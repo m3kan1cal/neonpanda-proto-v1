@@ -16,7 +16,9 @@ applications:
           commands:
             # - nvm install 20
             # - nvm use 20
-            - npm-20 install
+            - alternatives --set node /usr/bin/node-20
+            - alternatives --set npm /usr/bin/npm-20
+            - npm install
         build:
           commands:
             - npm-20 run build
