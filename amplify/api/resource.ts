@@ -5,8 +5,8 @@ import * as lambda from 'aws-cdk-lib/aws-lambda';
 
 export function createCoreApi(stack: Stack, helloWorldLambda: lambda.IFunction) {
   // Create HTTP API Gateway v2
-  const httpApi = new apigatewayv2.HttpApi(stack, 'CoreApi', {
-    apiName: 'core-api',
+  const httpApi = new apigatewayv2.HttpApi(stack, 'ProtoApi', {
+    apiName: 'coachforge-proto-api',
     description: 'Core HTTP API for the application',
     corsPreflight: {
       allowCredentials: false,
