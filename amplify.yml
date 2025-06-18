@@ -18,7 +18,7 @@ applications:
             - npm install
         build:
           commands:
-            - npm-20 run build
+            - npm run build
       artifacts:
         baseDirectory: dist
         files:
