@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navigation from './components/Navigation';
 import LandingPage from './components/LandingPage';
 import FAQs from './components/FAQs';
+import ContactForm from './components/ContactForm';
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/faqs" element={<FAQs />} />
+            <Route path="/contact" element={<ContactForm />} />
           </Routes>
         </div>
       </div>
