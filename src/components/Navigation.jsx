@@ -79,20 +79,20 @@ function Navigation() {
                     FAQs
                   </Link>
                   <div className="border-t border-synthwave-neon-purple/20 my-2"></div>
-                  <a
-                    href="#waitlist"
+                  <Link
+                    to="/contact?type=waitlist"
                     onClick={closeDropdown}
-                    className="block px-4 py-3 font-rajdhani font-medium text-synthwave-text-primary hover:text-synthwave-neon-purple hover:bg-synthwave-neon-purple/10 transition-all duration-300"
+                    className="block px-4 py-3 font-rajdhani font-medium text-synthwave-text-primary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-300"
                   >
                     Join Waitlist
-                  </a>
-                  <a
-                    href="#collaborate"
+                  </Link>
+                  <Link
+                    to="/contact?type=collaborate"
                     onClick={closeDropdown}
-                    className="block px-4 py-3 font-rajdhani font-medium text-synthwave-text-primary hover:text-synthwave-neon-purple hover:bg-synthwave-neon-purple/10 transition-all duration-300"
+                    className="block px-4 py-3 font-rajdhani font-medium text-synthwave-text-primary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-300"
                   >
                     Collaborate
-                  </a>
+                  </Link>
                 </div>
               </div>
             </>

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { themeClasses } from '../utils/synthwaveThemeClasses';
 import { NeonBorder, GlitchText } from './themes/SynthwaveComponents';
 
@@ -16,12 +17,12 @@ function LandingPage() {
             Stop following generic workout programs. Create an AI coach that understands your goals, adapts to your progress, and is available whenever you need guidance—without the elite-level price tag.
           </h2>
           <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mt-12">
-            <button className={themeClasses.neonButton}>
+            <Link to="/contact?type=waitlist" className={themeClasses.neonButton}>
               Join the Waitlist - Launch Late 2025
-            </button>
-            <button className={themeClasses.cyanButton}>
+            </Link>
+            <Link to="/contact?type=collaborate" className={themeClasses.cyanButton}>
               Interested in Collaborating? Let's Connect
-            </button>
+            </Link>
           </div>
         </div>
       </section>
@@ -305,12 +306,12 @@ function LandingPage() {
 
           <div className="space-y-8">
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-              <button className={themeClasses.neonButton}>
+              <Link to="/contact?type=waitlist" className={themeClasses.neonButton}>
                 Join the Waitlist
-              </button>
-              <button className={themeClasses.cyanButton}>
+              </Link>
+              <Link to="/contact?type=collaborate" className={themeClasses.cyanButton}>
                 Want to Collaborate?
-              </button>
+              </Link>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-8 justify-center items-center text-sm font-rajdhani text-synthwave-text-secondary">
