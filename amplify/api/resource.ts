@@ -99,3 +99,7 @@ export function createCoreApi(stack: Stack, helloWorldLambda: lambda.IFunction, 
     }
   };
 }
+
+export const apiGatewayv2 = {
+  createCoreApi: createCoreApi,
+};

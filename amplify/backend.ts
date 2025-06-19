@@ -4,7 +4,9 @@ import { data } from './data/resource';
 import { storage } from './storage/resource';
 import { helloWorld } from './functions/hello-world/resource';
 import { contactForm } from './functions/contact-form/resource';
-import { createCoreApi } from './api/resource';
+import { apiGatewayv2 } from './api/resource';
+import { dynamodbTable } from './dynamodb/resource';
+
 
 /**
  * @see https://docs.amplify.aws/react/build-a-backend/ to add storage, functions, and more
@@ -17,23 +19,40 @@ const backend = defineBackend({
   contactForm,
 });
 
+
 // Create the Core API with all endpoints
-const coreApi = createCoreApi(
+const coreApi = apiGatewayv2.createCoreApi(
   backend.helloWorld.stack,
   backend.helloWorld.resources.lambda,
   backend.contactForm.resources.lambda
 );
 
-// Output the API URL
+// Create DynamoDB table
+const coreTable = dynamodbTable.createCoreTable(backend.helloWorld.stack);
+
+// Grant DynamoDB permissions to contact form function
+coreTable.table.grantWriteData(backend.contactForm.resources.lambda);
+
+// Add environment variable for table name
+backend.contactForm.addEnvironment('DYNAMODB_TABLE_NAME', coreTable.table.tableName);
+
+// Output the API URL and DynamoDB table info
 backend.addOutput({
   custom: {
-    API: {
+    api: {
       [coreApi.httpApi.httpApiId!]: {
         endpoint: coreApi.httpApi.apiEndpoint,
         customEndpoint: `https://${coreApi.domainName}`,
         region: backend.helloWorld.stack.region,
         apiName: coreApi.httpApi.httpApiName,
         domainName: coreApi.domainName
+      }
+    },
+    dynamodb: {
+      coreTable: {
+        tableName: coreTable.table.tableName,
+        tableArn: coreTable.table.tableArn,
+        region: backend.helloWorld.stack.region
       }
     }
   }

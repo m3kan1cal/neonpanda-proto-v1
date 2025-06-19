@@ -1,20 +1,12 @@
-import type { APIGatewayProxyHandler } from 'aws-lambda';
+import type { APIGatewayProxyEventV2, APIGatewayProxyHandlerV2 } from 'aws-lambda';
+import { createSuccessResponse, getCurrentTimestamp, getRequestId } from '../libs/api-helpers';
 
-export const handler: APIGatewayProxyHandler = async (event) => {
+export const handler: APIGatewayProxyHandlerV2 = async (event: APIGatewayProxyEventV2) => {
   console.log('event', event);
 
-  return {
-    statusCode: 200,
-    headers: {
-      'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Headers': 'Content-Type',
-      'Access-Control-Allow-Methods': 'OPTIONS,POST,GET'
-    },
-    body: JSON.stringify({
-      message: 'Hello World from Lambda!',
-      timestamp: new Date().toISOString(),
-      requestId: event.requestContext?.requestId
-    }),
-  };
+  return createSuccessResponse({
+    message: 'Hello World from Lambda!',
+    timestamp: getCurrentTimestamp(),
+    requestId: getRequestId(event)
+  });
 };

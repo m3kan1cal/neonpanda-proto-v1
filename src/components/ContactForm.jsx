@@ -3,11 +3,13 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { themeClasses } from '../utils/synthwaveThemeClasses';
 import { NeonBorder } from './themes/SynthwaveComponents';
 import { apiClient } from '../utils/apiConfig';
+import { useToast } from '../contexts/ToastContext';
 
 function ContactForm() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const contactType = searchParams.get('type') || 'general';
+  const { success, error } = useToast();
 
   const [formData, setFormData] = useState({
     firstName: '',
@@ -107,17 +109,21 @@ function ContactForm() {
       const result = await apiClient.post('contact', formData);
 
       console.log('Form submitted successfully:', result);
-      alert('Thank you for your message! We\'ll get back to you soon.');
-      navigate('/');
+      success('Thank you for your message! We\'ll get back to you soon.');
 
-    } catch (error) {
-      console.error('Submission error:', error);
+      // Navigate after a short delay to let user see the success message
+      setTimeout(() => {
+        navigate('/');
+      }, 1500);
+
+    } catch (err) {
+      console.error('Submission error:', err);
 
       // Handle validation errors specifically
-      if (error.message.includes('Validation failed')) {
-        alert(`Please check your form: ${error.message}`);
+      if (err.message.includes('Validation failed')) {
+        error(`Please check your form: ${err.message}`);
       } else {
-        alert('There was an error submitting your message. Please try again.');
+        error('There was an error submitting your message. Please try again.');
       }
     } finally {
       setIsSubmitting(false);
