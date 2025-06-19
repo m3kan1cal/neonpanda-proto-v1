@@ -138,8 +138,11 @@ export function createDynamoDBTable(scope: Construct) {
   });
 
   // Cost Alarm (simplified for development)
+  const alarmBaseName = 'CoachForge-ProtoApi-HighCostAlarm';
+  const alarmName = isSandbox ? `${alarmBaseName}-Dev` : alarmBaseName;
+
   const costAlarm = new cloudwatch.Alarm(scope, 'DynamoDBCostAlarm', {
-    alarmName: 'CoachForge-ProtoApi-HighCostAlarm',
+    alarmName: alarmName,
     alarmDescription: 'Alarm when DynamoDB costs exceed threshold',
     metric: new cloudwatch.Metric({
       namespace: 'AWS/Billing',
