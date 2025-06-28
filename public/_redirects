@@ -1,0 +1,8 @@
+# Redirect URLs with trailing slashes to URLs without trailing slashes
+/coach-creator/  /coach-creator  301!
+/coaches/        /coaches        301!
+/faqs/           /faqs           301!
+/contact/        /contact        301!
+
+# Fallback for React Router (SPA)
+/*    /index.html   200
