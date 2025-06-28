@@ -21,3 +21,26 @@ applications:
       cache:
         paths:
           - .npm/**/*
+    customHeaders:
+      - pattern: '**'
+        headers:
+          - key: 'X-Frame-Options'
+            value: 'DENY'
+          - key: 'X-XSS-Protection'
+            value: '1; mode=block'
+    redirects:
+      - source: '/coach-creator/'
+        target: '/coach-creator'
+        status: '301'
+      - source: '/coaches/'
+        target: '/coaches'
+        status: '301'
+      - source: '/faqs/'
+        target: '/faqs'
+        status: '301'
+      - source: '/contact/'
+        target: '/contact'
+        status: '301'
+      - source: '/<*>'
+        target: '/index.html'
+        status: '200'
