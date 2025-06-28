@@ -108,7 +108,7 @@ function ContactForm() {
       // Make API call to the contact form endpoint
       const result = await apiClient.post('contact', formData);
 
-      console.log('Form submitted successfully:', result);
+      console.info('Form submitted successfully:', result);
       success('Thank you for your message! We\'ll get back to you soon.');
 
       // Navigate after a short delay to let user see the success message

@@ -20,16 +20,16 @@ export interface SanitizedContactFormData extends ContactFormData {
 
 // Helper function to log contact form submission
 export function logContactSubmission(data: SanitizedContactFormData): void {
-  console.log('=== CONTACT FORM SUBMISSION ===');
-  console.log('Contact Type:', data.contactType);
-  console.log('Name:', `${data.firstName} ${data.lastName}`);
-  console.log('Email:', data.email);
-  console.log('Subject:', data.subject);
-  console.log('Message:', data.message);
-  console.log('Timestamp:', data.timestamp);
-  console.log('Request ID:', data.requestId);
-  console.log('Source IP:', data.sourceIp);
-  console.log('=== END SUBMISSION ===');
+  console.info('=== CONTACT FORM SUBMISSION ===');
+  console.info('Contact Type:', data.contactType);
+  console.info('Name:', `${data.firstName} ${data.lastName}`);
+  console.info('Email:', data.email);
+  console.info('Subject:', data.subject);
+  console.info('Message:', data.message);
+  console.info('Timestamp:', data.timestamp);
+  console.info('Request ID:', data.requestId);
+  console.info('Source IP:', data.sourceIp);
+  console.info('=== END SUBMISSION ===');
 }
 
 // Helper function to sanitize form data
