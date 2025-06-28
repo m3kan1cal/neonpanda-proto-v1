@@ -4,7 +4,17 @@ import * as apigatewayv2_integrations from 'aws-cdk-lib/aws-apigatewayv2-integra
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as certificatemanager from 'aws-cdk-lib/aws-certificatemanager';
 
-export function createCoreApi(stack: Stack, helloWorldLambda: lambda.IFunction, contactFormLambda: lambda.IFunction) {
+export function createCoreApi(
+  stack: Stack,
+  helloWorldLambda: lambda.IFunction,
+  contactFormLambda: lambda.IFunction,
+  createCoachCreatorSessionLambda: lambda.IFunction,
+  updateCoachCreatorSessionLambda: lambda.IFunction,
+  getCoachConfigsLambda: lambda.IFunction,
+  getCoachConfigLambda: lambda.IFunction,
+  getCoachConfigStatusLambda: lambda.IFunction,
+  getCoachCreatorSessionLambda: lambda.IFunction
+) {
   // Determine if this is a sandbox deployment
   const isSandbox = stack.node.tryGetContext('amplify-backend-type') === 'sandbox';
 
@@ -59,6 +69,41 @@ export function createCoreApi(stack: Stack, helloWorldLambda: lambda.IFunction, 
     contactFormLambda
   );
 
+  // Create Lambda integrations for coach creator functions
+  const createCoachCreatorSessionIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
+    'CreateCoachCreatorSessionIntegration',
+    createCoachCreatorSessionLambda
+  );
+
+  const updateCoachCreatorSessionIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
+    'UpdateCoachCreatorSessionIntegration',
+    updateCoachCreatorSessionLambda
+  );
+
+  const getCoachCreatorSessionIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
+    'GetCoachCreatorSessionIntegration',
+    getCoachCreatorSessionLambda
+  );
+
+  const getCoachConfigsIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
+    'GetCoachConfigsIntegration',
+    getCoachConfigsLambda
+  );
+
+  const getCoachConfigIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
+    'GetCoachConfigIntegration',
+    getCoachConfigLambda
+  );
+
+  const getCoachConfigStatusIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
+    'GetCoachConfigStatusIntegration',
+    getCoachConfigStatusLambda
+  );
+
+  // *******************************************************
+  // Miscellaneous Routes
+  // *******************************************************
+
   // Add routes
   httpApi.addRoutes({
     path: '/hello',
@@ -70,6 +115,56 @@ export function createCoreApi(stack: Stack, helloWorldLambda: lambda.IFunction, 
     path: '/contact',
     methods: [apigatewayv2.HttpMethod.POST],
     integration: contactFormIntegration
+  });
+
+  // *******************************************************
+  // Coach Creator Agent Routes
+  // *******************************************************
+
+  // Start coach creator session
+  httpApi.addRoutes({
+    path: '/users/{userId}/coach-creator-sessions',
+    methods: [apigatewayv2.HttpMethod.POST],
+    integration: createCoachCreatorSessionIntegration
+  });
+
+  // Update coach creator session (submit response)
+  httpApi.addRoutes({
+    path: '/users/{userId}/coach-creator-sessions/{sessionId}',
+    methods: [apigatewayv2.HttpMethod.PUT],
+    integration: updateCoachCreatorSessionIntegration
+  });
+
+  // Get coach creator session
+  httpApi.addRoutes({
+    path: '/users/{userId}/coach-creator-sessions/{sessionId}',
+    methods: [apigatewayv2.HttpMethod.GET],
+    integration: getCoachCreatorSessionIntegration
+  });
+
+  // Get coach config generation status
+  httpApi.addRoutes({
+    path: '/users/{userId}/coach-creator-sessions/{sessionId}/config-status',
+    methods: [apigatewayv2.HttpMethod.GET],
+    integration: getCoachConfigStatusIntegration
+  });
+
+  // *******************************************************
+  // Coach Config Routes
+  // *******************************************************
+
+  // Get all coach configs for a user
+  httpApi.addRoutes({
+    path: '/users/{userId}/coaches',
+    methods: [apigatewayv2.HttpMethod.GET],
+    integration: getCoachConfigsIntegration
+  });
+
+  // Get specific coach config
+  httpApi.addRoutes({
+    path: '/users/{userId}/coaches/{coachId}',
+    methods: [apigatewayv2.HttpMethod.GET],
+    integration: getCoachConfigIntegration
   });
 
   // Create custom domain name
@@ -95,7 +190,13 @@ export function createCoreApi(stack: Stack, helloWorldLambda: lambda.IFunction, 
     // Export individual integrations for potential reuse
     integrations: {
       helloWorld: helloWorldIntegration,
-      contactForm: contactFormIntegration
+      contactForm: contactFormIntegration,
+      createCoachCreatorSession: createCoachCreatorSessionIntegration,
+      updateCoachCreatorSession: updateCoachCreatorSessionIntegration,
+      getCoachConfigs: getCoachConfigsIntegration,
+      getCoachConfig: getCoachConfigIntegration,
+      getCoachConfigStatus: getCoachConfigStatusIntegration,
+      getCoachCreatorSession: getCoachCreatorSessionIntegration
     }
   };
 }

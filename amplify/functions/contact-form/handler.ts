@@ -1,6 +1,6 @@
 import type { APIGatewayProxyEventV2, APIGatewayProxyHandlerV2, APIGatewayProxyResultV2 } from 'aws-lambda';
 import { createErrorResponse, createSuccessResponse, getHttpMethod } from '../libs/api-helpers';
-import { saveContactFormToDynamoDB } from '../../dynamodb/operations';
+import { saveContactForm } from '../../dynamodb/operations';
 import {
   ContactFormData,
   validateContactForm,
@@ -9,7 +9,7 @@ import {
 } from './validate';
 
 export const handler: APIGatewayProxyHandlerV2 = async (event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> => {
-  console.log('Contact form submission event:', JSON.stringify(event, null, 2));
+  console.info('Contact form submission event:', JSON.stringify(event, null, 2));
 
   try {
     // Only allow POST requests
@@ -34,7 +34,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event: APIGatewayProxyEv
     // Validate the form data
     const validation = validateContactForm(formData);
     if (!validation.isValid) {
-      console.log('Form validation failed:', validation.errors);
+      console.info('Form validation failed:', validation.errors);
       return createErrorResponse(400, 'Validation failed', validation.errors);
     }
 
@@ -46,7 +46,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event: APIGatewayProxyEv
 
     // Save to DynamoDB
     try {
-      await saveContactFormToDynamoDB({
+      await saveContactForm({
         firstName: sanitizedData.firstName,
         lastName: sanitizedData.lastName,
         email: sanitizedData.email,
