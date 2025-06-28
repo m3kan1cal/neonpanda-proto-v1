@@ -146,8 +146,8 @@ function Coaches() {
 
   const handleCreateCoach = async () => {
     try {
-      // Generate a userId using nanoid (13 characters) if not present
-      const tempUserId = userId || nanoid(13);
+      // Generate a userId using nanoid (21 characters) if not present
+      const tempUserId = userId || nanoid(21);
 
       console.info('Creating new coach creator session for userId:', tempUserId);
 
