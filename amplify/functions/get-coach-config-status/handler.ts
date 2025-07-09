@@ -1,6 +1,6 @@
 import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
 import { createSuccessResponse, createErrorResponse } from '../libs/api-helpers';
-import { loadCoachCreatorSession, loadCoachConfig } from '../../dynamodb/operations';
+import { getCoachCreatorSession, getCoachConfig } from '../../dynamodb/operations';
 
 export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> => {
   try {
@@ -12,7 +12,7 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
     }
 
     // Load the session to check config generation status
-    const session = await loadCoachCreatorSession(userId, sessionId);
+    const session = await getCoachCreatorSession(userId, sessionId);
     if (!session) {
       return createErrorResponse(404, 'Session not found or expired');
     }
@@ -60,7 +60,7 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
       // Try to load the actual coach config to verify it exists
       if (coachConfigId) {
         try {
-          const coachConfig = await loadCoachConfig(userId, coachConfigId);
+          const coachConfig = await getCoachConfig(userId, coachConfigId);
           return createSuccessResponse({
             status: 'COMPLETE',
             message: 'Coach config generated successfully',

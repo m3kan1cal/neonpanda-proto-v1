@@ -1,10 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { nanoid } from 'nanoid';
 import { themeClasses } from '../utils/synthwaveThemeClasses';
-import { getCoaches } from '../utils/coachApi';
-import { createCoachCreatorSession } from '../utils/coachCreatorApi';
 import { NeonBorder } from './themes/SynthwaveComponents';
+import CoachAgent from '../utils/agents/CoachAgent';
 
 // Icons
 const CoachIcon = () => (
@@ -55,149 +53,76 @@ function Coaches() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const userId = searchParams.get('userId');
+  const agentRef = useRef(null);
 
-  const [coaches, setCoaches] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [inProgressCoach, setInProgressCoach] = useState(null);
+  // Agent state (managed by CoachesAgent)
+  const [agentState, setAgentState] = useState({
+    coaches: [],
+    isLoading: false,
+    error: null,
+    inProgressCoach: null
+  });
 
-  // Load coaches when component mounts or userId changes
+  // Initialize agent
   useEffect(() => {
-    const loadCoaches = async () => {
-      if (!userId) return;
-
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        console.info('Loading coaches for userId:', userId);
-        const result = await getCoaches(userId);
-        setCoaches(result.coaches || []);
-
-        // Check if we should remove in-progress coach (if it now exists in the coaches list)
-        if (inProgressCoach && result.coaches?.length > 0) {
-          setInProgressCoach(null);
-          // Clear from localStorage
-          localStorage.removeItem(`inProgress_${userId}`);
-        }
-      } catch (error) {
-        console.error('Error loading coaches:', error);
-        setError(error.message);
-        setCoaches([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadCoaches();
-  }, [userId, inProgressCoach]);
-
-  // Check for in-progress coach creation on component mount
-  useEffect(() => {
-    if (!userId) return;
-
-    const checkInProgressCoach = () => {
-      const inProgressData = localStorage.getItem(`inProgress_${userId}`);
-      if (inProgressData) {
-        try {
-          const data = JSON.parse(inProgressData);
-          const now = Date.now();
-          const elapsed = now - data.timestamp;
-
-          // Show in-progress coach for up to 10 minutes
-          if (elapsed < 10 * 60 * 1000) {
-            setInProgressCoach(data);
-
-            // Set up polling to check for coach completion
-            const pollInterval = setInterval(async () => {
-              try {
-                const result = await getCoaches(userId);
-                if (result.coaches?.length > 0) {
-                  setInProgressCoach(null);
-                  localStorage.removeItem(`inProgress_${userId}`);
-                  clearInterval(pollInterval);
-                }
-              } catch (error) {
-                console.error('Error polling for coaches:', error);
-              }
-            }, 15000); // Poll every 15 seconds
-
-            // Clean up interval after 10 minutes
-            setTimeout(() => {
-              clearInterval(pollInterval);
-              setInProgressCoach(null);
-              localStorage.removeItem(`inProgress_${userId}`);
-            }, 10 * 60 * 1000);
-
-            return () => clearInterval(pollInterval);
-          } else {
-            // Remove expired in-progress data
-            localStorage.removeItem(`inProgress_${userId}`);
+    if (!agentRef.current) {
+      agentRef.current = new CoachAgent({
+        userId,
+        onStateChange: (newState) => {
+          setAgentState(newState);
+        },
+        onNavigation: (type, data) => {
+          if (type === 'coach-creator') {
+            const newSearchParams = new URLSearchParams();
+            newSearchParams.set('userId', data.userId);
+            newSearchParams.set('coachCreatorSessionId', data.sessionId);
+            navigate(`/coach-creator?${newSearchParams.toString()}`);
           }
-        } catch (error) {
-          console.error('Error parsing in-progress data:', error);
-          localStorage.removeItem(`inProgress_${userId}`);
+        },
+        onError: (error) => {
+          console.error('CoachAgent error:', error);
+          // Could show toast notification here
         }
+      });
+    } else {
+      // Update agent when userId changes
+      agentRef.current.setUserId(userId);
+    }
+
+    return () => {
+      if (agentRef.current) {
+        agentRef.current.destroy();
+        agentRef.current = null;
       }
     };
+  }, [navigate, userId]);
 
-    checkInProgressCoach();
-  }, [userId]);
+
 
   const handleCreateCoach = async () => {
+    if (!agentRef.current) return;
+
     try {
-      // Generate a userId using nanoid (21 characters) if not present
-      const tempUserId = userId || nanoid(21);
-
-      console.info('Creating new coach creator session for userId:', tempUserId);
-
-      // Create coach creator session using API service
-      const result = await createCoachCreatorSession(tempUserId);
-
-      // Extract the sessionId from the response
-      const { sessionId } = result;
-
-      // Navigate to coach creator with the sessionId and userId
-      const newSearchParams = new URLSearchParams();
-      newSearchParams.set('userId', tempUserId);
-      newSearchParams.set('coachCreatorSessionId', sessionId);
-
-      navigate(`/coach-creator?${newSearchParams.toString()}`);
-
+      await agentRef.current.createNewCoach(userId);
     } catch (error) {
-      console.error('Error creating coach creator session:', error);
-      setError('Failed to create new coach creator session. Please try again.');
+      // Error handling is managed by the agent via onError callback
     }
   };
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString([], {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
+  const handleRefresh = async () => {
+    if (!agentRef.current) return;
 
-  const formatCoachName = (name) => {
-    return name.replace(/_/g, ' ');
-  };
-
-  const getSpecializationDisplay = (specializations) => {
-    if (!specializations || specializations.length === 0) return 'General Fitness';
-    return specializations.map(spec =>
-      spec.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
-    ).join(', ');
-  };
-
-  const getProgrammingFocusDisplay = (focus) => {
-    if (!focus || focus.length === 0) return 'General';
-    return focus.map(f => f.charAt(0).toUpperCase() + f.slice(1)).join(' & ');
+    try {
+      await agentRef.current.refresh();
+    } catch (error) {
+      // Error handling is managed by the agent via onError callback
+    }
   };
 
   // Show initial coach creator UI if no userId or no coaches found and no in-progress coach
-  if (!userId || (!isLoading && coaches.length === 0 && !inProgressCoach && !error)) {
+  if (!agentRef.current || agentRef.current.shouldShowEmptyState()) {
     return (
-      <div className={`${themeClasses.container} pt-20 min-h-screen`}>
+      <div className={`${themeClasses.container} min-h-screen`}>
         <div className="max-w-7xl mx-auto px-8 py-12">
           {/* Header */}
           <div className="text-center mb-16">
@@ -219,9 +144,9 @@ function Coaches() {
               Create My Coach
             </button>
 
-            {error && (
+            {agentState.error && (
               <div className="text-center text-synthwave-neon-pink mb-8">
-                <p className="font-rajdhani text-lg">{error}</p>
+                <p className="font-rajdhani text-lg">{agentState.error}</p>
               </div>
             )}
           </div>
@@ -282,7 +207,7 @@ function Coaches() {
 
   // Show coaches list
   return (
-    <div className={`${themeClasses.container} pt-20 min-h-screen`}>
+    <div className={`${themeClasses.container} min-h-screen`}>
       <div className="max-w-7xl mx-auto px-8 py-12">
         {/* Header */}
         <div className="text-center mb-16">
@@ -303,7 +228,7 @@ function Coaches() {
         </div>
 
         {/* Loading State */}
-        {isLoading && (
+        {agentState.isLoading && (
           <div className="text-center">
             <div className="inline-flex items-center space-x-2 text-synthwave-text-secondary font-rajdhani">
               <div className="w-6 h-6 border-2 border-synthwave-neon-cyan border-t-transparent rounded-full animate-spin"></div>
@@ -313,11 +238,11 @@ function Coaches() {
         )}
 
         {/* Error State */}
-        {error && !isLoading && (
+        {agentState.error && !agentState.isLoading && (
           <div className="text-center text-synthwave-neon-pink mb-8">
-            <p className="font-rajdhani text-lg">{error}</p>
+            <p className="font-rajdhani text-lg">{agentState.error}</p>
             <button
-              onClick={() => window.location.reload()}
+              onClick={handleRefresh}
               className={`${themeClasses.neonButton} text-sm px-6 py-2 mt-4`}
             >
               Try Again
@@ -326,10 +251,10 @@ function Coaches() {
         )}
 
         {/* Coaches Grid */}
-        {!isLoading && (coaches.length > 0 || inProgressCoach) && (
+        {!agentState.isLoading && (agentState.coaches.length > 0 || agentState.inProgressCoach) && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {/* In-Progress Coach Card */}
-            {inProgressCoach && (
+            {agentState.inProgressCoach && (
               <div className="bg-transparent border-2 border-synthwave-neon-cyan/30 rounded-lg p-6 relative overflow-hidden">
                 {/* Animated background overlay */}
                 <div className="absolute inset-0 bg-gradient-to-r from-synthwave-neon-cyan/5 to-synthwave-neon-pink/5 animate-pulse"></div>
@@ -360,7 +285,7 @@ function Coaches() {
                     <div className="flex items-center space-x-2 text-synthwave-text-secondary">
                       <CalendarIcon />
                       <span className="font-rajdhani text-xs">
-                        Started {formatDate(new Date(inProgressCoach.timestamp).toISOString())}
+                        Started {agentRef.current?.formatDate(new Date(agentState.inProgressCoach.timestamp).toISOString())}
                       </span>
                     </div>
 
@@ -382,10 +307,10 @@ function Coaches() {
             )}
 
             {/* Existing Coaches */}
-            {coaches.map((coach) => (
+            {agentState.coaches.map((coach) => (
               <div
-                key={coach.attributes.coach_id}
-                className="bg-transparent border-2 border-synthwave-neon-pink/30 rounded-lg p-6 transition-all duration-300 hover:border-synthwave-neon-pink hover:shadow-neon-pink hover:-translate-y-1 cursor-pointer"
+                key={coach.coach_id}
+                className="bg-transparent border-2 border-synthwave-neon-pink/30 rounded-lg p-6 transition-all duration-300 hover:border-synthwave-neon-pink hover:shadow-neon-pink hover:-translate-y-1"
               >
                 {/* Coach Icon */}
                 <div className="text-synthwave-neon-pink mb-6 flex justify-center">
@@ -394,7 +319,7 @@ function Coaches() {
 
                 {/* Coach Name */}
                 <h3 className="font-russo font-bold text-white text-xl uppercase mb-4 text-center">
-                  {formatCoachName(coach.attributes.coach_name)}
+                  {agentRef.current?.formatCoachName(coach.coach_name)}
                 </h3>
 
                 {/* Coach Details */}
@@ -403,8 +328,7 @@ function Coaches() {
                   <div className="flex items-center space-x-2 text-synthwave-text-secondary">
                     <TargetIcon />
                     <span className="font-rajdhani text-sm">
-                      {coach.attributes.technical_config?.experience_level?.charAt(0).toUpperCase() +
-                       coach.attributes.technical_config?.experience_level?.slice(1) || 'General'} Level
+                      {agentRef.current?.getExperienceLevelDisplay(coach.technical_config?.experience_level) || 'General'} Level
                     </span>
                   </div>
 
@@ -414,7 +338,7 @@ function Coaches() {
                       <TargetIcon />
                     </div>
                     <span className="font-rajdhani text-sm">
-                      Focus: {getProgrammingFocusDisplay(coach.attributes.technical_config?.programming_focus)}
+                      Focus: {agentRef.current?.getProgrammingFocusDisplay(coach.technical_config?.programming_focus)}
                     </span>
                   </div>
 
@@ -424,7 +348,7 @@ function Coaches() {
                       <TargetIcon />
                     </div>
                     <span className="font-rajdhani text-sm">
-                      {getSpecializationDisplay(coach.attributes.technical_config?.specializations)}
+                      {agentRef.current?.getSpecializationDisplay(coach.technical_config?.specializations)}
                     </span>
                   </div>
 
@@ -432,22 +356,30 @@ function Coaches() {
                   <div className="flex items-center space-x-2 text-synthwave-text-muted">
                     <CalendarIcon />
                     <span className="font-rajdhani text-xs">
-                      Created {formatDate(coach.createdAt)}
+                      Created {agentRef.current?.formatDate(coach.metadata?.created_date)}
                     </span>
                   </div>
 
                   {/* Conversations Count */}
                   <div className="text-center pt-2 border-t border-synthwave-neon-pink/20">
                     <span className="font-rajdhani text-xs text-synthwave-text-muted">
-                      {coach.attributes.metadata?.total_conversations || 0} conversations
+                      {coach.metadata?.total_conversations || 0} conversations
                     </span>
                   </div>
                 </div>
 
                 {/* Action Button */}
                 <div className="mt-6 text-center">
-                  <button className="bg-transparent border border-synthwave-neon-pink/50 text-synthwave-neon-pink px-4 py-2 rounded font-rajdhani text-sm uppercase tracking-wide transition-all duration-300 hover:bg-synthwave-neon-pink/10 hover:border-synthwave-neon-pink">
-                    Start Training
+                  <button
+                    onClick={() => {
+                      const newSearchParams = new URLSearchParams();
+                      newSearchParams.set('userId', userId);
+                      newSearchParams.set('coachId', coach.coach_id);
+                      navigate(`/training-grounds?${newSearchParams.toString()}`);
+                    }}
+                    className="bg-transparent border border-synthwave-neon-pink/50 text-synthwave-neon-pink px-4 py-2 rounded font-rajdhani text-sm uppercase tracking-wide transition-all duration-300 hover:bg-synthwave-neon-pink/10 hover:border-synthwave-neon-pink"
+                  >
+                    Enter Training Grounds
                   </button>
                 </div>
               </div>
@@ -456,12 +388,6 @@ function Coaches() {
         )}
       </div>
 
-      <style jsx global>{`
-        html, body {
-          min-height: 100%;
-          background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
-        }
-      `}</style>
     </div>
   );
 }

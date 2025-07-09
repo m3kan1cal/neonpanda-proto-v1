@@ -1,7 +1,7 @@
 import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
 import { createSuccessResponse, createErrorResponse } from '../libs/api-helpers';
 import {
-  loadCoachConfig,
+  getCoachConfig,
 } from '../../dynamodb/operations';
 
 export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> => {
@@ -18,13 +18,15 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
     }
 
     // Get specific coach
-    const coachConfig = await loadCoachConfig(userId, coachId);
+    const coachConfig = await getCoachConfig(userId, coachId);
 
     if (!coachConfig) {
       return createErrorResponse(404, 'Coach not found');
     }
 
-    return createSuccessResponse(coachConfig);
+    return createSuccessResponse({
+      coachConfig: coachConfig.attributes
+    });
 
   } catch (error) {
     console.error('Error getting coach config:', error);

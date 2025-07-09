@@ -1,5 +1,6 @@
 import type { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
 import { BedrockRuntimeClient, ConverseCommand } from '@aws-sdk/client-bedrock-runtime';
+import { LambdaClient, InvokeCommand, InvocationType } from '@aws-sdk/client-lambda';
 import { Pinecone } from '@pinecone-database/pinecone';
 
 
@@ -8,8 +9,19 @@ const CLAUDE_SONNET_4_MODEL_ID = 'us.anthropic.claude-sonnet-4-20250514-v1:0';
 const MAX_TOKENS = 4096;
 const TEMPERATURE = 0.7;
 
+// Model constants for external use
+export const MODEL_IDS = {
+  CLAUDE_SONNET_4_FULL: CLAUDE_SONNET_4_MODEL_ID,
+  CLAUDE_SONNET_4_DISPLAY: 'claude-sonnet-4'
+} as const;
+
 // Create Bedrock Runtime client
 const bedrockClient = new BedrockRuntimeClient({
+  region: process.env.AWS_REGION || 'us-west-2'
+});
+
+// Create Lambda client for async invocations
+const lambdaClient = new LambdaClient({
   region: process.env.AWS_REGION || 'us-west-2'
 });
 
@@ -72,19 +84,67 @@ export function getCurrentTimestamp(): string {
     return new Date().toISOString();
 }
 
+/**
+ * Triggers an async Lambda function invocation
+ * @param functionName - Name of the Lambda function to invoke
+ * @param payload - Payload to send to the Lambda function
+ * @param context - Optional context for logging (e.g., 'workout extraction', 'coach config generation')
+ * @returns Promise that resolves when invocation is triggered (not when target Lambda completes)
+ */
+export const invokeAsyncLambda = async (
+  functionName: string,
+  payload: Record<string, any>,
+  context?: string
+): Promise<void> => {
+  try {
+    console.info(`🚀 Triggering async Lambda invocation${context ? ` for ${context}` : ''}:`, {
+      functionName,
+      payloadKeys: Object.keys(payload),
+      context
+    });
+
+    const command = new InvokeCommand({
+      FunctionName: functionName,
+      InvocationType: InvocationType.Event, // Async invocation
+      Payload: JSON.stringify(payload)
+    });
+
+    await lambdaClient.send(command);
+
+    console.info(`✅ Successfully triggered async Lambda${context ? ` for ${context}` : ''}:`, {
+      functionName,
+      payloadSize: JSON.stringify(payload).length
+    });
+  } catch (error) {
+    console.error(`❌ Failed to trigger async Lambda${context ? ` for ${context}` : ''}:`, {
+      functionName,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      context
+    });
+
+    // Re-throw to allow caller to handle the error appropriately
+    throw new Error(`Failed to invoke async Lambda ${functionName}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+};
+
 // Amazon Bedrock Converse API call
 export const callBedrockApi = async (
   systemPrompt: string,
   userMessage: string
 ): Promise<string> => {
   try {
-    console.info('=== BEDROCK API CALL START ===');
+        console.info('=== BEDROCK API CALL START ===');
     console.info('AWS Region:', process.env.AWS_REGION || 'us-west-2');
     console.info('Model ID:', CLAUDE_SONNET_4_MODEL_ID);
     console.info('System prompt length:', systemPrompt.length);
     console.info('User message length:', userMessage.length);
     console.info('Bedrock client config:', {
       region: await bedrockClient.config.region?.() || 'unknown'
+    });
+    console.info('Environment variables:', {
+      AWS_REGION: process.env.AWS_REGION,
+      AWS_DEFAULT_REGION: process.env.AWS_DEFAULT_REGION,
+      AWS_LAMBDA_FUNCTION_NAME: process.env.AWS_LAMBDA_FUNCTION_NAME
     });
 
     const command = new ConverseCommand({
@@ -118,22 +178,15 @@ export const callBedrockApi = async (
       console.info('HEARTBEAT: Lambda still running, waiting for Bedrock response...');
     }, 5000);
 
-    // Add timeout wrapper to prevent hanging
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => {
-        clearInterval(heartbeatInterval);
-        reject(new Error('Bedrock API call timed out after 60 seconds'));
-      }, 60000);
-    });
-
-    // Add explicit error handling around the send call with timeout
+                    // Add explicit error handling around the send call with timeout
     let response;
+
     try {
       console.info('Starting Bedrock API call with 60s timeout...');
-      response = await Promise.race([
-        bedrockClient.send(command),
-        timeoutPromise
-      ]) as any;
+
+      // Simple approach: just make the API call and let AWS SDK handle timeouts
+      response = await bedrockClient.send(command);
+
       clearInterval(heartbeatInterval);
       console.info('bedrockClient.send() completed successfully');
     } catch (sendError: any) {

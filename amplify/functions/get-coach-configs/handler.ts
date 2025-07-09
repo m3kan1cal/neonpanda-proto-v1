@@ -1,7 +1,7 @@
 import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
 import { createSuccessResponse, createErrorResponse } from '../libs/api-helpers';
 import {
-  loadCoachConfigs,
+  queryCoachConfigs,
 } from '../../dynamodb/operations';
 
 export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> => {
@@ -13,11 +13,11 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
     }
 
     // Get coach configs for the user
-    const coachConfigs = await loadCoachConfigs(userId);
+    const coachConfigs = await queryCoachConfigs(userId);
 
     return createSuccessResponse({
       userId,
-      coaches: coachConfigs,
+      coaches: coachConfigs.map(item => item.attributes),
       count: coachConfigs.length
     });
 

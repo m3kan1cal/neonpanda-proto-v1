@@ -1,6 +1,6 @@
 import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
 import { createSuccessResponse, createErrorResponse } from '../libs/api-helpers';
-import { loadCoachCreatorSession } from '../../dynamodb/operations';
+import { getCoachCreatorSession } from '../../dynamodb/operations';
 import { CoachCreatorSession } from '../libs/coach-creator/types';
 
 export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> => {
@@ -13,7 +13,7 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
     }
 
         // Load the coach creator session from DynamoDB
-    const session = await loadCoachCreatorSession(userId, sessionId);
+    const session = await getCoachCreatorSession(userId, sessionId);
 
     if (!session) {
       return createErrorResponse(404, 'Coach creator session not found or expired');

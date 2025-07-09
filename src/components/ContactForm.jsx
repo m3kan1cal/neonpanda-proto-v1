@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { themeClasses } from '../utils/synthwaveThemeClasses';
 import { NeonBorder } from './themes/SynthwaveComponents';
-import { apiClient } from '../utils/apiConfig';
 import { useToast } from '../contexts/ToastContext';
+import ContactFormAgent from '../utils/agents/ContactFormAgent';
 
 function ContactForm() {
   const navigate = useNavigate();
@@ -20,34 +20,50 @@ function ContactForm() {
     contactType: contactType
   });
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
+  const agentRef = useRef(null);
+
+  // Agent state (managed by ContactFormAgent)
+  const [agentState, setAgentState] = useState({
+    isSubmitting: false,
+    error: null,
+    success: false,
+  });
+
+  // Initialize agent
+  useEffect(() => {
+    if (!agentRef.current) {
+      agentRef.current = new ContactFormAgent({
+        onStateChange: (newState) => {
+          setAgentState(newState);
+        },
+        onSuccess: (message) => {
+          success(message);
+          // Navigate after a short delay to let user see the success message
+          setTimeout(() => {
+            navigate('/');
+          }, 1500);
+        },
+        onError: (message) => {
+          error(message);
+        }
+      });
+    }
+
+    return () => {
+      if (agentRef.current) {
+        agentRef.current.destroy();
+        agentRef.current = null;
+      }
+    };
+  }, [navigate, success, error]);
 
   // Set subject based on contact type
   useEffect(() => {
-    let defaultSubject = '';
-    let defaultMessage = '';
-
-    switch (contactType) {
-      case 'waitlist':
-        defaultSubject = 'Interest in Joining the Waitlist';
-        defaultMessage = "Hi there!\n\nI'm interested in joining the waitlist for CoachForge. I'd love to be notified when the platform launches and learn more about creating my personalized AI fitness coach.\n\nLooking forward to hearing from you!";
-        break;
-      case 'collaborate':
-        defaultSubject = 'Interest in Collaboration';
-        defaultMessage = "Hi!\n\nI'm interested in collaborating with CoachForge and helping build the future of AI fitness coaching. I'd love to discuss how I can contribute to the project.\n\nPlease let me know more about collaboration opportunities!";
-        break;
-      default:
-        defaultSubject = 'General Inquiry';
-        defaultMessage = "Hi there!\n\nI have a question about CoachForge and would love to learn more.\n\nThanks!";
+    if (agentRef.current) {
+      const defaultData = agentRef.current.getDefaultFormData(contactType);
+      setFormData(defaultData);
     }
-
-    setFormData(prev => ({
-      ...prev,
-      subject: defaultSubject,
-      message: defaultMessage,
-      contactType: contactType
-    }));
   }, [contactType]);
 
   const handleInputChange = (e) => {
@@ -67,32 +83,11 @@ function ContactForm() {
   };
 
   const validateForm = () => {
-    const newErrors = {};
+    if (!agentRef.current) return false;
 
-    if (!formData.firstName.trim()) {
-      newErrors.firstName = 'First name is required';
-    }
-
-    if (!formData.lastName.trim()) {
-      newErrors.lastName = 'Last name is required';
-    }
-
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
-    }
-
-    if (!formData.subject.trim()) {
-      newErrors.subject = 'Subject is required';
-    }
-
-    if (!formData.message.trim()) {
-      newErrors.message = 'Message is required';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    const validation = agentRef.current.validateForm(formData);
+    setErrors(validation.errors);
+    return validation.isValid;
   };
 
     const handleSubmit = async (e) => {
@@ -102,31 +97,12 @@ function ContactForm() {
       return;
     }
 
-    setIsSubmitting(true);
+    if (!agentRef.current) return;
 
-        try {
-      // Make API call to the contact form endpoint
-      const result = await apiClient.post('contact', formData);
-
-      console.info('Form submitted successfully:', result);
-      success('Thank you for your message! We\'ll get back to you soon.');
-
-      // Navigate after a short delay to let user see the success message
-      setTimeout(() => {
-        navigate('/');
-      }, 1500);
-
+    try {
+      await agentRef.current.submitForm(formData);
     } catch (err) {
-      console.error('Submission error:', err);
-
-      // Handle validation errors specifically
-      if (err.message.includes('Validation failed')) {
-        error(`Please check your form: ${err.message}`);
-      } else {
-        error('There was an error submitting your message. Please try again.');
-      }
-    } finally {
-      setIsSubmitting(false);
+      // Error handling is managed by the agent via onError callback
     }
   };
 
@@ -157,7 +133,7 @@ function ContactForm() {
   };
 
   return (
-    <div className={`${themeClasses.container} pt-20 min-h-screen`}>
+          <div className={`${themeClasses.container} min-h-screen`}>
       <div className="max-w-4xl mx-auto px-8 py-12">
         {/* Header */}
         <div className="text-center mb-12">
@@ -283,13 +259,13 @@ function ContactForm() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-6">
               <button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={agentState.isSubmitting}
                 className={`${
                   contactType === 'waitlist' ? themeClasses.neonButton :
                   contactType === 'collaborate' ? themeClasses.cyanButton : themeClasses.neonButton
                 } disabled:opacity-50 disabled:cursor-not-allowed min-w-48`}
               >
-                {isSubmitting ? 'Sending...' : 'Send Message'}
+                {agentState.isSubmitting ? 'Sending...' : 'Send Message'}
               </button>
 
               <button

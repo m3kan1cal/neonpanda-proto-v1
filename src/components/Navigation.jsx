@@ -80,6 +80,18 @@ function Navigation() {
                   </Link>
                   <div className="border-t border-synthwave-neon-purple/20 my-2"></div>
                   <Link
+                    to="/coaches"
+                    onClick={closeDropdown}
+                    className={`block px-4 py-3 font-rajdhani font-medium transition-all duration-300 ${
+                      location.pathname === '/coaches'
+                        ? 'text-synthwave-neon-purple bg-synthwave-neon-purple/10'
+                        : 'text-synthwave-text-primary hover:text-synthwave-neon-purple hover:bg-synthwave-neon-purple/10'
+                    }`}
+                  >
+                    Coaches
+                  </Link>
+                  <div className="border-t border-synthwave-neon-purple/20 my-2"></div>
+                  <Link
                     to="/contact?type=waitlist"
                     onClick={closeDropdown}
                     className="block px-4 py-3 font-rajdhani font-medium text-synthwave-text-primary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-300"

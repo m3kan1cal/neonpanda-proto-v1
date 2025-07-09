@@ -4,6 +4,43 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Set default page background to synthwave theme */
+html, body {
+  background-color: #16213e !important;
+  margin: 0;
+  padding: 0;
+}
+
+/* Control overscroll background without disabling behavior */
+html {
+  background-color: #16213e !important;
+  min-height: 100vh;
+  /* Allow overscroll but ensure background color is applied */
+  background-attachment: fixed;
+}
+
+/* Additional overscroll background control */
+body {
+  background-color: #16213e !important;
+  background-attachment: fixed;
+  /* Allow elastic scrolling on iOS */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Ensure root container covers full viewport */
+#root {
+  background-color: #16213e !important;
+  min-height: 100vh;
+  min-height: 100dvh; /* Dynamic viewport height for mobile */
+  width: 100%;
+  position: relative;
+}
+
+/* Additional fallback for any remaining white space */
+* {
+  box-sizing: border-box;
+}
+
 /* Custom utilities for text gradients */
 @layer utilities {
   .text-gradient-neon {
@@ -19,5 +56,31 @@
       linear-gradient(rgba(255, 0, 128, 0.1) 1px, transparent 1px),
       linear-gradient(90deg, rgba(255, 0, 128, 0.1) 1px, transparent 1px);
     background-size: 50px 50px;
+  }
+
+  .hide-scrollbar {
+    /* Hide scrollbar for webkit browsers */
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .synthwave-scrollbar::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .synthwave-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .synthwave-scrollbar::-webkit-scrollbar-thumb {
+    background: #ff007f40;
+    border-radius: 4px;
+  }
+
+  .synthwave-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #ff007f60;
   }
 }

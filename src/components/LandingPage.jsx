@@ -7,8 +7,8 @@ function LandingPage() {
   return (
     <div className={`${themeClasses.container} border-0 m-0`}>
       {/* Hero Section */}
-      <section className="relative overflow-hidden pt-20 pb-48 px-8 text-center min-h-screen flex flex-col justify-center bg-synthwave-gradient before:absolute before:inset-0 before:bg-gradient-to-br before:from-synthwave-neon-pink/10 before:via-transparent before:to-synthwave-neon-cyan/10 before:pointer-events-none border-none outline-none" style={{backgroundImage: 'url(images/hero-splash-1.jpg)', backgroundSize: 'cover', backgroundPosition: 'center', backgroundBlendMode: 'overlay'}}>
-        <div className="absolute inset-0 bg-synthwave-bg-primary/60"></div>
+      <section className="relative overflow-hidden pb-48 px-8 text-center min-h-screen flex flex-col justify-center bg-synthwave-gradient before:absolute before:inset-0 before:bg-gradient-to-br before:from-synthwave-neon-pink/10 before:via-transparent before:to-synthwave-neon-cyan/10 before:pointer-events-none border-none outline-none" style={{backgroundImage: 'url(images/hero-splash-1.jpg)', backgroundSize: 'cover', backgroundPosition: 'center', backgroundBlendMode: 'overlay'}}>
+        <div className="absolute inset-0 bg-synthwave-bg-primary/30"></div>
         <div className="relative z-10">
           <h1 className="font-russo font-black text-5xl md:text-6xl lg:text-7xl text-white mb-8 drop-shadow-lg">
             Your Fitness Journey is Unique. Your Coach Should Be Too.

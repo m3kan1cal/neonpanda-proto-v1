@@ -1,8 +1,6 @@
 import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
-import { LambdaClient, InvokeCommand, InvocationType } from '@aws-sdk/client-lambda';
-import { createSuccessResponse, createErrorResponse, callBedrockApi } from '../libs/api-helpers';
+import { createSuccessResponse, createErrorResponse, callBedrockApi, invokeAsyncLambda } from '../libs/api-helpers';
 import { SophisticationLevel } from '../libs/coach-creator/types';
-import { generateCoachConfig } from '../libs/coach-creator/coach-generation';
 import {
   getProgress,
   storeUserResponse,
@@ -24,11 +22,8 @@ import {
 import {
   saveCoachCreatorSession,
   saveCoachConfig,
-  loadCoachCreatorSession,
+  getCoachCreatorSession,
 } from '../../dynamodb/operations';
-
-// Initialize Lambda client for async invocation
-const lambdaClient = new LambdaClient({});
 
 export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> => {
   try {
@@ -41,7 +36,7 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
     }
 
     // Load session
-    const session = await loadCoachCreatorSession(userId, sessionId);
+    const session = await getCoachCreatorSession(userId, sessionId);
     if (!session) {
       return createErrorResponse(404, 'Session not found or expired');
     }
@@ -116,18 +111,19 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
     // Trigger async coach config generation if complete
     if (isComplete) {
       try {
-        // Invoke the async coach config creation Lambda
-        const invokeParams = {
-          FunctionName: process.env.CREATE_COACH_CONFIG_FUNCTION_NAME || 'create-coach-config',
-          InvocationType: InvocationType.Event, // Async invocation
-          Payload: JSON.stringify({
+            const buildCoachConfigFunction = process.env.BUILD_COACH_CONFIG_FUNCTION_NAME;
+    if (!buildCoachConfigFunction) {
+      throw new Error('BUILD_COACH_CONFIG_FUNCTION_NAME environment variable not set');
+        }
+
+        await invokeAsyncLambda(
+          buildCoachConfigFunction,
+          {
             userId,
             sessionId
-          })
-        };
-
-        const command = new InvokeCommand(invokeParams);
-        await lambdaClient.send(command);
+          },
+          'coach config generation'
+        );
 
         console.info('Successfully triggered async coach config generation');
       } catch (error) {

@@ -1,0 +1,508 @@
+import { nanoid } from "nanoid";
+import {
+  createCoachConversation,
+  sendCoachConversationMessage,
+  updateCoachConversation,
+  getCoachConversation,
+  getCoachConversations,
+} from "../apis/coachConversationApi";
+import { getCoach } from "../apis/coachApi";
+import CoachAgent from './CoachAgent';
+
+/**
+ * CoachConversationAgent - Handles the business logic for coach conversations
+ * This class manages the conversation flow, conversation state, and API interactions
+ * while keeping the React component focused on UI concerns.
+ */
+export class CoachConversationAgent {
+  constructor(options = {}) {
+    // Configuration
+    this.userId = options.userId || null;
+    this.coachId = options.coachId || null;
+    this.conversationId = options.conversationId || null;
+    this.onStateChange = options.onStateChange || (() => {});
+    this.onNavigation = options.onNavigation || (() => {});
+    this.onError = options.onError || (() => {});
+
+    // State
+    this.state = {
+      messages: [],
+      isLoading: false,
+      isTyping: false,
+      error: null,
+      coach: null,
+      conversation: null,
+      historicalConversations: [],
+      isLoadingHistory: false,
+    };
+
+    // Bind methods
+    this.createConversation = this.createConversation.bind(this);
+    this.loadExistingConversation = this.loadExistingConversation.bind(this);
+    this.loadCoachDetails = this.loadCoachDetails.bind(this);
+    this.loadHistoricalConversations = this.loadHistoricalConversations.bind(this);
+    this.sendMessage = this.sendMessage.bind(this);
+    this.clearConversation = this.clearConversation.bind(this);
+    this.generateConversationTitle = this.generateConversationTitle.bind(this);
+  }
+
+  /**
+   * Updates the internal state and notifies subscribers
+   */
+  _updateState(newState) {
+    this.state = { ...this.state, ...newState };
+    if (typeof this.onStateChange === 'function') {
+      this.onStateChange(this.state);
+    }
+  }
+
+  /**
+   * Generates a unique message ID
+   */
+  _generateMessageId() {
+    return nanoid();
+  }
+
+  /**
+   * Adds a message to the conversation
+   */
+  _addMessage(message) {
+    const messages = [...this.state.messages, message];
+    this._updateState({ messages });
+  }
+
+  /**
+   * Generates a conversation title based on first user message or default
+   */
+  generateConversationTitle(userMessage = null) {
+    if (userMessage && userMessage.trim()) {
+      // Take first 50 characters of user message as title
+      const title = userMessage.trim().substring(0, 50);
+      return title.length < userMessage.trim().length ? `${title}...` : title;
+    }
+
+    // Generate default title with human-friendly date
+    const now = new Date();
+    return now.toLocaleDateString(undefined, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+  }
+
+  /**
+   * Loads coach details from the API
+   */
+  async loadCoachDetails(userId, coachId) {
+    try {
+      console.info("Loading coach details:", { userId, coachId });
+      const coachData = await getCoach(userId, coachId);
+      console.info("Raw coach data received:", coachData);
+      console.info("Coach name from API:", coachData.coachConfig?.coach_name);
+
+      // Format coach data like TrainingGrounds does
+      const coachAgent = new CoachAgent();
+      const formattedName = coachAgent.formatCoachName(coachData.coachConfig?.coach_name);
+      console.info("Formatted coach name:", formattedName);
+
+      const formattedCoachData = {
+        name: formattedName,
+        specialization: coachAgent.getSpecializationDisplay(coachData.coachConfig?.technical_config?.specializations),
+        experienceLevel: coachAgent.getExperienceLevelDisplay(coachData.coachConfig?.technical_config?.experience_level),
+        programmingFocus: coachAgent.getProgrammingFocusDisplay(coachData.coachConfig?.technical_config?.programming_focus),
+        rawCoach: coachData // Keep the full coach object for any additional data needed
+      };
+
+      console.info("Final formatted coach data:", formattedCoachData);
+      this._updateState({ coach: formattedCoachData });
+      return formattedCoachData;
+    } catch (error) {
+      console.error("Error loading coach details:", error);
+      this._updateState({ error: "Failed to load coach details" });
+      if (typeof this.onError === 'function') {
+        this.onError(error);
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Load historical conversations for the coach
+   */
+  async loadHistoricalConversations(userId, coachId) {
+    if (!userId || !coachId) return;
+
+    this._updateState({ isLoadingHistory: true });
+
+    try {
+      console.info('Loading historical conversations for:', { userId, coachId });
+      const result = await getCoachConversations(userId, coachId);
+
+      // Sort by last activity (most recent first)
+      const sortedConversations = (result.conversations || [])
+        .sort((a, b) => {
+          const dateA = new Date(a.metadata?.lastActivity || a.createdAt || 0);
+          const dateB = new Date(b.metadata?.lastActivity || b.createdAt || 0);
+          return dateB - dateA; // Most recent first
+        });
+
+      this._updateState({
+        historicalConversations: sortedConversations,
+        isLoadingHistory: false
+      });
+
+      console.info('Historical conversations loaded:', sortedConversations);
+      return sortedConversations;
+    } catch (error) {
+      console.error('Error loading historical conversations:', error);
+      this._updateState({
+        historicalConversations: [],
+        isLoadingHistory: false
+      });
+      return [];
+    }
+  }
+
+  /**
+   * Creates a new coach conversation
+   */
+  async createConversation(userId, coachId, title = null) {
+    try {
+      this._updateState({ isLoading: true, error: null });
+
+      // Generate title if not provided
+      const conversationTitle = title || this.generateConversationTitle();
+
+      console.info("Creating new coach conversation:", { userId, coachId, title: conversationTitle });
+
+      // Create conversation via API
+      const result = await createCoachConversation(userId, coachId, conversationTitle);
+      const { conversationId, conversation } = result;
+
+      // Update agent state
+      this.userId = userId;
+      this.coachId = coachId;
+      this.conversationId = conversationId;
+
+      // Load coach details
+      await this.loadCoachDetails(userId, coachId);
+
+      // Set initial state
+      this._updateState({
+        conversation,
+        messages: [],
+        isLoading: false,
+      });
+
+      // Notify navigation handler
+      if (typeof this.onNavigation === 'function') {
+        this.onNavigation("conversation-created", { userId, coachId, conversationId });
+      }
+
+      return { userId, coachId, conversationId };
+    } catch (error) {
+      console.error("Error creating coach conversation:", error);
+      this._updateState({
+        isLoading: false,
+        error: "Failed to create coach conversation",
+      });
+      if (typeof this.onError === 'function') {
+        this.onError(error);
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Loads an existing conversation from the backend
+   */
+  async loadExistingConversation(userId, coachId, conversationId) {
+    if (!userId || !coachId || !conversationId) {
+      throw new Error("User ID, Coach ID, and Conversation ID are required");
+    }
+
+    try {
+      this._updateState({ isLoading: true, error: null });
+
+      console.info("Loading existing coach conversation:", { userId, coachId, conversationId });
+
+      // Load conversation and coach details in parallel
+      const [conversationData] = await Promise.all([
+        getCoachConversation(userId, coachId, conversationId),
+        this.loadCoachDetails(userId, coachId)
+      ]);
+
+      // Update agent state
+      this.userId = userId;
+      this.coachId = coachId;
+      this.conversationId = conversationId;
+
+      // Debug: Log the full API response structure
+      console.info("Full API response structure:", conversationData);
+      console.info("API response keys:", Object.keys(conversationData || {}));
+
+      // Extract the actual conversation data (API wraps it in a 'conversation' property)
+      const actualConversation = conversationData.conversation || conversationData;
+      const messagesArray = actualConversation.messages || [];
+
+      // Reconstruct conversation from message history
+      const conversationMessages = [];
+      let messageId = 1;
+
+      if (messagesArray && messagesArray.length > 0) {
+        // Sort messages by timestamp to ensure chronological order (oldest first)
+        const sortedMessages = [...messagesArray].sort((a, b) => {
+          const timeA = new Date(a.timestamp || 0).getTime();
+          const timeB = new Date(b.timestamp || 0).getTime();
+          return timeA - timeB;
+        });
+
+        sortedMessages.forEach((message) => {
+          // Ensure content is a string
+          let messageContent = message.content || '';
+          if (typeof messageContent !== 'string') {
+            console.warn("Message content is not a string, converting:", messageContent, typeof messageContent);
+            messageContent = String(messageContent || '');
+          }
+
+          conversationMessages.push({
+            id: messageId++,
+            type: message.role === 'user' ? 'user' : 'ai',
+            content: messageContent,
+            timestamp: message.timestamp || new Date().toISOString(),
+          });
+        });
+      }
+
+      // Debug: Log message loading info
+      console.info("Loaded conversation messages:", {
+        totalMessages: conversationMessages.length,
+        messagesFromAPI: messagesArray.length,
+        messageOrder: conversationMessages.map(msg => ({
+          type: msg.type,
+          timestamp: msg.timestamp,
+          preview: msg.content.substring(0, 50) + (msg.content.length > 50 ? '...' : '')
+        }))
+      });
+
+      // Update state with loaded messages
+      this._updateState({
+        conversation: actualConversation,
+        messages: conversationMessages,
+        isLoading: false,
+      });
+
+      return conversationData;
+    } catch (error) {
+      console.error("Error loading existing conversation:", error);
+      this._updateState({
+        isLoading: false,
+        error: "Failed to load existing conversation",
+      });
+
+      // Handle conversation not found
+      if (error.message === "Conversation not found") {
+        if (typeof this.onNavigation === 'function') {
+          this.onNavigation("conversation-not-found");
+        }
+      }
+
+      if (typeof this.onError === 'function') {
+        this.onError(error);
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Sends a user message and processes the AI response
+   */
+  async sendMessage(messageContent) {
+    if (
+      !messageContent.trim() ||
+      this.state.isLoading ||
+      !this.userId ||
+      !this.coachId ||
+      !this.conversationId
+    ) {
+      return;
+    }
+
+    try {
+      // Add user message
+      const userMessage = {
+        id: this._generateMessageId(),
+        type: "user",
+        content: messageContent.trim(),
+        timestamp: new Date().toISOString(),
+      };
+
+      this._addMessage(userMessage);
+      this._updateState({ isLoading: true, isTyping: true, error: null });
+
+      // Send to API
+      const result = await sendCoachConversationMessage(
+        this.userId,
+        this.coachId,
+        this.conversationId,
+        messageContent.trim()
+      );
+
+      // Extract AI response content from the message object
+      let aiResponseContent = "Thank you for your message."; // Default fallback
+
+      if (result.aiResponse && typeof result.aiResponse === 'object') {
+        // API returns aiResponse as a message object with content property
+        aiResponseContent = result.aiResponse.content || "Thank you for your message.";
+      } else if (typeof result.aiResponse === 'string') {
+        // Fallback if API returns string directly
+        aiResponseContent = result.aiResponse;
+      }
+
+      // Ensure content is a string
+      if (typeof aiResponseContent !== 'string') {
+        console.warn("AI response content is not a string, converting:", aiResponseContent, typeof aiResponseContent);
+        aiResponseContent = String(aiResponseContent || "Thank you for your message.");
+      }
+
+      const aiResponse = {
+        id: this._generateMessageId(),
+        type: "ai",
+        content: aiResponseContent,
+        timestamp: new Date().toISOString(),
+      };
+
+      this._addMessage(aiResponse);
+      this._updateState({
+        isLoading: false,
+        isTyping: false,
+        conversation: result.conversation || this.state.conversation
+      });
+
+      return result;
+    } catch (error) {
+      console.error("Error sending message:", error);
+
+      // Add error message
+      const errorResponse = {
+        id: this._generateMessageId(),
+        type: "ai",
+        content:
+          "I'm sorry, I encountered an error processing your message. Please try again.",
+        timestamp: new Date().toISOString(),
+      };
+
+      this._addMessage(errorResponse);
+      this._updateState({
+        isLoading: false,
+        isTyping: false,
+        error: "Failed to send message",
+      });
+
+      if (typeof this.onError === 'function') {
+        this.onError(error);
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Clears the conversation and resets to initial state
+   */
+  clearConversation() {
+    this._updateState({
+      messages: [],
+      isLoading: false,
+      isTyping: false,
+      error: null,
+      conversation: null,
+    });
+  }
+
+  /**
+   * Updates coach conversation metadata (title, tags, isActive)
+   */
+  async updateCoachConversation(userId, coachId, conversationId, metadata) {
+    if (!userId || !coachId || !conversationId || !metadata || Object.keys(metadata).length === 0) {
+      throw new Error("User ID, Coach ID, Conversation ID, and metadata are required");
+    }
+
+    try {
+      console.info("Updating conversation metadata:", { userId, coachId, conversationId, metadata });
+
+      // Call API to update metadata
+      const result = await updateCoachConversation(userId, coachId, conversationId, metadata);
+
+      // Update local state with new metadata
+      const updatedConversation = {
+        ...this.state.conversation,
+        ...(metadata.title && { title: metadata.title }),
+        metadata: {
+          ...this.state.conversation?.metadata,
+          ...(metadata.tags && { tags: metadata.tags }),
+          ...(metadata.isActive !== undefined && { isActive: metadata.isActive }),
+        }
+      };
+
+      this._updateState({
+        conversation: updatedConversation
+      });
+
+      // Refresh historical conversations to show updated metadata
+      if (this.state.historicalConversations.length > 0) {
+        await this.loadHistoricalConversations(userId, coachId);
+      }
+
+      console.info("Conversation metadata updated successfully");
+      return result;
+    } catch (error) {
+      console.error("Error updating conversation metadata:", error);
+      this._updateState({
+        error: "Failed to update conversation metadata"
+      });
+      if (typeof this.onError === 'function') {
+        this.onError(error);
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Gets the current state
+   */
+  getState() {
+    return { ...this.state };
+  }
+
+  /**
+   * Gets conversation info
+   */
+  getConversationInfo() {
+    return {
+      userId: this.userId,
+      coachId: this.coachId,
+      conversationId: this.conversationId,
+      isActive: !!(this.userId && this.coachId && this.conversationId),
+      coach: this.state.coach,
+      conversation: this.state.conversation,
+    };
+  }
+
+  /**
+   * Destroys the agent and cleans up
+   */
+  destroy() {
+    this.userId = null;
+    this.coachId = null;
+    this.conversationId = null;
+    this.state = null;
+    this.onStateChange = null;
+    this.onNavigation = null;
+    this.onError = null;
+  }
+}
+
+export default CoachConversationAgent;

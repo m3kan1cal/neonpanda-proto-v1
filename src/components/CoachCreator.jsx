@@ -1,10 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { nanoid } from 'nanoid';
 import { themeClasses } from '../utils/synthwaveThemeClasses';
-import { createCoachCreatorSession, updateCoachCreatorSession, getCoachCreatorSession } from '../utils/coachCreatorApi';
 import { NeonBorder } from './themes/SynthwaveComponents';
 import { parseMarkdown } from '../utils/markdownParser.jsx';
+import CoachCreatorAgent from '../utils/agents/CoachCreatorAgent';
 
 // Icons for human and AI messages
 const UserIcon = () => (
@@ -106,32 +105,75 @@ const TypingIndicator = () => (
   </div>
 );
 
-// Initial message constant to ensure consistency
-const INITIAL_MESSAGE = "Hi! I'm here to help you create your perfect AI fitness coach. This will take about 15-20 minutes, and I'll adapt the questions based on your experience level.\n\nWhat brings you here? Tell me about your main fitness goals.";
-
 function CoachCreator() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const userId = searchParams.get('userId');
   const coachCreatorSessionId = searchParams.get('coachCreatorSessionId');
 
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      type: 'ai',
-      content: INITIAL_MESSAGE,
-      timestamp: new Date().toISOString(),
-    }
-  ]);
-
+  // UI-specific state
   const [inputMessage, setInputMessage] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [showTips, setShowTips] = useState(false);
-  const [isRedirecting, setIsRedirecting] = useState(false);
   const [redirectCountdown, setRedirectCountdown] = useState(6);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
+  const agentRef = useRef(null);
+
+  // Agent state (managed by CoachCreatorAgent)
+  const [agentState, setAgentState] = useState({
+    messages: [],
+    isLoading: false,
+    isTyping: false,
+    isComplete: false,
+    isRedirecting: false,
+    error: null
+  });
+
+  // Initialize agent
+  useEffect(() => {
+    if (!agentRef.current) {
+      agentRef.current = new CoachCreatorAgent({
+        userId,
+        sessionId: coachCreatorSessionId,
+        onStateChange: (newState) => {
+          setAgentState(newState);
+        },
+        onNavigation: (type, data) => {
+          if (type === 'session-created') {
+            const newSearchParams = new URLSearchParams();
+            newSearchParams.set('userId', data.userId);
+            newSearchParams.set('coachCreatorSessionId', data.sessionId);
+            navigate(`/coach-creator?${newSearchParams.toString()}`, { replace: true });
+          } else if (type === 'session-expired') {
+            navigate('/coach-creator', { replace: true });
+          } else if (type === 'session-complete') {
+            setRedirectCountdown(6);
+            const countdownInterval = setInterval(() => {
+              setRedirectCountdown(prev => {
+                if (prev <= 1) {
+                  clearInterval(countdownInterval);
+                  navigate(`/coaches?userId=${data.userId}`);
+                  return 0;
+                }
+                return prev - 1;
+              });
+            }, 1000);
+          }
+        },
+        onError: (error) => {
+          console.error('Agent error:', error);
+          // Could show toast notification here
+        }
+      });
+    }
+
+    return () => {
+      if (agentRef.current) {
+        agentRef.current.destroy();
+        agentRef.current = null;
+      }
+    };
+  }, [userId, coachCreatorSessionId, navigate]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -159,7 +201,7 @@ function CoachCreator() {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, isTyping]);
+  }, [agentState.messages, agentState.isTyping]);
 
   // Focus input when chat interface is visible
   useEffect(() => {
@@ -176,113 +218,38 @@ function CoachCreator() {
     }
   }, [inputMessage]);
 
-  // Load existing session on component mount if URL parameters are present
+  // Load existing session when agent is ready and URL parameters are present
   useEffect(() => {
     const loadExistingSession = async () => {
-      if (userId && coachCreatorSessionId && messages.length === 1) {
+      if (userId && coachCreatorSessionId && agentRef.current && agentState.messages.length <= 1) {
         try {
-          console.info('Loading existing coach creator session:', coachCreatorSessionId);
-          const sessionData = await getCoachCreatorSession(userId, coachCreatorSessionId);
-
-          // Reconstruct conversation from questionHistory
-          const conversationMessages = [];
-          let messageId = 1;
-
-          // Process all items in questionHistory
-          if (sessionData.questionHistory && sessionData.questionHistory.length > 0) {
-            sessionData.questionHistory.forEach((historyItem) => {
-              // Add user response first if it exists (not empty)
-              if (historyItem.userResponse && historyItem.userResponse.trim() !== "") {
-                conversationMessages.push({
-                  id: messageId++,
-                  type: 'user',
-                  content: historyItem.userResponse,
-                  timestamp: historyItem.timestamp || new Date().toISOString(),
-                });
-              }
-
-              // Add AI question/response second
-              conversationMessages.push({
-                id: messageId++,
-                type: 'ai',
-                content: historyItem.aiResponse,
-                timestamp: historyItem.timestamp || new Date().toISOString(),
-              });
-            });
-          }
-
-          if (conversationMessages.length > 0) {
-            setMessages(conversationMessages);
-          }
-
+          await agentRef.current.loadExistingSession(userId, coachCreatorSessionId);
         } catch (error) {
-          console.error('Error loading existing session:', error);
-          // If session not found or expired, reset to initial state
-          if (error.message === 'Session not found or expired') {
-            // Clear URL parameters and show initial UI
-            navigate('/coach-creator', { replace: true });
-          }
+          // Error handling is managed by the agent via onError callback
         }
       }
     };
 
     loadExistingSession();
-  }, [userId, coachCreatorSessionId, navigate]);
+  }, [userId, coachCreatorSessionId, agentState.messages.length]);
 
-        const handleCreateCoach = async () => {
+  const handleCreateCoach = async () => {
+    if (!agentRef.current) return;
+
     try {
-      // Generate a userId using nanoid (21 characters) if not present
-      const tempUserId = userId || nanoid(21);
-
-      console.info('Creating new coach creator session for userId:', tempUserId);
-
-      // Create coach creator session using API service
-      const result = await createCoachCreatorSession(tempUserId);
-
-      // Extract the sessionId and initialMessage from the response
-      const { sessionId, initialMessage } = result;
-
-      // Set the initial AI message from the API response
-      setMessages([
-        {
-          id: 1,
-          type: 'ai',
-          content: initialMessage,
-          timestamp: new Date().toISOString(),
-        }
-      ]);
-
-      // Update URL with the sessionId and userId from the API response
-      const newSearchParams = new URLSearchParams();
-      newSearchParams.set('userId', tempUserId);
-      newSearchParams.set('coachCreatorSessionId', sessionId);
-
-      // Navigate to the same route with updated search params
-      navigate(`/coach-creator?${newSearchParams.toString()}`, { replace: true });
-
+      await agentRef.current.createSession(userId);
     } catch (error) {
-      console.error('Error creating coach creator session:', error);
-      // You might want to show an error message to the user here
+      // Error handling is managed by the agent via onError callback
     }
   };
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
 
-    if (!inputMessage.trim() || isLoading || !userId || !coachCreatorSessionId) return;
+    if (!inputMessage.trim() || agentState.isLoading || !agentRef.current) return;
 
-    const userMessage = {
-      id: Date.now(),
-      type: 'user',
-      content: inputMessage.trim(),
-      timestamp: new Date().toISOString(),
-    };
-
-    const userResponseText = inputMessage.trim();
-    setMessages(prev => [...prev, userMessage]);
+    const messageContent = inputMessage.trim();
     setInputMessage('');
-    setIsLoading(true);
-    setIsTyping(true);
 
     // Refocus input and reset size after clearing it
     setTimeout(() => {
@@ -292,81 +259,17 @@ function CoachCreator() {
       }
     }, 100);
 
-        try {
-      // Update coach creator session using API service
-      const result = await updateCoachCreatorSession(userId, coachCreatorSessionId, userResponseText);
-
-      // Combine aiResponse and nextQuestion for the complete AI message
-      let aiResponseContent = result.aiResponse || "Thank you for your response.";
-
-      // Add the next question if available and session is not complete
-      if (!result.isComplete && result.nextQuestion) {
-        aiResponseContent += `\n\n${result.nextQuestion}`;
-      }
-
-      const aiResponse = {
-        id: Date.now() + 1,
-        type: 'ai',
-        content: aiResponseContent,
-        timestamp: new Date().toISOString(),
-      };
-
-      setMessages(prev => [...prev, aiResponse]);
-      setIsTyping(false);
-      setIsLoading(false);
-
-            // Redirect to coaches page when coach creation is complete
-      if (result.isComplete) {
-        // Store in-progress coach info in localStorage
-        const inProgressData = {
-          timestamp: Date.now(),
-          sessionId: coachCreatorSessionId,
-          status: 'generating'
-        };
-        localStorage.setItem(`inProgress_${userId}`, JSON.stringify(inProgressData));
-
-        setIsRedirecting(true);
-        setRedirectCountdown(6);
-
-        // Start countdown timer
-        const countdownInterval = setInterval(() => {
-          setRedirectCountdown(prev => {
-            if (prev <= 1) {
-              clearInterval(countdownInterval);
-              navigate(`/coaches?userId=${userId}`);
-              return 0;
-            }
-            return prev - 1;
-          });
-        }, 1000);
-      }
-
+    try {
+      await agentRef.current.sendMessage(messageContent);
     } catch (error) {
-      console.error('Error sending message:', error);
-
-      // Show error message to user
-      const errorResponse = {
-        id: Date.now() + 1,
-        type: 'ai',
-        content: "I'm sorry, I encountered an error processing your response. Please try again.",
-        timestamp: new Date().toISOString(),
-      };
-
-      setMessages(prev => [...prev, errorResponse]);
-      setIsTyping(false);
-      setIsLoading(false);
+      // Error handling is managed by the agent via onError callback
     }
   };
 
   const clearConversation = () => {
-    setMessages([
-      {
-        id: 1,
-        type: 'ai',
-        content: INITIAL_MESSAGE,
-        timestamp: new Date().toISOString(),
-      }
-    ]);
+    if (!agentRef.current) return;
+
+    agentRef.current.clearConversation();
 
     // Focus input and reset size after clearing conversation
     setTimeout(() => {
@@ -390,9 +293,9 @@ function CoachCreator() {
 
   // Show initial coach creator UI if no userId or sessionId
   if (!userId || !coachCreatorSessionId) {
-    return (
-      <div className={`${themeClasses.container} pt-20 min-h-screen`}>
-        <div className="max-w-7xl mx-auto px-8 py-12">
+      return (
+    <div className={`${themeClasses.container} min-h-screen`}>
+      <div className="max-w-7xl mx-auto px-8 py-12">
           {/* Header */}
           <div className="text-center mb-16">
                         <h1 className="font-russo font-black text-4xl md:text-5xl text-white mb-6 uppercase">
@@ -469,7 +372,7 @@ function CoachCreator() {
   // Original chat interface when userId and sessionId are present
   return (
     <>
-      <div className={`${themeClasses.container} pt-20 min-h-screen pb-8`}>
+      <div className={`${themeClasses.container} min-h-screen pb-8`}>
         <div className="max-w-7xl mx-auto px-8 py-12 min-h-[calc(100vh-5rem)] flex flex-col">
           {/* Header */}
           <div className="text-center mb-12">
@@ -489,7 +392,7 @@ function CoachCreator() {
               <NeonBorder color="cyan" className="bg-synthwave-bg-card/50 h-full flex flex-col overflow-hidden">
                 {/* Messages Area */}
                 <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
-                  {messages.map((message) => (
+                  {agentState.messages.map((message) => (
                     <div
                       key={message.id}
                       className={`flex items-start space-x-3 ${
@@ -512,7 +415,7 @@ function CoachCreator() {
                             ? 'bg-synthwave-neon-pink/10 border border-synthwave-neon-pink/30 text-synthwave-text-primary'
                             : 'bg-synthwave-neon-cyan/10 border border-synthwave-neon-cyan/30 text-synthwave-text-primary'
                         }`}>
-                          <div className="font-rajdhani text-base leading-relaxed">
+                          <div className="font-rajdhani text-base leading-normal">
                             {message.type === 'user' ? (
                               <span className="whitespace-pre-wrap">{message.content}</span>
                             ) : (
@@ -528,7 +431,7 @@ function CoachCreator() {
                   ))}
 
                   {/* Typing Indicator */}
-                  {isTyping && (
+                  {agentState.isTyping && (
                     <div className="flex items-start space-x-3">
                       <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan border border-synthwave-neon-cyan/50">
                         <AIIcon />
@@ -543,7 +446,7 @@ function CoachCreator() {
 
                 {/* Input Area or Redirect Countdown */}
                 <div className="border-t border-synthwave-neon-cyan/30 p-6">
-                  {isRedirecting ? (
+                  {agentState.isRedirecting ? (
                     /* Redirect Countdown Display */
                     <div className="text-center space-y-4">
                       <div className="flex items-center justify-center space-x-3">
@@ -606,11 +509,11 @@ function CoachCreator() {
 
                           <button
                             type="submit"
-                            disabled={!inputMessage.trim() || isLoading}
+                            disabled={!inputMessage.trim() || agentState.isLoading}
                             className={`${themeClasses.cyanButton} p-3 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 min-w-[3rem] flex items-center justify-center`}
                             title="Send message"
                           >
-                            {isLoading ? (
+                            {agentState.isLoading ? (
                               <div className="w-4 h-4 border-2 border-synthwave-neon-cyan border-t-transparent rounded-full animate-spin"></div>
                             ) : (
                               <SendIcon />
@@ -723,10 +626,6 @@ function CoachCreator() {
       </div>
 
       <style jsx global>{`
-        html, body {
-          min-height: 100%;
-          background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
-        }
         .custom-scrollbar::-webkit-scrollbar {
           width: 6px;
         }

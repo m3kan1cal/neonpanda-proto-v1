@@ -1,0 +1,150 @@
+import { getApiUrl } from './apiConfig';
+
+/**
+ * API service for Coach Conversation operations
+ */
+
+/**
+ * Creates a new coach conversation
+ * @param {string} userId - The user ID
+ * @param {string} coachId - The coach ID
+ * @param {string} title - The conversation title
+ * @returns {Promise<Object>} - The API response with conversation details
+ */
+export const createCoachConversation = async (userId, coachId, title) => {
+  const response = await fetch(`${getApiUrl('')}/users/${userId}/coaches/${coachId}/conversations`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      title
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`API Error: ${response.status}`);
+  }
+
+  const result = await response.json();
+  console.info('Coach conversation created:', result);
+
+  return result;
+};
+
+/**
+ * Gets a specific coach conversation
+ * @param {string} userId - The user ID
+ * @param {string} coachId - The coach ID
+ * @param {string} conversationId - The conversation ID
+ * @returns {Promise<Object>} - The conversation data with message history
+ */
+export const getCoachConversation = async (userId, coachId, conversationId) => {
+  const response = await fetch(`${getApiUrl('')}/users/${userId}/coaches/${coachId}/conversations/${conversationId}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      throw new Error('Conversation not found');
+    }
+    throw new Error(`API Error: ${response.status}`);
+  }
+
+  const result = await response.json();
+  console.info('Coach conversation loaded:', result);
+
+  return result;
+};
+
+/**
+ * Sends a message to a coach conversation
+ * @param {string} userId - The user ID
+ * @param {string} coachId - The coach ID
+ * @param {string} conversationId - The conversation ID
+ * @param {string} userResponse - The user's message/response
+ * @returns {Promise<Object>} - The API response with user message and coach reply
+ */
+export const sendCoachConversationMessage = async (userId, coachId, conversationId, userResponse) => {
+  const response = await fetch(`${getApiUrl('')}/users/${userId}/coaches/${coachId}/conversations/${conversationId}/send-message`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      userResponse
+    }),
+  });
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      throw new Error('Conversation not found');
+    }
+    throw new Error(`API Error: ${response.status}`);
+  }
+
+  const result = await response.json();
+  console.info('Coach conversation message sent:', result);
+
+  return result;
+};
+
+/**
+ * Updates coach conversation metadata (title, tags, isActive)
+ * @param {string} userId - The user ID
+ * @param {string} coachId - The coach ID
+ * @param {string} conversationId - The conversation ID
+ * @param {Object} metadata - The metadata to update
+ * @param {string} [metadata.title] - The conversation title
+ * @param {string[]} [metadata.tags] - The conversation tags
+ * @param {boolean} [metadata.isActive] - Whether the conversation is active
+ * @returns {Promise<Object>} - The API response with updated conversation
+ */
+export const updateCoachConversation = async (userId, coachId, conversationId, metadata) => {
+  const response = await fetch(`${getApiUrl('')}/users/${userId}/coaches/${coachId}/conversations/${conversationId}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(metadata),
+  });
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      throw new Error('Conversation not found');
+    }
+    throw new Error(`API Error: ${response.status}`);
+  }
+
+  const result = await response.json();
+  console.info('Coach conversation metadata updated:', result);
+
+  return result;
+};
+
+/**
+ * Gets all coach conversations for a specific user and coach
+ * @param {string} userId - The user ID
+ * @param {string} coachId - The coach ID
+ * @returns {Promise<Object>} - The API response with conversations array
+ */
+export const getCoachConversations = async (userId, coachId) => {
+  const response = await fetch(`${getApiUrl('')}/users/${userId}/coaches/${coachId}/conversations`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`API Error: ${response.status}`);
+  }
+
+  const result = await response.json();
+  console.info('Coach conversations loaded:', result);
+
+  return result;
+};

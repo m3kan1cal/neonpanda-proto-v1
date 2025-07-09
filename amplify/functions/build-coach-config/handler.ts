@@ -1,7 +1,7 @@
 import { Context, Handler } from 'aws-lambda';
 import { createSuccessResponse, createErrorResponse } from '../libs/api-helpers';
 import { generateCoachConfig } from '../libs/coach-creator/coach-generation';
-import { saveCoachConfig, loadCoachCreatorSession, saveCoachCreatorSession } from '../../dynamodb/operations';
+import { saveCoachConfig, getCoachCreatorSession, saveCoachCreatorSession } from '../../dynamodb/operations';
 
 // Interface for the event payload
 interface CoachConfigEvent {
@@ -21,7 +21,7 @@ export const handler: Handler<CoachConfigEvent> = async (event: CoachConfigEvent
     }
 
     // Load the completed session
-    session = await loadCoachCreatorSession(userId, sessionId);
+    session = await getCoachCreatorSession(userId, sessionId);
     if (!session) {
       throw new Error('Session not found or expired');
     }
