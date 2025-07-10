@@ -248,6 +248,9 @@ function TrainingGrounds() {
           {workoutState.recentWorkouts.map((workout) => (
             <div
               key={workout.workoutId}
+              onClick={() => {
+                navigate(`/training-grounds/workouts?userId=${userId}&workoutId=${workout.workoutId}&coachId=${coachId}`);
+              }}
               className="bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/20 hover:border-synthwave-neon-pink/40 hover:bg-synthwave-bg-primary/50 rounded-lg p-3 cursor-pointer transition-all duration-200"
             >
               <div className="flex items-center justify-between">

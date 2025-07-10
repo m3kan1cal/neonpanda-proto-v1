@@ -665,6 +665,9 @@ function CoachConversations() {
           {workoutState.recentWorkouts.map((workout) => (
             <div
               key={workout.workoutId}
+              onClick={() => {
+                navigate(`/training-grounds/workouts?userId=${userId}&workoutId=${workout.workoutId}&coachId=${coachId}`);
+              }}
               className="bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/20 hover:border-synthwave-neon-pink/40 hover:bg-synthwave-bg-primary/50 rounded-lg p-3 cursor-pointer transition-all duration-200"
             >
               <div className="flex items-center justify-between">
@@ -846,7 +849,7 @@ function CoachConversations() {
 
         {/* Main Content Area */}
         <div className="flex-1 flex justify-center">
-          <div className="w-full max-w-4xl">
+          <div className="w-full max-w-7xl">
             <NeonBorder color="cyan" className="bg-synthwave-bg-card/50 h-full flex flex-col overflow-hidden">
               {/* Messages Area */}
               <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">

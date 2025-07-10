@@ -24,17 +24,17 @@ This document outlines the implementation approach for natural language workout 
 - Natural fit with conversation-based logging
 
 ### Entity Separation
-- **Workout**: Prescribed workouts (future feature)
-- **WorkoutSession**: Completed workouts (current implementation)
+- **Workout Template**: Prescribed workouts (future feature)
+- **Workout**: Completed workouts (current implementation)
 
 ---
 
 ## Simplified Implementation Approach
 
-### Initial WorkoutSession Structure
+### Initial Workout Structure
 
 ```typescript
-interface WorkoutSession {
+interface Workout {
   workoutId: string;
   userId: string;
 
@@ -58,7 +58,7 @@ interface WorkoutSession {
 ### DynamoDB Structure
 
 ```
-// Workout Sessions (completed workouts)
+// Workouts (completed workouts)
 PK: user#{userId}
 SK: workout#{workoutId}
 GSI1PK: coach#{coachId}  // For any coach in the coachIds array
@@ -159,7 +159,7 @@ export const handler = async (event: any) => {
   // Parse and structure
   const workoutData = parseAndValidateWorkoutData(extractedData);
 
-  // Create workout session
+  // Create workout
   const workout = {
     workoutId: `ws_${userId}_${Date.now()}`,
     userId,
@@ -175,7 +175,7 @@ export const handler = async (event: any) => {
   };
 
   // Save to DynamoDB
-  await saveWorkoutSession(workout);
+  await saveWorkout(workout);
 
   // For future: This is where you'd add to Pinecone for semantic search
   // await addWorkoutToPinecone(userId, workout);
@@ -210,8 +210,8 @@ const triggerAsyncWorkoutExtraction = async (extractionData: any) => {
 Add to `amplify/dynamodb/operations.ts`:
 
 ```typescript
-export async function saveWorkoutSession(workout: WorkoutSession): Promise<void> {
-  const item = createDynamoDBItem<WorkoutSession>(
+export async function saveWorkout(workout: Workout): Promise<void> {
+  const item = createDynamoDBItem<Workout>(
     'workout',
     `user#${workout.userId}`,
     `workout#${workout.workoutId}`,
@@ -222,10 +222,10 @@ export async function saveWorkoutSession(workout: WorkoutSession): Promise<void>
   await saveToDynamoDB(item);
 }
 
-export async function getWorkoutSession(
+export async function getWorkout(
   userId: string,
   workoutId: string
-): Promise<DynamoDBItem<WorkoutSession> | null> {
+): Promise<DynamoDBItem<Workout> | null> {
   const tableName = process.env.DYNAMODB_TABLE_NAME;
 
   if (!tableName) {
@@ -247,17 +247,17 @@ export async function getWorkoutSession(
       return null;
     }
 
-    return deserializeFromDynamoDB(result.Item) as DynamoDBItem<WorkoutSession>;
+    return deserializeFromDynamoDB(result.Item) as DynamoDBItem<Workout>;
   } catch (error) {
-    console.error('Error loading workout session:', error);
+    console.error('Error loading workout:', error);
     throw error;
   }
 }
 
-export async function getRecentWorkoutSessions(
+export async function getRecentWorkouts(
   userId: string,
   limit: number = 10
-): Promise<DynamoDBItem<WorkoutSession>[]> {
+): Promise<DynamoDBItem<Workout>[]> {
   const tableName = process.env.DYNAMODB_TABLE_NAME;
 
   if (!tableName) {
@@ -283,20 +283,20 @@ export async function getRecentWorkoutSessions(
     }
 
     return result.Items.map(item =>
-      deserializeFromDynamoDB(item) as DynamoDBItem<WorkoutSession>
+      deserializeFromDynamoDB(item) as DynamoDBItem<Workout>
     );
   } catch (error) {
-    console.error('Error loading recent workout sessions:', error);
+    console.error('Error loading recent workouts:', error);
     throw error;
   }
 }
 
-export async function getWorkoutSessionsByCoach(
+export async function getWorkoutsByCoach(
   userId: string,
   coachId: string,
   limit: number = 20
-): Promise<DynamoDBItem<WorkoutSession>[]> {
-  // Implementation for coach-specific workout sessions
+): Promise<DynamoDBItem<Workout>[]> {
+  // Implementation for coach-specific workouts
   // Will need to filter by coachIds array containing the coachId
   // May require a scan operation or additional GSI structure
 }
@@ -307,7 +307,7 @@ export async function getWorkoutSessionsByCoach(
 Add to `amplify/functions/libs/coach-creator/types.ts`:
 
 ```typescript
-export interface WorkoutSession {
+export interface Workout {
   workoutId: string;
   userId: string;
   coachIds: string[];
@@ -349,7 +349,7 @@ export interface UniversalWorkoutSchema {
 
 ## Lambda Functions to Create
 
-### 1. Extract Workout Session Function
+### 1. Extract Workout Function
 
 ```
 amplify/functions/extract-workout/
@@ -358,7 +358,7 @@ amplify/functions/extract-workout/
 └── extraction-helpers.ts
 ```
 
-### 2. Get Workout Sessions Function
+### 2. Get Workouts Function
 
 ```
 amplify/functions/get-workouts/
@@ -366,7 +366,7 @@ amplify/functions/get-workouts/
 └── resource.ts
 ```
 
-### 3. Update Workout Session Function
+### 3. Update Workout Function
 
 ```
 amplify/functions/update-workout/
@@ -381,25 +381,25 @@ amplify/functions/update-workout/
 Add to `amplify/api/routes.ts`:
 
 ```typescript
-// Get workout sessions for user
+// Get workouts for user
 httpApi.addRoutes({
   path: '/users/{userId}/workouts',
   methods: [apigatewayv2.HttpMethod.GET],
-  integration: integrations.getWorkoutSessions
+  integration: integrations.getWorkouts
 });
 
-// Get specific workout session
+// Get specific workout
 httpApi.addRoutes({
   path: '/users/{userId}/workouts/{workoutId}',
   methods: [apigatewayv2.HttpMethod.GET],
-  integration: integrations.getWorkoutSession
+  integration: integrations.getWorkout
 });
 
-// Update workout session
+// Update workout
 httpApi.addRoutes({
   path: '/users/{userId}/workouts/{workoutId}',
   methods: [apigatewayv2.HttpMethod.PUT],
-  integration: integrations.updateWorkoutSession
+  integration: integrations.updateWorkout
 });
 ```
 
@@ -410,23 +410,23 @@ httpApi.addRoutes({
 ### Phase 1: Core Detection and Extraction
 1. COMPLETED **Add workout detection patterns** to `send-coach-conversation-message/handler.ts`
 2. COMPLETED **Create the async extraction Lambda** function (`extract-workout`)
-3. COMPLETED **Add WorkoutSession types** to existing types file
-4. COMPLETED **Update DynamoDB operations** with workout session methods
+3. COMPLETED **Add Workout types** to existing types file
+4. COMPLETED **Update DynamoDB operations** with workout methods
 5. COMPLETED **Build the workout extraction prompt** using Universal Workout Schema
 6. COMPLETED **Validate usage of the universal schema** in how we've implemented in the build prompt
 7. COMPLETED **Turn on the extraction** so that we're actually trying to extract and create workout sessions
 
 ### Phase 2: Basic UI Integration
 8. COMPLETED **Add slash/ method** for explicitly logging workouts in chat
-9. COMPLETED **Add workout session API routes** to the API Gateway
-10. COMPLETED **Add workout session Lambda** handlers to the backend and integrations
-11. COMPLETED **Create frontend workout session API calls** in `src/utils/apis/`
+9. COMPLETED **Add workout API routes** to the API Gateway
+10. COMPLETED **Add workout Lambda** handlers to the backend and integrations
+11. COMPLETED **Create frontend workout API calls** in `src/utils/apis/`
 12. COMPLETED **Update coach conversation agent** to handle workout logging responses
 13. **Add workout display** in workout UI, possibly separate UI similar to CoachConversation
 14. COMPLETED **Show recent workouts** display in the training grounds and maybe in the coach conversation
 
 ### Phase 3: Advanced Features
-15. **Implement workout session editing** UI
+15. **Implement workout editing** UI
 16. **Add confidence score display** for extracted data
 17. COMPLETED **Create workout history view** for users
 18. **Add workout context** to coach system prompts

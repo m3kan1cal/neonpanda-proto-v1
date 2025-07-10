@@ -138,7 +138,7 @@ export class WorkoutAgent {
       return;
     }
 
-    this._updateState({ isLoading: true });
+    this._updateState({ isLoadingRecent: true });
 
     try {
       const result = await getWorkouts(this.userId, {
@@ -154,7 +154,7 @@ export class WorkoutAgent {
 
       this._updateState({
         recentWorkouts: workouts,
-        isLoading: false,
+        isLoadingRecent: false,
         error: null,
         lastCheckTime: new Date()
       });
@@ -162,7 +162,7 @@ export class WorkoutAgent {
     } catch (error) {
       console.error('WorkoutAgent.loadRecentWorkouts: Error loading workouts:', error);
       this._updateState({
-        isLoading: false,
+        isLoadingRecent: false,
         error: error.message || 'Failed to load workouts'
       });
     }
@@ -217,6 +217,13 @@ export class WorkoutAgent {
       this.onError(error);
       return null;
     }
+  }
+
+  /**
+   * Alias for getWorkoutById for consistency
+   */
+  async getWorkout(workoutId) {
+    return this.getWorkoutById(workoutId);
   }
 
   /**
