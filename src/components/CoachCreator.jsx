@@ -119,6 +119,9 @@ function CoachCreator() {
   const inputRef = useRef(null);
   const agentRef = useRef(null);
 
+  // Add flag to prevent double execution from React StrictMode
+  const isSendingMessage = useRef(false);
+
   // Agent state (managed by CoachCreatorAgent)
   const [agentState, setAgentState] = useState({
     messages: [],
@@ -246,8 +249,10 @@ function CoachCreator() {
   const handleSendMessage = async (e) => {
     e.preventDefault();
 
-    if (!inputMessage.trim() || agentState.isLoading || !agentRef.current) return;
+    // Prevent double execution from React StrictMode
+    if (isSendingMessage.current || !inputMessage.trim() || agentState.isLoading || !agentRef.current) return;
 
+    isSendingMessage.current = true;
     const messageContent = inputMessage.trim();
     setInputMessage('');
 
@@ -263,6 +268,9 @@ function CoachCreator() {
       await agentRef.current.sendMessage(messageContent);
     } catch (error) {
       // Error handling is managed by the agent via onError callback
+    } finally {
+      // Reset flag after message is sent (success or failure)
+      isSendingMessage.current = false;
     }
   };
 

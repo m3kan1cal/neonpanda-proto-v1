@@ -426,11 +426,15 @@ httpApi.addRoutes({
 14. COMPLETED **Show recent workouts** display in the training grounds and maybe in the coach conversation
 
 ### Phase 3: Advanced Features
-15. **Implement workout editing** UI
-16. **Add confidence score display** for extracted data
+15. IN FUTURE **Implement workout editing** UI and make human friendly view
+16. COMPLETED **Add confidence score display** for extracted data
 17. COMPLETED **Create workout history view** for users
 18. **Add workout context** to coach system prompts
-Maybe summarize workouts and put in Pinecone for semantic searching?
+
+Maybe analyze weekly workouts and provide insights for a week-ending report?
+Maybe summarize workouts and put in Pinecone for semantic searching to have memory of workouts for future?
+Maybe summarize weekly coach conversations, workouts, coaching feedback and put in Pinecone so coach has memory of previous week workouts?
+Allow deleting workouts?
 
 ### Phase 4: Testing and Refinement
 19. **Test with simple workout logging** ("I did Fran in 8:57")

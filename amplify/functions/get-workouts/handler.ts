@@ -109,6 +109,8 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
       conversationId: session.attributes.conversationId,
       confidence: session.attributes.extractionMetadata.confidence,
       extractedAt: session.attributes.extractionMetadata.extractedAt,
+      // NEW: AI-generated summary for display and coach context
+      summary: session.attributes.summary,
       // Include key performance metrics for quick overview
       performanceMetrics: {
         intensity: session.attributes.workoutData.performance_metrics?.intensity,

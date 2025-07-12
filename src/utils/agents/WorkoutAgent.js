@@ -303,26 +303,31 @@ export class WorkoutAgent {
   }
 
   /**
-   * Formats workout data for display
+   * Formats workout for display - returns title for lists, summary for detailed views
    */
-  formatWorkoutSummary(workout) {
+  formatWorkoutSummary(workout, useTitle = false) {
     if (!workout) return 'Unknown workout';
 
-    // API returns workout data directly on the object, not nested under workoutData
-    const workoutName = workout.workoutName || 'Workout';
-    const discipline = workout.discipline || '';
-    const duration = workout.duration ? `${workout.duration}min` : '';
+    // If explicitly requesting title format, or if no AI summary available, use concise format
+    if (useTitle || !workout.summary) {
+      const workoutName = workout.workoutName || 'Workout';
+      const discipline = workout.discipline || '';
+      const duration = workout.duration ? `${Math.round(workout.duration)}min` : '';
 
-    // Create a concise summary
-    let summary = workoutName;
-    if (discipline) {
-      summary += ` (${discipline})`;
-    }
-    if (duration) {
-      summary += ` • ${duration}`;
+      // Create a concise title
+      let title = workoutName;
+      if (discipline) {
+        title += ` (${discipline})`;
+      }
+      if (duration) {
+        title += ` • ${duration}`;
+      }
+
+      return title;
     }
 
-    return summary;
+    // Return AI-generated summary for detailed contexts
+    return workout.summary;
   }
 
   /**

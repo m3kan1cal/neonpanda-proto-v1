@@ -24,6 +24,8 @@ export interface Workout {
     reviewedBy?: string;
     reviewedAt?: Date;
   };
+  // NEW: AI-generated summary for coach context and UI display
+  summary?: string;
 }
 
 /**

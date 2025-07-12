@@ -325,7 +325,10 @@ export const storeDebugDataInS3 = async (
   try {
     const bucketName = 'midgard-sandbox-logs';
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const key = `${prefix}/workout-extraction/${timestamp}_${metadata.userId || 'unknown'}_${metadata.type || 'raw-response'}.json`;
+
+    // Determine the folder based on the type of debug data
+    const folder = metadata.type === 'coach-conversation-prompt' ? 'coach-conversation' : 'workout-extraction';
+    const key = `${prefix}/${folder}/${timestamp}_${metadata.userId || 'unknown'}_${metadata.type || 'raw-response'}.json`;
 
     const debugData = {
       timestamp: new Date().toISOString(),

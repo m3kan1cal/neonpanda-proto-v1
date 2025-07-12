@@ -231,6 +231,9 @@ function CoachConversations() {
   const [showSlashCommandTooltip, setShowSlashCommandTooltip] = useState(false);
   const [isInputFocused, setIsInputFocused] = useState(false);
 
+  // Add flag to prevent double execution from React StrictMode
+  const isSendingMessage = useRef(false);
+
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
   const agentRef = useRef(null);
@@ -376,8 +379,8 @@ function CoachConversations() {
 
       workoutAgentRef.current.onNewWorkout = (workout) => {
         // Show toast notification for new workout
-        const summary = workoutAgentRef.current.formatWorkoutSummary(workout);
-        showToast(`Workout logged: ${summary}`, 'success');
+        const title = workoutAgentRef.current.formatWorkoutSummary(workout, true);
+        showToast(`Workout logged: ${title}`, 'success');
       };
     }
 
@@ -461,8 +464,11 @@ function CoachConversations() {
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (!inputMessage.trim() || !agentRef.current) return;
 
+    // Prevent double execution from React StrictMode
+    if (isSendingMessage.current || !inputMessage.trim() || !agentRef.current) return;
+
+    isSendingMessage.current = true;
     const messageToSend = inputMessage.trim();
     setInputMessage('');
 
@@ -478,6 +484,9 @@ function CoachConversations() {
       await agentRef.current.sendMessage(messageToSend);
     } catch (error) {
       console.error('Error sending message:', error);
+    } finally {
+      // Reset flag after message is sent (success or failure)
+      isSendingMessage.current = false;
     }
   };
 
@@ -682,7 +691,7 @@ function CoachConversations() {
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
                   <div className="font-rajdhani text-sm text-white font-medium truncate">
-                    {workoutAgentRef.current?.formatWorkoutSummary(workout) || 'Workout'}
+                    {workoutAgentRef.current?.formatWorkoutSummary(workout, true) || 'Workout'}
                   </div>
                   <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1 flex items-center space-x-2">
                     <span>{workoutAgentRef.current?.formatWorkoutTime(workout.completedAt) || 'Unknown time'}</span>

@@ -19,6 +19,12 @@ export interface PromptGenerationOptions {
     previousSessions?: number;
   };
   additionalConstraints?: string[];
+  workoutContext?: {
+    completedAt: Date;
+    summary?: string;
+    discipline?: string;
+    workoutName?: string;
+  }[];
 }
 
 /**
@@ -72,7 +78,8 @@ export const generateSystemPrompt = (
     includeUserContext = true,
     includeDetailedBackground = true,
     conversationContext,
-    additionalConstraints = []
+    additionalConstraints = [],
+    workoutContext = []
   } = options;
 
   // Extract config data - handle both DynamoDB item and direct config
@@ -214,18 +221,24 @@ ${configData.technical_config.preferred_intensity}`);
     }
   }
 
-  // 7. Conversation Guidelines (if enabled)
+  // 7. Recent Workout Context (if available)
+  if (workoutContext.length > 0) {
+    const workoutContextSection = generateWorkoutContext(workoutContext);
+    promptSections.push(workoutContextSection);
+  }
+
+  // 8. Conversation Guidelines (if enabled)
   if (includeConversationGuidelines) {
     promptSections.push(generateConversationGuidelines(configData));
   }
 
-  // 7. Additional Constraints (if any)
+  // 9. Additional Constraints (if any)
   if (additionalConstraints.length > 0) {
     promptSections.push(`# ADDITIONAL CONSTRAINTS
 ${additionalConstraints.map(constraint => `- ${constraint}`).join('\n')}`);
   }
 
-  // 8. Coach Adaptation Capabilities
+  // 10. Coach Adaptation Capabilities
   if (configData.modification_capabilities) {
     promptSections.push(`# COACH ADAPTATION CAPABILITIES
 Your ability to adapt and modify approaches:
@@ -239,7 +252,7 @@ You can adjust: ${configData.modification_capabilities.enabled_modifications?.jo
 Use these capabilities to better serve the athlete while maintaining your core coaching identity.`);
   }
 
-  // 9. Final Instructions
+  // 11. Final Instructions
   promptSections.push(`# FINAL INSTRUCTIONS
 You are now ready to coach this athlete. Remember:
 - Stay true to your personality: ${configData.selected_personality.primary_template}
@@ -304,6 +317,62 @@ ${sessionInfo.join('. ')}.`);
   }
 
   return sections.length > 0 ? `# USER CONTEXT\n${sections.join('\n\n')}` : null;
+};
+
+/**
+ * Generates recent workout context for the system prompt
+ */
+const generateWorkoutContext = (workoutContext: NonNullable<PromptGenerationOptions['workoutContext']>): string => {
+  if (!workoutContext || workoutContext.length === 0) {
+    return '';
+  }
+
+  const workoutSummaries = workoutContext.map((workout, index) => {
+    const timeAgo = formatTimeAgo(workout.completedAt);
+    const workoutName = workout.workoutName || 'Workout';
+    const discipline = workout.discipline || '';
+    const summary = workout.summary || `${workoutName}${discipline ? ` (${discipline})` : ''}`;
+
+    return `${index + 1}. ${timeAgo}: ${summary}`;
+  }).join('\n');
+
+  return `# RECENT WORKOUT CONTEXT
+Here are the athlete's recent workout sessions (most recent first):
+
+${workoutSummaries}
+
+Use this context to:
+- Reference recent training when relevant to current conversation
+- Identify patterns in their training approach
+- Build on their recent achievements and progress
+- Provide contextually relevant programming advice
+- Acknowledge their consistency and effort when appropriate
+
+DO NOT explicitly list out their workouts unless directly asked. Use this context naturally to enhance your coaching responses.`;
+};
+
+/**
+ * Helper function to format time ago for workout context
+ */
+const formatTimeAgo = (date: Date): string => {
+  const now = new Date();
+  const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+
+  if (diffInMinutes < 60) {
+    return `${diffInMinutes}m ago`;
+  } else if (diffInMinutes < 1440) { // 24 hours
+    const hours = Math.floor(diffInMinutes / 60);
+    return `${hours}h ago`;
+  } else {
+    const days = Math.floor(diffInMinutes / 1440);
+    if (days === 1) return 'Yesterday';
+    if (days < 7) return `${days}d ago`;
+    if (days < 30) {
+      const weeks = Math.floor(days / 7);
+      return `${weeks}w ago`;
+    }
+    return `${Math.floor(days / 30)}mo ago`;
+  }
 };
 
 /**

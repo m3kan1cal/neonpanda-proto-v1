@@ -1,6 +1,6 @@
 import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
-import { createSuccessResponse, createErrorResponse, callBedrockApi, MODEL_IDS, invokeAsyncLambda } from '../libs/api-helpers';
-import { getCoachConversation, sendCoachConversationMessage, getCoachConfig } from '../../dynamodb/operations';
+import { createSuccessResponse, createErrorResponse, callBedrockApi, MODEL_IDS, invokeAsyncLambda, storeDebugDataInS3 } from '../libs/api-helpers';
+import { getCoachConversation, sendCoachConversationMessage, getCoachConfig, queryWorkouts } from '../../dynamodb/operations';
 import { CoachMessage } from '../libs/coach-conversation/types';
 import { generateSystemPrompt, validateCoachConfig, generateSystemPromptPreview } from '../libs/coach-conversation/prompt-generation';
 import { detectWorkoutLogging, parseSlashCommand, isWorkoutSlashCommand, generateWorkoutDetectionContext, WORKOUT_SLASH_COMMANDS } from '../libs/workout';
@@ -43,6 +43,30 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
     const coachConfig = await getCoachConfig(userId, coachId);
     if (!coachConfig) {
       return createErrorResponse(404, 'Coach configuration not found');
+    }
+
+    // Load recent workouts for context (5 most recent workouts)
+    let recentWorkouts: any[] = [];
+    try {
+      const workoutResults = await queryWorkouts(userId, {
+        limit: 14,
+        sortBy: 'completedAt',
+        sortOrder: 'desc'
+      });
+      recentWorkouts = workoutResults.map(workout => ({
+        completedAt: workout.attributes.completedAt,
+        summary: workout.attributes.summary,
+        discipline: workout.attributes.workoutData.discipline,
+        workoutName: workout.attributes.workoutData.workout_name
+      }));
+      console.info('Loaded recent workouts for context:', {
+        userId,
+        workoutCount: recentWorkouts.length,
+        summaries: recentWorkouts.map(w => w.summary?.substring(0, 50) + '...')
+      });
+    } catch (error) {
+      console.warn('Failed to load recent workouts for context, continuing without:', error);
+      // Continue without workout context - don't fail the conversation
     }
 
     // Create user message
@@ -149,7 +173,8 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
         includeUserContext: true, // Now enabled with real context
         includeDetailedBackground: true,
         conversationContext,
-        additionalConstraints: workoutDetectionContext // Add workout context if detected
+        additionalConstraints: workoutDetectionContext, // Add workout context if detected
+        workoutContext: recentWorkouts // Add recent workout summaries for context
       };
 
       const { systemPrompt, metadata } = generateSystemPrompt(coachConfig, promptOptions);
@@ -183,8 +208,34 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
 CONVERSATION HISTORY:
 ${conversationHistoryText}
 
-CRITICAL: Review the conversation history above. Build naturally on what you already know about this athlete. USE THIS CONTEXT SILENTLY - don't explicitly reference previous exchanges unless directly relevant to the current topic. Provide contextually relevant responses that demonstrate continuity with the ongoing coaching relationship.`;
+CRITICAL:
+Review the conversation history above. Build naturally on what you already know about this athlete.
+USE THIS CONTEXT SILENTLY - don't explicitly reference previous exchanges unless directly relevant to the current topic.
+Provide contextually relevant responses that demonstrate continuity with the ongoing coaching relationship.`;
+      }
 
+      // Store system prompt with history in S3 for debugging
+      try {
+        const s3Location = await storeDebugDataInS3(systemPromptWithHistory, {
+          userId,
+          coachId,
+          conversationId,
+          coachName: coachConfig.attributes.coach_name,
+          userMessage: userResponse,
+          sessionNumber: conversationContext.sessionNumber,
+          promptLength: systemPromptWithHistory.length,
+          workoutContext: recentWorkouts.length > 0,
+          workoutDetected: isWorkoutLogging,
+          type: 'coach-conversation-prompt'
+        }, 'debug');
+
+        console.info('System prompt stored in S3 for debugging:', {
+          location: s3Location,
+          promptLength: systemPromptWithHistory.length,
+          workoutContextIncluded: recentWorkouts.length > 0
+        });
+      } catch (s3Error) {
+        console.warn('Failed to store system prompt in S3 (continuing anyway):', s3Error);
       }
 
       try {

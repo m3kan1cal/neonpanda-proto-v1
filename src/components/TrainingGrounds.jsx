@@ -263,7 +263,7 @@ function TrainingGrounds() {
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
                   <div className="font-rajdhani text-sm text-white font-medium truncate">
-                    {workoutAgentRef.current?.formatWorkoutSummary(workout) || 'Workout'}
+                    {workoutAgentRef.current?.formatWorkoutSummary(workout, true) || 'Workout'}
                   </div>
                   <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1 flex items-center space-x-2">
                     <span>{workoutAgentRef.current?.formatWorkoutTime(workout.completedAt) || 'Unknown time'}</span>

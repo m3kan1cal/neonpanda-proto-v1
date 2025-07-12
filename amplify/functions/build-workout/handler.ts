@@ -6,6 +6,7 @@ import {
   parseAndValidateWorkoutData,
   calculateConfidence,
   extractCompletedAtTime,
+  generateWorkoutSummary,
   BuildWorkoutEvent,
   UniversalWorkoutSchema
 } from '../libs/workout';
@@ -133,6 +134,11 @@ export const handler = async (event: BuildWorkoutEvent) => {
       ? new Date(event.completedAt)
       : extractCompletedAtTime(workoutContent) || new Date();
 
+    // Generate AI summary for coach context and UI display
+    console.info('Generating workout summary...');
+    const summary = await generateWorkoutSummary(workoutData, event.userMessage);
+    console.info('Generated summary:', { summary, length: summary.length });
+
     // Create workout session
     const workout = {
       workoutId: workoutData.workout_id,
@@ -142,6 +148,7 @@ export const handler = async (event: BuildWorkoutEvent) => {
       conversationId: event.conversationId,
       completedAt,
       workoutData,
+      summary, // NEW: AI-generated summary
       extractionMetadata: {
         confidence,
         extractedAt: new Date(),

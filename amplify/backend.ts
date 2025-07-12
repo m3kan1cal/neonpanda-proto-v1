@@ -141,7 +141,8 @@ grantBedrockPermissions([
 
 // Grant S3 debug permissions to functions that need it
 grantS3DebugPermissions([
-  backend.buildWorkout.resources.lambda
+  backend.buildWorkout.resources.lambda,
+  backend.sendCoachConversationMessage.resources.lambda
 ]);
 
 // Grant permission to updateCoachCreatorSession to invoke buildCoachConfig

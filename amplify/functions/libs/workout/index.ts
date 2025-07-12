@@ -22,7 +22,8 @@ export {
   parseAndValidateWorkoutData,
   calculateConfidence,
   extractCompletedAtTime,
-  isComplexWorkout
+  isComplexWorkout,
+  generateWorkoutSummary
 } from './extraction';
 
 export {

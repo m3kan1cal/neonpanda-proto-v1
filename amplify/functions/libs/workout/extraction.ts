@@ -7,7 +7,7 @@
 
 import { CoachConfig } from '../coach-creator/types';
 import { TimeIndicator, UniversalWorkoutSchema } from './types';
-import { storeDebugDataInS3 } from '../api-helpers';
+import { storeDebugDataInS3, callBedrockApi } from '../api-helpers';
 
 
 
@@ -647,4 +647,59 @@ export const extractCompletedAtTime = (userMessage: string): Date | null => {
   }
 
   return null; // Default to current time
+};
+
+/**
+ * Generate AI summary for workout context and UI display
+ */
+export const generateWorkoutSummary = async (workoutData: UniversalWorkoutSchema, originalMessage: string): Promise<string> => {
+  const summaryPrompt = `
+You are a fitness coach creating a concise summary of a completed workout for coaching context and display.
+
+WORKOUT DATA:
+${JSON.stringify(workoutData, null, 2)}
+
+ORIGINAL USER MESSAGE:
+"${originalMessage}"
+
+Create a 2-3 sentence summary that captures:
+1. What workout was completed (name, discipline, key movements) - be sure to include any workout names included in the WORKOUT DATA section.
+2. Key performance highlights (weights, times, rounds, notable achievements, reps, sets)
+3. Any relevant context (conditions, how it felt, modifications)
+
+Keep it concise, engaging, and useful for coaching reference. Focus on the most important performance details.
+
+EXAMPLE GOOD SUMMARIES:
+- "Completed Fran (21-15-9 thrusters/pull-ups) in 8:47 Rx. Strong performance with unbroken thrusters in first round and only 2 breaks on pull-ups."
+- "Heavy deadlift session with 5x3 at 315lbs, hitting a new 3RM. Form stayed solid throughout with controlled negatives."
+- "30-minute EMOM alternating air squats and push-ups. Maintained consistent pace despite fatigue, completing all 15 rounds as prescribed."
+
+SUMMARY:`;
+
+  try {
+    const response = await callBedrockApi(summaryPrompt, originalMessage);
+
+    // Clean up the response - remove any prefix like "SUMMARY:" and trim
+    const cleanSummary = response.trim();
+
+    // Ensure it's not too long (max 300 chars for UI display)
+    if (cleanSummary.length > 300) {
+      return cleanSummary.substring(0, 297) + '...';
+    }
+
+    return cleanSummary;
+  } catch (error) {
+    console.error('Error generating workout summary:', error);
+
+    // Fallback to basic summary if AI fails
+    const workoutName = workoutData.workout_name || 'Workout';
+    const discipline = workoutData.discipline || '';
+    const duration = workoutData.duration ? `${workoutData.duration}min` : '';
+
+    let fallback = `Completed ${workoutName}`;
+    if (discipline) fallback += ` (${discipline})`;
+    if (duration) fallback += ` in ${duration}`;
+
+    return fallback;
+  }
 };

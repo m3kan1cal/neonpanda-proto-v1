@@ -27,17 +27,10 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
       return createErrorResponse(404, 'Workout not found');
     }
 
-    // Return the full workout data
+    // Return the complete workout object (no need for manual mapping)
     return createSuccessResponse({
       workout: {
-        workoutId: workout.attributes.workoutId,
-        userId: workout.attributes.userId,
-        coachIds: workout.attributes.coachIds,
-        coachNames: workout.attributes.coachNames,
-        conversationId: workout.attributes.conversationId,
-        completedAt: workout.attributes.completedAt,
-        workoutData: workout.attributes.workoutData,
-        extractionMetadata: workout.attributes.extractionMetadata,
+        ...workout.attributes, // All workout properties
         // Include DynamoDB metadata
         createdAt: workout.createdAt,
         updatedAt: workout.updatedAt

@@ -243,8 +243,8 @@ function Workouts() {
       };
 
       workoutAgentRef.current.onNewWorkout = (workout) => {
-        const summary = workoutAgentRef.current.formatWorkoutSummary(workout);
-        showToast(`Workout logged: ${summary}`, 'success');
+        const title = workoutAgentRef.current.formatWorkoutSummary(workout, true);
+        showToast(`Workout logged: ${title}`, 'success');
       };
     }
 
@@ -290,6 +290,11 @@ function Workouts() {
       }
     };
   }, [userId, coachId]);
+
+  // Auto-scroll to top when workoutId changes
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [workoutId]);
 
   // Load specific workout
   useEffect(() => {
@@ -429,7 +434,7 @@ function Workouts() {
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
                   <div className="font-rajdhani text-sm text-white font-medium truncate">
-                    {workoutAgentRef.current?.formatWorkoutSummary(workout) || 'Workout'}
+                    {workoutAgentRef.current?.formatWorkoutSummary(workout, true) || 'Workout'}
                   </div>
                   <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1 flex items-center space-x-2">
                     <span>{workoutAgentRef.current?.formatWorkoutTime(workout.completedAt) || 'Unknown time'}</span>
