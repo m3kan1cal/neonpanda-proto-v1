@@ -9,7 +9,7 @@ import CoachCreator from './components/CoachCreator';
 import Coaches from './components/Coaches';
 import TrainingGrounds from './components/TrainingGrounds';
 import CoachConversations from './components/CoachConversations';
-import Workout from './components/Workout';
+import Workouts from './components/Workouts';
 import { ToastProvider } from './contexts/ToastContext';
 import ToastContainer from './components/ToastContainer';
 
@@ -30,7 +30,7 @@ function AppContent() {
           <Route path="/coaches" element={<Coaches />} />
           <Route path="/training-grounds" element={<TrainingGrounds />} />
           <Route path="/training-grounds/coach-conversations" element={<CoachConversations />} />
-          <Route path="/training-grounds/workouts" element={<Workout />} />
+                      <Route path="/training-grounds/workouts" element={<Workouts />} />
 
           {/* Trailing slash redirects handled at server level via amplify.yml */}
         </Routes>

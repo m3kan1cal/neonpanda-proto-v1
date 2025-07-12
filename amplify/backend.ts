@@ -23,7 +23,7 @@ import { updateWorkout } from './functions/update-workout/resource';
 import { getWorkoutsCount } from './functions/get-workouts-count/resource';
 import { apiGatewayv2 } from './api/resource';
 import { dynamodbTable } from './dynamodb/resource';
-import { grantBedrockPermissions, grantLambdaInvokePermissions } from './iam-policies';
+import { grantBedrockPermissions, grantLambdaInvokePermissions, grantS3DebugPermissions } from './iam-policies';
 
 
 /**
@@ -99,7 +99,7 @@ coreTable.table.grantReadWriteData(backend.getCoachConversation.resources.lambda
 coreTable.table.grantReadWriteData(backend.updateCoachConversation.resources.lambda);
 coreTable.table.grantReadWriteData(backend.sendCoachConversationMessage.resources.lambda);
 
-// Grant DynamoDB permissions to workout session functions (read and write)
+// Grant DynamoDB permissions to workout functions (read and write)
 coreTable.table.grantReadWriteData(backend.buildWorkout.resources.lambda);
 coreTable.table.grantReadWriteData(backend.getWorkouts.resources.lambda);
 coreTable.table.grantReadWriteData(backend.getWorkout.resources.lambda);
@@ -123,7 +123,7 @@ backend.getCoachConversation.addEnvironment('DYNAMODB_TABLE_NAME', coreTable.tab
 backend.updateCoachConversation.addEnvironment('DYNAMODB_TABLE_NAME', coreTable.table.tableName);
 backend.sendCoachConversationMessage.addEnvironment('DYNAMODB_TABLE_NAME', coreTable.table.tableName);
 
-// Add environment variables for workout session functions
+// Add environment variables for workout functions
 backend.buildWorkout.addEnvironment('DYNAMODB_TABLE_NAME', coreTable.table.tableName);
 backend.getWorkouts.addEnvironment('DYNAMODB_TABLE_NAME', coreTable.table.tableName);
 backend.getWorkout.addEnvironment('DYNAMODB_TABLE_NAME', coreTable.table.tableName);
@@ -136,6 +136,11 @@ grantBedrockPermissions([
   backend.updateCoachCreatorSession.resources.lambda,
   backend.buildCoachConfig.resources.lambda,
   backend.sendCoachConversationMessage.resources.lambda,
+  backend.buildWorkout.resources.lambda
+]);
+
+// Grant S3 debug permissions to functions that need it
+grantS3DebugPermissions([
   backend.buildWorkout.resources.lambda
 ]);
 

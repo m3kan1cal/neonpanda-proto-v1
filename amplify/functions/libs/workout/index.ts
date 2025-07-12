@@ -21,7 +21,8 @@ export {
   buildWorkoutExtractionPrompt,
   parseAndValidateWorkoutData,
   calculateConfidence,
-  extractCompletedAtTime
+  extractCompletedAtTime,
+  isComplexWorkout
 } from './extraction';
 
 export {

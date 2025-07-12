@@ -48,6 +48,22 @@ export const grantBedrockPermissions = (functions: IFunction[]): void => {
 };
 
 /**
+ * S3 policy for debugging logs storage
+ */
+export const createS3DebugPolicy = (): PolicyStatement => {
+  return new PolicyStatement({
+    effect: Effect.ALLOW,
+    actions: [
+      's3:PutObject',
+      's3:PutObjectAcl'
+    ],
+    resources: [
+      'arn:aws:s3:::midgard-sandbox-logs/debug/*'
+    ]
+  });
+};
+
+/**
  * Helper function to grant Lambda invoke permissions
  */
 export const grantLambdaInvokePermissions = (
@@ -56,4 +72,14 @@ export const grantLambdaInvokePermissions = (
 ): void => {
   const lambdaInvokePolicy = createLambdaInvokePolicy(targetFunctionArns);
   sourceFunction.addToRolePolicy(lambdaInvokePolicy);
+};
+
+/**
+ * Helper function to grant S3 debug permissions
+ */
+export const grantS3DebugPermissions = (functions: IFunction[]): void => {
+  const s3Policy = createS3DebugPolicy();
+  functions.forEach(func => {
+    func.addToRolePolicy(s3Policy);
+  });
 };

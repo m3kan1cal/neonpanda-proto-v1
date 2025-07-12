@@ -55,7 +55,7 @@ export const handler = async (event: BuildWorkoutEvent) => {
     console.info('Parsing extracted data...');
 
     // Parse and validate the extracted data
-    const workoutData = parseAndValidateWorkoutData(extractedData, event.userId);
+    const workoutData: UniversalWorkoutSchema = await parseAndValidateWorkoutData(extractedData, event.userId);
 
     // For slash commands, add metadata about explicit logging
     if (event.isSlashCommand) {
@@ -150,7 +150,7 @@ export const handler = async (event: BuildWorkoutEvent) => {
       }
     };
 
-    console.info('Saving workout session to DynamoDB...', {
+    console.info('Saving workout to DynamoDB...', {
       workoutId: workout.workoutId,
       discipline: workoutData.discipline,
       workoutName: workoutData.workout_name,

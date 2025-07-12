@@ -5,6 +5,7 @@ import { NeonBorder } from './themes/SynthwaveComponents';
 import WorkoutAgent from '../utils/agents/WorkoutAgent';
 import CoachConversationAgent from '../utils/agents/CoachConversationAgent';
 import { useToast } from '../contexts/ToastContext';
+import WorkoutViewer from './WorkoutViewer';
 
 // Icons
 const WorkoutIcon = () => (
@@ -151,7 +152,7 @@ const ModernPopover = ({ isOpen, onClose, anchorRef, children, title, className 
   );
 };
 
-function Workout() {
+function Workouts() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const userId = searchParams.get('userId');
@@ -164,29 +165,32 @@ function Workout() {
   const workoutsIconRef = useRef(null);
   const [isCreatingConversation, setIsCreatingConversation] = useState(false);
 
+  // View state
+  const [viewMode, setViewMode] = useState('formatted'); // 'formatted' or 'raw'
+
   const workoutAgentRef = useRef(null);
   const agentRef = useRef(null);
   const { showToast } = useToast();
 
   // Workout state
-  const [workoutState, setWorkoutState] = useState({
+  const [workoutAgentState, setWorkoutAgentState] = useState({
     currentWorkout: null,
     recentWorkouts: [],
-    isLoadingDetails: true,
-    isLoading: false,
+    isLoadingRecentItems: false,
+    isLoadingItem: false,
     error: null,
   });
 
   // Agent state (managed by CoachConversationAgent)
-  const [agentState, setAgentState] = useState({
+  const [coachConversationAgentState, setCoachConversationAgentState] = useState({
     messages: [],
-    isLoading: true,
+    isLoadingItem: true,
     isTyping: false,
     error: null,
     coach: null,
     conversation: null,
     historicalConversations: [],
-    isLoadingHistory: false,
+    isLoadingRecentItems: false,
   });
 
   // Redirect if missing required parameters
@@ -219,10 +223,15 @@ function Workout() {
 
     if (!workoutAgentRef.current) {
                   workoutAgentRef.current = new WorkoutAgent(userId, (newState) => {
-        // Use the same pattern as CoachConversations - replace entire state
-        setWorkoutState(prevState => ({
+        // Use the agent states directly
+        setWorkoutAgentState(prevState => ({
           ...prevState,
-          ...newState,
+          // Get loading states from agent
+          isLoadingRecentItems: newState.isLoadingRecentItems || false,
+          isLoadingItem: newState.isLoadingItem || false,
+          // Get data from agent
+          recentWorkouts: newState.recentWorkouts || [],
+          error: newState.error || null,
           // Keep our current workout separate from the agent's state
           currentWorkout: prevState.currentWorkout
         }));
@@ -258,10 +267,10 @@ function Workout() {
         conversationId: null, // We don't need a specific conversation for popover
         onStateChange: (newState) => {
           // Only update conversation-related state for popover
-          setAgentState(prevState => ({
+          setCoachConversationAgentState(prevState => ({
             ...prevState,
             historicalConversations: newState.historicalConversations || [],
-            isLoadingHistory: newState.isLoadingHistory || false,
+            isLoadingRecentItems: newState.isLoadingRecentItems || false,
             error: newState.error || null,
           }));
         },
@@ -288,23 +297,17 @@ function Workout() {
 
     const loadWorkout = async () => {
       try {
-        setWorkoutState(prevState => ({ ...prevState, isLoading: true, error: null }));
-
         // Use the workout agent to get the specific workout
+        // The agent will handle isLoadingDetails state internally
         const workout = await workoutAgentRef.current.getWorkout(workoutId);
 
-        setWorkoutState(prevState => ({
+        setWorkoutAgentState(prevState => ({
           ...prevState,
           currentWorkout: workout,
-          isLoading: false,
         }));
       } catch (error) {
         console.error('Error loading workout:', error);
-        setWorkoutState(prevState => ({
-          ...prevState,
-          error: 'Failed to load workout',
-          isLoading: false,
-        }));
+        // Error state is handled by the agent
       }
     };
 
@@ -318,6 +321,10 @@ function Workout() {
 
   const handleClosePopover = () => {
     setActivePopover(null);
+  };
+
+  const handleToggleView = () => {
+    setViewMode(viewMode === 'formatted' ? 'raw' : 'formatted');
   };
 
   const formatDate = (dateString) => {
@@ -385,14 +392,14 @@ function Workout() {
   // Render workout list
   const renderWorkoutList = () => (
     <div className="space-y-2">
-      {workoutState.isLoading ? (
+      {workoutAgentState.isLoadingRecentItems ? (
         <div className="text-center py-8">
           <div className="inline-flex items-center space-x-2 text-synthwave-text-secondary font-rajdhani">
             <div className="w-4 h-4 border-2 border-synthwave-neon-pink border-t-transparent rounded-full animate-spin"></div>
             <span>Loading workouts...</span>
           </div>
         </div>
-      ) : workoutState.recentWorkouts.length === 0 ? (
+              ) : workoutAgentState.recentWorkouts.length === 0 ? (
         <div className="text-center py-8">
           <div className="font-rajdhani text-synthwave-text-muted text-sm">
             No workouts found
@@ -403,7 +410,7 @@ function Workout() {
           <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
             Recent Workouts
           </div>
-          {workoutState.recentWorkouts.map((workout) => (
+          {workoutAgentState.recentWorkouts.map((workout) => (
             <div
               key={workout.workoutId}
               onClick={() => {
@@ -447,14 +454,14 @@ function Workout() {
   // Render conversation list
   const renderConversationList = () => (
     <div className="space-y-2">
-      {agentState.isLoadingHistory ? (
+      {coachConversationAgentState.isLoadingRecentItems ? (
         <div className="text-center py-8">
           <div className="inline-flex items-center space-x-2 text-synthwave-text-secondary font-rajdhani">
             <div className="w-4 h-4 border-2 border-synthwave-neon-pink border-t-transparent rounded-full animate-spin"></div>
             <span>Loading conversations...</span>
           </div>
         </div>
-      ) : agentState.historicalConversations.length === 0 ? (
+              ) : coachConversationAgentState.historicalConversations.length === 0 ? (
         <div className="text-center py-8">
           <div className="font-rajdhani text-synthwave-text-muted text-sm">
             No conversations found
@@ -465,7 +472,7 @@ function Workout() {
           <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
             Recent Conversations
           </div>
-          {agentState.historicalConversations.map((conv) => (
+          {coachConversationAgentState.historicalConversations.map((conv) => (
             <div
               key={conv.conversationId}
               onClick={() => handleConversationClick(conv.conversationId)}
@@ -492,7 +499,7 @@ function Workout() {
   );
 
   // Show loading state (only for main workout, not recent workouts)
-  if (workoutState.isLoadingDetails && !workoutState.currentWorkout) {
+  if (workoutAgentState.isLoadingItem && (!workoutAgentState.currentWorkout || workoutAgentState.currentWorkout.workoutId !== workoutId)) {
     return (
       <div className={`min-h-screen ${themeClasses.bgGradient} ${themeClasses.textPrimary} flex items-center justify-center`}>
         <div className="text-center">
@@ -504,11 +511,11 @@ function Workout() {
   }
 
   // Show error state
-  if (workoutState.error) {
+  if (workoutAgentState.error) {
     return (
       <div className={`min-h-screen ${themeClasses.bgGradient} ${themeClasses.textPrimary} flex items-center justify-center`}>
         <div className="text-center">
-          <p className="text-red-400 mb-4">{workoutState.error}</p>
+          <p className="text-red-400 mb-4">{workoutAgentState.error}</p>
           <button
             onClick={() => navigate('/training-grounds')}
             className={`${themeClasses.buttonPrimary} px-6 py-2 rounded-lg`}
@@ -520,7 +527,7 @@ function Workout() {
     );
   }
 
-  const workout = workoutState.currentWorkout;
+  const workout = workoutAgentState.currentWorkout;
 
   return (
     <div className={`${themeClasses.container} min-h-screen pb-8`}>
@@ -536,26 +543,28 @@ function Workout() {
               <div className="font-rajdhani text-2xl text-synthwave-neon-pink font-bold">
                 {workout.workoutData?.workout_name || 'Unnamed Workout'}
               </div>
-              <div className="font-rajdhani text-lg text-synthwave-text-secondary space-y-1">
+              <div className="font-rajdhani text-lg text-synthwave-text-secondary space-y-1 text-center">
                 <div>
-                  <span className="text-synthwave-neon-cyan">Completed:</span> {formatDate(workout.completedAt)}
+                  <span className="text-synthwave-neon-pink">Completed:</span> {formatDate(workout.completedAt)}
                 </div>
-                <div>
-                  <span className="text-synthwave-neon-cyan">Discipline:</span> {workout.workoutData?.discipline || 'Unknown'}
+                <div className="flex flex-wrap justify-center gap-x-6 gap-y-1">
+                  <div>
+                    <span className="text-synthwave-neon-pink">Discipline:</span> {workout.workoutData?.discipline || 'Unknown'}
+                  </div>
+                  {workout.workoutData?.duration && (
+                    <div>
+                      <span className="text-synthwave-neon-pink">Duration:</span> {Math.round(workout.workoutData.duration / 60)} minutes
+                    </div>
+                  )}
+                  {workout.extractionMetadata?.confidence && (
+                    <div>
+                      <span className="text-synthwave-neon-pink">Confidence:</span>
+                      <span className={`ml-2 ${workoutAgentRef.current?.getConfidenceColorClass(workout.extractionMetadata.confidence) || 'text-synthwave-text-secondary'}`}>
+                        {workoutAgentRef.current?.getConfidenceDisplay(workout.extractionMetadata.confidence) || 'Unknown'}
+                      </span>
+                    </div>
+                  )}
                 </div>
-                {workout.workoutData?.duration && (
-                  <div>
-                    <span className="text-synthwave-neon-cyan">Duration:</span> {Math.round(workout.workoutData.duration / 60)} minutes
-                  </div>
-                )}
-                {workout.extractionMetadata?.confidence && (
-                  <div>
-                    <span className="text-synthwave-neon-cyan">Confidence:</span>
-                    <span className={`ml-2 ${workoutAgentRef.current?.getConfidenceColorClass(workout.extractionMetadata.confidence) || 'text-synthwave-text-secondary'}`}>
-                      {workoutAgentRef.current?.getConfidenceDisplay(workout.extractionMetadata.confidence) || 'Unknown'}
-                    </span>
-                  </div>
-                )}
               </div>
             </div>
           )}
@@ -567,12 +576,43 @@ function Workout() {
             <div className="p-6 h-full overflow-y-auto custom-scrollbar">
               {workout ? (
                 <div className="space-y-4">
-                  <h2 className="font-russo font-bold text-xl text-synthwave-neon-pink uppercase mb-4">
-                    Raw Workout Data
-                  </h2>
-                  <pre className="bg-synthwave-bg-primary/50 border border-synthwave-neon-cyan/30 rounded-lg p-4 text-synthwave-text-primary font-mono text-sm overflow-x-auto whitespace-pre-wrap">
-                    {JSON.stringify(workout, null, 2)}
-                  </pre>
+                  {viewMode === 'formatted' ? (
+                    <WorkoutViewer workout={workout} onToggleView={handleToggleView} />
+                  ) : (
+                    <div className="space-y-6">
+                      {/* Toggle View Button */}
+                      <div className="flex justify-end">
+                        <button
+                          onClick={handleToggleView}
+                          className={`${themeClasses.neonButton} text-sm px-4 py-2 flex items-center space-x-2`}
+                        >
+                          <WorkoutIcon />
+                          <span>View Formatted</span>
+                        </button>
+                      </div>
+
+                      {/* Raw JSON Container */}
+                      <div className="border border-synthwave-neon-pink/30 rounded-lg overflow-hidden">
+                        <div className="px-4 py-3 bg-synthwave-bg-primary/30 flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <div className="text-synthwave-neon-pink">
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                              </svg>
+                            </div>
+                            <h3 className="font-russo font-bold text-white text-sm uppercase">
+                              Raw Workout Data
+                            </h3>
+                          </div>
+                        </div>
+                        <div className="p-4 bg-synthwave-bg-card/20">
+                          <pre className="bg-synthwave-bg-primary/50 border border-synthwave-neon-cyan/30 rounded-lg p-4 text-synthwave-text-primary font-mono text-sm overflow-x-auto whitespace-pre-wrap">
+                            {JSON.stringify(workout, null, 2)}
+                          </pre>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="flex items-center justify-center h-full">
@@ -648,7 +688,7 @@ function Workout() {
           <button
             onClick={() => {
               // TODO: Implement workout logging functionality
-              console.log('Log Workout clicked - functionality to be implemented');
+              console.info('Log Workout clicked - functionality to be implemented');
             }}
             className={`${themeClasses.neonButton} text-sm px-4 py-2 transition-all duration-300 flex items-center space-x-2`}
           >
@@ -664,4 +704,4 @@ function Workout() {
   );
 }
 
-export default Workout;
+export default Workouts;

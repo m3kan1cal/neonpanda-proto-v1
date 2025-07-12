@@ -2,14 +2,14 @@ import { nanoid } from 'nanoid';
 import { getWorkouts, getWorkout, updateWorkout, getWorkoutsCount, getRecentWorkouts } from '../apis/workoutApi.js';
 
 /**
- * WorkoutAgent - Handles the business logic for workout session management
+ * WorkoutAgent - Handles the business logic for workout management
  * This class manages workout loading, recent workout tracking, and state management
  * while keeping the React component focused on UI concerns.
  */
 export class WorkoutAgent {
   constructor(userId, onStateChange = null) {
-    console.log('WorkoutAgent: Constructor called');
-    console.log('WorkoutAgent: userId:', userId || '(not provided - will be set later)');
+    console.info('WorkoutAgent: Constructor called');
+    console.info('WorkoutAgent: userId:', userId || '(not provided - will be set later)');
 
     this.userId = userId;
     this.onStateChange = onStateChange;
@@ -30,7 +30,8 @@ export class WorkoutAgent {
       allWorkouts: [],
       totalWorkoutCount: 0,
       isLoadingCount: false,
-      isLoading: false,
+      isLoadingRecentItems: false,
+      isLoadingItem: false,
       error: null,
       lastCheckTime: null
     };
@@ -42,7 +43,7 @@ export class WorkoutAgent {
     this.pollInterval = null;
     this.lastWorkoutCount = 0;
 
-    console.log('WorkoutAgent: Constructor complete', userId ? 'with userId' : '(userId will be set later)');
+    console.info('WorkoutAgent: Constructor complete', userId ? 'with userId' : '(userId will be set later)');
   }
 
   /**
@@ -76,7 +77,7 @@ export class WorkoutAgent {
    * Sets the user ID and loads initial data
    */
   async setUserId(userId) {
-    console.log('WorkoutAgent.setUserId called with:', userId);
+    console.info('WorkoutAgent.setUserId called with:', userId);
 
     if (!userId) {
       console.error('WorkoutAgent.setUserId: userId is required');
@@ -84,7 +85,7 @@ export class WorkoutAgent {
     }
 
     this.userId = userId;
-    console.log('WorkoutAgent.setUserId: userId set to:', this.userId);
+    console.info('WorkoutAgent.setUserId: userId set to:', this.userId);
 
     // Load initial data
     await Promise.all([
@@ -92,14 +93,14 @@ export class WorkoutAgent {
       this.loadTotalWorkoutCount()
     ]);
 
-    console.log('WorkoutAgent.setUserId: Initial data loaded');
+    console.info('WorkoutAgent.setUserId: Initial data loaded');
   }
 
   /**
    * Loads total workout count for the user
    */
   async loadTotalWorkoutCount() {
-    console.log('WorkoutAgent.loadTotalWorkoutCount called');
+    console.info('WorkoutAgent.loadTotalWorkoutCount called');
 
     if (!this.userId) {
       console.error('WorkoutAgent.loadTotalWorkoutCount: No userId set');
@@ -110,7 +111,7 @@ export class WorkoutAgent {
 
     try {
       const result = await getWorkoutsCount(this.userId);
-      console.log('WorkoutAgent.loadTotalWorkoutCount: Got count:', result);
+      console.info('WorkoutAgent.loadTotalWorkoutCount: Got count:', result);
 
       this._updateState({
         totalWorkoutCount: result.totalCount || 0,
@@ -131,14 +132,14 @@ export class WorkoutAgent {
    * Loads recent workouts for the user
    */
   async loadRecentWorkouts(limit = 5) {
-    console.log('WorkoutAgent.loadRecentWorkouts called with limit:', limit);
+    console.info('WorkoutAgent.loadRecentWorkouts called with limit:', limit);
 
     if (!this.userId) {
       console.error('WorkoutAgent.loadRecentWorkouts: No userId set');
       return;
     }
 
-    this._updateState({ isLoadingRecent: true });
+    this._updateState({ isLoadingRecentItems: true });
 
     try {
       const result = await getWorkouts(this.userId, {
@@ -146,15 +147,15 @@ export class WorkoutAgent {
         sortBy: 'completedAt',
         sortOrder: 'desc'  // Most recent first
       });
-      console.log('WorkoutAgent.loadRecentWorkouts: Got result:', result);
+      console.info('WorkoutAgent.loadRecentWorkouts: Got result:', result);
 
       // Extract workouts from the API response
       const workouts = result.workouts || [];
-      console.log('WorkoutAgent.loadRecentWorkouts: Extracted workouts:', workouts);
+      console.info('WorkoutAgent.loadRecentWorkouts: Extracted workouts:', workouts);
 
       this._updateState({
         recentWorkouts: workouts,
-        isLoadingRecent: false,
+        isLoadingRecentItems: false,
         error: null,
         lastCheckTime: new Date()
       });
@@ -162,7 +163,7 @@ export class WorkoutAgent {
     } catch (error) {
       console.error('WorkoutAgent.loadRecentWorkouts: Error loading workouts:', error);
       this._updateState({
-        isLoadingRecent: false,
+        isLoadingRecentItems: false,
         error: error.message || 'Failed to load workouts'
       });
     }
@@ -174,7 +175,7 @@ export class WorkoutAgent {
   async loadAllWorkouts(options = {}) {
     if (!this.userId) return;
 
-    this._updateState({ isLoading: true, error: null });
+    this._updateState({ isLoadingRecentItems: true, error: null });
 
     try {
       console.info('Loading all workouts for userId:', this.userId, 'with options:', options);
@@ -184,7 +185,7 @@ export class WorkoutAgent {
 
       this._updateState({
         allWorkouts,
-        isLoading: false
+        isLoadingRecentItems: false
       });
 
       return allWorkouts;
@@ -192,7 +193,7 @@ export class WorkoutAgent {
     } catch (error) {
       console.error('Error loading all workouts:', error);
       this._updateState({
-        isLoading: false,
+        isLoadingRecentItems: false,
         error: error.message,
         allWorkouts: []
       });
@@ -202,18 +203,26 @@ export class WorkoutAgent {
   }
 
   /**
-   * Gets a specific workout session by ID
+   * Gets a specific workout by ID
    */
   async getWorkoutById(workoutId) {
     if (!this.userId || !workoutId) return null;
 
+    this._updateState({ isLoadingItem: true, error: null });
+
     try {
       console.info('Loading workout details for:', workoutId);
       const result = await getWorkout(this.userId, workoutId);
+
+      this._updateState({ isLoadingItem: false });
       return result.workout || null;
 
     } catch (error) {
       console.error('Error loading workout details:', error);
+            this._updateState({
+        isLoadingItem: false,
+        error: error.message || 'Failed to load workout details'
+      });
       this.onError(error);
       return null;
     }
@@ -405,7 +414,8 @@ export class WorkoutAgent {
       allWorkouts: [],
       totalWorkoutCount: 0,
       isLoadingCount: false,
-      isLoading: false,
+      isLoadingRecentItems: false,
+      isLoadingItem: false,
       error: null,
       lastCheckTime: null
     };

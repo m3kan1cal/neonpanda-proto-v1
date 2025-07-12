@@ -238,35 +238,35 @@ function CoachConversations() {
   const { showToast } = useToast();
 
   // Agent state (managed by CoachConversationAgent)
-  const [agentState, setAgentState] = useState({
+  const [coachConversationAgentState, setCoachConversationAgentState] = useState({
     messages: [],
-    isLoading: true,
+    isLoadingItem: true,
     isTyping: false,
     error: null,
     coach: null,
     conversation: null,
     historicalConversations: [],
-    isLoadingHistory: false,
+    isLoadingRecentItems: false,
   });
 
   // Workout agent state (managed by WorkoutAgent)
-  const [workoutState, setWorkoutState] = useState({
+  const [workoutAgentState, setWorkoutAgentState] = useState({
     recentWorkouts: [],
     allWorkouts: [],
-    isLoading: false,
+    isLoadingRecentItems: false,
     error: null,
     lastCheckTime: null
   });
 
   // Debug: Log when coach data changes
   useEffect(() => {
-    console.info("Component received coach data:", agentState.coach);
-  }, [agentState.coach]);
+    console.info("Component received coach data:", coachConversationAgentState.coach);
+  }, [coachConversationAgentState.coach]);
 
   // Debug: Log when workout state changes
   useEffect(() => {
-    console.info("Workout state updated:", workoutState);
-  }, [workoutState]);
+    console.info("Workout state updated:", workoutAgentState);
+  }, [workoutAgentState]);
 
   // Redirect if missing required parameters
   useEffect(() => {
@@ -297,11 +297,11 @@ function CoachConversations() {
     if (!userId || !coachId || !conversationId) return;
 
     // Reset agent state when conversationId changes to ensure loading state is shown
-    setAgentState(prevState => ({
+    setCoachConversationAgentState(prevState => ({
       ...prevState,
       conversation: null,
       messages: [],
-      isLoading: true
+      isLoadingItem: true
     }));
 
     if (!agentRef.current) {
@@ -310,7 +310,7 @@ function CoachConversations() {
         coachId,
         conversationId,
         onStateChange: (newState) => {
-          setAgentState(newState);
+          setCoachConversationAgentState(newState);
         },
         onNavigation: (type, data) => {
           if (type === 'conversation-not-found') {
@@ -357,7 +357,16 @@ function CoachConversations() {
 
     if (!workoutAgentRef.current) {
       workoutAgentRef.current = new WorkoutAgent(userId, (newState) => {
-        setWorkoutState(newState);
+        // Use agent states directly
+        setWorkoutAgentState(prevState => ({
+          ...prevState,
+          // Get loading states from agent
+          isLoadingRecentItems: newState.isLoadingRecentItems || false,
+          // Get data from agent
+          recentWorkouts: newState.recentWorkouts || [],
+          error: newState.error || null,
+          lastCheckTime: newState.lastCheckTime || null
+        }));
       });
 
       // Set up additional callbacks
@@ -417,7 +426,7 @@ function CoachConversations() {
 
   useEffect(() => {
     scrollToBottom();
-  }, [agentState.messages, agentState.isTyping]);
+  }, [coachConversationAgentState.messages, coachConversationAgentState.isTyping]);
 
   // Focus input when chat interface is visible
   useEffect(() => {
@@ -434,7 +443,7 @@ function CoachConversations() {
 
   // Also focus when the coach data is loaded (for page refresh scenarios)
   useEffect(() => {
-    if (agentState.coach && inputRef.current && !agentState.isLoading) {
+    if (coachConversationAgentState.coach && inputRef.current && !coachConversationAgentState.isLoadingItem) {
       setTimeout(() => {
         if (inputRef.current) {
           inputRef.current.focus();
@@ -442,7 +451,7 @@ function CoachConversations() {
         }
       }, 100);
     }
-  }, [agentState.coach, agentState.isLoading]);
+  }, [coachConversationAgentState.coach, coachConversationAgentState.isLoadingItem]);
 
   useEffect(() => {
     if (inputRef.current) {
@@ -557,7 +566,7 @@ function CoachConversations() {
   };
 
   const handleEditTitle = () => {
-    setEditTitleValue(agentState.conversation?.title || '');
+    setEditTitleValue(coachConversationAgentState.conversation?.title || '');
     setIsEditingTitle(true);
   };
 
@@ -644,14 +653,14 @@ function CoachConversations() {
   // Render workout list
   const renderWorkoutList = () => (
     <div className="space-y-2">
-      {workoutState.isLoading ? (
+      {workoutAgentState.isLoadingRecentItems ? (
         <div className="text-center py-8">
           <div className="inline-flex items-center space-x-2 text-synthwave-text-secondary font-rajdhani">
             <div className="w-4 h-4 border-2 border-synthwave-neon-pink border-t-transparent rounded-full animate-spin"></div>
             <span>Loading workouts...</span>
           </div>
         </div>
-      ) : workoutState.recentWorkouts.length === 0 ? (
+              ) : workoutAgentState.recentWorkouts.length === 0 ? (
         <div className="text-center py-8">
           <div className="font-rajdhani text-synthwave-text-muted text-sm">
             No workouts found
@@ -662,7 +671,7 @@ function CoachConversations() {
           <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
             Recent Workouts
           </div>
-          {workoutState.recentWorkouts.map((workout) => (
+          {workoutAgentState.recentWorkouts.map((workout) => (
             <div
               key={workout.workoutId}
               onClick={() => {
@@ -698,14 +707,14 @@ function CoachConversations() {
   // Render conversation list
   const renderConversationList = () => (
     <div className="space-y-2">
-      {agentState.isLoadingHistory ? (
+      {coachConversationAgentState.isLoadingRecentItems ? (
         <div className="text-center py-8">
           <div className="inline-flex items-center space-x-2 text-synthwave-text-secondary font-rajdhani">
             <div className="w-4 h-4 border-2 border-synthwave-neon-pink border-t-transparent rounded-full animate-spin"></div>
             <span>Loading conversations...</span>
           </div>
         </div>
-      ) : agentState.historicalConversations.length === 0 ? (
+              ) : coachConversationAgentState.historicalConversations.length === 0 ? (
         <div className="text-center py-8">
           <div className="font-rajdhani text-synthwave-text-muted text-sm">
             No conversations found
@@ -716,7 +725,7 @@ function CoachConversations() {
           <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
             Recent Conversations
           </div>
-          {agentState.historicalConversations.map((conv) => (
+          {coachConversationAgentState.historicalConversations.map((conv) => (
             <div
               key={conv.conversationId}
               onClick={() => handleConversationClick(conv.conversationId)}
@@ -747,14 +756,14 @@ function CoachConversations() {
   );
 
   // Show loading state while initializing coach or loading conversation
-  if (agentState.isLoading && (!agentState.coach || !agentState.conversation ||
-      (agentState.conversation && agentState.conversation.conversationId !== conversationId))) {
+  if (coachConversationAgentState.isLoadingItem && (!coachConversationAgentState.coach || !coachConversationAgentState.conversation ||
+      (coachConversationAgentState.conversation && coachConversationAgentState.conversation.conversationId !== conversationId))) {
     return (
       <div className={`min-h-screen ${themeClasses.bgGradient} ${themeClasses.textPrimary} flex items-center justify-center`}>
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-synthwave-neon-cyan mx-auto mb-4"></div>
           <p className="text-synthwave-text-secondary font-rajdhani">
-            {!agentState.coach ? 'Loading coach...' : 'Loading conversation...'}
+            {!coachConversationAgentState.coach ? 'Loading coach...' : 'Loading conversation...'}
           </p>
         </div>
       </div>
@@ -762,11 +771,11 @@ function CoachConversations() {
   }
 
   // Show error state
-  if (agentState.error && !agentState.coach) {
+  if (coachConversationAgentState.error && !coachConversationAgentState.coach) {
     return (
       <div className={`min-h-screen ${themeClasses.bgGradient} ${themeClasses.textPrimary} flex items-center justify-center`}>
         <div className="text-center">
-          <p className="text-red-400 mb-4">{agentState.error}</p>
+          <p className="text-red-400 mb-4">{coachConversationAgentState.error}</p>
           <button
             onClick={() => navigate('/training-grounds')}
             className={`${themeClasses.buttonPrimary} px-6 py-2 rounded-lg`}
@@ -783,9 +792,9 @@ function CoachConversations() {
       <div className="max-w-7xl mx-auto px-8 py-12 min-h-[calc(100vh-5rem)] flex flex-col">
         {/* Header */}
         <div className="mb-8 text-center">
-          {agentState.coach ? (
+          {coachConversationAgentState.coach ? (
             <h1 className="font-russo font-black text-4xl md:text-5xl text-white mb-6 uppercase">
-              Chat with: <span className="text-synthwave-neon-pink">{agentState.coach.name}</span>
+              Chat with: <span className="text-synthwave-neon-pink">{coachConversationAgentState.coach.name}</span>
             </h1>
           ) : (
             <h1 className="font-russo font-black text-4xl md:text-5xl text-white mb-6 uppercase">
@@ -794,7 +803,7 @@ function CoachConversations() {
           )}
 
           {/* Conversation Title */}
-          {agentState.conversation && agentState.conversation.title && (
+          {coachConversationAgentState.conversation && coachConversationAgentState.conversation.title && (
             <div className="font-rajdhani text-lg text-synthwave-text-secondary mb-2">
               {isEditingTitle ? (
                 <div className="flex items-center justify-center space-x-2">
@@ -832,7 +841,7 @@ function CoachConversations() {
                 <div className="flex items-center justify-center space-x-2">
                   <span>
                     <span className="text-synthwave-text-secondary">Conversation: </span>
-                    <span className="text-synthwave-neon-cyan">{agentState.conversation.title}</span>
+                    <span className="text-synthwave-neon-cyan">{coachConversationAgentState.conversation.title}</span>
                   </span>
                   <button
                     onClick={handleEditTitle}
@@ -853,7 +862,7 @@ function CoachConversations() {
             <NeonBorder color="cyan" className="bg-synthwave-bg-card/50 h-full flex flex-col overflow-hidden">
               {/* Messages Area */}
               <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
-                {agentState.messages.map((message) => (
+                {coachConversationAgentState.messages.map((message) => (
                   <div
                     key={message.id}
                     className={`flex items-start space-x-3 ${
@@ -890,7 +899,7 @@ function CoachConversations() {
                 ))}
 
                 {/* Typing Indicator */}
-                {agentState.isTyping && (
+                {coachConversationAgentState.isTyping && (
                   <div className="flex items-start space-x-3">
                     <div className="flex-shrink-0 w-10 h-10 rounded-full bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan border border-synthwave-neon-cyan/50 flex items-center justify-center">
                       <AIIcon />
@@ -925,7 +934,7 @@ function CoachConversations() {
                       placeholder="What's on your mind today? How can I help you with your training?"
                       className="w-full px-4 py-3 bg-synthwave-bg-primary/50 border-2 border-synthwave-neon-cyan/30 rounded-lg text-synthwave-text-primary font-rajdhani focus:outline-none focus:border-synthwave-neon-cyan transition-all duration-200 resize-none placeholder-synthwave-text-muted"
                       style={{ minHeight: '3rem' }}
-                      disabled={agentState.isLoading}
+                      disabled={coachConversationAgentState.isLoadingItem}
                     />
 
                     {/* Slash Command Tooltip */}
@@ -975,11 +984,11 @@ function CoachConversations() {
 
                     <button
                       type="submit"
-                      disabled={!inputMessage.trim() || agentState.isLoading}
+                      disabled={!inputMessage.trim() || coachConversationAgentState.isLoadingItem}
                       className={`${themeClasses.cyanButton} p-3 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 min-w-[3rem] flex items-center justify-center`}
                       title="Send message"
                     >
-                      {agentState.isLoading ? (
+                      {coachConversationAgentState.isLoadingItem ? (
                         <div className="w-4 h-4 border-2 border-synthwave-neon-cyan border-t-transparent rounded-full animate-spin"></div>
                       ) : (
                         <SendIcon />
@@ -1097,7 +1106,7 @@ function CoachConversations() {
           <button
             onClick={() => {
               // TODO: Implement workout logging functionality
-              console.log('Log Workout clicked - functionality to be implemented');
+              console.info('Log Workout clicked - functionality to be implemented');
             }}
             className={`${themeClasses.neonButton} text-sm px-4 py-2 transition-all duration-300 flex items-center space-x-2`}
           >

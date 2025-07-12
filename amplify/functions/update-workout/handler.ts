@@ -49,7 +49,7 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
     // Check if workout exists first
     const existingWorkout = await getWorkout(userId, workoutId);
     if (!existingWorkout) {
-      return createErrorResponse(404, 'Workout session not found');
+      return createErrorResponse(404, 'Workout not found');
     }
 
     // Update the workout session
@@ -57,7 +57,7 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
 
     // Return the updated workout data
     return createSuccessResponse({
-      message: 'Workout session updated successfully',
+      message: 'Workout updated successfully',
       workout: {
         workoutId: updatedWorkout.workoutId,
         userId: updatedWorkout.userId,

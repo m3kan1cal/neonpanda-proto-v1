@@ -27,13 +27,13 @@ export class CoachConversationAgent {
     // State
     this.state = {
       messages: [],
-      isLoading: false,
+      isLoadingItem: false,
       isTyping: false,
       error: null,
       coach: null,
       conversation: null,
       historicalConversations: [],
-      isLoadingHistory: false,
+      isLoadingRecentItems: false,
     };
 
     // Bind methods
@@ -135,7 +135,7 @@ export class CoachConversationAgent {
   async loadHistoricalConversations(userId, coachId) {
     if (!userId || !coachId) return;
 
-    this._updateState({ isLoadingHistory: true });
+    this._updateState({ isLoadingRecentItems: true });
 
     try {
       console.info('Loading historical conversations for:', { userId, coachId });
@@ -151,7 +151,7 @@ export class CoachConversationAgent {
 
       this._updateState({
         historicalConversations: sortedConversations,
-        isLoadingHistory: false
+        isLoadingRecentItems: false
       });
 
       console.info('Historical conversations loaded:', sortedConversations);
@@ -160,7 +160,7 @@ export class CoachConversationAgent {
       console.error('Error loading historical conversations:', error);
       this._updateState({
         historicalConversations: [],
-        isLoadingHistory: false
+        isLoadingRecentItems: false
       });
       return [];
     }
@@ -171,7 +171,7 @@ export class CoachConversationAgent {
    */
   async createConversation(userId, coachId, title = null) {
     try {
-      this._updateState({ isLoading: true, error: null });
+      this._updateState({ isLoadingItem: true, error: null });
 
       // Generate title if not provided
       const conversationTitle = title || this.generateConversationTitle();
@@ -194,7 +194,7 @@ export class CoachConversationAgent {
       this._updateState({
         conversation,
         messages: [],
-        isLoading: false,
+        isLoadingItem: false,
       });
 
       // Notify navigation handler
@@ -206,7 +206,7 @@ export class CoachConversationAgent {
     } catch (error) {
       console.error("Error creating coach conversation:", error);
       this._updateState({
-        isLoading: false,
+        isLoadingItem: false,
         error: "Failed to create coach conversation",
       });
       if (typeof this.onError === 'function') {
@@ -225,7 +225,7 @@ export class CoachConversationAgent {
     }
 
     try {
-      this._updateState({ isLoading: true, error: null });
+      this._updateState({ isLoadingItem: true, error: null });
 
       console.info("Loading existing coach conversation:", { userId, coachId, conversationId });
 
@@ -292,14 +292,14 @@ export class CoachConversationAgent {
       this._updateState({
         conversation: actualConversation,
         messages: conversationMessages,
-        isLoading: false,
+        isLoadingItem: false,
       });
 
       return conversationData;
     } catch (error) {
       console.error("Error loading existing conversation:", error);
       this._updateState({
-        isLoading: false,
+        isLoadingItem: false,
         error: "Failed to load existing conversation",
       });
 
@@ -323,7 +323,7 @@ export class CoachConversationAgent {
   async sendMessage(messageContent) {
     if (
       !messageContent.trim() ||
-      this.state.isLoading ||
+      this.state.isLoadingItem ||
       !this.userId ||
       !this.coachId ||
       !this.conversationId
@@ -341,7 +341,7 @@ export class CoachConversationAgent {
       };
 
       this._addMessage(userMessage);
-      this._updateState({ isLoading: true, isTyping: true, error: null });
+      this._updateState({ isLoadingItem: true, isTyping: true, error: null });
 
       // Send to API
       const result = await sendCoachConversationMessage(
@@ -377,7 +377,7 @@ export class CoachConversationAgent {
 
       this._addMessage(aiResponse);
       this._updateState({
-        isLoading: false,
+        isLoadingItem: false,
         isTyping: false,
         conversation: result.conversation || this.state.conversation
       });
@@ -397,7 +397,7 @@ export class CoachConversationAgent {
 
       this._addMessage(errorResponse);
       this._updateState({
-        isLoading: false,
+        isLoadingItem: false,
         isTyping: false,
         error: "Failed to send message",
       });
@@ -415,7 +415,7 @@ export class CoachConversationAgent {
   clearConversation() {
     this._updateState({
       messages: [],
-      isLoading: false,
+      isLoadingItem: false,
       isTyping: false,
       error: null,
       conversation: null,

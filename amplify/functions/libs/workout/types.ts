@@ -2,13 +2,13 @@
  * Workout Session Types
  *
  * This module contains TypeScript interfaces and types specific to
- * workout session functionality including extraction, detection, and processing.
+ * workout functionality including extraction, detection, and processing.
  */
 
 import { CoachConfig } from '../coach-creator/types';
 
 /**
- * Core workout session data structure
+ * Core workout data structure
  */
 export interface Workout {
   workoutId: string;

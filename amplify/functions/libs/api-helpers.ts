@@ -1,12 +1,13 @@
 import type { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
 import { BedrockRuntimeClient, ConverseCommand } from '@aws-sdk/client-bedrock-runtime';
 import { LambdaClient, InvokeCommand, InvocationType } from '@aws-sdk/client-lambda';
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { Pinecone } from '@pinecone-database/pinecone';
 
 
 // Amazon Bedrock Converse API configuration
 const CLAUDE_SONNET_4_MODEL_ID = 'us.anthropic.claude-sonnet-4-20250514-v1:0';
-const MAX_TOKENS = 4096;
+const MAX_TOKENS = 16384; // Increased for complex workout extractions (Claude 4 supports much higher limits)
 const TEMPERATURE = 0.7;
 
 // Model constants for external use
@@ -22,6 +23,11 @@ const bedrockClient = new BedrockRuntimeClient({
 
 // Create Lambda client for async invocations
 const lambdaClient = new LambdaClient({
+  region: process.env.AWS_REGION || 'us-west-2'
+});
+
+// Create S3 client for debugging logs
+const s3Client = new S3Client({
   region: process.env.AWS_REGION || 'us-west-2'
 });
 
@@ -306,6 +312,48 @@ export const storePineconeContext = async (
 
   } catch (error) {
     console.error('Failed to store Pinecone context:', error);
+    throw error;
+  }
+};
+
+// Store debugging data in S3 for analysis
+export const storeDebugDataInS3 = async (
+  content: string,
+  metadata: Record<string, any>,
+  prefix: string = 'debug'
+): Promise<string> => {
+  try {
+    const bucketName = 'midgard-sandbox-logs';
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const key = `${prefix}/workout-extraction/${timestamp}_${metadata.userId || 'unknown'}_${metadata.type || 'raw-response'}.json`;
+
+    const debugData = {
+      timestamp: new Date().toISOString(),
+      metadata,
+      content
+    };
+
+    const command = new PutObjectCommand({
+      Bucket: bucketName,
+      Key: key,
+      Body: JSON.stringify(debugData, null, 2),
+      ContentType: 'application/json',
+      ServerSideEncryption: 'AES256'
+    });
+
+    await s3Client.send(command);
+
+    console.info(`Successfully stored debug data in S3:`, {
+      bucket: bucketName,
+      key,
+      contentLength: content.length,
+      metadataKeys: Object.keys(metadata)
+    });
+
+    return `s3://${bucketName}/${key}`;
+
+  } catch (error) {
+    console.error('Failed to store debug data in S3:', error);
     throw error;
   }
 };

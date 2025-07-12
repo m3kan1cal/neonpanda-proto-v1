@@ -422,7 +422,7 @@ httpApi.addRoutes({
 10. COMPLETED **Add workout Lambda** handlers to the backend and integrations
 11. COMPLETED **Create frontend workout API calls** in `src/utils/apis/`
 12. COMPLETED **Update coach conversation agent** to handle workout logging responses
-13. **Add workout display** in workout UI, possibly separate UI similar to CoachConversation
+13. COMPLETED **Add workout display** in workout UI, possibly separate UI similar to CoachConversation
 14. COMPLETED **Show recent workouts** display in the training grounds and maybe in the coach conversation
 
 ### Phase 3: Advanced Features

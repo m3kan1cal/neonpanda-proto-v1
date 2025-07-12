@@ -136,7 +136,7 @@ export function createCoreApi(
     sendCoachConversationMessageLambda
   );
 
-  // Create Lambda integrations for workout session functions
+  // Create Lambda integrations for workout functions
   const getWorkoutsIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
     'GetWorkoutsIntegration',
     getWorkoutsLambda

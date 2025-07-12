@@ -24,7 +24,7 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
     const workout = await getWorkout(userId, workoutId);
 
     if (!workout) {
-      return createErrorResponse(404, 'Workout session not found');
+      return createErrorResponse(404, 'Workout not found');
     }
 
     // Return the full workout data

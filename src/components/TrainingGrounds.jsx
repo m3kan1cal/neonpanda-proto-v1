@@ -99,7 +99,14 @@ function TrainingGrounds() {
   // Create stable callback reference with useCallback
   const handleWorkoutStateChange = useCallback((newState) => {
     console.info('TrainingGrounds: WorkoutAgent state changed:', newState);
-    setWorkoutState(newState);
+
+    // Map specific loading states to general isLoading for backward compatibility
+    const mappedState = {
+      ...newState,
+      isLoading: newState.isLoadingCount || newState.isLoadingRecentItems || newState.isLoadingItem
+    };
+
+    setWorkoutState(mappedState);
   }, []); // Empty dependency array = stable reference
 
   // Auto-scroll to top when page loads
@@ -218,7 +225,7 @@ function TrainingGrounds() {
 
   const renderWorkoutList = () => (
     <div className="space-y-2">
-      {workoutState.isLoading ? (
+      {workoutState.isLoadingRecentItems ? (
         <div className="text-center py-8">
           <div className="inline-flex items-center space-x-2 text-synthwave-text-secondary font-rajdhani">
             <div className="w-4 h-4 border-2 border-synthwave-neon-pink border-t-transparent rounded-full animate-spin"></div>
@@ -393,7 +400,7 @@ function TrainingGrounds() {
           </div>
           <div className="bg-synthwave-bg-card/30 border-2 border-synthwave-neon-pink/30 rounded-lg p-4 text-center">
             <div className="text-2xl font-russo font-bold text-synthwave-neon-pink mb-1">
-              {workoutState.isLoading ? (
+              {workoutState.isLoadingCount ? (
                 <div className="w-6 h-6 border-2 border-synthwave-neon-pink border-t-transparent rounded-full animate-spin mx-auto"></div>
               ) : (
                 workoutState.totalWorkoutCount || 0
@@ -562,7 +569,7 @@ function TrainingGrounds() {
               <button
                 onClick={() => {
                   // TODO: Implement workout logging functionality
-                  console.log('Log Workout clicked - functionality to be implemented');
+                  console.info('Log Workout clicked - functionality to be implemented');
                 }}
                 className={`${themeClasses.neonButton} text-sm px-6 py-3 transition-all duration-300 inline-flex items-center space-x-2 mx-auto`}
               >

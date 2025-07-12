@@ -82,16 +82,16 @@ export const getWorkouts = async (userId, options = {}) => {
 
   const result = await response.json();
   console.info('getWorkouts: API Response:', result);
-  console.info('getWorkouts: Workout sessions loaded:', result);
+  console.info('getWorkouts: Workouts loaded:', result);
 
   return result;
 };
 
 /**
- * Gets a specific workout session with full details
+ * Gets a specific workout with full details
  * @param {string} userId - The user ID
- * @param {string} workoutId - The workout session ID
- * @returns {Promise<Object>} - The API response with full workout session details
+ * @param {string} workoutId - The workout ID
+ * @returns {Promise<Object>} - The API response with full workout details
  */
 export const getWorkout = async (userId, workoutId) => {
   const response = await fetch(`${getApiUrl('')}/users/${userId}/workouts/${workoutId}`, {
@@ -103,13 +103,13 @@ export const getWorkout = async (userId, workoutId) => {
 
   if (!response.ok) {
     if (response.status === 404) {
-      throw new Error('Workout session not found');
+      throw new Error('Workout not found');
     }
     throw new Error(`API Error: ${response.status}`);
   }
 
   const result = await response.json();
-  console.info('Workout session loaded:', result);
+  console.info('Workout loaded:', result);
 
   return result;
 };
@@ -117,8 +117,8 @@ export const getWorkout = async (userId, workoutId) => {
 /**
  * Updates a workout session
  * @param {string} userId - The user ID
- * @param {string} workoutId - The workout session ID
- * @param {Object} updates - The workout session updates
+ * @param {string} workoutId - The workout ID
+ * @param {Object} updates - The workout updates
  * @param {Object} [updates.workoutData] - Updated workout data
  * @param {Object} [updates.extractionMetadata] - Updated extraction metadata
  * @param {string} [updates.extractionMetadata.reviewedBy] - User who reviewed the workout
@@ -137,7 +137,7 @@ export const updateWorkout = async (userId, workoutId, updates) => {
 
   if (!response.ok) {
     if (response.status === 404) {
-      throw new Error('Workout session not found');
+      throw new Error('Workout not found');
     }
     if (response.status === 400) {
       const errorData = await response.json();
@@ -147,7 +147,7 @@ export const updateWorkout = async (userId, workoutId, updates) => {
   }
 
   const result = await response.json();
-  console.info('Workout session updated:', result);
+  console.info('Workout updated:', result);
 
   return result;
 };
@@ -200,7 +200,7 @@ export const getWorkoutsByDiscipline = async (userId, discipline, limit = 20) =>
 
 // Get workout sessions count for a user
 export async function getWorkoutsCount(userId, options = {}) {
-  console.log('Making API call to get workout sessions count for user:', userId);
+  console.info('Making API call to get workout sessions count for user:', userId);
 
   const queryParams = new URLSearchParams();
 
@@ -235,7 +235,7 @@ export async function getWorkoutsCount(userId, options = {}) {
     }
 
     const data = await response.json();
-    console.log('Successfully retrieved workout sessions count:', data);
+    console.info('Successfully retrieved workout sessions count:', data);
     return data;
   } catch (error) {
     console.error('Error getting workout sessions count:', error);

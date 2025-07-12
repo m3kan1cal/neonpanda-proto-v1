@@ -539,7 +539,7 @@ export async function saveWorkout(workout: Workout): Promise<void> {
 
   await saveToDynamoDB(item);
 
-  console.info('Workout session saved successfully:', {
+  console.info('Workout saved successfully:', {
     workoutId: workout.workoutId,
     userId: workout.userId,
     discipline: workout.workoutData.discipline,
@@ -640,7 +640,7 @@ export async function queryWorkoutsCount(
 
     const totalCount = filteredSessions.length;
 
-    console.info('Workout sessions counted successfully:', {
+    console.info('Workouts counted successfully:', {
       userId,
       totalFound: allSessions.length,
       afterFiltering: totalCount,
@@ -781,7 +781,7 @@ export async function queryWorkouts(
       filteredSessions = filteredSessions.slice(offset, offset + limit);
     }
 
-    console.info('Workout sessions queried successfully:', {
+    console.info('Workouts queried successfully:', {
       userId,
       totalFound: allSessions.length,
       afterFiltering: filteredSessions.length,
@@ -805,7 +805,7 @@ export async function updateWorkout(
   const existingSession = await getWorkout(userId, workoutId);
 
   if (!existingSession) {
-    throw new Error(`Workout session not found: ${workoutId}`);
+    throw new Error(`Workout not found: ${workoutId}`);
   }
 
   // Update the session with new data
@@ -828,7 +828,7 @@ export async function updateWorkout(
     updatedAt: new Date().toISOString()
   };
 
-  console.info('About to save workout session update to DynamoDB:', {
+  console.info('About to save workout update to DynamoDB:', {
     workoutId,
     userId,
     updateFields: Object.keys(updates),
@@ -838,7 +838,7 @@ export async function updateWorkout(
 
   await saveToDynamoDB(updatedItem);
 
-  console.info('Successfully updated workout session in DynamoDB');
+  console.info('Successfully updated workout in DynamoDB');
 
   return updatedSession;
 }

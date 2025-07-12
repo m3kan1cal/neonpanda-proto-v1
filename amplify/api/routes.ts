@@ -161,7 +161,7 @@ export function addCoachConversationRoutes(
 }
 
 /**
- * Add workout session routes to the HTTP API
+ * Add workout routes to the HTTP API
  */
 export function addWorkoutRoutes(
   httpApi: apigatewayv2.HttpApi,
