@@ -2,7 +2,6 @@ import { CoachCreatorSession, PersonalityCoherenceCheck, CoachPersonalityTemplat
 import { callBedrockApi } from '../api-helpers';
 import { extractSafetyProfile, extractMethodologyPreferences, extractTrainingFrequency, extractSpecializations, extractGoalTimeline, extractIntensityPreference } from './data-extraction';
 import { generateCoachCreatorSessionSummary } from './session-management';
-import { storePineconeContext } from '../api-helpers';
 import { COACH_CREATOR_QUESTIONS } from './question-management';
 
 // Coach Personality Templates
@@ -524,38 +523,7 @@ export const validateCoachConfigSafety = async (coachConfig: CoachConfig, safety
   };
 };
 
-// Store coach creator summary in Pinecone for future analysis
-export const saveCoachCreatorSummary = async (userId: string, conversationSummary: string, metadata: any) => {
-  try {
-    // Prepare coach creator specific metadata
-    const coachCreatorMetadata = {
-      record_type: 'coach_creator_summary',
 
-      // Coach creator specific metadata from the function call
-      sophistication_level: metadata.sophistication_level || 'unknown',
-      selected_personality: metadata.selected_personality || 'unknown',
-      selected_methodology: metadata.selected_methodology || 'unknown',
-      safety_considerations: metadata.safety_considerations || 0,
-      creation_date: metadata.creation_date || new Date().toISOString(),
-
-      // Semantic search categories
-      topics: ['coach_creator', 'user_onboarding', 'personality_selection', 'methodology_selection'],
-
-      // Additional context for retrieval
-      outcome: 'coach_created'
-    };
-
-    // Use centralized storage function
-    await storePineconeContext(userId, conversationSummary, coachCreatorMetadata);
-
-  } catch (error) {
-    console.error('Failed to store Pinecone coach creator context:', error);
-
-    // Don't throw error to avoid breaking the coach creator process
-    // Pinecone storage is for analytics/future retrieval, not critical for immediate functionality
-    console.warn('Coach creator will continue despite Pinecone storage failure');
-  }
-};
 
 // Generate final coach configuration
 export const generateCoachConfig = async (session: CoachCreatorSession): Promise<CoachConfig> => {
@@ -749,15 +717,8 @@ who completed ${session.questionHistory.length} questions. Create a coach that p
       console.warn('Personality coherence issues detected:', personalityValidation.conflicting_traits);
     }
 
-    // Store coach creator conversation summary in Pinecone for future analysis
-    const coachCreatorSummary = generateCoachCreatorSessionSummary(session);
-    await saveCoachCreatorSummary(session.userId, coachCreatorSummary, {
-      sophistication_level: session.userContext.sophisticationLevel,
-      selected_personality: coachConfig.selected_personality.primary_template,
-      selected_methodology: coachConfig.selected_methodology.primary_methodology,
-      safety_considerations: safetyProfile.injuries.length,
-      creation_date: new Date().toISOString()
-    });
+    // Note: Pinecone storage is now handled by the calling function (build-coach-config handler)
+    // This allows for better separation of concerns and proper error handling
 
     return coachConfig;
   } catch (error) {

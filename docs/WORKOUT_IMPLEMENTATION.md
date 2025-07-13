@@ -429,18 +429,14 @@ httpApi.addRoutes({
 15. IN FUTURE **Implement workout editing** UI and make human friendly view
 16. COMPLETED **Add confidence score display** for extracted data
 17. COMPLETED **Create workout history view** for users
-18. **Add workout context** to coach system prompts
-
-Maybe analyze weekly workouts and provide insights for a week-ending report?
-Maybe summarize workouts and put in Pinecone for semantic searching to have memory of workouts for future?
-Maybe summarize weekly coach conversations, workouts, coaching feedback and put in Pinecone so coach has memory of previous week workouts?
-Allow deleting workouts?
+18. COMPLETED **Add workout context** to coach system prompts
+19. COMPLETED **Dump system prompts** in send-coach-conversation-message handler to S3 similar to the extract workout system prompts, make sure it all works
 
 ### Phase 4: Testing and Refinement
-19. **Test with simple workout logging** ("I did Fran in 8:57")
-20. **Test with complex workout descriptions** (custom workouts, scaling)
-21. **Refine extraction accuracy** based on user feedback
-22. **Add error handling** for failed extractions
+19. COMPLETED **Test with simple workout logging** ("I did Fran in 8:57")
+20. COMPLETED **Test with complex workout descriptions** (custom workouts, scaling)
+21. COMPLETED **Refine extraction accuracy** based on user feedback
+22. COMPLETED **Add error handling** for failed extractions
 
 ---
 

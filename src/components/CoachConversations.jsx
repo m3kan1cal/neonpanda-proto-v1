@@ -557,16 +557,27 @@ function CoachConversations() {
     setIsCreatingConversation(true);
 
     try {
+      console.info('CoachConversations.jsx: Creating new conversation...', { userId, coachId });
+
       // Create new conversation using the agent
       const result = await agentRef.current.createConversation(userId, coachId);
+
+      console.info('CoachConversations.jsx: Conversation created successfully:', result);
 
       // Navigate to the new conversation
       // The useEffect will handle refreshing historical conversations when conversationId changes
       if (result && result.conversationId) {
+        console.info('CoachConversations.jsx: Navigating to conversation:', result.conversationId);
+        // Close the popover before navigation
+        handleClosePopover();
         navigate(`/training-grounds/coach-conversations?userId=${userId}&coachId=${coachId}&conversationId=${result.conversationId}`);
+      } else {
+        console.error('CoachConversations.jsx: No conversationId in result:', result);
+        showToast('Failed to create conversation - no ID returned', 'error');
       }
     } catch (error) {
-      console.error('Error creating new conversation:', error);
+      console.error('CoachConversations.jsx: Error creating new conversation:', error);
+      showToast('Failed to create conversation', 'error');
       // Fall back to training grounds if creation fails
       navigate(`/training-grounds?userId=${userId}&coachId=${coachId}`);
     } finally {

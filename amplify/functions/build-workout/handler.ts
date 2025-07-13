@@ -7,9 +7,12 @@ import {
   calculateConfidence,
   extractCompletedAtTime,
   generateWorkoutSummary,
+  storeWorkoutSummaryInPinecone,
   BuildWorkoutEvent,
   UniversalWorkoutSchema
 } from '../libs/workout';
+
+
 
 export const handler = async (event: BuildWorkoutEvent) => {
   try {
@@ -190,12 +193,23 @@ export const handler = async (event: BuildWorkoutEvent) => {
     // Save to DynamoDB
     await saveWorkout(workout);
 
+    // Store workout summary in Pinecone for semantic search and coach context
+    console.info('📝 Storing workout summary in Pinecone...');
+    const pineconeResult = await storeWorkoutSummaryInPinecone(
+      event.userId,
+      summary,
+      workoutData,
+      workout
+    );
+
     console.info('✅ Workout extraction completed successfully:', {
       workoutId: workout.workoutId,
       discipline: workoutData.discipline,
       workoutName: workoutData.workout_name || 'Custom Workout',
       confidence,
-      validationFlags: workoutData.metadata!.validation_flags || []
+      validationFlags: workoutData.metadata!.validation_flags || [],
+      pineconeStored: pineconeResult.success,
+      pineconeRecordId: pineconeResult.success && 'recordId' in pineconeResult ? pineconeResult.recordId : null
     });
 
     return createSuccessResponse({

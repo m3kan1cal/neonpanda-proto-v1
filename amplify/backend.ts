@@ -161,7 +161,7 @@ grantLambdaInvokePermissions(
 backend.updateCoachCreatorSession.addEnvironment('BUILD_COACH_CONFIG_FUNCTION_NAME', backend.buildCoachConfig.resources.lambda.functionName);
 
 // Add environment variable for the workout extraction function name
-backend.sendCoachConversationMessage.addEnvironment('BUILD_WORKOUT_SESSION_FUNCTION_NAME', backend.buildWorkout.resources.lambda.functionName);
+backend.sendCoachConversationMessage.addEnvironment('BUILD_WORKOUT_FUNCTION_NAME', backend.buildWorkout.resources.lambda.functionName);
 
 // Output the API URL and DynamoDB table info
 backend.addOutput({

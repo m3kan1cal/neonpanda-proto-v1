@@ -378,15 +378,26 @@ function Workouts() {
     setIsCreatingConversation(true);
 
     try {
+      console.info('Workouts.jsx: Creating new conversation...', { userId, coachId });
+
       // Create new conversation using the agent
       const result = await agentRef.current.createConversation(userId, coachId);
 
+      console.info('Workouts.jsx: Conversation created successfully:', result);
+
       // Navigate to the new conversation
       if (result && result.conversationId) {
+        console.info('Workouts.jsx: Navigating to conversation:', result.conversationId);
+        // Close the popover before navigation
+        handleClosePopover();
         navigate(`/training-grounds/coach-conversations?userId=${userId}&coachId=${coachId}&conversationId=${result.conversationId}`);
+      } else {
+        console.error('Workouts.jsx: No conversationId in result:', result);
+        showToast('Failed to create conversation - no ID returned', 'error');
       }
     } catch (error) {
-      console.error('Error creating new conversation:', error);
+      console.error('Workouts.jsx: Error creating new conversation:', error);
+      showToast('Failed to create conversation', 'error');
       // Fall back to training grounds if creation fails
       navigate(`/training-grounds?userId=${userId}&coachId=${coachId}`);
     } finally {
@@ -558,7 +569,7 @@ function Workouts() {
                   </div>
                   {workout.workoutData?.duration && (
                     <div>
-                      <span className="text-synthwave-neon-pink">Duration:</span> {Math.round(workout.workoutData.duration / 60)} minutes
+                      <span className="text-synthwave-neon-pink">Duration:</span> {Math.round(workout.workoutData.duration)} minutes
                     </div>
                   )}
                   {workout.extractionMetadata?.confidence && (

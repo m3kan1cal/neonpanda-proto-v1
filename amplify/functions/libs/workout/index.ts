@@ -27,6 +27,10 @@ export {
 } from './extraction';
 
 export {
+  storeWorkoutSummaryInPinecone
+} from './pinecone';
+
+export {
   Workout,
   UniversalWorkoutSchema,
   BuildWorkoutEvent,

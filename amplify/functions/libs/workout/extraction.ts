@@ -120,6 +120,24 @@ EXTRACTION GUIDELINES:
    - unusual_performance (times/weights outside normal ranges)
    - incomplete_description, ambiguous_exercises
 
+   CRITICAL BLOCKING FLAGS (these prevent workout from being saved):
+   - 'planning_inquiry': User is asking about future workouts, planning, or "what should I do"
+   - 'advice_seeking': User is asking for advice, technique tips, or general fitness questions
+   - 'future_planning': User is discussing future workout plans or scheduling
+   - 'no_performance_data': No actual workout performance data found in the message
+
+   EXAMPLES OF BLOCKING FLAG USAGE:
+   - "What did I do for back squat last week?" → ['planning_inquiry'] (asking about past, not logging new)
+   - "Can you tell me what workouts I did yesterday?" → ['planning_inquiry'] (inquiry about past)
+   - "Should I do Fran today?" → ['advice_seeking', 'future_planning'] (asking for advice about future)
+   - "What's a good warm-up routine?" → ['advice_seeking'] (seeking general advice)
+   - "I'm thinking about doing Murph tomorrow" → ['future_planning'] (planning future workout)
+   - "Just to confirm, what was my time on Fran?" → ['planning_inquiry'] (confirming past data)
+
+   IMPORTANT: If the message is clearly a question about past workouts, advice seeking, or future planning,
+   set the appropriate blocking flags even if workout terms are present. These flags prevent inappropriate
+   workout logging when users are asking questions rather than reporting completed workouts.
+
 7. STANDARDIZATION:
    - Exercise names: Use standard terms (thruster not "front squat to press", pull-up not "chin-up")
    - Units: Be consistent (convert if needed, note original)

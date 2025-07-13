@@ -1,6 +1,6 @@
 import { Context, Handler } from 'aws-lambda';
 import { createSuccessResponse, createErrorResponse } from '../libs/api-helpers';
-import { generateCoachConfig } from '../libs/coach-creator/coach-generation';
+import { generateCoachConfig, storeCoachCreatorSummaryInPinecone, generateCoachCreatorSessionSummary } from '../libs/coach-creator';
 import { saveCoachConfig, getCoachCreatorSession, saveCoachCreatorSession } from '../../dynamodb/operations';
 
 // Interface for the event payload
@@ -49,6 +49,16 @@ export const handler: Handler<CoachConfigEvent> = async (event: CoachConfigEvent
     // Save the coach config
     await saveCoachConfig(userId, coachConfig);
 
+    // Store coach creator summary in Pinecone for future analysis
+    console.info('📝 Storing coach creator summary in Pinecone...');
+    const conversationSummary = generateCoachCreatorSessionSummary(session.attributes);
+    const pineconeResult = await storeCoachCreatorSummaryInPinecone(
+      userId,
+      conversationSummary,
+      session.attributes,
+      coachConfig
+    );
+
     // Update session to indicate completion
     const completedSession = {
       ...session.attributes,
@@ -59,7 +69,14 @@ export const handler: Handler<CoachConfigEvent> = async (event: CoachConfigEvent
     };
     await saveCoachCreatorSession(completedSession);
 
-    console.info('Coach config generation completed successfully:', coachConfig.coach_id);
+    console.info('✅ Coach config generation completed successfully:', {
+      coachConfigId: coachConfig.coach_id,
+      coachName: coachConfig.coach_name,
+      userId,
+      sessionId,
+      pineconeStored: pineconeResult.success,
+      pineconeRecordId: pineconeResult.success && 'recordId' in pineconeResult ? pineconeResult.recordId : null
+    });
 
     return createSuccessResponse({
       success: true,

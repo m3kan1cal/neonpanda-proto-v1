@@ -327,52 +327,97 @@ const generateWorkoutContext = (workoutContext: NonNullable<PromptGenerationOpti
     return '';
   }
 
-  const workoutSummaries = workoutContext.map((workout, index) => {
-    const timeAgo = formatTimeAgo(workout.completedAt);
-    const workoutName = workout.workoutName || 'Workout';
-    const discipline = workout.discipline || '';
-    const summary = workout.summary || `${workoutName}${discipline ? ` (${discipline})` : ''}`;
+  const { thisWeek, lastWeek, older } = groupWorkoutsByTimeframe(workoutContext);
 
-    return `${index + 1}. ${timeAgo}: ${summary}`;
-  }).join('\n');
+  const formatWorkoutGroup = (workouts: typeof workoutContext, groupName: string) => {
+    if (workouts.length === 0) return '';
+
+    const workoutSummaries = workouts.map((workout, index) => {
+      const timeAgo = formatTimeAgo(workout.completedAt);
+      const workoutName = workout.workoutName || 'Workout';
+      const discipline = workout.discipline || '';
+      const summary = workout.summary || `${workoutName}${discipline ? ` (${discipline})` : ''}`;
+
+      return `- ${timeAgo}: ${summary}`;
+    }).join('\n');
+
+    return `## ${groupName}:\n${workoutSummaries}`;
+  };
+
+  const sections = [
+    formatWorkoutGroup(thisWeek, 'THIS WEEK'),
+    formatWorkoutGroup(lastWeek, 'LAST WEEK'),
+    formatWorkoutGroup(older, 'EARLIER')
+  ].filter(section => section !== '');
 
   return `# RECENT WORKOUT CONTEXT
-Here are the athlete's recent workout sessions (most recent first):
 
-${workoutSummaries}
+${sections.join('\n\n')}
 
-Use this context to:
+## TEMPORAL REASONING GUIDELINES:
+- When users ask about "last week", consider workouts from 7-14 days ago, but also relevant recent workouts if they provide context
+- When users ask about "this week", include workouts from 0-7 days ago
+- "Recently" typically means within the last 3-5 days
+- "Yesterday" is part of both "recently" and "this week" - don't treat time periods as mutually exclusive
+- Users often use overlapping time references ("last week" can include "yesterday" if it provides relevant context)
+- When responding to time-based queries, consider the logical time period the user intends, not just literal calendar boundaries
+- Provide comprehensive answers that include all relevant workouts within the requested timeframe
+
+## USAGE INSTRUCTIONS:
 - Reference recent training when relevant to current conversation
 - Identify patterns in their training approach
 - Build on their recent achievements and progress
 - Provide contextually relevant programming advice
 - Acknowledge their consistency and effort when appropriate
-
-DO NOT explicitly list out their workouts unless directly asked. Use this context naturally to enhance your coaching responses.`;
+- DO NOT explicitly list out their workouts unless directly asked
+- Use this context naturally to enhance your coaching responses`;
 };
 
 /**
- * Helper function to format time ago for workout context
+ * Helper function to format time ago for workout context with enhanced temporal information
  */
 const formatTimeAgo = (date: Date): string => {
   const now = new Date();
   const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+  const days = Math.floor(diffInMinutes / 1440);
+
+  // Get day of week for context
+  const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' });
 
   if (diffInMinutes < 60) {
-    return `${diffInMinutes}m ago`;
+    return `${diffInMinutes}m ago (${dayOfWeek})`;
   } else if (diffInMinutes < 1440) { // 24 hours
     const hours = Math.floor(diffInMinutes / 60);
-    return `${hours}h ago`;
+    return `${hours}h ago (${dayOfWeek})`;
   } else {
-    const days = Math.floor(diffInMinutes / 1440);
-    if (days === 1) return 'Yesterday';
-    if (days < 7) return `${days}d ago`;
+    if (days === 1) return `Yesterday (${dayOfWeek})`;
+    if (days < 7) return `${days}d ago (${dayOfWeek}) - This week`;
+    if (days < 14) return `${days}d ago (${dayOfWeek}) - Last week`;
     if (days < 30) {
       const weeks = Math.floor(days / 7);
-      return `${weeks}w ago`;
+      return `${weeks}w ago (${dayOfWeek})`;
     }
-    return `${Math.floor(days / 30)}mo ago`;
+    return `${Math.floor(days / 30)}mo ago (${dayOfWeek})`;
   }
+};
+
+/**
+ * Helper function to group workouts by timeframe for better temporal context
+ */
+const groupWorkoutsByTimeframe = (workouts: NonNullable<PromptGenerationOptions['workoutContext']>) => {
+  const now = new Date();
+  const thisWeek: typeof workouts = [];
+  const lastWeek: typeof workouts = [];
+  const older: typeof workouts = [];
+
+  workouts.forEach(workout => {
+    const days = Math.floor((now.getTime() - workout.completedAt.getTime()) / (1000 * 60 * 60 * 24));
+    if (days < 7) thisWeek.push(workout);
+    else if (days < 14) lastWeek.push(workout);
+    else older.push(workout);
+  });
+
+  return { thisWeek, lastWeek, older };
 };
 
 /**

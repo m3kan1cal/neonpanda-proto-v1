@@ -1,9 +1,15 @@
 import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
-import { createSuccessResponse, createErrorResponse, callBedrockApi, MODEL_IDS, invokeAsyncLambda, storeDebugDataInS3 } from '../libs/api-helpers';
+import { createSuccessResponse, createErrorResponse, callBedrockApi, MODEL_IDS, invokeAsyncLambda, storeDebugDataInS3, queryPineconeContext } from '../libs/api-helpers';
 import { getCoachConversation, sendCoachConversationMessage, getCoachConfig, queryWorkouts } from '../../dynamodb/operations';
 import { CoachMessage } from '../libs/coach-conversation/types';
 import { generateSystemPrompt, validateCoachConfig, generateSystemPromptPreview } from '../libs/coach-conversation/prompt-generation';
 import { detectWorkoutLogging, parseSlashCommand, isWorkoutSlashCommand, generateWorkoutDetectionContext, WORKOUT_SLASH_COMMANDS } from '../libs/workout';
+import { shouldUsePineconeSearch, formatPineconeContext } from '../libs/pinecone-utils';
+
+// Configuration constants
+const RECENT_WORKOUTS_CONTEXT_LIMIT = 14;
+const ENABLE_S3_DEBUG_LOGGING = false; // Set to true to enable system prompt debugging in S3
+
 export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> => {
   try {
     const userId = event.pathParameters?.userId;
@@ -45,11 +51,11 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
       return createErrorResponse(404, 'Coach configuration not found');
     }
 
-    // Load recent workouts for context (5 most recent workouts)
+    // Load recent workouts for context
     let recentWorkouts: any[] = [];
     try {
       const workoutResults = await queryWorkouts(userId, {
-        limit: 14,
+        limit: RECENT_WORKOUTS_CONTEXT_LIMIT,
         sortBy: 'completedAt',
         sortOrder: 'desc'
       });
@@ -67,6 +73,50 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
     } catch (error) {
       console.warn('Failed to load recent workouts for context, continuing without:', error);
       // Continue without workout context - don't fail the conversation
+    }
+
+    // Query Pinecone for semantic context if appropriate
+    let pineconeContext = '';
+    let pineconeMatches: any[] = [];
+    const shouldQueryPinecone = shouldUsePineconeSearch(userResponse);
+
+    if (shouldQueryPinecone) {
+      try {
+        console.info('🔍 Querying Pinecone for semantic context:', {
+          userId,
+          userMessageLength: userResponse.length,
+          messagePreview: userResponse.substring(0, 100) + '...'
+        });
+
+        const pineconeResult = await queryPineconeContext(userId, userResponse, {
+          topK: 3,
+          includeWorkouts: true,
+          includeCoachCreator: true,
+          minScore: 0.7
+        });
+
+        if (pineconeResult.success && pineconeResult.matches.length > 0) {
+          pineconeMatches = pineconeResult.matches;
+          pineconeContext = formatPineconeContext(pineconeMatches);
+
+          console.info('✅ Successfully retrieved Pinecone context:', {
+            totalMatches: pineconeResult.totalMatches,
+            relevantMatches: pineconeResult.relevantMatches,
+            contextLength: pineconeContext.length
+          });
+        } else {
+          console.info('📭 No relevant Pinecone context found:', {
+            success: pineconeResult.success,
+            totalMatches: pineconeResult.totalMatches,
+            error: pineconeResult.error
+          });
+        }
+      } catch (error) {
+        console.warn('⚠️ Failed to query Pinecone context, continuing without:', error);
+        // Continue without Pinecone context - don't fail the conversation
+      }
+    } else {
+      console.info('⏭️ Skipping Pinecone query - message does not require semantic search');
     }
 
     // Create user message
@@ -116,9 +166,9 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
       // Trigger async workout extraction (fire-and-forget)
       // This runs in parallel while the conversation continues
       try {
-            const buildFunction = process.env.BUILD_WORKOUT_SESSION_FUNCTION_NAME;
+            const buildFunction = process.env.BUILD_WORKOUT_FUNCTION_NAME;
     if (!buildFunction) {
-      throw new Error('BUILD_WORKOUT_SESSION_FUNCTION_NAME environment variable not set');
+      throw new Error('BUILD_WORKOUT_FUNCTION_NAME environment variable not set');
         }
 
         // Ensure we have valid workout content to extract
@@ -187,12 +237,21 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
           ...preview,
           conversationContext,
           promptLength: metadata.promptLength,
-          coachId: metadata.coachId
+          coachId: metadata.coachId,
+          hasPineconeContext: pineconeContext.length > 0,
+          pineconeMatches: pineconeMatches.length
         });
       }
 
       // Build conversation history into system prompt (following coach creator pattern exactly)
       let systemPromptWithHistory = systemPrompt;
+
+      // Add Pinecone context to system prompt if available
+      if (pineconeContext) {
+        systemPromptWithHistory += `\n\nSEMANTIC CONTEXT:${pineconeContext}
+
+IMPORTANT: Use the semantic context above to provide more informed and contextual responses. Reference relevant past workouts or patterns when appropriate, but don't explicitly mention that you're using stored context.`;
+      }
 
       if (existingMessages.length > 0) {
         // Format conversation history like coach creator does
@@ -214,28 +273,33 @@ USE THIS CONTEXT SILENTLY - don't explicitly reference previous exchanges unless
 Provide contextually relevant responses that demonstrate continuity with the ongoing coaching relationship.`;
       }
 
-      // Store system prompt with history in S3 for debugging
-      try {
-        const s3Location = await storeDebugDataInS3(systemPromptWithHistory, {
-          userId,
-          coachId,
-          conversationId,
-          coachName: coachConfig.attributes.coach_name,
-          userMessage: userResponse,
-          sessionNumber: conversationContext.sessionNumber,
-          promptLength: systemPromptWithHistory.length,
-          workoutContext: recentWorkouts.length > 0,
-          workoutDetected: isWorkoutLogging,
-          type: 'coach-conversation-prompt'
-        }, 'debug');
+      // Store system prompt with history in S3 for debugging (only if enabled)
+      if (ENABLE_S3_DEBUG_LOGGING) {
+        try {
+          const s3Location = await storeDebugDataInS3(systemPromptWithHistory, {
+            userId,
+            coachId,
+            conversationId,
+            coachName: coachConfig.attributes.coach_name,
+            userMessage: userResponse,
+            sessionNumber: conversationContext.sessionNumber,
+            promptLength: systemPromptWithHistory.length,
+            workoutContext: recentWorkouts.length > 0,
+            workoutDetected: isWorkoutLogging,
+            pineconeContext: pineconeMatches.length > 0,
+            pineconeMatches: pineconeMatches.length,
+            type: 'coach-conversation-prompt'
+          }, 'debug');
 
-        console.info('System prompt stored in S3 for debugging:', {
-          location: s3Location,
-          promptLength: systemPromptWithHistory.length,
-          workoutContextIncluded: recentWorkouts.length > 0
-        });
-      } catch (s3Error) {
-        console.warn('Failed to store system prompt in S3 (continuing anyway):', s3Error);
+          console.info('System prompt stored in S3 for debugging:', {
+            location: s3Location,
+            promptLength: systemPromptWithHistory.length,
+            workoutContextIncluded: recentWorkouts.length > 0,
+            pineconeContextIncluded: pineconeMatches.length > 0
+          });
+        } catch (s3Error) {
+          console.warn('Failed to store system prompt in S3 (continuing anyway):', s3Error);
+        }
       }
 
       try {
@@ -258,7 +322,7 @@ Provide contextually relevant responses that demonstrate continuity with the ong
       timestamp: new Date(),
       metadata: {
         model: MODEL_IDS.CLAUDE_SONNET_4_DISPLAY
-        // Note: Additional context like session number and prompt metadata
+        // Note: Additional context like session number, prompt metadata, and Pinecone context
         // are logged above for debugging but not stored in message metadata
         // due to interface constraints
       }
@@ -276,7 +340,12 @@ Provide contextually relevant responses that demonstrate continuity with the ong
     return createSuccessResponse({
       userResponse: newUserMessage,
       aiResponse: newAiMessage,
-      conversationId
+      conversationId,
+      pineconeContext: {
+        used: pineconeMatches.length > 0,
+        matches: pineconeMatches.length,
+        contextLength: pineconeContext.length
+      }
     }, 'Conversation updated successfully');
 
   } catch (error) {

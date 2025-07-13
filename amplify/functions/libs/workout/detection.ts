@@ -272,8 +272,27 @@ export const isCompletedWorkout = (message: string): boolean => {
     /evening.*session/i // "evening supplemental session"
   ];
 
+  // Add question indicators to catch inquiries about past workouts
+  const questionIndicators = [
+    /what\s+did\s+i\s+do/i,        // "What did I do for..."
+    /what\s+was\s+my/i,           // "What was my time..."
+    /can\s+you\s+tell\s+me/i,     // "Can you tell me what..."
+    /just\s+to\s+confirm/i,       // "Just to confirm, what..."
+    /remind\s+me/i,               // "Remind me what..."
+    /what\s+were\s+my/i,          // "What were my..."
+    /how\s+did\s+i\s+do/i,        // "How did I do on..."
+    /\?\s*$/,                     // Ends with question mark
+    /^(what|how|when|where|which|did|was|were|can|could|would|should)/i // Starts with question words
+  ];
+
   const hasCompletionIndicators = completionIndicators.some(pattern => pattern.test(message));
   const hasPlanningIndicators = planningIndicators.some(pattern => pattern.test(message));
+  const hasQuestionIndicators = questionIndicators.some(pattern => pattern.test(message));
+
+  // If has question indicators, likely not a completed workout (it's an inquiry)
+  if (hasQuestionIndicators) {
+    return false;
+  }
 
   // If has completion indicators and no planning indicators, likely completed
   if (hasCompletionIndicators && !hasPlanningIndicators) {

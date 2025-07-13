@@ -6,7 +6,9 @@ export const updateCoachCreatorSession = defineFunction({
   timeoutSeconds: 30,
   memoryMB: 1024,
   environment: {
-    DYNAMODB_TABLE_NAME: 'CoachForge-ProtoApi-AllItems-V2'
+    DYNAMODB_TABLE_NAME: 'CoachForge-ProtoApi-AllItems-V2',
+    // This placeholder gets overridden in backend.ts with the actual Lambda function name
+    BUILD_COACH_CONFIG_FUNCTION_NAME: 'build-coach-config'
   }
 });
 

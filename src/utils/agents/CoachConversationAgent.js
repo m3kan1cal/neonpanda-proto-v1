@@ -180,7 +180,8 @@ export class CoachConversationAgent {
 
       // Create conversation via API
       const result = await createCoachConversation(userId, coachId, conversationTitle);
-      const { conversationId, conversation } = result;
+      const conversation = result.conversation;
+      const conversationId = conversation.conversationId;
 
       // Update agent state
       this.userId = userId;

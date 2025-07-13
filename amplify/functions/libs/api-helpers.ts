@@ -360,3 +360,108 @@ export const storeDebugDataInS3 = async (
     throw error;
   }
 };
+
+/**
+ * Query Pinecone for semantic context relevant to user message
+ *
+ * @param userId - The user ID for namespace targeting
+ * @param userMessage - The user's message to find relevant context for
+ * @param options - Query options for filtering and limiting results
+ * @returns Promise with relevant context matches
+ */
+export const queryPineconeContext = async (
+  userId: string,
+  userMessage: string,
+  options: {
+    topK?: number;
+    includeWorkouts?: boolean;
+    includeCoachCreator?: boolean;
+    minScore?: number;
+  } = {}
+) => {
+  try {
+    const {
+      topK = 5,
+      includeWorkouts = true,
+      includeCoachCreator = true,
+      minScore = 0.7
+    } = options;
+
+    const { index } = await getPineconeClient();
+    const userNamespace = getUserNamespace(userId);
+
+    // Build filter for record types
+    const recordTypeFilters = [];
+    if (includeWorkouts) recordTypeFilters.push('workout_summary');
+    if (includeCoachCreator) recordTypeFilters.push('coach_creator_summary');
+
+    if (recordTypeFilters.length === 0) {
+      console.warn('No record types specified for Pinecone query');
+      return { matches: [], success: true, totalMatches: 0, relevantMatches: 0 };
+    }
+
+    // Use hosted model search - Pinecone converts text to embeddings automatically
+    const searchQuery = {
+      query: {
+        inputs: { text: userMessage },
+        topK: topK,
+      },
+      // fields: ['text', 'record_type'], // Not sure what this is for yet
+      filter: {
+        record_type: { $in: recordTypeFilters }
+      }
+    }
+
+    console.info('Querying Pinecone with hosted model:', {
+      indexName: PINECONE_INDEX_NAME,
+      namespace: userNamespace,
+      userId,
+      userMessageLength: userMessage.length,
+      topK,
+      recordTypes: recordTypeFilters
+    });
+
+    const queryResponse = await index.namespace(userNamespace).searchRecords(searchQuery);
+
+    // Filter results by minimum score and format for consumption
+    const relevantMatches = queryResponse.result.hits
+      .filter((match: any) => match.score && match.score >= minScore)
+      .map((match: any) => ({
+        id: match.id,
+        score: match.score,
+        content: match.metadata?.text || '', // The original content stored in metadata
+        recordType: match.metadata?.record_type,
+        metadata: match.metadata
+      }));
+
+    console.info('Successfully queried Pinecone for context:', {
+      indexName: PINECONE_INDEX_NAME,
+      namespace: userNamespace,
+      userId,
+      userMessageLength: userMessage.length,
+      totalMatches: queryResponse.result.hits.length,
+      relevantMatches: relevantMatches.length,
+      minScore,
+      recordTypes: recordTypeFilters
+    });
+
+    return {
+      matches: relevantMatches,
+      success: true,
+      totalMatches: queryResponse.result.hits.length,
+      relevantMatches: relevantMatches.length
+    };
+
+  } catch (error) {
+    console.error('Failed to query Pinecone context:', error);
+
+    // Return empty results instead of throwing - allows graceful degradation
+    return {
+      matches: [],
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      totalMatches: 0,
+      relevantMatches: 0
+    };
+  }
+};
