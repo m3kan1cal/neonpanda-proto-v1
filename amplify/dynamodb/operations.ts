@@ -1,7 +1,7 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, PutCommand, GetCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 import { CoachCreatorSession, DynamoDBItem, ContactFormAttributes, CoachConfigSummary, CoachConfig } from "../functions/libs/coach-creator/types";
-import { CoachConversation, CoachConversationSummary, CoachMessage } from "../functions/libs/coach-conversation/types";
+import { CoachConversation, CoachConversationListItem, CoachMessage, CoachConversationSummary } from "../functions/libs/coach-conversation/types";
 import { Workout } from "../functions/libs/workout/types";
 
 // DynamoDB client setup
@@ -375,7 +375,7 @@ export async function getCoachConversation(
 export async function queryCoachConversations(
   userId: string,
   coachId: string
-): Promise<DynamoDBItem<CoachConversationSummary>[]> {
+): Promise<DynamoDBItem<CoachConversationListItem>[]> {
   try {
     // Use the generic query function to get all coach conversations for the user + coach
     const items = await queryFromDynamoDB<any>(
@@ -841,4 +841,69 @@ export async function updateWorkout(
   console.info('Successfully updated workout in DynamoDB');
 
   return updatedSession;
+}
+
+// Function to save a coach conversation summary
+export async function saveCoachConversationSummary(summary: CoachConversationSummary): Promise<void> {
+  const item = createDynamoDBItem<CoachConversationSummary>(
+    'conversationSummary',
+    `user#${summary.userId}`,
+    `conversation#${summary.conversationId}#summary`,
+    summary,
+    new Date().toISOString()
+  );
+
+  await saveToDynamoDB(item);
+
+  console.info('Conversation summary saved successfully:', {
+    summaryId: summary.summaryId,
+    userId: summary.userId,
+    conversationId: summary.conversationId,
+    confidence: summary.metadata.confidence,
+    messageCount: summary.metadata.messageRange.totalMessages,
+    triggerReason: summary.metadata.triggerReason
+  });
+}
+
+// Function to get a coach conversation summary
+export async function getCoachConversationSummary(
+  userId: string,
+  conversationId: string
+): Promise<DynamoDBItem<CoachConversationSummary> | null> {
+  return await loadFromDynamoDB<CoachConversationSummary>(
+    `user#${userId}`,
+    `conversation#${conversationId}#summary`,
+    'conversationSummary'
+  );
+}
+
+// Function to query coach conversation summaries for a user
+export async function queryCoachConversationSummaries(
+  userId: string,
+  coachId?: string
+): Promise<DynamoDBItem<CoachConversationSummary>[]> {
+  try {
+    // Query all conversation summaries for the user
+    const items = await queryFromDynamoDB<CoachConversationSummary>(
+      `user#${userId}`,
+      'conversation#',
+      'conversationSummary'
+    );
+
+    // Filter by coach if specified
+    const filteredItems = coachId
+      ? items.filter(item => item.attributes.coachId === coachId)
+      : items;
+
+    console.info('Conversation summaries queried successfully:', {
+      userId,
+      coachId: coachId || 'all',
+      totalFound: filteredItems.length
+    });
+
+    return filteredItems;
+  } catch (error) {
+    console.error(`Error querying conversation summaries for user ${userId}:`, error);
+    throw error;
+  }
 }

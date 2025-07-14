@@ -17,6 +17,7 @@ import { getCoachConversation } from './functions/get-coach-conversation/resourc
 import { updateCoachConversation } from './functions/update-coach-conversation/resource';
 import { sendCoachConversationMessage } from './functions/send-coach-conversation-message/resource';
 import { buildWorkout } from './functions/build-workout/resource';
+import { buildConversationSummary } from './functions/build-conversation-summary/resource';
 import { getWorkouts } from './functions/get-workouts/resource';
 import { getWorkout } from './functions/get-workout/resource';
 import { updateWorkout } from './functions/update-workout/resource';
@@ -48,6 +49,7 @@ const backend = defineBackend({
   updateCoachConversation,
   sendCoachConversationMessage,
   buildWorkout,
+  buildConversationSummary,
   getWorkouts,
   getWorkout,
   updateWorkout,
@@ -101,6 +103,7 @@ coreTable.table.grantReadWriteData(backend.sendCoachConversationMessage.resource
 
 // Grant DynamoDB permissions to workout functions (read and write)
 coreTable.table.grantReadWriteData(backend.buildWorkout.resources.lambda);
+coreTable.table.grantReadWriteData(backend.buildConversationSummary.resources.lambda);
 coreTable.table.grantReadWriteData(backend.getWorkouts.resources.lambda);
 coreTable.table.grantReadWriteData(backend.getWorkout.resources.lambda);
 coreTable.table.grantReadWriteData(backend.updateWorkout.resources.lambda);
@@ -125,6 +128,7 @@ backend.sendCoachConversationMessage.addEnvironment('DYNAMODB_TABLE_NAME', coreT
 
 // Add environment variables for workout functions
 backend.buildWorkout.addEnvironment('DYNAMODB_TABLE_NAME', coreTable.table.tableName);
+backend.buildConversationSummary.addEnvironment('DYNAMODB_TABLE_NAME', coreTable.table.tableName);
 backend.getWorkouts.addEnvironment('DYNAMODB_TABLE_NAME', coreTable.table.tableName);
 backend.getWorkout.addEnvironment('DYNAMODB_TABLE_NAME', coreTable.table.tableName);
 backend.updateWorkout.addEnvironment('DYNAMODB_TABLE_NAME', coreTable.table.tableName);
@@ -136,7 +140,8 @@ grantBedrockPermissions([
   backend.updateCoachCreatorSession.resources.lambda,
   backend.buildCoachConfig.resources.lambda,
   backend.sendCoachConversationMessage.resources.lambda,
-  backend.buildWorkout.resources.lambda
+  backend.buildWorkout.resources.lambda,
+  backend.buildConversationSummary.resources.lambda
 ]);
 
 // Grant S3 debug permissions to functions that need it
@@ -151,10 +156,13 @@ grantLambdaInvokePermissions(
   [backend.buildCoachConfig.resources.lambda.functionArn]
 );
 
-// Grant permission to sendCoachConversationMessage to invoke buildWorkout
+// Grant permission to sendCoachConversationMessage to invoke buildWorkout and buildConversationSummary
 grantLambdaInvokePermissions(
   backend.sendCoachConversationMessage.resources.lambda,
-  [backend.buildWorkout.resources.lambda.functionArn]
+  [
+    backend.buildWorkout.resources.lambda.functionArn,
+    backend.buildConversationSummary.resources.lambda.functionArn
+  ]
 );
 
 // Add environment variable for the coach config function name
@@ -162,6 +170,9 @@ backend.updateCoachCreatorSession.addEnvironment('BUILD_COACH_CONFIG_FUNCTION_NA
 
 // Add environment variable for the workout extraction function name
 backend.sendCoachConversationMessage.addEnvironment('BUILD_WORKOUT_FUNCTION_NAME', backend.buildWorkout.resources.lambda.functionName);
+
+// Add environment variable for the conversation summary function name
+backend.sendCoachConversationMessage.addEnvironment('BUILD_CONVERSATION_SUMMARY_FUNCTION_NAME', backend.buildConversationSummary.resources.lambda.functionName);
 
 // Output the API URL and DynamoDB table info
 backend.addOutput({

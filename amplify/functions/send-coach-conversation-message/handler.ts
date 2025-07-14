@@ -5,10 +5,12 @@ import { CoachMessage } from '../libs/coach-conversation/types';
 import { generateSystemPrompt, validateCoachConfig, generateSystemPromptPreview } from '../libs/coach-conversation/prompt-generation';
 import { detectWorkoutLogging, parseSlashCommand, isWorkoutSlashCommand, generateWorkoutDetectionContext, WORKOUT_SLASH_COMMANDS } from '../libs/workout';
 import { shouldUsePineconeSearch, formatPineconeContext } from '../libs/pinecone-utils';
+import { detectConversationComplexity } from '../libs/coach-conversation/detection';
 
 // Configuration constants
 const RECENT_WORKOUTS_CONTEXT_LIMIT = 14;
 const ENABLE_S3_DEBUG_LOGGING = false; // Set to true to enable system prompt debugging in S3
+
 
 export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> => {
   try {
@@ -49,6 +51,43 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
     const coachConfig = await getCoachConfig(userId, coachId);
     if (!coachConfig) {
       return createErrorResponse(404, 'Coach configuration not found');
+    }
+
+    // Check if we should trigger conversation summary
+    const hasComplexityTriggers = detectConversationComplexity(userResponse);
+    const shouldTriggerSummary = existingConversation.attributes.metadata.totalMessages % 5 === 0 || hasComplexityTriggers;
+    if (shouldTriggerSummary) {
+      const triggerReason = existingConversation.attributes.metadata.totalMessages % 5 === 0 ? 'message_count' : 'complexity';
+      console.info('🔄 Conversation summary trigger detected:', {
+        conversationId,
+        totalMessages: existingConversation.attributes.metadata.totalMessages,
+        triggeredBy: triggerReason,
+        complexityDetected: hasComplexityTriggers
+      });
+
+      // Trigger async conversation summary generation
+      try {
+        const summaryFunction = process.env.BUILD_CONVERSATION_SUMMARY_FUNCTION_NAME;
+        if (!summaryFunction) {
+          console.warn('⚠️ BUILD_CONVERSATION_SUMMARY_FUNCTION_NAME environment variable not set');
+        } else {
+          await invokeAsyncLambda(
+            summaryFunction,
+            {
+              userId,
+              coachId,
+              conversationId,
+              triggerReason,
+              messageCount: existingConversation.attributes.metadata.totalMessages,
+              complexityIndicators: hasComplexityTriggers ? ['complexity_detected'] : undefined
+            },
+            'conversation summary generation'
+          );
+        }
+      } catch (error) {
+        console.error('❌ Failed to trigger conversation summary generation, but continuing conversation:', error);
+        // Don't throw - we want the conversation to continue even if summary generation fails
+      }
     }
 
     // Load recent workouts for context

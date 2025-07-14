@@ -13,5 +13,13 @@ export {
 export {
   CoachMessage,
   CoachConversation,
+  CoachConversationListItem,
+  BuildCoachConversationSummaryEvent,
   CoachConversationSummary
 } from './types';
+
+export {
+  buildCoachConversationSummaryPrompt,
+  parseCoachConversationSummary,
+  storeCoachConversationSummaryInPinecone
+} from './summary';

@@ -164,6 +164,34 @@
 }
 ```
 
+### Conversation Summaries
+```json
+{
+  "pk": "user#${user_id}",
+  "sk": "conversation#${conversation_id}#summary",
+  "entityType": "conversationSummary",
+  "createdAt": "2025-06-20T15:30:00Z",
+  "updatedAt": "2025-06-20T15:30:00Z",
+  "attributes": {
+    "conversationId": "conv_12345",
+    "summary_data": {
+      "narrative_summary": "User has been consistently working on Olympic lifts with focus on technique improvement. Shows strong motivation but tends to rush through warm-ups. Responded well to cue about 'patience in the setup' and achieved PR in clean & jerk. Dealing with some shoulder tightness from desk work.",
+      "key_facts": {
+        "current_goals": ["Olympic lift technique", "shoulder mobility", "consistency"],
+        "recent_progress": ["Clean & jerk PR: 185lb", "Improved front rack position"],
+        "preferences": ["Morning workouts", "Detailed technique feedback", "Progressive loading"],
+        "constraints": ["Desk job affecting posture", "Limited evening availability"],
+        "schedule_context": ["Prefers 6am sessions", "Travels frequently for work"]
+      },
+      "emotional_state": "Motivated but sometimes impatient, responds well to encouragement and specific technical cues",
+      "action_items": ["Daily shoulder mobility routine", "Focus on setup patience", "Track warm-up consistency"],
+      "last_updated": "2025-06-20T15:30:00Z",
+      "conversation_id": "conv_12345"
+    }
+  }
+}
+```
+
 **Key Details**:
 - Full conversation stored in S3, metadata in DynamoDB
 - AI-extracted topics and sentiment for analytics

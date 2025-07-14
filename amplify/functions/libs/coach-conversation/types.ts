@@ -39,9 +39,9 @@ export interface CoachConversation {
 }
 
 /**
- * Summary version for efficient listing (excludes messages array)
+ * Lightweight version for efficient listing (excludes messages array)
  */
-export interface CoachConversationSummary {
+export interface CoachConversationListItem {
   conversationId: string;
   coachId: string;
   userId: string;
@@ -52,5 +52,55 @@ export interface CoachConversationSummary {
     totalMessages: number;
     isActive: boolean;
     tags?: string[];
+  };
+}
+
+/**
+ * Event structure for building coach conversation summaries
+ */
+export interface BuildCoachConversationSummaryEvent {
+  userId: string;
+  coachId: string;
+  conversationId: string;
+  triggerReason: 'message_count' | 'complexity';
+  messageCount: number;
+  complexityIndicators?: string[];
+}
+
+/**
+ * AI-generated coach conversation summary for semantic search and coach context
+ */
+export interface CoachConversationSummary {
+  summaryId: string;
+  userId: string;
+  coachId: string;
+  conversationId: string;
+  narrative: string; // 150-300 word narrative summary
+  structuredData: {
+    current_goals: string[];
+    recent_progress: string[];
+    preferences: {
+      communication_style: string;
+      training_preferences: string[];
+      schedule_constraints: string[];
+    };
+    emotional_state: {
+      current_mood: string;
+      motivation_level: string;
+      confidence_level: string;
+    };
+    key_insights: string[];
+    important_context: string[];
+  };
+  metadata: {
+    createdAt: Date;
+    messageRange: {
+      startMessageId: string;
+      endMessageId: string;
+      totalMessages: number;
+    };
+    triggerReason: 'message_count' | 'complexity';
+    complexityIndicators?: string[];
+    confidence: number;
   };
 }
