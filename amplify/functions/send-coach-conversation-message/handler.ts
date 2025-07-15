@@ -128,9 +128,10 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
         });
 
         const pineconeResult = await queryPineconeContext(userId, userResponse, {
-          topK: 3,
+          topK: 6, // Increase to 8-10 for more context
           includeWorkouts: true,
           includeCoachCreator: true,
+          includeConversationSummaries: true,
           minScore: 0.7
         });
 

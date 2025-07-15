@@ -135,3 +135,110 @@ export const detectConversationComplexity = (userMessage: string): boolean => {
 
   return allTriggers.some(keyword => message.includes(keyword));
 };
+
+/**
+ * Detect if the user's message indicates they need conversation memory/context from past interactions
+ * @param userMessage - The user's message to analyze
+ * @returns boolean indicating if conversation memory retrieval would be helpful
+ */
+export const detectConversationMemoryNeeds = (userMessage: string): boolean => {
+  const message = userMessage.toLowerCase();
+
+  // Direct conversation references
+  const conversationReferenceKeywords = [
+    'remember', 'recall', 'you said', 'you mentioned', 'we talked about',
+    'we discussed', 'you told me', 'you suggested', 'our conversation',
+    'last time we', 'when we spoke', 'you understand', 'you know me',
+    'you know', 'as we discussed', 'like we talked about', 'you remember',
+    'remind me', 'think back', 'look back', 'previous conversation',
+    'earlier conversation', 'before we', 'when you', 'you always say',
+    'you usually', 'your advice', 'what you think', 'your opinion'
+  ];
+
+  // Emotional/relationship context seeking
+  const emotionalContextKeywords = [
+    'feeling like', 'same feeling', 'similar to', 'like before',
+    'again', 'still', 'continue to feel', 'keep feeling', 'pattern',
+    'trend', 'usually feel', 'typically', 'normally', 'often',
+    'relationship', 'connection', 'trust', 'understanding', 'support',
+    'guidance', 'help me understand', 'why do i', 'what causes',
+    'emotional', 'mentally', 'psychologically', 'mindset', 'attitude'
+  ];
+
+  // Goal/progress continuity references
+  const goalContinuityKeywords = [
+    'my goal', 'our goal', 'working toward', 'progress on', 'still working on',
+    'continue working', 'keep working', 'objective', 'target', 'plan we made',
+    'what we planned', 'strategy', 'approach we', 'method we', 'system we',
+    'program we', 'routine we', 'schedule we', 'timeline', 'milestone',
+    'next step', 'moving forward', 'building on', 'foundation we'
+  ];
+
+  // Preference/constraint references
+  const preferenceKeywords = [
+    'prefer', 'like', 'dislike', 'hate', 'love', 'enjoy', 'avoid',
+    'schedule', 'constraints', 'limitations', 'availability', 'busy',
+    'time', 'family', 'work', 'lifestyle', 'routine', 'habits',
+    'comfortable with', 'struggle with', 'good at', 'bad at',
+    'strength', 'weakness', 'challenge', 'difficulty', 'easy',
+    'hard', 'difficult', 'comfortable', 'uncomfortable'
+  ];
+
+  // Personal context/situation references
+  const personalContextKeywords = [
+    'situation', 'context', 'background', 'personal', 'life',
+    'what\'s been going on', 'update you', 'catch up', 'fill you in',
+    'let you know', 'inform you', 'tell you about', 'share with you',
+    'happening in my', 'going through', 'dealing with', 'facing',
+    'experiencing', 'current situation', 'right now', 'lately',
+    'recently', 'these days', 'currently'
+  ];
+
+  // Coaching relationship/style references
+  const coachingRelationshipKeywords = [
+    'coaching style', 'approach works', 'method works', 'way you',
+    'how you', 'your style', 'your approach', 'your method',
+    'connection', 'chemistry', 'fit', 'match', 'compatibility',
+    'understanding', 'communication', 'feedback', 'guidance',
+    'support', 'encouragement', 'motivation', 'inspiration',
+    'accountability', 'partnership', 'team', 'together'
+  ];
+
+  // Progress/comparison references
+  const progressComparisonKeywords = [
+    'compared to', 'versus', 'vs', 'different from', 'similar to',
+    'like when', 'unlike when', 'better than', 'worse than',
+    'same as', 'improvement from', 'decline from', 'change from',
+    'progress since', 'regress since', 'since we', 'from when',
+    'back then', 'now vs', 'then vs', 'used to', 'before'
+  ];
+
+  // Question patterns that often need context
+  const contextualQuestionKeywords = [
+    'why', 'how', 'what', 'when', 'where', 'which', 'who',
+    'should i', 'would you', 'do you think', 'what do you',
+    'how do you', 'why do you', 'can you', 'will you',
+    'help me', 'explain', 'clarify', 'understand', 'make sense'
+  ];
+
+  // Check if message contains any memory retrieval triggers
+  const allMemoryTriggers = [
+    ...conversationReferenceKeywords,
+    ...emotionalContextKeywords,
+    ...goalContinuityKeywords,
+    ...preferenceKeywords,
+    ...personalContextKeywords,
+    ...coachingRelationshipKeywords,
+    ...progressComparisonKeywords,
+    ...contextualQuestionKeywords
+  ];
+
+  // Also check for longer, more complex messages that might benefit from context
+  const isComplexMessage = userMessage.length > 100;
+  const hasQuestionMark = userMessage.includes('?');
+  const isComplexQuery = isComplexMessage && hasQuestionMark;
+
+  const hasMemoryTriggers = allMemoryTriggers.some(keyword => message.includes(keyword));
+
+  return hasMemoryTriggers || isComplexQuery;
+};

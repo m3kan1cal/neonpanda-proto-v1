@@ -2,6 +2,8 @@
  * Pinecone utility functions for semantic search and context formatting
  */
 
+import { detectConversationMemoryNeeds } from './coach-conversation';
+
 // Configuration
 const PINECONE_QUERY_ENABLED = true;
 
@@ -65,14 +67,78 @@ export function shouldUsePineconeSearch(userMessage: string): boolean {
 
   // Keywords that indicate asking about methodology or coaching approach
   const methodologyKeywords = [
+    // Basic methodology terms
     'why', 'approach', 'methodology', 'philosophy', 'strategy',
-    'programming', 'periodization', 'training style', 'coaching style'
+    'programming', 'periodization', 'training style', 'coaching style',
+
+    // Training systems & approaches
+    'linear progression', 'conjugate method', 'westside', '5/3/1', 'starting strength',
+    'block periodization', 'undulating', 'dip', 'bulgarian method', 'sheiko',
+    'high frequency', 'low frequency', 'volume', 'intensity', 'density',
+    'autoregulation', 'rpe', 'rate of perceived exertion', 'rir', 'rep in reserve',
+    'max effort', 'dynamic effort', 'repetition method', 'concurrent training',
+    'conjugate', 'linear', 'non-linear', 'undulating periodization',
+
+    // Fitness disciplines & specializations
+    'crossfit', 'powerlifting', 'olympic lifting', 'weightlifting', 'bodybuilding', 'strongman',
+    'calisthenics', 'gymnastics', 'endurance', 'cardio', 'hiit', 'conditioning',
+    'functional fitness', 'athletic performance', 'sport specific', 'general fitness',
+    'strength training', 'hypertrophy', 'power development', 'speed training',
+
+    // Programming concepts
+    'mesocycle', 'microcycle', 'macrocycle', 'phase', 'block', 'cycle',
+    'progressive overload', 'adaptation', 'specificity', 'variation',
+    'frequency', 'duration', 'load management', 'fatigue management',
+    'peak', 'taper', 'deload', 'maintenance', 'offseason', 'preseason',
+
+    // Recovery & lifestyle methodology
+    'recovery', 'regeneration', 'sleep', 'stress management', 'hydration',
+    'nutrition', 'supplementation', 'lifestyle', 'work-life balance',
+    'cut', 'bulk', 'recomp', 'body composition', 'weight management'
   ];
 
   // Keywords that indicate asking about specific movements or techniques
   const techniqueKeywords = [
+    // Basic technique terms
     'technique', 'form', 'movement', 'exercise', 'lift', 'skill',
-    'mobility', 'flexibility', 'injury', 'pain', 'recovery'
+    'mobility', 'flexibility', 'injury', 'pain', 'recovery',
+
+    // Core movement patterns & exercises
+    'squat', 'deadlift', 'bench press', 'overhead press', 'row', 'pull up',
+    'clean', 'jerk', 'snatch', 'press', 'chin up', 'dip', 'lunge',
+    'hip hinge', 'squat pattern', 'push', 'pull', 'carry', 'loaded carry',
+    'unilateral', 'bilateral', 'compound', 'isolation', 'accessory',
+    'primary', 'secondary', 'assistance', 'supplemental',
+
+    // Technical execution & cues
+    'cue', 'coaching cue', 'setup', 'breathing', 'bracing', 'tension',
+    'tempo', 'pause', 'eccentric', 'concentric', 'isometric',
+    'range of motion', 'rom', 'depth', 'lockout', 'sticking point',
+    'bar path', 'grip', 'stance', 'foot position', 'hand position',
+    'neutral spine', 'core stability', 'shoulder position', 'hip position',
+
+    // Movement quality & assessment
+    'mobility', 'stability', 'flexibility', 'balance', 'coordination',
+    'motor control', 'movement pattern', 'compensation', 'dysfunction',
+    'asymmetry', 'imbalance', 'restriction', 'limitation',
+    'screen', 'assessment', 'evaluation', 'analysis',
+
+    // Problem-solving & troubleshooting
+    'plateau', 'stall', 'regression', 'weakness', 'imbalance', 'compensation',
+    'troubleshoot', 'diagnose', 'fix', 'correct', 'adjust', 'modify',
+    'alternative', 'substitute', 'variation', 'progression', 'regression',
+    'scale', 'adapt', 'accommodate', 'work around',
+
+    // Injury & rehabilitation
+    'injury', 'pain', 'hurt', 'sore', 'ache', 'discomfort',
+    'rehabilitation', 'rehab', 'prehab', 'prevention', 'recovery',
+    'physical therapy', 'pt', 'doctor', 'medical', 'clearance',
+    'inflammation', 'swelling', 'acute', 'chronic', 'overuse',
+
+    // Equipment & environment
+    'equipment', 'gear', 'barbell', 'dumbbell', 'kettlebell', 'machine',
+    'cable', 'resistance band', 'bodyweight', 'home gym', 'commercial gym',
+    'platform', 'rack', 'bench', 'safety', 'spotting'
   ];
 
   // Check if message contains relevant keywords
@@ -82,10 +148,13 @@ export function shouldUsePineconeSearch(userMessage: string): boolean {
     ...techniqueKeywords
   ].some(keyword => message.includes(keyword));
 
+  // Check if message indicates need for conversation memory/context
+  const needsConversationMemory = detectConversationMemoryNeeds(userMessage);
+
   // Also use Pinecone for longer, more complex questions
   const isComplexQuery = userMessage.length > 50 && userMessage.includes('?');
 
-  return hasRelevantKeywords || isComplexQuery;
+  return hasRelevantKeywords || needsConversationMemory || isComplexQuery;
 }
 
 /**
@@ -106,6 +175,11 @@ export function formatPineconeContext(pineconeMatches: any[]): string {
     .map(match => `- ${match.content} (Score: ${match.score.toFixed(2)})`)
     .join('\n');
 
+  const conversationContext = pineconeMatches
+    .filter(match => match.recordType === 'conversation_summary')
+    .map(match => `- ${match.content} (Score: ${match.score.toFixed(2)})`)
+    .join('\n');
+
   let contextString = '';
 
   if (workoutContext) {
@@ -114,6 +188,10 @@ export function formatPineconeContext(pineconeMatches: any[]): string {
 
   if (coachCreatorContext) {
     contextString += `\nCOACH CREATION CONTEXT:\n${coachCreatorContext}`;
+  }
+
+  if (conversationContext) {
+    contextString += `\nCOACHING RELATIONSHIP MEMORY:\n${conversationContext}`;
   }
 
   return contextString;

@@ -177,8 +177,9 @@ export const handler = async (event: any) => {
   // Save to DynamoDB
   await saveWorkout(workout);
 
-  // For future: This is where you'd add to Pinecone for semantic search
-  // await addWorkoutToPinecone(userId, workout);
+  // Store workout summary in Pinecone for semantic search and coach context
+  const summary = await generateWorkoutSummary(workoutData, userMessage);
+  await storeWorkoutSummaryInPinecone(userId, summary, workoutData, workout);
 
   return { success: true, workoutId: workout.workoutId };
 };
@@ -431,6 +432,8 @@ httpApi.addRoutes({
 17. COMPLETED **Create workout history view** for users
 18. COMPLETED **Add workout context** to coach system prompts
 19. COMPLETED **Dump system prompts** in send-coach-conversation-message handler to S3 similar to the extract workout system prompts, make sure it all works
+20. COMPLETED **Implement Pinecone semantic search** for workout summaries in coach context
+21. COMPLETED **Add workout summary generation** for AI-generated summaries stored in Pinecone
 
 ### Phase 4: Testing and Refinement
 19. COMPLETED **Test with simple workout logging** ("I did Fran in 8:57")
@@ -440,12 +443,46 @@ httpApi.addRoutes({
 
 ---
 
+## Integrated Context System
+
+### Semantic Search Integration
+The workout logging system is now fully integrated with the broader coaching context system:
+
+**Three Types of Context:**
+1. **Workout Summaries** (`workout_summary`) - Generated after each workout extraction
+2. **Coach Creator Sessions** (`coach_creator_summary`) - From coach creation process
+3. **Conversation Summaries** (`conversation_summary`) - Generated every 5 messages + complexity triggers
+
+**Unified Retrieval:**
+```typescript
+const pineconeResult = await queryPineconeContext(userId, userResponse, {
+  topK: 6, // Increased from 3 to accommodate multiple context types
+  includeWorkouts: true,
+  includeCoachCreator: true,
+  includeConversationSummaries: true,
+  minScore: 0.7
+});
+```
+
+**Context Injection in System Prompt:**
+- `RELEVANT WORKOUT HISTORY:` - Past workout summaries
+- `COACH CREATION CONTEXT:` - Coach personality and methodology context
+- `COACHING RELATIONSHIP MEMORY:` - Conversation summaries with goals, preferences, emotional state
+
+**Trigger Detection:**
+- Extended methodology keywords (5/3/1, westside, rpe, etc.)
+- Comprehensive technique keywords (squat, deadlift, form cues, etc.)
+- Conversation memory triggers (remember, you said, we discussed, etc.)
+
+---
+
 ## Implementation Notes
 
 ### Coach Personality Integration
 - Workout acknowledgment must match the coach's personality
 - Use existing `coachConfig.personality_prompt` in acknowledgment generation
-- Include recent workout context in future coach conversations
+- Include recent workout context in future coach conversations through Pinecone semantic search
+- Workout summaries are automatically included in coach context when semantically relevant to user messages
 
 ### User Experience Flow
 1. User describes workout in coach conversation
@@ -454,14 +491,23 @@ httpApi.addRoutes({
 4. Async extraction happens in background
 5. Full workout data available in workout history
 6. User can edit/review extracted data by clicking on workout
+7. **NEW**: Workout summary automatically generated and stored in Pinecone
+8. **NEW**: Future coach conversations can reference past workouts through semantic search
+9. **NEW**: Coach has contextual memory of user's workout history when relevant
 
 ### Future Enhancements
 - Multiple coach support (expand coachIds array)
 - Prescribed workout comparison
-- Weekly workout summaries for Pinecone indexing
 - Coach notifications and analytics
 - Workout sharing between coaches
 - Advanced workout templates and prescription system
+
+### Implemented Enhancements (Since Original Document)
+- **Pinecone Integration**: Workout summaries are automatically generated and stored in Pinecone for semantic search
+- **Coach Context**: Workouts provide context to coaches through semantic search when relevant
+- **Conversation Memory System**: Parallel implementation for conversation summaries alongside workout summaries
+- **Enhanced Detection**: Expanded methodology and technique keywords for better workout and coaching context detection
+- **Unified Context System**: Workouts, coach creator sessions, and conversation summaries all contribute to coaching context
 
 ---
 

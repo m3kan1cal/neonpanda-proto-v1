@@ -23,3 +23,8 @@ export {
   parseCoachConversationSummary,
   storeCoachConversationSummaryInPinecone
 } from './summary';
+
+export {
+  detectConversationComplexity,
+  detectConversationMemoryNeeds
+} from './detection';

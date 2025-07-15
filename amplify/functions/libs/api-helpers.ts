@@ -376,6 +376,7 @@ export const queryPineconeContext = async (
     topK?: number;
     includeWorkouts?: boolean;
     includeCoachCreator?: boolean;
+    includeConversationSummaries?: boolean;
     minScore?: number;
   } = {}
 ) => {
@@ -384,6 +385,7 @@ export const queryPineconeContext = async (
       topK = 5,
       includeWorkouts = true,
       includeCoachCreator = true,
+      includeConversationSummaries = true,
       minScore = 0.7
     } = options;
 
@@ -394,6 +396,7 @@ export const queryPineconeContext = async (
     const recordTypeFilters = [];
     if (includeWorkouts) recordTypeFilters.push('workout_summary');
     if (includeCoachCreator) recordTypeFilters.push('coach_creator_summary');
+    if (includeConversationSummaries) recordTypeFilters.push('conversation_summary');
 
     if (recordTypeFilters.length === 0) {
       console.warn('No record types specified for Pinecone query');
