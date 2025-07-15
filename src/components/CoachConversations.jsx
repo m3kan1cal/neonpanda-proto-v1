@@ -783,7 +783,7 @@ function CoachConversations() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-synthwave-neon-cyan mx-auto mb-4"></div>
           <p className="text-synthwave-text-secondary font-rajdhani">
-            {!coachConversationAgentState.coach ? 'Loading coach...' : 'Loading conversation...'}
+            Loading conversation...
           </p>
         </div>
       </div>
