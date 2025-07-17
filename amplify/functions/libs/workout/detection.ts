@@ -41,7 +41,7 @@ export const parseSlashCommand = (message: string): SlashCommandResult => {
     return { isSlashCommand: false };
   }
 
-  const slashCommandRegex = /^\/(\w+)\s*(.*)$/;
+  const slashCommandRegex = /^\/([a-zA-Z0-9-]+)\s*([\s\S]*)$/;
   const match = message.match(slashCommandRegex);
 
   if (!match) {

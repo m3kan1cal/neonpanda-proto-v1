@@ -500,7 +500,17 @@ function TrainingGrounds() {
                 disabled={agentState.isCreatingConversation}
                 className={`${themeClasses.neonButton} text-sm px-6 py-3 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center space-x-2`}
               >
-                {agentState.isCreatingConversation ? 'Creating...' : 'Start New Conversation'}
+                {agentState.isCreatingConversation ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                    <span>Creating...</span>
+                  </>
+                ) : (
+                  <>
+                    <ConversationIcon />
+                    <span>Start Conversation</span>
+                  </>
+                )}
               </button>
             </div>
           </div>

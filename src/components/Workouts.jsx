@@ -684,7 +684,10 @@ function Workouts() {
                 <span>Creating...</span>
               </div>
             ) : (
-              'Start New Conversation'
+              <div className="flex items-center space-x-2">
+                <ChatIcon />
+                <span>Start Conversation</span>
+              </div>
             )}
           </button>
         </div>

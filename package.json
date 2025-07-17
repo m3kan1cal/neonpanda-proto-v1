@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "upsert-methodologies": "node scripts/upsert-methodologies.js"
   },
   "dependencies": {
     "@aws-amplify/cli": "^13.0.1",
@@ -33,6 +34,7 @@
     "@vitejs/plugin-react": "^4.4.1",
     "autoprefixer": "^10.4.21",
     "constructs": "^10.4.2",
+    "dotenv": "^17.2.0",
     "esbuild": "^0.25.5",
     "eslint": "^9.25.0",
     "eslint-plugin-react-hooks": "^5.2.0",

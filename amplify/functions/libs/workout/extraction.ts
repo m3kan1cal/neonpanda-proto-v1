@@ -700,11 +700,6 @@ SUMMARY:`;
     // Clean up the response - remove any prefix like "SUMMARY:" and trim
     const cleanSummary = response.trim();
 
-    // Ensure it's not too long (max 300 chars for UI display)
-    if (cleanSummary.length > 300) {
-      return cleanSummary.substring(0, 297) + '...';
-    }
-
     return cleanSummary;
   } catch (error) {
     console.error('Error generating workout summary:', error);
