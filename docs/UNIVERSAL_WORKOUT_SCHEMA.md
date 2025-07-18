@@ -243,7 +243,23 @@ CrossFit workouts require flexible structure to handle diverse workout formats w
                 "broken_sets": [10, 6, 5],
                 "rest_between_sets": [15, 20]
               },
+              "distance": null,
+              "calories": null,
+              "time": null,
               "form_notes": "Good depth, need to work on front rack position"
+            },
+            {
+              "exercise_name": "pull_up",
+              "movement_type": "gymnastics",
+              "variation": "chest_to_bar",
+              "assistance": "none",
+              "reps": {
+                "prescribed": 21,
+                "completed": 21,
+                "broken_sets": [8, 7, 6],
+                "rest_between_sets": [25, 30]
+              },
+              "form_notes": "Good kipping rhythm, maintained strict form"
             }
           ]
         }
@@ -252,7 +268,12 @@ CrossFit workouts require flexible structure to handle diverse workout formats w
         "total_time": 537,
         "rounds_completed": 3,
         "total_reps": 126,
-        "round_times": [195, 148, 194]
+        "round_times": [195, 148, 194],
+        "score": {
+          "value": 537,
+          "type": "time",
+          "unit": "seconds"
+        }
       }
     }
   }
@@ -687,6 +708,20 @@ Assign confidence levels to extracted data:
 "did 5 sets of 8" → 5 sets, 8 reps each
 "went to failure on the last set" → failure_achieved: true
 "had 3 reps left in the tank" → rpe: ~7
+"max pull-ups - got 15" → prescribed: "max", completed: 15
+"to failure" → prescribed: "max", completed: [actual number achieved]
+"AMRAP strict pull-ups" → prescribed: "max", completed: [actual reps]
+```
+
+#### Workout Score Patterns
+```
+"Fran in 8:57" → score: {value: 537, type: "time", unit: "seconds"}
+"finished in 12 minutes 34 seconds" → score: {value: 754, type: "time", unit: "seconds"}
+"got 12 rounds" → score: {value: 12, type: "rounds"}
+"12 rounds plus 5 reps" → score: {value: "12+5", type: "rounds"}
+"completed 347 total reps" → score: {value: 347, type: "reps"}
+"max deadlift was 315 pounds" → score: {value: 315, type: "weight", unit: "lbs"}
+"ran 5.2 miles total" → score: {value: 5.2, type: "distance", unit: "miles"}
 ```
 
 #### Subjective Quality Indicators
@@ -1150,7 +1185,12 @@ def analyze_cross_training_effects(user_workouts):
         "total_time": 537,
         "rounds_completed": 3,
         "total_reps": 126,
-        "round_times": [195, 148, 194]
+        "round_times": [195, 148, 194],
+        "score": {
+          "value": 537,
+          "type": "time",
+          "unit": "seconds"
+        }
       }
     }
   },

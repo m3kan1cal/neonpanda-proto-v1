@@ -99,6 +99,11 @@ export interface CrossFitWorkout {
     rounds_completed: number;
     total_reps?: number;
     round_times?: number[];
+    score?: {
+      value: number | string;
+      type: 'time' | 'rounds' | 'reps' | 'weight' | 'distance' | 'points';
+      unit?: string;
+    };
   };
 }
 
@@ -127,7 +132,7 @@ export interface CrossFitExercise {
     scaled_weight?: number;
   };
   reps?: {
-    prescribed: number;
+    prescribed: number | "max";
     completed: number;
     broken_sets?: number[];
     rest_between_sets?: number[];

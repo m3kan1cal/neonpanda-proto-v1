@@ -61,8 +61,9 @@ EXTRACTION REQUIREMENTS:
 - For complex multi-phase workouts, break into clear round structures
 - EFFICIENCY: For workouts with >10 rounds, group similar warmup sets to stay within token limits
 - JSON OPTIMIZATION: Use concise structures and avoid repetitive null fields where possible
-- WORKOUT NAMING: ALWAYS generate a Latin-inspired workout name based on workout characteristics. Use meaningful Latin terms that reflect the workout's nature:
-  * Create 1- or 2-word combinations that sound powerful and meaningful
+- WORKOUT NAMING: Use user-provided names when mentioned, otherwise generate Latin-inspired names
+  * If user provides a name ("I did Fran", "workout called XYZ"), use that exact name
+  * Only generate Latin names when no name is provided or implied
 ${isComplex ? '- COMPLEX WORKOUT OPTIMIZATION: Consolidate warmup rounds, use minimal weight objects, prioritize working sets and metcon rounds' : ''}
 
 You are an expert fitness data extraction AI that converts natural language workout descriptions into structured data following the Universal Workout Schema v2.0.
@@ -108,6 +109,13 @@ EXTRACTION GUIDELINES:
    - Movement Variations: kipping vs strict pull-ups, butterfly vs chest-to-bar
    - Time Domains: Sprint (<5min), medium (5-15min), long (15-30min), very long (30+min)
    - Common Formats: For time, AMRAP (as many rounds as possible), EMOM (every minute on minute)
+   - Max Effort Detection: "max pull-ups", "to failure", "max effort", "AMRAP" → prescribed: "max" (never use 999)
+   - Score Extraction: Determine primary performance metric based on workout format:
+     * For Time workouts: score = {value: total_time, type: "time", unit: "seconds"}
+     * AMRAP workouts: score = {value: rounds_completed, type: "rounds"} or {value: total_reps, type: "reps"}
+     * EMOM workouts: score = {value: weight_used, type: "weight", unit: "lbs/kg"} or {value: reps_maintained, type: "reps"}
+     * Max effort: score = {value: max_achieved, type: "reps"}
+     * Examples: "Fran in 8:57" → score: {value: 537, type: "time", unit: "seconds"}, "12 rounds + 5 reps" → score: {value: "12+5", type: "rounds"}
 
 5. CONFIDENCE SCORING:
    - 0.9+: Explicit data provided ("my time was 8:57")
@@ -153,9 +161,13 @@ EXTRACTION GUIDELINES:
    - When in doubt about equipment terminology, count the TOTAL movement repetitions performed
 
 8. CROSSFIT EXTRACTION EXAMPLES:
-   - "Did Fran in 8:57 with 95lb thrusters" → workout_name: "Fran", total_time: 537, rx_status: "rx"
+   - "Did Fran in 8:57 with 95lb thrusters" → workout_name: "Fran", total_time: 537, rx_status: "rx", score: {value: 537, type: "time", unit: "seconds"}
    - "Scaled Murph with 65lb thrusters" → workout_name: "Murph", rx_status: "scaled", scaled_weight: 65
-   - "20 minute AMRAP: 5 pull-ups, 10 push-ups, 15 squats - got 12 rounds" → workout_format: "amrap", rounds_completed: 12
+   - "Today's workout was called Death by Burpees" → workout_name: "Death by Burpees" (preserve user name)
+   - "Then max strict pull-ups - I got 15" → reps: {prescribed: "max", completed: 15} (use "max" not 999)
+   - "Finished with max push-ups to failure" → reps: {prescribed: "max", completed: [actual number]} (use "max" for max effort)
+   - "20 minute AMRAP: 5 pull-ups, 10 push-ups, 15 squats - got 12 rounds" → workout_format: "amrap", rounds_completed: 12, score: {value: 12, type: "rounds"}
+   - "AMRAP got 12 rounds plus 5 reps" → rounds_completed: 12, score: {value: "12+5", type: "rounds"}
    - "EMOM 10: 3 thrusters at 135" → workout_format: "emom", time_cap: 600, weight: 135
    - "Broke the 21 thrusters into 10-6-5" → broken_sets: [10, 6, 5]
    - "3 sets of squats at 185, then 5 rounds of burpees and pull-ups" → workout_format: "strength_then_metcon", rounds_completed: 8 (3 squat rounds + 5 metcon rounds)
@@ -315,7 +327,7 @@ CRITICAL EFFICIENCY RULE: For workouts with >8 rounds, apply aggressive consolid
                 "scaled_weight": "number|null"
               },
               "reps": {
-                "prescribed": "number",
+                "prescribed": "number|\"max\" (use \"max\" for max effort exercises like max pull-ups, max push-ups, AMRAP to failure)",
                 "completed": "number",
                 "broken_sets": "array of numbers|null",
                 "rest_between_sets": "array of seconds|null"
@@ -332,7 +344,12 @@ CRITICAL EFFICIENCY RULE: For workouts with >8 rounds, apply aggressive consolid
         "total_time": "number (seconds)|null",
         "rounds_completed": "number",
         "total_reps": "number|null",
-        "round_times": "array of seconds|null"
+        "round_times": "array of seconds|null",
+        "score": {
+          "value": "number|string (primary performance metric)",
+          "type": "time|rounds|reps|weight|distance|points",
+          "unit": "string|null (seconds, lbs, kg, meters, etc.)"
+        }
       }
     },
     "powerlifting": {

@@ -306,6 +306,19 @@ const WorkoutSummary = ({ workoutData }) => {
             value={crossfitData.time_cap ? `${Math.floor(crossfitData.time_cap / 60)}:${String(crossfitData.time_cap % 60).padStart(2, '0')}` : null}
             dataPath="workoutData.discipline_specific.crossfit.time_cap"
           />
+          {crossfitData.performance_data?.score && (
+            <ValueDisplay
+              label="Score"
+              value={(() => {
+                const score = crossfitData.performance_data.score;
+                if (score.type === 'time' && typeof score.value === 'number') {
+                  return `${Math.floor(score.value / 60)}:${String(score.value % 60).padStart(2, '0')}`;
+                }
+                return score.unit ? `${score.value} ${score.unit}` : score.value;
+              })()}
+              dataPath="workoutData.discipline_specific.crossfit.performance_data.score"
+            />
+          )}
         </>
       )}
     </div>
