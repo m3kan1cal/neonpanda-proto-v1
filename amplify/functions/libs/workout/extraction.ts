@@ -662,6 +662,38 @@ export const calculateConfidence = (workoutData: UniversalWorkoutSchema): number
  * Extracts the completed time from user message if explicitly mentioned
  */
 export const extractCompletedAtTime = (userMessage: string): Date | null => {
+  // Check for explicit time with US timezone (e.g., "7 AM Eastern", "3:30 PM Pacific")
+  const timezonePattern = /(\d{1,2})(?::(\d{2}))?\s*(am|pm)\s+(eastern|et|central|ct|mountain|mt|pacific|pt)/i;
+  const timezoneMatch = userMessage.match(timezonePattern);
+
+  if (timezoneMatch) {
+    const hour = parseInt(timezoneMatch[1]);
+    const minute = parseInt(timezoneMatch[2] || '0');
+    const ampm = timezoneMatch[3].toLowerCase();
+    const timezone = timezoneMatch[4].toLowerCase();
+
+    // Convert to 24-hour format
+    let hour24 = hour;
+    if (ampm === 'pm' && hour !== 12) {
+      hour24 += 12;
+    } else if (ampm === 'am' && hour === 12) {
+      hour24 = 0;
+    }
+
+    // Map timezone to UTC offset (assuming standard time for simplicity)
+    let utcOffset = 0;
+    if (timezone.includes('eastern') || timezone === 'et') utcOffset = 5;
+    else if (timezone.includes('central') || timezone === 'ct') utcOffset = 6;
+    else if (timezone.includes('mountain') || timezone === 'mt') utcOffset = 7;
+    else if (timezone.includes('pacific') || timezone === 'pt') utcOffset = 8;
+
+    // Create UTC date
+    const date = new Date();
+    date.setUTCHours(hour24 + utcOffset, minute, 0, 0);
+
+    return date;
+  }
+
   // Look for explicit time references like "yesterday", "this morning", etc.
   const timeIndicators: TimeIndicator[] = [
     { pattern: /yesterday/i, offset: -1 },

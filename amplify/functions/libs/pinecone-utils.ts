@@ -180,7 +180,34 @@ export function formatPineconeContext(pineconeMatches: any[]): string {
     .map(match => `- ${match.content} (Score: ${match.score.toFixed(2)})`)
     .join('\n');
 
+  const methodologyContext = pineconeMatches
+    .filter(match => match.recordType === 'methodology')
+    .map(match => {
+      // Extract methodology title and source from metadata if available
+      const title = match.metadata?.title || 'Methodology';
+      const source = match.metadata?.source || '';
+      const discipline = match.metadata?.discipline || '';
+
+      // Truncate content for display (first 200 characters)
+      const truncatedContent = match.content.length > 200
+        ? match.content.substring(0, 200) + '...'
+        : match.content;
+
+      const sourceInfo = source && discipline
+        ? ` (${source} - ${discipline})`
+        : source ? ` (${source})`
+        : discipline ? ` (${discipline})`
+        : '';
+
+      return `- **${title}${sourceInfo}**: ${truncatedContent} (Score: ${match.score.toFixed(2)})`;
+    })
+    .join('\n');
+
   let contextString = '';
+
+  if (methodologyContext) {
+    contextString += `\nRELEVANT METHODOLOGY KNOWLEDGE:\n${methodologyContext}`;
+  }
 
   if (workoutContext) {
     contextString += `\nRELEVANT WORKOUT HISTORY:\n${workoutContext}`;

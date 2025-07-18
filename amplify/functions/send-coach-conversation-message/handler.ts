@@ -192,6 +192,7 @@ export const handler = async (
             includeWorkouts: true,
             includeCoachCreator: true,
             includeConversationSummaries: true,
+            includeMethodology: true, // Enable methodology document retrieval
             minScore: 0.7,
           }
         );
