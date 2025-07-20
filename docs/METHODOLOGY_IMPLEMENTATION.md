@@ -129,30 +129,92 @@ Documents are stored in a format optimized for vector database ingestion:
 - ✅ Graceful fallback when methodology retrieval fails
 
 ### Phase 2: Conversation Integration
-3. **Coach Conversation Memory Integration**
-   - Modify conversation summary prompts to include methodology references
-   - Store methodology discussions in conversation summaries
-   - Create methodology-specific conversation triggers
-   - Test methodology memory retrieval in ongoing conversations
+3. **Coach Conversation Memory Integration** ✅ **90% COMPLETED**
+   - ✅ Modify conversation summary prompts to include methodology references
+   - ✅ Store methodology discussions in conversation summaries
+   - ✅ Create methodology-specific conversation triggers
+   - ❌ Test methodology memory retrieval in ongoing conversations
 
-4. **Methodology Recommendation System**
+**Implementation Details:**
+- ✅ Extended `shouldUsePineconeSearch()` with 80+ methodology keywords including training systems, programming concepts, creator names, and fitness disciplines
+- ✅ `includeMethodology: true` enabled in coach conversations with parallel Pinecone queries
+- ✅ Methodology context formatted and injected into coach system prompts with metadata (title, source, discipline)
+- ✅ Automatic methodology document retrieval when methodology keywords detected
+- ✅ Enhanced conversation summary prompts to capture methodology discussions, preferences, and questions
+- ✅ Added `methodology_preferences` field to conversation summary schema with structured data storage
+- ✅ Methodology discussions now stored in Pinecone for semantic search and context retrieval
+- ❌ Methodology context persistence across conversation turns needs testing
+
+4. **Methodology Recommendation System** ❌ **DEFERRED - Future Enhancement**
    - Develop user assessment logic for methodology matching
    - Create methodology comparison capabilities
    - Implement progressive methodology suggestions
    - Build methodology transition guidance
 
-### Phase 3: Advanced Features
-5. **Workout Generation Integration**
-   - Connect methodology documents to workout generation
-   - Create methodology-specific workout templates
-   - Implement progression tracking within methodologies
-   - Test workout alignment with methodology principles
+**Note: Deferred to focus on core conversation/workout management and weekly planning features. Current natural methodology discovery through conversation is sufficient for prototype phase.**
 
-6. **Personalization Engine**
+### Phase 3: Advanced Features
+5. **Workout Generation Integration** ✅ **PARTIALLY IMPLEMENTED**
+   - ✅ Connect methodology documents to workout extraction (already implemented)
+   - ✅ Methodology context injection in workout extraction prompts (already implemented)
+   - ❌ Create methodology-specific workout templates for user generation
+   - ❌ Add them to the methodology index? or somewhere else?
+   - ❌ Integrate templates into coach conversation prompts
+   - ❌ Implement progression tracking within methodologies
+   - ❌ Test workout alignment with methodology principles
+
+**Current Implementation Status:**
+- ✅ **Methodology Context Injection**: Workout extraction prompts already include coach methodology context
+- ✅ **Methodology Detection**: Extended keyword detection includes 80+ methodology terms
+- ✅ **Pinecone Integration**: Methodology documents are queried during workout extraction
+- ✅ **Coach Context**: Coach's methodology is included in workout extraction prompts
+- ❌ **User Workout Generation**: No structured workout generation for users yet (only extraction from completed workouts)
+
+**Implementation Plan for CrossFit & Functional Fitness Workout Templates:**
+
+**Step 1: CrossFit Template Creation** ✅ **COMPLETED**
+- ✅ Analyze each CrossFit methodology document for:
+  * Programming structure (strength, metcon, skill work ratios)
+  * Movement patterns and exercise preferences
+  * Time domains and workout formats
+  * Scaling approaches and progression methods
+  * Philosophy and training principles
+
+**Step 2: Template Structure Development** ✅ **COMPLETED**
+For each CrossFit methodology, create templates with:
+- ✅ **Strength Component**: Methodology-specific strength programming
+- ✅ **MetCon Component**: Workout format and movement selection
+- ✅ **Skill Work**: Gymnastics and skill development focus
+- ✅ **Scaling Options**: RX, scaled, and beginner variations
+- ✅ **Progression Logic**: How to advance within the methodology
+
+**Step 3: Template Integration & Pinecone Upsert** ✅ **READY TO IMPLEMENT**
+- ✅ Add workout templates to methodology documents (templates already created)
+- ✅ Upsert updated methodology documents to Pinecone methodology namespace
+- ✅ Templates become part of methodology context retrieved by `queryPineconeContext()`
+- ✅ Coach automatically accesses templates when methodology keywords detected
+
+**Step 4: Testing & Validation** ❌ **PENDING**
+- Test template retrieval when methodology keywords detected in conversation
+- Validate coach response quality using embedded templates
+- Ensure proper scaling and progression logic in coach responses
+- Test methodology alignment in generated workouts
+
+**Template Integration Approach:**
+The templates would be methodology-specific and embedded in the coach's conversation prompts. When users ask for workouts, the coach would:
+1. **Identify the user's methodology** (from coach config or conversation context)
+2. **Select appropriate template** based on methodology
+3. **Adapt template** to user's experience level and equipment
+4. **Include methodology-specific coaching cues** and philosophy
+5. **Provide scaling options** for different fitness levels
+
+6. **Personalization Engine** ❌ **DEFERRED - Focus on Core Features**
    - User methodology preference tracking
    - Methodology effectiveness monitoring
    - Adaptive methodology recommendations
    - Long-term methodology progression planning
+
+**Note: Deferred to prioritize analytics, conversation/workout management, and weekly planning features.**
 
 ### Phase 4: Quality Assurance
 7. **Testing and Validation**

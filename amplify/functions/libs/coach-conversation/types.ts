@@ -84,6 +84,11 @@ export interface CoachConversationSummary {
       training_preferences: string[];
       schedule_constraints: string[];
     };
+    methodology_preferences: {
+      mentioned_methodologies: string[];
+      preferred_approaches: string[];
+      methodology_questions: string[];
+    };
     emotional_state: {
       current_mood: string;
       motivation_level: string;

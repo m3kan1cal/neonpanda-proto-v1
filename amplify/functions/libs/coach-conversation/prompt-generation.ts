@@ -355,13 +355,19 @@ const generateWorkoutContext = (workoutContext: NonNullable<PromptGenerationOpti
 ${sections.join('\n\n')}
 
 ## TEMPORAL REASONING GUIDELINES:
+- CRITICAL: Pay careful attention to timing references and workout completion times
+- When users log workouts, use the actual completion time, not when they're telling you about it
+- If a user says "I did a workout this morning" and it's currently afternoon, the workout was earlier TODAY, not yesterday
+- If a user mentions a specific time (e.g., "finished at 11:42 AM Eastern"), that's when the workout was completed
+- "Yesterday" specifically means the previous calendar day - don't use this unless the workout was actually completed yesterday
+- "This morning", "earlier today", "today" all refer to the SAME DAY as the conversation
 - When users ask about "last week", consider workouts from 7-14 days ago, but also relevant recent workouts if they provide context
 - When users ask about "this week", include workouts from 0-7 days ago
 - "Recently" typically means within the last 3-5 days
-- "Yesterday" is part of both "recently" and "this week" - don't treat time periods as mutually exclusive
-- Users often use overlapping time references ("last week" can include "yesterday" if it provides relevant context)
+- Users often use overlapping time references - don't treat time periods as mutually exclusive
 - When responding to time-based queries, consider the logical time period the user intends, not just literal calendar boundaries
 - Provide comprehensive answers that include all relevant workouts within the requested timeframe
+- ALWAYS verify workout timing context from the workout data before making temporal references
 
 ## USAGE INSTRUCTIONS:
 - Reference recent training when relevant to current conversation
@@ -488,6 +494,13 @@ const generateConversationGuidelines = (configData: CoachConfig): string => {
     '- Focus on effort, consistency, and progress rather than just raw numbers when possible',
     '- When discussing volume or training load, be precise about what you\'re calculating',
     '- Avoid making assumptions about workout data that wasn\'t explicitly provided',
+    '',
+    '## WORKOUT TIMING ANALYSIS GUIDELINES',
+    '- CRITICAL: Base temporal references on the actual workout completion time, not the conversation time',
+    '- If a workout shows completion time of today, do NOT refer to it as "yesterday" even if logged later',
+    '- Use workout timestamps to determine correct relative timing (today vs yesterday vs this week)',
+    '- When referencing previous workouts, check their actual completion dates for accurate temporal context',
+    '- Be precise about timing: "this morning\'s workout" vs "yesterday\'s session" based on actual data',
     '',
     '## EQUIPMENT TERMINOLOGY INTERPRETATION',
     '- "Dual DBs" or "dual dumbbells" means using TWO dumbbells simultaneously for ONE movement',

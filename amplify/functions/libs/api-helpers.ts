@@ -7,13 +7,16 @@ import { Pinecone } from '@pinecone-database/pinecone';
 
 // Amazon Bedrock Converse API configuration
 const CLAUDE_SONNET_4_MODEL_ID = 'us.anthropic.claude-sonnet-4-20250514-v1:0';
+const NOVA_MICRO_MODEL_ID = 'us.amazon.nova-micro-v1:0';
 const MAX_TOKENS = 16384; // Increased for complex workout extractions (Claude 4 supports much higher limits)
 const TEMPERATURE = 0.7;
 
 // Model constants for external use
 export const MODEL_IDS = {
   CLAUDE_SONNET_4_FULL: CLAUDE_SONNET_4_MODEL_ID,
-  CLAUDE_SONNET_4_DISPLAY: 'claude-sonnet-4'
+  CLAUDE_SONNET_4_DISPLAY: 'claude-sonnet-4',
+  NOVA_MICRO: NOVA_MICRO_MODEL_ID,
+  NOVA_MICRO_DISPLAY: 'nova-micro'
 } as const;
 
 // Create Bedrock Runtime client
@@ -136,12 +139,13 @@ export const invokeAsyncLambda = async (
 // Amazon Bedrock Converse API call
 export const callBedrockApi = async (
   systemPrompt: string,
-  userMessage: string
+  userMessage: string,
+  modelId: string = CLAUDE_SONNET_4_MODEL_ID
 ): Promise<string> => {
   try {
     console.info('=== BEDROCK API CALL START ===');
     console.info('AWS Region:', process.env.AWS_REGION || 'us-west-2');
-    console.info('Model ID:', CLAUDE_SONNET_4_MODEL_ID);
+    console.info('Model ID:', modelId);
     console.info('System prompt length:', systemPrompt.length);
     console.info('User message length:', userMessage.length);
     console.info('Bedrock client config:', {
@@ -154,7 +158,7 @@ export const callBedrockApi = async (
     });
 
     const command = new ConverseCommand({
-      modelId: CLAUDE_SONNET_4_MODEL_ID,
+      modelId: modelId,
       messages: [
         {
           role: 'user',
@@ -478,51 +482,51 @@ export const queryPineconeContext = async (
       }
     }
 
-    // Query methodology namespace if methodology is requested - SEQUENTIAL APPROACH
-    // if (includeMethodology) {
-    //   try {
-    //     const methodologySearchQuery = {
-    //       query: {
-    //         inputs: { text: userMessage },
-    //         topK: Math.ceil(topK / 2), // Use half topK for methodology to balance results
-    //       }
-    //       // No filter needed for methodology namespace - all records are methodology documents
-    //     };
+    // Query methodology namespace if methodology is requested
+    if (includeMethodology) {
+      try {
+        const methodologySearchQuery = {
+          query: {
+            inputs: { text: userMessage },
+            topK: Math.ceil(topK / 2), // Use half topK for methodology to balance results
+          }
+          // No filter needed for methodology namespace - all records are methodology documents
+        };
 
-    //     console.info('Querying methodology namespace:', {
-    //       indexName: PINECONE_INDEX_NAME,
-    //       namespace: 'methodology',
-    //       userMessageLength: userMessage.length,
-    //       topK: Math.ceil(topK / 2)
-    //     });
+        console.info('Querying methodology namespace:', {
+          indexName: PINECONE_INDEX_NAME,
+          namespace: 'methodology',
+          userMessageLength: userMessage.length,
+          topK: Math.ceil(topK / 2)
+        });
 
-    //     const methodologyResponse = await index.namespace('methodology').searchRecords(methodologySearchQuery);
+        const methodologyResponse = await index.namespace('methodology').searchRecords(methodologySearchQuery);
 
-    //     // Add record_type to methodology matches and add to allMatches
-    //     const methodologyMatches = methodologyResponse.result.hits.map((match: any) => ({
-    //       ...match,
-    //       metadata: {
-    //         ...match.metadata,
-    //         record_type: 'methodology' // Ensure methodology records have proper record_type
-    //       }
-    //     }));
+        // Add record_type to methodology matches and add to allMatches
+        const methodologyMatches = methodologyResponse.result.hits.map((match: any) => ({
+          ...match,
+          metadata: {
+            ...match.metadata,
+            record_type: 'methodology' // Ensure methodology records have proper record_type
+          }
+        }));
 
-    //     allMatches.push(...methodologyMatches);
+        allMatches.push(...methodologyMatches);
 
-    //     console.info('✅ Methodology namespace query successful:', {
-    //       matches: methodologyMatches.length
-    //     });
+        console.info('✅ Methodology namespace query successful:', {
+          matches: methodologyMatches.length
+        });
 
-    //   } catch (error) {
-    //     console.error('❌ Failed to query methodology namespace:', error);
-    //     console.error('Error details:', {
-    //       message: error instanceof Error ? error.message : 'Unknown error',
-    //       name: error instanceof Error ? error.name : 'Unknown',
-    //       stack: error instanceof Error ? error.stack?.substring(0, 500) : undefined
-    //     });
-    //     // Continue without methodology context - this allows the conversation to proceed
-    //   }
-    // }
+      } catch (error) {
+        console.error('❌ Failed to query methodology namespace:', error);
+        console.error('Error details:', {
+          message: error instanceof Error ? error.message : 'Unknown error',
+          name: error instanceof Error ? error.name : 'Unknown',
+          stack: error instanceof Error ? error.stack?.substring(0, 500) : undefined
+        });
+        // Continue without methodology context - this allows the conversation to proceed
+      }
+    }
 
     // Sort by score descending and take top results
     allMatches.sort((a, b) => (b.score || 0) - (a.score || 0));

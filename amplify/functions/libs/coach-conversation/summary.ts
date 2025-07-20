@@ -26,6 +26,9 @@ Current Goals: ${existingSummary.structuredData.current_goals.join(', ')}
 Recent Progress: ${existingSummary.structuredData.recent_progress.join(', ')}
 Communication Style: ${existingSummary.structuredData.preferences.communication_style}
 Training Preferences: ${existingSummary.structuredData.preferences.training_preferences.join(', ')}
+Methodology Preferences: ${existingSummary.structuredData.methodology_preferences ?
+  `Mentioned: ${existingSummary.structuredData.methodology_preferences.mentioned_methodologies?.join(', ') || 'None'},
+   Preferred: ${existingSummary.structuredData.methodology_preferences.preferred_approaches?.join(', ') || 'None'}` : 'None captured yet'}
 Emotional State: ${existingSummary.structuredData.emotional_state.current_mood} (motivation: ${existingSummary.structuredData.emotional_state.motivation_level})
 Key Insights: ${existingSummary.structuredData.key_insights.join(', ')}
 Important Context: ${existingSummary.structuredData.important_context.join(', ')}
@@ -52,6 +55,8 @@ Write a flowing narrative that captures:
 - Emotional state and motivation patterns
 - Notable insights or breakthroughs
 - Communication style preferences
+- Training methodologies discussed, preferred, or referenced
+- Any methodology-specific programming or approach preferences
 
 ## STRUCTURED DATA
 Provide the following in valid JSON format:
@@ -63,6 +68,11 @@ Provide the following in valid JSON format:
     "communication_style": "brief description of how they like to communicate",
     "training_preferences": ["preference 1", "preference 2"],
     "schedule_constraints": ["constraint 1", "constraint 2"]
+  },
+  "methodology_preferences": {
+    "mentioned_methodologies": ["methodology names discussed", "programming approaches referenced"],
+    "preferred_approaches": ["user's stated preferences for training styles", "programming principles they responded well to"],
+    "methodology_questions": ["specific questions about methodologies", "areas of methodology interest"]
   },
   "emotional_state": {
     "current_mood": "brief description",
@@ -83,6 +93,17 @@ GUIDELINES:
 - Update/evolve information from previous summaries rather than repeating
 - Use specific examples when relevant
 - Maintain professional coaching context
+
+## METHODOLOGY FOCUS AREAS:
+Pay special attention to capturing:
+- Specific methodology names mentioned (5/3/1, CrossFit, Starting Strength, etc.)
+- Programming concepts discussed (periodization, autoregulation, linear progression, etc.)
+- Training philosophy preferences (high frequency, conjugate method, block periodization, etc.)
+- Questions about different training approaches or systems
+- User responses to methodology-based coaching advice
+- Creator names or methodology sources referenced (Jim Wendler, Louie Simmons, etc.)
+- Discipline preferences (powerlifting, CrossFit, bodybuilding, etc.)
+- Any methodology comparison discussions or preferences expressed
 
 The summary should help the coach remember and build upon the relationship in future conversations.`;
 }
@@ -122,6 +143,13 @@ export function parseCoachConversationSummary(
         communication_style: '',
         training_preferences: [],
         schedule_constraints: []
+      };
+    }
+    if (!structuredData.methodology_preferences) {
+      structuredData.methodology_preferences = {
+        mentioned_methodologies: [],
+        preferred_approaches: [],
+        methodology_questions: []
       };
     }
     if (!structuredData.emotional_state) {
@@ -190,13 +218,14 @@ function calculateSummaryConfidence(narrative: string, structuredData: any): num
 
   // Structured data completeness (0-60 points)
   const fields = [
-    { field: structuredData.current_goals, weight: 15 },
+    { field: structuredData.current_goals, weight: 12 },
     { field: structuredData.recent_progress, weight: 10 },
     { field: structuredData.preferences?.communication_style, weight: 8 },
     { field: structuredData.preferences?.training_preferences, weight: 7 },
-    { field: structuredData.emotional_state?.current_mood, weight: 8 },
-    { field: structuredData.emotional_state?.motivation_level, weight: 7 },
-    { field: structuredData.key_insights, weight: 5 }
+    { field: structuredData.methodology_preferences?.mentioned_methodologies, weight: 6 },
+    { field: structuredData.methodology_preferences?.preferred_approaches, weight: 5 },
+    { field: structuredData.emotional_state?.current_mood, weight: 7 },
+    { field: structuredData.emotional_state?.motivation_level, weight: 5 }
   ];
 
   fields.forEach(({ field, weight }) => {
@@ -225,6 +254,7 @@ Goals: ${summary.structuredData.current_goals.join(', ')}
 Recent Progress: ${summary.structuredData.recent_progress.join(', ')}
 Communication Style: ${summary.structuredData.preferences.communication_style}
 Training Preferences: ${summary.structuredData.preferences.training_preferences.join(', ')}
+Methodology Preferences: ${summary.structuredData.methodology_preferences.mentioned_methodologies.join(', ')} | Preferred Approaches: ${summary.structuredData.methodology_preferences.preferred_approaches.join(', ')} | Questions: ${summary.structuredData.methodology_preferences.methodology_questions.join(', ')}
 Emotional State: ${summary.structuredData.emotional_state.current_mood} (motivation: ${summary.structuredData.emotional_state.motivation_level})
 Key Insights: ${summary.structuredData.key_insights.join(', ')}
 Important Context: ${summary.structuredData.important_context.join(', ')}
@@ -245,7 +275,8 @@ Important Context: ${summary.structuredData.important_context.join(', ')}
       hasGoals: summary.structuredData.current_goals.length > 0,
       hasProgress: summary.structuredData.recent_progress.length > 0,
       hasEmotionalState: !!summary.structuredData.emotional_state.current_mood,
-      hasInsights: summary.structuredData.key_insights.length > 0
+      hasInsights: summary.structuredData.key_insights.length > 0,
+      hasMethodologyPreferences: summary.structuredData.methodology_preferences.mentioned_methodologies.length > 0 || summary.structuredData.methodology_preferences.preferred_approaches.length > 0
     };
 
     // Store in Pinecone using the same pattern as workout summaries

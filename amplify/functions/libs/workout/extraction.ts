@@ -7,7 +7,7 @@
 
 import { CoachConfig } from '../coach-creator/types';
 import { TimeIndicator, UniversalWorkoutSchema } from './types';
-import { storeDebugDataInS3, callBedrockApi } from '../api-helpers';
+import { storeDebugDataInS3, callBedrockApi, MODEL_IDS } from '../api-helpers';
 
 
 
@@ -659,61 +659,60 @@ export const calculateConfidence = (workoutData: UniversalWorkoutSchema): number
 };
 
 /**
- * Extracts the completed time from user message if explicitly mentioned
+ * Extracts the completed time from user message using AI
  */
-export const extractCompletedAtTime = (userMessage: string): Date | null => {
-  // Check for explicit time with US timezone (e.g., "7 AM Eastern", "3:30 PM Pacific")
-  const timezonePattern = /(\d{1,2})(?::(\d{2}))?\s*(am|pm)\s+(eastern|et|central|ct|mountain|mt|pacific|pt)/i;
-  const timezoneMatch = userMessage.match(timezonePattern);
+export const extractCompletedAtTime = async (userMessage: string): Promise<Date | null> => {
+  const timeExtractionPrompt = `
+You are a time extraction expert. Given a user's workout message, extract when the workout was actually completed.
 
-  if (timezoneMatch) {
-    const hour = parseInt(timezoneMatch[1]);
-    const minute = parseInt(timezoneMatch[2] || '0');
-    const ampm = timezoneMatch[3].toLowerCase();
-    const timezone = timezoneMatch[4].toLowerCase();
+USER MESSAGE: "${userMessage}"
+CURRENT TIME: ${new Date().toISOString()}
+CURRENT DAY: ${new Date().toLocaleDateString('en-US', { weekday: 'long' })}
 
-    // Convert to 24-hour format
-    let hour24 = hour;
-    if (ampm === 'pm' && hour !== 12) {
-      hour24 += 12;
-    } else if (ampm === 'am' && hour === 12) {
-      hour24 = 0;
-    }
+Instructions:
+- If the user mentions a specific time (with or without timezone), use that exact time
+- For relative references (this morning, yesterday, etc.), calculate the appropriate time based on current time
+- For timezone references (Eastern, Pacific, etc.), convert to UTC properly
+- If no time is mentioned or the message is about future plans, return null
+- Consider context: distinguish between completed workouts vs planning/questions
 
-    // Map timezone to UTC offset (assuming standard time for simplicity)
-    let utcOffset = 0;
-    if (timezone.includes('eastern') || timezone === 'et') utcOffset = 5;
-    else if (timezone.includes('central') || timezone === 'ct') utcOffset = 6;
-    else if (timezone.includes('mountain') || timezone === 'mt') utcOffset = 7;
-    else if (timezone.includes('pacific') || timezone === 'pt') utcOffset = 8;
+Return ONLY a JSON object with this format:
+{
+  "completedAt": "2025-01-XX[T]XX:XX:XX.XXXZ" or null,
+  "confidence": 0.0-1.0,
+  "reasoning": "Brief explanation of how you determined the time"
+}
 
-    // Create UTC date
-    const date = new Date();
-    date.setUTCHours(hour24 + utcOffset, minute, 0, 0);
+Examples:
+- "I just finished at 11:42 AM Eastern" → {"completedAt": "2025-01-14T16:42:00.000Z", "confidence": 0.95, "reasoning": "Explicit time with timezone, converted EST to UTC"}
+- "I worked out this morning" → {"completedAt": "2025-01-14T14:00:00.000Z", "confidence": 0.8, "reasoning": "This morning interpreted as 9 AM local time"}
+- "Did my workout yesterday afternoon" → {"completedAt": "2025-01-13T19:00:00.000Z", "confidence": 0.7, "reasoning": "Yesterday afternoon assumed as 2 PM local time"}
+- "Should I do Fran today?" → {"completedAt": null, "confidence": 0.9, "reasoning": "Future planning question, not completed workout"}
+- "What did I do last week?" → {"completedAt": null, "confidence": 0.9, "reasoning": "Inquiry about past, not logging new workout"}
+`;
 
-    return date;
+  try {
+    console.info('Extracting workout completion time using Nova Micro:', {
+      userMessage: userMessage.substring(0, 100),
+      currentTime: new Date().toISOString()
+    });
+
+    const response = await callBedrockApi(timeExtractionPrompt, userMessage, MODEL_IDS.NOVA_MICRO);
+
+    const result = JSON.parse(response.trim());
+
+    console.info('AI time extraction result:', {
+      userMessage: userMessage.substring(0, 100),
+      extractedTime: result.completedAt,
+      confidence: result.confidence,
+      reasoning: result.reasoning
+    });
+
+    return result.completedAt ? new Date(result.completedAt) : null;
+  } catch (error) {
+    console.error('AI time extraction failed, using current time as default:', error);
+    return new Date(); // Simple fallback to current time
   }
-
-  // Look for explicit time references like "yesterday", "this morning", etc.
-  const timeIndicators: TimeIndicator[] = [
-    { pattern: /yesterday/i, offset: -1 },
-    { pattern: /this morning/i, offset: 0, hour: 9 },
-    { pattern: /earlier today/i, offset: 0, hour: 14 },
-    { pattern: /last night/i, offset: -1, hour: 19 }
-  ];
-
-  for (const indicator of timeIndicators) {
-    if (indicator.pattern.test(userMessage)) {
-      const date = new Date();
-      date.setDate(date.getDate() + indicator.offset);
-      if (indicator.hour) {
-        date.setHours(indicator.hour, 0, 0, 0);
-      }
-      return date;
-    }
-  }
-
-  return null; // Default to current time
 };
 
 /**

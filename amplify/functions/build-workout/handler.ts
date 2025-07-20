@@ -132,10 +132,20 @@ export const handler = async (event: BuildWorkoutEvent) => {
       });
     }
 
-    // Determine completed time
+    // Determine completed time using AI extraction
+    const extractedTime = await extractCompletedAtTime(workoutContent);
     const completedAt = event.completedAt
       ? new Date(event.completedAt)
-      : extractCompletedAtTime(workoutContent) || new Date();
+      : extractedTime || new Date();
+
+    console.info('Workout timing analysis:', {
+      userMessage: workoutContent.substring(0, 100),
+      extractedTime: extractedTime ? extractedTime.toISOString() : null,
+      finalCompletedAt: completedAt.toISOString(),
+      currentTime: new Date().toISOString(),
+      isToday: completedAt.toDateString() === new Date().toDateString(),
+      daysDifference: Math.floor((new Date().getTime() - completedAt.getTime()) / (1000 * 60 * 60 * 24))
+    });
 
     // Generate AI summary for coach context and UI display
     console.info('Generating workout summary...');
