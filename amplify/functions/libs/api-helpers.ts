@@ -3,6 +3,7 @@ import { BedrockRuntimeClient, ConverseCommand } from '@aws-sdk/client-bedrock-r
 import { LambdaClient, InvokeCommand, InvocationType } from '@aws-sdk/client-lambda';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { Pinecone } from '@pinecone-database/pinecone';
+import { getEnhancedMethodologyContext } from './pinecone-utils';
 
 
 // Amazon Bedrock Converse API configuration
@@ -365,6 +366,155 @@ export const storeDebugDataInS3 = async (
   }
 };
 
+// Helper function to validate Pinecone configuration
+const validatePineconeConfig = () => {
+  console.info('🔧 DEBUG: Pinecone configuration:', {
+    indexName: PINECONE_INDEX_NAME,
+    apiKeySet: !!PINECONE_API_KEY,
+    apiKeyLength: PINECONE_API_KEY?.length,
+    apiKeyPrefix: PINECONE_API_KEY?.substring(0, 12),
+    apiKeyIsPlaceholder: PINECONE_API_KEY === 'pcsk_replace_me',
+    environment: process.env.NODE_ENV || 'unknown',
+    envPineconeKey: process.env.PINECONE_API_KEY ? 'SET' : 'NOT_SET',
+    envPineconeKeyLength: process.env.PINECONE_API_KEY?.length || 0
+  });
+
+  if (!PINECONE_API_KEY || PINECONE_API_KEY === 'pcsk_replace_me') {
+    throw new Error('Pinecone API key is not properly configured');
+  }
+};
+
+// Helper function to query user namespace
+const queryUserNamespace = async (
+  index: any,
+  userId: string,
+  userMessage: string,
+  options: { topK: number; includeWorkouts: boolean; includeCoachCreator: boolean; includeConversationSummaries: boolean }
+): Promise<any[]> => {
+  const { topK, includeWorkouts, includeCoachCreator, includeConversationSummaries } = options;
+
+  // Build filter for record types in user namespace
+  const userRecordTypeFilters = [];
+  if (includeWorkouts) userRecordTypeFilters.push('workout_summary');
+  if (includeCoachCreator) userRecordTypeFilters.push('coach_creator_summary');
+  if (includeConversationSummaries) userRecordTypeFilters.push('conversation_summary');
+
+  if (userRecordTypeFilters.length === 0) return [];
+
+  try {
+    const userNamespace = getUserNamespace(userId);
+    const userSearchQuery = {
+      query: {
+        inputs: { text: userMessage },
+        topK: topK,
+      },
+      filter: {
+        record_type: { $in: userRecordTypeFilters }
+      }
+    };
+
+    console.info('Querying user namespace:', {
+      indexName: PINECONE_INDEX_NAME,
+      namespace: userNamespace,
+      userId,
+      userMessageLength: userMessage.length,
+      topK,
+      recordTypes: userRecordTypeFilters
+    });
+
+    const userResponse = await index.namespace(userNamespace).searchRecords(userSearchQuery);
+
+    console.info('✅ User namespace query successful:', {
+      matches: userResponse.result.hits.length
+    });
+
+    return userResponse.result.hits;
+  } catch (error) {
+    console.error('❌ Failed to query user namespace:', error);
+    return [];
+  }
+};
+
+// Helper function to query methodology namespace
+const queryMethodologyNamespace = async (
+  userMessage: string,
+  userId: string,
+  options: { topK: number }
+): Promise<any[]> => {
+  try {
+    // Use enhanced methodology context
+    const enhancedMethodologyMatches = await getEnhancedMethodologyContext(
+      userMessage,
+      userId,
+      {
+        topK: Math.ceil(options.topK / 2),
+        contextType: 'conversation'
+      }
+    );
+
+    // Add record_type to methodology matches
+    const methodologyMatches = enhancedMethodologyMatches.map((match: any) => ({
+      ...match,
+      metadata: {
+        ...match.metadata,
+        record_type: 'methodology'
+      }
+    }));
+
+    console.info('✅ Enhanced methodology namespace query successful:', {
+      matches: methodologyMatches.length
+    });
+
+    return methodologyMatches;
+  } catch (error) {
+    console.error('❌ Failed to query enhanced methodology context:', error);
+    return [];
+  }
+};
+
+// Helper function to process and filter results
+const processAndFilterResults = (
+  allMatches: any[],
+  options: { topK: number; minScore: number },
+  userId: string
+) => {
+  const { topK, minScore } = options;
+  const userNamespace = getUserNamespace(userId);
+
+  // Sort by score descending and take top results
+  allMatches.sort((a, b) => (b.score || 0) - (a.score || 0));
+  const topMatches = allMatches.slice(0, topK);
+
+  // Filter results by minimum score and format for consumption
+  const relevantMatches = topMatches
+    .filter((match: any) => match.score && match.score >= minScore)
+    .map((match: any) => ({
+      id: match.id,
+      score: match.score,
+      content: match.text || match.metadata?.text || '',
+      recordType: match.metadata?.record_type || 'methodology',
+      metadata: match.metadata,
+      namespace: match.metadata?.record_type === 'methodology' ? 'methodology' : userNamespace
+    }));
+
+  console.info('Successfully processed Pinecone results:', {
+    indexName: PINECONE_INDEX_NAME,
+    userId,
+    totalMatches: allMatches.length,
+    relevantMatches: relevantMatches.length,
+    minScore,
+    methodologyMatches: relevantMatches.filter(m => m.recordType === 'methodology').length,
+    userMatches: relevantMatches.filter(m => m.recordType !== 'methodology').length
+  });
+
+  return {
+    matches: relevantMatches,
+    success: true,
+    totalMatches: allMatches.length,
+    relevantMatches: relevantMatches.length
+  };
+};
+
 /**
  * Query Pinecone for semantic context relevant to user message
  *
@@ -395,174 +545,28 @@ export const queryPineconeContext = async (
       minScore = 0.7
     } = options;
 
-    console.info('🔧 DEBUG: Pinecone configuration:', {
-      indexName: PINECONE_INDEX_NAME,
-      apiKeySet: !!PINECONE_API_KEY,
-      apiKeyLength: PINECONE_API_KEY?.length,
-      apiKeyPrefix: PINECONE_API_KEY?.substring(0, 12), // Show more for debugging
-      apiKeyIsPlaceholder: PINECONE_API_KEY === 'pcsk_replace_me',
-      environment: process.env.NODE_ENV || 'unknown',
-      envPineconeKey: process.env.PINECONE_API_KEY ? 'SET' : 'NOT_SET',
-      envPineconeKeyLength: process.env.PINECONE_API_KEY?.length || 0
-    });
+    // Validate configuration
+    validatePineconeConfig();
 
-    // Validate API key before proceeding
-    if (!PINECONE_API_KEY || PINECONE_API_KEY === 'pcsk_replace_me') {
-      throw new Error('Pinecone API key is not properly configured');
-    }
+    const { index } = await getPineconeClient();
 
-    const { client, index } = await getPineconeClient();
-
-    // Debug: Check if index exists and list available indexes
-    // try {
-    //   console.info('🔧 Testing Pinecone client connection...');
-    //   const indexList = await client.listIndexes();
-    //   console.info('Available indexes:', indexList.indexes?.map(idx => idx.name) || []);
-
-    //   console.info('🔧 Testing specific index access...');
-    //   const indexStats = await index.describeIndexStats();
-    //   console.info('✅ Index access successful:', {
-    //     dimension: indexStats.dimension,
-    //     totalRecordCount: indexStats.totalRecordCount
-    //   });
-    // } catch (indexError) {
-    //   console.error('❌ Index access failed:', indexError);
-    //   console.error('This suggests either the index name is wrong or API key lacks permission');
-    //   throw indexError;
-    // }
-
-    const userNamespace = getUserNamespace(userId);
-
-    console.info('🔧 About to query user namespace:', {
-      namespace: userNamespace,
-      userId: userId,
+    console.info('🔧 About to query Pinecone:', {
+      namespace: getUserNamespace(userId),
+      userId,
       indexName: PINECONE_INDEX_NAME
     });
 
-    // Build filter for record types in user namespace
-    const userRecordTypeFilters = [];
-    if (includeWorkouts) userRecordTypeFilters.push('workout_summary');
-    if (includeCoachCreator) userRecordTypeFilters.push('coach_creator_summary');
-    if (includeConversationSummaries) userRecordTypeFilters.push('conversation_summary');
+    // Execute queries in parallel
+    const [userMatches, methodologyMatches] = await Promise.all([
+      queryUserNamespace(index, userId, userMessage, { topK, includeWorkouts, includeCoachCreator, includeConversationSummaries }),
+      includeMethodology ? queryMethodologyNamespace(userMessage, userId, { topK }) : Promise.resolve([])
+    ]);
 
-    let allMatches: any[] = [];
+    // Combine all matches
+    const allMatches = [...userMatches, ...methodologyMatches];
 
-    // Query user namespace if any user record types are requested
-    if (userRecordTypeFilters.length > 0) {
-      try {
-        const userSearchQuery = {
-          query: {
-            inputs: { text: userMessage },
-            topK: topK,
-          },
-          filter: {
-            record_type: { $in: userRecordTypeFilters }
-          }
-        };
-
-        console.info('Querying user namespace:', {
-          indexName: PINECONE_INDEX_NAME,
-          namespace: userNamespace,
-          userId,
-          userMessageLength: userMessage.length,
-          topK,
-          recordTypes: userRecordTypeFilters
-        });
-
-        const userResponse = await index.namespace(userNamespace).searchRecords(userSearchQuery);
-        allMatches.push(...userResponse.result.hits);
-
-        console.info('✅ User namespace query successful:', {
-          matches: userResponse.result.hits.length
-        });
-
-      } catch (error) {
-        console.error('❌ Failed to query user namespace:', error);
-        // Continue without user context
-      }
-    }
-
-    // Query methodology namespace if methodology is requested
-    if (includeMethodology) {
-      try {
-        const methodologySearchQuery = {
-          query: {
-            inputs: { text: userMessage },
-            topK: Math.ceil(topK / 2), // Use half topK for methodology to balance results
-          }
-          // No filter needed for methodology namespace - all records are methodology documents
-        };
-
-        console.info('Querying methodology namespace:', {
-          indexName: PINECONE_INDEX_NAME,
-          namespace: 'methodology',
-          userMessageLength: userMessage.length,
-          topK: Math.ceil(topK / 2)
-        });
-
-        const methodologyResponse = await index.namespace('methodology').searchRecords(methodologySearchQuery);
-
-        // Add record_type to methodology matches and add to allMatches
-        const methodologyMatches = methodologyResponse.result.hits.map((match: any) => ({
-          ...match,
-          metadata: {
-            ...match.metadata,
-            record_type: 'methodology' // Ensure methodology records have proper record_type
-          }
-        }));
-
-        allMatches.push(...methodologyMatches);
-
-        console.info('✅ Methodology namespace query successful:', {
-          matches: methodologyMatches.length
-        });
-
-      } catch (error) {
-        console.error('❌ Failed to query methodology namespace:', error);
-        console.error('Error details:', {
-          message: error instanceof Error ? error.message : 'Unknown error',
-          name: error instanceof Error ? error.name : 'Unknown',
-          stack: error instanceof Error ? error.stack?.substring(0, 500) : undefined
-        });
-        // Continue without methodology context - this allows the conversation to proceed
-      }
-    }
-
-    // Sort by score descending and take top results
-    allMatches.sort((a, b) => (b.score || 0) - (a.score || 0));
-    allMatches = allMatches.slice(0, topK);
-
-    // Filter results by minimum score and format for consumption
-    const relevantMatches = allMatches
-      .filter((match: any) => match.score && match.score >= minScore)
-      .map((match: any) => ({
-        id: match.id,
-        score: match.score,
-        content: match.text || match.metadata?.text || '', // Check root text first, then metadata for methodology vs user docs
-        recordType: match.metadata?.record_type || 'methodology',
-        metadata: match.metadata,
-        namespace: match.metadata?.record_type === 'methodology' ? 'methodology' : userNamespace
-      }));
-
-    console.info('Successfully queried Pinecone for context:', {
-      indexName: PINECONE_INDEX_NAME,
-      userId,
-      userMessageLength: userMessage.length,
-      totalMatches: allMatches.length,
-      relevantMatches: relevantMatches.length,
-      minScore,
-      userRecordTypes: userRecordTypeFilters,
-      includeMethodology,
-      methodologyMatches: relevantMatches.filter(m => m.recordType === 'methodology').length,
-      userMatches: relevantMatches.filter(m => m.recordType !== 'methodology').length
-    });
-
-    return {
-      matches: relevantMatches,
-      success: true,
-      totalMatches: allMatches.length,
-      relevantMatches: relevantMatches.length
-    };
+    // Process and return results
+    return processAndFilterResults(allMatches, { topK, minScore }, userId);
 
   } catch (error) {
     console.error('Failed to query Pinecone context:', error);

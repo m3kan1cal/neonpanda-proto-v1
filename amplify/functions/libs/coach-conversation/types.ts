@@ -109,3 +109,19 @@ export interface CoachConversationSummary {
     confidence: number;
   };
 }
+
+export interface MethodologyIntent {
+  isComparison: boolean;
+  isImplementationQuestion: boolean;
+  isPrincipleQuestion: boolean;
+  methodologies: string[];
+  primaryMethodology: string | null;
+}
+
+export interface EnhancedMethodologyOptions {
+  topK?: number;
+  contextType?: 'conversation' | 'workout_generation';
+  includeComparisons?: boolean;
+  includeProgression?: boolean;
+  includePracticalApplication?: boolean;
+}
