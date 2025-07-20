@@ -521,10 +521,31 @@ const generateConversationGuidelines = (configData: CoachConfig): string => {
     '- Interval fatigue patterns: earlier intervals often have higher round counts than later ones due to accumulated fatigue'
   ];
 
+  // Add methodology workout template guidelines
+  const methodologyTemplateGuidelines = [
+    '',
+    '## METHODOLOGY WORKOUT TEMPLATE GUIDELINES',
+    '- When users ask for workouts, use methodology knowledge from Pinecone to provide appropriate templates',
+    '- Replace movement placeholders with specific exercises based on user equipment and preferences',
+    '- Adjust rep ranges based on user fitness level and movement complexity',
+    '- Modify time domains based on user schedule and training phase',
+    '- Scale intensity based on user experience and recovery status',
+    '- Movement Substitution Guidelines:',
+    '  • Movement A: Typically compound barbell or heavy movement (squat, deadlift, press)',
+    '  • Movement B: Usually bodyweight or lighter implement (push-ups, pull-ups, dumbbell work)',
+    '  • Movement C: Often monostructural cardio or core movement (row, run, bike, planks)',
+    '  • Cardio: Running, rowing, biking, skiing, or bodyweight cardio equivalent',
+    '- Ensure all recommended workouts align with the user\'s chosen methodology principles',
+    '- Provide scaling options for different fitness levels when giving workout recommendations',
+    '- Include appropriate warm-up and cool-down suggestions with workout templates'
+  ];
+
   return `# CONVERSATION GUIDELINES
 ${guidelines.join('\n')}
 
-${workoutAnalysisGuidelines.join('\n')}`;
+${workoutAnalysisGuidelines.join('\n')}
+
+${methodologyTemplateGuidelines.join('\n')}`;
 };
 
 /**

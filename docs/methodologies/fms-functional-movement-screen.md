@@ -509,3 +509,176 @@ The system was refined through years of clinical practice and research, drawing 
 **Professional Collaboration**: Facilitate communication between healthcare providers, fitness professionals, and coaches using common FMS language and findings.
 
 **Technology Integration**: Utilize FMS apps and software for assessment documentation, progress tracking, and program management while maintaining assessment quality and professional standards.
+
+---
+
+## WORKOUT TEMPLATES
+
+**Programming Structure & Ratios:**
+- **Assessment-Driven Programming**: 70% corrective exercise, 20% movement integration, 10% skill development
+- **Session Structure**: Assessment → corrective exercise → movement integration → re-assessment
+- **Weekly Structure**: 60% mobility/stability work, 25% corrective patterns, 15% integrated movement
+- **Session Formats**: Individual assessment (40%), corrective circuits (35%), movement flows (25%)
+
+**Movement Patterns & Exercise Preferences:**
+- **Corrective Movement Focus**: Address dysfunction before building fitness
+- **Pattern-Based Approach**: Seven fundamental movement patterns as foundation
+- **Primary Assessment Patterns**:
+  1. Deep squat (ankle, knee, hip, thoracic spine, shoulder mobility and stability)
+  2. Hurdle step (stride mechanics, stability, control)
+  3. In-line lunge (hip and ankle mobility, knee stability)
+  4. Shoulder mobility (shoulder complex mobility)
+  5. Active straight leg raise (hip flexibility, core stability)
+  6. Trunk stability push-up (trunk stability in sagittal plane)
+  7. Rotary stability (trunk stability in transverse plane)
+- **Movement Quality Over Quantity**: Perfect patterns before load or speed
+
+**Assessment & Corrective Approach:**
+- **Systematic Assessment**: Use 7 movement screens to identify limitations
+- **Corrective Exercise Prescription**: Address specific dysfunctions found in assessment
+- **Movement Hierarchy**: Mobility → Stability → Movement Patterns → Skill Development
+- **Re-Assessment Protocol**: Regular testing to track improvement and modify programming
+
+**Scaling Approaches & Progression Methods:**
+- **Assessment-Based Scaling**: Exercise selection based on individual movement screen results
+- **Corrective Exercise Progression**:
+  - Level 1: Passive mobility and basic stability
+  - Level 2: Active mobility and dynamic stability
+  - Level 3: Movement pattern integration
+  - Level 4: Skill and performance development
+- **Movement Quality Standards**: Must demonstrate competent movement before progression
+- **Individual Correction**: Each person receives specific corrective exercise program
+
+**Weekly Programming Pattern:**
+- **Philosophy**: Assess, correct, re-assess, integrate
+- **Daily Structure**: 15-20 minutes assessment/corrective work before any fitness training
+- **Rest Days**: Active recovery with mobility and corrective exercise emphasis
+- **Volume**: Low to moderate, focused on quality and precision
+- **Intensity**: Low intensity with focus on movement quality and control
+
+**Example Weekly Schedule (Assessment-Based):**
+```
+Monday: Initial Assessment + Basic Corrections (45 min)
+FMS Assessment:
+- Complete 7-screen assessment
+- Identify top 3 movement limitations
+- Score and document findings
+Basic Corrective Protocol:
+- Address #1 limitation: 10 minutes specific corrective exercises
+- Address #2 limitation: 10 minutes specific corrective exercises
+- Movement integration: 10 minutes basic patterns
+Cool-down: 5 minutes breathing and relaxation
+
+Tuesday: Mobility Focus (35 min)
+Based on Monday's assessment:
+If poor overhead squat (common):
+- Ankle mobility: 3 x 30 seconds each ankle
+- Hip flexor stretches: 3 x 45 seconds each side
+- Thoracic spine extension: 3 x 10 reps
+- Shoulder flexion stretches: 3 x 30 seconds each arm
+Movement Practice:
+- Assisted overhead squat: 3 x 5 reps
+- Wall slide progression: 3 x 8 reps
+Integration Work:
+- Basic squat pattern: 3 x 8 bodyweight squats (perfect form)
+
+Wednesday: Stability Focus (40 min)
+Core Stability (if trunk stability push-up failed):
+- Dead bug: 3 x 5 each side (3 second holds)
+- Bird dog: 3 x 5 each side (5 second holds)
+- Modified plank progression: 3 x 20-30 seconds
+Single Leg Stability (if hurdle step/lunge failed):
+- Single leg stance: 3 x 30 seconds each leg
+- Single leg glute bridges: 3 x 8 each leg
+- Step ups with pause: 3 x 5 each leg (2 second pause)
+Movement Integration:
+- Corrected hurdle step practice: 3 x 3 each leg
+- Corrected lunge pattern: 3 x 5 each leg
+
+Thursday: Movement Pattern Integration (50 min)
+Pattern Practice (based on improvements):
+- Corrected squat pattern: 4 x 5 reps (focus on quality)
+- Corrected lunge patterns: 4 x 3 each leg
+- Corrected reaching patterns: 4 x 5 each direction
+Stability Challenge:
+- Single leg stance with perturbation: 3 x 20 seconds each leg
+- Plank variations: 3 x 30 seconds each variation
+Functional Integration:
+- Basic daily movement patterns
+- Sit-to-stand practice: 3 x 5 reps
+- Step-up/step-down: 3 x 5 each leg
+
+Friday: Re-Assessment + Progression (45 min)
+Mini Re-Assessment:
+- Re-test top 3 limitations from Monday
+- Document improvements and remaining issues
+- Adjust corrective exercise program
+Progressive Loading:
+- If movement quality improved, add light resistance
+- Goblet squat (if squat pattern improved): 3 x 5 reps
+- Light resistance band exercises for stability
+- Bodyweight movement progressions
+Planning:
+- Review week's progress
+- Plan next week's corrective focus
+- Set movement quality goals
+
+Saturday: Active Integration (30-60 min)
+Light Activity (only if movement patterns adequate):
+- 20-30 minutes walking with movement focus
+- Basic yoga or tai chi movements
+- Swimming or water walking (if available)
+- Focus on quality movement during activity
+Corrective Maintenance:
+- 15 minutes of week's corrective exercises
+- Foam rolling and self-massage
+- Breathing and relaxation techniques
+
+Sunday: Recovery + Reflection (20-30 min)
+Gentle Mobility:
+- Full body gentle stretching routine
+- Joint mobility sequence
+- Breathing exercises
+Assessment Reflection:
+- How did movements feel this week?
+- Which corrective exercises helped most?
+- Any pain or discomfort to address?
+Planning:
+- Prepare for next week's focus areas
+- Schedule any needed professional consultations
+```
+
+**Assessment Templates:**
+- **Initial FMS Screen**: Complete 7-movement assessment with scoring and documentation
+- **Movement Re-Screen**: Targeted re-assessment of specific movements showing dysfunction
+- **Progress Assessment**: Monthly comprehensive re-evaluation with comparison to baseline
+- **Maintenance Screen**: Quarterly or seasonal movement quality check-ups
+- **Return-to-Activity Screen**: Post-injury assessment before resuming full training
+
+**Corrective Exercise Templates:**
+- **Mobility First**: Address mobility limitations before stability training
+- **Stability Integration**: Build stability once adequate mobility achieved
+- **Movement Pattern Correction**: Practice correct movement patterns with assistance
+- **Functional Integration**: Apply corrected patterns to daily activities
+- **Load Progression**: Gradually add resistance only after movement quality established
+
+**Movement Quality Templates:**
+- **Assisted Patterns**: Use assistance to achieve correct movement patterns
+- **Regression Progressions**: Break complex movements into component parts
+- **Breathing Integration**: Combine proper breathing patterns with movement
+- **Slow Motion Practice**: Perform movements at very slow speeds for control
+- **Mirror Feedback**: Use visual feedback to improve movement awareness
+
+**Corrective Exercise Circuits:**
+- **Mobility Circuit**: 4-6 exercises targeting primary mobility limitations, 30-45 seconds each
+- **Stability Circuit**: 4-6 exercises targeting core and joint stability, 20-30 seconds holds
+- **Pattern Practice**: 4-6 movement patterns focusing on quality and control
+- **Integration Flow**: Seamless transition between corrected movement patterns
+- **Maintenance Circuit**: Daily 10-minute routine of key corrective exercises
+
+**Professional Integration Templates:**
+- **Healthcare Collaboration**: Structured communication format with medical professionals
+- **Coach Integration**: Guidelines for integrating FMS findings into training programs
+- **Progress Documentation**: Systematic tracking of movement improvements over time
+- **Return-to-Sport Protocol**: Graduated progression from corrective exercise to sport activity
+- **Injury Prevention Programming**: Ongoing movement quality maintenance within training

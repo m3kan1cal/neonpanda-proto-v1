@@ -521,3 +521,156 @@ After transitioning from individual to team competition, Froning continued to re
 **Character Building**: Emphasize integrity, humility, and service through training challenges and community interactions.
 
 **Sustainable Lifestyle**: Develop habits and practices that support long-term health, fitness, and spiritual growth throughout life stages.
+
+---
+
+## WORKOUT TEMPLATES
+
+**Programming Structure & Ratios:**
+- **High-Volume Approach**: More total work than typical CrossFit programming
+- **Competition Season**: 30% Strength, 50% MetCon, 20% Skills/Aerobic
+- **Off-Season**: 40% Aerobic Base, 35% Strength, 25% MetCon/Skills
+- **Session Structure**: Often 2-3 sessions/day during peak training
+- **Weekly Volume**: 12-18 hours/week for competitors
+
+**Movement Patterns & Exercise Preferences:**
+- **Competition Focus**: Advanced movements and loading
+- **Primary Patterns**: Olympic lifts, advanced gymnastics, endurance modalities
+- **Movement Complexity**: Comfortable with advanced skill requirements
+- **Equipment Usage**: Full gym setup required, specialty implements
+- **Pattern Priority**:
+  1. Competition-specific movements
+  2. High-skill gymnastics (muscle-ups, handstand walks)
+  3. Heavy barbell work
+  4. Endurance/volume work
+
+**Time Domains & Workout Formats:**
+- **Broad Spectrum**: All time domains trained extensively
+- **Domain Distribution**:
+  - Short power (0-2 min): 15%
+  - Classic CrossFit (2-15 min): 35%
+  - Long grinders (15-45 min): 35%
+  - Aerobic base (45+ min): 15%
+- **Format Preferences**: Volume chippers, multi-event days, team competitions
+- **Intensity Management**: Wave loading - hard/moderate/hard patterns
+
+**Scaling Approaches & Progression Methods:**
+- **Competition-Based Scaling**: Scale to competition standards
+- **Volume Progression**: Gradually increase total work capacity
+- **Load Progression**: Competition weights as minimum standards
+- **Skill Progression**: Master advanced movements before volume increase
+- **Scaling Examples**:
+  - Masters: Reduce volume, maintain intensity
+  - Intermediate: Reduce complexity, maintain time domains
+  - Beginner: Focus on movement quality, reduce everything else
+
+**Weekly Programming Pattern:**
+- **Philosophy**: High volume, competitor-level training with smart recovery
+- **Daily Structure**: Often 2-3 sessions per day during peak training
+- **Rest Days**: 1 complete rest day per week, active recovery days included
+- **Volume**: High daily volume, multiple sessions when possible
+- **Intensity**: Wave intensity - hard days followed by moderate, then hard again
+
+**Example Weekly Schedule:**
+```
+Monday: Two Session Day
+AM Session (45 min):
+- 3000m Row @ steady pace
+- Target: 12-15 minutes, conversational effort
+PM Session (40 min):
+- Back Squat: 5-5-3-3-1-1 (work up heavy)
+- Then: 3 rounds for time
+  - 21 Kettlebell swings (53/35 lbs)
+  - 15 Burpees
+
+Tuesday: Power + Speed (50 min)
+AM Session:
+- Power Clean: 8 x 3 @ 80%
+- Rest 90 seconds between sets
+PM Session:
+- "Grace": 30 Clean & jerks (135/95 lbs) for time
+- Target: 3-8 minutes
+
+Wednesday: Volume Grinder (70 min)
+"Mayhem Mile"
+4 rounds for time:
+- 400m Run
+- 25 Thrusters (95/65 lbs)
+- 50 Double unders
+- 25 Pull-ups
+Target time: 35-50 minutes
+
+Thursday: Heavy Strength + Intervals (60 min)
+AM Session:
+- Deadlift: Work up to 3RM
+PM Session:
+- 5 x 2 minutes on/1 minute off
+- 15 Wall balls + 10 Burpees each round
+- Go hard each 2-minute interval
+
+Friday: Competition Simulation (90 min)
+Event 1: Max Clean & Jerk (15 min)
+Rest 20 minutes
+Event 2: (25 min)
+- 21-15-9-15-21
+- Thrusters (135/95 lbs)
+- Chest-to-bar pull-ups
+Rest 20 minutes
+Event 3: 1000m Row for time
+
+Saturday: Mental Grind (75 min)
+"Rich's Choice"
+100-75-50-25 reps for time:
+- Wall balls (20/14 lbs)
+- Kettlebell swings (53/35 lbs)
+- Box jumps (24"/20")
+- Burpees
+Target: 45-75 minutes
+
+Sunday: COMPLETE REST
+```
+
+**Competition Prep Weekly Pattern:**
+- **Monday**: Volume + technique
+- **Tuesday**: High intensity + power
+- **Wednesday**: Long grind + skills
+- **Thursday**: Heavy strength + speed
+- **Friday**: Competition simulation
+- **Saturday**: Mental toughness/volume
+- **Sunday**: Rest and recovery
+
+**High-Volume Templates:**
+- **Volume Grinder**: 100 reps movement A, 80 reps movement B, 60 reps movement C, 40 reps movement D, 20 reps movement E
+- **Accumulate Reps**: Accumulate 300 reps total of 2-3 movements in minimum time
+- **Mayhem Mile**: 1600m run broken up by high-volume movement stations
+- **Century Club**: 100 reps each of 4 different movements for time
+- **Descending Volume**: 75-60-45-30-15 of 3 movements for time
+
+**Multi-Session Templates:**
+- **Two-a-Day**: Strength session + conditioning session with 4+ hour gap
+- **Three-Part Day**: Strength, skills, conditioning as separate scored sessions
+- **Morning/Evening**: Aerobic session AM, high-intensity session PM
+- **Session A/B**: Two different workouts, both scored, 15-20 minutes rest between
+- **Volume + Sprint**: 45-minute grinder, rest 1 hour, then 8-minute sprint
+
+**Endurance Templates:**
+- **Aerobic Intervals**: 5 x 8 minutes at sustainable pace, 2 minutes rest between
+- **Mixed Modal Endurance**: 45-minute continuous work rotating movements every 3 minutes
+- **Steady State**: 30-60 minutes single modality at conversational pace
+- **Pyramid Intervals**: 1-2-3-4-5-4-3-2-1 minute intervals with equal rest
+- **Tempo Work**: 4 x 12 minutes at "uncomfortable but doable" pace, 3 minutes rest
+
+**Competition Format Templates:**
+- **Multi-Event**: 3-4 separate scored workouts throughout day
+- **Heavy + Light**: Max effort strength, rest 10 minutes, then long light metcon
+- **Redemption**: Workout 1 determines loading/movements for Workout 2
+- **Time Cap Ladder**: Multiple workouts with increasing time caps throughout day
+- **Elimination Format**: Field gets smaller after each event based on placement
+
+**Mental Grind Templates:**
+- **Suffer Fest**: 25-30 minutes AMRAP of challenging movement combination
+- **Hour of Power**: 60 minutes continuous work at moderate intensity
+- **Grind to Sprint**: 20 minutes steady, then 5 minutes all-out finish
+- **Dark Horse**: Unexpectedly long workout revealed only after starting
+- **Volume Ladder**: 1-2-3-4-5-6-7-8-9-10 reps of 3-4 difficult movements
+- **No-Break Challenge**: Continuous movement for prescribed time, rest = penalty

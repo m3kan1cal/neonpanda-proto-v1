@@ -349,3 +349,131 @@ The system was refined through practical application with diverse populations, f
 **Technology Integration**: Utilize apps and tracking systems for programming, progress monitoring, and community connection.
 
 **Lifelong Health**: Focus on functional fitness that supports independent living and quality of life throughout the lifespan.
+
+---
+
+## WORKOUT TEMPLATES
+
+**Programming Structure & Ratios:**
+- **No Fixed Ratios**: Varies daily based on "constantly varied" principle
+- **Typical Week Breakdown**: 40% MetCon, 35% Strength, 25% Skill/Mobility
+- **Daily Structure**: Warm-up → Strength/Skill (0-20 min) → MetCon (5-30 min) → Cool-down
+- **Volume Distribution**: Moderate daily load, sustainable 6-7 days/week
+
+**Movement Patterns & Exercise Preferences:**
+- **Primary Patterns**: Squat, deadlift, press, pull, Olympic lifts, gymnastics, monostructural cardio
+- **Compound Movement Focus**: Multi-joint exercises over isolation
+- **Movement Hierarchy**:
+  1. Olympic lifts (power, speed, coordination)
+  2. Powerlifting (strength foundation)
+  3. Gymnastics (body control, relative strength)
+  4. Monostructural (cardiovascular conditioning)
+- **Avoided Movements**: Isolation exercises, machines, non-functional patterns
+
+**Time Domains & Workout Formats:**
+- **Short (0-5 minutes)**: Phosphocreatine system, max power
+- **Medium (5-15 minutes)**: Glycolytic system, classic CrossFit
+- **Long (15+ minutes)**: Oxidative system, aerobic capacity
+- **Format Distribution**: 40% medium, 30% short, 30% long domain
+- **Signature Formats**: 21-15-9, EMOM, AMRAP, For Time, Max Effort
+
+**Scaling Approaches & Progression Methods:**
+- **Load Scaling**: Reduce weight while maintaining movement integrity
+- **Movement Scaling**: Regression to simpler movement patterns
+  - Pull-ups → Ring rows → Assisted pull-ups
+  - Handstand push-ups → Pike push-ups → Push-ups
+- **Volume Scaling**: Reduce reps while maintaining workout stimulus
+- **Time Domain Scaling**: Shorter time caps for beginners
+- **Progression Principles**: Master basics before complexity, intensity before complexity
+
+**Weekly Programming Pattern:**
+- **Philosophy**: Constantly varied - no predictable patterns or scheduled rest days
+- **Daily Structure**: Mix time domains and movement patterns unpredictably
+- **Rest Days**: Taken as needed based on individual recovery, not scheduled
+- **Volume**: Moderate daily volume, sustainable 6-7 days per week if desired
+- **Intensity**: Varies daily - avoid consecutive days of same energy system focus
+
+**Example Weekly Schedule:**
+```
+Monday: "Fran"
+21-15-9 reps for time:
+- Thrusters (95/65 lbs)
+- Pull-ups
+Target time: 3-6 minutes
+
+Tuesday: 5K Run
+5000 meter run for time
+Target time: 18-30 minutes
+
+Wednesday: Strength + Power
+Back Squat: Work up to 1RM
+Then: 3 rounds for time
+- 15 Box jumps (24"/20")
+- 10 Overhead squats (95/65 lbs)
+Total time: 25-35 minutes
+
+Thursday: "Cindy"
+AMRAP 20 minutes:
+- 5 Pull-ups
+- 10 Push-ups
+- 15 Air squats
+Target: 15-25 rounds
+
+Friday: Heavy Deadlifts
+EMOM 10 minutes:
+- 3 Deadlifts @ 80% 1RM
+- Rest remainder of minute
+
+Saturday: Hero WOD "Murph"
+For time (with 20lb vest if possible):
+- 1 mile run
+- 100 Pull-ups
+- 200 Push-ups
+- 300 Air squats
+- 1 mile run
+Target time: 35-55 minutes
+
+Sunday: Active recovery or complete rest
+Optional: 20-30 minute walk or light movement
+```
+
+**Daily Workout Structure:**
+- Warm-up (5-10 minutes)
+- Strength or skill (0-20 minutes)
+- MetCon (5-30 minutes)
+- Cool-down (5-10 minutes)
+- **Total Time**: 25-60 minutes depending on elements
+
+**Classic Triplet Templates:**
+- **21-15-9 Format**: 21 reps movement A, 21 reps movement B, then 15-15, then 9-9 for time
+- **5 Rounds For Time**: 5 rounds of X reps movement A, Y reps movement B, Z reps movement C
+- **Couplet Sprint**: 3 rounds for time of high reps movement A + moderate reps movement B
+- **15-12-9 Format**: 15 reps each movement, 12 reps each, 9 reps each for time
+- **7-5-3 Heavy Format**: Descending reps with increasing weight each round
+
+**EMOM Templates:**
+- **Strength EMOM**: Every minute for 12 minutes - 3-5 reps of heavy compound movement
+- **Mixed EMOM**: Every minute for 15 minutes - Minute 1: Strength, Minute 2: Cardio, Minute 3: Gymnastics
+- **Ascending EMOM**: Minute 1: 1 rep, Minute 2: 2 reps, continue until failure
+- **Power EMOM**: Every 2 minutes for 10 minutes - 3 reps @ 80-90% Olympic lift
+- **Bodyweight EMOM**: Every minute for 8 minutes - bodyweight movement to near failure
+
+**Hero Workout Templates:**
+- **"Murph" Structure**: 1-mile run, large volume bodyweight (100+ reps each of 3-4 movements), 1-mile run
+- **Volume Hero**: 150+ reps of movement A, 100+ reps movement B, 50+ reps movement C for time
+- **Memorial Format**: High volume + long distance with weighted vest or heavy load option
+
+**Girl Workout Templates:**
+- **"Fran" Structure**: 21-15-9 of compound barbell movement + bodyweight pulling
+- **"Grace" Structure**: 30 reps for time of moderate-heavy compound movement
+- **"Cindy" Structure**: AMRAP 20 minutes of bodyweight movement cycle
+- **"Helen" Structure**: 3 rounds for time - cardio + strength + gymnastics
+- **"Karen" Structure**: 150 reps for time of single movement
+- **"Annie" Structure**: 50-40-30-20-10 of two complementary movements
+
+**Chipper Templates:**
+- **Descending Chipper**: 50-40-30-20-10 of 3-4 different movements for time
+- **Buy-In Chipper**: Cardio buy-in, multiple movements, cardio cash-out
+- **Pyramid Chipper**: 1-2-3-4-5-4-3-2-1 of multiple movements
+- **Round Number Chipper**: 100-80-60-40-20 or 60-50-40-30-20-10 formats
+- **Even Number Chipper**: 44-33-22-11 or 40-30-20-10 of movement combinations

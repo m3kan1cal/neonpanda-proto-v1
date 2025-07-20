@@ -188,11 +188,12 @@ For each CrossFit methodology, create templates with:
 - ✅ **Scaling Options**: RX, scaled, and beginner variations
 - ✅ **Progression Logic**: How to advance within the methodology
 
-**Step 3: Template Integration & Pinecone Upsert** ✅ **READY TO IMPLEMENT**
+**Step 3: Template Integration & Pinecone Upsert** ✅ **COMPLETED**
 - ✅ Add workout templates to methodology documents (templates already created)
 - ✅ Upsert updated methodology documents to Pinecone methodology namespace
 - ✅ Templates become part of methodology context retrieved by `queryPineconeContext()`
 - ✅ Coach automatically accesses templates when methodology keywords detected
+- ✅ Template usage guidelines integrated into coach conversation prompt generation
 
 **Step 4: Testing & Validation** ❌ **PENDING**
 - Test template retrieval when methodology keywords detected in conversation

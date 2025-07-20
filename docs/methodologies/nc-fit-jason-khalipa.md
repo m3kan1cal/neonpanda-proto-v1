@@ -273,5 +273,153 @@ The methodology is built on Khalipa's "earn your fitness" philosophy, which emph
 - Sustainable habit formation
 - Long-term health and wellness focus
 
+---
+
+## WORKOUT TEMPLATES
+
+**Programming Structure & Ratios:**
+- **Time-Efficient Focus**: Maximum results in minimum time
+- **Typical Session Breakdown**: 20% Warm-up, 70% Work, 10% Cool-down
+- **Weekly Structure**: 60% High-Intensity, 25% Strength, 15% Recovery/Skills
+- **Session Formats**: Circuits (40%), Supersets (30%), Intervals (20%), Straight Sets (10%)
+
+**Movement Patterns & Exercise Preferences:**
+- **Bodyweight Emphasis**: Minimal equipment dependence
+- **Compound Movements**: Maximize muscle recruitment per exercise
+- **Primary Patterns**: Squat, push, pull, hinge, carry, jump
+- **Equipment Priority**:
+  1. Bodyweight (most important)
+  2. Dumbbells/kettlebells (portable)
+  3. Minimal cardio equipment
+  4. Avoid complex setups
+- **Movement Selection**: Easy to learn, hard to mess up
+
+**Time Domains & Workout Formats:**
+- **Primary Domain**: 3-15 minutes (glycolytic focus)
+- **Format Distribution**:
+  - Tabata intervals (25%)
+  - Circuit training (35%)
+  - AMRAP/For Time (25%)
+  - Strength circuits (15%)
+- **Intensity Targets**: 80-90% max heart rate for work intervals
+- **Rest Periods**: Minimal rest, active recovery preferred
+
+**Scaling Approaches & Progression Methods:**
+- **Time Scaling**: Reduce work intervals, not intensity
+  - Advanced: 45 sec work/15 sec rest
+  - Beginner: 30 sec work/30 sec rest
+- **Movement Scaling**: Simpler movement patterns
+  - Burpees → Step-back burpees → Squat to stands
+- **Load Scaling**: Bodyweight → Light weights → Moderate weights
+- **Volume Progression**: Add rounds/circuits as fitness improves
+- **Complexity Progression**: Single limb → Bilateral → Combined movements
+
+**Weekly Programming Pattern:**
+- **Philosophy**: Time-efficient, sustainable for working professionals
+- **Daily Structure**: 20-45 minutes total including warm-up and cool-down
+- **Rest Days**: Scheduled 2 rest days per week (typically Wednesday and Sunday)
+- **Volume**: Lower daily volume, higher intensity to maximize time efficiency
+- **Intensity**: 3-4 high-intensity days, 1-2 moderate days per week
+
+**Example Weekly Schedule:**
+```
+Monday: Upper Body Strength + Finisher (35 min total)
+Superset 4 rounds:
+- Push-ups x 12-15
+- Bent over rows x 10-12
+- Rest 90 seconds
+Then: 8 minute AMRAP
+- 10 Burpees
+- 20 Mountain climbers
+
+Tuesday: Full Body Circuit (25 min total)
+5 rounds, 45 seconds work/15 seconds rest:
+- Bodyweight squats
+- Push-ups
+- Jumping jacks
+- Plank hold
+- High knees
+Rest 2 minutes between rounds
+
+Wednesday: REST or Active Recovery
+Optional: 20 minute walk or gentle yoga
+
+Thursday: Lower Body + Tabata (30 min total)
+4 sets of:
+- Goblet squats x 15
+- Single leg deadlifts x 8 each leg
+- Rest 2 minutes
+Then: Tabata (4 minutes)
+- 20 seconds jump squats
+- 10 seconds rest x 8 rounds
+
+Friday: Quick Burn AMRAP (20 min total)
+AMRAP 15 minutes:
+- 5 Burpees
+- 10 Push-ups
+- 15 Air squats
+- 20 Alternating lunges
+Target: 8-15 rounds
+
+Saturday: "Power Hour" Combo (45 min total)
+Strength (15 min):
+- Deadlifts: 3 sets of 8-10 reps
+Rest 3 minutes
+MetCon (20 min):
+- 10-9-8-7-6-5-4-3-2-1
+- Thrusters (light weight)
+- Box step-ups
+Cool-down: 7 minutes
+
+Sunday: COMPLETE REST
+```
+
+**Daily Workout Structure:**
+- Dynamic warm-up (3-5 minutes)
+- Main work (15-35 minutes)
+- Cool-down/stretch (2-5 minutes)
+- **Total Time**: 20-45 minutes maximum
+
+**Khalipa's "Power Hour" Saturday Format:**
+- Strength block (15 minutes)
+- Rest (3 minutes)
+- Conditioning block (20 minutes)
+- Cool-down (7 minutes)
+
+**Tabata Templates:**
+- **Single Movement Tabata**: 8 rounds of 20 seconds on, 10 seconds off of one movement
+- **Alternating Tabata**: 8 rounds alternating between 2 movements (20 on/10 off)
+- **Tabata Finisher**: After strength work, 4 minutes tabata of cardio movement
+- **Double Tabata**: Two 4-minute tabatas with 1 minute rest between
+- **Tabata + Hold**: 6 rounds tabata, then max time static hold of same muscle group
+
+**Circuit Templates:**
+- **4-Station Circuit**: 4 movements, 45 seconds work/15 seconds rest, 4 rounds
+- **Upper/Lower Circuit**: Alternate upper body and lower body movements, 6 stations, 3 rounds
+- **Equipment-Free Circuit**: 5-6 bodyweight movements, 40 seconds work/20 seconds rest
+- **Partner Circuit**: 2 people, one works while other rests, 6 movements, 3 rounds
+- **Compound Circuit**: All compound movements, 50 seconds work/10 seconds rest
+
+**Time-Efficient Strength Templates:**
+- **Superset + Finisher**: 4 sets of 2 strength movements, then 5-minute cardio finisher
+- **Strength Ladder**: 10-9-8-7-6-5-4-3-2-1 of strength movement + cardio between sets
+- **Time-Capped Strength**: AMRAP 15 minutes of strength movement + short cardio burst
+- **Density Sets**: As many sets as possible in 10 minutes of 5 reps @ moderate weight
+- **Mechanical Drop Sets**: Heavy compound → light isolation → bodyweight variation
+
+**"Lunch Break" Templates:**
+- **20-Minute Total**: 5 min warm-up + 10 min workout + 5 min cool-down
+- **Office Friendly**: 15 minutes, no equipment, minimal space required
+- **Parking Lot Workout**: Car-based exercises, 12 minutes total
+- **Hotel Room**: 18 minutes, bodyweight only, quiet movements
+- **Stairwell Special**: 15 minutes using stairs and landings only
+
+**Quick Burn Templates:**
+- **Death by**: Start with 1 rep minute 1, add 1 rep each minute until failure
+- **Every 30 Seconds**: Perform X reps every 30 seconds for 10 minutes
+- **Countdown**: 10-9-8-7-6-5-4-3-2-1 of 2-3 movements for time
+- **Buy-In/Cash-Out**: 100 reps, 8 minutes work, 100 reps
+- **Triple Threat**: 3 movements, 3 minutes each, max reps, 1 minute rest between
+
 ## Conclusion
 NC Fit represents a mature and practical approach to functional fitness that combines elite-level competition experience with real-world application. Jason Khalipa's methodology emphasizes that true fitness must be earned through consistent effort, progressive challenge, and mental resilience. The system's strength lies in its scalability, allowing everyone from beginners to elite athletes to benefit from its principles while maintaining focus on sustainable, long-term development. Success with NC Fit requires commitment to the process, emphasis on movement quality, and understanding that fitness is a lifelong journey rather than a destination.
