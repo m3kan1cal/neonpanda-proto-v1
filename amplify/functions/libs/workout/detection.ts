@@ -6,6 +6,7 @@
  */
 
 import { QuickWorkoutExtraction } from './types';
+import { callBedrockApi, MODEL_IDS } from '../api-helpers';
 
 /**
  * Supported workout slash commands
@@ -78,247 +79,132 @@ export const isWorkoutSlashCommand = (slashCommandResult: SlashCommandResult): b
 };
 
 /**
- * Detects if a user message contains workout logging indicators
- * Uses two-stage detection: first checks for workout-related terms,
- * then analyzes intent to distinguish between completed workouts and planning/advice
+ * AI-powered detection of completed workout logging in user messages
+ * Analyzes both workout content and completion intent in a single pass
  *
  * @param message - The user's message to analyze
- * @returns boolean indicating if workout logging was detected
+ * @returns Promise<boolean> indicating if the message is a workout log
  *
  * @example
  * ```typescript
- * const isWorkout = detectWorkoutLogging("I just finished Fran in 8:57");
+ * const isWorkout = await isWorkoutLog("I just finished Fran in 8:57");
  * // Returns: true
  *
- * const isPlanning = detectWorkoutLogging("Can I superset bench press with pushups?");
- * // Returns: false (workout terms detected, but intent is planning)
+ * const isPlanning = await isWorkoutLog("Can I superset bench press with pushups?");
+ * // Returns: false (planning/advice, not completed workout)
  * ```
  */
-export const detectWorkoutLogging = (message: string): boolean => {
+export const isWorkoutLog = async (message: string): Promise<boolean> => {
   if (!message || typeof message !== 'string') {
     return false;
   }
 
-  // Stage 1: Check for workout-related terms
-  const workoutTermIndicators = [
-    // Completion phrases
-    /did\s+\w+\s+today/i,
-    /just\s+finished/i,
-    /completed\s+\w+/i,
-    /finished\s+the\s+workout/i,
-    /workout\s+complete/i,
-    /just\s+did/i,
-    /training\s+session/i,
-    /exercise\s+complete/i,
-    /workout\s+log/i,
+  const detectionPrompt = `
+Analyze this message to determine if it describes a COMPLETED WORKOUT that should be logged.
 
-    // Performance indicators
-    /my\s+time\s+was/i,
-    /crushed\s+it/i,
-    /smashed\s+it/i,
-    /went\s+heavy/i,
-    /lifted\s+\d+/i,
+MESSAGE: "${message}"
 
-    // Time formats (e.g., 8:57, 12:34)
-    /\d+:\d+/,
+Return ONLY a JSON response in this exact format:
+{
+  "isWorkoutLog": boolean,
+  "confidence": number,
+  "reasoning": "brief explanation"
+}
 
-    // Weight formats (e.g., 95 lbs, 135 kg)
-    /\d+\s*(lbs?|kg|pounds?|kilos?)/i,
+DETECTION CRITERIA:
+1. COMPLETED WORKOUT LOG = User is describing/reporting a workout they already finished
+   - Examples: "Just finished Fran in 8:57", "Did 5 rounds today", "Crushed that EMOM", "Deadlifted 315 for 3 reps"
 
-    // Rep and round counts
-    /\d+\s+reps/i,
-    /\d+\s+rounds/i,
+2. NOT A WORKOUT LOG = Any of these:
+   - Planning future workouts: "Should I do Murph tomorrow?"
+   - Asking questions: "What did I do last week?", "Can I superset bench press?"
+   - Seeking advice: "How should I warm up?", "What's better, squats or deadlifts?"
+   - General fitness discussion: "I love CrossFit", "My gym is great"
+   - Technique questions: "How do I improve my pull-ups?"
+   - Scheduling: "Planning to workout at 6pm"
 
-    // Time units
-    /\d+\s*(min|mins|minutes|seconds|sec|secs)/i,
+3. EDGE CASES:
+   - Questions about past workouts = NOT A LOG (they're inquiries)
+   - Future tense = NOT A LOG (planning)
+   - General fitness chat = NOT A LOG (discussion)
+   - Must have specific performance details to be a workout log
 
-    // CrossFit benchmarks (common named workouts)
-    /(fran|murph|helen|diane|grace|cindy|annie|jackie|karen|nancy|elizabeth)/i,
+Return confidence 0.8+ only if very clear workout logging, 0.5-0.7 for moderate cases, <0.5 for unclear.`;
 
-    // PR and achievement language
-    /pr\s+today/i,
-    /new\s+personal\s+best/i,
-    /personal\s+record/i,
-    /best\s+time/i,
-    /hit\s+a\s+pr/i,
+    const response = await callBedrockApi(detectionPrompt, message, MODEL_IDS.NOVA_MICRO);
+  const result = JSON.parse(response);
 
-    // Scaling and modifications
-    /scaled\s+to/i,
-    /rx\s*$/i,
-    /as\s+prescribed/i,
-    /modified/i,
+  console.info('AI workout detection:', {
+    message: message.substring(0, 100),
+    isWorkoutLog: result.isWorkoutLog,
+    confidence: result.confidence,
+    reasoning: result.reasoning
+  });
 
-    // Movement-specific terms
-    /deadlift/i,
-    /squat/i,
-    /bench\s+press/i,
-    /pull\s*ups?/i,
-    /push\s*ups?/i,
-    /thrusters?/i,
-    /burpees?/i,
-    /box\s+jumps?/i,
-    /wall\s+balls?/i,
-    /kettlebell/i,
-    /barbell/i,
-    /dumbbell/i,
-
-    // Workout format terms
-    /amrap/i,
-    /emom/i,
-    /tabata/i,
-    /for\s+time/i,
-    /metcon/i,
-    /wod/i, // Workout of the Day
-
-    // Distance and cardio
-    /ran\s+\d+/i,
-    /mile/i,
-    /kilometer/i,
-    /\d+k\s+run/i,
-    /treadmill/i,
-    /bike/i,
-    /rowing/i,
-    /swim/i
-  ];
-
-  // Stage 1: Check if message contains workout-related terms
-  const hasWorkoutTerms = workoutTermIndicators.some(pattern => pattern.test(message));
-
-  if (!hasWorkoutTerms) {
-    return false; // No workout terms detected, definitely not a workout log
-  }
-
-  // Stage 2: If workout terms detected, check if it's actually a completed workout vs planning/advice
-  return isCompletedWorkout(message);
+  return result.isWorkoutLog && result.confidence > 0.5;
 };
 
 /**
- * Extracts basic workout information from a message for quick analysis
+ * AI-powered quick extraction of workout information for immediate coach response
  * This is used for immediate coach response while full extraction runs async
  *
  * @param message - The user's message to analyze
- * @returns object with basic extracted information
+ * @returns Promise<QuickWorkoutExtraction> with extracted information
  */
-export const quickWorkoutExtraction = (message: string): QuickWorkoutExtraction => {
-  const result: QuickWorkoutExtraction = {
-    confidence: 0.5 // Default confidence
-  };
+export const quickWorkoutExtraction = async (message: string): Promise<QuickWorkoutExtraction> => {
+  const extractionPrompt = `
+Extract key workout information from this message for immediate coach feedback.
 
-  // Try to extract workout name (CrossFit benchmarks)
-  const benchmarkMatch = message.match(/(fran|murph|helen|diane|grace|cindy|annie|jackie|karen|nancy|elizabeth)/i);
-  if (benchmarkMatch) {
-    result.workoutName = benchmarkMatch[1].toLowerCase();
-    result.discipline = 'crossfit';
-    result.confidence = 0.9;
-  }
+MESSAGE: "${message}"
 
-  // Try to extract time
-  const timeMatch = message.match(/(\d+:\d+)/);
-  if (timeMatch) {
-    result.timeDetected = timeMatch[1];
-    result.confidence = Math.max(result.confidence, 0.8);
-  }
+Return ONLY a JSON response in this exact format:
+{
+  "workoutName": "string|null",
+  "discipline": "crossfit|powerlifting|running|bodybuilding|hiit|general|null",
+  "timeDetected": "string|null",
+  "weightDetected": "string|null",
+  "repCountDetected": "string|null",
+  "roundsDetected": "string|null",
+  "intensityDetected": "string|null",
+  "equipmentUsed": "string|null",
+  "locationContext": "string|null",
+  "keyExercises": ["array of main exercises"],
+  "confidence": number,
+  "quickSummary": "brief one-line summary for coach"
+}
 
-  // Try to extract weight
-  const weightMatch = message.match(/(\d+)\s*(lbs?|kg|pounds?|kilos?)/i);
-  if (weightMatch) {
-    result.weightDetected = `${weightMatch[1]} ${weightMatch[2]}`;
-    result.confidence = Math.max(result.confidence, 0.7);
-  }
+EXTRACTION GUIDELINES:
+1. workoutName: Named workouts (Fran, Murph, etc.) or user-given names
+2. discipline: Best guess based on movements/language
+3. timeDetected: Any time mentions (8:57, 30 minutes, etc.)
+4. weightDetected: Primary weights used (135 lbs, 50kg dumbbells, etc.)
+5. repCountDetected: Key rep numbers mentioned
+6. roundsDetected: Rounds/sets completed
+7. intensityDetected: RPE, effort level, or descriptive intensity
+8. equipmentUsed: Key equipment (dumbbells, barbell, bodyweight, etc.)
+9. locationContext: Gym, home, hotel, outdoors, etc.
+10. keyExercises: 2-4 main movements mentioned
+11. confidence: 0.8+ for clear info, 0.5-0.7 moderate, <0.5 unclear
+12. quickSummary: One sentence for immediate coach context
+
+Examples:
+- "Just finished Fran in 8:57 with 95lb thrusters" → workoutName: "Fran", timeDetected: "8:57", weightDetected: "95 lbs"
+- "Crushed 5 rounds of that brutal hotel workout" → roundsDetected: "5", intensityDetected: "brutal", locationContext: "hotel"
+- "Deadlifted 315 for 3 reps, new PR!" → discipline: "powerlifting", weightDetected: "315", repCountDetected: "3", intensityDetected: "PR"`;
+
+    const response = await callBedrockApi(extractionPrompt, message, MODEL_IDS.NOVA_MICRO);
+  const result = JSON.parse(response);
+
+  console.info('AI quick workout extraction:', {
+    message: message.substring(0, 100),
+    confidence: result.confidence,
+    summary: result.quickSummary
+  });
 
   return result;
 };
 
-/**
- * Validates if a message is likely a workout completion vs. a workout plan
- * Used as Stage 2 of workout detection after workout terms are identified
- *
- * @param message - The user's message to analyze
- * @returns boolean indicating if this is likely a completed workout vs. planned workout
- *
- * @example
- * ```typescript
- * isCompletedWorkout("I just finished Fran in 8:57"); // Returns: true
- * isCompletedWorkout("Can I superset bench press with pushups?"); // Returns: false
- * isCompletedWorkout("Planning to do Murph tomorrow"); // Returns: false
- * ```
- */
-export const isCompletedWorkout = (message: string): boolean => {
-  const completionIndicators = [
-    /just\s+finished/i,
-    /completed/i,
-    /did\s+\w+\s+today/i,
-    /my\s+time\s+was/i,
-    /crushed\s+it/i,
-    /finished\s+in/i,
-    /workout\s+complete/i,
-    /done\s+with/i,
-    /hit\s+a\s+pr/i,
-    /new\s+personal\s+best/i
-  ];
 
-  const planningIndicators = [
-    /going\s+to\s+do/i,
-    /plan\s+to/i,
-    /will\s+do/i,
-    /should\s+i/i,
-    /can\s+i/i,         // "Can I superset..."
-    /what\s+about/i,
-    /thinking\s+about/i,
-    /tomorrow/i,
-    /next\s+week/i,
-    /later/i,
-    /for\s+tonight/i,   // "For tonight's workout"
-    /evening.*session/i // "evening supplemental session"
-  ];
-
-  // Add question indicators to catch inquiries about past workouts
-  const questionIndicators = [
-    /what\s+did\s+i\s+do/i,        // "What did I do for..."
-    /what\s+was\s+my/i,           // "What was my time..."
-    /can\s+you\s+tell\s+me/i,     // "Can you tell me what..."
-    /just\s+to\s+confirm/i,       // "Just to confirm, what..."
-    /remind\s+me/i,               // "Remind me what..."
-    /what\s+were\s+my/i,          // "What were my..."
-    /how\s+did\s+i\s+do/i,        // "How did I do on..."
-    /\?\s*$/,                     // Ends with question mark
-    /^(what|how|when|where|which|did|was|were|can|could|would|should)/i // Starts with question words
-  ];
-
-  const hasCompletionIndicators = completionIndicators.some(pattern => pattern.test(message));
-  const hasPlanningIndicators = planningIndicators.some(pattern => pattern.test(message));
-  const hasQuestionIndicators = questionIndicators.some(pattern => pattern.test(message));
-
-  // If has question indicators, likely not a completed workout (it's an inquiry)
-  if (hasQuestionIndicators) {
-    return false;
-  }
-
-  // If has completion indicators and no planning indicators, likely completed
-  if (hasCompletionIndicators && !hasPlanningIndicators) {
-    return true;
-  }
-
-  // If has planning indicators, likely not completed
-  if (hasPlanningIndicators) {
-    return false;
-  }
-
-  // If has past tense verbs, likely completed
-  const pastTenseIndicators = [
-    /did/i,
-    /went/i,
-    /ran/i,
-    /lifted/i,
-    /finished/i,
-    /completed/i,
-    /crushed/i,
-    /smashed/i,
-    /hit/i
-  ];
-
-  return pastTenseIndicators.some(pattern => pattern.test(message));
-};
 
 /**
  * Generates AI coach context for workout detection responses

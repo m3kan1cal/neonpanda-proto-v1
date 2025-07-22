@@ -8,8 +8,7 @@
 export {
   parseSlashCommand,
   isWorkoutSlashCommand,
-  detectWorkoutLogging,
-  isCompletedWorkout,
+  isWorkoutLog,
   quickWorkoutExtraction,
   generateWorkoutDetectionContext,
   generateStructuredWorkoutContext,

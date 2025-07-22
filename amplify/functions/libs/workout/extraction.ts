@@ -168,7 +168,8 @@ EXTRACTION GUIDELINES:
    - "Finished with max push-ups to failure" → reps: {prescribed: "max", completed: [actual number]} (use "max" for max effort)
    - "20 minute AMRAP: 5 pull-ups, 10 push-ups, 15 squats - got 12 rounds" → workout_format: "amrap", rounds_completed: 12, score: {value: 12, type: "rounds"}
    - "AMRAP got 12 rounds plus 5 reps" → rounds_completed: 12, score: {value: "12+5", type: "rounds"}
-   - "EMOM 10: 3 thrusters at 135" → workout_format: "emom", time_cap: 600, weight: 135
+   - "EMOM 10: 3 thrusters at 135" → workout_format: "emom", time_cap: 600, weight: 135, create 10 separate rounds
+   - "30min EMOM completed 6 rounds" → 6 separate round objects in rounds array, NOT 1 template round
    - "Broke the 21 thrusters into 10-6-5" → broken_sets: [10, 6, 5]
    - "3 sets of squats at 185, then 5 rounds of burpees and pull-ups" → workout_format: "strength_then_metcon", rounds_completed: 8 (3 squat rounds + 5 metcon rounds)
 
@@ -217,6 +218,15 @@ EXTRACTION GUIDELINES:
    - "6 rounds of X" = 6 separate rounds, each with round_number incremented
    - Each round contains the same exercises with same prescribed reps
    - Track rest periods between rounds in rest_between_sets
+
+   B.1. EMOM SPECIFIC ROUND STRUCTURE:
+   - CRITICAL: EMOM workouts MUST create separate rounds for each COMPLETED ROUND, not each minute
+   - "30min EMOM" with 6 rounds completed = 6 separate round objects (NOT 1 template round)
+   - Each round represents one complete cycle through all exercises with incremented round_number: 1, 2, 3, 4, 5, 6
+   - This enables tracking performance degradation, pacing, and round-by-round analysis
+   - WRONG: 1 round with exercises, performance_data.rounds_completed: 6
+   - CORRECT: 6 rounds array elements, each with same exercises, performance_data.rounds_completed: 6
+   - Example: "30min EMOM, 5 exercises per round, completed 6 rounds" = create 6 round objects, NOT 30
 
    C. WORKING SETS vs BURNOUT SETS:
    - Multiple working sets of same exercise = separate rounds

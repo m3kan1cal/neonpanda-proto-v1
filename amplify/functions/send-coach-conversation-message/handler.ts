@@ -21,7 +21,7 @@ import {
   generateSystemPromptPreview,
 } from "../libs/coach-conversation/prompt-generation";
 import {
-  detectWorkoutLogging,
+  isWorkoutLog,
   parseSlashCommand,
   isWorkoutSlashCommand,
   generateWorkoutDetectionContext,
@@ -41,7 +41,7 @@ const ENABLE_S3_DEBUG_LOGGING = false; // Set to true to enable system prompt de
 console.info("🔍 DEBUG: Imported functions test:", {
   parseSlashCommand: typeof parseSlashCommand,
   isWorkoutSlashCommand: typeof isWorkoutSlashCommand,
-  WORKOUT_SLASH_COMMANDS: WORKOUT_SLASH_COMMANDS
+  WORKOUT_SLASH_COMMANDS: WORKOUT_SLASH_COMMANDS,
 });
 
 export const handler = async (
@@ -210,7 +210,6 @@ export const handler = async (
           console.info("📭 No relevant Pinecone context found:", {
             success: pineconeResult.success,
             totalMatches: pineconeResult.totalMatches,
-            error: pineconeResult.error,
           });
         }
       } catch (error) {
@@ -266,13 +265,16 @@ export const handler = async (
       const testMatch = userResponse.match(testRegex);
       console.info("🔍 DEBUG: Direct regex test:", {
         testMatch: testMatch,
-        userResponse: userResponse.substring(0, 50)
+        userResponse: userResponse.substring(0, 50),
       });
 
       slashCommand = parseSlashCommand(userResponse);
       console.info("🔍 DEBUG: Slash command parsing result:", slashCommand);
       console.info("🔍 DEBUG: Raw userResponse:", JSON.stringify(userResponse));
-      console.info("🔍 DEBUG: userResponse starts with /:", userResponse.startsWith('/'));
+      console.info(
+        "🔍 DEBUG: userResponse starts with /:",
+        userResponse.startsWith("/")
+      );
       console.info("🔍 DEBUG: userResponse length:", userResponse.length);
 
       isSlashCommandWorkout = isWorkoutSlashCommand(slashCommand);
@@ -282,7 +284,7 @@ export const handler = async (
       );
 
       isNaturalLanguageWorkout =
-        !slashCommand.isSlashCommand && detectWorkoutLogging(userResponse);
+        !slashCommand.isSlashCommand && isWorkoutLog(userResponse);
       console.info(
         "🔍 DEBUG: Is natural language workout:",
         isNaturalLanguageWorkout

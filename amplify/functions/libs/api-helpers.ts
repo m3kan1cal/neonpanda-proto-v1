@@ -137,6 +137,14 @@ export const invokeAsyncLambda = async (
   }
 };
 
+// Get model-specific token limits
+const getMaxTokensForModel = (modelId: string): number => {
+  if (modelId.includes('nova-micro')) {
+    return 8000; // Conservative limit for Nova Micro (actual limit is 10k)
+  }
+  return MAX_TOKENS; // Default for Claude models
+};
+
 // Amazon Bedrock Converse API call
 export const callBedrockApi = async (
   systemPrompt: string,
@@ -176,7 +184,7 @@ export const callBedrockApi = async (
         }
       ],
       inferenceConfig: {
-        maxTokens: MAX_TOKENS,
+        maxTokens: getMaxTokensForModel(modelId),
         temperature: TEMPERATURE,
       },
     });

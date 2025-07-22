@@ -279,6 +279,13 @@ export interface QuickWorkoutExtraction {
   timeDetected?: string;
   weightDetected?: string;
   discipline?: string;
+  repCountDetected?: string;
+  roundsDetected?: string;
+  intensityDetected?: string;
+  equipmentUsed?: string;
+  locationContext?: string;
+  keyExercises?: string[];
+  quickSummary?: string;
   confidence: number;
 }
 
