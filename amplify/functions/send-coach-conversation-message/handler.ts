@@ -284,7 +284,7 @@ export const handler = async (
       );
 
       isNaturalLanguageWorkout =
-        !slashCommand.isSlashCommand && isWorkoutLog(userResponse);
+        !slashCommand.isSlashCommand && (await isWorkoutLog(userResponse));
       console.info(
         "🔍 DEBUG: Is natural language workout:",
         isNaturalLanguageWorkout
