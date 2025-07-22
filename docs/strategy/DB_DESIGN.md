@@ -59,298 +59,254 @@
 
 ---
 
-### User Profile
+### Coach Conversation
 ```json
 {
-  "pk": "user#${user_id}",
-  "sk": "profile",
-  "entityType": "userProfile",
+  "pk": "user#${userId}",
+  "sk": "coachConversation#${coachId}#${conversationId}",
+  "entityType": "coachConversation",
   "createdAt": "2025-06-20T15:30:00Z",
   "updatedAt": "2025-06-20T15:30:00Z",
   "attributes": {
     "userId": "string",
-    "email": "string",
-    "firstName": "string",
-    "lastName": "string",
-    "dateOfBirth": "1990-01-15",
-    "gender": "male|female|other|prefer_not_to_say",
-    "fitnessLevel": "beginner|intermediate|advanced",
-    "goals": ["strength", "conditioning", "weight_loss", "competition"],
-    "preferences": {
-      "workoutTypes": ["crossfit", "powerlifting", "gymnastics"],
-      "availableTime": 60,
-      "equipment": ["barbell", "dumbbells", "pull_up_bar"],
-      "trainingDays": ["monday", "tuesday", "thursday", "friday"]
-    },
-    "subscription": {
-      "tier": "free|premium|pro",
-      "status": "active|inactive|cancelled",
-      "expiresAt": "2025-12-31T23:59:59Z"
-    },
-    "profilePictureUrl": "string",
-    "timezone": "America/New_York",
-    "isActive": true
-  }
-}
-```
-
-**Key Details**:
-- Single profile per user with comprehensive fitness and preference data
-- Subscription management for monetization
-- Timezone handling for global users
-
----
-
-### User Preferences
-```json
-{
-  "pk": "user#${user_id}",
-  "sk": "preferences",
-  "entityType": "userPreferences",
-  "createdAt": "2025-06-20T15:30:00Z",
-  "updatedAt": "2025-06-20T15:30:00Z",
-  "attributes": {
-    "notification_settings": {
-      "workout_reminders": true,
-      "coach_messages": true,
-      "progress_updates": true,
-      "email_frequency": "daily|weekly|monthly",
-      "push_notifications": true
-    },
-    "privacy_settings": {
-      "data_sharing": "none|anonymized|full",
-      "public_profile": false,
-      "workout_sharing": "private|friends|public"
-    },
-    "ui_preferences": {
-      "theme": "light|dark|auto",
-      "language": "en|es|fr",
-      "measurement_units": "imperial|metric",
-      "default_coach": "coach_id_string"
+    "coachId": "string",
+    "conversationId": "string",
+    "title": "string",
+    "messages": [
+      {
+        "id": "string",
+        "role": "user|assistant",
+        "content": "string",
+        "timestamp": "Date",
+        "metadata": {
+          "workoutDetected": "boolean",
+          "extractionConfidence": "number"
+        }
+      }
+    ],
+    "metadata": {
+      "createdAt": "Date",
+      "lastActivity": "Date",
+      "totalMessages": "number",
+      "tags": ["array"],
+      "isActive": "boolean"
     }
   }
 }
 ```
 
 **Key Details**:
-- Separate entity for user preferences to avoid bloating profile
-- Granular notification and privacy controls
-- UI customization options
+- Full conversation stored in DynamoDB attributes (messages array)
+- Coach-specific conversation organization
+- Message-level metadata for workout detection and extraction tracking
+- Active/inactive status for conversation management
 
 ---
 
-### Conversation History
+### Coach Conversation Summary
 ```json
 {
-  "pk": "user#${user_id}",
-  "sk": "conversationHistory#${timestamp}",
-  "entityType": "conversationHistory",
-  "createdAt": "2025-06-20T15:30:00Z",
-  "updatedAt": "2025-06-20T15:30:00Z",
-  "attributes": {
-    "conversationId": "conv_12345",
-    "coachId": "coach_67890",
-    "s3Bucket": "coach-ai-conversations",
-    "s3Key": "users/${user_id}/conversations/${conversation_id}.json",
-    "messageCount": 12,
-    "lastMessage": "Great job on that workout! How are you feeling?",
-    "sentiment": "positive|neutral|negative",
-    "duration": 15,
-    "topics": ["workout_planning", "motivation", "form_feedback"],
-    "conversationType": "coaching|check_in|problem_solving|goal_setting",
-    "isArchived": false,
-    "needsFollowUp": false
-  }
-}
-```
-
-### Conversation Summaries
-```json
-{
-  "pk": "user#${user_id}",
-  "sk": "conversation#${conversation_id}#summary",
+  "pk": "user#${userId}",
+  "sk": "conversation#${conversationId}#summary",
   "entityType": "conversationSummary",
   "createdAt": "2025-06-20T15:30:00Z",
   "updatedAt": "2025-06-20T15:30:00Z",
   "attributes": {
-    "conversationId": "conv_12345",
-    "summary_data": {
-      "narrative_summary": "User has been consistently working on Olympic lifts with focus on technique improvement. Shows strong motivation but tends to rush through warm-ups. Responded well to cue about 'patience in the setup' and achieved PR in clean & jerk. Dealing with some shoulder tightness from desk work.",
+    "summaryId": "string",
+    "userId": "string",
+    "coachId": "string",
+    "conversationId": "string",
+    "summaryText": "string",
+    "structuredData": {
+      "narrative_summary": "string",
       "key_facts": {
-        "current_goals": ["Olympic lift technique", "shoulder mobility", "consistency"],
-        "recent_progress": ["Clean & jerk PR: 185lb", "Improved front rack position"],
-        "preferences": ["Morning workouts", "Detailed technique feedback", "Progressive loading"],
-        "constraints": ["Desk job affecting posture", "Limited evening availability"],
-        "schedule_context": ["Prefers 6am sessions", "Travels frequently for work"]
+        "current_goals": ["array"],
+        "recent_progress": ["array"],
+        "preferences": ["array"],
+        "constraints": ["array"],
+        "schedule_context": ["array"]
       },
-      "emotional_state": "Motivated but sometimes impatient, responds well to encouragement and specific technical cues",
-      "action_items": ["Daily shoulder mobility routine", "Focus on setup patience", "Track warm-up consistency"],
-      "last_updated": "2025-06-20T15:30:00Z",
-      "conversation_id": "conv_12345"
+      "emotional_state": "string",
+      "action_items": ["array"],
+      "last_updated": "Date"
+    },
+    "metadata": {
+      "createdAt": "Date",
+      "confidence": "number",
+      "triggerReason": "string",
+      "messageRange": {
+        "startMessageId": "string",
+        "endMessageId": "string",
+        "totalMessages": "number"
+      }
     }
   }
 }
 ```
 
 **Key Details**:
-- Full conversation stored in S3, metadata in DynamoDB
-- AI-extracted topics and sentiment for analytics
-- Conversation type classification for coach optimization
-- Follow-up flags for coach attention management
+- AI-generated summaries of conversation content
+- Structured data extraction for coach optimization
+- Message range tracking for summary context
+- Confidence scoring for summary quality
 
 ---
 
 ### Coach Configuration
 ```json
 {
-  "pk": "user#${user_id}",
-  "sk": "coach#${coach_id}",
+  "pk": "user#${userId}",
+  "sk": "coach#${coachId}",
   "entityType": "coachConfig",
   "createdAt": "2025-06-20T15:30:00Z",
   "updatedAt": "2025-06-20T15:30:00Z",
   "attributes": {
-    "coachName": "string",
-    "coachType": "fitness|nutrition|mindset|general",
-    "technical_config": {
-      "methodology": "comptrain_strength|mayhem_conditioning|prvn_hybrid",
-      "programming_focus": ["strength", "conditioning", "olympic_lifting"],
-      "experience_level": "beginner|intermediate|advanced",
-      "training_frequency": 5,
-      "specializations": ["powerlifting", "gymnastics", "endurance"],
-      "injury_considerations": ["knee_surgery", "shoulder_impingement"],
-      "goal_timeline": "3_months|6_months|1_year|ongoing",
-      "preferred_intensity": "low|moderate|high",
-      "equipment_available": ["barbell", "dumbbells", "rings"],
-      "time_constraints": {
-        "session_length": 60,
-        "available_days": ["monday", "tuesday", "thursday", "friday"]
-      }
+    "coach_id": "string",
+    "coach_name": "string",
+    "selected_personality": {
+      "primary_template": "string",
+      "selection_reasoning": "string"
     },
-    "generated_prompts": {
-      "personality_prompt": "You communicate with a direct but encouraging style...",
-      "motivation_prompt": "When users struggle, you remind them of progress...",
-      "methodology_prompt": "Your programming emphasizes progressive overload...",
-      "communication_style": "You respond with 2-3 sentences most of the time..."
+    "selected_methodology": {
+      "primary_methodology": "string"
+    },
+    "technical_config": {
+      "programming_focus": ["array"],
+      "specializations": ["array"],
+      "methodology": "string",
+      "experience_level": "string",
+      "goal_timeline": "string",
+      "preferred_intensity": "string",
+      "equipment_available": ["array"]
     },
     "metadata": {
-      "version": "1.2",
-      "user_satisfaction": 4.2,
-      "total_conversations": 127,
-      "last_updated": "2025-06-20T15:30:00Z",
-      "adaptation_history": [
-        {
-          "date": "2025-06-15T10:00:00Z",
-          "change": "increased_motivation_focus",
-          "trigger": "low_engagement_detected",
-          "result": "improved_response_rate"
-        }
-      ]
-    },
-    "isActive": true,
-    "isPrimary": true,
-    "customInstructions": "Focus on Olympic lifting technique and competition prep"
-  }
-}
-```
-
-**Key Details**:
-- Sophisticated coach configuration matching technical architecture
-- Separation of technical config and generated prompts
-- Adaptation history tracking for evolutionary learning
-- Version control for coach improvements
-
----
-
-### Workout History
-```json
-{
-  "pk": "user#${user_id}",
-  "sk": "workoutHistory#${workout_date}#${session_id}",
-  "entityType": "workoutHistory",
-  "createdAt": "2025-06-20T15:30:00Z",
-  "updatedAt": "2025-06-20T15:30:00Z",
-  "attributes": {
-    "workoutDate": "2025-06-20",
-    "conversationId": "conv_12345",
-    "s3Bucket": "coach-ai-conversations",
-    "s3Key": "users/${user_id}/workouts/${workout_date}/${session_id}.json",
-    "extracted_data": {
-      "workoutName": "Fran",
-      "workoutType": "metcon|strength|skill|endurance",
-      "duration": 45,
-      "intensity": "low|moderate|high",
-      "perceivedExertion": 8,
-      "exercises": ["thruster", "pull_up", "burpee"],
-      "achievements": ["PR", "first_time_rx", "improved_form"],
-      "concerns": ["shoulder_pain", "felt_tired"],
-      "environment": "gym|home|outdoor",
-      "weather_conditions": "hot|cold|humid|ideal"
-    },
-    "coachId": "coach_67890",
-    "isCompleted": true,
-    "needsFollowUp": false,
-    "userFeedback": {
-      "satisfaction": 4,
-      "difficulty": "too_easy|just_right|too_hard",
-      "enjoyment": 5,
-      "notes": "Felt great today, shoulders are getting stronger"
+      "created_date": "Date",
+      "total_conversations": "number"
     }
   }
 }
 ```
 
 **Key Details**:
-- Conversational workout logging with AI extraction
-- Detailed workout stored in S3, metadata in DynamoDB
-- AI-extracted structured data for analytics and programming
-- User feedback integration for coach adaptation
+- Coach-specific configuration for AI personality and methodology
+- Technical configuration for programming focus and specializations
+- Metadata tracking for coach usage and effectiveness
+- Personality and methodology selection with reasoning
 
 ---
 
-### Coach Performance Tracking
+### Workout Session
 ```json
 {
-  "pk": "coach#${coach_id}",
-  "sk": "performance#${date_period}",
-  "entityType": "coachPerformance",
+  "pk": "user#${userId}",
+  "sk": "workout#${workoutId}",
+  "entityType": "workout",
   "createdAt": "2025-06-20T15:30:00Z",
   "updatedAt": "2025-06-20T15:30:00Z",
   "attributes": {
-    "period": "2025-06-01_2025-06-30",
-    "user_count": 15,
-    "conversation_count": 342,
-    "user_satisfaction_avg": 4.3,
-    "user_retention_rate": 0.87,
-    "successful_adaptations": 23,
-    "workout_completion_rate": 0.92,
-    "user_goal_achievement": 0.74,
-    "response_time_avg": 1.8,
-    "engagement_metrics": {
-      "messages_per_session": 8.5,
-      "session_duration_avg": 12.3,
-      "user_initiated_sessions": 0.65
+    "workoutId": "string",
+    "userId": "string",
+    "coachIds": ["array"],
+    "coachNames": ["array"],
+    "conversationId": "string",
+    "completedAt": "Date",
+    "workoutData": {
+      // Universal Workout Schema - See UNIVERSAL_WORKOUT_SCHEMA.md for complete structure
+      "workout_name": "string",
+      "discipline": "string",
+      "workout_type": "string",
+      "duration": "number",
+      "location": "string",
+      "performance_metrics": {
+        "intensity": "number",
+        "perceived_exertion": "number",
+        "heart_rate": {
+          "avg": "number",
+          "max": "number",
+          "zones": {
+            "zone_1": "number",
+            "zone_2": "number",
+            "zone_3": "number",
+            "zone_4": "number",
+            "zone_5": "number"
+          }
+        },
+        "calories_burned": "number",
+        "mood_pre": "number",
+        "mood_post": "number",
+        "energy_level_pre": "number",
+        "energy_level_post": "number"
+      },
+      "discipline_specific": {
+        // Discipline-specific workout data structure
+        // See UNIVERSAL_WORKOUT_SCHEMA.md for complete discipline schemas
+      },
+      "pr_achievements": ["array"],
+      "subjective_feedback": {
+        "enjoyment": "number",
+        "difficulty": "number",
+        "form_quality": "number",
+        "motivation": "number",
+        "confidence": "number",
+        "mental_state": "string",
+        "pacing_strategy": "string",
+        "nutrition_pre_workout": "string",
+        "hydration_level": "string",
+        "sleep_quality_previous": "number",
+        "stress_level": "number",
+        "soreness_pre": {
+          "overall": "number",
+          "legs": "number",
+          "arms": "number",
+          "back": "number"
+        },
+        "soreness_post": {
+          "overall": "number",
+          "legs": "number",
+          "arms": "number",
+          "back": "number"
+        },
+        "notes": "string"
+      },
+      "coach_notes": {
+        "programming_intent": "string",
+        "coaching_cues_given": ["array"],
+        "areas_for_improvement": ["array"],
+        "positive_observations": ["array"],
+        "next_session_focus": "string",
+        "adaptation_recommendations": ["array"],
+        "safety_flags": ["array"],
+        "motivation_strategy": "string"
+      }
     },
-    "improvement_areas": ["motivation_strategies", "exercise_variety"],
-    "top_performing_features": ["workout_planning", "progress_tracking"]
+    "extractionMetadata": {
+      "confidence": "number",
+      "extractedAt": "Date",
+      "reviewedBy": "string",
+      "reviewedAt": "Date"
+    },
+    "summary": "string"
   }
 }
 ```
 
 **Key Details**:
-- Cross-user performance analytics for coach optimization
-- Identifies successful patterns and improvement opportunities
-- Supports platform-wide coach enhancement strategies
+- Full workout data stored using Universal Workout Schema (see UNIVERSAL_WORKOUT_SCHEMA.md)
+- AI extraction metadata for quality tracking
+- Coach integration for programming and feedback
+- Comprehensive performance and subjective metrics
 
 ---
 
 ### Coach Creator Session
 ```json
 {
-  "pk": "user#${user_id}",
-  "sk": "coachCreatorSession#${session_id}",
+  "pk": "user#${userId}",
+  "sk": "coachCreatorSession#${sessionId}",
   "entityType": "coachCreatorSession",
   "createdAt": "2025-06-22T15:30:00Z",
   "updatedAt": "2025-06-22T15:30:00Z",
+  "ttl": 1703209200,
   "attributes": {
     "sessionId": "coach_creator_user123_1703123456789",
     "userId": "user123",
@@ -391,6 +347,7 @@
 - Full conversation history and detailed responses stored in S3 for cost efficiency
 - Progress tracking enables session resumption and analytics
 - Sophistication detection history supports adaptive questioning improvements
+- TTL for automatic cleanup (7 days for incomplete, 30 days for complete sessions)
 
 ---
 
@@ -505,78 +462,86 @@ coach-ai-conversations/
 
 ### Primary Query Patterns
 
-**User Profile & Preferences**:
+**Coach Conversation Management**:
 ```javascript
-// Get user profile
-Query: pk="user#${user_id}" AND sk="profile"
+// Get specific conversation
+Query: pk="user#${userId}" AND sk="coachConversation#${coachId}#${conversationId}"
 
-// Get user preferences
-Query: pk="user#${user_id}" AND sk="preferences"
+// Get all conversations for user and coach (summaries only)
+Query: pk="user#${userId}" AND sk begins_with "coachConversation#${coachId}#"
+FilterExpression: entityType = "coachConversation"
+
+// Get all conversations with full messages
+Query: pk="user#${userId}" AND sk begins_with "coachConversation#${coachId}#"
+FilterExpression: entityType = "coachConversation"
 ```
 
-**Conversation Management**:
+**Coach Configuration**:
 ```javascript
-// Recent conversations
-Query: pk="user#${user_id}" AND sk begins_with "conversationHistory"
-OrderBy: sk DESC
-Limit: 20
+// Get specific coach config
+Query: pk="user#${userId}" AND sk="coach#${coachId}"
 
-// Conversations needing follow-up
-Query: pk="user#${user_id}" AND sk begins_with "conversationHistory"
-FilterExpression: needsFollowUp = true
-```
-
-**Coach Operations**:
-```javascript
-// User's active coaches
-Query: pk="user#${user_id}" AND sk begins_with "coach"
-FilterExpression: isActive = true
-
-// Primary coach
-Query: pk="user#${user_id}" AND sk begins_with "coach"
-FilterExpression: isPrimary = true
+// Get all coach configs for user
+Query: pk="user#${userId}" AND sk begins_with "coach#"
+FilterExpression: entityType = "coachConfig"
 ```
 
 **Workout History**:
 ```javascript
-// Recent workouts
-Query: pk="user#${user_id}" AND sk begins_with "workoutHistory"
-OrderBy: sk DESC
-Limit: 10
+// Get specific workout
+Query: pk="user#${userId}" AND sk="workout#${workoutId}"
 
-// Workouts by date range
-Query: pk="user#${user_id}" AND sk between "workoutHistory#2025-06-01" and "workoutHistory#2025-06-30"
+// Get all workouts for user
+Query: pk="user#${userId}" AND sk begins_with "workout#"
+FilterExpression: entityType = "workout"
 
-// Incomplete workouts
-Query: pk="user#${user_id}" AND sk begins_with "workoutHistory"
-FilterExpression: isCompleted = false
+// Get workouts with filtering and pagination
+Query: pk="user#${userId}" AND sk begins_with "workout#"
+FilterExpression: entityType = "workout"
+// Additional filtering by date, discipline, coach, confidence
+// Sorting by completedAt, confidence, workoutName
+// Pagination with limit and offset
 ```
 
 **Coach Creator Sessions**:
 ```javascript
+// Get specific session
+Query: pk="user#${userId}" AND sk="coachCreatorSession#${sessionId}"
+
 // Get recent coach creator sessions
-Query: pk="user#${user_id}" AND sk begins_with "coachCreatorSession"
+Query: pk="user#${userId}" AND sk begins_with "coachCreatorSession"
 OrderBy: sk DESC
 Limit: 10
 
-// Get specific session
-Query: pk="user#${user_id}" AND sk="coachCreatorSession#${session_id}"
-
 // Get incomplete sessions (for cleanup/analytics)
-Query: pk="user#${user_id}" AND sk begins_with "coachCreatorSession"
+Query: pk="user#${userId}" AND sk begins_with "coachCreatorSession"
 FilterExpression: isComplete = false
 
-// Sessions by completion status
-Query: pk="user#${user_id}" AND sk begins_with "coachCreatorSession"
+// Get sessions by completion status
+Query: pk="user#${userId}" AND sk begins_with "coachCreatorSession"
 FilterExpression: isComplete = true
 
-// Sessions by sophistication level
-Query: pk="user#${user_id}" AND sk begins_with "coachCreatorSession"
+// Get sessions by sophistication level
+Query: pk="user#${userId}" AND sk begins_with "coachCreatorSession"
 FilterExpression: sophisticationLevel = "INTERMEDIATE"
 
-// Abandoned sessions
-Query: pk="user#${user_id}" AND sk begins_with "coachCreatorSession"
+// Get abandoned sessions
+Query: pk="user#${userId}" AND sk begins_with "coachCreatorSession"
 FilterExpression: abandonedAt <> null
+```
+
+**Conversation Summaries**:
+```javascript
+// Get specific conversation summary
+Query: pk="user#${userId}" AND sk="conversation#${conversationId}#summary"
+
+// Get all conversation summaries for user
+Query: pk="user#${userId}" AND sk begins_with "conversation#"
+FilterExpression: entityType = "conversationSummary"
+
+// Get summaries by coach
+Query: pk="user#${userId}" AND sk begins_with "conversation#"
+FilterExpression: entityType = "conversationSummary" AND coachId = "${coachId}"
 ```
 
 ### Global Secondary Indexes (GSI)
