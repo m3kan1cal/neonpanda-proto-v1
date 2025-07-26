@@ -1,69 +1,12 @@
 import { CoachConfig, DynamoDBItem } from '../coach-creator/types';
-
-/**
- * Coach config input type - can be either direct CoachConfig or DynamoDB item
- */
-export type CoachConfigInput = CoachConfig | DynamoDBItem<CoachConfig>;
-
-/**
- * Interface for system prompt generation options
- */
-export interface PromptGenerationOptions {
-  includeConversationGuidelines?: boolean;
-  includeUserContext?: boolean;
-  includeDetailedBackground?: boolean;
-  conversationContext?: {
-    userName?: string;
-    currentGoals?: string[];
-    sessionNumber?: number;
-    previousSessions?: number;
-  };
-  additionalConstraints?: string[];
-  workoutContext?: {
-    completedAt: Date;
-    summary?: string;
-    discipline?: string;
-    workoutName?: string;
-  }[];
-}
-
-/**
- * Interface for the complete system prompt result
- */
-export interface SystemPrompt {
-  systemPrompt: string;
-  metadata: {
-    coachId: string;
-    coachName: string;
-    primaryPersonality: string;
-    methodology: string;
-    safetyConstraints: string[];
-    generatedAt: string;
-    promptLength: number;
-  };
-}
-
-/**
- * Interface for coach config validation results
- */
-export interface CoachConfigValidationResult {
-  isValid: boolean;
-  missingComponents: string[];
-  warnings: string[];
-}
-
-/**
- * Interface for system prompt preview/summary
- */
-export interface SystemPromptPreview {
-  coachName: string;
-  personality: string;
-  methodology: string;
-  safetyConstraints: number;
-  estimatedLength: number;
-  keyFeatures: string[];
-  dataRichness: string[];
-}
+import {
+  UserMemory,
+  CoachConfigInput,
+  PromptGenerationOptions,
+  SystemPrompt,
+  CoachConfigValidationResult,
+  SystemPromptPreview
+} from './types';
 
 /**
  * Generates a complete system prompt from a coach configuration
@@ -79,7 +22,8 @@ export const generateSystemPrompt = (
     includeDetailedBackground = true,
     conversationContext,
     additionalConstraints = [],
-    workoutContext = []
+    workoutContext = [],
+    userMemories = []
   } = options;
 
   // Extract config data - handle both DynamoDB item and direct config
@@ -211,6 +155,12 @@ ${configData.technical_config.goal_timeline}
 
 ## Preferred Intensity
 ${configData.technical_config.preferred_intensity}`);
+  }
+
+  // 5.5. User Memories (if available)
+  if (userMemories.length > 0) {
+    const memoriesSection = generateUserMemoriesSection(userMemories);
+    promptSections.push(memoriesSection);
   }
 
   // 6. User Context (if provided and enabled)
@@ -377,6 +327,47 @@ ${sections.join('\n\n')}
 - Acknowledge their consistency and effort when appropriate
 - DO NOT explicitly list out their workouts unless directly asked
 - Use this context naturally to enhance your coaching responses`;
+};
+
+/**
+ * Generates user memories section for the system prompt
+ */
+const generateUserMemoriesSection = (userMemories: UserMemory[]): string => {
+  if (userMemories.length === 0) {
+    return '';
+  }
+
+  // Group memories by type for better organization
+  const memoriesByType = userMemories.reduce((acc, memory) => {
+    if (!acc[memory.memoryType]) {
+      acc[memory.memoryType] = [];
+    }
+    acc[memory.memoryType].push(memory);
+    return acc;
+  }, {} as Record<string, UserMemory[]>);
+
+  const sections = [`# USER MEMORIES
+Based on previous conversations, here are important things the user has specifically asked you to remember:`];
+
+  // Add memories grouped by type
+  Object.entries(memoriesByType).forEach(([type, memories]) => {
+    sections.push(`## ${type.charAt(0).toUpperCase() + type.slice(1)} Memories`);
+
+    memories.forEach((memory, index) => {
+      sections.push(`### ${index + 1}. ${memory.content}`);
+      sections.push(`- **Importance**: ${memory.metadata.importance}`);
+      sections.push(`- **Usage**: Used ${memory.metadata.usageCount} times${memory.metadata.lastUsed ? ` (last: ${memory.metadata.lastUsed.toDateString()})` : ''}`);
+      sections.push(`- **Created**: ${memory.metadata.createdAt.toDateString()}`);
+      if (memory.metadata.tags && memory.metadata.tags.length > 0) {
+        sections.push(`- **Tags**: ${memory.metadata.tags.join(', ')}`);
+      }
+      sections.push('');
+    });
+  });
+
+  sections.push(`**IMPORTANT**: Use these memories to personalize your coaching. When relevant memories apply to the current conversation, reference them naturally to show continuity and personalized care.`);
+
+  return sections.join('\n');
 };
 
 /**

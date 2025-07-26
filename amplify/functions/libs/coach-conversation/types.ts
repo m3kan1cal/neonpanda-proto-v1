@@ -5,6 +5,8 @@
  * coach conversation functionality including messages, conversations, and metadata.
  */
 
+import { CoachConfig, DynamoDBItem } from '../coach-creator/types';
+
 /**
  * Individual message in a coach conversation
  */
@@ -124,4 +126,124 @@ export interface EnhancedMethodologyOptions {
   includeComparisons?: boolean;
   includeProgression?: boolean;
   includePracticalApplication?: boolean;
+}
+
+/**
+ * User memory for persistent coaching context
+ */
+export interface UserMemory {
+  memoryId: string;
+  userId: string;
+  coachId?: string; // Optional - memories can be coach-specific or global
+  content: string; // The memory content/description
+  memoryType: 'preference' | 'goal' | 'constraint' | 'instruction' | 'context';
+  metadata: {
+    createdAt: Date;
+    lastUsed?: Date;
+    usageCount: number;
+    source: 'conversation' | 'explicit_request';
+    importance: 'high' | 'medium' | 'low';
+    tags?: string[];
+  };
+}
+
+/**
+ * Event structure for detecting memory requests
+ */
+export interface UserMemoryDetectionEvent {
+  userId: string;
+  coachId: string;
+  conversationId: string;
+  userMessage: string;
+  messageContext?: string; // Additional context from conversation
+}
+
+/**
+ * Response from memory detection analysis
+ */
+export interface UserMemoryDetectionResult {
+  isMemoryRequest: boolean;
+  confidence: number;
+  extractedMemory?: {
+    content: string;
+    type: UserMemory['memoryType'];
+    importance: UserMemory['metadata']['importance'];
+  };
+  reasoning?: string;
+}
+
+/**
+ * Conversation context information for prompt generation
+ */
+export interface ConversationContext {
+  userName?: string;
+  currentGoals?: string[];
+  sessionNumber?: number;
+  previousSessions?: number;
+}
+
+/**
+ * Workout context information for prompt generation
+ */
+export interface WorkoutContext {
+  completedAt: Date;
+  summary?: string;
+  discipline?: string;
+  workoutName?: string;
+}
+
+/**
+ * Coach config input type - can be either direct CoachConfig or DynamoDB item
+ */
+export type CoachConfigInput = CoachConfig | DynamoDBItem<CoachConfig>;
+
+/**
+ * Interface for system prompt generation options
+ */
+export interface PromptGenerationOptions {
+  includeConversationGuidelines?: boolean;
+  includeUserContext?: boolean;
+  includeDetailedBackground?: boolean;
+  conversationContext?: ConversationContext;
+  additionalConstraints?: string[];
+  workoutContext?: WorkoutContext[];
+  userMemories?: UserMemory[];
+}
+
+/**
+ * Interface for the complete system prompt result
+ */
+export interface SystemPrompt {
+  systemPrompt: string;
+  metadata: {
+    coachId: string;
+    coachName: string;
+    primaryPersonality: string;
+    methodology: string;
+    safetyConstraints: string[];
+    generatedAt: string;
+    promptLength: number;
+  };
+}
+
+/**
+ * Interface for coach config validation results
+ */
+export interface CoachConfigValidationResult {
+  isValid: boolean;
+  missingComponents: string[];
+  warnings: string[];
+}
+
+/**
+ * Interface for system prompt preview/summary
+ */
+export interface SystemPromptPreview {
+  coachName: string;
+  personality: string;
+  methodology: string;
+  safetyConstraints: number;
+  estimatedLength: number;
+  keyFeatures: string[];
+  dataRichness: string[];
 }

@@ -351,6 +351,44 @@
 
 ---
 
+### User Memory
+```json
+{
+  "pk": "user#${userId}",
+  "sk": "userMemory#${memoryId}",
+  "entityType": "userMemory",
+  "createdAt": "2025-01-15T10:30:00Z",
+  "updatedAt": "2025-01-15T10:30:00Z",
+  "attributes": {
+    "memoryId": "user_memory_1703123456789_abc123def",
+    "userId": "user123",
+    "coachId": "coach456",
+    "content": "I prefer morning workouts and like compound movements",
+    "memoryType": "preference",
+    "metadata": {
+      "createdAt": "2025-01-15T10:30:00Z",
+      "lastUsed": "2025-01-12T14:20:00Z",
+      "usageCount": 3,
+      "source": "explicit_request",
+      "importance": "high",
+      "tags": ["scheduling", "exercise_preference"]
+    }
+  }
+}
+```
+
+**Key Details**:
+- Stores user-requested memories for persistent coaching context
+- AI-driven detection using Bedrock Nova Micro for memory request classification
+- Memory types: preference, goal, constraint, instruction, context
+- Coach-specific or global memories (optional coachId)
+- Usage tracking for prioritization and analytics
+- Natural language interface: users say "remember that I..."
+- Integrated into coach conversation prompts for personalized responses
+- Conservative 70% confidence threshold prevents false positives
+
+---
+
 ## S3 File Organization Strategy
 
 ```
@@ -542,6 +580,29 @@ FilterExpression: entityType = "conversationSummary"
 // Get summaries by coach
 Query: pk="user#${userId}" AND sk begins_with "conversation#"
 FilterExpression: entityType = "conversationSummary" AND coachId = "${coachId}"
+```
+
+**User Memories**:
+```javascript
+// Get specific user memory
+Query: pk="user#${userId}" AND sk="userMemory#${memoryId}"
+
+// Get all memories for user
+Query: pk="user#${userId}" AND sk begins_with "userMemory#"
+FilterExpression: entityType = "userMemory"
+
+// Get memories by coach (includes global memories)
+Query: pk="user#${userId}" AND sk begins_with "userMemory#"
+FilterExpression: entityType = "userMemory" AND (coachId = "${coachId}" OR attribute_not_exists(coachId))
+
+// Get memories by type and importance
+Query: pk="user#${userId}" AND sk begins_with "userMemory#"
+FilterExpression: entityType = "userMemory" AND memoryType = "preference" AND importance = "high"
+
+// Get memories with usage statistics (sorted by importance, usage, date)
+Query: pk="user#${userId}" AND sk begins_with "userMemory#"
+FilterExpression: entityType = "userMemory"
+// Post-processing sorting: importance (high>medium>low), usageCount (desc), createdAt (desc)
 ```
 
 ### Global Secondary Indexes (GSI)

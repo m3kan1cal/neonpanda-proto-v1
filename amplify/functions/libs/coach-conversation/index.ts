@@ -2,13 +2,16 @@
 export {
   generateSystemPrompt,
   validateCoachConfig,
-  generateSystemPromptPreview,
+  generateSystemPromptPreview
+} from './prompt-generation';
+
+export {
   type PromptGenerationOptions,
   type SystemPrompt,
   type CoachConfigInput,
   type CoachConfigValidationResult,
   type SystemPromptPreview
-} from './prompt-generation';
+} from './types';
 
 export {
   CoachMessage,

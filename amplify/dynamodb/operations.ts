@@ -1,7 +1,7 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, PutCommand, GetCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 import { CoachCreatorSession, DynamoDBItem, ContactFormAttributes, CoachConfigSummary, CoachConfig } from "../functions/libs/coach-creator/types";
-import { CoachConversation, CoachConversationListItem, CoachMessage, CoachConversationSummary } from "../functions/libs/coach-conversation/types";
+import { CoachConversation, CoachConversationListItem, CoachMessage, CoachConversationSummary, UserMemory } from "../functions/libs/coach-conversation/types";
 import { Workout } from "../functions/libs/workout/types";
 
 // DynamoDB client setup
@@ -906,4 +906,134 @@ export async function queryCoachConversationSummaries(
     console.error(`Error querying conversation summaries for user ${userId}:`, error);
     throw error;
   }
+}
+
+// ===========================
+// USER MEMORY OPERATIONS
+// ===========================
+
+/**
+ * Save a user memory to DynamoDB
+ */
+export async function saveUserMemory(memory: UserMemory): Promise<void> {
+  const timestamp = new Date().toISOString();
+
+  const item = createDynamoDBItem<UserMemory>(
+    'userMemory',
+    `user#${memory.userId}`,
+    `userMemory#${memory.memoryId}`,
+    memory,
+    timestamp
+  );
+
+  await saveToDynamoDB(item);
+  console.info('User memory saved successfully:', {
+    memoryId: memory.memoryId,
+    userId: memory.userId,
+    coachId: memory.coachId,
+    type: memory.memoryType
+  });
+}
+
+/**
+ * Query user memories for a specific user and optionally coach
+ */
+export async function queryUserMemories(
+  userId: string,
+  coachId?: string,
+  options?: {
+    memoryType?: UserMemory['memoryType'];
+    importance?: UserMemory['metadata']['importance'];
+    limit?: number;
+  }
+): Promise<UserMemory[]> {
+  const items = await queryFromDynamoDB<UserMemory>(
+    `user#${userId}`,
+    'userMemory#',
+    'userMemory'
+  );
+
+  let filteredItems = items.map(item => item.attributes);
+
+  // Filter by coach if specified
+  if (coachId) {
+    filteredItems = filteredItems.filter(memory =>
+      memory.coachId === coachId || !memory.coachId // Include global memories
+    );
+  }
+
+  // Filter by memory type if specified
+  if (options?.memoryType) {
+    filteredItems = filteredItems.filter(memory =>
+      memory.memoryType === options.memoryType
+    );
+  }
+
+  // Filter by importance if specified
+  if (options?.importance) {
+    filteredItems = filteredItems.filter(memory =>
+      memory.metadata.importance === options.importance
+    );
+  }
+
+  // Sort by usage and importance
+  filteredItems.sort((a, b) => {
+    // First sort by importance (high > medium > low)
+    const importanceOrder = { high: 3, medium: 2, low: 1 };
+    const importanceDiff = importanceOrder[b.metadata.importance] - importanceOrder[a.metadata.importance];
+    if (importanceDiff !== 0) return importanceDiff;
+
+    // Then by usage count
+    const usageDiff = b.metadata.usageCount - a.metadata.usageCount;
+    if (usageDiff !== 0) return usageDiff;
+
+    // Finally by creation date (newest first)
+    return new Date(b.metadata.createdAt).getTime() - new Date(a.metadata.createdAt).getTime();
+  });
+
+  // Apply limit if specified
+  if (options?.limit) {
+    filteredItems = filteredItems.slice(0, options.limit);
+  }
+
+  console.info('User memories queried successfully:', {
+    userId,
+    coachId: coachId || 'all',
+    totalFound: filteredItems.length,
+    filtered: {
+      memoryType: options?.memoryType,
+      importance: options?.importance,
+      limit: options?.limit
+    }
+  });
+
+  return filteredItems;
+}
+
+/**
+ * Update usage statistics for a user memory
+ */
+export async function updateUserMemory(memoryId: string, userId: string): Promise<void> {
+  const memory = await loadFromDynamoDB<UserMemory>(
+    `user#${userId}`,
+    `userMemory#${memoryId}`,
+    'userMemory'
+  );
+
+  if (!memory) {
+    console.warn(`Memory ${memoryId} not found for user ${userId}`);
+    return;
+  }
+
+  // Update usage statistics
+  memory.attributes.metadata.usageCount += 1;
+  memory.attributes.metadata.lastUsed = new Date();
+  memory.updatedAt = new Date().toISOString();
+
+  await saveToDynamoDB(memory);
+  console.info('Memory usage updated:', {
+    memoryId,
+    userId,
+    newUsageCount: memory.attributes.metadata.usageCount
+  });
 }

@@ -5,6 +5,9 @@
  * including complexity detection for conversation summarization.
  */
 
+import { UserMemoryDetectionEvent, UserMemoryDetectionResult, UserMemory } from './types';
+import { callBedrockApi, MODEL_IDS } from '../api-helpers';
+
 /**
  * Detect if the user's message contains complexity triggers that warrant immediate conversation summarization
  * @param userMessage - The user's message to analyze
@@ -242,3 +245,131 @@ export const detectConversationMemoryNeeds = (userMessage: string): boolean => {
 
   return hasMemoryTriggers || isComplexQuery;
 };
+
+/**
+ * Memory Detection Logic
+ * Uses Amazon Bedrock to detect when users want to store memories
+ */
+
+/**
+ * Detect if user message contains a memory request using Bedrock API
+ */
+export async function detectUserMemoryRequest(event: UserMemoryDetectionEvent): Promise<UserMemoryDetectionResult> {
+  const { userMessage, messageContext } = event;
+
+  const systemPrompt = `You are an AI assistant that analyzes user messages to detect when they want you to "remember" something about them for future conversations.
+
+TASK: Determine if the user is asking you to remember something, and if so, extract the memory content.
+
+MEMORY REQUEST INDICATORS:
+- "I want you to remember..."
+- "Please remember that..."
+- "Remember this about me..."
+- "Don't forget that I..."
+- "Keep in mind that..."
+- "Note that I..."
+- "For future reference..."
+- "Always remember..."
+- Similar phrases expressing desire for persistent memory
+
+MEMORY TYPES:
+- preference: Training preferences, communication style, etc.
+- goal: Fitness goals, targets, aspirations
+- constraint: Physical limitations, time constraints, equipment limitations
+- instruction: Specific coaching instructions or approaches
+- context: Personal context, background, lifestyle factors
+
+RESPONSE FORMAT:
+You must respond with ONLY a valid JSON object with this exact structure:
+{
+  "isMemoryRequest": boolean,
+  "confidence": number (0.0 to 1.0),
+  "extractedMemory": {
+    "content": "string describing what to remember",
+    "type": "preference|goal|constraint|instruction|context",
+    "importance": "high|medium|low"
+  } | null,
+  "reasoning": "brief explanation of decision"
+}
+
+GUIDELINES:
+- Be conservative: only detect clear, explicit memory requests
+- Content should be concise but capture the essential information
+- Importance: high=critical for coaching, medium=helpful context, low=nice to know
+- If unsure, set isMemoryRequest to false
+- Don't detect questions, general statements, or workout logging as memory requests`;
+
+  const userPrompt = `${messageContext ? `CONVERSATION CONTEXT:\n${messageContext}\n\n` : ''}USER MESSAGE TO ANALYZE:\n"${userMessage}"
+
+Analyze this message and respond with the JSON format specified.`;
+
+  try {
+    console.info('Detecting user memory request:', {
+      userId: event.userId,
+      coachId: event.coachId,
+      messageLength: userMessage.length,
+      hasContext: !!messageContext
+    });
+
+    const response = await callBedrockApi(systemPrompt, userPrompt, MODEL_IDS.NOVA_MICRO);
+
+    // Parse the JSON response
+    const result: UserMemoryDetectionResult = JSON.parse(response.trim());
+
+    // Validate the response structure
+    if (typeof result.isMemoryRequest !== 'boolean' ||
+        typeof result.confidence !== 'number' ||
+        result.confidence < 0 || result.confidence > 1) {
+      throw new Error('Invalid response format from user memory detection');
+    }
+
+    console.info('User memory detection completed:', {
+      userId: event.userId,
+      isMemoryRequest: result.isMemoryRequest,
+      confidence: result.confidence,
+      extractedType: result.extractedMemory?.type,
+      reasoning: result.reasoning
+    });
+
+    return result;
+  } catch (error) {
+    console.error('Error in user memory detection:', error);
+
+    // Return safe fallback
+    return {
+      isMemoryRequest: false,
+      confidence: 0,
+      reasoning: 'Error occurred during user memory detection analysis'
+    };
+  }
+}
+
+/**
+ * Create a UserMemory object from detection result
+ */
+export function createUserMemory(
+  detectionResult: UserMemoryDetectionResult,
+  userId: string,
+  coachId?: string
+): UserMemory | null {
+  if (!detectionResult.isMemoryRequest || !detectionResult.extractedMemory) {
+    return null;
+  }
+
+  const memoryId = `user_memory_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+
+  return {
+    memoryId,
+    userId,
+    coachId,
+    content: detectionResult.extractedMemory.content,
+    memoryType: detectionResult.extractedMemory.type,
+    metadata: {
+      createdAt: new Date(),
+      usageCount: 0,
+      source: 'explicit_request',
+      importance: detectionResult.extractedMemory.importance,
+      tags: []
+    }
+  };
+}

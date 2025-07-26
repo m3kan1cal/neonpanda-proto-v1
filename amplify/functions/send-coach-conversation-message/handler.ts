@@ -2,47 +2,22 @@ import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from "aws-lambda";
 import {
   createSuccessResponse,
   createErrorResponse,
-  callBedrockApi,
   MODEL_IDS,
   invokeAsyncLambda,
-  storeDebugDataInS3,
-  queryPineconeContext,
 } from "../libs/api-helpers";
 import {
   getCoachConversation,
   sendCoachConversationMessage,
   getCoachConfig,
-  queryWorkouts,
 } from "../../dynamodb/operations";
 import { CoachMessage } from "../libs/coach-conversation/types";
-import {
-  generateSystemPrompt,
-  validateCoachConfig,
-  generateSystemPromptPreview,
-} from "../libs/coach-conversation/prompt-generation";
-import {
-  isWorkoutLog,
-  parseSlashCommand,
-  isWorkoutSlashCommand,
-  generateWorkoutDetectionContext,
-  WORKOUT_SLASH_COMMANDS,
-} from "../libs/workout";
-import {
-  shouldUsePineconeSearch,
-  formatPineconeContext,
-} from "../libs/pinecone-utils";
 import { detectConversationComplexity } from "../libs/coach-conversation/detection";
+import { gatherConversationContext } from "../libs/coach-conversation/context";
+import { detectAndProcessWorkout } from "../libs/coach-conversation/workout-detection";
+import { processUserMemories } from "../libs/coach-conversation/memory-processing";
+import { generateAIResponse } from "../libs/coach-conversation/response-generation";
 
-// Configuration constants
-const RECENT_WORKOUTS_CONTEXT_LIMIT = 14;
-const ENABLE_S3_DEBUG_LOGGING = false; // Set to true to enable system prompt debugging in S3
-
-// Debug: Test the imported functions
-console.info("🔍 DEBUG: Imported functions test:", {
-  parseSlashCommand: typeof parseSlashCommand,
-  isWorkoutSlashCommand: typeof isWorkoutSlashCommand,
-  WORKOUT_SLASH_COMMANDS: WORKOUT_SLASH_COMMANDS,
-});
+// Configuration constants - moved to individual modules
 
 export const handler = async (
   event: APIGatewayProxyEventV2
@@ -142,88 +117,8 @@ export const handler = async (
       }
     }
 
-    // Load recent workouts for context
-    let recentWorkouts: any[] = [];
-    try {
-      const workoutResults = await queryWorkouts(userId, {
-        limit: RECENT_WORKOUTS_CONTEXT_LIMIT,
-        sortBy: "completedAt",
-        sortOrder: "desc",
-      });
-      recentWorkouts = workoutResults.map((workout) => ({
-        completedAt: workout.attributes.completedAt,
-        summary: workout.attributes.summary,
-        discipline: workout.attributes.workoutData.discipline,
-        workoutName: workout.attributes.workoutData.workout_name,
-      }));
-      console.info("Loaded recent workouts for context:", {
-        userId,
-        workoutCount: recentWorkouts.length,
-        summaries: recentWorkouts.map(
-          (w) => w.summary?.substring(0, 50) + "..."
-        ),
-      });
-    } catch (error) {
-      console.warn(
-        "Failed to load recent workouts for context, continuing without:",
-        error
-      );
-      // Continue without workout context - don't fail the conversation
-    }
-
-    // Query Pinecone for semantic context if appropriate
-    let pineconeContext = "";
-    let pineconeMatches: any[] = [];
-    const shouldQueryPinecone = shouldUsePineconeSearch(userResponse);
-
-    if (shouldQueryPinecone) {
-      try {
-        console.info("🔍 Querying Pinecone for semantic context:", {
-          userId,
-          userMessageLength: userResponse.length,
-          messagePreview: userResponse.substring(0, 100) + "...",
-        });
-
-        const pineconeResult = await queryPineconeContext(
-          userId,
-          userResponse,
-          {
-            topK: 6, // Increase to 8-10 for more context
-            includeWorkouts: true,
-            includeCoachCreator: true,
-            includeConversationSummaries: true,
-            includeMethodology: true, // Enable methodology document retrieval
-            minScore: 0.7,
-          }
-        );
-
-        if (pineconeResult.success && pineconeResult.matches.length > 0) {
-          pineconeMatches = pineconeResult.matches;
-          pineconeContext = formatPineconeContext(pineconeMatches);
-
-          console.info("✅ Successfully retrieved Pinecone context:", {
-            totalMatches: pineconeResult.totalMatches,
-            relevantMatches: pineconeResult.relevantMatches,
-            contextLength: pineconeContext.length,
-          });
-        } else {
-          console.info("📭 No relevant Pinecone context found:", {
-            success: pineconeResult.success,
-            totalMatches: pineconeResult.totalMatches,
-          });
-        }
-      } catch (error) {
-        console.warn(
-          "⚠️ Failed to query Pinecone context, continuing without:",
-          error
-        );
-        // Continue without Pinecone context - don't fail the conversation
-      }
-    } else {
-      console.info(
-        "⏭️ Skipping Pinecone query - message does not require semantic search"
-      );
-    }
+    // Gather all conversation context (workouts + Pinecone)
+    const context = await gatherConversationContext(userId, userResponse);
 
     // Create user message
     const newUserMessage: CoachMessage = {
@@ -240,267 +135,45 @@ export const handler = async (
         existingMessages.filter((msg) => msg.role === "user").length + 1,
     };
 
-    // Check for workout logging detection (natural language OR slash commands)
-    console.info("🔍 DEBUG: Starting workout detection for message:", {
-      userResponse:
-        userResponse.substring(0, 100) +
-        (userResponse.length > 100 ? "..." : ""),
-      messageLength: userResponse.length,
-    });
-    console.info(
-      "🔍 DEBUG: Available workout slash commands:",
-      WORKOUT_SLASH_COMMANDS
+    // Detect and process workouts (natural language or slash commands)
+    const workoutResult = await detectAndProcessWorkout(
+      userResponse,
+      userId,
+      coachId,
+      conversationId,
+      coachConfig,
+      conversationContext
     );
 
-    let slashCommand,
-      isSlashCommandWorkout,
-      isNaturalLanguageWorkout,
-      isWorkoutLogging;
+    // Process user memories (retrieve existing, detect and save new ones)
+    const memoryResult = await processUserMemories(
+      userId,
+      coachId,
+      userResponse,
+      conversationId,
+      existingMessages
+    );
 
-    try {
-      console.info("🔍 DEBUG: About to parse slash command for:", userResponse);
+    // Generate AI response with all context
+    const responseResult = await generateAIResponse(
+      coachConfig,
+      context,
+      workoutResult,
+      memoryResult,
+      userResponse,
+      existingMessages,
+      conversationContext,
+      userId,
+      coachId,
+      conversationId
+    );
 
-      // Direct test of the regex
-      const testRegex = /^\/([a-zA-Z0-9-]+)\s*(.*)$/;
-      const testMatch = userResponse.match(testRegex);
-      console.info("🔍 DEBUG: Direct regex test:", {
-        testMatch: testMatch,
-        userResponse: userResponse.substring(0, 50),
-      });
+    let aiResponseContent = responseResult.aiResponseContent;
+    const promptMetadata = responseResult.promptMetadata;
 
-      slashCommand = parseSlashCommand(userResponse);
-      console.info("🔍 DEBUG: Slash command parsing result:", slashCommand);
-      console.info("🔍 DEBUG: Raw userResponse:", JSON.stringify(userResponse));
-      console.info(
-        "🔍 DEBUG: userResponse starts with /:",
-        userResponse.startsWith("/")
-      );
-      console.info("🔍 DEBUG: userResponse length:", userResponse.length);
-
-      isSlashCommandWorkout = isWorkoutSlashCommand(slashCommand);
-      console.info(
-        "🔍 DEBUG: Is slash command workout:",
-        isSlashCommandWorkout
-      );
-
-      isNaturalLanguageWorkout =
-        !slashCommand.isSlashCommand && (await isWorkoutLog(userResponse));
-      console.info(
-        "🔍 DEBUG: Is natural language workout:",
-        isNaturalLanguageWorkout
-      );
-
-      isWorkoutLogging = isSlashCommandWorkout || isNaturalLanguageWorkout;
-      console.info(
-        "🔍 DEBUG: Final workout detection result:",
-        isWorkoutLogging
-      );
-    } catch (error) {
-      console.error("❌ Error during workout detection:", error);
-      slashCommand = { isSlashCommand: false };
-      isSlashCommandWorkout = false;
-      isNaturalLanguageWorkout = false;
-      isWorkoutLogging = false;
-    }
-
-    let workoutDetectionContext: string[] = [];
-    let workoutContent = userResponse; // Default to full user response
-
-    if (isWorkoutLogging) {
-      console.info("🏋️ WORKOUT DETECTED:", {
-        userId,
-        coachId,
-        conversationId,
-        userMessage: userResponse,
-        detectionType: isSlashCommandWorkout
-          ? "slash_command"
-          : "natural_language",
-        slashCommand: isSlashCommandWorkout ? slashCommand.command : null,
-        sessionNumber: conversationContext.sessionNumber,
-        coachName: coachConfig.attributes.coach_name,
-        timestamp: new Date().toISOString(),
-      });
-
-      // For slash commands, use just the content after the command
-      if (isSlashCommandWorkout && slashCommand.content) {
-        workoutContent = slashCommand.content;
-      }
-
-      // Generate appropriate workout detection context for AI coach
-      workoutDetectionContext = generateWorkoutDetectionContext(
-        isSlashCommandWorkout
-      );
-
-      // Trigger async workout extraction (fire-and-forget)
-      // This runs in parallel while the conversation continues
-      try {
-        const buildFunction = process.env.BUILD_WORKOUT_FUNCTION_NAME;
-        if (!buildFunction) {
-          throw new Error(
-            "BUILD_WORKOUT_FUNCTION_NAME environment variable not set"
-          );
-        }
-
-        // Ensure we have valid workout content to extract
-        const extractionContent = workoutContent || userResponse;
-
-        await invokeAsyncLambda(
-          buildFunction,
-          {
-            userId,
-            coachId,
-            conversationId,
-            userMessage: extractionContent,
-            coachConfig: coachConfig.attributes,
-            isSlashCommand: isSlashCommandWorkout,
-            slashCommand: isSlashCommandWorkout
-              ? slashCommand.command || null
-              : null,
-          },
-          "workout extraction"
-        );
-      } catch (error) {
-        console.error(
-          "❌ Failed to trigger workout extraction, but continuing conversation:",
-          error
-        );
-        // Don't throw - we want the conversation to continue even if extraction fails
-      }
-    }
-
-    // Validate coach config and generate comprehensive system prompt
-    let aiResponseContent: string;
-    let promptMetadata: any = null;
-
-    try {
-      // Validate coach config has all required prompts
-      const validation = validateCoachConfig(coachConfig);
-      if (!validation.isValid) {
-        console.error("Coach config validation failed:", {
-          missingComponents: validation.missingComponents,
-          coachId,
-          userId,
-        });
-        // Still continue but with warnings
-      }
-
-      if (validation.warnings.length > 0) {
-        console.warn("Coach config validation warnings:", {
-          warnings: validation.warnings,
-          coachId,
-          userId,
-        });
-      }
-
-      // Generate comprehensive system prompt using coach conversation utilities
-      const promptOptions = {
-        includeConversationGuidelines: true,
-        includeUserContext: true, // Now enabled with real context
-        includeDetailedBackground: true,
-        conversationContext,
-        additionalConstraints: workoutDetectionContext, // Add workout context if detected
-        workoutContext: recentWorkouts, // Add recent workout summaries for context
-      };
-
-      const { systemPrompt, metadata } = generateSystemPrompt(
-        coachConfig,
-        promptOptions
-      );
-      promptMetadata = metadata;
-
-      // Log prompt preview for debugging (in development)
-      if (process.env.NODE_ENV !== "production") {
-        const preview = generateSystemPromptPreview(coachConfig);
-        console.info("Generated system prompt preview:", {
-          ...preview,
-          conversationContext,
-          promptLength: metadata.promptLength,
-          coachId: metadata.coachId,
-          hasPineconeContext: pineconeContext.length > 0,
-          pineconeMatches: pineconeMatches.length,
-        });
-      }
-
-      // Build conversation history into system prompt (following coach creator pattern exactly)
-      let systemPromptWithHistory = systemPrompt;
-
-      // Add Pinecone context to system prompt if available
-      if (pineconeContext) {
-        systemPromptWithHistory += `\n\nSEMANTIC CONTEXT:${pineconeContext}
-
-IMPORTANT: Use the semantic context above to provide more informed and contextual responses. Reference relevant past workouts or patterns when appropriate, but don't explicitly mention that you're using stored context.`;
-      }
-
-      if (existingMessages.length > 0) {
-        // Format conversation history like coach creator does
-        const conversationHistoryText = existingMessages
-          .map((msg, index) => {
-            const messageNumber = Math.floor(index / 2) + 1;
-            return msg.role === "user"
-              ? `Exchange ${messageNumber}:\nUser: ${msg.content}`
-              : `Coach: ${msg.content}`;
-          })
-          .join("\n\n");
-
-        systemPromptWithHistory = `${systemPrompt}
-
-CONVERSATION HISTORY:
-${conversationHistoryText}
-
-CRITICAL:
-Review the conversation history above. Build naturally on what you already know about this athlete.
-USE THIS CONTEXT SILENTLY - don't explicitly reference previous exchanges unless directly relevant to the current topic.
-Provide contextually relevant responses that demonstrate continuity with the ongoing coaching relationship.`;
-      }
-
-      // Store system prompt with history in S3 for debugging (only if enabled)
-      if (ENABLE_S3_DEBUG_LOGGING) {
-        try {
-          const s3Location = await storeDebugDataInS3(
-            systemPromptWithHistory,
-            {
-              userId,
-              coachId,
-              conversationId,
-              coachName: coachConfig.attributes.coach_name,
-              userMessage: userResponse,
-              sessionNumber: conversationContext.sessionNumber,
-              promptLength: systemPromptWithHistory.length,
-              workoutContext: recentWorkouts.length > 0,
-              workoutDetected: isWorkoutLogging,
-              pineconeContext: pineconeMatches.length > 0,
-              pineconeMatches: pineconeMatches.length,
-              type: "coach-conversation-prompt",
-            },
-            "debug"
-          );
-
-          console.info("System prompt stored in S3 for debugging:", {
-            location: s3Location,
-            promptLength: systemPromptWithHistory.length,
-            workoutContextIncluded: recentWorkouts.length > 0,
-            pineconeContextIncluded: pineconeMatches.length > 0,
-          });
-        } catch (s3Error) {
-          console.warn(
-            "Failed to store system prompt in S3 (continuing anyway):",
-            s3Error
-          );
-        }
-      }
-
-      try {
-        aiResponseContent = await callBedrockApi(
-          systemPromptWithHistory,
-          userResponse
-        );
-      } catch (error) {
-        console.error("Claude API error:", error);
-        return createErrorResponse(500, "Failed to process response with AI");
-      }
-    } catch (aiError) {
-      console.error("Error generating AI response:", aiError);
-      return createErrorResponse(500, "Failed to generate coach response");
+    // Add memory feedback if a memory was saved
+    if (memoryResult.memoryFeedback) {
+      aiResponseContent = `${memoryResult.memoryFeedback}\n\n${aiResponseContent}`;
     }
 
     // Create AI response message
@@ -537,9 +210,9 @@ Provide contextually relevant responses that demonstrate continuity with the ong
         aiResponse: newAiMessage,
         conversationId,
         pineconeContext: {
-          used: pineconeMatches.length > 0,
-          matches: pineconeMatches.length,
-          contextLength: pineconeContext.length,
+          used: context.pineconeMatches.length > 0,
+          matches: context.pineconeMatches.length,
+          contextLength: context.pineconeContext.length,
         },
       },
       "Conversation updated successfully"
