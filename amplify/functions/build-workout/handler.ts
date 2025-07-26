@@ -1,6 +1,5 @@
 import { createSuccessResponse, createErrorResponse, callBedrockApi } from '../libs/api-helpers';
 import { saveWorkout } from '../../dynamodb/operations';
-import { CoachConfig } from '../libs/coach-creator/types';
 import {
   buildWorkoutExtractionPrompt,
   parseAndValidateWorkoutData,
@@ -8,10 +7,11 @@ import {
   extractCompletedAtTime,
   generateWorkoutSummary,
   storeWorkoutSummaryInPinecone,
+  classifyDiscipline,
   BuildWorkoutEvent,
-  UniversalWorkoutSchema
+  UniversalWorkoutSchema,
+  DisciplineClassification
 } from '../libs/workout';
-
 
 
 export const handler = async (event: BuildWorkoutEvent) => {
@@ -96,10 +96,45 @@ export const handler = async (event: BuildWorkoutEvent) => {
     workoutData.metadata.data_confidence = confidence;
 
     // Check for blocking validation flags that indicate this isn't a real workout log
-    // For slash commands, we're more lenient since the user explicitly requested logging
-    const blockingFlags = event.isSlashCommand
-      ? ['no_performance_data'] // Only block if there's literally no workout data
-      : ['planning_inquiry', 'no_performance_data', 'advice_seeking', 'future_planning'];
+    // More intelligent blocking logic based on context and discipline
+
+    // Use AI to classify the discipline characteristics
+    let isQualitativeDiscipline = false;
+    let disciplineClassification: DisciplineClassification;
+
+    try {
+      disciplineClassification = await classifyDiscipline(workoutData.discipline, workoutData);
+      isQualitativeDiscipline = disciplineClassification.isQualitative;
+    } catch (error) {
+      console.warn('Failed to classify discipline, defaulting to quantitative:', error);
+      // Default to quantitative (more restrictive) if classification fails
+      isQualitativeDiscipline = false;
+      disciplineClassification = {
+        isQualitative: false,
+        requiresPreciseMetrics: true,
+        environment: 'mixed',
+        primaryFocus: 'mixed',
+        confidence: 0,
+        reasoning: 'Classification failed, defaulted to quantitative'
+      };
+    }
+
+    // For slash commands, we're very lenient since user explicitly requested logging
+    // For qualitative disciplines, we're more forgiving about missing precise metrics
+    let blockingFlags: string[];
+
+    if (event.isSlashCommand) {
+      // For slash commands, only block if there's truly no workout information at all
+      // Don't block on 'no_performance_data' since user explicitly wants to log something
+      blockingFlags = [];
+    } else if (isQualitativeDiscipline) {
+      // For endurance/qualitative sports, be less strict about performance data
+      // These often focus on time, effort, technique rather than precise metrics
+      blockingFlags = ['planning_inquiry', 'advice_seeking', 'future_planning'];
+    } else {
+      // For strength/power sports, maintain stricter requirements
+      blockingFlags = ['planning_inquiry', 'no_performance_data', 'advice_seeking', 'future_planning'];
+    }
 
     const hasBlockingFlag = workoutData.metadata.validation_flags?.some(flag =>
       blockingFlags.includes(flag)
@@ -117,15 +152,25 @@ export const handler = async (event: BuildWorkoutEvent) => {
         dataCompleteness: workoutData.metadata.data_completeness,
         extractionNotes: workoutData.metadata.extraction_notes,
         isSlashCommand: event.isSlashCommand,
-        slashCommand: event.slashCommand
+        slashCommand: event.slashCommand,
+        discipline: workoutData.discipline,
+        disciplineClassification,
+        appliedBlockingFlags: blockingFlags
       });
+
+      let reason: string;
+      if (event.isSlashCommand) {
+        reason = 'Unable to extract any workout information from slash command content';
+      } else if (detectedFlags?.includes('no_performance_data') && !isQualitativeDiscipline) {
+        reason = 'No performance data found for strength/power workout';
+      } else {
+        reason = 'Not a workout log - appears to be planning/advice seeking';
+      }
 
       return createSuccessResponse({
         success: false,
         skipped: true,
-        reason: event.isSlashCommand
-          ? 'No workout data found in slash command content'
-          : 'Not a workout log - appears to be planning/advice seeking',
+        reason,
         blockingFlags: detectedFlags,
         confidence,
         workoutId: workoutData.workout_id

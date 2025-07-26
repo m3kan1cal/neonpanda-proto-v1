@@ -8,6 +8,18 @@
 import { CoachConfig } from '../coach-creator/types';
 
 /**
+ * Discipline classification result from AI analysis
+ */
+export interface DisciplineClassification {
+  isQualitative: boolean;
+  requiresPreciseMetrics: boolean;
+  environment: 'indoor' | 'outdoor' | 'mixed';
+  primaryFocus: 'strength' | 'endurance' | 'power' | 'speed' | 'agility' | 'flexibility' | 'balance' | 'technique' | 'coordination' | 'mixed';
+  confidence: number;
+  reasoning: string;
+}
+
+/**
  * Core workout data structure
  */
 export interface Workout {

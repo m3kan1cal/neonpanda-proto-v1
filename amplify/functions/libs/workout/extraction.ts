@@ -5,11 +5,13 @@
  * from natural language using the Universal Workout Schema.
  */
 
-import { CoachConfig } from '../coach-creator/types';
-import { TimeIndicator, UniversalWorkoutSchema } from './types';
-import { storeDebugDataInS3, callBedrockApi, MODEL_IDS } from '../api-helpers';
-
-
+import { CoachConfig } from "../coach-creator/types";
+import {
+  TimeIndicator,
+  UniversalWorkoutSchema,
+  DisciplineClassification,
+} from "./types";
+import { storeDebugDataInS3, callBedrockApi, MODEL_IDS } from "../api-helpers";
 
 /**
  * Detects if a workout is likely to be complex and need optimization
@@ -25,7 +27,9 @@ export const isComplexWorkout = (userMessage: string): boolean => {
     /then.*then/i, // Multiple phases (then X then Y)
   ];
 
-  const matchCount = complexityIndicators.filter(pattern => pattern.test(userMessage)).length;
+  const matchCount = complexityIndicators.filter((pattern) =>
+    pattern.test(userMessage)
+  ).length;
   const messageLength = userMessage.length;
 
   // Complex if multiple indicators OR very long message
@@ -35,11 +39,14 @@ export const isComplexWorkout = (userMessage: string): boolean => {
 /**
  * Builds a comprehensive workout extraction prompt using the Universal Workout Schema
  */
-export const buildWorkoutExtractionPrompt = (userMessage: string, coachConfig: CoachConfig): string => {
+export const buildWorkoutExtractionPrompt = (
+  userMessage: string,
+  coachConfig: CoachConfig
+): string => {
   const isComplex = isComplexWorkout(userMessage);
 
   return `
-${isComplex ? 'COMPLEX WORKOUT DETECTED - APPLY AGGRESSIVE OPTIMIZATION!' : ''}
+${isComplex ? "COMPLEX WORKOUT DETECTED - APPLY AGGRESSIVE OPTIMIZATION!" : ""}
 
 CRITICAL JSON FORMATTING RULES:
 - Return ONLY valid JSON. No markdown backticks, no explanations, no text outside JSON
@@ -64,7 +71,7 @@ EXTRACTION REQUIREMENTS:
 - WORKOUT NAMING: Use user-provided names when mentioned, otherwise generate Latin-inspired names
   * If user provides a name ("I did Fran", "workout called XYZ"), use that exact name
   * Only generate Latin names when no name is provided or implied
-${isComplex ? '- COMPLEX WORKOUT OPTIMIZATION: Consolidate warmup rounds, use minimal weight objects, prioritize working sets and metcon rounds' : ''}
+${isComplex ? "- COMPLEX WORKOUT OPTIMIZATION: Consolidate warmup rounds, use minimal weight objects, prioritize working sets and metcon rounds" : ""}
 
 You are an expert fitness data extraction AI that converts natural language workout descriptions into structured data following the Universal Workout Schema v2.0.
 
@@ -73,11 +80,11 @@ USER WORKOUT DESCRIPTION:
 
 COACH CONTEXT:
 - Coach Name: ${coachConfig.coach_name}
-- Primary Methodology: ${coachConfig.selected_methodology?.primary_methodology || 'general'}
-- Coach Specializations: ${coachConfig.technical_config?.specializations?.join(', ') || 'general fitness'}
-- Programming Focus: ${coachConfig.technical_config?.programming_focus?.join(', ') || 'general'}
-- Preferred Intensity: ${coachConfig.technical_config?.preferred_intensity || 'moderate'}
-- Equipment Available: ${coachConfig.technical_config?.equipment_available?.join(', ') || 'standard gym'}
+- Primary Methodology: ${coachConfig.selected_methodology?.primary_methodology || "general"}
+- Coach Specializations: ${coachConfig.technical_config?.specializations?.join(", ") || "general fitness"}
+- Programming Focus: ${coachConfig.technical_config?.programming_focus?.join(", ") || "general"}
+- Preferred Intensity: ${coachConfig.technical_config?.preferred_intensity || "moderate"}
+- Equipment Available: ${coachConfig.technical_config?.equipment_available?.join(", ") || "standard gym"}
 
 EXTRACTION GUIDELINES:
 
@@ -495,12 +502,12 @@ const convertUndefinedToNull = (obj: any): any => {
     return null;
   }
 
-  if (obj === null || typeof obj !== 'object') {
+  if (obj === null || typeof obj !== "object") {
     return obj;
   }
 
   if (Array.isArray(obj)) {
-    return obj.map(item => convertUndefinedToNull(item));
+    return obj.map((item) => convertUndefinedToNull(item));
   }
 
   const result: any = {};
@@ -515,33 +522,48 @@ const convertUndefinedToNull = (obj: any): any => {
 /**
  * Parses and validates the extracted workout data from Claude's response
  */
-export const parseAndValidateWorkoutData = async (extractedData: string, userId: string): Promise<UniversalWorkoutSchema> => {
+export const parseAndValidateWorkoutData = async (
+  extractedData: string,
+  userId: string
+): Promise<UniversalWorkoutSchema> => {
   try {
     // Log the raw response for debugging
-    console.info('Raw Claude response length:', extractedData.length);
-    console.info('Raw Claude response preview (first 500 chars):', extractedData.substring(0, 500));
-    console.info('Raw Claude response end (last 500 chars):', extractedData.substring(Math.max(0, extractedData.length - 500)));
+    console.info("Raw Claude response length:", extractedData.length);
+    console.info(
+      "Raw Claude response preview (first 500 chars):",
+      extractedData.substring(0, 500)
+    );
+    console.info(
+      "Raw Claude response end (last 500 chars):",
+      extractedData.substring(Math.max(0, extractedData.length - 500))
+    );
 
     // Store raw response in S3 for debugging large responses
-    console.info('Storing Bedrock response in S3 for debugging...');
+    console.info("Storing Bedrock response in S3 for debugging...");
     storeDebugDataInS3(extractedData, {
       userId,
-      type: 'large-raw-response',
+      type: "large-raw-response",
       length: extractedData.length,
-      timestamp: new Date().toISOString()
-    }).catch(error => {
-      console.warn('Failed to store large response in S3:', error);
+      timestamp: new Date().toISOString(),
+    }).catch((error) => {
+      console.warn("Failed to store large response in S3:", error);
     });
 
     // Check if response starts and ends with proper JSON structure
     const trimmedData = extractedData.trim();
-    if (!trimmedData.startsWith('{')) {
-      console.error('Response does not start with {. First 100 chars:', trimmedData.substring(0, 100));
-      throw new Error('Response does not start with valid JSON opening brace');
+    if (!trimmedData.startsWith("{")) {
+      console.error(
+        "Response does not start with {. First 100 chars:",
+        trimmedData.substring(0, 100)
+      );
+      throw new Error("Response does not start with valid JSON opening brace");
     }
-    if (!trimmedData.endsWith('}')) {
-      console.error('Response does not end with }. Last 100 chars:', trimmedData.substring(Math.max(0, trimmedData.length - 100)));
-      throw new Error('Response does not end with valid JSON closing brace');
+    if (!trimmedData.endsWith("}")) {
+      console.error(
+        "Response does not end with }. Last 100 chars:",
+        trimmedData.substring(Math.max(0, trimmedData.length - 100))
+      );
+      throw new Error("Response does not end with valid JSON closing brace");
     }
 
     // Parse the JSON response
@@ -553,18 +575,16 @@ export const parseAndValidateWorkoutData = async (extractedData: string, userId:
 
     // Ensure required fields have defaults
     if (!workoutData.date) {
-      workoutData.date = new Date().toISOString().split('T')[0]; // Today's date in YYYY-MM-DD
+      workoutData.date = new Date().toISOString().split("T")[0]; // Today's date in YYYY-MM-DD
     }
 
     if (!workoutData.discipline) {
-      workoutData.discipline = 'hybrid';
+      workoutData.discipline = "hybrid";
     }
 
     if (!workoutData.workout_type) {
-      workoutData.workout_type = 'hybrid';
+      workoutData.workout_type = "hybrid";
     }
-
-
 
     // Ensure complete metadata structure according to Universal Workout Schema
     if (!workoutData.metadata) {
@@ -572,43 +592,48 @@ export const parseAndValidateWorkoutData = async (extractedData: string, userId:
     }
 
     // Set default values for all required metadata fields
-    workoutData.metadata.logged_via = 'conversation';
-    workoutData.metadata.logging_time = workoutData.metadata.logging_time || null;
-    workoutData.metadata.data_confidence = workoutData.metadata.data_confidence || 0.5;
+    workoutData.metadata.logged_via = "conversation";
+    workoutData.metadata.logging_time =
+      workoutData.metadata.logging_time || null;
+    workoutData.metadata.data_confidence =
+      workoutData.metadata.data_confidence || 0.5;
     workoutData.metadata.ai_extracted = true;
     workoutData.metadata.user_verified = false;
-    workoutData.metadata.version = '1.0';
-    workoutData.metadata.schema_version = '2.0';
-    workoutData.metadata.data_completeness = workoutData.metadata.data_completeness || 0.5;
-    workoutData.metadata.extraction_method = 'claude_conversation_analysis';
-    workoutData.metadata.validation_flags = workoutData.metadata.validation_flags || [];
-    workoutData.metadata.extraction_notes = workoutData.metadata.extraction_notes || null;
+    workoutData.metadata.version = "1.0";
+    workoutData.metadata.schema_version = "2.0";
+    workoutData.metadata.data_completeness =
+      workoutData.metadata.data_completeness || 0.5;
+    workoutData.metadata.extraction_method = "claude_conversation_analysis";
+    workoutData.metadata.validation_flags =
+      workoutData.metadata.validation_flags || [];
+    workoutData.metadata.extraction_notes =
+      workoutData.metadata.extraction_notes || null;
 
     // Convert all undefined values to null for consistent DynamoDB storage
     const cleanedWorkoutData = convertUndefinedToNull(workoutData);
 
     return cleanedWorkoutData as UniversalWorkoutSchema;
-    } catch (error) {
-    console.error('Error parsing workout data:', error);
-    console.error('Raw extracted data length:', extractedData.length);
+  } catch (error) {
+    console.error("Error parsing workout data:", error);
+    console.error("Raw extracted data length:", extractedData.length);
 
     // Store the problematic response in S3 for debugging
     try {
       const s3Location = await storeDebugDataInS3(extractedData, {
         userId,
-        type: 'json-parse-error',
+        type: "json-parse-error",
         length: extractedData.length,
-        error: error instanceof Error ? error.message : 'Unknown error',
-        timestamp: new Date().toISOString()
+        error: error instanceof Error ? error.message : "Unknown error",
+        timestamp: new Date().toISOString(),
       });
-      console.error('Problematic response stored in S3:', s3Location);
+      console.error("Problematic response stored in S3:", s3Location);
     } catch (s3Error) {
-      console.warn('Failed to store problematic response in S3:', s3Error);
+      console.warn("Failed to store problematic response in S3:", s3Error);
     }
 
     // If it's a JSON parsing error, try to identify the problematic location
-    if (error instanceof SyntaxError && error.message.includes('JSON')) {
-      console.error('JSON Syntax Error Details:', error.message);
+    if (error instanceof SyntaxError && error.message.includes("JSON")) {
+      console.error("JSON Syntax Error Details:", error.message);
 
       // Try to find the position mentioned in the error
       const positionMatch = error.message.match(/position (\d+)/);
@@ -617,23 +642,26 @@ export const parseAndValidateWorkoutData = async (extractedData: string, userId:
         const contextStart = Math.max(0, position - 200);
         const contextEnd = Math.min(extractedData.length, position + 200);
 
-        console.error('Context around error position:', {
+        console.error("Context around error position:", {
           position,
           contextStart,
           contextEnd,
           contextBefore: extractedData.substring(contextStart, position),
-          contextAfter: extractedData.substring(position, contextEnd)
+          contextAfter: extractedData.substring(position, contextEnd),
         });
       }
 
       // Try to validate JSON structure by checking for common issues
       const commonIssues = [
-        { pattern: /,\s*}/, issue: 'Trailing comma before closing brace' },
-        { pattern: /,\s*]/, issue: 'Trailing comma before closing bracket' },
-        { pattern: /}\s*{/, issue: 'Missing comma between objects' },
-        { pattern: /]\s*\[/, issue: 'Missing comma between arrays' },
-        { pattern: /"\s*"/, issue: 'Missing comma between strings' },
-        { pattern: /\n\s*"[^"]*":\s*"[^"]*"\n\s*"/, issue: 'Missing comma between object properties' }
+        { pattern: /,\s*}/, issue: "Trailing comma before closing brace" },
+        { pattern: /,\s*]/, issue: "Trailing comma before closing bracket" },
+        { pattern: /}\s*{/, issue: "Missing comma between objects" },
+        { pattern: /]\s*\[/, issue: "Missing comma between arrays" },
+        { pattern: /"\s*"/, issue: "Missing comma between strings" },
+        {
+          pattern: /\n\s*"[^"]*":\s*"[^"]*"\n\s*"/,
+          issue: "Missing comma between object properties",
+        },
       ];
 
       commonIssues.forEach(({ pattern, issue }) => {
@@ -644,7 +672,8 @@ export const parseAndValidateWorkoutData = async (extractedData: string, userId:
       });
     }
 
-    const errorMessage = error instanceof Error ? error.message : 'Unknown parsing error';
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown parsing error";
     throw new Error(`Failed to parse workout data: ${errorMessage}`);
   }
 };
@@ -652,12 +681,15 @@ export const parseAndValidateWorkoutData = async (extractedData: string, userId:
 /**
  * Calculates confidence score based on the extracted data quality
  */
-export const calculateConfidence = (workoutData: UniversalWorkoutSchema): number => {
+export const calculateConfidence = (
+  workoutData: UniversalWorkoutSchema
+): number => {
   let confidence = 0.5; // Base confidence
 
   // Higher confidence for explicit data
   if (workoutData.workout_name) confidence += 0.2;
-  if (workoutData.discipline_specific?.crossfit?.performance_data?.total_time) confidence += 0.2;
+  if (workoutData.discipline_specific?.crossfit?.performance_data?.total_time)
+    confidence += 0.2;
   if (workoutData.performance_metrics?.perceived_exertion) confidence += 0.1;
   if (workoutData.subjective_feedback?.notes) confidence += 0.1;
 
@@ -671,13 +703,15 @@ export const calculateConfidence = (workoutData: UniversalWorkoutSchema): number
 /**
  * Extracts the completed time from user message using AI
  */
-export const extractCompletedAtTime = async (userMessage: string): Promise<Date | null> => {
+export const extractCompletedAtTime = async (
+  userMessage: string
+): Promise<Date | null> => {
   const timeExtractionPrompt = `
 You are a time extraction expert. Given a user's workout message, extract when the workout was actually completed.
 
 USER MESSAGE: "${userMessage}"
 CURRENT TIME: ${new Date().toISOString()}
-CURRENT DAY: ${new Date().toLocaleDateString('en-US', { weekday: 'long' })}
+CURRENT DAY: ${new Date().toLocaleDateString("en-US", { weekday: "long" })}
 
 Instructions:
 - If the user mentions a specific time (with or without timezone), use that exact time
@@ -702,25 +736,32 @@ Examples:
 `;
 
   try {
-    console.info('Extracting workout completion time using Nova Micro:', {
+    console.info("Extracting workout completion time using Nova Micro:", {
       userMessage: userMessage.substring(0, 100),
-      currentTime: new Date().toISOString()
+      currentTime: new Date().toISOString(),
     });
 
-    const response = await callBedrockApi(timeExtractionPrompt, userMessage, MODEL_IDS.NOVA_MICRO);
+    const response = await callBedrockApi(
+      timeExtractionPrompt,
+      userMessage,
+      MODEL_IDS.NOVA_MICRO
+    );
 
     const result = JSON.parse(response.trim());
 
-    console.info('AI time extraction result:', {
+    console.info("AI time extraction result:", {
       userMessage: userMessage.substring(0, 100),
       extractedTime: result.completedAt,
       confidence: result.confidence,
-      reasoning: result.reasoning
+      reasoning: result.reasoning,
     });
 
     return result.completedAt ? new Date(result.completedAt) : null;
   } catch (error) {
-    console.error('AI time extraction failed, using current time as default:', error);
+    console.error(
+      "AI time extraction failed, using current time as default:",
+      error
+    );
     return new Date(); // Simple fallback to current time
   }
 };
@@ -728,7 +769,10 @@ Examples:
 /**
  * Generate AI summary for workout context and UI display
  */
-export const generateWorkoutSummary = async (workoutData: UniversalWorkoutSchema, originalMessage: string): Promise<string> => {
+export const generateWorkoutSummary = async (
+  workoutData: UniversalWorkoutSchema,
+  originalMessage: string
+): Promise<string> => {
   const summaryPrompt = `
 You are a fitness coach creating a concise summary of a completed workout for coaching context and display.
 
@@ -760,17 +804,136 @@ SUMMARY:`;
 
     return cleanSummary;
   } catch (error) {
-    console.error('Error generating workout summary:', error);
+    console.error("Error generating workout summary:", error);
 
     // Fallback to basic summary if AI fails
-    const workoutName = workoutData.workout_name || 'Workout';
-    const discipline = workoutData.discipline || '';
-    const duration = workoutData.duration ? `${workoutData.duration}min` : '';
+    const workoutName = workoutData.workout_name || "Workout";
+    const discipline = workoutData.discipline || "";
+    const duration = workoutData.duration ? `${workoutData.duration}min` : "";
 
     let fallback = `Completed ${workoutName}`;
     if (discipline) fallback += ` (${discipline})`;
     if (duration) fallback += ` in ${duration}`;
 
     return fallback;
+  }
+};
+
+/**
+ * AI-powered classification of workout disciplines
+ * Provides flexible classification for various discipline characteristics
+ *
+ * @param discipline - The workout discipline to classify
+ * @param workoutData - Optional workout data for additional context
+ * @returns Promise<object> - Classification result with multiple attributes
+ */
+export const classifyDiscipline = async (
+  discipline: string,
+  workoutData?: UniversalWorkoutSchema
+): Promise<DisciplineClassification> => {
+  if (!discipline || typeof discipline !== "string") {
+    return {
+      isQualitative: false,
+      requiresPreciseMetrics: true,
+      environment: "mixed" as const,
+      primaryFocus: "mixed" as const,
+      confidence: 0,
+      reasoning: "Invalid discipline provided",
+    };
+  }
+
+  const classificationPrompt = `
+Analyze this workout discipline to provide comprehensive classification information.
+
+DISCIPLINE: "${discipline}"
+${
+  workoutData
+    ? `WORKOUT CONTEXT: ${JSON.stringify(
+        {
+          workout_name: workoutData.workout_name,
+          workout_type: workoutData.workout_type,
+          duration: workoutData.duration,
+          location: workoutData.location,
+        },
+        null,
+        2
+      )}`
+    : ""
+}
+
+Return ONLY a JSON response in this exact format:
+{
+  "isQualitative": boolean,
+  "requiresPreciseMetrics": boolean,
+  "environment": "indoor|outdoor|mixed",
+  "primaryFocus": "strength|endurance|power|speed|agility|flexibility|balance|technique|coordination|mixed",
+  "confidence": number,
+  "reasoning": "brief explanation"
+}
+
+CLASSIFICATION CRITERIA:
+
+QUALITATIVE DISCIPLINES (more forgiving of missing precise metrics):
+- Focus on time, effort, technique, experience rather than exact numbers
+- Often done in uncontrolled environments (outdoors, open water, trails)
+- Performance may be hard to measure precisely but workout still has value
+- Examples: swimming (especially open water), running (especially trails), cycling, yoga, martial arts, climbing, hiking, dance, pilates
+
+QUANTITATIVE DISCIPLINES (require specific performance metrics):
+- Focus on precise weights, reps, sets, distances, times
+- Usually done in controlled environments with measurable equipment
+- Performance is typically tracked with specific numbers for progression
+- Examples: powerlifting, weightlifting, CrossFit, bodybuilding, track & field, rowing (machine)
+
+PRIMARY FOCUS CATEGORIES:
+- "strength": Building maximal force production (powerlifting, weightlifting, strength training)
+- "endurance": Sustained activity over time (marathon running, cycling, swimming distance)
+- "power": Explosive force/speed combination (Olympic lifting, jumping, throwing)
+- "speed": Maximum velocity (sprinting, speed skating, racing)
+- "agility": Quick direction changes (basketball, soccer, tennis, martial arts)
+- "flexibility": Range of motion (yoga, stretching, gymnastics flexibility work)
+- "balance": Stability and equilibrium (balance beam, slacklining, balance training)
+- "technique": Skill refinement and form (martial arts kata, dance, gymnastics skills)
+- "coordination": Multi-limb movement patterns (dance, complex skills, sport-specific drills)
+- "mixed": Multiple components equally emphasized (CrossFit, general fitness, boot camp)
+
+EDGE CASES:
+- "hybrid" discipline = lean towards qualitative (mixed training)
+- Indoor vs outdoor versions of same sport may differ (indoor rowing = quantitative, outdoor rowing = qualitative)
+- Consider the workout context if provided
+- Some disciplines can have different focuses depending on the specific workout (running can be endurance OR speed)
+
+Return confidence 0.8+ for clear classifications, 0.5-0.7 for moderate cases, <0.5 for unclear.`;
+
+  try {
+    console.info("Classifying discipline as qualitative/quantitative:", {
+      discipline,
+      hasWorkoutContext: !!workoutData,
+    });
+
+    const response = await callBedrockApi(
+      classificationPrompt,
+      discipline,
+      MODEL_IDS.NOVA_MICRO
+    );
+    const result = JSON.parse(response.trim());
+
+    console.info("AI discipline classification result:", {
+      discipline,
+      isQualitative: result.isQualitative,
+      requiresPreciseMetrics: result.requiresPreciseMetrics,
+      environment: result.environment,
+      primaryFocus: result.primaryFocus,
+      confidence: result.confidence,
+      reasoning: result.reasoning,
+    });
+
+    // Return the full classification result
+    return result;
+  } catch (error) {
+    console.error("AI discipline classification failed:", error);
+    throw new Error(
+      `Failed to classify discipline "${discipline}": ${error instanceof Error ? error.message : "Unknown error"}`
+    );
   }
 };

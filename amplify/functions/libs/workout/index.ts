@@ -22,7 +22,8 @@ export {
   calculateConfidence,
   extractCompletedAtTime,
   isComplexWorkout,
-  generateWorkoutSummary
+  generateWorkoutSummary,
+  classifyDiscipline
 } from './extraction';
 
 export {
@@ -32,6 +33,7 @@ export {
 export {
   Workout,
   UniversalWorkoutSchema,
+  DisciplineClassification,
   BuildWorkoutEvent,
   CrossFitExercise,
   CrossFitRound,
