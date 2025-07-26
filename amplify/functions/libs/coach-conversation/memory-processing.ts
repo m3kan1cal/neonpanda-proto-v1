@@ -1,26 +1,27 @@
-import { queryUserMemories, saveUserMemory, updateUserMemory } from "../../../dynamodb/operations";
+import { queryUserMemories as queryUserMemoriesFromDb, saveUserMemory, updateUserMemory } from "../../../dynamodb/operations";
 import { detectUserMemoryRequest, createUserMemory } from "./detection";
 import { UserMemory } from "./types";
 
-export interface MemoryProcessingResult {
+
+
+export interface MemoryRetrievalResult {
   userMemories: UserMemory[];
+}
+
+export interface MemoryDetectionResult {
   memoryFeedback: string | null;
 }
 
 /**
- * Retrieves existing memories and detects/saves new memory requests
+ * Retrieves existing user memories for context (BEFORE AI response generation)
  */
-export async function processUserMemories(
+export async function queryUserMemories(
   userId: string,
-  coachId: string,
-  userMessage: string,
-  conversationId: string,
-  existingMessages: any[]
-): Promise<MemoryProcessingResult> {
-  // Retrieve user memories for context (BEFORE prompt generation)
+  coachId: string
+): Promise<MemoryRetrievalResult> {
   let userMemories: UserMemory[] = [];
   try {
-    userMemories = await queryUserMemories(userId, coachId, { limit: 10 });
+    userMemories = await queryUserMemoriesFromDb(userId, coachId, { limit: 10 });
 
     // Update usage statistics for retrieved memories
     if (userMemories.length > 0) {
@@ -42,7 +43,19 @@ export async function processUserMemories(
     // Continue without memories
   }
 
-  // Detect and handle memory requests
+  return { userMemories };
+}
+
+/**
+ * Detects and saves new memory requests (AFTER AI response generation)
+ */
+export async function detectAndSaveMemories(
+  userId: string,
+  coachId: string,
+  userMessage: string,
+  conversationId: string,
+  existingMessages: any[]
+): Promise<MemoryDetectionResult> {
   let memoryFeedback: string | null = null;
   try {
     const memoryDetectionEvent = {
@@ -82,8 +95,6 @@ export async function processUserMemories(
     // Don't fail the conversation for memory errors
   }
 
-  return {
-    userMemories,
-    memoryFeedback
-  };
+  return { memoryFeedback };
 }
+

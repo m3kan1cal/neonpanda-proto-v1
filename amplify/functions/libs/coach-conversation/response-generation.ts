@@ -2,7 +2,7 @@ import { callBedrockApi, MODEL_IDS, storeDebugDataInS3 } from "../api-helpers";
 import { generateSystemPrompt, validateCoachConfig, generateSystemPromptPreview } from "./prompt-generation";
 import { ConversationContextResult } from "./context";
 import { WorkoutDetectionResult } from "./workout-detection";
-import { MemoryProcessingResult } from "./memory-processing";
+import { MemoryRetrievalResult } from "./memory-processing";
 
 // Configuration constants
 const ENABLE_S3_DEBUG_LOGGING = false; // Set to true to enable system prompt debugging in S3
@@ -19,7 +19,7 @@ export async function generateAIResponse(
   coachConfig: any,
   context: ConversationContextResult,
   workoutResult: WorkoutDetectionResult,
-  memoryResult: MemoryProcessingResult,
+  memoryResult: MemoryRetrievalResult,
   userMessage: string,
   existingMessages: any[],
   conversationContext: any,

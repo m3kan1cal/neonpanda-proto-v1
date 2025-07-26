@@ -28,16 +28,6 @@ export async function detectAndProcessWorkout(
   conversationContext: any
 ): Promise<WorkoutDetectionResult> {
   // Check for workout logging detection (natural language OR slash commands)
-  console.info("🔍 DEBUG: Starting workout detection for message:", {
-    userMessage:
-      userMessage.substring(0, 100) +
-      (userMessage.length > 100 ? "..." : ""),
-    messageLength: userMessage.length,
-  });
-  console.info(
-    "🔍 DEBUG: Available workout slash commands:",
-    WORKOUT_SLASH_COMMANDS
-  );
 
   let slashCommand,
     isSlashCommandWorkout,
@@ -45,43 +35,11 @@ export async function detectAndProcessWorkout(
     isWorkoutLogging;
 
   try {
-    console.info("🔍 DEBUG: About to parse slash command for:", userMessage);
-
-    // Direct test of the regex
-    const testRegex = /^\/([a-zA-Z0-9-]+)\s*(.*)$/;
-    const testMatch = userMessage.match(testRegex);
-    console.info("🔍 DEBUG: Direct regex test:", {
-      testMatch: testMatch,
-      userMessage: userMessage.substring(0, 50),
-    });
-
     slashCommand = parseSlashCommand(userMessage);
-    console.info("🔍 DEBUG: Slash command parsing result:", slashCommand);
-    console.info("🔍 DEBUG: Raw userMessage:", JSON.stringify(userMessage));
-    console.info(
-      "🔍 DEBUG: userMessage starts with /:",
-      userMessage.startsWith("/")
-    );
-    console.info("🔍 DEBUG: userMessage length:", userMessage.length);
-
     isSlashCommandWorkout = isWorkoutSlashCommand(slashCommand);
-    console.info(
-      "🔍 DEBUG: Is slash command workout:",
-      isSlashCommandWorkout
-    );
-
     isNaturalLanguageWorkout =
       !slashCommand.isSlashCommand && (await isWorkoutLog(userMessage));
-    console.info(
-      "🔍 DEBUG: Is natural language workout:",
-      isNaturalLanguageWorkout
-    );
-
     isWorkoutLogging = isSlashCommandWorkout || isNaturalLanguageWorkout;
-    console.info(
-      "🔍 DEBUG: Final workout detection result:",
-      isWorkoutLogging
-    );
   } catch (error) {
     console.error("❌ Error during workout detection:", error);
     slashCommand = { isSlashCommand: false };

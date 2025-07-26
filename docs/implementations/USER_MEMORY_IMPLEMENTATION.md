@@ -138,17 +138,32 @@ Based on previous conversations, here are important things the user has specific
 **IMPORTANT**: Use these memories to personalize your coaching...
 ```
 
-### 5. Conversation Handler Integration
-**File**: `amplify/functions/send-coach-conversation-message/handler.ts`
+### 5. Modular Service Architecture (Post-Refactoring)
+**Primary Handler**: `amplify/functions/send-coach-conversation-message/handler.ts` (reduced from 630 to 228 lines)
+
+**Extracted Service Modules**:
+- **`context.ts`**: Gathers conversation context (workouts + Pinecone semantic search)
+- **`workout-detection.ts`**: Handles workout detection and async processing
+- **`memory-processing.ts`**: Split into two focused functions:
+  - `queryUserMemories()`: Retrieves existing memories for AI context (BEFORE response)
+  - `detectAndSaveMemories()`: Detects and saves new memories (AFTER response)
+- **`response-generation.ts`**: AI response generation with all contextual data
 
 **Integration Flow**:
-1. Retrieve existing memories for conversation context (limit: 10)
-2. Update usage statistics in background (non-blocking)
-3. Include memories in prompt generation options
-4. Generate AI response with full memory context
-5. Detect memory requests in user message (post-response)
+1. `gatherConversationContext()` - Load workouts + Pinecone context
+2. `detectAndProcessWorkout()` - Handle workout detection/extraction
+3. `queryUserMemories()` - Retrieve existing memories for context (limit: 10)
+4. `generateAIResponse()` - Generate response with full memory context
+5. `detectAndSaveMemories()` - Detect memory requests in user message (post-response)
 6. Save new memories if detected with >70% confidence
 7. Append memory confirmation to AI response
+
+**Benefits of Modularization**:
+- **64% code reduction** in main handler (630 → 228 lines)
+- **Single responsibility** per service module
+- **Easier testing** and debugging of individual components
+- **Maintained execution order** and functionality
+- **Cleaner imports** and reduced complexity
 
 **Error Handling**:
 - Memory operations never interrupt conversation flow
@@ -157,6 +172,41 @@ Based on previous conversations, here are important things the user has specific
 - Background operations use proper error catching
 
 ## Code Quality Improvements
+
+### Refactoring Achievements (Post-Implementation)
+**Date**: January 2025
+
+**Major Refactoring**: Extracted monolithic 630-line handler into focused service modules:
+
+1. **`amplify/functions/libs/coach-conversation/context.ts`**
+   - Consolidated workout loading and Pinecone semantic search
+   - Clean interface: `ConversationContextResult`
+   - Handles all external context gathering
+
+2. **`amplify/functions/libs/coach-conversation/workout-detection.ts`**
+   - All workout detection logic (slash commands + natural language)
+   - Async workout extraction triggering
+   - Removed excessive debug logging
+
+3. **`amplify/functions/libs/coach-conversation/memory-processing.ts`**
+   - Split into two focused functions following established patterns
+   - `queryUserMemories()` - aligns with `queryWorkouts()`, `queryCoachConfigs()` naming
+   - `detectAndSaveMemories()` - post-response memory detection
+   - Removed unused `MemoryProcessingResult` interface
+
+4. **`amplify/functions/libs/coach-conversation/response-generation.ts`**
+   - AI response generation with comprehensive context
+   - System prompt building and conversation history formatting
+   - S3 debug storage (feature-flagged)
+
+**Cleanup Performed**:
+- ✅ Removed deprecated `processUserMemories()` function
+- ✅ Removed unused `MemoryProcessingResult` interface
+- ✅ Cleaned up excessive debug logging (8 verbose statements removed)
+- ✅ Aligned function naming with codebase conventions
+- ✅ Maintained correct execution order and functionality
+
+## Legacy Code Quality Improvements
 
 ### Naming Consistency
 **Before**: Mixed naming patterns

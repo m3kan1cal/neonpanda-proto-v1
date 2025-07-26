@@ -14,7 +14,7 @@ import { CoachMessage } from "../libs/coach-conversation/types";
 import { detectConversationComplexity } from "../libs/coach-conversation/detection";
 import { gatherConversationContext } from "../libs/coach-conversation/context";
 import { detectAndProcessWorkout } from "../libs/coach-conversation/workout-detection";
-import { processUserMemories } from "../libs/coach-conversation/memory-processing";
+import { queryUserMemories, detectAndSaveMemories } from "../libs/coach-conversation/memory-processing";
 import { generateAIResponse } from "../libs/coach-conversation/response-generation";
 
 // Configuration constants - moved to individual modules
@@ -145,21 +145,15 @@ export const handler = async (
       conversationContext
     );
 
-    // Process user memories (retrieve existing, detect and save new ones)
-    const memoryResult = await processUserMemories(
-      userId,
-      coachId,
-      userResponse,
-      conversationId,
-      existingMessages
-    );
+    // Retrieve existing user memories for context (BEFORE AI response)
+    const memoryRetrieval = await queryUserMemories(userId, coachId);
 
     // Generate AI response with all context
     const responseResult = await generateAIResponse(
       coachConfig,
       context,
       workoutResult,
-      memoryResult,
+      memoryRetrieval,
       userResponse,
       existingMessages,
       conversationContext,
@@ -171,9 +165,18 @@ export const handler = async (
     let aiResponseContent = responseResult.aiResponseContent;
     const promptMetadata = responseResult.promptMetadata;
 
+    // Detect and save new memories (AFTER AI response generation)
+    const memoryDetection = await detectAndSaveMemories(
+      userId,
+      coachId,
+      userResponse,
+      conversationId,
+      existingMessages
+    );
+
     // Add memory feedback if a memory was saved
-    if (memoryResult.memoryFeedback) {
-      aiResponseContent = `${memoryResult.memoryFeedback}\n\n${aiResponseContent}`;
+    if (memoryDetection.memoryFeedback) {
+      aiResponseContent = `${memoryDetection.memoryFeedback}\n\n${aiResponseContent}`;
     }
 
     // Create AI response message
