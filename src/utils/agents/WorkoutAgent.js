@@ -336,18 +336,46 @@ export class WorkoutAgent {
   formatWorkoutTime(completedAt) {
     if (!completedAt) return 'Unknown time';
 
-    const date = new Date(completedAt);
-    const now = new Date();
-    const diffInMinutes = Math.floor((now - date) / (1000 * 60));
+    try {
+      const date = new Date(completedAt);
+      const now = new Date();
 
-    if (diffInMinutes < 60) {
-      return `${diffInMinutes}m ago`;
-    } else if (diffInMinutes < 1440) { // 24 hours
-      const hours = Math.floor(diffInMinutes / 60);
-      return `${hours}h ago`;
-    } else {
-      const days = Math.floor(diffInMinutes / 1440);
-      return `${days}d ago`;
+      // Check if date is valid
+      if (isNaN(date.getTime())) {
+        console.warn('Invalid date format:', completedAt);
+        return 'Invalid date';
+      }
+
+      // Calculate difference in milliseconds, then convert to minutes
+      const diffInMs = now.getTime() - date.getTime();
+      const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+
+      // Use absolute value to handle any timezone issues
+      const absDiffInMinutes = Math.abs(diffInMinutes);
+
+      // Log negative values for debugging
+      if (diffInMinutes < 0) {
+        console.warn('Workout time calculation resulted in negative value:', {
+          completedAt,
+          parsedDate: date.toISOString(),
+          now: now.toISOString(),
+          diffInMinutes,
+          absDiffInMinutes
+        });
+      }
+
+      if (absDiffInMinutes < 60) {
+        return `${absDiffInMinutes}m ago`;
+      } else if (absDiffInMinutes < 1440) { // 24 hours
+        const hours = Math.floor(absDiffInMinutes / 60);
+        return `${hours}h ago`;
+      } else {
+        const days = Math.floor(absDiffInMinutes / 1440);
+        return `${days}d ago`;
+      }
+    } catch (error) {
+      console.error('Error formatting workout time:', error, { completedAt });
+      return 'Unknown time';
     }
   }
 

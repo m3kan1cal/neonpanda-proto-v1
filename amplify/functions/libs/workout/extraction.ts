@@ -167,6 +167,29 @@ EXTRACTION GUIDELINES:
    - "Each arm" or "per arm" means multiply by 2 (e.g., "10 reps each arm" = 20 total reps)
    - When in doubt about equipment terminology, count the TOTAL movement repetitions performed
 
+7.6. CRITICAL: BILATERAL DUMBBELL WEIGHT CALCULATION:
+   - WEIGHT NOTATION vs REP NOTATION are fundamentally different concepts
+   - WEIGHT NOTATION ("each hand", "per hand", "both hands"):
+     * "50# each hand" = 50 pounds PER dumbbell × 2 dumbbells = 100 pounds TOTAL LOAD
+     * "30kg per hand" = 30kg PER dumbbell × 2 dumbbells = 60kg TOTAL LOAD
+     * "both hands" with bilateral movements = calculate total load across both dumbbells
+     * Record the TOTAL TRAINING LOAD, not per-dumbbell weight
+   - REP NOTATION ("each arm", "per arm", "per side"):
+     * "10 reps each arm" = 10 PER arm × 2 arms = 20 total reps
+     * "15 lunges per side" = 15 PER side × 2 sides = 30 total reps
+     * Record the TOTAL REPETITIONS performed
+   - BILATERAL DUMBBELL MOVEMENTS requiring total load calculation:
+     * Thrusters, overhead press, bench press, rows, deadlifts, curls, etc.
+     * Any movement where TWO dumbbells are used simultaneously
+   - UNILATERAL MOVEMENTS (keep per-dumbbell weight):
+     * Single-arm rows, single-arm presses, alternating movements
+     * Only use ONE dumbbell at a time
+   - WEIGHT CALCULATION EXAMPLES:
+     * "4 DB thrusters 50# each hand" → weight: {value: 100, unit: "lbs"} (50×2)
+     * "DB bench press 30kg per hand" → weight: {value: 60, unit: "kg"} (30×2)
+     * "Single-arm row 40# each arm" → weight: {value: 40, unit: "lbs"} (unilateral, no doubling)
+     * "Alternating DB press 25kg" → weight: {value: 25, unit: "kg"} (alternating, no doubling)
+
 8. CROSSFIT EXTRACTION EXAMPLES:
    - "Did Fran in 8:57 with 95lb thrusters" → workout_name: "Fran", total_time: 537, rx_status: "rx", score: {value: 537, type: "time", unit: "seconds"}
    - "Scaled Murph with 65lb thrusters" → workout_name: "Murph", rx_status: "scaled", scaled_weight: 65
@@ -179,6 +202,9 @@ EXTRACTION GUIDELINES:
    - "30min EMOM completed 6 rounds" → 6 separate round objects in rounds array, NOT 1 template round
    - "Broke the 21 thrusters into 10-6-5" → broken_sets: [10, 6, 5]
    - "3 sets of squats at 185, then 5 rounds of burpees and pull-ups" → workout_format: "strength_then_metcon", rounds_completed: 8 (3 squat rounds + 5 metcon rounds)
+   - "4 DB thrusters 50# each hand" → weight: {value: 100, unit: "lbs"} (bilateral: 50×2=100)
+   - "DB power cleans 50# both hands" → weight: {value: 100, unit: "lbs"} (bilateral: 50×2=100)
+   - "Single-arm DB rows 40# each arm" → weight: {value: 40, unit: "lbs"} (unilateral: no doubling)
 
 8.5. OPTIMIZATION EXAMPLES FOR COMPLEX WORKOUTS:
    - BEFORE: 4 separate warmup rounds (135×3, 185×3, 225×3, 245×3)
