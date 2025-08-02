@@ -25,7 +25,9 @@ function Breadcrumbs() {
     'coach-creator': 'Coach Creator',
     'coaches': 'Coaches',
     'training-grounds': 'Training Grounds',
-    'coach-conversations': 'Coach Conversations'
+    'coach-conversations': 'Coach Conversations',
+    'workouts': 'Workouts',
+    'manage-workouts': 'Manage Workouts'
   };
 
   // Don't show breadcrumbs on the home page

@@ -11,7 +11,7 @@ import {
   UniversalWorkoutSchema,
   DisciplineClassification,
 } from "./types";
-import { storeDebugDataInS3, callBedrockApi, MODEL_IDS } from "../api-helpers";
+import { storeDebugDataInS3, callBedrockApi, MODEL_IDS, fixMalformedJson } from "../api-helpers";
 
 /**
  * Detects if a workout is likely to be complex and need optimization
@@ -59,6 +59,15 @@ CRITICAL JSON FORMATTING RULES:
 - CRITICAL: Generate MINIFIED JSON with NO extra whitespace, newlines, or formatting
 - Remove all unnecessary spaces, tabs, and line breaks to minimize payload size
 - Example: {"key":"value","array":[1,2,3]} NOT { "key": "value", "array": [ 1, 2, 3 ] }
+
+CRITICAL JSON STRUCTURE VALIDATION:
+- Each opening brace { must have exactly ONE matching closing brace }
+- Each opening bracket [ must have exactly ONE matching closing bracket ]
+- Count your braces: total opening braces must equal total closing braces exactly
+- Count your brackets: total opening brackets must equal total closing brackets exactly
+- For complex nested structures with 20+ rounds, be extra careful with overall balance
+- Multiple consecutive closing characters (like }]}) are VALID when closing nested structures
+- Focus on total count balance, not consecutive characters
 
 EXTRACTION REQUIREMENTS:
 - Include ALL schema fields, use null for missing data
@@ -315,6 +324,13 @@ CRITICAL EFFICIENCY RULE: For workouts with >8 rounds, apply aggressive consolid
 - Use concise form_notes to capture progression details
 - Omit null fields that don't add contextual value
 - Prioritize working sets and metcon rounds for individual tracking
+
+ANTI-MALFORMED JSON STRATEGY:
+- For workouts with >15 rounds, prioritize JSON structural integrity over complete detail
+- Consider grouping similar consecutive rounds into single rounds with range notation
+- Example: Instead of 8 separate identical warmup rounds, use 1 round with form_notes: "Rounds 1-8: 135lbs x 3 reps progression"
+- Better to have valid parseable JSON with some detail loss than malformed JSON with full detail
+- Focus on: working sets, key lifts, metcon rounds - these are most important for tracking
 
 {
   "workout_id": "auto_generated_by_system",
@@ -592,8 +608,9 @@ export const parseAndValidateWorkoutData = async (
       throw new Error("Response does not end with valid JSON closing brace");
     }
 
-    // Parse the JSON response
-    const workoutData = JSON.parse(extractedData);
+    // Parse the JSON response with malformed JSON fixing
+    const fixedJsonData = fixMalformedJson(extractedData);
+    const workoutData = JSON.parse(fixedJsonData);
 
     // Set system-generated fields
     workoutData.workout_id = `ws_${userId}_${Date.now()}`;

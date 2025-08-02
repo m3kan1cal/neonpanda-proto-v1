@@ -10,6 +10,7 @@ import Coaches from './components/Coaches';
 import TrainingGrounds from './components/TrainingGrounds';
 import CoachConversations from './components/CoachConversations';
 import Workouts from './components/Workouts';
+import ManageWorkouts from './components/ManageWorkouts';
 import { ToastProvider } from './contexts/ToastContext';
 import ToastContainer from './components/ToastContainer';
 
@@ -30,7 +31,8 @@ function AppContent() {
           <Route path="/coaches" element={<Coaches />} />
           <Route path="/training-grounds" element={<TrainingGrounds />} />
           <Route path="/training-grounds/coach-conversations" element={<CoachConversations />} />
-                      <Route path="/training-grounds/workouts" element={<Workouts />} />
+          <Route path="/training-grounds/workouts" element={<Workouts />} />
+          <Route path="/training-grounds/manage-workouts" element={<ManageWorkouts />} />
 
           {/* Trailing slash redirects handled at server level via amplify.yml */}
         </Routes>

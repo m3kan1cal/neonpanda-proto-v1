@@ -702,17 +702,27 @@ function Workouts() {
         anchorRef={workoutsIconRef}
         title="Recent Workouts"
       >
-        {/* Log Workout Button */}
-        <div className="flex justify-center mb-4">
+        {/* Action Buttons */}
+        <div className="flex flex-col space-y-2 mb-4">
           <button
             onClick={() => {
               // TODO: Implement workout logging functionality
               console.info('Log Workout clicked - functionality to be implemented');
             }}
-            className={`${themeClasses.neonButton} text-sm px-4 py-2 transition-all duration-300 flex items-center space-x-2`}
+            className={`${themeClasses.neonButton} text-sm px-4 py-2 transition-all duration-300 flex items-center space-x-2 justify-center`}
           >
             <WorkoutIcon />
             <span>Log Workout</span>
+          </button>
+
+          <button
+            onClick={() => navigate(`/training-grounds/manage-workouts?userId=${userId}&coachId=${coachId}`)}
+            className={`${themeClasses.cyanButton} text-sm px-4 py-2 transition-all duration-300 flex items-center space-x-2 justify-center`}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+            </svg>
+            <span>Manage Workouts</span>
           </button>
         </div>
 

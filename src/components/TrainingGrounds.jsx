@@ -498,7 +498,7 @@ function TrainingGrounds() {
               <button
                 onClick={handleStartNewConversation}
                 disabled={agentState.isCreatingConversation}
-                className={`${themeClasses.neonButton} text-sm px-6 py-3 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center space-x-2`}
+                className={`${themeClasses.neonButton} text-sm px-6 py-3 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center space-x-2 w-3/4 justify-center`}
               >
                 {agentState.isCreatingConversation ? (
                   <>
@@ -507,7 +507,9 @@ function TrainingGrounds() {
                   </>
                 ) : (
                   <>
-                    <ConversationIcon />
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
                     <span>Start Conversation</span>
                   </>
                 )}
@@ -574,19 +576,29 @@ function TrainingGrounds() {
               {renderWorkoutList()}
             </div>
 
-            {/* Log Workout Button */}
-            <div className="text-center">
+            {/* Action Buttons */}
+            <div className="text-center space-y-3">
               <button
                 onClick={() => {
                   // TODO: Implement workout logging functionality
                   console.info('Log Workout clicked - functionality to be implemented');
                 }}
-                className={`${themeClasses.neonButton} text-sm px-6 py-3 transition-all duration-300 inline-flex items-center space-x-2 mx-auto`}
+                className={`${themeClasses.neonButton} text-sm px-6 py-3 transition-all duration-300 inline-flex items-center space-x-2 w-3/4 justify-center`}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
                 <span>Log Workout</span>
+              </button>
+
+              <button
+                onClick={() => navigate(`/training-grounds/manage-workouts?userId=${userId}&coachId=${coachId}`)}
+                className={`${themeClasses.cyanButton} text-sm px-6 py-3 transition-all duration-300 inline-flex items-center space-x-2 w-3/4 justify-center`}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+                <span>Manage Workouts</span>
               </button>
             </div>
           </div>
