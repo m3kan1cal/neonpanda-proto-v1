@@ -32,15 +32,17 @@ export class CoachConversationAgent {
       error: null,
       coach: null,
       conversation: null,
-      historicalConversations: [],
+      recentConversations: [],
       isLoadingRecentItems: false,
+      conversationCount: 0,
+      isLoadingConversationCount: false,
     };
 
     // Bind methods
     this.createConversation = this.createConversation.bind(this);
     this.loadExistingConversation = this.loadExistingConversation.bind(this);
     this.loadCoachDetails = this.loadCoachDetails.bind(this);
-    this.loadHistoricalConversations = this.loadHistoricalConversations.bind(this);
+    this.loadRecentConversations = this.loadRecentConversations.bind(this);
     this.sendMessage = this.sendMessage.bind(this);
     this.clearConversation = this.clearConversation.bind(this);
     this.generateConversationTitle = this.generateConversationTitle.bind(this);
@@ -131,26 +133,30 @@ export class CoachConversationAgent {
 
   /**
    * Load historical conversations for the coach
+   * @param {string} userId - The user ID
+   * @param {string} coachId - The coach ID
+   * @param {number} limit - Maximum number of conversations to return (default: 10)
    */
-  async loadHistoricalConversations(userId, coachId) {
+  async loadRecentConversations(userId, coachId, limit = 10) {
     if (!userId || !coachId) return;
 
     this._updateState({ isLoadingRecentItems: true });
 
     try {
-      console.info('Loading historical conversations for:', { userId, coachId });
+      console.info('Loading historical conversations for:', { userId, coachId, limit });
       const result = await getCoachConversations(userId, coachId);
 
-      // Sort by last activity (most recent first)
+      // Sort by last activity (most recent first) and apply limit
       const sortedConversations = (result.conversations || [])
         .sort((a, b) => {
           const dateA = new Date(a.metadata?.lastActivity || a.createdAt || 0);
           const dateB = new Date(b.metadata?.lastActivity || b.createdAt || 0);
           return dateB - dateA; // Most recent first
-        });
+        })
+        .slice(0, limit); // Apply limit
 
       this._updateState({
-        historicalConversations: sortedConversations,
+        recentConversations: sortedConversations,
         isLoadingRecentItems: false
       });
 
@@ -159,10 +165,46 @@ export class CoachConversationAgent {
     } catch (error) {
       console.error('Error loading historical conversations:', error);
       this._updateState({
-        historicalConversations: [],
+        recentConversations: [],
         isLoadingRecentItems: false
       });
       return [];
+    }
+  }
+
+  /**
+   * Loads conversation count for the user and coach
+   */
+  async loadConversationCount(userId, coachId) {
+    if (!userId || !coachId) return;
+
+    this._updateState({ isLoadingConversationCount: true });
+
+    try {
+      console.info('Loading conversation count for:', { userId, coachId });
+
+      // Import the count API function
+      const { getCoachConversationsCount } = await import('../apis/coachConversationApi');
+      const result = await getCoachConversationsCount(userId, coachId);
+
+      console.info('Conversation count API result:', result);
+
+      this._updateState({
+        conversationCount: result.totalCount || 0,
+        isLoadingConversationCount: false
+      });
+
+      console.info('Conversation count loaded:', result.totalCount);
+      return result.totalCount;
+    } catch (error) {
+      console.error('Error loading conversation count:', error);
+      console.error('Error details:', error.message);
+      // Don't show error for count as it's not critical
+      this._updateState({
+        conversationCount: 0,
+        isLoadingConversationCount: false
+      });
+      return 0;
     }
   }
 
@@ -453,8 +495,8 @@ export class CoachConversationAgent {
       });
 
       // Refresh historical conversations to show updated metadata
-      if (this.state.historicalConversations.length > 0) {
-        await this.loadHistoricalConversations(userId, coachId);
+      if (this.state.recentConversations.length > 0) {
+        await this.loadRecentConversations(userId, coachId);
       }
 
       console.info("Conversation metadata updated successfully");

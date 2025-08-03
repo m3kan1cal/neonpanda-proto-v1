@@ -21,7 +21,9 @@ import { buildConversationSummary } from './functions/build-conversation-summary
 import { getWorkouts } from './functions/get-workouts/resource';
 import { getWorkout } from './functions/get-workout/resource';
 import { updateWorkout } from './functions/update-workout/resource';
+import { deleteWorkout } from './functions/delete-workout/resource';
 import { getWorkoutsCount } from './functions/get-workouts-count/resource';
+import { getConversationsCount } from './functions/get-conversations-count/resource';
 import { apiGatewayv2 } from './api/resource';
 import { dynamodbTable } from './dynamodb/resource';
 import { grantBedrockPermissions, grantLambdaInvokePermissions, grantS3DebugPermissions } from './iam-policies';
@@ -53,7 +55,9 @@ const backend = defineBackend({
   getWorkouts,
   getWorkout,
   updateWorkout,
+  deleteWorkout,
   getWorkoutsCount,
+  getConversationsCount,
 });
 
 
@@ -76,7 +80,9 @@ const coreApi = apiGatewayv2.createCoreApi(
   backend.getWorkouts.resources.lambda,
   backend.getWorkout.resources.lambda,
   backend.updateWorkout.resources.lambda,
-  backend.getWorkoutsCount.resources.lambda
+  backend.deleteWorkout.resources.lambda,
+  backend.getWorkoutsCount.resources.lambda,
+  backend.getConversationsCount.resources.lambda
 );
 
 // Create DynamoDB table
@@ -107,7 +113,9 @@ coreTable.table.grantReadWriteData(backend.buildConversationSummary.resources.la
 coreTable.table.grantReadWriteData(backend.getWorkouts.resources.lambda);
 coreTable.table.grantReadWriteData(backend.getWorkout.resources.lambda);
 coreTable.table.grantReadWriteData(backend.updateWorkout.resources.lambda);
+coreTable.table.grantReadWriteData(backend.deleteWorkout.resources.lambda);
 coreTable.table.grantReadData(backend.getWorkoutsCount.resources.lambda);
+coreTable.table.grantReadData(backend.getConversationsCount.resources.lambda);
 
 // Add environment variable for table name
 backend.contactForm.addEnvironment('DYNAMODB_TABLE_NAME', coreTable.table.tableName);
@@ -132,7 +140,9 @@ backend.buildConversationSummary.addEnvironment('DYNAMODB_TABLE_NAME', coreTable
 backend.getWorkouts.addEnvironment('DYNAMODB_TABLE_NAME', coreTable.table.tableName);
 backend.getWorkout.addEnvironment('DYNAMODB_TABLE_NAME', coreTable.table.tableName);
 backend.updateWorkout.addEnvironment('DYNAMODB_TABLE_NAME', coreTable.table.tableName);
+backend.deleteWorkout.addEnvironment('DYNAMODB_TABLE_NAME', coreTable.table.tableName);
 backend.getWorkoutsCount.addEnvironment('DYNAMODB_TABLE_NAME', coreTable.table.tableName);
+backend.getConversationsCount.addEnvironment('DYNAMODB_TABLE_NAME', coreTable.table.tableName);
 
 // Grant Bedrock permissions to functions that need it
 grantBedrockPermissions([

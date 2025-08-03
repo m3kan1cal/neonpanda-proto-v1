@@ -6,6 +6,16 @@ import { parseMarkdown } from '../utils/markdownParser.jsx';
 import CoachConversationAgent from '../utils/agents/CoachConversationAgent';
 import WorkoutAgent from '../utils/agents/WorkoutAgent';
 import { useToast } from '../contexts/ToastContext';
+import {
+  FloatingIconButton,
+  ModernPopover,
+  FloatingIconBar,
+  WorkoutIcon,
+  ChatIcon,
+  LightningIcon,
+  CloseIcon,
+  ChevronRightIcon
+} from './shared/FloatingMenu';
 
 // Icons for human and AI messages
 const UserIcon = () => (
@@ -61,35 +71,7 @@ const PlusIcon = () => (
   </svg>
 );
 
-const WorkoutIcon = () => (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-  </svg>
-);
 
-const ChatIcon = () => (
-  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-  </svg>
-);
-
-const LightningIcon = () => (
-  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-  </svg>
-);
-
-const CloseIcon = () => (
-  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-  </svg>
-);
-
-const ChevronRightIcon = () => (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-  </svg>
-);
 
 const TypingIndicator = () => (
   <div className="flex space-x-1 p-4">
@@ -99,113 +81,7 @@ const TypingIndicator = () => (
   </div>
 );
 
-// Modern Floating Icon Button Component
-const FloatingIconButton = React.forwardRef(({ icon, isActive, onClick, title, className = "" }, ref) => (
-  <button
-    ref={ref}
-    onClick={onClick}
-    className={`
-      p-3 rounded-xl transition-all duration-200 backdrop-blur-sm border
-      ${isActive
-        ? 'bg-synthwave-neon-pink/20 border-synthwave-neon-pink text-synthwave-neon-pink shadow-lg shadow-synthwave-neon-pink/30'
-        : 'bg-synthwave-bg-card/40 border-synthwave-neon-pink/30 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 hover:border-synthwave-neon-pink/50 hover:shadow-md'
-      }
-      ${className}
-    `}
-    title={title}
-  >
-    {icon}
-  </button>
-));
 
-// Modern Popover Component
-const ModernPopover = ({ isOpen, onClose, anchorRef, children, title, className = "" }) => {
-  const popoverRef = useRef(null);
-
-  // Click outside to close
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (isOpen &&
-          popoverRef.current &&
-          !popoverRef.current.contains(event.target) &&
-          anchorRef.current &&
-          !anchorRef.current.contains(event.target)) {
-        onClose();
-      }
-    };
-
-    // ESC key to close
-    const handleEscKey = (event) => {
-      if (isOpen && event.key === 'Escape') {
-        onClose();
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      document.addEventListener('keydown', handleEscKey);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('keydown', handleEscKey);
-    };
-  }, [isOpen, onClose, anchorRef]);
-
-  if (!isOpen) return null;
-
-  return (
-    <>
-      {/* Mobile overlay */}
-      <div className="lg:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-40" />
-
-                  {/* Popover */}
-      <div
-        ref={popoverRef}
-        className={`
-          fixed z-50 bg-synthwave-bg-card/95 backdrop-blur-md
-          border-2 border-synthwave-neon-pink/30 rounded-xl shadow-2xl
-          shadow-synthwave-neon-pink/20 flex flex-col
-          ${className}
-
-          /* Mobile positioning - bottom sheet style */
-          inset-x-4 bottom-4 top-20
-
-          /* Desktop positioning - to the right of the floating icons */
-          lg:left-20 lg:top-1/2 lg:-translate-y-1/2
-          lg:w-96 lg:h-[32rem]
-          lg:inset-auto
-        `}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-synthwave-neon-pink/30 flex-shrink-0">
-          <h3 className="font-russo font-bold text-white text-sm uppercase">
-            {title}
-          </h3>
-          <button
-            onClick={onClose}
-            className="text-synthwave-text-secondary hover:text-synthwave-neon-pink transition-colors duration-300 p-1"
-          >
-            <CloseIcon />
-          </button>
-        </div>
-
-                {/* Scrollable content */}
-        <div
-          className="flex-1 overflow-y-auto synthwave-scrollbar"
-          style={{
-            scrollbarWidth: 'thin',
-            scrollbarColor: '#ff007f40 transparent'
-          }}
-        >
-          <div className="p-4">
-            {children}
-          </div>
-        </div>
-      </div>
-    </>
-  );
-};
 
 function CoachConversations() {
   const [searchParams] = useSearchParams();
@@ -248,7 +124,7 @@ function CoachConversations() {
     error: null,
     coach: null,
     conversation: null,
-    historicalConversations: [],
+    recentConversations: [],
     isLoadingRecentItems: false,
   });
 
@@ -283,7 +159,7 @@ function CoachConversations() {
   useEffect(() => {
     if (activePopover === 'conversations' && userId && coachId && agentRef.current) {
       console.info('Loading conversations for popover...', { userId, coachId, conversationId });
-      agentRef.current.loadHistoricalConversations(userId, coachId);
+      agentRef.current.loadRecentConversations(userId, coachId, 10);
     }
   }, [activePopover, userId, coachId]);
 
@@ -291,7 +167,7 @@ function CoachConversations() {
   useEffect(() => {
     if (activePopover === 'workouts' && userId && workoutAgentRef.current) {
       console.info('Loading workouts for popover...', { userId, activePopover });
-      workoutAgentRef.current.loadRecentWorkouts();
+      workoutAgentRef.current.loadRecentWorkouts(10);
     }
   }, [activePopover, userId]);
 
@@ -336,7 +212,7 @@ function CoachConversations() {
           // If the conversations popover is open, also load conversations list
           if (activePopover === 'conversations') {
             console.info('Loading conversations list after agent initialization...');
-            agentRef.current.loadHistoricalConversations(userId, coachId);
+            agentRef.current.loadRecentConversations(userId, coachId);
           }
         }
       }, 50);
@@ -734,7 +610,7 @@ function CoachConversations() {
             <span>Loading conversations...</span>
           </div>
         </div>
-              ) : coachConversationAgentState.historicalConversations.length === 0 ? (
+              ) : coachConversationAgentState.recentConversations.length === 0 ? (
         <div className="text-center py-8">
           <div className="font-rajdhani text-synthwave-text-muted text-sm">
             No conversations found
@@ -745,7 +621,7 @@ function CoachConversations() {
           <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
             Recent Conversations
           </div>
-          {coachConversationAgentState.historicalConversations.map((conv) => (
+          {coachConversationAgentState.recentConversations.map((conv) => (
             <div
               key={conv.conversationId}
               onClick={() => handleConversationClick(conv.conversationId)}
@@ -860,8 +736,8 @@ function CoachConversations() {
               ) : (
                 <div className="flex items-center justify-center space-x-2">
                   <span>
-                    <span className="text-synthwave-text-secondary">Conversation: </span>
-                    <span className="text-synthwave-neon-cyan">{coachConversationAgentState.conversation.title}</span>
+                    <span className="text-synthwave-neon-pink">Conversation: </span>
+                    <span className="text-synthwave-text-secondary">{coachConversationAgentState.conversation.title}</span>
                   </span>
                   <button
                     onClick={handleEditTitle}
@@ -1067,24 +943,22 @@ function CoachConversations() {
       </div>
 
       {/* Modern Floating Icon Bar */}
-      <div className="fixed left-4 top-1/2 -translate-y-1/2 z-50">
-        <div className="flex flex-col space-y-3">
-          <FloatingIconButton
-            ref={conversationsIconRef}
-            icon={<ChatIcon />}
-            isActive={activePopover === 'conversations'}
-            onClick={() => handleTogglePopover('conversations')}
-            title="Recent Conversations"
-          />
-          <FloatingIconButton
-            ref={workoutsIconRef}
-            icon={<LightningIcon />}
-            isActive={activePopover === 'workouts'}
-            onClick={() => handleTogglePopover('workouts')}
-            title="Recent Workouts"
-          />
-        </div>
-      </div>
+      <FloatingIconBar>
+        <FloatingIconButton
+          ref={conversationsIconRef}
+          icon={<ChatIcon />}
+          isActive={activePopover === 'conversations'}
+          onClick={() => handleTogglePopover('conversations')}
+          title="Recent Conversations"
+        />
+        <FloatingIconButton
+          ref={workoutsIconRef}
+          icon={<LightningIcon />}
+          isActive={activePopover === 'workouts'}
+          onClick={() => handleTogglePopover('workouts')}
+          title="Recent Workouts"
+        />
+      </FloatingIconBar>
 
       {/* Modern Popovers */}
       <ModernPopover
@@ -1098,18 +972,18 @@ function CoachConversations() {
           <button
             onClick={handleNewConversation}
             disabled={isCreatingConversation}
-            className={`${themeClasses.neonButton} text-sm px-4 py-2 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed`}
+            className={`${themeClasses.neonButton} text-sm px-6 py-3 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center space-x-2 w-3/4 justify-center`}
           >
             {isCreatingConversation ? (
-              <div className="flex items-center justify-center space-x-2">
+              <>
                 <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
                 <span>Creating...</span>
-              </div>
+              </>
             ) : (
-              <div className="flex items-center space-x-2">
+              <>
                 <ChatIcon />
                 <span>Start Conversation</span>
-              </div>
+              </>
             )}
           </button>
         </div>
@@ -1131,7 +1005,7 @@ function CoachConversations() {
               // TODO: Implement workout logging functionality
               console.info('Log Workout clicked - functionality to be implemented');
             }}
-            className={`${themeClasses.neonButton} text-sm px-4 py-2 transition-all duration-300 flex items-center space-x-2`}
+            className={`${themeClasses.neonButton} text-sm px-6 py-3 transition-all duration-300 inline-flex items-center space-x-2 w-3/4 justify-center`}
           >
             <WorkoutIcon />
             <span>Log Workout</span>

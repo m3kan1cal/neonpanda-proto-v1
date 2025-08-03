@@ -1,5 +1,4 @@
 import { getCoach } from '../apis/coachApi';
-import { createCoachConversation, getCoachConversations } from '../apis/coachConversationApi';
 import CoachAgent from './CoachAgent';
 
 /**
@@ -19,15 +18,17 @@ export class TrainingGroundsAgent {
     // State
     this.state = {
       coachData: null,
-      recentConversations: [],
-      isLoading: false,
-      isLoadingConversations: false,
-      isCreatingConversation: false,
+      isLoading: !!(options.userId && options.coachId), // Start loading if we have required params
       error: null,
     };
 
     // Create a coach agent instance for utility methods
     this.coachAgent = new CoachAgent();
+
+    // Notify component of initial state
+    if (typeof this.onStateChange === 'function') {
+      this.onStateChange(this.state);
+    }
   }
 
   /**
@@ -57,7 +58,6 @@ export class TrainingGroundsAgent {
     this._updateState({ isLoading: true, error: null });
 
     try {
-      console.info('Loading coach data for:', { userId, coachId });
 
       // Fetch the specific coach
       const coach = await getCoach(userId, coachId);
@@ -112,128 +112,17 @@ export class TrainingGroundsAgent {
     }
   }
 
-  /**
-   * Load recent conversations for the coach
-   */
-  async loadRecentConversations(userId, coachId) {
-    if (!userId || !coachId) return;
 
-    this._updateState({ isLoadingConversations: true });
-
-    try {
-      console.info('Loading recent conversations for:', { userId, coachId });
-      const result = await getCoachConversations(userId, coachId);
-
-      // Sort by last activity (most recent first) and take only the last 5
-      const sortedConversations = (result.conversations || [])
-        .sort((a, b) => {
-          const dateA = new Date(a.metadata?.lastActivity || a.createdAt || 0);
-          const dateB = new Date(b.metadata?.lastActivity || b.createdAt || 0);
-          return dateB - dateA; // Most recent first
-        })
-        .slice(0, 5); // Take only the last 5
-
-      this._updateState({
-        recentConversations: sortedConversations,
-        isLoadingConversations: false
-      });
-
-      console.info('Recent conversations loaded:', sortedConversations);
-      return sortedConversations;
-    } catch (error) {
-      console.error('Error loading recent conversations:', error);
-      // Don't show error for conversations as it's not critical
-      this._updateState({
-        recentConversations: [],
-        isLoadingConversations: false
-      });
-      return [];
-    }
-  }
 
   /**
-   * Create a new conversation and navigate to it
-   */
-  async createNewConversation(userId, coachId) {
-    if (!userId || !coachId) return;
-
-    this._updateState({ isCreatingConversation: true });
-
-    try {
-      console.info('Creating new conversation for:', { userId, coachId });
-
-      // Create a new conversation with human-friendly date as title
-      const now = new Date();
-      const title = now.toLocaleDateString(undefined, {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true
-      });
-
-      const result = await createCoachConversation(userId, coachId, title);
-      const { conversationId } = result;
-
-      this._updateState({ isCreatingConversation: false });
-
-      // Navigate to the conversation
-      if (typeof this.onNavigation === 'function') {
-        this.onNavigation('conversation-created', {
-          userId,
-          coachId,
-          conversationId
-        });
-      }
-
-      // Refresh both conversations list and coach data (to update total count)
-      await Promise.all([
-        this.loadRecentConversations(userId, coachId),
-        this.loadCoachData(userId, coachId)
-      ]);
-
-      return { conversationId };
-    } catch (error) {
-      console.error('Error creating conversation:', error);
-      this._updateState({
-        isCreatingConversation: false,
-        error: 'Failed to create conversation'
-      });
-      if (typeof this.onError === 'function') {
-        this.onError(error);
-      }
-      throw error;
-    }
-  }
-
-  /**
-   * Navigate to a specific conversation
-   */
-  navigateToConversation(conversationId) {
-    if (!this.userId || !this.coachId || !conversationId) return;
-
-    if (typeof this.onNavigation === 'function') {
-      this.onNavigation('view-conversation', {
-        userId: this.userId,
-        coachId: this.coachId,
-        conversationId
-      });
-    }
-  }
-
-  /**
-   * Initialize and load all data
+   * Initialize and load coach data
    */
   async initialize(userId, coachId) {
     this.setIds(userId, coachId);
 
     try {
-      // Load coach data and conversations in parallel
-      await Promise.all([
-        this.loadCoachData(userId, coachId),
-        this.loadRecentConversations(userId, coachId)
-      ]);
+      // Load coach data only
+      await this.loadCoachData(userId, coachId);
     } catch (error) {
       console.error('Error initializing training grounds:', error);
     }
@@ -261,10 +150,7 @@ export class TrainingGroundsAgent {
   destroy() {
     this.state = {
       coachData: null,
-      recentConversations: [],
       isLoading: false,
-      isLoadingConversations: false,
-      isCreatingConversation: false,
       error: null,
     };
   }

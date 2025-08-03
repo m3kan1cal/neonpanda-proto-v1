@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { themeClasses } from '../utils/synthwaveThemeClasses';
 import { NeonBorder } from './themes/SynthwaveComponents';
 import TrainingGroundsAgent from '../utils/agents/TrainingGroundsAgent';
+import CoachConversationAgent from '../utils/agents/CoachConversationAgent';
 import WorkoutAgent from '../utils/agents/WorkoutAgent';
 
 // Icons
@@ -75,18 +76,28 @@ function TrainingGrounds() {
   const coachId = searchParams.get('coachId');
 
   const [showCoachDetails, setShowCoachDetails] = useState(false);
-  const agentRef = useRef(null);
+  const trainingGroundsAgentRef = useRef(null);
+  const conversationAgentRef = useRef(null);
   const workoutAgentRef = useRef(null);
 
-  // Agent state (managed by TrainingGroundsAgent)
-  const [agentState, setAgentState] = useState({
+  // Training Grounds state (managed by TrainingGroundsAgent - coach data only)
+  const [trainingGroundsState, setTrainingGroundsState] = useState({
     coachData: null,
-    recentConversations: [],
-    isLoading: false,
-    isLoadingConversations: false,
-    isCreatingConversation: false,
+    isLoading: !!(userId && coachId), // Start loading if we have required params
     error: null,
   });
+
+  // Conversation state (managed by CoachConversationAgent)
+  const [conversationAgentState, setConversationAgentState] = useState({
+    recentConversations: [],
+    conversationCount: 0,
+    isLoadingRecentItems: false,
+    isLoadingConversationCount: !!(userId && coachId), // Start loading count if we have required params
+    isLoadingItem: false,
+    error: null,
+  });
+
+
 
   // Workout state (managed by WorkoutAgent)
   const [workoutState, setWorkoutState] = useState({
@@ -114,21 +125,28 @@ function TrainingGrounds() {
     window.scrollTo(0, 0);
   }, []);
 
-    // Initialize agent
+  // Handle escape key to close coach details
   useEffect(() => {
-    if (!agentRef.current) {
-      agentRef.current = new TrainingGroundsAgent({
+    const handleEscapeKey = (event) => {
+      if (event.key === 'Escape' && showCoachDetails) {
+        setShowCoachDetails(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleEscapeKey);
+    return () => {
+      document.removeEventListener('keydown', handleEscapeKey);
+    };
+  }, [showCoachDetails]);
+
+    // Initialize Training Grounds agent (coach data only)
+  useEffect(() => {
+    if (!trainingGroundsAgentRef.current) {
+      trainingGroundsAgentRef.current = new TrainingGroundsAgent({
         userId,
         coachId,
         onStateChange: (newState) => {
-          setAgentState(newState);
-        },
-        onNavigation: (type, data) => {
-          if (type === 'conversation-created') {
-            navigate(`/training-grounds/coach-conversations?userId=${data.userId}&coachId=${data.coachId}&conversationId=${data.conversationId}`);
-          } else if (type === 'view-conversation') {
-            navigate(`/training-grounds/coach-conversations?userId=${data.userId}&coachId=${data.coachId}&conversationId=${data.conversationId}`);
-          }
+          setTrainingGroundsState(newState);
         },
         onError: (error) => {
           console.error('TrainingGroundsAgent error:', error);
@@ -138,12 +156,41 @@ function TrainingGrounds() {
     }
 
     return () => {
-      if (agentRef.current) {
-        agentRef.current.destroy();
-        agentRef.current = null;
+      if (trainingGroundsAgentRef.current) {
+        trainingGroundsAgentRef.current.destroy();
+        trainingGroundsAgentRef.current = null;
       }
     };
-  }, [navigate]);
+  }, []); // Remove navigate dependency to prevent re-mounting
+
+  // Initialize conversation agent
+  useEffect(() => {
+    if (!conversationAgentRef.current) {
+      conversationAgentRef.current = new CoachConversationAgent({
+        onStateChange: (newState) => {
+          setConversationAgentState(newState);
+        },
+        onNavigation: (type, data) => {
+          if (type === 'conversation-created') {
+            navigate(`/training-grounds/coach-conversations?userId=${data.userId}&coachId=${data.coachId}&conversationId=${data.conversationId}`);
+          } else if (type === 'view-conversation') {
+            navigate(`/training-grounds/coach-conversations?userId=${data.userId}&coachId=${data.coachId}&conversationId=${data.conversationId}`);
+          }
+        },
+        onError: (error) => {
+          console.error('CoachConversationAgent error:', error);
+          // Could show toast notification here
+        }
+      });
+    }
+
+    return () => {
+      if (conversationAgentRef.current) {
+        conversationAgentRef.current.destroy();
+        conversationAgentRef.current = null;
+      }
+    };
+  }, []); // Remove navigate dependency to prevent re-mounting
 
   // Initialize workout agent with stable callback
   useEffect(() => {
@@ -163,40 +210,33 @@ function TrainingGrounds() {
 
   // Initialize data when userId or coachId changes
   useEffect(() => {
-    if (agentRef.current && userId && coachId) {
-      agentRef.current.initialize(userId, coachId);
+    if (trainingGroundsAgentRef.current && userId && coachId) {
+      trainingGroundsAgentRef.current.initialize(userId, coachId);
+    }
+    if (conversationAgentRef.current && userId && coachId) {
+      conversationAgentRef.current.loadRecentConversations(userId, coachId, 5);
+      conversationAgentRef.current.loadConversationCount(userId, coachId);
+    }
+    if (workoutAgentRef.current && userId) {
+      console.info('TrainingGrounds: Setting userId and loading workouts for:', userId);
+      workoutAgentRef.current.setUserId(userId);
+      workoutAgentRef.current.loadRecentWorkouts(5);
     }
   }, [userId, coachId]);
 
-  // Initialize workout data when userId changes
-  useEffect(() => {
-    console.info('TrainingGrounds: userId changed:', userId);
-    console.info('TrainingGrounds: workoutAgentRef.current:', workoutAgentRef.current);
-
-    if (workoutAgentRef.current && userId) {
-      console.info('TrainingGrounds: Setting userId on WorkoutAgent:', userId);
-      workoutAgentRef.current.setUserId(userId);
-    } else {
-      console.warn('TrainingGrounds: Missing workoutAgentRef or userId:', {
-        hasWorkoutAgent: !!workoutAgentRef.current,
-        userId
-      });
-    }
-  }, [userId]);
-
   const handleStartNewConversation = async () => {
-    if (!agentRef.current || !userId || !coachId || agentState.isCreatingConversation) return;
+    if (!conversationAgentRef.current || !userId || !coachId || conversationAgentState.isLoadingItem) return;
 
     try {
-      await agentRef.current.createNewConversation(userId, coachId);
+      await conversationAgentRef.current.createConversation(userId, coachId);
     } catch (error) {
       // Error handling is managed by the agent via onError callback
     }
   };
 
   const handleViewConversation = (conversationId) => {
-    if (!agentRef.current) return;
-    agentRef.current.navigateToConversation(conversationId);
+    if (!conversationId || !userId || !coachId) return;
+    navigate(`/training-grounds/coach-conversations?userId=${userId}&coachId=${coachId}&conversationId=${conversationId}`);
   };
 
   const formatConversationDate = (dateString) => {
@@ -310,22 +350,18 @@ function TrainingGrounds() {
     );
   }
 
-  if (agentState.isLoading) {
+  if (trainingGroundsState.isLoading) {
     return (
-      <div className={`${themeClasses.container} min-h-screen`}>
-        <div className="max-w-7xl mx-auto px-8 py-12">
-          <div className="text-center">
-            <div className="inline-flex items-center space-x-2 text-synthwave-text-secondary font-rajdhani">
-              <div className="w-6 h-6 border-2 border-synthwave-neon-cyan border-t-transparent rounded-full animate-spin"></div>
-              <span>Loading Training Grounds...</span>
-            </div>
-          </div>
+      <div className={`min-h-screen ${themeClasses.bgGradient} ${themeClasses.textPrimary} flex items-center justify-center`}>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-synthwave-neon-cyan mx-auto mb-4"></div>
+          <p className="text-synthwave-text-secondary font-rajdhani">Loading Training Grounds...</p>
         </div>
       </div>
     );
   }
 
-  if (agentState.error) {
+  if (trainingGroundsState.error) {
     return (
       <div className={`${themeClasses.container} min-h-screen`}>
         <div className="max-w-4xl mx-auto px-8 py-12 text-center">
@@ -333,7 +369,7 @@ function TrainingGrounds() {
             Training Grounds Error
           </h1>
           <p className="font-rajdhani text-lg text-synthwave-neon-pink mb-8">
-            {agentState.error}
+            {trainingGroundsState.error}
           </p>
           <button
             onClick={() => navigate('/coaches')}
@@ -357,25 +393,27 @@ function TrainingGrounds() {
               Training Grounds
             </h1>
             <div className="font-rajdhani text-xl text-synthwave-text-secondary mb-4 flex items-center justify-center space-x-3">
-              <span className="text-synthwave-neon-pink">{agentState.coachData?.name}</span>
+              <span className="text-synthwave-neon-pink">{trainingGroundsState.coachData?.name}</span>
               <button
-                onClick={() => setShowCoachDetails(true)}
-                className="text-synthwave-neon-pink hover:text-synthwave-neon-pink transition-all duration-300 p-1 rounded-full hover:bg-synthwave-neon-pink/10 hover:shadow-lg hover:shadow-synthwave-neon-pink/50"
-                title="View coach details"
+                onClick={() => setShowCoachDetails(!showCoachDetails)}
+                className={`text-synthwave-neon-pink hover:text-synthwave-neon-pink transition-all duration-300 p-1 rounded-full hover:bg-synthwave-neon-pink/10 hover:shadow-lg hover:shadow-synthwave-neon-pink/50 ${
+                  showCoachDetails ? 'bg-synthwave-neon-pink/20 shadow-lg shadow-synthwave-neon-pink/50' : ''
+                }`}
+                title={showCoachDetails ? "Hide coach details" : "View coach details"}
               >
                 <InfoIcon />
               </button>
             </div>
                         <div className="font-rajdhani text-lg text-synthwave-text-secondary mb-4 space-y-1">
               <div>
-                <span className="text-synthwave-neon-pink">Specialization:</span> {agentState.coachData?.specialization}
+                <span className="text-synthwave-neon-pink">Specialization:</span> {trainingGroundsState.coachData?.specialization}
               </div>
               <div>
-                <span className="text-synthwave-neon-pink">Level:</span> {agentState.coachData?.experienceLevel} •
-                <span className="text-synthwave-neon-pink"> Focus:</span> {agentState.coachData?.programmingFocus}
+                <span className="text-synthwave-neon-pink">Level:</span> {trainingGroundsState.coachData?.experienceLevel} •
+                <span className="text-synthwave-neon-pink"> Focus:</span> {trainingGroundsState.coachData?.programmingFocus}
               </div>
               <div>
-                <span className="text-synthwave-neon-pink">Methodology:</span> {agentState.coachData?.primaryMethodology}
+                <span className="text-synthwave-neon-pink">Methodology:</span> {trainingGroundsState.coachData?.primaryMethodology}
               </div>
             </div>
             <p className="font-rajdhani text-lg text-synthwave-text-secondary max-w-3xl mx-auto">
@@ -388,10 +426,10 @@ function TrainingGrounds() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12 max-w-5xl mx-auto">
           <div className="bg-synthwave-bg-card/30 border-2 border-synthwave-neon-pink/30 rounded-lg p-4 text-center">
             <div className="text-2xl font-russo font-bold text-synthwave-neon-pink mb-1">
-              {agentState.isLoading ? (
+              {conversationAgentState.isLoadingConversationCount ? (
                 <div className="w-6 h-6 border-2 border-synthwave-neon-pink border-t-transparent rounded-full animate-spin mx-auto"></div>
               ) : (
-                agentState.coachData?.totalConversations || 0
+                conversationAgentState.conversationCount || 0
               )}
             </div>
             <div className="font-rajdhani text-sm text-synthwave-text-secondary">
@@ -412,10 +450,10 @@ function TrainingGrounds() {
           </div>
           <div className="bg-synthwave-bg-card/30 border-2 border-synthwave-neon-pink/30 rounded-lg p-4 text-center">
             <div className="text-2xl font-russo font-bold text-synthwave-neon-pink mb-1">
-              {agentState.isLoading ? (
+              {trainingGroundsState.isLoading ? (
                 <div className="w-6 h-6 border-2 border-synthwave-neon-pink border-t-transparent rounded-full animate-spin mx-auto"></div>
               ) : (
-                agentState.coachData?.activePrograms || 0
+                trainingGroundsState.coachData?.activePrograms || 0
               )}
             </div>
             <div className="font-rajdhani text-sm text-synthwave-text-secondary">
@@ -450,19 +488,19 @@ function TrainingGrounds() {
 
             {/* Recent Conversations List */}
             <div className="space-y-3 mb-6">
-              {agentState.isLoadingConversations ? (
+              {conversationAgentState.isLoadingRecentItems ? (
                 <div className="text-center py-4">
                   <div className="inline-flex items-center space-x-2 text-synthwave-text-secondary font-rajdhani text-sm">
                     <div className="w-4 h-4 border-2 border-synthwave-neon-pink border-t-transparent rounded-full animate-spin"></div>
                     <span>Loading conversations...</span>
                   </div>
                 </div>
-              ) : agentState.recentConversations.length > 0 ? (
+              ) : conversationAgentState.recentConversations.length > 0 ? (
                 <>
                   <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
                     Recent Conversations
                   </div>
-                  {agentState.recentConversations.map((conversation) => (
+                  {conversationAgentState.recentConversations.map((conversation) => (
                     <div
                       key={conversation.conversationId}
                       onClick={() => handleViewConversation(conversation.conversationId)}
@@ -497,10 +535,10 @@ function TrainingGrounds() {
             <div className="text-center">
               <button
                 onClick={handleStartNewConversation}
-                disabled={agentState.isCreatingConversation}
+                disabled={conversationAgentState.isLoadingItem}
                 className={`${themeClasses.neonButton} text-sm px-6 py-3 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center space-x-2 w-3/4 justify-center`}
               >
-                {agentState.isCreatingConversation ? (
+                {conversationAgentState.isLoadingItem ? (
                   <>
                     <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
                     <span>Creating...</span>
@@ -648,9 +686,11 @@ function TrainingGrounds() {
       {/* Mobile Coach Details Button */}
       <div className="lg:hidden fixed bottom-6 right-6 z-50">
         <button
-          onClick={() => setShowCoachDetails(true)}
-          className="bg-synthwave-bg-card/90 border-2 border-synthwave-neon-pink/30 text-synthwave-neon-pink hover:border-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 p-4 rounded-full shadow-lg transition-all duration-300 hover:scale-110"
-          title="View coach details"
+          onClick={() => setShowCoachDetails(!showCoachDetails)}
+          className={`bg-synthwave-bg-card/90 border-2 border-synthwave-neon-pink/30 text-synthwave-neon-pink hover:border-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 p-4 rounded-full shadow-lg transition-all duration-300 hover:scale-110 ${
+            showCoachDetails ? 'bg-synthwave-neon-pink/20 shadow-lg shadow-synthwave-neon-pink/50' : ''
+          }`}
+          title={showCoachDetails ? "Hide coach details" : "View coach details"}
         >
           <InfoIcon />
         </button>
@@ -673,7 +713,7 @@ function TrainingGrounds() {
                 </button>
               </div>
 
-              {agentState.coachData && (
+              {trainingGroundsState.coachData && (
                 <div className="space-y-6">
                   {/* Basic Info */}
                   <div>
@@ -683,11 +723,11 @@ function TrainingGrounds() {
                     <div className="space-y-2 text-sm">
                                           <div className="flex justify-between">
                       <span className="text-synthwave-text-secondary">Name:</span>
-                      <span className="text-white font-medium">{agentState.coachData.name}</span>
+                      <span className="text-white font-medium">{trainingGroundsState.coachData.name}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-synthwave-text-secondary">Created:</span>
-                      <span className="text-white">{agentState.coachData.rawCoach && new Date(agentState.coachData.joinedDate).toLocaleDateString()}</span>
+                      <span className="text-white">{trainingGroundsState.coachData.rawCoach && new Date(trainingGroundsState.coachData.joinedDate).toLocaleDateString()}</span>
                     </div>
                     </div>
                   </div>
@@ -701,19 +741,19 @@ function TrainingGrounds() {
                       <div>
                         <span className="text-synthwave-text-secondary block mb-1">Experience Level:</span>
                         <span className="text-white bg-synthwave-bg-primary/50 px-2 py-1 rounded text-xs">
-                          {agentState.coachData.experienceLevel}
+                          {trainingGroundsState.coachData.experienceLevel}
                         </span>
                       </div>
                       <div>
                         <span className="text-synthwave-text-secondary block mb-1">Programming Focus:</span>
                         <span className="text-white bg-synthwave-bg-primary/50 px-2 py-1 rounded text-xs">
-                          {agentState.coachData.programmingFocus}
+                          {trainingGroundsState.coachData.programmingFocus}
                         </span>
                       </div>
                       <div>
                         <span className="text-synthwave-text-secondary block mb-1">Specializations:</span>
                         <span className="text-white bg-synthwave-bg-primary/50 px-2 py-1 rounded text-xs">
-                          {agentState.coachData.specialization}
+                          {trainingGroundsState.coachData.specialization}
                         </span>
                       </div>
                     </div>
@@ -728,22 +768,22 @@ function TrainingGrounds() {
                       <div className="bg-synthwave-bg-primary/30 rounded p-3">
                         <div className="flex justify-between items-center">
                           <span className="text-synthwave-text-secondary text-sm">Total Conversations</span>
-                          <span className="text-synthwave-neon-pink font-bold text-lg">{agentState.coachData.totalConversations}</span>
+                          <span className="text-synthwave-neon-pink font-bold text-lg">{trainingGroundsState.coachData.totalConversations}</span>
                         </div>
                       </div>
                       <div className="bg-synthwave-bg-primary/30 rounded p-3">
                         <div className="flex justify-between items-center">
                           <span className="text-synthwave-text-secondary text-sm">Active Programs</span>
-                          <span className="text-synthwave-neon-pink font-bold text-lg">{agentState.coachData.activePrograms}</span>
+                          <span className="text-synthwave-neon-pink font-bold text-lg">{trainingGroundsState.coachData.activePrograms}</span>
                         </div>
                       </div>
                     </div>
                   </div>
 
                   {/* Additional Mobile Sections - abbreviated for space */}
-                  {(agentState.coachData.rawCoach?.coachConfig?.metadata?.methodology_profile ||
-                    agentState.coachData.rawCoach?.coachConfig?.technical_config?.methodology ||
-                    agentState.coachData.rawCoach?.coachConfig?.selected_methodology) && (
+                  {(trainingGroundsState.coachData.rawCoach?.coachConfig?.metadata?.methodology_profile ||
+                    trainingGroundsState.coachData.rawCoach?.coachConfig?.technical_config?.methodology ||
+                    trainingGroundsState.coachData.rawCoach?.coachConfig?.selected_methodology) && (
                     <div>
                       <h4 className="font-russo font-semibold text-synthwave-neon-pink text-sm uppercase mb-3">
                         Methodology
@@ -752,20 +792,20 @@ function TrainingGrounds() {
                         <div>
                           <span className="text-synthwave-text-secondary block mb-1">Primary:</span>
                           <span className="text-white bg-synthwave-bg-primary/50 px-2 py-1 rounded text-xs">
-                            {agentState.coachData.primaryMethodology}
+                            {trainingGroundsState.coachData.primaryMethodology}
                           </span>
                         </div>
                       </div>
                     </div>
                   )}
 
-                  {agentState.coachData.rawCoach?.coachConfig?.metadata?.safety_profile?.equipment && (
+                  {trainingGroundsState.coachData.rawCoach?.coachConfig?.metadata?.safety_profile?.equipment && (
                     <div>
                       <h4 className="font-russo font-semibold text-synthwave-neon-pink text-sm uppercase mb-3">
                         Equipment
                       </h4>
                       <div className="flex flex-wrap gap-1">
-                        {agentState.coachData.rawCoach.coachConfig.metadata.safety_profile.equipment.map((eq, idx) => (
+                        {trainingGroundsState.coachData.rawCoach.coachConfig.metadata.safety_profile.equipment.map((eq, idx) => (
                           <span key={idx} className="text-white bg-synthwave-neon-cyan/20 px-2 py-1 rounded text-xs">
                             {eq.replace(/_/g, ' ')}
                           </span>
@@ -813,7 +853,7 @@ function TrainingGrounds() {
               </button>
             </div>
 
-            {agentState.coachData && (
+            {trainingGroundsState.coachData && (
               <div className="space-y-6">
                 {/* Basic Info */}
                 <div>
@@ -823,7 +863,7 @@ function TrainingGrounds() {
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-synthwave-text-secondary">Name:</span>
-                      <span className="text-white font-medium">{agentState.coachData.name}</span>
+                      <span className="text-white font-medium">{trainingGroundsState.coachData.name}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-synthwave-text-secondary">Coach ID:</span>
@@ -831,7 +871,7 @@ function TrainingGrounds() {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-synthwave-text-secondary">Created:</span>
-                                              <span className="text-white">{new Date(agentState.coachData.joinedDate).toLocaleDateString()}</span>
+                                              <span className="text-white">{new Date(trainingGroundsState.coachData.joinedDate).toLocaleDateString()}</span>
                     </div>
                   </div>
                 </div>
@@ -845,19 +885,19 @@ function TrainingGrounds() {
                     <div>
                       <span className="text-synthwave-text-secondary block mb-1">Experience Level:</span>
                       <span className="text-white bg-synthwave-bg-primary/50 px-2 py-1 rounded text-xs">
-                        {agentState.coachData.experienceLevel}
+                        {trainingGroundsState.coachData.experienceLevel}
                       </span>
                     </div>
                     <div>
                       <span className="text-synthwave-text-secondary block mb-1">Programming Focus:</span>
                       <span className="text-white bg-synthwave-bg-primary/50 px-2 py-1 rounded text-xs">
-                        {agentState.coachData.programmingFocus}
+                        {trainingGroundsState.coachData.programmingFocus}
                       </span>
                     </div>
                     <div>
                       <span className="text-synthwave-text-secondary block mb-1">Specializations:</span>
                       <span className="text-white bg-synthwave-bg-primary/50 px-2 py-1 rounded text-xs">
-                        {agentState.coachData.specialization}
+                        {trainingGroundsState.coachData.specialization}
                       </span>
                     </div>
                   </div>
@@ -872,22 +912,22 @@ function TrainingGrounds() {
                     <div className="bg-synthwave-bg-primary/30 rounded p-3">
                       <div className="flex justify-between items-center">
                         <span className="text-synthwave-text-secondary text-sm">Total Conversations</span>
-                        <span className="text-synthwave-neon-pink font-bold text-lg">{agentState.coachData.totalConversations}</span>
+                        <span className="text-synthwave-neon-pink font-bold text-lg">{trainingGroundsState.coachData.totalConversations}</span>
                       </div>
                     </div>
                     <div className="bg-synthwave-bg-primary/30 rounded p-3">
                       <div className="flex justify-between items-center">
                         <span className="text-synthwave-text-secondary text-sm">Active Programs</span>
-                        <span className="text-synthwave-neon-pink font-bold text-lg">{agentState.coachData.activePrograms}</span>
+                        <span className="text-synthwave-neon-pink font-bold text-lg">{trainingGroundsState.coachData.activePrograms}</span>
                       </div>
                     </div>
                   </div>
                 </div>
 
                 {/* Methodology Profile - Show if we have methodology data from any source */}
-                {(agentState.coachData.rawCoach?.coachConfig?.metadata?.methodology_profile ||
-                  agentState.coachData.rawCoach?.coachConfig?.technical_config?.methodology ||
-                  agentState.coachData.rawCoach?.coachConfig?.selected_methodology) && (
+                {(trainingGroundsState.coachData.rawCoach?.coachConfig?.metadata?.methodology_profile ||
+                  trainingGroundsState.coachData.rawCoach?.coachConfig?.technical_config?.methodology ||
+                  trainingGroundsState.coachData.rawCoach?.coachConfig?.selected_methodology) && (
                   <div>
                     <h4 className="font-russo font-semibold text-synthwave-neon-pink text-sm uppercase mb-3">
                       Methodology Profile
@@ -896,14 +936,14 @@ function TrainingGrounds() {
                       <div>
                         <span className="text-synthwave-text-secondary block mb-1">Primary Methodology:</span>
                         <span className="text-white bg-synthwave-bg-primary/50 px-2 py-1 rounded text-xs">
-                          {agentState.coachData.primaryMethodology}
+                          {trainingGroundsState.coachData.primaryMethodology}
                         </span>
                       </div>
-                      {agentState.coachData.rawCoach.coachConfig?.metadata?.methodology_profile?.experience && (
+                      {trainingGroundsState.coachData.rawCoach.coachConfig?.metadata?.methodology_profile?.experience && (
                         <div>
                           <span className="text-synthwave-text-secondary block mb-1">Experience:</span>
                           <div className="flex flex-wrap gap-1">
-                            {agentState.coachData.rawCoach.coachConfig.metadata.methodology_profile.experience.map((exp, idx) => (
+                            {trainingGroundsState.coachData.rawCoach.coachConfig.metadata.methodology_profile.experience.map((exp, idx) => (
                               <span key={idx} className="text-white bg-synthwave-bg-primary/30 px-2 py-1 rounded text-xs">
                                 {exp.replace(/_/g, ' ')}
                               </span>
@@ -911,11 +951,11 @@ function TrainingGrounds() {
                           </div>
                         </div>
                       )}
-                      {agentState.coachData.rawCoach.coachConfig?.metadata?.methodology_profile?.preferences && (
+                      {trainingGroundsState.coachData.rawCoach.coachConfig?.metadata?.methodology_profile?.preferences && (
                         <div>
                           <span className="text-synthwave-text-secondary block mb-1">Preferences:</span>
                           <div className="flex flex-wrap gap-1">
-                            {agentState.coachData.rawCoach.coachConfig.metadata.methodology_profile.preferences.map((pref, idx) => (
+                            {trainingGroundsState.coachData.rawCoach.coachConfig.metadata.methodology_profile.preferences.map((pref, idx) => (
                               <span key={idx} className="text-white bg-synthwave-bg-primary/30 px-2 py-1 rounded text-xs">
                                 {pref.replace(/_/g, ' ')}
                               </span>
@@ -924,7 +964,7 @@ function TrainingGrounds() {
                         </div>
                       )}
                       {/* Show note if only basic methodology is available */}
-                      {!agentState.coachData.rawCoach.coachConfig?.metadata?.methodology_profile && (
+                      {!trainingGroundsState.coachData.rawCoach.coachConfig?.metadata?.methodology_profile && (
                         <div className="text-xs text-synthwave-text-muted bg-synthwave-bg-primary/10 p-2 rounded">
                           Basic methodology configuration. Extended profile available in newer coach versions.
                         </div>
@@ -934,17 +974,17 @@ function TrainingGrounds() {
                 )}
 
                 {/* Safety Profile */}
-                {agentState.coachData.rawCoach?.coachConfig?.metadata?.safety_profile && (
+                {trainingGroundsState.coachData.rawCoach?.coachConfig?.metadata?.safety_profile && (
                   <div>
                     <h4 className="font-russo font-semibold text-synthwave-neon-pink text-sm uppercase mb-3">
                       Safety & Equipment Profile
                     </h4>
                     <div className="space-y-3 text-sm">
-                      {agentState.coachData.rawCoach.coachConfig.metadata.safety_profile.equipment && (
+                      {trainingGroundsState.coachData.rawCoach.coachConfig.metadata.safety_profile.equipment && (
                         <div>
                           <span className="text-synthwave-text-secondary block mb-1">Available Equipment:</span>
                           <div className="flex flex-wrap gap-1">
-                            {agentState.coachData.rawCoach.coachConfig.metadata.safety_profile.equipment.map((eq, idx) => (
+                            {trainingGroundsState.coachData.rawCoach.coachConfig.metadata.safety_profile.equipment.map((eq, idx) => (
                               <span key={idx} className="text-white bg-synthwave-neon-cyan/20 px-2 py-1 rounded text-xs">
                                 {eq.replace(/_/g, ' ')}
                               </span>
@@ -952,11 +992,11 @@ function TrainingGrounds() {
                           </div>
                         </div>
                       )}
-                      {agentState.coachData.rawCoach.coachConfig.metadata.safety_profile.contraindications && agentState.coachData.rawCoach.coachConfig.metadata.safety_profile.contraindications.length > 0 && (
+                      {trainingGroundsState.coachData.rawCoach.coachConfig.metadata.safety_profile.contraindications && trainingGroundsState.coachData.rawCoach.coachConfig.metadata.safety_profile.contraindications.length > 0 && (
                         <div>
                           <span className="text-synthwave-text-secondary block mb-1">Contraindications:</span>
                           <div className="flex flex-wrap gap-1">
-                            {agentState.coachData.rawCoach.coachConfig.metadata.safety_profile.contraindications.map((contra, idx) => (
+                            {trainingGroundsState.coachData.rawCoach.coachConfig.metadata.safety_profile.contraindications.map((contra, idx) => (
                               <span key={idx} className="text-synthwave-neon-pink bg-synthwave-neon-pink/20 px-2 py-1 rounded text-xs">
                                 {contra.replace(/_/g, ' ')}
                               </span>
@@ -964,11 +1004,11 @@ function TrainingGrounds() {
                           </div>
                         </div>
                       )}
-                      {agentState.coachData.rawCoach.coachConfig.metadata.safety_profile.modifications && agentState.coachData.rawCoach.coachConfig.metadata.safety_profile.modifications.length > 0 && (
+                      {trainingGroundsState.coachData.rawCoach.coachConfig.metadata.safety_profile.modifications && trainingGroundsState.coachData.rawCoach.coachConfig.metadata.safety_profile.modifications.length > 0 && (
                         <div>
                           <span className="text-synthwave-text-secondary block mb-1">Required Modifications:</span>
                           <div className="flex flex-wrap gap-1">
-                            {agentState.coachData.rawCoach.coachConfig.metadata.safety_profile.modifications.map((mod, idx) => (
+                            {trainingGroundsState.coachData.rawCoach.coachConfig.metadata.safety_profile.modifications.map((mod, idx) => (
                               <span key={idx} className="text-white bg-synthwave-bg-primary/30 px-2 py-1 rounded text-xs">
                                 {mod.replace(/_/g, ' ')}
                               </span>
@@ -976,14 +1016,14 @@ function TrainingGrounds() {
                           </div>
                         </div>
                       )}
-                      {agentState.coachData.rawCoach.coachConfig.metadata.safety_profile.timeConstraints && (
+                      {trainingGroundsState.coachData.rawCoach.coachConfig.metadata.safety_profile.timeConstraints && (
                         <div>
                           <span className="text-synthwave-text-secondary block mb-1">Time Constraints:</span>
                           <div className="text-white bg-synthwave-bg-primary/30 px-2 py-1 rounded text-xs inline-block">
-                            {agentState.coachData.rawCoach.coachConfig.metadata.safety_profile.timeConstraints.session_duration && typeof agentState.coachData.rawCoach.coachConfig.metadata.safety_profile.timeConstraints.session_duration === 'string'
-                              ? agentState.coachData.rawCoach.coachConfig.metadata.safety_profile.timeConstraints.session_duration.replace(/_/g, ' ')
-                              : agentState.coachData.rawCoach.coachConfig.metadata.safety_profile.timeConstraints.session_duration || 'Not specified'
-                            } • {agentState.coachData.rawCoach.coachConfig.metadata.safety_profile.timeConstraints.preferred_time || 'Not specified'}
+                            {trainingGroundsState.coachData.rawCoach.coachConfig.metadata.safety_profile.timeConstraints.session_duration && typeof trainingGroundsState.coachData.rawCoach.coachConfig.metadata.safety_profile.timeConstraints.session_duration === 'string'
+                              ? trainingGroundsState.coachData.rawCoach.coachConfig.metadata.safety_profile.timeConstraints.session_duration.replace(/_/g, ' ')
+                              : trainingGroundsState.coachData.rawCoach.coachConfig.metadata.safety_profile.timeConstraints.session_duration || 'Not specified'
+                            } • {trainingGroundsState.coachData.rawCoach.coachConfig.metadata.safety_profile.timeConstraints.preferred_time || 'Not specified'}
                           </div>
                         </div>
                       )}
@@ -992,7 +1032,7 @@ function TrainingGrounds() {
                 )}
 
                 {/* Selected Personality */}
-                {agentState.coachData.rawCoach?.coachConfig?.selected_personality && (
+                {trainingGroundsState.coachData.rawCoach?.coachConfig?.selected_personality && (
                   <div>
                     <h4 className="font-russo font-semibold text-synthwave-neon-pink text-sm uppercase mb-3">
                       Personality Configuration
@@ -1001,16 +1041,16 @@ function TrainingGrounds() {
                       <div>
                         <span className="text-synthwave-text-secondary block mb-1">Primary Template:</span>
                         <span className="text-white bg-synthwave-bg-primary/50 px-2 py-1 rounded text-xs">
-                          {agentState.coachData.rawCoach.coachConfig.selected_personality.primary_template && typeof agentState.coachData.rawCoach.coachConfig.selected_personality.primary_template === 'string'
-                            ? agentState.coachData.rawCoach.coachConfig.selected_personality.primary_template.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
-                            : agentState.coachData.rawCoach.coachConfig.selected_personality.primary_template || 'Not specified'}
+                          {trainingGroundsState.coachData.rawCoach.coachConfig.selected_personality.primary_template && typeof trainingGroundsState.coachData.rawCoach.coachConfig.selected_personality.primary_template === 'string'
+                            ? trainingGroundsState.coachData.rawCoach.coachConfig.selected_personality.primary_template.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+                            : trainingGroundsState.coachData.rawCoach.coachConfig.selected_personality.primary_template || 'Not specified'}
                         </span>
                       </div>
-                      {agentState.coachData.rawCoach.coachConfig.selected_personality.secondary_influences && (
+                      {trainingGroundsState.coachData.rawCoach.coachConfig.selected_personality.secondary_influences && (
                         <div>
                           <span className="text-synthwave-text-secondary block mb-1">Secondary Influences:</span>
                           <div className="flex flex-wrap gap-1">
-                            {agentState.coachData.rawCoach.coachConfig.selected_personality.secondary_influences.map((inf, idx) => (
+                            {trainingGroundsState.coachData.rawCoach.coachConfig.selected_personality.secondary_influences.map((inf, idx) => (
                               <span key={idx} className="text-white bg-synthwave-bg-primary/30 px-2 py-1 rounded text-xs">
                                 {inf.replace(/_/g, ' ')}
                               </span>
@@ -1018,11 +1058,11 @@ function TrainingGrounds() {
                           </div>
                         </div>
                       )}
-                      {agentState.coachData.rawCoach.coachConfig.selected_personality.selection_reasoning && (
+                      {trainingGroundsState.coachData.rawCoach.coachConfig.selected_personality.selection_reasoning && (
                         <div>
                           <span className="text-synthwave-text-secondary block mb-1">Selection Reasoning:</span>
                           <div className="text-xs text-synthwave-text-secondary bg-synthwave-bg-primary/20 p-2 rounded leading-relaxed">
-                            {agentState.coachData.rawCoach.coachConfig.selected_personality.selection_reasoning.substring(0, 200)}...
+                            {trainingGroundsState.coachData.rawCoach.coachConfig.selected_personality.selection_reasoning.substring(0, 200)}...
                           </div>
                         </div>
                       )}
@@ -1031,7 +1071,7 @@ function TrainingGrounds() {
                 )}
 
                 {/* Advanced Technical Configuration */}
-                {agentState.coachData.rawCoach?.coachConfig?.technical_config && (
+                {trainingGroundsState.coachData.rawCoach?.coachConfig?.technical_config && (
                   <div>
                     <h4 className="font-russo font-semibold text-synthwave-neon-pink text-sm uppercase mb-3">
                       Advanced Technical Config
@@ -1041,37 +1081,37 @@ function TrainingGrounds() {
                         <div className="bg-synthwave-bg-primary/20 rounded p-2">
                           <span className="text-synthwave-text-muted block mb-1">Goal Timeline:</span>
                           <span className="text-white">
-                            {agentState.coachData.rawCoach.coachConfig.technical_config.goal_timeline && typeof agentState.coachData.rawCoach.coachConfig.technical_config.goal_timeline === 'string'
-                              ? agentState.coachData.rawCoach.coachConfig.technical_config.goal_timeline.replace(/_/g, ' ')
-                              : agentState.coachData.rawCoach.coachConfig.technical_config.goal_timeline || 'Not specified'}
+                            {trainingGroundsState.coachData.rawCoach.coachConfig.technical_config.goal_timeline && typeof trainingGroundsState.coachData.rawCoach.coachConfig.technical_config.goal_timeline === 'string'
+                              ? trainingGroundsState.coachData.rawCoach.coachConfig.technical_config.goal_timeline.replace(/_/g, ' ')
+                              : trainingGroundsState.coachData.rawCoach.coachConfig.technical_config.goal_timeline || 'Not specified'}
                           </span>
                         </div>
                         <div className="bg-synthwave-bg-primary/20 rounded p-2">
                           <span className="text-synthwave-text-muted block mb-1">Training Frequency:</span>
-                          <span className="text-white">{agentState.coachData.rawCoach.coachConfig.technical_config.training_frequency} days/week</span>
+                          <span className="text-white">{trainingGroundsState.coachData.rawCoach.coachConfig.technical_config.training_frequency} days/week</span>
                         </div>
                         <div className="bg-synthwave-bg-primary/20 rounded p-2">
                           <span className="text-synthwave-text-muted block mb-1">Intensity:</span>
                           <span className="text-white">
-                            {agentState.coachData.rawCoach.coachConfig.technical_config.preferred_intensity && typeof agentState.coachData.rawCoach.coachConfig.technical_config.preferred_intensity === 'string'
-                              ? agentState.coachData.rawCoach.coachConfig.technical_config.preferred_intensity.replace(/_/g, ' ')
-                              : agentState.coachData.rawCoach.coachConfig.technical_config.preferred_intensity || 'Not specified'}
+                            {trainingGroundsState.coachData.rawCoach.coachConfig.technical_config.preferred_intensity && typeof trainingGroundsState.coachData.rawCoach.coachConfig.technical_config.preferred_intensity === 'string'
+                              ? trainingGroundsState.coachData.rawCoach.coachConfig.technical_config.preferred_intensity.replace(/_/g, ' ')
+                              : trainingGroundsState.coachData.rawCoach.coachConfig.technical_config.preferred_intensity || 'Not specified'}
                           </span>
                         </div>
                         <div className="bg-synthwave-bg-primary/20 rounded p-2">
                           <span className="text-synthwave-text-muted block mb-1">Methodology:</span>
                           <span className="text-white">
-                            {agentState.coachData.rawCoach.coachConfig.technical_config.methodology && typeof agentState.coachData.rawCoach.coachConfig.technical_config.methodology === 'string'
-                              ? agentState.coachData.rawCoach.coachConfig.technical_config.methodology.replace(/_/g, ' ')
-                              : agentState.coachData.rawCoach.coachConfig.technical_config.methodology || 'Not specified'}
+                            {trainingGroundsState.coachData.rawCoach.coachConfig.technical_config.methodology && typeof trainingGroundsState.coachData.rawCoach.coachConfig.technical_config.methodology === 'string'
+                              ? trainingGroundsState.coachData.rawCoach.coachConfig.technical_config.methodology.replace(/_/g, ' ')
+                              : trainingGroundsState.coachData.rawCoach.coachConfig.technical_config.methodology || 'Not specified'}
                           </span>
                         </div>
                       </div>
-                      {agentState.coachData.rawCoach.coachConfig.technical_config.injury_considerations && agentState.coachData.rawCoach.coachConfig.technical_config.injury_considerations.length > 0 && (
+                      {trainingGroundsState.coachData.rawCoach.coachConfig.technical_config.injury_considerations && trainingGroundsState.coachData.rawCoach.coachConfig.technical_config.injury_considerations.length > 0 && (
                         <div>
                           <span className="text-synthwave-text-secondary block mb-1">Injury Considerations:</span>
                           <div className="flex flex-wrap gap-1">
-                            {agentState.coachData.rawCoach.coachConfig.technical_config.injury_considerations.map((inj, idx) => (
+                            {trainingGroundsState.coachData.rawCoach.coachConfig.technical_config.injury_considerations.map((inj, idx) => (
                               <span key={idx} className="text-synthwave-neon-pink bg-synthwave-neon-pink/20 px-2 py-1 rounded text-xs">
                                 {inj.replace(/_/g, ' ')}
                               </span>
@@ -1079,15 +1119,15 @@ function TrainingGrounds() {
                           </div>
                         </div>
                       )}
-                      {agentState.coachData.rawCoach.coachConfig.technical_config.safety_constraints && (
+                      {trainingGroundsState.coachData.rawCoach.coachConfig.technical_config.safety_constraints && (
                         <div>
                           <span className="text-synthwave-text-secondary block mb-1">Safety Constraints:</span>
                           <div className="text-xs text-synthwave-text-secondary bg-synthwave-bg-primary/20 p-2 rounded space-y-1">
-                            {agentState.coachData.rawCoach.coachConfig.technical_config.safety_constraints.volume_progression_limit && (
-                              <div>Volume Progression: {agentState.coachData.rawCoach.coachConfig.technical_config.safety_constraints.volume_progression_limit}</div>
+                            {trainingGroundsState.coachData.rawCoach.coachConfig.technical_config.safety_constraints.volume_progression_limit && (
+                              <div>Volume Progression: {trainingGroundsState.coachData.rawCoach.coachConfig.technical_config.safety_constraints.volume_progression_limit}</div>
                             )}
-                            {agentState.coachData.rawCoach.coachConfig.technical_config.safety_constraints.contraindicated_exercises && (
-                              <div>Contraindicated: {agentState.coachData.rawCoach.coachConfig.technical_config.safety_constraints.contraindicated_exercises.join(', ').replace(/_/g, ' ')}</div>
+                            {trainingGroundsState.coachData.rawCoach.coachConfig.technical_config.safety_constraints.contraindicated_exercises && (
+                              <div>Contraindicated: {trainingGroundsState.coachData.rawCoach.coachConfig.technical_config.safety_constraints.contraindicated_exercises.join(', ').replace(/_/g, ' ')}</div>
                             )}
                           </div>
                         </div>
@@ -1104,21 +1144,21 @@ function TrainingGrounds() {
                   <div className="space-y-2 text-xs">
                     <div className="bg-synthwave-bg-primary/20 rounded p-2">
                       <span className="text-synthwave-text-muted block mb-1">Coach Type:</span>
-                      <span className="text-white font-mono">{agentState.coachData.rawCoach.type || 'AI Coach'}</span>
+                      <span className="text-white font-mono">{trainingGroundsState.coachData.rawCoach.type || 'AI Coach'}</span>
                     </div>
                     <div className="bg-synthwave-bg-primary/20 rounded p-2">
                       <span className="text-synthwave-text-muted block mb-1">Version:</span>
                       <span className="text-white font-mono">
-                        {agentState.coachData.rawCoach.coachConfig?.metadata?.version || 'v1.0'}
+                        {trainingGroundsState.coachData.rawCoach.coachConfig?.metadata?.version || 'v1.0'}
                       </span>
                     </div>
                     <div className="bg-synthwave-bg-primary/20 rounded p-2">
                       <span className="text-synthwave-text-muted block mb-1">Entity Type:</span>
-                      <span className="text-white font-mono">{agentState.coachData.rawCoach.entityType}</span>
+                      <span className="text-white font-mono">{trainingGroundsState.coachData.rawCoach.entityType}</span>
                     </div>
                     <div className="bg-synthwave-bg-primary/20 rounded p-2">
                       <span className="text-synthwave-text-muted block mb-1">Last Updated:</span>
-                      <span className="text-white font-mono">{new Date(agentState.coachData.rawCoach.updatedAt).toLocaleDateString()}</span>
+                      <span className="text-white font-mono">{new Date(trainingGroundsState.coachData.rawCoach.updatedAt).toLocaleDateString()}</span>
                     </div>
                   </div>
                 </div>

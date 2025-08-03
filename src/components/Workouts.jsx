@@ -6,151 +6,41 @@ import WorkoutAgent from '../utils/agents/WorkoutAgent';
 import CoachConversationAgent from '../utils/agents/CoachConversationAgent';
 import { useToast } from '../contexts/ToastContext';
 import WorkoutViewer from './WorkoutViewer';
+import {
+  FloatingIconButton,
+  ModernPopover,
+  FloatingIconBar,
+  WorkoutIcon,
+  ChatIcon,
+  LightningIcon,
+  CloseIcon,
+  ChevronRightIcon
+} from './shared/FloatingMenu';
 
-// Icons
-const WorkoutIcon = () => (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-  </svg>
-);
-
+// Local icons (not shared)
 const WorkoutIconLarge = () => (
   <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
   </svg>
 );
 
-const ChatIcon = () => (
-  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+const EditIcon = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
   </svg>
 );
 
-const LightningIcon = () => (
-  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+const SaveIcon = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
   </svg>
 );
 
-const CloseIcon = () => (
-  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+const CancelIcon = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
   </svg>
 );
-
-const ChevronRightIcon = () => (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-  </svg>
-);
-
-// Modern Floating Icon Button Component
-const FloatingIconButton = React.forwardRef(({ icon, isActive, onClick, title, className = "" }, ref) => (
-  <button
-    ref={ref}
-    onClick={onClick}
-    className={`
-      p-3 rounded-xl transition-all duration-200 backdrop-blur-sm border
-      ${isActive
-        ? 'bg-synthwave-neon-pink/20 border-synthwave-neon-pink text-synthwave-neon-pink shadow-lg shadow-synthwave-neon-pink/30'
-        : 'bg-synthwave-bg-card/40 border-synthwave-neon-pink/30 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 hover:border-synthwave-neon-pink/50 hover:shadow-md'
-      }
-      ${className}
-    `}
-    title={title}
-  >
-    {icon}
-  </button>
-));
-
-// Modern Popover Component
-const ModernPopover = ({ isOpen, onClose, anchorRef, children, title, className = "" }) => {
-  const popoverRef = useRef(null);
-
-  // Click outside to close
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (isOpen &&
-          popoverRef.current &&
-          !popoverRef.current.contains(event.target) &&
-          anchorRef.current &&
-          !anchorRef.current.contains(event.target)) {
-        onClose();
-      }
-    };
-
-    // ESC key to close
-    const handleEscKey = (event) => {
-      if (isOpen && event.key === 'Escape') {
-        onClose();
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      document.addEventListener('keydown', handleEscKey);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('keydown', handleEscKey);
-    };
-  }, [isOpen, onClose, anchorRef]);
-
-  if (!isOpen) return null;
-
-  return (
-    <>
-      {/* Mobile overlay */}
-      <div className="lg:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-40" />
-
-      {/* Popover */}
-      <div
-        ref={popoverRef}
-        className={`
-          fixed z-50 bg-synthwave-bg-card/95 backdrop-blur-md
-          border-2 border-synthwave-neon-pink/30 rounded-xl shadow-2xl
-          shadow-synthwave-neon-pink/20 flex flex-col
-          ${className}
-
-          /* Mobile positioning - bottom sheet style */
-          inset-x-4 bottom-4 top-20
-
-          /* Desktop positioning - to the right of the floating icons */
-          lg:left-20 lg:top-1/2 lg:-translate-y-1/2
-          lg:w-96 lg:h-[32rem]
-          lg:inset-auto
-        `}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-synthwave-neon-pink/30 flex-shrink-0">
-          <h3 className="font-russo font-bold text-white text-sm uppercase">
-            {title}
-          </h3>
-          <button
-            onClick={onClose}
-            className="text-synthwave-text-secondary hover:text-synthwave-neon-pink transition-colors duration-300 p-1"
-          >
-            <CloseIcon />
-          </button>
-        </div>
-
-        {/* Scrollable content */}
-        <div
-          className="flex-1 overflow-y-auto synthwave-scrollbar"
-          style={{
-            scrollbarWidth: 'thin',
-            scrollbarColor: '#ff007f40 transparent'
-          }}
-        >
-          <div className="p-4">
-            {children}
-          </div>
-        </div>
-      </div>
-    </>
-  );
-};
 
 function Workouts() {
   const [searchParams] = useSearchParams();
@@ -168,16 +58,26 @@ function Workouts() {
   // View state
   const [viewMode, setViewMode] = useState('formatted'); // 'formatted' or 'raw'
 
+  // Workout title editing state
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [editTitleValue, setEditTitleValue] = useState('');
+  const [isSavingTitle, setIsSavingTitle] = useState(false);
+
+  // Delete confirmation state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [workoutToDelete, setWorkoutToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const workoutAgentRef = useRef(null);
   const agentRef = useRef(null);
-  const { showToast } = useToast();
+  const { addToast, success, error, info } = useToast();
 
   // Workout state
   const [workoutAgentState, setWorkoutAgentState] = useState({
     currentWorkout: null,
     recentWorkouts: [],
     isLoadingRecentItems: false,
-    isLoadingItem: false,
+    isLoadingItem: !!(userId && workoutId && coachId), // Start loading if we have required params
     error: null,
   });
 
@@ -189,7 +89,7 @@ function Workouts() {
     error: null,
     coach: null,
     conversation: null,
-    historicalConversations: [],
+    recentConversations: [],
     isLoadingRecentItems: false,
   });
 
@@ -205,7 +105,7 @@ function Workouts() {
   useEffect(() => {
     if (activePopover === 'conversations' && userId && coachId && agentRef.current) {
       console.info('Loading conversations for popover...', { userId, coachId });
-      agentRef.current.loadHistoricalConversations(userId, coachId);
+      agentRef.current.loadRecentConversations(userId, coachId, 10);
     }
   }, [activePopover, userId, coachId]);
 
@@ -213,7 +113,7 @@ function Workouts() {
   useEffect(() => {
     if (activePopover === 'workouts' && userId && workoutAgentRef.current) {
       console.info('Loading workouts for popover...', { userId, activePopover });
-      workoutAgentRef.current.loadRecentWorkouts();
+      workoutAgentRef.current.loadRecentWorkouts(10);
     }
   }, [activePopover, userId]);
 
@@ -244,7 +144,7 @@ function Workouts() {
 
       workoutAgentRef.current.onNewWorkout = (workout) => {
         const title = workoutAgentRef.current.formatWorkoutSummary(workout, true);
-        showToast(`Workout logged: ${title}`, 'success');
+        success(`Workout logged: ${title}`);
       };
     }
 
@@ -254,7 +154,7 @@ function Workouts() {
         workoutAgentRef.current = null;
       }
     };
-  }, [userId, showToast]);
+  }, [userId, success]);
 
   // Initialize conversation agent (for popover functionality only)
   useEffect(() => {
@@ -269,7 +169,7 @@ function Workouts() {
           // Only update conversation-related state for popover
           setCoachConversationAgentState(prevState => ({
             ...prevState,
-            historicalConversations: newState.historicalConversations || [],
+            recentConversations: newState.recentConversations || [],
             isLoadingRecentItems: newState.isLoadingRecentItems || false,
             error: newState.error || null,
           }));
@@ -302,8 +202,16 @@ function Workouts() {
 
     const loadWorkout = async () => {
       try {
+        // Clear any existing workout and set loading state
+        setWorkoutAgentState(prevState => ({
+          ...prevState,
+          currentWorkout: null,
+          isLoadingItem: true,
+          error: null
+        }));
+
         // Use the workout agent to get the specific workout
-        // The agent will handle isLoadingDetails state internally
+        // The agent will handle isLoadingItem state internally via state callback
         const workout = await workoutAgentRef.current.getWorkout(workoutId);
 
         setWorkoutAgentState(prevState => ({
@@ -393,17 +301,118 @@ function Workouts() {
         navigate(`/training-grounds/coach-conversations?userId=${userId}&coachId=${coachId}&conversationId=${result.conversationId}`);
       } else {
         console.error('Workouts.jsx: No conversationId in result:', result);
-        showToast('Failed to create conversation - no ID returned', 'error');
+        error('Failed to create conversation - no ID returned');
       }
     } catch (error) {
       console.error('Workouts.jsx: Error creating new conversation:', error);
-      showToast('Failed to create conversation', 'error');
+      error('Failed to create conversation');
       // Fall back to training grounds if creation fails
       navigate(`/training-grounds?userId=${userId}&coachId=${coachId}`);
     } finally {
       setIsCreatingConversation(false);
     }
   };
+
+  // Workout title editing handlers
+  const handleEditTitle = () => {
+    setEditTitleValue(workoutAgentState.currentWorkout?.workoutData?.workout_name || '');
+    setIsEditingTitle(true);
+  };
+
+  const handleSaveTitle = async () => {
+    if (!editTitleValue.trim() || !workoutAgentRef.current || !workoutAgentState.currentWorkout) return;
+
+    setIsSavingTitle(true);
+    try {
+      await workoutAgentRef.current.updateWorkout(userId, workoutAgentState.currentWorkout.workoutId, {
+        workoutData: {
+          workout_name: editTitleValue.trim()
+        }
+      });
+
+      // Update local state with the new title
+      setWorkoutAgentState(prevState => ({
+        ...prevState,
+        currentWorkout: {
+          ...prevState.currentWorkout,
+          workoutData: {
+            ...prevState.currentWorkout.workoutData,
+            workout_name: editTitleValue.trim()
+          }
+        }
+      }));
+
+      setIsEditingTitle(false);
+      success('Workout title updated successfully');
+    } catch (error) {
+      console.error('Error updating workout title:', error);
+      error('Failed to update workout title');
+    } finally {
+      setIsSavingTitle(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditingTitle(false);
+    setEditTitleValue('');
+  };
+
+  const handleTitleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleSaveTitle();
+    } else if (e.key === 'Escape') {
+      handleCancelEdit();
+    }
+  };
+
+  // Delete workout handlers
+  const handleDeleteClick = (workout) => {
+    setWorkoutToDelete(workout);
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!workoutToDelete || !workoutAgentRef.current || !userId) return;
+
+    setIsDeleting(true);
+    try {
+      await workoutAgentRef.current.deleteWorkout(userId, workoutToDelete.workoutId);
+      success('Workout deleted successfully');
+      setShowDeleteModal(false);
+      setWorkoutToDelete(null);
+      // Navigate back to manage workouts after successful deletion
+      navigate(`/training-grounds/manage-workouts?userId=${userId}&coachId=${coachId}`);
+    } catch (error) {
+      console.error('Error deleting workout:', error);
+      error('Failed to delete workout');
+      // Close modal even on error so user can try again
+      setShowDeleteModal(false);
+      setWorkoutToDelete(null);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteModal(false);
+    setWorkoutToDelete(null);
+  };
+
+  // Close delete modal when pressing escape
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape' && showDeleteModal) {
+        handleCancelDelete();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [showDeleteModal, handleCancelDelete]);
 
   // Render workout list
   const renderWorkoutList = () => (
@@ -477,7 +486,7 @@ function Workouts() {
             <span>Loading conversations...</span>
           </div>
         </div>
-              ) : coachConversationAgentState.historicalConversations.length === 0 ? (
+              ) : coachConversationAgentState.recentConversations.length === 0 ? (
         <div className="text-center py-8">
           <div className="font-rajdhani text-synthwave-text-muted text-sm">
             No conversations found
@@ -488,7 +497,7 @@ function Workouts() {
           <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
             Recent Conversations
           </div>
-          {coachConversationAgentState.historicalConversations.map((conv) => (
+          {coachConversationAgentState.recentConversations.map((conv) => (
             <div
               key={conv.conversationId}
               onClick={() => handleConversationClick(conv.conversationId)}
@@ -557,7 +566,50 @@ function Workouts() {
           {workout && (
             <div className="space-y-2">
               <div className="font-rajdhani text-2xl text-synthwave-neon-pink font-bold">
-                {workout.workoutData?.workout_name || 'Unnamed Workout'}
+                {isEditingTitle ? (
+                  <div className="flex items-center justify-center space-x-2">
+                    <input
+                      type="text"
+                      value={editTitleValue}
+                      onChange={(e) => setEditTitleValue(e.target.value)}
+                      onKeyDown={handleTitleKeyPress}
+                      className="bg-synthwave-bg-primary/50 border-2 border-synthwave-neon-cyan/30 rounded px-3 py-1 text-synthwave-neon-cyan font-rajdhani text-lg font-normal focus:outline-none focus:border-synthwave-neon-cyan transition-all duration-200"
+                      placeholder="Enter workout title..."
+                      autoFocus
+                    />
+                    <button
+                      onClick={handleSaveTitle}
+                      disabled={isSavingTitle || !editTitleValue.trim()}
+                      className="text-synthwave-neon-cyan hover:text-white transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                      title="Save title"
+                    >
+                      {isSavingTitle ? (
+                        <div className="w-4 h-4 border-2 border-synthwave-neon-cyan border-t-transparent rounded-full animate-spin"></div>
+                      ) : (
+                        <SaveIcon />
+                      )}
+                    </button>
+                    <button
+                      onClick={handleCancelEdit}
+                      disabled={isSavingTitle}
+                      className="text-synthwave-text-secondary hover:text-synthwave-neon-pink transition-colors duration-300 disabled:opacity-50"
+                      title="Cancel"
+                    >
+                      <CancelIcon />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center space-x-2">
+                    <span>{workout.workoutData?.workout_name || 'Unnamed Workout'}</span>
+                    <button
+                      onClick={handleEditTitle}
+                      className="text-synthwave-text-secondary hover:text-synthwave-neon-cyan transition-colors duration-300"
+                      title="Edit title"
+                    >
+                      <EditIcon />
+                    </button>
+                  </div>
+                )}
               </div>
               <div className="font-rajdhani text-lg text-synthwave-text-secondary space-y-1 text-center">
                 <div>
@@ -593,7 +645,11 @@ function Workouts() {
               {workout ? (
                 <div className="space-y-4">
                   {viewMode === 'formatted' ? (
-                    <WorkoutViewer workout={workout} onToggleView={handleToggleView} />
+                    <WorkoutViewer
+                      workout={workout}
+                      onToggleView={handleToggleView}
+                      onDeleteWorkout={handleDeleteClick}
+                    />
                   ) : (
                     <div className="space-y-6">
                       {/* Toggle View Button */}
@@ -645,24 +701,22 @@ function Workouts() {
       </div>
 
       {/* Modern Floating Icon Bar */}
-      <div className="fixed left-4 top-1/2 -translate-y-1/2 z-50">
-        <div className="flex flex-col space-y-3">
-          <FloatingIconButton
-            ref={conversationsIconRef}
-            icon={<ChatIcon />}
-            isActive={activePopover === 'conversations'}
-            onClick={() => handleTogglePopover('conversations')}
-            title="Recent Conversations"
-          />
-          <FloatingIconButton
-            ref={workoutsIconRef}
-            icon={<LightningIcon />}
-            isActive={activePopover === 'workouts'}
-            onClick={() => handleTogglePopover('workouts')}
-            title="Recent Workouts"
-          />
-        </div>
-      </div>
+      <FloatingIconBar>
+        <FloatingIconButton
+          ref={conversationsIconRef}
+          icon={<ChatIcon />}
+          isActive={activePopover === 'conversations'}
+          onClick={() => handleTogglePopover('conversations')}
+          title="Recent Conversations"
+        />
+        <FloatingIconButton
+          ref={workoutsIconRef}
+          icon={<LightningIcon />}
+          isActive={activePopover === 'workouts'}
+          onClick={() => handleTogglePopover('workouts')}
+          title="Recent Workouts"
+        />
+      </FloatingIconBar>
 
       {/* Modern Popovers */}
       <ModernPopover
@@ -676,18 +730,18 @@ function Workouts() {
           <button
             onClick={handleNewConversation}
             disabled={isCreatingConversation}
-            className={`${themeClasses.neonButton} text-sm px-4 py-2 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed`}
+            className={`${themeClasses.neonButton} text-sm px-6 py-3 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center space-x-2 w-3/4 justify-center`}
           >
             {isCreatingConversation ? (
-              <div className="flex items-center justify-center space-x-2">
+              <>
                 <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
                 <span>Creating...</span>
-              </div>
+              </>
             ) : (
-              <div className="flex items-center space-x-2">
+              <>
                 <ChatIcon />
                 <span>Start Conversation</span>
-              </div>
+              </>
             )}
           </button>
         </div>
@@ -702,33 +756,68 @@ function Workouts() {
         anchorRef={workoutsIconRef}
         title="Recent Workouts"
       >
-        {/* Action Buttons */}
-        <div className="flex flex-col space-y-2 mb-4">
+        {/* Log Workout Button */}
+        <div className="flex justify-center mb-4">
           <button
             onClick={() => {
               // TODO: Implement workout logging functionality
               console.info('Log Workout clicked - functionality to be implemented');
             }}
-            className={`${themeClasses.neonButton} text-sm px-4 py-2 transition-all duration-300 flex items-center space-x-2 justify-center`}
+            className={`${themeClasses.neonButton} text-sm px-6 py-3 transition-all duration-300 inline-flex items-center space-x-2 w-3/4 justify-center`}
           >
             <WorkoutIcon />
             <span>Log Workout</span>
-          </button>
-
-          <button
-            onClick={() => navigate(`/training-grounds/manage-workouts?userId=${userId}&coachId=${coachId}`)}
-            className={`${themeClasses.cyanButton} text-sm px-4 py-2 transition-all duration-300 flex items-center space-x-2 justify-center`}
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-            </svg>
-            <span>Manage Workouts</span>
           </button>
         </div>
 
         {/* Workouts List */}
         {renderWorkoutList()}
       </ModernPopover>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && workoutToDelete && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[10000]">
+          <div className="bg-synthwave-bg-card border-2 border-synthwave-neon-pink/30 rounded-lg shadow-2xl shadow-synthwave-neon-pink/20 p-6 max-w-md w-full mx-4">
+            <div className="text-center">
+              <h3 className="text-synthwave-neon-pink font-rajdhani text-xl font-bold mb-2">
+                Delete Workout
+              </h3>
+              <p className="font-rajdhani text-base text-synthwave-text-secondary mb-6">
+                Are you sure you want to delete "{workoutAgentRef.current?.formatWorkoutSummary(workoutToDelete, true) || 'this workout'}"? This action cannot be undone.
+              </p>
+
+              <div className="flex space-x-4">
+                <button
+                  onClick={handleCancelDelete}
+                  disabled={isDeleting}
+                  className={`flex-1 ${themeClasses.cyanButton} text-sm disabled:opacity-50 disabled:cursor-not-allowed`}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmDelete}
+                  disabled={isDeleting}
+                  className={`flex-1 ${themeClasses.neonButton} text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2`}
+                >
+                  {isDeleting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                      <span>Deleting...</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                      <span>Delete</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

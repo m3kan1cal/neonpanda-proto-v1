@@ -460,7 +460,7 @@ const CoachNotes = ({ notes }) => {
 };
 
 // Main WorkoutViewer component
-const WorkoutViewer = ({ workout, onToggleView }) => {
+const WorkoutViewer = ({ workout, onToggleView, onDeleteWorkout }) => {
   if (!workout || !workout.workoutData) {
     return (
       <div className="text-center py-8">
@@ -538,8 +538,33 @@ const WorkoutViewer = ({ workout, onToggleView }) => {
 
   return (
     <div className="space-y-6" data-workout-viewer>
-      {/* Toggle View Button */}
-      <div className="flex justify-end">
+      {/* Toggle View, Manage Workouts, and Delete Buttons */}
+      <div className="flex justify-end space-x-3">
+        <button
+          onClick={() => {
+            const searchParams = new URLSearchParams(window.location.search);
+            const userId = searchParams.get('userId');
+            const coachId = searchParams.get('coachId');
+            if (userId && coachId) {
+              window.location.href = `/training-grounds/manage-workouts?userId=${userId}&coachId=${coachId}`;
+            }
+          }}
+          className={`${themeClasses.cyanButton} text-sm px-4 py-2 flex items-center space-x-2`}
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012 2v2M7 7h10" />
+          </svg>
+          <span>Manage Workouts</span>
+        </button>
+        <button
+          onClick={() => onDeleteWorkout && onDeleteWorkout(workout)}
+          className={`${themeClasses.neonButton} text-sm px-4 py-2 flex items-center space-x-2`}
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          </svg>
+          <span>Delete Workout</span>
+        </button>
         <button
           onClick={onToggleView}
           className={`${themeClasses.neonButton} text-sm px-4 py-2 flex items-center space-x-2`}

@@ -46,6 +46,13 @@ function Breadcrumbs() {
       return `${basePath}?userId=${userId}&coachId=${coachId}`;
     }
 
+    // For Manage Workouts, preserve userId and coachId if available
+    if (routeName === 'manage-workouts' && searchParams.has('userId') && searchParams.has('coachId')) {
+      const userId = searchParams.get('userId');
+      const coachId = searchParams.get('coachId');
+      return `${basePath}?userId=${userId}&coachId=${coachId}`;
+    }
+
     return basePath;
   };
 
@@ -63,30 +70,82 @@ function Breadcrumbs() {
           </Link>
 
           {/* Breadcrumb trail */}
-          {pathnames.map((name, index) => {
-            const pathSegments = pathnames.slice(0, index + 1);
-            const routeTo = buildRoute(pathSegments, name);
-            const isLast = index === pathnames.length - 1;
-            const displayName = routeMap[name] || name.charAt(0).toUpperCase() + name.slice(1);
+          {(() => {
+            // Special handling for workouts page - show it as a child of Manage Workouts
+            const isWorkoutsPage = pathnames.includes('workouts') && pathnames.includes('training-grounds');
 
-            return (
-              <React.Fragment key={name}>
-                <span className="text-white font-medium">/</span>
-                {isLast ? (
-                  <span className="text-synthwave-neon-pink font-medium">
-                    {displayName}
-                  </span>
-                ) : (
+            if (isWorkoutsPage) {
+              // Build custom breadcrumb path: Training Grounds > Manage Workouts > Workouts
+              const trainingGroundsSegment = pathnames.slice(0, pathnames.indexOf('training-grounds') + 1);
+              const manageWorkoutsPath = [...trainingGroundsSegment, 'manage-workouts'];
+
+              return [
+                // Training Grounds breadcrumb
+                ...pathnames.slice(0, pathnames.indexOf('workouts')).map((name, index) => {
+                  const pathSegments = pathnames.slice(0, index + 1);
+                  const routeTo = buildRoute(pathSegments, name);
+                  const displayName = routeMap[name] || name.charAt(0).toUpperCase() + name.slice(1);
+
+                  return (
+                    <React.Fragment key={name}>
+                      <span className="text-white font-medium">/</span>
+                      <Link
+                        to={routeTo}
+                        className="text-synthwave-text-secondary hover:text-synthwave-neon-cyan transition-colors duration-200"
+                      >
+                        {displayName}
+                      </Link>
+                    </React.Fragment>
+                  );
+                }),
+
+                // Manage Workouts breadcrumb (virtual parent)
+                <React.Fragment key="manage-workouts">
+                  <span className="text-white font-medium">/</span>
                   <Link
-                    to={routeTo}
+                    to={buildRoute(manageWorkoutsPath, 'manage-workouts')}
                     className="text-synthwave-text-secondary hover:text-synthwave-neon-cyan transition-colors duration-200"
                   >
-                    {displayName}
+                    Manage Workouts
                   </Link>
-                )}
-              </React.Fragment>
-            );
-          })}
+                </React.Fragment>,
+
+                // Workouts breadcrumb (current page)
+                <React.Fragment key="workouts-current">
+                  <span className="text-white font-medium">/</span>
+                  <span className="text-synthwave-neon-pink font-medium">
+                    Workouts
+                  </span>
+                </React.Fragment>
+              ];
+            }
+
+            // Default breadcrumb rendering for all other pages
+            return pathnames.map((name, index) => {
+              const pathSegments = pathnames.slice(0, index + 1);
+              const routeTo = buildRoute(pathSegments, name);
+              const isLast = index === pathnames.length - 1;
+              const displayName = routeMap[name] || name.charAt(0).toUpperCase() + name.slice(1);
+
+              return (
+                <React.Fragment key={name}>
+                  <span className="text-white font-medium">/</span>
+                  {isLast ? (
+                    <span className="text-synthwave-neon-pink font-medium">
+                      {displayName}
+                    </span>
+                  ) : (
+                    <Link
+                      to={routeTo}
+                      className="text-synthwave-text-secondary hover:text-synthwave-neon-cyan transition-colors duration-200"
+                    >
+                      {displayName}
+                    </Link>
+                  )}
+                </React.Fragment>
+              );
+            });
+          })()}
         </div>
       </div>
     </nav>

@@ -148,3 +148,42 @@ export const getCoachConversations = async (userId, coachId) => {
 
   return result;
 };
+
+/**
+ * Gets conversation count for a specific user and coach
+ * @param {string} userId - The user ID
+ * @param {string} coachId - The coach ID
+ * @returns {Promise<Object>} - The API response with conversation count
+ */
+export const getCoachConversationsCount = async (userId, coachId) => {
+  console.info('Making API call to get conversation count for user:', userId, 'coach:', coachId);
+
+  const url = `${getApiUrl('')}/users/${userId}/coaches/${coachId}/conversations/count`;
+
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      let errorMessage = 'Failed to get conversation count';
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorMessage;
+      } catch (parseError) {
+        console.error('Error parsing error response:', parseError);
+      }
+      throw new Error(errorMessage);
+    }
+
+    const data = await response.json();
+    console.info('Successfully retrieved conversation count:', data);
+    return data;
+  } catch (error) {
+    console.error('Error getting conversation count:', error);
+    throw error;
+  }
+};

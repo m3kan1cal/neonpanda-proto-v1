@@ -608,9 +608,15 @@ export const parseAndValidateWorkoutData = async (
       throw new Error("Response does not end with valid JSON closing brace");
     }
 
-    // Parse the JSON response with malformed JSON fixing
-    const fixedJsonData = fixMalformedJson(extractedData);
-    const workoutData = JSON.parse(fixedJsonData);
+    // Parse the JSON response - only apply fixer if parsing fails
+    let workoutData;
+    try {
+      workoutData = JSON.parse(extractedData);
+    } catch (error) {
+      console.warn("JSON parsing failed, attempting to fix malformed JSON...");
+      const fixedJsonData = fixMalformedJson(extractedData);
+      workoutData = JSON.parse(fixedJsonData);
+    }
 
     // Set system-generated fields
     workoutData.workout_id = `ws_${userId}_${Date.now()}`;

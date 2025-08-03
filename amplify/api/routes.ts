@@ -18,7 +18,9 @@ export interface RouteIntegrations {
   getWorkouts: apigatewayv2_integrations.HttpLambdaIntegration;
   getWorkout: apigatewayv2_integrations.HttpLambdaIntegration;
   updateWorkout: apigatewayv2_integrations.HttpLambdaIntegration;
+  deleteWorkout: apigatewayv2_integrations.HttpLambdaIntegration;
   getWorkoutsCount: apigatewayv2_integrations.HttpLambdaIntegration;
+  getConversationsCount: apigatewayv2_integrations.HttpLambdaIntegration;
 }
 
 /**
@@ -158,6 +160,13 @@ export function addCoachConversationRoutes(
     methods: [apigatewayv2.HttpMethod.POST],
     integration: integrations.sendCoachConversationMessage
   });
+
+  // Get conversations count for user + coach
+  httpApi.addRoutes({
+    path: '/users/{userId}/coaches/{coachId}/conversations/count',
+    methods: [apigatewayv2.HttpMethod.GET],
+    integration: integrations.getConversationsCount
+  });
 }
 
 /**
@@ -190,6 +199,13 @@ export function addWorkoutRoutes(
     path: '/users/{userId}/workouts/{workoutId}',
     methods: [apigatewayv2.HttpMethod.PUT],
     integration: integrations.updateWorkout
+  });
+
+  // Delete workout session
+  httpApi.addRoutes({
+    path: '/users/{userId}/workouts/{workoutId}',
+    methods: [apigatewayv2.HttpMethod.DELETE],
+    integration: integrations.deleteWorkout
   });
 
   // Get workout sessions count for a user

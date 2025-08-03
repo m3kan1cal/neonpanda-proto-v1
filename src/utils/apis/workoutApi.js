@@ -242,3 +242,30 @@ export async function getWorkoutsCount(userId, options = {}) {
     throw error;
   }
 }
+
+/**
+ * Deletes a workout session
+ * @param {string} userId - The user ID
+ * @param {string} workoutId - The workout ID
+ * @returns {Promise<Object>} - The API response
+ */
+export const deleteWorkout = async (userId, workoutId) => {
+  const response = await fetch(`${getApiUrl('')}/users/${userId}/workouts/${workoutId}`, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      throw new Error('Workout not found');
+    }
+    throw new Error(`API Error: ${response.status}`);
+  }
+
+  const result = await response.json();
+  console.info('Workout deleted:', result);
+
+  return result;
+};

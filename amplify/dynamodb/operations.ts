@@ -1,5 +1,5 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, PutCommand, GetCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, PutCommand, GetCommand, QueryCommand, DeleteCommand } from "@aws-sdk/lib-dynamodb";
 import { CoachCreatorSession, DynamoDBItem, ContactFormAttributes, CoachConfigSummary, CoachConfig } from "../functions/libs/coach-creator/types";
 import { CoachConversation, CoachConversationListItem, CoachMessage, CoachConversationSummary, UserMemory } from "../functions/libs/coach-conversation/types";
 import { Workout } from "../functions/libs/workout/types";
@@ -808,10 +808,29 @@ export async function updateWorkout(
     throw new Error(`Workout not found: ${workoutId}`);
   }
 
-  // Update the session with new data
+  // Deep merge function for nested objects
+  const deepMerge = (target: any, source: any): any => {
+    const result = { ...target };
+    for (const key in source) {
+      if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
+        result[key] = deepMerge(target[key] || {}, source[key]);
+      } else {
+        result[key] = source[key];
+      }
+    }
+    return result;
+  };
+
+  // Update the session with new data using deep merge
   const updatedSession: Workout = {
     ...existingSession.attributes,
     ...updates,
+    // Deep merge workoutData if it exists in updates
+    workoutData: updates.workoutData
+      ? deepMerge(existingSession.attributes.workoutData, updates.workoutData)
+      : existingSession.attributes.workoutData,
+    // Sync root-level workoutName with workoutData.workout_name if it's being updated
+    workoutName: updates.workoutData?.workout_name || existingSession.attributes.workoutName,
     // Always update the extraction metadata to track changes
     extractionMetadata: {
       ...existingSession.attributes.extractionMetadata,
@@ -841,6 +860,39 @@ export async function updateWorkout(
   console.info('Successfully updated workout in DynamoDB');
 
   return updatedSession;
+}
+
+// Function to delete a workout session
+export async function deleteWorkout(userId: string, workoutId: string): Promise<void> {
+  console.info('Deleting workout from DynamoDB:', { userId, workoutId });
+
+  // First check if the workout exists
+  const existingWorkout = await getWorkout(userId, workoutId);
+  if (!existingWorkout) {
+    throw new Error(`Workout not found: ${workoutId}`);
+  }
+
+  // Delete the workout from DynamoDB
+  const tableName = process.env.DYNAMODB_TABLE_NAME;
+  if (!tableName) {
+    throw new Error('DYNAMODB_TABLE_NAME environment variable is not set');
+  }
+
+  try {
+    const command = new DeleteCommand({
+      TableName: tableName,
+      Key: {
+        pk: `user#${userId}`,
+        sk: `workout#${workoutId}`
+      }
+    });
+
+    await docClient.send(command);
+    console.info('Successfully deleted workout from DynamoDB:', { userId, workoutId });
+  } catch (error) {
+    console.error('Error deleting workout from DynamoDB:', error);
+    throw new Error(`Failed to delete workout: ${workoutId}`);
+  }
 }
 
 // Function to save a coach conversation summary
@@ -878,6 +930,33 @@ export async function getCoachConversationSummary(
 }
 
 // Function to query coach conversation summaries for a user
+export async function queryConversationsCount(
+  userId: string,
+  coachId: string
+): Promise<number> {
+  try {
+    // Get all conversations for the user and coach
+    const allConversations = await queryFromDynamoDB<CoachConversationListItem>(
+      `user#${userId}`,
+      `coachConversation#${coachId}#`,
+      'coachConversation'
+    );
+
+    const totalCount = allConversations.length;
+
+    console.info('Conversations counted successfully:', {
+      userId,
+      coachId,
+      totalFound: totalCount
+    });
+
+    return totalCount;
+  } catch (error) {
+    console.error(`Error counting conversations for user ${userId} and coach ${coachId}:`, error);
+    throw error;
+  }
+}
+
 export async function queryCoachConversationSummaries(
   userId: string,
   coachId?: string

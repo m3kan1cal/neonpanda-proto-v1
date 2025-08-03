@@ -1,5 +1,5 @@
 import { nanoid } from 'nanoid';
-import { getWorkouts, getWorkout, updateWorkout, getWorkoutsCount, getRecentWorkouts } from '../apis/workoutApi.js';
+import { getWorkouts, getWorkout, updateWorkout, deleteWorkout, getWorkoutsCount, getRecentWorkouts } from '../apis/workoutApi.js';
 
 /**
  * WorkoutAgent - Handles the business logic for workout management
@@ -31,6 +31,7 @@ export class WorkoutAgent {
       totalWorkoutCount: 0,
       isLoadingCount: false,
       isLoadingRecentItems: false,
+      isLoadingAllItems: false,
       isLoadingItem: false,
       error: null,
       lastCheckTime: null
@@ -89,7 +90,7 @@ export class WorkoutAgent {
 
     // Load initial data
     await Promise.all([
-      this.loadRecentWorkouts(),
+      this.loadRecentWorkouts(5),
       this.loadTotalWorkoutCount()
     ]);
 
@@ -131,7 +132,7 @@ export class WorkoutAgent {
   /**
    * Loads recent workouts for the user
    */
-  async loadRecentWorkouts(limit = 5) {
+  async loadRecentWorkouts(limit = 10) {
     console.info('WorkoutAgent.loadRecentWorkouts called with limit:', limit);
 
     if (!this.userId) {
@@ -175,7 +176,7 @@ export class WorkoutAgent {
   async loadAllWorkouts(options = {}) {
     if (!this.userId) return;
 
-    this._updateState({ isLoadingRecentItems: true, error: null });
+    this._updateState({ isLoadingAllItems: true, error: null });
 
     try {
       console.info('Loading all workouts for userId:', this.userId, 'with options:', options);
@@ -185,7 +186,7 @@ export class WorkoutAgent {
 
       this._updateState({
         allWorkouts,
-        isLoadingRecentItems: false
+        isLoadingAllItems: false
       });
 
       return allWorkouts;
@@ -193,7 +194,7 @@ export class WorkoutAgent {
     } catch (error) {
       console.error('Error loading all workouts:', error);
       this._updateState({
-        isLoadingRecentItems: false,
+        isLoadingAllItems: false,
         error: error.message,
         allWorkouts: []
       });
@@ -261,7 +262,7 @@ export class WorkoutAgent {
 
         // If we have new workouts, refresh the recent workouts list
         if (newWorkouts.length > 0 && this.state.lastCheckTime) {
-          await this.loadRecentWorkouts();
+          await this.loadRecentWorkouts(5);
 
           // Check if count increased (new workout added)
           if (this.state.recentWorkouts.length > currentWorkoutCount) {
@@ -400,6 +401,88 @@ export class WorkoutAgent {
   }
 
   /**
+   * Updates workout metadata (title, etc.)
+   */
+  async updateWorkout(userId, workoutId, updates) {
+    if (!userId || !workoutId || !updates || Object.keys(updates).length === 0) {
+      throw new Error("User ID, Workout ID, and updates are required");
+    }
+
+    try {
+      console.info("Updating workout metadata:", { userId, workoutId, updates });
+
+      // Call API to update workout
+      const result = await updateWorkout(userId, workoutId, updates);
+
+      // Update local state with new metadata
+      const updatedWorkout = {
+        ...this.state.workout,
+        ...updates
+      };
+
+      this._updateState({
+        workout: updatedWorkout
+      });
+
+      // Refresh recent workouts to show updated metadata
+      if (this.state.recentWorkouts.length > 0) {
+        await this.loadRecentWorkouts(5);
+      }
+
+      // Refresh all workouts if they're loaded
+      if (this.state.allWorkouts.length > 0) {
+        await this.loadAllWorkouts();
+      }
+
+      console.info("Workout metadata updated successfully");
+      return result;
+    } catch (error) {
+      console.error("Error updating workout metadata:", error);
+      this._updateState({
+        error: "Failed to update workout metadata"
+      });
+      if (typeof this.onError === 'function') {
+        this.onError(error);
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Deletes a workout session
+   */
+  async deleteWorkout(userId, workoutId) {
+    if (!userId || !workoutId) {
+      throw new Error("User ID and Workout ID are required");
+    }
+
+    try {
+      console.info("Deleting workout:", { userId, workoutId });
+
+      // Call API to delete workout
+      const result = await deleteWorkout(userId, workoutId);
+
+      // Remove from local state if it exists
+      this._updateState({
+        recentWorkouts: this.state.recentWorkouts.filter(w => w.workoutId !== workoutId),
+        allWorkouts: this.state.allWorkouts.filter(w => w.workoutId !== workoutId)
+      });
+
+      console.info("Workout deleted successfully");
+      return result;
+    } catch (error) {
+      console.error("Error deleting workout:", error);
+      this._updateState({
+        error: "Failed to delete workout"
+      });
+      if (typeof this.onError === 'function') {
+        this.onError(error);
+      }
+      throw error;
+    }
+  }
+
+  /**
    * Gets the current state
    */
   getState() {
@@ -423,7 +506,7 @@ export class WorkoutAgent {
    */
   async refresh() {
     if (this.userId) {
-      await this.loadRecentWorkouts();
+      await this.loadRecentWorkouts(5);
     }
   }
 
@@ -448,6 +531,7 @@ export class WorkoutAgent {
       totalWorkoutCount: 0,
       isLoadingCount: false,
       isLoadingRecentItems: false,
+      isLoadingAllItems: false,
       isLoadingItem: false,
       error: null,
       lastCheckTime: null

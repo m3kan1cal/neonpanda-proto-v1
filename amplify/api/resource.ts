@@ -23,7 +23,9 @@ export function createCoreApi(
   getWorkoutsLambda: lambda.IFunction,
   getWorkoutLambda: lambda.IFunction,
   updateWorkoutLambda: lambda.IFunction,
-  getWorkoutsCountLambda: lambda.IFunction
+  deleteWorkoutLambda: lambda.IFunction,
+  getWorkoutsCountLambda: lambda.IFunction,
+  getConversationsCountLambda: lambda.IFunction
 ) {
   // Determine if this is a sandbox deployment
   const isSandbox = stack.node.tryGetContext('amplify-backend-type') === 'sandbox';
@@ -152,9 +154,19 @@ export function createCoreApi(
     updateWorkoutLambda
   );
 
+  const deleteWorkoutIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
+    'DeleteWorkoutIntegration',
+    deleteWorkoutLambda
+  );
+
   const getWorkoutsCountIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
     'GetWorkoutsCountIntegration',
     getWorkoutsCountLambda
+  );
+
+  const getConversationsCountIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
+    'GetConversationsCountIntegration',
+    getConversationsCountLambda
   );
 
   // Create integrations object for route configuration
@@ -175,7 +187,9 @@ export function createCoreApi(
     getWorkouts: getWorkoutsIntegration,
     getWorkout: getWorkoutIntegration,
     updateWorkout: updateWorkoutIntegration,
-    getWorkoutsCount: getWorkoutsCountIntegration
+    deleteWorkout: deleteWorkoutIntegration,
+    getWorkoutsCount: getWorkoutsCountIntegration,
+    getConversationsCount: getConversationsCountIntegration
   };
 
   // Add all routes using the organized route definitions

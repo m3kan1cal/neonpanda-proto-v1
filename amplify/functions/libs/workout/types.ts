@@ -38,6 +38,8 @@ export interface Workout {
   };
   // NEW: AI-generated summary for coach context and UI display
   summary?: string;
+  // Root-level workout name for easier access
+  workoutName?: string;
 }
 
 /**
