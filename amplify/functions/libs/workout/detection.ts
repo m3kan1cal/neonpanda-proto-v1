@@ -111,25 +111,98 @@ Return ONLY a JSON response in this exact format:
   "reasoning": "brief explanation"
 }
 
-DETECTION CRITERIA:
-1. COMPLETED WORKOUT LOG = User is describing/reporting a workout they already finished
-   - Examples: "Just finished Fran in 8:57", "Did 5 rounds today", "Crushed that EMOM", "Deadlifted 315 for 3 reps"
+STRICT WORKOUT LOGGING DETECTION CRITERIA:
 
-2. NOT A WORKOUT LOG = Any of these:
-   - Planning future workouts: "Should I do Murph tomorrow?"
-   - Asking questions: "What did I do last week?", "Can I superset bench press?"
-   - Seeking advice: "How should I warm up?", "What's better, squats or deadlifts?"
-   - General fitness discussion: "I love CrossFit", "My gym is great"
-   - Technique questions: "How do I improve my pull-ups?"
-   - Scheduling: "Planning to workout at 6pm"
+ONLY classify as workout logging if ALL THREE requirements are met:
 
-3. EDGE CASES:
-   - Questions about past workouts = NOT A LOG (they're inquiries)
-   - Future tense = NOT A LOG (planning)
-   - General fitness chat = NOT A LOG (discussion)
-   - Must have specific performance details to be a workout log
+1. PAST TENSE COMPLETION: Message must explicitly indicate a workout WAS COMPLETED
+   REQUIRED language patterns:
+   - "I did [workout]" / "Did [workout]"
+   - "I finished [workout]" / "Just finished [workout]" / "Finished [workout]"
+   - "I completed [workout]" / "Completed [workout]"
+   - "I crushed [workout]" / "Crushed [workout]"
+   - "I performed [workout]" / "Performed [workout]"
+   - "I trained [workout]" / "Trained [workout]"
+   - "I got through [workout]" / "Got through [workout]"
+   - "I knocked out [workout]" / "Knocked out [workout]"
 
-Return confidence 0.8+ only if very clear workout logging, 0.5-0.7 for moderate cases, <0.5 for unclear.`;
+   AVOID: "will do", "going to", "planning", "want to", "should I", "might do"
+
+2. SPECIFIC WORKOUT CONTENT: Must contain concrete workout details
+   REQUIRED content (at least one):
+   - Specific times: "8:57", "30 minutes", "45 seconds"
+   - Weights/loads: "315 lbs", "50kg", "bodyweight", "135#"
+   - Reps/rounds: "5 rounds", "20 reps", "3 sets", "AMRAP"
+   - Named workouts: "Fran", "Murph", "Cindy", "Helen"
+   - Distances: "3 miles", "5k", "400m"
+   - Specific exercises: "deadlifts", "thrusters", "pull-ups"
+   - Workout structures: "21-15-9", "EMOM", "tabata"
+
+   AVOID: Vague references like "worked out", "exercised", "trained hard"
+
+3. EXPLICIT LOGGING INTENT: Clear intent to record/document the completed workout
+   REQUIRED intent patterns:
+   - "I did [specific workout details]"
+   - "Just finished [specific workout details]"
+   - "Completed [specific workout details]"
+   - "Today's workout: [specific details]"
+   - "My workout today: [specific details]"
+   - "This morning I did [specific details]"
+   - "Workout done: [specific details]"
+   - "Training session complete: [specific details]"
+
+   LOGGING REQUEST language (even more explicit):
+   - "Log this workout:"
+   - "Track this:"
+   - "Record my workout:"
+   - "Add this to my log:"
+   - "Save this workout:"
+   - "Document this session:"
+
+   AVOID: Questions, discussions, experiences, feelings, commentary
+
+EXAMPLES THAT SHOULD BE DETECTED AS WORKOUT LOGS:
+[YES] "I did Fran today in 8:57"
+[YES] "Just finished my deadlift session - 5x3 at 315lbs"
+[YES] "Completed a 5k run this morning in 24:30"
+[YES] "Today's workout: 3 rounds of burpees and squats"
+[YES] "Crushed that EMOM - 10 minutes of thrusters"
+[YES] "Did 21-15-9 of pull-ups and push-ups"
+[YES] "Log this workout: 5 rounds of Cindy"
+[YES] "Record my training: back squats 3x5 at 275lbs"
+[YES] "Track this: 30-minute bike ride"
+[YES] "Workout done: bench press and rows"
+
+EXAMPLES THAT SHOULD NOT BE DETECTED (casual conversation):
+[NO] "I felt strong during squats" (discussing experience, no completion language)
+[NO] "The thrusters were tough today" (commentary on difficulty, not logging)
+[NO] "I'm sore from yesterday's deadlifts" (discussing recovery, not logging)
+[NO] "Should I do Murph this week?" (future planning question)
+[NO] "What did I do last Tuesday?" (asking about past, not logging new)
+[NO] "How was your workout?" (asking about others)
+[NO] "I love doing burpees" (expressing preferences)
+[NO] "My form felt off on squats" (technique discussion)
+[NO] "I want to work on pull-ups" (future goals, not completed workout)
+[NO] "The gym was crowded today" (general discussion)
+[NO] "That workout looks hard" (commenting on future workout)
+[NO] "I'm thinking about doing Fran" (considering, not completed)
+[NO] "Deadlifts are my favorite" (preference discussion)
+
+CRITICAL EXCLUSION PATTERNS:
+- Question words: "what", "how", "when", "where", "why", "should", "can", "could"
+- Future tense: "will", "going to", "planning", "want to", "need to"
+- Conditional: "if I", "maybe", "thinking about", "considering"
+- Discussion: "I like", "I prefer", "I think", "I feel"
+- Experience sharing: "it was", "felt like", "seemed", "appeared"
+- Advice seeking: "recommendations", "suggestions", "help", "tips"
+
+CONFIDENCE SCORING:
+- 0.9+: Clear past tense + specific details + explicit logging language
+- 0.7-0.9: Past tense + workout content but less explicit logging intent
+- 0.5-0.7: Ambiguous but contains some workout logging elements
+- <0.5: Missing key requirements or clearly not workout logging
+
+CRITICAL: When in doubt, DO NOT classify as workout logging. It's better to miss a workout log than create false positives from casual fitness conversation.`;
 
     const response = await callBedrockApi(detectionPrompt, message, MODEL_IDS.NOVA_MICRO);
   const result = JSON.parse(response);

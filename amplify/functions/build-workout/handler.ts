@@ -1,5 +1,9 @@
-import { createSuccessResponse, createErrorResponse, callBedrockApi } from '../libs/api-helpers';
-import { saveWorkout } from '../../dynamodb/operations';
+import {
+  createSuccessResponse,
+  createErrorResponse,
+  callBedrockApi,
+} from "../libs/api-helpers";
+import { saveWorkout } from "../../dynamodb/operations";
 import {
   buildWorkoutExtractionPrompt,
   parseAndValidateWorkoutData,
@@ -10,21 +14,27 @@ import {
   classifyDiscipline,
   BuildWorkoutEvent,
   UniversalWorkoutSchema,
-  DisciplineClassification
-} from '../libs/workout';
-
+  DisciplineClassification,
+} from "../libs/workout";
+import {
+  normalizeWorkout,
+  shouldNormalizeWorkout,
+  generateNormalizationSummary,
+} from "../libs/workout/normalization";
 
 export const handler = async (event: BuildWorkoutEvent) => {
   try {
-    console.info('🏋️ Starting workout extraction:', {
+    console.info("🏋️ Starting workout extraction:", {
       userId: event.userId,
       coachId: event.coachId,
       conversationId: event.conversationId,
       messageLength: event.userMessage.length,
       coachName: event.coachConfig.coach_name,
-      detectionType: event.isSlashCommand ? 'slash_command' : 'natural_language',
+      detectionType: event.isSlashCommand
+        ? "slash_command"
+        : "natural_language",
       slashCommand: event.slashCommand || null,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
 
     // For slash commands, the message is already cleaned (just the workout content)
@@ -32,68 +42,147 @@ export const handler = async (event: BuildWorkoutEvent) => {
     const workoutContent = event.userMessage;
 
     if (event.isSlashCommand) {
-      console.info('🎯 Processing slash command workout:', {
+      console.info("🎯 Processing slash command workout:", {
         command: event.slashCommand,
         content: workoutContent,
-        isExplicitLogging: true
+        isExplicitLogging: true,
       });
     }
 
     // Build extraction prompt using Universal Workout Schema
-    const extractionPrompt = buildWorkoutExtractionPrompt(workoutContent, event.coachConfig);
+    const extractionPrompt = buildWorkoutExtractionPrompt(
+      workoutContent,
+      event.coachConfig
+    );
 
-    console.info('Generated extraction prompt:', {
+    console.info("Generated extraction prompt:", {
       promptLength: extractionPrompt.length,
       userMessage: workoutContent,
-      promptPreview: extractionPrompt.substring(0, 1000) + (extractionPrompt.length > 1000 ? '...' : '')
+      promptPreview:
+        extractionPrompt.substring(0, 1000) +
+        (extractionPrompt.length > 1000 ? "..." : ""),
     });
 
-    console.info('Calling Claude for workout extraction...');
-    const extractedData = await callBedrockApi(extractionPrompt, workoutContent);
+    console.info("Calling Claude for workout extraction...");
+    const extractedData = await callBedrockApi(
+      extractionPrompt,
+      workoutContent
+    );
 
-    console.info('Claude extraction completed. Raw response:', {
+    console.info("Claude extraction completed. Raw response:", {
       responseLength: extractedData.length,
-      responsePreview: extractedData.substring(0, 500) + (extractedData.length > 500 ? '...' : '')
+      responsePreview:
+        extractedData.substring(0, 500) +
+        (extractedData.length > 500 ? "..." : ""),
     });
 
-    console.info('Parsing extracted data...');
+    console.info("Parsing extracted data...");
 
     // Parse and validate the extracted data
-    const workoutData: UniversalWorkoutSchema = await parseAndValidateWorkoutData(extractedData, event.userId);
+    const workoutData: UniversalWorkoutSchema =
+      await parseAndValidateWorkoutData(extractedData, event.userId);
 
     // For slash commands, add metadata about explicit logging
     if (event.isSlashCommand) {
-      workoutData.metadata.logged_via = 'slash_command';
+      workoutData.metadata.logged_via = "slash_command";
       workoutData.metadata.extraction_notes =
-        (workoutData.metadata.extraction_notes ? workoutData.metadata.extraction_notes + ' ' : '') +
+        (workoutData.metadata.extraction_notes
+          ? workoutData.metadata.extraction_notes + " "
+          : "") +
         `User explicitly logged workout using /${event.slashCommand} command.`;
     }
 
-    console.info('Parsed workout data structure:', {
+    console.info("Parsed workout data structure:", {
       basicInfo: {
         workoutId: workoutData.workout_id,
         discipline: workoutData.discipline,
         workoutName: workoutData.workout_name,
         workoutType: workoutData.workout_type,
         duration: workoutData.duration,
-        location: workoutData.location
+        location: workoutData.location,
       },
-      performanceMetrics: workoutData.performance_metrics ? 'Present' : 'Missing',
-      disciplineSpecific: workoutData.discipline_specific ? Object.keys(workoutData.discipline_specific) : 'Missing',
-      crossfitData: workoutData.discipline_specific?.crossfit ? {
-        workoutFormat: workoutData.discipline_specific.crossfit.workout_format,
-        rxStatus: workoutData.discipline_specific.crossfit.rx_status,
-        roundsCount: workoutData.discipline_specific.crossfit.rounds?.length || 0,
-        performanceData: workoutData.discipline_specific.crossfit.performance_data ? 'Present' : 'Missing'
-      } : 'Missing',
+      performanceMetrics: workoutData.performance_metrics
+        ? "Present"
+        : "Missing",
+      disciplineSpecific: workoutData.discipline_specific
+        ? Object.keys(workoutData.discipline_specific)
+        : "Missing",
+      crossfitData: workoutData.discipline_specific?.crossfit
+        ? {
+            workoutFormat:
+              workoutData.discipline_specific.crossfit.workout_format,
+            rxStatus: workoutData.discipline_specific.crossfit.rx_status,
+            roundsCount:
+              workoutData.discipline_specific.crossfit.rounds?.length || 0,
+            performanceData: workoutData.discipline_specific.crossfit
+              .performance_data
+              ? "Present"
+              : "Missing",
+          }
+        : "Missing",
       metadataCompleteness: workoutData.metadata?.data_completeness,
-      validationFlags: workoutData.metadata?.validation_flags?.length || 0
+      validationFlags: workoutData.metadata?.validation_flags?.length || 0,
     });
 
     // Calculate confidence score and update metadata
     // Note: metadata is guaranteed to exist after parseAndValidateWorkoutData
     const confidence = calculateConfidence(workoutData);
     workoutData.metadata.data_confidence = confidence;
+
+    // NORMALIZATION STEP - Normalize workout data for schema compliance
+    let finalWorkoutData = workoutData;
+    let normalizationSummary = "Normalization skipped";
+
+    if (shouldNormalizeWorkout(workoutData, confidence)) {
+      console.info("🔧 Running normalization on workout data...", {
+        reason: confidence < 0.7 ? "low_confidence" : "structural_check",
+        confidence,
+        hasCoachNotes: !!workoutData.coach_notes,
+        hasDisciplineSpecific: !!workoutData.discipline_specific,
+      });
+
+      const normalizationResult = await normalizeWorkout(workoutData, event.userId);
+      normalizationSummary = generateNormalizationSummary(normalizationResult);
+
+      console.info("Normalization completed:", {
+        isValid: normalizationResult.isValid,
+        issuesFound: normalizationResult.issues.length,
+        correctionsMade: normalizationResult.issues.filter((i) => i.corrected)
+          .length,
+        normalizationConfidence: normalizationResult.confidence,
+        summary: normalizationSummary,
+      });
+
+      // Use normalized data if normalization was successful
+      if (
+        normalizationResult.isValid ||
+        normalizationResult.issues.some((i) => i.corrected)
+      ) {
+        finalWorkoutData = normalizationResult.normalizedData;
+
+        // Update confidence if normalization improved the data
+        if (normalizationResult.confidence > confidence) {
+          finalWorkoutData.metadata.data_confidence = Math.min(
+            confidence + 0.1, // Modest confidence boost for normalization
+            normalizationResult.confidence
+          );
+        }
+      }
+
+      // Add normalization flags to metadata
+      normalizationResult.issues.forEach((issue) => {
+        if (
+          !finalWorkoutData.metadata.validation_flags?.includes(issue.field)
+        ) {
+          finalWorkoutData.metadata.validation_flags?.push(issue.field);
+        }
+      });
+    } else {
+      console.info("⏩ Skipping normalization:", {
+        reason: confidence > 0.9 ? "high_confidence" : "no_structural_issues",
+        confidence,
+      });
+    }
 
     // Check for blocking validation flags that indicate this isn't a real workout log
     // More intelligent blocking logic based on context and discipline
@@ -103,19 +192,25 @@ export const handler = async (event: BuildWorkoutEvent) => {
     let disciplineClassification: DisciplineClassification;
 
     try {
-      disciplineClassification = await classifyDiscipline(workoutData.discipline, workoutData);
+      disciplineClassification = await classifyDiscipline(
+        finalWorkoutData.discipline,
+        finalWorkoutData
+      );
       isQualitativeDiscipline = disciplineClassification.isQualitative;
     } catch (error) {
-      console.warn('Failed to classify discipline, defaulting to quantitative:', error);
+      console.warn(
+        "Failed to classify discipline, defaulting to quantitative:",
+        error
+      );
       // Default to quantitative (more restrictive) if classification fails
       isQualitativeDiscipline = false;
       disciplineClassification = {
         isQualitative: false,
         requiresPreciseMetrics: true,
-        environment: 'mixed',
-        primaryFocus: 'mixed',
+        environment: "mixed",
+        primaryFocus: "mixed",
         confidence: 0,
-        reasoning: 'Classification failed, defaulted to quantitative'
+        reasoning: "Classification failed, defaulted to quantitative",
       };
     }
 
@@ -130,41 +225,54 @@ export const handler = async (event: BuildWorkoutEvent) => {
     } else if (isQualitativeDiscipline) {
       // For endurance/qualitative sports, be less strict about performance data
       // These often focus on time, effort, technique rather than precise metrics
-      blockingFlags = ['planning_inquiry', 'advice_seeking', 'future_planning'];
+      blockingFlags = ["planning_inquiry", "advice_seeking", "future_planning"];
     } else {
       // For strength/power sports, maintain stricter requirements
-      blockingFlags = ['planning_inquiry', 'no_performance_data', 'advice_seeking', 'future_planning'];
+      blockingFlags = [
+        "planning_inquiry",
+        "no_performance_data",
+        "advice_seeking",
+        "future_planning",
+      ];
     }
 
-    const hasBlockingFlag = workoutData.metadata.validation_flags?.some(flag =>
-      blockingFlags.includes(flag)
+    const hasBlockingFlag = finalWorkoutData.metadata.validation_flags?.some(
+      (flag) => blockingFlags.includes(flag)
     );
 
     if (hasBlockingFlag) {
-      const detectedFlags = workoutData.metadata.validation_flags?.filter(flag =>
-        blockingFlags.includes(flag)
+      const detectedFlags = finalWorkoutData.metadata.validation_flags?.filter(
+        (flag) => blockingFlags.includes(flag)
       );
 
-      console.info('🚫 Skipping workout save - blocking validation flags detected:', {
-        workoutId: workoutData.workout_id,
-        blockingFlags: detectedFlags,
-        confidence,
-        dataCompleteness: workoutData.metadata.data_completeness,
-        extractionNotes: workoutData.metadata.extraction_notes,
-        isSlashCommand: event.isSlashCommand,
-        slashCommand: event.slashCommand,
-        discipline: workoutData.discipline,
-        disciplineClassification,
-        appliedBlockingFlags: blockingFlags
-      });
+      console.info(
+        "🚫 Skipping workout save - blocking validation flags detected:",
+        {
+          workoutId: finalWorkoutData.workout_id,
+          blockingFlags: detectedFlags,
+          confidence,
+          dataCompleteness: finalWorkoutData.metadata.data_completeness,
+          extractionNotes: finalWorkoutData.metadata.extraction_notes,
+          isSlashCommand: event.isSlashCommand,
+          slashCommand: event.slashCommand,
+          discipline: finalWorkoutData.discipline,
+          disciplineClassification,
+          appliedBlockingFlags: blockingFlags,
+          normalizationSummary,
+        }
+      );
 
       let reason: string;
       if (event.isSlashCommand) {
-        reason = 'Unable to extract any workout information from slash command content';
-      } else if (detectedFlags?.includes('no_performance_data') && !isQualitativeDiscipline) {
-        reason = 'No performance data found for strength/power workout';
+        reason =
+          "Unable to extract any workout information from slash command content";
+      } else if (
+        detectedFlags?.includes("no_performance_data") &&
+        !isQualitativeDiscipline
+      ) {
+        reason = "No performance data found for strength/power workout";
       } else {
-        reason = 'Not a workout log - appears to be planning/advice seeking';
+        reason = "Not a workout log - appears to be planning/advice seeking";
       }
 
       return createSuccessResponse({
@@ -173,7 +281,8 @@ export const handler = async (event: BuildWorkoutEvent) => {
         reason,
         blockingFlags: detectedFlags,
         confidence,
-        workoutId: workoutData.workout_id
+        workoutId: finalWorkoutData.workout_id,
+        normalizationSummary,
       });
     }
 
@@ -183,113 +292,132 @@ export const handler = async (event: BuildWorkoutEvent) => {
       ? new Date(event.completedAt)
       : extractedTime || new Date();
 
-    console.info('Workout timing analysis:', {
+    console.info("Workout timing analysis:", {
       userMessage: workoutContent.substring(0, 100),
       extractedTime: extractedTime ? extractedTime.toISOString() : null,
       finalCompletedAt: completedAt.toISOString(),
       currentTime: new Date().toISOString(),
       isToday: completedAt.toDateString() === new Date().toDateString(),
-      daysDifference: Math.floor((new Date().getTime() - completedAt.getTime()) / (1000 * 60 * 60 * 24))
+      daysDifference: Math.floor(
+        (new Date().getTime() - completedAt.getTime()) / (1000 * 60 * 60 * 24)
+      ),
     });
 
     // Generate AI summary for coach context and UI display
-    console.info('Generating workout summary...');
-    const summary = await generateWorkoutSummary(workoutData, event.userMessage);
-    console.info('Generated summary:', { summary, length: summary.length });
+    console.info("Generating workout summary...");
+    const summary = await generateWorkoutSummary(
+      finalWorkoutData,
+      event.userMessage
+    );
+    console.info("Generated summary:", { summary, length: summary.length });
 
     // Create workout session
     const workout = {
-      workoutId: workoutData.workout_id,
+      workoutId: finalWorkoutData.workout_id,
       userId: event.userId,
       coachIds: [event.coachId],
       coachNames: [event.coachConfig.coach_name],
       conversationId: event.conversationId,
       completedAt,
-      workoutData,
+      workoutData: finalWorkoutData,
       summary, // NEW: AI-generated summary
       extractionMetadata: {
-        confidence,
+        confidence: finalWorkoutData.metadata.data_confidence, // Use final confidence after normalization
         extractedAt: new Date(),
         reviewedBy: "system",
-        reviewedAt: new Date()
-      }
+        reviewedAt: new Date(),
+        normalizationSummary, // Include normalization summary in metadata
+      },
     };
 
-    console.info('Saving workout to DynamoDB...', {
+    console.info("Saving workout to DynamoDB...", {
       workoutId: workout.workoutId,
-      discipline: workoutData.discipline,
-      workoutName: workoutData.workout_name,
-      confidence,
-      completeness: workoutData.metadata!.data_completeness || 0,
-      detectionType: event.isSlashCommand ? 'slash_command' : 'natural_language',
-      slashCommand: event.slashCommand || null
+      discipline: finalWorkoutData.discipline,
+      workoutName: finalWorkoutData.workout_name,
+      confidence: finalWorkoutData.metadata.data_confidence,
+      completeness: finalWorkoutData.metadata.data_completeness || 0,
+      detectionType: event.isSlashCommand
+        ? "slash_command"
+        : "natural_language",
+      slashCommand: event.slashCommand || null,
+      normalizationSummary,
     });
 
     // Log the complete workout data structure being saved (with truncation for readability)
-    console.info('Complete workout data being saved:', {
+    console.info("Complete workout data being saved:", {
       workout: {
         workoutId: workout.workoutId,
         userId: workout.userId,
         conversationId: workout.conversationId,
         completedAt: workout.completedAt,
-        extractionMetadata: workout.extractionMetadata
+        extractionMetadata: workout.extractionMetadata,
       },
       workoutData: {
-        ...workoutData,
+        ...finalWorkoutData,
         // Show discipline-specific data in readable format
-        discipline_specific_summary: workoutData.discipline_specific ? {
-          disciplines: Object.keys(workoutData.discipline_specific),
-          crossfit_details: workoutData.discipline_specific.crossfit ?
-            JSON.stringify(workoutData.discipline_specific.crossfit).substring(0, 500) + '...' : null
-        } : null
-      }
+        discipline_specific_summary: finalWorkoutData.discipline_specific
+          ? {
+              disciplines: Object.keys(finalWorkoutData.discipline_specific),
+              crossfit_details: finalWorkoutData.discipline_specific.crossfit
+                ? JSON.stringify(
+                    finalWorkoutData.discipline_specific.crossfit
+                  ).substring(0, 500) + "..."
+                : null,
+            }
+          : null,
+      },
     });
 
     // Save to DynamoDB
     await saveWorkout(workout);
 
     // Store workout summary in Pinecone for semantic search and coach context
-    console.info('📝 Storing workout summary in Pinecone...');
+    console.info("📝 Storing workout summary in Pinecone...");
     const pineconeResult = await storeWorkoutSummaryInPinecone(
       event.userId,
       summary,
-      workoutData,
+      finalWorkoutData,
       workout
     );
 
-    console.info('✅ Workout extraction completed successfully:', {
+    console.info("✅ Workout extraction completed successfully:", {
       workoutId: workout.workoutId,
-      discipline: workoutData.discipline,
-      workoutName: workoutData.workout_name || 'Custom Workout',
-      confidence,
-      validationFlags: workoutData.metadata!.validation_flags || [],
+      discipline: finalWorkoutData.discipline,
+      workoutName: finalWorkoutData.workout_name || "Custom Workout",
+      confidence: finalWorkoutData.metadata.data_confidence,
+      validationFlags: finalWorkoutData.metadata.validation_flags || [],
+      normalizationSummary,
       pineconeStored: pineconeResult.success,
-      pineconeRecordId: pineconeResult.success && 'recordId' in pineconeResult ? pineconeResult.recordId : null
+      pineconeRecordId:
+        pineconeResult.success && "recordId" in pineconeResult
+          ? pineconeResult.recordId
+          : null,
     });
 
     return createSuccessResponse({
       success: true,
       workoutId: workout.workoutId,
-      discipline: workoutData.discipline,
-      workoutName: workoutData.workout_name,
-      confidence,
-      extractionMetadata: workout.extractionMetadata
+      discipline: finalWorkoutData.discipline,
+      workoutName: finalWorkoutData.workout_name,
+      confidence: finalWorkoutData.metadata.data_confidence,
+      extractionMetadata: workout.extractionMetadata,
+      normalizationSummary,
     });
-
   } catch (error) {
-    console.error('❌ Error extracting workout session:', error);
-    console.error('Event data:', {
+    console.error("❌ Error extracting workout session:", error);
+    console.error("Event data:", {
       userId: event.userId,
       coachId: event.coachId,
       conversationId: event.conversationId,
-      messagePreview: event.userMessage.substring(0, 100)
+      messagePreview: event.userMessage.substring(0, 100),
     });
 
-    const errorMessage = error instanceof Error ? error.message : 'Unknown extraction error';
-    return createErrorResponse(500, 'Failed to extract workout session', {
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown extraction error";
+    return createErrorResponse(500, "Failed to extract workout session", {
       error: errorMessage,
       userId: event.userId,
-      conversationId: event.conversationId
+      conversationId: event.conversationId,
     });
   }
 };

@@ -11,7 +11,9 @@ import {
   UniversalWorkoutSchema,
   DisciplineClassification,
 } from "./types";
-import { storeDebugDataInS3, callBedrockApi, MODEL_IDS, fixMalformedJson } from "../api-helpers";
+import { storeDebugDataInS3, callBedrockApi, MODEL_IDS } from "../api-helpers";
+import { cleanResponse, fixMalformedJson } from "../response-utils";
+import { getSchemaWithContext } from "../schemas/universal-workout-schema";
 
 /**
  * Detects if a workout is likely to be complex and need optimization
@@ -316,222 +318,7 @@ EXTRACTION GUIDELINES:
    - MINIMAL NESTED OBJECTS: Flatten structures where possible without losing data integrity
    - STRENGTH+METCON OPTIMIZATION: For "strength then metcon" format, consolidate warmup progression into 1-2 rounds max
 
-UNIVERSAL WORKOUT SCHEMA STRUCTURE:
-You must extract data into this exact JSON structure. Use null for missing data, never omit fields.
-
-CRITICAL EFFICIENCY RULE: For workouts with >8 rounds, apply aggressive consolidation:
-- Consolidate warmup progressions into 1-2 rounds maximum
-- Use concise form_notes to capture progression details
-- Omit null fields that don't add contextual value
-- Prioritize working sets and metcon rounds for individual tracking
-
-ANTI-MALFORMED JSON STRATEGY:
-- For workouts with >15 rounds, prioritize JSON structural integrity over complete detail
-- Consider grouping similar consecutive rounds into single rounds with range notation
-- Example: Instead of 8 separate identical warmup rounds, use 1 round with form_notes: "Rounds 1-8: 135lbs x 3 reps progression"
-- Better to have valid parseable JSON with some detail loss than malformed JSON with full detail
-- Focus on: working sets, key lifts, metcon rounds - these are most important for tracking
-
-{
-  "workout_id": "auto_generated_by_system",
-  "user_id": "auto_populated_by_system",
-  "date": "YYYY-MM-DD format of workout completion",
-  "discipline": "crossfit|powerlifting|bodybuilding|hiit|running|swimming|cycling|yoga|martial_arts|climbing|hybrid",
-  "methodology": "string (e.g., comptrain, westside_conjugate, etc.)",
-  "workout_name": "string (e.g., Fran, Murph, custom name)",
-  "workout_type": "strength|cardio|flexibility|skill|competition|recovery|conditioning|hybrid",
-  "duration": "number (total workout duration in minutes)",
-  "location": "gym|box|home|outdoors|online|other",
-
-  "performance_metrics": {
-    "intensity": "integer 1-10 (perceived intensity)",
-    "perceived_exertion": "integer 1-10 (RPE scale)",
-    "heart_rate": {
-      "avg": "number|null",
-      "max": "number|null",
-      "zones": {
-        "zone_1": "number|null (seconds in zone)",
-        "zone_2": "number|null",
-        "zone_3": "number|null",
-        "zone_4": "number|null",
-        "zone_5": "number|null"
-      }
-    },
-    "calories_burned": "number|null (estimated if not provided)",
-    "mood_pre": "integer 1-10|null",
-    "mood_post": "integer 1-10|null",
-    "energy_level_pre": "integer 1-10|null",
-    "energy_level_post": "integer 1-10|null"
-  },
-
-  "discipline_specific": {
-    "crossfit": {
-      "workout_format": "for_time|amrap|emom|tabata|ladder|chipper|death_by|intervals|strength_then_metcon|hero_workout|custom",
-      "time_cap": "number (seconds)|null",
-      "rx_status": "rx|scaled|modified",
-      "rounds": [
-        {
-          "round_number": "integer",
-          "exercises": [
-            {
-              "exercise_name": "string (standardized name)",
-              "movement_type": "barbell|dumbbell|kettlebell|bodyweight|gymnastics|cardio|other",
-              "variation": "string|null (kipping, strict, butterfly, etc.)",
-              "assistance": "string|null (none, band, box, etc.)",
-              "weight": {
-                "value": "number|null",
-                "unit": "lbs|kg",
-                "percentage_1rm": "number|null",
-                "rx_weight": "number|null",
-                "scaled_weight": "number|null"
-              },
-              "reps": {
-                "prescribed": "number|\"max\" (use \"max\" for max effort exercises like max pull-ups, max push-ups, AMRAP to failure)",
-                "completed": "number",
-                "broken_sets": "array of numbers|null",
-                "rest_between_sets": "array of seconds|null"
-              },
-              "distance": "number|null (in meters)",
-              "calories": "number|null",
-              "time": "number|null (in seconds)",
-              "form_notes": "string|null"
-            }
-          ]
-        }
-      ],
-      "performance_data": {
-        "total_time": "number (seconds)|null",
-        "rounds_completed": "number",
-        "total_reps": "number|null",
-        "round_times": "array of seconds|null",
-        "score": {
-          "value": "number|string (primary performance metric)",
-          "type": "time|rounds|reps|weight|distance|points",
-          "unit": "string|null (seconds, lbs, kg, meters, etc.)"
-        }
-      }
-    },
-    "powerlifting": {
-      "session_type": "max_effort|dynamic_effort|repetition_method|competition_prep",
-      "competition_prep": "boolean",
-      "exercises": [
-        {
-          "exercise_name": "string",
-          "movement_category": "main_lift|accessory|mobility",
-          "equipment": "array of strings (belt, sleeves, wraps, etc.)",
-          "competition_commands": "boolean",
-          "attempts": {
-            "opener": "number|null",
-            "second_attempt": "number|null",
-            "third_attempt": "number|null",
-            "successful_attempts": "array of numbers",
-            "missed_attempts": "array of numbers",
-            "miss_reasons": "array of strings"
-          },
-          "sets": [
-            {
-              "set_type": "opener|second|third|warmup|working|accessory",
-              "weight": "number",
-              "reps": "number",
-              "rpe": "number 1-10|null",
-              "rest_time": "number (seconds)|null",
-              "percentage_1rm": "number|null",
-              "bar_speed": "slow|moderate|fast|explosive|null",
-              "competition_commands": "boolean"
-            }
-          ]
-        }
-      ]
-    },
-    "running": {
-      "run_type": "easy|tempo|interval|long|race|recovery|fartlek",
-      "total_distance": "number (miles or km)",
-      "total_time": "number (seconds)",
-      "average_pace": "string (MM:SS format)",
-      "elevation_gain": "number (feet)|null",
-      "surface": "road|trail|track|treadmill|mixed",
-      "weather": "string|null",
-      "segments": [
-        {
-          "segment_number": "integer",
-          "distance": "number",
-          "time": "number (seconds)",
-          "pace": "string (MM:SS)",
-          "heart_rate_avg": "number|null",
-          "effort_level": "easy|moderate|hard|max",
-          "terrain": "flat|uphill|downhill|mixed"
-        }
-      ]
-    }
-  },
-
-  "pr_achievements": [
-    {
-      "exercise": "string",
-      "discipline": "string",
-      "pr_type": "workout_time|1rm|volume_pr|distance_pr|pace_pr",
-      "previous_best": "number|null",
-      "new_best": "number",
-      "improvement": "number|null",
-      "improvement_percentage": "number|null",
-      "date_previous": "YYYY-MM-DD|null",
-      "significance": "minor|moderate|major",
-      "context": "string|null"
-    }
-  ],
-
-  "subjective_feedback": {
-    "enjoyment": "integer 1-10|null",
-    "difficulty": "integer 1-10|null",
-    "form_quality": "integer 1-10|null",
-    "motivation": "integer 1-10|null",
-    "confidence": "integer 1-10|null",
-    "mental_state": "focused|distracted|motivated|tired|energetic|stressed|calm|null",
-    "pacing_strategy": "even_split|negative_split|positive_split|went_out_too_fast|conservative|null",
-    "nutrition_pre_workout": "string|null",
-    "hydration_level": "poor|fair|good|excellent|null",
-    "sleep_quality_previous": "integer 1-10|null",
-    "stress_level": "integer 1-10|null",
-    "soreness_pre": {
-      "overall": "integer 1-10|null",
-      "legs": "integer 1-10|null",
-      "arms": "integer 1-10|null",
-      "back": "integer 1-10|null"
-    },
-    "soreness_post": {
-      "overall": "integer 1-10|null",
-      "legs": "integer 1-10|null",
-      "arms": "integer 1-10|null",
-      "back": "integer 1-10|null"
-    },
-    "notes": "string|null"
-  },
-
-  "coach_notes": {
-    "programming_intent": "string|null",
-    "coaching_cues_given": "array of strings|null",
-    "areas_for_improvement": "array of strings|null",
-    "positive_observations": "array of strings|null",
-    "next_session_focus": "string|null",
-    "adaptation_recommendations": "array of strings|null",
-    "safety_flags": "array of strings",
-    "motivation_strategy": "string|null"
-  },
-
-  "metadata": {
-    "logged_via": "conversation",
-    "logging_time": "number (seconds to log)|null",
-    "data_confidence": "number 0-1 (confidence in extraction accuracy)",
-    "ai_extracted": true,
-    "user_verified": false,
-    "version": "1.0",
-    "schema_version": "2.0",
-    "data_completeness": "number 0-1 (how complete the data is)",
-    "extraction_method": "claude_conversation_analysis",
-    "validation_flags": "array of strings (missing_heart_rate, estimated_calories, etc.)",
-    "extraction_notes": "string|null"
-  }
-}
+${getSchemaWithContext('extraction')}
 `;
 };
 
@@ -608,14 +395,25 @@ export const parseAndValidateWorkoutData = async (
       throw new Error("Response does not end with valid JSON closing brace");
     }
 
-    // Parse the JSON response - only apply fixer if parsing fails
+    // Parse the JSON response with fallback cleaning and fixing
     let workoutData;
     try {
       workoutData = JSON.parse(extractedData);
-    } catch (error) {
-      console.warn("JSON parsing failed, attempting to fix malformed JSON...");
-      const fixedJsonData = fixMalformedJson(extractedData);
-      workoutData = JSON.parse(fixedJsonData);
+    } catch (parseError) {
+      console.warn("JSON parsing failed, attempting to clean and fix response...");
+      try {
+        const cleanedResponse = cleanResponse(extractedData);
+        const fixedResponse = fixMalformedJson(cleanedResponse);
+        workoutData = JSON.parse(fixedResponse);
+        console.info("Successfully parsed response after cleaning and fixing");
+      } catch (fallbackError) {
+        console.error("Failed to parse workout extraction response after all attempts:", {
+          originalResponse: extractedData.substring(0, 500),
+          parseError: parseError instanceof Error ? parseError.message : 'Unknown error',
+          fallbackError: fallbackError instanceof Error ? fallbackError.message : 'Unknown error'
+        });
+        throw new Error(`Invalid JSON response: ${parseError instanceof Error ? parseError.message : 'Parse failed'}`);
+      }
     }
 
     // Set system-generated fields

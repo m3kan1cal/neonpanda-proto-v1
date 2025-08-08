@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { themeClasses } from '../utils/synthwaveThemeClasses';
 import { NeonBorder } from './themes/SynthwaveComponents';
@@ -105,7 +105,7 @@ function CoachConversations() {
 
   // Slash command states
   const [showSlashCommandTooltip, setShowSlashCommandTooltip] = useState(false);
-  const [isInputFocused, setIsInputFocused] = useState(false);
+  const [selectedCommandIndex, setSelectedCommandIndex] = useState(0);
 
   // Add flag to prevent double execution from React StrictMode
   const isSendingMessage = useRef(false);
@@ -381,7 +381,43 @@ function CoachConversations() {
     }
   };
 
-  const handleKeyPress = (e) => {
+    const handleKeyPress = (e) => {
+    // Handle slash command navigation when tooltip is visible
+    if (showSlashCommandTooltip) {
+      const availableCommands = getAvailableSlashCommands();
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setSelectedCommandIndex(prev =>
+          prev < availableCommands.length - 1 ? prev + 1 : 0
+        );
+        return;
+      }
+
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setSelectedCommandIndex(prev =>
+          prev > 0 ? prev - 1 : availableCommands.length - 1
+        );
+        return;
+      }
+
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        const selectedCommand = availableCommands[selectedCommandIndex];
+        setInputMessage(selectedCommand.command + ' ');
+        setShowSlashCommandTooltip(false); // Close tooltip
+        return;
+      }
+
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setShowSlashCommandTooltip(false); // Close tooltip
+        return;
+      }
+    }
+
+    // Default behavior for sending messages
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage(e);
@@ -530,12 +566,7 @@ function CoachConversations() {
     }
   };
 
-  // Helper function to check if current input starts with slash command
-  const isTypingSlashCommand = () => {
-    return inputMessage.startsWith('/') && inputMessage.length > 1;
-  };
-
-  // Helper function to get available slash commands
+      // Helper function to get available slash commands
   const getAvailableSlashCommands = () => {
     return [
       { command: '/log-workout', description: 'Log a completed workout', example: '/log-workout I did Fran in 8:57' },
@@ -543,6 +574,21 @@ function CoachConversations() {
       { command: '/workout', description: 'Log workout session', example: '/workout 5k run in 24:30' }
     ];
   };
+
+      // Simple function to check if we should show slash command tooltip
+  const shouldShowTooltip = () => {
+    return inputMessage.startsWith('/') && inputMessage.length > 0 && !inputMessage.includes(' ');
+  };
+
+  // Show/hide tooltip based on input
+  useEffect(() => {
+    if (shouldShowTooltip()) {
+      setShowSlashCommandTooltip(true);
+      setSelectedCommandIndex(0);
+    } else {
+      setShowSlashCommandTooltip(false);
+    }
+  }, [inputMessage]);
 
 
 
@@ -821,12 +867,7 @@ function CoachConversations() {
                         setInputMessage(e.target.value);
                         autoResizeTextarea(e.target);
                       }}
-                      onFocus={() => setIsInputFocused(true)}
-                      onBlur={() => {
-                        // Delay hiding tooltip to allow clicking on it
-                        setTimeout(() => setIsInputFocused(false), 200);
-                      }}
-                      onKeyPress={handleKeyPress}
+                      onKeyDown={handleKeyPress}
                       placeholder="What's on your mind today? How can I help you with your training?"
                       className="w-full px-4 py-3 bg-synthwave-bg-primary/50 border-2 border-synthwave-neon-cyan/30 rounded-lg text-synthwave-text-primary font-rajdhani focus:outline-none focus:border-synthwave-neon-cyan transition-all duration-200 resize-none placeholder-synthwave-text-muted"
                       style={{ minHeight: '3rem' }}
@@ -834,7 +875,7 @@ function CoachConversations() {
                     />
 
                     {/* Slash Command Tooltip */}
-                    {isInputFocused && isTypingSlashCommand() && (
+                    {showSlashCommandTooltip && (
                       <div className="absolute bottom-full mb-2 left-0 bg-synthwave-bg-card/95 border-2 border-synthwave-neon-cyan/30 rounded-lg p-4 shadow-lg backdrop-blur-sm z-10 min-w-[400px]">
                         <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
                           Available Slash Commands
@@ -843,25 +884,44 @@ function CoachConversations() {
                           {getAvailableSlashCommands().map((cmd, index) => (
                             <div
                               key={index}
-                              className="flex items-start space-x-3 p-2 hover:bg-synthwave-bg-primary/30 rounded cursor-pointer transition-colors duration-200"
+                                                                                                                        className={`flex items-start space-x-3 py-1 px-2 rounded cursor-pointer transition-colors duration-200 border ${
+                                index === selectedCommandIndex
+                                  ? 'bg-synthwave-bg-primary/30 border-synthwave-neon-cyan/20'
+                                  : 'hover:bg-synthwave-bg-primary/30 border-transparent'
+                              }`}
                               onClick={() => {
                                 setInputMessage(cmd.command + ' ');
                                 inputRef.current?.focus();
                               }}
                             >
-                              <code className="font-mono text-synthwave-neon-cyan text-sm font-bold">
+                                                                                                                        <div className={`font-rajdhani text-sm ${
+                                index === selectedCommandIndex
+                                  ? 'text-synthwave-neon-cyan'
+                                  : 'text-synthwave-neon-cyan'
+                              }`}>
                                 {cmd.command}
-                              </code>
+                              </div>
                               <div className="flex-1">
-                                <div className="font-rajdhani text-white text-sm">
+                                <div className={`font-rajdhani text-sm ${
+                                  index === selectedCommandIndex
+                                    ? 'text-white'
+                                    : 'text-white'
+                                }`}>
                                   {cmd.description}
                                 </div>
-                                <div className="font-rajdhani text-synthwave-text-muted text-xs mt-1">
+                                <div className={`font-rajdhani text-xs mt-1 ${
+                                  index === selectedCommandIndex
+                                    ? 'text-synthwave-text-secondary'
+                                    : 'text-synthwave-text-muted'
+                                }`}>
                                   {cmd.example}
                                 </div>
                               </div>
                             </div>
                           ))}
+                        </div>
+                        <div className="font-rajdhani text-xs text-synthwave-text-muted mt-3 pt-2 border-t border-synthwave-neon-cyan/20">
+                          Use ↑↓ to navigate, Enter to select, Esc to close
                         </div>
                       </div>
                     )}
@@ -913,13 +973,7 @@ function CoachConversations() {
                   </button>
                   <button
                     className="bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/30 text-synthwave-neon-pink px-3 py-1 rounded-full text-sm font-rajdhani hover:bg-synthwave-neon-pink/10 transition-colors duration-300"
-                    onClick={() => setInputMessage("I'm experiencing some pain/discomfort. What should I do?")}
-                  >
-                    Pain/Injury
-                  </button>
-                  <button
-                    className="bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/30 text-synthwave-neon-pink px-3 py-1 rounded-full text-sm font-rajdhani hover:bg-synthwave-neon-pink/10 transition-colors duration-300"
-                    onClick={() => setInputMessage("I want to progress/increase the difficulty of my workouts")}
+                    onClick={() => setInputMessage("I want to progress/increase the difficulty of my workouts.")}
                   >
                     Progression
                   </button>
@@ -931,7 +985,7 @@ function CoachConversations() {
                   </button>
                   <button
                     className="bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/30 text-synthwave-neon-pink px-3 py-1 rounded-full text-sm font-rajdhani hover:bg-synthwave-neon-pink/10 transition-colors duration-300"
-                    onClick={() => setInputMessage("Create a WOD for me today based on my goals and training plan")}
+                    onClick={() => setInputMessage("Create a WOD for me today based on my goals and training plan.")}
                   >
                     WOD Creation
                   </button>

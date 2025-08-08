@@ -1,0 +1,1152 @@
+{
+  "pk": "user#4sVTVPd6aJdRq",
+  "sk": "workout#ws_4sVTVPd6aJdRq_1754527033974",
+  "attributes": {
+   "coachIds": [
+    "user_4sVTVPd6aJdRq_coach_main"
+   ],
+   "coachNames": [
+    "Marcus_The_Strength_Builder"
+   ],
+   "completedAt": "2025-08-07T22:45:00.000Z",
+   "conversationId": "conv_1754269339684_7fanuvurm",
+   "extractionMetadata": {
+    "confidence": 0.7999999999999999,
+    "extractedAt": "2025-08-07T00:37:19.388Z",
+    "reviewedAt": "2025-08-07T00:37:19.388Z",
+    "reviewedBy": "system"
+   },
+   "summary": "Completed \"POWER & CONDITIONING FUSION\" - a 60-minute hybrid workout combining power development, strength building, and metabolic conditioning. Hit solid numbers with Zercher squats building to 155# for 6 reps, bench press at 185# for 4x10, and maintained strong output through the 8-minute conditioning finisher alternating devil press (40# DBs) and ball slams. Well-structured session targeting multiple energy systems with progressive loading on the squat work and consistent performance across all four training phases.",
+   "userId": "4sVTVPd6aJdRq",
+   "workoutData": {
+    "date": "2024-12-19",
+    "discipline": "hybrid",
+    "duration": 60,
+    "location": "gym",
+    "metadata": {
+     "ai_extracted": true,
+     "data_completeness": 0.5,
+     "data_confidence": 0.7999999999999999,
+     "extraction_method": "claude_conversation_analysis",
+     "extraction_notes": "User explicitly logged workout using /log-workout command.",
+     "logged_via": "slash_command",
+     "logging_time": null,
+     "schema_version": "2.0",
+     "user_verified": false,
+     "validation_flags": [
+     ],
+     "version": "1.0"
+    },
+    "methodology": "COMPTRAIN_STRENGTH",
+    "performance_metrics": {
+     "discipline_specific": {
+      "crossfit": {
+       "coach_notes": {
+        "adaptation_recommendations": [
+         "Consider increasing Zercher squat working weight",
+         "Add pause reps to bench press for strength development"
+        ],
+        "areas_for_improvement": [
+         "Pacing in conditioning finisher",
+         "Consistency in devil press form under fatigue"
+        ],
+        "coaching_cues_given": [
+         "Focus on explosive hip drive in sandbag cleans",
+         "Maintain upright torso in Zercher squats",
+         "Control the eccentric on bench press",
+         "Full ROM on Pendlay rows"
+        ],
+        "motivation_strategy": "Multi-phase training maintains engagement and targets multiple energy systems",
+        "next_session_focus": "Recovery and mobility work",
+        "positive_observations": [
+         "Good progressive loading on Zercher squats",
+         "Maintained intensity throughout conditioning phase",
+         "Strong performance on compound movements"
+        ],
+        "programming_intent": "Power and conditioning fusion targeting explosive power, strength building, and metabolic conditioning",
+        "safety_flags": [
+        ]
+       },
+       "metadata": {
+        "ai_extracted": true,
+        "data_completeness": 0.9,
+        "data_confidence": 0.85,
+        "extraction_method": "claude_conversation_analysis",
+        "extraction_notes": "Complex multi-phase workout with strength and conditioning components. Devil press weight calculated as 40# per hand × 2 = 80# total load for bilateral movement. Conditioning finisher structured as alternating 30s work/30s rest intervals over 8 minutes = 16 total intervals. Estimated rep counts for max effort intervals based on typical performance degradation patterns.",
+        "logged_via": "conversation",
+        "logging_time": null,
+        "schema_version": "2.0",
+        "user_verified": false,
+        "validation_flags": [
+         "estimated_calories",
+         "inferred_conditioning_reps",
+         "estimated_performance_metrics"
+        ],
+        "version": "1.0"
+       },
+       "performance_data": {
+        "powerlifting": null,
+        "rounds_completed": 24,
+        "round_times": null,
+        "running": null,
+        "score": {
+         "type": "rounds",
+         "unit": null,
+         "value": 24
+        },
+        "total_reps": 456,
+        "total_time": 3600
+       },
+       "pr_achievements": [
+       ],
+       "rounds": [
+        {
+         "exercises": [
+          {
+           "assistance": "none",
+           "calories": null,
+           "distance": null,
+           "exercise_name": "sandbag clean",
+           "form_notes": null,
+           "movement_type": "other",
+           "reps": {
+            "broken_sets": null,
+            "completed": 5,
+            "prescribed": 5,
+            "rest_between_sets": null
+           },
+           "time": null,
+           "variation": null,
+           "weight": {
+            "percentage_1rm": null,
+            "rx_weight": null,
+            "scaled_weight": null,
+            "unit": "lbs",
+            "value": 75
+           }
+          },
+          {
+           "assistance": "none",
+           "calories": null,
+           "distance": null,
+           "exercise_name": "broad jump",
+           "form_notes": null,
+           "movement_type": "bodyweight",
+           "reps": {
+            "broken_sets": null,
+            "completed": 3,
+            "prescribed": 3,
+            "rest_between_sets": null
+           },
+           "time": null,
+           "variation": null,
+           "weight": {
+            "percentage_1rm": null,
+            "rx_weight": null,
+            "scaled_weight": null,
+            "unit": "lbs",
+            "value": null
+           }
+          },
+          {
+           "assistance": "none",
+           "calories": null,
+           "distance": null,
+           "exercise_name": "sit-up",
+           "form_notes": null,
+           "movement_type": "bodyweight",
+           "reps": {
+            "broken_sets": null,
+            "completed": 12,
+            "prescribed": 12,
+            "rest_between_sets": [
+             90
+            ]
+           },
+           "time": null,
+           "variation": null,
+           "weight": {
+            "percentage_1rm": null,
+            "rx_weight": null,
+            "scaled_weight": null,
+            "unit": "lbs",
+            "value": null
+           }
+          }
+         ],
+         "round_number": 1
+        },
+        {
+         "exercises": [
+          {
+           "assistance": "none",
+           "calories": null,
+           "distance": null,
+           "exercise_name": "sandbag clean",
+           "form_notes": null,
+           "movement_type": "other",
+           "reps": {
+            "broken_sets": null,
+            "completed": 5,
+            "prescribed": 5,
+            "rest_between_sets": null
+           },
+           "time": null,
+           "variation": null,
+           "weight": {
+            "percentage_1rm": null,
+            "rx_weight": null,
+            "scaled_weight": null,
+            "unit": "lbs",
+            "value": 75
+           }
+          },
+          {
+           "assistance": "none",
+           "calories": null,
+           "distance": null,
+           "exercise_name": "broad jump",
+           "form_notes": null,
+           "movement_type": "bodyweight",
+           "reps": {
+            "broken_sets": null,
+            "completed": 3,
+            "prescribed": 3,
+            "rest_between_sets": null
+           },
+           "time": null,
+           "variation": null,
+           "weight": {
+            "percentage_1rm": null,
+            "rx_weight": null,
+            "scaled_weight": null,
+            "unit": "lbs",
+            "value": null
+           }
+          },
+          {
+           "assistance": "none",
+           "calories": null,
+           "distance": null,
+           "exercise_name": "sit-up",
+           "form_notes": null,
+           "movement_type": "bodyweight",
+           "reps": {
+            "broken_sets": null,
+            "completed": 12,
+            "prescribed": 12,
+            "rest_between_sets": [
+             90
+            ]
+           },
+           "time": null,
+           "variation": null,
+           "weight": {
+            "percentage_1rm": null,
+            "rx_weight": null,
+            "scaled_weight": null,
+            "unit": "lbs",
+            "value": null
+           }
+          }
+         ],
+         "round_number": 2
+        },
+        {
+         "exercises": [
+          {
+           "assistance": "none",
+           "calories": null,
+           "distance": null,
+           "exercise_name": "sandbag clean",
+           "form_notes": null,
+           "movement_type": "other",
+           "reps": {
+            "broken_sets": null,
+            "completed": 5,
+            "prescribed": 5,
+            "rest_between_sets": null
+           },
+           "time": null,
+           "variation": null,
+           "weight": {
+            "percentage_1rm": null,
+            "rx_weight": null,
+            "scaled_weight": null,
+            "unit": "lbs",
+            "value": 75
+           }
+          },
+          {
+           "assistance": "none",
+           "calories": null,
+           "distance": null,
+           "exercise_name": "broad jump",
+           "form_notes": null,
+           "movement_type": "bodyweight",
+           "reps": {
+            "broken_sets": null,
+            "completed": 3,
+            "prescribed": 3,
+            "rest_between_sets": null
+           },
+           "time": null,
+           "variation": null,
+           "weight": {
+            "percentage_1rm": null,
+            "rx_weight": null,
+            "scaled_weight": null,
+            "unit": "lbs",
+            "value": null
+           }
+          },
+          {
+           "assistance": "none",
+           "calories": null,
+           "distance": null,
+           "exercise_name": "sit-up",
+           "form_notes": null,
+           "movement_type": "bodyweight",
+           "reps": {
+            "broken_sets": null,
+            "completed": 12,
+            "prescribed": 12,
+            "rest_between_sets": [
+             90
+            ]
+           },
+           "time": null,
+           "variation": null,
+           "weight": {
+            "percentage_1rm": null,
+            "rx_weight": null,
+            "scaled_weight": null,
+            "unit": "lbs",
+            "value": null
+           }
+          }
+         ],
+         "round_number": 3
+        },
+        {
+         "exercises": [
+          {
+           "assistance": "none",
+           "calories": null,
+           "distance": null,
+           "exercise_name": "sandbag clean",
+           "form_notes": null,
+           "movement_type": "other",
+           "reps": {
+            "broken_sets": null,
+            "completed": 5,
+            "prescribed": 5,
+            "rest_between_sets": null
+           },
+           "time": null,
+           "variation": null,
+           "weight": {
+            "percentage_1rm": null,
+            "rx_weight": null,
+            "scaled_weight": null,
+            "unit": "lbs",
+            "value": 75
+           }
+          },
+          {
+           "assistance": "none",
+           "calories": null,
+           "distance": null,
+           "exercise_name": "broad jump",
+           "form_notes": null,
+           "movement_type": "bodyweight",
+           "reps": {
+            "broken_sets": null,
+            "completed": 3,
+            "prescribed": 3,
+            "rest_between_sets": null
+           },
+           "time": null,
+           "variation": null,
+           "weight": {
+            "percentage_1rm": null,
+            "rx_weight": null,
+            "scaled_weight": null,
+            "unit": "lbs",
+            "value": null
+           }
+          },
+          {
+           "assistance": "none",
+           "calories": null,
+           "distance": null,
+           "exercise_name": "sit-up",
+           "form_notes": null,
+           "movement_type": "bodyweight",
+           "reps": {
+            "broken_sets": null,
+            "completed": 12,
+            "prescribed": 12,
+            "rest_between_sets": null
+           },
+           "time": null,
+           "variation": null,
+           "weight": {
+            "percentage_1rm": null,
+            "rx_weight": null,
+            "scaled_weight": null,
+            "unit": "lbs",
+            "value": null
+           }
+          }
+         ],
+         "round_number": 4
+        },
+        {
+         "exercises": [
+          {
+           "assistance": "none",
+           "calories": null,
+           "distance": null,
+           "exercise_name": "zercher squat",
+           "form_notes": "Progressive loading 115→135→155→155",
+           "movement_type": "barbell",
+           "reps": {
+            "broken_sets": null,
+            "completed": 6,
+            "prescribed": 6,
+            "rest_between_sets": [
+             150
+            ]
+           },
+           "time": null,
+           "variation": null,
+           "weight": {
+            "percentage_1rm": null,
+            "rx_weight": null,
+            "scaled_weight": null,
+            "unit": "lbs",
+            "value": 115
+           }
+          }
+         ],
+         "round_number": 5
+        },
+        {
+         "exercises": [
+          {
+           "assistance": "none",
+           "calories": null,
+           "distance": null,
+           "exercise_name": "zercher squat",
+           "form_notes": null,
+           "movement_type": "barbell",
+           "reps": {
+            "broken_sets": null,
+            "completed": 6,
+            "prescribed": 6,
+            "rest_between_sets": [
+             150
+            ]
+           },
+           "time": null,
+           "variation": null,
+           "weight": {
+            "percentage_1rm": null,
+            "rx_weight": null,
+            "scaled_weight": null,
+            "unit": "lbs",
+            "value": 135
+           }
+          }
+         ],
+         "round_number": 6
+        },
+        {
+         "exercises": [
+          {
+           "assistance": "none",
+           "calories": null,
+           "distance": null,
+           "exercise_name": "zercher squat",
+           "form_notes": null,
+           "movement_type": "barbell",
+           "reps": {
+            "broken_sets": null,
+            "completed": 6,
+            "prescribed": 6,
+            "rest_between_sets": [
+             150
+            ]
+           },
+           "time": null,
+           "variation": null,
+           "weight": {
+            "percentage_1rm": null,
+            "rx_weight": null,
+            "scaled_weight": null,
+            "unit": "lbs",
+            "value": 155
+           }
+          }
+         ],
+         "round_number": 7
+        },
+        {
+         "exercises": [
+          {
+           "assistance": "none",
+           "calories": null,
+           "distance": null,
+           "exercise_name": "zercher squat",
+           "form_notes": null,
+           "movement_type": "barbell",
+           "reps": {
+            "broken_sets": null,
+            "completed": 6,
+            "prescribed": 6,
+            "rest_between_sets": null
+           },
+           "time": null,
+           "variation": null,
+           "weight": {
+            "percentage_1rm": null,
+            "rx_weight": null,
+            "scaled_weight": null,
+            "unit": "lbs",
+            "value": 155
+           }
+          }
+         ],
+         "round_number": 8
+        },
+        {
+         "exercises": [
+          {
+           "assistance": "none",
+           "calories": null,
+           "distance": null,
+           "exercise_name": "bench press",
+           "form_notes": null,
+           "movement_type": "barbell",
+           "reps": {
+            "broken_sets": null,
+            "completed": 10,
+            "prescribed": 10,
+            "rest_between_sets": null
+           },
+           "time": null,
+           "variation": null,
+           "weight": {
+            "percentage_1rm": null,
+            "rx_weight": null,
+            "scaled_weight": null,
+            "unit": "lbs",
+            "value": 185
+           }
+          },
+          {
+           "assistance": "none",
+           "calories": null,
+           "distance": null,
+           "exercise_name": "pendlay row",
+           "form_notes": null,
+           "movement_type": "barbell",
+           "reps": {
+            "broken_sets": null,
+            "completed": 10,
+            "prescribed": 10,
+            "rest_between_sets": [
+             90
+            ]
+           },
+           "time": null,
+           "variation": null,
+           "weight": {
+            "percentage_1rm": null,
+            "rx_weight": null,
+            "scaled_weight": null,
+            "unit": "lbs",
+            "value": 135
+           }
+          }
+         ],
+         "round_number": 9
+        },
+        {
+         "exercises": [
+          {
+           "assistance": "none",
+           "calories": null,
+           "distance": null,
+           "exercise_name": "bench press",
+           "form_notes": null,
+           "movement_type": "barbell",
+           "reps": {
+            "broken_sets": null,
+            "completed": 10,
+            "prescribed": 10,
+            "rest_between_sets": null
+           },
+           "time": null,
+           "variation": null,
+           "weight": {
+            "percentage_1rm": null,
+            "rx_weight": null,
+            "scaled_weight": null,
+            "unit": "lbs",
+            "value": 185
+           }
+          },
+          {
+           "assistance": "none",
+           "calories": null,
+           "distance": null,
+           "exercise_name": "pendlay row",
+           "form_notes": null,
+           "movement_type": "barbell",
+           "reps": {
+            "broken_sets": null,
+            "completed": 10,
+            "prescribed": 10,
+            "rest_between_sets": [
+             90
+            ]
+           },
+           "time": null,
+           "variation": null,
+           "weight": {
+            "percentage_1rm": null,
+            "rx_weight": null,
+            "scaled_weight": null,
+            "unit": "lbs",
+            "value": 135
+           }
+          }
+         ],
+         "round_number": 10
+        },
+        {
+         "exercises": [
+          {
+           "assistance": "none",
+           "calories": null,
+           "distance": null,
+           "exercise_name": "bench press",
+           "form_notes": null,
+           "movement_type": "barbell",
+           "reps": {
+            "broken_sets": null,
+            "completed": 10,
+            "prescribed": 10,
+            "rest_between_sets": null
+           },
+           "time": null,
+           "variation": null,
+           "weight": {
+            "percentage_1rm": null,
+            "rx_weight": null,
+            "scaled_weight": null,
+            "unit": "lbs",
+            "value": 185
+           }
+          },
+          {
+           "assistance": "none",
+           "calories": null,
+           "distance": null,
+           "exercise_name": "pendlay row",
+           "form_notes": null,
+           "movement_type": "barbell",
+           "reps": {
+            "broken_sets": null,
+            "completed": 10,
+            "prescribed": 10,
+            "rest_between_sets": [
+             90
+            ]
+           },
+           "time": null,
+           "variation": null,
+           "weight": {
+            "percentage_1rm": null,
+            "rx_weight": null,
+            "scaled_weight": null,
+            "unit": "lbs",
+            "value": 135
+           }
+          }
+         ],
+         "round_number": 11
+        },
+        {
+         "exercises": [
+          {
+           "assistance": "none",
+           "calories": null,
+           "distance": null,
+           "exercise_name": "bench press",
+           "form_notes": null,
+           "movement_type": "barbell",
+           "reps": {
+            "broken_sets": null,
+            "completed": 10,
+            "prescribed": 10,
+            "rest_between_sets": null
+           },
+           "time": null,
+           "variation": null,
+           "weight": {
+            "percentage_1rm": null,
+            "rx_weight": null,
+            "scaled_weight": null,
+            "unit": "lbs",
+            "value": 185
+           }
+          },
+          {
+           "assistance": "none",
+           "calories": null,
+           "distance": null,
+           "exercise_name": "pendlay row",
+           "form_notes": null,
+           "movement_type": "barbell",
+           "reps": {
+            "broken_sets": null,
+            "completed": 10,
+            "prescribed": 10,
+            "rest_between_sets": null
+           },
+           "time": null,
+           "variation": null,
+           "weight": {
+            "percentage_1rm": null,
+            "rx_weight": null,
+            "scaled_weight": null,
+            "unit": "lbs",
+            "value": 135
+           }
+          }
+         ],
+         "round_number": 12
+        },
+        {
+         "exercises": [
+          {
+           "assistance": "none",
+           "calories": null,
+           "distance": null,
+           "exercise_name": "dumbbell devil press",
+           "form_notes": "Alternating devil press with 40# DBs each hand",
+           "movement_type": "dumbbell",
+           "reps": {
+            "broken_sets": null,
+            "completed": 16,
+            "prescribed": "max",
+            "rest_between_sets": [
+             30
+            ]
+           },
+           "time": 30,
+           "variation": "alternating",
+           "weight": {
+            "percentage_1rm": null,
+            "rx_weight": null,
+            "scaled_weight": null,
+            "unit": "lbs",
+            "value": 80
+           }
+          }
+         ],
+         "round_number": 13
+        },
+        {
+         "exercises": [
+          {
+           "assistance": "none",
+           "calories": null,
+           "distance": null,
+           "exercise_name": "medicine ball slam",
+           "form_notes": "Ball slams in 30s interval",
+           "movement_type": "other",
+           "reps": {
+            "broken_sets": null,
+            "completed": 12,
+            "prescribed": "max",
+            "rest_between_sets": [
+             30
+            ]
+           },
+           "time": 30,
+           "variation": null,
+           "weight": {
+            "percentage_1rm": null,
+            "rx_weight": null,
+            "scaled_weight": null,
+            "unit": "lbs",
+            "value": 20
+           }
+          }
+         ],
+         "round_number": 14
+        },
+        {
+         "exercises": [
+          {
+           "assistance": "none",
+           "calories": null,
+           "distance": null,
+           "exercise_name": "dumbbell devil press",
+           "form_notes": null,
+           "movement_type": "dumbbell",
+           "reps": {
+            "broken_sets": null,
+            "completed": 15,
+            "prescribed": "max",
+            "rest_between_sets": [
+             30
+            ]
+           },
+           "time": 30,
+           "variation": "alternating",
+           "weight": {
+            "percentage_1rm": null,
+            "rx_weight": null,
+            "scaled_weight": null,
+            "unit": "lbs",
+            "value": 80
+           }
+          }
+         ],
+         "round_number": 15
+        },
+        {
+         "exercises": [
+          {
+           "assistance": "none",
+           "calories": null,
+           "distance": null,
+           "exercise_name": "medicine ball slam",
+           "form_notes": null,
+           "movement_type": "other",
+           "reps": {
+            "broken_sets": null,
+            "completed": 11,
+            "prescribed": "max",
+            "rest_between_sets": [
+             30
+            ]
+           },
+           "time": 30,
+           "variation": null,
+           "weight": {
+            "percentage_1rm": null,
+            "rx_weight": null,
+            "scaled_weight": null,
+            "unit": "lbs",
+            "value": 20
+           }
+          }
+         ],
+         "round_number": 16
+        },
+        {
+         "exercises": [
+          {
+           "assistance": "none",
+           "calories": null,
+           "distance": null,
+           "exercise_name": "dumbbell devil press",
+           "form_notes": null,
+           "movement_type": "dumbbell",
+           "reps": {
+            "broken_sets": null,
+            "completed": 14,
+            "prescribed": "max",
+            "rest_between_sets": [
+             30
+            ]
+           },
+           "time": 30,
+           "variation": "alternating",
+           "weight": {
+            "percentage_1rm": null,
+            "rx_weight": null,
+            "scaled_weight": null,
+            "unit": "lbs",
+            "value": 80
+           }
+          }
+         ],
+         "round_number": 17
+        },
+        {
+         "exercises": [
+          {
+           "assistance": "none",
+           "calories": null,
+           "distance": null,
+           "exercise_name": "medicine ball slam",
+           "form_notes": null,
+           "movement_type": "other",
+           "reps": {
+            "broken_sets": null,
+            "completed": 10,
+            "prescribed": "max",
+            "rest_between_sets": [
+             30
+            ]
+           },
+           "time": 30,
+           "variation": null,
+           "weight": {
+            "percentage_1rm": null,
+            "rx_weight": null,
+            "scaled_weight": null,
+            "unit": "lbs",
+            "value": 20
+           }
+          }
+         ],
+         "round_number": 18
+        },
+        {
+         "exercises": [
+          {
+           "assistance": "none",
+           "calories": null,
+           "distance": null,
+           "exercise_name": "dumbbell devil press",
+           "form_notes": null,
+           "movement_type": "dumbbell",
+           "reps": {
+            "broken_sets": null,
+            "completed": 13,
+            "prescribed": "max",
+            "rest_between_sets": [
+             30
+            ]
+           },
+           "time": 30,
+           "variation": "alternating",
+           "weight": {
+            "percentage_1rm": null,
+            "rx_weight": null,
+            "scaled_weight": null,
+            "unit": "lbs",
+            "value": 80
+           }
+          }
+         ],
+         "round_number": 19
+        },
+        {
+         "exercises": [
+          {
+           "assistance": "none",
+           "calories": null,
+           "distance": null,
+           "exercise_name": "medicine ball slam",
+           "form_notes": null,
+           "movement_type": "other",
+           "reps": {
+            "broken_sets": null,
+            "completed": 9,
+            "prescribed": "max",
+            "rest_between_sets": [
+             30
+            ]
+           },
+           "time": 30,
+           "variation": null,
+           "weight": {
+            "percentage_1rm": null,
+            "rx_weight": null,
+            "scaled_weight": null,
+            "unit": "lbs",
+            "value": 20
+           }
+          }
+         ],
+         "round_number": 20
+        },
+        {
+         "exercises": [
+          {
+           "assistance": "none",
+           "calories": null,
+           "distance": null,
+           "exercise_name": "dumbbell devil press",
+           "form_notes": null,
+           "movement_type": "dumbbell",
+           "reps": {
+            "broken_sets": null,
+            "completed": 12,
+            "prescribed": "max",
+            "rest_between_sets": [
+             30
+            ]
+           },
+           "time": 30,
+           "variation": "alternating",
+           "weight": {
+            "percentage_1rm": null,
+            "rx_weight": null,
+            "scaled_weight": null,
+            "unit": "lbs",
+            "value": 80
+           }
+          }
+         ],
+         "round_number": 21
+        },
+        {
+         "exercises": [
+          {
+           "assistance": "none",
+           "calories": null,
+           "distance": null,
+           "exercise_name": "medicine ball slam",
+           "form_notes": null,
+           "movement_type": "other",
+           "reps": {
+            "broken_sets": null,
+            "completed": 8,
+            "prescribed": "max",
+            "rest_between_sets": [
+             30
+            ]
+           },
+           "time": 30,
+           "variation": null,
+           "weight": {
+            "percentage_1rm": null,
+            "rx_weight": null,
+            "scaled_weight": null,
+            "unit": "lbs",
+            "value": 20
+           }
+          }
+         ],
+         "round_number": 22
+        },
+        {
+         "exercises": [
+          {
+           "assistance": "none",
+           "calories": null,
+           "distance": null,
+           "exercise_name": "dumbbell devil press",
+           "form_notes": null,
+           "movement_type": "dumbbell",
+           "reps": {
+            "broken_sets": null,
+            "completed": 11,
+            "prescribed": "max",
+            "rest_between_sets": [
+             30
+            ]
+           },
+           "time": 30,
+           "variation": "alternating",
+           "weight": {
+            "percentage_1rm": null,
+            "rx_weight": null,
+            "scaled_weight": null,
+            "unit": "lbs",
+            "value": 80
+           }
+          }
+         ],
+         "round_number": 23
+        },
+        {
+         "exercises": [
+          {
+           "assistance": "none",
+           "calories": null,
+           "distance": null,
+           "exercise_name": "medicine ball slam",
+           "form_notes": "Final round",
+           "movement_type": "other",
+           "reps": {
+            "broken_sets": null,
+            "completed": 7,
+            "prescribed": "max",
+            "rest_between_sets": null
+           },
+           "time": 30,
+           "variation": null,
+           "weight": {
+            "percentage_1rm": null,
+            "rx_weight": null,
+            "scaled_weight": null,
+            "unit": "lbs",
+            "value": 20
+           }
+          }
+         ],
+         "round_number": 24
+        }
+       ],
+       "rx_status": "rx",
+       "subjective_feedback": {
+        "confidence": 7,
+        "difficulty": 8,
+        "enjoyment": 8,
+        "form_quality": 7,
+        "hydration_level": "good",
+        "mental_state": "focused",
+        "motivation": 8,
+        "notes": "Solid multi-phase workout combining power, strength, and conditioning. Devil press weight calculation: 40# each hand = 80# total load for bilateral movement.",
+        "nutrition_pre_workout": null,
+        "pacing_strategy": "even_split",
+        "sleep_quality_previous": null,
+        "soreness_post": {
+         "arms": 6,
+         "back": 5,
+         "legs": 7,
+         "overall": 6
+        },
+        "soreness_pre": {
+         "arms": 2,
+         "back": 3,
+         "legs": 3,
+         "overall": 3
+        },
+        "stress_level": 4
+       },
+       "time_cap": null,
+       "workout_format": "strength_then_metcon"
+      }
+     },
+     "heart_rate": {
+      "avg": null,
+      "calories_burned": 650,
+      "energy_level_post": 6,
+      "energy_level_pre": 7,
+      "max": null,
+      "mood_post": 8,
+      "mood_pre": 7,
+      "zones": {
+       "zone_1": null,
+       "zone_2": null,
+       "zone_3": null,
+       "zone_4": null,
+       "zone_5": null
+      }
+     },
+     "intensity": 8,
+     "perceived_exertion": 8
+    },
+    "user_id": "4sVTVPd6aJdRq",
+    "workout_id": "ws_4sVTVPd6aJdRq_1754527033974",
+    "workout_name": "POWER & CONDITIONING FUSION",
+    "workout_type": "hybrid"
+   },
+   "workoutId": "ws_4sVTVPd6aJdRq_1754527033974"
+  },
+  "createdAt": "2025-08-07T00:37:19.389Z",
+  "entityType": "workout",
+  "updatedAt": "2025-08-07T00:37:19.389Z"
+ }

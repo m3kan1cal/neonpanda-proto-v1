@@ -51,6 +51,10 @@ export {
   DisciplineSpecific
 } from './types';
 
-// Future exports can be added here as the library grows:
-// export { validateWorkoutData } from './validation';
-// export { WorkoutEnhancementConfig } from './types';
+export {
+  normalizeWorkout,
+  shouldNormalizeWorkout,
+  generateNormalizationSummary,
+  type NormalizationResult,
+  type NormalizationIssue
+} from './normalization';
