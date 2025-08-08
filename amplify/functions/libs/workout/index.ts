@@ -23,7 +23,8 @@ export {
   extractCompletedAtTime,
   isComplexWorkout,
   generateWorkoutSummary,
-  classifyDiscipline
+  classifyDiscipline,
+  validateWorkoutStructure
 } from './extraction';
 
 export {

@@ -20,6 +20,7 @@ import { getSchemaWithContext } from "../schemas/universal-workout-schema";
  */
 export const isComplexWorkout = (userMessage: string): boolean => {
   const complexityIndicators = [
+    // Original indicators
     /warmup.*\d+.*\d+.*\d+/i, // Multiple warmup weights
     /\d+\s*sets.*\d+\s*reps/i, // Multiple sets mentioned
     /amrap.*\d+.*rounds/i, // AMRAP with multiple rounds
@@ -27,15 +28,198 @@ export const isComplexWorkout = (userMessage: string): boolean => {
     /\d+\s*rounds.*\d+\s*rounds/i, // Multiple round mentions
     /progression/i, // Progression workouts
     /then.*then/i, // Multiple phases (then X then Y)
+
+    // Enhanced multi-phase detection
+    /metcon.*strength|strength.*metcon/i, // Strength/metcon combos
+    /warmup.*working.*cooldown/i, // Full workout phases
+    /part\s*[12].*part\s*[12]/i, // Explicit part mentions
+    /phase\s*[12].*phase\s*[12]/i, // Phase mentions
+
+    // Complex rep schemes
+    /\d+[-x]\d+[-x]\d+/i, // 21-15-9 patterns
+    /\d+\s*sets.*\d+\s*reps.*\d+\s*(lbs?|kg|#)/i, // Sets+reps+weight
+    /ladder|pyramid|wave/i, // Progressive schemes
+    /ascending|descending/i, // Progressive patterns
+
+    // Interval complexity
+    /\d+\s*rounds.*\d+\s*minutes.*rest/i, // Timed intervals
+    /emom.*\d+.*minutes/i, // EMOM duration
+    /tabata|intervals?/i, // Interval formats
+    /\d+\s*on\s*\d+\s*off/i, // Work/rest patterns
+
+    // Movement complexity
+    /superset|circuit|complex/i, // Complex formats
+    /then|followed\s*by|after/i, // Sequential phases
+    /(\w+\s+){6,}/i, // Dense descriptions (6+ consecutive words)
+    /\d+\s*exercises?/i, // Multiple exercise mentions
+
+    // Equipment/setup complexity
+    /barbell.*dumbbell|dumbbell.*barbell/i, // Multiple equipment
+    /\d+\s*(stations?|movements?)/i, // Multi-station workouts
+    /rotate|switch/i, // Equipment rotation
+
+    // Time domain complexity
+    /\d+\s*minutes.*\d+\s*minutes/i, // Multiple time domains
+    /sprint.*endurance|endurance.*sprint/i, // Mixed energy systems
   ];
 
   const matchCount = complexityIndicators.filter((pattern) =>
     pattern.test(userMessage)
   ).length;
   const messageLength = userMessage.length;
+  const wordCount = userMessage.split(/\s+/).length;
 
-  // Complex if multiple indicators OR very long message
-  return matchCount >= 2 || messageLength > 500;
+  // Complex if multiple indicators OR very long message OR very detailed
+  return matchCount >= 2 || messageLength > 500 || wordCount > 100;
+};
+
+/**
+ * Validates workout structure for common issues and inconsistencies
+ */
+export const validateWorkoutStructure = (workoutData: any): {
+  hasIssues: boolean;
+  issues: string[];
+  severity: 'minor' | 'major' | 'critical';
+} => {
+  const issues: string[] = [];
+  let severity: 'minor' | 'major' | 'critical' = 'minor';
+
+  // Check for basic structure
+  if (!workoutData.rounds || !Array.isArray(workoutData.rounds)) {
+    issues.push('Missing or invalid rounds array');
+    severity = 'critical';
+    return { hasIssues: true, issues, severity };
+  }
+
+  const rounds = workoutData.rounds;
+
+  // 1. Round consistency checks
+  const roundStructures = rounds.map((round: any, index: number) => {
+    const structure = {
+      hasRoundNumber: typeof round.round_number === 'number',
+      hasPhase: typeof round.phase === 'string',
+      hasExercises: Array.isArray(round.exercises),
+      exerciseCount: Array.isArray(round.exercises) ? round.exercises.length : 0,
+      fields: Object.keys(round || {}).sort()
+    };
+
+    if (!structure.hasRoundNumber) {
+      issues.push(`Round ${index + 1} missing round_number`);
+    }
+    if (!structure.hasExercises) {
+      issues.push(`Round ${index + 1} missing or invalid exercises array`);
+      severity = 'major';
+    }
+
+    return structure;
+  });
+
+  // Check for inconsistent round structures
+  const firstRoundFields = roundStructures[0]?.fields || [];
+  const inconsistentRounds = roundStructures.filter((struct: any, index: number) =>
+    JSON.stringify(struct.fields) !== JSON.stringify(firstRoundFields)
+  );
+
+  if (inconsistentRounds.length > 0) {
+    issues.push(`Inconsistent round structures detected in ${inconsistentRounds.length} rounds`);
+    if (severity === 'minor') severity = 'major';
+  }
+
+  // 2. Exercise object uniformity checks
+  const allExercises = rounds.flatMap((round: any) => round.exercises || []);
+  if (allExercises.length > 0) {
+    const exerciseStructures = allExercises.map((exercise: any) =>
+      Object.keys(exercise || {}).sort()
+    );
+
+    const firstExerciseFields = exerciseStructures[0] || [];
+    const inconsistentExercises = exerciseStructures.filter((fields: string[]) =>
+      JSON.stringify(fields) !== JSON.stringify(firstExerciseFields)
+    );
+
+    if (inconsistentExercises.length > 0 && allExercises.length > 1) {
+      issues.push(`Inconsistent exercise structures across ${inconsistentExercises.length} exercises`);
+      if (severity === 'minor') severity = 'major';
+    }
+
+    // Check for missing required exercise fields
+    allExercises.forEach((exercise: any, index: number) => {
+      if (!exercise.exercise_name || typeof exercise.exercise_name !== 'string') {
+        issues.push(`Exercise ${index + 1} missing exercise_name`);
+        severity = 'major';
+      }
+    });
+  }
+
+  // 3. Logical grouping checks (phase consistency)
+  const phaseRounds = rounds.reduce((acc: any, round: any) => {
+    const phase = round.phase || 'unknown';
+    if (!acc[phase]) acc[phase] = [];
+    acc[phase].push(round);
+    return acc;
+  }, {});
+
+  // Check for mixed time domains in same phase
+  Object.entries(phaseRounds).forEach(([phase, phaseRounds]: [string, any]) => {
+    if (phase === 'working' && phaseRounds.length > 1) {
+      // Look for strength/metcon mixing in working rounds
+      const hasHeavyStrength = phaseRounds.some((round: any) =>
+        round.exercises?.some((ex: any) =>
+          ex.weight?.value > 200 || // Heavy weights
+          (ex.reps?.prescribed && ex.reps.prescribed <= 5) // Low rep ranges
+        )
+      );
+
+      const hasMetcon = phaseRounds.some((round: any) =>
+        round.exercises?.some((ex: any) =>
+          ex.reps?.prescribed > 15 || // High rep ranges
+          ['thruster', 'burpee', 'pull-up', 'push-up'].includes(ex.exercise_name?.toLowerCase())
+        )
+      );
+
+      if (hasHeavyStrength && hasMetcon) {
+        issues.push('Potential strength/metcon mixing detected in working rounds');
+        if (severity === 'minor') severity = 'major';
+      }
+    }
+  });
+
+  // 4. Movement naming consistency
+  const exerciseNames = allExercises.map((ex: any) => ex.exercise_name?.toLowerCase()).filter(Boolean);
+  const nameVariations = exerciseNames.reduce((acc: any, name: string) => {
+    const normalized = name.replace(/[^a-z]/g, ''); // Remove spaces, hyphens
+    if (!acc[normalized]) acc[normalized] = new Set();
+    acc[normalized].add(name);
+    return acc;
+  }, {});
+
+  Object.entries(nameVariations).forEach(([normalized, variations]: [string, any]) => {
+    if (variations.size > 1) {
+      issues.push(`Inconsistent naming for ${normalized}: ${Array.from(variations).join(', ')}`);
+    }
+  });
+
+  // 5. Critical structural issues
+  if (workoutData.coach_notes && typeof workoutData.coach_notes !== 'object') {
+    issues.push('coach_notes should be an object at root level');
+    severity = 'major';
+  }
+
+  if (workoutData.discipline_specific?.coach_notes) {
+    issues.push('coach_notes incorrectly nested in discipline_specific');
+    severity = 'major';
+  }
+
+  if (workoutData.performance_metrics?.discipline_specific) {
+    issues.push('discipline_specific incorrectly nested in performance_metrics');
+    severity = 'major';
+  }
+
+  return {
+    hasIssues: issues.length > 0,
+    issues,
+    severity
+  };
 };
 
 /**
@@ -96,6 +280,62 @@ COACH CONTEXT:
 - Programming Focus: ${coachConfig.technical_config?.programming_focus?.join(", ") || "general"}
 - Preferred Intensity: ${coachConfig.technical_config?.preferred_intensity || "moderate"}
 - Equipment Available: ${coachConfig.technical_config?.equipment_available?.join(", ") || "standard gym"}
+
+COMPLEX WORKOUT STRUCTURE EXAMPLES:
+
+1. MULTI-PHASE WORKOUTS:
+   Structure as separate round categories with clear time domain separation:
+   - Warmup rounds: strength building sets (lighter weights, progressive)
+   - Working rounds: main workout content (heaviest loads or metcon)
+   - Cooldown rounds: accessory work (stretching, mobility)
+
+   Example Structure:
+   rounds: [
+     {round_number: 1, phase: "warmup", exercises: [...]},
+     {round_number: 2, phase: "warmup", exercises: [...]},
+     {round_number: 3, phase: "working", exercises: [...]},
+     {round_number: 4, phase: "working", exercises: [...]},
+     {round_number: 5, phase: "cooldown", exercises: [...]}
+   ]
+
+2. INTERVAL WORKOUTS (EMOM/Tabata/Circuits):
+   Each interval = separate round with consistent structure:
+   - Round 1: EMOM minute 1 exercises
+   - Round 2: EMOM minute 2 exercises
+   - Use consistent exercise field patterns within all rounds
+   - Mark intervals with phase: "working" and note timing in round metadata
+
+3. SUPERSET/CIRCUIT STRUCTURE:
+   Group related exercises in same round:
+   - Round 1: [Exercise A, Exercise B] (performed together)
+   - Round 2: [Exercise A, Exercise B] (repeat superset)
+   - Keep paired movements together, use consistent naming
+
+4. COMPLEX REP SCHEMES (21-15-9, Ladders, Pyramids):
+   Each rep range = separate round:
+   - Round 1: 21 reps of each movement
+   - Round 2: 15 reps of each movement
+   - Round 3: 9 reps of each movement
+   - Maintain exercise order and structure across rounds
+
+CRITICAL ROUND STRUCTURE RULES:
+
+1. CONSISTENCY: All rounds in a workout must follow the same structure pattern
+2. LOGICAL GROUPING: Group exercises that happen simultaneously or sequentially
+3. TIME DOMAIN RESPECT: Don't mix strength work with metcon in same round unless explicitly stated
+4. MOVEMENT PAIRING: Keep paired movements (supersets) in the same round
+5. PROGRESSION TRACKING: Use consistent field names across rounds for same exercises
+6. PHASE CLARITY: Use clear phase markers ("warmup", "working", "cooldown")
+
+WRONG EXAMPLES:
+- Mixing different exercise object structures within same workout
+- Putting warmup and working sets in same round
+- Inconsistent exercise naming across rounds ("pull-up" vs "pullup")
+
+CORRECT EXAMPLES:
+- Consistent exercise objects across all rounds
+- Clear phase separation with logical round grouping
+- Uniform field structures for all exercises
 
 EXTRACTION GUIDELINES:
 

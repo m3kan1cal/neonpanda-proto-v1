@@ -569,9 +569,7 @@ function CoachConversations() {
       // Helper function to get available slash commands
   const getAvailableSlashCommands = () => {
     return [
-      { command: '/log-workout', description: 'Log a completed workout', example: '/log-workout I did Fran in 8:57' },
-      { command: '/log', description: 'Quick workout log', example: '/log Deadlifted 405x3' },
-      { command: '/workout', description: 'Log workout session', example: '/workout 5k run in 24:30' }
+      { command: '/log-workout', description: 'Log a completed workout', example: '/log-workout I did Fran in 8:57' }
     ];
   };
 

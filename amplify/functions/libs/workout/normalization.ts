@@ -54,6 +54,42 @@ RESPONSE REQUIREMENTS:
 - Start directly with { and end with }
 - Ensure all JSON is properly escaped and parseable
 
+COMPLEX WORKOUT NORMALIZATION FOCUS:
+
+1. ROUND CONSISTENCY: Ensure all rounds follow identical structure patterns
+   - All rounds must have same field structure (round_number, phase, exercises, etc.)
+   - Exercise objects within rounds must be uniformly structured
+   - Check for missing fields that should be present in all rounds
+
+2. EXERCISE OBJECT UNIFORMITY: All exercises must have same field structure
+   - Consistent field names across all exercise instances
+   - Same optional field patterns (e.g., if one exercise has "weight", all should have weight field)
+   - Uniform data types for equivalent fields
+
+3. LOGICAL GROUPING: Verify exercises are grouped logically by time domain
+   - Warmup exercises should be in "warmup" phase rounds
+   - Working sets should be in "working" phase rounds
+   - Cooldown/accessory work in "cooldown" phase rounds
+   - Don't mix strength and metcon in same round unless explicitly indicated
+
+4. MOVEMENT PROGRESSION: Check for consistent naming of same exercises across rounds
+   - "pull-up", "pullup", "pull ups" should be normalized to consistent format
+   - Same movement should have identical exercise_name across all rounds
+   - Maintain movement standards and variations correctly
+
+5. TIME DOMAIN VALIDATION: Ensure strength and metcon phases are properly separated
+   - Heavy strength work should not be mixed with high-intensity metcon
+   - Progressive warmup should precede working sets
+   - Recovery/accessory work should follow main workout content
+
+CRITICAL FIXES TO PRIORITIZE:
+- Inconsistent exercise field structures across rounds
+- Misplaced exercises in wrong time domains (strength in metcon rounds)
+- Incomplete round objects missing required fields (round_number, exercises array)
+- Inconsistent movement naming (normalize to standard format)
+- Missing phase markers for complex multi-part workouts
+- Incorrect nesting of discipline_specific or coach_notes
+
 ${getSchemaWithContext('validation')}
 
 EXPECTED OUTPUT FORMAT:
@@ -89,7 +125,8 @@ Transform this workout data to conform to the Universal Workout Schema v2.0 and 
  */
 export const normalizeWorkout = async (
   workoutData: any,
-  userId: string
+  userId: string,
+  enableThinking: boolean = false
 ): Promise<NormalizationResult> => {
   try {
     console.info("🔧 Starting workout normalization:", {
@@ -99,7 +136,7 @@ export const normalizeWorkout = async (
     });
 
     // Use intelligent normalization for all cases that need normalization
-    return await performNormalization(workoutData, userId);
+    return await performNormalization(workoutData, userId, enableThinking);
   } catch (error) {
     console.error("Normalization failed:", error);
     return {
@@ -126,13 +163,22 @@ export const normalizeWorkout = async (
  */
 const performNormalization = async (
   workoutData: any,
-  userId: string
+  userId: string,
+  enableThinking: boolean = false
 ): Promise<NormalizationResult> => {
   try {
     const normalizationPrompt = buildNormalizationPrompt(workoutData);
+
+    console.info("Normalization call configuration:", {
+      enableThinking,
+      promptLength: normalizationPrompt.length
+    });
+
     const normalizationResponse = await callBedrockApi(
       normalizationPrompt,
-      "workout_normalization"
+      "workout_normalization",
+      undefined, // Use default model
+      enableThinking
     );
 
     // Parse JSON with fallback cleaning and fixing
@@ -290,17 +336,27 @@ export const shouldNormalizeWorkout = (
   // First, do a quick structural check
   const hasCorrectStructure = hasCorrectRootStructure(workoutData);
 
+  // Check for complexity indicators that might need normalization
+  const isComplex = checkForComplexWorkoutIndicators(workoutData);
+
   console.info("🔍 Normalization decision analysis:", {
     hasCorrectStructure,
     extractionConfidence,
+    isComplex,
     workoutId: workoutData.workout_id,
     discipline: workoutData.discipline
   });
 
-  // If structure is correct and confidence is high, skip normalization
-  if (hasCorrectStructure && extractionConfidence > 0.8) {
-    console.info("✅ Skipping normalization: correct structure + high confidence");
+  // If structure is correct and confidence is high, skip normalization (unless complex)
+  if (hasCorrectStructure && extractionConfidence > 0.8 && !isComplex) {
+    console.info("✅ Skipping normalization: correct structure + high confidence + simple workout");
     return false;
+  }
+
+  // Normalize complex workouts even with good structure/confidence for quality assurance
+  if (isComplex && hasCorrectStructure && extractionConfidence > 0.7) {
+    console.info("🔧 Normalization required: complex workout needs validation");
+    return true;
   }
 
   // If structure is incorrect, always normalize regardless of confidence
@@ -348,4 +404,31 @@ export const generateNormalizationSummary = (result: NormalizationResult): strin
   }
 
   return summary;
+};
+
+/**
+ * Simple check for complexity indicators that suggest normalization might be beneficial
+ */
+const checkForComplexWorkoutIndicators = (workoutData: any): boolean => {
+  // Check for multiple rounds (potential complexity)
+  const roundCount = workoutData.discipline_specific?.crossfit?.rounds?.length || 0;
+  if (roundCount > 5) return true;
+
+  // Check for multiple phases
+  const rounds = workoutData.discipline_specific?.crossfit?.rounds || [];
+  const phases = new Set(rounds.map((r: any) => r.phase).filter(Boolean));
+  if (phases.size > 2) return true;
+
+  // Check for exercise count complexity
+  const totalExercises = rounds.reduce((count: number, round: any) =>
+    count + (round.exercises?.length || 0), 0);
+  if (totalExercises > 8) return true;
+
+  // Check for many different movements
+  const allExercises = rounds.flatMap((r: any) => r.exercises || []);
+  const exerciseNames = allExercises.map((e: any) => e.exercise_name?.toLowerCase()).filter(Boolean);
+  const uniqueExercises = new Set(exerciseNames);
+  if (uniqueExercises.size > 5) return true;
+
+  return false;
 };

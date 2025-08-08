@@ -11,7 +11,7 @@ import { callBedrockApi, MODEL_IDS } from '../api-helpers';
 /**
  * Supported workout slash commands
  */
-export const WORKOUT_SLASH_COMMANDS = ['log-workout', 'log', 'workout'] as const;
+export const WORKOUT_SLASH_COMMANDS = ['log-workout'] as const;
 
 /**
  * Slash command parsing result

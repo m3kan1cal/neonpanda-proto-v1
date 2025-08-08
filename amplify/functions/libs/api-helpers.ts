@@ -182,11 +182,57 @@ const getMaxTokensForModel = (modelId: string): number => {
   return MAX_TOKENS; // Default for Claude models
 };
 
-// Amazon Bedrock Converse API call
+/**
+ * Enhances a prompt to enable Claude's thinking capabilities
+ */
+const enhancePromptForThinking = (systemPrompt: string): string => {
+  const thinkingInstructions = `
+THINKING INSTRUCTIONS:
+Before providing your final response, use <thinking> tags to think through the problem step by step.
+
+Within the thinking tags, you should:
+- Analyze the complexity of the task
+- Break down the problem into components
+- Consider edge cases and potential issues
+- Plan your approach methodically
+- Reason through any ambiguities
+- Validate your logic before responding
+
+After your thinking, provide your final response outside the thinking tags.
+
+Example format:
+<thinking>
+Let me analyze this step by step:
+1. The user is asking for...
+2. I need to consider...
+3. The key challenges are...
+4. My approach should be...
+</thinking>
+
+[Your final response here]
+
+${systemPrompt}`;
+
+  return thinkingInstructions;
+};
+
+/**
+ * Strips thinking tags from Claude's response to return only the final answer
+ */
+const stripThinkingTags = (response: string): string => {
+  // Remove everything between <thinking> and </thinking> tags (including the tags)
+  const withoutThinking = response.replace(/<thinking>[\s\S]*?<\/thinking>/gi, '');
+
+  // Clean up any extra whitespace that might be left
+  return withoutThinking.trim();
+};
+
+// Amazon Bedrock Converse API call with optional thinking capabilities
 export const callBedrockApi = async (
   systemPrompt: string,
   userMessage: string,
-  modelId: string = CLAUDE_SONNET_4_MODEL_ID
+  modelId: string = CLAUDE_SONNET_4_MODEL_ID,
+  enableThinking: boolean = false
 ): Promise<string> => {
   try {
     console.info("=== BEDROCK API CALL START ===");
@@ -194,6 +240,7 @@ export const callBedrockApi = async (
     console.info("Model ID:", modelId);
     console.info("System prompt length:", systemPrompt.length);
     console.info("User message length:", userMessage.length);
+    console.info("Thinking enabled:", enableThinking);
     console.info("Bedrock client config:", {
       region: (await bedrockClient.config.region?.()) || "unknown",
     });
@@ -217,7 +264,7 @@ export const callBedrockApi = async (
       ],
       system: [
         {
-          text: systemPrompt,
+          text: enableThinking ? enhancePromptForThinking(systemPrompt) : systemPrompt,
         },
       ],
       inferenceConfig: {
@@ -282,7 +329,13 @@ export const callBedrockApi = async (
       throw new Error("Invalid response format from Bedrock");
     }
 
-    const responseText = response.output.message.content[0].text;
+    let responseText = response.output.message.content[0].text;
+
+    // If thinking was enabled, extract the final response (strip thinking tags)
+    if (enableThinking) {
+      responseText = stripThinkingTags(responseText);
+    }
+
     console.info(
       "Successfully extracted response text, length:",
       responseText.length

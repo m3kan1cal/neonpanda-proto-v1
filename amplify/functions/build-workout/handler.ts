@@ -22,6 +22,45 @@ import {
   generateNormalizationSummary,
 } from "../libs/workout/normalization";
 
+/**
+ * Simple complexity check to determine if thinking should be enabled
+ */
+const checkWorkoutComplexity = (workoutContent: string): boolean => {
+  const content = workoutContent.toLowerCase();
+
+  // Check for multiple phases
+  const phaseIndicators = ['warmup', 'warm-up', 'warm up', 'working', 'cooldown', 'cool-down', 'cool down', 'metcon', 'strength'];
+  const phaseMatches = phaseIndicators.filter(indicator => content.includes(indicator)).length;
+
+  // Check for complex structures
+  const complexityIndicators = [
+    /\d+\s*rounds/gi,     // Multiple rounds
+    /\d+\s*sets/gi,       // Multiple sets
+    /superset/gi,         // Supersets
+    /circuit/gi,          // Circuits
+    /emom/gi,             // EMOM
+    /tabata/gi,           // Tabata
+    /for\s+time/gi,       // For time
+    /amrap/gi,            // AMRAP
+    /\d+:\d+/g,           // Time notation
+    /\d+\s*x\s*\d+/gi,    // Rep schemes like 5x5
+  ];
+
+  const complexMatches = complexityIndicators.filter(pattern => pattern.test(content)).length;
+
+  // Enable thinking for complex workouts
+  const isComplex = phaseMatches >= 2 || complexMatches >= 3 || workoutContent.length > 800;
+
+  console.info("Workout complexity analysis:", {
+    phaseMatches,
+    complexMatches,
+    contentLength: workoutContent.length,
+    isComplex
+  });
+
+  return isComplex;
+};
+
 export const handler = async (event: BuildWorkoutEvent) => {
   try {
     console.info("🏋️ Starting workout extraction:", {
@@ -64,9 +103,22 @@ export const handler = async (event: BuildWorkoutEvent) => {
     });
 
     console.info("Calling Claude for workout extraction...");
+
+    // Enable thinking for complex workouts to improve accuracy
+    const isComplexWorkout = checkWorkoutComplexity(workoutContent);
+    const enableThinking = isComplexWorkout;
+
+    console.info("Extraction configuration:", {
+      isComplexWorkout,
+      enableThinking,
+      workoutLength: workoutContent.length
+    });
+
     const extractedData = await callBedrockApi(
       extractionPrompt,
-      workoutContent
+      workoutContent,
+      undefined, // Use default model
+      enableThinking
     );
 
     console.info("Claude extraction completed. Raw response:", {
@@ -125,7 +177,6 @@ export const handler = async (event: BuildWorkoutEvent) => {
     });
 
     // Calculate confidence score and update metadata
-    // Note: metadata is guaranteed to exist after parseAndValidateWorkoutData
     const confidence = calculateConfidence(workoutData);
     workoutData.metadata.data_confidence = confidence;
 
@@ -141,7 +192,11 @@ export const handler = async (event: BuildWorkoutEvent) => {
         hasDisciplineSpecific: !!workoutData.discipline_specific,
       });
 
-      const normalizationResult = await normalizeWorkout(workoutData, event.userId);
+      const normalizationResult = await normalizeWorkout(
+        workoutData,
+        event.userId,
+        enableThinking // Use same thinking setting as extraction
+      );
       normalizationSummary = generateNormalizationSummary(normalizationResult);
 
       console.info("Normalization completed:", {
