@@ -6,6 +6,7 @@
  */
 
 import { CoachConfig, DynamoDBItem } from '../coach-creator/types';
+import { UserMemory } from '../user/types';
 
 /**
  * Individual message in a coach conversation
@@ -126,25 +127,6 @@ export interface EnhancedMethodologyOptions {
   includeComparisons?: boolean;
   includeProgression?: boolean;
   includePracticalApplication?: boolean;
-}
-
-/**
- * User memory for persistent coaching context
- */
-export interface UserMemory {
-  memoryId: string;
-  userId: string;
-  coachId?: string; // Optional - memories can be coach-specific or global
-  content: string; // The memory content/description
-  memoryType: 'preference' | 'goal' | 'constraint' | 'instruction' | 'context';
-  metadata: {
-    createdAt: Date;
-    lastUsed?: Date;
-    usageCount: number;
-    source: 'conversation' | 'explicit_request';
-    importance: 'high' | 'medium' | 'low';
-    tags?: string[];
-  };
 }
 
 /**

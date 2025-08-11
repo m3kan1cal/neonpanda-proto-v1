@@ -33,6 +33,49 @@
 
 ## Entity Schema Definitions
 
+### User Profile
+```json
+{
+  "pk": "user#${userId}",
+  "sk": "profile",
+  "entityType": "user",
+  "gsi1pk": "email#${email}",
+  "gsi1sk": "profile",
+  "gsi2pk": "username#${username}",
+  "gsi2sk": "profile",
+  "createdAt": "2025-06-20T15:30:00Z",
+  "updatedAt": "2025-06-20T15:30:00Z",
+  "attributes": {
+    "userId": "string",
+    "email": "string",
+    "username": "string",
+    "firstName": "string",
+    "lastName": "string",
+    "displayName": "string",
+    "nickname": "string",
+    "avatar": {
+      "url": "string",
+      "s3Key": "string"
+    },
+    "preferences": {},
+    "subscription": {},
+    "demographics": {},
+    "fitness": {},
+    "metadata": {}
+  }
+}
+```
+
+**Key Details**:
+- Primary user identity and profile information
+- Username for public identification and @mentions
+- Nickname for casual/friendly interactions with coaches
+- Display name for UI presentation (defaults to firstName + lastName)
+- Comprehensive preferences for personalization
+- Subscription and billing integration
+
+---
+
 ### Contact Form
 ```json
 {
@@ -90,6 +133,13 @@
       "totalMessages": "number",
       "tags": ["array"],
       "isActive": "boolean"
+    },
+    "athleteProfile": {
+      "summary": "string",        // AI-generated natural language athlete profile
+      "lastUpdated": "Date",      // When this profile was last generated
+      "version": "number",        // For tracking profile evolution
+      "confidence": "number",     // AI confidence in the profile accuracy (0-1)
+      "sources": ["array"]        // Data sources used (e.g., "workouts", "conversations", "memories")
     }
   }
 }
@@ -500,6 +550,22 @@ coach-ai-conversations/
 
 ### Primary Query Patterns
 
+**User Profile Management**:
+```javascript
+// Get user profile
+Query: pk="user#${userId}" AND sk="profile"
+
+// Get user by email (requires GSI or scan - see below)
+GSI Query: gsi1pk="email#${email}" AND gsi1sk="profile"
+
+// Get user by username (requires GSI)
+GSI Query: gsi2pk="username#${username}" AND gsi2sk="profile"
+
+// Update user profile
+UpdateItem: pk="user#${userId}" AND sk="profile"
+UpdateExpression: SET attributes.preferences.timezone = :tz, updatedAt = :now
+```
+
 **Coach Conversation Management**:
 ```javascript
 // Get specific conversation
@@ -607,15 +673,15 @@ FilterExpression: entityType = "userMemory"
 
 ### Global Secondary Indexes (GSI)
 
-**GSI-1: Generic Index**
-- **Partition Key**: gsi1pk
-- **Sort Key**: gsi1sk
-- **Use Cases**: Flexible queries based on application-specific access patterns
+**GSI-1: Email Lookup Index**
+- **Partition Key**: gsi1pk (format: `email#${email}`)
+- **Sort Key**: gsi1sk (format: `profile`)
+- **Use Cases**: User lookup by email address, authentication flows, password reset
 
-**GSI-2: Generic Index**
-- **Partition Key**: gsi2pk
-- **Sort Key**: gsi2sk
-- **Use Cases**: Additional flexible queries for different access patterns
+**GSI-2: Username Lookup Index**
+- **Partition Key**: gsi2pk (format: `username#${username}`)
+- **Sort Key**: gsi2sk (format: `profile`)
+- **Use Cases**: User lookup by username, public profile access, @mentions
 
 **GSI-3: EntityType Index**
 - **Partition Key**: entityType

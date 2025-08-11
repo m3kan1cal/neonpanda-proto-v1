@@ -64,6 +64,22 @@ export const createS3DebugPolicy = (): PolicyStatement => {
 };
 
 /**
+ * S3 policy for analytics storage
+ */
+export const createS3AnalyticsPolicy = (): PolicyStatement => {
+  return new PolicyStatement({
+    effect: Effect.ALLOW,
+    actions: [
+      's3:PutObject',
+      's3:PutObjectAcl'
+    ],
+    resources: [
+      'arn:aws:s3:::midgard-sandbox-logs/analytics/weekly-analytics/*'
+    ]
+  });
+};
+
+/**
  * Helper function to grant Lambda invoke permissions
  */
 export const grantLambdaInvokePermissions = (
@@ -79,6 +95,16 @@ export const grantLambdaInvokePermissions = (
  */
 export const grantS3DebugPermissions = (functions: IFunction[]): void => {
   const s3Policy = createS3DebugPolicy();
+  functions.forEach(func => {
+    func.addToRolePolicy(s3Policy);
+  });
+};
+
+/**
+ * Helper function to grant S3 analytics permissions
+ */
+export const grantS3AnalyticsPermissions = (functions: IFunction[]): void => {
+  const s3Policy = createS3AnalyticsPolicy();
   functions.forEach(func => {
     func.addToRolePolicy(s3Policy);
   });

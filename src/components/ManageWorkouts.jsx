@@ -345,7 +345,7 @@ function ManageWorkouts() {
     const dateInfo = formatWorkoutDate(workout.completedAt || workout.date);
     const workoutName = workoutAgentRef.current?.formatWorkoutSummary(workout, true) || 'Workout';
 
-    const duration = workout.duration;
+    const duration = workout.duration ? Math.round(workout.duration / 60) : null;
     const discipline = workout.discipline || 'fitness';
     const intensity = workout.performanceMetrics?.intensity || "~";
 

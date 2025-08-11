@@ -27,7 +27,9 @@ function Breadcrumbs() {
     'training-grounds': 'Training Grounds',
     'coach-conversations': 'Coach Conversations',
     'workouts': 'Workouts',
-    'manage-workouts': 'Manage Workouts'
+    'manage-workouts': 'Manage Workouts',
+    'reports': 'Reports',
+    'weekly': 'Weekly Reports'
   };
 
   // Don't show breadcrumbs on the home page
@@ -51,6 +53,26 @@ function Breadcrumbs() {
       const userId = searchParams.get('userId');
       const coachId = searchParams.get('coachId');
       return `${basePath}?userId=${userId}&coachId=${coachId}`;
+    }
+
+    // For Reports, preserve userId and coachId if available
+    if (routeName === 'reports' && searchParams.has('userId') && searchParams.has('coachId')) {
+      const userId = searchParams.get('userId');
+      const coachId = searchParams.get('coachId');
+      return `${basePath}?userId=${userId}&coachId=${coachId}`;
+    }
+
+    // For Weekly Reports, preserve userId, weekId, and coachId if available
+    if (routeName === 'weekly' && searchParams.has('userId')) {
+      const userId = searchParams.get('userId');
+      const weekId = searchParams.get('weekId');
+      const coachId = searchParams.get('coachId');
+
+      let params = `userId=${userId}`;
+      if (weekId) params += `&weekId=${weekId}`;
+      if (coachId) params += `&coachId=${coachId}`;
+
+      return `${basePath}?${params}`;
     }
 
     return basePath;

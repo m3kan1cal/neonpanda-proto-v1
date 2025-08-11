@@ -5,6 +5,7 @@ import { NeonBorder } from './themes/SynthwaveComponents';
 import TrainingGroundsAgent from '../utils/agents/TrainingGroundsAgent';
 import CoachConversationAgent from '../utils/agents/CoachConversationAgent';
 import WorkoutAgent from '../utils/agents/WorkoutAgent';
+import ReportAgent from '../utils/agents/ReportAgent';
 
 // Icons
 const ConversationIcon = () => (
@@ -43,8 +44,6 @@ const MessagesIcon = () => (
   </svg>
 );
 
-
-
 const InfoIcon = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -79,6 +78,7 @@ function TrainingGrounds() {
   const trainingGroundsAgentRef = useRef(null);
   const conversationAgentRef = useRef(null);
   const workoutAgentRef = useRef(null);
+  const reportsAgentRef = useRef(null);
 
   // Training Grounds state (managed by TrainingGroundsAgent - coach data only)
   const [trainingGroundsState, setTrainingGroundsState] = useState({
@@ -104,6 +104,14 @@ function TrainingGrounds() {
     recentWorkouts: [],
     totalWorkoutCount: 0,
     isLoading: false,
+    error: null,
+  });
+
+  // Reports state (managed by ReportsAgent)
+  const [reportsState, setReportsState] = useState({
+    recentReports: [],
+    isLoadingRecentItems: false,
+    isLoadingItem: false,
     error: null,
   });
 
@@ -208,6 +216,27 @@ function TrainingGrounds() {
     };
   }, [handleWorkoutStateChange]);
 
+  // Initialize reports agent
+  useEffect(() => {
+    if (!reportsAgentRef.current) {
+      reportsAgentRef.current = new ReportAgent(null, (newState) => {
+        setReportsState(prev => ({
+          ...prev,
+          isLoadingRecentItems: newState.isLoadingRecentItems || false,
+          isLoadingItem: newState.isLoadingItem || false,
+          recentReports: newState.recentReports || [],
+          error: newState.error || null,
+        }));
+      });
+    }
+    return () => {
+      if (reportsAgentRef.current) {
+        reportsAgentRef.current.destroy();
+        reportsAgentRef.current = null;
+      }
+    };
+  }, []);
+
   // Initialize data when userId or coachId changes
   useEffect(() => {
     if (trainingGroundsAgentRef.current && userId && coachId) {
@@ -221,6 +250,11 @@ function TrainingGrounds() {
       console.info('TrainingGrounds: Setting userId and loading workouts for:', userId);
       workoutAgentRef.current.setUserId(userId);
       workoutAgentRef.current.loadRecentWorkouts(5);
+    }
+    if (reportsAgentRef.current && userId) {
+      console.info('TrainingGrounds: Setting userId and loading reports for:', userId);
+      reportsAgentRef.current.setUserId(userId);
+      reportsAgentRef.current.loadRecentReports(5);
     }
   }, [userId, coachId]);
 
@@ -575,23 +609,65 @@ function TrainingGrounds() {
             </div>
           </div>
 
-          {/* Analytics & Insights Section */}
+          {/* Reports & Insights Section */}
           <div className="bg-synthwave-bg-card/50 border-2 border-synthwave-neon-purple/30 rounded-lg p-6 transition-all duration-300 hover:border-synthwave-neon-purple hover:-translate-y-1">
             <div className="flex items-center space-x-3 mb-4">
               <div className="text-synthwave-neon-purple">
                 <AnalyticsIcon />
               </div>
               <h3 className="font-russo font-bold text-white text-lg uppercase">
-                Analytics & Insights
+                Reports & Insights
               </h3>
             </div>
-            <p className="font-rajdhani text-synthwave-text-secondary text-sm mb-6">
-              Performance analytics and personalized insights.
-            </p>
-            <div className="text-center py-8">
-              <div className="font-rajdhani text-synthwave-text-muted text-sm">
-                This feature is in active development and is coming soon
-              </div>
+            <p className="font-rajdhani text-synthwave-text-secondary text-sm mb-6">Weekly and monthly reports with insights and recommendations.</p>
+
+            <div className="space-y-3 mb-2">
+              {reportsState.isLoadingRecentItems ? (
+                <div className="text-center py-4">
+                  <div className="inline-flex items-center space-x-2 text-synthwave-text-secondary font-rajdhani text-sm">
+                    <div className="flex space-x-1">
+                      <div className="w-2 h-2 bg-synthwave-neon-purple rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                      <div className="w-2 h-2 bg-synthwave-neon-purple rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                      <div className="w-2 h-2 bg-synthwave-neon-purple rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                    </div>
+                    <span>Loading reports...</span>
+                  </div>
+                </div>
+              ) : reportsState.error ? (
+                <div className="text-center py-4">
+                  <div className="font-rajdhani text-synthwave-neon-pink text-sm mb-2">Reports API Error</div>
+                  <div className="font-rajdhani text-synthwave-text-muted text-xs">{reportsState.error}</div>
+                </div>
+              ) : reportsState.recentReports.length === 0 ? (
+                <div className="text-center py-4">
+                  <div className="font-rajdhani text-synthwave-text-muted text-sm">No reports found</div>
+                </div>
+              ) : (
+                <>
+                  <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">Recent Reports</div>
+                  {reportsState.recentReports.map((rep) => (
+                    <div
+                      key={rep.weekId}
+                      onClick={() => navigate(`/training-grounds/reports/weekly?userId=${userId}&weekId=${rep.weekId}&coachId=${coachId}`)}
+                      className="bg-synthwave-bg-primary/30 border border-synthwave-neon-purple/20 hover:border-synthwave-neon-purple/40 hover:bg-synthwave-bg-primary/50 rounded-lg p-3 cursor-pointer transition-all duration-200"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1 min-w-0">
+                          <div className="font-rajdhani text-sm text-white font-medium truncate">
+                            {reportsAgentRef.current?.formatReportTitle(rep) || rep.weekId}
+                          </div>
+                          <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                            {(rep.weekStart && rep.weekEnd) ? `${rep.weekStart} → ${rep.weekEnd}` : ''}
+                          </div>
+                        </div>
+                        <div className="text-synthwave-neon-purple ml-2">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7"/></svg>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </>
+              )}
             </div>
           </div>
 

@@ -1,6 +1,6 @@
 import { queryUserMemories as queryUserMemoriesFromDb, saveUserMemory, updateUserMemory } from "../../../dynamodb/operations";
 import { detectUserMemoryRequest, createUserMemory } from "./detection";
-import { UserMemory } from "./types";
+import { UserMemory } from '../user/types';
 
 
 

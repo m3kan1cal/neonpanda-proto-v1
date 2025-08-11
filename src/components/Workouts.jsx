@@ -621,7 +621,7 @@ function Workouts() {
                   </div>
                   {workout.workoutData?.duration && (
                     <div>
-                      <span className="text-synthwave-neon-pink">Duration:</span> {Math.round(workout.workoutData.duration)} minutes
+                      <span className="text-synthwave-neon-pink">Duration:</span> {Math.round(workout.workoutData.duration / 60)} minutes
                     </div>
                   )}
                   {workout.extractionMetadata?.confidence && (

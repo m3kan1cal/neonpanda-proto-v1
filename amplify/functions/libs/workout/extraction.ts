@@ -263,9 +263,11 @@ EXTRACTION REQUIREMENTS:
 - For complex multi-phase workouts, break into clear round structures
 - EFFICIENCY: For workouts with >10 rounds, group similar warmup sets to stay within token limits
 - JSON OPTIMIZATION: Use concise structures and avoid repetitive null fields where possible
-- WORKOUT NAMING: Use user-provided names when mentioned, otherwise generate Latin-inspired names
+- WORKOUT NAMING: Use user-provided names when mentioned, otherwise ALWAYS generate Latin-inspired names
   * If user provides a name ("I did Fran", "workout called XYZ"), use that exact name
-  * Only generate Latin names when no name is provided or implied
+  * MANDATORY: When no explicit name is provided, create a Latin/Roman-inspired name (e.g., "Fortis Vigor", "Gladiator Complex", "Infernus Maximus", "Tempestus Power", "Dominus Strength")
+  * DO NOT use generic English descriptive names like "Power & Conditioning Complex" - always use Latin-inspired naming
+  * Latin naming adds character and memorability to workouts - this is a key feature
 ${isComplex ? "- COMPLEX WORKOUT OPTIMIZATION: Consolidate warmup rounds, use minimal weight objects, prioritize working sets and metcon rounds" : ""}
 
 You are an expert fitness data extraction AI that converts natural language workout descriptions into structured data following the Universal Workout Schema v2.0.
@@ -445,6 +447,9 @@ EXTRACTION GUIDELINES:
    - "Did Fran in 8:57 with 95lb thrusters" → workout_name: "Fran", total_time: 537, rx_status: "rx", score: {value: 537, type: "time", unit: "seconds"}
    - "Scaled Murph with 65lb thrusters" → workout_name: "Murph", rx_status: "scaled", scaled_weight: 65
    - "Today's workout was called Death by Burpees" → workout_name: "Death by Burpees" (preserve user name)
+   - "I did squats then burpees and pull-ups" → workout_name: "Gladiator Complex" (Latin name for unnamed workout)
+   - "Completed a strength and conditioning session" → workout_name: "Fortis Vigor" (Latin name for unnamed workout)
+   - "Did landmine work then front squats and a metcon finisher" → workout_name: "Infernus Maximus" (Latin name for multi-phase workout)
    - "Then max strict pull-ups - I got 15" → reps: {prescribed: "max", completed: 15} (use "max" not 999)
    - "Finished with max push-ups to failure" → reps: {prescribed: "max", completed: [actual number]} (use "max" for max effort)
    - "20 minute AMRAP: 5 pull-ups, 10 push-ups, 15 squats - got 12 rounds" → workout_format: "amrap", rounds_completed: 12, score: {value: 12, type: "rounds"}
@@ -896,7 +901,7 @@ SUMMARY:`;
     // Fallback to basic summary if AI fails
     const workoutName = workoutData.workout_name || "Workout";
     const discipline = workoutData.discipline || "";
-    const duration = workoutData.duration ? `${workoutData.duration}min` : "";
+    const duration = workoutData.duration ? `${Math.round(workoutData.duration / 60)}min` : "";
 
     let fallback = `Completed ${workoutName}`;
     if (discipline) fallback += ` (${discipline})`;

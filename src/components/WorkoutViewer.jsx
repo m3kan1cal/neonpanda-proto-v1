@@ -260,7 +260,7 @@ const WorkoutSummary = ({ workoutData }) => {
       />
       <ValueDisplay
         label="Duration"
-        value={workoutData.duration ? `${workoutData.duration} min` : null}
+        value={workoutData.duration ? `${Math.round(workoutData.duration / 60)} min` : null}
         dataPath="workoutData.duration"
       />
       <ValueDisplay

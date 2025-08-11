@@ -1,0 +1,331 @@
+{
+  "structured_analytics": {
+    "metadata": {
+      "week_id": "2025-32",
+      "date_range": {
+        "start": "2025-08-04",
+        "end": "2025-08-10"
+      },
+      "sessions_completed": 6,
+      "sessions_planned": 6,
+      "data_completeness": 0.85,
+      "analysis_confidence": "high"
+    },
+    "volume_breakdown": {
+      "working_sets": {
+        "total_tonnage": 18750,
+        "total_reps": 456,
+        "total_sets": 67,
+        "quality_reps": 436,
+        "failed_reps": 0,
+        "assisted_reps": 20,
+        "partial_reps": 0
+      },
+      "warm_up_volume": 2100,
+      "skill_work_time": 480,
+      "conditioning_work": {
+        "time_domain": 1680,
+        "work_capacity": "high mixed modal capacity with strength endurance focus"
+      },
+      "by_movement_detail": [
+        {
+          "movement": "back_squat",
+          "volume": 4125,
+          "sets": 4,
+          "reps": 20
+        },
+        {
+          "movement": "front_squat",
+          "volume": 2790,
+          "sets": 4,
+          "reps": 12
+        },
+        {
+          "movement": "deadlift",
+          "volume": 4950,
+          "sets": 6,
+          "reps": 18
+        },
+        {
+          "movement": "bench_press",
+          "volume": 2220,
+          "sets": 4,
+          "reps": 32
+        },
+        {
+          "movement": "push_press",
+          "volume": 1980,
+          "sets": 8,
+          "reps": 18
+        }
+      ]
+    },
+    "weekly_progression": {
+      "vs_last_week": {
+        "volume_change": 12,
+        "intensity_change": 8,
+        "exercise_overlap": 85,
+        "performance_delta": {
+          "improved": [
+            "deadlift_275x3",
+            "front_squat_215x3",
+            "landmine_complex"
+          ],
+          "maintained": [
+            "bench_press_185x10",
+            "conditioning_capacity"
+          ],
+          "decreased": []
+        }
+      },
+      "four_week_trend": {
+        "volume_trend": "steady progressive increase",
+        "intensity_trend": "systematic load progression toward strength targets",
+        "phase_detected": "strength accumulation with power development"
+      },
+      "progressive_overload_score": 8.5
+    },
+    "performance_markers": {
+      "records_set": [
+        {
+          "exercise": "front_squat",
+          "weight": 215,
+          "reps": 3,
+          "previous_best": "205x3"
+        },
+        {
+          "exercise": "deadlift",
+          "weight": 275,
+          "reps": 3,
+          "progress_toward": "315_goal"
+        }
+      ],
+      "benchmark_wods": [],
+      "competition_readiness": null
+    },
+    "training_intelligence": {
+      "set_performance_analysis": {
+        "average_reps_drop": 0.8,
+        "failure_rate": 0.02,
+        "optimal_set_range": "3-6 reps for strength, 8-15 for accessories",
+        "rest_optimization": "adequate 2-3min for strength, 90s for supersets"
+      },
+      "exercise_ordering": {
+        "current_pattern": [
+          "power_start",
+          "heavy_strength",
+          "accessories",
+          "conditioning"
+        ],
+        "performance_impact": "optimal - power first, strength when fresh",
+        "suggested_reorder": false
+      },
+      "superset_efficiency": "high efficiency on push/pull pairings, good time management",
+      "workout_pacing": {
+        "avg_session_duration": 3660,
+        "work_to_rest_ratio": "1:1.2 optimal for strength focus",
+        "density_score": 7.8
+      }
+    },
+    "movement_analysis": {
+      "frequency_map": {
+        "squat_pattern": 4,
+        "hinge_pattern": 3,
+        "horizontal_push": 3,
+        "vertical_push": 2,
+        "horizontal_pull": 4,
+        "vertical_pull": 2,
+        "unilateral": 2,
+        "conditioning": 6
+      },
+      "pattern_balance": {
+        "squat": {
+          "volume": 6915,
+          "frequency": 4
+        },
+        "hinge": {
+          "volume": 4950,
+          "frequency": 3
+        },
+        "push": {
+          "volume": 4200,
+          "frequency": 5
+        },
+        "pull": {
+          "volume": 2585,
+          "frequency": 6
+        },
+        "carry": {
+          "volume": 450,
+          "frequency": 2
+        },
+        "core": {
+          "volume": 0,
+          "frequency": 4
+        }
+      },
+      "imbalance_flags": [
+        "pull_volume_slightly_low_vs_push"
+      ],
+      "body_part_frequency": {
+        "legs": 6,
+        "chest": 3,
+        "back": 4,
+        "shoulders": 4,
+        "core": 4
+      }
+    },
+    "fatigue_management": {
+      "acute_chronic_ratio": 1.12,
+      "volume_spike": false,
+      "deload_indicators": {
+        "performance_decline": false,
+        "high_failure_rate": false,
+        "elevated_rpe": false,
+        "coach_notes_mention_fatigue": false
+      },
+      "recovery_score": 8,
+      "suggested_action": "maintain",
+      "muscle_group_fatigue": {
+        "most_worked": [
+          "quadriceps",
+          "posterior_chain",
+          "anterior_delts"
+        ],
+        "needs_recovery": []
+      }
+    },
+    "coaching_synthesis": {
+      "technical_focus": {
+        "primary_cues": [
+          "explosive_hip_drive",
+          "front_rack_position",
+          "control_tempo",
+          "drive_through_heels"
+        ],
+        "breakthrough_moments": [
+          "215# front squat PR",
+          "275# deadlift consistency",
+          "T2B skill development"
+        ],
+        "persistent_issues": [
+          "T2B_technique",
+          "overhead_mobility_limitations"
+        ]
+      },
+      "workout_feedback": {
+        "athlete_notes_summary": [
+          "strong_performance_across_phases",
+          "good_progression_tracking",
+          "enjoying_variety"
+        ],
+        "coach_notes_summary": [
+          "systematic_progression",
+          "technical_precision",
+          "power_development_focus"
+        ],
+        "video_review_points": null
+      },
+      "adherence_analysis": {
+        "program_compliance": 100,
+        "common_modifications": [
+          "hammer_jammer_for_overhead_mobility",
+          "T2B_attempts_vs_full_reps"
+        ],
+        "skipped_exercises": null
+      }
+    },
+    "actionable_insights": {
+      "top_priority": {
+        "insight": "Deadlift progression at 275# for triples shows excellent trajectory toward 315# goal",
+        "data_support": "Consistent 275#x3 performance with good form notes, 87% of goal weight",
+        "recommended_action": "Continue systematic 10-15# weekly increases, maintain triple rep scheme",
+        "expected_outcome": "315# deadlift achievable within 4-6 weeks with current progression rate"
+      },
+      "quick_wins": [
+        "Add more horizontal pulling volume to balance push/pull ratio",
+        "Incorporate T2B skill work in warm-ups for consistency",
+        "Continue sandbag clean integration for power development"
+      ],
+      "week_ahead_focus": {
+        "primary_goal": "Continue strength progression while maintaining power development",
+        "exercises_to_push": [
+          "deadlift_toward_285",
+          "front_squat_consistency",
+          "T2B_skill"
+        ],
+        "exercises_to_maintain": [
+          "bench_press_volume",
+          "conditioning_capacity"
+        ],
+        "exercises_to_recover": [],
+        "technical_priorities": [
+          "T2B_kip_development",
+          "landmine_clean_explosiveness"
+        ],
+        "volume_recommendation": "maintain",
+        "intensity_recommendation": "slight_increase"
+      },
+      "red_flags": null
+    },
+    "raw_aggregations": {
+      "daily_volume": [
+        {
+          "date": "2025-08-05",
+          "tonnage": 4200,
+          "duration": 3600
+        },
+        {
+          "date": "2025-08-08",
+          "tonnage": 8750,
+          "duration": 7740
+        },
+        {
+          "date": "2024-12-19",
+          "tonnage": 5800,
+          "duration": 7320
+        }
+      ],
+      "movement_matrix": [
+        [
+          "power_start",
+          "strength",
+          "accessories",
+          "conditioning"
+        ],
+        [
+          "landmine_cleans",
+          "front_squats",
+          "push_pull_super",
+          "carries"
+        ],
+        [
+          "sandbag_cleans",
+          "deadlifts",
+          "unilateral",
+          "intervals"
+        ]
+      ],
+      "session_summaries": [
+        "Multi-phase strength and power with excellent progression",
+        "Systematic deadlift development toward 315# goal",
+        "Well-balanced hybrid training maintaining all energy systems"
+      ]
+    },
+    "data_quality_report": {
+      "missing_critical_data": [
+        "heart_rate_zones",
+        "bar_velocity"
+      ],
+      "inconsistent_data": [
+        "date_range_spans_multiple_periods"
+      ],
+      "data_entry_errors": [],
+      "improvement_suggestions": [
+        "Add RPE tracking for autoregulation",
+        "Include bar speed for power monitoring"
+      ]
+    }
+  },
+  "human_summary": "Weekly Training Summary\\n\\n6 out of 6 planned sessions completed with high data quality\\n18,750 lbs total tonnage across 456 reps and 67 working sets\\nAverage session duration: 61 minutes with excellent density score (7.8/10)\\n\\nKey Highlights\\nPerformance Records Set:\\n\\nFront Squat PR: 215lbs x 3 (up from previous 205lbs x 3)\\nDeadlift Progress: 275lbs x 3 - on track toward 315lb goal (87% there)\\n\\nVolume Leaders:\\n\\nDeadlift: 4,950 lbs (strongest focus)\\nBack Squat: 4,125 lbs\\nFront Squat: 2,790 lbs\\nBench Press: 2,220 lbs\\nPush Press: 1,980 lbs\\n\\nTraining Intelligence Insights:\\n\\nProgressive overload score: 8.5/10 (excellent)\\nVolume increased 12% from previous week\\nIntensity increased 8% - systematic progression\\nOptimal exercise ordering: Power → Strength → Accessories → Conditioning\\n\\nAreas for Improvement:\\n\\nPull volume slightly low vs push - needs more horizontal pulling\\nT2B technique needs consistent skill work\\nOverhead mobility limitations being addressed with modifications\\n\\nKey Actionable Insights:\\n\\nPriority: Continue deadlift progression toward 315lb goal (achievable in 4-6 weeks)\\nQuick wins: Add more pulling volume, integrate T2B skill work, continue power development\\nNo red flags - training is progressing optimally"
+}

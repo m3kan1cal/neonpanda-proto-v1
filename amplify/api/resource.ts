@@ -25,7 +25,9 @@ export function createCoreApi(
   updateWorkoutLambda: lambda.IFunction,
   deleteWorkoutLambda: lambda.IFunction,
   getWorkoutsCountLambda: lambda.IFunction,
-  getConversationsCountLambda: lambda.IFunction
+  getConversationsCountLambda: lambda.IFunction,
+  getWeeklyReportsLambda: lambda.IFunction,
+  getWeeklyReportLambda: lambda.IFunction
 ) {
   // Determine if this is a sandbox deployment
   const isSandbox = stack.node.tryGetContext('amplify-backend-type') === 'sandbox';
@@ -169,6 +171,17 @@ export function createCoreApi(
     getConversationsCountLambda
   );
 
+  // Create Lambda integrations for weekly report functions
+  const getWeeklyReportsIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
+    'GetWeeklyReportsIntegration',
+    getWeeklyReportsLambda
+  );
+
+  const getWeeklyReportIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
+    'GetWeeklyReportIntegration',
+    getWeeklyReportLambda
+  );
+
   // Create integrations object for route configuration
   const integrations: RouteIntegrations = {
     helloWorld: helloWorldIntegration,
@@ -189,7 +202,9 @@ export function createCoreApi(
     updateWorkout: updateWorkoutIntegration,
     deleteWorkout: deleteWorkoutIntegration,
     getWorkoutsCount: getWorkoutsCountIntegration,
-    getConversationsCount: getConversationsCountIntegration
+    getConversationsCount: getConversationsCountIntegration,
+    getWeeklyReports: getWeeklyReportsIntegration,
+    getWeeklyReport: getWeeklyReportIntegration
   };
 
   // Add all routes using the organized route definitions

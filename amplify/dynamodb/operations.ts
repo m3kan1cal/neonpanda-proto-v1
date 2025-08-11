@@ -1,12 +1,36 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, PutCommand, GetCommand, QueryCommand, DeleteCommand } from "@aws-sdk/lib-dynamodb";
 import { CoachCreatorSession, DynamoDBItem, ContactFormAttributes, CoachConfigSummary, CoachConfig } from "../functions/libs/coach-creator/types";
-import { CoachConversation, CoachConversationListItem, CoachMessage, CoachConversationSummary, UserMemory } from "../functions/libs/coach-conversation/types";
+import { CoachConversation, CoachConversationListItem, CoachMessage, CoachConversationSummary } from "../functions/libs/coach-conversation/types";
+import { UserProfile, UserMemory } from "../functions/libs/user/types";
 import { Workout } from "../functions/libs/workout/types";
+import { WeeklyAnalytics } from "../functions/libs/analytics/types";
 
 // DynamoDB client setup
 const dynamoDbClient = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(dynamoDbClient);
+
+// ===========================
+// DYNAMODB OPERATION INTERFACES
+// ===========================
+
+/**
+ * Query result for all users operation
+ */
+export interface QueryAllUsersResult {
+  users: DynamoDBItem<UserProfile>[];
+  lastEvaluatedKey?: any;
+  count: number;
+}
+
+/**
+ * Generic query result for GSI-3 entity type queries
+ */
+export interface QueryAllEntitiesResult<T> {
+  items: DynamoDBItem<T>[];
+  lastEvaluatedKey?: any;
+  count: number;
+}
 
 // Generic function to save any item to DynamoDB
 export async function saveToDynamoDB<T>(item: DynamoDBItem<T>): Promise<void> {
@@ -1058,7 +1082,7 @@ export async function queryUserMemories(
   // Sort by usage and importance
   filteredItems.sort((a, b) => {
     // First sort by importance (high > medium > low)
-    const importanceOrder = { high: 3, medium: 2, low: 1 };
+    const importanceOrder: Record<UserMemory['metadata']['importance'], number> = { high: 3, medium: 2, low: 1 };
     const importanceDiff = importanceOrder[b.metadata.importance] - importanceOrder[a.metadata.importance];
     if (importanceDiff !== 0) return importanceDiff;
 
@@ -1115,4 +1139,213 @@ export async function updateUserMemory(memoryId: string, userId: string): Promis
     userId,
     newUsageCount: memory.attributes.metadata.usageCount
   });
+}
+
+/**
+ * Generic function to query all entities of a specific type using GSI-3 (EntityType index)
+ * Used for analytics and admin operations across all entity types
+ */
+export async function queryAllEntitiesByType<T>(
+  entityType: string,
+  limit?: number,
+  exclusiveStartKey?: any,
+  filterExpression?: string,
+  expressionAttributeValues?: Record<string, any>
+): Promise<{
+  items: DynamoDBItem<T>[];
+  lastEvaluatedKey?: any;
+  count: number;
+}> {
+  const tableName = process.env.DYNAMODB_TABLE_NAME;
+
+  if (!tableName) {
+    throw new Error('DYNAMODB_TABLE_NAME environment variable is not set');
+  }
+
+  try {
+    console.info(`Querying all ${entityType} entities from DynamoDB using GSI-3:`, {
+      entityType,
+      limit,
+      hasExclusiveStartKey: !!exclusiveStartKey,
+      hasFilterExpression: !!filterExpression
+    });
+
+    const command = new QueryCommand({
+      TableName: tableName,
+      IndexName: 'gsi3',
+      KeyConditionExpression: 'entityType = :entityType',
+      ExpressionAttributeValues: {
+        ':entityType': entityType,
+        ...expressionAttributeValues
+      },
+      FilterExpression: filterExpression,
+      Limit: limit,
+      ExclusiveStartKey: exclusiveStartKey
+    });
+
+    const result = await docClient.send(command);
+    const items = (result.Items || []) as DynamoDBItem<T>[];
+
+    console.info(`Successfully queried ${entityType} entities:`, {
+      entityType,
+      itemCount: items.length,
+      hasMoreResults: !!result.LastEvaluatedKey
+    });
+
+    return {
+      items: items,
+      lastEvaluatedKey: result.LastEvaluatedKey,
+      count: items.length
+    };
+  } catch (error) {
+    console.error(`Error querying all ${entityType} entities from DynamoDB:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Query all active users from DynamoDB using GSI-3 (EntityType index)
+ * Used for analytics and admin operations
+ */
+export async function queryAllUsers(
+  limit?: number,
+  exclusiveStartKey?: any
+): Promise<QueryAllUsersResult> {
+  const result = await queryAllEntitiesByType<UserProfile>(
+    'user',
+    limit,
+    exclusiveStartKey,
+    'attributes.metadata.isActive = :isActive',
+    { ':isActive': true }
+  );
+
+  return {
+    users: result.items,
+    lastEvaluatedKey: result.lastEvaluatedKey,
+    count: result.count
+  };
+}
+
+// Function to save weekly analytics data
+export async function saveWeeklyAnalytics(weeklyAnalytics: WeeklyAnalytics): Promise<void> {
+  const item = createDynamoDBItem<WeeklyAnalytics>(
+    'analytics',
+    `user#${weeklyAnalytics.userId}`,
+    `weeklyAnalytics#${weeklyAnalytics.weekId}`,
+    weeklyAnalytics,
+    new Date().toISOString()
+  );
+
+  await saveToDynamoDB(item);
+  console.info('Weekly analytics saved successfully:', {
+    userId: weeklyAnalytics.userId,
+    weekId: weeklyAnalytics.weekId,
+    weekRange: `${weeklyAnalytics.weekStart} to ${weeklyAnalytics.weekEnd}`,
+    workoutCount: weeklyAnalytics.metadata.workoutCount,
+    s3Location: weeklyAnalytics.s3Location,
+    analysisConfidence: weeklyAnalytics.metadata.analysisConfidence
+  });
+}
+
+// Function to query all weekly analytics for a user
+export async function queryWeeklyAnalytics(
+  userId: string,
+  options?: {
+    // Date filtering
+    fromDate?: Date;
+    toDate?: Date;
+
+    // Pagination
+    limit?: number;
+    offset?: number;
+
+    // Sorting
+    sortBy?: 'weekStart' | 'weekEnd' | 'workoutCount';
+    sortOrder?: 'asc' | 'desc';
+  }
+): Promise<DynamoDBItem<WeeklyAnalytics>[]> {
+  try {
+    // Get all weekly analytics for the user
+    const allAnalytics = await queryFromDynamoDB<WeeklyAnalytics>(
+      `user#${userId}`,
+      'weeklyAnalytics#',
+      'analytics'
+    );
+
+    // Apply filters
+    let filteredAnalytics = allAnalytics;
+
+    // Date filtering
+    if (options?.fromDate) {
+      filteredAnalytics = filteredAnalytics.filter(analytics => {
+        const weekStart = new Date(analytics.attributes.weekStart);
+        return weekStart >= options.fromDate!;
+      });
+    }
+
+    if (options?.toDate) {
+      filteredAnalytics = filteredAnalytics.filter(analytics => {
+        const weekEnd = new Date(analytics.attributes.weekEnd);
+        return weekEnd <= options.toDate!;
+      });
+    }
+
+    // Sorting
+    const sortBy = options?.sortBy || 'weekStart';
+    const sortOrder = options?.sortOrder || 'desc';
+
+    filteredAnalytics.sort((a, b) => {
+      let aValue: any, bValue: any;
+
+      switch (sortBy) {
+        case 'weekStart':
+          aValue = new Date(a.attributes.weekStart);
+          bValue = new Date(b.attributes.weekStart);
+          break;
+        case 'weekEnd':
+          aValue = new Date(a.attributes.weekEnd);
+          bValue = new Date(b.attributes.weekEnd);
+          break;
+        case 'workoutCount':
+          aValue = a.attributes.metadata.workoutCount;
+          bValue = b.attributes.metadata.workoutCount;
+          break;
+        default:
+          aValue = new Date(a.attributes.weekStart);
+          bValue = new Date(b.attributes.weekStart);
+      }
+
+      if (sortOrder === 'asc') {
+        return aValue > bValue ? 1 : -1;
+      } else {
+        return aValue < bValue ? 1 : -1;
+      }
+    });
+
+    // Pagination
+    if (options?.offset || options?.limit) {
+      const offset = options.offset || 0;
+      const limit = options.limit || 50;
+      filteredAnalytics = filteredAnalytics.slice(offset, offset + limit);
+    }
+
+    console.info(`Found ${filteredAnalytics.length} weekly analytics records for user ${userId}`);
+    return filteredAnalytics;
+
+  } catch (error) {
+    console.error('Error querying weekly analytics:', error);
+    throw error;
+  }
+}
+
+// Function to get a specific weekly analytics record
+export async function getWeeklyAnalytics(
+  userId: string,
+  weekId: string
+): Promise<DynamoDBItem<WeeklyAnalytics> | null> {
+  return await loadFromDynamoDB<WeeklyAnalytics>(
+    `user#${userId}`,
+    `weeklyAnalytics#${weekId}`,
+    'analytics'
+  );
 }

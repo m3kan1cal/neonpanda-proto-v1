@@ -5,7 +5,8 @@
  * including complexity detection for conversation summarization.
  */
 
-import { UserMemoryDetectionEvent, UserMemoryDetectionResult, UserMemory } from './types';
+import { UserMemoryDetectionEvent, UserMemoryDetectionResult } from './types';
+import { UserMemory } from '../user/types';
 import { callBedrockApi, MODEL_IDS } from '../api-helpers';
 
 /**

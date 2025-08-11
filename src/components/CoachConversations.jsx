@@ -854,7 +854,7 @@ function CoachConversations() {
               </div>
 
               {/* Input Area */}
-              <div className="border-t border-synthwave-neon-cyan/30 p-6">
+              <div className="border-t border-synthwave-neon-pink/30 p-6">
                 <form onSubmit={handleSendMessage} className="flex items-end space-x-4">
                   {/* Message Input */}
                   <div className="flex-1 flex flex-col justify-end relative">
@@ -867,14 +867,19 @@ function CoachConversations() {
                       }}
                       onKeyDown={handleKeyPress}
                       placeholder="What's on your mind today? How can I help you with your training?"
-                      className="w-full px-4 py-3 bg-synthwave-bg-primary/50 border-2 border-synthwave-neon-cyan/30 rounded-lg text-synthwave-text-primary font-rajdhani focus:outline-none focus:border-synthwave-neon-cyan transition-all duration-200 resize-none placeholder-synthwave-text-muted"
-                      style={{ minHeight: '3rem' }}
+                      className="w-full px-4 py-3 bg-synthwave-bg-primary/50 border-2 border-synthwave-neon-pink/30 rounded-lg text-synthwave-text-primary font-rajdhani outline-none ring-0 focus:outline-none focus:ring-0 focus-visible:outline-none focus:border-synthwave-neon-pink hover:border-synthwave-neon-pink/50 transition-colors duration-150 resize-none placeholder-synthwave-text-muted synthwave-scrollbar"
+                      style={{
+                        minHeight: '3rem',
+                        outline: 'none !important',
+                        boxShadow: 'none !important',
+                        WebkitTapHighlightColor: 'transparent'
+                      }}
                       disabled={coachConversationAgentState.isLoadingItem}
                     />
 
                     {/* Slash Command Tooltip */}
                     {showSlashCommandTooltip && (
-                      <div className="absolute bottom-full mb-2 left-0 bg-synthwave-bg-card/95 border-2 border-synthwave-neon-cyan/30 rounded-lg p-4 shadow-lg backdrop-blur-sm z-10 min-w-[400px]">
+                      <div className="absolute bottom-full mb-2 left-0 bg-synthwave-bg-card/95 border-2 border-synthwave-neon-pink/30 rounded-lg p-4 shadow-lg backdrop-blur-sm z-10 min-w-[400px]">
                         <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
                           Available Slash Commands
                         </div>
@@ -884,7 +889,7 @@ function CoachConversations() {
                               key={index}
                                                                                                                         className={`flex items-start space-x-3 py-1 px-2 rounded cursor-pointer transition-colors duration-200 border ${
                                 index === selectedCommandIndex
-                                  ? 'bg-synthwave-bg-primary/30 border-synthwave-neon-cyan/20'
+                                  ? 'bg-synthwave-bg-primary/30 border-synthwave-neon-pink/20'
                                   : 'hover:bg-synthwave-bg-primary/30 border-transparent'
                               }`}
                               onClick={() => {
@@ -894,8 +899,8 @@ function CoachConversations() {
                             >
                                                                                                                         <div className={`font-rajdhani text-sm ${
                                 index === selectedCommandIndex
-                                  ? 'text-synthwave-neon-cyan'
-                                  : 'text-synthwave-neon-cyan'
+                                  ? 'text-synthwave-neon-pink'
+                                  : 'text-synthwave-neon-pink'
                               }`}>
                                 {cmd.command}
                               </div>
@@ -918,7 +923,7 @@ function CoachConversations() {
                             </div>
                           ))}
                         </div>
-                        <div className="font-rajdhani text-xs text-synthwave-text-muted mt-3 pt-2 border-t border-synthwave-neon-cyan/20">
+                        <div className="font-rajdhani text-xs text-synthwave-text-muted mt-3 pt-2 border-t border-synthwave-neon-pink/20">
                           Use ↑↓ to navigate, Enter to select, Esc to close
                         </div>
                       </div>
@@ -939,11 +944,11 @@ function CoachConversations() {
                     <button
                       type="submit"
                       disabled={!inputMessage.trim() || coachConversationAgentState.isLoadingItem}
-                      className={`${themeClasses.cyanButton} p-3 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 min-w-[3rem] flex items-center justify-center`}
+                      className={`${themeClasses.neonButton} p-3 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 min-w-[3rem] flex items-center justify-center`}
                       title="Send message"
                     >
                       {coachConversationAgentState.isLoadingItem ? (
-                        <div className="w-4 h-4 border-2 border-synthwave-neon-cyan border-t-transparent rounded-full animate-spin"></div>
+                        <div className="w-4 h-4 border-2 border-synthwave-neon-pink border-t-transparent rounded-full animate-spin"></div>
                       ) : (
                         <SendIcon />
                       )}

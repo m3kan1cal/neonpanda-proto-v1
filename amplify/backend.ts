@@ -24,9 +24,12 @@ import { updateWorkout } from './functions/update-workout/resource';
 import { deleteWorkout } from './functions/delete-workout/resource';
 import { getWorkoutsCount } from './functions/get-workouts-count/resource';
 import { getConversationsCount } from './functions/get-conversations-count/resource';
+import { buildWeeklyAnalytics, createWeeklyAnalyticsSchedule } from './functions/build-weekly-analytics/resource';
+import { getWeeklyReports } from './functions/get-weekly-reports/resource';
+import { getWeeklyReport } from './functions/get-weekly-report/resource';
 import { apiGatewayv2 } from './api/resource';
 import { dynamodbTable } from './dynamodb/resource';
-import { grantBedrockPermissions, grantLambdaInvokePermissions, grantS3DebugPermissions } from './iam-policies';
+import { grantBedrockPermissions, grantLambdaInvokePermissions, grantS3DebugPermissions, grantS3AnalyticsPermissions } from './iam-policies';
 
 
 /**
@@ -58,6 +61,9 @@ const backend = defineBackend({
   deleteWorkout,
   getWorkoutsCount,
   getConversationsCount,
+  buildWeeklyAnalytics,
+  getWeeklyReports,
+  getWeeklyReport,
 });
 
 
@@ -82,7 +88,9 @@ const coreApi = apiGatewayv2.createCoreApi(
   backend.updateWorkout.resources.lambda,
   backend.deleteWorkout.resources.lambda,
   backend.getWorkoutsCount.resources.lambda,
-  backend.getConversationsCount.resources.lambda
+  backend.getConversationsCount.resources.lambda,
+  backend.getWeeklyReports.resources.lambda,
+  backend.getWeeklyReport.resources.lambda
 );
 
 // Create DynamoDB table
@@ -116,6 +124,9 @@ coreTable.table.grantReadWriteData(backend.updateWorkout.resources.lambda);
 coreTable.table.grantReadWriteData(backend.deleteWorkout.resources.lambda);
 coreTable.table.grantReadData(backend.getWorkoutsCount.resources.lambda);
 coreTable.table.grantReadData(backend.getConversationsCount.resources.lambda);
+coreTable.table.grantReadWriteData(backend.buildWeeklyAnalytics.resources.lambda);
+coreTable.table.grantReadData(backend.getWeeklyReports.resources.lambda);
+coreTable.table.grantReadData(backend.getWeeklyReport.resources.lambda);
 
 // Add environment variable for table name
 backend.contactForm.addEnvironment('DYNAMODB_TABLE_NAME', coreTable.table.tableName);
@@ -143,6 +154,9 @@ backend.updateWorkout.addEnvironment('DYNAMODB_TABLE_NAME', coreTable.table.tabl
 backend.deleteWorkout.addEnvironment('DYNAMODB_TABLE_NAME', coreTable.table.tableName);
 backend.getWorkoutsCount.addEnvironment('DYNAMODB_TABLE_NAME', coreTable.table.tableName);
 backend.getConversationsCount.addEnvironment('DYNAMODB_TABLE_NAME', coreTable.table.tableName);
+backend.buildWeeklyAnalytics.addEnvironment('DYNAMODB_TABLE_NAME', coreTable.table.tableName);
+  backend.getWeeklyReports.addEnvironment('DYNAMODB_TABLE_NAME', coreTable.table.tableName);
+  backend.getWeeklyReport.addEnvironment('DYNAMODB_TABLE_NAME', coreTable.table.tableName);
 
 // Grant Bedrock permissions to functions that need it
 grantBedrockPermissions([
@@ -151,13 +165,19 @@ grantBedrockPermissions([
   backend.buildCoachConfig.resources.lambda,
   backend.sendCoachConversationMessage.resources.lambda,
   backend.buildWorkout.resources.lambda,
-  backend.buildConversationSummary.resources.lambda
+  backend.buildConversationSummary.resources.lambda,
+  backend.buildWeeklyAnalytics.resources.lambda
 ]);
 
 // Grant S3 debug permissions to functions that need it
 grantS3DebugPermissions([
   backend.buildWorkout.resources.lambda,
   backend.sendCoachConversationMessage.resources.lambda
+]);
+
+// Grant S3 analytics permissions to functions that need it
+grantS3AnalyticsPermissions([
+  backend.buildWeeklyAnalytics.resources.lambda
 ]);
 
 // Grant permission to updateCoachCreatorSession to invoke buildCoachConfig
@@ -183,6 +203,12 @@ backend.sendCoachConversationMessage.addEnvironment('BUILD_WORKOUT_FUNCTION_NAME
 
 // Add environment variable for the conversation summary function name
 backend.sendCoachConversationMessage.addEnvironment('BUILD_CONVERSATION_SUMMARY_FUNCTION_NAME', backend.buildConversationSummary.resources.lambda.functionName);
+
+// Create EventBridge schedule for weekly analytics
+const weeklyAnalyticsSchedule = createWeeklyAnalyticsSchedule(
+  backend.buildWeeklyAnalytics.stack,
+  backend.buildWeeklyAnalytics.resources.lambda
+);
 
 // Output the API URL and DynamoDB table info
 backend.addOutput({

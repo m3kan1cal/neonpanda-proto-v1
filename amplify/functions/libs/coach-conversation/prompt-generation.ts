@@ -1,6 +1,6 @@
 import { CoachConfig, DynamoDBItem } from '../coach-creator/types';
+import { UserMemory } from '../user/types';
 import {
-  UserMemory,
   CoachConfigInput,
   PromptGenerationOptions,
   SystemPrompt,
@@ -350,10 +350,10 @@ const generateUserMemoriesSection = (userMemories: UserMemory[]): string => {
 Based on previous conversations, here are important things the user has specifically asked you to remember:`];
 
   // Add memories grouped by type
-  Object.entries(memoriesByType).forEach(([type, memories]) => {
+  Object.entries(memoriesByType).forEach(([type, memories]: [string, UserMemory[]]) => {
     sections.push(`## ${type.charAt(0).toUpperCase() + type.slice(1)} Memories`);
 
-    memories.forEach((memory, index) => {
+    memories.forEach((memory: UserMemory, index: number) => {
       sections.push(`### ${index + 1}. ${memory.content}`);
       sections.push(`- **Importance**: ${memory.metadata.importance}`);
       sections.push(`- **Usage**: Used ${memory.metadata.usageCount} times${memory.metadata.lastUsed ? ` (last: ${memory.metadata.lastUsed.toDateString()})` : ''}`);

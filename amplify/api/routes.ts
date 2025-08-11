@@ -21,6 +21,8 @@ export interface RouteIntegrations {
   deleteWorkout: apigatewayv2_integrations.HttpLambdaIntegration;
   getWorkoutsCount: apigatewayv2_integrations.HttpLambdaIntegration;
   getConversationsCount: apigatewayv2_integrations.HttpLambdaIntegration;
+  getWeeklyReports: apigatewayv2_integrations.HttpLambdaIntegration;
+  getWeeklyReport: apigatewayv2_integrations.HttpLambdaIntegration;
 }
 
 /**
@@ -217,6 +219,32 @@ export function addWorkoutRoutes(
 }
 
 /**
+ * Add report routes to the HTTP API
+ */
+export function addReportRoutes(
+  httpApi: apigatewayv2.HttpApi,
+  integrations: RouteIntegrations
+): void {
+  // *******************************************************
+  // Weekly Reports Routes
+  // *******************************************************
+
+  // Get all weekly reports for a user
+  httpApi.addRoutes({
+    path: '/users/{userId}/reports/weekly',
+    methods: [apigatewayv2.HttpMethod.GET],
+    integration: integrations.getWeeklyReports
+  });
+
+  // Get specific weekly report
+  httpApi.addRoutes({
+    path: '/users/{userId}/reports/weekly/{weekId}',
+    methods: [apigatewayv2.HttpMethod.GET],
+    integration: integrations.getWeeklyReport
+  });
+}
+
+/**
  * Add all routes to the HTTP API
  */
 export function addAllRoutes(
@@ -228,4 +256,5 @@ export function addAllRoutes(
   addCoachConfigRoutes(httpApi, integrations);
   addCoachConversationRoutes(httpApi, integrations);
   addWorkoutRoutes(httpApi, integrations);
+  addReportRoutes(httpApi, integrations);
 }
