@@ -30,6 +30,7 @@ import { getWeeklyReport } from './functions/get-weekly-report/resource';
 import { apiGatewayv2 } from './api/resource';
 import { dynamodbTable } from './dynamodb/resource';
 import { grantBedrockPermissions, grantLambdaInvokePermissions, grantS3DebugPermissions, grantS3AnalyticsPermissions } from './iam-policies';
+import { config } from './functions/libs/configs';
 
 
 /**
@@ -128,35 +129,39 @@ coreTable.table.grantReadWriteData(backend.buildWeeklyAnalytics.resources.lambda
 coreTable.table.grantReadData(backend.getWeeklyReports.resources.lambda);
 coreTable.table.grantReadData(backend.getWeeklyReport.resources.lambda);
 
-// Add environment variable for table name
-backend.contactForm.addEnvironment('DYNAMODB_TABLE_NAME', coreTable.table.tableName);
-backend.createCoachCreatorSession.addEnvironment('DYNAMODB_TABLE_NAME', coreTable.table.tableName);
-backend.updateCoachCreatorSession.addEnvironment('DYNAMODB_TABLE_NAME', coreTable.table.tableName);
-backend.getCoachCreatorSession.addEnvironment('DYNAMODB_TABLE_NAME', coreTable.table.tableName);
-backend.buildCoachConfig.addEnvironment('DYNAMODB_TABLE_NAME', coreTable.table.tableName);
-backend.getCoachConfigs.addEnvironment('DYNAMODB_TABLE_NAME', coreTable.table.tableName);
-backend.getCoachConfig.addEnvironment('DYNAMODB_TABLE_NAME', coreTable.table.tableName);
-backend.getCoachConfigStatus.addEnvironment('DYNAMODB_TABLE_NAME', coreTable.table.tableName);
+// Add environment variables to all functions
+const allFunctions = [
+  backend.helloWorld,
+  backend.contactForm,
+  backend.createCoachCreatorSession,
+  backend.updateCoachCreatorSession,
+  backend.buildCoachConfig,
+  backend.getCoachConfigs,
+  backend.getCoachConfig,
+  backend.getCoachConfigStatus,
+  backend.getCoachCreatorSession,
+  backend.createCoachConversation,
+  backend.getCoachConversations,
+  backend.getCoachConversation,
+  backend.updateCoachConversation,
+  backend.sendCoachConversationMessage,
+  backend.buildWorkout,
+  backend.buildConversationSummary,
+  backend.getWorkouts,
+  backend.getWorkout,
+  backend.updateWorkout,
+  backend.deleteWorkout,
+  backend.getWorkoutsCount,
+  backend.getConversationsCount,
+  backend.buildWeeklyAnalytics,
+  backend.getWeeklyReports,
+  backend.getWeeklyReport
+];
 
-// Add environment variables for coach conversation functions
-backend.createCoachConversation.addEnvironment('DYNAMODB_TABLE_NAME', coreTable.table.tableName);
-backend.getCoachConversations.addEnvironment('DYNAMODB_TABLE_NAME', coreTable.table.tableName);
-backend.getCoachConversation.addEnvironment('DYNAMODB_TABLE_NAME', coreTable.table.tableName);
-backend.updateCoachConversation.addEnvironment('DYNAMODB_TABLE_NAME', coreTable.table.tableName);
-backend.sendCoachConversationMessage.addEnvironment('DYNAMODB_TABLE_NAME', coreTable.table.tableName);
-
-// Add environment variables for workout functions
-backend.buildWorkout.addEnvironment('DYNAMODB_TABLE_NAME', coreTable.table.tableName);
-backend.buildConversationSummary.addEnvironment('DYNAMODB_TABLE_NAME', coreTable.table.tableName);
-backend.getWorkouts.addEnvironment('DYNAMODB_TABLE_NAME', coreTable.table.tableName);
-backend.getWorkout.addEnvironment('DYNAMODB_TABLE_NAME', coreTable.table.tableName);
-backend.updateWorkout.addEnvironment('DYNAMODB_TABLE_NAME', coreTable.table.tableName);
-backend.deleteWorkout.addEnvironment('DYNAMODB_TABLE_NAME', coreTable.table.tableName);
-backend.getWorkoutsCount.addEnvironment('DYNAMODB_TABLE_NAME', coreTable.table.tableName);
-backend.getConversationsCount.addEnvironment('DYNAMODB_TABLE_NAME', coreTable.table.tableName);
-backend.buildWeeklyAnalytics.addEnvironment('DYNAMODB_TABLE_NAME', coreTable.table.tableName);
-  backend.getWeeklyReports.addEnvironment('DYNAMODB_TABLE_NAME', coreTable.table.tableName);
-  backend.getWeeklyReport.addEnvironment('DYNAMODB_TABLE_NAME', coreTable.table.tableName);
+allFunctions.forEach(func => {
+  func.addEnvironment('DYNAMODB_TABLE_NAME', coreTable.table.tableName);
+  func.addEnvironment('PINECONE_API_KEY', config.PINECONE_API_KEY);
+});
 
 // Grant Bedrock permissions to functions that need it
 grantBedrockPermissions([
@@ -195,13 +200,8 @@ grantLambdaInvokePermissions(
   ]
 );
 
-// Add environment variable for the coach config function name
 backend.updateCoachCreatorSession.addEnvironment('BUILD_COACH_CONFIG_FUNCTION_NAME', backend.buildCoachConfig.resources.lambda.functionName);
-
-// Add environment variable for the workout extraction function name
 backend.sendCoachConversationMessage.addEnvironment('BUILD_WORKOUT_FUNCTION_NAME', backend.buildWorkout.resources.lambda.functionName);
-
-// Add environment variable for the conversation summary function name
 backend.sendCoachConversationMessage.addEnvironment('BUILD_CONVERSATION_SUMMARY_FUNCTION_NAME', backend.buildConversationSummary.resources.lambda.functionName);
 
 // Create EventBridge schedule for weekly analytics

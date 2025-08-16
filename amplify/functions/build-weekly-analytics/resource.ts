@@ -6,13 +6,10 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 import { Stack } from "aws-cdk-lib";
 import { createS3AnalyticsPolicy } from "../../iam-policies";
 
+
 export const buildWeeklyAnalytics = defineFunction({
   name: "build-weekly-analytics",
   entry: "./handler.ts",
-  environment: {
-    DYNAMODB_TABLE_NAME:
-      process.env.DYNAMODB_TABLE_NAME || "CoachForge-ProtoApi-AllItems-V2",
-  },
   timeoutSeconds: 900, // 15 minutes for processing all users
   memoryMB: 1024, // Standard memory for batch processing
 });

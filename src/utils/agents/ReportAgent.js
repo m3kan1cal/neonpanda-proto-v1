@@ -7,7 +7,9 @@ export class ReportAgent {
 
     this.reportsState = {
       recentReports: [],
+      allReports: [],
       isLoadingRecentItems: false,
+      isLoadingAllItems: false,
       isLoadingItem: false,
       error: null,
       lastCheckTime: null,
@@ -52,6 +54,43 @@ export class ReportAgent {
     }
   }
 
+  /**
+   * Loads all reports with optional filtering (same pattern as WorkoutAgent.loadAllWorkouts)
+   */
+  async loadAllReports(options = {}) {
+    if (!this.userId) return;
+
+    this._updateState({ isLoadingAllItems: true, error: null });
+
+    try {
+      console.info('Loading all reports for userId:', this.userId, 'with options:', options);
+      const result = await getWeeklyReports(this.userId, {
+        limit: options.limit || 50,
+        sortBy: options.sortBy || 'weekStart',
+        sortOrder: options.sortOrder || 'desc',
+        ...options
+      });
+
+      const allReports = result.reports || result.analytics || [];
+
+      this._updateState({
+        allReports,
+        isLoadingAllItems: false
+      });
+
+      return allReports;
+
+    } catch (error) {
+      console.error('Error loading all reports:', error);
+      this._updateState({
+        isLoadingAllItems: false,
+        error: error.message || 'Failed to load reports',
+        allReports: []
+      });
+      throw error;
+    }
+  }
+
   async getReport(weekId) {
     if (!this.userId || !weekId) return null;
     this._updateState({ isLoadingItem: true, error: null });
@@ -80,7 +119,9 @@ export class ReportAgent {
     this.userId = null;
     this.reportsState = {
       recentReports: [],
+      allReports: [],
       isLoadingRecentItems: false,
+      isLoadingAllItems: false,
       isLoadingItem: false,
       error: null,
       lastCheckTime: null,

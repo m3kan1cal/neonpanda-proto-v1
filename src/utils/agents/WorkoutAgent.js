@@ -313,15 +313,11 @@ export class WorkoutAgent {
     if (useTitle || !workout.summary) {
       const workoutName = workout.workoutName || 'Workout';
       const discipline = workout.discipline || '';
-      const duration = workout.duration ? `${Math.round(workout.duration / 60)}min` : '';
 
-      // Create a concise title
+      // Create a concise title without duration
       let title = workoutName;
       if (discipline) {
         title += ` (${discipline})`;
-      }
-      if (duration) {
-        title += ` • ${duration}`;
       }
 
       return title;

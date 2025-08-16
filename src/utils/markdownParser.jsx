@@ -72,14 +72,13 @@ export const parseMarkdown = (text) => {
 
     // Handle empty lines
     if (!trimmedLine) {
-      elements.push(<br key={elementKey++} />);
+      elements.push(<div key={elementKey++} className="h-4" />);
     } else {
       // Handle regular lines with inline formatting
       elements.push(
-        <span key={elementKey++}>
+        <div key={elementKey++} className="leading-normal">
           {parseInlineFormatting(line)}
-          <br />
-        </span>
+        </div>
       );
     }
 

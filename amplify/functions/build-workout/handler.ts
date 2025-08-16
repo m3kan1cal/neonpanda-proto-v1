@@ -2,6 +2,7 @@ import {
   createSuccessResponse,
   createErrorResponse,
   callBedrockApi,
+  MODEL_IDS,
 } from "../libs/api-helpers";
 import { saveWorkout } from "../../dynamodb/operations";
 import {
@@ -12,6 +13,7 @@ import {
   generateWorkoutSummary,
   storeWorkoutSummaryInPinecone,
   classifyDiscipline,
+  checkWorkoutComplexity,
   BuildWorkoutEvent,
   UniversalWorkoutSchema,
   DisciplineClassification,
@@ -21,45 +23,6 @@ import {
   shouldNormalizeWorkout,
   generateNormalizationSummary,
 } from "../libs/workout/normalization";
-
-/**
- * Simple complexity check to determine if thinking should be enabled
- */
-const checkWorkoutComplexity = (workoutContent: string): boolean => {
-  const content = workoutContent.toLowerCase();
-
-  // Check for multiple phases
-  const phaseIndicators = ['warmup', 'warm-up', 'warm up', 'working', 'cooldown', 'cool-down', 'cool down', 'metcon', 'strength'];
-  const phaseMatches = phaseIndicators.filter(indicator => content.includes(indicator)).length;
-
-  // Check for complex structures
-  const complexityIndicators = [
-    /\d+\s*rounds/gi,     // Multiple rounds
-    /\d+\s*sets/gi,       // Multiple sets
-    /superset/gi,         // Supersets
-    /circuit/gi,          // Circuits
-    /emom/gi,             // EMOM
-    /tabata/gi,           // Tabata
-    /for\s+time/gi,       // For time
-    /amrap/gi,            // AMRAP
-    /\d+:\d+/g,           // Time notation
-    /\d+\s*x\s*\d+/gi,    // Rep schemes like 5x5
-  ];
-
-  const complexMatches = complexityIndicators.filter(pattern => pattern.test(content)).length;
-
-  // Enable thinking for complex workouts
-  const isComplex = phaseMatches >= 2 || complexMatches >= 3 || workoutContent.length > 800;
-
-  console.info("Workout complexity analysis:", {
-    phaseMatches,
-    complexMatches,
-    contentLength: workoutContent.length,
-    isComplex
-  });
-
-  return isComplex;
-};
 
 export const handler = async (event: BuildWorkoutEvent) => {
   try {
@@ -117,7 +80,7 @@ export const handler = async (event: BuildWorkoutEvent) => {
     const extractedData = await callBedrockApi(
       extractionPrompt,
       workoutContent,
-      undefined, // Use default model
+      MODEL_IDS.CLAUDE_SONNET_4_FULL,
       enableThinking
     );
 

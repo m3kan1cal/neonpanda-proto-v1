@@ -16,6 +16,45 @@ import { cleanResponse, fixMalformedJson } from "../response-utils";
 import { getSchemaWithContext } from "../schemas/universal-workout-schema";
 
 /**
+ * Simple complexity check to determine if thinking should be enabled
+ */
+export const checkWorkoutComplexity = (workoutContent: string): boolean => {
+  const content = workoutContent.toLowerCase();
+
+  // Check for multiple phases
+  const phaseIndicators = ['warmup', 'warm-up', 'warm up', 'working', 'cooldown', 'cool-down', 'cool down', 'metcon', 'strength'];
+  const phaseMatches = phaseIndicators.filter(indicator => content.includes(indicator)).length;
+
+  // Check for complex structures
+  const complexityIndicators = [
+    /\d+\s*rounds/gi,     // Multiple rounds
+    /\d+\s*sets/gi,       // Multiple sets
+    /superset/gi,         // Supersets
+    /circuit/gi,          // Circuits
+    /emom/gi,             // EMOM
+    /tabata/gi,           // Tabata
+    /for\s+time/gi,       // For time
+    /amrap/gi,            // AMRAP
+    /\d+:\d+/g,           // Time notation
+    /\d+\s*x\s*\d+/gi,    // Rep schemes like 5x5
+  ];
+
+  const complexMatches = complexityIndicators.filter(pattern => pattern.test(content)).length;
+
+  // Enable thinking for complex workouts
+  const isComplex = phaseMatches >= 2 || complexMatches >= 3 || workoutContent.length > 800;
+
+  console.info("Workout complexity analysis:", {
+    phaseMatches,
+    complexMatches,
+    contentLength: workoutContent.length,
+    isComplex
+  });
+
+  return isComplex;
+};
+
+/**
  * Detects if a workout is likely to be complex and need optimization
  */
 export const isComplexWorkout = (userMessage: string): boolean => {

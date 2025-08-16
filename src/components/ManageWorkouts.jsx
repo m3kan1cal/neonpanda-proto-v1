@@ -4,17 +4,11 @@ import { themeClasses } from '../utils/synthwaveThemeClasses';
 import { NeonBorder } from './themes/SynthwaveComponents';
 import { useToast } from '../contexts/ToastContext';
 import { WorkoutAgent } from '../utils/agents/WorkoutAgent';
-import CoachConversationAgent from '../utils/agents/CoachConversationAgent';
+import { FloatingMenuManager } from './shared/FloatingMenuManager';
 import {
-  FloatingIconButton,
-  ModernPopover,
-  FloatingIconBar,
   WorkoutIcon,
-  ChatIcon,
-  LightningIcon,
-  CloseIcon,
-  ChevronRightIcon
-} from './shared/FloatingMenu';
+  CloseIcon
+} from './themes/SynthwaveComponents';
 
 // Icons
 const TrashIcon = () => (
@@ -63,14 +57,10 @@ function ManageWorkouts() {
   const [workoutToDelete, setWorkoutToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Modern popover state
-  const [activePopover, setActivePopover] = useState(null);
-  const conversationsIconRef = useRef(null);
-  const workoutsIconRef = useRef(null);
-  const [isCreatingConversation, setIsCreatingConversation] = useState(false);
+
 
   const workoutAgentRef = useRef(null);
-  const agentRef = useRef(null);
+
   const { addToast, success, error, info } = useToast();
 
   // Unified workout state (like Workouts.jsx)
@@ -84,17 +74,7 @@ function ManageWorkouts() {
     totalCount: 0
   });
 
-  // Agent state for conversations (managed by CoachConversationAgent)
-  const [coachConversationAgentState, setCoachConversationAgentState] = useState({
-    messages: [],
-    isLoadingItem: true,
-    isTyping: false,
-    error: null,
-    coach: null,
-    conversation: null,
-    recentConversations: [],
-    isLoadingRecentItems: false,
-  });
+
 
   // Redirect if missing required parameters
   useEffect(() => {
@@ -169,56 +149,9 @@ function ManageWorkouts() {
     loadWorkouts();
   }, [userId]);
 
-  // Load conversations when popover is opened
-  useEffect(() => {
-    if (activePopover === 'conversations' && userId && coachId && agentRef.current) {
-      console.info('Loading conversations for popover...', { userId, coachId });
-      agentRef.current.loadRecentConversations(userId, coachId, 10);
-    }
-  }, [activePopover, userId, coachId]);
 
-  // Load workouts when popover is opened
-  useEffect(() => {
-    if (activePopover === 'workouts' && userId && workoutAgentRef.current) {
-      console.info('Loading workouts for popover...', { userId, activePopover });
-      workoutAgentRef.current.loadRecentWorkouts(10);
-    }
-  }, [activePopover, userId]);
 
-  // Initialize conversation agent (for popover functionality only)
-  useEffect(() => {
-    if (!userId || !coachId) return;
 
-    if (!agentRef.current) {
-      agentRef.current = new CoachConversationAgent({
-        userId,
-        coachId,
-        conversationId: null, // We don't need a specific conversation for popover
-        onStateChange: (newState) => {
-          // Only update conversation-related state for popover
-          setCoachConversationAgentState(prevState => ({
-            ...prevState,
-            recentConversations: newState.recentConversations || [],
-            isLoadingRecentItems: newState.isLoadingRecentItems || false,
-            error: newState.error || null,
-          }));
-        },
-        onNavigation: (type, data) => {
-          // Handle navigation if needed
-        },
-        onError: (error) => {
-          console.error('Conversation agent error:', error);
-        }
-      });
-    }
-
-    return () => {
-      if (agentRef.current) {
-        agentRef.current.destroy();
-        agentRef.current = null;
-      }
-    };
-  }, [userId, coachId]);
 
   // Handle delete click
   const handleDeleteClick = (workout) => {
@@ -270,75 +203,13 @@ function ManageWorkouts() {
     };
   };
 
-  // Modern popover handlers
-  const handleTogglePopover = (popoverType) => {
-    setActivePopover(activePopover === popoverType ? null : popoverType);
-  };
 
-  const handleClosePopover = () => {
-    setActivePopover(null);
-  };
 
-  const formatConversationDate = (dateString) => {
-    if (!dateString) return 'Unknown';
 
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInHours = Math.floor((now - date) / (1000 * 60 * 60));
 
-    if (diffInHours < 1) {
-      return 'Just now';
-    } else if (diffInHours < 24) {
-      return `${diffInHours}h ago`;
-    } else if (diffInHours < 48) {
-      return 'Yesterday';
-    } else {
-      const diffInDays = Math.floor(diffInHours / 24);
-      return `${diffInDays}d ago`;
-    }
-  };
 
-  const truncateTitle = (title, maxLength = 40) => {
-    if (!title || title.length <= maxLength) return title || 'Untitled';
-    return title.substring(0, maxLength) + '...';
-  };
 
-  const handleConversationClick = (selectedConversationId) => {
-    navigate(`/training-grounds/coach-conversations?userId=${userId}&coachId=${coachId}&conversationId=${selectedConversationId}`);
-  };
 
-  const handleNewConversation = async () => {
-    if (!agentRef.current || !userId || !coachId || isCreatingConversation) return;
-
-    setIsCreatingConversation(true);
-
-    try {
-      console.info('ManageWorkouts.jsx: Creating new conversation...', { userId, coachId });
-
-      // Create new conversation using the agent
-      const result = await agentRef.current.createConversation(userId, coachId);
-
-      console.info('ManageWorkouts.jsx: Conversation created successfully:', result);
-
-      // Navigate to the new conversation
-      if (result && result.conversationId) {
-        console.info('ManageWorkouts.jsx: Navigating to conversation:', result.conversationId);
-        // Close the popover before navigation
-        handleClosePopover();
-        navigate(`/training-grounds/coach-conversations?userId=${userId}&coachId=${coachId}&conversationId=${result.conversationId}`);
-      } else {
-        console.error('ManageWorkouts.jsx: No conversationId in result:', result);
-        error('Failed to create conversation - no ID returned');
-      }
-    } catch (error) {
-      console.error('ManageWorkouts.jsx: Error creating new conversation:', error);
-              error('Failed to create conversation');
-      // Fall back to training grounds if creation fails
-      navigate(`/training-grounds?userId=${userId}&coachId=${coachId}`);
-    } finally {
-      setIsCreatingConversation(false);
-    }
-  };
 
   // Render workout card
   const renderWorkoutCard = (workout) => {
@@ -470,108 +341,7 @@ function ManageWorkouts() {
     );
   };
 
-  // Render workout list for popover
-  const renderWorkoutList = () => (
-    <div className="space-y-2">
-      {workoutAgentState.isLoadingRecentItems ? (
-        <div className="text-center py-8">
-          <div className="inline-flex items-center space-x-2 text-synthwave-text-secondary font-rajdhani">
-            <div className="w-4 h-4 border-2 border-synthwave-neon-pink border-t-transparent rounded-full animate-spin"></div>
-            <span>Loading workouts...</span>
-          </div>
-        </div>
-      ) : workoutAgentState.recentWorkouts.length === 0 ? (
-        <div className="text-center py-8">
-          <div className="font-rajdhani text-synthwave-text-muted text-sm">
-            No workouts found
-          </div>
-        </div>
-      ) : (
-        <>
-          <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
-            Recent Workouts
-          </div>
-          {workoutAgentState.recentWorkouts.map((workout) => (
-            <div
-              key={workout.workoutId}
-              onClick={() => {
-                navigate(`/training-grounds/workouts?userId=${userId}&workoutId=${workout.workoutId}&coachId=${coachId}`);
-                // Close the popover after clicking
-                handleClosePopover();
-              }}
-              className="bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/20 hover:border-synthwave-neon-pink/40 hover:bg-synthwave-bg-primary/50 rounded-lg p-3 cursor-pointer transition-all duration-200"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex-1 min-w-0">
-                  <div className="font-rajdhani text-sm text-white font-medium truncate">
-                    {workoutAgentRef.current?.formatWorkoutSummary(workout, true) || 'Workout'}
-                  </div>
-                  <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1 flex items-center space-x-2">
-                    <span>{workoutAgentRef.current?.formatWorkoutTime(workout.completedAt) || 'Unknown time'}</span>
-                    {workout.extractionMetadata?.confidence && (
-                      <span className={`${workoutAgentRef.current?.getConfidenceColorClass(workout.extractionMetadata.confidence) || 'text-synthwave-text-secondary'}`}>
-                        • {workoutAgentRef.current?.getConfidenceDisplay(workout.extractionMetadata.confidence) || 'Unknown'}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <div className="text-synthwave-neon-pink ml-2">
-                  <LightningIcon />
-                </div>
-              </div>
-            </div>
-          ))}
-        </>
-      )}
-    </div>
-  );
 
-  // Render conversation list for popover
-  const renderConversationList = () => (
-    <div className="space-y-2">
-      {coachConversationAgentState.isLoadingRecentItems ? (
-        <div className="text-center py-8">
-          <div className="inline-flex items-center space-x-2 text-synthwave-text-secondary font-rajdhani">
-            <div className="w-4 h-4 border-2 border-synthwave-neon-pink border-t-transparent rounded-full animate-spin"></div>
-            <span>Loading conversations...</span>
-          </div>
-        </div>
-      ) : coachConversationAgentState.recentConversations.length === 0 ? (
-        <div className="text-center py-8">
-          <div className="font-rajdhani text-synthwave-text-muted text-sm">
-            No conversations found
-          </div>
-        </div>
-      ) : (
-        <>
-          <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
-            Recent Conversations
-          </div>
-          {coachConversationAgentState.recentConversations.map((conv) => (
-            <div
-              key={conv.conversationId}
-              onClick={() => handleConversationClick(conv.conversationId)}
-              className="bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/20 hover:border-synthwave-neon-pink/40 hover:bg-synthwave-bg-primary/50 rounded-lg p-3 cursor-pointer transition-all duration-200"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex-1 min-w-0">
-                  <div className="font-rajdhani text-sm text-white font-medium truncate">
-                    {truncateTitle(conv.title)}
-                  </div>
-                  <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
-                    {formatConversationDate(conv.metadata?.lastActivity || conv.createdAt)} • {conv.metadata?.totalMessages || 0} messages
-                  </div>
-                </div>
-                <div className="text-synthwave-neon-pink ml-2">
-                  <ChevronRightIcon />
-                </div>
-              </div>
-            </div>
-          ))}
-        </>
-      )}
-    </div>
-  );
 
   // Auto-scroll to top when page loads
   useEffect(() => {
@@ -722,79 +492,16 @@ function ManageWorkouts() {
       </div>
     </div>
 
-      {/* Modern Floating Icon Bar */}
-      <FloatingIconBar>
-        <FloatingIconButton
-          ref={conversationsIconRef}
-          icon={<ChatIcon />}
-          isActive={activePopover === 'conversations'}
-          onClick={() => handleTogglePopover('conversations')}
-          title="Recent Conversations"
-        />
-        <FloatingIconButton
-          ref={workoutsIconRef}
-          icon={<LightningIcon />}
-          isActive={activePopover === 'workouts'}
-          onClick={() => handleTogglePopover('workouts')}
-          title="Recent Workouts"
-        />
-      </FloatingIconBar>
+      {/* Floating Menu Manager */}
+      <FloatingMenuManager
+        userId={userId}
+        coachId={coachId}
+        currentPage="manage-workouts"
+      />
 
-      {/* Modern Popovers */}
-      <ModernPopover
-        isOpen={activePopover === 'conversations'}
-        onClose={handleClosePopover}
-        anchorRef={conversationsIconRef}
-        title="Recent Conversations"
-      >
-        {/* New Conversation Button */}
-        <div className="flex justify-center mb-4">
-          <button
-            onClick={handleNewConversation}
-            disabled={isCreatingConversation}
-            className={`${themeClasses.neonButton} text-sm px-6 py-3 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center space-x-2 w-3/4 justify-center`}
-          >
-            {isCreatingConversation ? (
-              <>
-                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
-                <span>Creating...</span>
-              </>
-            ) : (
-              <>
-                <ChatIcon />
-                <span>Start Conversation</span>
-              </>
-            )}
-          </button>
-        </div>
 
-        {/* Conversations List */}
-        {renderConversationList()}
-      </ModernPopover>
 
-      <ModernPopover
-        isOpen={activePopover === 'workouts'}
-        onClose={handleClosePopover}
-        anchorRef={workoutsIconRef}
-        title="Recent Workouts"
-      >
-        {/* Log Workout Button */}
-        <div className="flex justify-center mb-4">
-          <button
-            onClick={() => {
-              // TODO: Implement workout logging functionality
-              console.info('Log Workout clicked - functionality to be implemented');
-            }}
-            className={`${themeClasses.neonButton} text-sm px-6 py-3 transition-all duration-300 inline-flex items-center space-x-2 w-3/4 justify-center`}
-          >
-            <WorkoutIcon />
-            <span>Log Workout</span>
-          </button>
-        </div>
 
-        {/* Workouts List */}
-        {renderWorkoutList()}
-      </ModernPopover>
 
             {/* Delete Confirmation Modal */}
       {showDeleteModal && workoutToDelete && (

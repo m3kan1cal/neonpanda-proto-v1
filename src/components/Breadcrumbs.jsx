@@ -28,7 +28,7 @@ function Breadcrumbs() {
     'coach-conversations': 'Coach Conversations',
     'workouts': 'Workouts',
     'manage-workouts': 'Manage Workouts',
-    'reports': 'Reports',
+    'reports': 'View Reports',
     'weekly': 'Weekly Reports'
   };
 

@@ -21,6 +21,7 @@ export {
   parseAndValidateWorkoutData,
   calculateConfidence,
   extractCompletedAtTime,
+  checkWorkoutComplexity,
   isComplexWorkout,
   generateWorkoutSummary,
   classifyDiscipline,

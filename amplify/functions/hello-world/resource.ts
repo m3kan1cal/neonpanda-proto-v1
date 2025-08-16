@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { defineFunction } from '@aws-amplify/backend';
 
 export const helloWorld = defineFunction({

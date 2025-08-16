@@ -1,34 +1,24 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { themeClasses } from '../utils/synthwaveThemeClasses';
-import { NeonBorder } from './themes/SynthwaveComponents';
+import {
+  NeonBorder,
+  ConversationIcon,
+  AnalyticsIcon,
+  WorkoutIcon,
+  LightningIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon
+} from './themes/SynthwaveComponents';
 import TrainingGroundsAgent from '../utils/agents/TrainingGroundsAgent';
 import CoachConversationAgent from '../utils/agents/CoachConversationAgent';
 import WorkoutAgent from '../utils/agents/WorkoutAgent';
 import ReportAgent from '../utils/agents/ReportAgent';
 
-// Icons
-const ConversationIcon = () => (
-  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-  </svg>
-);
-
+// Local icons not in SynthwaveComponents
 const ProgramIcon = () => (
   <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-  </svg>
-);
-
-const AnalyticsIcon = () => (
-  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-  </svg>
-);
-
-const WorkoutIcon = () => (
-  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
   </svg>
 );
 
@@ -47,24 +37,6 @@ const MessagesIcon = () => (
 const InfoIcon = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-  </svg>
-);
-
-const ChevronLeftIcon = () => (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-  </svg>
-);
-
-const ChevronRightIcon = () => (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-  </svg>
-);
-
-const LightningIcon = () => (
-  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
   </svg>
 );
 
@@ -339,14 +311,9 @@ function TrainingGrounds() {
                   <div className="font-rajdhani text-sm text-white font-medium truncate">
                     {workoutAgentRef.current?.formatWorkoutSummary(workout, true) || 'Workout'}
                   </div>
-                  <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1 flex items-center space-x-2">
-                    <span>{workoutAgentRef.current?.formatWorkoutTime(workout.completedAt) || 'Unknown time'}</span>
-                    {workout.extractionMetadata?.confidence && (
-                      <span className={`${workoutAgentRef.current?.getConfidenceColorClass(workout.extractionMetadata.confidence) || 'text-synthwave-text-secondary'}`}>
-                        • {workoutAgentRef.current?.getConfidenceDisplay(workout.extractionMetadata.confidence) || 'Unknown'}
-                      </span>
-                    )}
-                  </div>
+                                  <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                  {workoutAgentRef.current?.formatWorkoutTime(workout.completedAt) || 'Unknown time'}{workout.duration ? ` • ` : ''}<span className="text-synthwave-neon-cyan">{workout.duration ? `${Math.round(workout.duration / 60)}min` : ''}</span>{workout.extractionMetadata?.confidence ? ` • ` : ''}{workout.extractionMetadata?.confidence ? <span className={`${workoutAgentRef.current?.getConfidenceColorClass(workout.extractionMetadata.confidence) || 'text-synthwave-text-secondary'}`}>{workoutAgentRef.current?.getConfidenceDisplay(workout.extractionMetadata.confidence) || 'Unknown'}</span> : ''}
+                </div>
                 </div>
                 <div className="text-synthwave-neon-pink ml-2">
                   <LightningIcon />
@@ -546,7 +513,7 @@ function TrainingGrounds() {
                             {truncateTitle(conversation.title)}
                           </div>
                           <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
-                            {formatConversationDate(conversation.metadata?.lastActivity || conversation.createdAt)} • {conversation.metadata?.totalMessages || 0} messages
+                            {formatConversationDate(conversation.metadata?.lastActivity || conversation.createdAt)} • <span className="text-synthwave-neon-cyan">{conversation.metadata?.totalMessages || 0} messages</span>
                           </div>
                         </div>
                         <div className="text-synthwave-neon-pink ml-2">

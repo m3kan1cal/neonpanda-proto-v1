@@ -1,24 +1,10 @@
 import React, { useState } from 'react';
 import { themeClasses } from '../utils/synthwaveThemeClasses';
-
-// Icons
-const ChevronDownIcon = () => (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-  </svg>
-);
-
-const ChevronRightIcon = () => (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-  </svg>
-);
-
-const WorkoutIcon = () => (
-  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-  </svg>
-);
+import {
+  ChevronDownIcon,
+  ChevronRightIcon,
+  WorkoutIcon
+} from './themes/SynthwaveComponents';
 
 const MetricsIcon = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -576,7 +562,7 @@ const WorkoutViewer = ({ workout, onToggleView, onDeleteWorkout }) => {
 
       {/* Workout Summary */}
       <CollapsibleSection
-        title="Workout Summary"
+        title="Workout Metadata"
         icon={<WorkoutIcon />}
         defaultOpen={true}
       >
@@ -592,21 +578,89 @@ const WorkoutViewer = ({ workout, onToggleView, onDeleteWorkout }) => {
         <PerformanceMetrics metrics={workoutData.performance_metrics} />
       </CollapsibleSection>
 
+      {/* PR Achievements */}
+      {workoutData.pr_achievements && workoutData.pr_achievements.length > 0 && (
+        <CollapsibleSection
+          title={`PR Achievements (${workoutData.pr_achievements.length})`}
+          icon={<MetricsIcon />}
+          defaultOpen={true}
+        >
+          <div className="space-y-3">
+            {workoutData.pr_achievements.map((pr, index) => (
+              <div key={index} className="bg-synthwave-bg-primary/20 border border-synthwave-neon-pink/20 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="font-rajdhani font-bold text-synthwave-neon-pink text-lg capitalize">
+                    {pr.exercise} {pr.pr_type && `(${pr.pr_type.replace(/_/g, ' ')})`}
+                  </h4>
+                  <span className={`text-sm font-rajdhani uppercase px-2 py-1 rounded ${
+                    pr.significance === 'major' ? 'bg-synthwave-neon-pink/20 text-synthwave-neon-pink' :
+                    pr.significance === 'moderate' ? 'bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan' :
+                    'bg-synthwave-text-secondary/20 text-synthwave-text-secondary'
+                  }`}>
+                    {pr.significance}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+                  <ValueDisplay
+                    label="Previous Best"
+                    value={pr.previous_best}
+                    dataPath={`workoutData.pr_achievements[${index}].previous_best`}
+                  />
+                  <ValueDisplay
+                    label="New Best"
+                    value={pr.new_best}
+                    dataPath={`workoutData.pr_achievements[${index}].new_best`}
+                  />
+                  <ValueDisplay
+                    label="Improvement"
+                    value={pr.improvement}
+                    dataPath={`workoutData.pr_achievements[${index}].improvement`}
+                  />
+                  <ValueDisplay
+                    label="Improvement %"
+                    value={pr.improvement_percentage ? `${pr.improvement_percentage}%` : null}
+                    dataPath={`workoutData.pr_achievements[${index}].improvement_percentage`}
+                  />
+                </div>
+
+                {pr.date_previous && (
+                  <div className="mb-2">
+                    <ValueDisplay
+                      label="Previous PR Date"
+                      value={new Date(pr.date_previous).toLocaleDateString()}
+                      dataPath={`workoutData.pr_achievements[${index}].date_previous`}
+                    />
+                  </div>
+                )}
+
+                {pr.context && (
+                  <div className="mt-3 p-3 bg-synthwave-bg-primary/30 rounded border border-synthwave-neon-cyan/20">
+                    <span className="text-synthwave-neon-cyan font-rajdhani text-base font-medium">Context: </span>
+                    <span className="text-synthwave-text-secondary font-rajdhani text-base" data-json-path={`workoutData.pr_achievements[${index}].context`} data-json-value={JSON.stringify(pr.context)}>
+                      {pr.context}
+                    </span>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </CollapsibleSection>
+      )}
+
       {/* AI-Generated Summary */}
       {workout.summary && (
         <CollapsibleSection
-          title="AI Summary"
+          title="Workout Summary"
           icon={<AIIcon />}
           defaultOpen={true}
         >
-          <div className="p-4 bg-synthwave-bg-primary/20 border border-synthwave-neon-cyan/20 rounded-lg">
-            <div className="text-synthwave-text-primary font-rajdhani text-base leading-relaxed">
-              {workout.summary}
-            </div>
-            <div className="mt-3 text-synthwave-text-secondary font-rajdhani text-sm">
-              <span className="text-synthwave-neon-cyan">Generated by AI</span> •
-              Provides contextual overview of workout performance and key highlights
-            </div>
+          <div className="text-synthwave-text-primary font-rajdhani text-base leading-relaxed">
+            {workout.summary}
+          </div>
+          <div className="mt-3 text-synthwave-text-secondary font-rajdhani text-sm">
+            <span className="text-synthwave-neon-cyan">Generated by AI</span> •
+            Provides contextual overview of workout performance and key highlights
           </div>
         </CollapsibleSection>
       )}
