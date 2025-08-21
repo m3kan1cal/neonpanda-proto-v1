@@ -23,6 +23,8 @@ export interface RouteIntegrations {
   getConversationsCount: apigatewayv2_integrations.HttpLambdaIntegration;
   getWeeklyReports: apigatewayv2_integrations.HttpLambdaIntegration;
   getWeeklyReport: apigatewayv2_integrations.HttpLambdaIntegration;
+  getMemories: apigatewayv2_integrations.HttpLambdaIntegration;
+  deleteMemory: apigatewayv2_integrations.HttpLambdaIntegration;
 }
 
 /**
@@ -245,6 +247,32 @@ export function addReportRoutes(
 }
 
 /**
+ * Add memory routes to the HTTP API
+ */
+export function addMemoryRoutes(
+  httpApi: apigatewayv2.HttpApi,
+  integrations: RouteIntegrations
+): void {
+  // *******************************************************
+  // Memory Routes
+  // *******************************************************
+
+  // Get all memories for a user
+  httpApi.addRoutes({
+    path: '/users/{userId}/memories',
+    methods: [apigatewayv2.HttpMethod.GET],
+    integration: integrations.getMemories
+  });
+
+  // Delete specific memory
+  httpApi.addRoutes({
+    path: '/users/{userId}/memories/{memoryId}',
+    methods: [apigatewayv2.HttpMethod.DELETE],
+    integration: integrations.deleteMemory
+  });
+}
+
+/**
  * Add all routes to the HTTP API
  */
 export function addAllRoutes(
@@ -257,4 +285,5 @@ export function addAllRoutes(
   addCoachConversationRoutes(httpApi, integrations);
   addWorkoutRoutes(httpApi, integrations);
   addReportRoutes(httpApi, integrations);
+  addMemoryRoutes(httpApi, integrations);
 }

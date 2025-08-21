@@ -3,7 +3,7 @@ import {
   getWorkout,
   queryCoachConversations,
   getCoachConversation,
-  queryUserMemories,
+  queryMemories,
 } from "../../../dynamodb/operations";
 import { callBedrockApi, MODEL_IDS } from "../api-helpers";
 import { cleanResponse, fixMalformedJson } from "../response-utils";
@@ -296,13 +296,13 @@ export const fetchUserContext = async (
   console.info(`Fetching user context for user ${userId}`);
 
   try {
-    // Query user memories (function already exists) - get all memories for user
-    const memories = await queryUserMemories(userId, undefined, {
+    // Query memories (function already exists) - get all memories for user
+    const memories = await queryMemories(userId, undefined, {
       limit: 50, // Get more memories for comprehensive context
     });
 
     console.info(
-      `Successfully fetched ${memories.length} user memories for user ${userId}`
+      `Successfully fetched ${memories.length} memories for user ${userId}`
     );
     return memories;
   } catch (error) {
@@ -328,7 +328,7 @@ export const fetchUserWeeklyData = async (
   // Step 2: Extract coach IDs from workouts
   const coachIds = extractCoachIds(workouts);
 
-  // Step 3: Fetch historical context, coaching context, and user memories in parallel
+  // Step 3: Fetch historical context, coaching context, and memories in parallel
   const [historicalSummaries, conversations, memories] = await Promise.all([
     fetchHistoricalWorkoutSummaries(userId),
     fetchCoachingContext(userId, coachIds),
@@ -380,7 +380,7 @@ const buildAnalyticsPrompt = (
   weeklyData: UserWeeklyData,
   userProfile?: any
 ): string => {
-  // Build comprehensive athlete profile from AI profile + user memories
+  // Build comprehensive athlete profile from AI profile + memories
   let athleteProfile = "";
 
   // Add AI-generated athlete profile if available
@@ -388,7 +388,7 @@ const buildAnalyticsPrompt = (
     athleteProfile += `ATHLETE PROFILE:\n${userProfile.athleteProfile.summary}\n\n`;
   }
 
-  // Add structured user memories
+  // Add structured memories
   if (weeklyData.userContext.memories.length > 0) {
     athleteProfile += `DETAILED CONTEXT:\n`;
     athleteProfile += weeklyData.userContext.memories

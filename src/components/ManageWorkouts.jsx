@@ -7,6 +7,7 @@ import { WorkoutAgent } from '../utils/agents/WorkoutAgent';
 import { FloatingMenuManager } from './shared/FloatingMenuManager';
 import {
   WorkoutIcon,
+  WorkoutIconSmall,
   CloseIcon
 } from './themes/SynthwaveComponents';
 
@@ -450,7 +451,7 @@ function ManageWorkouts() {
             }}
             className={`${themeClasses.neonButton} text-sm px-6 py-3 flex items-center space-x-2`}
           >
-            <WorkoutIcon />
+            <WorkoutIconSmall />
             <span>Log Workout</span>
           </button>
         </div>

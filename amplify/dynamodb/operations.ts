@@ -1012,13 +1012,13 @@ export async function queryCoachConversationSummaries(
 }
 
 // ===========================
-// USER MEMORY OPERATIONS
+// MEMORY OPERATIONS
 // ===========================
 
 /**
- * Save a user memory to DynamoDB
+ * Save a memory to DynamoDB
  */
-export async function saveUserMemory(memory: UserMemory): Promise<void> {
+export async function saveMemory(memory: UserMemory): Promise<void> {
   const timestamp = new Date().toISOString();
 
   const item = createDynamoDBItem<UserMemory>(
@@ -1030,7 +1030,7 @@ export async function saveUserMemory(memory: UserMemory): Promise<void> {
   );
 
   await saveToDynamoDB(item);
-  console.info('User memory saved successfully:', {
+  console.info('Memory saved successfully:', {
     memoryId: memory.memoryId,
     userId: memory.userId,
     coachId: memory.coachId,
@@ -1039,9 +1039,9 @@ export async function saveUserMemory(memory: UserMemory): Promise<void> {
 }
 
 /**
- * Query user memories for a specific user and optionally coach
+ * Query memories for a specific user and optionally coach
  */
-export async function queryUserMemories(
+export async function queryMemories(
   userId: string,
   coachId?: string,
   options?: {
@@ -1099,7 +1099,7 @@ export async function queryUserMemories(
     filteredItems = filteredItems.slice(0, options.limit);
   }
 
-  console.info('User memories queried successfully:', {
+  console.info('Memories queried successfully:', {
     userId,
     coachId: coachId || 'all',
     totalFound: filteredItems.length,
@@ -1114,9 +1114,9 @@ export async function queryUserMemories(
 }
 
 /**
- * Update usage statistics for a user memory
+ * Update usage statistics for a memory
  */
-export async function updateUserMemory(memoryId: string, userId: string): Promise<void> {
+export async function updateMemory(memoryId: string, userId: string): Promise<void> {
   const memory = await loadFromDynamoDB<UserMemory>(
     `user#${userId}`,
     `userMemory#${memoryId}`,
@@ -1139,6 +1139,44 @@ export async function updateUserMemory(memoryId: string, userId: string): Promis
     userId,
     newUsageCount: memory.attributes.metadata.usageCount
   });
+}
+
+
+
+/**
+ * Delete a memory from DynamoDB
+ */
+export async function deleteMemory(userId: string, memoryId: string): Promise<void> {
+  const tableName = process.env.DYNAMODB_TABLE_NAME;
+
+  if (!tableName) {
+    throw new Error('DYNAMODB_TABLE_NAME environment variable is not set');
+  }
+
+  try {
+    const command = new DeleteCommand({
+      TableName: tableName,
+      Key: {
+        pk: `user#${userId}`,
+        sk: `userMemory#${memoryId}`
+      },
+      // Add condition to ensure the item exists before deleting
+      ConditionExpression: 'attribute_exists(pk)'
+    });
+
+    await docClient.send(command);
+    console.info('Memory deleted successfully:', {
+      memoryId,
+      userId
+    });
+
+  } catch (error: any) {
+    if (error.name === 'ConditionalCheckFailedException') {
+      throw new Error(`Memory ${memoryId} not found for user ${userId}`);
+    }
+    console.error('Error deleting memory:', error);
+    throw error;
+  }
 }
 
 /**

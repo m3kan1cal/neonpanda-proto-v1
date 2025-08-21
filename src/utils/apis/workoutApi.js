@@ -244,6 +244,67 @@ export async function getWorkoutsCount(userId, options = {}) {
 }
 
 /**
+ * Gets the count of unique training days for a user
+ * @param {string} userId - The user ID
+ * @param {Object} [options] - Optional query parameters
+ * @param {string} [options.fromDate] - Filter workouts from this date (ISO string)
+ * @param {string} [options.toDate] - Filter workouts to this date (ISO string)
+ * @param {string} [options.discipline] - Filter by discipline (crossfit, powerlifting, etc.)
+ * @param {string} [options.workoutType] - Filter by workout type
+ * @param {string} [options.location] - Filter by location
+ * @param {string} [options.coachId] - Filter by coach ID
+ * @param {number} [options.minConfidence] - Filter by minimum confidence score
+ * @returns {Promise<number>} - The number of unique training days
+ */
+export const getTrainingDaysCount = async (userId, options = {}) => {
+  console.info('getTrainingDaysCount: Calculating training days for user:', userId);
+  console.info('getTrainingDaysCount: options:', options);
+
+  try {
+    // Get all workouts with the specified filters, but no limit to ensure we get all data
+    const result = await getWorkouts(userId, {
+      ...options,
+      limit: 100, // Get a reasonable number of workouts
+      sortBy: 'completedAt',
+      sortOrder: 'desc'
+    });
+
+    const workouts = result.workouts || [];
+    console.info('getTrainingDaysCount: Retrieved workouts:', workouts.length);
+
+    if (workouts.length === 0) {
+      return 0;
+    }
+
+    // Extract unique dates from completedAt timestamps
+    const uniqueDates = new Set();
+
+    workouts.forEach(workout => {
+      if (workout.completedAt) {
+        try {
+          const date = new Date(workout.completedAt);
+          // Convert to YYYY-MM-DD format to ensure we're counting calendar days
+          const dateString = date.toISOString().split('T')[0];
+          uniqueDates.add(dateString);
+        } catch (error) {
+          console.warn('getTrainingDaysCount: Invalid date format for workout:', workout.workoutId, workout.completedAt);
+        }
+      }
+    });
+
+    const trainingDaysCount = uniqueDates.size;
+    console.info('getTrainingDaysCount: Unique training days found:', trainingDaysCount);
+    console.info('getTrainingDaysCount: Unique dates:', Array.from(uniqueDates).sort());
+
+    return trainingDaysCount;
+
+  } catch (error) {
+    console.error('getTrainingDaysCount: Error calculating training days:', error);
+    throw error;
+  }
+};
+
+/**
  * Deletes a workout session
  * @param {string} userId - The user ID
  * @param {string} workoutId - The workout ID

@@ -132,7 +132,7 @@ export interface EnhancedMethodologyOptions {
 /**
  * Event structure for detecting memory requests
  */
-export interface UserMemoryDetectionEvent {
+export interface MemoryDetectionEvent {
   userId: string;
   coachId: string;
   conversationId: string;
@@ -143,7 +143,7 @@ export interface UserMemoryDetectionEvent {
 /**
  * Response from memory detection analysis
  */
-export interface UserMemoryDetectionResult {
+export interface MemoryDetectionResult {
   isMemoryRequest: boolean;
   confidence: number;
   extractedMemory?: {

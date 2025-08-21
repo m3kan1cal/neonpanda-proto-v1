@@ -12,17 +12,18 @@ import {
 } from './FloatingMenu';
 import {
   WorkoutIcon,
+  WorkoutIconSmall,
   ChatIcon,
+  ChatIconSmall,
   LightningIcon,
-  ChevronRightIcon
+  LightningIconSmall,
+  ReportIconSmall,
+  ChevronRightIcon,
+  MenuIcon,
+  MemoryIcon
 } from '../themes/SynthwaveComponents';
 
-// Local icon definitions
-const BarChartIcon = () => (
-  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-  </svg>
-);
+
 
 /**
  * FloatingMenuManager - A comprehensive floating menu system with agent management
@@ -39,6 +40,7 @@ export const FloatingMenuManager = ({
 
   // Modern popover state
   const [activePopover, setActivePopover] = useState(null);
+  const menuIconRef = useRef(null);
   const conversationsIconRef = useRef(null);
   const workoutsIconRef = useRef(null);
   const reportsIconRef = useRef(null);
@@ -315,7 +317,7 @@ export const FloatingMenuManager = ({
                   </div>
                 </div>
                 <div className="text-synthwave-neon-pink ml-2">
-                  <LightningIcon />
+                  <LightningIconSmall />
                 </div>
               </div>
             </div>
@@ -364,13 +366,104 @@ export const FloatingMenuManager = ({
                   </div>
                 </div>
                 <div className="text-synthwave-neon-pink ml-2">
-                  <BarChartIcon />
+                  <ReportIconSmall />
                 </div>
               </div>
             </div>
           ))}
         </>
       )}
+    </div>
+  );
+
+
+
+      const renderMainActionsMenu = () => (
+    <div className="space-y-3">
+
+      {/* CYAN BUTTONS - Management Actions */}
+      {/* Training Grounds */}
+      <button
+        onClick={() => {
+          navigate(`/training-grounds?userId=${userId}&coachId=${coachId}`);
+          handleClosePopover();
+        }}
+        className={`${themeClasses.cyanButton} text-sm px-4 py-2 w-full flex items-center justify-center space-x-2`}
+      >
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+        </svg>
+        <span>Training Grounds</span>
+      </button>
+
+      {/* Manage Workouts */}
+      <button
+        onClick={() => {
+          navigate(`/training-grounds/manage-workouts?userId=${userId}&coachId=${coachId}`);
+          handleClosePopover();
+        }}
+        className={`${themeClasses.cyanButton} text-sm px-4 py-2 w-full flex items-center justify-center space-x-2`}
+      >
+        <WorkoutIconSmall />
+        <span>Manage Workouts</span>
+      </button>
+
+      {/* Manage Memories */}
+      <button
+        onClick={() => {
+          navigate(`/training-grounds/manage-memories?userId=${userId}&coachId=${coachId}`);
+          handleClosePopover();
+        }}
+        className={`${themeClasses.cyanButton} text-sm px-4 py-2 w-full flex items-center justify-center space-x-2`}
+      >
+        <MemoryIcon />
+        <span>Manage Memories</span>
+      </button>
+
+      {/* View Reports */}
+      <button
+        onClick={() => {
+          navigate(`/training-grounds/reports?userId=${userId}&coachId=${coachId}`);
+          handleClosePopover();
+        }}
+        className={`${themeClasses.cyanButton} text-sm px-4 py-2 w-full flex items-center justify-center space-x-2`}
+      >
+        <ReportIconSmall />
+        <span>View Reports</span>
+      </button>
+
+      {/* PINK BUTTONS - Creation/Writing Actions */}
+      {/* Log Workout */}
+      <button
+        onClick={() => {
+          // TODO: Implement workout logging functionality
+          console.info('Log Workout clicked - functionality to be implemented');
+          handleClosePopover();
+        }}
+        className={`${themeClasses.neonButton} text-sm px-4 py-2 w-full flex items-center justify-center space-x-2`}
+      >
+        <WorkoutIconSmall />
+        <span>Log Workout</span>
+      </button>
+
+      {/* Start Conversation */}
+      <button
+        onClick={handleNewConversation}
+        disabled={isCreatingConversation}
+        className={`${themeClasses.neonButton} text-sm px-4 py-2 w-full flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed`}
+      >
+        {isCreatingConversation ? (
+          <>
+            <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+            <span>Creating...</span>
+          </>
+        ) : (
+          <>
+            <ChatIconSmall />
+            <span>Start Conversation</span>
+          </>
+        )}
+      </button>
     </div>
   );
 
@@ -428,22 +521,29 @@ export const FloatingMenuManager = ({
       {/* Modern Floating Icon Bar */}
       <FloatingIconBar className={className}>
         <FloatingIconButton
+          ref={menuIconRef}
+          icon={<MenuIcon />}
+          isActive={activePopover === 'menu'}
+          onClick={() => handleTogglePopover('menu')}
+          title="Quick Actions"
+        />
+        <FloatingIconButton
           ref={conversationsIconRef}
-          icon={<ChatIcon />}
+          icon={<ChatIconSmall />}
           isActive={activePopover === 'conversations'}
           onClick={() => handleTogglePopover('conversations')}
           title="Recent Conversations"
         />
         <FloatingIconButton
           ref={workoutsIconRef}
-          icon={<LightningIcon />}
+          icon={<LightningIconSmall />}
           isActive={activePopover === 'workouts'}
           onClick={() => handleTogglePopover('workouts')}
           title="Recent Workouts"
         />
         <FloatingIconButton
           ref={reportsIconRef}
-          icon={<BarChartIcon />}
+          icon={<ReportIconSmall />}
           isActive={activePopover === 'reports'}
           onClick={() => handleTogglePopover('reports')}
           title="Recent Reports"
@@ -451,6 +551,15 @@ export const FloatingMenuManager = ({
       </FloatingIconBar>
 
       {/* Modern Popovers */}
+      <ModernPopover
+        isOpen={activePopover === 'menu'}
+        onClose={handleClosePopover}
+        anchorRef={menuIconRef}
+        title="Quick Actions"
+      >
+        {renderMainActionsMenu()}
+      </ModernPopover>
+
       <ModernPopover
         isOpen={activePopover === 'conversations'}
         onClose={handleClosePopover}
@@ -471,7 +580,7 @@ export const FloatingMenuManager = ({
               </>
             ) : (
               <>
-                <ChatIcon />
+                <ChatIconSmall />
                 <span>Start Conversation</span>
               </>
             )}
@@ -497,7 +606,7 @@ export const FloatingMenuManager = ({
             }}
             className={`${themeClasses.neonButton} text-sm px-6 py-3 transition-all duration-300 inline-flex items-center space-x-2 w-3/4 justify-center`}
           >
-            <WorkoutIcon />
+            <WorkoutIconSmall />
             <span>Log Workout</span>
           </button>
         </div>

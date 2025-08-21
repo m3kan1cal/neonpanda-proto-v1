@@ -27,7 +27,9 @@ export function createCoreApi(
   getWorkoutsCountLambda: lambda.IFunction,
   getConversationsCountLambda: lambda.IFunction,
   getWeeklyReportsLambda: lambda.IFunction,
-  getWeeklyReportLambda: lambda.IFunction
+  getWeeklyReportLambda: lambda.IFunction,
+  getMemoriesLambda: lambda.IFunction,
+  deleteMemoryLambda: lambda.IFunction
 ) {
   // Determine if this is a sandbox deployment
   const isSandbox = stack.node.tryGetContext('amplify-backend-type') === 'sandbox';
@@ -182,6 +184,17 @@ export function createCoreApi(
     getWeeklyReportLambda
   );
 
+  // Create Lambda integrations for memory functions
+  const getMemoriesIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
+    'GetMemoriesIntegration',
+    getMemoriesLambda
+  );
+
+  const deleteMemoryIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
+    'DeleteMemoryIntegration',
+    deleteMemoryLambda
+  );
+
   // Create integrations object for route configuration
   const integrations: RouteIntegrations = {
     helloWorld: helloWorldIntegration,
@@ -204,7 +217,9 @@ export function createCoreApi(
     getWorkoutsCount: getWorkoutsCountIntegration,
     getConversationsCount: getConversationsCountIntegration,
     getWeeklyReports: getWeeklyReportsIntegration,
-    getWeeklyReport: getWeeklyReportIntegration
+    getWeeklyReport: getWeeklyReportIntegration,
+    getMemories: getMemoriesIntegration,
+    deleteMemory: deleteMemoryIntegration
   };
 
   // Add all routes using the organized route definitions

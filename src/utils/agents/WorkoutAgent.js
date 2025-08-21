@@ -1,5 +1,5 @@
 import { nanoid } from 'nanoid';
-import { getWorkouts, getWorkout, updateWorkout, deleteWorkout, getWorkoutsCount, getRecentWorkouts } from '../apis/workoutApi.js';
+import { getWorkouts, getWorkout, updateWorkout, deleteWorkout, getWorkoutsCount, getRecentWorkouts, getTrainingDaysCount } from '../apis/workoutApi.js';
 
 /**
  * WorkoutAgent - Handles the business logic for workout management
@@ -29,7 +29,9 @@ export class WorkoutAgent {
       recentWorkouts: [],
       allWorkouts: [],
       totalWorkoutCount: 0,
+      trainingDaysCount: 0,
       isLoadingCount: false,
+      isLoadingTrainingDays: false,
       isLoadingRecentItems: false,
       isLoadingAllItems: false,
       isLoadingItem: false,
@@ -91,7 +93,8 @@ export class WorkoutAgent {
     // Load initial data
     await Promise.all([
       this.loadRecentWorkouts(5),
-      this.loadTotalWorkoutCount()
+      this.loadTotalWorkoutCount(),
+      this.loadTrainingDaysCount()
     ]);
 
     console.info('WorkoutAgent.setUserId: Initial data loaded');
@@ -125,6 +128,38 @@ export class WorkoutAgent {
       this._updateState({
         isLoadingCount: false,
         error: error.message || 'Failed to load workout count'
+      });
+    }
+  }
+
+  /**
+   * Loads training days count for the user
+   */
+  async loadTrainingDaysCount(options = {}) {
+    console.info('WorkoutAgent.loadTrainingDaysCount called');
+
+    if (!this.userId) {
+      console.error('WorkoutAgent.loadTrainingDaysCount: No userId set');
+      return;
+    }
+
+    this._updateState({ isLoadingTrainingDays: true });
+
+    try {
+      const trainingDaysCount = await getTrainingDaysCount(this.userId, options);
+      console.info('WorkoutAgent.loadTrainingDaysCount: Got count:', trainingDaysCount);
+
+      this._updateState({
+        trainingDaysCount: trainingDaysCount || 0,
+        isLoadingTrainingDays: false,
+        error: null
+      });
+
+    } catch (error) {
+      console.error('WorkoutAgent.loadTrainingDaysCount: Error loading training days count:', error);
+      this._updateState({
+        isLoadingTrainingDays: false,
+        error: error.message || 'Failed to load training days count'
       });
     }
   }
@@ -525,7 +560,9 @@ export class WorkoutAgent {
       recentWorkouts: [],
       allWorkouts: [],
       totalWorkoutCount: 0,
+      trainingDaysCount: 0,
       isLoadingCount: false,
+      isLoadingTrainingDays: false,
       isLoadingRecentItems: false,
       isLoadingAllItems: false,
       isLoadingItem: false,

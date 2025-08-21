@@ -4,9 +4,11 @@ import { themeClasses } from '../utils/synthwaveThemeClasses';
 import {
   NeonBorder,
   ConversationIcon,
-  AnalyticsIcon,
+  ReportIcon,
   WorkoutIcon,
+  WorkoutIconSmall,
   LightningIcon,
+  LightningIconSmall,
   ChevronLeftIcon,
   ChevronRightIcon
 } from './themes/SynthwaveComponents';
@@ -30,13 +32,19 @@ const ResourcesIcon = () => (
 
 const MessagesIcon = () => (
   <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5zM21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
   </svg>
 );
 
 const InfoIcon = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+  </svg>
+);
+
+const BarChartIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
   </svg>
 );
 
@@ -94,7 +102,7 @@ function TrainingGrounds() {
     // Map specific loading states to general isLoading for backward compatibility
     const mappedState = {
       ...newState,
-      isLoading: newState.isLoadingCount || newState.isLoadingRecentItems || newState.isLoadingItem
+      isLoading: newState.isLoadingCount || newState.isLoadingRecentItems || newState.isLoadingItem || newState.isLoadingTrainingDays
     };
 
     setWorkoutState(mappedState);
@@ -221,7 +229,7 @@ function TrainingGrounds() {
     if (workoutAgentRef.current && userId) {
       console.info('TrainingGrounds: Setting userId and loading workouts for:', userId);
       workoutAgentRef.current.setUserId(userId);
-      workoutAgentRef.current.loadRecentWorkouts(5);
+      // Note: setUserId already loads recent workouts, total count, and training days count
     }
     if (reportsAgentRef.current && userId) {
       console.info('TrainingGrounds: Setting userId and loading reports for:', userId);
@@ -267,6 +275,32 @@ function TrainingGrounds() {
   const truncateTitle = (title, maxLength = 30) => {
     if (!title || title.length <= maxLength) return title || 'Untitled';
     return title.substring(0, maxLength) + '...';
+  };
+
+  const getWeekDateRange = (weekId) => {
+    if (!weekId) return 'Unknown week';
+
+    const [year, week] = weekId.split('-W');
+    if (!year || !week) return weekId;
+
+    const firstDayOfYear = new Date(year, 0, 1);
+    const daysToFirstMonday = (8 - firstDayOfYear.getDay()) % 7;
+    const firstMonday = new Date(year, 0, 1 + daysToFirstMonday);
+
+    const weekStart = new Date(firstMonday);
+    weekStart.setDate(firstMonday.getDate() + (parseInt(week) - 1) * 7);
+
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekStart.getDate() + 6);
+
+    const formatDate = (date) => {
+      return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric'
+      });
+    };
+
+    return `${formatDate(weekStart)} - ${formatDate(weekEnd)}`;
   };
 
   const renderWorkoutList = () => (
@@ -316,7 +350,7 @@ function TrainingGrounds() {
                 </div>
                 </div>
                 <div className="text-synthwave-neon-pink ml-2">
-                  <LightningIcon />
+                  <LightningIconSmall />
                 </div>
               </div>
             </div>
@@ -393,7 +427,7 @@ function TrainingGrounds() {
             <h1 className="font-russo font-black text-4xl md:text-5xl text-white mb-6 uppercase">
               Training Grounds
             </h1>
-            <div className="font-rajdhani text-xl text-synthwave-text-secondary mb-4 flex items-center justify-center space-x-3">
+            <div className="font-rajdhani text-xl text-synthwave-text-secondary mb-6 flex items-center justify-center space-x-3">
               <span className="text-synthwave-neon-pink">{trainingGroundsState.coachData?.name}</span>
               <button
                 onClick={() => setShowCoachDetails(!showCoachDetails)}
@@ -405,69 +439,199 @@ function TrainingGrounds() {
                 <InfoIcon />
               </button>
             </div>
-                        <div className="font-rajdhani text-lg text-synthwave-text-secondary mb-4 space-y-1">
-              <div>
-                <span className="text-synthwave-neon-pink">Specialization:</span> {trainingGroundsState.coachData?.specialization}
-              </div>
-              <div>
-                <span className="text-synthwave-neon-pink">Level:</span> {trainingGroundsState.coachData?.experienceLevel} •
-                <span className="text-synthwave-neon-pink"> Focus:</span> {trainingGroundsState.coachData?.programmingFocus}
-              </div>
-              <div>
-                <span className="text-synthwave-neon-pink">Methodology:</span> {trainingGroundsState.coachData?.primaryMethodology}
-              </div>
-            </div>
             <p className="font-rajdhani text-lg text-synthwave-text-secondary max-w-3xl mx-auto">
-              Your dedicated workspace for all activities with this coach. Track progress, access resources, and stay connected.
+              Track progress, access resources, stay connected, and manage your complete fitness journey. Everything you need to achieve your goals is centralized here.
             </p>
+          </div>
+        </div>
+
+        {/* Quick Actions Section */}
+        <div className="mb-12">
+          <div className="max-w-4xl mx-auto bg-synthwave-bg-card/50 border-2 border-synthwave-neon-pink/30 rounded-lg p-6">
+            <div className="flex items-center space-x-3 mb-6">
+              <div className="text-synthwave-neon-pink">
+                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                </svg>
+              </div>
+              <h2 className="font-russo font-bold text-white text-lg uppercase">
+                Quick Actions
+              </h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {/* CYAN BUTTONS - Management Actions */}
+              {/* Training Grounds */}
+              <button
+                onClick={() => {
+                  navigate(`/training-grounds?userId=${userId}&coachId=${coachId}`);
+                }}
+                className={`${themeClasses.cyanButton} text-sm px-4 py-3 flex items-center justify-center space-x-2`}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+                <span>Training Grounds</span>
+              </button>
+
+              {/* Manage Workouts */}
+              <button
+                onClick={() => {
+                  navigate(`/training-grounds/manage-workouts?userId=${userId}&coachId=${coachId}`);
+                }}
+                className={`${themeClasses.cyanButton} text-sm px-4 py-3 flex items-center justify-center space-x-2`}
+              >
+                <WorkoutIconSmall />
+                <span>Manage Workouts</span>
+              </button>
+
+              {/* Manage Memories */}
+              <button
+                onClick={() => {
+                  navigate(`/training-grounds/manage-memories?userId=${userId}&coachId=${coachId}`);
+                }}
+                className={`${themeClasses.cyanButton} text-sm px-4 py-3 flex items-center justify-center space-x-2`}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+                <span>Manage Memories</span>
+              </button>
+
+              {/* View Reports */}
+              <button
+                onClick={() => {
+                  navigate(`/training-grounds/reports?userId=${userId}&coachId=${coachId}`);
+                }}
+                className={`${themeClasses.cyanButton} text-sm px-4 py-3 flex items-center justify-center space-x-2`}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                <span>View Reports</span>
+              </button>
+
+              {/* PINK BUTTONS - Creation/Writing Actions */}
+              {/* Log Workout */}
+              <button
+                onClick={() => {
+                  // TODO: Implement workout logging functionality
+                  console.info('Log Workout clicked - functionality to be implemented');
+                }}
+                className={`${themeClasses.neonButton} text-sm px-4 py-3 flex items-center justify-center space-x-2`}
+              >
+                <WorkoutIconSmall />
+                <span>Log Workout</span>
+              </button>
+
+              {/* Start Conversation */}
+              <button
+                onClick={handleStartNewConversation}
+                disabled={conversationAgentState.isLoadingItem}
+                className={`${themeClasses.neonButton} text-sm px-4 py-3 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed`}
+              >
+                {conversationAgentState.isLoadingItem ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                    <span>Creating...</span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                    <span>Start Conversation</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
 
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12 max-w-5xl mx-auto">
           <div className="bg-synthwave-bg-card/30 border-2 border-synthwave-neon-pink/30 rounded-lg p-4 text-center">
-            <div className="text-2xl font-russo font-bold text-synthwave-neon-pink mb-1">
-              {conversationAgentState.isLoadingConversationCount ? (
-                <div className="w-6 h-6 border-2 border-synthwave-neon-pink border-t-transparent rounded-full animate-spin mx-auto"></div>
-              ) : (
-                conversationAgentState.conversationCount || 0
-              )}
-            </div>
-            <div className="font-rajdhani text-sm text-synthwave-text-secondary">
-              Total Conversations
-            </div>
+            {conversationAgentState.isLoadingConversationCount ? (
+              <>
+                <div className="text-2xl font-russo font-bold text-synthwave-neon-pink mb-1 flex items-center justify-center h-8">
+                  <div className="w-6 h-6 border-2 border-synthwave-neon-pink border-t-transparent rounded-full animate-spin"></div>
+                </div>
+                <div className="font-rajdhani text-sm text-synthwave-text-secondary">
+                  Total Conversations
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="text-2xl font-russo font-bold text-synthwave-neon-pink mb-1">
+                  {conversationAgentState.conversationCount || 0}
+                </div>
+                <div className="font-rajdhani text-sm text-synthwave-text-secondary">
+                  Total Conversations
+                </div>
+              </>
+            )}
           </div>
           <div className="bg-synthwave-bg-card/30 border-2 border-synthwave-neon-pink/30 rounded-lg p-4 text-center">
-            <div className="text-2xl font-russo font-bold text-synthwave-neon-pink mb-1">
-              {workoutState.isLoadingCount ? (
-                <div className="w-6 h-6 border-2 border-synthwave-neon-pink border-t-transparent rounded-full animate-spin mx-auto"></div>
-              ) : (
-                workoutState.totalWorkoutCount || 0
-              )}
-            </div>
-            <div className="font-rajdhani text-sm text-synthwave-text-secondary">
-              Total Workouts
-            </div>
+            {workoutState.isLoadingCount ? (
+              <>
+                <div className="text-2xl font-russo font-bold text-synthwave-neon-pink mb-1 flex items-center justify-center h-8">
+                  <div className="w-6 h-6 border-2 border-synthwave-neon-pink border-t-transparent rounded-full animate-spin"></div>
+                </div>
+                <div className="font-rajdhani text-sm text-synthwave-text-secondary">
+                  Total Workouts
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="text-2xl font-russo font-bold text-synthwave-neon-pink mb-1">
+                  {workoutState.totalWorkoutCount || 0}
+                </div>
+                <div className="font-rajdhani text-sm text-synthwave-text-secondary">
+                  Total Workouts
+                </div>
+              </>
+            )}
           </div>
           <div className="bg-synthwave-bg-card/30 border-2 border-synthwave-neon-pink/30 rounded-lg p-4 text-center">
-            <div className="text-2xl font-russo font-bold text-synthwave-neon-pink mb-1">
-              {trainingGroundsState.isLoading ? (
-                <div className="w-6 h-6 border-2 border-synthwave-neon-pink border-t-transparent rounded-full animate-spin mx-auto"></div>
-              ) : (
-                trainingGroundsState.coachData?.activePrograms || 0
-              )}
-            </div>
-            <div className="font-rajdhani text-sm text-synthwave-text-secondary">
-              Active Programs
-            </div>
+            {trainingGroundsState.isLoading ? (
+              <>
+                <div className="text-2xl font-russo font-bold text-synthwave-neon-pink mb-1 flex items-center justify-center h-8">
+                  <div className="w-6 h-6 border-2 border-synthwave-neon-pink border-t-transparent rounded-full animate-spin"></div>
+                </div>
+                <div className="font-rajdhani text-sm text-synthwave-text-secondary">
+                  Active Programs
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="text-2xl font-russo font-bold text-synthwave-neon-pink mb-1">
+                  {trainingGroundsState.coachData?.activePrograms || 0}
+                </div>
+                <div className="font-rajdhani text-sm text-synthwave-text-secondary">
+                  Active Programs
+                </div>
+              </>
+            )}
           </div>
           <div className="bg-synthwave-bg-card/30 border-2 border-synthwave-neon-pink/30 rounded-lg p-4 text-center">
-            <div className="text-2xl font-russo font-bold text-synthwave-neon-pink mb-1">
-              24
-            </div>
-            <div className="font-rajdhani text-sm text-synthwave-text-secondary">
-              Days Training
-            </div>
+            {workoutState.isLoadingTrainingDays ? (
+              <>
+                <div className="text-2xl font-russo font-bold text-synthwave-neon-pink mb-1 flex items-center justify-center h-8">
+                  <div className="w-6 h-6 border-2 border-synthwave-neon-pink border-t-transparent rounded-full animate-spin"></div>
+                </div>
+                <div className="font-rajdhani text-sm text-synthwave-text-secondary">
+                  Days Training
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="text-2xl font-russo font-bold text-synthwave-neon-pink mb-1">
+                  {workoutState.trainingDaysCount || 0}
+                </div>
+                <div className="font-rajdhani text-sm text-synthwave-text-secondary">
+                  Days Training
+                </div>
+              </>
+            )}
           </div>
         </div>
 
@@ -488,7 +652,7 @@ function TrainingGrounds() {
             </p>
 
             {/* Recent Conversations List */}
-            <div className="space-y-3 mb-6">
+            <div className="space-y-2 mb-6">
               {conversationAgentState.isLoadingRecentItems ? (
                 <div className="text-center py-4">
                   <div className="inline-flex items-center space-x-2 text-synthwave-text-secondary font-rajdhani text-sm">
@@ -531,56 +695,33 @@ function TrainingGrounds() {
                 </div>
               )}
             </div>
-
-            {/* Start New Conversation Button */}
-            <div className="text-center">
-              <button
-                onClick={handleStartNewConversation}
-                disabled={conversationAgentState.isLoadingItem}
-                className={`${themeClasses.neonButton} text-sm px-6 py-3 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center space-x-2 w-3/4 justify-center`}
-              >
-                {conversationAgentState.isLoadingItem ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
-                    <span>Creating...</span>
-                  </>
-                ) : (
-                  <>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                    </svg>
-                    <span>Start Conversation</span>
-                  </>
-                )}
-              </button>
-            </div>
           </div>
 
-          {/* Training Programs Section */}
-          <div className="bg-synthwave-bg-card/50 border-2 border-synthwave-neon-cyan/30 rounded-lg p-6 transition-all duration-300 hover:border-synthwave-neon-cyan hover:-translate-y-1">
+          {/* Workout History Section */}
+          <div className="bg-synthwave-bg-card/50 border-2 border-synthwave-neon-pink/30 rounded-lg p-6 transition-all duration-300 hover:border-synthwave-neon-pink hover:-translate-y-1">
             <div className="flex items-center space-x-3 mb-4">
-              <div className="text-synthwave-neon-cyan">
-                <ProgramIcon />
+              <div className="text-synthwave-neon-pink">
+                <WorkoutIcon />
               </div>
               <h3 className="font-russo font-bold text-white text-lg uppercase">
-                Training Programs
+                Workout History
               </h3>
             </div>
             <p className="font-rajdhani text-synthwave-text-secondary text-sm mb-6">
-              Active training programs and workout plans.
+              Recent completed workouts and detailed session logs with performance tracking.
             </p>
-            <div className="text-center py-8">
-              <div className="font-rajdhani text-synthwave-text-muted text-sm">
-                This feature is in active development and is coming soon
-              </div>
+
+            {/* Workout List */}
+            <div>
+              {renderWorkoutList()}
             </div>
           </div>
 
           {/* Reports & Insights Section */}
-          <div className="bg-synthwave-bg-card/50 border-2 border-synthwave-neon-purple/30 rounded-lg p-6 transition-all duration-300 hover:border-synthwave-neon-purple hover:-translate-y-1">
+          <div className="bg-synthwave-bg-card/50 border-2 border-synthwave-neon-pink/30 rounded-lg p-6 transition-all duration-300 hover:border-synthwave-neon-pink hover:-translate-y-1">
             <div className="flex items-center space-x-3 mb-4">
-              <div className="text-synthwave-neon-purple">
-                <AnalyticsIcon />
+              <div className="text-synthwave-neon-pink">
+                <ReportIcon />
               </div>
               <h3 className="font-russo font-bold text-white text-lg uppercase">
                 Reports & Insights
@@ -588,15 +729,11 @@ function TrainingGrounds() {
             </div>
             <p className="font-rajdhani text-synthwave-text-secondary text-sm mb-6">Weekly and monthly reports with insights and recommendations.</p>
 
-            <div className="space-y-3 mb-2">
+            <div className="space-y-2 mb-2">
               {reportsState.isLoadingRecentItems ? (
                 <div className="text-center py-4">
                   <div className="inline-flex items-center space-x-2 text-synthwave-text-secondary font-rajdhani text-sm">
-                    <div className="flex space-x-1">
-                      <div className="w-2 h-2 bg-synthwave-neon-purple rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                      <div className="w-2 h-2 bg-synthwave-neon-purple rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                      <div className="w-2 h-2 bg-synthwave-neon-purple rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-                    </div>
+                    <div className="w-4 h-4 border-2 border-synthwave-neon-pink border-t-transparent rounded-full animate-spin"></div>
                     <span>Loading reports...</span>
                   </div>
                 </div>
@@ -616,19 +753,19 @@ function TrainingGrounds() {
                     <div
                       key={rep.weekId}
                       onClick={() => navigate(`/training-grounds/reports/weekly?userId=${userId}&weekId=${rep.weekId}&coachId=${coachId}`)}
-                      className="bg-synthwave-bg-primary/30 border border-synthwave-neon-purple/20 hover:border-synthwave-neon-purple/40 hover:bg-synthwave-bg-primary/50 rounded-lg p-3 cursor-pointer transition-all duration-200"
+                      className="bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/20 hover:border-synthwave-neon-pink/40 hover:bg-synthwave-bg-primary/50 rounded-lg p-3 cursor-pointer transition-all duration-200"
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex-1 min-w-0">
                           <div className="font-rajdhani text-sm text-white font-medium truncate">
-                            {reportsAgentRef.current?.formatReportTitle(rep) || rep.weekId}
+                            Week {rep.weekId}
                           </div>
                           <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
-                            {(rep.weekStart && rep.weekEnd) ? `${rep.weekStart} → ${rep.weekEnd}` : ''}
+                            {getWeekDateRange(rep.weekId)} • <span className="text-synthwave-neon-cyan">{rep.metadata?.workoutCount || 0} workouts</span>
                           </div>
                         </div>
-                        <div className="text-synthwave-neon-purple ml-2">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7"/></svg>
+                        <div className="text-synthwave-neon-pink ml-2">
+                          <BarChartIcon />
                         </div>
                       </div>
                     </div>
@@ -638,56 +775,30 @@ function TrainingGrounds() {
             </div>
           </div>
 
-          {/* Workout History Section */}
+          {/* Training Programs Section */}
           <div className="bg-synthwave-bg-card/50 border-2 border-synthwave-neon-pink/30 rounded-lg p-6 transition-all duration-300 hover:border-synthwave-neon-pink hover:-translate-y-1">
             <div className="flex items-center space-x-3 mb-4">
               <div className="text-synthwave-neon-pink">
-                <WorkoutIcon />
+                <ProgramIcon />
               </div>
               <h3 className="font-russo font-bold text-white text-lg uppercase">
-                Workout History
+                Training Programs
               </h3>
             </div>
             <p className="font-rajdhani text-synthwave-text-secondary text-sm mb-6">
-              Recent completed workouts and session logs.
+              Structured training programs and workout plans designed by you and your coach.
             </p>
-
-            {/* Workout List */}
-            <div className="mb-6">
-              {renderWorkoutList()}
-            </div>
-
-            {/* Action Buttons */}
-            <div className="text-center space-y-3">
-              <button
-                onClick={() => {
-                  // TODO: Implement workout logging functionality
-                  console.info('Log Workout clicked - functionality to be implemented');
-                }}
-                className={`${themeClasses.neonButton} text-sm px-6 py-3 transition-all duration-300 inline-flex items-center space-x-2 w-3/4 justify-center`}
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-                <span>Log Workout</span>
-              </button>
-
-              <button
-                onClick={() => navigate(`/training-grounds/manage-workouts?userId=${userId}&coachId=${coachId}`)}
-                className={`${themeClasses.cyanButton} text-sm px-6 py-3 transition-all duration-300 inline-flex items-center space-x-2 w-3/4 justify-center`}
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                </svg>
-                <span>Manage Workouts</span>
-              </button>
+            <div className="text-center py-8">
+              <div className="font-rajdhani text-synthwave-text-muted text-sm">
+                This feature is in active development and is coming soon
+              </div>
             </div>
           </div>
 
           {/* Resources & Tools Section */}
-          <div className="bg-synthwave-bg-card/50 border-2 border-synthwave-neon-cyan/30 rounded-lg p-6 transition-all duration-300 hover:border-synthwave-neon-cyan hover:-translate-y-1">
+          <div className="bg-synthwave-bg-card/50 border-2 border-synthwave-neon-pink/30 rounded-lg p-6 transition-all duration-300 hover:border-synthwave-neon-pink hover:-translate-y-1">
             <div className="flex items-center space-x-3 mb-4">
-              <div className="text-synthwave-neon-cyan">
+              <div className="text-synthwave-neon-pink">
                 <ResourcesIcon />
               </div>
               <h3 className="font-russo font-bold text-white text-lg uppercase">
@@ -695,7 +806,7 @@ function TrainingGrounds() {
               </h3>
             </div>
             <p className="font-rajdhani text-synthwave-text-secondary text-sm mb-6">
-              Exercise library, tools, and coaching resources.
+              Exercise library, training tools, and educational resources to enhance your training.
             </p>
             <div className="text-center py-8">
               <div className="font-rajdhani text-synthwave-text-muted text-sm">
@@ -705,9 +816,9 @@ function TrainingGrounds() {
           </div>
 
           {/* Messages & Notifications Section */}
-          <div className="bg-synthwave-bg-card/50 border-2 border-synthwave-neon-purple/30 rounded-lg p-6 transition-all duration-300 hover:border-synthwave-neon-purple hover:-translate-y-1">
+          <div className="bg-synthwave-bg-card/50 border-2 border-synthwave-neon-pink/30 rounded-lg p-6 transition-all duration-300 hover:border-synthwave-neon-pink hover:-translate-y-1">
             <div className="flex items-center space-x-3 mb-4">
-              <div className="text-synthwave-neon-purple">
+              <div className="text-synthwave-neon-pink">
                 <MessagesIcon />
               </div>
               <h3 className="font-russo font-bold text-white text-lg uppercase">
@@ -715,7 +826,7 @@ function TrainingGrounds() {
               </h3>
             </div>
             <p className="font-rajdhani text-synthwave-text-secondary text-sm mb-6">
-              Important messages and system notifications.
+              Important messages and notifications from your coach and the platform.
             </p>
             <div className="text-center py-8">
               <div className="font-rajdhani text-synthwave-text-muted text-sm">
@@ -763,14 +874,14 @@ function TrainingGrounds() {
                     <h4 className="font-russo font-semibold text-synthwave-neon-pink text-sm uppercase mb-3">
                       Basic Information
                     </h4>
-                    <div className="space-y-2 text-sm">
+                    <div className={`space-y-2 ${themeClasses.cardText} text-sm`}>
                                           <div className="flex justify-between">
                       <span className="text-synthwave-text-secondary">Name:</span>
-                      <span className="text-white font-medium">{trainingGroundsState.coachData.name}</span>
+                      <span className="text-synthwave-neon-cyan font-medium">{trainingGroundsState.coachData.name}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-synthwave-text-secondary">Created:</span>
-                      <span className="text-white">{trainingGroundsState.coachData.rawCoach && new Date(trainingGroundsState.coachData.joinedDate).toLocaleDateString()}</span>
+                      <span className="text-synthwave-neon-cyan">{new Date(trainingGroundsState.coachData.rawCoach?.coachConfig?.metadata?.created_date).toLocaleDateString()}</span>
                     </div>
                     </div>
                   </div>
@@ -780,22 +891,22 @@ function TrainingGrounds() {
                     <h4 className="font-russo font-semibold text-synthwave-neon-pink text-sm uppercase mb-3">
                       Training Configuration
                     </h4>
-                    <div className="space-y-2 text-sm">
-                      <div>
-                        <span className="text-synthwave-text-secondary block mb-1">Experience Level:</span>
-                        <span className="text-white bg-synthwave-bg-primary/50 px-2 py-1 rounded text-xs">
+                    <div className={`space-y-2 ${themeClasses.cardText} text-sm`}>
+                      <div className="flex justify-between">
+                        <span className="text-synthwave-text-secondary">Experience Level:</span>
+                        <span className="text-synthwave-neon-cyan font-medium">
                           {trainingGroundsState.coachData.experienceLevel}
                         </span>
                       </div>
-                      <div>
-                        <span className="text-synthwave-text-secondary block mb-1">Programming Focus:</span>
-                        <span className="text-white bg-synthwave-bg-primary/50 px-2 py-1 rounded text-xs">
+                      <div className="flex justify-between">
+                        <span className="text-synthwave-text-secondary">Programming Focus:</span>
+                        <span className="text-synthwave-neon-cyan font-medium">
                           {trainingGroundsState.coachData.programmingFocus}
                         </span>
                       </div>
-                      <div>
-                        <span className="text-synthwave-text-secondary block mb-1">Specializations:</span>
-                        <span className="text-white bg-synthwave-bg-primary/50 px-2 py-1 rounded text-xs">
+                      <div className="flex justify-between">
+                        <span className="text-synthwave-text-secondary">Specializations:</span>
+                        <span className="text-synthwave-neon-cyan font-medium">
                           {trainingGroundsState.coachData.specialization}
                         </span>
                       </div>
@@ -807,18 +918,14 @@ function TrainingGrounds() {
                     <h4 className="font-russo font-semibold text-synthwave-neon-pink text-sm uppercase mb-3">
                       Activity Statistics
                     </h4>
-                    <div className="space-y-3">
-                      <div className="bg-synthwave-bg-primary/30 rounded p-3">
-                        <div className="flex justify-between items-center">
-                          <span className="text-synthwave-text-secondary text-sm">Total Conversations</span>
-                          <span className="text-synthwave-neon-pink font-bold text-lg">{trainingGroundsState.coachData.totalConversations}</span>
-                        </div>
+                    <div className={`space-y-2 ${themeClasses.cardText} text-sm`}>
+                      <div className="flex justify-between">
+                        <span className="text-synthwave-text-secondary">Total Conversations:</span>
+                        <span className="text-synthwave-neon-cyan font-medium">{trainingGroundsState.coachData.totalConversations}</span>
                       </div>
-                      <div className="bg-synthwave-bg-primary/30 rounded p-3">
-                        <div className="flex justify-between items-center">
-                          <span className="text-synthwave-text-secondary text-sm">Active Programs</span>
-                          <span className="text-synthwave-neon-pink font-bold text-lg">{trainingGroundsState.coachData.activePrograms}</span>
-                        </div>
+                      <div className="flex justify-between">
+                        <span className="text-synthwave-text-secondary">Active Programs:</span>
+                        <span className="text-synthwave-neon-cyan font-medium">{trainingGroundsState.coachData.activePrograms}</span>
                       </div>
                     </div>
                   </div>
@@ -831,10 +938,10 @@ function TrainingGrounds() {
                       <h4 className="font-russo font-semibold text-synthwave-neon-pink text-sm uppercase mb-3">
                         Methodology
                       </h4>
-                      <div className="space-y-2 text-sm">
-                        <div>
-                          <span className="text-synthwave-text-secondary block mb-1">Primary:</span>
-                          <span className="text-white bg-synthwave-bg-primary/50 px-2 py-1 rounded text-xs">
+                      <div className={`space-y-2 ${themeClasses.cardText} text-sm`}>
+                        <div className="flex justify-between">
+                          <span className="text-synthwave-text-secondary">Primary:</span>
+                          <span className="text-synthwave-neon-cyan font-medium">
                             {trainingGroundsState.coachData.primaryMethodology}
                           </span>
                         </div>
@@ -847,12 +954,13 @@ function TrainingGrounds() {
                       <h4 className="font-russo font-semibold text-synthwave-neon-pink text-sm uppercase mb-3">
                         Equipment
                       </h4>
-                      <div className="flex flex-wrap gap-1">
-                        {trainingGroundsState.coachData.rawCoach.coachConfig.metadata.safety_profile.equipment.map((eq, idx) => (
-                          <span key={idx} className="text-white bg-synthwave-neon-cyan/20 px-2 py-1 rounded text-xs">
-                            {eq.replace(/_/g, ' ')}
+                      <div className={`${themeClasses.cardText} text-sm`}>
+                        <div className="flex justify-between">
+                          <span className="text-synthwave-text-secondary">Available Equipment:</span>
+                          <span className="text-synthwave-neon-cyan font-medium">
+                            {trainingGroundsState.coachData.rawCoach.coachConfig.metadata.safety_profile.equipment.map(eq => eq.replace(/_/g, ' ')).join(', ')}
                           </span>
-                        ))}
+                        </div>
                       </div>
                     </div>
                   )}
@@ -869,7 +977,7 @@ function TrainingGrounds() {
         <button
           onClick={() => setShowCoachDetails(!showCoachDetails)}
           className={`fixed top-1/2 -translate-y-1/2 bg-synthwave-bg-card/90 border-2 border-synthwave-neon-pink/30 text-synthwave-neon-pink hover:border-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 p-3 rounded-l-lg transition-all duration-300 hover:-translate-x-1 z-50 ${
-            showCoachDetails ? 'right-96' : 'right-0'
+            showCoachDetails ? 'right-[28rem]' : 'right-0'
           }`}
           title={showCoachDetails ? "Hide coach details" : "Show coach details"}
         >
@@ -883,11 +991,18 @@ function TrainingGrounds() {
         <div className={`fixed top-20 right-0 h-[calc(100vh-5rem)] bg-synthwave-bg-card/95 backdrop-blur-sm border-l-2 border-synthwave-neon-pink/30 transition-all duration-300 z-40 ${
           showCoachDetails ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
         }`}>
-          <div className="w-96 h-full overflow-y-auto p-6 space-y-6">
+          <div className="w-[28rem] h-full overflow-y-auto synthwave-scrollbar p-6 space-y-6">
             <div className="flex items-center justify-between border-b border-synthwave-neon-pink/30 pb-4 mb-6">
-              <h3 className="font-russo font-bold text-white text-lg uppercase">
-                Coach Details
-              </h3>
+              <div className="flex items-center space-x-3">
+                <div className="text-synthwave-neon-pink">
+                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <h3 className="font-russo font-bold text-white text-lg uppercase">
+                  Coach Details
+                </h3>
+              </div>
               <button
                 onClick={() => setShowCoachDetails(false)}
                 className="text-synthwave-text-secondary hover:text-synthwave-neon-pink transition-colors duration-300"
@@ -903,18 +1018,18 @@ function TrainingGrounds() {
                   <h4 className="font-russo font-semibold text-synthwave-neon-pink text-sm uppercase mb-3">
                     Basic Information
                   </h4>
-                  <div className="space-y-2 text-sm">
+                                      <div className={`space-y-2 ${themeClasses.cardText} text-sm`}>
                     <div className="flex justify-between">
                       <span className="text-synthwave-text-secondary">Name:</span>
-                      <span className="text-white font-medium">{trainingGroundsState.coachData.name}</span>
+                      <span className="text-synthwave-neon-cyan font-medium">{trainingGroundsState.coachData.name}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-synthwave-text-secondary">Coach ID:</span>
-                      <span className="text-white font-mono text-xs">{coachId}</span>
+                      <span className="text-synthwave-neon-cyan">{coachId}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-synthwave-text-secondary">Created:</span>
-                                              <span className="text-white">{new Date(trainingGroundsState.coachData.joinedDate).toLocaleDateString()}</span>
+                      <span className="text-synthwave-neon-cyan">{new Date(trainingGroundsState.coachData.rawCoach?.coachConfig?.metadata?.created_date).toLocaleDateString()}</span>
                     </div>
                   </div>
                 </div>
@@ -924,22 +1039,22 @@ function TrainingGrounds() {
                   <h4 className="font-russo font-semibold text-synthwave-neon-pink text-sm uppercase mb-3">
                     Training Configuration
                   </h4>
-                  <div className="space-y-2 text-sm">
-                    <div>
-                      <span className="text-synthwave-text-secondary block mb-1">Experience Level:</span>
-                      <span className="text-white bg-synthwave-bg-primary/50 px-2 py-1 rounded text-xs">
+                                      <div className={`space-y-2 ${themeClasses.cardText} text-sm`}>
+                    <div className="flex justify-between">
+                      <span className="text-synthwave-text-secondary">Experience Level:</span>
+                      <span className="text-synthwave-neon-cyan font-medium">
                         {trainingGroundsState.coachData.experienceLevel}
                       </span>
                     </div>
-                    <div>
-                      <span className="text-synthwave-text-secondary block mb-1">Programming Focus:</span>
-                      <span className="text-white bg-synthwave-bg-primary/50 px-2 py-1 rounded text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-synthwave-text-secondary">Programming Focus:</span>
+                      <span className="text-synthwave-neon-cyan font-medium">
                         {trainingGroundsState.coachData.programmingFocus}
                       </span>
                     </div>
-                    <div>
-                      <span className="text-synthwave-text-secondary block mb-1">Specializations:</span>
-                      <span className="text-white bg-synthwave-bg-primary/50 px-2 py-1 rounded text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-synthwave-text-secondary">Specializations:</span>
+                      <span className="text-synthwave-neon-cyan font-medium">
                         {trainingGroundsState.coachData.specialization}
                       </span>
                     </div>
@@ -951,19 +1066,15 @@ function TrainingGrounds() {
                   <h4 className="font-russo font-semibold text-synthwave-neon-pink text-sm uppercase mb-3">
                     Activity Statistics
                   </h4>
-                  <div className="space-y-3">
-                    <div className="bg-synthwave-bg-primary/30 rounded p-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-synthwave-text-secondary text-sm">Total Conversations</span>
-                        <span className="text-synthwave-neon-pink font-bold text-lg">{trainingGroundsState.coachData.totalConversations}</span>
+                  <div className={`space-y-2 ${themeClasses.cardText} text-sm`}>
+                      <div className="flex justify-between">
+                        <span className="text-synthwave-text-secondary">Total Conversations:</span>
+                        <span className="text-synthwave-neon-cyan font-medium">{trainingGroundsState.coachData.totalConversations}</span>
                       </div>
-                    </div>
-                    <div className="bg-synthwave-bg-primary/30 rounded p-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-synthwave-text-secondary text-sm">Active Programs</span>
-                        <span className="text-synthwave-neon-pink font-bold text-lg">{trainingGroundsState.coachData.activePrograms}</span>
+                      <div className="flex justify-between">
+                        <span className="text-synthwave-text-secondary">Active Programs:</span>
+                        <span className="text-synthwave-neon-cyan font-medium">{trainingGroundsState.coachData.activePrograms}</span>
                       </div>
-                    </div>
                   </div>
                 </div>
 
@@ -975,40 +1086,32 @@ function TrainingGrounds() {
                     <h4 className="font-russo font-semibold text-synthwave-neon-pink text-sm uppercase mb-3">
                       Methodology Profile
                     </h4>
-                    <div className="space-y-2 text-sm">
-                      <div>
-                        <span className="text-synthwave-text-secondary block mb-1">Primary Methodology:</span>
-                        <span className="text-white bg-synthwave-bg-primary/50 px-2 py-1 rounded text-xs">
+                    <div className={`space-y-2 ${themeClasses.cardText} text-sm`}>
+                      <div className="flex justify-between">
+                        <span className="text-synthwave-text-secondary">Primary Methodology:</span>
+                        <span className="text-synthwave-neon-cyan font-medium">
                           {trainingGroundsState.coachData.primaryMethodology}
                         </span>
                       </div>
                       {trainingGroundsState.coachData.rawCoach.coachConfig?.metadata?.methodology_profile?.experience && (
-                        <div>
-                          <span className="text-synthwave-text-secondary block mb-1">Experience:</span>
-                          <div className="flex flex-wrap gap-1">
-                            {trainingGroundsState.coachData.rawCoach.coachConfig.metadata.methodology_profile.experience.map((exp, idx) => (
-                              <span key={idx} className="text-white bg-synthwave-bg-primary/30 px-2 py-1 rounded text-xs">
-                                {exp.replace(/_/g, ' ')}
-                              </span>
-                            ))}
-                          </div>
+                        <div className="flex justify-between">
+                          <span className="text-synthwave-text-secondary">Experience:</span>
+                          <span className="text-synthwave-neon-cyan font-medium">
+                            {trainingGroundsState.coachData.rawCoach.coachConfig.metadata.methodology_profile.experience.map(exp => exp.replace(/_/g, ' ')).join(', ')}
+                          </span>
                         </div>
                       )}
                       {trainingGroundsState.coachData.rawCoach.coachConfig?.metadata?.methodology_profile?.preferences && (
-                        <div>
-                          <span className="text-synthwave-text-secondary block mb-1">Preferences:</span>
-                          <div className="flex flex-wrap gap-1">
-                            {trainingGroundsState.coachData.rawCoach.coachConfig.metadata.methodology_profile.preferences.map((pref, idx) => (
-                              <span key={idx} className="text-white bg-synthwave-bg-primary/30 px-2 py-1 rounded text-xs">
-                                {pref.replace(/_/g, ' ')}
-                              </span>
-                            ))}
-                          </div>
+                        <div className="flex justify-between">
+                          <span className="text-synthwave-text-secondary">Preferences:</span>
+                          <span className="text-synthwave-neon-cyan font-medium">
+                            {trainingGroundsState.coachData.rawCoach.coachConfig.metadata.methodology_profile.preferences.map(pref => pref.replace(/_/g, ' ')).join(', ')}
+                          </span>
                         </div>
                       )}
                       {/* Show note if only basic methodology is available */}
                       {!trainingGroundsState.coachData.rawCoach.coachConfig?.metadata?.methodology_profile && (
-                        <div className="text-xs text-synthwave-text-muted bg-synthwave-bg-primary/10 p-2 rounded">
+                        <div className={`${themeClasses.cardText} text-sm text-synthwave-text-muted bg-synthwave-bg-card/20 border border-synthwave-text-muted/20 p-3 rounded-lg`}>
                           Basic methodology configuration. Extended profile available in newer coach versions.
                         </div>
                       )}
@@ -1022,52 +1125,40 @@ function TrainingGrounds() {
                     <h4 className="font-russo font-semibold text-synthwave-neon-pink text-sm uppercase mb-3">
                       Safety & Equipment Profile
                     </h4>
-                    <div className="space-y-3 text-sm">
+                    <div className={`space-y-3 ${themeClasses.cardText} text-sm`}>
                       {trainingGroundsState.coachData.rawCoach.coachConfig.metadata.safety_profile.equipment && (
-                        <div>
-                          <span className="text-synthwave-text-secondary block mb-1">Available Equipment:</span>
-                          <div className="flex flex-wrap gap-1">
-                            {trainingGroundsState.coachData.rawCoach.coachConfig.metadata.safety_profile.equipment.map((eq, idx) => (
-                              <span key={idx} className="text-white bg-synthwave-neon-cyan/20 px-2 py-1 rounded text-xs">
-                                {eq.replace(/_/g, ' ')}
-                              </span>
-                            ))}
-                          </div>
+                        <div className="flex justify-between">
+                          <span className="text-synthwave-text-secondary">Available Equipment:</span>
+                          <span className="text-synthwave-neon-cyan font-medium">
+                            {trainingGroundsState.coachData.rawCoach.coachConfig.metadata.safety_profile.equipment.map(eq => eq.replace(/_/g, ' ')).join(', ')}
+                          </span>
                         </div>
                       )}
                       {trainingGroundsState.coachData.rawCoach.coachConfig.metadata.safety_profile.contraindications && trainingGroundsState.coachData.rawCoach.coachConfig.metadata.safety_profile.contraindications.length > 0 && (
-                        <div>
-                          <span className="text-synthwave-text-secondary block mb-1">Contraindications:</span>
-                          <div className="flex flex-wrap gap-1">
-                            {trainingGroundsState.coachData.rawCoach.coachConfig.metadata.safety_profile.contraindications.map((contra, idx) => (
-                              <span key={idx} className="text-synthwave-neon-pink bg-synthwave-neon-pink/20 px-2 py-1 rounded text-xs">
-                                {contra.replace(/_/g, ' ')}
-                              </span>
-                            ))}
-                          </div>
+                        <div className="flex justify-between">
+                          <span className="text-synthwave-text-secondary">Contraindications:</span>
+                          <span className="text-synthwave-neon-cyan font-medium">
+                            {trainingGroundsState.coachData.rawCoach.coachConfig.metadata.safety_profile.contraindications.map(contra => contra.replace(/_/g, ' ')).join(', ')}
+                          </span>
                         </div>
                       )}
                       {trainingGroundsState.coachData.rawCoach.coachConfig.metadata.safety_profile.modifications && trainingGroundsState.coachData.rawCoach.coachConfig.metadata.safety_profile.modifications.length > 0 && (
-                        <div>
-                          <span className="text-synthwave-text-secondary block mb-1">Required Modifications:</span>
-                          <div className="flex flex-wrap gap-1">
-                            {trainingGroundsState.coachData.rawCoach.coachConfig.metadata.safety_profile.modifications.map((mod, idx) => (
-                              <span key={idx} className="text-white bg-synthwave-bg-primary/30 px-2 py-1 rounded text-xs">
-                                {mod.replace(/_/g, ' ')}
-                              </span>
-                            ))}
-                          </div>
+                        <div className="flex justify-between">
+                          <span className="text-synthwave-text-secondary">Required Modifications:</span>
+                          <span className="text-synthwave-neon-cyan font-medium">
+                            {trainingGroundsState.coachData.rawCoach.coachConfig.metadata.safety_profile.modifications.map(mod => mod.replace(/_/g, ' ')).join(', ')}
+                          </span>
                         </div>
                       )}
                       {trainingGroundsState.coachData.rawCoach.coachConfig.metadata.safety_profile.timeConstraints && (
-                        <div>
-                          <span className="text-synthwave-text-secondary block mb-1">Time Constraints:</span>
-                          <div className="text-white bg-synthwave-bg-primary/30 px-2 py-1 rounded text-xs inline-block">
+                        <div className="flex justify-between">
+                          <span className="text-synthwave-text-secondary">Time Constraints:</span>
+                          <span className="text-synthwave-neon-cyan font-medium">
                             {trainingGroundsState.coachData.rawCoach.coachConfig.metadata.safety_profile.timeConstraints.session_duration && typeof trainingGroundsState.coachData.rawCoach.coachConfig.metadata.safety_profile.timeConstraints.session_duration === 'string'
                               ? trainingGroundsState.coachData.rawCoach.coachConfig.metadata.safety_profile.timeConstraints.session_duration.replace(/_/g, ' ')
                               : trainingGroundsState.coachData.rawCoach.coachConfig.metadata.safety_profile.timeConstraints.session_duration || 'Not specified'
                             } • {trainingGroundsState.coachData.rawCoach.coachConfig.metadata.safety_profile.timeConstraints.preferred_time || 'Not specified'}
-                          </div>
+                          </span>
                         </div>
                       )}
                     </div>
@@ -1080,33 +1171,29 @@ function TrainingGrounds() {
                     <h4 className="font-russo font-semibold text-synthwave-neon-pink text-sm uppercase mb-3">
                       Personality Configuration
                     </h4>
-                    <div className="space-y-2 text-sm">
-                      <div>
-                        <span className="text-synthwave-text-secondary block mb-1">Primary Template:</span>
-                        <span className="text-white bg-synthwave-bg-primary/50 px-2 py-1 rounded text-xs">
+                    <div className={`space-y-2 ${themeClasses.cardText} text-sm`}>
+                      <div className="flex justify-between">
+                        <span className="text-synthwave-text-secondary">Primary Template:</span>
+                        <span className="text-synthwave-neon-cyan font-medium">
                           {trainingGroundsState.coachData.rawCoach.coachConfig.selected_personality.primary_template && typeof trainingGroundsState.coachData.rawCoach.coachConfig.selected_personality.primary_template === 'string'
-                            ? trainingGroundsState.coachData.rawCoach.coachConfig.selected_personality.primary_template.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+                            ? trainingGroundsState.coachData.rawCoach.coachConfig.selected_personality.primary_template.replace(/_/g, ' ')
                             : trainingGroundsState.coachData.rawCoach.coachConfig.selected_personality.primary_template || 'Not specified'}
                         </span>
                       </div>
                       {trainingGroundsState.coachData.rawCoach.coachConfig.selected_personality.secondary_influences && (
-                        <div>
-                          <span className="text-synthwave-text-secondary block mb-1">Secondary Influences:</span>
-                          <div className="flex flex-wrap gap-1">
-                            {trainingGroundsState.coachData.rawCoach.coachConfig.selected_personality.secondary_influences.map((inf, idx) => (
-                              <span key={idx} className="text-white bg-synthwave-bg-primary/30 px-2 py-1 rounded text-xs">
-                                {inf.replace(/_/g, ' ')}
-                              </span>
-                            ))}
-                          </div>
+                        <div className="flex justify-between">
+                          <span className="text-synthwave-text-secondary">Secondary Influences:</span>
+                          <span className="text-synthwave-neon-cyan font-medium">
+                            {trainingGroundsState.coachData.rawCoach.coachConfig.selected_personality.secondary_influences.map(inf => inf.replace(/_/g, ' ')).join(', ')}
+                          </span>
                         </div>
                       )}
                       {trainingGroundsState.coachData.rawCoach.coachConfig.selected_personality.selection_reasoning && (
                         <div>
-                          <span className="text-synthwave-text-secondary block mb-1">Selection Reasoning:</span>
-                          <div className="text-xs text-synthwave-text-secondary bg-synthwave-bg-primary/20 p-2 rounded leading-relaxed">
-                            {trainingGroundsState.coachData.rawCoach.coachConfig.selected_personality.selection_reasoning.substring(0, 200)}...
-                          </div>
+                          <span className="text-synthwave-text-secondary block mb-2">Selection Reasoning:</span>
+                          <span className="text-synthwave-neon-cyan">
+                            {trainingGroundsState.coachData.rawCoach.coachConfig.selected_personality.selection_reasoning}
+                          </span>
                         </div>
                       )}
                     </div>
@@ -1119,53 +1206,47 @@ function TrainingGrounds() {
                     <h4 className="font-russo font-semibold text-synthwave-neon-pink text-sm uppercase mb-3">
                       Advanced Technical Config
                     </h4>
-                    <div className="space-y-2 text-sm">
-                      <div className="grid grid-cols-2 gap-2 text-xs">
-                        <div className="bg-synthwave-bg-primary/20 rounded p-2">
-                          <span className="text-synthwave-text-muted block mb-1">Goal Timeline:</span>
-                          <span className="text-white">
-                            {trainingGroundsState.coachData.rawCoach.coachConfig.technical_config.goal_timeline && typeof trainingGroundsState.coachData.rawCoach.coachConfig.technical_config.goal_timeline === 'string'
-                              ? trainingGroundsState.coachData.rawCoach.coachConfig.technical_config.goal_timeline.replace(/_/g, ' ')
-                              : trainingGroundsState.coachData.rawCoach.coachConfig.technical_config.goal_timeline || 'Not specified'}
-                          </span>
-                        </div>
-                        <div className="bg-synthwave-bg-primary/20 rounded p-2">
-                          <span className="text-synthwave-text-muted block mb-1">Training Frequency:</span>
-                          <span className="text-white">{trainingGroundsState.coachData.rawCoach.coachConfig.technical_config.training_frequency} days/week</span>
-                        </div>
-                        <div className="bg-synthwave-bg-primary/20 rounded p-2">
-                          <span className="text-synthwave-text-muted block mb-1">Intensity:</span>
-                          <span className="text-white">
-                            {trainingGroundsState.coachData.rawCoach.coachConfig.technical_config.preferred_intensity && typeof trainingGroundsState.coachData.rawCoach.coachConfig.technical_config.preferred_intensity === 'string'
-                              ? trainingGroundsState.coachData.rawCoach.coachConfig.technical_config.preferred_intensity.replace(/_/g, ' ')
-                              : trainingGroundsState.coachData.rawCoach.coachConfig.technical_config.preferred_intensity || 'Not specified'}
-                          </span>
-                        </div>
-                        <div className="bg-synthwave-bg-primary/20 rounded p-2">
-                          <span className="text-synthwave-text-muted block mb-1">Methodology:</span>
-                          <span className="text-white">
-                            {trainingGroundsState.coachData.rawCoach.coachConfig.technical_config.methodology && typeof trainingGroundsState.coachData.rawCoach.coachConfig.technical_config.methodology === 'string'
-                              ? trainingGroundsState.coachData.rawCoach.coachConfig.technical_config.methodology.replace(/_/g, ' ')
-                              : trainingGroundsState.coachData.rawCoach.coachConfig.technical_config.methodology || 'Not specified'}
-                          </span>
-                        </div>
+                    <div className={`space-y-2 ${themeClasses.cardText} text-sm`}>
+                      <div className="flex justify-between">
+                        <span className="text-synthwave-text-secondary">Goal Timeline:</span>
+                        <span className="text-synthwave-neon-cyan font-medium">
+                          {trainingGroundsState.coachData.rawCoach.coachConfig.technical_config.goal_timeline && typeof trainingGroundsState.coachData.rawCoach.coachConfig.technical_config.goal_timeline === 'string'
+                            ? trainingGroundsState.coachData.rawCoach.coachConfig.technical_config.goal_timeline.replace(/_/g, ' ')
+                            : trainingGroundsState.coachData.rawCoach.coachConfig.technical_config.goal_timeline || 'Not specified'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-synthwave-text-secondary">Training Frequency:</span>
+                        <span className="text-synthwave-neon-cyan font-medium">{trainingGroundsState.coachData.rawCoach.coachConfig.technical_config.training_frequency} days/week</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-synthwave-text-secondary">Intensity:</span>
+                        <span className="text-synthwave-neon-cyan font-medium">
+                          {trainingGroundsState.coachData.rawCoach.coachConfig.technical_config.preferred_intensity && typeof trainingGroundsState.coachData.rawCoach.coachConfig.technical_config.preferred_intensity === 'string'
+                            ? trainingGroundsState.coachData.rawCoach.coachConfig.technical_config.preferred_intensity.replace(/_/g, ' ')
+                            : trainingGroundsState.coachData.rawCoach.coachConfig.technical_config.preferred_intensity || 'Not specified'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-synthwave-text-secondary">Methodology:</span>
+                        <span className="text-synthwave-neon-cyan font-medium">
+                          {trainingGroundsState.coachData.rawCoach.coachConfig.technical_config.methodology && typeof trainingGroundsState.coachData.rawCoach.coachConfig.technical_config.methodology === 'string'
+                            ? trainingGroundsState.coachData.rawCoach.coachConfig.technical_config.methodology.replace(/_/g, ' ')
+                            : trainingGroundsState.coachData.rawCoach.coachConfig.technical_config.methodology || 'Not specified'}
+                        </span>
                       </div>
                       {trainingGroundsState.coachData.rawCoach.coachConfig.technical_config.injury_considerations && trainingGroundsState.coachData.rawCoach.coachConfig.technical_config.injury_considerations.length > 0 && (
-                        <div>
-                          <span className="text-synthwave-text-secondary block mb-1">Injury Considerations:</span>
-                          <div className="flex flex-wrap gap-1">
-                            {trainingGroundsState.coachData.rawCoach.coachConfig.technical_config.injury_considerations.map((inj, idx) => (
-                              <span key={idx} className="text-synthwave-neon-pink bg-synthwave-neon-pink/20 px-2 py-1 rounded text-xs">
-                                {inj.replace(/_/g, ' ')}
-                              </span>
-                            ))}
-                          </div>
+                        <div className="flex justify-between">
+                          <span className="text-synthwave-text-secondary">Injury Considerations:</span>
+                          <span className="text-synthwave-neon-cyan font-medium">
+                            {trainingGroundsState.coachData.rawCoach.coachConfig.technical_config.injury_considerations.map(inj => inj.replace(/_/g, ' ')).join(', ')}
+                          </span>
                         </div>
                       )}
                       {trainingGroundsState.coachData.rawCoach.coachConfig.technical_config.safety_constraints && (
                         <div>
-                          <span className="text-synthwave-text-secondary block mb-1">Safety Constraints:</span>
-                          <div className="text-xs text-synthwave-text-secondary bg-synthwave-bg-primary/20 p-2 rounded space-y-1">
+                          <span className="text-synthwave-text-secondary block mb-2">Safety Constraints:</span>
+                          <div className="text-synthwave-neon-cyan space-y-1">
                             {trainingGroundsState.coachData.rawCoach.coachConfig.technical_config.safety_constraints.volume_progression_limit && (
                               <div>Volume Progression: {trainingGroundsState.coachData.rawCoach.coachConfig.technical_config.safety_constraints.volume_progression_limit}</div>
                             )}
@@ -1184,24 +1265,20 @@ function TrainingGrounds() {
                   <h4 className="font-russo font-semibold text-synthwave-neon-pink text-sm uppercase mb-3">
                     System Information
                   </h4>
-                  <div className="space-y-2 text-xs">
-                    <div className="bg-synthwave-bg-primary/20 rounded p-2">
-                      <span className="text-synthwave-text-muted block mb-1">Coach Type:</span>
-                      <span className="text-white font-mono">{trainingGroundsState.coachData.rawCoach.type || 'AI Coach'}</span>
+                  <div className={`space-y-2 ${themeClasses.cardText} text-sm`}>
+                    <div className="flex justify-between">
+                      <span className="text-synthwave-text-secondary">Coach Type:</span>
+                      <span className="text-synthwave-neon-cyan font-medium">{trainingGroundsState.coachData.rawCoach.type || 'AI Coach'}</span>
                     </div>
-                    <div className="bg-synthwave-bg-primary/20 rounded p-2">
-                      <span className="text-synthwave-text-muted block mb-1">Version:</span>
-                      <span className="text-white font-mono">
+                    <div className="flex justify-between">
+                      <span className="text-synthwave-text-secondary">Version:</span>
+                      <span className="text-synthwave-neon-cyan font-medium">
                         {trainingGroundsState.coachData.rawCoach.coachConfig?.metadata?.version || 'v1.0'}
                       </span>
                     </div>
-                    <div className="bg-synthwave-bg-primary/20 rounded p-2">
-                      <span className="text-synthwave-text-muted block mb-1">Entity Type:</span>
-                      <span className="text-white font-mono">{trainingGroundsState.coachData.rawCoach.entityType}</span>
-                    </div>
-                    <div className="bg-synthwave-bg-primary/20 rounded p-2">
-                      <span className="text-synthwave-text-muted block mb-1">Last Updated:</span>
-                      <span className="text-white font-mono">{new Date(trainingGroundsState.coachData.rawCoach.updatedAt).toLocaleDateString()}</span>
+                    <div className="flex justify-between">
+                      <span className="text-synthwave-text-secondary">Entity Type:</span>
+                      <span className="text-synthwave-neon-cyan font-medium">{trainingGroundsState.coachData.rawCoach?.entityType || 'coach'}</span>
                     </div>
                   </div>
                 </div>

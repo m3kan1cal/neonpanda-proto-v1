@@ -5,7 +5,7 @@
  * including complexity detection for conversation summarization.
  */
 
-import { UserMemoryDetectionEvent, UserMemoryDetectionResult } from './types';
+import { MemoryDetectionEvent, MemoryDetectionResult } from './types';
 import { UserMemory } from '../user/types';
 import { callBedrockApi, MODEL_IDS } from '../api-helpers';
 
@@ -255,7 +255,7 @@ export const detectConversationMemoryNeeds = (userMessage: string): boolean => {
 /**
  * Detect if user message contains a memory request using Bedrock API
  */
-export async function detectUserMemoryRequest(event: UserMemoryDetectionEvent): Promise<UserMemoryDetectionResult> {
+export async function detectMemoryRequest(event: MemoryDetectionEvent): Promise<MemoryDetectionResult> {
   const { userMessage, messageContext } = event;
 
   const systemPrompt = `You are an AI assistant that analyzes user messages to detect when they want you to "remember" something about them for future conversations.
@@ -305,7 +305,7 @@ GUIDELINES:
 Analyze this message and respond with the JSON format specified.`;
 
   try {
-    console.info('Detecting user memory request:', {
+    console.info('Detecting memory request:', {
       userId: event.userId,
       coachId: event.coachId,
       messageLength: userMessage.length,
@@ -315,16 +315,16 @@ Analyze this message and respond with the JSON format specified.`;
     const response = await callBedrockApi(systemPrompt, userPrompt, MODEL_IDS.NOVA_MICRO);
 
     // Parse the JSON response
-    const result: UserMemoryDetectionResult = JSON.parse(response.trim());
+    const result: MemoryDetectionResult = JSON.parse(response.trim());
 
     // Validate the response structure
     if (typeof result.isMemoryRequest !== 'boolean' ||
         typeof result.confidence !== 'number' ||
         result.confidence < 0 || result.confidence > 1) {
-      throw new Error('Invalid response format from user memory detection');
+      throw new Error('Invalid response format from memory detection');
     }
 
-    console.info('User memory detection completed:', {
+    console.info('Memory detection completed:', {
       userId: event.userId,
       isMemoryRequest: result.isMemoryRequest,
       confidence: result.confidence,
@@ -334,13 +334,13 @@ Analyze this message and respond with the JSON format specified.`;
 
     return result;
   } catch (error) {
-    console.error('Error in user memory detection:', error);
+    console.error('Error in memory detection:', error);
 
     // Return safe fallback
     return {
       isMemoryRequest: false,
       confidence: 0,
-      reasoning: 'Error occurred during user memory detection analysis'
+      reasoning: 'Error occurred during memory detection analysis'
     };
   }
 }
@@ -348,8 +348,8 @@ Analyze this message and respond with the JSON format specified.`;
 /**
  * Create a UserMemory object from detection result
  */
-export function createUserMemory(
-  detectionResult: UserMemoryDetectionResult,
+export function createMemory(
+  detectionResult: MemoryDetectionResult,
   userId: string,
   coachId?: string
 ): UserMemory | null {

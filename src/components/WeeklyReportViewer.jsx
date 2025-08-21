@@ -633,7 +633,7 @@ function WeeklyReportViewer({ report, onToggleView }) {
                 {structured.training_intelligence.exercise_ordering.current_pattern && structured.training_intelligence.exercise_ordering.current_pattern.length > 0 && (
                   <div className="mt-3">
                     <span className="text-synthwave-neon-pink font-rajdhani text-base font-medium">Current Pattern: </span>
-                    <span className="text-white font-rajdhani text-base">{structured.training_intelligence.exercise_ordering.current_pattern.join(' → ')}</span>
+                    <span className="text-white font-rajdhani text-base">{structured.training_intelligence.exercise_ordering.current_pattern.map(item => String(item).replace(/_/g, ' ')).join(' → ')}</span>
                   </div>
                 )}
               </div>

@@ -6,6 +6,11 @@ function Navigation() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const location = useLocation();
 
+  // Extract userId and coachId from current URL's query parameters
+  const searchParams = new URLSearchParams(location.search);
+  const currentUserId = searchParams.get('userId') || 'user123'; // fallback to default
+  const currentCoachId = searchParams.get('coachId') || 'coach456'; // fallback to default
+
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
   };
@@ -89,6 +94,17 @@ function Navigation() {
                     }`}
                   >
                     Coaches
+                  </Link>
+                  <Link
+                    to={`/training-grounds/manage-memories?userId=${currentUserId}&coachId=${currentCoachId}`}
+                    onClick={closeDropdown}
+                    className={`block px-4 py-3 font-rajdhani font-medium transition-all duration-300 ${
+                      location.pathname === '/training-grounds/manage-memories'
+                        ? 'text-synthwave-neon-purple bg-synthwave-neon-purple/10'
+                        : 'text-synthwave-text-primary hover:text-synthwave-neon-purple hover:bg-synthwave-neon-purple/10'
+                    }`}
+                  >
+                    Memories
                   </Link>
                   <div className="border-t border-synthwave-neon-purple/20 my-2"></div>
                   <Link

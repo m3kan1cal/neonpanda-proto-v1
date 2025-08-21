@@ -58,7 +58,7 @@ export async function generateAIResponse(
       conversationContext,
       additionalConstraints: workoutResult.workoutDetectionContext, // Add workout context if detected
       workoutContext: context.recentWorkouts, // Add recent workout summaries for context
-      userMemories: memoryResult.userMemories, // Add user memories for personalization
+      userMemories: memoryResult.memories, // Add memories for personalization
     };
 
     const { systemPrompt, metadata } = generateSystemPrompt(

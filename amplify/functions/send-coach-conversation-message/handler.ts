@@ -14,7 +14,7 @@ import { CoachMessage } from "../libs/coach-conversation/types";
 import { detectConversationComplexity } from "../libs/coach-conversation/detection";
 import { gatherConversationContext } from "../libs/coach-conversation/context";
 import { detectAndProcessWorkout } from "../libs/coach-conversation/workout-detection";
-import { queryUserMemories, detectAndSaveMemories } from "../libs/coach-conversation/memory-processing";
+import { queryMemories, detectAndSaveMemories } from "../libs/coach-conversation/memory-processing";
 import { generateAIResponse } from "../libs/coach-conversation/response-generation";
 
 // Configuration constants - moved to individual modules
@@ -145,8 +145,8 @@ export const handler = async (
       conversationContext
     );
 
-    // Retrieve existing user memories for context (BEFORE AI response)
-    const memoryRetrieval = await queryUserMemories(userId, coachId);
+    // Retrieve existing memories for context (BEFORE AI response)
+    const memoryRetrieval = await queryMemories(userId, coachId);
 
     // Generate AI response with all context
     const responseResult = await generateAIResponse(

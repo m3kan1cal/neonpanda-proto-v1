@@ -242,23 +242,17 @@ function ViewReports() {
 
           {/* Metadata with grouped layout */}
           <div className="space-y-1 mb-2">
-            {/* Row 1: Date Range and Workouts */}
+            {/* Row 1: Period */}
+            <div className="flex justify-between items-center">
+              <span className="text-synthwave-neon-cyan font-rajdhani text-base font-medium">Period:</span>
+              <span className="text-synthwave-text-primary font-rajdhani text-base">{dateRange}</span>
+            </div>
+
+            {/* Row 2: Workouts and Confidence */}
             <div className="grid grid-cols-2 gap-3">
-              <div className="flex justify-between items-center">
-                <span className="text-synthwave-neon-cyan font-rajdhani text-base font-medium">Period:</span>
-                <span className="text-synthwave-text-primary font-rajdhani text-base">{dateRange}</span>
-              </div>
               <div className="flex justify-between items-center">
                 <span className="text-synthwave-neon-cyan font-rajdhani text-base font-medium">Workouts:</span>
                 <span className="text-synthwave-text-primary font-rajdhani text-base">{workoutCount}</span>
-              </div>
-            </div>
-
-            {/* Row 2: Conversations and Confidence */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="flex justify-between items-center">
-                <span className="text-synthwave-neon-cyan font-rajdhani text-base font-medium">Conversations:</span>
-                <span className="text-synthwave-text-primary font-rajdhani text-base">{conversationCount}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-synthwave-neon-cyan font-rajdhani text-base font-medium">Confidence:</span>

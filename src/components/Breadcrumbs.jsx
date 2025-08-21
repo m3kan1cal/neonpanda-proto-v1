@@ -28,6 +28,7 @@ function Breadcrumbs() {
     'coach-conversations': 'Coach Conversations',
     'workouts': 'Workouts',
     'manage-workouts': 'Manage Workouts',
+    'manage-memories': 'Manage Memories',
     'reports': 'View Reports',
     'weekly': 'Weekly Reports'
   };
@@ -50,6 +51,13 @@ function Breadcrumbs() {
 
     // For Manage Workouts, preserve userId and coachId if available
     if (routeName === 'manage-workouts' && searchParams.has('userId') && searchParams.has('coachId')) {
+      const userId = searchParams.get('userId');
+      const coachId = searchParams.get('coachId');
+      return `${basePath}?userId=${userId}&coachId=${coachId}`;
+    }
+
+    // For Manage Memories, preserve userId and coachId if available
+    if (routeName === 'manage-memories' && searchParams.has('userId') && searchParams.has('coachId')) {
       const userId = searchParams.get('userId');
       const coachId = searchParams.get('coachId');
       return `${basePath}?userId=${userId}&coachId=${coachId}`;

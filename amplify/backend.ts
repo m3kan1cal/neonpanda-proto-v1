@@ -27,6 +27,8 @@ import { getConversationsCount } from './functions/get-conversations-count/resou
 import { buildWeeklyAnalytics, createWeeklyAnalyticsSchedule } from './functions/build-weekly-analytics/resource';
 import { getWeeklyReports } from './functions/get-weekly-reports/resource';
 import { getWeeklyReport } from './functions/get-weekly-report/resource';
+import { getMemories } from './functions/get-memories/resource';
+import { deleteMemory } from './functions/delete-memory/resource';
 import { apiGatewayv2 } from './api/resource';
 import { dynamodbTable } from './dynamodb/resource';
 import { grantBedrockPermissions, grantLambdaInvokePermissions, grantS3DebugPermissions, grantS3AnalyticsPermissions } from './iam-policies';
@@ -65,6 +67,8 @@ const backend = defineBackend({
   buildWeeklyAnalytics,
   getWeeklyReports,
   getWeeklyReport,
+  getMemories,
+  deleteMemory,
 });
 
 
@@ -91,7 +95,9 @@ const coreApi = apiGatewayv2.createCoreApi(
   backend.getWorkoutsCount.resources.lambda,
   backend.getConversationsCount.resources.lambda,
   backend.getWeeklyReports.resources.lambda,
-  backend.getWeeklyReport.resources.lambda
+  backend.getWeeklyReport.resources.lambda,
+  backend.getMemories.resources.lambda,
+  backend.deleteMemory.resources.lambda
 );
 
 // Create DynamoDB table
@@ -129,6 +135,10 @@ coreTable.table.grantReadWriteData(backend.buildWeeklyAnalytics.resources.lambda
 coreTable.table.grantReadData(backend.getWeeklyReports.resources.lambda);
 coreTable.table.grantReadData(backend.getWeeklyReport.resources.lambda);
 
+// Grant DynamoDB permissions to memory functions
+coreTable.table.grantReadData(backend.getMemories.resources.lambda);
+coreTable.table.grantReadWriteData(backend.deleteMemory.resources.lambda);
+
 // Add environment variables to all functions
 const allFunctions = [
   backend.helloWorld,
@@ -155,7 +165,9 @@ const allFunctions = [
   backend.getConversationsCount,
   backend.buildWeeklyAnalytics,
   backend.getWeeklyReports,
-  backend.getWeeklyReport
+  backend.getWeeklyReport,
+  backend.getMemories,
+  backend.deleteMemory
 ];
 
 allFunctions.forEach(func => {

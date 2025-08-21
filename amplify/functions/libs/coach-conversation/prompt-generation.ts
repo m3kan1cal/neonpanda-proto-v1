@@ -157,9 +157,9 @@ ${configData.technical_config.goal_timeline}
 ${configData.technical_config.preferred_intensity}`);
   }
 
-  // 5.5. User Memories (if available)
+  // 5.5. Memories (if available)
   if (userMemories.length > 0) {
-    const memoriesSection = generateUserMemoriesSection(userMemories);
+    const memoriesSection = generateMemoriesSection(userMemories);
     promptSections.push(memoriesSection);
   }
 
@@ -330,9 +330,9 @@ ${sections.join('\n\n')}
 };
 
 /**
- * Generates user memories section for the system prompt
+ * Generates memories section for the system prompt
  */
-const generateUserMemoriesSection = (userMemories: UserMemory[]): string => {
+const generateMemoriesSection = (userMemories: UserMemory[]): string => {
   if (userMemories.length === 0) {
     return '';
   }
@@ -346,12 +346,12 @@ const generateUserMemoriesSection = (userMemories: UserMemory[]): string => {
     return acc;
   }, {} as Record<string, UserMemory[]>);
 
-  const sections = [`# USER MEMORIES
+  const sections = [`# MEMORIES
 Based on previous conversations, here are important things the user has specifically asked you to remember:`];
 
   // Add memories grouped by type
   Object.entries(memoriesByType).forEach(([type, memories]: [string, UserMemory[]]) => {
-    sections.push(`## ${type.charAt(0).toUpperCase() + type.slice(1)} Memories`);
+    sections.push(`## ${type.charAt(0).toUpperCase() + type.slice(1)}`);
 
     memories.forEach((memory: UserMemory, index: number) => {
       sections.push(`### ${index + 1}. ${memory.content}`);

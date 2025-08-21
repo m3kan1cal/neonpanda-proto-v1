@@ -11,6 +11,7 @@ import TrainingGrounds from './components/TrainingGrounds';
 import CoachConversations from './components/CoachConversations';
 import Workouts from './components/Workouts';
 import ManageWorkouts from './components/ManageWorkouts';
+import ManageMemories from './components/ManageMemories';
 import ViewReports from './components/ViewReports';
 import WeeklyReports from './components/WeeklyReports';
 import { ToastProvider } from './contexts/ToastContext';
@@ -35,6 +36,7 @@ function AppContent() {
           <Route path="/training-grounds/coach-conversations" element={<CoachConversations />} />
           <Route path="/training-grounds/workouts" element={<Workouts />} />
           <Route path="/training-grounds/manage-workouts" element={<ManageWorkouts />} />
+          <Route path="/training-grounds/manage-memories" element={<ManageMemories />} />
           <Route path="/training-grounds/reports" element={<ViewReports />} />
           <Route path="/training-grounds/reports/weekly" element={<WeeklyReports />} />
 

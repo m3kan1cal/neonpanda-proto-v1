@@ -1,11 +1,11 @@
-import { queryUserMemories as queryUserMemoriesFromDb, saveUserMemory, updateUserMemory } from "../../../dynamodb/operations";
-import { detectUserMemoryRequest, createUserMemory } from "./detection";
+import { queryMemories as queryMemoriesFromDb, saveMemory, updateMemory } from "../../../dynamodb/operations";
+import { detectMemoryRequest, createMemory } from "./detection";
 import { UserMemory } from '../user/types';
 
 
 
 export interface MemoryRetrievalResult {
-  userMemories: UserMemory[];
+  memories: UserMemory[];
 }
 
 export interface MemoryDetectionResult {
@@ -13,37 +13,37 @@ export interface MemoryDetectionResult {
 }
 
 /**
- * Retrieves existing user memories for context (BEFORE AI response generation)
+ * Retrieves existing memories for context (BEFORE AI response generation)
  */
-export async function queryUserMemories(
+export async function queryMemories(
   userId: string,
   coachId: string
 ): Promise<MemoryRetrievalResult> {
-  let userMemories: UserMemory[] = [];
+  let memories: UserMemory[] = [];
   try {
-    userMemories = await queryUserMemoriesFromDb(userId, coachId, { limit: 10 });
+    memories = await queryMemoriesFromDb(userId, coachId, { limit: 10 });
 
     // Update usage statistics for retrieved memories
-    if (userMemories.length > 0) {
+    if (memories.length > 0) {
       // Don't await these - update in background
-      userMemories.forEach(memory => {
-        updateUserMemory(memory.memoryId, userId).catch((err: any) =>
+      memories.forEach(memory => {
+        updateMemory(memory.memoryId, userId).catch((err: any) =>
           console.warn('Failed to update memory usage:', err)
         );
       });
     }
 
-    console.info('Retrieved user memories for context:', {
+    console.info('Retrieved memories for context:', {
       userId,
       coachId,
-      memoryCount: userMemories.length
+      memoryCount: memories.length
     });
   } catch (memoryRetrievalError) {
-    console.error('Error retrieving user memories:', memoryRetrievalError);
+    console.error('Error retrieving memories:', memoryRetrievalError);
     // Continue without memories
   }
 
-  return { userMemories };
+  return { memories };
 }
 
 /**
@@ -66,21 +66,21 @@ export async function detectAndSaveMemories(
       messageContext: existingMessages.slice(-3).map(msg => `${msg.role}: ${msg.content}`).join('\n')
     };
 
-    const memoryDetection = await detectUserMemoryRequest(memoryDetectionEvent);
+    const memoryDetection = await detectMemoryRequest(memoryDetectionEvent);
 
     if (memoryDetection.isMemoryRequest && memoryDetection.confidence > 0.7) {
-      const userMemory = createUserMemory(memoryDetection, userId, coachId);
+      const memory = createMemory(memoryDetection, userId, coachId);
 
-      if (userMemory) {
-        await saveUserMemory(userMemory);
-        memoryFeedback = `✅ I've remembered that for you: "${userMemory.content}"`;
+      if (memory) {
+        await saveMemory(memory);
+        memoryFeedback = `✅ I've remembered that for you: "${memory.content}"`;
 
-        console.info('User memory saved:', {
-          memoryId: userMemory.memoryId,
+        console.info('Memory saved:', {
+          memoryId: memory.memoryId,
           userId,
           coachId,
-          type: userMemory.memoryType,
-          importance: userMemory.metadata.importance,
+          type: memory.memoryType,
+          importance: memory.metadata.importance,
           confidence: memoryDetection.confidence
         });
       }
