@@ -1,5 +1,7 @@
 import { queryMemories as queryMemoriesFromDb, saveMemory, updateMemory } from "../../../dynamodb/operations";
-import { detectMemoryRequest, createMemory } from "./detection";
+import { detectMemoryRequest, createMemory, detectMemoryRetrievalNeed } from "./detection";
+import { querySemanticMemories } from '../api-helpers';
+import { storeMemoryInPinecone } from '../user/pinecone';
 import { UserMemory } from '../user/types';
 
 
@@ -13,15 +15,78 @@ export interface MemoryDetectionResult {
 }
 
 /**
- * Retrieves existing memories for context (BEFORE AI response generation)
+ * Helper function to combine and deduplicate memories from different sources
+ */
+function combineAndDeduplicateMemories(semanticMemories: any[], importantMemories: UserMemory[]): UserMemory[] {
+  const memoryMap = new Map<string, UserMemory>();
+
+  // Add semantic memories first (they have priority due to relevance)
+  semanticMemories.forEach(memory => {
+    memoryMap.set(memory.memoryId, memory);
+  });
+
+  // Add important memories if not already included
+  importantMemories.forEach(memory => {
+    if (!memoryMap.has(memory.memoryId)) {
+      memoryMap.set(memory.memoryId, memory);
+    }
+  });
+
+  return Array.from(memoryMap.values());
+}
+
+/**
+ * Retrieves existing memories for context using AI-guided approach (BEFORE AI response generation)
+ * Simplified for prototype - uses AI detection to determine semantic vs standard retrieval
  */
 export async function queryMemories(
   userId: string,
-  coachId: string
+  coachId: string,
+  userMessage?: string,
+  messageContext?: string
 ): Promise<MemoryRetrievalResult> {
   let memories: UserMemory[] = [];
+
   try {
-    memories = await queryMemoriesFromDb(userId, coachId, { limit: 10 });
+    if (userMessage) {
+      // Use AI to determine if semantic memory retrieval is beneficial
+      const retrievalDetection = await detectMemoryRetrievalNeed(userMessage, messageContext);
+
+      if (retrievalDetection.needsSemanticRetrieval && retrievalDetection.confidence > 0.6) {
+        console.info('🧠 AI detected need for semantic memory retrieval:', {
+          confidence: retrievalDetection.confidence,
+          contextTypes: retrievalDetection.contextTypes,
+          reasoning: retrievalDetection.reasoning
+        });
+
+        // Use semantic + importance hybrid approach
+        const [semanticMemories, importantMemories] = await Promise.all([
+          querySemanticMemories(userId, userMessage, {
+            topK: 6,
+            contextTypes: retrievalDetection.contextTypes
+          }),
+          queryMemoriesFromDb(userId, coachId, { limit: 4, importance: 'high' })
+        ]);
+
+        memories = combineAndDeduplicateMemories(semanticMemories, importantMemories);
+
+        console.info('Retrieved hybrid memories:', {
+          semanticCount: semanticMemories.length,
+          importantCount: importantMemories.length,
+          finalCount: memories.length
+        });
+      } else {
+        // AI determined semantic retrieval not beneficial - get top important memories only
+        console.info('🔄 AI determined semantic retrieval not needed, using importance-based:', {
+          confidence: retrievalDetection.confidence,
+          reasoning: retrievalDetection.reasoning
+        });
+        memories = await queryMemoriesFromDb(userId, coachId, { limit: 10 });
+      }
+    } else {
+      // No user message provided - use standard importance-based approach
+      memories = await queryMemoriesFromDb(userId, coachId, { limit: 10 });
+    }
 
     // Update usage statistics for retrieved memories
     if (memories.length > 0) {
@@ -36,11 +101,13 @@ export async function queryMemories(
     console.info('Retrieved memories for context:', {
       userId,
       coachId,
-      memoryCount: memories.length
+      memoryCount: memories.length,
+      approach: userMessage ? 'AI-guided' : 'standard'
     });
-  } catch (memoryRetrievalError) {
-    console.error('Error retrieving memories:', memoryRetrievalError);
-    // Continue without memories
+
+  } catch (error) {
+    console.error('Error retrieving memories:', error);
+    throw error; // Simplified - let the error bubble up rather than silent fallback
   }
 
   return { memories };
@@ -72,7 +139,18 @@ export async function detectAndSaveMemories(
       const memory = createMemory(memoryDetection, userId, coachId);
 
       if (memory) {
+        // Save to DynamoDB (existing)
         await saveMemory(memory);
+
+        // NEW: Also store in Pinecone for semantic search
+        try {
+          await storeMemoryInPinecone(memory);
+          console.info('Memory stored in both DynamoDB and Pinecone');
+        } catch (error) {
+          console.warn('Failed to store memory in Pinecone, continuing:', error);
+          // Don't fail the conversation for Pinecone errors
+        }
+
         memoryFeedback = `✅ I've remembered that for you: "${memory.content}"`;
 
         console.info('Memory saved:', {

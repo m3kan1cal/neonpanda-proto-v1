@@ -182,7 +182,7 @@ function ManageMemories() {
         {/* Memory content */}
         <div className="pr-12">
           <div className={`${themeClasses.cardText} text-base mb-3 leading-relaxed`}>
-            {memory.content}
+            <span className="font-bold text-white">Memory:</span> {memory.content}
           </div>
 
           {/* Memory metadata */}
@@ -351,7 +351,7 @@ function ManageMemories() {
 
           {/* Stats */}
           <div className="flex justify-center mb-8">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 max-w-4xl">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 w-full max-w-4xl">
               <div className="bg-synthwave-bg-card/30 border-2 border-synthwave-neon-pink/30 rounded-lg p-4 text-center">
                 <div className="text-2xl font-russo font-bold text-synthwave-neon-pink mb-1">
                   {memoryAgentState.totalCount || 0}

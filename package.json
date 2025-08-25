@@ -8,7 +8,8 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "upsert-methodologies": "node scripts/upsert-methodologies.js"
+    "upsert-methodologies": "node scripts/upsert-methodologies.js",
+    "seed-coach-templates": "node scripts/seed-coach-templates.js"
   },
   "dependencies": {
     "@aws-amplify/cli": "^13.0.1",

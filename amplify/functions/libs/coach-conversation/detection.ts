@@ -346,6 +346,85 @@ Analyze this message and respond with the JSON format specified.`;
 }
 
 /**
+ * Detects if the user message requires semantic memory retrieval using AI analysis
+ * Follows same pattern as detectMemoryRequest
+ */
+export async function detectMemoryRetrievalNeed(
+  userMessage: string,
+  messageContext?: string
+): Promise<{
+  needsSemanticRetrieval: boolean;
+  confidence: number;
+  contextTypes: string[];
+  reasoning: string;
+}> {
+  const systemPrompt = `You are an AI assistant that analyzes user messages to determine if retrieving past memories would enhance the coaching response.
+
+TASK: Determine if the user's message would benefit from accessing their stored preferences, goals, constraints, or past context.
+
+MEMORY CONTEXT INDICATORS:
+- References to personal preferences ("I like/hate", "works for me", "my preference")
+- Goal-related discussions ("my goal", "trying to", "working towards", "want to achieve")
+- Constraint mentions ("I can't", "limited time", "only have", "schedule constraints")
+- Emotional/motivational states that might have past patterns ("feeling frustrated", "struggling", "motivated")
+- Past reference patterns ("remember when", "you told me", "we discussed", "like before")
+- Requests for personalized advice that would benefit from knowing user context
+- Questions about progress, patterns, or consistency
+- Mentions of specific preferences, limitations, or approaches
+
+CONTEXT TYPES:
+- preference: Training preferences, exercise likes/dislikes, communication style
+- goal: Fitness goals, targets, aspirations, motivations
+- constraint: Physical limitations, time constraints, equipment limitations, schedule
+- instruction: Specific coaching approaches or methods the user prefers
+- context: Personal background, lifestyle factors, emotional patterns
+- motivational: Past emotional states, motivation patterns, support strategies
+
+RESPONSE FORMAT:
+You must respond with ONLY a valid JSON object:
+{
+  "needsSemanticRetrieval": boolean,
+  "confidence": number (0.0 to 1.0),
+  "contextTypes": ["preference", "goal", "constraint", "instruction", "context", "motivational"],
+  "reasoning": "brief explanation why semantic memory retrieval would/wouldn't help"
+}
+
+GUIDELINES:
+- Consider if knowing the user's past preferences, goals, or constraints would improve the coaching response
+- Higher confidence for explicit personal references, lower for general fitness questions
+- Include multiple context types if relevant
+- Be generous - better to include memory context than miss important personalization`;
+
+  const userPrompt = `${messageContext ? `CONVERSATION CONTEXT:\n${messageContext}\n\n` : ''}USER MESSAGE TO ANALYZE:\n"${userMessage}"
+
+Analyze this message and determine if retrieving stored memories would enhance the coaching response.`;
+
+  try {
+    const response = await callBedrockApi(systemPrompt, userPrompt, MODEL_IDS.NOVA_MICRO);
+    const result = JSON.parse(response);
+
+    console.info('Memory retrieval detection completed:', {
+      userMessage: userMessage.substring(0, 100),
+      needsSemanticRetrieval: result.needsSemanticRetrieval,
+      confidence: result.confidence,
+      contextTypes: result.contextTypes,
+      reasoning: result.reasoning
+    });
+
+    return result;
+  } catch (error) {
+    console.error('Error in memory retrieval detection:', error);
+    // Conservative fallback - assume no semantic retrieval needed
+    return {
+      needsSemanticRetrieval: false,
+      confidence: 0.0,
+      contextTypes: [],
+      reasoning: 'Error in AI detection, defaulting to no semantic retrieval'
+    };
+  }
+}
+
+/**
  * Create a UserMemory object from detection result
  */
 export function createMemory(

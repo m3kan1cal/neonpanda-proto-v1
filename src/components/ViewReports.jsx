@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { themeClasses } from '../utils/synthwaveThemeClasses';
-import { NeonBorder } from './themes/SynthwaveComponents';
+import { NeonBorder, NewBadge } from './themes/SynthwaveComponents';
+import { isCurrentWeekReport } from '../utils/dateUtils';
 import { useToast } from '../contexts/ToastContext';
 import ReportAgent from '../utils/agents/ReportAgent';
 import { FloatingMenuManager } from './shared/FloatingMenuManager';
@@ -185,6 +186,7 @@ function ViewReports() {
     const conversationCount = report.metadata?.conversationCount || 0;
     const analysisConfidence = report.metadata?.analysisConfidence || 'medium';
     const dataCompleteness = Math.round((report.metadata?.dataCompleteness || 0.5) * 100);
+    const isNew = isCurrentWeekReport(report.weekId);
 
     // Extract top priority insight from structured analytics
     const topPriority = report.analyticsData?.structured_analytics?.actionable_insights?.top_priority?.insight;
@@ -202,6 +204,8 @@ function ViewReports() {
         className={`${themeClasses.glowCard} group cursor-pointer transition-all duration-300 hover:-translate-y-1 relative`}
         onClick={() => navigate(`/training-grounds/reports/weekly?userId=${userId}&weekId=${report.weekId}&coachId=${coachId || 'default'}`)}
       >
+        {/* NEW badge for current week reports */}
+        {isNew && <NewBadge />}
 
         {/* Action buttons - appear on hover at top right */}
         <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex space-x-3">
@@ -236,7 +240,7 @@ function ViewReports() {
 
         {/* Report header */}
         <div className="mb-4">
-          <h3 className="font-rajdhani text-xl text-synthwave-neon-pink font-bold mb-2 truncate">
+                    <h3 className="font-rajdhani text-xl text-synthwave-neon-pink font-bold mb-2 truncate">
             Weekly Report: Week {report.weekId}
           </h3>
 

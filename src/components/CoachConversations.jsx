@@ -7,7 +7,7 @@ import CoachConversationAgent from '../utils/agents/CoachConversationAgent';
 import { useToast } from '../contexts/ToastContext';
 import { FloatingMenuManager } from './shared/FloatingMenuManager';
 import {
-  WorkoutIcon,
+  WorkoutIconSmall,
   CloseIcon
 } from './themes/SynthwaveComponents';
 
@@ -721,7 +721,7 @@ function CoachConversations() {
                     className="bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/30 text-synthwave-neon-pink px-3 py-1 rounded-full text-sm font-rajdhani hover:bg-synthwave-neon-pink/10 transition-colors duration-300 flex items-center space-x-2"
                     onClick={() => setInputMessage("/log-workout ")}
                   >
-                    <WorkoutIcon />
+                    <WorkoutIconSmall />
                     <span>Log Workout</span>
                   </button>
 

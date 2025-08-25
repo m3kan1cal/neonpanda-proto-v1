@@ -168,6 +168,8 @@ export interface CoachConfig {
     methodology_reasoning: string;
     programming_emphasis: string;
     periodization_approach: string;
+    creativity_emphasis: string;
+    workout_innovation: string;
   };
   technical_config: {
     methodology: string;
@@ -204,6 +206,8 @@ export interface CoachConfig {
     enabled_modifications: string[];
     personality_flexibility: string;
     programming_adaptability: string;
+    creative_programming: string;
+    workout_variety_emphasis: string;
     safety_override_level: string;
   };
   metadata: {
@@ -214,5 +218,25 @@ export interface CoachConfig {
     safety_profile: any;
     methodology_profile: any;
     coach_creator_session_summary: string;
+  };
+}
+
+// Coach Template interface for pre-built coach configurations
+export interface CoachTemplate {
+  template_id: string;           // e.g., "tmpl_bsb_2025_08_23"
+  template_name: string;         // e.g., "Beginner Strength Builder"
+  persona_category: string;      // Maps to personas 1-7 (e.g., "persona_1")
+  description: string;           // User-facing description
+  target_audience: string[];     // ["beginners", "strength_focused", etc.]
+
+  // Pre-configured coach config (same structure as CoachConfig)
+  base_config: CoachConfig;
+
+  // Template metadata
+  metadata: {
+    created_date: string;
+    version: string;
+    popularity_score?: number;   // Track usage for ordering
+    is_active: boolean;         // Enable/disable templates
   };
 }

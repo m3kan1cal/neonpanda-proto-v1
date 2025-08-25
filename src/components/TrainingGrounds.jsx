@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { themeClasses } from '../utils/synthwaveThemeClasses';
+import { isCurrentWeekReport } from '../utils/dateUtils';
 import {
   NeonBorder,
+  NewBadge,
   ConversationIcon,
   ReportIcon,
   WorkoutIcon,
@@ -303,6 +305,10 @@ function TrainingGrounds() {
     return `${formatDate(weekStart)} - ${formatDate(weekEnd)}`;
   };
 
+
+
+
+
   const renderWorkoutList = () => (
     <div className="space-y-2">
       {workoutState.isLoadingRecentItems ? (
@@ -460,19 +466,6 @@ function TrainingGrounds() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {/* CYAN BUTTONS - Management Actions */}
-              {/* Training Grounds */}
-              <button
-                onClick={() => {
-                  navigate(`/training-grounds?userId=${userId}&coachId=${coachId}`);
-                }}
-                className={`${themeClasses.cyanButton} text-sm px-4 py-3 flex items-center justify-center space-x-2`}
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                </svg>
-                <span>Training Grounds</span>
-              </button>
-
               {/* Manage Workouts */}
               <button
                 onClick={() => {
@@ -495,6 +488,19 @@ function TrainingGrounds() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                 </svg>
                 <span>Manage Memories</span>
+              </button>
+
+              {/* Manage Conversations */}
+              <button
+                onClick={() => {
+                  navigate(`/training-grounds/manage-conversations?userId=${userId}&coachId=${coachId}`);
+                }}
+                className={`${themeClasses.cyanButton} text-sm px-4 py-3 flex items-center justify-center space-x-2`}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+                <span>Manage Conversations</span>
               </button>
 
               {/* View Reports */}
@@ -548,7 +554,8 @@ function TrainingGrounds() {
         </div>
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12 max-w-5xl mx-auto">
+        <div className="flex justify-center mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 w-full max-w-4xl">
           <div className="bg-synthwave-bg-card/30 border-2 border-synthwave-neon-pink/30 rounded-lg p-4 text-center">
             {conversationAgentState.isLoadingConversationCount ? (
               <>
@@ -632,6 +639,7 @@ function TrainingGrounds() {
                 </div>
               </>
             )}
+          </div>
           </div>
         </div>
 
@@ -749,27 +757,33 @@ function TrainingGrounds() {
               ) : (
                 <>
                   <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">Recent Reports</div>
-                  {reportsState.recentReports.map((rep) => (
-                    <div
-                      key={rep.weekId}
-                      onClick={() => navigate(`/training-grounds/reports/weekly?userId=${userId}&weekId=${rep.weekId}&coachId=${coachId}`)}
-                      className="bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/20 hover:border-synthwave-neon-pink/40 hover:bg-synthwave-bg-primary/50 rounded-lg p-3 cursor-pointer transition-all duration-200"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1 min-w-0">
-                          <div className="font-rajdhani text-sm text-white font-medium truncate">
-                            Week {rep.weekId}
+                  {reportsState.recentReports.map((rep) => {
+                    const isNew = isCurrentWeekReport(rep.weekId);
+                    return (
+                      <div
+                        key={rep.weekId}
+                        onClick={() => navigate(`/training-grounds/reports/weekly?userId=${userId}&weekId=${rep.weekId}&coachId=${coachId}`)}
+                                                className="relative bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/20 hover:border-synthwave-neon-pink/40 hover:bg-synthwave-bg-primary/50 rounded-lg p-3 cursor-pointer transition-all duration-200"
+                      >
+                        {/* NEW badge for current week reports */}
+                        {isNew && <NewBadge />}
+
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1 min-w-0">
+                            <div className="font-rajdhani text-sm text-white font-medium truncate">
+                              Week {rep.weekId}
+                            </div>
+                            <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                              {getWeekDateRange(rep.weekId)} • <span className="text-synthwave-neon-cyan">{rep.metadata?.workoutCount || 0} workouts</span>
+                            </div>
                           </div>
-                          <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
-                            {getWeekDateRange(rep.weekId)} • <span className="text-synthwave-neon-cyan">{rep.metadata?.workoutCount || 0} workouts</span>
+                          <div className="ml-2 text-synthwave-neon-pink">
+                            <BarChartIcon />
                           </div>
-                        </div>
-                        <div className="text-synthwave-neon-pink ml-2">
-                          <BarChartIcon />
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </>
               )}
             </div>

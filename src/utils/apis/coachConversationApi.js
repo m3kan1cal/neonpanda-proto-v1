@@ -187,3 +187,62 @@ export const getCoachConversationsCount = async (userId, coachId) => {
     throw error;
   }
 };
+
+/**
+ * Deletes a coach conversation
+ * @param {string} userId - The user ID
+ * @param {string} coachId - The coach ID
+ * @param {string} conversationId - The conversation ID
+ * @returns {Promise<Object>} - The API response object
+ */
+export const deleteCoachConversation = async (userId, coachId, conversationId) => {
+  console.info('Deleting coach conversation:', { userId, coachId, conversationId });
+
+  const url = `${getApiUrl('')}/users/${userId}/coaches/${coachId}/conversations/${conversationId}`;
+
+  try {
+    const response = await fetch(url, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      let errorMessage = 'Failed to delete conversation';
+
+      if (response.status === 400) {
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || 'Bad request - invalid parameters';
+        } catch (parseError) {
+          errorMessage = 'Bad request - invalid parameters';
+        }
+      } else if (response.status === 404) {
+        errorMessage = 'Conversation not found';
+      } else {
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorMessage;
+        } catch (parseError) {
+          console.error('Error parsing error response:', parseError);
+        }
+      }
+
+      throw new Error(errorMessage);
+    }
+
+    const data = await response.json();
+    console.info('Successfully deleted conversation:', {
+      conversationId,
+      coachId,
+      userId,
+      pineconeCleanup: data.pineconeCleanup
+    });
+
+    return data;
+  } catch (error) {
+    console.error('Error deleting conversation:', error);
+    throw error;
+  }
+};

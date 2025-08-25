@@ -5,7 +5,7 @@
  * and coach memory capabilities.
  */
 
-import { storePineconeContext } from '../api-helpers';
+import { storePineconeContext, deletePineconeContext } from '../api-helpers';
 import { UniversalWorkoutSchema, Workout } from './types';
 
 /**
@@ -97,9 +97,56 @@ export const storeWorkoutSummaryInPinecone = async (
 };
 
 /**
- * Future functions can be added here:
- * - retrieveWorkoutHistory()
- * - searchSimilarWorkouts()
- * - getWorkoutPatterns()
- * - updateWorkoutSummary()
+ * Delete workout summary from Pinecone when workout is deleted
+ *
+ * @param userId - The user ID for namespace targeting
+ * @param workoutId - The workout ID to delete from Pinecone
+ * @returns Promise with deletion result
  */
+export const deleteWorkoutSummaryFromPinecone = async (
+  userId: string,
+  workoutId: string
+): Promise<{ success: boolean; error?: string }> => {
+  try {
+    console.info('🗑️ Deleting workout summary from Pinecone:', {
+      userId,
+      workoutId
+    });
+
+    // Use centralized deletion function with workout-specific filter
+    const result = await deletePineconeContext(userId, {
+      record_type: 'workout_summary',
+      workout_id: workoutId
+    });
+
+    if (result.success) {
+      console.info('✅ Successfully deleted workout summary from Pinecone:', {
+        userId,
+        workoutId,
+        deletedRecords: result.deletedCount
+      });
+    } else {
+      console.warn('⚠️ Failed to delete workout summary from Pinecone:', {
+        userId,
+        workoutId,
+        error: result.error
+      });
+    }
+
+    return {
+      success: result.success,
+      error: result.error
+    };
+
+  } catch (error) {
+    console.error('❌ Failed to delete workout summary from Pinecone:', error);
+
+    // Don't throw error to avoid breaking the workout deletion process
+    // Pinecone cleanup failure shouldn't prevent DynamoDB deletion
+    console.warn('Workout deletion will continue despite Pinecone cleanup failure');
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
+  }
+};

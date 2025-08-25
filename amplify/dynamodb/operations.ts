@@ -1,7 +1,25 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, PutCommand, GetCommand, QueryCommand, DeleteCommand } from "@aws-sdk/lib-dynamodb";
-import { CoachCreatorSession, DynamoDBItem, ContactFormAttributes, CoachConfigSummary, CoachConfig } from "../functions/libs/coach-creator/types";
-import { CoachConversation, CoachConversationListItem, CoachMessage, CoachConversationSummary } from "../functions/libs/coach-conversation/types";
+import {
+  DynamoDBDocumentClient,
+  PutCommand,
+  GetCommand,
+  QueryCommand,
+  DeleteCommand,
+} from "@aws-sdk/lib-dynamodb";
+import {
+  CoachCreatorSession,
+  DynamoDBItem,
+  ContactFormAttributes,
+  CoachConfigSummary,
+  CoachConfig,
+  CoachTemplate,
+} from "../functions/libs/coach-creator/types";
+import {
+  CoachConversation,
+  CoachConversationListItem,
+  CoachMessage,
+  CoachConversationSummary,
+} from "../functions/libs/coach-conversation/types";
 import { UserProfile, UserMemory } from "../functions/libs/user/types";
 import { Workout } from "../functions/libs/workout/types";
 import { WeeklyAnalytics } from "../functions/libs/analytics/types";
@@ -37,7 +55,7 @@ export async function saveToDynamoDB<T>(item: DynamoDBItem<T>): Promise<void> {
   const tableName = process.env.DYNAMODB_TABLE_NAME;
 
   if (!tableName) {
-    throw new Error('DYNAMODB_TABLE_NAME environment variable is not set');
+    throw new Error("DYNAMODB_TABLE_NAME environment variable is not set");
   }
 
   try {
@@ -45,26 +63,28 @@ export async function saveToDynamoDB<T>(item: DynamoDBItem<T>): Promise<void> {
     const serializedItem = serializeForDynamoDB(item);
 
     // Debug: Log conversation items before saving
-    if (item.entityType === 'coachConversation') {
+    if (item.entityType === "coachConversation") {
       const conversationItem = item.attributes as any;
       const serializedConversation = serializedItem.attributes as any;
-      console.info('About to serialize and save coach conversation:', {
+      console.info("About to serialize and save coach conversation:", {
         pk: item.pk,
         sk: item.sk,
         originalMessagesCount: conversationItem?.messages?.length || 0,
         serializedMessagesCount: serializedConversation?.messages?.length || 0,
-        firstMessage: serializedConversation?.messages?.[0] ? {
-          id: serializedConversation.messages[0].id,
-          role: serializedConversation.messages[0].role,
-          hasContent: !!serializedConversation.messages[0].content,
-          timestamp: serializedConversation.messages[0].timestamp
-        } : 'No messages'
+        firstMessage: serializedConversation?.messages?.[0]
+          ? {
+              id: serializedConversation.messages[0].id,
+              role: serializedConversation.messages[0].role,
+              hasContent: !!serializedConversation.messages[0].content,
+              timestamp: serializedConversation.messages[0].timestamp,
+            }
+          : "No messages",
       });
     }
 
     const command = new PutCommand({
       TableName: tableName,
-      Item: serializedItem
+      Item: serializedItem,
     });
 
     await docClient.send(command);
@@ -84,7 +104,7 @@ export async function loadFromDynamoDB<T>(
   const tableName = process.env.DYNAMODB_TABLE_NAME;
 
   if (!tableName) {
-    throw new Error('DYNAMODB_TABLE_NAME environment variable is not set');
+    throw new Error("DYNAMODB_TABLE_NAME environment variable is not set");
   }
 
   try {
@@ -92,8 +112,8 @@ export async function loadFromDynamoDB<T>(
       TableName: tableName,
       Key: {
         pk,
-        sk
-      }
+        sk,
+      },
     });
 
     const result = await docClient.send(command);
@@ -111,8 +131,11 @@ export async function loadFromDynamoDB<T>(
 
     return deserializedItem as DynamoDBItem<T>;
   } catch (error) {
-    const errorEntityType = entityType || 'item';
-    console.error(`Error loading ${errorEntityType} data from DynamoDB:`, error);
+    const errorEntityType = entityType || "item";
+    console.error(
+      `Error loading ${errorEntityType} data from DynamoDB:`,
+      error
+    );
     throw error;
   }
 }
@@ -126,24 +149,24 @@ export async function queryFromDynamoDB<T>(
   const tableName = process.env.DYNAMODB_TABLE_NAME;
 
   if (!tableName) {
-    throw new Error('DYNAMODB_TABLE_NAME environment variable is not set');
+    throw new Error("DYNAMODB_TABLE_NAME environment variable is not set");
   }
 
   try {
     const command = new QueryCommand({
       TableName: tableName,
-      KeyConditionExpression: '#pk = :pk AND begins_with(#sk, :sk_prefix)',
-      FilterExpression: entityType ? '#entityType = :entityType' : undefined,
+      KeyConditionExpression: "#pk = :pk AND begins_with(#sk, :sk_prefix)",
+      FilterExpression: entityType ? "#entityType = :entityType" : undefined,
       ExpressionAttributeNames: {
-        '#pk': 'pk',
-        '#sk': 'sk',
-        ...(entityType && { '#entityType': 'entityType' })
+        "#pk": "pk",
+        "#sk": "sk",
+        ...(entityType && { "#entityType": "entityType" }),
       },
       ExpressionAttributeValues: {
-        ':pk': pk,
-        ':sk_prefix': skPrefix,
-        ...(entityType && { ':entityType': entityType })
-      }
+        ":pk": pk,
+        ":sk_prefix": skPrefix,
+        ...(entityType && { ":entityType": entityType }),
+      },
     });
 
     const result = await docClient.send(command);
@@ -155,10 +178,13 @@ export async function queryFromDynamoDB<T>(
     const items = (result.Items as DynamoDBItem<T>[]) || [];
 
     // Deserialize all items to convert ISO strings back to Date objects
-    return items.map(item => deserializeFromDynamoDB(item));
+    return items.map((item) => deserializeFromDynamoDB(item));
   } catch (error) {
-    const errorEntityType = entityType || 'items';
-    console.error(`Error querying ${errorEntityType} data from DynamoDB:`, error);
+    const errorEntityType = entityType || "items";
+    console.error(
+      `Error querying ${errorEntityType} data from DynamoDB:`,
+      error
+    );
     throw error;
   }
 }
@@ -177,33 +203,31 @@ export function createDynamoDBItem<T>(
     attributes,
     entityType,
     createdAt: timestamp,
-    updatedAt: timestamp
+    updatedAt: timestamp,
   };
 }
 
 // Specific function for contact form data (uses the generic function)
-export async function saveContactForm(
-  formData: {
-    firstName: string;
-    lastName: string;
-    email: string;
-    subject: string;
-    message: string;
-    contactType: string;
-    timestamp: string;
-  }
-): Promise<void> {
+export async function saveContactForm(formData: {
+  firstName: string;
+  lastName: string;
+  email: string;
+  subject: string;
+  message: string;
+  contactType: string;
+  timestamp: string;
+}): Promise<void> {
   const attributes: ContactFormAttributes = {
     firstName: formData.firstName,
     lastName: formData.lastName,
     email: formData.email,
     subject: formData.subject,
     message: formData.message,
-    contactType: formData.contactType
+    contactType: formData.contactType,
   };
 
   const item = createDynamoDBItem<ContactFormAttributes>(
-    'contactForm',
+    "contactForm",
     `contactForm#${formData.email}`,
     `timestamp#${formData.timestamp}`,
     attributes,
@@ -214,9 +238,12 @@ export async function saveContactForm(
 }
 
 // Simplified function to save coach config directly
-export async function saveCoachConfig(userId: string, coachConfig: CoachConfig): Promise<void> {
+export async function saveCoachConfig(
+  userId: string,
+  coachConfig: CoachConfig
+): Promise<void> {
   const item = createDynamoDBItem<CoachConfig>(
-    'coachConfig',
+    "coachConfig",
     `user#${userId}`,
     `coach#${coachConfig.coach_id}`,
     coachConfig,
@@ -234,17 +261,23 @@ export async function getCoachConfig(
   return await loadFromDynamoDB<CoachConfig>(
     `user#${userId}`,
     `coach#${coachId}`,
-    'coachConfig'
+    "coachConfig"
   );
 }
 
 // Simplified function to save coach creator session directly
-export async function saveCoachCreatorSession(session: CoachCreatorSession, ttlDays?: number): Promise<void> {
+export async function saveCoachCreatorSession(
+  session: CoachCreatorSession,
+  ttlDays?: number
+): Promise<void> {
+  // Default TTL: 7 days for incomplete, 30 days for complete sessions
+  // Can be overridden with ttlDays parameter for special cases
   const calculatedTtlDays = ttlDays || (session.isComplete ? 30 : 7);
-  const ttlTimestamp = Math.floor(Date.now() / 1000) + (calculatedTtlDays * 24 * 60 * 60);
+  const ttlTimestamp =
+    Math.floor(Date.now() / 1000) + calculatedTtlDays * 24 * 60 * 60;
 
   const item = createDynamoDBItem<CoachCreatorSession>(
-    'coachCreatorSession',
+    "coachCreatorSession",
     `user#${session.userId}`,
     `coachCreatorSession#${session.sessionId}`,
     session,
@@ -254,7 +287,7 @@ export async function saveCoachCreatorSession(session: CoachCreatorSession, ttlD
   // Add TTL to the item and use the generic saveToDynamoDB function (which handles Date serialization)
   const itemWithTTL = {
     ...item,
-    ttl: ttlTimestamp
+    ttl: ttlTimestamp,
   };
 
   await saveToDynamoDB(itemWithTTL);
@@ -271,10 +304,10 @@ function serializeForDynamoDB(obj: any): any {
   }
 
   if (Array.isArray(obj)) {
-    return obj.map(item => serializeForDynamoDB(item));
+    return obj.map((item) => serializeForDynamoDB(item));
   }
 
-  if (typeof obj === 'object') {
+  if (typeof obj === "object") {
     const serialized: any = {};
     for (const [key, value] of Object.entries(obj)) {
       serialized[key] = serializeForDynamoDB(value);
@@ -292,7 +325,7 @@ function deserializeFromDynamoDB(obj: any): any {
     return obj;
   }
 
-  if (typeof obj === 'string') {
+  if (typeof obj === "string") {
     // Check if the string looks like an ISO date (basic regex)
     const isoDateRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z?$/;
     if (isoDateRegex.test(obj)) {
@@ -306,10 +339,10 @@ function deserializeFromDynamoDB(obj: any): any {
   }
 
   if (Array.isArray(obj)) {
-    return obj.map(item => deserializeFromDynamoDB(item));
+    return obj.map((item) => deserializeFromDynamoDB(item));
   }
 
-  if (typeof obj === 'object') {
+  if (typeof obj === "object") {
     const deserialized: any = {};
     for (const [key, value] of Object.entries(obj)) {
       deserialized[key] = deserializeFromDynamoDB(value);
@@ -328,28 +361,35 @@ export async function getCoachCreatorSession(
   return await loadFromDynamoDB<CoachCreatorSession>(
     `user#${userId}`,
     `coachCreatorSession#${sessionId}`,
-    'coachCreatorSession'
+    "coachCreatorSession"
   );
 }
 
 // Function to load coach configs for a specific user (with limited properties)
-export async function queryCoachConfigs(userId: string): Promise<DynamoDBItem<CoachConfigSummary>[]> {
+export async function queryCoachConfigs(
+  userId: string
+): Promise<DynamoDBItem<CoachConfigSummary>[]> {
   try {
     // Use the generic query function to get all coach configs for the user
     const items = await queryFromDynamoDB<any>(
       `user#${userId}`,
-      'coach#',
-      'coachConfig'
+      "coach#",
+      "coachConfig"
     );
 
     // Filter to include only the properties we need, leveraging the original structure
-    return items.map(item => {
+    return items.map((item) => {
       const {
         coach_id,
         coach_name,
         selected_personality: { primary_template, selection_reasoning } = {},
-        technical_config: { programming_focus, specializations, methodology, experience_level } = {},
-        metadata: { created_date, total_conversations } = {}
+        technical_config: {
+          programming_focus,
+          specializations,
+          methodology,
+          experience_level,
+        } = {},
+        metadata: { created_date, total_conversations } = {},
       } = item.attributes;
 
       return {
@@ -358,9 +398,14 @@ export async function queryCoachConfigs(userId: string): Promise<DynamoDBItem<Co
           coach_id,
           coach_name,
           selected_personality: { primary_template, selection_reasoning },
-          technical_config: { programming_focus, specializations, methodology, experience_level },
-          metadata: { created_date, total_conversations }
-        }
+          technical_config: {
+            programming_focus,
+            specializations,
+            methodology,
+            experience_level,
+          },
+          metadata: { created_date, total_conversations },
+        },
       };
     });
   } catch (error) {
@@ -370,9 +415,11 @@ export async function queryCoachConfigs(userId: string): Promise<DynamoDBItem<Co
 }
 
 // Function to save a coach conversation
-export async function saveCoachConversation(conversation: CoachConversation): Promise<void> {
+export async function saveCoachConversation(
+  conversation: CoachConversation
+): Promise<void> {
   const item = createDynamoDBItem<CoachConversation>(
-    'coachConversation',
+    "coachConversation",
     `user#${conversation.userId}`,
     `coachConversation#${conversation.coachId}#${conversation.conversationId}`,
     conversation,
@@ -391,7 +438,7 @@ export async function getCoachConversation(
   return await loadFromDynamoDB<CoachConversation>(
     `user#${userId}`,
     `coachConversation#${coachId}#${conversationId}`,
-    'coachConversation'
+    "coachConversation"
   );
 }
 
@@ -405,20 +452,23 @@ export async function queryCoachConversations(
     const items = await queryFromDynamoDB<any>(
       `user#${userId}`,
       `coachConversation#${coachId}#`,
-      'coachConversation'
+      "coachConversation"
     );
 
     // Filter to exclude messages array, keeping only summary properties
-    return items.map(item => {
+    return items.map((item) => {
       const { messages, ...summaryAttributes } = item.attributes;
 
       return {
         ...item,
-        attributes: summaryAttributes
+        attributes: summaryAttributes,
       };
     });
   } catch (error) {
-    console.error(`Error loading coach conversations for user ${userId}, coach ${coachId}:`, error);
+    console.error(
+      `Error loading coach conversations for user ${userId}, coach ${coachId}:`,
+      error
+    );
     throw error;
   }
 }
@@ -431,7 +481,7 @@ export async function queryCoachConversationsWithMessages(
   return await queryFromDynamoDB<CoachConversation>(
     `user#${userId}`,
     `coachConversation#${coachId}#`,
-    'coachConversation'
+    "coachConversation"
   );
 }
 
@@ -443,23 +493,27 @@ export async function sendCoachConversationMessage(
   messages: CoachMessage[]
 ): Promise<void> {
   // First load the existing conversation
-  const existingConversation = await getCoachConversation(userId, coachId, conversationId);
+  const existingConversation = await getCoachConversation(
+    userId,
+    coachId,
+    conversationId
+  );
 
   if (!existingConversation) {
     throw new Error(`Conversation not found: ${conversationId}`);
   }
 
   // Debug: Log the existing conversation and new messages
-  console.info('Updating conversation messages:', {
+  console.info("Updating conversation messages:", {
     conversationId,
     existingMessageCount: existingConversation.attributes.messages?.length || 0,
     newMessageCount: messages.length,
-    messagesPreview: messages.map(msg => ({
+    messagesPreview: messages.map((msg) => ({
       id: msg.id,
       role: msg.role,
       contentLength: msg.content?.length || 0,
-      timestamp: msg.timestamp
-    }))
+      timestamp: msg.timestamp,
+    })),
   });
 
   // Update the conversation with new messages and metadata
@@ -469,29 +523,29 @@ export async function sendCoachConversationMessage(
     metadata: {
       ...existingConversation.attributes.metadata,
       lastActivity: new Date(),
-      totalMessages: messages.length
-    }
+      totalMessages: messages.length,
+    },
   };
 
   // Create updated item maintaining original timestamps but updating the updatedAt field
   const updatedItem = {
     ...existingConversation,
     attributes: updatedConversation,
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
   };
 
   // Debug: Log what we're about to save
-  console.info('About to save to DynamoDB:', {
+  console.info("About to save to DynamoDB:", {
     pk: updatedItem.pk,
     sk: updatedItem.sk,
     messagesCount: updatedItem.attributes.messages?.length || 0,
-    totalMessages: updatedItem.attributes.metadata?.totalMessages
+    totalMessages: updatedItem.attributes.metadata?.totalMessages,
   });
 
   await saveToDynamoDB(updatedItem);
 
   // Debug: Confirm save completed
-  console.info('Successfully saved conversation messages to DynamoDB');
+  console.info("Successfully saved conversation messages to DynamoDB");
 }
 
 // Function to update conversation metadata (title, tags, isActive)
@@ -502,17 +556,21 @@ export async function updateCoachConversation(
   updateData: { title?: string; tags?: string[]; isActive?: boolean }
 ): Promise<CoachConversation> {
   // First load the existing conversation
-  const existingConversation = await getCoachConversation(userId, coachId, conversationId);
+  const existingConversation = await getCoachConversation(
+    userId,
+    coachId,
+    conversationId
+  );
 
   if (!existingConversation) {
     throw new Error(`Conversation not found: ${conversationId}`);
   }
 
   // Debug: Log the update operation
-  console.info('Updating conversation metadata:', {
+  console.info("Updating conversation metadata:", {
     conversationId,
     updateFields: Object.keys(updateData),
-    updateData
+    updateData,
   });
 
   // Update the conversation metadata
@@ -522,39 +580,93 @@ export async function updateCoachConversation(
     metadata: {
       ...existingConversation.attributes.metadata,
       ...(updateData.tags !== undefined && { tags: updateData.tags }),
-      ...(updateData.isActive !== undefined && { isActive: updateData.isActive }),
-      lastActivity: new Date()
-    }
+      ...(updateData.isActive !== undefined && {
+        isActive: updateData.isActive,
+      }),
+      lastActivity: new Date(),
+    },
   };
 
   // Create updated item maintaining original timestamps but updating the updatedAt field
   const updatedItem = {
     ...existingConversation,
     attributes: updatedConversation,
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
   };
 
   // Debug: Log what we're about to save
-  console.info('About to save metadata update to DynamoDB:', {
+  console.info("About to save metadata update to DynamoDB:", {
     pk: updatedItem.pk,
     sk: updatedItem.sk,
     title: updatedItem.attributes.title,
     tags: updatedItem.attributes.metadata?.tags,
-    isActive: updatedItem.attributes.metadata?.isActive
+    isActive: updatedItem.attributes.metadata?.isActive,
   });
 
   await saveToDynamoDB(updatedItem);
 
   // Debug: Confirm save completed
-  console.info('Successfully saved conversation metadata to DynamoDB');
+  console.info("Successfully saved conversation metadata to DynamoDB");
 
   return updatedConversation;
+}
+
+// Function to delete a coach conversation
+export async function deleteCoachConversation(
+  userId: string,
+  conversationId: string
+): Promise<void> {
+  console.info("Deleting coach conversation from DynamoDB:", {
+    userId,
+    conversationId,
+  });
+
+  // First check if the conversation exists by finding it with the conversationId pattern
+  // Since we don't know the coachId, we need to query for conversations and find the matching one
+  const allConversations = await queryFromDynamoDB<any>(
+    `user#${userId}`,
+    "coachConversation#",
+    "coachConversation"
+  );
+
+  const targetConversation = allConversations.find((conv) =>
+    conv.sk.endsWith(`#${conversationId}`)
+  );
+
+  if (!targetConversation) {
+    throw new Error(`Conversation not found: ${conversationId}`);
+  }
+
+  // Delete the conversation from DynamoDB
+  const tableName = process.env.DYNAMODB_TABLE_NAME;
+  if (!tableName) {
+    throw new Error("DYNAMODB_TABLE_NAME environment variable is not set");
+  }
+
+  try {
+    const command = new DeleteCommand({
+      TableName: tableName,
+      Key: {
+        pk: targetConversation.pk,
+        sk: targetConversation.sk,
+      },
+    });
+
+    await docClient.send(command);
+    console.info("Successfully deleted coach conversation from DynamoDB:", {
+      userId,
+      conversationId,
+    });
+  } catch (error) {
+    console.error("Error deleting coach conversation from DynamoDB:", error);
+    throw new Error(`Failed to delete conversation: ${conversationId}`);
+  }
 }
 
 // Function to save a workout session
 export async function saveWorkout(workout: Workout): Promise<void> {
   const item = createDynamoDBItem<Workout>(
-    'workout',
+    "workout",
     `user#${workout.userId}`,
     `workout#${workout.workoutId}`,
     workout,
@@ -563,11 +675,11 @@ export async function saveWorkout(workout: Workout): Promise<void> {
 
   await saveToDynamoDB(item);
 
-  console.info('Workout saved successfully:', {
+  console.info("Workout saved successfully:", {
     workoutId: workout.workoutId,
     userId: workout.userId,
     discipline: workout.workoutData.discipline,
-    completedAt: workout.completedAt
+    completedAt: workout.completedAt,
   });
 }
 
@@ -579,7 +691,7 @@ export async function getWorkout(
   return await loadFromDynamoDB<Workout>(
     `user#${userId}`,
     `workout#${workoutId}`,
-    'workout'
+    "workout"
   );
 }
 
@@ -607,8 +719,8 @@ export async function queryWorkoutsCount(
     // Get all workout sessions for the user
     const allSessions = await queryFromDynamoDB<Workout>(
       `user#${userId}`,
-      'workout#',
-      'workout'
+      "workout#",
+      "workout"
     );
 
     // Apply filters to get the count
@@ -616,7 +728,7 @@ export async function queryWorkoutsCount(
 
     // Date filtering
     if (options?.fromDate || options?.toDate) {
-      filteredSessions = filteredSessions.filter(session => {
+      filteredSessions = filteredSessions.filter((session) => {
         const completedAt = session.attributes.completedAt;
         const sessionDate = new Date(completedAt);
 
@@ -629,46 +741,51 @@ export async function queryWorkoutsCount(
 
     // Discipline filtering
     if (options?.discipline) {
-      filteredSessions = filteredSessions.filter(session =>
-        session.attributes.workoutData.discipline === options.discipline
+      filteredSessions = filteredSessions.filter(
+        (session) =>
+          session.attributes.workoutData.discipline === options.discipline
       );
     }
 
     // Workout type filtering
     if (options?.workoutType) {
-      filteredSessions = filteredSessions.filter(session =>
-        session.attributes.workoutData.workout_type === options.workoutType
+      filteredSessions = filteredSessions.filter(
+        (session) =>
+          session.attributes.workoutData.workout_type === options.workoutType
       );
     }
 
     // Location filtering
     if (options?.location) {
-      filteredSessions = filteredSessions.filter(session =>
-        session.attributes.workoutData.location === options.location
+      filteredSessions = filteredSessions.filter(
+        (session) =>
+          session.attributes.workoutData.location === options.location
       );
     }
 
     // Coach filtering
     if (options?.coachId) {
-      filteredSessions = filteredSessions.filter(session =>
+      filteredSessions = filteredSessions.filter((session) =>
         session.attributes.coachIds.includes(options.coachId!)
       );
     }
 
     // Confidence filtering
     if (options?.minConfidence) {
-      filteredSessions = filteredSessions.filter(session =>
-        session.attributes.extractionMetadata.confidence >= options.minConfidence!
+      filteredSessions = filteredSessions.filter(
+        (session) =>
+          session.attributes.extractionMetadata.confidence >=
+          options.minConfidence!
       );
     }
 
     const totalCount = filteredSessions.length;
 
-    console.info('Workouts counted successfully:', {
+    console.info("Workouts counted successfully:", {
       userId,
       totalFound: allSessions.length,
       afterFiltering: totalCount,
-      filters: options
+      filters: options,
     });
 
     return totalCount;
@@ -702,16 +819,16 @@ export async function queryWorkouts(
     offset?: number;
 
     // Sorting
-    sortBy?: 'completedAt' | 'confidence' | 'workoutName';
-    sortOrder?: 'asc' | 'desc';
+    sortBy?: "completedAt" | "confidence" | "workoutName";
+    sortOrder?: "asc" | "desc";
   }
 ): Promise<DynamoDBItem<Workout>[]> {
   try {
     // Get all workout sessions for the user
     const allSessions = await queryFromDynamoDB<Workout>(
       `user#${userId}`,
-      'workout#',
-      'workout'
+      "workout#",
+      "workout"
     );
 
     // Apply filters
@@ -719,7 +836,7 @@ export async function queryWorkouts(
 
     // Date filtering
     if (options?.fromDate || options?.toDate) {
-      filteredSessions = filteredSessions.filter(session => {
+      filteredSessions = filteredSessions.filter((session) => {
         const completedAt = session.attributes.completedAt;
         const sessionDate = new Date(completedAt);
 
@@ -732,36 +849,41 @@ export async function queryWorkouts(
 
     // Discipline filtering
     if (options?.discipline) {
-      filteredSessions = filteredSessions.filter(session =>
-        session.attributes.workoutData.discipline === options.discipline
+      filteredSessions = filteredSessions.filter(
+        (session) =>
+          session.attributes.workoutData.discipline === options.discipline
       );
     }
 
     // Workout type filtering
     if (options?.workoutType) {
-      filteredSessions = filteredSessions.filter(session =>
-        session.attributes.workoutData.workout_type === options.workoutType
+      filteredSessions = filteredSessions.filter(
+        (session) =>
+          session.attributes.workoutData.workout_type === options.workoutType
       );
     }
 
     // Location filtering
     if (options?.location) {
-      filteredSessions = filteredSessions.filter(session =>
-        session.attributes.workoutData.location === options.location
+      filteredSessions = filteredSessions.filter(
+        (session) =>
+          session.attributes.workoutData.location === options.location
       );
     }
 
     // Coach filtering
     if (options?.coachId) {
-      filteredSessions = filteredSessions.filter(session =>
+      filteredSessions = filteredSessions.filter((session) =>
         session.attributes.coachIds.includes(options.coachId!)
       );
     }
 
     // Confidence filtering
     if (options?.minConfidence) {
-      filteredSessions = filteredSessions.filter(session =>
-        session.attributes.extractionMetadata.confidence >= options.minConfidence!
+      filteredSessions = filteredSessions.filter(
+        (session) =>
+          session.attributes.extractionMetadata.confidence >=
+          options.minConfidence!
       );
     }
 
@@ -771,17 +893,17 @@ export async function queryWorkouts(
         let aValue: any, bValue: any;
 
         switch (options.sortBy) {
-          case 'completedAt':
+          case "completedAt":
             aValue = new Date(a.attributes.completedAt);
             bValue = new Date(b.attributes.completedAt);
             break;
-          case 'confidence':
+          case "confidence":
             aValue = a.attributes.extractionMetadata.confidence;
             bValue = b.attributes.extractionMetadata.confidence;
             break;
-          case 'workoutName':
-            aValue = a.attributes.workoutData.workout_name || '';
-            bValue = b.attributes.workoutData.workout_name || '';
+          case "workoutName":
+            aValue = a.attributes.workoutData.workout_name || "";
+            bValue = b.attributes.workoutData.workout_name || "";
             break;
           default:
             aValue = new Date(a.attributes.completedAt);
@@ -789,12 +911,14 @@ export async function queryWorkouts(
         }
 
         const comparison = aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
-        return options.sortOrder === 'desc' ? -comparison : comparison;
+        return options.sortOrder === "desc" ? -comparison : comparison;
       });
     } else {
       // Default sort by completedAt descending (most recent first)
-      filteredSessions.sort((a, b) =>
-        new Date(b.attributes.completedAt).getTime() - new Date(a.attributes.completedAt).getTime()
+      filteredSessions.sort(
+        (a, b) =>
+          new Date(b.attributes.completedAt).getTime() -
+          new Date(a.attributes.completedAt).getTime()
       );
     }
 
@@ -805,11 +929,11 @@ export async function queryWorkouts(
       filteredSessions = filteredSessions.slice(offset, offset + limit);
     }
 
-    console.info('Workouts queried successfully:', {
+    console.info("Workouts queried successfully:", {
       userId,
       totalFound: allSessions.length,
       afterFiltering: filteredSessions.length,
-      filters: options
+      filters: options,
     });
 
     return filteredSessions;
@@ -836,7 +960,11 @@ export async function updateWorkout(
   const deepMerge = (target: any, source: any): any => {
     const result = { ...target };
     for (const key in source) {
-      if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
+      if (
+        source[key] &&
+        typeof source[key] === "object" &&
+        !Array.isArray(source[key])
+      ) {
         result[key] = deepMerge(target[key] || {}, source[key]);
       } else {
         result[key] = source[key];
@@ -854,41 +982,47 @@ export async function updateWorkout(
       ? deepMerge(existingSession.attributes.workoutData, updates.workoutData)
       : existingSession.attributes.workoutData,
     // Sync root-level workoutName with workoutData.workout_name if it's being updated
-    workoutName: updates.workoutData?.workout_name || existingSession.attributes.workoutName,
+    workoutName:
+      updates.workoutData?.workout_name ||
+      existingSession.attributes.workoutName,
     // Always update the extraction metadata to track changes
     extractionMetadata: {
       ...existingSession.attributes.extractionMetadata,
       ...updates.extractionMetadata,
       // Track when the update was made
-      reviewedAt: new Date()
-    }
+      reviewedAt: new Date(),
+    },
   };
 
   // Create updated item maintaining original timestamps but updating the updatedAt field
   const updatedItem = {
     ...existingSession,
     attributes: updatedSession,
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
   };
 
-  console.info('About to save workout update to DynamoDB:', {
+  console.info("About to save workout update to DynamoDB:", {
     workoutId,
     userId,
     updateFields: Object.keys(updates),
-    originalConfidence: existingSession.attributes.extractionMetadata.confidence,
-    newConfidence: updatedSession.extractionMetadata.confidence
+    originalConfidence:
+      existingSession.attributes.extractionMetadata.confidence,
+    newConfidence: updatedSession.extractionMetadata.confidence,
   });
 
   await saveToDynamoDB(updatedItem);
 
-  console.info('Successfully updated workout in DynamoDB');
+  console.info("Successfully updated workout in DynamoDB");
 
   return updatedSession;
 }
 
 // Function to delete a workout session
-export async function deleteWorkout(userId: string, workoutId: string): Promise<void> {
-  console.info('Deleting workout from DynamoDB:', { userId, workoutId });
+export async function deleteWorkout(
+  userId: string,
+  workoutId: string
+): Promise<void> {
+  console.info("Deleting workout from DynamoDB:", { userId, workoutId });
 
   // First check if the workout exists
   const existingWorkout = await getWorkout(userId, workoutId);
@@ -899,7 +1033,7 @@ export async function deleteWorkout(userId: string, workoutId: string): Promise<
   // Delete the workout from DynamoDB
   const tableName = process.env.DYNAMODB_TABLE_NAME;
   if (!tableName) {
-    throw new Error('DYNAMODB_TABLE_NAME environment variable is not set');
+    throw new Error("DYNAMODB_TABLE_NAME environment variable is not set");
   }
 
   try {
@@ -907,22 +1041,27 @@ export async function deleteWorkout(userId: string, workoutId: string): Promise<
       TableName: tableName,
       Key: {
         pk: `user#${userId}`,
-        sk: `workout#${workoutId}`
-      }
+        sk: `workout#${workoutId}`,
+      },
     });
 
     await docClient.send(command);
-    console.info('Successfully deleted workout from DynamoDB:', { userId, workoutId });
+    console.info("Successfully deleted workout from DynamoDB:", {
+      userId,
+      workoutId,
+    });
   } catch (error) {
-    console.error('Error deleting workout from DynamoDB:', error);
+    console.error("Error deleting workout from DynamoDB:", error);
     throw new Error(`Failed to delete workout: ${workoutId}`);
   }
 }
 
 // Function to save a coach conversation summary
-export async function saveCoachConversationSummary(summary: CoachConversationSummary): Promise<void> {
+export async function saveCoachConversationSummary(
+  summary: CoachConversationSummary
+): Promise<void> {
   const item = createDynamoDBItem<CoachConversationSummary>(
-    'conversationSummary',
+    "conversationSummary",
     `user#${summary.userId}`,
     `conversation#${summary.conversationId}#summary`,
     summary,
@@ -931,13 +1070,13 @@ export async function saveCoachConversationSummary(summary: CoachConversationSum
 
   await saveToDynamoDB(item);
 
-  console.info('Conversation summary saved successfully:', {
+  console.info("Conversation summary saved successfully:", {
     summaryId: summary.summaryId,
     userId: summary.userId,
     conversationId: summary.conversationId,
     confidence: summary.metadata.confidence,
     messageCount: summary.metadata.messageRange.totalMessages,
-    triggerReason: summary.metadata.triggerReason
+    triggerReason: summary.metadata.triggerReason,
   });
 }
 
@@ -949,7 +1088,7 @@ export async function getCoachConversationSummary(
   return await loadFromDynamoDB<CoachConversationSummary>(
     `user#${userId}`,
     `conversation#${conversationId}#summary`,
-    'conversationSummary'
+    "conversationSummary"
   );
 }
 
@@ -963,20 +1102,23 @@ export async function queryConversationsCount(
     const allConversations = await queryFromDynamoDB<CoachConversationListItem>(
       `user#${userId}`,
       `coachConversation#${coachId}#`,
-      'coachConversation'
+      "coachConversation"
     );
 
     const totalCount = allConversations.length;
 
-    console.info('Conversations counted successfully:', {
+    console.info("Conversations counted successfully:", {
       userId,
       coachId,
-      totalFound: totalCount
+      totalFound: totalCount,
     });
 
     return totalCount;
   } catch (error) {
-    console.error(`Error counting conversations for user ${userId} and coach ${coachId}:`, error);
+    console.error(
+      `Error counting conversations for user ${userId} and coach ${coachId}:`,
+      error
+    );
     throw error;
   }
 }
@@ -989,24 +1131,27 @@ export async function queryCoachConversationSummaries(
     // Query all conversation summaries for the user
     const items = await queryFromDynamoDB<CoachConversationSummary>(
       `user#${userId}`,
-      'conversation#',
-      'conversationSummary'
+      "conversation#",
+      "conversationSummary"
     );
 
     // Filter by coach if specified
     const filteredItems = coachId
-      ? items.filter(item => item.attributes.coachId === coachId)
+      ? items.filter((item) => item.attributes.coachId === coachId)
       : items;
 
-    console.info('Conversation summaries queried successfully:', {
+    console.info("Conversation summaries queried successfully:", {
       userId,
-      coachId: coachId || 'all',
-      totalFound: filteredItems.length
+      coachId: coachId || "all",
+      totalFound: filteredItems.length,
     });
 
     return filteredItems;
   } catch (error) {
-    console.error(`Error querying conversation summaries for user ${userId}:`, error);
+    console.error(
+      `Error querying conversation summaries for user ${userId}:`,
+      error
+    );
     throw error;
   }
 }
@@ -1022,7 +1167,7 @@ export async function saveMemory(memory: UserMemory): Promise<void> {
   const timestamp = new Date().toISOString();
 
   const item = createDynamoDBItem<UserMemory>(
-    'userMemory',
+    "userMemory",
     `user#${memory.userId}`,
     `userMemory#${memory.memoryId}`,
     memory,
@@ -1030,11 +1175,11 @@ export async function saveMemory(memory: UserMemory): Promise<void> {
   );
 
   await saveToDynamoDB(item);
-  console.info('Memory saved successfully:', {
+  console.info("Memory saved successfully:", {
     memoryId: memory.memoryId,
     userId: memory.userId,
     coachId: memory.coachId,
-    type: memory.memoryType
+    type: memory.memoryType,
   });
 }
 
@@ -1045,45 +1190,50 @@ export async function queryMemories(
   userId: string,
   coachId?: string,
   options?: {
-    memoryType?: UserMemory['memoryType'];
-    importance?: UserMemory['metadata']['importance'];
+    memoryType?: UserMemory["memoryType"];
+    importance?: UserMemory["metadata"]["importance"];
     limit?: number;
   }
 ): Promise<UserMemory[]> {
   const items = await queryFromDynamoDB<UserMemory>(
     `user#${userId}`,
-    'userMemory#',
-    'userMemory'
+    "userMemory#",
+    "userMemory"
   );
 
-  let filteredItems = items.map(item => item.attributes);
+  let filteredItems = items.map((item) => item.attributes);
 
   // Filter by coach if specified
   if (coachId) {
-    filteredItems = filteredItems.filter(memory =>
-      memory.coachId === coachId || !memory.coachId // Include global memories
+    filteredItems = filteredItems.filter(
+      (memory) => memory.coachId === coachId || !memory.coachId // Include global memories
     );
   }
 
   // Filter by memory type if specified
   if (options?.memoryType) {
-    filteredItems = filteredItems.filter(memory =>
-      memory.memoryType === options.memoryType
+    filteredItems = filteredItems.filter(
+      (memory) => memory.memoryType === options.memoryType
     );
   }
 
   // Filter by importance if specified
   if (options?.importance) {
-    filteredItems = filteredItems.filter(memory =>
-      memory.metadata.importance === options.importance
+    filteredItems = filteredItems.filter(
+      (memory) => memory.metadata.importance === options.importance
     );
   }
 
   // Sort by usage and importance
   filteredItems.sort((a, b) => {
     // First sort by importance (high > medium > low)
-    const importanceOrder: Record<UserMemory['metadata']['importance'], number> = { high: 3, medium: 2, low: 1 };
-    const importanceDiff = importanceOrder[b.metadata.importance] - importanceOrder[a.metadata.importance];
+    const importanceOrder: Record<
+      UserMemory["metadata"]["importance"],
+      number
+    > = { high: 3, medium: 2, low: 1 };
+    const importanceDiff =
+      importanceOrder[b.metadata.importance] -
+      importanceOrder[a.metadata.importance];
     if (importanceDiff !== 0) return importanceDiff;
 
     // Then by usage count
@@ -1091,7 +1241,10 @@ export async function queryMemories(
     if (usageDiff !== 0) return usageDiff;
 
     // Finally by creation date (newest first)
-    return new Date(b.metadata.createdAt).getTime() - new Date(a.metadata.createdAt).getTime();
+    return (
+      new Date(b.metadata.createdAt).getTime() -
+      new Date(a.metadata.createdAt).getTime()
+    );
   });
 
   // Apply limit if specified
@@ -1099,15 +1252,15 @@ export async function queryMemories(
     filteredItems = filteredItems.slice(0, options.limit);
   }
 
-  console.info('Memories queried successfully:', {
+  console.info("Memories queried successfully:", {
     userId,
-    coachId: coachId || 'all',
+    coachId: coachId || "all",
     totalFound: filteredItems.length,
     filtered: {
       memoryType: options?.memoryType,
       importance: options?.importance,
-      limit: options?.limit
-    }
+      limit: options?.limit,
+    },
   });
 
   return filteredItems;
@@ -1116,11 +1269,14 @@ export async function queryMemories(
 /**
  * Update usage statistics for a memory
  */
-export async function updateMemory(memoryId: string, userId: string): Promise<void> {
+export async function updateMemory(
+  memoryId: string,
+  userId: string
+): Promise<void> {
   const memory = await loadFromDynamoDB<UserMemory>(
     `user#${userId}`,
     `userMemory#${memoryId}`,
-    'userMemory'
+    "userMemory"
   );
 
   if (!memory) {
@@ -1134,23 +1290,24 @@ export async function updateMemory(memoryId: string, userId: string): Promise<vo
   memory.updatedAt = new Date().toISOString();
 
   await saveToDynamoDB(memory);
-  console.info('Memory usage updated:', {
+  console.info("Memory usage updated:", {
     memoryId,
     userId,
-    newUsageCount: memory.attributes.metadata.usageCount
+    newUsageCount: memory.attributes.metadata.usageCount,
   });
 }
-
-
 
 /**
  * Delete a memory from DynamoDB
  */
-export async function deleteMemory(userId: string, memoryId: string): Promise<void> {
+export async function deleteMemory(
+  userId: string,
+  memoryId: string
+): Promise<void> {
   const tableName = process.env.DYNAMODB_TABLE_NAME;
 
   if (!tableName) {
-    throw new Error('DYNAMODB_TABLE_NAME environment variable is not set');
+    throw new Error("DYNAMODB_TABLE_NAME environment variable is not set");
   }
 
   try {
@@ -1158,23 +1315,22 @@ export async function deleteMemory(userId: string, memoryId: string): Promise<vo
       TableName: tableName,
       Key: {
         pk: `user#${userId}`,
-        sk: `userMemory#${memoryId}`
+        sk: `userMemory#${memoryId}`,
       },
       // Add condition to ensure the item exists before deleting
-      ConditionExpression: 'attribute_exists(pk)'
+      ConditionExpression: "attribute_exists(pk)",
     });
 
     await docClient.send(command);
-    console.info('Memory deleted successfully:', {
+    console.info("Memory deleted successfully:", {
       memoryId,
-      userId
+      userId,
     });
-
   } catch (error: any) {
-    if (error.name === 'ConditionalCheckFailedException') {
+    if (error.name === "ConditionalCheckFailedException") {
       throw new Error(`Memory ${memoryId} not found for user ${userId}`);
     }
-    console.error('Error deleting memory:', error);
+    console.error("Error deleting memory:", error);
     throw error;
   }
 }
@@ -1197,28 +1353,31 @@ export async function queryAllEntitiesByType<T>(
   const tableName = process.env.DYNAMODB_TABLE_NAME;
 
   if (!tableName) {
-    throw new Error('DYNAMODB_TABLE_NAME environment variable is not set');
+    throw new Error("DYNAMODB_TABLE_NAME environment variable is not set");
   }
 
   try {
-    console.info(`Querying all ${entityType} entities from DynamoDB using GSI-3:`, {
-      entityType,
-      limit,
-      hasExclusiveStartKey: !!exclusiveStartKey,
-      hasFilterExpression: !!filterExpression
-    });
+    console.info(
+      `Querying all ${entityType} entities from DynamoDB using GSI-3:`,
+      {
+        entityType,
+        limit,
+        hasExclusiveStartKey: !!exclusiveStartKey,
+        hasFilterExpression: !!filterExpression,
+      }
+    );
 
     const command = new QueryCommand({
       TableName: tableName,
-      IndexName: 'gsi3',
-      KeyConditionExpression: 'entityType = :entityType',
+      IndexName: "gsi3",
+      KeyConditionExpression: "entityType = :entityType",
       ExpressionAttributeValues: {
-        ':entityType': entityType,
-        ...expressionAttributeValues
+        ":entityType": entityType,
+        ...expressionAttributeValues,
       },
       FilterExpression: filterExpression,
       Limit: limit,
-      ExclusiveStartKey: exclusiveStartKey
+      ExclusiveStartKey: exclusiveStartKey,
     });
 
     const result = await docClient.send(command);
@@ -1227,16 +1386,19 @@ export async function queryAllEntitiesByType<T>(
     console.info(`Successfully queried ${entityType} entities:`, {
       entityType,
       itemCount: items.length,
-      hasMoreResults: !!result.LastEvaluatedKey
+      hasMoreResults: !!result.LastEvaluatedKey,
     });
 
     return {
       items: items,
       lastEvaluatedKey: result.LastEvaluatedKey,
-      count: items.length
+      count: items.length,
     };
   } catch (error) {
-    console.error(`Error querying all ${entityType} entities from DynamoDB:`, error);
+    console.error(
+      `Error querying all ${entityType} entities from DynamoDB:`,
+      error
+    );
     throw error;
   }
 }
@@ -1250,24 +1412,26 @@ export async function queryAllUsers(
   exclusiveStartKey?: any
 ): Promise<QueryAllUsersResult> {
   const result = await queryAllEntitiesByType<UserProfile>(
-    'user',
+    "user",
     limit,
     exclusiveStartKey,
-    'attributes.metadata.isActive = :isActive',
-    { ':isActive': true }
+    "attributes.metadata.isActive = :isActive",
+    { ":isActive": true }
   );
 
   return {
     users: result.items,
     lastEvaluatedKey: result.lastEvaluatedKey,
-    count: result.count
+    count: result.count,
   };
 }
 
 // Function to save weekly analytics data
-export async function saveWeeklyAnalytics(weeklyAnalytics: WeeklyAnalytics): Promise<void> {
+export async function saveWeeklyAnalytics(
+  weeklyAnalytics: WeeklyAnalytics
+): Promise<void> {
   const item = createDynamoDBItem<WeeklyAnalytics>(
-    'analytics',
+    "analytics",
     `user#${weeklyAnalytics.userId}`,
     `weeklyAnalytics#${weeklyAnalytics.weekId}`,
     weeklyAnalytics,
@@ -1275,13 +1439,13 @@ export async function saveWeeklyAnalytics(weeklyAnalytics: WeeklyAnalytics): Pro
   );
 
   await saveToDynamoDB(item);
-  console.info('Weekly analytics saved successfully:', {
+  console.info("Weekly analytics saved successfully:", {
     userId: weeklyAnalytics.userId,
     weekId: weeklyAnalytics.weekId,
     weekRange: `${weeklyAnalytics.weekStart} to ${weeklyAnalytics.weekEnd}`,
     workoutCount: weeklyAnalytics.metadata.workoutCount,
     s3Location: weeklyAnalytics.s3Location,
-    analysisConfidence: weeklyAnalytics.metadata.analysisConfidence
+    analysisConfidence: weeklyAnalytics.metadata.analysisConfidence,
   });
 }
 
@@ -1298,16 +1462,16 @@ export async function queryWeeklyAnalytics(
     offset?: number;
 
     // Sorting
-    sortBy?: 'weekStart' | 'weekEnd' | 'workoutCount';
-    sortOrder?: 'asc' | 'desc';
+    sortBy?: "weekStart" | "weekEnd" | "workoutCount";
+    sortOrder?: "asc" | "desc";
   }
 ): Promise<DynamoDBItem<WeeklyAnalytics>[]> {
   try {
     // Get all weekly analytics for the user
     const allAnalytics = await queryFromDynamoDB<WeeklyAnalytics>(
       `user#${userId}`,
-      'weeklyAnalytics#',
-      'analytics'
+      "weeklyAnalytics#",
+      "analytics"
     );
 
     // Apply filters
@@ -1315,36 +1479,36 @@ export async function queryWeeklyAnalytics(
 
     // Date filtering
     if (options?.fromDate) {
-      filteredAnalytics = filteredAnalytics.filter(analytics => {
+      filteredAnalytics = filteredAnalytics.filter((analytics) => {
         const weekStart = new Date(analytics.attributes.weekStart);
         return weekStart >= options.fromDate!;
       });
     }
 
     if (options?.toDate) {
-      filteredAnalytics = filteredAnalytics.filter(analytics => {
+      filteredAnalytics = filteredAnalytics.filter((analytics) => {
         const weekEnd = new Date(analytics.attributes.weekEnd);
         return weekEnd <= options.toDate!;
       });
     }
 
     // Sorting
-    const sortBy = options?.sortBy || 'weekStart';
-    const sortOrder = options?.sortOrder || 'desc';
+    const sortBy = options?.sortBy || "weekStart";
+    const sortOrder = options?.sortOrder || "desc";
 
     filteredAnalytics.sort((a, b) => {
       let aValue: any, bValue: any;
 
       switch (sortBy) {
-        case 'weekStart':
+        case "weekStart":
           aValue = new Date(a.attributes.weekStart);
           bValue = new Date(b.attributes.weekStart);
           break;
-        case 'weekEnd':
+        case "weekEnd":
           aValue = new Date(a.attributes.weekEnd);
           bValue = new Date(b.attributes.weekEnd);
           break;
-        case 'workoutCount':
+        case "workoutCount":
           aValue = a.attributes.metadata.workoutCount;
           bValue = b.attributes.metadata.workoutCount;
           break;
@@ -1353,7 +1517,7 @@ export async function queryWeeklyAnalytics(
           bValue = new Date(b.attributes.weekStart);
       }
 
-      if (sortOrder === 'asc') {
+      if (sortOrder === "asc") {
         return aValue > bValue ? 1 : -1;
       } else {
         return aValue < bValue ? 1 : -1;
@@ -1367,11 +1531,12 @@ export async function queryWeeklyAnalytics(
       filteredAnalytics = filteredAnalytics.slice(offset, offset + limit);
     }
 
-    console.info(`Found ${filteredAnalytics.length} weekly analytics records for user ${userId}`);
+    console.info(
+      `Found ${filteredAnalytics.length} weekly analytics records for user ${userId}`
+    );
     return filteredAnalytics;
-
   } catch (error) {
-    console.error('Error querying weekly analytics:', error);
+    console.error("Error querying weekly analytics:", error);
     throw error;
   }
 }
@@ -1384,6 +1549,140 @@ export async function getWeeklyAnalytics(
   return await loadFromDynamoDB<WeeklyAnalytics>(
     `user#${userId}`,
     `weeklyAnalytics#${weekId}`,
-    'analytics'
+    "analytics"
   );
+}
+
+// ===========================
+// COACH TEMPLATE OPERATIONS
+// ===========================
+
+/**
+ * Get all available coach templates
+ */
+export async function queryCoachTemplates(): Promise<
+  DynamoDBItem<CoachTemplate>[]
+> {
+  try {
+    // Query all coach templates using the global template partition
+    const items = await queryFromDynamoDB<CoachTemplate>(
+      "template#global",
+      "coachTemplate#",
+      "coachTemplate"
+    );
+
+    // Filter to only active templates and sort by popularity/name
+    const activeTemplates = items.filter(
+      (item) => item.attributes.metadata.is_active
+    );
+
+    // Sort by popularity score (desc) then by template name (asc)
+    activeTemplates.sort((a, b) => {
+      const popularityDiff =
+        (b.attributes.metadata.popularity_score || 0) -
+        (a.attributes.metadata.popularity_score || 0);
+      if (popularityDiff !== 0) return popularityDiff;
+
+      return a.attributes.template_name.localeCompare(
+        b.attributes.template_name
+      );
+    });
+
+    console.info("Coach templates queried successfully:", {
+      totalFound: items.length,
+      activeTemplates: activeTemplates.length,
+    });
+
+    return activeTemplates;
+  } catch (error) {
+    console.error("Error querying coach templates from DynamoDB:", error);
+    throw error;
+  }
+}
+
+/**
+ * Get a specific coach template by template ID
+ */
+export async function getCoachTemplate(
+  templateId: string
+): Promise<DynamoDBItem<CoachTemplate> | null> {
+  return await loadFromDynamoDB<CoachTemplate>(
+    "template#global",
+    `coachTemplate#${templateId}`,
+    "coachTemplate"
+  );
+}
+
+/**
+ * Create a coach config from a template
+ */
+export async function createCoachConfigFromTemplate(
+  userId: string,
+  templateId: string
+): Promise<CoachConfig> {
+  try {
+    // Get the template
+    const template = await getCoachTemplate(templateId);
+
+    if (!template) {
+      throw new Error(`Coach template not found: ${templateId}`);
+    }
+
+    if (!template.attributes.metadata.is_active) {
+      throw new Error(`Coach template is not active: ${templateId}`);
+    }
+
+    // Generate new coach ID and timestamp
+    const timestamp = Date.now();
+    const newCoachId = `user_${userId}_coach_${timestamp}`;
+    const currentDate = new Date().toISOString();
+
+    // Copy the base_config and update necessary fields
+    const newCoachConfig: CoachConfig = {
+      ...template.attributes.base_config,
+      coach_id: newCoachId,
+      metadata: {
+        ...template.attributes.base_config.metadata,
+        created_date: currentDate,
+        total_conversations: 0,
+        user_satisfaction: null,
+      },
+    };
+
+    // Save the new coach config
+    await saveCoachConfig(userId, newCoachConfig);
+
+    // Update template popularity score (optional - tracks usage)
+    try {
+      const updatedTemplate = {
+        ...template,
+        attributes: {
+          ...template.attributes,
+          metadata: {
+            ...template.attributes.metadata,
+            popularity_score:
+              (template.attributes.metadata.popularity_score || 0) + 1,
+          },
+        },
+        updatedAt: currentDate,
+      };
+      await saveToDynamoDB(updatedTemplate);
+    } catch (popularityError) {
+      // Don't fail the whole operation if popularity update fails
+      console.warn("Failed to update template popularity:", popularityError);
+    }
+
+    console.info("Coach config created from template successfully:", {
+      templateId,
+      templateName: template.attributes.template_name,
+      userId,
+      newCoachId,
+      coachName: newCoachConfig.coach_name,
+    });
+
+    return newCoachConfig;
+  } catch (error) {
+    console.error("Error creating coach config from template:", error);
+    throw error;
+  }
 }

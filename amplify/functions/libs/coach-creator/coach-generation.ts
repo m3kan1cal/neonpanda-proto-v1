@@ -613,7 +613,9 @@ Generate a JSON configuration following this EXACT structure:
     "primary_methodology": "methodology_id_from_templates",
     "methodology_reasoning": "Why this methodology fits user's goals and preferences",
     "programming_emphasis": "strength|conditioning|balanced",
-    "periodization_approach": "linear|conjugate|block|daily_undulating"
+    "periodization_approach": "linear|conjugate|block|daily_undulating",
+    "creativity_emphasis": "high_variety|medium_variety|low_variety",
+    "workout_innovation": "enabled|disabled"
   },
   "technical_config": {
     "methodology": "${methodologyPreferences.primary || 'hybrid'}",
@@ -646,6 +648,8 @@ Generate a JSON configuration following this EXACT structure:
     "enabled_modifications": ${JSON.stringify(Object.keys(COACH_MODIFICATION_OPTIONS))},
     "personality_flexibility": "high|medium|low",
     "programming_adaptability": "high|medium|low",
+    "creative_programming": "high|medium|low",
+    "workout_variety_emphasis": "high|medium|low",
     "safety_override_level": "none|limited|moderate"
   },
   "metadata": {

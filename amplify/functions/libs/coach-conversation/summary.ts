@@ -80,7 +80,8 @@ Provide the following in valid JSON format:
     "confidence_level": "high/medium/low with context"
   },
   "key_insights": ["insight 1", "insight 2"],
-  "important_context": ["context item 1", "context item 2"]
+  "important_context": ["context item 1", "context item 2"],
+  "conversation_tags": ["tag1", "tag2", "tag3"]
 }
 
 GUIDELINES:
@@ -93,6 +94,13 @@ GUIDELINES:
 - Update/evolve information from previous summaries rather than repeating
 - Use specific examples when relevant
 - Maintain professional coaching context
+
+## CONVERSATION TAGS GUIDELINES:
+Generate 2-5 descriptive tags that categorize this conversation. Tags should be:
+- Lowercase with hyphens (e.g., "strength-training", "weekly-wods", "crossfit")
+- Based on the main topics, methodologies, or themes discussed
+- Useful for filtering and organizing conversations
+- Examples: "strength-training", "cardio", "nutrition", "motivation", "injury-recovery", "crossfit", "powerlifting", "bodybuilding", "weekly-wods", "goal-setting", "progress-review", "technique-focus", "equipment-questions", "scheduling", "methodology-comparison"
 
 ## METHODOLOGY FOCUS AREAS:
 Pay special attention to capturing:
@@ -164,6 +172,9 @@ export function parseCoachConversationSummary(
     }
     if (!structuredData.important_context || !Array.isArray(structuredData.important_context)) {
       structuredData.important_context = [];
+    }
+    if (!structuredData.conversation_tags || !Array.isArray(structuredData.conversation_tags)) {
+      structuredData.conversation_tags = [];
     }
 
     // Calculate confidence based on narrative length and structured data completeness

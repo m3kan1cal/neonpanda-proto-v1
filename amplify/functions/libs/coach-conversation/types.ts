@@ -99,6 +99,7 @@ export interface CoachConversationSummary {
     };
     key_insights: string[];
     important_context: string[];
+    conversation_tags: string[];
   };
   metadata: {
     createdAt: Date;

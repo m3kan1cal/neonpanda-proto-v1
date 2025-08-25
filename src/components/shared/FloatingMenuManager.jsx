@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../../contexts/ToastContext';
 import { themeClasses } from '../../utils/synthwaveThemeClasses';
+import { isCurrentWeekReport } from '../../utils/dateUtils';
 import ReportAgent from '../../utils/agents/ReportAgent';
 import WorkoutAgent from '../../utils/agents/WorkoutAgent';
 import CoachConversationAgent from '../../utils/agents/CoachConversationAgent';
@@ -20,7 +21,8 @@ import {
   ReportIconSmall,
   ChevronRightIcon,
   MenuIcon,
-  MemoryIcon
+  MemoryIcon,
+  NewBadge
 } from '../themes/SynthwaveComponents';
 
 
@@ -277,6 +279,8 @@ export const FloatingMenuManager = ({
     return `${formatDate(weekStart)} - ${formatDate(weekEnd)}`;
   };
 
+
+
   // Render functions
   const renderWorkoutList = () => (
     <div className="space-y-2">
@@ -347,30 +351,36 @@ export const FloatingMenuManager = ({
           <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
             Recent Reports
           </div>
-          {reportAgentState.recentReports.slice(0, 10).map((report) => (
-            <div
-              key={report.weekId}
-              onClick={() => {
-                navigate(`/training-grounds/reports/weekly?userId=${userId}&weekId=${report.weekId}&coachId=${coachId}`);
-                handleClosePopover();
-              }}
-              className="bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/20 hover:border-synthwave-neon-pink/40 hover:bg-synthwave-bg-primary/50 rounded-lg p-3 cursor-pointer transition-all duration-200"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex-1 min-w-0">
-                  <div className="font-rajdhani text-sm text-white font-medium truncate">
-                    Week {report.weekId}
+          {reportAgentState.recentReports.slice(0, 10).map((report) => {
+            const isNew = isCurrentWeekReport(report.weekId);
+            return (
+              <div
+                key={report.weekId}
+                onClick={() => {
+                  navigate(`/training-grounds/reports/weekly?userId=${userId}&weekId=${report.weekId}&coachId=${coachId}`);
+                  handleClosePopover();
+                }}
+                className="relative bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/20 hover:border-synthwave-neon-pink/40 hover:bg-synthwave-bg-primary/50 rounded-lg p-3 cursor-pointer transition-all duration-200"
+              >
+                {/* NEW badge for current week reports */}
+                {isNew && <NewBadge />}
+
+                <div className="flex items-center justify-between">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-rajdhani text-sm text-white font-medium truncate">
+                      Week {report.weekId}
+                    </div>
+                    <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                      {getWeekDateRange(report.weekId)} • <span className="text-synthwave-neon-cyan">{report.metadata?.workoutCount || 0} workouts</span>
+                    </div>
                   </div>
-                  <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
-                    {getWeekDateRange(report.weekId)} • <span className="text-synthwave-neon-cyan">{report.metadata?.workoutCount || 0} workouts</span>
+                  <div className="text-synthwave-neon-pink ml-2">
+                    <ReportIconSmall />
                   </div>
-                </div>
-                <div className="text-synthwave-neon-pink ml-2">
-                  <ReportIconSmall />
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </>
       )}
     </div>
@@ -388,7 +398,7 @@ export const FloatingMenuManager = ({
           navigate(`/training-grounds?userId=${userId}&coachId=${coachId}`);
           handleClosePopover();
         }}
-        className={`${themeClasses.cyanButton} text-sm px-4 py-2 w-full flex items-center justify-center space-x-2`}
+        className="bg-transparent border-2 border-synthwave-neon-purple text-synthwave-neon-purple px-4 py-3 rounded-lg font-rajdhani font-semibold text-sm uppercase tracking-wide cursor-pointer transition-all duration-300 hover:bg-synthwave-neon-purple hover:text-synthwave-bg-primary hover:shadow-neon-purple hover:-translate-y-1 active:translate-y-0 w-full flex items-center justify-center space-x-2"
       >
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -420,6 +430,18 @@ export const FloatingMenuManager = ({
         <span>Manage Memories</span>
       </button>
 
+      {/* Manage Conversations */}
+      <button
+        onClick={() => {
+          navigate(`/training-grounds/manage-conversations?userId=${userId}&coachId=${coachId}`);
+          handleClosePopover();
+        }}
+        className={`${themeClasses.cyanButton} text-sm px-4 py-2 w-full flex items-center justify-center space-x-2`}
+      >
+        <ChatIconSmall />
+        <span>Manage Conversations</span>
+      </button>
+
       {/* View Reports */}
       <button
         onClick={() => {
@@ -440,7 +462,7 @@ export const FloatingMenuManager = ({
           console.info('Log Workout clicked - functionality to be implemented');
           handleClosePopover();
         }}
-        className={`${themeClasses.neonButton} text-sm px-4 py-2 w-full flex items-center justify-center space-x-2`}
+        className={`${themeClasses.neonButton} text-sm px-4 py-3 w-full flex items-center justify-center space-x-2`}
       >
         <WorkoutIconSmall />
         <span>Log Workout</span>
@@ -450,7 +472,7 @@ export const FloatingMenuManager = ({
       <button
         onClick={handleNewConversation}
         disabled={isCreatingConversation}
-        className={`${themeClasses.neonButton} text-sm px-4 py-2 w-full flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed`}
+        className={`${themeClasses.neonButton} text-sm px-4 py-3 w-full flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed`}
       >
         {isCreatingConversation ? (
           <>
@@ -566,26 +588,7 @@ export const FloatingMenuManager = ({
         anchorRef={conversationsIconRef}
         title="Recent Conversations"
       >
-        {/* New Conversation Button */}
-        <div className="flex justify-center mb-4">
-          <button
-            onClick={handleNewConversation}
-            disabled={isCreatingConversation}
-            className={`${themeClasses.neonButton} text-sm px-6 py-3 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center space-x-2 w-3/4 justify-center`}
-          >
-            {isCreatingConversation ? (
-              <>
-                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
-                <span>Creating...</span>
-              </>
-            ) : (
-              <>
-                <ChatIconSmall />
-                <span>Start Conversation</span>
-              </>
-            )}
-          </button>
-        </div>
+
 
         {/* Conversations List */}
         {renderConversationList()}
@@ -597,19 +600,7 @@ export const FloatingMenuManager = ({
         anchorRef={workoutsIconRef}
         title="Recent Workouts"
       >
-        {/* Log Workout Button */}
-        <div className="flex justify-center mb-4">
-          <button
-            onClick={() => {
-              // TODO: Implement workout logging functionality
-              console.info('Log Workout clicked - functionality to be implemented');
-            }}
-            className={`${themeClasses.neonButton} text-sm px-6 py-3 transition-all duration-300 inline-flex items-center space-x-2 w-3/4 justify-center`}
-          >
-            <WorkoutIconSmall />
-            <span>Log Workout</span>
-          </button>
-        </div>
+
 
         {/* Workouts List */}
         {renderWorkoutList()}

@@ -15,6 +15,9 @@ export function createCoreApi(
   getCoachConfigLambda: lambda.IFunction,
   getCoachConfigStatusLambda: lambda.IFunction,
   getCoachCreatorSessionLambda: lambda.IFunction,
+  getCoachTemplatesLambda: lambda.IFunction,
+  getCoachTemplateLambda: lambda.IFunction,
+  createCoachConfigFromTemplateLambda: lambda.IFunction,
   createCoachConversationLambda: lambda.IFunction,
   getCoachConversationsLambda: lambda.IFunction,
   getCoachConversationLambda: lambda.IFunction,
@@ -29,7 +32,8 @@ export function createCoreApi(
   getWeeklyReportsLambda: lambda.IFunction,
   getWeeklyReportLambda: lambda.IFunction,
   getMemoriesLambda: lambda.IFunction,
-  deleteMemoryLambda: lambda.IFunction
+  deleteMemoryLambda: lambda.IFunction,
+  deleteCoachConversationLambda: lambda.IFunction
 ) {
   // Determine if this is a sandbox deployment
   const isSandbox = stack.node.tryGetContext('amplify-backend-type') === 'sandbox';
@@ -116,6 +120,22 @@ export function createCoreApi(
     getCoachConfigStatusLambda
   );
 
+  // Create Lambda integrations for coach template functions
+  const getCoachTemplatesIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
+    'GetCoachTemplatesIntegration',
+    getCoachTemplatesLambda
+  );
+
+  const getCoachTemplateIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
+    'GetCoachTemplateIntegration',
+    getCoachTemplateLambda
+  );
+
+  const createCoachConfigFromTemplateIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
+    'CreateCoachConfigFromTemplateIntegration',
+    createCoachConfigFromTemplateLambda
+  );
+
   // Create Lambda integrations for coach conversation functions
   const createCoachConversationIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
     'CreateCoachConversationIntegration',
@@ -195,6 +215,11 @@ export function createCoreApi(
     deleteMemoryLambda
   );
 
+  const deleteCoachConversationIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
+    'DeleteCoachConversationIntegration',
+    deleteCoachConversationLambda
+  );
+
   // Create integrations object for route configuration
   const integrations: RouteIntegrations = {
     helloWorld: helloWorldIntegration,
@@ -205,6 +230,9 @@ export function createCoreApi(
     getCoachConfigs: getCoachConfigsIntegration,
     getCoachConfig: getCoachConfigIntegration,
     getCoachConfigStatus: getCoachConfigStatusIntegration,
+    getCoachTemplates: getCoachTemplatesIntegration,
+    getCoachTemplate: getCoachTemplateIntegration,
+    createCoachConfigFromTemplate: createCoachConfigFromTemplateIntegration,
     createCoachConversation: createCoachConversationIntegration,
     getCoachConversations: getCoachConversationsIntegration,
     getCoachConversation: getCoachConversationIntegration,
@@ -219,7 +247,8 @@ export function createCoreApi(
     getWeeklyReports: getWeeklyReportsIntegration,
     getWeeklyReport: getWeeklyReportIntegration,
     getMemories: getMemoriesIntegration,
-    deleteMemory: deleteMemoryIntegration
+    deleteMemory: deleteMemoryIntegration,
+    deleteCoachConversation: deleteCoachConversationIntegration
   };
 
   // Add all routes using the organized route definitions

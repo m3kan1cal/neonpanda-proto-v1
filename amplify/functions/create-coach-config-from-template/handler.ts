@@ -1,0 +1,70 @@
+import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from "aws-lambda";
+import {
+  createSuccessResponse,
+  createErrorResponse,
+} from "../libs/api-helpers";
+import { createCoachConfigFromTemplate } from "../../dynamodb/operations";
+
+export const handler = async (
+  event: APIGatewayProxyEventV2
+): Promise<APIGatewayProxyResultV2> => {
+  try {
+    // Extract userId and templateId from path parameters
+    const userId = event.pathParameters?.userId;
+    const templateId = event.pathParameters?.templateId;
+
+    if (!userId) {
+      return createErrorResponse(400, "User ID is required");
+    }
+
+    if (!templateId) {
+      return createErrorResponse(400, "Template ID is required");
+    }
+
+    console.info("Creating coach config from template:", {
+      userId,
+      templateId,
+    });
+
+    // Create the coach config from the template
+    const newCoachConfig = await createCoachConfigFromTemplate(
+      userId,
+      templateId
+    );
+
+    console.info("Successfully created coach config from template:", {
+      userId,
+      templateId,
+      newCoachId: newCoachConfig.coach_id,
+      coachName: newCoachConfig.coach_name,
+    });
+
+    return createSuccessResponse(
+      {
+        coachConfig: {
+          coach_id: newCoachConfig.coach_id,
+          coach_name: newCoachConfig.coach_name,
+          selected_personality: newCoachConfig.selected_personality,
+          technical_config: newCoachConfig.technical_config,
+          metadata: newCoachConfig.metadata,
+        },
+      },
+      "Coach config created successfully from template"
+    );
+  } catch (error) {
+    console.error("Error creating coach config from template:", error);
+
+    // Handle specific error cases
+    if (error instanceof Error) {
+      if (error.message.includes("not found")) {
+        return createErrorResponse(404, error.message);
+      }
+
+      if (error.message.includes("not active")) {
+        return createErrorResponse(400, error.message);
+      }
+    }
+
+    return createErrorResponse(500, "Internal server error");
+  }
+};

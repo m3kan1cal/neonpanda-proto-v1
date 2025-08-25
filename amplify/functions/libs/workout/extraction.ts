@@ -448,7 +448,10 @@ EXTRACTION GUIDELINES:
 7. STANDARDIZATION:
    - Exercise names: Use standard terms (thruster not "front squat to press", pull-up not "chin-up")
    - Units: Be consistent (convert if needed, note original)
-   - Times: Always in seconds for calculations, but preserve original format in notes
+   - Times: CRITICAL - ALL time values MUST be in seconds (duration, total_time, round_times, rest_between_sets)
+     * "8 minutes 57 seconds" → 537 seconds
+     * "45 minute workout" → 2700 seconds
+     * "1:30 rest" → 90 seconds
    - CrossFit Movement Standards: Use official CrossFit terminology (chest-to-bar pull-up, box jump, wall ball, etc.)
 
 7.5. EQUIPMENT TERMINOLOGY INTERPRETATION:
@@ -633,6 +636,64 @@ const convertUndefinedToNull = (obj: any): any => {
 };
 
 /**
+ * Validates and converts time values to ensure they are in seconds
+ */
+const validateTimeInSeconds = (timeValue: any, fieldName: string): number | null => {
+  if (timeValue === null || timeValue === undefined) return null;
+
+  const numValue = Number(timeValue);
+  if (isNaN(numValue)) return null;
+
+  // If value seems too small to be seconds (likely minutes), warn but don't auto-convert
+  // Let the AI handle proper conversion based on context
+  if (numValue > 0 && numValue < 10 && fieldName.includes('duration')) {
+    console.warn(`⚠️ Suspicious ${fieldName} value: ${numValue} (too small for seconds, might be minutes)`);
+  }
+
+  return numValue;
+};
+
+/**
+ * Validates time fields in workout data to ensure they are in seconds
+ */
+const validateWorkoutTimes = (workoutData: any): void => {
+  // Validate main duration
+  if (workoutData.duration) {
+    workoutData.duration = validateTimeInSeconds(workoutData.duration, 'duration');
+  }
+
+  // Validate CrossFit performance data times
+  if (workoutData.discipline_specific?.crossfit?.performance_data) {
+    const perfData = workoutData.discipline_specific.crossfit.performance_data;
+
+    if (perfData.total_time) {
+      perfData.total_time = validateTimeInSeconds(perfData.total_time, 'total_time');
+    }
+
+    if (perfData.round_times && Array.isArray(perfData.round_times)) {
+      perfData.round_times = perfData.round_times.map((time: any, index: number) =>
+        validateTimeInSeconds(time, `round_times[${index}]`)
+      ).filter((time: any) => time !== null);
+    }
+  }
+
+  // Validate rest times in exercises
+  if (workoutData.discipline_specific?.crossfit?.rounds) {
+    workoutData.discipline_specific.crossfit.rounds.forEach((round: any, roundIndex: number) => {
+      if (round.exercises && Array.isArray(round.exercises)) {
+        round.exercises.forEach((exercise: any, exerciseIndex: number) => {
+          if (exercise.reps?.rest_between_sets && Array.isArray(exercise.reps.rest_between_sets)) {
+            exercise.reps.rest_between_sets = exercise.reps.rest_between_sets.map((rest: any, restIndex: number) =>
+              validateTimeInSeconds(rest, `round[${roundIndex}].exercise[${exerciseIndex}].rest_between_sets[${restIndex}]`)
+            ).filter((rest: any) => rest !== null);
+          }
+        });
+      }
+    });
+  }
+};
+
+/**
  * Parses and validates the extracted workout data from Claude's response
  */
 export const parseAndValidateWorkoutData = async (
@@ -699,6 +760,9 @@ export const parseAndValidateWorkoutData = async (
         throw new Error(`Invalid JSON response: ${parseError instanceof Error ? parseError.message : 'Parse failed'}`);
       }
     }
+
+    // Validate time fields are in seconds
+    validateWorkoutTimes(workoutData);
 
     // Set system-generated fields
     workoutData.workout_id = `ws_${userId}_${Date.now()}`;

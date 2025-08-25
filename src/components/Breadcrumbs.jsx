@@ -29,6 +29,7 @@ function Breadcrumbs() {
     'workouts': 'Workouts',
     'manage-workouts': 'Manage Workouts',
     'manage-memories': 'Manage Memories',
+    'manage-conversations': 'Manage Coach Conversations',
     'reports': 'View Reports',
     'weekly': 'Weekly Reports'
   };
@@ -58,6 +59,13 @@ function Breadcrumbs() {
 
     // For Manage Memories, preserve userId and coachId if available
     if (routeName === 'manage-memories' && searchParams.has('userId') && searchParams.has('coachId')) {
+      const userId = searchParams.get('userId');
+      const coachId = searchParams.get('coachId');
+      return `${basePath}?userId=${userId}&coachId=${coachId}`;
+    }
+
+    // For Manage Conversations, preserve userId and coachId if available
+    if (routeName === 'manage-conversations' && searchParams.has('userId') && searchParams.has('coachId')) {
       const userId = searchParams.get('userId');
       const coachId = searchParams.get('coachId');
       return `${basePath}?userId=${userId}&coachId=${coachId}`;
@@ -101,8 +109,41 @@ function Breadcrumbs() {
 
           {/* Breadcrumb trail */}
           {(() => {
+            // Special handling for coach-creator page - show it as a child of Coaches
+            const isCoachCreatorPage = pathnames.includes('coach-creator');
+
             // Special handling for workouts page - show it as a child of Manage Workouts
             const isWorkoutsPage = pathnames.includes('workouts') && pathnames.includes('training-grounds');
+
+            // Special handling for coach-conversations page - show it as a child of Manage Coach Conversations
+            const isCoachConversationsPage = pathnames.includes('coach-conversations') && pathnames.includes('training-grounds');
+
+            if (isCoachCreatorPage) {
+              // Build custom breadcrumb path: Coaches > Coach Creator
+              const userId = searchParams.get('userId');
+              const coachesPath = userId ? `/coaches?userId=${userId}` : '/coaches';
+
+              return [
+                // Coaches breadcrumb (virtual parent)
+                <React.Fragment key="coaches">
+                  <span className="text-white font-medium">/</span>
+                  <Link
+                    to={coachesPath}
+                    className="text-synthwave-text-secondary hover:text-synthwave-neon-cyan transition-colors duration-200"
+                  >
+                    Coaches
+                  </Link>
+                </React.Fragment>,
+
+                // Coach Creator breadcrumb (current page)
+                <React.Fragment key="coach-creator-current">
+                  <span className="text-white font-medium">/</span>
+                  <span className="text-synthwave-neon-pink font-medium">
+                    Coach Creator
+                  </span>
+                </React.Fragment>
+              ];
+            }
 
             if (isWorkoutsPage) {
               // Build custom breadcrumb path: Training Grounds > Manage Workouts > Workouts
@@ -145,6 +186,52 @@ function Breadcrumbs() {
                   <span className="text-white font-medium">/</span>
                   <span className="text-synthwave-neon-pink font-medium">
                     Workouts
+                  </span>
+                </React.Fragment>
+              ];
+            }
+
+            if (isCoachConversationsPage) {
+              // Build custom breadcrumb path: Training Grounds > Manage Coach Conversations > Coach Conversation
+              const trainingGroundsSegment = pathnames.slice(0, pathnames.indexOf('training-grounds') + 1);
+              const manageConversationsPath = [...trainingGroundsSegment, 'manage-conversations'];
+
+              return [
+                // Training Grounds breadcrumb
+                ...pathnames.slice(0, pathnames.indexOf('coach-conversations')).map((name, index) => {
+                  const pathSegments = pathnames.slice(0, index + 1);
+                  const routeTo = buildRoute(pathSegments, name);
+                  const displayName = routeMap[name] || name.charAt(0).toUpperCase() + name.slice(1);
+
+                  return (
+                    <React.Fragment key={name}>
+                      <span className="text-white font-medium">/</span>
+                      <Link
+                        to={routeTo}
+                        className="text-synthwave-text-secondary hover:text-synthwave-neon-cyan transition-colors duration-200"
+                      >
+                        {displayName}
+                      </Link>
+                    </React.Fragment>
+                  );
+                }),
+
+                // Manage Coach Conversations breadcrumb (virtual parent)
+                <React.Fragment key="manage-conversations">
+                  <span className="text-white font-medium">/</span>
+                  <Link
+                    to={buildRoute(manageConversationsPath, 'manage-conversations')}
+                    className="text-synthwave-text-secondary hover:text-synthwave-neon-cyan transition-colors duration-200"
+                  >
+                    Manage Coach Conversations
+                  </Link>
+                </React.Fragment>,
+
+                // Coach Conversation breadcrumb (current page)
+                <React.Fragment key="coach-conversations-current">
+                  <span className="text-white font-medium">/</span>
+                  <span className="text-synthwave-neon-pink font-medium">
+                    Coach Conversation
                   </span>
                 </React.Fragment>
               ];

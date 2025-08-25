@@ -110,6 +110,35 @@ export const handler = async (event: BuildCoachConversationSummaryEvent) => {
     console.info('💾 Saving conversation summary to DynamoDB...');
     await saveCoachConversationSummary(summary);
 
+    // Update the conversation with generated tags if any were created
+    if (summary.structuredData.conversation_tags && summary.structuredData.conversation_tags.length > 0) {
+      console.info('🏷️ Updating conversation with generated tags:', summary.structuredData.conversation_tags);
+      try {
+        const { saveToDynamoDB } = await import('../../dynamodb/operations');
+
+        // Update the conversation with the new tags
+        const updatedConversation = {
+          ...conversationItem,
+          attributes: {
+            ...conversation,
+            tags: summary.structuredData.conversation_tags,
+            metadata: {
+              ...conversation.metadata,
+              tags: summary.structuredData.conversation_tags,
+              lastActivity: new Date()
+            }
+          },
+          updatedAt: new Date().toISOString()
+        };
+
+        await saveToDynamoDB(updatedConversation);
+        console.info('✅ Conversation tags updated successfully');
+      } catch (tagUpdateError) {
+        console.error('⚠️ Failed to update conversation tags (non-critical):', tagUpdateError);
+        // Don't fail the summary generation for tag update errors
+      }
+    }
+
     // Store the summary in Pinecone for semantic search
     console.info('🔍 Storing conversation summary in Pinecone...');
     const pineconeResult = await storeCoachConversationSummaryInPinecone(summary);

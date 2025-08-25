@@ -1,6 +1,7 @@
 import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
 import { createSuccessResponse, createErrorResponse } from '../libs/api-helpers';
 import { deleteWorkout, getWorkout } from '../../dynamodb/operations';
+import { deleteWorkoutSummaryFromPinecone } from '../libs/workout/pinecone';
 
 export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> => {
   try {
@@ -26,14 +27,19 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
       return createErrorResponse(404, 'Workout not found');
     }
 
-    // Delete the workout session
+    // Delete the workout session from DynamoDB
     await deleteWorkout(userId, workoutId);
+
+    // Clean up associated workout summary from Pinecone
+    console.info('🗑️ Cleaning up workout summary from Pinecone...');
+    const pineconeResult = await deleteWorkoutSummaryFromPinecone(userId, workoutId);
 
     // Return success response
     return createSuccessResponse({
       message: 'Workout deleted successfully',
       workoutId,
-      userId
+      userId,
+      pineconeCleanup: pineconeResult.success
     });
 
   } catch (error) {

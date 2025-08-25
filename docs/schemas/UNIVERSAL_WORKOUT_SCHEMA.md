@@ -124,7 +124,7 @@ Universal Core (all workouts)
   "methodology": "comptrain",
   "workout_name": "Fran",
   "workout_type": "metcon",
-  "duration": 45,
+  "duration": 2700,
   "location": "gym",
   "coach_id": "user123_coach_main",
   "conversation_id": "conv_456"
@@ -138,6 +138,12 @@ Universal Core (all workouts)
 - **Format**: `user{user_id}_{YYYYMMDD}_{session_number}`
 - **Analytics Use**: Primary key for all workout-related queries
 - **AI Extraction**: Auto-generated, not extracted from user input
+
+**duration** `integer`
+- **Purpose**: Total workout session duration for time management and analytics
+- **Unit**: **ALWAYS in seconds** (e.g., 45 minutes = 2700 seconds)
+- **Analytics Use**: Session length trends, time efficiency analysis
+- **AI Extraction**: Convert from user input ("45 minutes" → 2700)
 
 **discipline** `enum`
 - **Purpose**: High-level categorization for discipline-specific processing
@@ -687,10 +693,13 @@ Assign confidence levels to extracted data:
 ### Language Pattern Recognition
 
 #### Time Expressions
+**CRITICAL: All time values MUST be stored in seconds**
 ```
 "took me 8 minutes and 57 seconds" → total_time: 537
 "finished in under 9 minutes" → total_time: <540, confidence: 0.7
 "around 8 and a half minutes" → total_time: 510, confidence: 0.8
+"45 minute workout" → duration: 2700
+"1 hour 15 minute session" → duration: 4500
 "my usual Fran time" → requires historical lookup
 ```
 
@@ -1108,7 +1117,7 @@ def analyze_cross_training_effects(user_workouts):
   "methodology": "comptrain",
   "workout_name": "Fran",
   "workout_type": "metcon",
-  "duration": 45,
+  "duration": 2700,
   "location": "gym",
   "coach_id": "user123_coach_main",
   "conversation_id": "conv_456",

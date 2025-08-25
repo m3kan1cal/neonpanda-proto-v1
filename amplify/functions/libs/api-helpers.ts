@@ -749,3 +749,149 @@ export const queryPineconeContext = async (
     };
   }
 };
+
+/**
+ * Delete records from Pinecone by metadata filter
+ *
+ * @param userId - The user ID for namespace targeting
+ * @param filter - Metadata filter to find records to delete
+ * @returns Promise with deletion result
+ */
+export const deletePineconeContext = async (
+  userId: string,
+  filter: Record<string, any>
+): Promise<{ success: boolean; deletedCount: number; error?: string }> => {
+  try {
+    const { index } = await getPineconeClient();
+    const userNamespace = getUserNamespace(userId);
+
+    console.info('🗑️ Deleting records from Pinecone by metadata filter:', {
+      userId,
+      namespace: userNamespace,
+      filter
+    });
+
+    // Delete directly by metadata filter - much simpler approach
+    await index.namespace(userNamespace).deleteMany(filter);
+
+    console.info('✅ Successfully deleted records from Pinecone by metadata filter:', {
+      userId,
+      namespace: userNamespace,
+      filter
+    });
+
+    // Note: Pinecone deleteMany by filter doesn't return count, so we return success without count
+    return { success: true, deletedCount: 1 }; // Assume at least 1 record was deleted
+
+  } catch (error) {
+    console.error('❌ Failed to delete records from Pinecone:', error);
+    return {
+      success: false,
+      deletedCount: 0,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
+  }
+};
+
+/**
+ * Query memories from Pinecone based on semantic relevance
+ * Follows the same pattern as other Pinecone query functions
+ */
+export const querySemanticMemories = async (
+  userId: string,
+  userMessage: string,
+  options: {
+    topK?: number;
+    minScore?: number;
+    contextTypes?: string[]
+  } = {}
+): Promise<any[]> => {
+  const { topK = 6, minScore = 0.7, contextTypes = [] } = options;
+
+  try {
+    const { index } = await getPineconeClient();
+    const userNamespace = getUserNamespace(userId);
+
+    console.info('🔍 Querying semantic memories from Pinecone:', {
+      userId,
+      userMessageLength: userMessage.length,
+      topK,
+      minScore,
+      contextTypes,
+      namespace: userNamespace
+    });
+
+    // Build filter for memory records
+    let filter: Record<string, any> = {
+      record_type: 'user_memory'
+    };
+
+    // Add context type filtering if specified
+    if (contextTypes.length > 0) {
+      filter = {
+        ...filter,
+        $or: contextTypes.map(type => ({ memory_type: type }))
+      };
+    }
+
+    const searchQuery = {
+      query: {
+        inputs: { text: userMessage },
+        topK
+      },
+      filter
+    };
+
+    const response = await index.namespace(userNamespace).searchRecords(searchQuery);
+
+    if (!response.result.hits || response.result.hits.length === 0) {
+      console.info('📭 No semantic memories found in Pinecone:', {
+        userId,
+        contextTypes,
+        queryLength: userMessage.length
+      });
+      return [];
+    }
+
+    // Filter by minimum score and convert to memory objects
+    const relevantMemories = response.result.hits
+      .filter((hit: any) => hit.score >= minScore)
+      .map((hit: any) => {
+        // Convert Pinecone result back to UserMemory-like object
+        return {
+          memoryId: hit.metadata.memory_id,
+          userId: hit.metadata.user_id || userId,
+          coachId: hit.metadata.coach_id,
+          content: hit.text || hit.content,
+          memoryType: hit.metadata.memory_type,
+          metadata: {
+            importance: hit.metadata.importance,
+            createdAt: new Date(hit.metadata.created_at),
+            usageCount: hit.metadata.usage_count || 0,
+            lastUsed: hit.metadata.last_used ? new Date(hit.metadata.last_used) : undefined,
+            tags: hit.metadata.tags || []
+          },
+          // Add Pinecone-specific metadata
+          pineconeScore: hit.score,
+          pineconeId: hit.id
+        };
+      });
+
+    console.info('✅ Successfully retrieved semantic memories:', {
+      userId,
+      totalHits: response.result.hits.length,
+      relevantMemories: relevantMemories.length,
+      minScore,
+      averageScore: relevantMemories.length > 0
+        ? (relevantMemories.reduce((sum, m) => sum + m.pineconeScore, 0) / relevantMemories.length).toFixed(3)
+        : 0
+    });
+
+    return relevantMemories;
+
+  } catch (error) {
+    console.error('❌ Failed to query semantic memories from Pinecone:', error);
+    // Return empty array to allow graceful fallback
+    return [];
+  }
+};

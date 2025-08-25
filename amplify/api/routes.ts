@@ -10,6 +10,9 @@ export interface RouteIntegrations {
   getCoachConfigs: apigatewayv2_integrations.HttpLambdaIntegration;
   getCoachConfig: apigatewayv2_integrations.HttpLambdaIntegration;
   getCoachConfigStatus: apigatewayv2_integrations.HttpLambdaIntegration;
+  getCoachTemplates: apigatewayv2_integrations.HttpLambdaIntegration;
+  getCoachTemplate: apigatewayv2_integrations.HttpLambdaIntegration;
+  createCoachConfigFromTemplate: apigatewayv2_integrations.HttpLambdaIntegration;
   createCoachConversation: apigatewayv2_integrations.HttpLambdaIntegration;
   getCoachConversations: apigatewayv2_integrations.HttpLambdaIntegration;
   getCoachConversation: apigatewayv2_integrations.HttpLambdaIntegration;
@@ -21,6 +24,7 @@ export interface RouteIntegrations {
   deleteWorkout: apigatewayv2_integrations.HttpLambdaIntegration;
   getWorkoutsCount: apigatewayv2_integrations.HttpLambdaIntegration;
   getConversationsCount: apigatewayv2_integrations.HttpLambdaIntegration;
+  deleteCoachConversation: apigatewayv2_integrations.HttpLambdaIntegration;
   getWeeklyReports: apigatewayv2_integrations.HttpLambdaIntegration;
   getWeeklyReport: apigatewayv2_integrations.HttpLambdaIntegration;
   getMemories: apigatewayv2_integrations.HttpLambdaIntegration;
@@ -120,6 +124,39 @@ export function addCoachConfigRoutes(
 }
 
 /**
+ * Add coach template routes to the HTTP API
+ */
+export function addCoachTemplateRoutes(
+  httpApi: apigatewayv2.HttpApi,
+  integrations: RouteIntegrations
+): void {
+  // *******************************************************
+  // Coach Template Routes
+  // *******************************************************
+
+  // Get all available coach templates
+  httpApi.addRoutes({
+    path: '/coach-templates',
+    methods: [apigatewayv2.HttpMethod.GET],
+    integration: integrations.getCoachTemplates
+  });
+
+  // Get specific coach template
+  httpApi.addRoutes({
+    path: '/coach-templates/{templateId}',
+    methods: [apigatewayv2.HttpMethod.GET],
+    integration: integrations.getCoachTemplate
+  });
+
+  // Create coach config from template
+  httpApi.addRoutes({
+    path: '/users/{userId}/coaches/from-template/{templateId}',
+    methods: [apigatewayv2.HttpMethod.POST],
+    integration: integrations.createCoachConfigFromTemplate
+  });
+}
+
+/**
  * Add coach conversation routes to the HTTP API
  */
 export function addCoachConversationRoutes(
@@ -170,6 +207,13 @@ export function addCoachConversationRoutes(
     path: '/users/{userId}/coaches/{coachId}/conversations/count',
     methods: [apigatewayv2.HttpMethod.GET],
     integration: integrations.getConversationsCount
+  });
+
+  // Delete conversation
+  httpApi.addRoutes({
+    path: '/users/{userId}/coaches/{coachId}/conversations/{conversationId}',
+    methods: [apigatewayv2.HttpMethod.DELETE],
+    integration: integrations.deleteCoachConversation
   });
 }
 
@@ -282,6 +326,7 @@ export function addAllRoutes(
   addMiscRoutes(httpApi, integrations);
   addCoachCreatorRoutes(httpApi, integrations);
   addCoachConfigRoutes(httpApi, integrations);
+  addCoachTemplateRoutes(httpApi, integrations);
   addCoachConversationRoutes(httpApi, integrations);
   addWorkoutRoutes(httpApi, integrations);
   addReportRoutes(httpApi, integrations);

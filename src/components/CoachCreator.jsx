@@ -307,10 +307,10 @@ function CoachCreator() {
           {/* Header */}
           <div className="text-center mb-16">
                         <h1 className="font-russo font-black text-4xl md:text-5xl text-white mb-6 uppercase">
-              Create Your Virtual Fitness Coach
+              Create Your Personal Coach
             </h1>
             <p className="font-rajdhani text-xl text-synthwave-text-secondary max-w-3xl mx-auto leading-relaxed mb-8">
-              Get a personalized virtual coach with adaptive intelligence tailored to your goals, experience, and preferences.
+              Get a personalized coach with adaptive intelligence that learns from your interactions and evolves with your progress.
               Takes about 15-20 minutes to set up your perfect training partner.
             </p>
 
@@ -331,10 +331,10 @@ function CoachCreator() {
                 <BrainIcon />
               </div>
               <h3 className="font-russo font-bold text-white text-lg uppercase mb-4">
-                AI-Powered Intelligence
+                Intelligent Coaching
               </h3>
               <p className="font-rajdhani text-synthwave-text-secondary leading-relaxed">
-                Advanced AI that understands your unique goals, limitations, and preferences to create truly personalized training programs.
+                Intelligent coaching that understands your unique goals, limitations, and preferences to create truly personalized training programs.
               </p>
             </NeonBorder>
 
@@ -385,10 +385,10 @@ function CoachCreator() {
           {/* Header */}
           <div className="text-center mb-12">
             <h1 className="font-russo font-black text-4xl md:text-5xl text-white mb-6 uppercase">
-              Create Your Virtual Fitness Coach
+              Create Your Personal Coach
             </h1>
             <p className="font-rajdhani text-xl text-synthwave-text-secondary max-w-3xl mx-auto leading-relaxed">
-              Get a personalized virtual coach with adaptive intelligence tailored to your goals, experience, and preferences.
+              Get a personalized coach with adaptive intelligence that learns from your interactions and evolves with your progress.
               Takes about 15-20 minutes to set up your perfect training partner.
             </p>
           </div>
@@ -396,7 +396,7 @@ function CoachCreator() {
           {/* Main Content Area */}
           <div className="flex-1 flex justify-center">
             {/* Chat Container - Centered */}
-            <div className="w-full max-w-4xl">
+            <div className="w-full max-w-7xl">
               <NeonBorder color="cyan" className="bg-synthwave-bg-card/50 h-full flex flex-col overflow-hidden">
                 {/* Messages Area */}
                 <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">

@@ -1,6 +1,7 @@
 import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
 import { createSuccessResponse, createErrorResponse } from '../libs/api-helpers';
 import { deleteMemory, loadFromDynamoDB } from '../../dynamodb/operations';
+import { deleteMemoryFromPinecone } from '../libs/user/pinecone';
 import { UserMemory } from '../libs/user/types';
 
 export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> => {
@@ -32,14 +33,19 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
       return createErrorResponse(404, 'Memory not found');
     }
 
-    // Delete the memory
+    // Delete the memory from DynamoDB
     await deleteMemory(userId, memoryId);
+
+    // Clean up from Pinecone
+    console.info('🗑️ Cleaning up memory from Pinecone...');
+    const pineconeResult = await deleteMemoryFromPinecone(userId, memoryId);
 
     // Return success response
     return createSuccessResponse({
       message: 'Memory deleted successfully',
       memoryId,
-      userId
+      userId,
+      pineconeCleanup: pineconeResult.success
     });
 
   } catch (error) {

@@ -1,5 +1,5 @@
 import { nanoid } from 'nanoid';
-import { getCoaches } from '../apis/coachApi';
+import { getCoaches, getCoachTemplates, createCoachFromTemplate } from '../apis/coachApi';
 import { createCoachCreatorSession } from '../apis/coachCreatorApi';
 
 /**
@@ -18,8 +18,11 @@ export class CoachAgent {
     // State
     this.state = {
       coaches: [],
+      templates: [],
       isLoading: false,
+      templatesLoading: false,
       error: null,
+      templatesError: null,
       inProgressCoach: null
     };
 
@@ -29,7 +32,9 @@ export class CoachAgent {
 
     // Bind methods
     this.loadCoaches = this.loadCoaches.bind(this);
+    this.loadTemplates = this.loadTemplates.bind(this);
     this.createNewCoach = this.createNewCoach.bind(this);
+    this.createCoachFromTemplate = this.createCoachFromTemplate.bind(this);
     this.checkInProgressCoach = this.checkInProgressCoach.bind(this);
     this.startPolling = this.startPolling.bind(this);
     this.stopPolling = this.stopPolling.bind(this);
@@ -42,6 +47,12 @@ export class CoachAgent {
       setTimeout(() => {
         this.checkInProgressCoach();
         this.loadCoaches();
+        this.loadTemplates();
+      }, 0);
+    } else {
+      // Load templates even without userId for template browsing
+      setTimeout(() => {
+        this.loadTemplates();
       }, 0);
     }
   }
@@ -65,6 +76,7 @@ export class CoachAgent {
         // Set loading state immediately before starting to load
         this._updateState({ isLoading: true });
         this.loadCoaches();
+        this.loadTemplates();
       }
     }
   }
@@ -102,6 +114,69 @@ export class CoachAgent {
         isLoading: false,
         error: error.message,
         coaches: []
+      });
+      this.onError(error);
+      throw error;
+    }
+  }
+
+  /**
+   * Loads coach templates from the API
+   */
+  async loadTemplates() {
+    this._updateState({ templatesLoading: true, templatesError: null });
+
+    try {
+      console.info('Loading coach templates');
+      const result = await getCoachTemplates();
+      const templates = result.templates || [];
+
+      this._updateState({
+        templates,
+        templatesLoading: false
+      });
+
+      return templates;
+
+    } catch (error) {
+      console.error('Error loading coach templates:', error);
+      this._updateState({
+        templatesLoading: false,
+        templatesError: error.message,
+        templates: []
+      });
+      this.onError(error);
+      throw error;
+    }
+  }
+
+  /**
+   * Creates a coach from a template
+   */
+  async createCoachFromTemplate(templateId, providedUserId = null) {
+    try {
+      this._updateState({ error: null });
+
+      // Generate userId if not provided
+      const userId = providedUserId || this.userId || nanoid(21);
+
+      console.info('Creating coach from template:', { templateId, userId });
+
+      // Create coach from template via API
+      const result = await createCoachFromTemplate(userId, templateId);
+      const { coachConfig } = result;
+
+      console.info('Coach created from template successfully:', coachConfig);
+
+      // Reload coaches to show the new one
+      await this.loadCoaches();
+
+      return coachConfig;
+
+    } catch (error) {
+      console.error('Error creating coach from template:', error);
+      this._updateState({
+        error: 'Failed to create coach from template. Please try again.'
       });
       this.onError(error);
       throw error;
@@ -262,6 +337,16 @@ export class CoachAgent {
    */
   getExperienceLevelDisplay(level) {
     return level ? level.charAt(0).toUpperCase() + level.slice(1) : 'General';
+  }
+
+  /**
+   * Formats template target audience for display
+   */
+  getTemplateAudienceDisplay(targetAudience) {
+    if (!targetAudience || targetAudience.length === 0) return 'General';
+    return targetAudience.map(tag =>
+      tag.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+    ).slice(0, 3).join(', ');
   }
 
   /**

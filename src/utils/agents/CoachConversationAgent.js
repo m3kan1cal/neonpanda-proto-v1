@@ -5,6 +5,7 @@ import {
   updateCoachConversation,
   getCoachConversation,
   getCoachConversations,
+  deleteCoachConversation,
 } from "../apis/coachConversationApi";
 import { getCoach } from "../apis/coachApi";
 import CoachAgent from './CoachAgent';
@@ -46,6 +47,7 @@ export class CoachConversationAgent {
     this.sendMessage = this.sendMessage.bind(this);
     this.clearConversation = this.clearConversation.bind(this);
     this.generateConversationTitle = this.generateConversationTitle.bind(this);
+    this.deleteCoachConversation = this.deleteCoachConversation.bind(this);
   }
 
   /**
@@ -509,6 +511,47 @@ export class CoachConversationAgent {
       if (typeof this.onError === 'function') {
         this.onError(error);
       }
+      throw error;
+    }
+  }
+
+  /**
+   * Deletes a coach conversation
+   */
+  async deleteCoachConversation(userId, coachId, conversationId) {
+    if (!userId || !coachId || !conversationId) {
+      throw new Error("User ID, Coach ID, and Conversation ID are required");
+    }
+
+    try {
+      this._updateState({ isLoadingItem: true, error: null });
+
+      console.info("Deleting coach conversation:", { userId, coachId, conversationId });
+
+      // Call API to delete conversation
+      const result = await deleteCoachConversation(userId, coachId, conversationId);
+
+      // Refresh the recent conversations list to reflect the deletion
+      if (this.state.recentConversations.length > 0) {
+        await this.loadRecentConversations(userId, coachId);
+      }
+
+      // Update loading state
+      this._updateState({ isLoadingItem: false });
+
+      console.info("Conversation deleted successfully");
+      return true;
+    } catch (error) {
+      console.error("Error deleting conversation:", error);
+      this._updateState({
+        isLoadingItem: false,
+        error: "Failed to delete conversation"
+      });
+
+      if (typeof this.onError === 'function') {
+        this.onError(error);
+      }
+
       throw error;
     }
   }

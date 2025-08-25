@@ -146,7 +146,17 @@ export const handler = async (
     );
 
     // Retrieve existing memories for context (BEFORE AI response)
-    const memoryRetrieval = await queryMemories(userId, coachId);
+    // Calculate conversation context from existing messages for AI-guided memory retrieval
+    const messageContext = existingMessages.slice(-3)
+      .map(msg => `${msg.role}: ${msg.content}`)
+      .join('\n');
+
+    const memoryRetrieval = await queryMemories(
+      userId,
+      coachId,
+      userResponse,
+      messageContext
+    );
 
     // Generate AI response with all context
     const responseResult = await generateAIResponse(
