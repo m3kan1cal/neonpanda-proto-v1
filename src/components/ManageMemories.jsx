@@ -84,11 +84,11 @@ function ManageMemories() {
       memoryAgentRef.current = new MemoryAgent(userId, (newState) => {
         setMemoryAgentState(prevState => ({
           ...prevState,
-          allMemories: newState.allMemories || prevState.allMemories,
-          isLoadingAllItems: newState.isLoadingAllItems || false,
-          isLoadingItem: newState.isLoadingItem || false,
-          error: newState.error || null,
-          totalCount: newState.totalCount || 0
+          allMemories: newState.allMemories !== undefined ? newState.allMemories : prevState.allMemories,
+          isLoadingAllItems: newState.isLoadingAllItems !== undefined ? newState.isLoadingAllItems : false,
+          isLoadingItem: newState.isLoadingItem !== undefined ? newState.isLoadingItem : false,
+          error: newState.error !== undefined ? newState.error : null,
+          totalCount: newState.totalCount !== undefined ? newState.totalCount : 0
         }));
       });
 
@@ -253,18 +253,16 @@ function ManageMemories() {
     if (memoryAgentState.error) {
       return (
         <div className="text-center py-12">
-          <div className="font-rajdhani text-synthwave-neon-pink text-lg mb-4">
-            Error Loading Memories
-          </div>
-          <div className="font-rajdhani text-synthwave-text-muted text-sm mb-6">
-            {memoryAgentState.error}
-          </div>
-          <button
-            onClick={() => memoryAgentRef.current?.loadAllMemories()}
-            className={`${themeClasses.neonButton} text-sm px-6 py-3`}
-          >
-            Try Again
-          </button>
+          <NeonBorder color="pink" className="max-w-md mx-auto p-6">
+            <p className="font-rajdhani text-synthwave-neon-pink text-xl font-bold mb-2">Error Loading Memories</p>
+            <p className="font-rajdhani text-synthwave-text-secondary text-lg mb-6">{memoryAgentState.error}</p>
+            <button
+              onClick={() => memoryAgentRef.current?.loadAllMemories()}
+              className={`${themeClasses.neonButton} text-sm px-6 py-3`}
+            >
+              Try Again
+            </button>
+          </NeonBorder>
         </div>
       );
     }
@@ -391,8 +389,8 @@ function ManageMemories() {
           {memoryAgentState.error && (
             <div className="text-center py-12">
               <NeonBorder color="pink" className="max-w-md mx-auto p-6">
-                <p className="text-synthwave-neon-pink mb-2">Error Loading Memories</p>
-                <p className="text-synthwave-text-secondary text-sm">{memoryAgentState.error}</p>
+                <p className="font-rajdhani text-synthwave-neon-pink text-xl font-bold mb-2">Error Loading Memories</p>
+                <p className="font-rajdhani text-synthwave-text-secondary text-lg">{memoryAgentState.error}</p>
               </NeonBorder>
             </div>
           )}

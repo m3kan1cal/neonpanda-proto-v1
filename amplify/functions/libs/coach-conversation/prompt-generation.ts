@@ -44,6 +44,15 @@ export const generateSystemPrompt = (
   // Build the system prompt sections
   const promptSections = [];
 
+  // 0. CRITICAL SYSTEM RULES (MUST BE FIRST)
+  promptSections.push(`⚠️ CRITICAL SYSTEM RULES - READ FIRST:
+1. NEVER generate memory confirmations (messages starting with "✅")
+2. NEVER say "I've remembered", "I've saved", or "I've noted" in response to memory commands
+3. The system automatically handles ALL memory confirmations - DO NOT duplicate them
+4. When users save memories with /save-memory, respond naturally to their content without acknowledging the save process
+
+`);
+
     // 1. Core Identity & Personality
   promptSections.push(`# COACH IDENTITY & PERSONALITY
 ${personality_prompt}
@@ -428,7 +437,14 @@ const generateConversationGuidelines = (configData: CoachConfig): string => {
     '- Provide specific, actionable advice based on your methodology',
     '- Always prioritize safety and respect the established constraints',
     '- Adapt your response length and complexity to their experience level',
-    '- Use encouraging language that matches your motivational style'
+    '- Use encouraging language that matches your motivational style',
+    '',
+    '⚠️ MEMORY CONFIRMATION RULES:',
+    '- NEVER generate memory confirmations starting with "✅"',
+    '- NEVER say "I\'ve remembered", "I\'ve saved", or "I\'ve noted" when responding to memory commands',
+    '- The system automatically handles ALL memory confirmations',
+    '- If you see a memory confirmation in the conversation, DO NOT repeat or acknowledge it',
+    '- Respond naturally to the user\'s content without mentioning the memory save process'
   ];
 
   // Add personality-specific guidelines

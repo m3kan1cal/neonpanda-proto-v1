@@ -6,6 +6,7 @@ import WorkoutAgent from '../utils/agents/WorkoutAgent';
 import { useToast } from '../contexts/ToastContext';
 import WorkoutViewer from './WorkoutViewer';
 import { FloatingMenuManager } from './shared/FloatingMenuManager';
+import { FullPageLoader, CenteredErrorState, EmptyState } from './shared/ErrorStates';
 import {
   CloseIcon
 } from './themes/SynthwaveComponents';
@@ -295,11 +296,10 @@ function Workouts() {
           </div>
         </div>
               ) : workoutAgentState.recentWorkouts.length === 0 ? (
-        <div className="text-center py-8">
-          <div className="font-rajdhani text-synthwave-text-muted text-sm">
-            No workouts found
-          </div>
-        </div>
+        <EmptyState
+          title="No workouts found"
+          size="medium"
+        />
       ) : (
         <>
           <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
@@ -352,11 +352,10 @@ function Workouts() {
           </div>
         </div>
               ) : coachConversationAgentState.recentConversations.length === 0 ? (
-        <div className="text-center py-8">
-          <div className="font-rajdhani text-synthwave-text-muted text-sm">
-            No conversations found
-          </div>
-        </div>
+        <EmptyState
+          title="No conversations found"
+          size="medium"
+        />
       ) : (
         <>
           <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
@@ -390,37 +389,19 @@ function Workouts() {
 
   // Show loading state (only for main workout, not recent workouts)
   if (workoutAgentState.isLoadingItem && (!workoutAgentState.currentWorkout || workoutAgentState.currentWorkout.workoutId !== workoutId)) {
-    return (
-      <div className={`min-h-screen ${themeClasses.bgGradient} ${themeClasses.textPrimary} flex items-center justify-center`}>
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-synthwave-neon-cyan mx-auto mb-4"></div>
-          <p className="text-synthwave-text-secondary font-rajdhani">Loading workout...</p>
-        </div>
-      </div>
-    );
+    return <FullPageLoader text="Loading workout..." />;
   }
 
   // Show error state
   if (workoutAgentState.error) {
     return (
-      <div className={`min-h-screen ${themeClasses.bgGradient} ${themeClasses.textPrimary} flex items-center justify-center`}>
-        <div className="text-center">
-          <div className="mb-6">
-            <div className="font-russo text-2xl text-synthwave-neon-orange mb-4 uppercase tracking-wide">
-              Connection Error
-            </div>
-            <p className="text-synthwave-text-secondary font-rajdhani text-lg">
-              {workoutAgentState.error}
-            </p>
-          </div>
-          <button
-            onClick={() => navigate('/training-grounds')}
-            className={`${themeClasses.neonButton}`}
-          >
-            Back to Training Grounds
-          </button>
-        </div>
-      </div>
+      <CenteredErrorState
+        title="Training Grounds Error"
+        message={workoutAgentState.error}
+        buttonText="Back to Training Grounds"
+        onButtonClick={() => navigate(`/training-grounds?userId=${userId}&coachId=${coachId}`)}
+        variant="error"
+      />
     );
   }
 
@@ -560,11 +541,10 @@ function Workouts() {
                 </div>
               ) : (
                 <div className="flex items-center justify-center h-full">
-                  <div className="text-center">
-                    <div className="text-synthwave-text-secondary font-rajdhani text-lg">
-                      No workout data available
-                    </div>
-                  </div>
+                  <EmptyState
+                    title="No workout data available"
+                    size="large"
+                  />
                 </div>
               )}
             </div>

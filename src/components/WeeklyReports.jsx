@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { themeClasses } from "../utils/synthwaveThemeClasses";
 import { NeonBorder } from './themes/SynthwaveComponents';
+import { FullPageLoader, CenteredErrorState } from './shared/ErrorStates';
 import WeeklyReportViewer from "./WeeklyReportViewer";
 import ReportAgent from "../utils/agents/ReportAgent";
 import { FloatingMenuManager } from './shared/FloatingMenuManager';
@@ -62,47 +63,23 @@ function Reports() {
   }, []);
 
   if (reportAgentState.isLoadingItem) {
-    return (
-      <div
-        className={`min-h-screen ${themeClasses.bgGradient} ${themeClasses.textPrimary} flex items-center justify-center`}
-      >
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-synthwave-neon-cyan mx-auto mb-4"></div>
-          <p className="text-synthwave-text-secondary font-rajdhani">
-            Loading weekly report...
-          </p>
-        </div>
-      </div>
-    );
+    return <FullPageLoader text="Loading weekly report..." />;
   }
 
   if (reportAgentState.error) {
     return (
-      <div
-        className={`min-h-screen ${themeClasses.bgGradient} ${themeClasses.textPrimary} flex items-center justify-center`}
-      >
-        <div className="text-center">
-          <div className="mb-6">
-            <div className="font-russo text-2xl text-synthwave-neon-orange mb-4 uppercase tracking-wide">
-              Connection Error
-            </div>
-            <p className="text-synthwave-text-secondary font-rajdhani text-lg">
-              {reportAgentState.error}
-            </p>
-          </div>
-          <button
-            onClick={() => {
-              const fallbackUrl = coachId
-                ? `/training-grounds?userId=${userId}&coachId=${coachId}`
-                : "/training-grounds";
-              navigate(fallbackUrl);
-            }}
-            className={`${themeClasses.neonButton}`}
-          >
-            Back to Training Grounds
-          </button>
-        </div>
-      </div>
+      <CenteredErrorState
+        title="Training Grounds Error"
+        message={reportAgentState.error}
+        buttonText="Back to Training Grounds"
+        onButtonClick={() => {
+          const fallbackUrl = coachId
+            ? `/training-grounds?userId=${userId}&coachId=${coachId}`
+            : "/training-grounds";
+          navigate(fallbackUrl);
+        }}
+        variant="error"
+      />
     );
   }
 

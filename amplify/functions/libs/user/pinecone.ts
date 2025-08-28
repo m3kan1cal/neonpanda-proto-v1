@@ -35,7 +35,7 @@ export const storeMemoryInPinecone = async (memory: UserMemory): Promise<{ succe
       topics: [`memory_${memory.memoryType}`, 'user_context', 'personalization'],
 
       // Add context for retrieval
-      is_global: !memory.coachId, // True if memory applies to all coaches
+      is_global: !memory.coachId || memory.coachId === null, // True if memory applies to all coaches
       logged_at: new Date().toISOString()
     };
 

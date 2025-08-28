@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../../contexts/ToastContext';
 import { themeClasses } from '../../utils/synthwaveThemeClasses';
-import { isCurrentWeekReport } from '../../utils/dateUtils';
+import { isCurrentWeekReport, isNewWorkout } from '../../utils/dateUtils';
 import ReportAgent from '../../utils/agents/ReportAgent';
 import WorkoutAgent from '../../utils/agents/WorkoutAgent';
 import CoachConversationAgent from '../../utils/agents/CoachConversationAgent';
@@ -302,15 +302,19 @@ export const FloatingMenuManager = ({
           <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
             Recent Workouts
           </div>
-          {workoutAgentState.recentWorkouts.map((workout) => (
-            <div
-              key={workout.workoutId}
-              onClick={() => {
-                navigate(`/training-grounds/workouts?userId=${userId}&workoutId=${workout.workoutId}&coachId=${coachId}`);
-                handleClosePopover();
-              }}
-              className="bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/20 hover:border-synthwave-neon-pink/40 hover:bg-synthwave-bg-primary/50 rounded-lg p-3 cursor-pointer transition-all duration-200"
-            >
+          {workoutAgentState.recentWorkouts.map((workout) => {
+            const isNew = isNewWorkout(workout.completedAt);
+            return (
+              <div
+                key={workout.workoutId}
+                onClick={() => {
+                  navigate(`/training-grounds/workouts?userId=${userId}&workoutId=${workout.workoutId}&coachId=${coachId}`);
+                  handleClosePopover();
+                }}
+                className="relative bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/20 hover:border-synthwave-neon-pink/40 hover:bg-synthwave-bg-primary/50 rounded-lg p-3 cursor-pointer transition-all duration-200"
+              >
+                {/* NEW badge for workouts within 24 hours */}
+                {isNew && <NewBadge />}
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
                   <div className="font-rajdhani text-sm text-white font-medium truncate">
@@ -324,8 +328,9 @@ export const FloatingMenuManager = ({
                   <LightningIconSmall />
                 </div>
               </div>
-            </div>
-          ))}
+              </div>
+            );
+          })}
         </>
       )}
     </div>
@@ -485,6 +490,19 @@ export const FloatingMenuManager = ({
             <span>Start Conversation</span>
           </>
         )}
+      </button>
+
+      {/* Save Memory */}
+      <button
+        onClick={() => {
+          // TODO: Implement save memory functionality
+          console.info('Save Memory clicked - functionality to be implemented');
+          handleClosePopover();
+        }}
+        className={`${themeClasses.neonButton} text-sm px-4 py-3 w-full flex items-center justify-center space-x-2`}
+      >
+        <MemoryIcon />
+        <span>Save Memory</span>
       </button>
     </div>
   );

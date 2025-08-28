@@ -36,10 +36,33 @@ export async function detectAndProcessWorkout(
 
   try {
     slashCommand = parseSlashCommand(userMessage);
+    console.info('🔍 Slash command parsing result:', {
+      userMessage: userMessage.substring(0, 100),
+      isSlashCommand: slashCommand.isSlashCommand,
+      command: slashCommand.command,
+      content: slashCommand.content?.substring(0, 100)
+    });
+
     isSlashCommandWorkout = isWorkoutSlashCommand(slashCommand);
+    console.info('🔍 Slash command workout check:', {
+      isSlashCommandWorkout,
+      supportedCommands: ['log-workout'],
+      detectedCommand: slashCommand.command
+    });
+
     isNaturalLanguageWorkout =
       !slashCommand.isSlashCommand && (await isWorkoutLog(userMessage));
+    console.info('🔍 Natural language workout check:', {
+      isNaturalLanguageWorkout,
+      skippedDueToSlashCommand: slashCommand.isSlashCommand
+    });
+
     isWorkoutLogging = isSlashCommandWorkout || isNaturalLanguageWorkout;
+    console.info('🔍 Final workout detection result:', {
+      isWorkoutLogging,
+      isSlashCommandWorkout,
+      isNaturalLanguageWorkout
+    });
   } catch (error) {
     console.error("❌ Error during workout detection:", error);
     slashCommand = { isSlashCommand: false };

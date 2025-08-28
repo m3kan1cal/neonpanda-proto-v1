@@ -36,3 +36,32 @@ export const getCurrentWeekId = () => {
 
   return `${currentYear}-W${currentWeek.toString().padStart(2, '0')}`;
 };
+
+/**
+ * Check if a workout is new (created within the last 24 hours)
+ * @param {string} completedAt - Workout completion date in ISO string format
+ * @returns {boolean} - True if the workout was completed within the last 24 hours
+ */
+export const isNewWorkout = (completedAt) => {
+  if (!completedAt) return false;
+
+  try {
+    const workoutDate = new Date(completedAt);
+    const now = new Date();
+
+    // Check if date is valid
+    if (isNaN(workoutDate.getTime())) {
+      return false;
+    }
+
+    // Calculate difference in milliseconds
+    const diffInMs = now.getTime() - workoutDate.getTime();
+    const diffInHours = diffInMs / (1000 * 60 * 60);
+
+    // Return true if workout is less than 24 hours old
+    return diffInHours >= 0 && diffInHours <= 24;
+  } catch (error) {
+    console.error('Error checking if workout is new:', error);
+    return false;
+  }
+};

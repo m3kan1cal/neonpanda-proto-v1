@@ -69,27 +69,60 @@ export const getCoachConversation = async (userId, coachId, conversationId) => {
  * @returns {Promise<Object>} - The API response with user message and coach reply
  */
 export const sendCoachConversationMessage = async (userId, coachId, conversationId, userResponse) => {
-  const response = await fetch(`${getApiUrl('')}/users/${userId}/coaches/${coachId}/conversations/${conversationId}/send-message`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      userResponse
-    }),
-  });
+  // Create AbortController for timeout handling
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 45000); // 45 second timeout
 
-  if (!response.ok) {
-    if (response.status === 404) {
-      throw new Error('Conversation not found');
+  try {
+    console.info('🚀 Sending coach conversation message:', {
+      userId,
+      coachId,
+      conversationId,
+      messageLength: userResponse.length
+    });
+
+    const response = await fetch(`${getApiUrl('')}/users/${userId}/coaches/${coachId}/conversations/${conversationId}/send-message`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        userResponse
+      }),
+      signal: controller.signal
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        throw new Error('Conversation not found');
+      }
+      if (response.status === 503) {
+        throw new Error('Service temporarily unavailable - request took too long');
+      }
+      throw new Error(`API Error: ${response.status}`);
     }
-    throw new Error(`API Error: ${response.status}`);
+
+    const result = await response.json();
+    console.info('✅ Coach conversation message sent successfully:', {
+      userMessageId: result.userResponse?.id,
+      aiMessageId: result.aiResponse?.id,
+      conversationId: result.conversationId
+    });
+
+    return result;
+  } catch (error) {
+    clearTimeout(timeoutId);
+
+    if (error.name === 'AbortError') {
+      console.error('❌ Request timed out after 45 seconds');
+      throw new Error('Request timed out - the server is taking too long to respond');
+    }
+
+    console.error('❌ Error sending coach conversation message:', error);
+    throw error;
   }
-
-  const result = await response.json();
-  console.info('Coach conversation message sent:', result);
-
-  return result;
 };
 
 /**

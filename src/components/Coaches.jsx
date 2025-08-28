@@ -123,6 +123,14 @@ function Coaches() {
     window.scrollTo(0, 0);
   }, []);
 
+  // Redirect to home if no userId
+  useEffect(() => {
+    if (!userId) {
+      navigate('/', { replace: true });
+      return;
+    }
+  }, [userId, navigate]);
+
   // Initialize agent
   useEffect(() => {
     if (!agentRef.current) {

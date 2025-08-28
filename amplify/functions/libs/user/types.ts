@@ -35,7 +35,7 @@ export interface UserProfile {
 export interface UserMemory {
   memoryId: string;
   userId: string;
-  coachId?: string; // Optional - memories can be coach-specific or global
+  coachId?: string | null; // Optional - memories can be coach-specific (string) or global (null/undefined)
   content: string; // The memory content/description
   memoryType: "preference" | "goal" | "constraint" | "instruction" | "context";
   metadata: {

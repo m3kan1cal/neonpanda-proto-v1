@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { themeClasses } from '../utils/synthwaveThemeClasses';
+import { FullPageLoader, CenteredErrorState } from './shared/ErrorStates';
 import { NeonBorder } from './themes/SynthwaveComponents';
 import { parseMarkdown } from '../utils/markdownParser.jsx';
 import CoachConversationAgent from '../utils/agents/CoachConversationAgent';
@@ -33,11 +34,7 @@ const SendIcon = () => (
   </svg>
 );
 
-const ClearIcon = () => (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-  </svg>
-);
+
 
 const EditIcon = () => (
   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -155,7 +152,7 @@ function CoachConversations() {
         },
         onNavigation: (type, data) => {
           if (type === 'conversation-not-found') {
-            navigate('/training-grounds', { replace: true });
+            navigate(`/training-grounds/manage-conversations?userId=${userId}&coachId=${coachId}`, { replace: true });
           }
         },
         onError: (error) => {
@@ -171,11 +168,7 @@ function CoachConversations() {
         if (agentRef.current) {
           agentRef.current.loadExistingConversation(userId, coachId, conversationId);
 
-          // If the conversations popover is open, also load conversations list
-          if (activePopover === 'conversations') {
-            console.info('Loading conversations list after agent initialization...');
-            agentRef.current.loadRecentConversations(userId, coachId);
-          }
+          // Note: Conversations list will be loaded when popover is opened via FloatingMenuManager
         }
       }, 50);
     } else {
@@ -285,20 +278,7 @@ function CoachConversations() {
     }
   };
 
-  const clearConversation = () => {
-    if (agentRef.current) {
-      agentRef.current.clearConversation();
-      setInputMessage('');
 
-      // Focus input and reset size after clearing conversation
-      setTimeout(() => {
-        if (inputRef.current) {
-          inputRef.current.focus();
-          autoResizeTextarea(inputRef.current);
-        }
-      }, 100);
-    }
-  };
 
     const handleKeyPress = (e) => {
     // Handle slash command navigation when tooltip is visible
@@ -421,7 +401,8 @@ function CoachConversations() {
       // Helper function to get available slash commands
   const getAvailableSlashCommands = () => {
     return [
-      { command: '/log-workout', description: 'Log a completed workout', example: '/log-workout I did Fran in 8:57' }
+      { command: '/log-workout', description: 'Log a completed workout', example: '/log-workout I did Fran in 8:57' },
+      { command: '/save-memory', description: 'Save a memory or note', example: '/save-memory I prefer morning workouts' }
     ];
   };
 
@@ -447,41 +428,23 @@ function CoachConversations() {
 
 
   // Show loading state while initializing coach or loading conversation
-  if (coachConversationAgentState.isLoadingItem && (!coachConversationAgentState.coach || !coachConversationAgentState.conversation ||
-      (coachConversationAgentState.conversation && coachConversationAgentState.conversation.conversationId !== conversationId))) {
-    return (
-      <div className={`min-h-screen ${themeClasses.bgGradient} ${themeClasses.textPrimary} flex items-center justify-center`}>
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-synthwave-neon-cyan mx-auto mb-4"></div>
-          <p className="text-synthwave-text-secondary font-rajdhani">
-            Loading conversation...
-          </p>
-        </div>
-      </div>
-    );
+  if (coachConversationAgentState.isLoadingItem ||
+      !coachConversationAgentState.coach ||
+      !coachConversationAgentState.conversation ||
+      (coachConversationAgentState.conversation && coachConversationAgentState.conversation.conversationId !== conversationId)) {
+    return <FullPageLoader text="Loading conversation..." />;
   }
 
   // Show error state
   if (coachConversationAgentState.error && !coachConversationAgentState.coach) {
     return (
-      <div className={`min-h-screen ${themeClasses.bgGradient} ${themeClasses.textPrimary} flex items-center justify-center`}>
-        <div className="text-center">
-          <div className="mb-6">
-            <div className="font-russo text-2xl text-synthwave-neon-cyan mb-4 uppercase tracking-wide">
-              Connection Error
-            </div>
-            <p className="text-synthwave-text-secondary font-rajdhani text-lg">
-              {coachConversationAgentState.error}
-            </p>
-          </div>
-          <button
-            onClick={() => navigate('/training-grounds')}
-            className={`${themeClasses.neonButton}`}
-          >
-            Back to Training Grounds
-          </button>
-        </div>
-      </div>
+      <CenteredErrorState
+        title="Training Grounds Error"
+        message={coachConversationAgentState.error}
+        buttonText="Back to Training Grounds"
+        onButtonClick={() => navigate(`/training-grounds?userId=${userId}&coachId=${coachId}`)}
+        variant="error"
+      />
     );
   }
 
@@ -632,7 +595,7 @@ function CoachConversations() {
                         boxShadow: 'none !important',
                         WebkitTapHighlightColor: 'transparent'
                       }}
-                      disabled={coachConversationAgentState.isLoadingItem}
+                      disabled={coachConversationAgentState.isTyping}
                     />
 
                     {/* Slash Command Tooltip */}
@@ -688,24 +651,15 @@ function CoachConversations() {
                     )}
                   </div>
 
-                  {/* Action Buttons */}
-                  <div className="flex space-x-2">
-                    <button
-                      type="button"
-                      onClick={clearConversation}
-                      className="bg-transparent border-2 border-synthwave-text-secondary/50 text-synthwave-text-secondary hover:border-synthwave-text-secondary hover:text-synthwave-text-primary p-3 rounded-lg transition-all duration-300 hover:-translate-y-0.5"
-                      title="Clear conversation"
-                    >
-                      <ClearIcon />
-                    </button>
-
+                  {/* Send Button */}
+                  <div className="flex">
                     <button
                       type="submit"
-                      disabled={!inputMessage.trim() || coachConversationAgentState.isLoadingItem}
+                      disabled={!inputMessage.trim() || coachConversationAgentState.isTyping}
                       className={`${themeClasses.neonButton} p-3 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 min-w-[3rem] flex items-center justify-center`}
                       title="Send message"
                     >
-                      {coachConversationAgentState.isLoadingItem ? (
+                      {coachConversationAgentState.isTyping ? (
                         <div className="w-4 h-4 border-2 border-synthwave-neon-pink border-t-transparent rounded-full animate-spin"></div>
                       ) : (
                         <SendIcon />

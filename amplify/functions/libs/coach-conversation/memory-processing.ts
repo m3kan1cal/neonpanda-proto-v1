@@ -1,8 +1,9 @@
 import { queryMemories as queryMemoriesFromDb, saveMemory, updateMemory } from "../../../dynamodb/operations";
-import { detectMemoryRequest, createMemory, detectMemoryRetrievalNeed } from "./detection";
+import { detectMemoryRequest, createMemory, detectMemoryRetrievalNeed, detectMemoryScope } from "./detection";
 import { querySemanticMemories } from '../api-helpers';
 import { storeMemoryInPinecone } from '../user/pinecone';
 import { UserMemory } from '../user/types';
+import { parseSlashCommand } from '../workout/detection';
 
 
 
@@ -10,9 +11,35 @@ export interface MemoryRetrievalResult {
   memories: UserMemory[];
 }
 
+// Legacy interfaces - keeping for backward compatibility if needed elsewhere
 export interface MemoryDetectionResult {
   memoryFeedback: string | null;
 }
+
+export interface MemoryProcessingResult {
+  isMemoryProcessing: boolean;
+  memoryContent: string;
+  slashCommand: any;
+  isSlashCommandMemory: boolean;
+  isNaturalLanguageMemory: boolean;
+  memoryFeedback: string | null;
+}
+
+/**
+ * Supported memory slash commands
+ */
+export const MEMORY_SLASH_COMMANDS = ['save-memory'] as const;
+
+/**
+ * Checks if a slash command is a memory command
+ */
+export const isMemorySlashCommand = (slashCommandResult: any): boolean => {
+  return slashCommandResult.isSlashCommand &&
+    slashCommandResult.command !== undefined &&
+    MEMORY_SLASH_COMMANDS.includes(slashCommandResult.command as any);
+};
+
+
 
 /**
  * Helper function to combine and deduplicate memories from different sources
@@ -114,65 +141,149 @@ export async function queryMemories(
 }
 
 /**
- * Detects and saves new memory requests (AFTER AI response generation)
+ * Unified memory processing function (natural language detection AND slash commands)
+ * Follows the same pattern as detectAndProcessWorkout
  */
-export async function detectAndSaveMemories(
+export async function detectAndProcessMemory(
+  userMessage: string,
   userId: string,
   coachId: string,
-  userMessage: string,
   conversationId: string,
-  existingMessages: any[]
-): Promise<MemoryDetectionResult> {
-  let memoryFeedback: string | null = null;
+  existingMessages: any[],
+  coachName?: string
+): Promise<MemoryProcessingResult> {
+  // Check for memory processing (natural language OR slash commands)
+  let slashCommand,
+    isSlashCommandMemory,
+    isNaturalLanguageMemory,
+    isMemoryProcessing;
+
   try {
-    const memoryDetectionEvent = {
+    slashCommand = parseSlashCommand(userMessage);
+    isSlashCommandMemory = isMemorySlashCommand(slashCommand);
+
+    // Only check natural language detection if it's not a slash command
+    isNaturalLanguageMemory = false;
+    if (!slashCommand.isSlashCommand) {
+      const memoryDetectionEvent = {
+        userId,
+        coachId,
+        conversationId,
+        userMessage: userMessage,
+        messageContext: existingMessages.slice(-3).map(msg => `${msg.role}: ${msg.content}`).join('\n')
+      };
+      const memoryDetection = await detectMemoryRequest(memoryDetectionEvent);
+      isNaturalLanguageMemory = memoryDetection.isMemoryRequest && memoryDetection.confidence > 0.7;
+    }
+
+    isMemoryProcessing = isSlashCommandMemory || isNaturalLanguageMemory;
+  } catch (error) {
+    console.error("❌ Error during memory detection:", error);
+    slashCommand = { isSlashCommand: false };
+    isSlashCommandMemory = false;
+    isNaturalLanguageMemory = false;
+    isMemoryProcessing = false;
+  }
+
+  let memoryContent = userMessage; // Default to full user response
+  let memoryFeedback: string | null = null;
+
+  if (isMemoryProcessing) {
+    console.info("🧠 MEMORY PROCESSING DETECTED:", {
       userId,
       coachId,
       conversationId,
       userMessage: userMessage,
-      messageContext: existingMessages.slice(-3).map(msg => `${msg.role}: ${msg.content}`).join('\n')
-    };
+      detectionType: isSlashCommandMemory ? "slash_command" : "natural_language",
+      slashCommand: isSlashCommandMemory ? slashCommand.command : null,
+      timestamp: new Date().toISOString(),
+    });
 
-    const memoryDetection = await detectMemoryRequest(memoryDetectionEvent);
+    // For slash commands, use just the content after the command
+    if (isSlashCommandMemory && slashCommand.content) {
+      memoryContent = slashCommand.content;
+    }
 
-    if (memoryDetection.isMemoryRequest && memoryDetection.confidence > 0.7) {
-      const memory = createMemory(memoryDetection, userId, coachId);
+    // Process the memory (unified logic for both types, just like workouts)
+    try {
+      let memory: UserMemory | null = null;
 
+      if (isSlashCommandMemory) {
+        // For slash commands, create memory directly with AI scope detection
+        if (!memoryContent || memoryContent.trim().length === 0) {
+          memoryFeedback = "❌ Please provide content to save as a memory. Example: /save-memory I prefer morning workouts";
+        } else {
+          // Use AI to determine if memory should be coach-specific or global
+          const scopeDetection = await detectMemoryScope(memoryContent.trim(), coachName);
+
+          console.info('🎯 Slash command memory scope detected:', {
+            content: memoryContent.trim().substring(0, 50) + (memoryContent.length > 50 ? '...' : ''),
+            isCoachSpecific: scopeDetection.isCoachSpecific,
+            confidence: scopeDetection.confidence,
+            reasoning: scopeDetection.reasoning
+          });
+
+          memory = {
+            memoryId: `user_memory_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
+            userId,
+            coachId: scopeDetection.isCoachSpecific ? coachId : undefined, // Global if not coach-specific
+            memoryType: 'preference', // Default type for explicit memories
+            content: memoryContent.trim(),
+            metadata: {
+              importance: 'medium', // Default importance for explicit memories
+              source: 'explicit_request',
+              createdAt: new Date(),
+              lastUsed: new Date(),
+              usageCount: 0,
+              tags: scopeDetection.isCoachSpecific ? ['coach_specific'] : ['global']
+            }
+          };
+        }
+      } else {
+        // For natural language, use AI detection
+        const memoryDetectionEvent = {
+          userId,
+          coachId,
+          conversationId,
+          userMessage: userMessage,
+          messageContext: existingMessages.slice(-3).map(msg => `${msg.role}: ${msg.content}`).join('\n')
+        };
+        const memoryDetection = await detectMemoryRequest(memoryDetectionEvent);
+        memory = await createMemory(memoryDetection, userId, coachId, coachName);
+      }
+
+      // Unified storage logic for both types
       if (memory) {
-        // Save to DynamoDB (existing)
         await saveMemory(memory);
-
-        // NEW: Also store in Pinecone for semantic search
         try {
           await storeMemoryInPinecone(memory);
-          console.info('Memory stored in both DynamoDB and Pinecone');
+          console.info('Memory stored in both DynamoDB and Pinecone:', {
+            type: isSlashCommandMemory ? 'slash_command' : 'natural_language',
+            memoryId: memory.memoryId
+          });
         } catch (error) {
           console.warn('Failed to store memory in Pinecone, continuing:', error);
-          // Don't fail the conversation for Pinecone errors
         }
-
         memoryFeedback = `✅ I've remembered that for you: "${memory.content}"`;
-
         console.info('Memory saved:', {
           memoryId: memory.memoryId,
           userId,
-          coachId,
-          type: memory.memoryType,
-          importance: memory.metadata.importance,
-          confidence: memoryDetection.confidence
+          scope: memory.coachId ? `coach_specific (${memory.coachId})` : 'global',
+          type: isSlashCommandMemory ? 'slash_command' : 'natural_language'
         });
       }
-    } else if (memoryDetection.isMemoryRequest) {
-      console.info('Memory request detected but confidence too low:', {
-        confidence: memoryDetection.confidence,
-        reasoning: memoryDetection.reasoning
-      });
+    } catch (error) {
+      console.error("❌ Failed to process memory, but continuing conversation:", error);
+      memoryFeedback = "❌ Sorry, I couldn't save that memory right now.";
     }
-  } catch (memoryError) {
-    console.error('Error in memory detection/saving:', memoryError);
-    // Don't fail the conversation for memory errors
   }
 
-  return { memoryFeedback };
+  return {
+    isMemoryProcessing,
+    memoryContent,
+    slashCommand,
+    isSlashCommandMemory,
+    isNaturalLanguageMemory,
+    memoryFeedback,
+  };
 }
-

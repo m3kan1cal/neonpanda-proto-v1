@@ -3,7 +3,6 @@ import {
   createSuccessResponse,
   createErrorResponse,
   MODEL_IDS,
-  invokeAsyncLambda,
 } from "../libs/api-helpers";
 import {
   getCoachConversation,
@@ -11,13 +10,18 @@ import {
   getCoachConfig,
 } from "../../dynamodb/operations";
 import { CoachMessage } from "../libs/coach-conversation/types";
-import { detectConversationComplexity } from "../libs/coach-conversation/detection";
+import { detectAndProcessConversationSummary } from "../libs/coach-conversation/detection";
 import { gatherConversationContext } from "../libs/coach-conversation/context";
 import { detectAndProcessWorkout } from "../libs/coach-conversation/workout-detection";
-import { queryMemories, detectAndSaveMemories } from "../libs/coach-conversation/memory-processing";
+import { queryMemories, detectAndProcessMemory } from "../libs/coach-conversation/memory-processing";
 import { generateAIResponse } from "../libs/coach-conversation/response-generation";
 
-// Configuration constants - moved to individual modules
+// Feature flags
+const FEATURE_FLAGS = {
+  ENABLE_WORKOUT_DETECTION: true,
+  ENABLE_MEMORY_PROCESSING: true,
+  ENABLE_CONVERSATION_SUMMARY: true
+};
 
 export const handler = async (
   event: APIGatewayProxyEventV2
@@ -66,57 +70,6 @@ export const handler = async (
       return createErrorResponse(404, "Coach configuration not found");
     }
 
-    // Check if we should trigger conversation summary
-    const hasComplexityTriggers = detectConversationComplexity(userResponse);
-    const shouldTriggerSummary =
-      existingConversation.attributes.metadata.totalMessages % 5 === 0 ||
-      hasComplexityTriggers;
-    if (shouldTriggerSummary) {
-      const triggerReason =
-        existingConversation.attributes.metadata.totalMessages % 5 === 0
-          ? "message_count"
-          : "complexity";
-      console.info("🔄 Conversation summary trigger detected:", {
-        conversationId,
-        totalMessages: existingConversation.attributes.metadata.totalMessages,
-        triggeredBy: triggerReason,
-        complexityDetected: hasComplexityTriggers,
-      });
-
-      // Trigger async conversation summary generation
-      try {
-        const summaryFunction =
-          process.env.BUILD_CONVERSATION_SUMMARY_FUNCTION_NAME;
-        if (!summaryFunction) {
-          console.warn(
-            "⚠️ BUILD_CONVERSATION_SUMMARY_FUNCTION_NAME environment variable not set"
-          );
-        } else {
-          await invokeAsyncLambda(
-            summaryFunction,
-            {
-              userId,
-              coachId,
-              conversationId,
-              triggerReason,
-              messageCount:
-                existingConversation.attributes.metadata.totalMessages,
-              complexityIndicators: hasComplexityTriggers
-                ? ["complexity_detected"]
-                : undefined,
-            },
-            "conversation summary generation"
-          );
-        }
-      } catch (error) {
-        console.error(
-          "❌ Failed to trigger conversation summary generation, but continuing conversation:",
-          error
-        );
-        // Don't throw - we want the conversation to continue even if summary generation fails
-      }
-    }
-
     // Gather all conversation context (workouts + Pinecone)
     const context = await gatherConversationContext(userId, userResponse);
 
@@ -136,57 +89,114 @@ export const handler = async (
     };
 
     // Detect and process workouts (natural language or slash commands)
-    const workoutResult = await detectAndProcessWorkout(
-      userResponse,
-      userId,
-      coachId,
-      conversationId,
-      coachConfig,
-      conversationContext
-    );
+    let workoutResult;
+    if (FEATURE_FLAGS.ENABLE_WORKOUT_DETECTION) {
+      console.info('🔍 Starting workout detection for message:', {
+        messageLength: userResponse.length,
+        messagePreview: userResponse.substring(0, 100),
+        conversationId,
+        sessionNumber: conversationContext.sessionNumber
+      });
 
-    // Retrieve existing memories for context (BEFORE AI response)
-    // Calculate conversation context from existing messages for AI-guided memory retrieval
-    const messageContext = existingMessages.slice(-3)
-      .map(msg => `${msg.role}: ${msg.content}`)
-      .join('\n');
+      try {
+        workoutResult = await detectAndProcessWorkout(
+          userResponse,
+          userId,
+          coachId,
+          conversationId,
+          coachConfig,
+          conversationContext
+        );
+      } catch (error) {
+        console.error('❌ Error in workout detection, using fallback:', error);
+        // Provide fallback workout result to prevent conversation from failing
+        workoutResult = {
+          isWorkoutLogging: false,
+          workoutContent: userResponse,
+          workoutDetectionContext: [],
+          slashCommand: { isSlashCommand: false },
+          isSlashCommandWorkout: false,
+          isNaturalLanguageWorkout: false
+        };
+      }
+    } else {
+      console.info('🔍 Workout detection disabled by feature flag');
+      workoutResult = {
+        isWorkoutLogging: false,
+        workoutContent: userResponse,
+        workoutDetectionContext: [],
+        slashCommand: { isSlashCommand: false },
+        isSlashCommandWorkout: false,
+        isNaturalLanguageWorkout: false
+      };
+    }
 
-    const memoryRetrieval = await queryMemories(
-      userId,
-      coachId,
-      userResponse,
-      messageContext
-    );
+    // Process memory (natural language detection AND slash commands)
+    let memoryResult;
+    let memoryRetrieval;
+
+    if (FEATURE_FLAGS.ENABLE_MEMORY_PROCESSING) {
+      memoryResult = await detectAndProcessMemory(
+        userResponse,
+        userId,
+        coachId,
+        conversationId,
+        existingMessages,
+        coachConfig.attributes.coach_name
+      );
+
+      // Retrieve existing memories for context (BEFORE AI response)
+      // Calculate conversation context from existing messages for AI-guided memory retrieval
+      const messageContext = existingMessages.slice(-3)
+        .map(msg => `${msg.role}: ${msg.content}`)
+        .join('\n');
+
+      memoryRetrieval = await queryMemories(
+        userId,
+        coachId,
+        userResponse,
+        messageContext
+      );
+    } else {
+      console.info('🧠 Memory processing disabled by feature flag');
+      memoryResult = {
+        memoryFeedback: null
+      };
+      memoryRetrieval = {
+        memories: []
+      };
+    }
 
     // Generate AI response with all context
-    const responseResult = await generateAIResponse(
-      coachConfig,
-      context,
-      workoutResult,
-      memoryRetrieval,
-      userResponse,
-      existingMessages,
-      conversationContext,
-      userId,
-      coachId,
-      conversationId
-    );
+    let responseResult;
+    try {
+      responseResult = await generateAIResponse(
+        coachConfig,
+        context,
+        workoutResult,
+        memoryRetrieval,
+        userResponse,
+        existingMessages,
+        conversationContext,
+        userId,
+        coachId,
+        conversationId
+      );
+    } catch (error) {
+      console.error('❌ Error in AI response generation, using fallback:', error);
+      // Provide fallback response to prevent conversation from failing
+      responseResult = {
+        aiResponseContent: "I apologize, but I'm having trouble generating a response right now. Your message has been saved and I'll be back to help you soon!",
+        promptMetadata: null
+      };
+    }
 
     let aiResponseContent = responseResult.aiResponseContent;
     const promptMetadata = responseResult.promptMetadata;
 
-    // Detect and save new memories (AFTER AI response generation)
-    const memoryDetection = await detectAndSaveMemories(
-      userId,
-      coachId,
-      userResponse,
-      conversationId,
-      existingMessages
-    );
-
-    // Add memory feedback if a memory was saved
-    if (memoryDetection.memoryFeedback) {
-      aiResponseContent = `${memoryDetection.memoryFeedback}\n\n${aiResponseContent}`;
+    // Add memory feedback if any memory was processed
+    if (FEATURE_FLAGS.ENABLE_MEMORY_PROCESSING && memoryResult.memoryFeedback) {
+      aiResponseContent = `${memoryResult.memoryFeedback}\n\n${aiResponseContent}`;
     }
 
     // Create AI response message
@@ -210,26 +220,69 @@ export const handler = async (
       newAiMessage,
     ];
 
-    await sendCoachConversationMessage(
+    const conversationSaveResult = await sendCoachConversationMessage(
       userId,
       coachId,
       conversationId,
       updatedMessages
     );
 
-    return createSuccessResponse(
-      {
-        userResponse: newUserMessage,
-        aiResponse: newAiMessage,
-        conversationId,
-        pineconeContext: {
-          used: context.pineconeMatches.length > 0,
-          matches: context.pineconeMatches.length,
-          contextLength: context.pineconeContext.length,
+    // Check if we should trigger conversation summary (after conversation is fully updated)
+    if (FEATURE_FLAGS.ENABLE_CONVERSATION_SUMMARY) {
+      try {
+        // Get the updated conversation to check the current message count
+        const updatedConversation = await getCoachConversation(userId, coachId, conversationId);
+        if (updatedConversation) {
+          const currentMessageCount = updatedConversation.attributes.metadata.totalMessages;
+
+          const summaryResult = await detectAndProcessConversationSummary(
+            userId,
+            coachId,
+            conversationId,
+            userResponse,
+            currentMessageCount
+          );
+
+
+        }
+      } catch (summaryError) {
+        console.error(
+          "❌ Failed to trigger conversation summary generation, but continuing:",
+          summaryError
+        );
+        // Don't throw - we want the response to succeed even if summary generation fails
+      }
+    }
+
+    try {
+      // Safely access context properties with fallbacks
+      const pineconeMatches = context?.pineconeMatches || [];
+      const pineconeContext = context?.pineconeContext || '';
+
+      const successResponse = createSuccessResponse(
+        {
+          userResponse: newUserMessage,
+          aiResponse: newAiMessage,
+          conversationId,
+          pineconeContext: {
+            used: pineconeMatches.length > 0,
+            matches: pineconeMatches.length,
+            contextLength: pineconeContext.length,
+          },
         },
-      },
-      "Conversation updated successfully"
-    );
+        "Conversation updated successfully"
+      );
+
+      console.info('✅ Successfully created success response');
+      return successResponse;
+    } catch (responseError) {
+      console.error('❌ Error creating success response:', responseError);
+      // Even if response creation fails, the messages were saved successfully
+      return createSuccessResponse(
+        { conversationId, status: 'saved' },
+        "Conversation updated successfully (response creation had issues)"
+      );
+    }
   } catch (error) {
     console.error("Error updating coach conversation:", error);
     return createErrorResponse(500, "Internal server error");

@@ -368,6 +368,7 @@ export class CoachConversationAgent {
   async sendMessage(messageContent) {
     if (
       !messageContent.trim() ||
+      this.state.isTyping ||
       this.state.isLoadingItem ||
       !this.userId ||
       !this.coachId ||
@@ -386,7 +387,7 @@ export class CoachConversationAgent {
       };
 
       this._addMessage(userMessage);
-      this._updateState({ isLoadingItem: true, isTyping: true, error: null });
+      this._updateState({ isTyping: true, error: null });
 
       // Send to API
       const result = await sendCoachConversationMessage(
@@ -396,7 +397,7 @@ export class CoachConversationAgent {
         messageContent.trim()
       );
 
-      // Extract AI response content from the message object
+            // Extract AI response content from the message object
       let aiResponseContent = "Thank you for your message."; // Default fallback
 
       if (result.aiResponse && typeof result.aiResponse === 'object') {
@@ -422,7 +423,6 @@ export class CoachConversationAgent {
 
       this._addMessage(aiResponse);
       this._updateState({
-        isLoadingItem: false,
         isTyping: false,
         conversation: result.conversation || this.state.conversation
       });
@@ -442,7 +442,6 @@ export class CoachConversationAgent {
 
       this._addMessage(errorResponse);
       this._updateState({
-        isLoadingItem: false,
         isTyping: false,
         error: "Failed to send message",
       });

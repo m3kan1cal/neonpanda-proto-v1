@@ -50,35 +50,46 @@ export interface QueryAllEntitiesResult<T> {
   count: number;
 }
 
+// Interface for DynamoDB save result
+export interface DynamoDBSaveResult {
+  success: boolean;
+  httpStatusCode?: number;
+  requestId?: string;
+  attempts?: number;
+  totalRetryDelay?: number;
+  itemSizeKB: string;
+  errorDetails?: {
+    message: string;
+    name: string;
+    code: string;
+  };
+}
+
 // Generic function to save any item to DynamoDB
-export async function saveToDynamoDB<T>(item: DynamoDBItem<T>): Promise<void> {
+export async function saveToDynamoDB<T>(item: DynamoDBItem<T>): Promise<DynamoDBSaveResult> {
   const tableName = process.env.DYNAMODB_TABLE_NAME;
 
   if (!tableName) {
     throw new Error("DYNAMODB_TABLE_NAME environment variable is not set");
   }
 
+  let serializedItem: any;
+  let itemSizeBytes: number = 0;
+  let itemSizeKB: string = 'unknown';
+
   try {
     // Serialize the entire item to handle any Date objects anywhere in the structure
-    const serializedItem = serializeForDynamoDB(item);
+    serializedItem = serializeForDynamoDB(item);
 
-    // Debug: Log conversation items before saving
-    if (item.entityType === "coachConversation") {
-      const conversationItem = item.attributes as any;
-      const serializedConversation = serializedItem.attributes as any;
-      console.info("About to serialize and save coach conversation:", {
-        pk: item.pk,
-        sk: item.sk,
-        originalMessagesCount: conversationItem?.messages?.length || 0,
-        serializedMessagesCount: serializedConversation?.messages?.length || 0,
-        firstMessage: serializedConversation?.messages?.[0]
-          ? {
-              id: serializedConversation.messages[0].id,
-              role: serializedConversation.messages[0].role,
-              hasContent: !!serializedConversation.messages[0].content,
-              timestamp: serializedConversation.messages[0].timestamp,
-            }
-          : "No messages",
+    // Check item size before saving (DynamoDB has 400KB limit)
+    itemSizeBytes = JSON.stringify(serializedItem).length;
+    itemSizeKB = (itemSizeBytes / 1024).toFixed(2);
+
+    // Warn if approaching DynamoDB size limit
+    if (itemSizeBytes > 350000) {
+      console.warn(`⚠️ Large item approaching DynamoDB limit: ${itemSizeKB}KB (400KB max)`, {
+        entityType: item.entityType,
+        itemSizeKB
       });
     }
 
@@ -87,10 +98,61 @@ export async function saveToDynamoDB<T>(item: DynamoDBItem<T>): Promise<void> {
       Item: serializedItem,
     });
 
-    await docClient.send(command);
-    console.info(`${item.entityType} data saved to DynamoDB successfully`);
+    const putResult = await docClient.send(command);
+
+    const result: DynamoDBSaveResult = {
+      success: true,
+      httpStatusCode: putResult.$metadata?.httpStatusCode,
+      requestId: putResult.$metadata?.requestId,
+      attempts: putResult.$metadata?.attempts,
+      totalRetryDelay: putResult.$metadata?.totalRetryDelay,
+      itemSizeKB
+    };
+
+    return result;
+
   } catch (error) {
-    console.error(`Error saving ${item.entityType} data to DynamoDB:`, error);
+    const errorResult: DynamoDBSaveResult = {
+      success: false,
+      itemSizeKB: itemSizeKB || 'unknown',
+      errorDetails: {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        name: error instanceof Error ? error.name : 'Unknown',
+        code: (error as any)?.code || 'No code'
+      }
+    };
+
+    console.error(`❌ Error saving ${item.entityType} data to DynamoDB:`, {
+      ...errorResult,
+      errorStack: error instanceof Error ? error.stack : 'No stack',
+      pk: item.pk,
+      sk: item.sk
+    });
+
+    // Still throw the error for backward compatibility, but also return result info
+    throw error;
+  }
+}
+
+// Enhanced save function that explicitly checks the result and provides detailed error info
+export async function saveToDynamoDBWithResult<T>(item: DynamoDBItem<T>): Promise<DynamoDBSaveResult> {
+  try {
+    const result = await saveToDynamoDB(item);
+
+    // Explicit success verification
+    if (!result.success) {
+      console.error('🚨 DynamoDB save reported success=false:', result);
+      throw new Error(`Save operation failed: ${result.errorDetails?.message || 'Unknown error'}`);
+    }
+
+    // Additional checks for suspicious results
+    if (!result.httpStatusCode || result.httpStatusCode !== 200) {
+      console.warn('⚠️ DynamoDB save completed but with unexpected status code:', result);
+    }
+
+    return result;
+  } catch (error) {
+    console.error('🚨 Exception during DynamoDB save operation:', error);
     throw error;
   }
 }
@@ -485,36 +547,92 @@ export async function queryCoachConversationsWithMessages(
   );
 }
 
+// Interface for conversation message save result
+export interface ConversationSaveResult {
+  success: boolean;
+  conversationId: string;
+  previousMessageCount: number;
+  newMessageCount: number;
+  messagesAdded: number;
+  lastMessageId?: string;
+  dynamodbResult: DynamoDBSaveResult;
+  errorDetails?: {
+    stage: 'loading' | 'validation' | 'saving';
+    message: string;
+  };
+}
+
 // Function to send a message to a coach conversation
 export async function sendCoachConversationMessage(
   userId: string,
   coachId: string,
   conversationId: string,
   messages: CoachMessage[]
-): Promise<void> {
-  // First load the existing conversation
-  const existingConversation = await getCoachConversation(
-    userId,
-    coachId,
-    conversationId
-  );
+): Promise<ConversationSaveResult> {
+  let existingConversation;
 
-  if (!existingConversation) {
-    throw new Error(`Conversation not found: ${conversationId}`);
+  try {
+    // First load the existing conversation
+    existingConversation = await getCoachConversation(
+      userId,
+      coachId,
+      conversationId
+    );
+
+    if (!existingConversation) {
+      const errorResult: ConversationSaveResult = {
+        success: false,
+        conversationId,
+        previousMessageCount: 0,
+        newMessageCount: messages.length,
+        messagesAdded: 0,
+        dynamodbResult: {
+          success: false,
+          itemSizeKB: 'unknown',
+          errorDetails: {
+            message: `Conversation not found: ${conversationId}`,
+            name: 'ConversationNotFound',
+            code: 'CONVERSATION_NOT_FOUND'
+          }
+        },
+        errorDetails: {
+          stage: 'loading',
+          message: `Conversation not found: ${conversationId}`
+        }
+      };
+
+      console.error('❌ Conversation not found:', errorResult);
+      throw new Error(`Conversation not found: ${conversationId}`);
+    }
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('Conversation not found')) {
+      throw error; // Re-throw conversation not found errors
+    }
+
+    const errorResult: ConversationSaveResult = {
+      success: false,
+      conversationId,
+      previousMessageCount: 0,
+      newMessageCount: messages.length,
+      messagesAdded: 0,
+      dynamodbResult: {
+        success: false,
+        itemSizeKB: 'unknown',
+        errorDetails: {
+          message: error instanceof Error ? error.message : 'Unknown error',
+          name: error instanceof Error ? error.name : 'Unknown',
+          code: 'LOADING_ERROR'
+        }
+      },
+      errorDetails: {
+        stage: 'loading',
+        message: error instanceof Error ? error.message : 'Unknown error loading conversation'
+      }
+    };
+
+    console.error('❌ Error loading conversation:', errorResult);
+    throw error;
   }
-
-  // Debug: Log the existing conversation and new messages
-  console.info("Updating conversation messages:", {
-    conversationId,
-    existingMessageCount: existingConversation.attributes.messages?.length || 0,
-    newMessageCount: messages.length,
-    messagesPreview: messages.map((msg) => ({
-      id: msg.id,
-      role: msg.role,
-      contentLength: msg.content?.length || 0,
-      timestamp: msg.timestamp,
-    })),
-  });
 
   // Update the conversation with new messages and metadata
   const updatedConversation: CoachConversation = {
@@ -534,18 +652,70 @@ export async function sendCoachConversationMessage(
     updatedAt: new Date().toISOString(),
   };
 
-  // Debug: Log what we're about to save
-  console.info("About to save to DynamoDB:", {
-    pk: updatedItem.pk,
-    sk: updatedItem.sk,
-    messagesCount: updatedItem.attributes.messages?.length || 0,
-    totalMessages: updatedItem.attributes.metadata?.totalMessages,
-  });
+  const previousMessageCount = existingConversation.attributes.messages?.length || 0;
+  const messagesAdded = messages.length - previousMessageCount;
 
-  await saveToDynamoDB(updatedItem);
+  let saveResult: DynamoDBSaveResult;
 
-  // Debug: Confirm save completed
-  console.info("Successfully saved conversation messages to DynamoDB");
+  try {
+    saveResult = await saveToDynamoDBWithResult(updatedItem);
+
+    // Verify the save was actually successful
+    if (!saveResult.success) {
+      const errorResult: ConversationSaveResult = {
+        success: false,
+        conversationId,
+        previousMessageCount,
+        newMessageCount: messages.length,
+        messagesAdded,
+        dynamodbResult: saveResult,
+        errorDetails: {
+          stage: 'saving',
+          message: `DynamoDB save failed: ${saveResult.errorDetails?.message || 'Unknown error'}`
+        }
+      };
+
+      console.error('❌ DynamoDB save failed:', errorResult);
+      throw new Error(`DynamoDB save failed: ${saveResult.errorDetails?.message || 'Unknown error'}`);
+    }
+  } catch (error) {
+    const errorResult: ConversationSaveResult = {
+      success: false,
+      conversationId,
+      previousMessageCount,
+      newMessageCount: messages.length,
+      messagesAdded,
+      dynamodbResult: {
+        success: false,
+        itemSizeKB: 'unknown',
+        errorDetails: {
+          message: error instanceof Error ? error.message : 'Unknown error',
+          name: error instanceof Error ? error.name : 'Unknown',
+          code: 'SAVE_ERROR'
+        }
+      },
+      errorDetails: {
+        stage: 'saving',
+        message: error instanceof Error ? error.message : 'Unknown error during save'
+      }
+    };
+
+    console.error('❌ Error during conversation save:', errorResult);
+    throw error;
+  }
+
+  // Create successful result
+  const result: ConversationSaveResult = {
+    success: true,
+    conversationId,
+    previousMessageCount,
+    newMessageCount: messages.length,
+    messagesAdded,
+    lastMessageId: updatedItem.attributes.messages?.slice(-1)?.[0]?.id,
+    dynamodbResult: saveResult
+  };
+
+  return result;
 }
 
 // Function to update conversation metadata (title, tags, isActive)
@@ -565,13 +735,6 @@ export async function updateCoachConversation(
   if (!existingConversation) {
     throw new Error(`Conversation not found: ${conversationId}`);
   }
-
-  // Debug: Log the update operation
-  console.info("Updating conversation metadata:", {
-    conversationId,
-    updateFields: Object.keys(updateData),
-    updateData,
-  });
 
   // Update the conversation metadata
   const updatedConversation: CoachConversation = {
@@ -594,19 +757,7 @@ export async function updateCoachConversation(
     updatedAt: new Date().toISOString(),
   };
 
-  // Debug: Log what we're about to save
-  console.info("About to save metadata update to DynamoDB:", {
-    pk: updatedItem.pk,
-    sk: updatedItem.sk,
-    title: updatedItem.attributes.title,
-    tags: updatedItem.attributes.metadata?.tags,
-    isActive: updatedItem.attributes.metadata?.isActive,
-  });
-
   await saveToDynamoDB(updatedItem);
-
-  // Debug: Confirm save completed
-  console.info("Successfully saved conversation metadata to DynamoDB");
 
   return updatedConversation;
 }
@@ -1166,11 +1317,17 @@ export async function queryCoachConversationSummaries(
 export async function saveMemory(memory: UserMemory): Promise<void> {
   const timestamp = new Date().toISOString();
 
+  // Convert undefined coachId to null for DynamoDB compatibility
+  const cleanedMemory = { ...memory };
+  if (cleanedMemory.coachId === undefined) {
+    cleanedMemory.coachId = null;
+  }
+
   const item = createDynamoDBItem<UserMemory>(
     "userMemory",
     `user#${memory.userId}`,
     `userMemory#${memory.memoryId}`,
-    memory,
+    cleanedMemory,
     timestamp
   );
 
@@ -1206,7 +1363,7 @@ export async function queryMemories(
   // Filter by coach if specified
   if (coachId) {
     filteredItems = filteredItems.filter(
-      (memory) => memory.coachId === coachId || !memory.coachId // Include global memories
+      (memory) => memory.coachId === coachId || !memory.coachId || memory.coachId === null // Include global memories
     );
   }
 

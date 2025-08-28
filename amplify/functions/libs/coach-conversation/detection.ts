@@ -7,7 +7,7 @@
 
 import { MemoryDetectionEvent, MemoryDetectionResult } from './types';
 import { UserMemory } from '../user/types';
-import { callBedrockApi, MODEL_IDS } from '../api-helpers';
+import { callBedrockApi, MODEL_IDS, invokeAsyncLambda } from '../api-helpers';
 
 /**
  * Detect if the user's message contains complexity triggers that warrant immediate conversation summarization
@@ -324,14 +324,6 @@ Analyze this message and respond with the JSON format specified.`;
       throw new Error('Invalid response format from memory detection');
     }
 
-    console.info('Memory detection completed:', {
-      userId: event.userId,
-      isMemoryRequest: result.isMemoryRequest,
-      confidence: result.confidence,
-      extractedType: result.extractedMemory?.type,
-      reasoning: result.reasoning
-    });
-
     return result;
   } catch (error) {
     console.error('Error in memory detection:', error);
@@ -403,14 +395,6 @@ Analyze this message and determine if retrieving stored memories would enhance t
     const response = await callBedrockApi(systemPrompt, userPrompt, MODEL_IDS.NOVA_MICRO);
     const result = JSON.parse(response);
 
-    console.info('Memory retrieval detection completed:', {
-      userMessage: userMessage.substring(0, 100),
-      needsSemanticRetrieval: result.needsSemanticRetrieval,
-      confidence: result.confidence,
-      contextTypes: result.contextTypes,
-      reasoning: result.reasoning
-    });
-
     return result;
   } catch (error) {
     console.error('Error in memory retrieval detection:', error);
@@ -425,31 +409,203 @@ Analyze this message and determine if retrieving stored memories would enhance t
 }
 
 /**
+ * Detect if a memory should be coach-specific or global using AI analysis
+ */
+export async function detectMemoryScope(
+  memoryContent: string,
+  coachName?: string
+): Promise<{
+  isCoachSpecific: boolean;
+  confidence: number;
+  reasoning: string;
+}> {
+  const systemPrompt = `You are an AI assistant that analyzes user memories to determine if they should be coach-specific or apply globally to all coaches.
+
+COACH-SPECIFIC memories are about:
+- Coaching style preferences and feedback ("I like when Marcus gives detailed technical cues")
+- Communication style preferences ("Your motivational approach works well for me")
+- Methodology-specific interactions ("In CrossFit, I need you to remind me about pacing")
+- Coach relationship dynamics ("You push me the right amount", "I respond better to your encouragement")
+- Coaching technique feedback ("I prefer when you demonstrate movements")
+- Program-specific context tied to this coach's approach
+
+GLOBAL memories apply to ALL coaches and are about:
+- Physical constraints and injuries ("I have a shoulder injury")
+- Equipment, time, location constraints ("I train at home with limited equipment")
+- Goals and aspirations ("I want to deadlift 315 pounds")
+- Personal context and lifestyle ("I'm a busy parent with two kids")
+- General training preferences ("I prefer morning workouts")
+- Dietary restrictions or preferences
+- Past training history and experience
+
+RESPONSE FORMAT:
+You must respond with ONLY a valid JSON object with this exact structure:
+{
+  "isCoachSpecific": boolean,
+  "confidence": number (0.0 to 1.0),
+  "reasoning": "brief explanation of why this memory is coach-specific or global"
+}
+
+GUIDELINES:
+- Default to global unless there's clear evidence the memory is about the coaching relationship
+- Be conservative: most user context should be global
+- Look for direct references to coaching style, communication, or methodology-specific interactions
+- Personal constraints, goals, and context are typically global`;
+
+  const userPrompt = `${coachName ? `COACH NAME: ${coachName}\n\n` : ''}MEMORY TO ANALYZE:\n"${memoryContent}"
+
+Analyze this memory and respond with the JSON format specified.`;
+
+  try {
+    console.info('🎯 Detecting memory scope:', {
+      memoryContent: memoryContent.substring(0, 100) + (memoryContent.length > 100 ? '...' : ''),
+      coachName: coachName || 'unknown',
+      contentLength: memoryContent.length
+    });
+
+    const response = await callBedrockApi(systemPrompt, userPrompt, MODEL_IDS.NOVA_MICRO);
+
+    // Parse the JSON response
+    const result = JSON.parse(response.trim());
+
+    // Validate the response structure
+    if (typeof result.isCoachSpecific !== 'boolean' ||
+        typeof result.confidence !== 'number' ||
+        result.confidence < 0 || result.confidence > 1) {
+      throw new Error('Invalid response format from memory scope detection');
+    }
+
+    return result;
+  } catch (error) {
+    console.error('Error in memory scope detection:', error);
+
+    // Return safe fallback (default to global)
+    return {
+      isCoachSpecific: false,
+      confidence: 0,
+      reasoning: 'Error occurred during scope detection analysis, defaulting to global'
+    };
+  }
+}
+
+/**
  * Create a UserMemory object from detection result
  */
-export function createMemory(
+export async function createMemory(
   detectionResult: MemoryDetectionResult,
   userId: string,
-  coachId?: string
-): UserMemory | null {
+  coachId?: string,
+  coachName?: string
+): Promise<UserMemory | null> {
   if (!detectionResult.isMemoryRequest || !detectionResult.extractedMemory) {
     return null;
   }
 
   const memoryId = `user_memory_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
 
+  // Use AI to determine if memory should be coach-specific or global
+  const scopeDetection = await detectMemoryScope(detectionResult.extractedMemory.content, coachName);
+
   return {
     memoryId,
     userId,
-    coachId,
+    coachId: scopeDetection.isCoachSpecific ? coachId : undefined, // Global if not coach-specific
     content: detectionResult.extractedMemory.content,
     memoryType: detectionResult.extractedMemory.type,
     metadata: {
       createdAt: new Date(),
       usageCount: 0,
-      source: 'explicit_request',
+      source: 'conversation',
       importance: detectionResult.extractedMemory.importance,
-      tags: []
+      tags: scopeDetection.isCoachSpecific ? ['coach_specific'] : ['global']
     }
   };
+}
+
+/**
+ * Detect if conversation summary should be triggered and trigger it if needed
+ * @param userId - User ID
+ * @param coachId - Coach ID
+ * @param conversationId - Conversation ID
+ * @param userMessage - The user's message to analyze for complexity
+ * @param currentMessageCount - Current total message count in conversation
+ * @returns Object indicating if summary was triggered and the reason
+ */
+export async function detectAndProcessConversationSummary(
+  userId: string,
+  coachId: string,
+  conversationId: string,
+  userMessage: string,
+  currentMessageCount: number
+): Promise<{
+  triggered: boolean;
+  triggerReason?: 'message_count' | 'complexity';
+  complexityDetected: boolean;
+}> {
+  const hasComplexityTriggers = detectConversationComplexity(userMessage);
+  const shouldTriggerSummary =
+    currentMessageCount % 6 === 0 || hasComplexityTriggers;
+
+  if (!shouldTriggerSummary) {
+    return {
+      triggered: false,
+      complexityDetected: hasComplexityTriggers
+    };
+  }
+
+  const triggerReason =
+    currentMessageCount % 6 === 0 ? "message_count" : "complexity";
+
+  console.info("🔄 Conversation summary trigger detected:", {
+    conversationId,
+    totalMessages: currentMessageCount,
+    triggeredBy: triggerReason,
+    complexityDetected: hasComplexityTriggers,
+  });
+
+  try {
+    // Trigger async conversation summary generation
+    const summaryFunction = process.env.BUILD_CONVERSATION_SUMMARY_FUNCTION_NAME;
+    if (!summaryFunction) {
+      console.warn(
+        "⚠️ BUILD_CONVERSATION_SUMMARY_FUNCTION_NAME environment variable not set"
+      );
+      return {
+        triggered: false,
+        triggerReason,
+        complexityDetected: hasComplexityTriggers
+      };
+    }
+
+    await invokeAsyncLambda(
+      summaryFunction,
+      {
+        userId,
+        coachId,
+        conversationId,
+        triggerReason,
+        messageCount: currentMessageCount,
+        complexityIndicators: hasComplexityTriggers
+          ? ["complexity_detected"]
+          : undefined,
+      },
+      "conversation summary generation"
+    );
+
+    return {
+      triggered: true,
+      triggerReason,
+      complexityDetected: hasComplexityTriggers
+    };
+  } catch (error) {
+    console.error(
+      "❌ Failed to trigger conversation summary generation:",
+      error
+    );
+    return {
+      triggered: false,
+      triggerReason,
+      complexityDetected: hasComplexityTriggers
+    };
+  }
 }

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { themeClasses } from '../utils/synthwaveThemeClasses';
-import { isCurrentWeekReport } from '../utils/dateUtils';
+import { isCurrentWeekReport, isNewWorkout } from '../utils/dateUtils';
 import {
   NeonBorder,
   NewBadge,
@@ -14,6 +14,8 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon
 } from './themes/SynthwaveComponents';
+import { FullPageLoader, CenteredErrorState, InlineError, EmptyState } from './shared/ErrorStates';
+import CommandPalette from './shared/CommandPalette';
 import TrainingGroundsAgent from '../utils/agents/TrainingGroundsAgent';
 import CoachConversationAgent from '../utils/agents/CoachConversationAgent';
 import WorkoutAgent from '../utils/agents/WorkoutAgent';
@@ -57,6 +59,8 @@ function TrainingGrounds() {
   const coachId = searchParams.get('coachId');
 
   const [showCoachDetails, setShowCoachDetails] = useState(false);
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+  const [commandPaletteCommand, setCommandPaletteCommand] = useState('');
   const trainingGroundsAgentRef = useRef(null);
   const conversationAgentRef = useRef(null);
   const workoutAgentRef = useRef(null);
@@ -115,19 +119,31 @@ function TrainingGrounds() {
     window.scrollTo(0, 0);
   }, []);
 
-  // Handle escape key to close coach details
+  // Handle keyboard shortcuts
   useEffect(() => {
-    const handleEscapeKey = (event) => {
-      if (event.key === 'Escape' && showCoachDetails) {
-        setShowCoachDetails(false);
+    const handleKeyboardShortcuts = (event) => {
+      // Escape key to close coach details or command palette
+      if (event.key === 'Escape') {
+        if (isCommandPaletteOpen) {
+          setIsCommandPaletteOpen(false);
+        } else if (showCoachDetails) {
+          setShowCoachDetails(false);
+        }
+      }
+
+      // Cmd/Ctrl + K to open command palette
+      if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
+        event.preventDefault();
+        setCommandPaletteCommand('');
+        setIsCommandPaletteOpen(true);
       }
     };
 
-    document.addEventListener('keydown', handleEscapeKey);
+    document.addEventListener('keydown', handleKeyboardShortcuts);
     return () => {
-      document.removeEventListener('keydown', handleEscapeKey);
+      document.removeEventListener('keydown', handleKeyboardShortcuts);
     };
-  }, [showCoachDetails]);
+  }, [showCoachDetails, isCommandPaletteOpen]);
 
     // Initialize Training Grounds agent (coach data only)
   useEffect(() => {
@@ -319,33 +335,34 @@ function TrainingGrounds() {
           </div>
         </div>
       ) : workoutState.error ? (
-        <div className="text-center py-8">
-          <div className="font-rajdhani text-synthwave-neon-pink text-sm mb-2">
-            Workout API Error
-          </div>
-          <div className="font-rajdhani text-synthwave-text-muted text-xs">
-            {workoutState.error}
-          </div>
-        </div>
+        <InlineError
+          title="Workout API Error"
+          message={workoutState.error}
+          variant="error"
+          size="medium"
+        />
       ) : workoutState.recentWorkouts.length === 0 ? (
-        <div className="text-center py-8">
-          <div className="font-rajdhani text-synthwave-text-muted text-sm">
-            No workouts found
-          </div>
-        </div>
+        <EmptyState
+          title="No workouts found"
+          size="medium"
+        />
       ) : (
         <>
           <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
             Recent Workouts
           </div>
-          {workoutState.recentWorkouts.map((workout) => (
-            <div
-              key={workout.workoutId}
-              onClick={() => {
-                navigate(`/training-grounds/workouts?userId=${userId}&workoutId=${workout.workoutId}&coachId=${coachId}`);
-              }}
-              className="bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/20 hover:border-synthwave-neon-pink/40 hover:bg-synthwave-bg-primary/50 rounded-lg p-3 cursor-pointer transition-all duration-200"
-            >
+          {workoutState.recentWorkouts.map((workout) => {
+            const isNew = isNewWorkout(workout.completedAt);
+            return (
+              <div
+                key={workout.workoutId}
+                onClick={() => {
+                  navigate(`/training-grounds/workouts?userId=${userId}&workoutId=${workout.workoutId}&coachId=${coachId}`);
+                }}
+                className="relative bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/20 hover:border-synthwave-neon-pink/40 hover:bg-synthwave-bg-primary/50 rounded-lg p-3 cursor-pointer transition-all duration-200"
+              >
+                {/* NEW badge for workouts within 24 hours */}
+                {isNew && <NewBadge />}
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
                   <div className="font-rajdhani text-sm text-white font-medium truncate">
@@ -359,8 +376,9 @@ function TrainingGrounds() {
                   <LightningIconSmall />
                 </div>
               </div>
-            </div>
-          ))}
+              </div>
+            );
+          })}
         </>
       )}
     </div>
@@ -372,54 +390,29 @@ function TrainingGrounds() {
 
   if (!userId || !coachId) {
     return (
-      <div className={`${themeClasses.container} min-h-screen`}>
-        <div className="max-w-4xl mx-auto px-8 py-12 text-center">
-          <h1 className="font-russo font-black text-3xl text-white mb-6 uppercase">
-            Invalid Training Grounds Access
-          </h1>
-          <p className="font-rajdhani text-lg text-synthwave-text-secondary mb-8">
-            Both User ID and Coach ID are required to access the Training Grounds.
-          </p>
-          <button
-            onClick={() => navigate('/coaches')}
-            className={`${themeClasses.neonButton} text-lg px-8 py-3`}
-          >
-            Return to Coaches
-          </button>
-        </div>
-      </div>
+      <CenteredErrorState
+        title="Training Grounds Error"
+        message="Both User ID and Coach ID are required to access the Training Grounds."
+        buttonText="Back to Coaches"
+        onButtonClick={() => navigate(`/coaches?userId=${userId || ''}`)}
+        variant="error"
+      />
     );
   }
 
   if (trainingGroundsState.isLoading) {
-    return (
-      <div className={`min-h-screen ${themeClasses.bgGradient} ${themeClasses.textPrimary} flex items-center justify-center`}>
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-synthwave-neon-cyan mx-auto mb-4"></div>
-          <p className="text-synthwave-text-secondary font-rajdhani">Loading Training Grounds...</p>
-        </div>
-      </div>
-    );
+    return <FullPageLoader text="Loading Training Grounds..." />;
   }
 
   if (trainingGroundsState.error) {
     return (
-      <div className={`${themeClasses.container} min-h-screen`}>
-        <div className="max-w-4xl mx-auto px-8 py-12 text-center">
-          <h1 className="font-russo font-black text-3xl text-white mb-6 uppercase">
-            Training Grounds Error
-          </h1>
-          <p className="font-rajdhani text-lg text-synthwave-neon-pink mb-8">
-            {trainingGroundsState.error}
-          </p>
-          <button
-            onClick={() => navigate('/coaches')}
-            className={`${themeClasses.neonButton} text-lg px-8 py-3`}
-          >
-            Back to Coaches
-          </button>
-        </div>
-      </div>
+      <CenteredErrorState
+        title="Training Grounds Error"
+        message={trainingGroundsState.error}
+        buttonText="Back to Coaches"
+        onButtonClick={() => navigate(`/coaches?userId=${userId || ''}`)}
+        variant="error"
+      />
     );
   }
 
@@ -520,8 +513,8 @@ function TrainingGrounds() {
               {/* Log Workout */}
               <button
                 onClick={() => {
-                  // TODO: Implement workout logging functionality
-                  console.info('Log Workout clicked - functionality to be implemented');
+                  setCommandPaletteCommand('/log-workout ');
+                  setIsCommandPaletteOpen(true);
                 }}
                 className={`${themeClasses.neonButton} text-sm px-4 py-3 flex items-center justify-center space-x-2`}
               >
@@ -548,6 +541,20 @@ function TrainingGrounds() {
                     <span>Start Conversation</span>
                   </>
                 )}
+              </button>
+
+              {/* Save Memory */}
+              <button
+                onClick={() => {
+                  setCommandPaletteCommand('/save-memory ');
+                  setIsCommandPaletteOpen(true);
+                }}
+                className={`${themeClasses.neonButton} text-sm px-4 py-3 flex items-center justify-center space-x-2`}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+                <span>Save Memory</span>
               </button>
             </div>
           </div>
@@ -746,14 +753,17 @@ function TrainingGrounds() {
                   </div>
                 </div>
               ) : reportsState.error ? (
-                <div className="text-center py-4">
-                  <div className="font-rajdhani text-synthwave-neon-pink text-sm mb-2">Reports API Error</div>
-                  <div className="font-rajdhani text-synthwave-text-muted text-xs">{reportsState.error}</div>
-                </div>
+                <InlineError
+                  title="Reports API Error"
+                  message={reportsState.error}
+                  variant="error"
+                  size="small"
+                />
               ) : reportsState.recentReports.length === 0 ? (
-                <div className="text-center py-4">
-                  <div className="font-rajdhani text-synthwave-text-muted text-sm">No reports found</div>
-                </div>
+                <EmptyState
+                  title="No reports found"
+                  size="small"
+                />
               ) : (
                 <>
                   <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">Recent Reports</div>
@@ -1301,6 +1311,16 @@ function TrainingGrounds() {
           </div>
         </div>
       </div>
+
+      {/* Command Palette */}
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => {
+          setIsCommandPaletteOpen(false);
+          setCommandPaletteCommand('');
+        }}
+        prefilledCommand={commandPaletteCommand}
+      />
 
     </div>
   );

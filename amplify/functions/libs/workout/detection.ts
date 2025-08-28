@@ -39,22 +39,32 @@ export interface SlashCommandResult {
  */
 export const parseSlashCommand = (message: string): SlashCommandResult => {
   if (!message || typeof message !== 'string') {
+    console.info('🔍 parseSlashCommand: Invalid message input:', { message, type: typeof message });
     return { isSlashCommand: false };
   }
 
   const slashCommandRegex = /^\/([a-zA-Z0-9-]+)\s*([\s\S]*)$/;
   const match = message.match(slashCommandRegex);
 
+  console.info('🔍 parseSlashCommand: Regex match result:', {
+    messageStart: message.substring(0, 50),
+    hasMatch: !!match,
+    matchGroups: match ? match.length : 0
+  });
+
   if (!match) {
     return { isSlashCommand: false };
   }
 
   const [, command, content] = match;
-  return {
+  const result = {
     isSlashCommand: true,
     command: command.toLowerCase(),
     content: content.trim()
   };
+
+  console.info('🔍 parseSlashCommand: Parsed result:', result);
+  return result;
 };
 
 /**
@@ -73,9 +83,19 @@ export const parseSlashCommand = (message: string): SlashCommandResult => {
  * ```
  */
 export const isWorkoutSlashCommand = (slashCommandResult: SlashCommandResult): boolean => {
-  return slashCommandResult.isSlashCommand &&
+  const result = slashCommandResult.isSlashCommand &&
     slashCommandResult.command !== undefined &&
     WORKOUT_SLASH_COMMANDS.includes(slashCommandResult.command as any);
+
+  console.info('🔍 isWorkoutSlashCommand: Check result:', {
+    isSlashCommand: slashCommandResult.isSlashCommand,
+    command: slashCommandResult.command,
+    supportedCommands: WORKOUT_SLASH_COMMANDS,
+    isSupported: slashCommandResult.command ? WORKOUT_SLASH_COMMANDS.includes(slashCommandResult.command as any) : false,
+    finalResult: result
+  });
+
+  return result;
 };
 
 /**
@@ -99,7 +119,8 @@ export const isWorkoutLog = async (message: string): Promise<boolean> => {
     return false;
   }
 
-  const detectionPrompt = `
+  try {
+    const detectionPrompt = `
 Analyze this message to determine if it describes a COMPLETED WORKOUT that should be logged.
 
 MESSAGE: "${message}"
@@ -204,17 +225,38 @@ CONFIDENCE SCORING:
 
 CRITICAL: When in doubt, DO NOT classify as workout logging. It's better to miss a workout log than create false positives from casual fitness conversation.`;
 
+    console.info('🔍 Starting AI workout detection for message:', {
+      messageLength: message.length,
+      messagePreview: message.substring(0, 100)
+    });
+
     const response = await callBedrockApi(detectionPrompt, message, MODEL_IDS.NOVA_MICRO);
-  const result = JSON.parse(response);
 
-  console.info('AI workout detection:', {
-    message: message.substring(0, 100),
-    isWorkoutLog: result.isWorkoutLog,
-    confidence: result.confidence,
-    reasoning: result.reasoning
-  });
+    console.info('🔍 Received response from AI workout detection:', {
+      responseLength: response.length,
+      responsePreview: response.substring(0, 200)
+    });
 
-  return result.isWorkoutLog && result.confidence > 0.5;
+    const result = JSON.parse(response);
+
+    console.info('🔍 AI workout detection result:', {
+      message: message.substring(0, 100),
+      isWorkoutLog: result.isWorkoutLog,
+      confidence: result.confidence,
+      reasoning: result.reasoning,
+      willReturnTrue: result.isWorkoutLog && result.confidence > 0.5
+    });
+
+    return result.isWorkoutLog && result.confidence > 0.5;
+  } catch (error) {
+    console.error('❌ Error in isWorkoutLog function:', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      messageLength: message.length,
+      messagePreview: message.substring(0, 100)
+    });
+    // Return false on error to prevent blocking the conversation
+    return false;
+  }
 };
 
 /**
