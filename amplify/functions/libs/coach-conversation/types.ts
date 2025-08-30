@@ -5,15 +5,15 @@
  * coach conversation functionality including messages, conversations, and metadata.
  */
 
-import { CoachConfig, DynamoDBItem } from '../coach-creator/types';
-import { UserMemory } from '../user/types';
+import { CoachConfig, DynamoDBItem } from "../coach-creator/types";
+import { UserMemory } from "../memory";
 
 /**
  * Individual message in a coach conversation
  */
 export interface CoachMessage {
   id: string;
-  role: 'user' | 'assistant';
+  role: "user" | "assistant";
   content: string;
   timestamp: Date;
   metadata?: {
@@ -65,7 +65,7 @@ export interface BuildCoachConversationSummaryEvent {
   userId: string;
   coachId: string;
   conversationId: string;
-  triggerReason: 'message_count' | 'complexity';
+  triggerReason: "message_count" | "complexity";
   messageCount: number;
   complexityIndicators?: string[];
 }
@@ -108,7 +108,7 @@ export interface CoachConversationSummary {
       endMessageId: string;
       totalMessages: number;
     };
-    triggerReason: 'message_count' | 'complexity';
+    triggerReason: "message_count" | "complexity";
     complexityIndicators?: string[];
     confidence: number;
   };
@@ -124,35 +124,10 @@ export interface MethodologyIntent {
 
 export interface EnhancedMethodologyOptions {
   topK?: number;
-  contextType?: 'conversation' | 'workout_generation';
+  contextType?: "conversation" | "workout_generation";
   includeComparisons?: boolean;
   includeProgression?: boolean;
   includePracticalApplication?: boolean;
-}
-
-/**
- * Event structure for detecting memory requests
- */
-export interface MemoryDetectionEvent {
-  userId: string;
-  coachId: string;
-  conversationId: string;
-  userMessage: string;
-  messageContext?: string; // Additional context from conversation
-}
-
-/**
- * Response from memory detection analysis
- */
-export interface MemoryDetectionResult {
-  isMemoryRequest: boolean;
-  confidence: number;
-  extractedMemory?: {
-    content: string;
-    type: UserMemory['memoryType'];
-    importance: UserMemory['metadata']['importance'];
-  };
-  reasoning?: string;
 }
 
 /**

@@ -2,7 +2,6 @@
  * Pinecone utility functions for semantic search and context formatting
  */
 
-import { detectConversationMemoryNeeds } from './coach-conversation';
 import { callBedrockApi, MODEL_IDS, getPineconeClient } from './api-helpers';
 import { MethodologyIntent, EnhancedMethodologyOptions } from './coach-conversation/types';
 
@@ -10,153 +9,69 @@ import { MethodologyIntent, EnhancedMethodologyOptions } from './coach-conversat
 const PINECONE_QUERY_ENABLED = true;
 
 /**
- * Determine if the user's message would benefit from Pinecone semantic search
+ * Determine if the user's message would benefit from Pinecone semantic search using AI analysis
  * @param userMessage - The user's message to analyze
- * @returns boolean indicating if Pinecone search should be used
+ * @param messageContext - Optional context from the conversation
+ * @returns Promise<boolean> indicating if Pinecone search should be used
  */
-export function shouldUsePineconeSearch(userMessage: string): boolean {
+export async function shouldUsePineconeSearch(
+  userMessage: string,
+  messageContext?: string
+): Promise<boolean> {
   if (!PINECONE_QUERY_ENABLED) return false;
 
-  const message = userMessage.toLowerCase();
+  const systemPrompt = `You are an AI assistant that analyzes user messages in fitness coaching conversations to determine if semantic search through stored workout history and methodology content would enhance the coaching response.
 
-    // Keywords that indicate the user is asking about past workouts or patterns
-  const workoutHistoryKeywords = [
-    // Time-based references
-    'last time', 'last week', 'last month', 'last year', 'yesterday', 'recently',
-    'earlier', 'ago', 'back', 'since', 'until', 'during', 'while',
-    'this week', 'this month', 'today', 'few days ago', 'couple days ago',
-    'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday',
+TASK: Determine if the user's message would benefit from accessing stored workout history, methodology explanations, or technique guidance through semantic search.
 
-    // Past tense indicators
-    'before', 'previous', 'history', 'pattern', 'trend', 'past', 'already',
-    'used to', 'have been', 'was doing', 'did', 'done', 'finished',
-    'completed', 'attempted', 'tried', 'worked on', 'performed',
-    'achieved', 'reached', 'hit', 'made', 'got', 'went',
+SEMANTIC SEARCH INDICATORS:
+- Workout history references ("last time", "previous workouts", "what did I do", "show me my", "when did I")
+- Performance tracking & comparison ("progress", "improvement", "better than", "compared to", "PR", "personal record")
+- Methodology questions ("why", "approach", "programming", "periodization", "training philosophy", "strategy")
+- Training system inquiries ("5/3/1", "conjugate", "linear progression", "block periodization", "RPE")
+- Technique & form questions ("squat form", "deadlift technique", "movement pattern", "coaching cues")
+- Exercise-specific guidance ("bench press", "overhead press", "clean", "snatch", "pull-ups")
+- Problem-solving requests ("plateau", "stall", "fix", "troubleshoot", "alternative", "substitute")
+- Injury & rehabilitation ("pain", "hurt", "injury", "rehab", "work around", "modification")
+- Equipment & setup questions ("barbell", "dumbbell", "home gym", "equipment", "setup")
+- Pattern analysis ("usually", "typically", "pattern", "trend", "habit", "routine")
+- Complex questions requiring background knowledge or context
+- Requests for explanations that would benefit from stored methodology content
 
-    // Performance tracking & comparison
-    'improvement', 'progress', 'compare', 'similar', 'when did',
-    'how often', 'frequency', 'consistently', 'struggle', 'challenge',
-    'strength', 'weakness', 'pr', 'personal record', 'best', 'worst',
-    'better', 'worse', 'faster', 'slower', 'heavier', 'lighter',
-    'stronger', 'weaker', 'improved', 'declined', 'increased', 'decreased',
+RESPONSE FORMAT:
+You must respond with ONLY a valid JSON object:
+{
+  "shouldUseSemanticSearch": boolean,
+  "confidence": number (0.0 to 1.0),
+  "searchTypes": ["workout_history", "methodology", "technique", "problem_solving", "equipment"],
+  "reasoning": "brief explanation of why semantic search would/wouldn't help"
+}
 
-    // Workout query patterns
-    'what workouts', 'which workouts', 'workouts i did', 'workouts i have done',
-    'show me', 'tell me about', 'remind me', 'recap', 'summary',
-    'logged', 'recorded', 'tracked', 'entered', 'documented',
+GUIDELINES:
+- Consider if accessing stored workout data, methodology content, or technique guidance would improve the response
+- Higher confidence for specific exercise names, methodology terms, or historical references
+- Complex questions often benefit from semantic search even without obvious keywords
+- Be generous - better to include semantic context than miss valuable information`;
 
-    // Reflection & analysis keywords
-    'remember', 'recall', 'think back', 'look back', 'reflect',
-    'analyze', 'review', 'check', 'see', 'find', 'search',
-    'how was', 'how did', 'what was', 'where was', 'when was',
+  const userPrompt = `${messageContext ? `CONVERSATION CONTEXT:\n${messageContext}\n\n` : ""}USER MESSAGE TO ANALYZE:\n"${userMessage}"
 
-    // Conditional/hypothetical past references
-    'if i', 'when i', 'after i', 'once i', 'whenever i',
-    'every time', 'each time', 'usually', 'typically', 'normally',
+Analyze this message and determine if semantic search would enhance the coaching response.`;
 
-    // Habit/routine indicators
-    'routine', 'schedule', 'regular', 'usual', 'habit', 'pattern',
-    'cycle', 'sequence', 'order', 'rotation', 'plan',
+  try {
+    const response = await callBedrockApi(
+      systemPrompt,
+      userPrompt,
+      MODEL_IDS.NOVA_MICRO
+    );
+    const result = JSON.parse(response);
 
-    // Emotional/subjective past references
-    'felt', 'feeling', 'thought', 'seemed', 'appeared', 'looked',
-    'sore', 'tired', 'energized', 'motivated', 'struggled', 'enjoyed',
-
-    // Negation patterns (often indicate past experience)
-    'never', 'not', 'didnt', "didn't", 'havent', "haven't", 'wasnt', "wasn't",
-    'couldnt', "couldn't", 'wouldnt', "wouldn't", 'shouldnt', "shouldn't"
-  ];
-
-  // Keywords that indicate asking about methodology or coaching approach
-  const methodologyKeywords = [
-    // Basic methodology terms
-    'why', 'approach', 'methodology', 'philosophy', 'strategy',
-    'programming', 'periodization', 'training style', 'coaching style',
-
-    // Training systems & approaches
-    'linear progression', 'conjugate method', 'westside', '5/3/1', 'starting strength',
-    'block periodization', 'undulating', 'dip', 'bulgarian method', 'sheiko',
-    'high frequency', 'low frequency', 'volume', 'intensity', 'density',
-    'autoregulation', 'rpe', 'rate of perceived exertion', 'rir', 'rep in reserve',
-    'max effort', 'dynamic effort', 'repetition method', 'concurrent training',
-    'conjugate', 'linear', 'non-linear', 'undulating periodization',
-
-    // Fitness disciplines & specializations
-    'crossfit', 'powerlifting', 'olympic lifting', 'weightlifting', 'bodybuilding', 'strongman',
-    'calisthenics', 'gymnastics', 'endurance', 'cardio', 'hiit', 'conditioning',
-    'functional fitness', 'athletic performance', 'sport specific', 'general fitness',
-    'strength training', 'hypertrophy', 'power development', 'speed training',
-
-    // Programming concepts
-    'mesocycle', 'microcycle', 'macrocycle', 'phase', 'block', 'cycle',
-    'progressive overload', 'adaptation', 'specificity', 'variation',
-    'frequency', 'duration', 'load management', 'fatigue management',
-    'peak', 'taper', 'deload', 'maintenance', 'offseason', 'preseason',
-
-    // Recovery & lifestyle methodology
-    'recovery', 'regeneration', 'sleep', 'stress management', 'hydration',
-    'nutrition', 'supplementation', 'lifestyle', 'work-life balance',
-    'cut', 'bulk', 'recomp', 'body composition', 'weight management'
-  ];
-
-  // Keywords that indicate asking about specific movements or techniques
-  const techniqueKeywords = [
-    // Basic technique terms
-    'technique', 'form', 'movement', 'exercise', 'lift', 'skill',
-    'mobility', 'flexibility', 'injury', 'pain', 'recovery',
-
-    // Core movement patterns & exercises
-    'squat', 'deadlift', 'bench press', 'overhead press', 'row', 'pull up',
-    'clean', 'jerk', 'snatch', 'press', 'chin up', 'dip', 'lunge',
-    'hip hinge', 'squat pattern', 'push', 'pull', 'carry', 'loaded carry',
-    'unilateral', 'bilateral', 'compound', 'isolation', 'accessory',
-    'primary', 'secondary', 'assistance', 'supplemental',
-
-    // Technical execution & cues
-    'cue', 'coaching cue', 'setup', 'breathing', 'bracing', 'tension',
-    'tempo', 'pause', 'eccentric', 'concentric', 'isometric',
-    'range of motion', 'rom', 'depth', 'lockout', 'sticking point',
-    'bar path', 'grip', 'stance', 'foot position', 'hand position',
-    'neutral spine', 'core stability', 'shoulder position', 'hip position',
-
-    // Movement quality & assessment
-    'mobility', 'stability', 'flexibility', 'balance', 'coordination',
-    'motor control', 'movement pattern', 'compensation', 'dysfunction',
-    'asymmetry', 'imbalance', 'restriction', 'limitation',
-    'screen', 'assessment', 'evaluation', 'analysis',
-
-    // Problem-solving & troubleshooting
-    'plateau', 'stall', 'regression', 'weakness', 'imbalance', 'compensation',
-    'troubleshoot', 'diagnose', 'fix', 'correct', 'adjust', 'modify',
-    'alternative', 'substitute', 'variation', 'progression', 'regression',
-    'scale', 'adapt', 'accommodate', 'work around',
-
-    // Injury & rehabilitation
-    'injury', 'pain', 'hurt', 'sore', 'ache', 'discomfort',
-    'rehabilitation', 'rehab', 'prehab', 'prevention', 'recovery',
-    'physical therapy', 'pt', 'doctor', 'medical', 'clearance',
-    'inflammation', 'swelling', 'acute', 'chronic', 'overuse',
-
-    // Equipment & environment
-    'equipment', 'gear', 'barbell', 'dumbbell', 'kettlebell', 'machine',
-    'cable', 'resistance band', 'bodyweight', 'home gym', 'commercial gym',
-    'platform', 'rack', 'bench', 'safety', 'spotting'
-  ];
-
-  // Check if message contains relevant keywords
-  const hasRelevantKeywords = [
-    ...workoutHistoryKeywords,
-    ...methodologyKeywords,
-    ...techniqueKeywords
-  ].some(keyword => message.includes(keyword));
-
-  // Check if message indicates need for conversation memory/context
-  const needsConversationMemory = detectConversationMemoryNeeds(userMessage);
-
-  // Also use Pinecone for longer, more complex questions
-  const isComplexQuery = userMessage.length > 50 && userMessage.includes('?');
-
-  return hasRelevantKeywords || needsConversationMemory || isComplexQuery;
+    return result.shouldUseSemanticSearch || false;
+  } catch (error) {
+    console.error("Error in Pinecone search decision:", error);
+    // Conservative fallback - use semantic search for complex questions
+    const isComplexQuery = userMessage.length > 50 && userMessage.includes('?');
+    return isComplexQuery;
+  }
 }
 
 /**

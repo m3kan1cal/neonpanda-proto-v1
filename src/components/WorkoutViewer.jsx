@@ -3,7 +3,8 @@ import { themeClasses } from '../utils/synthwaveThemeClasses';
 import {
   ChevronDownIcon,
   ChevronRightIcon,
-  WorkoutIcon
+  WorkoutIcon,
+  WorkoutIconSmall
 } from './themes/SynthwaveComponents';
 
 const MetricsIcon = () => (
@@ -563,7 +564,7 @@ const WorkoutViewer = ({ workout, onToggleView, onDeleteWorkout }) => {
       {/* Workout Summary */}
       <CollapsibleSection
         title="Workout Metadata"
-        icon={<WorkoutIcon />}
+        icon={<WorkoutIconSmall />}
         defaultOpen={true}
       >
         <WorkoutSummary workoutData={workoutData} />
@@ -669,7 +670,7 @@ const WorkoutViewer = ({ workout, onToggleView, onDeleteWorkout }) => {
       {crossfitData && crossfitData.rounds && (
         <CollapsibleSection
           title={`Workout Rounds (${crossfitData.rounds.length})`}
-          icon={<WorkoutIcon />}
+          icon={<WorkoutIconSmall />}
           defaultOpen={true}
         >
           <div className="space-y-6">

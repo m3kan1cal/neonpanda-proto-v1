@@ -14,9 +14,9 @@ function getDefaultApiUrl() {
 
   // Use appropriate subdomain based on environment
   if (isDevelopment) {
-    return 'https://api-dev.coachforge.ai';
+    return 'https://api-dev.neonpanda.ai';
   } else {
-    return 'https://api-prod.coachforge.ai';
+    return 'https://api-prod.neonpanda.ai';
   }
 }
 

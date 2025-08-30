@@ -17,6 +17,7 @@ import { getCoachConversations } from "./functions/get-coach-conversations/resou
 import { getCoachConversation } from "./functions/get-coach-conversation/resource";
 import { updateCoachConversation } from "./functions/update-coach-conversation/resource";
 import { sendCoachConversationMessage } from "./functions/send-coach-conversation-message/resource";
+import { createWorkout } from "./functions/create-workout/resource";
 import { buildWorkout } from "./functions/build-workout/resource";
 import { buildConversationSummary } from "./functions/build-conversation-summary/resource";
 import { getWorkouts } from "./functions/get-workouts/resource";
@@ -32,6 +33,7 @@ import {
 import { getWeeklyReports } from "./functions/get-weekly-reports/resource";
 import { getWeeklyReport } from "./functions/get-weekly-report/resource";
 import { getMemories } from "./functions/get-memories/resource";
+import { createMemory } from "./functions/create-memory/resource";
 import { deleteMemory } from "./functions/delete-memory/resource";
 import { deleteCoachConversation } from "./functions/delete-coach-conversation/resource";
 import { apiGatewayv2 } from "./api/resource";
@@ -66,6 +68,7 @@ const backend = defineBackend({
   getCoachConversation,
   updateCoachConversation,
   sendCoachConversationMessage,
+  createWorkout,
   buildWorkout,
   buildConversationSummary,
   getWorkouts,
@@ -78,6 +81,7 @@ const backend = defineBackend({
   getWeeklyReports,
   getWeeklyReport,
   getMemories,
+  createMemory,
   deleteMemory,
   deleteCoachConversation,
 });
@@ -101,6 +105,7 @@ const coreApi = apiGatewayv2.createCoreApi(
   backend.getCoachConversation.resources.lambda,
   backend.updateCoachConversation.resources.lambda,
   backend.sendCoachConversationMessage.resources.lambda,
+  backend.createWorkout.resources.lambda,
   backend.getWorkouts.resources.lambda,
   backend.getWorkout.resources.lambda,
   backend.updateWorkout.resources.lambda,
@@ -110,6 +115,7 @@ const coreApi = apiGatewayv2.createCoreApi(
   backend.getWeeklyReports.resources.lambda,
   backend.getWeeklyReport.resources.lambda,
   backend.getMemories.resources.lambda,
+  backend.createMemory.resources.lambda,
   backend.deleteMemory.resources.lambda,
   backend.deleteCoachConversation.resources.lambda
 );
@@ -165,6 +171,7 @@ coreTable.table.grantReadWriteData(
 );
 
 // Grant DynamoDB permissions to workout functions (read and write)
+coreTable.table.grantReadData(backend.createWorkout.resources.lambda);
 coreTable.table.grantReadWriteData(backend.buildWorkout.resources.lambda);
 coreTable.table.grantReadWriteData(
   backend.buildConversationSummary.resources.lambda
@@ -183,6 +190,7 @@ coreTable.table.grantReadData(backend.getWeeklyReport.resources.lambda);
 
 // Grant DynamoDB permissions to memory functions
 coreTable.table.grantReadData(backend.getMemories.resources.lambda);
+coreTable.table.grantReadWriteData(backend.createMemory.resources.lambda);
 coreTable.table.grantReadWriteData(backend.deleteMemory.resources.lambda);
 
 // Add environment variables to all functions
@@ -201,6 +209,7 @@ const allFunctions = [
   backend.getCoachConversation,
   backend.updateCoachConversation,
   backend.sendCoachConversationMessage,
+  backend.createWorkout,
   backend.buildWorkout,
   backend.buildConversationSummary,
   backend.getWorkouts,
@@ -213,6 +222,7 @@ const allFunctions = [
   backend.getWeeklyReports,
   backend.getWeeklyReport,
   backend.getMemories,
+  backend.createMemory,
   backend.deleteMemory,
   backend.deleteCoachConversation,
   backend.getCoachTemplates,
@@ -234,6 +244,7 @@ grantBedrockPermissions([
   backend.buildWorkout.resources.lambda,
   backend.buildConversationSummary.resources.lambda,
   backend.buildWeeklyAnalytics.resources.lambda,
+  backend.createMemory.resources.lambda, // Added for AI scope detection
 ]);
 
 // Grant S3 debug permissions to functions that need it
@@ -251,6 +262,12 @@ grantLambdaInvokePermissions(
   [backend.buildCoachConfig.resources.lambda.functionArn]
 );
 
+// Grant permission to createWorkout to invoke buildWorkout
+grantLambdaInvokePermissions(
+  backend.createWorkout.resources.lambda,
+  [backend.buildWorkout.resources.lambda.functionArn]
+);
+
 // Grant permission to sendCoachConversationMessage to invoke buildWorkout and buildConversationSummary
 grantLambdaInvokePermissions(
   backend.sendCoachConversationMessage.resources.lambda,
@@ -264,6 +281,12 @@ backend.updateCoachCreatorSession.addEnvironment(
   "BUILD_COACH_CONFIG_FUNCTION_NAME",
   backend.buildCoachConfig.resources.lambda.functionName
 );
+
+backend.createWorkout.addEnvironment(
+  "BUILD_WORKOUT_FUNCTION_NAME",
+  backend.buildWorkout.resources.lambda.functionName
+);
+
 backend.sendCoachConversationMessage.addEnvironment(
   "BUILD_WORKOUT_FUNCTION_NAME",
   backend.buildWorkout.resources.lambda.functionName

@@ -18,6 +18,7 @@ export interface RouteIntegrations {
   getCoachConversation: apigatewayv2_integrations.HttpLambdaIntegration;
   updateCoachConversation: apigatewayv2_integrations.HttpLambdaIntegration;
   sendCoachConversationMessage: apigatewayv2_integrations.HttpLambdaIntegration;
+  createWorkout: apigatewayv2_integrations.HttpLambdaIntegration;
   getWorkouts: apigatewayv2_integrations.HttpLambdaIntegration;
   getWorkout: apigatewayv2_integrations.HttpLambdaIntegration;
   updateWorkout: apigatewayv2_integrations.HttpLambdaIntegration;
@@ -28,6 +29,7 @@ export interface RouteIntegrations {
   getWeeklyReports: apigatewayv2_integrations.HttpLambdaIntegration;
   getWeeklyReport: apigatewayv2_integrations.HttpLambdaIntegration;
   getMemories: apigatewayv2_integrations.HttpLambdaIntegration;
+  createMemory: apigatewayv2_integrations.HttpLambdaIntegration;
   deleteMemory: apigatewayv2_integrations.HttpLambdaIntegration;
 }
 
@@ -256,6 +258,13 @@ export function addWorkoutRoutes(
     integration: integrations.deleteWorkout
   });
 
+  // Create new workout session
+  httpApi.addRoutes({
+    path: '/users/{userId}/workouts',
+    methods: [apigatewayv2.HttpMethod.POST],
+    integration: integrations.createWorkout
+  });
+
   // Get workout sessions count for a user
   httpApi.addRoutes({
     path: '/users/{userId}/workouts/count',
@@ -306,6 +315,13 @@ export function addMemoryRoutes(
     path: '/users/{userId}/memories',
     methods: [apigatewayv2.HttpMethod.GET],
     integration: integrations.getMemories
+  });
+
+  // Create a new memory for a user
+  httpApi.addRoutes({
+    path: '/users/{userId}/memories',
+    methods: [apigatewayv2.HttpMethod.POST],
+    integration: integrations.createMemory
   });
 
   // Delete specific memory

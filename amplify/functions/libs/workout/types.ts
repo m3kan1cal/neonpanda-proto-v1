@@ -277,7 +277,7 @@ export interface WorkoutMetadata {
 export interface BuildWorkoutEvent {
   userId: string;
   coachId: string;
-  conversationId: string;
+  conversationId: string; // "standalone" for command palette, actual conversationId for conversation-based
   userMessage: string;
   coachConfig: CoachConfig;
   completedAt?: string; // ISO date string

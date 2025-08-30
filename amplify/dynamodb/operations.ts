@@ -20,7 +20,8 @@ import {
   CoachMessage,
   CoachConversationSummary,
 } from "../functions/libs/coach-conversation/types";
-import { UserProfile, UserMemory } from "../functions/libs/user/types";
+import { UserProfile } from "../functions/libs/user/types";
+import { UserMemory } from "../functions/libs/memory/types";
 import { Workout } from "../functions/libs/workout/types";
 import { WeeklyAnalytics } from "../functions/libs/analytics/types";
 

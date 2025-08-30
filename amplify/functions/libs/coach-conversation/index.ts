@@ -28,6 +28,5 @@ export {
 } from './summary';
 
 export {
-  detectConversationComplexity,
-  detectConversationMemoryNeeds
+  detectConversationComplexity
 } from './detection';

@@ -1,11 +1,18 @@
-import { queryMemories as queryMemoriesFromDb, saveMemory, updateMemory } from "../../../dynamodb/operations";
-import { detectMemoryRequest, createMemory, detectMemoryRetrievalNeed, detectMemoryScope } from "./detection";
-import { querySemanticMemories } from '../api-helpers';
-import { storeMemoryInPinecone } from '../user/pinecone';
-import { UserMemory } from '../user/types';
-import { parseSlashCommand } from '../workout/detection';
-
-
+import {
+  queryMemories as queryMemoriesFromDb,
+  saveMemory,
+  updateMemory,
+} from "../../../dynamodb/operations";
+import { querySemanticMemories } from "../api-helpers";
+import { storeMemoryInPinecone } from "../user/pinecone";
+import {
+  UserMemory,
+  detectMemoryRequest,
+  detectMemoryRetrievalNeed,
+  generateMemoryId,
+  detectMemoryCharacteristics,
+} from "../memory";
+import { parseSlashCommand } from "../workout/detection";
 
 export interface MemoryRetrievalResult {
   memories: UserMemory[];
@@ -28,32 +35,35 @@ export interface MemoryProcessingResult {
 /**
  * Supported memory slash commands
  */
-export const MEMORY_SLASH_COMMANDS = ['save-memory'] as const;
+export const MEMORY_SLASH_COMMANDS = ["save-memory"] as const;
 
 /**
  * Checks if a slash command is a memory command
  */
 export const isMemorySlashCommand = (slashCommandResult: any): boolean => {
-  return slashCommandResult.isSlashCommand &&
+  return (
+    slashCommandResult.isSlashCommand &&
     slashCommandResult.command !== undefined &&
-    MEMORY_SLASH_COMMANDS.includes(slashCommandResult.command as any);
+    MEMORY_SLASH_COMMANDS.includes(slashCommandResult.command as any)
+  );
 };
-
-
 
 /**
  * Helper function to combine and deduplicate memories from different sources
  */
-function combineAndDeduplicateMemories(semanticMemories: any[], importantMemories: UserMemory[]): UserMemory[] {
+function combineAndDeduplicateMemories(
+  semanticMemories: any[],
+  importantMemories: UserMemory[]
+): UserMemory[] {
   const memoryMap = new Map<string, UserMemory>();
 
   // Add semantic memories first (they have priority due to relevance)
-  semanticMemories.forEach(memory => {
+  semanticMemories.forEach((memory) => {
     memoryMap.set(memory.memoryId, memory);
   });
 
   // Add important memories if not already included
-  importantMemories.forEach(memory => {
+  importantMemories.forEach((memory) => {
     if (!memoryMap.has(memory.memoryId)) {
       memoryMap.set(memory.memoryId, memory);
     }
@@ -77,37 +87,52 @@ export async function queryMemories(
   try {
     if (userMessage) {
       // Use AI to determine if semantic memory retrieval is beneficial
-      const retrievalDetection = await detectMemoryRetrievalNeed(userMessage, messageContext);
+      const retrievalDetection = await detectMemoryRetrievalNeed(
+        userMessage,
+        messageContext
+      );
 
-      if (retrievalDetection.needsSemanticRetrieval && retrievalDetection.confidence > 0.6) {
-        console.info('🧠 AI detected need for semantic memory retrieval:', {
+      if (
+        retrievalDetection.needsSemanticRetrieval &&
+        retrievalDetection.confidence > 0.6
+      ) {
+        console.info("🧠 AI detected need for semantic memory retrieval:", {
           confidence: retrievalDetection.confidence,
           contextTypes: retrievalDetection.contextTypes,
-          reasoning: retrievalDetection.reasoning
+          reasoning: retrievalDetection.reasoning,
         });
 
         // Use semantic + importance hybrid approach
         const [semanticMemories, importantMemories] = await Promise.all([
           querySemanticMemories(userId, userMessage, {
             topK: 6,
-            contextTypes: retrievalDetection.contextTypes
+            contextTypes: retrievalDetection.contextTypes,
           }),
-          queryMemoriesFromDb(userId, coachId, { limit: 4, importance: 'high' })
+          queryMemoriesFromDb(userId, coachId, {
+            limit: 4,
+            importance: "high",
+          }),
         ]);
 
-        memories = combineAndDeduplicateMemories(semanticMemories, importantMemories);
+        memories = combineAndDeduplicateMemories(
+          semanticMemories,
+          importantMemories
+        );
 
-        console.info('Retrieved hybrid memories:', {
+        console.info("Retrieved hybrid memories:", {
           semanticCount: semanticMemories.length,
           importantCount: importantMemories.length,
-          finalCount: memories.length
+          finalCount: memories.length,
         });
       } else {
         // AI determined semantic retrieval not beneficial - get top important memories only
-        console.info('🔄 AI determined semantic retrieval not needed, using importance-based:', {
-          confidence: retrievalDetection.confidence,
-          reasoning: retrievalDetection.reasoning
-        });
+        console.info(
+          "🔄 AI determined semantic retrieval not needed, using importance-based:",
+          {
+            confidence: retrievalDetection.confidence,
+            reasoning: retrievalDetection.reasoning,
+          }
+        );
         memories = await queryMemoriesFromDb(userId, coachId, { limit: 10 });
       }
     } else {
@@ -118,22 +143,21 @@ export async function queryMemories(
     // Update usage statistics for retrieved memories
     if (memories.length > 0) {
       // Don't await these - update in background
-      memories.forEach(memory => {
+      memories.forEach((memory) => {
         updateMemory(memory.memoryId, userId).catch((err: any) =>
-          console.warn('Failed to update memory usage:', err)
+          console.warn("Failed to update memory usage:", err)
         );
       });
     }
 
-    console.info('Retrieved memories for context:', {
+    console.info("Retrieved memories for context:", {
       userId,
       coachId,
       memoryCount: memories.length,
-      approach: userMessage ? 'AI-guided' : 'standard'
+      approach: userMessage ? "AI-guided" : "standard",
     });
-
   } catch (error) {
-    console.error('Error retrieving memories:', error);
+    console.error("Error retrieving memories:", error);
     throw error; // Simplified - let the error bubble up rather than silent fallback
   }
 
@@ -170,10 +194,14 @@ export async function detectAndProcessMemory(
         coachId,
         conversationId,
         userMessage: userMessage,
-        messageContext: existingMessages.slice(-3).map(msg => `${msg.role}: ${msg.content}`).join('\n')
+        messageContext: existingMessages
+          .slice(-3)
+          .map((msg) => `${msg.role}: ${msg.content}`)
+          .join("\n"),
       };
       const memoryDetection = await detectMemoryRequest(memoryDetectionEvent);
-      isNaturalLanguageMemory = memoryDetection.isMemoryRequest && memoryDetection.confidence > 0.7;
+      isNaturalLanguageMemory =
+        memoryDetection.isMemoryRequest && memoryDetection.confidence > 0.7;
     }
 
     isMemoryProcessing = isSlashCommandMemory || isNaturalLanguageMemory;
@@ -194,7 +222,9 @@ export async function detectAndProcessMemory(
       coachId,
       conversationId,
       userMessage: userMessage,
-      detectionType: isSlashCommandMemory ? "slash_command" : "natural_language",
+      detectionType: isSlashCommandMemory
+        ? "slash_command"
+        : "natural_language",
       slashCommand: isSlashCommandMemory ? slashCommand.command : null,
       timestamp: new Date().toISOString(),
     });
@@ -211,32 +241,41 @@ export async function detectAndProcessMemory(
       if (isSlashCommandMemory) {
         // For slash commands, create memory directly with AI scope detection
         if (!memoryContent || memoryContent.trim().length === 0) {
-          memoryFeedback = "❌ Please provide content to save as a memory. Example: /save-memory I prefer morning workouts";
+          memoryFeedback =
+            "❌ Please provide content to save as a memory. Example: /save-memory I prefer morning workouts";
         } else {
-          // Use AI to determine if memory should be coach-specific or global
-          const scopeDetection = await detectMemoryScope(memoryContent.trim(), coachName);
+          // Use AI to determine memory characteristics (combined analysis)
+          const memoryCharacteristics = await detectMemoryCharacteristics(
+            memoryContent.trim(),
+            coachName
+          );
 
-          console.info('🎯 Slash command memory scope detected:', {
-            content: memoryContent.trim().substring(0, 50) + (memoryContent.length > 50 ? '...' : ''),
-            isCoachSpecific: scopeDetection.isCoachSpecific,
-            confidence: scopeDetection.confidence,
-            reasoning: scopeDetection.reasoning
+          console.info("🎯 Slash command memory characteristics detected:", {
+            content:
+              memoryContent.trim().substring(0, 50) +
+              (memoryContent.length > 50 ? "..." : ""),
+            type: memoryCharacteristics.type,
+            importance: memoryCharacteristics.importance,
+            isCoachSpecific: memoryCharacteristics.isCoachSpecific,
+            confidence: memoryCharacteristics.confidence,
           });
 
           memory = {
-            memoryId: `user_memory_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
+            memoryId: generateMemoryId(),
             userId,
-            coachId: scopeDetection.isCoachSpecific ? coachId : undefined, // Global if not coach-specific
-            memoryType: 'preference', // Default type for explicit memories
+            coachId: memoryCharacteristics.isCoachSpecific ? coachId : undefined, // AI determines scope
+            memoryType: memoryCharacteristics.type, // AI-determined type
             content: memoryContent.trim(),
             metadata: {
-              importance: 'medium', // Default importance for explicit memories
-              source: 'explicit_request',
+              importance: memoryCharacteristics.importance, // AI-determined importance
+              source: "explicit_request",
               createdAt: new Date(),
               lastUsed: new Date(),
               usageCount: 0,
-              tags: scopeDetection.isCoachSpecific ? ['coach_specific'] : ['global']
-            }
+              tags: memoryCharacteristics.isCoachSpecific
+                ? ["coach_specific"]
+                : ["global"],
+            },
           };
         }
       } else {
@@ -246,10 +285,41 @@ export async function detectAndProcessMemory(
           coachId,
           conversationId,
           userMessage: userMessage,
-          messageContext: existingMessages.slice(-3).map(msg => `${msg.role}: ${msg.content}`).join('\n')
+          messageContext: existingMessages
+            .slice(-3)
+            .map((msg) => `${msg.role}: ${msg.content}`)
+            .join("\n"),
         };
         const memoryDetection = await detectMemoryRequest(memoryDetectionEvent);
-        memory = await createMemory(memoryDetection, userId, coachId, coachName);
+
+        if (
+          memoryDetection.isMemoryRequest &&
+          memoryDetection.extractedMemory
+        ) {
+          // Use AI to determine memory characteristics (combined analysis)
+          const memoryCharacteristics = await detectMemoryCharacteristics(
+            memoryDetection.extractedMemory.content,
+            coachName
+          );
+
+          memory = {
+            memoryId: generateMemoryId(),
+            userId,
+            coachId: memoryCharacteristics.isCoachSpecific ? coachId : undefined,
+            content: memoryDetection.extractedMemory.content,
+            memoryType: memoryCharacteristics.type, // AI-determined type
+            metadata: {
+              createdAt: new Date(),
+              lastUsed: new Date(),
+              usageCount: 0,
+              source: "conversation",
+              importance: memoryCharacteristics.importance, // AI-determined importance
+              tags: memoryCharacteristics.isCoachSpecific
+                ? ["coach_specific"]
+                : ["global"],
+            },
+          };
+        }
       }
 
       // Unified storage logic for both types
@@ -257,23 +327,31 @@ export async function detectAndProcessMemory(
         await saveMemory(memory);
         try {
           await storeMemoryInPinecone(memory);
-          console.info('Memory stored in both DynamoDB and Pinecone:', {
-            type: isSlashCommandMemory ? 'slash_command' : 'natural_language',
-            memoryId: memory.memoryId
+          console.info("Memory stored in both DynamoDB and Pinecone:", {
+            type: isSlashCommandMemory ? "slash_command" : "natural_language",
+            memoryId: memory.memoryId,
           });
         } catch (error) {
-          console.warn('Failed to store memory in Pinecone, continuing:', error);
+          console.warn(
+            "Failed to store memory in Pinecone, continuing:",
+            error
+          );
         }
         memoryFeedback = `✅ I've remembered that for you: "${memory.content}"`;
-        console.info('Memory saved:', {
+        console.info("Memory saved:", {
           memoryId: memory.memoryId,
           userId,
-          scope: memory.coachId ? `coach_specific (${memory.coachId})` : 'global',
-          type: isSlashCommandMemory ? 'slash_command' : 'natural_language'
+          scope: memory.coachId
+            ? `coach_specific (${memory.coachId})`
+            : "global",
+          type: isSlashCommandMemory ? "slash_command" : "natural_language",
         });
       }
     } catch (error) {
-      console.error("❌ Failed to process memory, but continuing conversation:", error);
+      console.error(
+        "❌ Failed to process memory, but continuing conversation:",
+        error
+      );
       memoryFeedback = "❌ Sorry, I couldn't save that memory right now.";
     }
   }

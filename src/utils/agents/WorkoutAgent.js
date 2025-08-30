@@ -1,5 +1,5 @@
 import { nanoid } from 'nanoid';
-import { getWorkouts, getWorkout, updateWorkout, deleteWorkout, getWorkoutsCount, getRecentWorkouts, getTrainingDaysCount } from '../apis/workoutApi.js';
+import { getWorkouts, getWorkout, updateWorkout, deleteWorkout, getWorkoutsCount, getRecentWorkouts, getTrainingDaysCount, createWorkout } from '../apis/workoutApi.js';
 
 /**
  * WorkoutAgent - Handles the business logic for workout management
@@ -471,6 +471,42 @@ export class WorkoutAgent {
       console.error("Error updating workout metadata:", error);
       this._updateState({
         error: "Failed to update workout metadata"
+      });
+      if (typeof this.onError === 'function') {
+        this.onError(error);
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Creates a new workout from user input
+   */
+  async createWorkout(workoutContent, options = {}) {
+    if (!this.userId) {
+      throw new Error("User ID is required");
+    }
+
+    if (!workoutContent || typeof workoutContent !== 'string' || workoutContent.trim().length === 0) {
+      throw new Error("Workout content is required");
+    }
+
+    try {
+      console.info("Creating workout:", {
+        userId: this.userId,
+        workoutContent: workoutContent.substring(0, 100) + '...',
+        options
+      });
+
+      // Call API to create workout
+      const result = await createWorkout(this.userId, workoutContent.trim(), options);
+
+      console.info("Workout creation initiated successfully");
+      return result;
+    } catch (error) {
+      console.error("Error creating workout:", error);
+      this._updateState({
+        error: "Failed to create workout"
       });
       if (typeof this.onError === 'function') {
         this.onError(error);

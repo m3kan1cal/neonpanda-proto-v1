@@ -21,6 +21,7 @@ function Breadcrumbs() {
   // Define route mappings for better display names
   const routeMap = {
     'faqs': 'FAQs',
+    'changelog': 'Changelog',
     'contact': 'Contact',
     'coach-creator': 'Coach Creator',
     'coaches': 'Coaches',

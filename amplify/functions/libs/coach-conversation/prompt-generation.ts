@@ -1,5 +1,5 @@
 import { CoachConfig, DynamoDBItem } from '../coach-creator/types';
-import { UserMemory } from '../user/types';
+import { UserMemory } from '../memory/types';
 import {
   CoachConfigInput,
   PromptGenerationOptions,

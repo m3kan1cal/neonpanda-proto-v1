@@ -51,7 +51,7 @@ export async function gatherConversationContext(
   // Query Pinecone for semantic context if appropriate
   let pineconeContext = "";
   let pineconeMatches: any[] = [];
-  const shouldQueryPinecone = shouldUsePineconeSearch(userMessage);
+  const shouldQueryPinecone = await shouldUsePineconeSearch(userMessage);
 
   if (shouldQueryPinecone) {
     try {

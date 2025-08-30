@@ -74,6 +74,63 @@ export const getMemories = async (userId, options = {}) => {
 };
 
 /**
+ * Creates a new memory for a user
+ * @param {string} userId - The user ID
+ * @param {Object} memoryData - The memory data
+ * @param {string} memoryData.content - The memory content
+ * @param {string} [memoryData.coachId] - Optional coach ID (AI determines if memory should be coach-specific)
+ * @returns {Promise<Object>} - The API response with the created memory (includes AI analysis)
+ * @note Memory type and importance are automatically determined by AI
+ */
+export const createMemory = async (userId, memoryData) => {
+  const url = `${getApiUrl('')}/users/${userId}/memories`;
+
+  console.info('createMemory: Making API call to:', url);
+  console.info('createMemory: userId:', userId);
+  console.info('createMemory: memoryData:', memoryData);
+
+  const requestBody = {
+    content: memoryData.content,
+    coachId: memoryData.coachId || null,
+    // AI will determine memoryType and importance automatically
+  };
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(requestBody),
+  });
+
+  console.info('createMemory: Response status:', response.status);
+  console.info('createMemory: Response ok:', response.ok);
+
+  if (!response.ok) {
+    console.error('createMemory: API Error - Status:', response.status);
+
+    // Try to get the specific error message from the response
+    let errorMessage = `API Error: ${response.status}`;
+    try {
+      const errorData = await response.json();
+      if (errorData.error) {
+        errorMessage = errorData.error;
+        console.error('createMemory: Specific error message:', errorMessage);
+      }
+    } catch (jsonError) {
+      console.warn('createMemory: Could not parse error response as JSON');
+    }
+
+    throw new Error(errorMessage);
+  }
+
+  const result = await response.json();
+  console.info('createMemory: API Response:', result);
+
+  return result;
+};
+
+/**
  * Deletes a specific memory
  * @param {string} userId - The user ID
  * @param {string} memoryId - The memory ID

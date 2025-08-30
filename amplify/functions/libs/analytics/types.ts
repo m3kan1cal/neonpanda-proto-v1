@@ -7,7 +7,7 @@
 import { DynamoDBItem } from "../coach-creator/types";
 import { Workout } from "../workout/types";
 import { CoachConversation } from "../coach-conversation/types";
-import { UserMemory } from "../user/types";
+import { UserMemory } from "../memory/types";
 
 /**
  * Event type for weekly analytics trigger from EventBridge

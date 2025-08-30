@@ -420,7 +420,7 @@ function TrainingGrounds() {
     <div className={`${themeClasses.container} min-h-screen`}>
       <div className="max-w-7xl mx-auto px-8 py-12">
         {/* Header */}
-        <div className="mb-12">
+        <div className="mb-8">
           {/* Title */}
           <div className="text-center">
             <h1 className="font-russo font-black text-4xl md:text-5xl text-white mb-6 uppercase">
@@ -438,9 +438,23 @@ function TrainingGrounds() {
                 <InfoIcon />
               </button>
             </div>
-            <p className="font-rajdhani text-lg text-synthwave-text-secondary max-w-3xl mx-auto">
+            <p className="font-rajdhani text-lg text-synthwave-text-secondary max-w-3xl mx-auto mb-4">
               Track progress, access resources, stay connected, and manage your complete fitness journey. Everything you need to achieve your goals is centralized here.
             </p>
+            <div className="flex items-center justify-center space-x-2 text-synthwave-text-secondary font-rajdhani text-sm">
+              <div className="flex items-center space-x-1 bg-synthwave-bg-primary/30 px-2 py-1 rounded border border-synthwave-neon-pink/20">
+                <span className="text-synthwave-neon-pink">⌘</span>
+                <span>K</span>
+              </div>
+              <span>for Command Palette</span>
+              <div className="flex items-center space-x-1">
+                <span>(</span>
+                <svg className="w-4 h-4 text-synthwave-neon-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+                <span>Works on any page )</span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -1320,6 +1334,9 @@ function TrainingGrounds() {
           setCommandPaletteCommand('');
         }}
         prefilledCommand={commandPaletteCommand}
+        workoutAgent={workoutAgentRef.current}
+        userId={userId}
+        coachId={coachId}
       />
 
     </div>

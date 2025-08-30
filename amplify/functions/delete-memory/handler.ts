@@ -2,7 +2,7 @@ import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
 import { createSuccessResponse, createErrorResponse } from '../libs/api-helpers';
 import { deleteMemory, loadFromDynamoDB } from '../../dynamodb/operations';
 import { deleteMemoryFromPinecone } from '../libs/user/pinecone';
-import { UserMemory } from '../libs/user/types';
+import { UserMemory } from '../libs/memory/types';
 
 export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> => {
   try {

@@ -551,6 +551,13 @@ function ManageWorkouts() {
               Review, organize, and analyze your complete workout history. Track
               your fitness journey and monitor your progress over time.
             </p>
+            <div className="flex items-center justify-center space-x-2 text-synthwave-text-secondary font-rajdhani text-sm">
+              <div className="flex items-center space-x-1 bg-synthwave-bg-primary/30 px-2 py-1 rounded border border-synthwave-neon-pink/20">
+                <span className="text-synthwave-neon-pink">⌘</span>
+                <span>K</span>
+              </div>
+              <span>for Command Palette</span>
+            </div>
           </div>
 
           {/* Stats */}

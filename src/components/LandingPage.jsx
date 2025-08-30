@@ -76,46 +76,84 @@ function LandingPage() {
             Create your perfect AI fitness coach from scratch. Design how it communicates, what methodologies it follows, and how it adapts to your unique journey. Get personalized programming, motivation, and guidance that evolves as you do.
           </p>
 
+          {/* Core Features Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {/* Feature 1 - Methodology Intelligence */}
             <NeonBorder color="pink" className="p-8 bg-synthwave-bg-card/50">
-              <h3 className="font-russo text-xl text-synthwave-neon-pink mb-4 uppercase">Completely Customizable</h3>
+              <div className="text-synthwave-neon-pink mb-6 flex justify-center">
+                <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+              </div>
+              <h3 className="font-russo text-xl text-synthwave-neon-pink mb-4 uppercase">Methodology Intelligence</h3>
               <p className="font-rajdhani text-synthwave-text-secondary leading-relaxed">
-                Build your AI coach's personality, communication style, and training philosophy. Want a tough-love motivator or an encouraging supporter? You decide.
+                AI coaches that understand 30+ training systems including CrossFit, powerlifting, and Olympic lifting methodologies. Not random workouts—intelligent programming based on proven principles.
               </p>
             </NeonBorder>
 
+            {/* Feature 2 - Predictive Intelligence */}
             <NeonBorder color="cyan" className="p-8 bg-synthwave-bg-card/50">
-              <h3 className="font-russo text-xl text-synthwave-neon-cyan mb-4 uppercase">Learns & Adapts</h3>
+              <div className="text-synthwave-neon-cyan mb-6 flex justify-center">
+                <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </div>
+              <h3 className="font-russo text-xl text-synthwave-neon-cyan mb-4 uppercase">Predictive Intelligence</h3>
               <p className="font-rajdhani text-synthwave-text-secondary leading-relaxed">
-                Your coach gets smarter with every workout, adjusting to your progress, preferences, and life changes. No more static programs that don't evolve.
+                Your coach learns your patterns and predicts needs before problems arise. Based on your sleep and training data, it might reduce intensity to prevent overreaching or adjust programming when motivation typically drops.
               </p>
             </NeonBorder>
 
+            {/* Feature 3 - Movement & Mental Coaching */}
             <NeonBorder color="purple" className="p-8 bg-synthwave-bg-card/50">
-              <h3 className="font-russo text-xl text-synthwave-neon-purple mb-4 uppercase">Built on Proven Methods</h3>
+              <div className="text-synthwave-neon-purple mb-6 flex justify-center">
+                <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+              </div>
+              <h3 className="font-russo text-xl text-synthwave-neon-purple mb-4 uppercase">Movement & Mental Coaching</h3>
               <p className="font-rajdhani text-synthwave-text-secondary leading-relaxed">
-                Choose from training approaches inspired by elite methodologies like Mayhem, PRVN, and CompTrain—or create your own hybrid approach.
+                AI coaches that analyze both biomechanics and psychology. Get technical movement corrections plus mental coaching—addressing both your squat depth and your motivation patterns.
               </p>
             </NeonBorder>
 
+            {/* Feature 4 - Completely Customizable */}
             <NeonBorder color="pink" className="p-8 bg-synthwave-bg-card/50">
-              <h3 className="font-russo text-xl text-synthwave-neon-pink mb-4 uppercase">Available 24/7</h3>
+              <div className="text-synthwave-neon-pink mb-6 flex justify-center">
+                <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </div>
+              <h3 className="font-russo text-xl text-synthwave-neon-pink mb-4 uppercase">Forge Your Perfect Coach</h3>
               <p className="font-rajdhani text-synthwave-text-secondary leading-relaxed">
-                Get instant answers to your questions, motivation when you need it, and programming that fits your schedule. Your coach never sleeps.
+                Design your ideal coach through guided conversations. Build their personality, communication style, and training philosophy. Want a tough-love motivator or encouraging supporter? You decide exactly how they coach you.
               </p>
             </NeonBorder>
 
+            {/* Feature 5 - Available 24/7 */}
             <NeonBorder color="cyan" className="p-8 bg-synthwave-bg-card/50">
-              <h3 className="font-russo text-xl text-synthwave-neon-cyan mb-4 uppercase">Advanced Yet Simple</h3>
+              <div className="text-synthwave-neon-cyan mb-6 flex justify-center">
+                <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 className="font-russo text-xl text-synthwave-neon-cyan mb-4 uppercase">Elite Expertise, Always Available</h3>
               <p className="font-rajdhani text-synthwave-text-secondary leading-relaxed">
-                Sophisticated AI architecture that delivers intelligent coaching through an intuitive, easy-to-use interface. No tech degree required.
+                Access elite coaching intelligence 24/7 with complete memory of your training history. Get thoughtful guidance for 3am questions and programming that adapts to your life.
               </p>
             </NeonBorder>
 
+            {/* Feature 6 - Secure & Private */}
             <NeonBorder color="purple" className="p-8 bg-synthwave-bg-card/50">
-              <h3 className="font-russo text-xl text-synthwave-neon-purple mb-4 uppercase">Secure & Private</h3>
+              <div className="text-synthwave-neon-purple mb-6 flex justify-center">
+                <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </div>
+              <h3 className="font-russo text-xl text-synthwave-neon-purple mb-4 uppercase">Private & Empowering</h3>
               <p className="font-rajdhani text-synthwave-text-secondary leading-relaxed">
-                Your personal fitness data, goals, and conversations stay completely private. Enterprise-grade security ensures your information is protected.
+                Your personal data stays completely private while your coach helps you understand the science behind your training. Learn the 'why' behind every recommendation to forge your potential.
               </p>
             </NeonBorder>
           </div>

@@ -15,6 +15,7 @@ import ManageMemories from './components/ManageMemories';
 import ManageCoachConversations from './components/ManageCoachConversations';
 import ViewReports from './components/ViewReports';
 import WeeklyReports from './components/WeeklyReports';
+import Changelog from './components/Changelog';
 import { ToastProvider } from './contexts/ToastContext';
 import ToastContainer from './components/ToastContainer';
 
@@ -30,6 +31,7 @@ function AppContent() {
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/faqs" element={<FAQs />} />
+          <Route path="/changelog" element={<Changelog />} />
           <Route path="/contact" element={<ContactForm />} />
           <Route path="/coach-creator" element={<CoachCreator />} />
           <Route path="/coaches" element={<Coaches />} />

@@ -4,7 +4,7 @@
  */
 
 import { storePineconeContext, deletePineconeContext } from '../api-helpers';
-import { UserMemory } from './types';
+import { UserMemory } from '../memory/types';
 
 /**
  * Store user memory in Pinecone for semantic search

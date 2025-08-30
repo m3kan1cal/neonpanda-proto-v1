@@ -20,7 +20,8 @@ import {
 } from "./date-utils";
 import { Workout } from "../workout/types";
 import { CoachConversation } from "../coach-conversation/types";
-import { UserMemory, UserProfile } from "../user/types";
+import { UserProfile } from "../user/types";
+import { UserMemory } from "../memory/types";
 import { DynamoDBItem } from "../coach-creator/types";
 import { HistoricalWorkoutSummary, UserWeeklyData } from "./types";
 import { getAnalyticsSchemaWithContext } from "../schemas/universal-analytics-schema";

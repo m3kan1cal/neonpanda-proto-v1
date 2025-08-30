@@ -7,5 +7,5 @@
 
 export {
   UserProfile,
-  UserMemory
+
 } from './types';

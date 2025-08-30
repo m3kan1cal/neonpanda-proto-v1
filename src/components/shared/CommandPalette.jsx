@@ -1,42 +1,62 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { themeClasses } from '../../utils/synthwaveThemeClasses';
+import React, { useState, useRef, useEffect } from "react";
+import { themeClasses } from "../../utils/synthwaveThemeClasses";
+import CommandPaletteAgent from "../../utils/agents/CommandPaletteAgent";
 
-const CommandPalette = ({ isOpen, onClose, prefilledCommand = '' }) => {
+const CommandPalette = ({
+  isOpen,
+  onClose,
+  prefilledCommand = "",
+  workoutAgent,
+  userId,
+  coachId,
+}) => {
   const [input, setInput] = useState(prefilledCommand);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef(null);
+  const agentRef = useRef(null);
+
+  // Agent state
+  const [agentState, setAgentState] = useState({
+    isExecuting: false,
+    executionResult: null,
+    error: null,
+    lastExecutedCommand: null,
+  });
 
   // Mock commands for visual demonstration
   const mockCommands = [
     {
-      id: 'log-workout',
-      trigger: '/log-workout',
-      description: 'Log a completed workout',
-      example: '/log-workout I did Fran in 8:57',
-      category: 'workout',
-      icon: '🏋️'
+      id: "log-workout",
+      trigger: "/log-workout",
+      description: "Log a completed workout",
+      example: "/log-workout I did Fran in 8:57",
+      category: "workout",
+      icon: "🏋️",
     },
     {
-      id: 'save-memory',
-      trigger: '/save-memory',
-      description: 'Save a memory or note',
-      example: '/save-memory I prefer morning workouts',
-      category: 'memory',
-      icon: '💭'
-    }
+      id: "save-memory",
+      trigger: "/save-memory",
+      description: "Save a memory or note",
+      example: "/save-memory I prefer morning workouts",
+      category: "memory",
+      icon: "💭",
+    },
   ];
 
-    // Determine what to show based on input state
+  // Determine what to show based on input state
   const getDisplayState = () => {
     const trimmedInput = input.trim();
 
     // If empty or just starting to type a command, show all commands
-    if (!trimmedInput || (trimmedInput.startsWith('/') && !trimmedInput.includes(' '))) {
+    if (
+      !trimmedInput ||
+      (trimmedInput.startsWith("/") && !trimmedInput.includes(" "))
+    ) {
       return {
-        type: 'command-list',
-        commands: mockCommands.filter(cmd =>
+        type: "command-list",
+        commands: mockCommands.filter((cmd) =>
           cmd.trigger.toLowerCase().includes(trimmedInput.toLowerCase())
-        )
+        ),
       };
     }
 
@@ -44,70 +64,135 @@ const CommandPalette = ({ isOpen, onClose, prefilledCommand = '' }) => {
     const commandMatch = trimmedInput.match(/^(\/[\w-]+)\s+(.+)$/);
     if (commandMatch) {
       const [, command, content] = commandMatch;
-      const matchedCommand = mockCommands.find(cmd => cmd.trigger === command);
+      const matchedCommand = mockCommands.find(
+        (cmd) => cmd.trigger === command
+      );
       if (matchedCommand) {
         return {
-          type: 'execution-preview',
+          type: "execution-preview",
           command: matchedCommand,
-          content: content.trim()
+          content: content.trim(),
         };
       }
     }
 
     // Default: show filtered commands
     return {
-      type: 'command-list',
-      commands: mockCommands.filter(cmd =>
-        cmd.trigger.toLowerCase().includes(trimmedInput.toLowerCase()) ||
-        cmd.description.toLowerCase().includes(trimmedInput.toLowerCase())
-      )
+      type: "command-list",
+      commands: mockCommands.filter(
+        (cmd) =>
+          cmd.trigger.toLowerCase().includes(trimmedInput.toLowerCase()) ||
+          cmd.description.toLowerCase().includes(trimmedInput.toLowerCase())
+      ),
     };
   };
 
   const displayState = getDisplayState();
 
-  // Focus input when opened
+  // Initialize agent
+  useEffect(() => {
+    if (!agentRef.current) {
+      agentRef.current = new CommandPaletteAgent(
+        userId,
+        workoutAgent,
+        (newState) => {
+          setAgentState(newState);
+        }
+      );
+    } else {
+      // Update agent when dependencies change
+      agentRef.current.setUserId(userId);
+      agentRef.current.setWorkoutAgent(workoutAgent);
+    }
+
+    return () => {
+      if (agentRef.current) {
+        agentRef.current.destroy();
+        agentRef.current = null;
+      }
+    };
+  }, [userId, workoutAgent]);
+
+  // Execute command function (now just delegates to agent)
+  const executeCommand = async (command, content) => {
+    if (!agentRef.current) return;
+
+    try {
+      await agentRef.current.executeCommand(command, content, { coachId });
+    } catch (error) {
+      // Error is already handled by the agent
+      console.error("Command execution failed:", error);
+    }
+  };
+
+  // Auto-close on successful execution
+  useEffect(() => {
+    if (agentState.executionResult?.success) {
+      const timer = setTimeout(() => {
+        onClose();
+        agentRef.current?.clearExecutionResult();
+      }, 2500);
+      return () => clearTimeout(timer);
+    }
+  }, [agentState.executionResult?.success, onClose]);
+
+  // Update input when prefilledCommand changes
+  useEffect(() => {
+    setInput(prefilledCommand);
+  }, [prefilledCommand]);
+
+  // Focus input when opened and reset agent state when closed
   useEffect(() => {
     if (isOpen && inputRef.current) {
       inputRef.current.focus();
+      // Move cursor to end of input if there's prefilled content
+      setTimeout(() => {
+        if (inputRef.current && input) {
+          inputRef.current.setSelectionRange(input.length, input.length);
+        }
+      }, 0);
     }
-  }, [isOpen]);
+    if (!isOpen && agentRef.current) {
+      agentRef.current.clearExecutionResult();
+    }
+  }, [isOpen, input]);
 
-    // Handle keyboard navigation
+  // Handle keyboard navigation
   const handleKeyDown = (e) => {
-    if (e.key === 'Escape') {
+    if (e.key === "Escape") {
       onClose();
-    } else if (displayState.type === 'command-list') {
-      if (e.key === 'ArrowDown') {
+    } else if (displayState.type === "command-list") {
+      if (e.key === "ArrowDown") {
         e.preventDefault();
-        setSelectedIndex(prev =>
+        setSelectedIndex((prev) =>
           prev < displayState.commands.length - 1 ? prev + 1 : 0
         );
-      } else if (e.key === 'ArrowUp') {
+      } else if (e.key === "ArrowUp") {
         e.preventDefault();
-        setSelectedIndex(prev =>
+        setSelectedIndex((prev) =>
           prev > 0 ? prev - 1 : displayState.commands.length - 1
         );
-      } else if (e.key === 'Enter') {
+      } else if (e.key === "Enter") {
         e.preventDefault();
         if (displayState.commands[selectedIndex]) {
           const command = displayState.commands[selectedIndex];
-          setInput(command.trigger + ' ');
+          setInput(command.trigger + " ");
           setSelectedIndex(0);
           // Move cursor to end after setting input
           setTimeout(() => {
             if (inputRef.current) {
-              inputRef.current.setSelectionRange(inputRef.current.value.length, inputRef.current.value.length);
+              inputRef.current.setSelectionRange(
+                inputRef.current.value.length,
+                inputRef.current.value.length
+              );
             }
           }, 0);
         }
       }
-    } else if (displayState.type === 'execution-preview') {
-      if (e.key === 'Enter') {
+    } else if (displayState.type === "execution-preview") {
+      if (e.key === "Enter") {
         e.preventDefault();
-        // For demo, show what would be executed
-        alert(`Would execute: ${displayState.command.trigger} "${displayState.content}"`);
-        onClose();
+        executeCommand(displayState.command, displayState.content);
       }
     }
   };
@@ -131,7 +216,9 @@ const CommandPalette = ({ isOpen, onClose, prefilledCommand = '' }) => {
       <div
         className={`relative mt-20 w-full max-w-2xl mx-4 ${themeClasses.neonBorder} bg-synthwave-bg-card/95 backdrop-blur-md rounded-lg shadow-2xl transform transition-all duration-300 ease-out`}
         style={{
-          animation: isOpen ? 'slideDown 0.3s ease-out' : 'slideUp 0.3s ease-in'
+          animation: isOpen
+            ? "slideDown 0.3s ease-out"
+            : "slideUp 0.3s ease-in",
         }}
       >
         {/* Header */}
@@ -140,7 +227,9 @@ const CommandPalette = ({ isOpen, onClose, prefilledCommand = '' }) => {
             <div className="w-6 h-6 rounded-full bg-synthwave-neon-pink/20 flex items-center justify-center">
               <span className="text-synthwave-neon-pink text-sm">⚡</span>
             </div>
-            <h2 className="font-russo text-lg text-white uppercase">Command Palette</h2>
+            <h2 className="font-russo text-lg text-white uppercase">
+              Command Palette
+            </h2>
           </div>
         </div>
 
@@ -155,70 +244,78 @@ const CommandPalette = ({ isOpen, onClose, prefilledCommand = '' }) => {
             placeholder="Type a command or search..."
             className="w-full px-4 py-3 bg-synthwave-bg-primary/50 border-2 border-synthwave-neon-pink/30 rounded-lg text-white font-rajdhani text-lg placeholder-synthwave-text-muted focus:outline-none focus:border-synthwave-neon-pink transition-colors duration-200"
             style={{
-              outline: 'none !important',
-              boxShadow: 'none !important',
-              WebkitTapHighlightColor: 'transparent'
+              outline: "none !important",
+              boxShadow: "none !important",
+              WebkitTapHighlightColor: "transparent",
             }}
           />
         </div>
 
         {/* Command List View */}
-        {displayState.type === 'command-list' && displayState.commands.length > 0 && (
-          <div className="px-6 pb-6">
-            <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-3">
-              Available Commands
-            </div>
-            <div className="space-y-2 max-h-80 overflow-y-auto custom-scrollbar">
-              {displayState.commands.map((command, index) => (
-                <div
-                  key={command.id}
-                  className={`flex items-start space-x-3 py-2 px-3 rounded cursor-pointer transition-colors duration-200 border ${
-                    index === selectedIndex
-                      ? 'bg-synthwave-bg-primary/30 border-synthwave-neon-pink/20'
-                      : 'hover:bg-synthwave-bg-primary/30 border-transparent'
-                  }`}
-                  onClick={() => {
-                    setInput(command.trigger + ' ');
-                    // Move cursor to end after setting input
-                    setTimeout(() => {
-                      if (inputRef.current) {
-                        inputRef.current.focus();
-                        inputRef.current.setSelectionRange(inputRef.current.value.length, inputRef.current.value.length);
-                      }
-                    }, 0);
-                  }}
-                >
-                  <div className={`font-rajdhani text-base ${
-                    index === selectedIndex
-                      ? 'text-synthwave-neon-pink'
-                      : 'text-synthwave-neon-pink'
-                  }`}>
-                    {command.trigger}
-                  </div>
-                  <div className="flex-1">
-                    <div className={`font-rajdhani text-base ${
+        {displayState.type === "command-list" &&
+          displayState.commands.length > 0 && (
+            <div className="px-6 pb-6">
+              <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-3">
+                Available Commands
+              </div>
+              <div className="space-y-2 max-h-80 overflow-y-auto custom-scrollbar">
+                {displayState.commands.map((command, index) => (
+                  <div
+                    key={command.id}
+                    className={`flex items-start space-x-3 py-2 px-3 rounded cursor-pointer transition-colors duration-200 border ${
                       index === selectedIndex
-                        ? 'text-white'
-                        : 'text-white'
-                    }`}>
-                      {command.description}
+                        ? "bg-synthwave-bg-primary/30 border-synthwave-neon-pink/20"
+                        : "hover:bg-synthwave-bg-primary/30 border-transparent"
+                    }`}
+                    onClick={() => {
+                      setInput(command.trigger + " ");
+                      // Move cursor to end after setting input
+                      setTimeout(() => {
+                        if (inputRef.current) {
+                          inputRef.current.focus();
+                          inputRef.current.setSelectionRange(
+                            inputRef.current.value.length,
+                            inputRef.current.value.length
+                          );
+                        }
+                      }, 0);
+                    }}
+                  >
+                    <div
+                      className={`font-rajdhani text-base ${
+                        index === selectedIndex
+                          ? "text-synthwave-neon-pink"
+                          : "text-synthwave-neon-pink"
+                      }`}
+                    >
+                      {command.trigger}
                     </div>
-                    <div className={`font-rajdhani text-sm mt-1 ${
-                      index === selectedIndex
-                        ? 'text-synthwave-text-secondary'
-                        : 'text-synthwave-text-muted'
-                    }`}>
-                      {command.example}
+                    <div className="flex-1">
+                      <div
+                        className={`font-rajdhani text-base ${
+                          index === selectedIndex ? "text-white" : "text-white"
+                        }`}
+                      >
+                        {command.description}
+                      </div>
+                      <div
+                        className={`font-rajdhani text-sm mt-1 ${
+                          index === selectedIndex
+                            ? "text-synthwave-text-secondary"
+                            : "text-synthwave-text-muted"
+                        }`}
+                      >
+                        {command.example}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
         {/* Execution Preview */}
-        {displayState.type === 'execution-preview' && (
+        {displayState.type === "execution-preview" && (
           <div className="px-6 pb-6">
             <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-3">
               Ready to Execute
@@ -246,26 +343,54 @@ const CommandPalette = ({ isOpen, onClose, prefilledCommand = '' }) => {
                 </div>
               </div>
 
-              <div className="text-synthwave-text-muted font-rajdhani text-sm px-3">
-                Press Enter to execute
-              </div>
+              {/* Execution Status */}
+              {agentState.isExecuting && (
+                <div className="flex items-center space-x-3 py-3 px-3 rounded bg-synthwave-bg-primary/20 border border-synthwave-neon-cyan/30">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-synthwave-neon-cyan"></div>
+                  <span className="text-synthwave-text-secondary font-rajdhani text-sm">
+                    Executing command...
+                  </span>
+                </div>
+              )}
+
+              {agentState.executionResult && (
+                <div
+                  className={`py-3 px-3 rounded border ${
+                    agentState.executionResult.success
+                      ? "bg-synthwave-neon-cyan/10 border-synthwave-neon-cyan/30 text-synthwave-neon-cyan"
+                      : "bg-red-900/20 border-red-500/30 text-red-400"
+                  }`}
+                >
+                  <div className="font-rajdhani text-sm">
+                    {agentState.executionResult.message}
+                  </div>
+                </div>
+              )}
+
+              {!agentState.isExecuting && !agentState.executionResult && (
+                <div className="text-synthwave-text-muted font-rajdhani text-sm px-3">
+                  Press Enter to execute
+                </div>
+              )}
             </div>
           </div>
         )}
 
         {/* No Results */}
-        {displayState.type === 'command-list' && displayState.commands.length === 0 && input && (
-          <div className="px-6 pb-6">
-            <div className="text-center py-8">
-              <div className="text-synthwave-text-muted font-rajdhani text-lg">
-                No commands found for "{input}"
-              </div>
-              <div className="text-synthwave-text-muted font-rajdhani text-sm mt-2">
-                Try typing /log-workout or /save-memory
+        {displayState.type === "command-list" &&
+          displayState.commands.length === 0 &&
+          input && (
+            <div className="px-6 pb-6">
+              <div className="text-center py-8">
+                <div className="text-synthwave-text-muted font-rajdhani text-lg">
+                  No commands found for "{input}"
+                </div>
+                <div className="text-synthwave-text-muted font-rajdhani text-sm mt-2">
+                  Try typing /log-workout or /save-memory
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
         {/* Footer */}
         <div className="px-6 py-3 border-t border-synthwave-neon-pink/30 bg-synthwave-bg-primary/30">
@@ -275,9 +400,7 @@ const CommandPalette = ({ isOpen, onClose, prefilledCommand = '' }) => {
               <span>↵ Execute</span>
               <span>Esc Close</span>
             </div>
-            <div>
-              Cmd+K to open anywhere
-            </div>
+            <div>Cmd+K to open anywhere</div>
           </div>
         </div>
       </div>

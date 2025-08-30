@@ -5,6 +5,7 @@ import {
   isWorkoutSlashCommand,
   generateWorkoutDetectionContext,
   WORKOUT_SLASH_COMMANDS,
+  BuildWorkoutEvent,
 } from "../workout";
 
 export interface WorkoutDetectionResult {
@@ -112,19 +113,21 @@ export async function detectAndProcessWorkout(
       // Ensure we have valid workout content to extract
       const extractionContent = workoutContent || userMessage;
 
+      const buildWorkoutPayload: BuildWorkoutEvent = {
+        userId,
+        coachId,
+        conversationId,
+        userMessage: extractionContent,
+        coachConfig: coachConfig.attributes,
+        isSlashCommand: isSlashCommandWorkout,
+        slashCommand: isSlashCommandWorkout
+          ? slashCommand.command || undefined
+          : undefined,
+      };
+
       await invokeAsyncLambda(
         buildFunction,
-        {
-          userId,
-          coachId,
-          conversationId,
-          userMessage: extractionContent,
-          coachConfig: coachConfig.attributes,
-          isSlashCommand: isSlashCommandWorkout,
-          slashCommand: isSlashCommandWorkout
-            ? slashCommand.command || null
-            : null,
-        },
+        buildWorkoutPayload,
         "workout extraction"
       );
     } catch (error) {

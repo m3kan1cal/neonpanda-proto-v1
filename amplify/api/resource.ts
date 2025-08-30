@@ -23,6 +23,7 @@ export function createCoreApi(
   getCoachConversationLambda: lambda.IFunction,
   updateCoachConversationLambda: lambda.IFunction,
   sendCoachConversationMessageLambda: lambda.IFunction,
+  createWorkoutLambda: lambda.IFunction,
   getWorkoutsLambda: lambda.IFunction,
   getWorkoutLambda: lambda.IFunction,
   updateWorkoutLambda: lambda.IFunction,
@@ -32,6 +33,7 @@ export function createCoreApi(
   getWeeklyReportsLambda: lambda.IFunction,
   getWeeklyReportLambda: lambda.IFunction,
   getMemoriesLambda: lambda.IFunction,
+  createMemoryLambda: lambda.IFunction,
   deleteMemoryLambda: lambda.IFunction,
   deleteCoachConversationLambda: lambda.IFunction
 ) {
@@ -43,14 +45,14 @@ export function createCoreApi(
   const apiName = isSandbox ? `${baseApiName}-dev` : baseApiName;
 
   // Domain configuration
-  const baseDomain = 'coachforge.ai';
+  const baseDomain = 'neonpanda.ai';
   const domainName = isSandbox ? `api-dev.${baseDomain}` : `api-prod.${baseDomain}`;
 
   // Certificate ARN - You'll need to replace these with your actual certificate ARNs
   // The certificate must be in the same region as your API Gateway
   const certificateArn = stack.region === 'us-east-1'
-    ? 'arn:aws:acm:us-east-1:061920441871:certificate/44634e49-4c70-4be3-8f14-f2114dcffc35'
-    : 'arn:aws:acm:us-west-2:061920441871:certificate/9d6277b4-e8b7-4448-bc40-0a68fec06270';
+    ? 'arn:aws:acm:us-east-1:061920441871:certificate/09144037-9ab1-4161-8642-20b533aacc64'
+    : 'arn:aws:acm:us-west-2:061920441871:certificate/cb16d147-c35e-4406-a259-85e768ae943e';
 
   // Import the existing certificate
   const certificate = certificatemanager.Certificate.fromCertificateArn(
@@ -163,6 +165,11 @@ export function createCoreApi(
   );
 
   // Create Lambda integrations for workout functions
+  const createWorkoutIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
+    'CreateWorkoutIntegration',
+    createWorkoutLambda
+  );
+
   const getWorkoutsIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
     'GetWorkoutsIntegration',
     getWorkoutsLambda
@@ -210,6 +217,11 @@ export function createCoreApi(
     getMemoriesLambda
   );
 
+  const createMemoryIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
+    'CreateMemoryIntegration',
+    createMemoryLambda
+  );
+
   const deleteMemoryIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
     'DeleteMemoryIntegration',
     deleteMemoryLambda
@@ -238,6 +250,7 @@ export function createCoreApi(
     getCoachConversation: getCoachConversationIntegration,
     updateCoachConversation: updateCoachConversationIntegration,
     sendCoachConversationMessage: sendCoachConversationMessageIntegration,
+    createWorkout: createWorkoutIntegration,
     getWorkouts: getWorkoutsIntegration,
     getWorkout: getWorkoutIntegration,
     updateWorkout: updateWorkoutIntegration,
@@ -247,6 +260,7 @@ export function createCoreApi(
     getWeeklyReports: getWeeklyReportsIntegration,
     getWeeklyReport: getWeeklyReportIntegration,
     getMemories: getMemoriesIntegration,
+    createMemory: createMemoryIntegration,
     deleteMemory: deleteMemoryIntegration,
     deleteCoachConversation: deleteCoachConversationIntegration
   };

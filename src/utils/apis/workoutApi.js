@@ -305,6 +305,49 @@ export const getTrainingDaysCount = async (userId, options = {}) => {
 };
 
 /**
+ * Creates a new workout session from user input
+ * @param {string} userId - The user ID
+ * @param {string} workoutContent - The workout content from user
+ * @param {Object} [options] - Optional parameters
+ * @param {string} [options.coachId] - Coach ID if available
+ * @param {string} [options.conversationId] - Conversation ID if available
+ * @returns {Promise<Object>} - The API response with workout creation status
+ */
+export const createWorkout = async (userId, workoutContent, options = {}) => {
+  const response = await fetch(`${getApiUrl('')}/users/${userId}/workouts`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      userMessage: workoutContent,
+      coachId: options.coachId || null,
+      conversationId: options.conversationId || null,
+      isSlashCommand: true,
+      slashCommand: '/log-workout'
+    }),
+  });
+
+  if (!response.ok) {
+    let errorMessage = `API Error: ${response.status}`;
+    try {
+      const errorData = await response.json();
+      if (errorData.error) {
+        errorMessage = errorData.error;
+      }
+    } catch (jsonError) {
+      console.warn('Could not parse error response as JSON');
+    }
+    throw new Error(errorMessage);
+  }
+
+  const result = await response.json();
+  console.info('Workout creation initiated:', result);
+
+  return result;
+};
+
+/**
  * Deletes a workout session
  * @param {string} userId - The user ID
  * @param {string} workoutId - The workout ID
