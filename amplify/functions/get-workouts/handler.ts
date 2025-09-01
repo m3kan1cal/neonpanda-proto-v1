@@ -1,14 +1,13 @@
-import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
 import { createSuccessResponse, createErrorResponse } from '../libs/api-helpers';
 import { queryWorkouts } from '../../dynamodb/operations';
+import { getUserId, extractJWTClaims } from '../libs/auth/jwt-utils';
+import type { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResultV2 } from 'aws-lambda';
 
-export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> => {
+export const handler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Promise<APIGatewayProxyResultV2> => {
   try {
-    const userId = event.pathParameters?.userId;
-
-    if (!userId) {
-      return createErrorResponse(400, 'userId is required');
-    }
+    // Extract userId from JWT claims (validated by API Gateway authorizer)
+    const userId = getUserId(event);
+    const claims = extractJWTClaims(event);
 
     // Parse query parameters for filtering
     const queryParams = event.queryStringParameters || {};

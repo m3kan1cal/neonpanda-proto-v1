@@ -51,7 +51,7 @@ const PINECONE_INDEX_NAME = "coach-creator-proto-v1-dev";
 const PINECONE_API_KEY = process.env.PINECONE_API_KEY || "pcsk_4tHp6N_MUauyYPRhqQjDZ9qyrWwe4nD7gRXuPz66SnbtkbAUQdUqkCfmcmzbAJfhYKSsyC";
 
 // Debug: Log Pinecone configuration at module load
-console.log('🔧 PINECONE_API_KEY validation:', {
+console.info('🔧 PINECONE_API_KEY validation:', {
   exists: !!PINECONE_API_KEY,
   length: PINECONE_API_KEY?.length,
   isPlaceholder: PINECONE_API_KEY === "pcsk_replace_me",

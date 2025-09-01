@@ -62,7 +62,11 @@ export class CoachAgent {
    */
   _updateState(newState) {
     this.state = { ...this.state, ...newState };
-    this.onStateChange(this.state);
+    if (typeof this.onStateChange === 'function') {
+      this.onStateChange(this.state);
+    } else {
+      console.warn('CoachAgent: onStateChange is not a function, skipping state update notification');
+    }
   }
 
   /**
@@ -78,6 +82,20 @@ export class CoachAgent {
         this.loadCoaches();
         this.loadTemplates();
       }
+    }
+  }
+
+  /**
+   * Initialize the agent after React component is ready
+   */
+  initialize() {
+    if (this.userId) {
+      this._updateState({ isLoading: true, error: null });
+      this.checkInProgressCoach();
+      this.loadCoaches();
+      this.loadTemplates();
+    } else {
+      this.loadTemplates();
     }
   }
 

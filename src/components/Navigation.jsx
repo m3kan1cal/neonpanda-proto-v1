@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 
-function Navigation() {
+function Navigation({ user, signOut }) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const location = useLocation();
 
@@ -66,14 +66,38 @@ function Navigation() {
           />
         </Link>
 
-        {/* Navigation Menu */}
-        <div className="relative" data-dropdown-container>
-          <button
-            onClick={toggleDropdown}
-            className="flex items-center justify-center w-10 h-10 border border-synthwave-neon-cyan/30 rounded-lg bg-synthwave-bg-card/50 hover:border-synthwave-neon-cyan hover:bg-synthwave-bg-card/70 transition-all duration-300"
+        {/* User Info and Navigation Menu */}
+        <div className="flex items-center space-x-4">
+          {/* Logged in user */}
+          {user?.attributes && (
+            <div className="flex items-center space-x-2 text-synthwave-text-secondary font-rajdhani">
+                                          <svg
+                className="w-4 h-4 text-synthwave-neon-pink"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                />
+              </svg>
+              <span className="text-synthwave-neon-pink font-medium">
+                {user.attributes.preferred_username || user.attributes.email}
+              </span>
+            </div>
+          )}
+
+          {/* Navigation Menu */}
+          <div className="relative" data-dropdown-container>
+            <button
+              onClick={toggleDropdown}
+              className="flex items-center justify-center w-10 h-10 border border-synthwave-neon-pink rounded-lg bg-synthwave-bg-card/50 hover:border-synthwave-neon-pink hover:bg-synthwave-bg-card/70 transition-all duration-300"
           >
             <svg
-              className="w-5 h-5 text-synthwave-neon-cyan"
+              className="w-5 h-5 text-synthwave-neon-pink"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -89,7 +113,7 @@ function Navigation() {
 
           {/* Dropdown Menu */}
           {isDropdownOpen && (
-            <div className="absolute right-0 mt-2 w-48 bg-synthwave-bg-card/95 backdrop-blur-sm border border-synthwave-neon-cyan/30 rounded-lg shadow-lg z-[10002]">
+            <div className="absolute right-0 mt-2 w-56 bg-synthwave-bg-card/95 backdrop-blur-sm border border-synthwave-neon-pink rounded-lg shadow-lg z-[10002]">
               <div className="py-2">
                 <Link
                   to="/"
@@ -229,9 +253,34 @@ function Navigation() {
                   </svg>
                   <span>Collaborate</span>
                 </Link>
+
+                {/* Sign Out Button */}
+                <button
+                  onClick={() => {
+                    signOut();
+                    closeDropdown();
+                  }}
+                  className="flex items-center space-x-3 px-4 py-3 font-rajdhani font-medium text-synthwave-text-primary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-300 w-full text-left"
+                >
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                    />
+                  </svg>
+                  <span>Sign Out</span>
+                </button>
               </div>
             </div>
-          )}
+                      )}
+          </div>
         </div>
       </div>
     </nav>

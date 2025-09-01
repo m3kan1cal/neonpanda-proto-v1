@@ -109,3 +109,54 @@ export const grantS3AnalyticsPermissions = (functions: IFunction[]): void => {
     func.addToRolePolicy(s3Policy);
   });
 };
+
+/**
+ * Cognito policy for post-confirmation Lambda to update user attributes
+ */
+export const createCognitoAdminPolicy = (): PolicyStatement => {
+  return new PolicyStatement({
+    effect: Effect.ALLOW,
+    actions: [
+      'cognito-idp:AdminUpdateUserAttributes',
+      'cognito-idp:AdminGetUser'
+    ],
+    resources: [
+      '*' // Post-confirmation triggers need access to the user pool they're attached to
+    ]
+  });
+};
+
+/**
+ * Helper function to grant Cognito admin permissions
+ */
+export const grantCognitoAdminPermissions = (functions: IFunction[]): void => {
+  const cognitoPolicy = createCognitoAdminPolicy();
+  functions.forEach(func => {
+    func.addToRolePolicy(cognitoPolicy);
+  });
+};
+
+/**
+ * DynamoDB policy for basic CRUD operations
+ */
+export const createDynamoDBPolicy = (): PolicyStatement => {
+  return new PolicyStatement({
+    effect: Effect.ALLOW,
+    actions: [
+      'dynamodb:PutItem',
+      'dynamodb:UpdateItem',
+      'dynamodb:GetItem'
+    ],
+    resources: ['*'] // Will be scoped by table name in environment
+  });
+};
+
+/**
+ * Helper function to grant DynamoDB permissions
+ */
+export const grantDynamoDBPermissions = (functions: IFunction[]): void => {
+  const dynamoPolicy = createDynamoDBPolicy();
+  functions.forEach(func => {
+    func.addToRolePolicy(dynamoPolicy);
+  });
+};

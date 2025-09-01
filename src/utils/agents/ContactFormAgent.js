@@ -1,4 +1,4 @@
-import { apiClient } from '../apis/apiConfig';
+import { submitContactForm } from '../apis/contactApi';
 
 /**
  * ContactFormAgent - Handles business logic for Contact Form component
@@ -44,7 +44,7 @@ export class ContactFormAgent {
       console.info('Submitting contact form:', formData);
 
       // Make API call to the contact form endpoint
-      const result = await apiClient.post('contact', formData);
+      const result = await submitContactForm(formData);
 
       console.info('Form submitted successfully:', result);
 

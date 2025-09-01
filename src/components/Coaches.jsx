@@ -124,6 +124,13 @@ function Coaches() {
           // Could show toast notification here
         }
       });
+
+      // Initialize after the component is ready
+      setTimeout(() => {
+        if (agentRef.current) {
+          agentRef.current.initialize();
+        }
+      }, 0);
     } else {
       // Update agent when userId changes
       agentRef.current.setUserId(userId);
@@ -189,6 +196,14 @@ function Coaches() {
     return null;
   }
 
+  // Debug logging - temporary
+  console.log('🐛 Coaches Debug:', {
+    isCreatingCustomCoach,
+    agentStateIsLoading: agentState.isLoading,
+    hasInProgressCoach: !!agentState.inProgressCoach,
+    agentStateError: agentState.error
+  });
+
   // Show coaches list
   return (
     <div className={`${themeClasses.container} min-h-screen`}>
@@ -198,7 +213,7 @@ function Coaches() {
           <h1 className="font-russo font-black text-4xl md:text-5xl text-white mb-6 uppercase">
             Your Coaches
           </h1>
-          <p className="font-rajdhani text-xl text-synthwave-text-secondary max-w-3xl mx-auto leading-relaxed mb-8">
+          <p className="font-rajdhani text-lg text-synthwave-text-secondary max-w-3xl mx-auto mb-4">
             Manage your personalized coaching team. Each coach learns from your interactions and becomes more effective the more you work together.
           </p>
         </div>

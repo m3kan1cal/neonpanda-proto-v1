@@ -1,4 +1,4 @@
-import { getApiUrl } from './apiConfig';
+import { getApiUrl, authenticatedFetch } from "./apiConfig.js";
 
 /**
  * API service for Workout Session operations
@@ -24,67 +24,71 @@ import { getApiUrl } from './apiConfig';
 export const getWorkouts = async (userId, options = {}) => {
   // Validate limit parameter
   if (options.limit !== undefined) {
-    if (typeof options.limit !== 'number' || options.limit < 1 || options.limit > 100) {
-      throw new Error('limit must be a number between 1 and 100');
+    if (
+      typeof options.limit !== "number" ||
+      options.limit < 1 ||
+      options.limit > 100
+    ) {
+      throw new Error("limit must be a number between 1 and 100");
     }
   }
 
   // Build query parameters
   const params = new URLSearchParams();
 
-  if (options.fromDate) params.append('fromDate', options.fromDate);
-  if (options.toDate) params.append('toDate', options.toDate);
-  if (options.discipline) params.append('discipline', options.discipline);
-  if (options.workoutType) params.append('workoutType', options.workoutType);
-  if (options.location) params.append('location', options.location);
-  if (options.coachId) params.append('coachId', options.coachId);
-  if (options.minConfidence) params.append('minConfidence', options.minConfidence.toString());
-  if (options.limit) params.append('limit', options.limit.toString());
-  if (options.offset) params.append('offset', options.offset.toString());
-  if (options.sortBy) params.append('sortBy', options.sortBy);
-  if (options.sortOrder) params.append('sortOrder', options.sortOrder);
+  if (options.fromDate) params.append("fromDate", options.fromDate);
+  if (options.toDate) params.append("toDate", options.toDate);
+  if (options.discipline) params.append("discipline", options.discipline);
+  if (options.workoutType) params.append("workoutType", options.workoutType);
+  if (options.location) params.append("location", options.location);
+  if (options.coachId) params.append("coachId", options.coachId);
+  if (options.minConfidence)
+    params.append("minConfidence", options.minConfidence.toString());
+  if (options.limit) params.append("limit", options.limit.toString());
+  if (options.offset) params.append("offset", options.offset.toString());
+  if (options.sortBy) params.append("sortBy", options.sortBy);
+  if (options.sortOrder) params.append("sortOrder", options.sortOrder);
 
   const queryString = params.toString();
-  const url = `${getApiUrl('')}/users/${userId}/workouts${queryString ? '?' + queryString : ''}`;
+  const url = `${getApiUrl("")}/users/${userId}/workouts${queryString ? "?" + queryString : ""}`;
 
-  console.info('getWorkouts: Making API call to:', url);
-  console.info('getWorkouts: userId:', userId);
-  console.info('getWorkouts: options:', options);
-  console.info('getWorkouts: queryString:', queryString);
+  console.info("getWorkouts: Making API call to:", url);
+  console.info("getWorkouts: userId:", userId);
+  console.info("getWorkouts: options:", options);
 
-  const response = await fetch(url, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
+  try {
+    const response = await authenticatedFetch(url, {
+      method: "GET",
+    });
 
-  console.info('getWorkouts: Response status:', response.status);
-  console.info('getWorkouts: Response ok:', response.ok);
+    console.info("getWorkouts: Response status:", response.status);
+    console.info("getWorkouts: Response ok:", response.ok);
 
-  if (!response.ok) {
-    console.error('getWorkouts: API Error - Status:', response.status);
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("getWorkouts: Error response:", errorText);
 
-    // Try to get the specific error message from the response
-    let errorMessage = `API Error: ${response.status}`;
-    try {
-      const errorData = await response.json();
-      if (errorData.error) {
-        errorMessage = errorData.error;
-        console.error('getWorkouts: Specific error message:', errorMessage);
+      let errorMessage;
+      try {
+        const errorData = JSON.parse(errorText);
+        errorMessage =
+          errorData.error ||
+          errorData.message ||
+          `API Error: ${response.status}`;
+      } catch (parseError) {
+        errorMessage = `API Error: ${response.status}`;
       }
-    } catch (jsonError) {
-      console.warn('getWorkouts: Could not parse error response as JSON');
+
+      throw new Error(errorMessage);
     }
 
-    throw new Error(errorMessage);
+    const result = await response.json();
+    console.info("getWorkouts: Workouts loaded:", result);
+    return result;
+  } catch (error) {
+    console.error("getWorkouts: API Error:", error);
+    throw error;
   }
-
-  const result = await response.json();
-  console.info('getWorkouts: API Response:', result);
-  console.info('getWorkouts: Workouts loaded:', result);
-
-  return result;
 };
 
 /**
@@ -94,24 +98,46 @@ export const getWorkouts = async (userId, options = {}) => {
  * @returns {Promise<Object>} - The API response with full workout details
  */
 export const getWorkout = async (userId, workoutId) => {
-  const response = await fetch(`${getApiUrl('')}/users/${userId}/workouts/${workoutId}`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
+  const url = `${getApiUrl("")}/users/${userId}/workouts/${workoutId}`;
 
-  if (!response.ok) {
-    if (response.status === 404) {
-      throw new Error('Workout not found');
+  console.info("getWorkout: Making API call to:", url);
+
+  try {
+    const response = await authenticatedFetch(url, {
+      method: "GET",
+    });
+
+    console.info("getWorkout: Response status:", response.status);
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        throw new Error("Workout not found");
+      }
+
+      const errorText = await response.text();
+      console.error("getWorkout: Error response:", errorText);
+
+      let errorMessage;
+      try {
+        const errorData = JSON.parse(errorText);
+        errorMessage =
+          errorData.error ||
+          errorData.message ||
+          `API Error: ${response.status}`;
+      } catch (parseError) {
+        errorMessage = `API Error: ${response.status}`;
+      }
+
+      throw new Error(errorMessage);
     }
-    throw new Error(`API Error: ${response.status}`);
+
+    const result = await response.json();
+    console.info("getWorkout: Workout loaded:", result);
+    return result;
+  } catch (error) {
+    console.error("getWorkout: API Error:", error);
+    throw error;
   }
-
-  const result = await response.json();
-  console.info('Workout loaded:', result);
-
-  return result;
 };
 
 /**
@@ -127,29 +153,51 @@ export const getWorkout = async (userId, workoutId) => {
  * @returns {Promise<Object>} - The API response with updated workout session
  */
 export const updateWorkout = async (userId, workoutId, updates) => {
-  const response = await fetch(`${getApiUrl('')}/users/${userId}/workouts/${workoutId}`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(updates),
-  });
+  const url = `${getApiUrl("")}/users/${userId}/workouts/${workoutId}`;
 
-  if (!response.ok) {
-    if (response.status === 404) {
-      throw new Error('Workout not found');
+  console.info("updateWorkout: Making API call to:", url);
+  console.info("updateWorkout: updates:", updates);
+
+  try {
+    const response = await authenticatedFetch(url, {
+      method: "PUT",
+      body: JSON.stringify(updates),
+    });
+
+    console.info("updateWorkout: Response status:", response.status);
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        throw new Error("Workout not found");
+      }
+
+      const errorText = await response.text();
+      console.error("updateWorkout: Error response:", errorText);
+
+      let errorMessage;
+      try {
+        const errorData = JSON.parse(errorText);
+        errorMessage =
+          errorData.error ||
+          errorData.message ||
+          `API Error: ${response.status}`;
+      } catch (parseError) {
+        errorMessage =
+          response.status === 400
+            ? "Bad request"
+            : `API Error: ${response.status}`;
+      }
+
+      throw new Error(errorMessage);
     }
-    if (response.status === 400) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Bad request');
-    }
-    throw new Error(`API Error: ${response.status}`);
+
+    const result = await response.json();
+    console.info("updateWorkout: Workout updated:", result);
+    return result;
+  } catch (error) {
+    console.error("updateWorkout: API Error:", error);
+    throw error;
   }
-
-  const result = await response.json();
-  console.info('Workout updated:', result);
-
-  return result;
 };
 
 /**
@@ -163,8 +211,8 @@ export const getWorkoutsByDateRange = async (userId, startDate, endDate) => {
   return getWorkouts(userId, {
     fromDate: startDate.toISOString(),
     toDate: endDate.toISOString(),
-    sortBy: 'completedAt',
-    sortOrder: 'desc'  // Most recent first
+    sortBy: "completedAt",
+    sortOrder: "desc", // Most recent first
   });
 };
 
@@ -177,8 +225,8 @@ export const getWorkoutsByDateRange = async (userId, startDate, endDate) => {
 export const getRecentWorkouts = async (userId, limit = 10) => {
   return getWorkouts(userId, {
     limit,
-    sortBy: 'completedAt',
-    sortOrder: 'desc'  // Most recent first
+    sortBy: "completedAt",
+    sortOrder: "desc", // Most recent first
   });
 };
 
@@ -189,56 +237,78 @@ export const getRecentWorkouts = async (userId, limit = 10) => {
  * @param {number} [limit=20] - Maximum number of workouts
  * @returns {Promise<Object>} - The API response with filtered workout sessions
  */
-export const getWorkoutsByDiscipline = async (userId, discipline, limit = 20) => {
+export const getWorkoutsByDiscipline = async (
+  userId,
+  discipline,
+  limit = 20
+) => {
   return getWorkouts(userId, {
     discipline,
     limit,
-    sortBy: 'completedAt',
-    sortOrder: 'desc'  // Most recent first
+    sortBy: "completedAt",
+    sortOrder: "desc", // Most recent first
   });
 };
 
 // Get workout sessions count for a user
 export async function getWorkoutsCount(userId, options = {}) {
-  console.info('Making API call to get workout sessions count for user:', userId);
+  console.info(
+    "Making API call to get workout sessions count for user:",
+    userId
+  );
 
   const queryParams = new URLSearchParams();
 
   // Add optional filters
-  if (options.fromDate) queryParams.append('fromDate', options.fromDate);
-  if (options.toDate) queryParams.append('toDate', options.toDate);
-  if (options.discipline) queryParams.append('discipline', options.discipline);
-  if (options.workoutType) queryParams.append('workoutType', options.workoutType);
-  if (options.location) queryParams.append('location', options.location);
-  if (options.coachId) queryParams.append('coachId', options.coachId);
-  if (options.minConfidence) queryParams.append('minConfidence', options.minConfidence.toString());
+  if (options.fromDate) queryParams.append("fromDate", options.fromDate);
+  if (options.toDate) queryParams.append("toDate", options.toDate);
+  if (options.discipline) queryParams.append("discipline", options.discipline);
+  if (options.workoutType)
+    queryParams.append("workoutType", options.workoutType);
+  if (options.location) queryParams.append("location", options.location);
+  if (options.coachId) queryParams.append("coachId", options.coachId);
+  if (options.minConfidence)
+    queryParams.append("minConfidence", options.minConfidence.toString());
 
-  const url = `${getApiUrl('')}/users/${userId}/workouts/count${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+  const path = `/users/${userId}/workouts/count${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
+
+  const url = `${getApiUrl("")}${path}`;
+
+  console.info("getWorkoutsCount: Making API call to:", url);
 
   try {
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+    const response = await authenticatedFetch(url, {
+      method: "GET",
     });
 
+    console.info("getWorkoutsCount: Response status:", response.status);
+
     if (!response.ok) {
-      let errorMessage = 'Failed to get workout sessions count';
+      const errorText = await response.text();
+      console.error("getWorkoutsCount: Error response:", errorText);
+
+      let errorMessage;
       try {
-        const errorData = await response.json();
-        errorMessage = errorData.message || errorMessage;
+        const errorData = JSON.parse(errorText);
+        errorMessage =
+          errorData.error ||
+          errorData.message ||
+          `API Error: ${response.status}`;
       } catch (parseError) {
-        console.error('Error parsing error response:', parseError);
+        errorMessage = `API Error: ${response.status}`;
       }
+
       throw new Error(errorMessage);
     }
 
     const data = await response.json();
-    console.info('Successfully retrieved workout sessions count:', data);
+    console.info(
+      "getWorkoutsCount: Successfully retrieved workout sessions count:",
+      data
+    );
     return data;
   } catch (error) {
-    console.error('Error getting workout sessions count:', error);
+    console.error("getWorkoutsCount: API Error:", error);
     throw error;
   }
 }
@@ -257,20 +327,23 @@ export async function getWorkoutsCount(userId, options = {}) {
  * @returns {Promise<number>} - The number of unique training days
  */
 export const getTrainingDaysCount = async (userId, options = {}) => {
-  console.info('getTrainingDaysCount: Calculating training days for user:', userId);
-  console.info('getTrainingDaysCount: options:', options);
+  console.info(
+    "getTrainingDaysCount: Calculating training days for user:",
+    userId
+  );
+  console.info("getTrainingDaysCount: options:", options);
 
   try {
     // Get all workouts with the specified filters, but no limit to ensure we get all data
     const result = await getWorkouts(userId, {
       ...options,
       limit: 100, // Get a reasonable number of workouts
-      sortBy: 'completedAt',
-      sortOrder: 'desc'
+      sortBy: "completedAt",
+      sortOrder: "desc",
     });
 
     const workouts = result.workouts || [];
-    console.info('getTrainingDaysCount: Retrieved workouts:', workouts.length);
+    console.info("getTrainingDaysCount: Retrieved workouts:", workouts.length);
 
     if (workouts.length === 0) {
       return 0;
@@ -279,27 +352,39 @@ export const getTrainingDaysCount = async (userId, options = {}) => {
     // Extract unique dates from completedAt timestamps
     const uniqueDates = new Set();
 
-    workouts.forEach(workout => {
+    workouts.forEach((workout) => {
       if (workout.completedAt) {
         try {
           const date = new Date(workout.completedAt);
           // Convert to YYYY-MM-DD format to ensure we're counting calendar days
-          const dateString = date.toISOString().split('T')[0];
+          const dateString = date.toISOString().split("T")[0];
           uniqueDates.add(dateString);
         } catch (error) {
-          console.warn('getTrainingDaysCount: Invalid date format for workout:', workout.workoutId, workout.completedAt);
+          console.warn(
+            "getTrainingDaysCount: Invalid date format for workout:",
+            workout.workoutId,
+            workout.completedAt
+          );
         }
       }
     });
 
     const trainingDaysCount = uniqueDates.size;
-    console.info('getTrainingDaysCount: Unique training days found:', trainingDaysCount);
-    console.info('getTrainingDaysCount: Unique dates:', Array.from(uniqueDates).sort());
+    console.info(
+      "getTrainingDaysCount: Unique training days found:",
+      trainingDaysCount
+    );
+    console.info(
+      "getTrainingDaysCount: Unique dates:",
+      Array.from(uniqueDates).sort()
+    );
 
     return trainingDaysCount;
-
   } catch (error) {
-    console.error('getTrainingDaysCount: Error calculating training days:', error);
+    console.error(
+      "getTrainingDaysCount: Error calculating training days:",
+      error
+    );
     throw error;
   }
 };
@@ -314,37 +399,52 @@ export const getTrainingDaysCount = async (userId, options = {}) => {
  * @returns {Promise<Object>} - The API response with workout creation status
  */
 export const createWorkout = async (userId, workoutContent, options = {}) => {
-  const response = await fetch(`${getApiUrl('')}/users/${userId}/workouts`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      userMessage: workoutContent,
-      coachId: options.coachId || null,
-      conversationId: options.conversationId || null,
-      isSlashCommand: true,
-      slashCommand: '/log-workout'
-    }),
-  });
+  const url = `${getApiUrl("")}/users/${userId}/workouts`;
 
-  if (!response.ok) {
-    let errorMessage = `API Error: ${response.status}`;
-    try {
-      const errorData = await response.json();
-      if (errorData.error) {
-        errorMessage = errorData.error;
+  const requestBody = {
+    userMessage: workoutContent,
+    coachId: options.coachId || null,
+    conversationId: options.conversationId || null,
+    isSlashCommand: true,
+    slashCommand: "/log-workout",
+  };
+
+  console.info("createWorkout: Making API call to:", url);
+  console.info("createWorkout: requestBody:", requestBody);
+
+  try {
+    const response = await authenticatedFetch(url, {
+      method: "POST",
+      body: JSON.stringify(requestBody),
+    });
+
+    console.info("createWorkout: Response status:", response.status);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("createWorkout: Error response:", errorText);
+
+      let errorMessage;
+      try {
+        const errorData = JSON.parse(errorText);
+        errorMessage =
+          errorData.error ||
+          errorData.message ||
+          `API Error: ${response.status}`;
+      } catch (parseError) {
+        errorMessage = `API Error: ${response.status}`;
       }
-    } catch (jsonError) {
-      console.warn('Could not parse error response as JSON');
+
+      throw new Error(errorMessage);
     }
-    throw new Error(errorMessage);
+
+    const result = await response.json();
+    console.info("createWorkout: Workout creation initiated:", result);
+    return result;
+  } catch (error) {
+    console.error("createWorkout: API Error:", error);
+    throw error;
   }
-
-  const result = await response.json();
-  console.info('Workout creation initiated:', result);
-
-  return result;
 };
 
 /**
@@ -354,22 +454,44 @@ export const createWorkout = async (userId, workoutContent, options = {}) => {
  * @returns {Promise<Object>} - The API response
  */
 export const deleteWorkout = async (userId, workoutId) => {
-  const response = await fetch(`${getApiUrl('')}/users/${userId}/workouts/${workoutId}`, {
-    method: 'DELETE',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
+  const url = `${getApiUrl("")}/users/${userId}/workouts/${workoutId}`;
 
-  if (!response.ok) {
-    if (response.status === 404) {
-      throw new Error('Workout not found');
+  console.info("deleteWorkout: Making API call to:", url);
+
+  try {
+    const response = await authenticatedFetch(url, {
+      method: "DELETE",
+    });
+
+    console.info("deleteWorkout: Response status:", response.status);
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        throw new Error("Workout not found");
+      }
+
+      const errorText = await response.text();
+      console.error("deleteWorkout: Error response:", errorText);
+
+      let errorMessage;
+      try {
+        const errorData = JSON.parse(errorText);
+        errorMessage =
+          errorData.error ||
+          errorData.message ||
+          `API Error: ${response.status}`;
+      } catch (parseError) {
+        errorMessage = `API Error: ${response.status}`;
+      }
+
+      throw new Error(errorMessage);
     }
-    throw new Error(`API Error: ${response.status}`);
+
+    const result = await response.json();
+    console.info("deleteWorkout: Workout deleted:", result);
+    return result;
+  } catch (error) {
+    console.error("deleteWorkout: API Error:", error);
+    throw error;
   }
-
-  const result = await response.json();
-  console.info('Workout deleted:', result);
-
-  return result;
 };

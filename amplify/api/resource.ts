@@ -3,11 +3,10 @@ import * as apigatewayv2 from 'aws-cdk-lib/aws-apigatewayv2';
 import * as apigatewayv2_integrations from 'aws-cdk-lib/aws-apigatewayv2-integrations';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as certificatemanager from 'aws-cdk-lib/aws-certificatemanager';
-import { addAllRoutes, RouteIntegrations } from './routes';
+import { HttpUserPoolAuthorizer } from 'aws-cdk-lib/aws-apigatewayv2-authorizers';
 
 export function createCoreApi(
   stack: Stack,
-  helloWorldLambda: lambda.IFunction,
   contactFormLambda: lambda.IFunction,
   createCoachCreatorSessionLambda: lambda.IFunction,
   updateCoachCreatorSessionLambda: lambda.IFunction,
@@ -35,7 +34,8 @@ export function createCoreApi(
   getMemoriesLambda: lambda.IFunction,
   createMemoryLambda: lambda.IFunction,
   deleteMemoryLambda: lambda.IFunction,
-  deleteCoachConversationLambda: lambda.IFunction
+  deleteCoachConversationLambda: lambda.IFunction,
+  userPoolAuthorizer: HttpUserPoolAuthorizer
 ) {
   // Determine if this is a sandbox deployment
   const isSandbox = stack.node.tryGetContext('amplify-backend-type') === 'sandbox';
@@ -78,12 +78,6 @@ export function createCoreApi(
       allowOrigins: ['*']
     }
   });
-
-  // Create Lambda integration for hello world function
-  const helloWorldIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
-    'HelloWorldIntegration',
-    helloWorldLambda
-  );
 
   // Create Lambda integration for contact form function
   const contactFormIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
@@ -233,8 +227,7 @@ export function createCoreApi(
   );
 
   // Create integrations object for route configuration
-  const integrations: RouteIntegrations = {
-    helloWorld: helloWorldIntegration,
+  const integrations = {
     contactForm: contactFormIntegration,
     createCoachCreatorSession: createCoachCreatorSessionIntegration,
     updateCoachCreatorSession: updateCoachCreatorSessionIntegration,
@@ -265,8 +258,195 @@ export function createCoreApi(
     deleteCoachConversation: deleteCoachConversationIntegration
   };
 
-  // Add all routes using the organized route definitions
-  addAllRoutes(httpApi, integrations);
+  // *******************************************************
+  // ROUTE DEFINITIONS
+  // *******************************************************
+
+  // Miscellaneous Routes (PUBLIC)
+  httpApi.addRoutes({
+    path: '/contact',
+    methods: [apigatewayv2.HttpMethod.POST],
+    integration: integrations.contactForm
+  });
+
+  // Coach Templates (PUBLIC - as requested by user)
+  httpApi.addRoutes({
+    path: '/coach-templates',
+    methods: [apigatewayv2.HttpMethod.GET],
+    integration: integrations.getCoachTemplates
+  });
+
+  httpApi.addRoutes({
+    path: '/coach-templates/{templateId}',
+    methods: [apigatewayv2.HttpMethod.GET],
+    integration: integrations.getCoachTemplate
+  });
+
+  // Workout Routes (PROTECTED)
+  httpApi.addRoutes({
+    path: '/users/{userId}/workouts',
+    methods: [apigatewayv2.HttpMethod.GET],
+    integration: integrations.getWorkouts,
+    authorizer: userPoolAuthorizer
+  });
+
+  httpApi.addRoutes({
+    path: '/users/{userId}/workouts/{workoutId}',
+    methods: [apigatewayv2.HttpMethod.GET],
+    integration: integrations.getWorkout,
+    // authorizer: userPoolAuthorizer
+  });
+
+  httpApi.addRoutes({
+    path: '/users/{userId}/workouts/{workoutId}',
+    methods: [apigatewayv2.HttpMethod.PUT],
+    integration: integrations.updateWorkout,
+    // authorizer: userPoolAuthorizer
+  });
+
+  httpApi.addRoutes({
+    path: '/users/{userId}/workouts/{workoutId}',
+    methods: [apigatewayv2.HttpMethod.DELETE],
+    integration: integrations.deleteWorkout,
+    // authorizer: userPoolAuthorizer
+  });
+
+  httpApi.addRoutes({
+    path: '/users/{userId}/workouts',
+    methods: [apigatewayv2.HttpMethod.POST],
+    integration: integrations.createWorkout,
+    authorizer: userPoolAuthorizer
+  });
+
+  httpApi.addRoutes({
+    path: '/users/{userId}/workouts/count',
+    methods: [apigatewayv2.HttpMethod.GET],
+    integration: integrations.getWorkoutsCount,
+    authorizer: userPoolAuthorizer
+  });
+
+  // All other routes (PROTECTED) - Add more as needed
+  // For now, adding them without authorizer to maintain existing functionality
+  // TODO: Add authorizer to these routes in Phase 1
+
+  // Coach Creator Routes
+  httpApi.addRoutes({
+    path: '/users/{userId}/coach-creator-sessions',
+    methods: [apigatewayv2.HttpMethod.POST],
+    integration: integrations.createCoachCreatorSession
+  });
+
+  httpApi.addRoutes({
+    path: '/users/{userId}/coach-creator-sessions/{sessionId}',
+    methods: [apigatewayv2.HttpMethod.PUT],
+    integration: integrations.updateCoachCreatorSession
+  });
+
+  httpApi.addRoutes({
+    path: '/users/{userId}/coach-creator-sessions/{sessionId}',
+    methods: [apigatewayv2.HttpMethod.GET],
+    integration: integrations.getCoachCreatorSession
+  });
+
+  httpApi.addRoutes({
+    path: '/users/{userId}/coach-creator-sessions/{sessionId}/config-status',
+    methods: [apigatewayv2.HttpMethod.GET],
+    integration: integrations.getCoachConfigStatus
+  });
+
+  // Coach Config Routes
+  httpApi.addRoutes({
+    path: '/users/{userId}/coaches',
+    methods: [apigatewayv2.HttpMethod.GET],
+    integration: integrations.getCoachConfigs
+  });
+
+  httpApi.addRoutes({
+    path: '/users/{userId}/coaches/{coachId}',
+    methods: [apigatewayv2.HttpMethod.GET],
+    integration: integrations.getCoachConfig
+  });
+
+  httpApi.addRoutes({
+    path: '/users/{userId}/coaches/from-template/{templateId}',
+    methods: [apigatewayv2.HttpMethod.POST],
+    integration: integrations.createCoachConfigFromTemplate
+  });
+
+  // Coach Conversation Routes
+  httpApi.addRoutes({
+    path: '/users/{userId}/coaches/{coachId}/conversations',
+    methods: [apigatewayv2.HttpMethod.POST],
+    integration: integrations.createCoachConversation
+  });
+
+  httpApi.addRoutes({
+    path: '/users/{userId}/coaches/{coachId}/conversations',
+    methods: [apigatewayv2.HttpMethod.GET],
+    integration: integrations.getCoachConversations
+  });
+
+  httpApi.addRoutes({
+    path: '/users/{userId}/coaches/{coachId}/conversations/{conversationId}',
+    methods: [apigatewayv2.HttpMethod.GET],
+    integration: integrations.getCoachConversation
+  });
+
+  httpApi.addRoutes({
+    path: '/users/{userId}/coaches/{coachId}/conversations/{conversationId}',
+    methods: [apigatewayv2.HttpMethod.PUT],
+    integration: integrations.updateCoachConversation
+  });
+
+  httpApi.addRoutes({
+    path: '/users/{userId}/coaches/{coachId}/conversations/{conversationId}/send-message',
+    methods: [apigatewayv2.HttpMethod.POST],
+    integration: integrations.sendCoachConversationMessage
+  });
+
+  httpApi.addRoutes({
+    path: '/users/{userId}/coaches/{coachId}/conversations/count',
+    methods: [apigatewayv2.HttpMethod.GET],
+    integration: integrations.getConversationsCount
+  });
+
+  httpApi.addRoutes({
+    path: '/users/{userId}/coaches/{coachId}/conversations/{conversationId}',
+    methods: [apigatewayv2.HttpMethod.DELETE],
+    integration: integrations.deleteCoachConversation
+  });
+
+  // Report Routes
+  httpApi.addRoutes({
+    path: '/users/{userId}/reports/weekly',
+    methods: [apigatewayv2.HttpMethod.GET],
+    integration: integrations.getWeeklyReports
+  });
+
+  httpApi.addRoutes({
+    path: '/users/{userId}/reports/weekly/{weekId}',
+    methods: [apigatewayv2.HttpMethod.GET],
+    integration: integrations.getWeeklyReport
+  });
+
+  // Memory Routes
+  httpApi.addRoutes({
+    path: '/users/{userId}/memories',
+    methods: [apigatewayv2.HttpMethod.GET],
+    integration: integrations.getMemories
+  });
+
+  httpApi.addRoutes({
+    path: '/users/{userId}/memories',
+    methods: [apigatewayv2.HttpMethod.POST],
+    integration: integrations.createMemory
+  });
+
+  httpApi.addRoutes({
+    path: '/users/{userId}/memories/{memoryId}',
+    methods: [apigatewayv2.HttpMethod.DELETE],
+    integration: integrations.deleteMemory
+  });
 
   // Create custom domain name
   const customDomain = new apigatewayv2.DomainName(stack, 'ApiCustomDomain', {

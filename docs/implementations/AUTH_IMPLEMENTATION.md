@@ -105,12 +105,12 @@ const cognitoClient = new CognitoIdentityProviderClient({
 })
 
 export const handler = async (event) => {
-  console.log('Post-confirmation trigger:', JSON.stringify(event, null, 2))
+  console.info('Post-confirmation trigger:', JSON.stringify(event, null, 2))
 
   try {
     // Generate custom userId
     const customUserId = `user_${nanoid(10)}`
-    console.log(`Generating custom userId: ${customUserId} for user: ${event.userName}`)
+    console.info(`Generating custom userId: ${customUserId} for user: ${event.userName}`)
 
     // Set custom userId attribute
     const command = new AdminUpdateUserAttributesCommand({
@@ -123,7 +123,7 @@ export const handler = async (event) => {
     })
 
     await cognitoClient.send(command)
-    console.log(`Successfully set custom userId: ${customUserId}`)
+    console.info(`Successfully set custom userId: ${customUserId}`)
 
     return event
 
@@ -267,7 +267,7 @@ import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
 import { loadCoachConversations } from '../../dynamodb/operations'
 
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-  console.log('Event:', JSON.stringify(event, null, 2))
+  console.info('Event:', JSON.stringify(event, null, 2))
 
   try {
     // 1. Extract authentication info

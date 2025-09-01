@@ -1,6 +1,7 @@
 import { defineBackend } from "@aws-amplify/backend";
 import { auth } from "./auth/resource";
-import { helloWorld } from "./functions/hello-world/resource";
+import { postConfirmation } from "./functions/post-confirmation/resource";
+import { HttpUserPoolAuthorizer } from 'aws-cdk-lib/aws-apigatewayv2-authorizers';
 import { contactForm } from "./functions/contact-form/resource";
 import { createCoachCreatorSession } from "./functions/create-coach-creator-session/resource";
 import { updateCoachCreatorSession } from "./functions/update-coach-creator-session/resource";
@@ -43,6 +44,8 @@ import {
   grantLambdaInvokePermissions,
   grantS3DebugPermissions,
   grantS3AnalyticsPermissions,
+  grantCognitoAdminPermissions,
+  grantDynamoDBPermissions,
 } from "./iam-policies";
 import { config } from "./functions/libs/configs";
 
@@ -51,7 +54,7 @@ import { config } from "./functions/libs/configs";
  */
 const backend = defineBackend({
   auth,
-  helloWorld,
+  postConfirmation,
   contactForm,
   createCoachCreatorSession,
   updateCoachCreatorSession,
@@ -86,10 +89,18 @@ const backend = defineBackend({
   deleteCoachConversation,
 });
 
+// Create User Pool authorizer
+const userPoolAuthorizer = new HttpUserPoolAuthorizer(
+  'UserPoolAuthorizer',
+  backend.auth.resources.userPool,
+  {
+    userPoolClients: [backend.auth.resources.userPoolClient],
+  }
+);
+
 // Create the Core API with all endpoints
 const coreApi = apiGatewayv2.createCoreApi(
-  backend.helloWorld.stack,
-  backend.helloWorld.resources.lambda,
+  backend.contactForm.stack,
   backend.contactForm.resources.lambda,
   backend.createCoachCreatorSession.resources.lambda,
   backend.updateCoachCreatorSession.resources.lambda,
@@ -117,11 +128,12 @@ const coreApi = apiGatewayv2.createCoreApi(
   backend.getMemories.resources.lambda,
   backend.createMemory.resources.lambda,
   backend.deleteMemory.resources.lambda,
-  backend.deleteCoachConversation.resources.lambda
+  backend.deleteCoachConversation.resources.lambda,
+  userPoolAuthorizer
 );
 
 // Create DynamoDB table
-const coreTable = dynamodbTable.createCoreTable(backend.helloWorld.stack);
+const coreTable = dynamodbTable.createCoreTable(backend.contactForm.stack);
 
 // Grant DynamoDB permissions to contact form function
 coreTable.table.grantWriteData(backend.contactForm.resources.lambda);
@@ -195,7 +207,6 @@ coreTable.table.grantReadWriteData(backend.deleteMemory.resources.lambda);
 
 // Add environment variables to all functions
 const allFunctions = [
-  backend.helloWorld,
   backend.contactForm,
   backend.createCoachCreatorSession,
   backend.updateCoachCreatorSession,
@@ -237,7 +248,6 @@ allFunctions.forEach((func) => {
 
 // Grant Bedrock permissions to functions that need it
 grantBedrockPermissions([
-  backend.helloWorld.resources.lambda,
   backend.updateCoachCreatorSession.resources.lambda,
   backend.buildCoachConfig.resources.lambda,
   backend.sendCoachConversationMessage.resources.lambda,
@@ -302,6 +312,30 @@ const weeklyAnalyticsSchedule = createWeeklyAnalyticsSchedule(
   backend.buildWeeklyAnalytics.resources.lambda
 );
 
+// Configure password policy and advanced security via CDK
+const { cfnUserPool } = backend.auth.resources.cfnResources;
+cfnUserPool.policies = {
+  passwordPolicy: {
+    minimumLength: 8,
+    requireLowercase: true,
+    requireUppercase: true,
+    requireNumbers: true,
+    requireSymbols: false,  // Keep user-friendly for fitness enthusiasts
+  },
+};
+
+// Configure post-confirmation Lambda IAM permissions via CDK
+const postConfirmationLambda = backend.postConfirmation.resources.lambda;
+
+// Grant permissions using centralized policy helpers
+grantCognitoAdminPermissions([postConfirmationLambda]);
+grantDynamoDBPermissions([postConfirmationLambda]);
+
+// Enable Cognito Advanced Security Features (Plus tier)
+cfnUserPool.userPoolAddOns = {
+  advancedSecurityMode: 'ENFORCED'  // Options: 'OFF', 'AUDIT', 'ENFORCED'
+};
+
 // Output the API URL and DynamoDB table info
 backend.addOutput({
   custom: {
@@ -309,7 +343,7 @@ backend.addOutput({
       [coreApi.httpApi.httpApiId!]: {
         endpoint: coreApi.httpApi.apiEndpoint,
         customEndpoint: `https://${coreApi.domainName}`,
-        region: backend.helloWorld.stack.region,
+        region: backend.contactForm.stack.region,
         apiName: coreApi.httpApi.httpApiName,
         domainName: coreApi.domainName,
       },
@@ -318,7 +352,7 @@ backend.addOutput({
       coreTable: {
         tableName: coreTable.table.tableName,
         tableArn: coreTable.table.tableArn,
-        region: backend.helloWorld.stack.region,
+        region: backend.contactForm.stack.region,
       },
     },
   },

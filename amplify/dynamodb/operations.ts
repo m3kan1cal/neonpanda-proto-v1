@@ -1309,6 +1309,163 @@ export async function queryCoachConversationSummaries(
 }
 
 // ===========================
+// USER PROFILE OPERATIONS
+// ===========================
+
+/**
+ * Save a user profile to DynamoDB
+ */
+export async function saveUserProfile(userProfile: UserProfile): Promise<void> {
+  const timestamp = new Date().toISOString();
+
+  const item = createDynamoDBItem<UserProfile>(
+    "user",
+    `user#${userProfile.userId}`,
+    "profile",
+    userProfile,
+    timestamp
+  );
+
+  // Add GSI keys for email and username lookups
+  const itemWithGSI = {
+    ...item,
+    gsi1pk: `email#${userProfile.email}`,
+    gsi1sk: "profile",
+    gsi2pk: `username#${userProfile.username}`,
+    gsi2sk: "profile",
+  };
+
+  await saveToDynamoDB(itemWithGSI);
+  console.info("User profile saved successfully:", {
+    userId: userProfile.userId,
+    email: userProfile.email,
+    username: userProfile.username,
+    displayName: userProfile.displayName,
+  });
+}
+
+/**
+ * Get a user profile by userId
+ */
+export async function getUserProfile(
+  userId: string
+): Promise<DynamoDBItem<UserProfile> | null> {
+  return await loadFromDynamoDB<UserProfile>(
+    `user#${userId}`,
+    "profile",
+    "user"
+  );
+}
+
+/**
+ * Get a user profile by email using GSI-1
+ */
+export async function getUserProfileByEmail(
+  email: string
+): Promise<DynamoDBItem<UserProfile> | null> {
+  const tableName = process.env.DYNAMODB_TABLE_NAME;
+
+  if (!tableName) {
+    throw new Error("DYNAMODB_TABLE_NAME environment variable is not set");
+  }
+
+  try {
+    console.info(`Querying user profile by email: ${email}`);
+
+    const command = new QueryCommand({
+      TableName: tableName,
+      IndexName: "gsi1",
+      KeyConditionExpression: "gsi1pk = :gsi1pk AND gsi1sk = :gsi1sk",
+      ExpressionAttributeValues: {
+        ":gsi1pk": `email#${email}`,
+        ":gsi1sk": "profile",
+      },
+      Limit: 1, // Should only be one user per email
+    });
+
+    const result = await docClient.send(command);
+    const items = (result.Items || []) as DynamoDBItem<UserProfile>[];
+
+    if (items.length === 0) {
+      console.info(`No user profile found for email: ${email}`);
+      return null;
+    }
+
+    if (items.length > 1) {
+      console.warn(`⚠️ Multiple user profiles found for email: ${email}`, {
+        count: items.length,
+        userIds: items.map(item => item.attributes.userId)
+      });
+    }
+
+    console.info(`User profile found for email: ${email}`, {
+      userId: items[0].attributes.userId,
+      username: items[0].attributes.username
+    });
+
+    return items[0];
+
+  } catch (error) {
+    console.error(`Error querying user profile by email: ${email}`, error);
+    throw error;
+  }
+}
+
+/**
+ * Update a user profile
+ */
+export async function updateUserProfile(
+  userId: string,
+  updates: Partial<UserProfile>
+): Promise<UserProfile> {
+  // First get the existing profile
+  const existingProfile = await getUserProfile(userId);
+
+  if (!existingProfile) {
+    throw new Error(`User profile not found: ${userId}`);
+  }
+
+  // Deep merge function for nested objects
+  const deepMerge = (target: any, source: any): any => {
+    const result = { ...target };
+    for (const key in source) {
+      if (
+        source[key] &&
+        typeof source[key] === "object" &&
+        !Array.isArray(source[key])
+      ) {
+        result[key] = deepMerge(target[key] || {}, source[key]);
+      } else {
+        result[key] = source[key];
+      }
+    }
+    return result;
+  };
+
+  // Update the profile with new data using deep merge
+  const updatedProfile: UserProfile = deepMerge(existingProfile.attributes, updates);
+
+  // Create updated item maintaining original timestamps but updating the updatedAt field
+  const updatedItem = {
+    ...existingProfile,
+    attributes: updatedProfile,
+    updatedAt: new Date().toISOString(),
+    // Update GSI keys if email or username changed
+    gsi1pk: `email#${updatedProfile.email}`,
+    gsi2pk: `username#${updatedProfile.username}`,
+  };
+
+  await saveToDynamoDB(updatedItem);
+
+  console.info("User profile updated successfully:", {
+    userId,
+    updateFields: Object.keys(updates),
+  });
+
+  return updatedProfile;
+}
+
+// ===========================
 // MEMORY OPERATIONS
 // ===========================
 

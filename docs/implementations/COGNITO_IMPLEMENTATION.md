@@ -1,6 +1,6 @@
-# Cognito Authentication Implementation Plan
+# Cognito Authentication Implementation Plan - REVISED
 
-## CoachForge Platform - Custom UserId Strategy
+## CoachForge Platform - Simplified Custom UserId Strategy
 
 ### Executive Summary
 
@@ -9,9 +9,16 @@ This plan implements Amazon Cognito user authentication for the CoachForge platf
 - **Username**: Public display handle (unique, mutable)
 - **Custom UserId**: Internal system identifier (unique, immutable)
 
-**Estimated Timeline**: 8-12 hours total implementation
-**Difficulty Level**: Moderate
+**Estimated Timeline**: 6-8 hours total implementation (REVISED)
+**Difficulty Level**: Moderate → **Simplified**
 **Impact**: Secure user authentication with seamless integration into existing API structure
+
+### **Key Simplifications Applied**:
+- Leveraging Amplify Gen 2 built-in auth patterns instead of manual JWT configuration
+- Auth middleware pattern to reduce repetitive Lambda function updates
+- URL parameter → Auth context migration strategy
+- Dev mode bypass for testing multiple users
+- Public routes: `/hello`, `/contact` only (coach-templates now protected)
 
 ---
 
@@ -36,10 +43,17 @@ This plan implements Amazon Cognito user authentication for the CoachForge platf
 
 ---
 
-## Phase 1: Backend Authentication Setup
+## Phase 0: Proof of Concept (REVISED)
+**Timeline**: 2-3 hours
+
+### **Goal**: End-to-end auth flow with ONE protected endpoint
+
+## Phase 1: Core Auth Infrastructure (REVISED)
 **Timeline**: 3-4 hours
 
-### Step 1.1: Create Auth Resource
+### **Goal**: Auth middleware + key endpoints protected
+
+### Step 0.1: Update Auth Resource (Simplified)
 **File**: `amplify/auth/resource.ts`
 
 ```typescript
@@ -50,33 +64,16 @@ export const auth = defineAuth({
     email: {
       verificationEmailStyle: "CODE",
       verificationEmailSubject: "Welcome to CoachForge!",
-      verificationEmailBody: (createCode) =>
-        `Welcome to CoachForge! Your verification code is ${createCode()}`
     }
   },
-  multifactor: {
-    mode: 'OPTIONAL',  // Can be upgraded to REQUIRED later
-    totp: true,
-    sms: true
-  },
   userAttributes: {
-    // Login credential
-    email: {
-      required: true,
-      mutable: true
-    },
-    // Public display name
-    preferred_username: {
-      required: true,
-      mutable: true
-    },
-    // Internal system ID
+    email: { required: true, mutable: true },
+    preferred_username: { required: true, mutable: true },
     'custom:user_id': {
       dataType: 'String',
       required: false,
-      mutable: false  // Set once, never changes
+      mutable: false
     },
-    // Optional profile info
     given_name: { required: false, mutable: true },
     family_name: { required: false, mutable: true }
   },
@@ -86,12 +83,12 @@ export const auth = defineAuth({
     requireLowercase: true,
     requireUppercase: true,
     requireNumbers: true,
-    requireSymbols: false  // Keep it user-friendly for fitness enthusiasts
+    requireSymbols: false
   }
 })
 ```
 
-### Step 1.2: Create Post-Confirmation Trigger
+### Step 0.2: Create Post-Confirmation Trigger
 **File**: `amplify/functions/post-confirmation/handler.ts`
 
 ```typescript
@@ -106,12 +103,12 @@ const cognitoClient = new CognitoIdentityProviderClient({
 })
 
 export const handler = async (event) => {
-  console.log('Post-confirmation trigger:', JSON.stringify(event, null, 2))
+  console.info('Post-confirmation trigger:', JSON.stringify(event, null, 2))
 
   try {
     // Generate custom userId
     const customUserId = `user_${nanoid(10)}`
-    console.log(`Generating custom userId: ${customUserId} for user: ${event.userName}`)
+    console.info(`Generating custom userId: ${customUserId} for user: ${event.userName}`)
 
     // Set custom userId attribute
     const command = new AdminUpdateUserAttributesCommand({
@@ -124,7 +121,7 @@ export const handler = async (event) => {
     })
 
     await cognitoClient.send(command)
-    console.log(`Successfully set custom userId: ${customUserId}`)
+    console.info(`Successfully set custom userId: ${customUserId}`)
 
     return event
 
@@ -150,7 +147,52 @@ export const postConfirmation = defineFunction({
 })
 ```
 
-### Step 1.3: Update Backend Configuration
+### Step 0.3: Create Auth Middleware (NEW)
+**File**: `amplify/functions/libs/auth-middleware.ts`
+
+```typescript
+import { createErrorResponse } from './api-helpers'
+
+export const withAuth = (handler, options = {}) => {
+  return async (event) => {
+    // Dev mode bypass for testing
+    if (process.env.NODE_ENV === 'development' && event.headers['x-dev-bypass'] === 'true') {
+      event.user = {
+        userId: 'dev_user_' + Math.random().toString(36).substr(2, 9),
+        username: 'dev_user',
+        email: 'dev@test.com'
+      }
+      return handler(event)
+    }
+
+    const claims = event.requestContext.authorizer?.jwt?.claims
+    if (!claims) {
+      return createErrorResponse(401, 'Authentication required')
+    }
+
+    const userId = claims['custom:user_id']
+    const requestedUserId = event.pathParameters?.userId
+
+    if (!userId) {
+      return createErrorResponse(400, 'Custom userId not found. Please contact support.')
+    }
+
+    if (userId !== requestedUserId) {
+      return createErrorResponse(403, 'Access denied: can only access your own data')
+    }
+
+    event.user = {
+      userId,
+      username: claims.preferred_username,
+      email: claims.email
+    }
+
+    return handler(event)
+  }
+}
+```
+
+### Step 0.4: Update Backend Configuration
 **File**: `amplify/backend.ts`
 
 ```typescript
@@ -183,37 +225,91 @@ backend.auth.resource.addTrigger({
 })
 ```
 
-### Step 1.4: Install Dependencies
+### Step 0.5: Protect ONE Endpoint (Test)
+**File**: `amplify/functions/get-workouts/handler.ts`
+
+```typescript
+import { withAuth } from '../libs/auth-middleware'
+import { getWorkouts } from '../../dynamodb/operations'
+
+const baseHandler = async (event) => {
+  const { userId } = event.user // Already validated by middleware!
+
+  // Your existing logic unchanged
+  const workouts = await getWorkouts(userId)
+
+  return createSuccessResponse({ workouts })
+}
+
+export const handler = withAuth(baseHandler)
+```
+
+### Step 0.6: Add Authenticator to Frontend
+**File**: `src/App.jsx`
+
+```jsx
+import { Authenticator } from '@aws-amplify/ui-react'
+import { Amplify } from 'aws-amplify'
+import outputs from '../amplify_outputs.json'
+
+Amplify.configure(outputs)
+
+function App() {
+  return (
+    <Authenticator>
+      {({ signOut, user }) => (
+        <AppContent user={user} signOut={signOut} />
+      )}
+    </Authenticator>
+  )
+}
+```
+
+### Step 0.7: Install Dependencies
 ```bash
-npm install nanoid @aws-sdk/client-cognito-identity-provider
+npm install nanoid @aws-sdk/client-cognito-identity-provider aws-amplify @aws-amplify/ui-react
 ```
 
 ---
 
-## Phase 2: API Gateway Security
-**Timeline**: 2-3 hours
+## Phase 1: Core Auth Infrastructure (REVISED)
+**Timeline**: 3-4 hours
 
-### Step 2.1: Update API Routes with Authentication
+### Step 1.1: Update API Routes with Simplified Auth
 **File**: `amplify/api/routes.ts`
 
 ```typescript
 import { auth } from '../auth/resource'
 
-// Helper function to add authenticated routes
-const addAuthenticatedRoute = (httpApi, path, methods, handler) => {
+// Public routes (no auth)
+export function addPublicRoutes(httpApi, integrations) {
   httpApi.addRoutes({
-    path,
-    methods,
-    integration: {
-      type: 'AWS_LAMBDA',
-      function: handler,
-      payloadFormatVersion: '2.0'
-    },
-    authorizer: {
-      type: 'JWT',
-      jwtAudience: [auth.resource.userPoolClientId],
-      jwtIssuer: `https://cognito-idp.${process.env.AWS_REGION}.amazonaws.com/${auth.resource.userPoolId}`
-    }
+    path: '/hello',
+    methods: ['GET'],
+    integration: integrations.helloWorld
+  })
+
+  httpApi.addRoutes({
+    path: '/contact',
+    methods: ['POST'],
+    integration: integrations.contactForm
+  })
+}
+
+// Protected routes (auth required) - Amplify Gen 2 magic!
+export function addProtectedRoutes(httpApi, integrations) {
+  const protectedRoutes = [
+    { path: '/coach-templates', methods: ['GET'], integration: integrations.getCoachTemplates },
+    { path: '/users/{userId}/coaches', methods: ['GET'], integration: integrations.getCoachConfigs },
+    { path: '/users/{userId}/workouts', methods: ['GET', 'POST'], integration: integrations.getWorkouts },
+    // Add all other user routes...
+  ]
+
+  protectedRoutes.forEach(route => {
+    httpApi.addRoutes({
+      ...route,
+      authorizer: auth // Simple!
+    })
   })
 }
 
@@ -268,7 +364,7 @@ import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda'
 import { loadCoachConversations } from '../../dynamodb/operations'
 
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-  console.log('Event:', JSON.stringify(event, null, 2))
+  console.info('Event:', JSON.stringify(event, null, 2))
 
   try {
     // 1. Extract authentication info
@@ -361,8 +457,10 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
 
 ---
 
-## Phase 3: Frontend Integration
-**Timeline**: 4-5 hours
+## Phase 2: Frontend Integration (REVISED)
+**Timeline**: 2-3 hours
+
+### **Goal**: Replace URL params with auth context, update API calls
 
 ### Step 3.1: Install Frontend Dependencies
 ```bash
@@ -727,8 +825,15 @@ export function MainApp({ signOut }) {
 
 ---
 
-## Phase 4: Testing & Validation
+## Phase 3: Full Migration & Polish (REVISED)
 **Timeline**: 1-2 hours
+
+### **Goal**: Apply auth to all endpoints, remove dev mode, error handling
+
+---
+
+## Testing & Validation
+**Timeline**: 1 hour
 
 ### Step 4.1: Authentication Flow Testing
 

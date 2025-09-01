@@ -34,7 +34,7 @@ function readTemplateFile(filePath) {
     const fileContent = fs.readFileSync(filePath, 'utf8');
     const template = JSON.parse(fileContent);
 
-    console.log(`✅ Successfully read template: ${template.attributes.template_name} (${template.attributes.template_id})`);
+    console.info(`✅ Successfully read template: ${template.attributes.template_name} (${template.attributes.template_id})`);
     return template;
   } catch (error) {
     console.error(`❌ Error reading template file ${filePath}:`, error.message);
@@ -54,7 +54,7 @@ async function insertTemplate(template) {
     });
 
     await docClient.send(command);
-    console.log(`✅ Successfully upserted template: ${template.attributes.template_name}`);
+    console.info(`✅ Successfully upserted template: ${template.attributes.template_name}`);
     return true;
   } catch (error) {
     console.error(`❌ Error upserting template ${template.attributes.template_name}:`, error.message);
@@ -72,9 +72,9 @@ function getTemplateFiles() {
       .filter(file => file.endsWith('-template.json'))
       .map(file => path.join(TEMPLATES_DIR, file));
 
-    console.log(`📁 Found ${templateFiles.length} template files:`);
+    console.info(`📁 Found ${templateFiles.length} template files:`);
     templateFiles.forEach(file => {
-      console.log(`   - ${path.basename(file)}`);
+      console.info(`   - ${path.basename(file)}`);
     });
 
     return templateFiles;
@@ -125,7 +125,7 @@ function validateTemplate(template, fileName) {
     return false;
   }
 
-  console.log(`✅ Template ${fileName} passed validation`);
+  console.info(`✅ Template ${fileName} passed validation`);
   return true;
 }
 
@@ -133,7 +133,7 @@ function validateTemplate(template, fileName) {
  * Main seeding function
  */
 async function seedCoachTemplates() {
-  console.log('🚀 Starting Coach Templates Seeding Process...\n');
+  console.info('🚀 Starting Coach Templates Seeding Process...\n');
 
   // Validate environment
   if (!TABLE_NAME) {
@@ -141,20 +141,20 @@ async function seedCoachTemplates() {
     process.exit(1);
   }
 
-  console.log(`📋 Configuration:`);
-  console.log(`   - Table Name: ${TABLE_NAME}`);
-  console.log(`   - AWS Region: ${AWS_REGION}`);
-  console.log(`   - Templates Directory: ${TEMPLATES_DIR}\n`);
+  console.info(`📋 Configuration:`);
+  console.info(`   - Table Name: ${TABLE_NAME}`);
+  console.info(`   - AWS Region: ${AWS_REGION}`);
+  console.info(`   - Templates Directory: ${TEMPLATES_DIR}\n`);
 
   // Get all template files
   const templateFiles = getTemplateFiles();
 
   if (templateFiles.length === 0) {
-    console.log('⚠️  No template files found. Exiting.');
+    console.info('⚠️  No template files found. Exiting.');
     return;
   }
 
-  console.log('\n📖 Reading and validating templates...\n');
+  console.info('\n📖 Reading and validating templates...\n');
 
   // Read and validate all templates
   const templates = [];
@@ -174,7 +174,7 @@ async function seedCoachTemplates() {
     process.exit(1);
   }
 
-  console.log(`\n💾 Upserting ${templates.length} templates into DynamoDB...\n`);
+  console.info(`\n💾 Upserting ${templates.length} templates into DynamoDB...\n`);
 
   // Insert templates into DynamoDB
   let successCount = 0;
@@ -193,16 +193,16 @@ async function seedCoachTemplates() {
   }
 
   // Summary
-  console.log('\n📊 Seeding Summary:');
-  console.log(`   ✅ Successfully upserted: ${successCount} templates`);
-  console.log(`   ❌ Failed: ${errorCount} templates`);
-  console.log(`   📁 Total processed: ${templates.length} templates\n`);
+  console.info('\n📊 Seeding Summary:');
+  console.info(`   ✅ Successfully upserted: ${successCount} templates`);
+  console.info(`   ❌ Failed: ${errorCount} templates`);
+  console.info(`   📁 Total processed: ${templates.length} templates\n`);
 
   if (errorCount > 0) {
-    console.log('⚠️  Some templates failed to upsert. Check the errors above.');
+    console.info('⚠️  Some templates failed to upsert. Check the errors above.');
     process.exit(1);
   } else {
-    console.log('🎉 Coach templates seeding completed successfully!');
+    console.info('🎉 Coach templates seeding completed successfully!');
   }
 }
 
@@ -212,7 +212,7 @@ async function seedCoachTemplates() {
 if (import.meta.url === `file://${process.argv[1]}`) {
   // Check for help flag
   if (process.argv.includes('--help') || process.argv.includes('-h')) {
-    console.log(`
+    console.info(`
 Coach Templates Seeding Script
 
 Usage: node scripts/seed-coach-templates.js [options]
