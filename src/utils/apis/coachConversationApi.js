@@ -1,4 +1,4 @@
-import { getApiUrl } from './apiConfig';
+import { getApiUrl, authenticatedFetch } from './apiConfig';
 
 /**
  * API service for Coach Conversation operations
@@ -12,11 +12,9 @@ import { getApiUrl } from './apiConfig';
  * @returns {Promise<Object>} - The API response with conversation details
  */
 export const createCoachConversation = async (userId, coachId, title) => {
-  const response = await fetch(`${getApiUrl('')}/users/${userId}/coaches/${coachId}/conversations`, {
+  const url = `${getApiUrl('')}/users/${userId}/coaches/${coachId}/conversations`;
+  const response = await authenticatedFetch(url, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
     body: JSON.stringify({
       title
     }),
@@ -40,11 +38,10 @@ export const createCoachConversation = async (userId, coachId, title) => {
  * @returns {Promise<Object>} - The conversation data with message history
  */
 export const getCoachConversation = async (userId, coachId, conversationId) => {
-  const response = await fetch(`${getApiUrl('')}/users/${userId}/coaches/${coachId}/conversations/${conversationId}`, {
+  const url = `${getApiUrl('')}/users/${userId}/coaches/${coachId}/conversations/${conversationId}`;
+  const response = await authenticatedFetch(url, {
     method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+
   });
 
   if (!response.ok) {
@@ -81,11 +78,9 @@ export const sendCoachConversationMessage = async (userId, coachId, conversation
       messageLength: userResponse.length
     });
 
-    const response = await fetch(`${getApiUrl('')}/users/${userId}/coaches/${coachId}/conversations/${conversationId}/send-message`, {
+    const url = `${getApiUrl('')}/users/${userId}/coaches/${coachId}/conversations/${conversationId}/send-message`;
+    const response = await authenticatedFetch(url, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
       body: JSON.stringify({
         userResponse
       }),
@@ -137,11 +132,10 @@ export const sendCoachConversationMessage = async (userId, coachId, conversation
  * @returns {Promise<Object>} - The API response with updated conversation
  */
 export const updateCoachConversation = async (userId, coachId, conversationId, metadata) => {
-  const response = await fetch(`${getApiUrl('')}/users/${userId}/coaches/${coachId}/conversations/${conversationId}`, {
+  const url = `${getApiUrl('')}/users/${userId}/coaches/${coachId}/conversations/${conversationId}`;
+  const response = await authenticatedFetch(url, {
     method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+
     body: JSON.stringify(metadata),
   });
 
@@ -165,11 +159,10 @@ export const updateCoachConversation = async (userId, coachId, conversationId, m
  * @returns {Promise<Object>} - The API response with conversations array
  */
 export const getCoachConversations = async (userId, coachId) => {
-  const response = await fetch(`${getApiUrl('')}/users/${userId}/coaches/${coachId}/conversations`, {
+  const url = `${getApiUrl('')}/users/${userId}/coaches/${coachId}/conversations`;
+  const response = await authenticatedFetch(url, {
     method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+
   });
 
   if (!response.ok) {
@@ -194,7 +187,7 @@ export const getCoachConversationsCount = async (userId, coachId) => {
   const url = `${getApiUrl('')}/users/${userId}/coaches/${coachId}/conversations/count`;
 
   try {
-    const response = await fetch(url, {
+    const response = await authenticatedFetch(url, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -234,7 +227,7 @@ export const deleteCoachConversation = async (userId, coachId, conversationId) =
   const url = `${getApiUrl('')}/users/${userId}/coaches/${coachId}/conversations/${conversationId}`;
 
   try {
-    const response = await fetch(url, {
+    const response = await authenticatedFetch(url, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',

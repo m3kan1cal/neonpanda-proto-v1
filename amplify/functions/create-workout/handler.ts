@@ -1,4 +1,4 @@
-import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
+import { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResultV2 } from 'aws-lambda';
 import {
   createSuccessResponse,
   createErrorResponse,
@@ -7,20 +7,27 @@ import {
 import { BuildWorkoutEvent } from "../libs/workout/types";
 import { CoachConfig } from "../libs/coach-creator/types";
 import { getCoachConfig } from "../../dynamodb/operations";
+import { getUserId, extractJWTClaims, authorizeUser } from '../libs/auth/jwt-utils';
 
-export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> => {
+export const handler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Promise<APIGatewayProxyResultV2> => {
   try {
+    // Extract userId from path parameters and validate against JWT claims
+    const requestedUserId = event.pathParameters?.userId;
+    if (!requestedUserId) {
+      return createErrorResponse(400, 'Missing userId in path parameters.');
+    }
+
+    // Authorize that the requested userId matches the authenticated user
+    authorizeUser(event, requestedUserId);
+
+    // Use the validated userId
+    const userId = requestedUserId;
+    const claims = extractJWTClaims(event);
+
     console.info("🏋️ Create workout handler started:", {
-      userId: event.pathParameters?.userId,
+      userId: userId,
       timestamp: new Date().toISOString(),
     });
-
-    // Extract userId from path parameters
-    const userId = event.pathParameters?.userId;
-    if (!userId) {
-      console.error("Missing userId in path parameters");
-      return createErrorResponse(400, "User ID is required");
-    }
 
     // Parse request body
     if (!event.body) {

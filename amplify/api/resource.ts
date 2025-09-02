@@ -294,21 +294,21 @@ export function createCoreApi(
     path: '/users/{userId}/workouts/{workoutId}',
     methods: [apigatewayv2.HttpMethod.GET],
     integration: integrations.getWorkout,
-    // authorizer: userPoolAuthorizer
+    authorizer: userPoolAuthorizer
   });
 
   httpApi.addRoutes({
     path: '/users/{userId}/workouts/{workoutId}',
     methods: [apigatewayv2.HttpMethod.PUT],
     integration: integrations.updateWorkout,
-    // authorizer: userPoolAuthorizer
+    authorizer: userPoolAuthorizer
   });
 
   httpApi.addRoutes({
     path: '/users/{userId}/workouts/{workoutId}',
     methods: [apigatewayv2.HttpMethod.DELETE],
     integration: integrations.deleteWorkout,
-    // authorizer: userPoolAuthorizer
+    authorizer: userPoolAuthorizer
   });
 
   httpApi.addRoutes({
@@ -325,127 +325,142 @@ export function createCoreApi(
     authorizer: userPoolAuthorizer
   });
 
-  // All other routes (PROTECTED) - Add more as needed
-  // For now, adding them without authorizer to maintain existing functionality
-  // TODO: Add authorizer to these routes in Phase 1
-
   // Coach Creator Routes
   httpApi.addRoutes({
     path: '/users/{userId}/coach-creator-sessions',
     methods: [apigatewayv2.HttpMethod.POST],
-    integration: integrations.createCoachCreatorSession
+    integration: integrations.createCoachCreatorSession,
+    authorizer: userPoolAuthorizer
   });
 
   httpApi.addRoutes({
     path: '/users/{userId}/coach-creator-sessions/{sessionId}',
     methods: [apigatewayv2.HttpMethod.PUT],
-    integration: integrations.updateCoachCreatorSession
+    integration: integrations.updateCoachCreatorSession,
+    authorizer: userPoolAuthorizer
   });
 
   httpApi.addRoutes({
     path: '/users/{userId}/coach-creator-sessions/{sessionId}',
     methods: [apigatewayv2.HttpMethod.GET],
-    integration: integrations.getCoachCreatorSession
+    integration: integrations.getCoachCreatorSession,
+    authorizer: userPoolAuthorizer
   });
 
   httpApi.addRoutes({
     path: '/users/{userId}/coach-creator-sessions/{sessionId}/config-status',
     methods: [apigatewayv2.HttpMethod.GET],
-    integration: integrations.getCoachConfigStatus
+    integration: integrations.getCoachConfigStatus,
+    authorizer: userPoolAuthorizer
   });
 
   // Coach Config Routes
   httpApi.addRoutes({
     path: '/users/{userId}/coaches',
     methods: [apigatewayv2.HttpMethod.GET],
-    integration: integrations.getCoachConfigs
+    integration: integrations.getCoachConfigs,
+    authorizer: userPoolAuthorizer
   });
 
   httpApi.addRoutes({
     path: '/users/{userId}/coaches/{coachId}',
     methods: [apigatewayv2.HttpMethod.GET],
-    integration: integrations.getCoachConfig
+    integration: integrations.getCoachConfig,
+    authorizer: userPoolAuthorizer
   });
 
   httpApi.addRoutes({
     path: '/users/{userId}/coaches/from-template/{templateId}',
     methods: [apigatewayv2.HttpMethod.POST],
-    integration: integrations.createCoachConfigFromTemplate
+    integration: integrations.createCoachConfigFromTemplate,
+    authorizer: userPoolAuthorizer
   });
 
   // Coach Conversation Routes
   httpApi.addRoutes({
     path: '/users/{userId}/coaches/{coachId}/conversations',
     methods: [apigatewayv2.HttpMethod.POST],
-    integration: integrations.createCoachConversation
+    integration: integrations.createCoachConversation,
+    authorizer: userPoolAuthorizer
   });
 
   httpApi.addRoutes({
     path: '/users/{userId}/coaches/{coachId}/conversations',
     methods: [apigatewayv2.HttpMethod.GET],
-    integration: integrations.getCoachConversations
+    integration: integrations.getCoachConversations,
+    authorizer: userPoolAuthorizer
   });
 
   httpApi.addRoutes({
     path: '/users/{userId}/coaches/{coachId}/conversations/{conversationId}',
     methods: [apigatewayv2.HttpMethod.GET],
-    integration: integrations.getCoachConversation
+    integration: integrations.getCoachConversation,
+    authorizer: userPoolAuthorizer
   });
 
   httpApi.addRoutes({
     path: '/users/{userId}/coaches/{coachId}/conversations/{conversationId}',
     methods: [apigatewayv2.HttpMethod.PUT],
-    integration: integrations.updateCoachConversation
+    integration: integrations.updateCoachConversation,
+    authorizer: userPoolAuthorizer
   });
 
   httpApi.addRoutes({
     path: '/users/{userId}/coaches/{coachId}/conversations/{conversationId}/send-message',
     methods: [apigatewayv2.HttpMethod.POST],
-    integration: integrations.sendCoachConversationMessage
+    integration: integrations.sendCoachConversationMessage,
+    authorizer: userPoolAuthorizer
   });
 
   httpApi.addRoutes({
     path: '/users/{userId}/coaches/{coachId}/conversations/count',
     methods: [apigatewayv2.HttpMethod.GET],
-    integration: integrations.getConversationsCount
+    integration: integrations.getConversationsCount,
+    authorizer: userPoolAuthorizer
   });
 
   httpApi.addRoutes({
     path: '/users/{userId}/coaches/{coachId}/conversations/{conversationId}',
     methods: [apigatewayv2.HttpMethod.DELETE],
-    integration: integrations.deleteCoachConversation
+    integration: integrations.deleteCoachConversation,
+    authorizer: userPoolAuthorizer
   });
 
   // Report Routes
   httpApi.addRoutes({
     path: '/users/{userId}/reports/weekly',
     methods: [apigatewayv2.HttpMethod.GET],
-    integration: integrations.getWeeklyReports
+    integration: integrations.getWeeklyReports,
+    authorizer: userPoolAuthorizer
   });
 
   httpApi.addRoutes({
     path: '/users/{userId}/reports/weekly/{weekId}',
     methods: [apigatewayv2.HttpMethod.GET],
-    integration: integrations.getWeeklyReport
+    integration: integrations.getWeeklyReport,
+    authorizer: userPoolAuthorizer
   });
 
   // Memory Routes
   httpApi.addRoutes({
     path: '/users/{userId}/memories',
     methods: [apigatewayv2.HttpMethod.GET],
-    integration: integrations.getMemories
+    integration: integrations.getMemories,
+    authorizer: userPoolAuthorizer
   });
 
   httpApi.addRoutes({
     path: '/users/{userId}/memories',
     methods: [apigatewayv2.HttpMethod.POST],
-    integration: integrations.createMemory
+    integration: integrations.createMemory,
+    authorizer: userPoolAuthorizer
   });
 
   httpApi.addRoutes({
     path: '/users/{userId}/memories/{memoryId}',
     methods: [apigatewayv2.HttpMethod.DELETE],
-    integration: integrations.deleteMemory
+    integration: integrations.deleteMemory,
+    authorizer: userPoolAuthorizer
   });
 
   // Create custom domain name

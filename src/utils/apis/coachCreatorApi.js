@@ -1,4 +1,4 @@
-import { getApiUrl } from './apiConfig';
+import { getApiUrl, authenticatedFetch } from './apiConfig';
 
 /**
  * API service for Coach Creator operations
@@ -10,11 +10,9 @@ import { getApiUrl } from './apiConfig';
  * @returns {Promise<Object>} - The API response with sessionId and initialMessage
  */
 export const createCoachCreatorSession = async (userId) => {
-  const response = await fetch(`${getApiUrl('')}/users/${userId}/coach-creator-sessions`, {
+  const url = `${getApiUrl('')}/users/${userId}/coach-creator-sessions`;
+  const response = await authenticatedFetch(url, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
     body: JSON.stringify({}),
   });
 
@@ -36,11 +34,9 @@ export const createCoachCreatorSession = async (userId) => {
  * @returns {Promise<Object>} - The API response with aiResponse, isComplete, etc.
  */
 export const updateCoachCreatorSession = async (userId, sessionId, userResponse) => {
-  const response = await fetch(`${getApiUrl('')}/users/${userId}/coach-creator-sessions/${sessionId}`, {
+  const url = `${getApiUrl('')}/users/${userId}/coach-creator-sessions/${sessionId}`;
+  const response = await authenticatedFetch(url, {
     method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-    },
     body: JSON.stringify({
       userResponse
     }),
@@ -63,11 +59,9 @@ export const updateCoachCreatorSession = async (userId, sessionId, userResponse)
  * @returns {Promise<Object>} - The session data with conversation history
  */
 export const getCoachCreatorSession = async (userId, sessionId) => {
-  const response = await fetch(`${getApiUrl('')}/users/${userId}/coach-creator-sessions/${sessionId}`, {
+  const url = `${getApiUrl('')}/users/${userId}/coach-creator-sessions/${sessionId}`;
+  const response = await authenticatedFetch(url, {
     method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-    },
   });
 
   if (!response.ok) {

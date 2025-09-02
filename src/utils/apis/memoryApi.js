@@ -1,4 +1,4 @@
-import { getApiUrl } from './apiConfig';
+import { getApiUrl, authenticatedFetch } from './apiConfig';
 
 /**
  * API service for Memory operations
@@ -38,11 +38,8 @@ export const getMemories = async (userId, options = {}) => {
   console.info('getMemories: options:', options);
   console.info('getMemories: queryString:', queryString);
 
-  const response = await fetch(url, {
+  const response = await authenticatedFetch(url, {
     method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-    },
   });
 
   console.info('getMemories: Response status:', response.status);
@@ -95,11 +92,8 @@ export const createMemory = async (userId, memoryData) => {
     // AI will determine memoryType and importance automatically
   };
 
-  const response = await fetch(url, {
+  const response = await authenticatedFetch(url, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
     body: JSON.stringify(requestBody),
   });
 
@@ -143,11 +137,8 @@ export const deleteMemory = async (userId, memoryId) => {
   console.info('deleteMemory: userId:', userId);
   console.info('deleteMemory: memoryId:', memoryId);
 
-  const response = await fetch(url, {
+  const response = await authenticatedFetch(url, {
     method: 'DELETE',
-    headers: {
-      'Content-Type': 'application/json',
-    },
   });
 
   console.info('deleteMemory: Response status:', response.status);

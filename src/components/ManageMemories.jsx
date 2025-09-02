@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useAuthorizeUser } from '../auth/hooks/useAuthorizeUser';
 import { themeClasses } from '../utils/synthwaveThemeClasses';
 import { NeonBorder } from './themes/SynthwaveComponents';
+import { AccessDenied, LoadingScreen } from './shared/AccessDenied';
 import { useToast } from '../contexts/ToastContext';
 import { MemoryAgent } from '../utils/agents/MemoryAgent';
 import { FloatingMenuManager } from './shared/FloatingMenuManager';
@@ -48,12 +50,13 @@ function ManageMemories() {
   const userId = searchParams.get('userId');
   const coachId = searchParams.get('coachId');
 
+  // Authorize that URL userId matches authenticated user
+  const { isValidating: isValidatingUserId, isValid: isValidUserId, error: userIdError } = useAuthorizeUser(userId);
+
   // Delete confirmation state
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [memoryToDelete, setMemoryToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
-
-
 
   const memoryAgentRef = useRef(null);
 
@@ -300,15 +303,17 @@ function ManageMemories() {
     );
   };
 
-  // Show loading state
-  if (memoryAgentState.isLoadingAllItems) {
+  // Show loading while validating userId or loading memories
+  if (isValidatingUserId || memoryAgentState.isLoadingAllItems) {
+    return <LoadingScreen message="Loading memories..." />;
+  }
+
+  // Handle userId validation errors
+  if (userIdError || !isValidUserId) {
     return (
-      <div className={`min-h-screen ${themeClasses.bgGradient} ${themeClasses.textPrimary} flex items-center justify-center`}>
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-synthwave-neon-cyan mx-auto mb-4"></div>
-          <p className="text-synthwave-text-secondary font-rajdhani">Loading memories...</p>
-        </div>
-      </div>
+      <AccessDenied
+        message={userIdError || "You can only access your own memories."}
+      />
     );
   }
 

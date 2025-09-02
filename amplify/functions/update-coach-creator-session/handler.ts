@@ -1,4 +1,4 @@
-import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
+import { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResultV2 } from 'aws-lambda';
 import { createSuccessResponse, createErrorResponse, callBedrockApi, invokeAsyncLambda } from '../libs/api-helpers';
 import { SophisticationLevel } from '../libs/coach-creator/types';
 import {
@@ -24,15 +24,28 @@ import {
   saveCoachConfig,
   getCoachCreatorSession,
 } from '../../dynamodb/operations';
+import { getUserId, extractJWTClaims, authorizeUser } from '../libs/auth/jwt-utils';
 
-export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> => {
+export const handler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Promise<APIGatewayProxyResultV2> => {
   try {
-    const userId = event.pathParameters?.userId;
+    // Extract userId from path parameters and validate against JWT claims
+    const requestedUserId = event.pathParameters?.userId;
+    if (!requestedUserId) {
+      return createErrorResponse(400, 'Missing userId in path parameters.');
+    }
+
+    // Authorize that the requested userId matches the authenticated user
+    authorizeUser(event, requestedUserId);
+
+    // Use the validated userId
+    const userId = requestedUserId;
+    const claims = extractJWTClaims(event);
+
     const sessionId = event.pathParameters?.sessionId;
     const { userResponse } = JSON.parse(event.body || '{}');
 
-    if (!userId || !sessionId || !userResponse) {
-      return createErrorResponse(400, 'Missing required fields: userId, sessionId, userResponse');
+    if (!sessionId || !userResponse) {
+      return createErrorResponse(400, 'Missing required fields: sessionId, userResponse');
     }
 
     // Load session

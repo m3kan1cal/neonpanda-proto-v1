@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useAuthorizeUser } from '../auth/hooks/useAuthorizeUser';
 import { themeClasses } from '../utils/synthwaveThemeClasses';
 import { isCurrentWeekReport, isNewWorkout } from '../utils/dateUtils';
 import {
@@ -57,6 +58,9 @@ function TrainingGrounds() {
   const navigate = useNavigate();
   const userId = searchParams.get('userId');
   const coachId = searchParams.get('coachId');
+
+  // Authorize that URL userId matches authenticated user
+  const { isValidating: isValidatingUserId, isValid: isValidUserId, error: userIdError } = useAuthorizeUser(userId);
 
   const [showCoachDetails, setShowCoachDetails] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
@@ -321,10 +325,6 @@ function TrainingGrounds() {
     return `${formatDate(weekStart)} - ${formatDate(weekEnd)}`;
   };
 
-
-
-
-
   const renderWorkoutList = () => (
     <div className="space-y-2">
       {workoutState.isLoadingRecentItems ? (
@@ -384,9 +384,23 @@ function TrainingGrounds() {
     </div>
   );
 
+  // Show loading while validating userId or loading training grounds data
+  if (isValidatingUserId || trainingGroundsState.isLoading) {
+    return <FullPageLoader text="Loading Training Grounds..." />;
+  }
 
-
-
+  // Handle userId validation errors
+  if (userIdError || !isValidUserId) {
+    return (
+      <CenteredErrorState
+        title="Access Denied"
+        message={userIdError || "You can only access your own Training Grounds."}
+        buttonText="Back to Coaches"
+        onButtonClick={() => navigate('/coaches')}
+        variant="error"
+      />
+    );
+  }
 
   if (!userId || !coachId) {
     return (
@@ -398,10 +412,6 @@ function TrainingGrounds() {
         variant="error"
       />
     );
-  }
-
-  if (trainingGroundsState.isLoading) {
-    return <FullPageLoader text="Loading Training Grounds..." />;
   }
 
   if (trainingGroundsState.error) {

@@ -1,4 +1,4 @@
-import { getApiUrl } from './apiConfig';
+import { getApiUrl, authenticatedFetch } from './apiConfig';
 
 // List weekly reports for a user
 export const getWeeklyReports = async (userId, options = {}) => {
@@ -12,7 +12,7 @@ export const getWeeklyReports = async (userId, options = {}) => {
 
   const url = `${getApiUrl('')}/users/${userId}/reports/weekly${params.toString() ? `?${params.toString()}` : ''}`;
 
-  const response = await fetch(url, { headers: { 'Content-Type': 'application/json' } });
+  const response = await authenticatedFetch(url, { method: 'GET' });
   if (!response.ok) throw new Error(`API Error: ${response.status}`);
   return response.json();
 };
@@ -20,7 +20,7 @@ export const getWeeklyReports = async (userId, options = {}) => {
 // Get a specific weekly report by weekId
 export const getWeeklyReport = async (userId, weekId) => {
   const url = `${getApiUrl('')}/users/${userId}/reports/weekly/${weekId}`;
-  const response = await fetch(url, { headers: { 'Content-Type': 'application/json' } });
+  const response = await authenticatedFetch(url, { method: 'GET' });
   if (!response.ok) {
     if (response.status === 404) throw new Error('Weekly report not found');
     throw new Error(`API Error: ${response.status}`);

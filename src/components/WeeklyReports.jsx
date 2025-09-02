@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
+import { useAuthorizeUser } from '../auth/hooks/useAuthorizeUser';
+import { AccessDenied, LoadingScreen } from './shared/AccessDenied';
 import { themeClasses } from "../utils/synthwaveThemeClasses";
 import { NeonBorder } from './themes/SynthwaveComponents';
 import { FullPageLoader, CenteredErrorState } from './shared/ErrorStates';
@@ -13,6 +15,9 @@ function Reports() {
   const userId = searchParams.get("userId");
   const weekId = searchParams.get("weekId");
   const coachId = searchParams.get("coachId");
+
+  // Authorize that URL userId matches authenticated user
+  const { isValidating: isValidatingUserId, isValid: isValidUserId, error: userIdError } = useAuthorizeUser(userId);
 
   const reportsAgentRef = useRef(null);
   const [reportAgentState, setReportAgentState] = useState({
@@ -62,8 +67,18 @@ function Reports() {
     window.scrollTo(0, 0);
   }, []);
 
-  if (reportAgentState.isLoadingItem) {
-    return <FullPageLoader text="Loading weekly report..." />;
+  // Show loading while validating userId or loading report
+  if (isValidatingUserId || reportAgentState.isLoadingItem) {
+    return <LoadingScreen message="Loading weekly report..." />;
+  }
+
+  // Handle userId validation errors
+  if (userIdError || !isValidUserId) {
+    return (
+      <AccessDenied
+        message={userIdError || "You can only access your own weekly reports."}
+      />
+    );
   }
 
   if (reportAgentState.error) {

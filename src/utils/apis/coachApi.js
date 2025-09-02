@@ -1,4 +1,4 @@
-import { getApiUrl } from './apiConfig';
+import { getApiUrl, authenticatedFetch } from './apiConfig';
 
 /**
  * API service for Coach operations
@@ -10,21 +10,36 @@ import { getApiUrl } from './apiConfig';
  * @returns {Promise<Object>} - The API response with coaches array
  */
 export const getCoaches = async (userId) => {
-  const response = await fetch(`${getApiUrl('')}/users/${userId}/coaches`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
+  const url = `${getApiUrl('')}/users/${userId}/coaches`;
+  console.info('getCoaches: Making API call to:', url);
 
-  if (!response.ok) {
-    throw new Error(`API Error: ${response.status}`);
+  try {
+    const response = await authenticatedFetch(url, {
+      method: 'GET',
+    });
+
+    console.info('getCoaches: Response status:', response.status);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('getCoaches: Error response:', errorText);
+      let errorMessage;
+      try {
+        const errorData = JSON.parse(errorText);
+        errorMessage = errorData.error || errorData.message || `API Error: ${response.status}`;
+      } catch (parseError) {
+        errorMessage = `API Error: ${response.status}`;
+      }
+      throw new Error(errorMessage);
+    }
+
+    const result = await response.json();
+    console.info('getCoaches: Coaches loaded successfully:', result);
+    return result;
+  } catch (error) {
+    console.error('getCoaches: API Error:', error);
+    throw error;
   }
-
-  const result = await response.json();
-  console.info('Coaches loaded:', result);
-
-  return result;
 };
 
 /**
@@ -34,21 +49,36 @@ export const getCoaches = async (userId) => {
  * @returns {Promise<Object>} - The API response with full coach details
  */
 export const getCoach = async (userId, coachId) => {
-  const response = await fetch(`${getApiUrl('')}/users/${userId}/coaches/${coachId}`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
+  const url = `${getApiUrl('')}/users/${userId}/coaches/${coachId}`;
+  console.info('getCoach: Making API call to:', url);
 
-  if (!response.ok) {
-    throw new Error(`API Error: ${response.status}`);
+  try {
+    const response = await authenticatedFetch(url, {
+      method: 'GET',
+    });
+
+    console.info('getCoach: Response status:', response.status);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('getCoach: Error response:', errorText);
+      let errorMessage;
+      try {
+        const errorData = JSON.parse(errorText);
+        errorMessage = errorData.error || errorData.message || `API Error: ${response.status}`;
+      } catch (parseError) {
+        errorMessage = `API Error: ${response.status}`;
+      }
+      throw new Error(errorMessage);
+    }
+
+    const result = await response.json();
+    console.info('getCoach: Coach loaded successfully:', result);
+    return result;
+  } catch (error) {
+    console.error('getCoach: API Error:', error);
+    throw error;
   }
-
-  const result = await response.json();
-  console.info('Coach loaded:', result);
-
-  return result;
 };
 
 /**
@@ -103,19 +133,34 @@ export const getCoachTemplate = async (templateId) => {
  * @returns {Promise<Object>} - The API response with new coach config
  */
 export const createCoachFromTemplate = async (userId, templateId) => {
-  const response = await fetch(`${getApiUrl('')}/users/${userId}/coaches/from-template/${templateId}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
+  const url = `${getApiUrl('')}/users/${userId}/coaches/from-template/${templateId}`;
+  console.info('createCoachFromTemplate: Making API call to:', url);
 
-  if (!response.ok) {
-    throw new Error(`API Error: ${response.status}`);
+  try {
+    const response = await authenticatedFetch(url, {
+      method: 'POST',
+    });
+
+    console.info('createCoachFromTemplate: Response status:', response.status);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('createCoachFromTemplate: Error response:', errorText);
+      let errorMessage;
+      try {
+        const errorData = JSON.parse(errorText);
+        errorMessage = errorData.error || errorData.message || `API Error: ${response.status}`;
+      } catch (parseError) {
+        errorMessage = `API Error: ${response.status}`;
+      }
+      throw new Error(errorMessage);
+    }
+
+    const result = await response.json();
+    console.info('createCoachFromTemplate: Coach created successfully:', result);
+    return result;
+  } catch (error) {
+    console.error('createCoachFromTemplate: API Error:', error);
+    throw error;
   }
-
-  const result = await response.json();
-  console.info('Coach created from template:', result);
-
-  return result;
 };

@@ -1,12 +1,21 @@
 import { createSuccessResponse, createErrorResponse } from '../libs/api-helpers';
 import { queryWorkouts } from '../../dynamodb/operations';
-import { getUserId, extractJWTClaims } from '../libs/auth/jwt-utils';
+import { getUserId, extractJWTClaims, authorizeUser } from '../libs/auth/jwt-utils';
 import type { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResultV2 } from 'aws-lambda';
 
 export const handler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Promise<APIGatewayProxyResultV2> => {
   try {
-    // Extract userId from JWT claims (validated by API Gateway authorizer)
-    const userId = getUserId(event);
+    // Extract userId from path parameters and validate against JWT claims
+    const requestedUserId = event.pathParameters?.userId;
+    if (!requestedUserId) {
+      return createErrorResponse(400, 'Missing userId in path parameters.');
+    }
+
+    // Authorize that the requested userId matches the authenticated user
+    authorizeUser(event, requestedUserId);
+
+    // Use the validated userId
+    const userId = requestedUserId;
     const claims = extractJWTClaims(event);
 
     // Parse query parameters for filtering

@@ -78,3 +78,17 @@ export const getPreferredUsername = (event: APIGatewayProxyEventV2WithJWTAuthori
 
   return username;
 };
+
+/**
+ * Authorizes that the requested userId matches the authenticated user
+ * @param event - API Gateway event with JWT authorizer
+ * @param requestedUserId - The userId from the API path/parameters
+ * @throws Error if userId doesn't match the authenticated user
+ */
+export const authorizeUser = (event: APIGatewayProxyEventV2WithJWTAuthorizer, requestedUserId: string): void => {
+  const authenticatedUserId = getUserId(event);
+
+  if (authenticatedUserId !== requestedUserId) {
+    throw new Error('Access denied: You can only access your own data.');
+  }
+};

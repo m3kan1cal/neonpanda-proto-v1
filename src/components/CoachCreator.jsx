@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useAuthorizeUser } from '../auth/hooks/useAuthorizeUser';
 import { themeClasses } from '../utils/synthwaveThemeClasses';
+import { AccessDenied, LoadingScreen } from './shared/AccessDenied';
 import { NeonBorder } from './themes/SynthwaveComponents';
 import { parseMarkdown } from '../utils/markdownParser.jsx';
 import CoachCreatorAgent from '../utils/agents/CoachCreatorAgent';
@@ -109,6 +111,9 @@ function CoachCreator() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const userId = searchParams.get('userId');
+
+  // Authorize that URL userId matches authenticated user
+  const { isValidating: isValidatingUserId, isValid: isValidUserId, error: userIdError } = useAuthorizeUser(userId);
   const coachCreatorSessionId = searchParams.get('coachCreatorSessionId');
 
   // UI-specific state
@@ -298,6 +303,20 @@ function CoachCreator() {
   const formatTime = (timestamp) => {
     return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
+
+  // Show loading while validating userId
+  if (isValidatingUserId) {
+    return <LoadingScreen message="Loading Coach Creator..." />;
+  }
+
+  // Handle userId validation errors
+  if (userIdError || !isValidUserId) {
+    return (
+      <AccessDenied
+        message={userIdError || "You can only access your own Coach Creator."}
+      />
+    );
+  }
 
   // Show initial coach creator UI if no userId or sessionId
   if (!userId || !coachCreatorSessionId) {

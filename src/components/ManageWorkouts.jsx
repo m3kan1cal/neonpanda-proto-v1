@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
+import { useAuthorizeUser } from '../auth/hooks/useAuthorizeUser';
 import { themeClasses } from "../utils/synthwaveThemeClasses";
+import { AccessDenied, LoadingScreen } from './shared/AccessDenied';
 import { isNewWorkout } from "../utils/dateUtils";
 import { NeonBorder, NewBadge } from "./themes/SynthwaveComponents";
 import { useToast } from "../contexts/ToastContext";
@@ -104,6 +106,9 @@ function ManageWorkouts() {
   const navigate = useNavigate();
   const userId = searchParams.get("userId");
   const coachId = searchParams.get("coachId");
+
+  // Authorize that URL userId matches authenticated user
+  const { isValidating: isValidatingUserId, isValid: isValidUserId, error: userIdError } = useAuthorizeUser(userId);
   const [activeTooltip, setActiveTooltip] = useState(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
 
@@ -474,19 +479,17 @@ function ManageWorkouts() {
     };
   }, [activeTooltip, showDeleteModal]);
 
-  // Show loading state
-  if (workoutAgentState.isLoadingAllItems) {
+  // Show loading while validating userId or loading workouts
+  if (isValidatingUserId || workoutAgentState.isLoadingAllItems) {
+    return <LoadingScreen message="Loading workout history..." />;
+  }
+
+  // Handle userId validation errors
+  if (userIdError || !isValidUserId) {
     return (
-      <div
-        className={`min-h-screen ${themeClasses.bgGradient} ${themeClasses.textPrimary} flex items-center justify-center`}
-      >
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-synthwave-neon-cyan mx-auto mb-4"></div>
-          <p className="text-synthwave-text-secondary font-rajdhani">
-            Loading workout history...
-          </p>
-        </div>
-      </div>
+      <AccessDenied
+        message={userIdError || "You can only access your own workouts."}
+      />
     );
   }
 

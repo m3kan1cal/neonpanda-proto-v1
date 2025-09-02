@@ -1,6 +1,7 @@
 // Auth exports for easy importing
 export { AuthProvider, useAuth } from './contexts/AuthContext';
 export { useAuthForm } from './hooks/useAuthForm';
+export { default as useAuthorizeUser } from './hooks/useAuthorizeUser';
 export { default as AuthRouter } from './components/AuthRouter';
 export { default as ProtectedRoute } from './components/ProtectedRoute';
 export { default as LoginForm } from './components/LoginForm';

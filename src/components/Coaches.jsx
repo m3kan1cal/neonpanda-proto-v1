@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useAuthorizeUser } from '../auth/hooks/useAuthorizeUser';
+import { AccessDenied, LoadingScreen } from './shared/AccessDenied';
 import { themeClasses } from '../utils/synthwaveThemeClasses';
 import { NeonBorder, NewBadge } from './themes/SynthwaveComponents';
 import CoachAgent from '../utils/agents/CoachAgent';
@@ -10,8 +12,6 @@ const CoachIcon = () => (
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
   </svg>
 );
-
-
 
 const CalendarIcon = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -82,6 +82,9 @@ function Coaches() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const userId = searchParams.get('userId');
+
+  // Authorize that URL userId matches authenticated user
+  const { isValidating: isValidatingUserId, isValid: isValidUserId, error: userIdError } = useAuthorizeUser(userId);
   const agentRef = useRef(null);
 
   // Agent state (managed by CoachesAgent)
@@ -190,6 +193,16 @@ function Coaches() {
     }
   };
 
+  // Show loading screen while validating userId or loading coaches
+  if (isValidatingUserId || agentState.isLoading) {
+    return <LoadingScreen message="Loading coaches..." />;
+  }
+
+  // Show access denied if user authorization failed
+  if (userIdError || !isValidUserId) {
+    return <AccessDenied message={userIdError || "You can only access your own coaches."} />;
+  }
+
   // Redirect to home if no userId
   if (!userId) {
     navigate('/', { replace: true });
@@ -218,18 +231,8 @@ function Coaches() {
           </p>
         </div>
 
-        {/* Loading State */}
-        {agentState.isLoading && (
-          <div className="text-center">
-            <div className="inline-flex items-center space-x-2 text-synthwave-text-secondary font-rajdhani">
-              <div className="w-6 h-6 border-2 border-synthwave-neon-cyan border-t-transparent rounded-full animate-spin"></div>
-              <span>Loading your coaches...</span>
-            </div>
-          </div>
-        )}
-
         {/* Error State */}
-        {agentState.error && !agentState.isLoading && (
+        {agentState.error && (
           <div className="text-center text-synthwave-neon-pink mb-8">
             <p className="font-rajdhani text-lg">{agentState.error}</p>
             <button
@@ -241,11 +244,8 @@ function Coaches() {
           </div>
         )}
 
-
-
         {/* Coaches Grid */}
-        {!agentState.isLoading && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {/* Add New Coach Card */}
             <div
               onClick={isCreatingCustomCoach ? undefined : handleCreateCoach}
@@ -452,8 +452,7 @@ function Coaches() {
                 </div>
               </div>
             ))}
-          </div>
-        )}
+        </div>
 
         {/* Coach Templates Section */}
         <div className="mt-20">

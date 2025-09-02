@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useAuthorizeUser } from '../auth/hooks/useAuthorizeUser';
+import { AccessDenied, LoadingScreen } from './shared/AccessDenied';
 import { themeClasses } from '../utils/synthwaveThemeClasses';
 import { NeonBorder } from './themes/SynthwaveComponents';
 import { useToast } from '../contexts/ToastContext';
@@ -53,6 +55,9 @@ function ManageCoachConversations() {
   const navigate = useNavigate();
   const userId = searchParams.get('userId');
   const coachId = searchParams.get('coachId');
+
+  // Authorize that URL userId matches authenticated user
+  const { isValidating: isValidatingUserId, isValid: isValidUserId, error: userIdError } = useAuthorizeUser(userId);
 
   // Delete confirmation state
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -408,6 +413,20 @@ function ManageCoachConversations() {
           </button>
         </div>
       </div>
+    );
+  }
+
+  // Show loading while validating userId
+  if (isValidatingUserId) {
+    return <LoadingScreen message="Loading conversations..." />;
+  }
+
+  // Handle userId validation errors
+  if (userIdError || !isValidUserId) {
+    return (
+      <AccessDenied
+        message={userIdError || "You can only access your own conversations."}
+      />
     );
   }
 

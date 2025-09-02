@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useAuthorizeUser } from '../auth/hooks/useAuthorizeUser';
+import { AccessDenied, LoadingScreen } from './shared/AccessDenied';
 import { themeClasses } from '../utils/synthwaveThemeClasses';
 import { NeonBorder, NewBadge } from './themes/SynthwaveComponents';
 import { isCurrentWeekReport } from '../utils/dateUtils';
@@ -44,6 +46,9 @@ function ViewReports() {
   const navigate = useNavigate();
   const userId = searchParams.get('userId');
   const coachId = searchParams.get('coachId');
+
+  // Authorize that URL userId matches authenticated user
+  const { isValidating: isValidatingUserId, isValid: isValidUserId, error: userIdError } = useAuthorizeUser(userId);
   const [activeTooltip, setActiveTooltip] = useState(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
 
@@ -317,15 +322,17 @@ function ViewReports() {
     };
   }, [activeTooltip]);
 
-  // Show loading state
-  if (reportAgentState.isLoadingAllItems) {
+  // Show loading while validating userId or loading reports
+  if (isValidatingUserId || reportAgentState.isLoadingAllItems) {
+    return <LoadingScreen message="Loading reports..." />;
+  }
+
+  // Handle userId validation errors
+  if (userIdError || !isValidUserId) {
     return (
-      <div className={`min-h-screen ${themeClasses.bgGradient} ${themeClasses.textPrimary} flex items-center justify-center`}>
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-synthwave-neon-cyan mx-auto mb-4"></div>
-          <p className="text-synthwave-text-secondary font-rajdhani">Loading reports...</p>
-        </div>
-      </div>
+      <AccessDenied
+        message={userIdError || "You can only access your own reports."}
+      />
     );
   }
 

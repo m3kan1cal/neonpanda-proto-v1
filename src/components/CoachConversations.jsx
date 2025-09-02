@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useAuthorizeUser } from '../auth/hooks/useAuthorizeUser';
+import { AccessDenied, LoadingScreen } from './shared/AccessDenied';
 import { themeClasses } from '../utils/synthwaveThemeClasses';
 import { FullPageLoader, CenteredErrorState } from './shared/ErrorStates';
 import { NeonBorder } from './themes/SynthwaveComponents';
@@ -77,15 +79,15 @@ function CoachConversations() {
   const coachId = searchParams.get('coachId');
   const conversationId = searchParams.get('conversationId');
 
+  // Authorize that URL userId matches authenticated user
+  const { isValidating: isValidatingUserId, isValid: isValidUserId, error: userIdError } = useAuthorizeUser(userId);
+
   // UI-specific state
   const [inputMessage, setInputMessage] = useState('');
   const [showNewConversation, setShowNewConversation] = useState(!conversationId);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editTitleValue, setEditTitleValue] = useState('');
   const [isSavingTitle, setIsSavingTitle] = useState(false);
-
-
-
 
   // Slash command states
   const [showSlashCommandTooltip, setShowSlashCommandTooltip] = useState(false);
@@ -421,18 +423,26 @@ function CoachConversations() {
     }
   }, [inputMessage]);
 
-
-
-
-
-
-
   // Show loading state while initializing coach or loading conversation
   if (coachConversationAgentState.isLoadingItem ||
       !coachConversationAgentState.coach ||
       !coachConversationAgentState.conversation ||
       (coachConversationAgentState.conversation && coachConversationAgentState.conversation.conversationId !== conversationId)) {
     return <FullPageLoader text="Loading conversation..." />;
+  }
+
+  // Show loading while validating userId
+  if (isValidatingUserId) {
+    return <LoadingScreen message="Loading conversation..." />;
+  }
+
+  // Handle userId validation errors
+  if (userIdError || !isValidUserId) {
+    return (
+      <AccessDenied
+        message={userIdError || "You can only access your own conversations."}
+      />
+    );
   }
 
   // Show error state
