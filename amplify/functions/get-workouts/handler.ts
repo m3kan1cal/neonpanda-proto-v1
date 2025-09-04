@@ -1,4 +1,4 @@
-import { createSuccessResponse, createErrorResponse } from '../libs/api-helpers';
+import { createOkResponse, createErrorResponse } from '../libs/api-helpers';
 import { queryWorkouts } from '../../dynamodb/operations';
 import { getUserId, extractJWTClaims, authorizeUser } from '../libs/auth/jwt-utils';
 import type { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResultV2 } from 'aws-lambda';
@@ -134,7 +134,7 @@ export const handler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): P
       } : undefined
     }));
 
-    return createSuccessResponse({
+    return createOkResponse({
       workouts: workoutSummaries,
       totalCount: workoutSummaries.length
     });

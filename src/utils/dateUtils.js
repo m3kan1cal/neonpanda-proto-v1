@@ -65,3 +65,35 @@ export const isNewWorkout = (completedAt) => {
     return false;
   }
 };
+
+/**
+ * Check if a conversation has recent activity (updated within the last 24 hours)
+ * @param {string} lastActivity - Last activity date in ISO string format (fallback to createdAt)
+ * @param {string} createdAt - Creation date in ISO string format (fallback if lastActivity not available)
+ * @returns {boolean} - True if the conversation had activity within the last 24 hours
+ */
+export const isRecentConversation = (lastActivity, createdAt) => {
+  // Use lastActivity if available, otherwise fall back to createdAt
+  const activityDate = lastActivity || createdAt;
+  if (!activityDate) return false;
+
+  try {
+    const conversationDate = new Date(activityDate);
+    const now = new Date();
+
+    // Check if date is valid
+    if (isNaN(conversationDate.getTime())) {
+      return false;
+    }
+
+    // Calculate difference in milliseconds
+    const diffInMs = now.getTime() - conversationDate.getTime();
+    const diffInHours = diffInMs / (1000 * 60 * 60);
+
+    // Return true if conversation had activity less than 24 hours ago
+    return diffInHours >= 0 && diffInHours <= 24;
+  } catch (error) {
+    console.error('Error checking if conversation is recent:', error);
+    return false;
+  }
+};

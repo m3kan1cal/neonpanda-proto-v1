@@ -1,5 +1,5 @@
 import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
-import { createSuccessResponse, createErrorResponse } from '../libs/api-helpers';
+import { createOkResponse, createErrorResponse } from '../libs/api-helpers';
 import { queryWeeklyAnalytics } from '../../dynamodb/operations';
 
 export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> => {
@@ -80,7 +80,7 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
       updatedAt: analyticsRecord.updatedAt
     }));
 
-    return createSuccessResponse({
+    return createOkResponse({
       reports: analyticsResponse,
       count: analyticsResponse.length,
       userId,

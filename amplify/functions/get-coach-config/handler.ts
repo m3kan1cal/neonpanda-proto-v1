@@ -1,5 +1,5 @@
 import { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResultV2 } from 'aws-lambda';
-import { createSuccessResponse, createErrorResponse } from '../libs/api-helpers';
+import { createOkResponse, createErrorResponse } from '../libs/api-helpers';
 import {
   getCoachConfig,
 } from '../../dynamodb/operations';
@@ -32,7 +32,7 @@ export const handler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): P
       return createErrorResponse(404, 'Coach not found');
     }
 
-    return createSuccessResponse({
+    return createOkResponse({
       coachConfig: coachConfig.attributes
     });
 

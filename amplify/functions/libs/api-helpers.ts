@@ -91,8 +91,8 @@ export function createErrorResponse(
   return createResponse(statusCode, errorBody);
 }
 
-// Helper function to create success responses
-export function createSuccessResponse(
+// Helper function to create OK responses (HTTP 200)
+export function createOkResponse(
   data: any,
   message?: string
 ): APIGatewayProxyResultV2 {
@@ -101,6 +101,18 @@ export function createSuccessResponse(
     successBody.message = message;
   }
   return createResponse(200, { ...successBody, ...data });
+}
+
+// Helper function to create created responses (HTTP 201)
+export function createCreatedResponse(
+  data: any,
+  message?: string
+): APIGatewayProxyResultV2 {
+  const successBody: any = { success: true };
+  if (message) {
+    successBody.message = message;
+  }
+  return createResponse(201, { ...successBody, ...data });
 }
 
 // Helper function to get HTTP method from API Gateway v2 event
@@ -127,6 +139,69 @@ export function getCurrentTimestamp(): string {
 
 // Re-export from response-utils for backward compatibility
 export { fixMalformedJson } from './response-utils';
+
+/**
+ * Triggers a synchronous Lambda function invocation
+ * @param functionName - Name of the Lambda function to invoke
+ * @param payload - Payload to send to the Lambda function
+ * @param context - Optional context for logging (e.g., 'initial message processing')
+ * @returns Promise that resolves when target Lambda completes with the response
+ */
+export const invokeLambda = async (
+  functionName: string,
+  payload: Record<string, any>,
+  context?: string
+): Promise<any> => {
+  try {
+    console.info(
+      `🚀 Triggering sync Lambda invocation${context ? ` for ${context}` : ""}:`,
+      {
+        functionName,
+        payloadKeys: Object.keys(payload),
+        context,
+      }
+    );
+
+    const command = new InvokeCommand({
+      FunctionName: functionName,
+      InvocationType: InvocationType.RequestResponse, // Sync invocation
+      Payload: JSON.stringify(payload),
+    });
+
+    const response = await lambdaClient.send(command);
+
+    console.info(
+      `✅ Successfully completed sync Lambda${context ? ` for ${context}` : ""}:`,
+      {
+        functionName,
+        payloadSize: JSON.stringify(payload).length,
+        statusCode: response.StatusCode,
+      }
+    );
+
+    // Parse and return the response payload if it exists
+    if (response.Payload) {
+      const responsePayload = JSON.parse(new TextDecoder().decode(response.Payload));
+      return responsePayload;
+    }
+
+    return null;
+  } catch (error) {
+    console.error(
+      `❌ Failed to invoke sync Lambda${context ? ` for ${context}` : ""}:`,
+      {
+        functionName,
+        error: error instanceof Error ? error.message : "Unknown error",
+        context,
+      }
+    );
+
+    // Re-throw to allow caller to handle the error appropriately
+    throw new Error(
+      `Failed to invoke sync Lambda ${functionName}: ${error instanceof Error ? error.message : "Unknown error"}`
+    );
+  }
+};
 
 /**
  * Triggers an async Lambda function invocation

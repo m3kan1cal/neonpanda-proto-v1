@@ -40,7 +40,7 @@ The Manage Coach Conversations feature will mirror the Manage Workouts implement
    - **Purpose**: Delete a conversation and cleanup (similar to delete-workout) ✅
    - **Route**: `DELETE /users/{userId}/coaches/{coachId}/conversations/{conversationId}` ✅
    - **Parameters**: userId, coachId, conversationId ✅
-   - **Response**: Uses `createSuccessResponse` and `createErrorResponse` helpers like other handlers ✅
+   - **Response**: Uses `createOkResponse` and `createErrorResponse` helpers like other handlers ✅
    - **Error Handling**: 400 for missing parameters, 404 for conversation not found, 500 for server errors ✅
    - **Cleanup**: Removes conversation from DynamoDB and any associated conversation summaries from Pinecone ✅
 

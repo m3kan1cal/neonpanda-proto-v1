@@ -238,7 +238,7 @@ const baseHandler = async (event) => {
   // Your existing logic unchanged
   const workouts = await getWorkouts(userId)
 
-  return createSuccessResponse({ workouts })
+  return createOkResponse({ workouts })
 }
 
 export const handler = withAuth(baseHandler)

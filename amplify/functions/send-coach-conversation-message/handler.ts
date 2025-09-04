@@ -1,6 +1,6 @@
 import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from "aws-lambda";
 import {
-  createSuccessResponse,
+  createOkResponse,
   createErrorResponse,
   MODEL_IDS,
 } from "../libs/api-helpers";
@@ -259,7 +259,7 @@ export const handler = async (
       const pineconeMatches = context?.pineconeMatches || [];
       const pineconeContext = context?.pineconeContext || '';
 
-      const successResponse = createSuccessResponse(
+      const successResponse = createOkResponse(
         {
           userResponse: newUserMessage,
           aiResponse: newAiMessage,
@@ -278,7 +278,7 @@ export const handler = async (
     } catch (responseError) {
       console.error('❌ Error creating success response:', responseError);
       // Even if response creation fails, the messages were saved successfully
-      return createSuccessResponse(
+      return createOkResponse(
         { conversationId, status: 'saved' },
         "Conversation updated successfully (response creation had issues)"
       );

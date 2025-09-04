@@ -1,6 +1,6 @@
 import { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResultV2 } from 'aws-lambda';
 import {
-  createSuccessResponse,
+  createCreatedResponse,
   createErrorResponse,
   invokeAsyncLambda,
 } from "../libs/api-helpers";
@@ -134,7 +134,7 @@ export const handler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): P
       status: "processing",
     });
 
-    return createSuccessResponse(response);
+    return createCreatedResponse(response);
 
   } catch (error) {
     console.error("❌ Unexpected error in create workout handler:", error);

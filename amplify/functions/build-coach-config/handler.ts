@@ -1,5 +1,5 @@
 import { Context, Handler } from 'aws-lambda';
-import { createSuccessResponse, createErrorResponse } from '../libs/api-helpers';
+import { createOkResponse, createErrorResponse } from '../libs/api-helpers';
 import { generateCoachConfig, storeCoachCreatorSummaryInPinecone, generateCoachCreatorSessionSummary } from '../libs/coach-creator';
 import { saveCoachConfig, getCoachCreatorSession, saveCoachCreatorSession } from '../../dynamodb/operations';
 
@@ -78,7 +78,7 @@ export const handler: Handler<CoachConfigEvent> = async (event: CoachConfigEvent
       pineconeRecordId: pineconeResult.success && 'recordId' in pineconeResult ? pineconeResult.recordId : null
     });
 
-    return createSuccessResponse({
+    return createOkResponse({
       success: true,
       coachConfigId: coachConfig.coach_id,
       coachName: coachConfig.coach_name,

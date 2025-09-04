@@ -1,5 +1,5 @@
 import { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResultV2 } from 'aws-lambda';
-import { createSuccessResponse, createErrorResponse } from '../libs/api-helpers';
+import { createOkResponse, createErrorResponse } from '../libs/api-helpers';
 import { queryWorkoutsCount } from '../../dynamodb/operations';
 import { getUserId, extractJWTClaims, authorizeUser } from '../libs/auth/jwt-utils';
 
@@ -68,7 +68,7 @@ export const handler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): P
     // Get the workout count
     const totalCount = await queryWorkoutsCount(userId, options);
 
-    return createSuccessResponse({
+    return createOkResponse({
       totalCount: totalCount
     });
 

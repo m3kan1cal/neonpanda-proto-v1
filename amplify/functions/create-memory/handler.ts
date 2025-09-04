@@ -1,6 +1,6 @@
 import { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResultV2 } from "aws-lambda";
 import {
-  createSuccessResponse,
+  createCreatedResponse,
   createErrorResponse,
 } from "../libs/api-helpers";
 import { saveMemory, getCoachConfig } from "../../dynamodb/operations";
@@ -113,7 +113,7 @@ export const handler = async (
     const pineconeResult = await storeMemoryInPinecone(memory);
 
     // Return success response with the created memory
-    return createSuccessResponse({
+    return createCreatedResponse({
       message: "Memory created successfully",
       memory,
       memoryId,

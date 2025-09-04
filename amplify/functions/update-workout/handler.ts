@@ -1,5 +1,5 @@
 import { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResultV2 } from 'aws-lambda';
-import { createSuccessResponse, createErrorResponse } from '../libs/api-helpers';
+import { createOkResponse, createErrorResponse } from '../libs/api-helpers';
 import { updateWorkout, getWorkout } from '../../dynamodb/operations';
 import { Workout } from '../libs/workout/types';
 import { getUserId, extractJWTClaims, authorizeUser } from '../libs/auth/jwt-utils';
@@ -64,7 +64,7 @@ export const handler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): P
     const updatedWorkout = await updateWorkout(userId, workoutId, updateData);
 
     // Return the updated workout data
-    return createSuccessResponse({
+    return createOkResponse({
       message: 'Workout updated successfully',
       workout: {
         workoutId: updatedWorkout.workoutId,

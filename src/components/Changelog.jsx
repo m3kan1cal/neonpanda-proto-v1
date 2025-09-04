@@ -42,6 +42,71 @@ const CollapsibleSection = ({ title, icon, children, defaultOpen = true, classNa
 
 const changelogEntries = [
   {
+    version: "Release v1.3.0",
+    date: "2025-09-03",
+    changes: {
+      added: [
+        "Command palette '/start-conversation' command for creating new coach conversations",
+        "Optional initial message support for conversation creation via command palette",
+        "Synchronous Lambda invocation for initial messages to ensure proper conversation state",
+        "NEW badge indicators for coach conversations with recent activity (last 24 hours)",
+        "NEW badge indicators for memories created within the past 24 hours",
+        "'Coach:' label prefix in Training Grounds header for better context",
+        "Automatic WorkoutAgent userId fallback mechanism in CommandPaletteAgent",
+        "Enhanced error messaging for WorkoutAgent race condition scenarios"
+      ],
+      changed: [
+        "All 'create-*' Lambda functions now return HTTP 201 (Created) responses for REST compliance",
+        "Renamed createSuccessResponse to createOkResponse across all Lambda functions",
+        "Updated 27 Lambda functions to use createOkResponse for non-creation operations",
+        "Command palette '/start-conversation' now supports trailing space for better UX",
+        "Training Grounds 'Start Conversation' button now pre-fills command palette with proper spacing",
+        "isRecentConversation helper function for determining conversation activity recency",
+        "Enhanced debug logging for WorkoutAgent initialization and userId setting"
+      ],
+      fixed: [
+        "Race condition where CommandPalette tried to use WorkoutAgent before userId was set",
+        "Conversation redirect not working after successful creation via command palette",
+        "Initial message not appearing in conversations created via command palette",
+        "Lambda invocation permissions for create-coach-conversation function",
+        "Missing conversation object in API response causing navigation failures",
+        "Cursor positioning in command palette after pre-filled commands"
+      ]
+    }
+  },
+  {
+    version: "Release v1.2.0",
+    date: "2025-09-02",
+    changes: {
+      added: [
+        "JWT authorization system with useAuthorizeUser hook for all route components",
+        "Shared AccessDenied and LoadingScreen components for consistent UI",
+        "User ID validation against authenticated user's custom:user_id claim",
+        "Comprehensive backend authorization for all Lambda handlers",
+        "HttpUserPoolAuthorizer protection for all protected API Gateway routes",
+        "authenticatedFetch utility for automatic JWT token inclusion in API calls",
+        "Centralized error handling and loading states across all components",
+        "Standardized authorization patterns across 10 route components"
+      ],
+      changed: [
+        "All *Api.js files now use authenticatedFetch instead of native fetch",
+        "API functions now use URL constants instead of inline string concatenation",
+        "Lambda handlers updated to use APIGatewayProxyEventV2WithJWTAuthorizer type",
+        "All route components now validate userId against authenticated user",
+        "Loading and error states consolidated into shared components",
+        "Authorization logic centralized and standardized across the application",
+        "API Gateway routes now enforce JWT validation at the infrastructure level"
+      ],
+      fixed: [
+        "Security vulnerability where users could access other users' data via URL manipulation",
+        "Inconsistent loading and error state presentations across components",
+        "Missing JWT token validation in API calls",
+        "Unauthorized access to protected resources",
+        "Inconsistent authorization patterns between different components"
+      ]
+    }
+  },
+  {
     version: "Release v1.1.0",
     date: "2025-08-28",
     changes: {

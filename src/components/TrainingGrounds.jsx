@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuthorizeUser } from '../auth/hooks/useAuthorizeUser';
 import { themeClasses } from '../utils/synthwaveThemeClasses';
-import { isCurrentWeekReport, isNewWorkout } from '../utils/dateUtils';
+import { isCurrentWeekReport, isNewWorkout, isRecentConversation } from '../utils/dateUtils';
 import {
   NeonBorder,
   NewBadge,
@@ -252,6 +252,16 @@ function TrainingGrounds() {
       console.info('TrainingGrounds: Setting userId and loading workouts for:', userId);
       workoutAgentRef.current.setUserId(userId);
       // Note: setUserId already loads recent workouts, total count, and training days count
+
+      // Force a re-render to ensure CommandPalette gets updated WorkoutAgent
+      // This is a workaround for the race condition between agent initialization and userId setting
+      setWorkoutState(prev => ({ ...prev, lastCheckTime: Date.now() }));
+    } else {
+      console.warn('TrainingGrounds: NOT setting userId for WorkoutAgent:', {
+        hasWorkoutAgent: !!workoutAgentRef.current,
+        userId: userId,
+        userIdType: typeof userId
+      });
     }
     if (reportsAgentRef.current && userId) {
       console.info('TrainingGrounds: Setting userId and loading reports for:', userId);
@@ -437,7 +447,7 @@ function TrainingGrounds() {
               Training Grounds
             </h1>
             <div className="font-rajdhani text-xl text-synthwave-text-secondary mb-6 flex items-center justify-center space-x-3">
-              <span className="text-synthwave-neon-pink">{trainingGroundsState.coachData?.name}</span>
+              <span><span className="text-white">Coach:</span> <span className="text-synthwave-neon-pink">{trainingGroundsState.coachData?.name}</span></span>
               <button
                 onClick={() => setShowCoachDetails(!showCoachDetails)}
                 className={`text-synthwave-neon-pink hover:text-synthwave-neon-pink transition-all duration-300 p-1 rounded-full hover:bg-synthwave-neon-pink/10 hover:shadow-lg hover:shadow-synthwave-neon-pink/50 ${
@@ -548,23 +558,16 @@ function TrainingGrounds() {
 
               {/* Start Conversation */}
               <button
-                onClick={handleStartNewConversation}
-                disabled={conversationAgentState.isLoadingItem}
-                className={`${themeClasses.neonButton} text-sm px-4 py-3 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed`}
+                onClick={() => {
+                  setCommandPaletteCommand('/start-conversation ');
+                  setIsCommandPaletteOpen(true);
+                }}
+                className={`${themeClasses.neonButton} text-sm px-4 py-3 flex items-center justify-center space-x-2`}
               >
-                {conversationAgentState.isLoadingItem ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
-                    <span>Creating...</span>
-                  </>
-                ) : (
-                  <>
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                    </svg>
-                    <span>Start Conversation</span>
-                  </>
-                )}
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+                <span>Start Conversation</span>
               </button>
 
               {/* Save Memory */}
@@ -704,12 +707,16 @@ function TrainingGrounds() {
                   <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
                     Recent Conversations
                   </div>
-                  {conversationAgentState.recentConversations.map((conversation) => (
-                    <div
-                      key={conversation.conversationId}
-                      onClick={() => handleViewConversation(conversation.conversationId)}
-                      className="bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/20 rounded-lg p-3 cursor-pointer transition-all duration-200 hover:border-synthwave-neon-pink/40 hover:bg-synthwave-bg-primary/50"
-                    >
+                  {conversationAgentState.recentConversations.map((conversation) => {
+                    const isRecent = isRecentConversation(conversation.metadata?.lastActivity, conversation.createdAt);
+                    return (
+                      <div
+                        key={conversation.conversationId}
+                        onClick={() => handleViewConversation(conversation.conversationId)}
+                        className="relative bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/20 rounded-lg p-3 cursor-pointer transition-all duration-200 hover:border-synthwave-neon-pink/40 hover:bg-synthwave-bg-primary/50"
+                      >
+                        {/* NEW badge for conversations with recent activity */}
+                        {isRecent && <NewBadge />}
                       <div className="flex items-center justify-between">
                         <div className="flex-1 min-w-0">
                           <div className="font-rajdhani text-sm text-white font-medium truncate">
@@ -723,8 +730,9 @@ function TrainingGrounds() {
                           <ChevronRightIcon />
                         </div>
                       </div>
-                    </div>
-                  ))}
+                      </div>
+                    );
+                  })}
                 </>
               ) : (
                 <div className="text-center py-4">
@@ -1347,6 +1355,12 @@ function TrainingGrounds() {
         workoutAgent={workoutAgentRef.current}
         userId={userId}
         coachId={coachId}
+        onNavigation={(type, data) => {
+          if (type === 'conversation-created') {
+            // Navigate to the new conversation
+            navigate(`/training-grounds/coach-conversations?userId=${data.userId}&coachId=${data.coachId}&conversationId=${data.conversationId}`);
+          }
+        }}
       />
 
     </div>

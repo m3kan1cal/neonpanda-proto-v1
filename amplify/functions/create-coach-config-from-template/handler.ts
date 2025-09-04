@@ -1,6 +1,6 @@
 import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from "aws-lambda";
 import {
-  createSuccessResponse,
+  createCreatedResponse,
   createErrorResponse,
 } from "../libs/api-helpers";
 import { createCoachConfigFromTemplate } from "../../dynamodb/operations";
@@ -39,7 +39,7 @@ export const handler = async (
       coachName: newCoachConfig.coach_name,
     });
 
-    return createSuccessResponse(
+    return createCreatedResponse(
       {
         coachConfig: {
           coach_id: newCoachConfig.coach_id,

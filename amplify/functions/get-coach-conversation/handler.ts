@@ -1,5 +1,5 @@
 import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
-import { createSuccessResponse, createErrorResponse } from '../libs/api-helpers';
+import { createOkResponse, createErrorResponse } from '../libs/api-helpers';
 import { getCoachConversation } from '../../dynamodb/operations';
 
 export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> => {
@@ -27,7 +27,7 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
       return createErrorResponse(404, 'Conversation not found');
     }
 
-    return createSuccessResponse({
+    return createOkResponse({
       conversation: conversation.attributes
     });
 

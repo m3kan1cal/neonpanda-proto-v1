@@ -213,17 +213,22 @@ export class CoachConversationAgent {
   /**
    * Creates a new coach conversation
    */
-  async createConversation(userId, coachId, title = null) {
+  async createConversation(userId, coachId, title = null, initialMessage = null) {
     try {
       this._updateState({ isLoadingItem: true, error: null });
 
       // Generate title if not provided
       const conversationTitle = title || this.generateConversationTitle();
 
-      console.info("Creating new coach conversation:", { userId, coachId, title: conversationTitle });
+      console.info("Creating new coach conversation:", {
+        userId,
+        coachId,
+        title: conversationTitle,
+        hasInitialMessage: !!initialMessage
+      });
 
-      // Create conversation via API
-      const result = await createCoachConversation(userId, coachId, conversationTitle);
+      // Create conversation via API (with optional initial message)
+      const result = await createCoachConversation(userId, coachId, conversationTitle, initialMessage);
       const conversation = result.conversation;
       const conversationId = conversation.conversationId;
 
@@ -247,7 +252,7 @@ export class CoachConversationAgent {
         this.onNavigation("conversation-created", { userId, coachId, conversationId });
       }
 
-      return { userId, coachId, conversationId };
+      return { userId, coachId, conversationId, conversation };
     } catch (error) {
       console.error("Error creating coach conversation:", error);
       this._updateState({

@@ -9,6 +9,7 @@ const CommandPalette = ({
   workoutAgent,
   userId,
   coachId,
+  onNavigation,
 }) => {
   const [input, setInput] = useState(prefilledCommand);
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -41,6 +42,14 @@ const CommandPalette = ({
       category: "memory",
       icon: "💭",
     },
+    {
+      id: "start-conversation",
+      trigger: "/start-conversation",
+      description: "Start a new conversation with a coach",
+      example: "/start-conversation I want to plan out my training week",
+      category: "conversation",
+      icon: "💬",
+    },
   ];
 
   // Determine what to show based on input state
@@ -57,6 +66,16 @@ const CommandPalette = ({
         commands: mockCommands.filter((cmd) =>
           cmd.trigger.toLowerCase().includes(trimmedInput.toLowerCase())
         ),
+      };
+    }
+
+    // Check for exact command match without content (like "/start-conversation")
+    const exactCommandMatch = mockCommands.find(cmd => cmd.trigger === trimmedInput);
+    if (exactCommandMatch) {
+      return {
+        type: "execution-preview",
+        command: exactCommandMatch,
+        content: "", // No content - execute with empty string
       };
     }
 
@@ -97,7 +116,8 @@ const CommandPalette = ({
         workoutAgent,
         (newState) => {
           setAgentState(newState);
-        }
+        },
+        onNavigation
       );
     } else {
       // Update agent when dependencies change
@@ -176,11 +196,14 @@ const CommandPalette = ({
         e.preventDefault();
         if (displayState.commands[selectedIndex]) {
           const command = displayState.commands[selectedIndex];
+
+          // All commands now support optional content - just add space and let user type
           setInput(command.trigger + " ");
           setSelectedIndex(0);
           // Move cursor to end after setting input
           setTimeout(() => {
             if (inputRef.current) {
+              inputRef.current.focus();
               inputRef.current.setSelectionRange(
                 inputRef.current.value.length,
                 inputRef.current.value.length

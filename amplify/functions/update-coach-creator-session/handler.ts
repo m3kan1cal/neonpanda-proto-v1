@@ -1,5 +1,5 @@
 import { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResultV2 } from 'aws-lambda';
-import { createSuccessResponse, createErrorResponse, callBedrockApi, invokeAsyncLambda } from '../libs/api-helpers';
+import { createOkResponse, createErrorResponse, callBedrockApi, invokeAsyncLambda } from '../libs/api-helpers';
 import { SophisticationLevel } from '../libs/coach-creator/types';
 import {
   getProgress,
@@ -148,7 +148,7 @@ export const handler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): P
       }
     }
 
-    return createSuccessResponse({
+    return createOkResponse({
       aiResponse: cleanedResponse,
       isComplete,
       progress: getProgress(session.attributes.userContext),

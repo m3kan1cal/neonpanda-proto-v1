@@ -1,5 +1,5 @@
 import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
-import { createSuccessResponse, createErrorResponse } from '../libs/api-helpers';
+import { createOkResponse, createErrorResponse } from '../libs/api-helpers';
 import { queryCoachConversations } from '../../dynamodb/operations';
 
 export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> => {
@@ -18,7 +18,7 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
     // Load conversation summaries for user + coach (excludes messages for efficiency)
     const conversationSummaries = await queryCoachConversations(userId, coachId);
 
-    return createSuccessResponse({
+    return createOkResponse({
       conversations: conversationSummaries.map(item => item.attributes),
       count: conversationSummaries.length
     });

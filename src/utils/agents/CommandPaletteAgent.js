@@ -1,4 +1,5 @@
-import { MemoryAgent } from './MemoryAgent.js';
+import { MemoryAgent } from "./MemoryAgent.js";
+import { CoachConversationAgent } from "./CoachConversationAgent.js";
 
 /**
  * CommandPaletteAgent - Handles command execution and state management
@@ -6,19 +7,23 @@ import { MemoryAgent } from './MemoryAgent.js';
  * focused on UI concerns.
  */
 export class CommandPaletteAgent {
-  constructor(userId, workoutAgent, onStateChange = null) {
+  constructor(userId, workoutAgent, onStateChange = null, onNavigation = null) {
     console.info("CommandPaletteAgent: Constructor called");
     console.info("CommandPaletteAgent: userId:", userId || "(not provided)");
 
     this.userId = userId;
     this.workoutAgent = workoutAgent;
     this.onStateChange = onStateChange;
+    this.onNavigation = onNavigation;
 
     // Initialize memory agent
     this.memoryAgent = null;
     if (userId) {
       this.memoryAgent = new MemoryAgent(userId);
     }
+
+    // Initialize conversation agent
+    this.conversationAgent = null;
 
     // Validate callback
     if (this.onStateChange && typeof this.onStateChange !== "function") {
@@ -125,6 +130,10 @@ export class CommandPaletteAgent {
           result = await this._executeSaveMemory(content, options);
           break;
 
+        case "start-conversation":
+          result = await this._executeStartConversation(content, options);
+          break;
+
         default:
           throw new Error(
             `Command "${command.trigger}" is not yet implemented.`
@@ -169,8 +178,26 @@ export class CommandPaletteAgent {
       throw new Error("Unable to log workout - missing required data");
     }
 
+    // Check if the WorkoutAgent has a userId set, and try to set it if not
+    if (!this.workoutAgent.userId) {
+      console.warn("CommandPaletteAgent: WorkoutAgent missing userId, attempting to set it");
+
+      // Try to set the userId on the WorkoutAgent
+      if (this.userId && this.workoutAgent.setUserId) {
+        this.workoutAgent.setUserId(this.userId);
+
+        // Double-check that it was set
+        if (!this.workoutAgent.userId) {
+          throw new Error("WorkoutAgent is not ready yet - please try again in a moment");
+        }
+      } else {
+        throw new Error("WorkoutAgent is not ready yet - please try again in a moment");
+      }
+    }
+
     console.info("CommandPaletteAgent._executeLogWorkout:", {
       userId: this.userId,
+      workoutAgentUserId: this.workoutAgent.userId,
       contentLength: content.length,
       options,
     });
@@ -211,14 +238,78 @@ export class CommandPaletteAgent {
       throw new Error("Failed to save memory");
     }
 
-        // Create informative message with AI analysis info
+    // Create informative message with AI analysis info
     let message = "Memory saved successfully!";
     if (result.aiAnalysis) {
-      const scope = result.aiAnalysis.scope.isCoachSpecific ? "coach-specific" : "global";
+      const scope = result.aiAnalysis.scope.isCoachSpecific
+        ? "coach-specific"
+        : "global";
       const typeInfo = result.aiAnalysis.typeAndImportance;
 
       message += ` (AI: ${scope}, ${typeInfo.type}, ${typeInfo.importance})`;
     }
+
+    return {
+      message,
+      details: result,
+    };
+  }
+
+  /**
+   * Execute start-conversation command
+   */
+  async _executeStartConversation(content, options = {}) {
+    if (!this.userId) {
+      throw new Error("Unable to start conversation - user not authenticated");
+    }
+
+    // For now, we'll need to get the coachId from options or use a default
+    // In a real implementation, you might want to show a coach selection UI
+    const coachId = options.coachId;
+    if (!coachId) {
+      throw new Error(
+        "Please select a coach first. Navigate to a coach page and try again."
+      );
+    }
+
+    const initialMessage = content?.trim() || null;
+
+    console.info("CommandPaletteAgent._executeStartConversation:", {
+      userId: this.userId,
+      coachId: coachId,
+      hasInitialMessage: !!initialMessage,
+      initialMessageLength: initialMessage?.length || 0,
+      options,
+    });
+
+    // Initialize conversation agent if needed
+    if (!this.conversationAgent) {
+      this.conversationAgent = new CoachConversationAgent({
+        userId: this.userId,
+        coachId: coachId,
+      });
+    }
+
+    // Create the conversation with optional initial message
+    const result = await this.conversationAgent.createConversation(
+      this.userId,
+      coachId,
+      null, // title (auto-generated)
+      initialMessage
+    );
+
+    // Trigger navigation if callback is available
+    if (this.onNavigation && result.conversation) {
+      this.onNavigation("conversation-created", {
+        userId: this.userId,
+        coachId: coachId,
+        conversationId: result.conversation.conversationId,
+      });
+    }
+
+    const message = initialMessage
+      ? "Conversation started with your message! Redirecting..."
+      : "Conversation started successfully! Redirecting...";
 
     return {
       message,

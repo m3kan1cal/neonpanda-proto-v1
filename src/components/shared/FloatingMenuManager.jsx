@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../../contexts/ToastContext';
 import { themeClasses } from '../../utils/synthwaveThemeClasses';
-import { isCurrentWeekReport, isNewWorkout } from '../../utils/dateUtils';
+import { isCurrentWeekReport, isNewWorkout, isRecentConversation } from '../../utils/dateUtils';
 import ReportAgent from '../../utils/agents/ReportAgent';
 import WorkoutAgent from '../../utils/agents/WorkoutAgent';
 import CoachConversationAgent from '../../utils/agents/CoachConversationAgent';
@@ -527,12 +527,16 @@ export const FloatingMenuManager = ({
           <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
             Recent Conversations
           </div>
-          {conversationAgentState.recentConversations.map((conv) => (
-            <div
-              key={conv.conversationId}
-              onClick={() => handleConversationClick(conv.conversationId)}
-              className="bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/20 hover:border-synthwave-neon-pink/40 hover:bg-synthwave-bg-primary/50 rounded-lg p-3 cursor-pointer transition-all duration-200"
-            >
+          {conversationAgentState.recentConversations.map((conv) => {
+            const isRecent = isRecentConversation(conv.metadata?.lastActivity, conv.createdAt);
+            return (
+              <div
+                key={conv.conversationId}
+                onClick={() => handleConversationClick(conv.conversationId)}
+                className="relative bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/20 hover:border-synthwave-neon-pink/40 hover:bg-synthwave-bg-primary/50 rounded-lg p-3 cursor-pointer transition-all duration-200"
+              >
+                {/* NEW badge for conversations with recent activity */}
+                {isRecent && <NewBadge />}
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
                   <div className="font-rajdhani text-sm text-white font-medium truncate">
@@ -546,8 +550,9 @@ export const FloatingMenuManager = ({
                   <ChevronRightIcon />
                 </div>
               </div>
-            </div>
-          ))}
+              </div>
+            );
+          })}
         </>
       )}
     </div>

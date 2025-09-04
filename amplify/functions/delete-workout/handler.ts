@@ -1,5 +1,5 @@
 import { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResultV2 } from 'aws-lambda';
-import { createSuccessResponse, createErrorResponse } from '../libs/api-helpers';
+import { createOkResponse, createErrorResponse } from '../libs/api-helpers';
 import { deleteWorkout, getWorkout } from '../../dynamodb/operations';
 import { deleteWorkoutSummaryFromPinecone } from '../libs/workout/pinecone';
 import { getUserId, extractJWTClaims, authorizeUser } from '../libs/auth/jwt-utils';
@@ -43,7 +43,7 @@ export const handler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): P
     const pineconeResult = await deleteWorkoutSummaryFromPinecone(userId, workoutId);
 
     // Return success response
-    return createSuccessResponse({
+    return createOkResponse({
       message: 'Workout deleted successfully',
       workoutId,
       userId,

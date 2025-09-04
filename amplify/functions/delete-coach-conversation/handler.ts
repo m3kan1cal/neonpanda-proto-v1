@@ -1,5 +1,5 @@
 import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
-import { createSuccessResponse, createErrorResponse } from '../libs/api-helpers';
+import { createOkResponse, createErrorResponse } from '../libs/api-helpers';
 import { deleteCoachConversation, getCoachConversation } from '../../dynamodb/operations';
 import { deleteConversationSummaryFromPinecone } from '../libs/coach-conversation/pinecone';
 
@@ -41,7 +41,7 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
     const pineconeResult = await deleteConversationSummaryFromPinecone(userId, conversationId);
 
     // Return success response
-    return createSuccessResponse({
+    return createOkResponse({
       message: 'Conversation deleted successfully',
       conversationId,
       coachId,

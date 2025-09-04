@@ -1,4 +1,4 @@
-import { createSuccessResponse, createErrorResponse, callBedrockApi } from '../libs/api-helpers';
+import { createOkResponse, createErrorResponse, callBedrockApi } from '../libs/api-helpers';
 import { saveCoachConversationSummary, getCoachConversationSummary, getCoachConversation, getCoachConfig } from '../../dynamodb/operations';
 import {
   BuildCoachConversationSummaryEvent,
@@ -138,7 +138,7 @@ export const handler = async (event: BuildCoachConversationSummaryEvent) => {
       pineconeRecordId: pineconeResult.success && 'recordId' in pineconeResult ? pineconeResult.recordId : null
     });
 
-    return createSuccessResponse({
+    return createOkResponse({
       success: true,
       summaryId: summary.summaryId,
       confidence: summary.metadata.confidence,

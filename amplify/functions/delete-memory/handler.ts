@@ -1,5 +1,5 @@
 import { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResultV2 } from 'aws-lambda';
-import { createSuccessResponse, createErrorResponse } from '../libs/api-helpers';
+import { createOkResponse, createErrorResponse } from '../libs/api-helpers';
 import { deleteMemory, loadFromDynamoDB } from '../../dynamodb/operations';
 import { deleteMemoryFromPinecone } from '../libs/user/pinecone';
 import { UserMemory } from '../libs/memory/types';
@@ -49,7 +49,7 @@ export const handler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): P
     const pineconeResult = await deleteMemoryFromPinecone(userId, memoryId);
 
     // Return success response
-    return createSuccessResponse({
+    return createOkResponse({
       message: 'Memory deleted successfully',
       memoryId,
       userId,

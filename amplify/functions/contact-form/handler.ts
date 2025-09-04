@@ -1,5 +1,5 @@
 import type { APIGatewayProxyEventV2, APIGatewayProxyHandlerV2, APIGatewayProxyResultV2 } from 'aws-lambda';
-import { createErrorResponse, createSuccessResponse, getHttpMethod } from '../libs/api-helpers';
+import { createErrorResponse, createOkResponse, getHttpMethod } from '../libs/api-helpers';
 import { saveContactForm } from '../../dynamodb/operations';
 import {
   ContactFormData,
@@ -61,7 +61,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event: APIGatewayProxyEv
     }
 
     // Return success response
-    return createSuccessResponse({
+    return createOkResponse({
       message: 'Contact form submitted successfully',
       timestamp: sanitizedData.timestamp,
       requestId: sanitizedData.requestId,

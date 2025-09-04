@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuthorizeUser } from '../auth/hooks/useAuthorizeUser';
 import { themeClasses } from '../utils/synthwaveThemeClasses';
-import { NeonBorder } from './themes/SynthwaveComponents';
+import { isNewWorkout } from '../utils/dateUtils';
+import { NeonBorder, NewBadge } from './themes/SynthwaveComponents';
 import { AccessDenied, LoadingScreen } from './shared/AccessDenied';
 import { useToast } from '../contexts/ToastContext';
 import { MemoryAgent } from '../utils/agents/MemoryAgent';
@@ -164,12 +165,15 @@ function ManageMemories() {
 
   // Render memory card (original full-width layout with workout card styling)
   const renderMemoryCard = (memory) => {
+    const isNew = isNewWorkout(memory.metadata?.createdAt || memory.createdAt);
     return (
       <div
         key={memory.memoryId}
         data-memory-card
         className={`${themeClasses.glowCard} group transition-all duration-300 hover:border-synthwave-neon-pink/50 hover:bg-synthwave-bg-card/70 relative`}
       >
+        {/* NEW badge for memories created within 24 hours */}
+        {isNew && <NewBadge />}
         {/* Delete button - appears on hover at top right */}
         <button
           onClick={(e) => {

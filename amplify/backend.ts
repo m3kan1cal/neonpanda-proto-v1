@@ -287,6 +287,12 @@ grantLambdaInvokePermissions(
   ]
 );
 
+// Grant permission to createCoachConversation to invoke sendCoachConversationMessage
+grantLambdaInvokePermissions(
+  backend.createCoachConversation.resources.lambda,
+  [backend.sendCoachConversationMessage.resources.lambda.functionArn]
+);
+
 backend.updateCoachCreatorSession.addEnvironment(
   "BUILD_COACH_CONFIG_FUNCTION_NAME",
   backend.buildCoachConfig.resources.lambda.functionName
@@ -304,6 +310,11 @@ backend.sendCoachConversationMessage.addEnvironment(
 backend.sendCoachConversationMessage.addEnvironment(
   "BUILD_CONVERSATION_SUMMARY_FUNCTION_NAME",
   backend.buildConversationSummary.resources.lambda.functionName
+);
+
+backend.createCoachConversation.addEnvironment(
+  "SEND_COACH_CONVERSATION_MESSAGE_FUNCTION_NAME",
+  backend.sendCoachConversationMessage.resources.lambda.functionName
 );
 
 // Create EventBridge schedule for weekly analytics

@@ -272,7 +272,7 @@ amplify/functions/create-workout/
 // amplify/functions/create-workout/handler.ts
 import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
 import {
-  createSuccessResponse,
+  createOkResponse,
   createErrorResponse,
   invokeAsyncLambda,
 } from '../libs/api-helpers';
@@ -336,7 +336,7 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
       'command palette workout creation'
     );
 
-    return createSuccessResponse({
+    return createOkResponse({
       message: 'Workout logged successfully',
       status: 'processing',
       workoutDescription: workoutDescription.trim(),

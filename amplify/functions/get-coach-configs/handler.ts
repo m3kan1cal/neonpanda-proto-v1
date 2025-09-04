@@ -1,5 +1,5 @@
 import { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResultV2 } from 'aws-lambda';
-import { createSuccessResponse, createErrorResponse } from '../libs/api-helpers';
+import { createOkResponse, createErrorResponse } from '../libs/api-helpers';
 import {
   queryCoachConfigs,
 } from '../../dynamodb/operations';
@@ -23,7 +23,7 @@ export const handler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): P
     // Get coach configs for the user
     const coachConfigs = await queryCoachConfigs(userId);
 
-    return createSuccessResponse({
+    return createOkResponse({
       userId,
       coaches: coachConfigs.map(item => item.attributes),
       count: coachConfigs.length

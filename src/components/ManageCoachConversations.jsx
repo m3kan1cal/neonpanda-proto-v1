@@ -3,7 +3,8 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuthorizeUser } from '../auth/hooks/useAuthorizeUser';
 import { AccessDenied, LoadingScreen } from './shared/AccessDenied';
 import { themeClasses } from '../utils/synthwaveThemeClasses';
-import { NeonBorder } from './themes/SynthwaveComponents';
+import { isRecentConversation } from '../utils/dateUtils';
+import { NeonBorder, NewBadge } from './themes/SynthwaveComponents';
 import { useToast } from '../contexts/ToastContext';
 import { CoachConversationAgent } from '../utils/agents/CoachConversationAgent';
 import { FloatingMenuManager } from './shared/FloatingMenuManager';
@@ -237,6 +238,7 @@ function ManageCoachConversations() {
 
   // Render conversation card
   const renderConversationCard = (conversation) => {
+    const isRecent = isRecentConversation(conversation.metadata?.lastActivity, conversation.createdAt);
     return (
       <div
         key={`${conversation.coachId}-${conversation.conversationId}`}
@@ -244,6 +246,8 @@ function ManageCoachConversations() {
         className={`${themeClasses.glowCard} group transition-all duration-300 hover:border-synthwave-neon-pink/50 hover:bg-synthwave-bg-card/70 relative cursor-pointer`}
         onClick={() => handleViewConversation(conversation)}
       >
+        {/* NEW badge for conversations with recent activity */}
+        {isRecent && <NewBadge />}
         {/* Action buttons - appears on hover at top right */}
         <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex space-x-2">
           <button

@@ -9,15 +9,21 @@ import { getApiUrl, authenticatedFetch } from './apiConfig';
  * @param {string} userId - The user ID
  * @param {string} coachId - The coach ID
  * @param {string} title - The conversation title
+ * @param {string} [initialMessage] - Optional initial message to start the conversation
  * @returns {Promise<Object>} - The API response with conversation details
  */
-export const createCoachConversation = async (userId, coachId, title) => {
+export const createCoachConversation = async (userId, coachId, title, initialMessage = null) => {
   const url = `${getApiUrl('')}/users/${userId}/coaches/${coachId}/conversations`;
+  const requestBody = { title };
+
+  // Add initial message if provided
+  if (initialMessage && initialMessage.trim()) {
+    requestBody.initialMessage = initialMessage.trim();
+  }
+
   const response = await authenticatedFetch(url, {
     method: 'POST',
-    body: JSON.stringify({
-      title
-    }),
+    body: JSON.stringify(requestBody),
   });
 
   if (!response.ok) {

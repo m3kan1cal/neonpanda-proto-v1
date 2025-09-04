@@ -206,9 +206,9 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const getAuthHeaders = async () => {
+  const getAuthHeaders = async (forceRefresh = false) => {
     try {
-      const session = await fetchAuthSession();
+      const session = await fetchAuthSession({ forceRefresh });
       return {
         'Authorization': `Bearer ${session.tokens.idToken.toString()}`
       };

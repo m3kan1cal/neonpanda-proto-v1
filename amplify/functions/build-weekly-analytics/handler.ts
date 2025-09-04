@@ -1,5 +1,5 @@
 import {
-  createSuccessResponse,
+  createOkResponse,
   createErrorResponse,
 } from "../libs/api-helpers";
 import {
@@ -26,7 +26,7 @@ export const handler = async (event: WeeklyAnalyticsEvent) => {
       completedAt: new Date().toISOString(),
     });
 
-    return createSuccessResponse({
+    return createOkResponse({
       message: "Weekly analytics processing completed successfully",
       totalProcessedUsers,
       timestamp: new Date().toISOString(),

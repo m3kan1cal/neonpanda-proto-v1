@@ -1,6 +1,6 @@
 import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from "aws-lambda";
 import {
-  createSuccessResponse,
+  createOkResponse,
   createErrorResponse,
 } from "../libs/api-helpers";
 import { getCoachTemplate } from "../../dynamodb/operations";
@@ -38,7 +38,7 @@ export const handler = async (
       personaCategory: template.attributes.persona_category,
     });
 
-    return createSuccessResponse({
+    return createOkResponse({
       template: template.attributes,
     });
   } catch (error) {

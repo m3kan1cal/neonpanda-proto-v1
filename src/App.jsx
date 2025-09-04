@@ -1,9 +1,10 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   BrowserRouter as Router,
   Routes,
   Route,
   useLocation,
+  useNavigate,
 } from "react-router-dom";
 
 import Navigation from "./components/Navigation";
@@ -25,11 +26,21 @@ import Changelog from "./components/Changelog";
 import { ToastProvider } from "./contexts/ToastContext";
 import ToastContainer from "./components/ToastContainer";
 import { AuthProvider, useAuth, AuthRouter, ProtectedRoute } from "./auth";
+import { setAuthFailureHandler } from "./utils/apis/apiConfig";
 
 function AppContent() {
   const location = useLocation();
+  const navigate = useNavigate();
   const isHomePage = location.pathname === "/";
   const { user, signOut } = useAuth();
+
+  // Set up the auth failure handler to use React Router navigation
+  useEffect(() => {
+    setAuthFailureHandler(() => {
+      console.info('Token refresh failed, navigating to /auth');
+      navigate('/auth', { replace: true });
+    });
+  }, [navigate]);
 
   // Debug: Log user info to console (matching existing pattern)
   console.info("🔐 Authenticated user:", user);

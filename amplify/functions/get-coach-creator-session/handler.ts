@@ -1,5 +1,5 @@
 import { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResultV2 } from 'aws-lambda';
-import { createSuccessResponse, createErrorResponse } from '../libs/api-helpers';
+import { createOkResponse, createErrorResponse } from '../libs/api-helpers';
 import { getCoachCreatorSession } from '../../dynamodb/operations';
 import { CoachCreatorSession } from '../libs/coach-creator/types';
 import { getUserId, extractJWTClaims, authorizeUser } from '../libs/auth/jwt-utils';
@@ -33,7 +33,7 @@ export const handler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): P
 
     // Return the session data as-is using the defined CoachCreatorSession interface
     const sessionData: CoachCreatorSession = session.attributes;
-    return createSuccessResponse(sessionData);
+    return createOkResponse(sessionData);
 
   } catch (error) {
     console.error('Error loading coach creator session:', error);

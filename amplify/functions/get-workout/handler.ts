@@ -1,5 +1,5 @@
 import { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResultV2 } from 'aws-lambda';
-import { createSuccessResponse, createErrorResponse } from '../libs/api-helpers';
+import { createOkResponse, createErrorResponse } from '../libs/api-helpers';
 import { getWorkout } from '../../dynamodb/operations';
 import { getUserId, extractJWTClaims, authorizeUser } from '../libs/auth/jwt-utils';
 
@@ -36,7 +36,7 @@ export const handler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): P
     }
 
     // Return the complete workout object (no need for manual mapping)
-    return createSuccessResponse({
+    return createOkResponse({
       workout: {
         ...workout.attributes, // All workout properties
         // Include DynamoDB metadata

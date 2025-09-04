@@ -1,5 +1,5 @@
 import { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResultV2 } from 'aws-lambda';
-import { createSuccessResponse, createErrorResponse } from '../libs/api-helpers';
+import { createOkResponse, createErrorResponse } from '../libs/api-helpers';
 import { getCoachCreatorSession, getCoachConfig } from '../../dynamodb/operations';
 import { getUserId, extractJWTClaims, authorizeUser } from '../libs/auth/jwt-utils';
 
@@ -33,7 +33,7 @@ export const handler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): P
 
     // Check if session is complete
     if (!sessionData.isComplete) {
-      return createSuccessResponse({
+      return createOkResponse({
         status: 'SESSION_INCOMPLETE',
         message: 'Coach creator session is not yet complete'
       });
@@ -43,14 +43,14 @@ export const handler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): P
     const configGenerationStatus = (sessionData as any).configGenerationStatus;
 
     if (!configGenerationStatus) {
-      return createSuccessResponse({
+      return createOkResponse({
         status: 'NOT_STARTED',
         message: 'Coach config generation has not been started'
       });
     }
 
     if (configGenerationStatus === 'IN_PROGRESS') {
-      return createSuccessResponse({
+      return createOkResponse({
         status: 'IN_PROGRESS',
         message: 'Coach config is being generated...',
         startedAt: (sessionData as any).configGenerationStartedAt
@@ -58,7 +58,7 @@ export const handler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): P
     }
 
     if (configGenerationStatus === 'FAILED') {
-      return createSuccessResponse({
+      return createOkResponse({
         status: 'FAILED',
         message: 'Coach config generation failed',
         error: (sessionData as any).configGenerationError,
@@ -73,7 +73,7 @@ export const handler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): P
       if (coachConfigId) {
         try {
           const coachConfig = await getCoachConfig(userId, coachConfigId);
-          return createSuccessResponse({
+          return createOkResponse({
             status: 'COMPLETE',
             message: 'Coach config generated successfully',
             coachConfigId,
@@ -83,7 +83,7 @@ export const handler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): P
           });
         } catch (error) {
           console.error('Error loading coach config:', error);
-          return createSuccessResponse({
+          return createOkResponse({
             status: 'COMPLETE_BUT_ERROR',
             message: 'Coach config generation completed but config could not be loaded',
             coachConfigId,
@@ -93,7 +93,7 @@ export const handler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): P
       }
     }
 
-    return createSuccessResponse({
+    return createOkResponse({
       status: 'UNKNOWN',
       message: 'Unknown config generation status',
       configGenerationStatus

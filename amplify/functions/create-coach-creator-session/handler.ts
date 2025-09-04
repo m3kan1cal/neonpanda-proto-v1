@@ -1,5 +1,5 @@
 import { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResultV2 } from 'aws-lambda';
-import { createSuccessResponse, createErrorResponse } from '../libs/api-helpers';
+import { createCreatedResponse, createErrorResponse } from '../libs/api-helpers';
 import {
   COACH_CREATOR_QUESTIONS,
 } from '../libs/coach-creator/question-management';
@@ -49,7 +49,7 @@ export const handler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): P
     // Save session to DynamoDB
     await saveCoachCreatorSession(session);
 
-    return createSuccessResponse({
+    return createCreatedResponse({
       sessionId: session.sessionId,
       progress: 0,
       estimatedDuration: '15-20 minutes',

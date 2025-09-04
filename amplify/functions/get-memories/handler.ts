@@ -1,5 +1,5 @@
 import { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResultV2 } from 'aws-lambda';
-import { createSuccessResponse, createErrorResponse } from '../libs/api-helpers';
+import { createOkResponse, createErrorResponse } from '../libs/api-helpers';
 import { queryMemories } from '../../dynamodb/operations';
 import { getUserId, extractJWTClaims, authorizeUser } from '../libs/auth/jwt-utils';
 
@@ -80,7 +80,7 @@ export const handler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): P
       }
     }));
 
-    return createSuccessResponse({
+    return createOkResponse({
       memories: memorySummaries,
       totalCount: memorySummaries.length
     });

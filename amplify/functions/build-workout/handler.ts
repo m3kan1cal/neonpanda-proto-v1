@@ -1,5 +1,5 @@
 import {
-  createSuccessResponse,
+  createOkResponse,
   createErrorResponse,
   callBedrockApi,
   MODEL_IDS,
@@ -293,7 +293,7 @@ export const handler = async (event: BuildWorkoutEvent) => {
         reason = "Not a workout log - appears to be planning/advice seeking";
       }
 
-      return createSuccessResponse({
+      return createOkResponse({
         success: false,
         skipped: true,
         reason,
@@ -412,7 +412,7 @@ export const handler = async (event: BuildWorkoutEvent) => {
           : null,
     });
 
-    return createSuccessResponse({
+    return createOkResponse({
       success: true,
       workoutId: workout.workoutId,
       discipline: finalWorkoutData.discipline,
