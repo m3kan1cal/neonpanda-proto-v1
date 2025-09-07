@@ -7,7 +7,9 @@ import { isNewWorkout } from "../utils/dateUtils";
 import { NeonBorder, NewBadge } from "./themes/SynthwaveComponents";
 import { useToast } from "../contexts/ToastContext";
 import { WorkoutAgent } from "../utils/agents/WorkoutAgent";
+import CoachAgent from "../utils/agents/CoachAgent";
 import { FloatingMenuManager } from "./shared/FloatingMenuManager";
+import CommandPalette from './shared/CommandPalette';
 import {
   WorkoutIcon,
   WorkoutIconSmall,
@@ -117,9 +119,34 @@ function ManageWorkouts() {
   const [workoutToDelete, setWorkoutToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Command palette state
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+  const [commandPaletteCommand, setCommandPaletteCommand] = useState('');
+
+  // Coach data state (for FloatingMenuManager)
+  const [coachData, setCoachData] = useState(null);
+
   const workoutAgentRef = useRef(null);
+  const coachAgentRef = useRef(null);
 
   const { addToast, success, error, info } = useToast();
+
+  // Handle keyboard shortcuts
+  useEffect(() => {
+    const handleKeyboardShortcuts = (event) => {
+      // Cmd/Ctrl + K to open command palette
+      if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
+        event.preventDefault();
+        setCommandPaletteCommand('');
+        setIsCommandPaletteOpen(true);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyboardShortcuts);
+    return () => {
+      document.removeEventListener('keydown', handleKeyboardShortcuts);
+    };
+  }, [isCommandPaletteOpen]);
 
   // Unified workout state (like Workouts.jsx)
   const [workoutAgentState, setWorkoutAgentState] = useState({
@@ -194,6 +221,31 @@ function ManageWorkouts() {
       }
     };
   }, [userId]);
+
+  // Load coach data for FloatingMenuManager
+  useEffect(() => {
+    if (!userId || !coachId) return;
+
+    const loadCoachData = async () => {
+      try {
+        if (!coachAgentRef.current) {
+          coachAgentRef.current = new CoachAgent();
+        }
+        const coachData = await coachAgentRef.current.loadCoachDetails(userId, coachId);
+        setCoachData(coachData);
+      } catch (error) {
+        console.error('Failed to load coach data:', error);
+      }
+    };
+
+    loadCoachData();
+
+    return () => {
+      if (coachAgentRef.current) {
+        coachAgentRef.current = null;
+      }
+    };
+  }, [userId, coachId]);
 
   // Load all workouts (no date filtering)
   useEffect(() => {
@@ -668,11 +720,34 @@ function ManageWorkouts() {
         </div>
       </div>
 
+      {/* Command Palette */}
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => {
+          setIsCommandPaletteOpen(false);
+          setCommandPaletteCommand('');
+        }}
+        prefilledCommand={commandPaletteCommand}
+        workoutAgent={workoutAgentRef.current}
+        userId={userId}
+        coachId={coachId}
+        onNavigation={(type, data) => {
+          if (type === 'conversation-created') {
+            navigate(`/training-grounds/coach-conversations?userId=${data.userId}&coachId=${data.coachId}&conversationId=${data.conversationId}`);
+          }
+        }}
+      />
+
       {/* Floating Menu Manager */}
       <FloatingMenuManager
         userId={userId}
         coachId={coachId}
         currentPage="manage-workouts"
+        coachData={coachData}
+        onCommandPaletteToggle={(command) => {
+          setCommandPaletteCommand(command);
+          setIsCommandPaletteOpen(true);
+        }}
       />
 
       {/* Delete Confirmation Modal */}

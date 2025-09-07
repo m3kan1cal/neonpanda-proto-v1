@@ -7,7 +7,9 @@ import { NeonBorder, NewBadge } from './themes/SynthwaveComponents';
 import { isCurrentWeekReport } from '../utils/dateUtils';
 import { useToast } from '../contexts/ToastContext';
 import ReportAgent from '../utils/agents/ReportAgent';
+import CoachAgent from '../utils/agents/CoachAgent';
 import { FloatingMenuManager } from './shared/FloatingMenuManager';
+import CommandPalette from './shared/CommandPalette';
 
 // Icons
 const CalendarIcon = () => (
@@ -52,8 +54,58 @@ function ViewReports() {
   const [activeTooltip, setActiveTooltip] = useState(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
 
+  // Command palette state
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+  const [commandPaletteCommand, setCommandPaletteCommand] = useState('');
+
+  // Coach data state (for FloatingMenuManager)
+  const [coachData, setCoachData] = useState(null);
+
   const reportAgentRef = useRef(null);
+  const coachAgentRef = useRef(null);
   const { addToast, success, error, info } = useToast();
+
+  // Handle keyboard shortcuts
+  useEffect(() => {
+    const handleKeyboardShortcuts = (event) => {
+      // Cmd/Ctrl + K to open command palette
+      if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
+        event.preventDefault();
+        setCommandPaletteCommand('');
+        setIsCommandPaletteOpen(true);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyboardShortcuts);
+    return () => {
+      document.removeEventListener('keydown', handleKeyboardShortcuts);
+    };
+  }, [isCommandPaletteOpen]);
+
+  // Load coach data for FloatingMenuManager
+  useEffect(() => {
+    if (!userId || !coachId) return;
+
+    const loadCoachData = async () => {
+      try {
+        if (!coachAgentRef.current) {
+          coachAgentRef.current = new CoachAgent();
+        }
+        const loadedCoachData = await coachAgentRef.current.loadCoachDetails(userId, coachId);
+        setCoachData(loadedCoachData);
+      } catch (error) {
+        console.error('Failed to load coach data:', error);
+      }
+    };
+
+    loadCoachData();
+
+    return () => {
+      if (coachAgentRef.current) {
+        coachAgentRef.current = null;
+      }
+    };
+  }, [userId, coachId]);
 
   // Report state for main page only (popover state handled by FloatingMenuManager)
   const [reportAgentState, setReportAgentState] = useState({
@@ -71,6 +123,11 @@ function ViewReports() {
       return;
     }
   }, [userId, navigate]);
+
+  // Auto-scroll to top when page loads
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   // Initialize report agent (for main page only)
   useEffect(() => {
@@ -427,11 +484,34 @@ function ViewReports() {
       </div>
     </div>
 
+      {/* Command Palette */}
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => {
+          setIsCommandPaletteOpen(false);
+          setCommandPaletteCommand('');
+        }}
+        prefilledCommand={commandPaletteCommand}
+        workoutAgent={null} // Will need to be provided if workout functionality is needed
+        userId={userId}
+        coachId={coachId}
+        onNavigation={(type, data) => {
+          if (type === 'conversation-created') {
+            navigate(`/training-grounds/coach-conversations?userId=${data.userId}&coachId=${data.coachId}&conversationId=${data.conversationId}`);
+          }
+        }}
+      />
+
       {/* Floating Menu Manager */}
       <FloatingMenuManager
         userId={userId}
         coachId={coachId}
         currentPage="reports"
+        coachData={coachData}
+        onCommandPaletteToggle={(command) => {
+          setCommandPaletteCommand(command);
+          setIsCommandPaletteOpen(true);
+        }}
       />
     </>
   );

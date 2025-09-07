@@ -5,32 +5,18 @@ import { AccessDenied, LoadingScreen } from "./shared/AccessDenied";
 import { themeClasses } from "../utils/synthwaveThemeClasses";
 import { NeonBorder } from "./themes/SynthwaveComponents";
 import WorkoutAgent from "../utils/agents/WorkoutAgent";
+import CoachAgent from "../utils/agents/CoachAgent";
 import { useToast } from "../contexts/ToastContext";
 import WorkoutViewer from "./WorkoutViewer";
 import { FloatingMenuManager } from "./shared/FloatingMenuManager";
+import CommandPalette from './shared/CommandPalette';
+import IconButton from './shared/IconButton';
 import {
   FullPageLoader,
   CenteredErrorState,
   EmptyState,
 } from "./shared/ErrorStates";
-import { CloseIcon } from "./themes/SynthwaveComponents";
-
-// Local icons (not shared)
-const WorkoutIconLarge = () => (
-  <svg
-    className="w-8 h-8"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M13 10V3L4 14h7v7l9-11h-7z"
-    />
-  </svg>
-);
+import { CloseIcon, WorkoutIcon } from "./themes/SynthwaveComponents";
 
 const EditIcon = () => (
   <svg
@@ -80,6 +66,12 @@ const CancelIcon = () => (
   </svg>
 );
 
+const JsonIcon = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+  </svg>
+);
+
 function Workouts() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -103,9 +95,31 @@ function Workouts() {
   const [workoutToDelete, setWorkoutToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Command palette state
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+  const [commandPaletteCommand, setCommandPaletteCommand] = useState('');
+
   const workoutAgentRef = useRef(null);
+  const coachAgentRef = useRef(null);
 
   const { addToast, success, error, info } = useToast();
+
+  // Handle keyboard shortcuts
+  useEffect(() => {
+    const handleKeyboardShortcuts = (event) => {
+      // Cmd/Ctrl + K to open command palette
+      if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
+        event.preventDefault();
+        setCommandPaletteCommand('');
+        setIsCommandPaletteOpen(true);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyboardShortcuts);
+    return () => {
+      document.removeEventListener('keydown', handleKeyboardShortcuts);
+    };
+  }, [isCommandPaletteOpen]);
 
   // Workout state
   const [workoutAgentState, setWorkoutAgentState] = useState({
@@ -115,6 +129,9 @@ function Workouts() {
     isLoadingItem: !!(userId && workoutId && coachId), // Start loading if we have required params
     error: null,
   });
+
+  // Coach data state (for FloatingMenuManager)
+  const [coachData, setCoachData] = useState(null);
 
   // Redirect if missing required parameters
   useEffect(() => {
@@ -165,6 +182,31 @@ function Workouts() {
       }
     };
   }, [userId, success]);
+
+  // Load coach data for FloatingMenuManager
+  useEffect(() => {
+    if (!userId || !coachId) return;
+
+    const loadCoachData = async () => {
+      try {
+        if (!coachAgentRef.current) {
+          coachAgentRef.current = new CoachAgent();
+        }
+        const coachData = await coachAgentRef.current.loadCoachDetails(userId, coachId);
+        setCoachData(coachData);
+      } catch (error) {
+        console.error('Failed to load coach data:', error);
+      }
+    };
+
+    loadCoachData();
+
+    return () => {
+      if (coachAgentRef.current) {
+        coachAgentRef.current = null;
+      }
+    };
+  }, [userId, coachId]);
 
   // Auto-scroll to top when workoutId changes
   useEffect(() => {
@@ -507,95 +549,10 @@ function Workouts() {
           <h1 className="font-russo font-black text-4xl md:text-5xl text-white mb-6 uppercase">
             Workout Details
           </h1>
-
-          {workout && (
-            <div className="space-y-2">
-              <div className="font-rajdhani text-2xl text-synthwave-neon-pink font-bold">
-                {isEditingTitle ? (
-                  <div className="flex items-center justify-center space-x-2">
-                    <input
-                      type="text"
-                      value={editTitleValue}
-                      onChange={(e) => setEditTitleValue(e.target.value)}
-                      onKeyDown={handleTitleKeyPress}
-                      className="bg-synthwave-bg-primary/50 border-2 border-synthwave-neon-cyan/30 rounded px-3 py-1 text-synthwave-neon-cyan font-rajdhani text-lg font-normal focus:outline-none focus:border-synthwave-neon-cyan transition-all duration-200"
-                      placeholder="Enter workout title..."
-                      autoFocus
-                    />
-                    <button
-                      onClick={handleSaveTitle}
-                      disabled={isSavingTitle || !editTitleValue.trim()}
-                      className="text-synthwave-neon-cyan hover:text-white transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                      title="Save title"
-                    >
-                      {isSavingTitle ? (
-                        <div className="w-4 h-4 border-2 border-synthwave-neon-cyan border-t-transparent rounded-full animate-spin"></div>
-                      ) : (
-                        <SaveIcon />
-                      )}
-                    </button>
-                    <button
-                      onClick={handleCancelEdit}
-                      disabled={isSavingTitle}
-                      className="text-synthwave-text-secondary hover:text-synthwave-neon-pink transition-colors duration-300 disabled:opacity-50"
-                      title="Cancel"
-                    >
-                      <CancelIcon />
-                    </button>
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-center space-x-2">
-                    <span>
-                      {workout.workoutData?.workout_name || "Unnamed Workout"}
-                    </span>
-                    <button
-                      onClick={handleEditTitle}
-                      className="text-synthwave-text-secondary hover:text-synthwave-neon-cyan transition-colors duration-300"
-                      title="Edit title"
-                    >
-                      <EditIcon />
-                    </button>
-                  </div>
-                )}
-              </div>
-              <div className="font-rajdhani text-lg text-synthwave-text-secondary space-y-1 text-center">
-                <div>
-                  <span className="text-synthwave-neon-pink">Completed:</span>{" "}
-                  {formatDate(workout.completedAt)}
-                </div>
-                <div className="flex flex-wrap justify-center gap-x-6 gap-y-1">
-                  <div>
-                    <span className="text-synthwave-neon-pink">
-                      Discipline:
-                    </span>{" "}
-                    {workout.workoutData?.discipline || "Unknown"}
-                  </div>
-                  {workout.workoutData?.duration && (
-                    <div>
-                      <span className="text-synthwave-neon-pink">
-                        Duration:
-                      </span>{" "}
-                      {Math.round(workout.workoutData.duration / 60)} minutes
-                    </div>
-                  )}
-                  {workout.extractionMetadata?.confidence && (
-                    <div>
-                      <span className="text-synthwave-neon-pink">
-                        Confidence:
-                      </span>
-                      <span
-                        className={`ml-2 ${workoutAgentRef.current?.getConfidenceColorClass(workout.extractionMetadata.confidence) || "text-synthwave-text-secondary"}`}
-                      >
-                        {workoutAgentRef.current?.getConfidenceDisplay(
-                          workout.extractionMetadata.confidence
-                        ) || "Unknown"}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
+          <p className="font-rajdhani text-lg text-synthwave-text-secondary max-w-3xl mx-auto mb-4">
+            View detailed breakdown of your completed workout including exercises, sets, reps, and performance metrics.
+            Use the tools above to manage or export your workout data.
+          </p>
         </div>
 
         {/* Main Content Area */}
@@ -606,59 +563,13 @@ function Workouts() {
           >
             <div className="p-6 h-full overflow-y-auto custom-scrollbar">
               {workout ? (
-                <div className="space-y-4">
-                  {viewMode === "formatted" ? (
-                    <WorkoutViewer
-                      workout={workout}
-                      onToggleView={handleToggleView}
-                      onDeleteWorkout={handleDeleteClick}
-                    />
-                  ) : (
-                    <div className="space-y-6">
-                      {/* Toggle View Button */}
-                      <div className="flex justify-end">
-                        <button
-                          onClick={handleToggleView}
-                          className={`${themeClasses.neonButton} text-sm px-4 py-2 flex items-center space-x-2`}
-                        >
-                          <WorkoutIcon />
-                          <span>View Formatted</span>
-                        </button>
-                      </div>
+                <WorkoutViewer
+                  workout={workout}
+                  onToggleView={handleToggleView}
+                  onDeleteWorkout={handleDeleteClick}
+                  viewMode={viewMode}
+                />
 
-                      {/* Raw JSON Container */}
-                      <div className="border border-synthwave-neon-pink/30 rounded-lg overflow-hidden">
-                        <div className="px-4 py-3 bg-synthwave-bg-primary/30 flex items-center justify-between">
-                          <div className="flex items-center space-x-3">
-                            <div className="text-synthwave-neon-pink">
-                              <svg
-                                className="w-5 h-5"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
-                                />
-                              </svg>
-                            </div>
-                            <h3 className="font-russo font-bold text-white text-sm uppercase">
-                              Raw Workout Data
-                            </h3>
-                          </div>
-                        </div>
-                        <div className="p-4 bg-synthwave-bg-card/20">
-                          <pre className="bg-synthwave-bg-primary/50 border border-synthwave-neon-cyan/30 rounded-lg p-4 text-synthwave-text-primary font-mono text-sm overflow-x-auto whitespace-pre-wrap">
-                            {JSON.stringify(workout, null, 2)}
-                          </pre>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
               ) : (
                 <div className="flex items-center justify-center h-full">
                   <EmptyState title="No workout data available" size="large" />
@@ -669,11 +580,34 @@ function Workouts() {
         </div>
       </div>
 
+      {/* Command Palette */}
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => {
+          setIsCommandPaletteOpen(false);
+          setCommandPaletteCommand('');
+        }}
+        prefilledCommand={commandPaletteCommand}
+        workoutAgent={workoutAgentRef.current}
+        userId={userId}
+        coachId={coachId}
+        onNavigation={(type, data) => {
+          if (type === 'conversation-created') {
+            navigate(`/training-grounds/coach-conversations?userId=${data.userId}&coachId=${data.coachId}&conversationId=${data.conversationId}`);
+          }
+        }}
+      />
+
       {/* Floating Menu Manager */}
       <FloatingMenuManager
         userId={userId}
         coachId={coachId}
         currentPage="workouts"
+        coachData={coachData}
+        onCommandPaletteToggle={(command) => {
+          setCommandPaletteCommand(command);
+          setIsCommandPaletteOpen(true);
+        }}
       />
 
       {/* Delete Confirmation Modal */}

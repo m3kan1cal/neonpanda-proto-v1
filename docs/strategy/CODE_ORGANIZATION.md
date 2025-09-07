@@ -1,33 +1,33 @@
-# Code Organization
+# NeonPanda Code Organization - Where Smart Structure Meets Great Development
 
-This document explains the organization of key code components in the CoachForge platform, including the coach-creator library and API routes structure.
+This document explains how we organize NeonPanda's code to keep it clean, maintainable, and easy to work with. Good code organization means faster development and fewer bugs - which means better coaching experiences for athletes.
 
 ---
 
 ## Coach Creator Library Organization
 
-### Problem Solved
+### The Problem We Solved
 
-The original `config-management.ts` and `question-management.ts` files had:
-- **Circular dependencies**: config-management imported from question-management, and vice versa
-- **Mixed concerns**: Single files handling multiple responsibilities
-- **Large file sizes**: 1400+ line files that were hard to navigate
-- **Unclear dependencies**: Everything imported from config-management created bottlenecks
+The original code was getting messy (like a gym after a busy Saturday morning):
+- **Circular dependencies**: Files importing each other in confusing loops
+- **Mixed concerns**: Single files trying to do everything at once
+- **Massive files**: 1400+ line monsters that were hard to navigate
+- **Dependency chaos**: Everything importing from one place created bottlenecks
 
-## New File Structure
+## Our Clean New Structure
 
-### 1. `types.ts` - Type Definitions
+### 1. `types.ts` - The Foundation
 - All TypeScript interfaces and type definitions
 - No business logic, just pure type declarations
-- Imported by all other files that need type definitions
+- The foundation that everything else builds on
 
 **Key Types:**
-- `SophisticationLevel`
-- `UserContext`
-- `Question`
-- `CoachCreatorSession`
-- `CoachPersonalityTemplate`
-- `MethodologyTemplate`
+- `SophisticationLevel` - How experienced an athlete is
+- `UserContext` - Everything we know about the athlete
+- `Question` - Coach creator conversation elements
+- `CoachCreatorSession` - The coach creation journey
+- `CoachPersonalityTemplate` - Emma, Marcus, Diana, and Alex templates
+- `MethodologyTemplate` - CompTrain, Mayhem, PRVN approaches
 
 ### 2. `config.ts` - Static Configuration Data
 - Question definitions (`COACH_CREATOR_QUESTIONS`)
@@ -48,28 +48,28 @@ The original `config-management.ts` and `question-management.ts` files had:
 **Purpose:** Handle the conversational flow and question sequencing
 
 ### 4. `coach-generation.ts` - Final Coach Creation
-- Coach configuration generation (`generateCoachConfig`)
+- Your coach configuration generation (`generateCoachConfig`)
 - Safety validation (`validateCoachConfigSafety`)
 - Personality coherence checking (`validatePersonalityCoherence`)
 - Pinecone integration for analytics
 
-**Purpose:** Complex business logic for creating the final AI coach
+**Purpose:** Complex business logic for creating your final AI coach
 
 ### 5. `session-management.ts` - Session State Management
-- Session creation and updates
-- Progress calculation
-- Session summary generation
+- Your session creation and updates
+- Your progress calculation
+- Your session summary generation
 
-**Purpose:** Handle session lifecycle and state
+**Purpose:** Handle your session lifecycle and state
 
 ### 6. `data-extraction.ts` - Response Processing
-- Extract user preferences from responses
-- Safety profile extraction
-- Methodology preference detection
+- Extract your preferences from responses
+- Your safety profile extraction
+- Your methodology preference detection
 
-**Purpose:** Parse and structure user responses
+**Purpose:** Parse and structure your responses
 
-## Dependency Flow
+## Dependency Flow - How Everything Connects
 
 ```
 types.ts (no dependencies)
@@ -85,7 +85,7 @@ session-management.ts (imports: types)
 data-extraction.ts (imports: types)
 ```
 
-## Benefits
+## Benefits - Why This Organization Rocks
 
 ### 1. **No Circular Dependencies**
 - Clear, unidirectional dependency flow
@@ -141,8 +141,8 @@ import { buildQuestionPrompt } from './question-management';
 
 ### Coach Creator Library
 - **Adding new question types**: Update `config.ts`
-- **Adding new coach personalities**: Update `config.ts`
-- **Changing API providers**: Update `api-helpers.ts`
+- **Adding new coach personalities** (like Emma, Marcus, Diana, Alex): Update `config.ts`
+- **Changing AI providers**: Update `api-helpers.ts`
 - **Modifying question flow**: Update `question-management.ts`
 - **Adding safety rules**: Update `config.ts` and `coach-generation.ts`
 - **Adding new data extraction**: Update `data-extraction.ts`
@@ -155,13 +155,13 @@ import { buildQuestionPrompt } from './question-management';
 - **Adding middleware or authentication**: Update both `resource.ts` and `routes.ts`
 - **API versioning**: Consider creating versioned route functions
 
-This organization follows standard software engineering practices and makes the codebase much more maintainable and scalable.
+This organization follows standard software engineering practices and makes the NeonPanda codebase much more maintainable and scalable.
 
 ---
 
-## API Routes Organization
+## API Routes Organization - Clean API Architecture
 
-### Problem Solved
+### The Problem We Solved
 
 The original `amplify/api/resource.ts` file had:
 - **Mixed Responsibilities**: Single 268-line file handling both infrastructure setup and route definitions
@@ -208,20 +208,20 @@ addCoachConversationRoutes(httpApi, integrations)
 - `POST /contact` - Contact form submission
 
 **Coach Creator Routes:**
-- `POST /users/{userId}/coach-creator-sessions` - Start creation session
-- `PUT /users/{userId}/coach-creator-sessions/{sessionId}` - Update session
-- `GET /users/{userId}/coach-creator-sessions/{sessionId}` - Get session
-- `GET /users/{userId}/coach-creator-sessions/{sessionId}/config-status` - Check generation status
+- `POST /users/{userId}/coach-creator-sessions` - Start your coach creation session
+- `PUT /users/{userId}/coach-creator-sessions/{sessionId}` - Update your session
+- `GET /users/{userId}/coach-creator-sessions/{sessionId}` - Get your session
+- `GET /users/{userId}/coach-creator-sessions/{sessionId}/config-status` - Check your generation status
 
 **Coach Config Routes:**
-- `GET /users/{userId}/coaches` - List user's coaches
-- `GET /users/{userId}/coaches/{coachId}` - Get specific coach config
+- `GET /users/{userId}/coaches` - List your coaches
+- `GET /users/{userId}/coaches/{coachId}` - Get your specific coach config
 
 **Coach Conversation Routes:**
-- `POST /users/{userId}/coaches/{coachId}/conversations` - Create conversation
-- `GET /users/{userId}/coaches/{coachId}/conversations` - List conversations
-- `GET /users/{userId}/coaches/{coachId}/conversations/{conversationId}` - Get conversation
-- `PUT /users/{userId}/coaches/{coachId}/conversations/{conversationId}` - Update conversation
+- `POST /users/{userId}/coaches/{coachId}/conversations` - Create your conversation
+- `GET /users/{userId}/coaches/{coachId}/conversations` - List your conversations
+- `GET /users/{userId}/coaches/{coachId}/conversations/{conversationId}` - Get your conversation
+- `PUT /users/{userId}/coaches/{coachId}/conversations/{conversationId}` - Update your conversation
 
 ### Infrastructure Setup (`resource.ts`)
 

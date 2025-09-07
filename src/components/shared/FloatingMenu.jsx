@@ -8,9 +8,10 @@ export const FloatingIconButton = React.forwardRef(({ icon, isActive, onClick, t
     onClick={onClick}
     className={`
       p-3 rounded-xl transition-all duration-200 backdrop-blur-sm border
+      focus:outline-none focus:ring-0
       ${isActive
-        ? 'bg-synthwave-neon-pink/20 border-synthwave-neon-pink text-synthwave-neon-pink shadow-lg shadow-synthwave-neon-pink/30'
-        : 'bg-synthwave-bg-card/40 border-synthwave-neon-pink/30 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 hover:border-synthwave-neon-pink/50 hover:shadow-md'
+        ? 'bg-synthwave-neon-pink/20 border-synthwave-neon-pink text-synthwave-neon-pink shadow-lg shadow-synthwave-neon-pink/30 focus:border-synthwave-neon-pink focus:shadow-lg focus:shadow-synthwave-neon-pink/30'
+        : 'bg-synthwave-bg-card/40 border-synthwave-neon-pink/30 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 hover:border-synthwave-neon-pink/50 hover:shadow-md focus:border-synthwave-neon-pink/50 focus:bg-synthwave-neon-pink/10'
       }
       ${className}
     `}

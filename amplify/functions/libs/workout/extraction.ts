@@ -899,27 +899,55 @@ export const calculateConfidence = (
  * Extracts the completed time from user message using AI
  */
 export const extractCompletedAtTime = async (
-  userMessage: string
+  userMessage: string,
+  messageTimestamp?: string
 ): Promise<Date | null> => {
+  const referenceTime = messageTimestamp || new Date().toISOString();
+  const messageDate = new Date(referenceTime);
+
+  // Calculate context information
+  const timeSinceMessage = Math.round((Date.now() - messageDate.getTime()) / 1000);
+  const userLocalTime = messageDate.toLocaleString('en-US', {
+    hour12: false,
+    timeZone: 'America/New_York' // Default to Eastern for now - could be enhanced with user timezone detection
+  });
+  const messageDay = messageDate.toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric'
+  });
+
   const timeExtractionPrompt = `
-You are a time extraction expert. Given a user's workout message, extract when the workout was actually completed.
+You are a time extraction expert. Extract when the workout was actually completed.
 
 USER MESSAGE: "${userMessage}"
-CURRENT TIME: ${new Date().toISOString()}
-CURRENT DAY: ${new Date().toLocaleDateString("en-US", { weekday: "long" })}
+MESSAGE TYPED AT: ${referenceTime} (UTC)
+USER'S LOCAL TIME WHEN TYPED: ${userLocalTime} ET
+CURRENT SERVER TIME: ${new Date().toISOString()} (UTC)
 
-Instructions:
-- If the user mentions a specific time (with or without timezone), use that exact time
-- For relative references (this morning, yesterday, etc.), calculate the appropriate time based on current time
-- For timezone references (Eastern, Pacific, etc.), convert to UTC properly
-- If no time is mentioned or the message is about future plans, return null
-- Consider context: distinguish between completed workouts vs planning/questions
+CONTEXT CLUES:
+- Time elapsed since message: ${timeSinceMessage} seconds
+- Message typed on: ${messageDay}
+- User's apparent timezone: America/New_York (Eastern)
+
+CRITICAL REASONING RULES:
+1. Use MESSAGE TYPED AT as your reference point for ALL relative time calculations
+2. When user says "7pm ET" and typed message at 11:30pm ET same day → workout was 7pm TODAY
+3. When user says "this morning" → calculate morning relative to the MESSAGE TYPED AT date
+4. When user says "yesterday" → calculate yesterday relative to the MESSAGE TYPED AT date
+5. For timezone abbreviations (ET, PT, CT, MT), convert properly to UTC
+6. If workout time seems unrealistic (future time), double-check your date calculation
+
+EXAMPLES:
+- Message typed at 11:30pm ET, user says "did Fran at 7pm ET" → 7pm ET TODAY (same date)
+- Message typed at 2am ET, user says "worked out this evening" → evening of PREVIOUS day
+- Message typed at 9am ET, user says "this morning at 6am" → 6am ET TODAY
 
 Return ONLY a JSON object with this format:
 {
   "completedAt": "2025-01-XX[T]XX:XX:XX.XXXZ" or null,
   "confidence": 0.0-1.0,
-  "reasoning": "Brief explanation of how you determined the time"
+  "reasoning": "Brief explanation including your date/time logic"
 }
 
 Examples:
@@ -933,7 +961,9 @@ Examples:
   try {
     console.info("Extracting workout completion time using Nova Micro:", {
       userMessage: userMessage.substring(0, 100),
+      messageTimestamp: referenceTime,
       currentTime: new Date().toISOString(),
+      timeSinceMessage: `${timeSinceMessage}s`,
     });
 
     const response = await callBedrockApi(
@@ -950,6 +980,24 @@ Examples:
       confidence: result.confidence,
       reasoning: result.reasoning,
     });
+
+    // Validate extracted time against message timestamp
+    if (result.completedAt && messageTimestamp) {
+      const extractedTime = new Date(result.completedAt);
+      const messageTime = new Date(messageTimestamp);
+      const timeDiff = extractedTime.getTime() - messageTime.getTime();
+      const hoursDiff = timeDiff / (1000 * 60 * 60);
+
+      // Flag suspicious results (workout time in future relative to message time)
+      if (hoursDiff > 1) {
+        console.warn("⚠️ Extracted workout time is in the future relative to message time:", {
+          extractedTime: extractedTime.toISOString(),
+          messageTime: messageTime.toISOString(),
+          hoursDifference: hoursDiff.toFixed(2),
+          reasoning: result.reasoning
+        });
+      }
+    }
 
     return result.completedAt ? new Date(result.completedAt) : null;
   } catch (error) {

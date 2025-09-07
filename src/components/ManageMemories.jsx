@@ -7,7 +7,9 @@ import { NeonBorder, NewBadge } from './themes/SynthwaveComponents';
 import { AccessDenied, LoadingScreen } from './shared/AccessDenied';
 import { useToast } from '../contexts/ToastContext';
 import { MemoryAgent } from '../utils/agents/MemoryAgent';
+import CoachAgent from '../utils/agents/CoachAgent';
 import { FloatingMenuManager } from './shared/FloatingMenuManager';
+import CommandPalette from './shared/CommandPalette';
 import {
   CloseIcon
 } from './themes/SynthwaveComponents';
@@ -59,9 +61,59 @@ function ManageMemories() {
   const [memoryToDelete, setMemoryToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Command palette state
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+  const [commandPaletteCommand, setCommandPaletteCommand] = useState('');
+
+  // Coach data state (for FloatingMenuManager)
+  const [coachData, setCoachData] = useState(null);
+
   const memoryAgentRef = useRef(null);
+  const coachAgentRef = useRef(null);
 
   const { addToast, success, error, info } = useToast();
+
+  // Handle keyboard shortcuts
+  useEffect(() => {
+    const handleKeyboardShortcuts = (event) => {
+      // Cmd/Ctrl + K to open command palette
+      if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
+        event.preventDefault();
+        setCommandPaletteCommand('');
+        setIsCommandPaletteOpen(true);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyboardShortcuts);
+    return () => {
+      document.removeEventListener('keydown', handleKeyboardShortcuts);
+    };
+  }, [isCommandPaletteOpen]);
+
+  // Load coach data for FloatingMenuManager
+  useEffect(() => {
+    if (!userId || !coachId) return;
+
+    const loadCoachData = async () => {
+      try {
+        if (!coachAgentRef.current) {
+          coachAgentRef.current = new CoachAgent();
+        }
+        const loadedCoachData = await coachAgentRef.current.loadCoachDetails(userId, coachId);
+        setCoachData(loadedCoachData);
+      } catch (error) {
+        console.error('Failed to load coach data:', error);
+      }
+    };
+
+    loadCoachData();
+
+    return () => {
+      if (coachAgentRef.current) {
+        coachAgentRef.current = null;
+      }
+    };
+  }, [userId, coachId]);
 
   // Memory state
   const [memoryAgentState, setMemoryAgentState] = useState({
@@ -420,11 +472,34 @@ function ManageMemories() {
         </div>
       </div>
 
+      {/* Command Palette */}
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => {
+          setIsCommandPaletteOpen(false);
+          setCommandPaletteCommand('');
+        }}
+        prefilledCommand={commandPaletteCommand}
+        workoutAgent={null} // Will need to be provided if workout functionality is needed
+        userId={userId}
+        coachId={coachId}
+        onNavigation={(type, data) => {
+          if (type === 'conversation-created') {
+            navigate(`/training-grounds/coach-conversations?userId=${data.userId}&coachId=${data.coachId}&conversationId=${data.conversationId}`);
+          }
+        }}
+      />
+
       {/* Floating Menu Manager */}
       <FloatingMenuManager
         userId={userId}
         coachId={coachId}
         currentPage="manage-memories"
+        coachData={coachData}
+        onCommandPaletteToggle={(command) => {
+          setCommandPaletteCommand(command);
+          setIsCommandPaletteOpen(true);
+        }}
       />
 
       {/* Delete Confirmation Modal */}

@@ -313,21 +313,6 @@ const generateWorkoutContext = (workoutContext: NonNullable<PromptGenerationOpti
 
 ${sections.join('\n\n')}
 
-## TEMPORAL REASONING GUIDELINES:
-- CRITICAL: Pay careful attention to timing references and workout completion times
-- When users log workouts, use the actual completion time, not when they're telling you about it
-- If a user says "I did a workout this morning" and it's currently afternoon, the workout was earlier TODAY, not yesterday
-- If a user mentions a specific time (e.g., "finished at 11:42 AM Eastern"), that's when the workout was completed
-- "Yesterday" specifically means the previous calendar day - don't use this unless the workout was actually completed yesterday
-- "This morning", "earlier today", "today" all refer to the SAME DAY as the conversation
-- When users ask about "last week", consider workouts from 7-14 days ago, but also relevant recent workouts if they provide context
-- When users ask about "this week", include workouts from 0-7 days ago
-- "Recently" typically means within the last 3-5 days
-- Users often use overlapping time references - don't treat time periods as mutually exclusive
-- When responding to time-based queries, consider the logical time period the user intends, not just literal calendar boundaries
-- Provide comprehensive answers that include all relevant workouts within the requested timeframe
-- ALWAYS verify workout timing context from the workout data before making temporal references
-
 ## USAGE INSTRUCTIONS:
 - Reference recent training when relevant to current conversation
 - Identify patterns in their training approach
@@ -487,6 +472,38 @@ const generateConversationGuidelines = (configData: CoachConfig): string => {
     guidelines.push(`- Keep sessions within ${configData.technical_config.time_constraints.session_duration} timeframe`);
   }
 
+  // Add temporal reasoning guidelines
+  const temporalReasoningGuidelines = [
+    '',
+    '## TEMPORAL REASONING GUIDELINES',
+    '- CRITICAL: Pay careful attention to timing references and workout completion times',
+    '- When users log workouts, use the actual completion time, not when they\'re telling you about it',
+    '- If a user says "I did a workout this morning" and it\'s currently afternoon, the workout was earlier TODAY, not yesterday',
+    '- If a user mentions a specific time (e.g., "finished at 11:42 AM Eastern"), that\'s when the workout was completed',
+    '- "Yesterday" specifically means the previous calendar day - don\'t use this unless the workout was actually completed yesterday',
+    '- "This morning", "earlier today", "today" all refer to the SAME DAY as the conversation',
+    '- When users ask about "last week", consider workouts from 7-14 days ago, but also relevant recent workouts if they provide context',
+    '- When users ask about "this week", include workouts from 0-7 days ago',
+    '- "Recently" typically means within the last 3-5 days',
+    '- Users often use overlapping time references - don\'t treat time periods as mutually exclusive',
+    '- When responding to time-based queries, consider the logical time period the user intends, not just literal calendar boundaries',
+    '- Provide comprehensive answers that include all relevant workouts within the requested timeframe',
+    '- ALWAYS verify workout timing context from the workout data before making temporal references'
+  ];
+
+  // Add exercise repetition prevention guidelines
+  const exerciseRepetitionGuidelines = [
+    '',
+    '## EXERCISE REPETITION PREVENTION',
+    '- CRITICAL: NEVER repeat the exact same exercises from recent workouts unless explicitly requested',
+    '- If a user did an exercise within the last 24-48 hours, avoid programming that same exercise',
+    '- When suggesting workouts, always check recent workout context for exercise overlap',
+    '- Prioritize exercise variety and movement pattern diversity',
+    '- If user specifically asks for the same exercise, acknowledge their recent work: "I see you did [exercise] yesterday, but since you\'re asking for it again..."',
+    '- Focus on complementary exercises that target similar muscle groups through different movement patterns',
+    '- Example: If they did squats yesterday, suggest lunges, step-ups, or single-leg work instead of more squats'
+  ];
+
   // Add critical workout analysis guidelines
   const workoutAnalysisGuidelines = [
     '',
@@ -561,6 +578,10 @@ const generateConversationGuidelines = (configData: CoachConfig): string => {
 
   return `# CONVERSATION GUIDELINES
 ${guidelines.join('\n')}
+
+${temporalReasoningGuidelines.join('\n')}
+
+${exerciseRepetitionGuidelines.join('\n')}
 
 ${workoutAnalysisGuidelines.join('\n')}
 

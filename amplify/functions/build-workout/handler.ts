@@ -305,7 +305,7 @@ export const handler = async (event: BuildWorkoutEvent) => {
     }
 
     // Determine completed time using AI extraction
-    const extractedTime = await extractCompletedAtTime(workoutContent);
+    const extractedTime = await extractCompletedAtTime(workoutContent, event.messageTimestamp);
     const completedAt = event.completedAt
       ? new Date(event.completedAt)
       : extractedTime || new Date();

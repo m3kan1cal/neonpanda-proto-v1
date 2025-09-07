@@ -145,7 +145,25 @@ export const createDynamoDBPolicy = (): PolicyStatement => {
     actions: [
       'dynamodb:PutItem',
       'dynamodb:UpdateItem',
-      'dynamodb:GetItem'
+      'dynamodb:GetItem',
+      'dynamodb:Query',
+      'dynamodb:DeleteItem'
+    ],
+    resources: ['*'] // Will be scoped by table name in environment
+  });
+};
+
+/**
+ * DynamoDB policy for throughput management operations
+ */
+export const createDynamoDBThroughputPolicy = (): PolicyStatement => {
+  return new PolicyStatement({
+    effect: Effect.ALLOW,
+    actions: [
+      'dynamodb:DescribeTable',
+      'dynamodb:UpdateTable',
+      'dynamodb:DescribeTimeToLive',
+      'dynamodb:ListTagsOfResource'
     ],
     resources: ['*'] // Will be scoped by table name in environment
   });
@@ -158,5 +176,15 @@ export const grantDynamoDBPermissions = (functions: IFunction[]): void => {
   const dynamoPolicy = createDynamoDBPolicy();
   functions.forEach(func => {
     func.addToRolePolicy(dynamoPolicy);
+  });
+};
+
+/**
+ * Helper function to grant DynamoDB throughput management permissions
+ */
+export const grantDynamoDBThroughputPermissions = (functions: IFunction[]): void => {
+  const throughputPolicy = createDynamoDBThroughputPolicy();
+  functions.forEach(func => {
+    func.addToRolePolicy(throughputPolicy);
   });
 };

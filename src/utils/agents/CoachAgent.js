@@ -1,5 +1,5 @@
 import { nanoid } from 'nanoid';
-import { getCoaches, getCoachTemplates, createCoachFromTemplate } from '../apis/coachApi';
+import { getCoaches, getCoach, getCoachTemplates, createCoachFromTemplate } from '../apis/coachApi';
 import { createCoachCreatorSession } from '../apis/coachCreatorApi';
 
 /**
@@ -163,6 +163,57 @@ export class CoachAgent {
         templatesError: error.message,
         templates: []
       });
+      this.onError(error);
+      throw error;
+    }
+  }
+
+  /**
+   * Load details for a specific coach
+   * @param {string} userId - The user ID
+   * @param {string} coachId - The coach ID
+   * @returns {Promise<Object>} Formatted coach data
+   */
+  async loadCoachDetails(userId, coachId) {
+    if (!userId || !coachId) {
+      throw new Error('userId and coachId are required');
+    }
+
+    try {
+      console.info('Loading coach details:', { userId, coachId });
+      const coachData = await getCoach(userId, coachId);
+      console.info('Raw coach data received:', coachData);
+
+      if (!coachData) {
+        throw new Error('Coach not found');
+      }
+
+      // Extract coach data from full configuration
+      const primaryMethodologyRaw = coachData.coachConfig?.metadata?.methodology_profile?.primary
+        || coachData.coachConfig?.technical_config?.methodology
+        || coachData.coachConfig?.selected_methodology?.primary_methodology;
+
+      const formattedPrimaryMethodology = primaryMethodologyRaw
+        ? primaryMethodologyRaw.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+        : 'Custom';
+
+      const formattedCoachData = {
+        name: this.formatCoachName(coachData.coachConfig?.coach_name),
+        specialization: this.getSpecializationDisplay(coachData.coachConfig?.technical_config?.specializations),
+        experienceLevel: this.getExperienceLevelDisplay(coachData.coachConfig?.technical_config?.experience_level),
+        programmingFocus: this.getProgrammingFocusDisplay(coachData.coachConfig?.technical_config?.programming_focus),
+        primaryMethodology: formattedPrimaryMethodology,
+        totalConversations: coachData.coachConfig?.metadata?.total_conversations || 0,
+        activePrograms: coachData.coachConfig?.metadata?.active_programs || 0,
+        joinedDate: coachData.createdAt,
+        rawCoach: coachData // Keep the full coach object for any additional data needed
+      };
+
+      console.info('Formatted coach details:', formattedCoachData);
+      return formattedCoachData;
+
+    } catch (error) {
+      console.error('Error loading coach details:', error);
       this.onError(error);
       throw error;
     }

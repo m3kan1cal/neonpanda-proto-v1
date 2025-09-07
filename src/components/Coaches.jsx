@@ -444,7 +444,7 @@ function Coaches() {
                       newSearchParams.set('coachId', coach.coach_id);
                       navigate(`/training-grounds?${newSearchParams.toString()}`);
                     }}
-                    className={`${themeClasses.neonButton} text-sm px-6 py-3 flex items-center justify-center space-x-2`}
+                    className={`${themeClasses.cyanButton} text-sm px-6 py-3 flex items-center justify-center space-x-2`}
                   >
                     <HomeIcon />
                     <span>Enter Training Grounds</span>

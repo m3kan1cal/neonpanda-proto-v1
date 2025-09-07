@@ -105,7 +105,7 @@ export async function queryMemories(
         // Use semantic + importance hybrid approach
         const [semanticMemories, importantMemories] = await Promise.all([
           querySemanticMemories(userId, userMessage, {
-            topK: 6,
+            topK: 10,
             contextTypes: retrievalDetection.contextTypes,
           }),
           queryMemoriesFromDb(userId, coachId, {

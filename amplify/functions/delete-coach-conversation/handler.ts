@@ -1,6 +1,6 @@
 import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
 import { createOkResponse, createErrorResponse } from '../libs/api-helpers';
-import { deleteCoachConversation, getCoachConversation } from '../../dynamodb/operations';
+import { deleteCoachConversation, getCoachConversation, getCoachConfig, saveCoachConfig } from '../../dynamodb/operations';
 import { deleteConversationSummaryFromPinecone } from '../libs/coach-conversation/pinecone';
 
 export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> => {
@@ -39,6 +39,29 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
     // Clean up associated conversation summary from Pinecone
     console.info('🗑️ Cleaning up conversation summary from Pinecone...');
     const pineconeResult = await deleteConversationSummaryFromPinecone(userId, conversationId);
+
+    // Update coach config conversation count
+    try {
+      const coachConfig = await getCoachConfig(userId, coachId);
+      if (coachConfig) {
+        const currentCount = coachConfig.attributes.metadata.total_conversations || 0;
+        const updated = {
+          ...coachConfig.attributes,
+          metadata: {
+            ...coachConfig.attributes.metadata,
+            total_conversations: Math.max(0, currentCount - 1), // Ensure count doesn't go below 0
+          },
+        };
+        await saveCoachConfig(userId, updated);
+        console.info('Updated coach config conversation count:', {
+          previousCount: currentCount,
+          newCount: updated.metadata.total_conversations
+        });
+      }
+    } catch (error) {
+      console.error('Failed to update conversation count:', error);
+      // Don't fail the request - conversation was deleted successfully
+    }
 
     // Return success response
     return createOkResponse({

@@ -88,7 +88,8 @@ export const sendCoachConversationMessage = async (userId, coachId, conversation
     const response = await authenticatedFetch(url, {
       method: 'POST',
       body: JSON.stringify({
-        userResponse
+        userResponse,
+        messageTimestamp: new Date().toISOString() // When user typed the message
       }),
       signal: controller.signal
     });

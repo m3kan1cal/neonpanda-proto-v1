@@ -154,6 +154,7 @@ export interface CoachConfigSummary {
 export interface CoachConfig {
   coach_id: string;
   coach_name: string;
+  coach_description?: string;
   selected_personality: {
     primary_template: string;
     secondary_influences?: string[];

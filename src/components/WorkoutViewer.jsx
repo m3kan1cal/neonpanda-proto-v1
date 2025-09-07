@@ -4,8 +4,10 @@ import {
   ChevronDownIcon,
   ChevronRightIcon,
   WorkoutIcon,
-  WorkoutIconSmall
+  WorkoutIconSmall,
+  TrashIcon
 } from './themes/SynthwaveComponents';
+import IconButton from './shared/IconButton';
 
 const MetricsIcon = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -447,7 +449,7 @@ const CoachNotes = ({ notes }) => {
 };
 
 // Main WorkoutViewer component
-const WorkoutViewer = ({ workout, onToggleView, onDeleteWorkout }) => {
+const WorkoutViewer = ({ workout, onToggleView, onDeleteWorkout, viewMode = "formatted" }) => {
   if (!workout || !workout.workoutData) {
     return (
       <div className="text-center py-8">
@@ -526,8 +528,11 @@ const WorkoutViewer = ({ workout, onToggleView, onDeleteWorkout }) => {
   return (
     <div className="space-y-6" data-workout-viewer>
       {/* Toggle View, Manage Workouts, and Delete Buttons */}
-      <div className="flex justify-end space-x-3">
-        <button
+      <div className="flex justify-end space-x-2">
+        <IconButton
+          variant="cyan"
+          tooltip="Manage Workouts"
+          tooltipPosition="bottom"
           onClick={() => {
             const searchParams = new URLSearchParams(window.location.search);
             const userId = searchParams.get('userId');
@@ -536,38 +541,74 @@ const WorkoutViewer = ({ workout, onToggleView, onDeleteWorkout }) => {
               window.location.href = `/training-grounds/manage-workouts?userId=${userId}&coachId=${coachId}`;
             }
           }}
-          className={`${themeClasses.cyanButton} text-sm px-4 py-2 flex items-center space-x-2`}
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012 2v2M7 7h10" />
-          </svg>
-          <span>Manage Workouts</span>
-        </button>
-        <button
-          onClick={() => onDeleteWorkout && onDeleteWorkout(workout)}
-          className={`${themeClasses.neonButton} text-sm px-4 py-2 flex items-center space-x-2`}
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-          </svg>
-          <span>Delete Workout</span>
-        </button>
-        <button
+          <WorkoutIconSmall />
+        </IconButton>
+        <IconButton
+          variant="cyan"
+          tooltip={viewMode === "formatted" ? "View Raw JSON" : "View Formatted"}
+          tooltipPosition="bottom"
           onClick={onToggleView}
-          className={`${themeClasses.neonButton} text-sm px-4 py-2 flex items-center space-x-2`}
         >
           <JsonIcon />
-          <span>View Raw JSON</span>
-        </button>
+        </IconButton>
+        <IconButton
+          variant="default"
+          tooltip="Delete Workout"
+          tooltipPosition="bottom"
+          onClick={() => onDeleteWorkout && onDeleteWorkout(workout)}
+        >
+          <TrashIcon />
+        </IconButton>
       </div>
 
-      {/* Workout Summary */}
+      {/* Raw JSON Section - only shown in raw mode */}
+      {viewMode === "raw" && (
+        <CollapsibleSection
+          title="Raw Workout Data"
+          icon={<JsonIcon />}
+          defaultOpen={true}
+        >
+          <pre className="bg-synthwave-bg-primary/50 border border-synthwave-neon-cyan/30 rounded-lg p-4 text-synthwave-text-primary font-mono text-sm overflow-x-auto whitespace-pre-wrap">
+            {JSON.stringify(workout, null, 2)}
+          </pre>
+        </CollapsibleSection>
+      )}
+
+      {/* Workout Metadata */}
       <CollapsibleSection
         title="Workout Metadata"
         icon={<WorkoutIconSmall />}
         defaultOpen={true}
       >
-        <WorkoutSummary workoutData={workoutData} />
+        <div className="space-y-4">
+          {/* Key Summary Info */}
+          <div className="pb-4 border-b border-synthwave-neon-pink/20">
+            <div className="flex justify-between items-center py-1">
+              <span className="text-synthwave-neon-pink font-rajdhani text-base font-medium">
+                Completed:
+              </span>
+              <span className="text-synthwave-text-primary font-rajdhani text-base">
+                {(() => {
+                  if (!workout.completedAt) return 'Unknown';
+                  const date = new Date(workout.completedAt);
+                  return date.toLocaleDateString(undefined, {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric'
+                  }) + ' at ' + date.toLocaleTimeString(undefined, {
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    hour12: true
+                  });
+                })()}
+              </span>
+            </div>
+          </div>
+
+          {/* Existing Workout Summary */}
+          <WorkoutSummary workoutData={workoutData} />
+        </div>
       </CollapsibleSection>
 
       {/* Performance Metrics */}

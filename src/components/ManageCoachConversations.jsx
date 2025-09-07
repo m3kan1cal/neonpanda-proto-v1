@@ -7,22 +7,19 @@ import { isRecentConversation } from '../utils/dateUtils';
 import { NeonBorder, NewBadge } from './themes/SynthwaveComponents';
 import { useToast } from '../contexts/ToastContext';
 import { CoachConversationAgent } from '../utils/agents/CoachConversationAgent';
+import CoachAgent from '../utils/agents/CoachAgent';
 import { FloatingMenuManager } from './shared/FloatingMenuManager';
+import CommandPalette from './shared/CommandPalette';
 import {
   CloseIcon,
-  ChatIconSmall
+  ChatIconSmall,
+  ConversationIcon
 } from './themes/SynthwaveComponents';
 
 // Icons
 const TrashIcon = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-  </svg>
-);
-
-const ConversationIcon = () => (
-  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
   </svg>
 );
 
@@ -65,8 +62,58 @@ function ManageCoachConversations() {
   const [conversationToDelete, setConversationToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Command palette state
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+  const [commandPaletteCommand, setCommandPaletteCommand] = useState('');
+
+  // Coach data state (for FloatingMenuManager)
+  const [coachData, setCoachData] = useState(null);
+
   const conversationAgentRef = useRef(null);
+  const coachAgentRef = useRef(null);
   const { addToast, success, error, info } = useToast();
+
+  // Handle keyboard shortcuts
+  useEffect(() => {
+    const handleKeyboardShortcuts = (event) => {
+      // Cmd/Ctrl + K to open command palette
+      if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
+        event.preventDefault();
+        setCommandPaletteCommand('');
+        setIsCommandPaletteOpen(true);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyboardShortcuts);
+    return () => {
+      document.removeEventListener('keydown', handleKeyboardShortcuts);
+    };
+  }, [isCommandPaletteOpen]);
+
+  // Load coach data for FloatingMenuManager
+  useEffect(() => {
+    if (!userId || !coachId) return;
+
+    const loadCoachData = async () => {
+      try {
+        if (!coachAgentRef.current) {
+          coachAgentRef.current = new CoachAgent();
+        }
+        const loadedCoachData = await coachAgentRef.current.loadCoachDetails(userId, coachId);
+        setCoachData(loadedCoachData);
+      } catch (error) {
+        console.error('Failed to load coach data:', error);
+      }
+    };
+
+    loadCoachData();
+
+    return () => {
+      if (coachAgentRef.current) {
+        coachAgentRef.current = null;
+      }
+    };
+  }, [userId, coachId]);
 
   // Conversation state - for specific coach conversations
   const [conversationAgentState, setConversationAgentState] = useState({
@@ -280,11 +327,6 @@ function ManageCoachConversations() {
 
           {/* Conversation metadata */}
           <div className={`flex flex-wrap items-center gap-4 ${themeClasses.cardText} text-sm`}>
-            {/* Coach name */}
-            <div className="bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan px-2 py-1 rounded text-xs font-rajdhani font-medium flex items-center space-x-1">
-              <UserIcon />
-              <span>{conversation.coachName || 'Unknown Coach'}</span>
-            </div>
             {/* Message count */}
             <div className="bg-synthwave-neon-purple/20 text-synthwave-neon-purple px-2 py-1 rounded text-xs font-rajdhani flex items-center space-x-1">
               <MessageIcon />
@@ -519,11 +561,34 @@ function ManageCoachConversations() {
         </div>
       </div>
 
+      {/* Command Palette */}
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => {
+          setIsCommandPaletteOpen(false);
+          setCommandPaletteCommand('');
+        }}
+        prefilledCommand={commandPaletteCommand}
+        workoutAgent={null} // Will need to be provided if workout functionality is needed
+        userId={userId}
+        coachId={coachId}
+        onNavigation={(type, data) => {
+          if (type === 'conversation-created') {
+            navigate(`/training-grounds/coach-conversations?userId=${data.userId}&coachId=${data.coachId}&conversationId=${data.conversationId}`);
+          }
+        }}
+      />
+
       {/* Floating Menu Manager */}
       <FloatingMenuManager
         userId={userId}
         coachId={coachId}
         currentPage="manage-conversations"
+        coachData={coachData}
+        onCommandPaletteToggle={(command) => {
+          setCommandPaletteCommand(command);
+          setIsCommandPaletteOpen(true);
+        }}
       />
 
       {/* Delete Confirmation Modal */}

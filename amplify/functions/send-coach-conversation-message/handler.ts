@@ -48,10 +48,14 @@ export const handler = async (
     }
 
     const body = JSON.parse(event.body);
-    const { userResponse } = body;
+    const { userResponse, messageTimestamp } = body;
 
     if (!userResponse || typeof userResponse !== "string") {
       return createErrorResponse(400, "User response is required");
+    }
+
+    if (!messageTimestamp) {
+      return createErrorResponse(400, "Message timestamp is required for accurate workout logging");
     }
 
     // Load existing conversation
@@ -105,7 +109,8 @@ export const handler = async (
           coachId,
           conversationId,
           coachConfig,
-          conversationContext
+          conversationContext,
+          messageTimestamp
         );
       } catch (error) {
         console.error('❌ Error in workout detection, using fallback:', error);

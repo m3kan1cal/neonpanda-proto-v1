@@ -22,10 +22,9 @@ import {
   ChevronRightIcon,
   MenuIcon,
   MemoryIcon,
+  CoachIcon,
   NewBadge
 } from '../themes/SynthwaveComponents';
-
-
 
 /**
  * FloatingMenuManager - A comprehensive floating menu system with agent management
@@ -35,7 +34,9 @@ export const FloatingMenuManager = ({
   userId,
   coachId,
   currentPage = 'default',
-  className = ""
+  className = "",
+  onCommandPaletteToggle = null,
+  coachData = null
 }) => {
   const navigate = useNavigate();
   const { success, error } = useToast();
@@ -46,6 +47,7 @@ export const FloatingMenuManager = ({
   const conversationsIconRef = useRef(null);
   const workoutsIconRef = useRef(null);
   const reportsIconRef = useRef(null);
+  const coachIconRef = useRef(null);
   const [isCreatingConversation, setIsCreatingConversation] = useState(false);
 
   // Agent refs
@@ -189,10 +191,24 @@ export const FloatingMenuManager = ({
 
   // Handlers
   const handleTogglePopover = (popoverType) => {
-    setActivePopover(activePopover === popoverType ? null : popoverType);
+    if (activePopover === popoverType) {
+      // Closing the popup - clear all agent states
+      setWorkoutAgentState({ recentWorkouts: [], isLoadingRecentItems: false, error: null });
+      setConversationAgentState({ recentConversations: [], isLoadingRecentItems: false, error: null });
+      setReportAgentState({ recentReports: [], isLoadingRecentItems: false, error: null });
+      setActivePopover(null);
+    } else {
+      // Opening a different popup
+      setActivePopover(popoverType);
+    }
   };
 
   const handleClosePopover = () => {
+    // Clear all agent states to prevent stale content flashing
+    setWorkoutAgentState({ recentWorkouts: [], isLoadingRecentItems: false, error: null });
+    setConversationAgentState({ recentConversations: [], isLoadingRecentItems: false, error: null });
+    setReportAgentState({ recentReports: [], isLoadingRecentItems: false, error: null });
+
     setActivePopover(null);
   };
 
@@ -325,7 +341,7 @@ export const FloatingMenuManager = ({
                   </div>
                 </div>
                 <div className="text-synthwave-neon-pink ml-2">
-                  <LightningIconSmall />
+                  <WorkoutIconSmall />
                 </div>
               </div>
               </div>
@@ -403,7 +419,7 @@ export const FloatingMenuManager = ({
           navigate(`/training-grounds?userId=${userId}&coachId=${coachId}`);
           handleClosePopover();
         }}
-        className="bg-transparent border-2 border-synthwave-neon-purple text-synthwave-neon-purple px-4 py-3 rounded-lg font-rajdhani font-semibold text-sm uppercase tracking-wide cursor-pointer transition-all duration-300 hover:bg-synthwave-neon-purple hover:text-synthwave-bg-primary hover:shadow-neon-purple hover:-translate-y-1 active:translate-y-0 w-full flex items-center justify-center space-x-2"
+        className={`${themeClasses.cyanButton} text-sm px-4 py-3 w-full flex items-center justify-center space-x-2`}
       >
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -463,8 +479,11 @@ export const FloatingMenuManager = ({
       {/* Log Workout */}
       <button
         onClick={() => {
-          // TODO: Implement workout logging functionality
-          console.info('Log Workout clicked - functionality to be implemented');
+          if (onCommandPaletteToggle) {
+            onCommandPaletteToggle('/log-workout ');
+          } else {
+            console.info('Log Workout clicked - onCommandPaletteToggle not provided');
+          }
           handleClosePopover();
         }}
         className={`${themeClasses.neonButton} text-sm px-4 py-3 w-full flex items-center justify-center space-x-2`}
@@ -475,7 +494,15 @@ export const FloatingMenuManager = ({
 
       {/* Start Conversation */}
       <button
-        onClick={handleNewConversation}
+        onClick={() => {
+          if (onCommandPaletteToggle) {
+            onCommandPaletteToggle('/start-conversation ');
+          } else {
+            // Fallback to original behavior if no command palette callback
+            handleNewConversation();
+          }
+          handleClosePopover();
+        }}
         disabled={isCreatingConversation}
         className={`${themeClasses.neonButton} text-sm px-4 py-3 w-full flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed`}
       >
@@ -495,8 +522,11 @@ export const FloatingMenuManager = ({
       {/* Save Memory */}
       <button
         onClick={() => {
-          // TODO: Implement save memory functionality
-          console.info('Save Memory clicked - functionality to be implemented');
+          if (onCommandPaletteToggle) {
+            onCommandPaletteToggle('/save-memory ');
+          } else {
+            console.info('Save Memory clicked - onCommandPaletteToggle not provided');
+          }
           handleClosePopover();
         }}
         className={`${themeClasses.neonButton} text-sm px-4 py-3 w-full flex items-center justify-center space-x-2`}
@@ -558,6 +588,673 @@ export const FloatingMenuManager = ({
     </div>
   );
 
+  const renderCoachDetails = () => {
+    if (!coachData) {
+      return (
+        <div className="text-center py-8">
+          <div className="font-rajdhani text-synthwave-text-muted text-sm">
+            No coach data available
+          </div>
+        </div>
+      );
+    }
+
+    const config = coachData.rawCoach?.coachConfig;
+    if (!config) {
+      return (
+        <div className="text-center py-8">
+          <div className="font-rajdhani text-synthwave-text-muted text-sm">
+            Coach configuration not available
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-4">
+        {/* Coach Identity */}
+        <div>
+          <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
+            Coach Identity
+          </div>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+              <div className="flex-1 min-w-0">
+                <div className="font-rajdhani text-sm text-white font-medium truncate">
+                  {config.coach_name?.replace(/_/g, ' ') || coachData.name}
+                </div>
+                <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                  {config.metadata?.created_date
+                    ? new Date(config.metadata.created_date).toLocaleDateString()
+                    : 'Unknown date'} • <span className="text-synthwave-neon-cyan">{config.metadata?.total_conversations || 0} conversations</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Coach Personality & Tone */}
+        {(config.selected_personality || config.generated_prompts) && (
+          <div>
+            <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
+              Coach Personality & Tone
+            </div>
+            <div className="space-y-3">
+              {config.selected_personality?.primary_template && (
+                <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-rajdhani text-sm text-white font-medium">
+                      Primary Personality: {config.selected_personality.primary_template.replace(/_/g, ' ').toUpperCase()}
+                    </div>
+                    <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                      {config.selected_personality.secondary_influences?.length > 0 && (
+                        <>Influenced by: <span className="text-synthwave-neon-cyan">{config.selected_personality.secondary_influences.map(inf => inf.replace(/_/g, ' ')).join(', ')}</span></>
+                      )}
+                      {config.selected_personality.blending_weights && (
+                        <> • Primary: <span className="text-synthwave-neon-cyan">{(config.selected_personality.blending_weights.primary * 100).toFixed(0)}%</span>, Secondary: <span className="text-synthwave-neon-purple">{(config.selected_personality.blending_weights.secondary * 100).toFixed(0)}%</span></>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+              {config.selected_personality?.selection_reasoning && (
+                <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-rajdhani text-sm text-white font-medium">
+                      Personality Selection Reasoning
+                    </div>
+                    <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1 leading-relaxed">
+                      {config.selected_personality.selection_reasoning}
+                    </div>
+                  </div>
+                </div>
+              )}
+              {config.generated_prompts?.communication_style && (
+                <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-rajdhani text-sm text-white font-medium">
+                      Communication Style Preview
+                    </div>
+                    <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1 leading-relaxed">
+                      {config.generated_prompts.communication_style.slice(0, 200)}...
+                    </div>
+                  </div>
+                </div>
+              )}
+              {config.generated_prompts?.motivation_prompt && (
+                <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-rajdhani text-sm text-white font-medium">
+                      Motivational Approach Preview
+                    </div>
+                    <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1 leading-relaxed">
+                      {config.generated_prompts.motivation_prompt.slice(0, 200)}...
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+
+
+        {/* Selected Methodology */}
+        {config.selected_methodology && (
+          <div>
+            <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
+              Training Methodology
+            </div>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+                <div className="flex-1 min-w-0">
+                  <div className="font-rajdhani text-sm text-white font-medium truncate">
+                    {config.selected_methodology.primary_methodology?.replace(/_/g, ' ') || 'Hybrid Training'}
+                  </div>
+                  <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                    <span className="text-synthwave-neon-cyan">{config.selected_methodology.programming_emphasis}</span> • <span className="text-synthwave-neon-cyan">{config.selected_methodology.periodization_approach} periodization</span>
+                    {config.selected_methodology.creativity_emphasis && (
+                      <> • <span className="text-synthwave-neon-cyan">{config.selected_methodology.creativity_emphasis.replace(/_/g, ' ')}</span></>
+                    )}
+                  </div>
+                </div>
+              </div>
+              {config.selected_methodology.methodology_reasoning && (
+                <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-rajdhani text-sm text-white font-medium">
+                      Methodology Reasoning
+                    </div>
+                    <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1 leading-relaxed">
+                      {config.selected_methodology.methodology_reasoning}
+                    </div>
+                  </div>
+                </div>
+              )}
+              {config.selected_methodology.workout_innovation && (
+                <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-rajdhani text-sm text-white font-medium">
+                      Workout Innovation
+                    </div>
+                    <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                      Status: <span className="text-synthwave-neon-cyan">{config.selected_methodology.workout_innovation}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Technical Configuration */}
+        {config.technical_config && (
+          <div>
+            <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
+              Technical Configuration
+            </div>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+                <div className="flex-1 min-w-0">
+                  <div className="font-rajdhani text-sm text-white font-medium truncate">
+                    {config.technical_config.experience_level?.toUpperCase() || 'INTERMEDIATE'} • {config.technical_config.training_frequency || 4} days/week
+                  </div>
+                  <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                    {config.technical_config.preferred_intensity?.replace(/_/g, ' ') || 'Moderate'} intensity • <span className="text-synthwave-neon-cyan">{config.technical_config.goal_timeline?.replace(/_/g, ' ') || '1 year'} timeline</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Safety Profile */}
+        {config.metadata?.safety_profile && (
+          <div>
+            <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
+              Safety & Limitations
+            </div>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+                <div className="flex-1 min-w-0">
+                  <div className="font-rajdhani text-sm text-white font-medium">
+                    {config.metadata.safety_profile.experienceLevel || 'Standard'} Safety Profile
+                  </div>
+                  <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                    Experience Level: <span className="text-synthwave-neon-cyan">{config.metadata.safety_profile.experienceLevel || 'Standard'}</span>
+                  </div>
+                </div>
+              </div>
+              {config.metadata.safety_profile.contraindications?.length > 0 && (
+                <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-rajdhani text-sm text-white font-medium">
+                      Contraindications ({config.metadata.safety_profile.contraindications.length})
+                    </div>
+                    <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                      {config.metadata.safety_profile.contraindications.map((contra, index) => (
+                        <div key={index} className="flex items-center space-x-2 mt-1">
+                          <span className="text-synthwave-neon-orange">•</span>
+                          <span>{contra.replace(/_/g, ' ')}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+              {config.metadata.safety_profile.modifications?.length > 0 && (
+                <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-rajdhani text-sm text-white font-medium">
+                      Required Modifications ({config.metadata.safety_profile.modifications.length})
+                    </div>
+                    <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                      {config.metadata.safety_profile.modifications.map((mod, index) => (
+                        <div key={index} className="flex items-center space-x-2 mt-1">
+                          <span className="text-synthwave-neon-cyan">•</span>
+                          <span>{mod.replace(/_/g, ' ')}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Equipment Available */}
+        {(config.metadata?.safety_profile?.equipment || config.technical_config?.equipment_available) && (
+          <div>
+            <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
+              Available Equipment
+            </div>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+                <div className="flex-1 min-w-0">
+                  <div className="font-rajdhani text-sm text-white font-medium">
+                    Equipment Types ({(config.metadata?.safety_profile?.equipment || config.technical_config?.equipment_available || []).length} total)
+                  </div>
+                  <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                    {(config.metadata?.safety_profile?.equipment || config.technical_config?.equipment_available || []).map((equipment, index) => (
+                      <div key={index} className="flex items-center space-x-2 mt-1">
+                        <span className="text-synthwave-neon-cyan">•</span>
+                        <span>{equipment.replace(/_/g, ' ')}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modification Capabilities */}
+        {config.modification_capabilities && (
+          <div>
+            <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
+              Coach Capabilities
+            </div>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+                <div className="flex-1 min-w-0">
+                  <div className="font-rajdhani text-sm text-white font-medium truncate">
+                    Programming Adaptability
+                  </div>
+                  <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                    Level: <span className="text-synthwave-neon-cyan">{config.modification_capabilities.programming_adaptability || 'Medium'}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+                <div className="flex-1 min-w-0">
+                  <div className="font-rajdhani text-sm text-white font-medium truncate">
+                    Creative Programming
+                  </div>
+                  <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                    Level: <span className="text-synthwave-neon-cyan">{config.modification_capabilities.creative_programming || 'Medium'}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+                <div className="flex-1 min-w-0">
+                  <div className="font-rajdhani text-sm text-white font-medium truncate">
+                    Personality Flexibility
+                  </div>
+                  <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                    Level: <span className="text-synthwave-neon-cyan">{config.modification_capabilities.personality_flexibility || 'Medium'}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+                <div className="flex-1 min-w-0">
+                  <div className="font-rajdhani text-sm text-white font-medium truncate">
+                    Workout Variety Emphasis
+                  </div>
+                  <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                    Level: <span className="text-synthwave-neon-cyan">{config.modification_capabilities.workout_variety_emphasis || 'Medium'}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+                <div className="flex-1 min-w-0">
+                  <div className="font-rajdhani text-sm text-white font-medium truncate">
+                    Safety Override Level
+                  </div>
+                  <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                    Level: <span className="text-synthwave-neon-cyan">{config.modification_capabilities.safety_override_level || 'Limited'}</span>
+                  </div>
+                </div>
+              </div>
+              {/* Show all enabled modifications */}
+              {config.modification_capabilities.enabled_modifications && (
+                <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-rajdhani text-sm text-white font-medium">
+                      Enabled Modifications ({config.modification_capabilities.enabled_modifications.length} total)
+                    </div>
+                    <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                      {config.modification_capabilities.enabled_modifications.map((modification, index) => (
+                        <div key={index} className="flex items-center space-x-2 mt-1">
+                          <span className="text-synthwave-neon-cyan">•</span>
+                          <span>{modification.replace(/_/g, ' ')}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Programming Focus & Specializations */}
+        {(config.technical_config?.programming_focus || config.technical_config?.specializations) && (
+          <div>
+            <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
+              Programming Focus
+            </div>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+                <div className="flex-1 min-w-0">
+                  <div className="font-rajdhani text-sm text-white font-medium">
+                    Focus Areas & Specializations
+                  </div>
+                  <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                    {config.technical_config.programming_focus?.map((focus, index) => (
+                      <div key={index} className="flex items-center space-x-2 mt-1">
+                        <span className="text-synthwave-neon-cyan">•</span>
+                        <span className="text-synthwave-neon-secondary">{focus.replace(/_/g, ' ')}</span>
+                      </div>
+                    ))}
+                    {config.technical_config.specializations?.map((spec, index) => (
+                      <div key={`spec-${index}`} className="flex items-center space-x-2 mt-1">
+                        <span className="text-synthwave-neon-cyan">•</span>
+                        <span className="text-synthwave-neon-secondary">{spec.replace(/_/g, ' ')}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Injury Considerations & Modifications */}
+        {(config.technical_config?.injury_considerations || config.metadata?.safety_profile?.modifications) && (
+          <div>
+            <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
+              Injury Considerations & Modifications
+            </div>
+            <div className="space-y-3">
+              {config.technical_config?.injury_considerations && (
+                <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-rajdhani text-sm text-white font-medium">
+                      Injury Considerations ({config.technical_config.injury_considerations.length})
+                    </div>
+                    <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                      {config.technical_config.injury_considerations.map((injury, index) => (
+                        <div key={index} className="flex items-center space-x-2 mt-1">
+                          <span className="text-synthwave-neon-orange">•</span>
+                          <span>{injury.replace(/_/g, ' ')}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+              {config.metadata?.safety_profile?.modifications && (
+                <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-rajdhani text-sm text-white font-medium">
+                      Required Modifications ({config.metadata.safety_profile.modifications.length})
+                    </div>
+                    <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                      {config.metadata.safety_profile.modifications.map((mod, index) => (
+                        <div key={index} className="flex items-center space-x-2 mt-1">
+                          <span className="text-synthwave-neon-cyan">•</span>
+                          <span>{mod.replace(/_/g, ' ')}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Time Constraints & Session Preferences */}
+        {(config.metadata?.safety_profile?.timeConstraints || config.technical_config?.time_constraints) && (
+          <div>
+            <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
+              Time Constraints & Preferences
+            </div>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+                <div className="flex-1 min-w-0">
+                  <div className="font-rajdhani text-sm text-white font-medium truncate">
+                    {config.metadata?.safety_profile?.timeConstraints?.session_duration || config.technical_config?.time_constraints?.session_duration || 60} minute sessions
+                  </div>
+                  <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                    {config.metadata?.safety_profile?.timeConstraints?.morning_preferred && (
+                      <>Preferred: <span className="text-synthwave-neon-cyan">Morning Training</span></>
+                    )}
+                    {config.metadata?.safety_profile?.timeConstraints?.preferred_time && (
+                      <> • Time: <span className="text-synthwave-neon-purple">{config.metadata.safety_profile.timeConstraints.preferred_time}</span></>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Learning Considerations */}
+        {config.metadata?.safety_profile?.learningConsiderations && (
+          <div>
+            <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
+              Learning Preferences
+            </div>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+                <div className="flex-1 min-w-0">
+                  <div className="font-rajdhani text-sm text-white font-medium">
+                    Preferred Learning Methods ({config.metadata.safety_profile.learningConsiderations.length})
+                  </div>
+                  <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                    {config.metadata.safety_profile.learningConsiderations.map((learning, index) => (
+                      <div key={index} className="flex items-center space-x-2 mt-1">
+                        <span className="text-synthwave-neon-cyan">•</span>
+                        <span>{learning.replace(/_/g, ' ')}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Recovery Needs */}
+        {(config.metadata?.safety_profile?.recoveryNeeds || config.technical_config?.safety_constraints?.recovery_requirements) && (
+          <div>
+            <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
+              Recovery Requirements
+            </div>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+                <div className="flex-1 min-w-0">
+                  <div className="font-rajdhani text-sm text-white font-medium">
+                    Recovery Focus Areas ({(config.metadata?.safety_profile?.recoveryNeeds || config.technical_config?.safety_constraints?.recovery_requirements || []).length})
+                  </div>
+                  <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                    {(config.metadata?.safety_profile?.recoveryNeeds || config.technical_config?.safety_constraints?.recovery_requirements || []).map((recovery, index) => (
+                      <div key={index} className="flex items-center space-x-2 mt-1">
+                        <span className="text-synthwave-neon-cyan">•</span>
+                        <span>{recovery.replace(/_/g, ' ')}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Environmental Factors */}
+        {config.metadata?.safety_profile?.environmentalFactors && (
+          <div>
+            <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
+              Environmental Factors
+            </div>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+                <div className="flex-1 min-w-0">
+                  <div className="font-rajdhani text-sm text-white font-medium">
+                    Scheduling Constraints ({config.metadata.safety_profile.environmentalFactors.length})
+                  </div>
+                  <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                    {config.metadata.safety_profile.environmentalFactors.map((factor, index) => (
+                      <div key={index} className="flex items-center space-x-2 mt-1">
+                        <span className="text-synthwave-neon-cyan">•</span>
+                        <span>{factor.replace(/_/g, ' ')}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Safety Constraints Detail */}
+        {config.technical_config?.safety_constraints && (
+          <div>
+            <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
+              Safety Monitoring
+            </div>
+            <div className="space-y-3">
+              {config.technical_config.safety_constraints.contraindicated_exercises && (
+                <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-rajdhani text-sm text-white font-medium">
+                      Contraindicated Exercises ({config.technical_config.safety_constraints.contraindicated_exercises.length})
+                    </div>
+                    <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                      {config.technical_config.safety_constraints.contraindicated_exercises.map((exercise, index) => (
+                        <div key={index} className="flex items-center space-x-2 mt-1">
+                          <span className="text-synthwave-neon-orange">•</span>
+                          <span>{exercise.replace(/_/g, ' ')}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+              {config.technical_config.safety_constraints.safety_monitoring && (
+                <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-rajdhani text-sm text-white font-medium">
+                      Safety Monitoring ({config.technical_config.safety_constraints.safety_monitoring.length})
+                    </div>
+                    <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                      {config.technical_config.safety_constraints.safety_monitoring.map((monitor, index) => (
+                        <div key={index} className="flex items-center space-x-2 mt-1">
+                          <span className="text-synthwave-neon-cyan">•</span>
+                          <span>{monitor.replace(/_/g, ' ')}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+              {config.technical_config.safety_constraints.volume_progression_limit && (
+                <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-rajdhani text-sm text-white font-medium">
+                      Volume Progression Limit
+                    </div>
+                    <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                      Limit: <span className="text-synthwave-neon-cyan">{config.technical_config.safety_constraints.volume_progression_limit}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Methodology Experience & Preferences */}
+        {config.metadata?.methodology_profile && (
+          <div>
+            <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
+              Methodology Experience
+            </div>
+            <div className="space-y-3">
+              {config.metadata.methodology_profile.experience && (
+                <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-rajdhani text-sm text-white font-medium">
+                      Training Experience ({config.metadata.methodology_profile.experience.length})
+                    </div>
+                    <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                      {config.metadata.methodology_profile.experience.map((exp, index) => (
+                        <div key={index} className="flex items-center space-x-2 mt-1">
+                          <span className="text-synthwave-neon-cyan">•</span>
+                          <span>{exp.replace(/_/g, ' ')}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+              {config.metadata.methodology_profile.preferences && (
+                <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-rajdhani text-sm text-white font-medium">
+                      Training Preferences ({config.metadata.methodology_profile.preferences.length})
+                    </div>
+                    <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                      {config.metadata.methodology_profile.preferences.map((pref, index) => (
+                        <div key={index} className="flex items-center space-x-2 mt-1">
+                          <span className="text-synthwave-neon-cyan">•</span>
+                          <span>{pref.replace(/_/g, ' ')}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Coach Creator Session Summary */}
+        {config.metadata?.coach_creator_session_summary && (
+          <div>
+            <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
+              Creation Summary
+            </div>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+                <div className="flex-1 min-w-0">
+                  <div className="font-rajdhani text-sm text-white font-medium">
+                    Coach Creator Session
+                  </div>
+                  <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1 leading-relaxed">
+                    {config.metadata.coach_creator_session_summary}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* System Information */}
+        <div>
+          <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
+            System Information
+          </div>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+              <div className="flex-1 min-w-0">
+                <div className="font-rajdhani text-sm text-white font-medium truncate">
+                  {config.entityType || 'coachConfig'} • v{config.metadata?.version || '1.0'}
+                </div>
+                <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                  ID: <span className="text-synthwave-neon-cyan">{config.coach_id?.split('_').pop() || 'main'}</span> •
+                  Updated: {config.updatedAt ? new Date(config.updatedAt).toLocaleDateString() : 'Unknown'}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   // Don't render if missing required props
   if (!userId) return null;
 
@@ -581,7 +1278,7 @@ export const FloatingMenuManager = ({
         />
         <FloatingIconButton
           ref={workoutsIconRef}
-          icon={<LightningIconSmall />}
+          icon={<WorkoutIconSmall />}
           isActive={activePopover === 'workouts'}
           onClick={() => handleTogglePopover('workouts')}
           title="Recent Workouts"
@@ -593,16 +1290,25 @@ export const FloatingMenuManager = ({
           onClick={() => handleTogglePopover('reports')}
           title="Recent Reports"
         />
+        {coachData && (
+          <FloatingIconButton
+            ref={coachIconRef}
+            icon={<CoachIcon />}
+            isActive={activePopover === 'coach'}
+            onClick={() => handleTogglePopover('coach')}
+            title="Coach Details"
+          />
+        )}
       </FloatingIconBar>
 
-      {/* Modern Popovers */}
+      {/* Modern Popovers - Only render content for active popover */}
       <ModernPopover
         isOpen={activePopover === 'menu'}
         onClose={handleClosePopover}
         anchorRef={menuIconRef}
         title="Quick Actions"
       >
-        {renderMainActionsMenu()}
+        {activePopover === 'menu' && renderMainActionsMenu()}
       </ModernPopover>
 
       <ModernPopover
@@ -611,10 +1317,7 @@ export const FloatingMenuManager = ({
         anchorRef={conversationsIconRef}
         title="Recent Conversations"
       >
-
-
-        {/* Conversations List */}
-        {renderConversationList()}
+        {activePopover === 'conversations' && renderConversationList()}
       </ModernPopover>
 
       <ModernPopover
@@ -623,10 +1326,7 @@ export const FloatingMenuManager = ({
         anchorRef={workoutsIconRef}
         title="Recent Workouts"
       >
-
-
-        {/* Workouts List */}
-        {renderWorkoutList()}
+        {activePopover === 'workouts' && renderWorkoutList()}
       </ModernPopover>
 
       <ModernPopover
@@ -635,9 +1335,19 @@ export const FloatingMenuManager = ({
         anchorRef={reportsIconRef}
         title="Recent Reports"
       >
-        {/* Reports List */}
-        {renderReportList()}
+        {activePopover === 'reports' && renderReportList()}
       </ModernPopover>
+
+      {coachData && (
+        <ModernPopover
+          isOpen={activePopover === 'coach'}
+          onClose={handleClosePopover}
+          anchorRef={coachIconRef}
+          title="Coach Details"
+        >
+          {activePopover === 'coach' && renderCoachDetails()}
+        </ModernPopover>
+      )}
     </>
   );
 };

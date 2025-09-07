@@ -22,6 +22,7 @@ export async function detectMemoryRetrievalNeed(
 TASK: Determine if the user's message would benefit from accessing their stored preferences, goals, constraints, or past context.
 
 MEMORY CONTEXT INDICATORS:
+- Direct memory queries ("do you remember", "remember my", "what do you remember about", "did I tell you about")
 - References to personal preferences ("I like/hate", "works for me", "my preference")
 - Goal-related discussions ("my goal", "trying to", "working towards", "want to achieve")
 - Constraint mentions ("I can't", "limited time", "only have", "schedule constraints")
@@ -49,6 +50,7 @@ You must respond with ONLY a valid JSON object:
 }
 
 GUIDELINES:
+- CRITICAL: Any message asking "do you remember" or similar memory queries should ALWAYS trigger semantic retrieval
 - Consider if knowing the user's past preferences, goals, or constraints would improve the coaching response
 - Higher confidence for explicit personal references, lower for general fitness questions
 - Include multiple context types if relevant

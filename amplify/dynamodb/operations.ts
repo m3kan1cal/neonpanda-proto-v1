@@ -7,6 +7,9 @@ import {
   DeleteCommand,
 } from "@aws-sdk/lib-dynamodb";
 import {
+  withThroughputScaling
+} from "./throughput-scaling";
+import {
   CoachCreatorSession,
   DynamoDBItem,
   ContactFormAttributes,
@@ -28,6 +31,8 @@ import { WeeklyAnalytics } from "../functions/libs/analytics/types";
 // DynamoDB client setup
 const dynamoDbClient = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(dynamoDbClient);
+
+// Note: DynamoDB operations now use withThroughputScaling wrapper for automatic scaling
 
 // ===========================
 // DYNAMODB OPERATION INTERFACES
@@ -170,7 +175,9 @@ export async function loadFromDynamoDB<T>(
     throw new Error("DYNAMODB_TABLE_NAME environment variable is not set");
   }
 
-  try {
+  const operationName = `Load ${entityType || 'item'} from DynamoDB`;
+
+  return withThroughputScaling(async () => {
     const command = new GetCommand({
       TableName: tableName,
       Key: {
@@ -193,14 +200,7 @@ export async function loadFromDynamoDB<T>(
     const deserializedItem = deserializeFromDynamoDB(result.Item);
 
     return deserializedItem as DynamoDBItem<T>;
-  } catch (error) {
-    const errorEntityType = entityType || "item";
-    console.error(
-      `Error loading ${errorEntityType} data from DynamoDB:`,
-      error
-    );
-    throw error;
-  }
+  }, operationName);
 }
 
 // Generic function to query multiple items from DynamoDB
@@ -215,7 +215,9 @@ export async function queryFromDynamoDB<T>(
     throw new Error("DYNAMODB_TABLE_NAME environment variable is not set");
   }
 
-  try {
+  const operationName = `Query ${entityType || 'items'} from DynamoDB`;
+
+  return withThroughputScaling(async () => {
     const command = new QueryCommand({
       TableName: tableName,
       KeyConditionExpression: "#pk = :pk AND begins_with(#sk, :sk_prefix)",
@@ -242,14 +244,7 @@ export async function queryFromDynamoDB<T>(
 
     // Deserialize all items to convert ISO strings back to Date objects
     return items.map((item) => deserializeFromDynamoDB(item));
-  } catch (error) {
-    const errorEntityType = entityType || "items";
-    console.error(
-      `Error querying ${errorEntityType} data from DynamoDB:`,
-      error
-    );
-    throw error;
-  }
+  }, operationName);
 }
 
 // Helper function to create a DynamoDB item with consistent structure
@@ -1369,7 +1364,7 @@ export async function getUserProfileByEmail(
     throw new Error("DYNAMODB_TABLE_NAME environment variable is not set");
   }
 
-  try {
+  return withThroughputScaling(async () => {
     console.info(`Querying user profile by email: ${email}`);
 
     const command = new QueryCommand({
@@ -1404,11 +1399,7 @@ export async function getUserProfileByEmail(
     });
 
     return items[0];
-
-  } catch (error) {
-    console.error(`Error querying user profile by email: ${email}`, error);
-    throw error;
-  }
+  }, `Query user profile by email: ${email}`);
 }
 
 /**
@@ -1539,23 +1530,35 @@ export async function queryMemories(
     );
   }
 
-  // Sort by usage and importance
+  // Sort by importance, recency, and usage with balanced scoring
   filteredItems.sort((a, b) => {
-    // First sort by importance (high > medium > low)
-    const importanceOrder: Record<
-      UserMemory["metadata"]["importance"],
-      number
-    > = { high: 3, medium: 2, low: 1 };
-    const importanceDiff =
-      importanceOrder[b.metadata.importance] -
-      importanceOrder[a.metadata.importance];
-    if (importanceDiff !== 0) return importanceDiff;
+    // Calculate composite scores for balanced ranking
+    const getCompositeScore = (memory: UserMemory) => {
+      // Importance score (high=3, medium=2, low=1)
+      const importanceOrder: Record<UserMemory["metadata"]["importance"], number> = {
+        high: 3, medium: 2, low: 1
+      };
+      const importanceScore = importanceOrder[memory.metadata.importance] * 100; // Weight: 100
 
-    // Then by usage count
-    const usageDiff = b.metadata.usageCount - a.metadata.usageCount;
-    if (usageDiff !== 0) return usageDiff;
+      // Recency score (newer memories get higher scores)
+      const now = new Date().getTime();
+      const createdAt = new Date(memory.metadata.createdAt).getTime();
+      const daysSinceCreated = (now - createdAt) / (1000 * 60 * 60 * 24);
+      const recencyScore = Math.max(0, 30 - daysSinceCreated); // Weight: 30 (memories older than 30 days get 0)
 
-    // Finally by creation date (newest first)
+      // Usage score (capped to prevent overwhelming recency)
+      const usageScore = Math.min(memory.metadata.usageCount * 2, 20); // Weight: 2 per use, max 20
+
+      return importanceScore + recencyScore + usageScore;
+    };
+
+    const scoreA = getCompositeScore(a);
+    const scoreB = getCompositeScore(b);
+
+    // Sort by composite score (highest first)
+    if (scoreB !== scoreA) return scoreB - scoreA;
+
+    // Tie-breaker: newest first
     return (
       new Date(b.metadata.createdAt).getTime() -
       new Date(a.metadata.createdAt).getTime()
@@ -1671,7 +1674,7 @@ export async function queryAllEntitiesByType<T>(
     throw new Error("DYNAMODB_TABLE_NAME environment variable is not set");
   }
 
-  try {
+  return withThroughputScaling(async () => {
     console.info(
       `Querying all ${entityType} entities from DynamoDB using GSI-3:`,
       {
@@ -1709,13 +1712,7 @@ export async function queryAllEntitiesByType<T>(
       lastEvaluatedKey: result.LastEvaluatedKey,
       count: items.length,
     };
-  } catch (error) {
-    console.error(
-      `Error querying all ${entityType} entities from DynamoDB:`,
-      error
-    );
-    throw error;
-  }
+  }, `Query all ${entityType} entities using GSI-3`);
 }
 
 /**

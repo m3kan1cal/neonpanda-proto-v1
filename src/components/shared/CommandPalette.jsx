@@ -148,13 +148,20 @@ const CommandPalette = ({
   // Auto-close on successful execution
   useEffect(() => {
     if (agentState.executionResult?.success) {
-      const timer = setTimeout(() => {
+      // If the command triggered navigation, close immediately
+      if (agentState.executionResult?.navigated) {
         onClose();
         agentRef.current?.clearExecutionResult();
-      }, 2500);
-      return () => clearTimeout(timer);
+      } else {
+        // Otherwise, wait 2.5 seconds before closing
+        const timer = setTimeout(() => {
+          onClose();
+          agentRef.current?.clearExecutionResult();
+        }, 2500);
+        return () => clearTimeout(timer);
+      }
     }
-  }, [agentState.executionResult?.success, onClose]);
+  }, [agentState.executionResult?.success, agentState.executionResult?.navigated, onClose]);
 
   // Update input when prefilledCommand changes
   useEffect(() => {

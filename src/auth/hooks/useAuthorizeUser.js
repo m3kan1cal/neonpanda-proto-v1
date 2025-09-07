@@ -19,6 +19,7 @@ export const useAuthorizeUser = (urlUserId, options = {}) => {
   const [isValidating, setIsValidating] = useState(true);
   const [isValid, setIsValid] = useState(false);
   const [authenticatedUserId, setAuthenticatedUserId] = useState(null);
+  const [userAttributes, setUserAttributes] = useState(null);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
@@ -35,8 +36,8 @@ export const useAuthorizeUser = (urlUserId, options = {}) => {
         setError(null);
 
         // Get the authenticated user's attributes
-        const userAttributes = await fetchUserAttributes();
-        const authUserId = userAttributes['custom:user_id'];
+        const fetchedUserAttributes = await fetchUserAttributes();
+        const authUserId = fetchedUserAttributes['custom:user_id'];
 
         if (!authUserId) {
           setError('Authenticated user has no custom:user_id attribute');
@@ -45,6 +46,7 @@ export const useAuthorizeUser = (urlUserId, options = {}) => {
         }
 
         setAuthenticatedUserId(authUserId);
+        setUserAttributes(fetchedUserAttributes);
 
         // Check if URL userId matches authenticated user
         const matches = authUserId === urlUserId;
@@ -85,6 +87,7 @@ export const useAuthorizeUser = (urlUserId, options = {}) => {
     isValidating,
     isValid,
     authenticatedUserId,
+    userAttributes,
     error
   };
 };

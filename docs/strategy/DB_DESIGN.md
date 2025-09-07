@@ -1,33 +1,33 @@
-# Custom Fitness AI Agents Platform - Database Schema Design
+# NeonPanda Database Schema - Where Smart Storage Meets Great Coaching
 
 ## Design Philosophy
 
 ### Core Principles
-- **AI-First Architecture**: Schema designed around conversational interactions rather than traditional form-based data entry
-- **Hybrid Storage Strategy**: DynamoDB for fast metadata queries + S3 for large content storage
-- **Single-Table Design**: All entity types in one DynamoDB table, differentiated by entityType and structured keys
-- **Conversation-Centric**: Workouts, feedback, and interactions captured through natural language, then AI-extracted into structured data
-- **Coach Evolution**: Schema supports sophisticated AI coach configurations that learn and adapt over time
+- **Conversation-First**: Schema built around natural conversations, not boring forms
+- **Smart Storage Strategy**: DynamoDB for lightning-fast queries + S3 for cost-effective content storage
+- **Single-Table Simplicity**: All data in one DynamoDB table, organized intelligently
+- **Natural Language Focus**: Workouts and feedback captured through conversation, then AI extracts the structured data
+- **Evolving Coaches**: Schema supports AI coaches that learn and get better over time
 
-### Storage Strategy Rationale
+### Why We Store Things Where We Do
 
-**DynamoDB Usage**:
-- Fast metadata queries for UI rendering
-- Structured data requiring consistent access patterns
-- Small, frequently accessed data
-- Relationship references and indexes
+**DynamoDB Handles**:
+- Lightning-fast queries for your app experience
+- Structured data you access frequently
+- Small, important data that needs to be instantly available
+- Relationships and indexes for smart queries
 
-**S3 Usage**:
-- Full conversation transcripts and detailed content
-- Cost-effective storage for large, infrequently accessed data
-- Unlimited size capacity for growing conversations
-- Batch processing and AI training data
+**S3 Handles**:
+- Full conversation transcripts and detailed workout logs
+- Cost-effective storage for content you don't access daily
+- Unlimited storage for your growing coaching relationship
+- Batch processing for AI insights and improvements
 
-**Benefits of Hybrid Approach**:
-- **Performance**: Sub-second query times for UI operations
-- **Cost Optimization**: ~90% storage cost reduction vs. pure DynamoDB
-- **Scalability**: No limits on conversation length or workout detail
-- **Analytics**: Easy batch processing of S3 content for insights
+**Why This Hybrid Approach Rocks**:
+- **Speed**: Sub-second response times for everything you see
+- **Cost Smart**: ~90% cheaper storage costs vs. putting everything in DynamoDB
+- **Unlimited Growth**: Your conversations and workouts can grow forever
+- **Smart Analytics**: Easy processing of your data for coaching insights
 
 ---
 
@@ -96,7 +96,7 @@
 ```
 
 **Key Details**:
-- Groups submissions by email address for duplicate detection
+- Groups your submissions by email address for duplicate detection
 - Chronological ordering via timestamp sort key
 - Simple form data storage for lead generation and support
 
@@ -135,10 +135,10 @@
       "isActive": "boolean"
     },
     "athleteProfile": {
-      "summary": "string",        // AI-generated natural language athlete profile
-      "lastUpdated": "Date",      // When this profile was last generated
-      "version": "number",        // For tracking profile evolution
-      "confidence": "number",     // AI confidence in the profile accuracy (0-1)
+      "summary": "string",        // AI-generated natural language profile of you as an athlete
+      "lastUpdated": "Date",      // When your profile was last generated
+      "version": "number",        // For tracking your profile evolution
+      "confidence": "number",     // AI confidence in your profile accuracy (0-1)
       "sources": ["array"]        // Data sources used (e.g., "workouts", "conversations", "memories")
     }
   }
@@ -146,7 +146,7 @@
 ```
 
 **Key Details**:
-- Full conversation stored in DynamoDB attributes (messages array)
+- Your full conversation stored in DynamoDB attributes (messages array)
 - Coach-specific conversation organization
 - Message-level metadata for workout detection and extraction tracking
 - Active/inactive status for conversation management
@@ -170,11 +170,11 @@
     "structuredData": {
       "narrative_summary": "string",
       "key_facts": {
-        "current_goals": ["array"],
-        "recent_progress": ["array"],
-        "preferences": ["array"],
-        "constraints": ["array"],
-        "schedule_context": ["array"]
+      "current_goals": ["array"],        // Your current fitness goals
+      "recent_progress": ["array"],      // Your recent achievements and progress
+      "preferences": ["array"],          // Your training preferences
+      "constraints": ["array"],          // Your limitations and considerations
+      "schedule_context": ["array"]      // Your schedule and availability context
       },
       "emotional_state": "string",
       "action_items": ["array"],
@@ -195,7 +195,7 @@
 ```
 
 **Key Details**:
-- AI-generated summaries of conversation content
+- AI-generated summaries of your conversation content
 - Structured data extraction for coach optimization
 - Message range tracking for summary context
 - Confidence scoring for summary quality
@@ -238,9 +238,9 @@
 ```
 
 **Key Details**:
-- Coach-specific configuration for AI personality and methodology
-- Technical configuration for programming focus and specializations
-- Metadata tracking for coach usage and effectiveness
+- Your coach-specific configuration for AI personality and methodology
+- Technical configuration for your programming focus and specializations
+- Metadata tracking for your coach usage and effectiveness
 - Personality and methodology selection with reasoning
 
 ---
@@ -261,7 +261,7 @@
     "conversationId": "string",
     "completedAt": "Date",
     "workoutData": {
-      // Universal Workout Schema - See UNIVERSAL_WORKOUT_SCHEMA.md for complete structure
+      // Universal Workout Schema - See UNIVERSAL_WORKOUT_SCHEMA.md for complete structure of your workouts
       "workout_name": "string",
       "discipline": "string",
       "workout_type": "string",
@@ -288,7 +288,7 @@
         "energy_level_post": "number"
       },
       "discipline_specific": {
-        // Discipline-specific workout data structure
+        // Your discipline-specific workout data structure
         // See UNIVERSAL_WORKOUT_SCHEMA.md for complete discipline schemas
       },
       "pr_achievements": ["array"],
@@ -319,14 +319,14 @@
         "notes": "string"
       },
       "coach_notes": {
-        "programming_intent": "string",
-        "coaching_cues_given": ["array"],
-        "areas_for_improvement": ["array"],
-        "positive_observations": ["array"],
-        "next_session_focus": "string",
-        "adaptation_recommendations": ["array"],
-        "safety_flags": ["array"],
-        "motivation_strategy": "string"
+        "programming_intent": "string",           // Why your coach programmed this workout
+        "coaching_cues_given": ["array"],         // Cues your coach gave you during the workout
+        "areas_for_improvement": ["array"],       // Areas your coach wants you to focus on
+        "positive_observations": ["array"],       // Things your coach noticed you doing well
+        "next_session_focus": "string",           // What your coach wants to work on next
+        "adaptation_recommendations": ["array"],   // How your coach thinks the program should adapt
+        "safety_flags": ["array"],                // Any safety concerns your coach noted
+        "motivation_strategy": "string"           // How your coach plans to keep you motivated
       }
     },
     "extractionMetadata": {
@@ -341,10 +341,10 @@
 ```
 
 **Key Details**:
-- Full workout data stored using Universal Workout Schema (see UNIVERSAL_WORKOUT_SCHEMA.md)
+- Your full workout data stored using Universal Workout Schema (see UNIVERSAL_WORKOUT_SCHEMA.md)
 - AI extraction metadata for quality tracking
-- Coach integration for programming and feedback
-- Comprehensive performance and subjective metrics
+- Your coach integration for programming and feedback
+- Comprehensive performance and subjective metrics about your training
 
 ---
 
@@ -391,10 +391,10 @@
 ```
 
 **Key Details**:
-- Groups all coach creator session data under user partition key
-- Session ID provides unique identification within user's coach creator sessions
+- Groups all your coach creator session data under your partition key
+- Session ID provides unique identification within your coach creator sessions
 - Core session metadata stored in DynamoDB for fast queries
-- Full conversation history and detailed responses stored in S3 for cost efficiency
+- Your full conversation history and detailed responses stored in S3 for cost efficiency
 - Progress tracking enables session resumption and analytics
 - Sophistication detection history supports adaptive questioning improvements
 - TTL for automatic cleanup (7 days for incomplete, 30 days for complete sessions)
@@ -428,50 +428,50 @@
 ```
 
 **Key Details**:
-- Stores user-requested memories for persistent coaching context
+- Stores your requested memories for persistent coaching context
 - AI-driven detection using Bedrock Nova Micro for memory request classification
 - Memory types: preference, goal, constraint, instruction, context
 - Coach-specific or global memories (optional coachId)
 - Usage tracking for prioritization and analytics
-- Natural language interface: users say "remember that I..."
-- Integrated into coach conversation prompts for personalized responses
+- Natural language interface: you say "remember that I..."
+- Integrated into your coach conversation prompts for personalized responses
 - Conservative 70% confidence threshold prevents false positives
 
 ---
 
-## S3 File Organization Strategy
+## S3 File Organization Strategy - How We Organize Your Data
 
 ```
-coach-ai-conversations/
-├── users/
-│   └── ${user_id}/
+neonpanda-athlete-data/
+├── athletes/
+│   └── ${athlete_id}/
 │       ├── conversations/
-│       │   ├── ${conversation_id}.json
-│       │   └── ${conversation_id}_metadata.json
+│       │   ├── ${conversation_id}.json          // Your conversation transcripts
+│       │   └── ${conversation_id}_metadata.json // Conversation metadata
 │       ├── workouts/
 │       │   └── ${workout_date}/
-│       │       └── ${session_id}.json
+│       │       └── ${session_id}.json          // Your detailed workout logs
 │       ├── coach_creator_sessions/
-│       │   └── ${session_id}.json
+│       │   └── ${session_id}.json              // Your coach creation journey
 │       └── exports/
-│           └── ${export_date}_full_history.json
+│           └── ${export_date}_full_history.json // Your complete data exports
 ├── coaches/
 │   └── ${coach_id}/
 │       ├── performance_reports/
-│       │   └── ${period}_analytics.json
+│       │   └── ${period}_analytics.json        // Coach performance analytics
 │       └── training_data/
-│           └── ${date}_conversation_patterns.json
+│           └── ${date}_conversation_patterns.json // Coaching pattern analysis
 └── platform/
     ├── methodology_content/
-    │   ├── comptrain/
-    │   ├── mayhem/
-    │   └── prvn/
+    │   ├── comptrain/                          // CompTrain methodology content
+    │   ├── mayhem/                             // Mayhem methodology content
+    │   └── prvn/                               // PRVN methodology content
     └── training_data/
-        ├── successful_adaptations.json
-        └── user_pattern_analysis.json
+        ├── successful_adaptations.json         // What works across the Panda Pack
+        └── athlete_pattern_analysis.json       // Anonymous pattern insights
 ```
 
-### Coach Creator Session S3 File Content Example
+### Your Coach Creator Session S3 File Content Example
 ```json
 {
   "sessionMetadata": {
@@ -539,67 +539,67 @@ coach-ai-conversations/
 ```
 
 **File Structure Benefits**:
-- **User Data Isolation**: Easy data export and privacy compliance
+- **Your Data Isolation**: Easy data export and privacy compliance
 - **Coach Analytics**: Performance tracking and improvement insights
-- **Platform Intelligence**: Cross-user learning and methodology optimization
+- **Platform Intelligence**: Cross-athlete learning and methodology optimization
 - **Backup Strategy**: Hierarchical organization for efficient backup/restore
 
 ---
 
-## Query Patterns & Access Patterns
+## Query Patterns & Access Patterns - How We Find Your Data Fast
 
 ### Primary Query Patterns
 
-**User Profile Management**:
+**Your Profile Management**:
 ```javascript
-// Get user profile
+// Get your profile
 Query: pk="user#${userId}" AND sk="profile"
 
-// Get user by email (requires GSI or scan - see below)
+// Get your profile by email (requires GSI or scan - see below)
 GSI Query: gsi1pk="email#${email}" AND gsi1sk="profile"
 
-// Get user by username (requires GSI)
+// Get your profile by username (requires GSI)
 GSI Query: gsi2pk="username#${username}" AND gsi2sk="profile"
 
-// Update user profile
+// Update your profile
 UpdateItem: pk="user#${userId}" AND sk="profile"
 UpdateExpression: SET attributes.preferences.timezone = :tz, updatedAt = :now
 ```
 
-**Coach Conversation Management**:
+**Your Coach Conversation Management**:
 ```javascript
-// Get specific conversation
+// Get your specific conversation
 Query: pk="user#${userId}" AND sk="coachConversation#${coachId}#${conversationId}"
 
-// Get all conversations for user and coach (summaries only)
+// Get all your conversations with a specific coach (summaries only)
 Query: pk="user#${userId}" AND sk begins_with "coachConversation#${coachId}#"
 FilterExpression: entityType = "coachConversation"
 
-// Get all conversations with full messages
+// Get all your conversations with full messages
 Query: pk="user#${userId}" AND sk begins_with "coachConversation#${coachId}#"
 FilterExpression: entityType = "coachConversation"
 ```
 
-**Coach Configuration**:
+**Your Coach Configuration**:
 ```javascript
-// Get specific coach config
+// Get your specific coach config
 Query: pk="user#${userId}" AND sk="coach#${coachId}"
 
-// Get all coach configs for user
+// Get all your coach configs
 Query: pk="user#${userId}" AND sk begins_with "coach#"
 FilterExpression: entityType = "coachConfig"
 ```
 
-**Workout History**:
+**Your Workout History**:
 ```javascript
-// Get specific workout
+// Get your specific workout
 Query: pk="user#${userId}" AND sk="workout#${workoutId}"
 
-// Get all workouts for user
+// Get all your workouts
 Query: pk="user#${userId}" AND sk begins_with "workout#"
 FilterExpression: entityType = "workout"
 
-// Get workouts with filtering and pagination
+// Get your workouts with filtering and pagination
 Query: pk="user#${userId}" AND sk begins_with "workout#"
 FilterExpression: entityType = "workout"
 // Additional filtering by date, discipline, coach, confidence
@@ -607,29 +607,29 @@ FilterExpression: entityType = "workout"
 // Pagination with limit and offset
 ```
 
-**Coach Creator Sessions**:
+**Your Coach Creator Sessions**:
 ```javascript
-// Get specific session
+// Get your specific session
 Query: pk="user#${userId}" AND sk="coachCreatorSession#${sessionId}"
 
-// Get recent coach creator sessions
+// Get your recent coach creator sessions
 Query: pk="user#${userId}" AND sk begins_with "coachCreatorSession"
 OrderBy: sk DESC
 Limit: 10
 
-// Get incomplete sessions (for cleanup/analytics)
+// Get your incomplete sessions (for cleanup/analytics)
 Query: pk="user#${userId}" AND sk begins_with "coachCreatorSession"
 FilterExpression: isComplete = false
 
-// Get sessions by completion status
+// Get your sessions by completion status
 Query: pk="user#${userId}" AND sk begins_with "coachCreatorSession"
 FilterExpression: isComplete = true
 
-// Get sessions by sophistication level
+// Get your sessions by sophistication level
 Query: pk="user#${userId}" AND sk begins_with "coachCreatorSession"
 FilterExpression: sophisticationLevel = "INTERMEDIATE"
 
-// Get abandoned sessions
+// Get your abandoned sessions
 Query: pk="user#${userId}" AND sk begins_with "coachCreatorSession"
 FilterExpression: abandonedAt <> null
 ```
@@ -750,7 +750,7 @@ All GSIs are configured with:
 - **Error Handling**: Graceful degradation when S3 content unavailable
 - **Data Integrity**: Checksums for S3 objects, referential integrity checks
 
-### 6. Coach Creator Session TTL and Cleanup Strategy
+### 6. Your Coach Creator Session TTL and Cleanup Strategy
 
 #### DynamoDB TTL
 ```json
@@ -758,8 +758,8 @@ All GSIs are configured with:
   "ttl": 1703209200
 }
 ```
-- **7-day TTL** for incomplete sessions
-- **30-day TTL** for completed sessions (for user reference)
+- **7-day TTL** for your incomplete sessions
+- **30-day TTL** for your completed sessions (for your reference)
 - **Automatic cleanup** prevents storage bloat
 
 #### S3 Lifecycle Management
@@ -770,10 +770,10 @@ All GSIs are configured with:
 
 ---
 
-## Migration Strategy
+## Migration Strategy - Rolling Out Your Data Architecture
 
 ### Phase 1: Core Tables (Week 1)
-- User profiles and preferences
+- Athlete profiles and preferences
 - Basic coach configurations
 - Simple conversation logging
 
@@ -784,7 +784,7 @@ All GSIs are configured with:
 
 ### Phase 3: Analytics & Optimization (Week 4+)
 - Coach performance tracking
-- Cross-user pattern analysis
+- Cross-athlete pattern analysis
 - Advanced query optimization
 
-This schema design provides a robust foundation for the AI-first fitness coaching platform while maintaining performance, cost-effectiveness, and scalability for future growth.
+This schema design provides a robust foundation for NeonPanda's AI-first fitness coaching platform while maintaining performance, cost-effectiveness, and scalability for future growth of the Panda Pack.

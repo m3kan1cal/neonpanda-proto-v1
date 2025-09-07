@@ -26,7 +26,7 @@ import { getWorkout } from "./functions/get-workout/resource";
 import { updateWorkout } from "./functions/update-workout/resource";
 import { deleteWorkout } from "./functions/delete-workout/resource";
 import { getWorkoutsCount } from "./functions/get-workouts-count/resource";
-import { getConversationsCount } from "./functions/get-conversations-count/resource";
+import { getCoachConversationsCount } from "./functions/get-coach-conversations-count/resource";
 import {
   buildWeeklyAnalytics,
   createWeeklyAnalyticsSchedule,
@@ -46,6 +46,7 @@ import {
   grantS3AnalyticsPermissions,
   grantCognitoAdminPermissions,
   grantDynamoDBPermissions,
+  grantDynamoDBThroughputPermissions,
 } from "./iam-policies";
 import { config } from "./functions/libs/configs";
 
@@ -79,7 +80,7 @@ const backend = defineBackend({
   updateWorkout,
   deleteWorkout,
   getWorkoutsCount,
-  getConversationsCount,
+  getCoachConversationsCount,
   buildWeeklyAnalytics,
   getWeeklyReports,
   getWeeklyReport,
@@ -122,7 +123,7 @@ const coreApi = apiGatewayv2.createCoreApi(
   backend.updateWorkout.resources.lambda,
   backend.deleteWorkout.resources.lambda,
   backend.getWorkoutsCount.resources.lambda,
-  backend.getConversationsCount.resources.lambda,
+  backend.getCoachConversationsCount.resources.lambda,
   backend.getWeeklyReports.resources.lambda,
   backend.getWeeklyReport.resources.lambda,
   backend.getMemories.resources.lambda,
@@ -193,7 +194,7 @@ coreTable.table.grantReadWriteData(backend.getWorkout.resources.lambda);
 coreTable.table.grantReadWriteData(backend.updateWorkout.resources.lambda);
 coreTable.table.grantReadWriteData(backend.deleteWorkout.resources.lambda);
 coreTable.table.grantReadData(backend.getWorkoutsCount.resources.lambda);
-coreTable.table.grantReadData(backend.getConversationsCount.resources.lambda);
+coreTable.table.grantReadData(backend.getCoachConversationsCount.resources.lambda);
 coreTable.table.grantReadWriteData(
   backend.buildWeeklyAnalytics.resources.lambda
 );
@@ -228,7 +229,7 @@ const allFunctions = [
   backend.updateWorkout,
   backend.deleteWorkout,
   backend.getWorkoutsCount,
-  backend.getConversationsCount,
+  backend.getCoachConversationsCount,
   backend.buildWeeklyAnalytics,
   backend.getWeeklyReports,
   backend.getWeeklyReport,
@@ -244,6 +245,16 @@ const allFunctions = [
 allFunctions.forEach((func) => {
   func.addEnvironment("DYNAMODB_TABLE_NAME", coreTable.table.tableName);
   func.addEnvironment("PINECONE_API_KEY", config.PINECONE_API_KEY);
+
+  // DynamoDB throughput scaling configuration
+  func.addEnvironment("DYNAMODB_BASE_READ_CAPACITY", "5");
+  func.addEnvironment("DYNAMODB_BASE_WRITE_CAPACITY", "5");
+  func.addEnvironment("DYNAMODB_MAX_READ_CAPACITY", "100");
+  func.addEnvironment("DYNAMODB_MAX_WRITE_CAPACITY", "50");
+  func.addEnvironment("DYNAMODB_SCALE_UP_FACTOR", "2.0");
+  func.addEnvironment("DYNAMODB_MAX_RETRIES", "5");
+  func.addEnvironment("DYNAMODB_INITIAL_RETRY_DELAY", "1000");
+  func.addEnvironment("DYNAMODB_SCALE_DOWN_DELAY_MINUTES", "10");
 });
 
 // Grant Bedrock permissions to functions that need it
@@ -265,6 +276,16 @@ grantS3DebugPermissions([
 
 // Grant S3 analytics permissions to functions that need it
 grantS3AnalyticsPermissions([backend.buildWeeklyAnalytics.resources.lambda]);
+
+// Grant DynamoDB throughput management permissions to high-volume functions
+grantDynamoDBThroughputPermissions([
+  backend.getWorkouts.resources.lambda,
+  backend.getWorkoutsCount.resources.lambda,
+  backend.buildWeeklyAnalytics.resources.lambda,
+  backend.getWeeklyReports.resources.lambda,
+  backend.getCoachConversationsCount.resources.lambda,
+  backend.getCoachConversations.resources.lambda,
+]);
 
 // Grant permission to updateCoachCreatorSession to invoke buildCoachConfig
 grantLambdaInvokePermissions(
@@ -341,6 +362,7 @@ const postConfirmationLambda = backend.postConfirmation.resources.lambda;
 // Grant permissions using centralized policy helpers
 grantCognitoAdminPermissions([postConfirmationLambda]);
 grantDynamoDBPermissions([postConfirmationLambda]);
+grantDynamoDBThroughputPermissions([postConfirmationLambda]);
 
 // Enable Cognito Advanced Security Features (Plus tier)
 cfnUserPool.userPoolAddOns = {

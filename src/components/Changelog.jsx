@@ -42,6 +42,128 @@ const CollapsibleSection = ({ title, icon, children, defaultOpen = true, classNa
 
 const changelogEntries = [
   {
+    version: "Release v1.6.0",
+    date: "2025-09-06",
+    changes: {
+      added: [
+        "messageTimestamp field to workout completion time extraction for improved accuracy",
+        "Enhanced AI prompt with user's browser timestamp as reference point for relative time calculations",
+        "Comprehensive context clues including time elapsed since message and user's local time",
+        "Critical reasoning rules for AI to handle edge cases like '7pm ET' typed at 11:30pm ET",
+        "Validation warnings for suspicious workout completion times (future relative to message time)",
+        "Enhanced logging with message timestamp, processing delay, and time difference analysis",
+        "coach_description property to coach configuration schema for concise coach specialties",
+        "Auto-scroll functionality to chat messages on page load with enhanced timing",
+        "User avatar with gradient background and first letter initial from authenticated user data",
+        "Modern 2025 UI/UX chat interface with floating input architecture",
+        "Voice recording interface with hold-to-record functionality and recording timer",
+        "Auto-expanding textarea with keyboard shortcuts (Enter to send, Shift+Enter for new line)",
+        "Action buttons for quick actions (Plus, Camera, Paperclip, Trash) with color-coded themes",
+        "Online status indicators with animated green dot and coach availability display",
+        "Enhanced coach specialty display using dynamic data from coach configuration",
+        "Character counter capability for long messages (implementation ready)",
+        "Custom SVG icon components for chat interface (MicIcon, SendIcon, PlusIcon, etc.)"
+      ],
+      changed: [
+        "Red Flags section in weekly reports now uses cyan styling to match Quick Wins section",
+        "Red Flags values now display without underscores and in bullet list format",
+        "Benchmark WODs section now properly displays object data instead of '[Object]'",
+        "Benchmark WODs labels now use neon-pink color for consistency",
+        "All Benchmark WODs values now display without underscores for better readability",
+        "AI time extraction now uses MESSAGE TYPED AT as reference point instead of server processing time",
+        "Enhanced time extraction prompt with explicit examples for common edge cases",
+        "Chat input architecture moved to fixed positioning outside main container for persistent visibility",
+        "Messages area bottom padding reduced from pb-48 to pb-32 for better visual balance",
+        "Send button icon color changed from white to black for better contrast on pink background",
+        "User chat bubble styling updated to softer pink background with white text and border",
+        "AI coach chat bubble styling updated to lighter cyan background with consistent border",
+        "useAuthorizeUser hook enhanced to return userAttributes for avatar personalization",
+        "Coach generation prompt updated with explicit guidelines for coach_description field",
+        "All coach template files updated with appropriate coach_description values",
+        "Chat input icons updated to borderless design with subtle hover interactions"
+      ],
+      fixed: [
+        "Workout completion time accuracy issues when user specifies relative times like '7pm ET'",
+        "Date calculation errors where workouts were assigned to wrong day due to server time reference",
+        "Weekly report Red Flags section inconsistent styling compared to other sections",
+        "Benchmark WODs displaying '[Object]' instead of actual workout data",
+        "Underscores appearing in weekly report values making them hard to read",
+        "AI model confusion about 'today' vs 'yesterday' when processing messages hours after workout completion",
+        "Chat input scrolling out of sight when users scroll up through message history",
+        "JSX syntax errors and component nesting issues in CoachConversations component",
+        "Function name conflicts (formatTime vs formatRecordingTime) causing compilation errors",
+        "Text contrast issues with white text on bright pink user chat bubbles",
+        "Coach specialty displaying default 'Fitness Coach' instead of dynamic configuration data",
+        "Missing scroll-to-bottom functionality on initial page load and message updates",
+        "Inconsistent icon styling between chat input buttons and site-wide design system"
+      ]
+    }
+  },
+  {
+    version: "Release v1.5.0",
+    date: "2025-09-05",
+    changes: {
+      added: [
+        "Professional kettlebell SVG icons for all workout-related functionality",
+        "Optimized WorkoutIconSmall with custom viewBox for better visual prominence",
+        "Conditional popup content rendering to prevent stale data display",
+        "Comprehensive agent state clearing on popup close to eliminate content flashing"
+      ],
+      changed: [
+        "All WorkoutIcon and WorkoutIconSmall components now use kettlebell design instead of lightning bolt",
+        "Updated WorkoutIconSmall viewBox from '0 0 512 512' to '32 32 448 448' for 14% visual zoom",
+        "Reverted ConversationIcon, ChatIcon, and ChatIconSmall to original chat bubble design",
+        "FloatingMenuManager popup content now only renders when popup is active",
+        "Enhanced handleTogglePopover logic to clear agent states when closing same popup",
+        "Improved handleClosePopover to reset all agent states for clean popup transitions"
+      ],
+      fixed: [
+        "Content flashing between popup transitions in FloatingMenuManager",
+        "Stale workout/conversation/report data appearing briefly when switching popups",
+        "Visual inconsistency where WorkoutIconSmall was larger (24px) than other small icons (20px)",
+        "Same-button toggle sequence showing cached data instead of loading spinner",
+        "Workout icons still displaying as lightning bolts in FloatingMenuManager and recent lists",
+        "Misaligned icons in FloatingMenuManager buttons due to size inconsistencies"
+      ]
+    }
+  },
+  {
+    version: "Release v1.4.0",
+    date: "2025-09-05",
+    changes: {
+      added: [
+        "Dynamic DynamoDB throughput scaling system with automatic retry logic",
+        "Comprehensive throughput management utility (throughput-scaling.ts)",
+        "Automatic capacity scaling for both main table and Global Secondary Indexes",
+        "Intelligent retry mechanism with exponential backoff for throughput exceptions",
+        "Environment-based configuration for scaling thresholds and retry limits",
+        "Automatic scale-down scheduling to minimize costs after operations complete",
+        "IAM permissions for DynamoDB throughput management operations",
+        "Comprehensive logging and monitoring for scaling events",
+        "Documentation for DynamoDB throughput scaling implementation"
+      ],
+      changed: [
+        "All DynamoDB query and load operations now use automatic throughput scaling",
+        "Refactored get-conversations-count to get-coach-conversations-count for naming consistency",
+        "Updated queryFromDynamoDB function to wrap operations with throughput scaling",
+        "Updated loadFromDynamoDB function to wrap operations with throughput scaling",
+        "Updated getUserProfileByEmail function to use throughput scaling",
+        "Updated queryAllEntitiesByType function to use throughput scaling",
+        "Consolidated two separate throughput scaling files into single unified implementation",
+        "Moved throughput scaling utilities to amplify/dynamodb/ folder for better organization",
+        "Environment variables added for all Lambda functions to configure scaling behavior",
+        "High-volume Lambda functions now have throughput management permissions"
+      ],
+      fixed: [
+        "ProvisionedThroughputExceededException errors that occurred during high-volume operations",
+        "DynamoDB capacity limits causing workout query failures",
+        "Throughput bottlenecks in analytics and reporting functions",
+        "TypeScript compilation errors in throughput scaling wrapper functions",
+        "Inconsistent naming convention between get-conversations-count and other Lambda functions"
+      ]
+    }
+  },
+  {
     version: "Release v1.3.0",
     date: "2025-09-03",
     changes: {

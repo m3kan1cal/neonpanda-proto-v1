@@ -578,6 +578,17 @@ ${SAFETY_RULES.filter(rule => rule.severity === 'critical').map(rule =>
 
 IMPORTANT: You must select the most appropriate personality template and methodology based on the user's complete profile. Do not just use defaults - analyze their responses and choose what will work best for THIS specific user.
 
+COACH DESCRIPTION GUIDELINES (for "coach_description" field):
+Create a concise 3-5 word description that captures the coach's primary specialty and approach. This will be displayed under the coach's name in the chat interface. Examples:
+- "Strength & Technical Excellence" (for powerlifting/technique focused)
+- "Functional Movement Expert Coach" (for mobility/movement quality focus)
+- "Endurance & Mental Toughness" (for cardio/mental resilience)
+- "Olympic Lifting Specialist" (for weightlifting technique)
+- "Competition Prep Coach" (for contest preparation)
+- "Beginner-Friendly Guide" (for new athletes)
+- "High-Intensity Conditioning Expert" (for conditioning focus)
+- "Injury Prevention Specialist" (for rehabilitation/safety focus)
+
 PERSONALITY SELECTION CRITERIA:
 - Beginner/returning to fitness/lacks confidence → Emma (Encouraging)
 - Intermediate/skill-focused/wants technical improvement → Marcus (Technical)
@@ -600,6 +611,7 @@ Generate a JSON configuration following this EXACT structure:
 {
   "coach_id": "user_${session.userId}_coach_main",
   "coach_name": "CreativePlayfulNameBasedOnPersonalityAndUserGoals",
+  "coach_description": "5WordsOrLessDescribingCoachSpecialty",
   "selected_personality": {
     "primary_template": "emma|marcus|diana|alex",
     "secondary_influences": ["template_id"],

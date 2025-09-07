@@ -146,6 +146,7 @@ export class CommandPaletteAgent {
           success: true,
           message: result.message,
           details: result.details || null,
+          navigated: result.navigated || false,
         },
         error: null,
       });
@@ -314,6 +315,7 @@ export class CommandPaletteAgent {
     return {
       message,
       details: result,
+      navigated: true, // Mark this command as triggering navigation
     };
   }
 

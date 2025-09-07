@@ -1,4 +1,4 @@
-# Simplified Pinecone Strategy - Semantic Search Layer
+# NeonPanda Pinecone Strategy - Smart Search for Smarter Coaching
 
 ## Keep Your Existing Namespace Structure
 ```typescript
@@ -15,20 +15,20 @@ const namespaces = {
 ## Role Clarity: DynamoDB vs S3 vs Pinecone
 
 ### DynamoDB Handles:
-- ✅ Recent conversation metadata (last 10 conversations)
-- ✅ Workout history with structured data
-- ✅ User profiles and coach configurations
+- ✅ Lightning-fast access to your recent conversations
+- ✅ Your workout history with structured data
+- ✅ Your profile and coach configurations
 - ✅ UI queries ("show me my workouts this week")
 
 ### S3 Handles:
-- ✅ Full conversation transcripts
-- ✅ Detailed workout logs
-- ✅ Large methodology documents
+- ✅ Full conversation transcripts for your records
+- ✅ Detailed workout logs and history
+- ✅ Large methodology documents and content
 
 ### Pinecone Handles:
-- 🎯 **Semantic search only** - "find similar conversations/topics"
+- 🎯 **Smart search only** - "find similar conversations/topics"
 - 🎯 **Context retrieval** - "what methodology applies to this question?"
-- 🎯 **Pattern matching** - "when did coach handle similar situations?"
+- 🎯 **Pattern matching** - "when did your coach handle similar situations?"
 
 ## What Goes in Pinecone (Keep It Simple)
 
@@ -47,12 +47,12 @@ const methodologyContent = {
 };
 ```
 
-### User Conversation Context
+### Your Conversation Context
 ```typescript
-// Just conversation topics/summaries, not full conversations
+// Just conversation topics/summaries, not your full conversations
 const conversationContext = {
   id: 'user123_conv_045_summary',
-  content: 'User struggled with overhead squat depth, coach recommended ankle mobility work and goblet squat progression',
+  content: 'Athlete struggled with overhead squat depth, coach recommended ankle mobility work and goblet squat progression',
   metadata: {
     conversation_id: 'conv_045', // Links back to DynamoDB record
     date: '2025-06-20',
@@ -63,7 +63,7 @@ const conversationContext = {
 };
 ```
 
-## Simple RAG Implementation
+## Simple RAG Implementation - Smart Context Retrieval
 
 ### Basic Context Retrieval
 ```typescript
@@ -83,7 +83,7 @@ const getCoachContext = async (userId: string, userMessage: string) => {
     includeMetadata: true
   });
 
-  // 3. Get recent context from DynamoDB (structured data)
+  // 3. Get your recent context from DynamoDB (structured data)
   const recentWorkouts = await getRecentWorkouts(userId, 5);
   const userProfile = await getUserProfile(userId);
 
@@ -98,17 +98,17 @@ const getCoachContext = async (userId: string, userMessage: string) => {
 
 ## Data Flow Example
 
-### When User Sends Message to Their Coach
+### When You Send Message to Your Coach
 
 **Context Already Available:**
-- ✅ Coach Agent already has `coachConfig` (personality, methodology, etc.)
-- ✅ Coach Agent already has `userProfile` (goals, preferences, injury history)
-- ✅ Conversation is happening within established coach-user relationship
+- ✅ Your Coach Agent already has `coachConfig` (personality, methodology, etc.)
+- ✅ Your Coach Agent already has `userProfile` (goals, preferences, injury history)
+- ✅ Conversation is happening within your established coach relationship
 
 ### Implementation
 ```typescript
 const handleCoachMessage = async (coachContext: CoachContext, userMessage: string) => {
-  // Coach context already contains:
+  // Your coach context already contains:
   // - coachConfig (personality, methodology, specializations)
   // - userProfile (goals, fitness level, preferences)
   // - conversationHistory (recent messages from DynamoDB)
@@ -116,21 +116,21 @@ const handleCoachMessage = async (coachContext: CoachContext, userMessage: strin
   // Only need to get semantic context from Pinecone
   const semanticContext = await getSemanticContext(coachContext.userId, userMessage);
 
-  // Generate coach response with all available context
+  // Generate your coach response with all available context
   const response = await generateCoachResponse({
     userMessage,
     coachConfig: coachContext.coachConfig,
     userProfile: coachContext.userProfile,
     recentHistory: coachContext.conversationHistory,
-    semanticContext // Methodology + similar past conversations
+    semanticContext // Methodology + your similar past conversations
   });
 
-  // Store conversation (as planned)
+  // Store your conversation (as planned)
   await storeConversation(coachContext.userId, userMessage, response);
 
   // Store summary in Pinecone for future semantic search
   await storePineconeContext(coachContext.userId, {
-    content: `User asked: ${userMessage}. Coach provided: ${response.slice(0, 200)}...`,
+    content: `Athlete asked: ${userMessage}. Coach provided: ${response.slice(0, 200)}...`,
     metadata: {
       topics: extractTopics(userMessage, response),
       outcome: classifyOutcome(response)
@@ -150,7 +150,7 @@ const getSemanticContext = async (userId: string, userMessage: string) => {
       includeMetadata: true
     }),
 
-    // Similar past conversations
+    // Your similar past conversations
     index.namespace(`user_${userId}`).query({
       vector: [], // Auto-generated from userMessage
       topK: 2,

@@ -1,17 +1,12 @@
 import React, { useState } from 'react';
 import { themeClasses } from '../utils/synthwaveThemeClasses';
-import { ChevronDownIcon } from './themes/SynthwaveComponents';
+import { ChevronDownIcon, WorkoutIconSmall } from './themes/SynthwaveComponents';
+import IconButton from './shared/IconButton';
 
 // Icons from WorkoutViewer
 const MetricsIcon = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-  </svg>
-);
-
-const WorkoutIcon = () => (
-  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
   </svg>
 );
 
@@ -113,7 +108,7 @@ const ValueDisplay = ({ label, value, dataPath, className = "" }) => {
   );
 };
 
-function WeeklyReportViewer({ report, onToggleView }) {
+function WeeklyReportViewer({ report, onToggleView, viewMode = "formatted" }) {
   if (!report) return null;
 
   const humanSummary = report.analyticsData?.human_summary || report.human_summary;
@@ -122,12 +117,120 @@ function WeeklyReportViewer({ report, onToggleView }) {
 
   return (
     <div className="space-y-6" data-weekly-report-viewer>
-      <div className="flex justify-end mb-6">
-        <button onClick={onToggleView} className={`${themeClasses.neonButton} text-sm px-4 py-2 flex items-center space-x-2`}>
+      {/* Toggle View Button */}
+      <div className="flex justify-end space-x-2">
+        <IconButton
+          variant="cyan"
+          tooltip={viewMode === "formatted" ? "View Raw JSON" : "View Formatted"}
+          tooltipPosition="bottom"
+          onClick={onToggleView}
+        >
           <JsonIcon />
-          <span>View Raw JSON</span>
-        </button>
+        </IconButton>
       </div>
+
+      {/* Raw JSON Section - only shown in raw mode */}
+      {viewMode === "raw" && (
+        <CollapsibleSection
+          title="Raw Report Data"
+          icon={<JsonIcon />}
+          defaultOpen={true}
+        >
+          <pre className="bg-synthwave-bg-primary/50 border border-synthwave-neon-cyan/30 rounded-lg p-4 text-synthwave-text-primary font-mono text-sm overflow-x-auto whitespace-pre-wrap">
+            {JSON.stringify(report, null, 2)}
+          </pre>
+        </CollapsibleSection>
+      )}
+
+      {/* Report Summary Section */}
+      <CollapsibleSection
+        title="Report Summary"
+        icon={<DatabaseIcon />}
+        defaultOpen={true}
+      >
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="flex justify-between items-center py-2">
+            <span className="text-synthwave-neon-pink font-rajdhani text-base font-medium">
+              Week Start:
+            </span>
+            <span className="text-synthwave-text-primary font-rajdhani text-base">
+              {(() => {
+                if (weekMeta.date_range?.start) {
+                  const startDate = new Date(weekMeta.date_range.start);
+                  return startDate.toLocaleDateString(undefined, {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  });
+                }
+                if (report.weekStart) {
+                  const startDate = new Date(report.weekStart);
+                  return startDate.toLocaleDateString(undefined, {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  });
+                }
+                return "Unknown";
+              })()}
+            </span>
+          </div>
+          <div className="flex justify-between items-center py-2">
+            <span className="text-synthwave-neon-pink font-rajdhani text-base font-medium">
+              Week End:
+            </span>
+            <span className="text-synthwave-text-primary font-rajdhani text-base">
+              {(() => {
+                if (weekMeta.date_range?.end) {
+                  const endDate = new Date(weekMeta.date_range.end);
+                  return endDate.toLocaleDateString(undefined, {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  });
+                }
+                if (report.weekEnd) {
+                  const endDate = new Date(report.weekEnd);
+                  return endDate.toLocaleDateString(undefined, {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  });
+                }
+                return "Unknown";
+              })()}
+            </span>
+          </div>
+          <div className="flex justify-between items-center py-2">
+            <span className="text-synthwave-neon-pink font-rajdhani text-base font-medium">
+              Total Volume:
+            </span>
+            <span className="text-synthwave-text-primary font-rajdhani text-base">
+              {(() => {
+                const tonnage = structured.volume_breakdown?.working_sets?.total_tonnage;
+                if (typeof tonnage === "number") {
+                  return `${tonnage.toLocaleString()} lbs`;
+                }
+                return "Unknown";
+              })()}
+            </span>
+          </div>
+          <div className="flex justify-between items-center py-2">
+            <span className="text-synthwave-neon-pink font-rajdhani text-base font-medium">
+              Overload Score:
+            </span>
+            <span className="text-synthwave-text-primary font-rajdhani text-base">
+              {(() => {
+                const score = structured.weekly_progression?.progressive_overload_score;
+                if (typeof score === "number") {
+                  return `${score}/10`;
+                }
+                return "Unknown";
+              })()}
+            </span>
+          </div>
+        </div>
+      </CollapsibleSection>
 
       {/* 1. Analysis Metadata */}
       <CollapsibleSection
@@ -255,11 +358,19 @@ function WeeklyReportViewer({ report, onToggleView }) {
 
             {/* Red Flags */}
             {structured.actionable_insights.red_flags && (
-              <div className="bg-synthwave-bg-primary/20 border border-synthwave-neon-orange/20 rounded-lg p-3">
-                <h4 className="font-rajdhani font-bold text-synthwave-neon-orange text-base mb-2">Red Flags</h4>
-                <div className="text-white font-rajdhani text-base" data-json-path="structured_analytics.actionable_insights.red_flags" data-json-value={JSON.stringify(structured.actionable_insights.red_flags)}>
-                  {structured.actionable_insights.red_flags}
-                </div>
+              <div className="bg-synthwave-bg-primary/20 border border-synthwave-neon-cyan/20 rounded-lg p-3">
+                <h4 className="font-rajdhani font-bold text-synthwave-neon-cyan text-lg mb-2">Red Flags</h4>
+                <ul className="space-y-1">
+                  {(Array.isArray(structured.actionable_insights.red_flags)
+                    ? structured.actionable_insights.red_flags
+                    : [structured.actionable_insights.red_flags]
+                  ).map((flag, index) => (
+                    <li key={index} className="text-white font-rajdhani text-base flex items-start space-x-2" data-json-path={`structured_analytics.actionable_insights.red_flags${Array.isArray(structured.actionable_insights.red_flags) ? `[${index}]` : ''}`} data-json-value={JSON.stringify(flag)}>
+                      <span className="text-synthwave-neon-cyan mt-1">•</span>
+                      <span>{String(flag).replace(/_/g, ' ')}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
             )}
 
@@ -332,8 +443,50 @@ function WeeklyReportViewer({ report, onToggleView }) {
             {structured.performance_markers.benchmark_wods && structured.performance_markers.benchmark_wods.length > 0 && (
               <div>
                 <h4 className="font-rajdhani font-bold text-synthwave-neon-cyan text-lg mb-2">Benchmark WODs</h4>
-                <div className="text-white font-rajdhani text-base">
-                  {structured.performance_markers.benchmark_wods.join(', ')}
+                <div className="space-y-3">
+                  {structured.performance_markers.benchmark_wods.map((wod, index) => (
+                    <div key={index} className="bg-synthwave-bg-primary/20 border border-synthwave-neon-cyan/20 rounded-lg p-3">
+                      {typeof wod === 'object' && wod !== null ? (
+                        <div className="space-y-2">
+                          {wod.name && (
+                            <div className="font-rajdhani font-bold text-synthwave-neon-pink text-base">
+                              {String(wod.name).replace(/_/g, ' ')}
+                            </div>
+                          )}
+                          {wod.time && (
+                            <div className="text-white font-rajdhani text-base">
+                              <span className="text-synthwave-neon-pink">Time:</span> {String(wod.time).replace(/_/g, ' ')}
+                            </div>
+                          )}
+                          {wod.result && (
+                            <div className="text-white font-rajdhani text-base">
+                              <span className="text-synthwave-neon-pink">Result:</span> {String(wod.result).replace(/_/g, ' ')}
+                            </div>
+                          )}
+                          {wod.score && (
+                            <div className="text-white font-rajdhani text-base">
+                              <span className="text-synthwave-neon-pink">Score:</span> {String(wod.score).replace(/_/g, ' ')}
+                            </div>
+                          )}
+                          {wod.notes && (
+                            <div className="text-white font-rajdhani text-base">
+                              <span className="text-synthwave-neon-pink">Notes:</span> {String(wod.notes).replace(/_/g, ' ')}
+                            </div>
+                          )}
+                          {/* Handle any other properties dynamically */}
+                          {Object.entries(wod).filter(([key]) => !['name', 'time', 'result', 'score', 'notes'].includes(key)).map(([key, value]) => (
+                            <div key={key} className="text-white font-rajdhani text-base">
+                              <span className="text-synthwave-neon-pink">{key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}:</span> {String(value).replace(/_/g, ' ')}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-white font-rajdhani text-base">
+                          {String(wod).replace(/_/g, ' ')}
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
