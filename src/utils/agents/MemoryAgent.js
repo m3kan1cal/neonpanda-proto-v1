@@ -327,24 +327,24 @@ export class MemoryAgent {
    * Formats memory creation date
    */
   formatMemoryDate(dateString) {
-    if (!dateString) return "Unknown";
+    if (!dateString) return "Created Unknown";
 
     const date = new Date(dateString);
     const now = new Date();
     const diffInHours = Math.floor((now - date) / (1000 * 60 * 60));
 
     if (diffInHours < 1) {
-      return "Just now";
+      return "Created just now";
     } else if (diffInHours < 24) {
-      return `${diffInHours}h ago`;
+      return `Created ${diffInHours}h ago`;
     } else if (diffInHours < 48) {
-      return "Yesterday";
+      return "Created yesterday";
     } else {
       const diffInDays = Math.floor(diffInHours / 24);
       if (diffInDays < 30) {
-        return `${diffInDays}d ago`;
+        return `Created ${diffInDays}d ago`;
       } else {
-        return date.toLocaleDateString();
+        return `Created ${date.toLocaleDateString()}`;
       }
     }
   }

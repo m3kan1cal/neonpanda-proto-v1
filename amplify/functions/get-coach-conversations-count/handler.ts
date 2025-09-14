@@ -20,11 +20,12 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
       coachId
     });
 
-    // Get the conversation count
-    const totalCount = await queryConversationsCount(userId, coachId);
+    // Get the conversation count and total messages
+    const { totalCount, totalMessages } = await queryConversationsCount(userId, coachId);
 
     return createOkResponse({
-      totalCount: totalCount
+      totalCount,
+      totalMessages
     });
 
   } catch (error) {

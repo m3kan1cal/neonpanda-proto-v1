@@ -92,6 +92,24 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
   .synthwave-scrollbar::-webkit-scrollbar-thumb:hover {
     background: #ff007f60;
   }
+
+  /* Cyan scrollbar for popup containers */
+  .synthwave-scrollbar-cyan::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .synthwave-scrollbar-cyan::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .synthwave-scrollbar-cyan::-webkit-scrollbar-thumb {
+    background: #00ffff20;
+    border-radius: 4px;
+  }
+
+  .synthwave-scrollbar-cyan::-webkit-scrollbar-thumb:hover {
+    background: #00ffff40;
+  }
 }
 
 /* Custom Amplify Authenticator styles removed - now using custom auth components */

@@ -61,7 +61,7 @@ export const parseMarkdown = (text) => {
         <ul key={elementKey++} className="list-none space-y-1 my-2 pl-0">
           {listItems.map((item, itemIndex) => (
             <li key={itemIndex} className="flex items-start space-x-3">
-              <span className="text-white mt-1 flex-shrink-0 font-bold">•</span>
+              <span className="text-white flex-shrink-0 font-bold">•</span>
               <span className="flex-1 leading-normal">{parseInlineFormatting(item)}</span>
             </li>
           ))}

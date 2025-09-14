@@ -1,10 +1,11 @@
 import React from 'react';
+import { containerPatterns, layoutPatterns } from '../../utils/uiPatterns';
 
 const AuthLayout = ({ children, title, subtitle }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Full-page modal mask with diagonal dark gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-synthwave-bg-primary via-synthwave-bg-tertiary to-synthwave-bg-purple"></div>
+      <div className={`absolute inset-0 ${layoutPatterns.authBackground}`}></div>
 
       {/* Auth form container */}
       <div className="relative w-full max-w-md z-10">
@@ -35,8 +36,8 @@ const AuthLayout = ({ children, title, subtitle }) => {
           )}
         </div>
 
-        {/* Auth Form Container - elevated with stronger styling */}
-        <div className="bg-synthwave-bg-tertiary/80 border-2 border-synthwave-neon-pink/40 rounded-xl p-8 shadow-2xl backdrop-blur-md transition-all duration-300 hover:border-synthwave-neon-pink hover:-translate-y-1 hover:shadow-neon-pink/20">
+        {/* Auth Form Container - using uiPatterns mainContent */}
+        <div className={`${containerPatterns.mainContent} p-8`}>
           {children}
         </div>
       </div>

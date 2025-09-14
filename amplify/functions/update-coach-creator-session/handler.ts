@@ -148,10 +148,20 @@ export const handler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): P
       }
     }
 
+    // Get detailed progress information
+    const progressDetails = getProgress(session.attributes.userContext);
+
     return createOkResponse({
       aiResponse: cleanedResponse,
       isComplete,
-      progress: getProgress(session.attributes.userContext),
+      progress: progressDetails.percentage,
+      progressDetails: {
+        questionsCompleted: progressDetails.questionsCompleted,
+        totalQuestions: progressDetails.totalQuestions,
+        percentage: progressDetails.percentage,
+        sophisticationLevel: session.attributes.userContext.sophisticationLevel,
+        currentQuestion: session.attributes.userContext.currentQuestion
+      },
       nextQuestion: nextQuestion ?
         nextQuestion.versions[session.attributes.userContext.sophisticationLevel as SophisticationLevel] ||
         nextQuestion.versions.UNKNOWN : null,

@@ -29,7 +29,9 @@ export class WorkoutAgent {
       recentWorkouts: [],
       allWorkouts: [],
       totalWorkoutCount: 0,
+      thisWeekWorkoutCount: 0,
       trainingDaysCount: 0,
+      lastWorkoutDaysAgo: 0,
       isLoadingCount: false,
       isLoadingTrainingDays: false,
       isLoadingRecentItems: false,
@@ -47,6 +49,38 @@ export class WorkoutAgent {
     this.lastWorkoutCount = 0;
 
     console.info('WorkoutAgent: Constructor complete', userId ? 'with userId' : '(userId will be set later)');
+  }
+
+  /**
+   * Calculates days since the most recent workout
+   * @param {Array} workouts - Array of workout objects
+   * @returns {number} - Number of days since last workout, or 0 if no workouts
+   */
+  _calculateLastWorkoutDaysAgo(workouts) {
+    if (!workouts || workouts.length === 0) {
+      return 0;
+    }
+
+    // Get the most recent workout (first in the array since they're sorted by completedAt desc)
+    const mostRecentWorkout = workouts[0];
+
+    if (!mostRecentWorkout || !mostRecentWorkout.completedAt) {
+      return 0;
+    }
+
+    try {
+      const lastWorkoutDate = new Date(mostRecentWorkout.completedAt);
+      const now = new Date();
+
+      // Calculate difference in milliseconds and convert to days
+      const diffInMs = now.getTime() - lastWorkoutDate.getTime();
+      const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+
+      return Math.max(0, diffInDays); // Ensure non-negative
+    } catch (error) {
+      console.warn('WorkoutAgent._calculateLastWorkoutDaysAgo: Error calculating days ago:', error);
+      return 0;
+    }
   }
 
   /**
@@ -90,14 +124,117 @@ export class WorkoutAgent {
     this.userId = userId;
     console.info('WorkoutAgent.setUserId: userId set to:', this.userId);
 
-    // Load initial data
-    await Promise.all([
-      this.loadRecentWorkouts(5),
-      this.loadTotalWorkoutCount(),
-      this.loadTrainingDaysCount()
-    ]);
+    // Load initial data with single optimized call
+    await this.loadWorkoutStats();
 
     console.info('WorkoutAgent.setUserId: Initial data loaded');
+  }
+
+  /**
+   * Loads all workout stats with a single optimized API call
+   * Calculates: total count, recent workouts, this week count, training days, last workout days ago
+   */
+  async loadWorkoutStats() {
+    console.info('WorkoutAgent.loadWorkoutStats: Starting optimized data loading');
+
+    if (!this.userId) {
+      console.error('WorkoutAgent.loadWorkoutStats: No userId set');
+      return;
+    }
+
+    // Set loading state for all metrics
+    this._updateState({
+      isLoadingCount: true,
+      isLoadingRecentItems: true,
+      isLoadingTrainingDays: true,
+      error: null
+    });
+
+    try {
+      // Single API call to get workouts with reasonable limit for calculations
+      const result = await getWorkouts(this.userId, {
+        limit: 100, // Get enough data to calculate all metrics accurately
+        sortBy: 'completedAt',
+        sortOrder: 'desc'
+      });
+
+      console.info('WorkoutAgent.loadWorkoutStats: Got API result:', result);
+
+      const workouts = result.workouts || [];
+      const totalCount = result.totalCount || workouts.length;
+
+      // Calculate this week's date range
+      const now = new Date();
+      const startOfWeek = new Date(now);
+      const dayOfWeek = now.getDay();
+      const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+      startOfWeek.setDate(now.getDate() - daysFromMonday);
+      startOfWeek.setHours(0, 0, 0, 0);
+
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 6);
+      endOfWeek.setHours(23, 59, 59, 999);
+
+      // Calculate all metrics from the single dataset
+      const recentWorkouts = workouts.slice(0, 5); // Take first 5 for recent list
+
+      // Count this week's workouts
+      const thisWeekWorkouts = workouts.filter(workout => {
+        if (!workout.completedAt) return false;
+        const workoutDate = new Date(workout.completedAt);
+        return workoutDate >= startOfWeek && workoutDate <= endOfWeek;
+      });
+
+      // Calculate unique training days
+      const uniqueDates = new Set();
+      workouts.forEach(workout => {
+        if (workout.completedAt) {
+          try {
+            const date = new Date(workout.completedAt);
+            const dateString = date.toISOString().split('T')[0];
+            uniqueDates.add(dateString);
+          } catch (error) {
+            console.warn('Invalid date format for workout:', workout.workoutId);
+          }
+        }
+      });
+
+      // Calculate days since last workout
+      const lastWorkoutDaysAgo = this._calculateLastWorkoutDaysAgo(workouts);
+
+      console.info('WorkoutAgent.loadWorkoutStats: Calculated metrics:', {
+        totalCount,
+        recentWorkoutsCount: recentWorkouts.length,
+        thisWeekCount: thisWeekWorkouts.length,
+        trainingDaysCount: uniqueDates.size,
+        lastWorkoutDaysAgo
+      });
+
+      // Update all state at once
+      this._updateState({
+        recentWorkouts,
+        totalWorkoutCount: totalCount,
+        thisWeekWorkoutCount: thisWeekWorkouts.length,
+        trainingDaysCount: uniqueDates.size,
+        lastWorkoutDaysAgo,
+        isLoadingCount: false,
+        isLoadingRecentItems: false,
+        isLoadingTrainingDays: false,
+        error: null,
+        lastCheckTime: Date.now()
+      });
+
+      console.info('WorkoutAgent.loadWorkoutStats: All metrics loaded successfully');
+
+    } catch (error) {
+      console.error('WorkoutAgent.loadWorkoutStats: Error loading workout stats:', error);
+      this._updateState({
+        isLoadingCount: false,
+        isLoadingRecentItems: false,
+        isLoadingTrainingDays: false,
+        error: error.message || 'Failed to load workout statistics'
+      });
+    }
   }
 
   /**
@@ -165,6 +302,60 @@ export class WorkoutAgent {
   }
 
   /**
+   * Loads this week's workout count for the user
+   */
+  async loadThisWeekWorkoutCount() {
+    console.info('WorkoutAgent.loadThisWeekWorkoutCount called');
+
+    if (!this.userId) {
+      console.error('WorkoutAgent.loadThisWeekWorkoutCount: No userId set');
+      return;
+    }
+
+    this._updateState({ isLoadingCount: true });
+
+    try {
+      // Calculate start of current week (Monday)
+      const now = new Date();
+      const startOfWeek = new Date(now);
+      const dayOfWeek = now.getDay(); // 0 = Sunday, 1 = Monday, etc.
+      const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Sunday should be 6 days from Monday
+      startOfWeek.setDate(now.getDate() - daysFromMonday);
+      startOfWeek.setHours(0, 0, 0, 0); // Start of day
+
+      // Calculate end of current week (Sunday)
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 6);
+      endOfWeek.setHours(23, 59, 59, 999); // End of day
+
+      console.info('WorkoutAgent.loadThisWeekWorkoutCount: Week range:', {
+        startOfWeek: startOfWeek.toISOString(),
+        endOfWeek: endOfWeek.toISOString()
+      });
+
+      // Import the API function
+      const { getWorkoutsByDateRange } = await import('../apis/workoutApi.js');
+      const result = await getWorkoutsByDateRange(this.userId, startOfWeek, endOfWeek);
+
+      const thisWeekCount = result.workouts ? result.workouts.length : 0;
+      console.info('WorkoutAgent.loadThisWeekWorkoutCount: Got count:', thisWeekCount);
+
+      this._updateState({
+        thisWeekWorkoutCount: thisWeekCount,
+        isLoadingCount: false,
+        error: null
+      });
+
+    } catch (error) {
+      console.error('WorkoutAgent.loadThisWeekWorkoutCount: Error loading this week count:', error);
+      this._updateState({
+        isLoadingCount: false,
+        error: error.message || 'Failed to load this week workout count'
+      });
+    }
+  }
+
+  /**
    * Loads recent workouts for the user
    */
   async loadRecentWorkouts(limit = 10) {
@@ -189,8 +380,13 @@ export class WorkoutAgent {
       const workouts = result.workouts || [];
       console.info('WorkoutAgent.loadRecentWorkouts: Extracted workouts:', workouts);
 
+      // Calculate days since last workout
+      const lastWorkoutDaysAgo = this._calculateLastWorkoutDaysAgo(workouts);
+      console.info('WorkoutAgent.loadRecentWorkouts: Calculated lastWorkoutDaysAgo:', lastWorkoutDaysAgo);
+
       this._updateState({
         recentWorkouts: workouts,
+        lastWorkoutDaysAgo: lastWorkoutDaysAgo,
         isLoadingRecentItems: false,
         error: null,
         lastCheckTime: new Date()
@@ -219,8 +415,13 @@ export class WorkoutAgent {
       // API returns 'workouts' property, not 'workouts'
       const allWorkouts = result.workouts || [];
 
+      // Calculate days since last workout from all workouts
+      const lastWorkoutDaysAgo = this._calculateLastWorkoutDaysAgo(allWorkouts);
+      console.info('WorkoutAgent.loadAllWorkouts: Calculated lastWorkoutDaysAgo:', lastWorkoutDaysAgo);
+
       this._updateState({
         allWorkouts,
+        lastWorkoutDaysAgo: lastWorkoutDaysAgo,
         isLoadingAllItems: false
       });
 
@@ -596,7 +797,9 @@ export class WorkoutAgent {
       recentWorkouts: [],
       allWorkouts: [],
       totalWorkoutCount: 0,
+      thisWeekWorkoutCount: 0,
       trainingDaysCount: 0,
+      lastWorkoutDaysAgo: 0,
       isLoadingCount: false,
       isLoadingTrainingDays: false,
       isLoadingRecentItems: false,

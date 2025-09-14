@@ -23,6 +23,7 @@ import ManageCoachConversations from "./components/ManageCoachConversations";
 import ViewReports from "./components/ViewReports";
 import WeeklyReports from "./components/WeeklyReports";
 import Changelog from "./components/Changelog";
+import Theme from "./components/Theme";
 import { ToastProvider } from "./contexts/ToastContext";
 import ToastContainer from "./components/ToastContainer";
 import { AuthProvider, useAuth, AuthRouter, ProtectedRoute } from "./auth";
@@ -51,13 +52,14 @@ function AppContent() {
       <Navigation user={user} signOut={signOut} />
       <Breadcrumbs />
       <div
-        className={`border-none outline-none bg-synthwave-bg-purple ${isHomePage ? "pt-[72px]" : "pt-24"}`}
+        className={`border-none outline-none bg-synthwave-bg-tertiary ${isHomePage ? "pt-[72px]" : "pt-24"}`}
       >
         <Routes>
           {/* Public routes */}
           <Route path="/" element={<LandingPage />} />
           <Route path="/faqs" element={<FAQs />} />
           <Route path="/changelog" element={<Changelog />} />
+          <Route path="/template/synthwave" element={<Theme />} />
           <Route path="/contact" element={<ContactForm />} />
 
           {/* Authentication route */}

@@ -36,6 +36,7 @@ export class CoachConversationAgent {
       recentConversations: [],
       isLoadingRecentItems: false,
       conversationCount: 0,
+      totalMessages: 0,
       isLoadingConversationCount: false,
     };
 
@@ -193,20 +194,22 @@ export class CoachConversationAgent {
 
       this._updateState({
         conversationCount: result.totalCount || 0,
+        totalMessages: result.totalMessages || 0,
         isLoadingConversationCount: false
       });
 
-      console.info('Conversation count loaded:', result.totalCount);
-      return result.totalCount;
+      console.info('Conversation count and messages loaded:', { totalCount: result.totalCount, totalMessages: result.totalMessages });
+      return { totalCount: result.totalCount, totalMessages: result.totalMessages };
     } catch (error) {
       console.error('Error loading conversation count:', error);
       console.error('Error details:', error.message);
       // Don't show error for count as it's not critical
       this._updateState({
         conversationCount: 0,
+        totalMessages: 0,
         isLoadingConversationCount: false
       });
-      return 0;
+      return { totalCount: 0, totalMessages: 0 };
     }
   }
 

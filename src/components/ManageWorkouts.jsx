@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useAuthorizeUser } from '../auth/hooks/useAuthorizeUser';
-import { themeClasses } from "../utils/synthwaveThemeClasses";
-import { AccessDenied, LoadingScreen } from './shared/AccessDenied';
+import { containerPatterns, buttonPatterns, layoutPatterns } from "../utils/uiPatterns";
+import { AccessDenied } from './shared/AccessDenied';
 import { isNewWorkout } from "../utils/dateUtils";
 import { NeonBorder, NewBadge } from "./themes/SynthwaveComponents";
 import { useToast } from "../contexts/ToastContext";
@@ -10,13 +10,43 @@ import { WorkoutAgent } from "../utils/agents/WorkoutAgent";
 import CoachAgent from "../utils/agents/CoachAgent";
 import { FloatingMenuManager } from "./shared/FloatingMenuManager";
 import CommandPalette from './shared/CommandPalette';
+import CoachHeader from './shared/CoachHeader';
 import {
   WorkoutIcon,
   WorkoutIconSmall,
   CloseIcon,
+  ConversationIcon,
+  ReportIcon,
+  LightningIcon,
+  StackIcon,
+  CalendarMonthIcon,
+  ClockIcon,
+  TargetIcon,
 } from "./themes/SynthwaveComponents";
 
 // Icons
+const EyeIcon = () => (
+  <svg
+    className="w-5 h-5"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+    />
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+    />
+  </svg>
+);
+
 const TrashIcon = () => (
   <svg
     className="w-5 h-5"
@@ -33,53 +63,6 @@ const TrashIcon = () => (
   </svg>
 );
 
-const CalendarIcon = () => (
-  <svg
-    className="w-5 h-5"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-    />
-  </svg>
-);
-
-const ClockIcon = () => (
-  <svg
-    className="w-5 h-5"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-    />
-  </svg>
-);
-
-const FireIcon = () => (
-  <svg
-    className="w-5 h-5"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 1-4 4-4 2.5 0 4 1.5 4 4 0 .5 0 1 0 1s1-.5 1-1c0-1-1-2-1-2z"
-    />
-  </svg>
-);
 
 const PreviewIcon = () => (
   <svg
@@ -102,6 +85,14 @@ const PreviewIcon = () => (
     />
   </svg>
 );
+
+// Small clock icon for metadata
+const ClockIconSmall = () => (
+  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+  </svg>
+);
+
 
 function ManageWorkouts() {
   const [searchParams] = useSearchParams();
@@ -334,21 +325,32 @@ function ManageWorkouts() {
   // Render workout card
   const renderWorkoutCard = (workout) => {
     const dateInfo = formatWorkoutDate(workout.completedAt || workout.date);
-    const workoutName =
-      workoutAgentRef.current?.formatWorkoutSummary(workout, true) || "Workout";
+    const workoutName = workoutAgentRef.current?.formatWorkoutSummary(workout, true) || workout.workoutName || "Workout";
 
-    const duration = workout.duration
-      ? Math.round(workout.duration / 60)
-      : null;
+    const duration = workout.duration ? Math.round(workout.duration / 60) : null;
     const discipline = workout.discipline || "fitness";
-    const intensity = workout.performanceMetrics?.intensity || "~";
+    const intensity = workout.performanceMetrics?.intensity || workout.workoutData?.performance_metrics?.intensity || 0;
+    const rpe = workout.performanceMetrics?.perceived_exertion || workout.workoutData?.performance_metrics?.perceived_exertion || 0;
+    const calories = workout.workoutData?.performance_metrics?.calories_burned || workout.performanceMetrics?.calories_burned;
+    const confidence = workout.extractionMetadata?.confidence || workout.confidence || 0;
+    const extractedAt = workout.extractionMetadata?.extractedAt || workout.extractedAt;
+    const coachName = workout.coachNames?.[0]?.replace(/_/g, ' ') || 'AI Coach';
     const isNew = isNewWorkout(workout.completedAt);
+
+    // Helper function to get consistent color spectrum (all start with same "easy" green, progress to purple at 10)
+    const getGaugeColor = (value) => {
+      if (value >= 8) return 'from-green-400 via-synthwave-neon-pink to-synthwave-neon-purple'; // Hard (8-10)
+      if (value >= 6) return 'from-green-400 via-orange-400 to-synthwave-neon-pink'; // Moderate-Hard (6-7)
+      if (value >= 4) return 'from-green-400 to-synthwave-neon-cyan'; // Moderate (4-5)
+      if (value >= 2) return 'from-green-400 to-green-300'; // Easy-Moderate (2-3)
+      return 'from-green-400 to-green-400'; // Very Easy (0-1)
+    };
 
     return (
       <div
         key={workout.workoutId}
         data-workout-card
-        className={`${themeClasses.glowCard} group cursor-pointer transition-all duration-300 hover:-translate-y-1 relative`}
+        className={`${containerPatterns.cardMedium} p-5 group transition-all duration-300 hover:border-synthwave-neon-cyan/40 hover:bg-synthwave-bg-card/40 relative cursor-pointer flex flex-col h-full`}
         onClick={() =>
           navigate(
             `/training-grounds/workouts?userId=${userId}&workoutId=${workout.workoutId}&coachId=${workout.coachIds?.[0] || "default"}`
@@ -358,142 +360,196 @@ function ManageWorkouts() {
         {/* NEW badge for workouts within 24 hours */}
         {isNew && <NewBadge />}
 
-        {/* Action buttons - appear on hover at top right */}
-        <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex space-x-3">
-          {/* Preview button */}
-          {workout.summary && (
+          {/* Action buttons - always visible */}
+          <div className="absolute top-4 right-4 flex space-x-2">
+            {/* Preview button */}
+            {workout.summary && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+
+                  if (activeTooltip === workout.workoutId) {
+                    setActiveTooltip(null);
+                  } else {
+                    // Get the workout card element (the parent with relative positioning)
+                    const workoutCard = e.target.closest("[data-workout-card]");
+                    if (workoutCard) {
+                      const rect = workoutCard.getBoundingClientRect();
+                      setTooltipPosition({
+                        x: rect.left + rect.width / 2, // Center horizontally on the card
+                        y: rect.bottom + 10, // Position below the card with some spacing
+                      });
+                    }
+                    setActiveTooltip(workout.workoutId);
+                  }
+                }}
+                className="p-2 bg-synthwave-neon-cyan/10 text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/20 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50"
+                title="Preview workout summary"
+              >
+                <EyeIcon className="w-4 h-4" />
+              </button>
+            )}
+
+            {/* Delete button */}
             <button
               onClick={(e) => {
                 e.stopPropagation();
-
-                if (activeTooltip === workout.workoutId) {
-                  setActiveTooltip(null);
-                } else {
-                  // Get the workout card element (the parent with relative positioning)
-                  const workoutCard = e.target.closest("[data-workout-card]");
-                  if (workoutCard) {
-                    const rect = workoutCard.getBoundingClientRect();
-                    setTooltipPosition({
-                      x: rect.left + rect.width / 2, // Center horizontally on the card
-                      y: rect.bottom + 10, // Position below the card with some spacing
-                    });
-                  }
-                  setActiveTooltip(workout.workoutId);
-                }
+                handleDeleteClick(workout);
               }}
-              className="text-synthwave-neon-pink hover:text-synthwave-neon-pink/70 transition-colors duration-200"
-              title="Preview workout summary"
+              className="p-2 bg-synthwave-neon-pink/10 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/20 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50"
+              title="Delete workout"
             >
-              <PreviewIcon />
+              <TrashIcon className="w-4 h-4" />
             </button>
-          )}
+          </div>
 
-          {/* Delete button */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDeleteClick(workout);
-            }}
-            className="text-synthwave-neon-pink hover:text-synthwave-neon-pink/70 transition-colors duration-200"
-            title="Delete workout"
-          >
-            <TrashIcon />
-          </button>
-        </div>
-
-        {/* Workout header */}
-        <div className="mb-4">
-          <h3 className="font-rajdhani text-xl text-synthwave-neon-pink font-bold mb-2 truncate">
+        {/* Card header with colored dot */}
+        <div className="flex items-start space-x-3 mb-4 pr-16">
+          <div className="w-3 h-3 bg-synthwave-neon-pink rounded-full flex-shrink-0 mt-2"></div>
+          <h3 className="font-russo text-lg text-white uppercase">
             {workoutName}
           </h3>
+        </div>
 
-          {/* Metadata with grouped layout */}
-          <div className="space-y-1 mb-2">
-            {/* Row 1: Discipline and Duration */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="flex justify-between items-center">
-                <span className="text-synthwave-neon-cyan font-rajdhani text-base font-medium">
-                  Discipline:
-                </span>
-                <span className="text-synthwave-text-primary font-rajdhani text-base">
-                  {discipline}
-                </span>
-              </div>
-              {duration && (
-                <div className="flex justify-between items-center">
-                  <span className="text-synthwave-neon-cyan font-rajdhani text-base font-medium">
-                    Duration:
-                  </span>
-                  <span className="text-synthwave-text-primary font-rajdhani text-base">
-                    {duration} min
-                  </span>
-                </div>
-              )}
+        {/* Tags Section - Moved above sub-containers */}
+        <div className="flex flex-wrap items-center gap-2 mb-4">
+          {/* Discipline Tag */}
+          <div className="bg-synthwave-neon-pink/20 text-synthwave-neon-pink px-2 py-0.5 rounded text-xs font-rajdhani font-medium">
+            {discipline}
+          </div>
+
+          {/* Location Tag with Pin Icon - Cyan */}
+          {workout.location && (
+            <div className="bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan px-2 py-0.5 rounded text-xs font-rajdhani font-medium flex items-center space-x-1">
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              <span>{workout.location}</span>
             </div>
+          )}
 
-            {/* Row 2: Location and Intensity */}
-            <div className="grid grid-cols-2 gap-3">
-              {workout.location && (
-                <div className="flex justify-between items-center">
-                  <span className="text-synthwave-neon-cyan font-rajdhani text-base font-medium">
-                    Location:
-                  </span>
-                  <span className="text-synthwave-text-primary font-rajdhani text-base">
-                    {workout.location}
-                  </span>
-                </div>
-              )}
-              <div className="flex justify-between items-center">
-                <span className="text-synthwave-neon-cyan font-rajdhani text-base font-medium">
-                  Intensity:
-                </span>
-                <span className="text-synthwave-text-primary font-rajdhani text-base">
-                  {intensity}/10
-                </span>
-              </div>
+          {/* Coach Name Tag - Purple */}
+          <div className="bg-synthwave-neon-purple/20 text-synthwave-neon-purple px-2 py-0.5 rounded text-xs font-rajdhani font-medium flex items-center space-x-1">
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+            <span>{coachName}</span>
+          </div>
+        </div>
+
+        {/* Performance Stats Grid - 3 Center Sections */}
+        <div className="grid grid-cols-3 gap-3 mb-4">
+          {/* Duration */}
+          <div className="text-center p-2 bg-synthwave-bg-primary/30 rounded-lg">
+            <div className="text-lg font-russo font-bold text-white mb-1">
+              {duration ? `${duration}m` : '--'}
             </div>
+            <div className="text-xs text-synthwave-text-muted font-rajdhani flex items-center justify-center gap-1">
+              <ClockIconSmall />
+              Duration
+            </div>
+          </div>
 
-            {/* Row 3: Completed */}
-            <div className="flex justify-between items-center">
-              <span className="text-synthwave-neon-cyan font-rajdhani text-base font-medium">
-                Completed:
-              </span>
-              <span className="text-synthwave-text-primary font-rajdhani text-base">
-                {dateInfo.date}, {dateInfo.time}
-              </span>
+          {/* Calories */}
+          <div className="text-center p-2 bg-synthwave-bg-primary/30 rounded-lg">
+            <div className="text-lg font-russo font-bold text-white mb-1">
+              {calories || '--'}
+            </div>
+            <div className="text-xs text-synthwave-text-muted font-rajdhani flex items-center justify-center gap-1">
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z" />
+              </svg>
+              Calories
+            </div>
+          </div>
+
+          {/* AI Confidence */}
+          <div className="text-center p-2 bg-synthwave-bg-primary/30 rounded-lg">
+            <div className="text-lg font-russo font-bold text-white mb-1">
+              {Math.round(confidence * 100)}%
+            </div>
+            <div className="text-xs text-synthwave-text-muted font-rajdhani flex items-center justify-center gap-1">
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+              </svg>
+              AI Score
             </div>
           </div>
         </div>
 
-        {/* Workout summary */}
-        {workout.summary && (
-          <div className="space-y-2">
-            <p className={`${themeClasses.cardText} text-sm line-clamp-2`}>
-              {workout.summary}
-            </p>
-          </div>
-        )}
+        {/* Dual Horizontal Gauge Bars - Side by Side */}
+        {(intensity > 0 || rpe > 0) && (
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            {/* Intensity Gauge */}
+            <div>
+              <div className="flex justify-between text-xs mb-1">
+                <span className="text-synthwave-text-secondary font-rajdhani">Intensity</span>
+                <span className="font-medium text-white font-rajdhani">{intensity || 0}/10</span>
+              </div>
+              <div className="w-full bg-gradient-to-r from-synthwave-neon-pink via-pink-800 to-purple-800 rounded-full h-2 relative overflow-hidden">
+                <div
+                  className="absolute top-0 right-0 h-2 bg-synthwave-bg-primary/90 rounded-r-full"
+                  style={{ width: `${100 - ((intensity || 0) / 10) * 100}%` }}
+                ></div>
+              </div>
+            </div>
 
-        {/* Performance indicators */}
-        {workout.workoutData?.performance_metrics && (
-          <div className="mt-3 pt-3 border-t border-synthwave-neon-pink/20">
-            <div className="flex justify-between text-xs text-synthwave-text-muted">
-              {workout.workoutData.performance_metrics.intensity && (
-                <span>
-                  Intensity: {workout.workoutData.performance_metrics.intensity}
-                  /10
-                </span>
-              )}
-              {workout.workoutData.performance_metrics.perceived_exertion && (
-                <span>
-                  RPE:{" "}
-                  {workout.workoutData.performance_metrics.perceived_exertion}
-                  /10
-                </span>
-              )}
+            {/* RPE Gauge */}
+            <div>
+              <div className="flex justify-between text-xs mb-1">
+                <span className="text-synthwave-text-secondary font-rajdhani">RPE</span>
+                <span className="font-medium text-white font-rajdhani">{rpe || 0}/10</span>
+              </div>
+              <div className="w-full bg-gradient-to-r from-synthwave-neon-pink via-pink-800 to-purple-800 rounded-full h-2 relative overflow-hidden">
+                <div
+                  className="absolute top-0 right-0 h-2 bg-synthwave-bg-primary/90 rounded-r-full"
+                  style={{ width: `${100 - ((rpe || 0) / 10) * 100}%` }}
+                ></div>
+              </div>
             </div>
           </div>
         )}
+
+        {/* Workout summary - Flexible content area in sub-container */}
+        <div className="flex-1 mb-3">
+          {workout.summary && (
+            <div className="p-3 bg-synthwave-bg-primary/30 rounded-lg">
+              <p className="font-rajdhani text-synthwave-text-secondary text-sm leading-relaxed line-clamp-3">
+                {(() => {
+                  const words = workout.summary.split(' ');
+                  if (words.length > 20) {
+                    return words.slice(0, 20).join(' ') + '...';
+                  }
+                  return workout.summary;
+                })()}
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Bottom Metadata Section - Dates Only */}
+        <div className="mt-auto">
+          {/* Dates Line */}
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Completion Date */}
+            <div className="flex items-center space-x-1 text-xs text-synthwave-text-secondary font-rajdhani">
+              <ClockIconSmall />
+              <span>{dateInfo.date} at {dateInfo.time}</span>
+            </div>
+
+            {/* Extraction Date */}
+            {extractedAt && (
+              <div className="flex items-center space-x-1 text-xs text-synthwave-text-secondary font-rajdhani">
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+                <span>Extracted {new Date(extractedAt).toLocaleDateString()}</span>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     );
   };
@@ -533,7 +589,81 @@ function ManageWorkouts() {
 
   // Show loading while validating userId or loading workouts
   if (isValidatingUserId || workoutAgentState.isLoadingAllItems) {
-    return <LoadingScreen message="Loading workout history..." />;
+    return (
+      <div className="bg-synthwave-bg-tertiary min-h-screen pb-8">
+        <div className="max-w-7xl mx-auto px-8 py-12 min-h-[calc(100vh-5rem)] flex flex-col">
+          {/* Header skeleton */}
+          <div className="mb-8 text-center">
+            <div className="h-12 bg-synthwave-text-muted/20 rounded animate-pulse w-64 mx-auto mb-6"></div>
+
+            {/* Coach header skeleton */}
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
+              <div className="text-left">
+                <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-48 mb-2"></div>
+                <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-32"></div>
+              </div>
+            </div>
+
+            <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-96 mx-auto mb-4"></div>
+            <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-80 mx-auto mb-4"></div>
+            <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-48 mx-auto"></div>
+          </div>
+
+          {/* Quick stats bar skeleton */}
+          <div className="flex justify-center mb-8">
+            <div className="w-full max-w-2xl">
+              <div className="bg-synthwave-bg-card/60 border border-synthwave-neon-cyan/20 rounded-2xl shadow-xl shadow-synthwave-neon-cyan/20 p-6">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <div className="p-2 bg-synthwave-text-muted/20 rounded-lg">
+                        <div className="w-4 h-4 bg-synthwave-text-muted/30 rounded"></div>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-8 mb-1"></div>
+                        <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-12"></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Workout cards skeleton */}
+          <div className="mb-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-6xl mx-auto">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className={`${containerPatterns.cardMedium} p-5 flex flex-col h-80`}>
+                  <div className="flex items-start space-x-2 mb-3">
+                    <div className="w-2.5 h-2.5 bg-synthwave-text-muted/20 rounded-full flex-shrink-0 mt-1.5 animate-pulse"></div>
+                    <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-32"></div>
+                  </div>
+                  <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-24 mb-3"></div>
+                  <div className="flex flex-wrap gap-1.5 mb-3">
+                    <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-16"></div>
+                    <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-12"></div>
+                    <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-14"></div>
+                  </div>
+                  <div className="space-y-2 flex-1">
+                    <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                    <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-4/5"></div>
+                    <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-3/5"></div>
+                  </div>
+                  <div className="pt-2 border-t border-synthwave-text-muted/20 mt-auto">
+                    <div className="flex justify-between">
+                      <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-16"></div>
+                      <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-12"></div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   // Handle userId validation errors
@@ -595,16 +725,21 @@ function ManageWorkouts() {
         </div>
       )}
 
-      <div className={`${themeClasses.container} min-h-screen pb-8`}>
+      <div className="bg-synthwave-bg-tertiary min-h-screen pb-8">
         <div className="max-w-7xl mx-auto px-8 py-12 min-h-[calc(100vh-5rem)] flex flex-col">
           {/* Header */}
           <div className="mb-8 text-center">
             <h1 className="font-russo font-black text-4xl md:text-5xl text-white mb-6 uppercase">
-              Manage Workouts
+              Your Workouts
             </h1>
+
+            {/* Coach Header */}
+            {coachData && (
+              <CoachHeader coachData={coachData} />
+            )}
+
             <p className="font-rajdhani text-lg text-synthwave-text-secondary max-w-3xl mx-auto mb-4">
-              Review, organize, and analyze your complete workout history. Track
-              your fitness journey and monitor your progress over time.
+              Review, organize, and analyze your complete workout history. Track your fitness journey and monitor your progress over time with comprehensive workout analytics and insights.
             </p>
             <div className="flex items-center justify-center space-x-2 text-synthwave-text-secondary font-rajdhani text-sm">
               <div className="flex items-center space-x-1 bg-synthwave-bg-primary/30 px-2 py-1 rounded border border-synthwave-neon-pink/20">
@@ -612,60 +747,82 @@ function ManageWorkouts() {
                 <span>K</span>
               </div>
               <span>for Command Palette</span>
+              <div className="flex items-center space-x-1">
+                <span>(</span>
+                <svg className="w-4 h-4 text-synthwave-neon-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+                <span>Works on any page )</span>
+              </div>
             </div>
           </div>
 
-          {/* Stats */}
+          {/* Quick Stats Bar */}
           <div className="flex justify-center mb-8">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 w-full max-w-4xl">
-              <div className="bg-synthwave-bg-card/30 border-2 border-synthwave-neon-pink/30 rounded-lg p-4 text-center">
-                <div className="text-2xl font-russo font-bold text-synthwave-neon-pink mb-1">
-                  {workoutAgentState.totalCount ||
-                    workoutAgentState.allWorkouts.length ||
-                    0}
-                </div>
-                <div className="font-rajdhani text-sm text-synthwave-text-secondary">
-                  Total Workouts
-                </div>
-              </div>
-              <div className="bg-synthwave-bg-card/30 border-2 border-synthwave-neon-pink/30 rounded-lg p-4 text-center">
-                <div className="text-2xl font-russo font-bold text-synthwave-neon-pink mb-1">
-                  {workoutAgentState.allWorkouts.filter((w) => {
-                    const workoutDate = new Date(w.completedAt || w.date);
-                    const now = new Date();
-                    const thirtyDaysAgo = new Date(
-                      now.getTime() - 30 * 24 * 60 * 60 * 1000
-                    );
-                    return workoutDate >= thirtyDaysAgo;
-                  }).length || 0}
-                </div>
-                <div className="font-rajdhani text-sm text-synthwave-text-secondary">
-                  Monthly Total
-                </div>
-              </div>
-              <div className="bg-synthwave-bg-card/30 border-2 border-synthwave-neon-pink/30 rounded-lg p-4 text-center">
-                <div className="text-2xl font-russo font-bold text-synthwave-neon-pink mb-1">
-                  {workoutAgentState.allWorkouts.filter((w) => {
-                    const workoutDate = new Date(w.completedAt || w.date);
-                    const now = new Date();
-                    const sevenDaysAgo = new Date(
-                      now.getTime() - 7 * 24 * 60 * 60 * 1000
-                    );
-                    return workoutDate >= sevenDaysAgo;
-                  }).length || 0}
-                </div>
-                <div className="font-rajdhani text-sm text-synthwave-text-secondary">
-                  Weekly Total
-                </div>
-              </div>
-              <div className="bg-synthwave-bg-card/30 border-2 border-synthwave-neon-pink/30 rounded-lg p-4 text-center">
-                <div className="text-2xl font-russo font-bold text-synthwave-neon-pink mb-1">
-                  {workoutAgentState.allWorkouts.filter((w) =>
-                    isNewWorkout(w.completedAt)
-                  ).length || 0}
-                </div>
-                <div className="font-rajdhani text-sm text-synthwave-text-secondary">
-                  Recent (24h)
+            <div className="w-full max-w-2xl">
+              <div className="bg-synthwave-bg-card/60 border border-synthwave-neon-cyan/20 rounded-2xl shadow-xl shadow-synthwave-neon-cyan/20 p-4">
+                <div className="flex flex-wrap justify-center gap-4 md:gap-6">
+                  {/* Total Workouts - Pink */}
+                  <div className="flex items-center gap-2 group cursor-pointer min-w-[120px]">
+                    <div className="p-2 bg-synthwave-neon-pink/10 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/20 hover:text-synthwave-neon-pink rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50">
+                      <StackIcon />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-lg font-russo font-bold text-white group-hover:scale-105 transition-transform duration-300">
+                        {workoutAgentState.totalCount || workoutAgentState.allWorkouts.length || 0}
+                      </div>
+                      <div className="text-xs text-synthwave-text-muted font-rajdhani uppercase tracking-wide">Total</div>
+                    </div>
+                  </div>
+
+                  {/* Monthly Total - Cyan */}
+                  <div className="flex items-center gap-2 group cursor-pointer min-w-[120px]">
+                    <div className="p-2 bg-synthwave-neon-cyan/10 text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/20 hover:text-synthwave-neon-cyan rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50">
+                      <CalendarMonthIcon />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-lg font-russo font-bold text-white group-hover:scale-105 transition-transform duration-300">
+                        {workoutAgentState.allWorkouts.filter((w) => {
+                          const workoutDate = new Date(w.completedAt || w.date);
+                          const now = new Date();
+                          const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+                          return workoutDate >= thirtyDaysAgo;
+                        }).length || 0}
+                      </div>
+                      <div className="text-xs text-synthwave-text-muted font-rajdhani uppercase tracking-wide">This Month</div>
+                    </div>
+                  </div>
+
+                  {/* Weekly Total - Purple */}
+                  <div className="flex items-center gap-2 group cursor-pointer min-w-[120px]">
+                    <div className="p-2 bg-synthwave-neon-purple/10 text-synthwave-neon-purple hover:bg-synthwave-neon-purple/20 hover:text-synthwave-neon-purple rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-purple/50">
+                      <ClockIcon />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-lg font-russo font-bold text-white group-hover:scale-105 transition-transform duration-300">
+                        {workoutAgentState.allWorkouts.filter((w) => {
+                          const workoutDate = new Date(w.completedAt || w.date);
+                          const now = new Date();
+                          const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                          return workoutDate >= sevenDaysAgo;
+                        }).length || 0}
+                      </div>
+                      <div className="text-xs text-synthwave-text-muted font-rajdhani uppercase tracking-wide">This Week</div>
+                    </div>
+                  </div>
+
+                  {/* Recent (24h) - Pink */}
+                  <div className="flex items-center gap-2 group cursor-pointer min-w-[120px]">
+                    <div className="p-2 bg-synthwave-neon-pink/10 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/20 hover:text-synthwave-neon-pink rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50">
+                      <TargetIcon />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-lg font-russo font-bold text-white group-hover:scale-105 transition-transform duration-300">
+                        {workoutAgentState.allWorkouts.filter((w) => isNewWorkout(w.completedAt)).length || 0}
+                      </div>
+                      <div className="text-xs text-synthwave-text-muted font-rajdhani uppercase tracking-wide">Recent</div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -701,7 +858,7 @@ function ManageWorkouts() {
                     onClick={() =>
                       navigate(`/training-grounds?userId=${userId}`)
                     }
-                    className={themeClasses.cyanButton}
+                    className={buttonPatterns.secondary}
                   >
                     Start Training
                   </button>
@@ -709,12 +866,14 @@ function ManageWorkouts() {
               </div>
             )}
 
-          {/* Workouts grid */}
+          {/* Workouts Grid */}
           {!workoutAgentState.isLoadingAllItems &&
             !workoutAgentState.error &&
             workoutAgentState.allWorkouts.length > 0 && (
-              <div className={themeClasses.cardGrid}>
-                {workoutAgentState.allWorkouts.map(renderWorkoutCard)}
+              <div className="mb-8">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-6xl mx-auto">
+                  {workoutAgentState.allWorkouts.map(renderWorkoutCard)}
+                </div>
               </div>
             )}
         </div>
@@ -753,17 +912,14 @@ function ManageWorkouts() {
       {/* Delete Confirmation Modal */}
       {showDeleteModal && workoutToDelete && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[10000]">
-          <div className="bg-synthwave-bg-card border-2 border-synthwave-neon-pink/30 rounded-lg shadow-2xl shadow-synthwave-neon-pink/20 p-6 max-w-md w-full mx-4">
+          <div className={`${containerPatterns.deleteModal} p-6 max-w-md w-full mx-4`}>
             <div className="text-center">
               <h3 className="text-synthwave-neon-pink font-rajdhani text-xl font-bold mb-2">
                 Delete Workout
               </h3>
               <p className="font-rajdhani text-base text-synthwave-text-secondary mb-6">
                 Are you sure you want to delete "
-                {workoutAgentRef.current?.formatWorkoutSummary(
-                  workoutToDelete,
-                  true
-                ) || "this workout"}
+                {workoutToDelete?.workoutName || "this workout"}
                 "? This action cannot be undone.
               </p>
 
@@ -771,14 +927,14 @@ function ManageWorkouts() {
                 <button
                   onClick={handleCancelDelete}
                   disabled={isDeleting}
-                  className={`flex-1 ${themeClasses.cyanButton} text-sm disabled:opacity-50 disabled:cursor-not-allowed`}
+                  className={`flex-1 ${buttonPatterns.secondary} text-sm disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleConfirmDelete}
                   disabled={isDeleting}
-                  className={`flex-1 ${themeClasses.neonButton} text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2`}
+                  className={`flex-1 ${buttonPatterns.primary} text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2`}
                 >
                   {isDeleting ? (
                     <>
@@ -802,3 +958,4 @@ function ManageWorkouts() {
 }
 
 export default ManageWorkouts;
+

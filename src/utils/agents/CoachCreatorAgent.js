@@ -3,6 +3,8 @@ import {
   createCoachCreatorSession,
   updateCoachCreatorSession,
   getCoachCreatorSession,
+  getCoachCreatorSessions,
+  deleteCoachCreatorSession,
 } from "../apis/coachCreatorApi";
 
 // Initial message constant
@@ -38,6 +40,12 @@ export class CoachCreatorAgent {
       isComplete: false,
       isRedirecting: false,
       error: null,
+      sessionData: null,
+      progress: {
+        questionsCompleted: 0,
+        estimatedTotal: 15, // Default estimate
+        percentage: 0,
+      },
     };
 
     // Bind methods
@@ -128,7 +136,7 @@ export class CoachCreatorAgent {
     }
 
     try {
-      this._updateState({ isLoading: true, error: null });
+      this._updateState({ isLoading: true, error: null, messages: [] });
 
       console.info("Loading existing coach creator session:", sessionId);
       const sessionData = await getCoachCreatorSession(userId, sessionId);
@@ -136,6 +144,24 @@ export class CoachCreatorAgent {
       // Update agent state
       this.userId = userId;
       this.sessionId = sessionId;
+
+      // Use progress details from API response if available
+      let progressData = {
+        questionsCompleted: 0,
+        estimatedTotal: 15,
+        percentage: 0,
+      };
+
+      if (sessionData.progressDetails) {
+        // Use exact values from backend
+        progressData = {
+          questionsCompleted: sessionData.progressDetails.questionsCompleted,
+          estimatedTotal: sessionData.progressDetails.totalQuestions,
+          percentage: sessionData.progressDetails.percentage,
+          sophisticationLevel: sessionData.progressDetails.sophisticationLevel,
+          currentQuestion: sessionData.progressDetails.currentQuestion,
+        };
+      }
 
       // Reconstruct conversation from questionHistory
       const conversationMessages = [];
@@ -176,6 +202,8 @@ export class CoachCreatorAgent {
             ? conversationMessages
             : this.state.messages,
         isLoading: false,
+        sessionData,
+        progress: progressData,
       });
 
       return sessionData;
@@ -245,7 +273,49 @@ export class CoachCreatorAgent {
       };
 
       this._addMessage(aiResponse);
-      this._updateState({ isLoading: false, isTyping: false });
+
+      // Update progress based on result
+      const updatedProgress = { ...this.state.progress };
+
+      // First update other progress fields from session data if available
+      if (result.sessionData && result.sessionData.userContext) {
+        const questionsCompleted = result.sessionData.userContext.responses ? Object.keys(result.sessionData.userContext.responses).length : 0;
+        const currentQuestion = result.sessionData.userContext.currentQuestion || 1;
+        const sophisticationLevel = result.sessionData.userContext.sophisticationLevel || 'UNKNOWN';
+
+        // Estimate total questions based on sophistication level
+        let estimatedTotal = 15; // Default
+        if (sophisticationLevel === 'BEGINNER') {
+          estimatedTotal = 12;
+        } else if (sophisticationLevel === 'INTERMEDIATE') {
+          estimatedTotal = 15;
+        } else if (sophisticationLevel === 'ADVANCED') {
+          estimatedTotal = 18;
+        } else if (sophisticationLevel === 'UNKNOWN') {
+          estimatedTotal = Math.max(10, currentQuestion + 6); // Adjust estimate as we progress
+        }
+
+        updatedProgress.questionsCompleted = questionsCompleted;
+        updatedProgress.estimatedTotal = estimatedTotal;
+        updatedProgress.sophisticationLevel = sophisticationLevel;
+        updatedProgress.currentQuestion = currentQuestion;
+      }
+
+      // Use detailed progress from API response
+      if (result.progressDetails) {
+        updatedProgress.questionsCompleted = result.progressDetails.questionsCompleted;
+        updatedProgress.estimatedTotal = result.progressDetails.totalQuestions;
+        updatedProgress.percentage = result.isComplete ? 100 : result.progressDetails.percentage;
+        updatedProgress.sophisticationLevel = result.progressDetails.sophisticationLevel;
+        updatedProgress.currentQuestion = result.progressDetails.currentQuestion;
+      }
+
+      this._updateState({
+        isLoading: false,
+        isTyping: false,
+        sessionData: result.sessionData || this.state.sessionData,
+        progress: updatedProgress,
+      });
 
       // Handle completion
       if (result.isComplete) {
@@ -351,6 +421,57 @@ export class CoachCreatorAgent {
     this.onStateChange = null;
     this.onNavigation = null;
     this.onError = null;
+  }
+
+  /**
+   * Static method to get coach creator sessions for a user
+   * @param {string} userId - The user ID
+   * @param {Object} options - Optional filters
+   * @returns {Promise<Array>} - Array of session summaries
+   */
+  static async getInProgressSessions(userId, options = {}) {
+    if (!userId) {
+      console.warn('Cannot load coach creator sessions without userId');
+      return [];
+    }
+
+    try {
+      console.info('Loading in-progress coach creator sessions');
+      const result = await getCoachCreatorSessions(userId, {
+        isComplete: false,
+        limit: 10,
+        sortBy: 'lastActivity',
+        sortOrder: 'desc',
+        ...options
+      });
+
+      return result.sessions || [];
+
+    } catch (error) {
+      console.error('Error loading coach creator sessions:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Static method to delete a coach creator session
+   * @param {string} userId - The user ID
+   * @param {string} sessionId - The session ID
+   * @returns {Promise<Object>} - The deletion result
+   */
+  static async deleteCoachCreatorSession(userId, sessionId) {
+    if (!userId || !sessionId) {
+      throw new Error('User ID and Session ID are required');
+    }
+
+    try {
+      console.info('Deleting coach creator session:', { userId, sessionId });
+      const result = await deleteCoachCreatorSession(userId, sessionId);
+      return result;
+    } catch (error) {
+      console.error('Error deleting coach creator session:', error);
+      throw error;
+    }
   }
 }
 

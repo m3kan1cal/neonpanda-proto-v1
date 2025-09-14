@@ -40,20 +40,21 @@ export class CoachAgent {
     this.stopPolling = this.stopPolling.bind(this);
     this.cleanup = this.cleanup.bind(this);
 
-    // Initialize with userId if provided
+    // Don't auto-initialize - let the component call initialize() when ready
+  }
+
+  /**
+   * Initialize the agent - call this after the component is ready
+   */
+  initialize() {
     if (this.userId) {
       this.state.isLoading = true;
-      // Use setTimeout to ensure onStateChange is set before calling
-      setTimeout(() => {
-        this.checkInProgressCoach();
-        this.loadCoaches();
-        this.loadTemplates();
-      }, 0);
+      this.checkInProgressCoach();
+      this.loadCoaches();
+      this.loadTemplates();
     } else {
       // Load templates even without userId for template browsing
-      setTimeout(() => {
-        this.loadTemplates();
-      }, 0);
+      this.loadTemplates();
     }
   }
 

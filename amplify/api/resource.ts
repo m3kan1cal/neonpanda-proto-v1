@@ -14,6 +14,8 @@ export function createCoreApi(
   getCoachConfigLambda: lambda.IFunction,
   getCoachConfigStatusLambda: lambda.IFunction,
   getCoachCreatorSessionLambda: lambda.IFunction,
+  getCoachCreatorSessionsLambda: lambda.IFunction,
+  deleteCoachCreatorSessionLambda: lambda.IFunction,
   getCoachTemplatesLambda: lambda.IFunction,
   getCoachTemplateLambda: lambda.IFunction,
   createCoachConfigFromTemplateLambda: lambda.IFunction,
@@ -99,6 +101,16 @@ export function createCoreApi(
   const getCoachCreatorSessionIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
     'GetCoachCreatorSessionIntegration',
     getCoachCreatorSessionLambda
+  );
+
+  const getCoachCreatorSessionsIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
+    'GetCoachCreatorSessionsIntegration',
+    getCoachCreatorSessionsLambda
+  );
+
+  const deleteCoachCreatorSessionIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
+    'DeleteCoachCreatorSessionIntegration',
+    deleteCoachCreatorSessionLambda
   );
 
   const getCoachConfigsIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
@@ -232,6 +244,8 @@ export function createCoreApi(
     createCoachCreatorSession: createCoachCreatorSessionIntegration,
     updateCoachCreatorSession: updateCoachCreatorSessionIntegration,
     getCoachCreatorSession: getCoachCreatorSessionIntegration,
+    getCoachCreatorSessions: getCoachCreatorSessionsIntegration,
+    deleteCoachCreatorSession: deleteCoachCreatorSessionIntegration,
     getCoachConfigs: getCoachConfigsIntegration,
     getCoachConfig: getCoachConfigIntegration,
     getCoachConfigStatus: getCoachConfigStatusIntegration,
@@ -334,6 +348,13 @@ export function createCoreApi(
   });
 
   httpApi.addRoutes({
+    path: '/users/{userId}/coach-creator-sessions',
+    methods: [apigatewayv2.HttpMethod.GET],
+    integration: integrations.getCoachCreatorSessions,
+    authorizer: userPoolAuthorizer
+  });
+
+  httpApi.addRoutes({
     path: '/users/{userId}/coach-creator-sessions/{sessionId}',
     methods: [apigatewayv2.HttpMethod.PUT],
     integration: integrations.updateCoachCreatorSession,
@@ -344,6 +365,13 @@ export function createCoreApi(
     path: '/users/{userId}/coach-creator-sessions/{sessionId}',
     methods: [apigatewayv2.HttpMethod.GET],
     integration: integrations.getCoachCreatorSession,
+    authorizer: userPoolAuthorizer
+  });
+
+  httpApi.addRoutes({
+    path: '/users/{userId}/coach-creator-sessions/{sessionId}',
+    methods: [apigatewayv2.HttpMethod.DELETE],
+    integration: integrations.deleteCoachCreatorSession,
     authorizer: userPoolAuthorizer
   });
 

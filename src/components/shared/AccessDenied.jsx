@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { themeClasses } from '../../utils/synthwaveThemeClasses';
+import { containerPatterns, buttonPatterns } from '../../utils/uiPatterns';
 
 /**
  * Standardized Access Denied component for consistent styling across the app
@@ -9,25 +10,39 @@ export const AccessDenied = ({
   title = "Access Denied",
   message,
   buttonText = "Back to Coaches",
-  redirectPath = "/coaches"
+  redirectPath = "/coaches",
+  userId = null
 }) => {
   const navigate = useNavigate();
 
+  const handleNavigate = () => {
+    if (userId && redirectPath === "/coaches") {
+      navigate(`/coaches?userId=${userId}`);
+    } else {
+      navigate(redirectPath);
+    }
+  };
+
   return (
     <div className={`${themeClasses.container} min-h-screen`}>
-      <div className="max-w-4xl mx-auto px-8 py-12 text-center">
-        <h1 className="font-russo font-black text-3xl text-white mb-6 uppercase">
-          {title}
-        </h1>
-        <p className="font-rajdhani text-synthwave-text-secondary text-lg mb-8">
-          {message}
-        </p>
-        <button
-          onClick={() => navigate(redirectPath)}
-          className="font-rajdhani bg-synthwave-neon-pink text-black px-6 py-3 rounded-lg font-bold hover:bg-synthwave-neon-pink/80 transition-colors"
-        >
-          {buttonText}
-        </button>
+      <div className="max-w-4xl mx-auto px-8 py-12 flex justify-center">
+        <div className={`${containerPatterns.errorState} w-full max-w-4xl`}>
+          <div className="flex items-center space-x-3 mb-4">
+            <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <h5 className="font-russo text-lg text-red-400 uppercase">{title}</h5>
+          </div>
+          <p className="text-red-300 font-rajdhani text-sm mb-6">
+            {message}
+          </p>
+          <button
+            onClick={handleNavigate}
+            className={buttonPatterns.primary}
+          >
+            {buttonText}
+          </button>
+        </div>
       </div>
     </div>
   );

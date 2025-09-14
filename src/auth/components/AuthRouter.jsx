@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import LoginForm from "./LoginForm";
 import RegisterForm from "./RegisterForm";
@@ -18,7 +18,18 @@ const AUTH_VIEWS = {
 const AuthRouter = () => {
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
-  const [currentView, setCurrentView] = useState(AUTH_VIEWS.LOGIN);
+  const [searchParams] = useSearchParams();
+
+  // Determine initial view from URL parameters
+  const getInitialView = () => {
+    const viewParam = searchParams.get('view');
+    if (viewParam && Object.values(AUTH_VIEWS).includes(viewParam)) {
+      return viewParam;
+    }
+    return AUTH_VIEWS.LOGIN;
+  };
+
+  const [currentView, setCurrentView] = useState(getInitialView);
   const [pendingEmail, setPendingEmail] = useState("");
   const [showVerificationSuccess, setShowVerificationSuccess] = useState(false);
   const [showPasswordResetSuccess, setShowPasswordResetSuccess] = useState(false);
@@ -27,7 +38,7 @@ const AuthRouter = () => {
   useEffect(() => {
     if (isAuthenticated && user?.attributes?.["custom:user_id"]) {
       const customUserId = user.attributes["custom:user_id"];
-      console.log("🚀 Redirecting authenticated user to coaches page with userId:", customUserId);
+      console.info("🚀 Redirecting authenticated user to coaches page with userId:", customUserId);
       navigate(`/coaches?userId=${customUserId}`);
     }
   }, [isAuthenticated, user, navigate]);

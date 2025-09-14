@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { themeClasses } from "../../utils/synthwaveThemeClasses";
+import { inputPatterns } from "../../utils/uiPatterns";
 import CommandPaletteAgent from "../../utils/agents/CommandPaletteAgent";
 
 const CommandPalette = ({
@@ -184,11 +185,26 @@ const CommandPalette = ({
     }
   }, [isOpen, input]);
 
+  // Handle escape key globally when command palette is open
+  useEffect(() => {
+    const handleGlobalKeyDown = (e) => {
+      if (e.key === "Escape" && isOpen) {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener("keydown", handleGlobalKeyDown);
+    }
+
+    return () => {
+      document.removeEventListener("keydown", handleGlobalKeyDown);
+    };
+  }, [isOpen, onClose]);
+
   // Handle keyboard navigation
   const handleKeyDown = (e) => {
-    if (e.key === "Escape") {
-      onClose();
-    } else if (displayState.type === "command-list") {
+    if (displayState.type === "command-list") {
       if (e.key === "ArrowDown") {
         e.preventDefault();
         setSelectedIndex((prev) =>
@@ -272,7 +288,7 @@ const CommandPalette = ({
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Type a command or search..."
-            className="w-full px-4 py-3 bg-synthwave-bg-primary/50 border-2 border-synthwave-neon-pink/30 rounded-lg text-white font-rajdhani text-lg placeholder-synthwave-text-muted focus:outline-none focus:border-synthwave-neon-pink transition-colors duration-200"
+            className={inputPatterns.commandInput}
             style={{
               outline: "none !important",
               boxShadow: "none !important",

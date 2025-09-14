@@ -76,3 +76,70 @@ export const getCoachCreatorSession = async (userId, sessionId) => {
 
   return result;
 };
+
+/**
+ * Gets all coach creator sessions for a user
+ * @param {string} userId - The user ID
+ * @param {Object} options - Optional filters
+ * @param {boolean} options.isComplete - Filter by completion status
+ * @param {number} options.limit - Limit number of results
+ * @returns {Promise<Object>} - Array of session summaries
+ */
+export const getCoachCreatorSessions = async (userId, options = {}) => {
+  const url = `${getApiUrl('')}/users/${userId}/coach-creator-sessions`;
+
+  // Build query parameters
+  const queryParams = new URLSearchParams();
+  if (options.isComplete !== undefined) {
+    queryParams.set('isComplete', options.isComplete.toString());
+  }
+  if (options.limit) {
+    queryParams.set('limit', options.limit.toString());
+  }
+  if (options.sortBy) {
+    queryParams.set('sortBy', options.sortBy);
+  }
+  if (options.sortOrder) {
+    queryParams.set('sortOrder', options.sortOrder);
+  }
+
+  const fullUrl = queryParams.toString() ? `${url}?${queryParams.toString()}` : url;
+
+  const response = await authenticatedFetch(fullUrl, {
+    method: 'GET',
+  });
+
+  if (!response.ok) {
+    throw new Error(`API Error: ${response.status}`);
+  }
+
+  const result = await response.json();
+  console.info('Coach creator sessions loaded:', result);
+
+  return result;
+};
+
+/**
+ * Deletes a coach creator session
+ * @param {string} userId - The user ID
+ * @param {string} sessionId - The session ID
+ * @returns {Promise<Object>} - The API response confirming deletion
+ */
+export const deleteCoachCreatorSession = async (userId, sessionId) => {
+  const url = `${getApiUrl('')}/users/${userId}/coach-creator-sessions/${sessionId}`;
+  const response = await authenticatedFetch(url, {
+    method: 'DELETE',
+  });
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      throw new Error('Coach creator session not found');
+    }
+    throw new Error(`API Error: ${response.status}`);
+  }
+
+  const result = await response.json();
+  console.info('Coach creator session deleted:', result);
+
+  return result;
+};

@@ -24,7 +24,7 @@ const LoginForm = ({
     const handleUnhandledRejection = (event) => {
       console.error("Unhandled promise rejection:", event.reason);
       if (event.reason && event.reason.name === "UserNotConfirmedException") {
-        console.log("Caught UserNotConfirmedException in global handler");
+        console.info("Caught UserNotConfirmedException in global handler");
         setShowVerificationOption(true);
         setGlobalError(
           "Account not confirmed. Please verify your email address to continue."
@@ -86,12 +86,12 @@ const LoginForm = ({
     setIsSubmitting(true);
 
     try {
-      console.log("About to call signIn with email:", formData.email.trim());
+      console.info("About to call signIn with email:", formData.email.trim());
       const result = await signIn(formData.email.trim(), formData.password);
-      console.log("SignIn result:", result);
-      console.log("SignIn result type:", typeof result);
-      console.log("SignIn result keys:", Object.keys(result || {}));
-      console.log("SignIn result JSON:", JSON.stringify(result, null, 2));
+      console.info("SignIn result:", result);
+      console.info("SignIn result type:", typeof result);
+      console.info("SignIn result keys:", Object.keys(result || {}));
+      console.info("SignIn result JSON:", JSON.stringify(result, null, 2));
       // Navigation will be handled by the AuthProvider state change
     } catch (error) {
       console.error("LoginForm sign in error:", error);
@@ -111,7 +111,7 @@ const LoginForm = ({
         error.__type === "UserNotConfirmedException" ||
         error.message === "UserNotConfirmedException"
       ) {
-        console.log(
+        console.info(
           "UserNotConfirmedException detected, redirecting to verification with email:",
           formData.email.trim()
         );
@@ -129,7 +129,7 @@ const LoginForm = ({
           );
         }
       } else if (error.name === "UserAlreadyAuthenticatedException") {
-        console.log("User already authenticated, redirecting to main app");
+        console.info("User already authenticated, redirecting to main app");
         // The AuthContext will handle the redirect automatically
         return;
       } else if (error.name === "NotAuthorizedException") {
@@ -139,7 +139,7 @@ const LoginForm = ({
       } else {
         // Check if the error message contains the UserNotConfirmedException text
         if (error.message && error.message.includes("User is not confirmed")) {
-          console.log(
+          console.info(
             "UserNotConfirmedException detected via message, redirecting to verification"
           );
           setUnconfirmedEmail(formData.email.trim());

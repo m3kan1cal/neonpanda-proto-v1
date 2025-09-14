@@ -1,379 +1,255 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { themeClasses } from '../utils/synthwaveThemeClasses';
-import { NeonBorder, GlitchText } from './themes/SynthwaveComponents';
+import { containerPatterns, buttonPatterns, layoutPatterns, typographyPatterns } from '../utils/uiPatterns';
 
 function LandingPage() {
   return (
-    <div className={`${themeClasses.container} border-0 m-0`}>
+    <div className="min-h-screen">
+      {/* Full-page background like AuthLayout */}
+      <div className={`fixed inset-0 ${layoutPatterns.authBackground}`}></div>
+
       {/* Hero Section */}
-      <section className="relative overflow-hidden pb-48 px-8 text-center min-h-screen flex flex-col justify-center bg-synthwave-gradient before:absolute before:inset-0 before:bg-gradient-to-br before:from-synthwave-neon-pink/10 before:via-transparent before:to-synthwave-neon-cyan/10 before:pointer-events-none border-none outline-none" style={{backgroundImage: 'url(images/hero-splash-1.jpg)', backgroundSize: 'cover', backgroundPosition: 'center', backgroundBlendMode: 'overlay'}}>
-        <div className="absolute inset-0 bg-synthwave-bg-primary/30"></div>
-        <div className="relative z-10">
-          <h1 className="font-russo font-black text-5xl md:text-6xl lg:text-7xl text-white mb-8 drop-shadow-lg">
-            Your Fitness Journey is Unique. Your Coach Should Be Too.
+      <section
+        className="relative z-10 min-h-screen flex flex-col justify-center items-center px-8 text-center"
+        style={{
+          backgroundImage: 'url(/images/hero-splash-3.jpg)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundBlendMode: 'overlay'
+        }}
+      >
+        {/* Light overlay for text readability while preserving vibrancy */}
+        <div className="absolute inset-0 bg-synthwave-bg-primary/20"></div>
+
+        <div className="relative z-10 max-w-6xl mx-auto">
+          {/* Logo */}
+          <div className="flex justify-center mb-8">
+            <img
+              src="/images/logo-light-sm.png"
+              alt="NeonPanda Logo"
+              className="h-16 w-auto"
+            />
+          </div>
+
+          {/* Main Headline */}
+          <h1 className={`${typographyPatterns.heroTitle} max-w-5xl mx-auto leading-tight`}>
+            Your Electric Fitness Companion
           </h1>
-          <h2 className={`${themeClasses.heroSubtitle} max-w-5xl mx-auto`}>
-            Stop following generic workout programs. Create an AI coach that understands your goals, adapts to your progress, and is available whenever you need guidance—without the elite-level price tag.
-          </h2>
-          <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mt-12">
-            <Link to="/contact?type=waitlist" className={themeClasses.neonButton}>
-              Join the Waitlist - Launch Late 2025
-            </Link>
-            <Link to="/contact?type=collaborate" className={themeClasses.cyanButton}>
-              Interested in Collaborating? Let's Connect
-            </Link>
+
+          {/* Key Brand Message */}
+          <div className={`${containerPatterns.mainContent} p-8 mb-8 max-w-4xl mx-auto`}>
+            <p className="font-rajdhani text-2xl text-synthwave-neon-pink leading-relaxed mb-4">
+              Where electric intelligence meets approachable excellence.
+            </p>
+            <p className="font-rajdhani text-xl text-synthwave-text-secondary leading-relaxed">
+              We're not just building AI coaches – we're creating relationships that transform lives, one workout at a time.
+            </p>
           </div>
-        </div>
-      </section>
 
-      {/* Problem Section */}
-      <section className="py-24 relative bg-gradient-to-br from-synthwave-bg-primary via-synthwave-bg-primary to-synthwave-bg-secondary">
-        <div className="absolute inset-0 grid-bg opacity-10"></div>
-        <div className="max-w-7xl mx-auto px-8">
-            <h2 className="font-russo font-black text-4xl md:text-5xl text-white mb-16 text-center uppercase">
-              The Problem with Most Fitness Apps
-            </h2>
-
-          <div className={themeClasses.cardGrid}>
-            <div className={`${themeClasses.glowCard} border-synthwave-neon-pink/30 hover:border-synthwave-neon-pink`}>
-              <h3 className={`${themeClasses.cardTitle} text-synthwave-neon-pink`}>
-                Generic Programs Don't Work
-              </h3>
-              <p className={themeClasses.cardText}>
-                One-size-fits-all workouts ignore your unique goals, schedule, injuries, and preferences. You end up frustrated with programs that don't fit your life.
-              </p>
-            </div>
-
-            <div className={`${themeClasses.glowCard} border-synthwave-neon-cyan/30 hover:border-synthwave-neon-cyan`}>
-              <h3 className={`${themeClasses.cardTitle} text-synthwave-neon-cyan`}>
-                Great Coaches Are Expensive & Unavailable
-              </h3>
-              <p className={themeClasses.cardText}>
-                Personal trainers cost $100+ per session, and even then, they're not available when you have questions at 6 AM or need motivation on a tough day.
-              </p>
-            </div>
-
-            <div className={`${themeClasses.glowCard} border-synthwave-neon-purple/30 hover:border-synthwave-neon-purple`}>
-              <h3 className={`${themeClasses.cardTitle} text-synthwave-neon-purple`}>
-                Cookie-Cutter AI Feels Robotic
-              </h3>
-              <p className={themeClasses.cardText}>
-                Existing fitness apps give you the same scripted responses as everyone else. They don't understand your training history or adapt to how you actually progress.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Solution Section */}
-      <section className="py-24 bg-gradient-to-r from-synthwave-bg-secondary via-purple-900/20 to-synthwave-bg-secondary border-t border-synthwave-neon-purple/20">
-        <div className="max-w-7xl mx-auto px-8">
-                      <h2 className="font-russo font-black text-4xl md:text-5xl text-white mb-8 text-center uppercase">
-              Finally, An AI Coach Built Just for You
-            </h2>
-          <p className="font-rajdhani text-xl text-synthwave-text-secondary mb-16 max-w-4xl mx-auto text-center leading-relaxed">
-            Create your perfect AI fitness coach from scratch. Design how it communicates, what methodologies it follows, and how it adapts to your unique journey. Get personalized programming, motivation, and guidance that evolves as you do.
+          {/* Subtitle */}
+          <p className={`${typographyPatterns.heroSubtitle} max-w-4xl mx-auto mb-12`}>
+            Create an AI coach that gets you. Not just your goals, but your personality, your struggles, your victories.
+            Because your fitness journey is as unique as you are.
           </p>
 
-          {/* Core Features Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {/* Feature 1 - Methodology Intelligence */}
-            <NeonBorder color="pink" className="p-8 bg-synthwave-bg-card/50">
-              <div className="text-synthwave-neon-pink mb-6 flex justify-center">
-                <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                </svg>
-              </div>
-              <h3 className="font-russo text-xl text-synthwave-neon-pink mb-4 uppercase">Methodology Intelligence</h3>
-              <p className="font-rajdhani text-synthwave-text-secondary leading-relaxed">
-                AI coaches that understand 30+ training systems including CrossFit, powerlifting, and Olympic lifting methodologies. Not random workouts—intelligent programming based on proven principles.
-              </p>
-            </NeonBorder>
-
-            {/* Feature 2 - Predictive Intelligence */}
-            <NeonBorder color="cyan" className="p-8 bg-synthwave-bg-card/50">
-              <div className="text-synthwave-neon-cyan mb-6 flex justify-center">
-                <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-              </div>
-              <h3 className="font-russo text-xl text-synthwave-neon-cyan mb-4 uppercase">Predictive Intelligence</h3>
-              <p className="font-rajdhani text-synthwave-text-secondary leading-relaxed">
-                Your coach learns your patterns and predicts needs before problems arise. Based on your sleep and training data, it might reduce intensity to prevent overreaching or adjust programming when motivation typically drops.
-              </p>
-            </NeonBorder>
-
-            {/* Feature 3 - Movement & Mental Coaching */}
-            <NeonBorder color="purple" className="p-8 bg-synthwave-bg-card/50">
-              <div className="text-synthwave-neon-purple mb-6 flex justify-center">
-                <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                </svg>
-              </div>
-              <h3 className="font-russo text-xl text-synthwave-neon-purple mb-4 uppercase">Movement & Mental Coaching</h3>
-              <p className="font-rajdhani text-synthwave-text-secondary leading-relaxed">
-                AI coaches that analyze both biomechanics and psychology. Get technical movement corrections plus mental coaching—addressing both your squat depth and your motivation patterns.
-              </p>
-            </NeonBorder>
-
-            {/* Feature 4 - Completely Customizable */}
-            <NeonBorder color="pink" className="p-8 bg-synthwave-bg-card/50">
-              <div className="text-synthwave-neon-pink mb-6 flex justify-center">
-                <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-              </div>
-              <h3 className="font-russo text-xl text-synthwave-neon-pink mb-4 uppercase">Forge Your Perfect Coach</h3>
-              <p className="font-rajdhani text-synthwave-text-secondary leading-relaxed">
-                Design your ideal coach through guided conversations. Build their personality, communication style, and training philosophy. Want a tough-love motivator or encouraging supporter? You decide exactly how they coach you.
-              </p>
-            </NeonBorder>
-
-            {/* Feature 5 - Available 24/7 */}
-            <NeonBorder color="cyan" className="p-8 bg-synthwave-bg-card/50">
-              <div className="text-synthwave-neon-cyan mb-6 flex justify-center">
-                <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <h3 className="font-russo text-xl text-synthwave-neon-cyan mb-4 uppercase">Elite Expertise, Always Available</h3>
-              <p className="font-rajdhani text-synthwave-text-secondary leading-relaxed">
-                Access elite coaching intelligence 24/7 with complete memory of your training history. Get thoughtful guidance for 3am questions and programming that adapts to your life.
-              </p>
-            </NeonBorder>
-
-            {/* Feature 6 - Secure & Private */}
-            <NeonBorder color="purple" className="p-8 bg-synthwave-bg-card/50">
-              <div className="text-synthwave-neon-purple mb-6 flex justify-center">
-                <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-              </div>
-              <h3 className="font-russo text-xl text-synthwave-neon-purple mb-4 uppercase">Private & Empowering</h3>
-              <p className="font-rajdhani text-synthwave-text-secondary leading-relaxed">
-                Your personal data stays completely private while your coach helps you understand the science behind your training. Learn the 'why' behind every recommendation to forge your potential.
-              </p>
-            </NeonBorder>
+          {/* CTA Buttons */}
+          <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
+            <Link to="/contact?type=waitlist" className={buttonPatterns.heroCTA}>
+              Join the Waitlist
+            </Link>
+            <Link to="/contact?type=collaborate" className={buttonPatterns.secondary}>
+              Let's Collaborate
+            </Link>
           </div>
         </div>
       </section>
 
-      {/* How It Works Section */}
-      <section className="py-24 relative bg-gradient-to-bl from-cyan-900/20 via-synthwave-bg-primary to-pink-900/20 border-t border-synthwave-neon-cyan/20">
-        <div className="absolute inset-0 grid-bg opacity-15"></div>
-        <div className="max-w-7xl mx-auto px-8">
-                      <h2 className="font-russo font-black text-4xl md:text-5xl text-white mb-16 text-center uppercase">
-              Three Steps to Your Perfect AI Coach
+      {/* App Preview Section */}
+      <section className="relative z-10 py-24 px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className={`${typographyPatterns.pageTitle} mb-6`}>
+              Meet Your Electric Companion
             </h2>
-
-          <div className="space-y-16">
-            <div className="flex flex-col lg:flex-row-reverse items-center gap-12">
-              <div className="lg:w-3/5">
-                <div className="flex items-center mb-6">
-                  <div className="w-12 h-12 bg-synthwave-neon-pink rounded-full border-2 border-synthwave-neon-pink flex items-center justify-center font-russo font-bold text-synthwave-bg-primary mr-6">
-                    1
-                  </div>
-                  <h3 className="font-russo text-2xl text-synthwave-neon-pink uppercase">Design Your Coach</h3>
-                </div>
-                <p className="font-rajdhani text-lg text-synthwave-text-secondary leading-relaxed mb-4">
-                  <strong>Tell us about your goals, experience, and preferences.</strong> Answer guided questions about your training history, what motivates you, and how you like to communicate.
-                </p>
-                <p className="font-rajdhani text-lg text-synthwave-text-secondary leading-relaxed">
-                  Starting with CrossFit? We've got specialized templates to get you going fast.
-                </p>
-              </div>
-              <div className="lg:w-2/5 flex items-center">
-                <div className="ml-auto mr-16">
-                  <GlitchText className="font-russo text-6xl text-synthwave-neon-pink opacity-50">
-                    DESIGN
-                  </GlitchText>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex flex-col lg:flex-row-reverse items-center gap-12">
-              <div className="lg:w-3/5">
-                <div className="flex items-center mb-6">
-                  <div className="w-12 h-12 bg-synthwave-neon-cyan rounded-full border-2 border-synthwave-neon-cyan flex items-center justify-center font-russo font-bold text-synthwave-bg-primary mr-6">
-                    2
-                  </div>
-                  <h3 className="font-russo text-2xl text-synthwave-neon-cyan uppercase">Customize & Refine</h3>
-                </div>
-                <p className="font-rajdhani text-lg text-synthwave-text-secondary leading-relaxed mb-4">
-                  <strong>Shape your coach's personality and approach.</strong> Choose training methodologies, communication style, and decision-making logic.
-                </p>
-                <p className="font-rajdhani text-lg text-synthwave-text-secondary leading-relaxed">
-                  Want data-driven programming? Prefer intuitive guidance? Make it yours.
-                </p>
-              </div>
-              <div className="lg:w-2/5 flex items-center">
-                <div className="ml-auto mr-16">
-                  <GlitchText className="font-russo text-6xl text-synthwave-neon-cyan opacity-50">
-                    REFINE
-                  </GlitchText>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex flex-col lg:flex-row-reverse items-center gap-12">
-              <div className="lg:w-3/5">
-                <div className="flex items-center mb-6">
-                  <div className="w-12 h-12 bg-synthwave-neon-purple rounded-full border-2 border-synthwave-neon-purple flex items-center justify-center font-russo font-bold text-synthwave-bg-primary mr-6">
-                    3
-                  </div>
-                  <h3 className="font-russo text-2xl text-synthwave-neon-purple uppercase">Train & Evolve</h3>
-                </div>
-                <p className="font-rajdhani text-lg text-synthwave-text-secondary leading-relaxed mb-4">
-                  <strong>Start training with your personalized AI coach.</strong> Get custom workouts, real-time guidance, and motivation that adapts as you progress.
-                </p>
-                <p className="font-rajdhani text-lg text-synthwave-text-secondary leading-relaxed">
-                  Your coach learns what works for you and gets better over time.
-                </p>
-              </div>
-              <div className="lg:w-2/5 flex items-center">
-                <div className="ml-auto mr-16">
-                  <GlitchText className="font-russo text-6xl text-synthwave-neon-purple opacity-50">
-                    EVOLVE
-                  </GlitchText>
-                </div>
-              </div>
-            </div>
+            <p className={`${typographyPatterns.description} max-w-3xl mx-auto`}>
+              NeonPanda isn't just another fitness app – it's the bridge between cutting-edge AI and genuine human connection.
+              Making AI coaching feel less artificial and more personal.
+            </p>
           </div>
-        </div>
-      </section>
 
-      {/* Target Audience Section */}
-      <section className="py-24 bg-gradient-to-r from-synthwave-bg-secondary via-green-900/20 to-synthwave-bg-secondary border-t border-synthwave-neon-green/20">
-        <div className="max-w-7xl mx-auto px-8">
-                      <h2 className="font-russo font-black text-4xl md:text-5xl text-white mb-8 text-center uppercase">
-              Built for Every Fitness Journey
-            </h2>
-          <p className="font-rajdhani text-xl text-synthwave-text-secondary mb-16 max-w-4xl mx-auto text-center leading-relaxed">
-            Starting with CrossFit and expanding to all fitness disciplines. Whether you're just beginning your fitness journey or training at an elite level, build the perfect AI coach tailored exactly to your needs.
-          </p>
-
-          <div className={themeClasses.cardGrid}>
-            <div className={`${themeClasses.glowCard} border-synthwave-neon-pink/30 hover:border-synthwave-neon-pink`}>
-              <h3 className={`${themeClasses.cardTitle} text-synthwave-neon-pink`}>
-                CrossFit Athletes
-              </h3>
-              <p className="font-rajdhani text-sm text-synthwave-neon-pink/80 mb-4 uppercase tracking-wide">
-                Our Starting Focus
-              </p>
-              <p className={themeClasses.cardText}>
-                Whether you're prepping for the Open or just fell in love with the sport, get programming that understands CrossFit's unique demands and methodology.
-              </p>
-            </div>
-
-            <div className={`${themeClasses.glowCard} border-synthwave-neon-cyan/30 hover:border-synthwave-neon-cyan`}>
-              <h3 className={`${themeClasses.cardTitle} text-synthwave-neon-cyan`}>
-                Fitness Enthusiasts
-              </h3>
-              <p className={themeClasses.cardText}>
-                Ready to move beyond generic apps? Create a coach that understands your goals, whether that's strength, conditioning, or general health.
-              </p>
-            </div>
-
-            <div className={`${themeClasses.glowCard} border-synthwave-neon-purple/30 hover:border-synthwave-neon-purple`}>
-              <h3 className={`${themeClasses.cardTitle} text-synthwave-neon-purple`}>
-                Expanding Soon
-              </h3>
-              <p className={themeClasses.cardText}>
-                We're building with other disciplines in mind—powerlifting, bodybuilding, endurance sports, and more. Your input helps us prioritize what's next.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Social Proof Section */}
-      <section className="py-24 relative bg-gradient-to-tr from-pink-900/20 via-synthwave-bg-primary to-purple-900/30 border-t border-synthwave-neon-pink/20">
-        <div className="absolute inset-0 grid-bg opacity-10"></div>
-        <div className="max-w-7xl mx-auto px-8">
-                      <h2 className="font-russo font-black text-4xl md:text-5xl text-white mb-16 text-center uppercase">
-              Building the Future of Fitness AI
-            </h2>
-
+          {/* App Screenshots Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-16">
-            <NeonBorder color="pink" className="p-8 bg-synthwave-bg-card/50">
-              <h3 className="font-russo text-xl text-synthwave-neon-pink mb-4 uppercase">Development Approach</h3>
-              <p className="font-rajdhani text-synthwave-text-secondary leading-relaxed">
-                We're taking a collaborative approach to building this platform. Rather than creating in isolation, we're seeking partners who want to help shape the future of AI coaching.
-              </p>
-            </NeonBorder>
+            {/* Screenshot 1 - Coach Creation */}
+            <div className={containerPatterns.cardMedium}>
+              <div className="p-6">
+                <div className="bg-synthwave-bg-primary/50 rounded-xl h-80 mb-6 flex items-center justify-center border-2 border-dashed border-synthwave-neon-pink/30">
+                  <div className="text-center">
+                    <div className="w-16 h-16 bg-synthwave-neon-pink/20 rounded-xl flex items-center justify-center mx-auto mb-4">
+                      <svg className="w-8 h-8 text-synthwave-neon-pink" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                    </div>
+                    <p className="font-rajdhani text-synthwave-text-muted">Coach Creation Screenshot</p>
+                  </div>
+                </div>
+                <h3 className={`${typographyPatterns.cardTitle} text-synthwave-neon-pink mb-3`}>
+                  Design Your Coach
+                </h3>
+                <p className="font-rajdhani text-synthwave-text-secondary">
+                  Build your perfect AI coach through guided conversations. Shape their personality, training philosophy, and communication style.
+                </p>
+              </div>
+            </div>
 
-            <NeonBorder color="cyan" className="p-8 bg-synthwave-bg-card/50">
-              <h3 className="font-russo text-xl text-synthwave-neon-cyan mb-4 uppercase">Methodology Foundation</h3>
-              <p className="font-rajdhani text-synthwave-text-secondary leading-relaxed">
-                Our AI coaching framework draws inspiration from proven training methodologies including Mayhem, PRVN, and CompTrain principles, while maintaining complete independence from these programs.
-              </p>
-            </NeonBorder>
+            {/* Screenshot 2 - Chat Interface */}
+            <div className={containerPatterns.cardMedium}>
+              <div className="p-6">
+                <div className="bg-synthwave-bg-primary/50 rounded-xl h-80 mb-6 flex items-center justify-center border-2 border-dashed border-synthwave-neon-cyan/30">
+                  <div className="text-center">
+                    <div className="w-16 h-16 bg-synthwave-neon-cyan/20 rounded-xl flex items-center justify-center mx-auto mb-4">
+                      <svg className="w-8 h-8 text-synthwave-neon-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                      </svg>
+                    </div>
+                    <p className="font-rajdhani text-synthwave-text-muted">Chat Interface Screenshot</p>
+                  </div>
+                </div>
+                <h3 className={`${typographyPatterns.cardTitle} text-synthwave-neon-cyan mb-3`}>
+                  Real Conversations
+                </h3>
+                <p className="font-rajdhani text-synthwave-text-secondary">
+                  Chat naturally with your AI coach. Get personalized guidance, motivation, and support whenever you need it.
+                </p>
+              </div>
+            </div>
 
-            <NeonBorder color="purple" className="p-8 bg-synthwave-bg-card/50">
-              <h3 className="font-russo text-xl text-synthwave-neon-purple mb-4 uppercase">Technical Excellence</h3>
-              <p className="font-rajdhani text-synthwave-text-secondary leading-relaxed">
-                Built on enterprise-grade infrastructure that ensures your AI coach responds quickly, securely, and reliably—without the tech complexity.
-              </p>
-            </NeonBorder>
-          </div>
-
-          <div className="text-center">
-            <div className="inline-block bg-synthwave-bg-card/50 border border-synthwave-neon-pink/30 rounded-xl p-8 max-w-2xl">
-              <p className="font-rajdhani text-lg text-synthwave-text-secondary italic leading-relaxed mb-4">
-                "As someone who's tried every fitness app out there, the idea of building my own AI coach is game-changing. Finally, something that could actually understand how I want to train."
-              </p>
-              <p className="font-russo text-synthwave-neon-pink uppercase text-sm tracking-wide">
-                — Beta User, CrossFit Athlete
-              </p>
+            {/* Screenshot 3 - Workout Programming */}
+            <div className={containerPatterns.cardMedium}>
+              <div className="p-6">
+                <div className="bg-synthwave-bg-primary/50 rounded-xl h-80 mb-6 flex items-center justify-center border-2 border-dashed border-synthwave-neon-purple/30">
+                  <div className="text-center">
+                    <div className="w-16 h-16 bg-synthwave-neon-purple/20 rounded-xl flex items-center justify-center mx-auto mb-4">
+                      <svg className="w-8 h-8 text-synthwave-neon-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                      </svg>
+                    </div>
+                    <p className="font-rajdhani text-synthwave-text-muted">Workout Programming Screenshot</p>
+                  </div>
+                </div>
+                <h3 className={`${typographyPatterns.cardTitle} text-synthwave-neon-purple mb-3`}>
+                  Smart Programming
+                </h3>
+                <p className="font-rajdhani text-synthwave-text-secondary">
+                  Get intelligent workout programming that adapts to your progress, schedule, and goals. No more generic routines.
+                </p>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Final CTA Section */}
-      <section className="py-24 text-center bg-gradient-to-b from-synthwave-bg-secondary via-cyan-900/30 to-synthwave-bg-primary border-t border-synthwave-neon-cyan/30">
-        <div className="max-w-4xl mx-auto px-8">
-          <h2 className="font-russo font-black text-4xl md:text-5xl text-white mb-8 uppercase">
-            Ready to Build Your Perfect AI Coach?
+      {/* Why NeonPanda Section */}
+      <section className="relative z-10 py-24 px-8">
+        <div className="max-w-5xl mx-auto text-center">
+          <h2 className={`${typographyPatterns.pageTitle} mb-8`}>
+            Why NeonPanda?
           </h2>
-          <p className="font-rajdhani text-xl text-synthwave-text-secondary mb-12 leading-relaxed">
-            Join thousands of fitness enthusiasts waiting for the future of personalized coaching. Be first to create your custom AI coach when we launch.
-          </p>
 
-          <div className="space-y-8">
-            <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-              <Link to="/contact?type=waitlist" className={themeClasses.neonButton}>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Playful Power */}
+            <div className={containerPatterns.cardLight}>
+              <div className="p-8">
+                <div className="w-16 h-16 bg-synthwave-neon-pink/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                  <svg className="w-8 h-8 text-synthwave-neon-pink" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                </div>
+                <h3 className={`${typographyPatterns.cardTitle} text-synthwave-neon-pink mb-4`}>
+                  Playful Power
+                </h3>
+                <p className="font-rajdhani text-synthwave-text-secondary leading-relaxed">
+                  Serious results don't require a serious attitude. Your AI coach is sophisticated enough to rival any human coach, yet approachable enough to feel like a friend.
+                </p>
+              </div>
+            </div>
+
+            {/* Electric Energy */}
+            <div className={containerPatterns.cardLight}>
+              <div className="p-8">
+                <div className="w-16 h-16 bg-synthwave-neon-cyan/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                  <svg className="w-8 h-8 text-synthwave-neon-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707" />
+                  </svg>
+                </div>
+                <h3 className={`${typographyPatterns.cardTitle} text-synthwave-neon-cyan mb-4`}>
+                  Electric Energy
+                </h3>
+                <p className="font-rajdhani text-synthwave-text-secondary leading-relaxed">
+                  We bring vibrant energy to every interaction. We're the spark that ignites your fitness journey and the bright light guiding you through tough workouts.
+                </p>
+              </div>
+            </div>
+
+            {/* Adaptive Authenticity */}
+            <div className={containerPatterns.cardLight}>
+              <div className="p-8">
+                <div className="w-16 h-16 bg-synthwave-neon-purple/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                  <svg className="w-8 h-8 text-synthwave-neon-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                  </svg>
+                </div>
+                <h3 className={`${typographyPatterns.cardTitle} text-synthwave-neon-purple mb-4`}>
+                  Adaptive Authenticity
+                </h3>
+                <p className="font-rajdhani text-synthwave-text-secondary leading-relaxed">
+                  Every coach is custom, every personality unique. We don't do generic. Your AI coach learns, adapts, and evolves with you.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Ready to Start Section */}
+      <section className="relative z-10 py-24 px-8">
+        <div className="max-w-4xl mx-auto text-center">
+          <div className={`${containerPatterns.mainContent} p-12`}>
+            <h2 className={`${typographyPatterns.pageTitle} mb-8`}>
+              Ready to Meet Your Electric Companion?
+            </h2>
+            <p className={`${typographyPatterns.description} mb-8`}>
+              Join the waitlist to be first in line when we launch. Or connect with us if you want to help build the future of AI coaching.
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-8">
+              <Link to="/contact?type=waitlist" className={buttonPatterns.heroCTA}>
                 Join the Waitlist
               </Link>
-              <Link to="/contact?type=collaborate" className={themeClasses.cyanButton}>
-                Want to Collaborate?
+              <Link to="/contact?type=collaborate" className={buttonPatterns.secondary}>
+                Let's Collaborate
               </Link>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-8 justify-center items-center text-sm font-rajdhani text-synthwave-text-secondary">
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-synthwave-neon-pink rounded-full"></div>
-                <span>Get notified when we launch in late 2025</span>
+                <div className="w-2 h-2 bg-synthwave-neon-pink rounded-full animate-pulse"></div>
+                <span>Launch: Late 2025</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-synthwave-neon-cyan rounded-full"></div>
-                <span>Help us build, test, or design the platform</span>
+                <div className="w-2 h-2 bg-synthwave-neon-cyan rounded-full animate-pulse"></div>
+                <span>Starting with CrossFit</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-synthwave-neon-purple rounded-full animate-pulse"></div>
+                <span>Built for Everyone</span>
               </div>
             </div>
-          </div>
-
-          <div className="mt-16">
-            <GlitchText className="font-russo text-2xl text-synthwave-neon-purple">
-              SYSTEM READY FOR LAUNCH
-            </GlitchText>
           </div>
         </div>
       </section>
 
       {/* Footer Section */}
-      <footer className="bg-synthwave-bg-primary border-t border-synthwave-neon-cyan/20 py-16">
+      <footer className="relative z-10 bg-synthwave-bg-primary border-t border-synthwave-neon-cyan/20 py-16">
         <div className="max-w-7xl mx-auto px-8">
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-12 mb-12">
 
@@ -382,7 +258,7 @@ function LandingPage() {
               <div className="flex items-center mb-6">
                 <img
                   src="/images/logo-light-sm.png"
-                  alt="CoachForge Logo"
+                  alt="NeonPanda Logo"
                   className="h-8 w-auto mr-3"
                 />
               </div>
@@ -438,20 +314,20 @@ function LandingPage() {
               <div className="space-y-4 font-rajdhani text-synthwave-text-secondary">
                 <div>
                   <p className="font-semibold text-white mb-1">Email</p>
-                  <a href="mailto:hello@coachforge.com" className="hover:text-synthwave-neon-pink transition-colors">
-                    hello@coachforge.com
+                  <a href="mailto:hello@NeonPanda.com" className="hover:text-synthwave-neon-pink transition-colors">
+                    hello@NeonPanda.com
                   </a>
                 </div>
                 <div>
                   <p className="font-semibold text-white mb-1">Support</p>
-                  <a href="mailto:support@coachforge.com" className="hover:text-synthwave-neon-pink transition-colors">
-                    support@coachforge.com
+                  <a href="mailto:support@NeonPanda.com" className="hover:text-synthwave-neon-pink transition-colors">
+                    support@NeonPanda.com
                   </a>
                 </div>
                 <div>
                   <p className="font-semibold text-white mb-1">Partnership</p>
-                  <a href="mailto:partners@coachforge.com" className="hover:text-synthwave-neon-pink transition-colors">
-                    partners@coachforge.com
+                  <a href="mailto:partners@NeonPanda.com" className="hover:text-synthwave-neon-pink transition-colors">
+                    partners@NeonPanda.com
                   </a>
                 </div>
               </div>
@@ -462,7 +338,7 @@ function LandingPage() {
           <div className="border-t border-synthwave-neon-cyan/20 pt-8">
             <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
               <div className="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-6 font-rajdhani text-synthwave-text-secondary">
-                <p>&copy; {new Date().getFullYear()} CoachForge, LLC. All rights reserved.</p>
+                <p>&copy; {new Date().getFullYear()} NeonPanda, LLC. All rights reserved.</p>
                 <div className="flex space-x-6">
                   <Link to="/privacy" className="hover:text-synthwave-neon-pink transition-colors">Privacy Policy</Link>
                   <Link to="/terms" className="hover:text-synthwave-neon-pink transition-colors">Terms of Service</Link>

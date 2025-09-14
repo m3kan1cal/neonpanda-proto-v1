@@ -1,5 +1,6 @@
 import React from 'react';
 import { themeClasses } from '../../utils/synthwaveThemeClasses';
+import { containerPatterns } from '../../utils/uiPatterns';
 
 // Standardized loading spinner component
 export const LoadingSpinner = ({ size = 'large', text = 'Loading...' }) => {
@@ -45,21 +46,26 @@ export const ErrorState = ({
 
   return (
     <div className={`${themeClasses.container} min-h-screen`}>
-      <div className="max-w-4xl mx-auto px-8 py-12 text-center">
-        <h1 className={`font-russo font-black text-3xl text-white mb-6 uppercase tracking-wide`}>
-          {title}
-        </h1>
-        <p className={`font-rajdhani text-lg ${getColorClass()} mb-8 leading-relaxed`}>
-          {message}
-        </p>
-        {onButtonClick && (
-          <button
-            onClick={onButtonClick}
-            className={`${themeClasses.neonButton} text-lg px-8 py-3`}
-          >
-            {buttonText}
-          </button>
-        )}
+      <div className="max-w-4xl mx-auto px-8 py-12 flex justify-center">
+        <div className={`${containerPatterns.errorState} w-full max-w-4xl`}>
+          <div className="flex items-center space-x-3 mb-4">
+            <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <h5 className="font-russo text-lg text-red-400 uppercase">{title}</h5>
+          </div>
+          <p className="text-red-300 font-rajdhani text-sm mb-6">
+            {message}
+          </p>
+          {onButtonClick && (
+            <button
+              onClick={onButtonClick}
+              className={`${themeClasses.neonButton} text-lg px-8 py-3`}
+            >
+              {buttonText}
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -87,15 +93,16 @@ export const CenteredErrorState = ({
 
   return (
     <div className={`min-h-screen ${themeClasses.bgGradient} ${themeClasses.textPrimary} flex items-center justify-center`}>
-      <div className="text-center max-w-lg mx-auto px-6">
-        <div className="mb-6">
-          <div className={`font-russo text-2xl ${getColorClass()} mb-4 uppercase tracking-wide`}>
-            {title}
-          </div>
-          <p className="text-synthwave-text-secondary font-rajdhani text-lg leading-relaxed">
-            {message}
-          </p>
+      <div className={`${containerPatterns.errorState} w-full max-w-lg mx-6`}>
+        <div className="flex items-center space-x-3 mb-4">
+          <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <h5 className="font-russo text-lg text-red-400 uppercase">{title}</h5>
         </div>
+        <p className="text-red-300 font-rajdhani text-sm mb-6">
+          {message}
+        </p>
         {onButtonClick && (
           <button
             onClick={onButtonClick}
@@ -155,11 +162,16 @@ export const InlineError = ({
   const sizeClasses = getSizeClasses();
 
   return (
-    <div className={`text-center ${sizeClasses.container}`}>
-      <div className={`font-rajdhani ${getColorClass()} ${sizeClasses.title} font-bold mb-2`}>
-        {title}
+    <div className={`${containerPatterns.inlineError} ${sizeClasses.container}`}>
+      <div className="flex items-center space-x-3 mb-2">
+        <svg className="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <div className={`font-russo text-red-400 ${sizeClasses.title} font-bold uppercase`}>
+          {title}
+        </div>
       </div>
-      <div className={`font-rajdhani text-synthwave-text-muted ${sizeClasses.message}`}>
+      <div className={`font-rajdhani text-red-300 ${sizeClasses.message}`}>
         {message}
       </div>
     </div>

@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
+import { Tooltip } from 'react-tooltip';
 import { themeClasses } from '../utils/synthwaveThemeClasses';
+import { containerPatterns, iconButtonPatterns, inputPatterns } from '../utils/uiPatterns';
 import {
   ChevronDownIcon,
   ChevronRightIcon,
@@ -22,7 +24,7 @@ const NotesIcon = () => (
 );
 
 const JsonIcon = () => (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
   </svg>
 );
@@ -36,30 +38,82 @@ const AIIcon = () => (
   </svg>
 );
 
-// Collapsible section component
+// Trophy icon for PR Achievements
+const TrophyIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+  </svg>
+);
+
+// Summary icon for Workout Summary
+const SummaryIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+  </svg>
+);
+
+// Rounds/Cycles icon for Workout Rounds
+const CyclesIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+  </svg>
+);
+
+// Feedback icon for Subjective Feedback
+const FeedbackIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+  </svg>
+);
+
+// Coach icon for Coach Notes
+const CoachIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+  </svg>
+);
+
+// Extraction/Processing icon for Extraction Notes
+const ProcessingIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+    <circle cx="9" cy="9" r="1" fill="currentColor" />
+    <circle cx="15" cy="9" r="1" fill="currentColor" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 13h6" />
+  </svg>
+);
+
+// Database icon for Raw Workout Data and Metadata
+const DatabaseIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
+  </svg>
+);
+
+// Collapsible section component - Modern 2025 style
 const CollapsibleSection = ({ title, icon, children, defaultOpen = false, className = "" }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
-    <div className={`border border-synthwave-neon-pink/30 rounded-lg overflow-hidden ${className}`}>
+    <div className={`${containerPatterns.collapsibleSection} overflow-hidden ${className}`}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-4 py-3 bg-synthwave-bg-primary/30 hover:bg-synthwave-bg-primary/50 transition-colors duration-200 flex items-center justify-between text-left"
+        className={containerPatterns.collapsibleHeader}
       >
         <div className="flex items-center space-x-3">
-          <div className="text-synthwave-neon-pink">
+          <div className="text-synthwave-neon-cyan">
             {icon}
           </div>
-          <h3 className="font-russo font-bold text-white text-sm uppercase">
+          <h3 className="font-russo font-bold text-white text-base uppercase">
             {title}
           </h3>
         </div>
-        <div className={`text-synthwave-neon-pink transition-transform duration-200 ${isOpen ? 'rotate-0' : '-rotate-90'}`}>
+        <div className={`text-synthwave-neon-cyan transition-transform duration-300 ${isOpen ? 'rotate-0' : '-rotate-90'}`}>
           <ChevronDownIcon />
         </div>
       </button>
       {isOpen && (
-        <div className="p-4 bg-synthwave-bg-card/20">
+        <div className={containerPatterns.collapsibleContent}>
           {children}
         </div>
       )}
@@ -448,8 +502,71 @@ const CoachNotes = ({ notes }) => {
   );
 };
 
+// Icons needed for the title editing
+const EditIcon = () => (
+  <svg
+    className="w-4 h-4"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+    />
+  </svg>
+);
+
+const SaveIcon = () => (
+  <svg
+    className="w-4 h-4"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M5 13l4 4L19 7"
+    />
+  </svg>
+);
+
+const CancelIcon = () => (
+  <svg
+    className="w-4 h-4"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M6 18L18 6M6 6l12 12"
+    />
+  </svg>
+);
+
 // Main WorkoutViewer component
-const WorkoutViewer = ({ workout, onToggleView, onDeleteWorkout, viewMode = "formatted" }) => {
+const WorkoutViewer = ({
+  workout,
+  onToggleView,
+  onDeleteWorkout,
+  viewMode = "formatted",
+  isEditingTitle,
+  editTitleValue,
+  isSavingTitle,
+  onEditTitle,
+  onSaveTitle,
+  onCancelEdit,
+  onTitleChange,
+  onTitleKeyPress,
+  formatDate
+}) => {
   if (!workout || !workout.workoutData) {
     return (
       <div className="text-center py-8">
@@ -527,39 +644,135 @@ const WorkoutViewer = ({ workout, onToggleView, onDeleteWorkout, viewMode = "for
 
   return (
     <div className="space-y-6" data-workout-viewer>
-      {/* Toggle View, Manage Workouts, and Delete Buttons */}
-      <div className="flex justify-end space-x-2">
-        <IconButton
-          variant="cyan"
-          tooltip="Manage Workouts"
-          tooltipPosition="bottom"
-          onClick={() => {
-            const searchParams = new URLSearchParams(window.location.search);
-            const userId = searchParams.get('userId');
-            const coachId = searchParams.get('coachId');
-            if (userId && coachId) {
-              window.location.href = `/training-grounds/manage-workouts?userId=${userId}&coachId=${coachId}`;
-            }
-          }}
-        >
-          <WorkoutIconSmall />
-        </IconButton>
-        <IconButton
-          variant="cyan"
-          tooltip={viewMode === "formatted" ? "View Raw JSON" : "View Formatted"}
-          tooltipPosition="bottom"
-          onClick={onToggleView}
-        >
-          <JsonIcon />
-        </IconButton>
-        <IconButton
-          variant="default"
-          tooltip="Delete Workout"
-          tooltipPosition="bottom"
-          onClick={() => onDeleteWorkout && onDeleteWorkout(workout)}
-        >
-          <TrashIcon />
-        </IconButton>
+      {/* Workout Title and Action Buttons */}
+      <div className="flex items-center justify-between">
+        {/* Workout Title Section - Left Side */}
+        <div className="flex-1">
+          {isEditingTitle ? (
+            <div className="flex items-center space-x-2">
+              <input
+                type="text"
+                value={editTitleValue}
+                onChange={(e) => onTitleChange && onTitleChange(e.target.value)}
+                onKeyDown={onTitleKeyPress}
+                className={inputPatterns.inlineEdit}
+                placeholder="Enter workout name..."
+                autoFocus
+              />
+              <button
+                onClick={onSaveTitle}
+                disabled={isSavingTitle || !editTitleValue?.trim()}
+                className={`p-1.5 bg-synthwave-neon-pink text-synthwave-bg-primary hover:bg-synthwave-neon-pink/90 hover:shadow-lg hover:shadow-synthwave-neon-pink/30 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary ${isSavingTitle ? 'opacity-50 cursor-not-allowed' : ''}`}
+                data-tooltip-id="save-workout-tooltip"
+                data-tooltip-content="Save title (Enter)"
+                data-tooltip-place="bottom"
+              >
+                {isSavingTitle ? (
+                  <div className="w-4 h-4 flex items-center justify-center">
+                    <div className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                ) : (
+                  <SaveIcon />
+                )}
+              </button>
+              <button
+                onClick={onCancelEdit}
+                disabled={isSavingTitle}
+                className={`p-1.5 border border-synthwave-neon-cyan/30 text-synthwave-neon-cyan hover:border-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 ${isSavingTitle ? 'opacity-50 cursor-not-allowed' : ''}`}
+                data-tooltip-id="cancel-edit-tooltip"
+                data-tooltip-content="Cancel (Esc)"
+                data-tooltip-place="bottom"
+              >
+                <CancelIcon />
+              </button>
+              <Tooltip
+                id="save-workout-tooltip"
+                offset={8}
+                delayShow={0}
+                style={{
+                  backgroundColor: '#000',
+                  color: '#fff',
+                  borderRadius: '8px',
+                  fontFamily: 'Rajdhani',
+                  fontSize: '14px',
+                  padding: '12px',
+                  zIndex: 99999,
+                  transform: 'translateX(-3px)'
+                }}
+              />
+              <Tooltip
+                id="cancel-edit-tooltip"
+                offset={8}
+                delayShow={0}
+                style={{
+                  backgroundColor: '#000',
+                  color: '#fff',
+                  borderRadius: '8px',
+                  fontFamily: 'Rajdhani',
+                  fontSize: '14px',
+                  padding: '12px',
+                  zIndex: 99999,
+                  transform: 'translateX(-3px)'
+                }}
+              />
+            </div>
+          ) : (
+            <div className="flex items-center space-x-1 group">
+              <h2 className="font-rajdhani font-bold text-2xl">
+                <span className="text-synthwave-neon-pink">Workout: </span>
+                <span className="text-white">{workout.workoutData?.workout_name || "Unnamed Workout"}</span>
+              </h2>
+              {onEditTitle && (
+                <>
+                  <button
+                    onClick={onEditTitle}
+                    className="p-1.5 text-synthwave-neon-pink hover:text-synthwave-neon-pink/80 hover:bg-synthwave-neon-pink/10 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary"
+                    data-tooltip-id="edit-workout-tooltip"
+                    data-tooltip-content="Edit workout name"
+                    data-tooltip-place="bottom"
+                  >
+                    <EditIcon />
+                  </button>
+                  <Tooltip
+                    id="edit-workout-tooltip"
+                    offset={8}
+                    delayShow={0}
+                    style={{
+                      backgroundColor: '#000',
+                      color: '#fff',
+                      borderRadius: '8px',
+                      fontFamily: 'Rajdhani',
+                      fontSize: '14px',
+                      padding: '12px',
+                      zIndex: 99999,
+                      transform: 'translateX(-3px)'
+                    }}
+                  />
+                </>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Action Buttons - Right Side */}
+        <div className="flex space-x-2">
+          <IconButton
+            variant="bordered"
+            tooltip={viewMode === "formatted" ? "View Raw JSON" : "View Formatted"}
+            tooltipPosition="bottom"
+            onClick={onToggleView}
+          >
+            <JsonIcon />
+          </IconButton>
+          <IconButton
+            variant="solid"
+            tooltip="Delete Workout"
+            tooltipPosition="bottom"
+            onClick={() => onDeleteWorkout && onDeleteWorkout(workout)}
+          >
+            <TrashIcon />
+          </IconButton>
+        </div>
       </div>
 
       {/* Raw JSON Section - only shown in raw mode */}
@@ -578,7 +791,7 @@ const WorkoutViewer = ({ workout, onToggleView, onDeleteWorkout, viewMode = "for
       {/* Workout Metadata */}
       <CollapsibleSection
         title="Workout Metadata"
-        icon={<WorkoutIconSmall />}
+        icon={<DatabaseIcon />}
         defaultOpen={true}
       >
         <div className="space-y-4">
@@ -624,7 +837,7 @@ const WorkoutViewer = ({ workout, onToggleView, onDeleteWorkout, viewMode = "for
       {workoutData.pr_achievements && workoutData.pr_achievements.length > 0 && (
         <CollapsibleSection
           title={`PR Achievements (${workoutData.pr_achievements.length})`}
-          icon={<MetricsIcon />}
+          icon={<TrophyIcon />}
           defaultOpen={true}
         >
           <div className="space-y-3">
@@ -694,15 +907,17 @@ const WorkoutViewer = ({ workout, onToggleView, onDeleteWorkout, viewMode = "for
       {workout.summary && (
         <CollapsibleSection
           title="Workout Summary"
-          icon={<AIIcon />}
+          icon={<SummaryIcon />}
           defaultOpen={true}
         >
-          <div className="text-synthwave-text-primary font-rajdhani text-base leading-relaxed">
-            {workout.summary}
-          </div>
-          <div className="mt-3 text-synthwave-text-secondary font-rajdhani text-sm">
-            <span className="text-synthwave-neon-cyan">Generated by AI</span> •
-            Provides contextual overview of workout performance and key highlights
+          <div className={containerPatterns.infoCardCyan}>
+            <div className="text-synthwave-text-primary font-rajdhani text-base leading-relaxed">
+              {workout.summary}
+            </div>
+            <div className="mt-3 p-3 bg-synthwave-bg-primary/30 rounded border border-synthwave-neon-cyan/20">
+              <span className="text-synthwave-neon-cyan font-rajdhani text-sm font-medium">Generated by AI</span>
+              <span className="text-synthwave-text-secondary font-rajdhani text-sm"> • Provides contextual overview of workout performance and key highlights</span>
+            </div>
           </div>
         </CollapsibleSection>
       )}
@@ -711,7 +926,7 @@ const WorkoutViewer = ({ workout, onToggleView, onDeleteWorkout, viewMode = "for
       {crossfitData && crossfitData.rounds && (
         <CollapsibleSection
           title={`Workout Rounds (${crossfitData.rounds.length})`}
-          icon={<WorkoutIconSmall />}
+          icon={<CyclesIcon />}
           defaultOpen={true}
         >
           <div className="space-y-6">
@@ -726,7 +941,7 @@ const WorkoutViewer = ({ workout, onToggleView, onDeleteWorkout, viewMode = "for
       {workoutData.subjective_feedback && (
         <CollapsibleSection
           title="Subjective Feedback"
-          icon={<NotesIcon />}
+          icon={<FeedbackIcon />}
           defaultOpen={false}
         >
           <SubjectiveFeedback feedback={workoutData.subjective_feedback} />
@@ -737,7 +952,7 @@ const WorkoutViewer = ({ workout, onToggleView, onDeleteWorkout, viewMode = "for
       {workoutData.coach_notes && (
         <CollapsibleSection
           title="Coach Notes"
-          icon={<NotesIcon />}
+          icon={<CoachIcon />}
           defaultOpen={false}
         >
           <CoachNotes notes={workoutData.coach_notes} />
@@ -748,7 +963,7 @@ const WorkoutViewer = ({ workout, onToggleView, onDeleteWorkout, viewMode = "for
       {workoutData.metadata?.extraction_notes && (
         <CollapsibleSection
           title="Extraction Notes"
-          icon={<NotesIcon />}
+          icon={<ProcessingIcon />}
           defaultOpen={false}
         >
           <div className="p-3 bg-synthwave-bg-primary/30 rounded border border-synthwave-neon-cyan/20">

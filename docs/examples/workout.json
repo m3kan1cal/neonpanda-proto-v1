@@ -1,91 +1,108 @@
 {
-  "workoutId": "ws_4sVTVPd6aJdRq_1752332843772",
+  "coachIds": ["user_4sVTVPd6aJdRq_coach_main"],
+  "coachNames": ["Marcus_The_Strength_Builder"],
+  "completedAt": "2025-08-05T22:20:00.000Z",
+  "conversationId": "conv_1754269339684_7fanuvurm",
+  "extractionMetadata": {
+    "confidence": 0.9999999999999999,
+    "extractedAt": "2025-08-05T01:10:45.321Z",
+    "reviewedAt": "2025-08-05T01:10:45.321Z",
+    "reviewedBy": "system"
+  },
+  "summary": "Completed \"Power Start Complex\" - a 62-minute hybrid strength and conditioning workout featuring five distinct phases: power development with hang power cleans at 135#, progressive trap bar deadlifts up to 245#, push/pull supersets with 205# bench press, and unilateral work with 100# total load Bulgarian split squats. Finished with an 8-round Tabata alternating between rowing sprints and 70# Russian kettlebell swings, demonstrating strong work capacity across multiple movement patterns and energy systems.",
   "userId": "4sVTVPd6aJdRq",
-  "coachIds": [
-    "user_4sVTVPd6aJdRq_coach_main"
-  ],
-  "coachNames": [
-    "Marcus_The_Strength_Builder"
-  ],
-  "conversationId": "conv_1751805821724_o13xwt9tr",
-  "completedAt": "2025-07-12T15:07:23.773Z",
   "workoutData": {
     "date": "2024-12-19",
-    "metadata": {
-      "logging_time": null,
-      "schema_version": "2.0",
-      "ai_extracted": true,
-      "data_completeness": 0.85,
-      "data_confidence": 0.9499999999999998,
-      "extraction_method": "claude_conversation_analysis",
-      "logged_via": "conversation",
-      "version": "1.0",
-      "validation_flags": [
-        "estimated_calories",
-        "inferred_rpe",
-        "estimated_soreness"
-      ],
-      "user_verified": false,
-      "extraction_notes": "Complex strength+metcon workout with clear progression. User reported hot garage conditions and 70-minute duration. Strong performance across all phases with heavy working sets at 245lbs for both squat and bench."
-    },
-    "performance_metrics": {
-      "intensity": 7,
-      "mood_pre": null,
-      "mood_post": 8,
-      "perceived_exertion": 7,
-      "calories_burned": 650,
-      "energy_level_post": 7,
-      "heart_rate": {
-        "zones": {
-          "zone_1": null,
-          "zone_2": null,
-          "zone_5": null,
-          "zone_3": null,
-          "zone_4": null
-        },
-        "max": null,
-        "avg": null
-      },
-      "energy_level_pre": null
-    },
-    "workout_name": "Fortis Vigor",
-    "pr_achievements": [],
+    "discipline": "hybrid",
     "discipline_specific": {
-      "running": null,
+      "coach_notes": {
+        "adaptation_recommendations": null,
+        "areas_for_improvement": null,
+        "coaching_cues_given": null,
+        "motivation_strategy": null,
+        "next_session_focus": null,
+        "positive_observations": null,
+        "programming_intent": "Multi-phase strength and conditioning workout targeting power development, heavy hinge patterns, push/pull balance, unilateral strength, and metabolic conditioning",
+        "safety_flags": []
+      },
       "crossfit": {
-        "workout_format": "strength_then_metcon",
         "performance_data": {
-          "total_reps": 558,
+          "rounds_completed": 23,
           "round_times": null,
-          "total_time": 4200,
-          "rounds_completed": 27
+          "score": {
+            "type": "time",
+            "unit": "seconds",
+            "value": 3720
+          },
+          "total_reps": null,
+          "total_time": 3720
         },
-        "time_cap": null,
+        "powerlifting": null,
         "rounds": [
           {
             "exercises": [
               {
+                "assistance": null,
+                "calories": null,
+                "distance": null,
+                "exercise_name": "hang power clean",
+                "form_notes": "Power start phase - 4 sets total",
+                "movement_type": "barbell",
                 "reps": {
-                  "prescribed": 5,
-                  "completed": 5,
                   "broken_sets": null,
+                  "completed": 3,
+                  "prescribed": 3,
                   "rest_between_sets": null
                 },
+                "time": null,
+                "variation": null,
+                "weight": {
+                  "percentage_1rm": null,
+                  "rx_weight": null,
+                  "scaled_weight": null,
+                  "unit": "lbs",
+                  "value": 135
+                }
+              },
+              {
+                "assistance": null,
+                "calories": null,
                 "distance": null,
-                "movement_type": "barbell",
+                "exercise_name": "box jump",
+                "form_notes": null,
+                "movement_type": "bodyweight",
+                "reps": {
+                  "broken_sets": null,
+                  "completed": 3,
+                  "prescribed": 3,
+                  "rest_between_sets": null
+                },
+                "time": null,
+                "variation": "24 inch",
                 "weight": {
                   "unit": "lbs",
-                  "percentage_1rm": null,
-                  "value": 95,
-                  "scaled_weight": null,
-                  "rx_weight": null
-                },
-                "calories": null,
-                "time": null,
+                  "value": null
+                }
+              },
+              {
                 "assistance": null,
-                "form_notes": "Warmup progression",
-                "exercise_name": "back squat",
-                "variation": null
+                "calories": null,
+                "distance": null,
+                "exercise_name": "sit-up",
+                "form_notes": null,
+                "movement_type": "bodyweight",
+                "reps": {
+                  "broken_sets": null,
+                  "completed": 10,
+                  "prescribed": 10,
+                  "rest_between_sets": null
+                },
+                "time": null,
+                "variation": null,
+                "weight": {
+                  "unit": "lbs",
+                  "value": null
+                }
               }
             ],
             "round_number": 1
@@ -93,27 +110,67 @@
           {
             "exercises": [
               {
+                "assistance": null,
+                "calories": null,
+                "distance": null,
+                "exercise_name": "hang power clean",
+                "form_notes": null,
+                "movement_type": "barbell",
                 "reps": {
-                  "prescribed": 5,
-                  "completed": 5,
                   "broken_sets": null,
+                  "completed": 3,
+                  "prescribed": 3,
                   "rest_between_sets": null
                 },
+                "time": null,
+                "variation": null,
+                "weight": {
+                  "percentage_1rm": null,
+                  "rx_weight": null,
+                  "scaled_weight": null,
+                  "unit": "lbs",
+                  "value": 135
+                }
+              },
+              {
+                "assistance": null,
+                "calories": null,
                 "distance": null,
-                "movement_type": "barbell",
+                "exercise_name": "box jump",
+                "form_notes": null,
+                "movement_type": "bodyweight",
+                "reps": {
+                  "broken_sets": null,
+                  "completed": 3,
+                  "prescribed": 3,
+                  "rest_between_sets": null
+                },
+                "time": null,
+                "variation": "24 inch",
                 "weight": {
                   "unit": "lbs",
-                  "percentage_1rm": null,
-                  "value": 135,
-                  "scaled_weight": null,
-                  "rx_weight": null
-                },
-                "calories": null,
-                "time": null,
+                  "value": null
+                }
+              },
+              {
                 "assistance": null,
-                "form_notes": "Warmup progression",
-                "exercise_name": "back squat",
-                "variation": null
+                "calories": null,
+                "distance": null,
+                "exercise_name": "sit-up",
+                "form_notes": null,
+                "movement_type": "bodyweight",
+                "reps": {
+                  "broken_sets": null,
+                  "completed": 10,
+                  "prescribed": 10,
+                  "rest_between_sets": null
+                },
+                "time": null,
+                "variation": null,
+                "weight": {
+                  "unit": "lbs",
+                  "value": null
+                }
               }
             ],
             "round_number": 2
@@ -121,27 +178,67 @@
           {
             "exercises": [
               {
+                "assistance": null,
+                "calories": null,
+                "distance": null,
+                "exercise_name": "hang power clean",
+                "form_notes": null,
+                "movement_type": "barbell",
                 "reps": {
-                  "prescribed": 5,
-                  "completed": 5,
                   "broken_sets": null,
+                  "completed": 3,
+                  "prescribed": 3,
                   "rest_between_sets": null
                 },
+                "time": null,
+                "variation": null,
+                "weight": {
+                  "percentage_1rm": null,
+                  "rx_weight": null,
+                  "scaled_weight": null,
+                  "unit": "lbs",
+                  "value": 135
+                }
+              },
+              {
+                "assistance": null,
+                "calories": null,
                 "distance": null,
-                "movement_type": "barbell",
+                "exercise_name": "box jump",
+                "form_notes": null,
+                "movement_type": "bodyweight",
+                "reps": {
+                  "broken_sets": null,
+                  "completed": 3,
+                  "prescribed": 3,
+                  "rest_between_sets": null
+                },
+                "time": null,
+                "variation": "24 inch",
                 "weight": {
                   "unit": "lbs",
-                  "percentage_1rm": null,
-                  "value": 155,
-                  "scaled_weight": null,
-                  "rx_weight": null
-                },
-                "calories": null,
-                "time": null,
+                  "value": null
+                }
+              },
+              {
                 "assistance": null,
-                "form_notes": "Warmup progression",
-                "exercise_name": "back squat",
-                "variation": null
+                "calories": null,
+                "distance": null,
+                "exercise_name": "sit-up",
+                "form_notes": null,
+                "movement_type": "bodyweight",
+                "reps": {
+                  "broken_sets": null,
+                  "completed": 10,
+                  "prescribed": 10,
+                  "rest_between_sets": null
+                },
+                "time": null,
+                "variation": null,
+                "weight": {
+                  "unit": "lbs",
+                  "value": null
+                }
               }
             ],
             "round_number": 3
@@ -149,27 +246,67 @@
           {
             "exercises": [
               {
+                "assistance": null,
+                "calories": null,
+                "distance": null,
+                "exercise_name": "hang power clean",
+                "form_notes": null,
+                "movement_type": "barbell",
                 "reps": {
-                  "prescribed": 3,
-                  "completed": 3,
                   "broken_sets": null,
+                  "completed": 3,
+                  "prescribed": 3,
                   "rest_between_sets": null
                 },
+                "time": null,
+                "variation": null,
+                "weight": {
+                  "percentage_1rm": null,
+                  "rx_weight": null,
+                  "scaled_weight": null,
+                  "unit": "lbs",
+                  "value": 135
+                }
+              },
+              {
+                "assistance": null,
+                "calories": null,
                 "distance": null,
-                "movement_type": "barbell",
+                "exercise_name": "box jump",
+                "form_notes": null,
+                "movement_type": "bodyweight",
+                "reps": {
+                  "broken_sets": null,
+                  "completed": 3,
+                  "prescribed": 3,
+                  "rest_between_sets": null
+                },
+                "time": null,
+                "variation": "24 inch",
                 "weight": {
                   "unit": "lbs",
-                  "percentage_1rm": null,
-                  "value": 185,
-                  "scaled_weight": null,
-                  "rx_weight": null
-                },
-                "calories": null,
-                "time": null,
+                  "value": null
+                }
+              },
+              {
                 "assistance": null,
-                "form_notes": "Working set",
-                "exercise_name": "back squat",
-                "variation": null
+                "calories": null,
+                "distance": null,
+                "exercise_name": "sit-up",
+                "form_notes": null,
+                "movement_type": "bodyweight",
+                "reps": {
+                  "broken_sets": null,
+                  "completed": 10,
+                  "prescribed": 10,
+                  "rest_between_sets": null
+                },
+                "time": null,
+                "variation": null,
+                "weight": {
+                  "unit": "lbs",
+                  "value": null
+                }
               }
             ],
             "round_number": 4
@@ -177,27 +314,27 @@
           {
             "exercises": [
               {
+                "assistance": null,
+                "calories": null,
+                "distance": null,
+                "exercise_name": "trap bar deadlift",
+                "form_notes": "Heavy hinge phase - weight progression",
+                "movement_type": "barbell",
                 "reps": {
-                  "prescribed": 3,
-                  "completed": 3,
                   "broken_sets": null,
+                  "completed": 5,
+                  "prescribed": 5,
                   "rest_between_sets": null
                 },
-                "distance": null,
-                "movement_type": "barbell",
-                "weight": {
-                  "unit": "lbs",
-                  "percentage_1rm": null,
-                  "value": 205,
-                  "scaled_weight": null,
-                  "rx_weight": null
-                },
-                "calories": null,
                 "time": null,
-                "assistance": null,
-                "form_notes": "Working set",
-                "exercise_name": "back squat",
-                "variation": null
+                "variation": "trap bar",
+                "weight": {
+                  "percentage_1rm": null,
+                  "rx_weight": null,
+                  "scaled_weight": null,
+                  "unit": "lbs",
+                  "value": 185
+                }
               }
             ],
             "round_number": 5
@@ -205,27 +342,27 @@
           {
             "exercises": [
               {
+                "assistance": null,
+                "calories": null,
+                "distance": null,
+                "exercise_name": "trap bar deadlift",
+                "form_notes": null,
+                "movement_type": "barbell",
                 "reps": {
-                  "prescribed": 3,
-                  "completed": 3,
                   "broken_sets": null,
+                  "completed": 5,
+                  "prescribed": 5,
                   "rest_between_sets": null
                 },
-                "distance": null,
-                "movement_type": "barbell",
-                "weight": {
-                  "unit": "lbs",
-                  "percentage_1rm": null,
-                  "value": 225,
-                  "scaled_weight": null,
-                  "rx_weight": null
-                },
-                "calories": null,
                 "time": null,
-                "assistance": null,
-                "form_notes": "Working set",
-                "exercise_name": "back squat",
-                "variation": null
+                "variation": "trap bar",
+                "weight": {
+                  "percentage_1rm": null,
+                  "rx_weight": null,
+                  "scaled_weight": null,
+                  "unit": "lbs",
+                  "value": 205
+                }
               }
             ],
             "round_number": 6
@@ -233,27 +370,27 @@
           {
             "exercises": [
               {
+                "assistance": null,
+                "calories": null,
+                "distance": null,
+                "exercise_name": "trap bar deadlift",
+                "form_notes": null,
+                "movement_type": "barbell",
                 "reps": {
-                  "prescribed": 3,
-                  "completed": 3,
                   "broken_sets": null,
+                  "completed": 5,
+                  "prescribed": 5,
                   "rest_between_sets": null
                 },
-                "distance": null,
-                "movement_type": "barbell",
-                "weight": {
-                  "unit": "lbs",
-                  "percentage_1rm": null,
-                  "value": 245,
-                  "scaled_weight": null,
-                  "rx_weight": null
-                },
-                "calories": null,
                 "time": null,
-                "assistance": null,
-                "form_notes": "Heavy working set",
-                "exercise_name": "back squat",
-                "variation": null
+                "variation": "trap bar",
+                "weight": {
+                  "percentage_1rm": null,
+                  "rx_weight": null,
+                  "scaled_weight": null,
+                  "unit": "lbs",
+                  "value": 225
+                }
               }
             ],
             "round_number": 7
@@ -261,27 +398,27 @@
           {
             "exercises": [
               {
+                "assistance": null,
+                "calories": null,
+                "distance": null,
+                "exercise_name": "trap bar deadlift",
+                "form_notes": null,
+                "movement_type": "barbell",
                 "reps": {
-                  "prescribed": 3,
-                  "completed": 3,
                   "broken_sets": null,
+                  "completed": 5,
+                  "prescribed": 5,
                   "rest_between_sets": null
                 },
-                "distance": null,
-                "movement_type": "barbell",
-                "weight": {
-                  "unit": "lbs",
-                  "percentage_1rm": null,
-                  "value": 245,
-                  "scaled_weight": null,
-                  "rx_weight": null
-                },
-                "calories": null,
                 "time": null,
-                "assistance": null,
-                "form_notes": "Heavy working set repeat",
-                "exercise_name": "back squat",
-                "variation": null
+                "variation": "trap bar",
+                "weight": {
+                  "percentage_1rm": null,
+                  "rx_weight": null,
+                  "scaled_weight": null,
+                  "unit": "lbs",
+                  "value": 245
+                }
               }
             ],
             "round_number": 8
@@ -289,27 +426,50 @@
           {
             "exercises": [
               {
+                "assistance": null,
+                "calories": null,
+                "distance": null,
+                "exercise_name": "bench press",
+                "form_notes": "Push/pull superset - 4 sets total",
+                "movement_type": "barbell",
                 "reps": {
-                  "prescribed": 20,
-                  "completed": 20,
                   "broken_sets": null,
+                  "completed": 8,
+                  "prescribed": 8,
                   "rest_between_sets": null
                 },
-                "distance": null,
-                "movement_type": "barbell",
-                "weight": {
-                  "unit": "lbs",
-                  "percentage_1rm": null,
-                  "value": 135,
-                  "scaled_weight": null,
-                  "rx_weight": null
-                },
-                "calories": null,
                 "time": null,
+                "variation": null,
+                "weight": {
+                  "percentage_1rm": null,
+                  "rx_weight": null,
+                  "scaled_weight": null,
+                  "unit": "lbs",
+                  "value": 205
+                }
+              },
+              {
                 "assistance": null,
-                "form_notes": "High rep burnout set",
-                "exercise_name": "back squat",
-                "variation": "burnout"
+                "calories": null,
+                "distance": null,
+                "exercise_name": "seated row",
+                "form_notes": null,
+                "movement_type": "other",
+                "reps": {
+                  "broken_sets": null,
+                  "completed": 6,
+                  "prescribed": 6,
+                  "rest_between_sets": null
+                },
+                "time": null,
+                "variation": "seated",
+                "weight": {
+                  "percentage_1rm": null,
+                  "rx_weight": null,
+                  "scaled_weight": null,
+                  "unit": "lbs",
+                  "value": 150
+                }
               }
             ],
             "round_number": 9
@@ -317,27 +477,50 @@
           {
             "exercises": [
               {
+                "assistance": null,
+                "calories": null,
+                "distance": null,
+                "exercise_name": "bench press",
+                "form_notes": null,
+                "movement_type": "barbell",
                 "reps": {
-                  "prescribed": 8,
-                  "completed": 8,
                   "broken_sets": null,
+                  "completed": 8,
+                  "prescribed": 8,
                   "rest_between_sets": null
                 },
-                "distance": null,
-                "movement_type": "barbell",
-                "weight": {
-                  "unit": "lbs",
-                  "percentage_1rm": null,
-                  "value": 135,
-                  "scaled_weight": null,
-                  "rx_weight": null
-                },
-                "calories": null,
                 "time": null,
+                "variation": null,
+                "weight": {
+                  "percentage_1rm": null,
+                  "rx_weight": null,
+                  "scaled_weight": null,
+                  "unit": "lbs",
+                  "value": 205
+                }
+              },
+              {
                 "assistance": null,
-                "form_notes": "Warmup",
-                "exercise_name": "bench press",
-                "variation": null
+                "calories": null,
+                "distance": null,
+                "exercise_name": "seated row",
+                "form_notes": null,
+                "movement_type": "other",
+                "reps": {
+                  "broken_sets": null,
+                  "completed": 6,
+                  "prescribed": 6,
+                  "rest_between_sets": null
+                },
+                "time": null,
+                "variation": "seated",
+                "weight": {
+                  "percentage_1rm": null,
+                  "rx_weight": null,
+                  "scaled_weight": null,
+                  "unit": "lbs",
+                  "value": 150
+                }
               }
             ],
             "round_number": 10
@@ -345,27 +528,50 @@
           {
             "exercises": [
               {
+                "assistance": null,
+                "calories": null,
+                "distance": null,
+                "exercise_name": "bench press",
+                "form_notes": null,
+                "movement_type": "barbell",
                 "reps": {
-                  "prescribed": 5,
-                  "completed": 5,
                   "broken_sets": null,
+                  "completed": 8,
+                  "prescribed": 8,
                   "rest_between_sets": null
                 },
-                "distance": null,
-                "movement_type": "barbell",
-                "weight": {
-                  "unit": "lbs",
-                  "percentage_1rm": null,
-                  "value": 185,
-                  "scaled_weight": null,
-                  "rx_weight": null
-                },
-                "calories": null,
                 "time": null,
+                "variation": null,
+                "weight": {
+                  "percentage_1rm": null,
+                  "rx_weight": null,
+                  "scaled_weight": null,
+                  "unit": "lbs",
+                  "value": 205
+                }
+              },
+              {
                 "assistance": null,
-                "form_notes": "Warmup",
-                "exercise_name": "bench press",
-                "variation": null
+                "calories": null,
+                "distance": null,
+                "exercise_name": "seated row",
+                "form_notes": null,
+                "movement_type": "other",
+                "reps": {
+                  "broken_sets": null,
+                  "completed": 6,
+                  "prescribed": 6,
+                  "rest_between_sets": null
+                },
+                "time": null,
+                "variation": "seated",
+                "weight": {
+                  "percentage_1rm": null,
+                  "rx_weight": null,
+                  "scaled_weight": null,
+                  "unit": "lbs",
+                  "value": 150
+                }
               }
             ],
             "round_number": 11
@@ -373,27 +579,50 @@
           {
             "exercises": [
               {
+                "assistance": null,
+                "calories": null,
+                "distance": null,
+                "exercise_name": "bench press",
+                "form_notes": null,
+                "movement_type": "barbell",
                 "reps": {
-                  "prescribed": 3,
-                  "completed": 3,
                   "broken_sets": null,
+                  "completed": 8,
+                  "prescribed": 8,
                   "rest_between_sets": null
                 },
-                "distance": null,
-                "movement_type": "barbell",
-                "weight": {
-                  "unit": "lbs",
-                  "percentage_1rm": null,
-                  "value": 205,
-                  "scaled_weight": null,
-                  "rx_weight": null
-                },
-                "calories": null,
                 "time": null,
+                "variation": null,
+                "weight": {
+                  "percentage_1rm": null,
+                  "rx_weight": null,
+                  "scaled_weight": null,
+                  "unit": "lbs",
+                  "value": 205
+                }
+              },
+              {
                 "assistance": null,
-                "form_notes": "Working set",
-                "exercise_name": "bench press",
-                "variation": null
+                "calories": null,
+                "distance": null,
+                "exercise_name": "seated row",
+                "form_notes": null,
+                "movement_type": "other",
+                "reps": {
+                  "broken_sets": null,
+                  "completed": 6,
+                  "prescribed": 6,
+                  "rest_between_sets": null
+                },
+                "time": null,
+                "variation": "seated",
+                "weight": {
+                  "percentage_1rm": null,
+                  "rx_weight": null,
+                  "scaled_weight": null,
+                  "unit": "lbs",
+                  "value": 150
+                }
               }
             ],
             "round_number": 12
@@ -401,27 +630,27 @@
           {
             "exercises": [
               {
+                "assistance": null,
+                "calories": null,
+                "distance": null,
+                "exercise_name": "bulgarian split squat",
+                "form_notes": "Unilateral phase - 6 reps each leg, 50# each hand",
+                "movement_type": "dumbbell",
                 "reps": {
-                  "prescribed": 3,
-                  "completed": 3,
                   "broken_sets": null,
+                  "completed": 12,
+                  "prescribed": 12,
                   "rest_between_sets": null
                 },
-                "distance": null,
-                "movement_type": "barbell",
-                "weight": {
-                  "unit": "lbs",
-                  "percentage_1rm": null,
-                  "value": 225,
-                  "scaled_weight": null,
-                  "rx_weight": null
-                },
-                "calories": null,
                 "time": null,
-                "assistance": null,
-                "form_notes": "Working set",
-                "exercise_name": "bench press",
-                "variation": null
+                "variation": "bulgarian split squat",
+                "weight": {
+                  "percentage_1rm": null,
+                  "rx_weight": null,
+                  "scaled_weight": null,
+                  "unit": "lbs",
+                  "value": 100
+                }
               }
             ],
             "round_number": 13
@@ -429,27 +658,27 @@
           {
             "exercises": [
               {
+                "assistance": null,
+                "calories": null,
+                "distance": null,
+                "exercise_name": "bulgarian split squat",
+                "form_notes": null,
+                "movement_type": "dumbbell",
                 "reps": {
-                  "prescribed": 3,
-                  "completed": 3,
                   "broken_sets": null,
+                  "completed": 12,
+                  "prescribed": 12,
                   "rest_between_sets": null
                 },
-                "distance": null,
-                "movement_type": "barbell",
-                "weight": {
-                  "unit": "lbs",
-                  "percentage_1rm": null,
-                  "value": 245,
-                  "scaled_weight": null,
-                  "rx_weight": null
-                },
-                "calories": null,
                 "time": null,
-                "assistance": null,
-                "form_notes": "Heavy working set",
-                "exercise_name": "bench press",
-                "variation": null
+                "variation": "bulgarian split squat",
+                "weight": {
+                  "percentage_1rm": null,
+                  "rx_weight": null,
+                  "scaled_weight": null,
+                  "unit": "lbs",
+                  "value": 100
+                }
               }
             ],
             "round_number": 14
@@ -457,27 +686,27 @@
           {
             "exercises": [
               {
+                "assistance": null,
+                "calories": null,
+                "distance": null,
+                "exercise_name": "bulgarian split squat",
+                "form_notes": null,
+                "movement_type": "dumbbell",
                 "reps": {
-                  "prescribed": 3,
-                  "completed": 3,
                   "broken_sets": null,
+                  "completed": 12,
+                  "prescribed": 12,
                   "rest_between_sets": null
                 },
-                "distance": null,
-                "movement_type": "barbell",
-                "weight": {
-                  "unit": "lbs",
-                  "percentage_1rm": null,
-                  "value": 245,
-                  "scaled_weight": null,
-                  "rx_weight": null
-                },
-                "calories": null,
                 "time": null,
-                "assistance": null,
-                "form_notes": "Heavy working set repeat",
-                "exercise_name": "bench press",
-                "variation": null
+                "variation": "bulgarian split squat",
+                "weight": {
+                  "percentage_1rm": null,
+                  "rx_weight": null,
+                  "scaled_weight": null,
+                  "unit": "lbs",
+                  "value": 100
+                }
               }
             ],
             "round_number": 15
@@ -485,27 +714,24 @@
           {
             "exercises": [
               {
+                "assistance": null,
+                "calories": null,
+                "distance": null,
+                "exercise_name": "rowing",
+                "form_notes": "Tabata round 1 - hard pace rowing sprint",
+                "movement_type": "cardio",
                 "reps": {
-                  "prescribed": 20,
-                  "completed": 20,
                   "broken_sets": null,
+                  "completed": null,
+                  "prescribed": null,
                   "rest_between_sets": null
                 },
-                "distance": null,
-                "movement_type": "barbell",
+                "time": 30,
+                "variation": "sprint",
                 "weight": {
                   "unit": "lbs",
-                  "percentage_1rm": null,
-                  "value": 135,
-                  "scaled_weight": null,
-                  "rx_weight": null
-                },
-                "calories": null,
-                "time": null,
-                "assistance": null,
-                "form_notes": "High rep burnout set",
-                "exercise_name": "bench press",
-                "variation": "burnout"
+                  "value": null
+                }
               }
             ],
             "round_number": 16
@@ -513,50 +739,27 @@
           {
             "exercises": [
               {
+                "assistance": null,
+                "calories": null,
+                "distance": null,
+                "exercise_name": "kettlebell swing",
+                "form_notes": "Tabata round 2 - Russian KBS",
+                "movement_type": "kettlebell",
                 "reps": {
-                  "prescribed": 4,
-                  "completed": 4,
                   "broken_sets": null,
+                  "completed": null,
+                  "prescribed": null,
                   "rest_between_sets": null
                 },
-                "distance": null,
-                "movement_type": "barbell",
+                "time": 30,
+                "variation": "russian",
                 "weight": {
-                  "unit": "lbs",
                   "percentage_1rm": null,
-                  "value": 135,
+                  "rx_weight": null,
                   "scaled_weight": null,
-                  "rx_weight": null
-                },
-                "calories": null,
-                "time": null,
-                "assistance": null,
-                "form_notes": "AMRAP 1 round 1",
-                "exercise_name": "push press",
-                "variation": null
-              },
-              {
-                "reps": {
-                  "prescribed": 12,
-                  "completed": 12,
-                  "broken_sets": null,
-                  "rest_between_sets": null
-                },
-                "distance": null,
-                "movement_type": "other",
-                "weight": {
                   "unit": "lbs",
-                  "percentage_1rm": null,
-                  "value": 20,
-                  "scaled_weight": null,
-                  "rx_weight": null
-                },
-                "calories": null,
-                "time": null,
-                "assistance": null,
-                "form_notes": "AMRAP 1 round 1",
-                "exercise_name": "slam ball",
-                "variation": null
+                  "value": 70
+                }
               }
             ],
             "round_number": 17
@@ -564,50 +767,24 @@
           {
             "exercises": [
               {
+                "assistance": null,
+                "calories": null,
+                "distance": null,
+                "exercise_name": "rowing",
+                "form_notes": "Tabata round 3 - hard pace rowing sprint",
+                "movement_type": "cardio",
                 "reps": {
-                  "prescribed": 4,
-                  "completed": 4,
                   "broken_sets": null,
+                  "completed": null,
+                  "prescribed": null,
                   "rest_between_sets": null
                 },
-                "distance": null,
-                "movement_type": "barbell",
+                "time": 30,
+                "variation": "sprint",
                 "weight": {
                   "unit": "lbs",
-                  "percentage_1rm": null,
-                  "value": 135,
-                  "scaled_weight": null,
-                  "rx_weight": null
-                },
-                "calories": null,
-                "time": null,
-                "assistance": null,
-                "form_notes": null,
-                "exercise_name": "push press",
-                "variation": null
-              },
-              {
-                "reps": {
-                  "prescribed": 12,
-                  "completed": 12,
-                  "broken_sets": null,
-                  "rest_between_sets": null
-                },
-                "distance": null,
-                "movement_type": "other",
-                "weight": {
-                  "unit": "lbs",
-                  "percentage_1rm": null,
-                  "value": 20,
-                  "scaled_weight": null,
-                  "rx_weight": null
-                },
-                "calories": null,
-                "time": null,
-                "assistance": null,
-                "form_notes": null,
-                "exercise_name": "slam ball",
-                "variation": null
+                  "value": null
+                }
               }
             ],
             "round_number": 18
@@ -615,50 +792,27 @@
           {
             "exercises": [
               {
+                "assistance": null,
+                "calories": null,
+                "distance": null,
+                "exercise_name": "kettlebell swing",
+                "form_notes": "Tabata round 4 - Russian KBS",
+                "movement_type": "kettlebell",
                 "reps": {
-                  "prescribed": 4,
-                  "completed": 4,
                   "broken_sets": null,
+                  "completed": null,
+                  "prescribed": null,
                   "rest_between_sets": null
                 },
-                "distance": null,
-                "movement_type": "barbell",
+                "time": 30,
+                "variation": "russian",
                 "weight": {
-                  "unit": "lbs",
                   "percentage_1rm": null,
-                  "value": 135,
+                  "rx_weight": null,
                   "scaled_weight": null,
-                  "rx_weight": null
-                },
-                "calories": null,
-                "time": null,
-                "assistance": null,
-                "form_notes": null,
-                "exercise_name": "push press",
-                "variation": null
-              },
-              {
-                "reps": {
-                  "prescribed": 12,
-                  "completed": 12,
-                  "broken_sets": null,
-                  "rest_between_sets": null
-                },
-                "distance": null,
-                "movement_type": "other",
-                "weight": {
                   "unit": "lbs",
-                  "percentage_1rm": null,
-                  "value": 20,
-                  "scaled_weight": null,
-                  "rx_weight": null
-                },
-                "calories": null,
-                "time": null,
-                "assistance": null,
-                "form_notes": null,
-                "exercise_name": "slam ball",
-                "variation": null
+                  "value": 70
+                }
               }
             ],
             "round_number": 19
@@ -666,50 +820,24 @@
           {
             "exercises": [
               {
+                "assistance": null,
+                "calories": null,
+                "distance": null,
+                "exercise_name": "rowing",
+                "form_notes": "Tabata round 5 - hard pace rowing sprint",
+                "movement_type": "cardio",
                 "reps": {
-                  "prescribed": 4,
-                  "completed": 4,
                   "broken_sets": null,
+                  "completed": null,
+                  "prescribed": null,
                   "rest_between_sets": null
                 },
-                "distance": null,
-                "movement_type": "barbell",
+                "time": 30,
+                "variation": "sprint",
                 "weight": {
                   "unit": "lbs",
-                  "percentage_1rm": null,
-                  "value": 135,
-                  "scaled_weight": null,
-                  "rx_weight": null
-                },
-                "calories": null,
-                "time": null,
-                "assistance": null,
-                "form_notes": null,
-                "exercise_name": "push press",
-                "variation": null
-              },
-              {
-                "reps": {
-                  "prescribed": 12,
-                  "completed": 12,
-                  "broken_sets": null,
-                  "rest_between_sets": null
-                },
-                "distance": null,
-                "movement_type": "other",
-                "weight": {
-                  "unit": "lbs",
-                  "percentage_1rm": null,
-                  "value": 20,
-                  "scaled_weight": null,
-                  "rx_weight": null
-                },
-                "calories": null,
-                "time": null,
-                "assistance": null,
-                "form_notes": null,
-                "exercise_name": "slam ball",
-                "variation": null
+                  "value": null
+                }
               }
             ],
             "round_number": 20
@@ -717,50 +845,27 @@
           {
             "exercises": [
               {
+                "assistance": null,
+                "calories": null,
+                "distance": null,
+                "exercise_name": "kettlebell swing",
+                "form_notes": "Tabata round 6 - Russian KBS",
+                "movement_type": "kettlebell",
                 "reps": {
-                  "prescribed": 4,
-                  "completed": 4,
                   "broken_sets": null,
+                  "completed": null,
+                  "prescribed": null,
                   "rest_between_sets": null
                 },
-                "distance": null,
-                "movement_type": "barbell",
+                "time": 30,
+                "variation": "russian",
                 "weight": {
-                  "unit": "lbs",
                   "percentage_1rm": null,
-                  "value": 135,
+                  "rx_weight": null,
                   "scaled_weight": null,
-                  "rx_weight": null
-                },
-                "calories": null,
-                "time": null,
-                "assistance": null,
-                "form_notes": null,
-                "exercise_name": "push press",
-                "variation": null
-              },
-              {
-                "reps": {
-                  "prescribed": 12,
-                  "completed": 12,
-                  "broken_sets": null,
-                  "rest_between_sets": null
-                },
-                "distance": null,
-                "movement_type": "other",
-                "weight": {
                   "unit": "lbs",
-                  "percentage_1rm": null,
-                  "value": 20,
-                  "scaled_weight": null,
-                  "rx_weight": null
-                },
-                "calories": null,
-                "time": null,
-                "assistance": null,
-                "form_notes": null,
-                "exercise_name": "slam ball",
-                "variation": null
+                  "value": 70
+                }
               }
             ],
             "round_number": 21
@@ -768,50 +873,24 @@
           {
             "exercises": [
               {
+                "assistance": null,
+                "calories": null,
+                "distance": null,
+                "exercise_name": "rowing",
+                "form_notes": "Tabata round 7 - hard pace rowing sprint",
+                "movement_type": "cardio",
                 "reps": {
-                  "prescribed": 4,
-                  "completed": 4,
                   "broken_sets": null,
+                  "completed": null,
+                  "prescribed": null,
                   "rest_between_sets": null
                 },
-                "distance": null,
-                "movement_type": "barbell",
+                "time": 30,
+                "variation": "sprint",
                 "weight": {
                   "unit": "lbs",
-                  "percentage_1rm": null,
-                  "value": 135,
-                  "scaled_weight": null,
-                  "rx_weight": null
-                },
-                "calories": null,
-                "time": null,
-                "assistance": null,
-                "form_notes": null,
-                "exercise_name": "push press",
-                "variation": null
-              },
-              {
-                "reps": {
-                  "prescribed": 12,
-                  "completed": 12,
-                  "broken_sets": null,
-                  "rest_between_sets": null
-                },
-                "distance": null,
-                "movement_type": "other",
-                "weight": {
-                  "unit": "lbs",
-                  "percentage_1rm": null,
-                  "value": 20,
-                  "scaled_weight": null,
-                  "rx_weight": null
-                },
-                "calories": null,
-                "time": null,
-                "assistance": null,
-                "form_notes": null,
-                "exercise_name": "slam ball",
-                "variation": null
+                  "value": null
+                }
               }
             ],
             "round_number": 22
@@ -819,323 +898,122 @@
           {
             "exercises": [
               {
+                "assistance": null,
+                "calories": null,
+                "distance": null,
+                "exercise_name": "kettlebell swing",
+                "form_notes": "Tabata round 8 - Russian KBS",
+                "movement_type": "kettlebell",
                 "reps": {
-                  "prescribed": 60,
-                  "completed": 60,
                   "broken_sets": null,
+                  "completed": null,
+                  "prescribed": null,
                   "rest_between_sets": null
                 },
-                "distance": null,
-                "movement_type": "cardio",
+                "time": 30,
+                "variation": "russian",
                 "weight": {
-                  "unit": "lbs",
                   "percentage_1rm": null,
-                  "value": null,
+                  "rx_weight": null,
                   "scaled_weight": null,
-                  "rx_weight": null
-                },
-                "calories": null,
-                "time": null,
-                "assistance": null,
-                "form_notes": "AMRAP 2 round 1",
-                "exercise_name": "rope drag",
-                "variation": "singles"
-              },
-              {
-                "reps": {
-                  "prescribed": 8,
-                  "completed": 8,
-                  "broken_sets": null,
-                  "rest_between_sets": null
-                },
-                "distance": null,
-                "movement_type": "dumbbell",
-                "weight": {
                   "unit": "lbs",
-                  "percentage_1rm": null,
-                  "value": 40,
-                  "scaled_weight": null,
-                  "rx_weight": null
-                },
-                "calories": null,
-                "time": null,
-                "assistance": null,
-                "form_notes": "Single DB alternating",
-                "exercise_name": "devil press",
-                "variation": "alternating"
+                  "value": 70
+                }
               }
             ],
             "round_number": 23
-          },
-          {
-            "exercises": [
-              {
-                "reps": {
-                  "prescribed": 60,
-                  "completed": 60,
-                  "broken_sets": null,
-                  "rest_between_sets": null
-                },
-                "distance": null,
-                "movement_type": "cardio",
-                "weight": {
-                  "unit": "lbs",
-                  "percentage_1rm": null,
-                  "value": null,
-                  "scaled_weight": null,
-                  "rx_weight": null
-                },
-                "calories": null,
-                "time": null,
-                "assistance": null,
-                "form_notes": null,
-                "exercise_name": "rope drag",
-                "variation": "singles"
-              },
-              {
-                "reps": {
-                  "prescribed": 8,
-                  "completed": 8,
-                  "broken_sets": null,
-                  "rest_between_sets": null
-                },
-                "distance": null,
-                "movement_type": "dumbbell",
-                "weight": {
-                  "unit": "lbs",
-                  "percentage_1rm": null,
-                  "value": 40,
-                  "scaled_weight": null,
-                  "rx_weight": null
-                },
-                "calories": null,
-                "time": null,
-                "assistance": null,
-                "form_notes": "Single DB alternating",
-                "exercise_name": "devil press",
-                "variation": "alternating"
-              }
-            ],
-            "round_number": 24
-          },
-          {
-            "exercises": [
-              {
-                "reps": {
-                  "prescribed": 60,
-                  "completed": 60,
-                  "broken_sets": null,
-                  "rest_between_sets": null
-                },
-                "distance": null,
-                "movement_type": "cardio",
-                "weight": {
-                  "unit": "lbs",
-                  "percentage_1rm": null,
-                  "value": null,
-                  "scaled_weight": null,
-                  "rx_weight": null
-                },
-                "calories": null,
-                "time": null,
-                "assistance": null,
-                "form_notes": null,
-                "exercise_name": "rope drag",
-                "variation": "singles"
-              },
-              {
-                "reps": {
-                  "prescribed": 8,
-                  "completed": 8,
-                  "broken_sets": null,
-                  "rest_between_sets": null
-                },
-                "distance": null,
-                "movement_type": "dumbbell",
-                "weight": {
-                  "unit": "lbs",
-                  "percentage_1rm": null,
-                  "value": 40,
-                  "scaled_weight": null,
-                  "rx_weight": null
-                },
-                "calories": null,
-                "time": null,
-                "assistance": null,
-                "form_notes": "Single DB alternating",
-                "exercise_name": "devil press",
-                "variation": "alternating"
-              }
-            ],
-            "round_number": 25
-          },
-          {
-            "exercises": [
-              {
-                "reps": {
-                  "prescribed": 60,
-                  "completed": 60,
-                  "broken_sets": null,
-                  "rest_between_sets": null
-                },
-                "distance": null,
-                "movement_type": "cardio",
-                "weight": {
-                  "unit": "lbs",
-                  "percentage_1rm": null,
-                  "value": null,
-                  "scaled_weight": null,
-                  "rx_weight": null
-                },
-                "calories": null,
-                "time": null,
-                "assistance": null,
-                "form_notes": null,
-                "exercise_name": "rope drag",
-                "variation": "singles"
-              },
-              {
-                "reps": {
-                  "prescribed": 8,
-                  "completed": 8,
-                  "broken_sets": null,
-                  "rest_between_sets": null
-                },
-                "distance": null,
-                "movement_type": "dumbbell",
-                "weight": {
-                  "unit": "lbs",
-                  "percentage_1rm": null,
-                  "value": 40,
-                  "scaled_weight": null,
-                  "rx_weight": null
-                },
-                "calories": null,
-                "time": null,
-                "assistance": null,
-                "form_notes": "Single DB alternating",
-                "exercise_name": "devil press",
-                "variation": "alternating"
-              }
-            ],
-            "round_number": 26
-          },
-          {
-            "exercises": [
-              {
-                "reps": {
-                  "prescribed": 60,
-                  "completed": 60,
-                  "broken_sets": null,
-                  "rest_between_sets": null
-                },
-                "distance": null,
-                "movement_type": "cardio",
-                "weight": {
-                  "unit": "lbs",
-                  "percentage_1rm": null,
-                  "value": null,
-                  "scaled_weight": null,
-                  "rx_weight": null
-                },
-                "calories": null,
-                "time": null,
-                "assistance": null,
-                "form_notes": null,
-                "exercise_name": "rope drag",
-                "variation": "singles"
-              },
-              {
-                "reps": {
-                  "prescribed": 8,
-                  "completed": 8,
-                  "broken_sets": null,
-                  "rest_between_sets": null
-                },
-                "distance": null,
-                "movement_type": "dumbbell",
-                "weight": {
-                  "unit": "lbs",
-                  "percentage_1rm": null,
-                  "value": 40,
-                  "scaled_weight": null,
-                  "rx_weight": null
-                },
-                "calories": null,
-                "time": null,
-                "assistance": null,
-                "form_notes": "Single DB alternating",
-                "exercise_name": "devil press",
-                "variation": "alternating"
-              }
-            ],
-            "round_number": 27
           }
         ],
-        "rx_status": "rx"
+        "running": null,
+        "rx_status": "rx",
+        "time_cap": null,
+        "workout_format": "strength_then_metcon"
       },
-      "powerlifting": null
-    },
-    "discipline": "hybrid",
-    "subjective_feedback": {
-      "notes": "Felt pretty good. It was very hot outside, worked out in garage. Long workout but felt good and strong.",
-      "nutrition_pre_workout": null,
-      "motivation": 8,
-      "confidence": 8,
-      "soreness_pre": {
-        "overall": null,
-        "back": null,
-        "arms": null,
-        "legs": null
+      "metadata": {
+        "ai_extracted": true,
+        "data_completeness": 0.85,
+        "data_confidence": 0.9,
+        "extraction_method": "claude_conversation_analysis",
+        "extraction_notes": "Well-structured multi-phase workout with clear time domains and exercise progression. Applied bilateral dumbbell weight calculation for Bulgarian split squats (50# each hand = 100# total load). Tabata rounds structured as individual time-based rounds with 30s work periods. High confidence in extraction accuracy due to detailed workout description with specific weights, reps, and timing.",
+        "logged_via": "conversation",
+        "logging_time": null,
+        "schema_version": "2.0",
+        "user_verified": false,
+        "validation_flags": [
+          "estimated_calories",
+          "missing_heart_rate",
+          "inferred_difficulty"
+        ],
+        "version": "1.0"
       },
-      "hydration_level": "good",
-      "form_quality": 8,
-      "stress_level": null,
-      "sleep_quality_previous": null,
-      "difficulty": 7,
-      "enjoyment": 8,
-      "soreness_post": {
-        "overall": 6,
-        "back": 5,
-        "arms": 6,
-        "legs": 7
+      "pr_achievements": [],
+      "subjective_feedback": {
+        "confidence": null,
+        "difficulty": 8,
+        "enjoyment": null,
+        "form_quality": null,
+        "hydration_level": null,
+        "mental_state": null,
+        "motivation": null,
+        "notes": "Complex multi-phase workout with strength and conditioning components",
+        "nutrition_pre_workout": null,
+        "pacing_strategy": null,
+        "sleep_quality_previous": null,
+        "soreness_post": {
+          "arms": null,
+          "back": null,
+          "legs": null,
+          "overall": null
+        },
+        "soreness_pre": {
+          "arms": null,
+          "back": null,
+          "legs": null,
+          "overall": null
+        },
+        "stress_level": null
+      }
+    },
+    "duration": 62,
+    "location": "gym",
+    "metadata": {
+      "ai_extracted": true,
+      "data_completeness": 0.5,
+      "data_confidence": 0.9999999999999999,
+      "extraction_method": "claude_conversation_analysis",
+      "extraction_notes": "User explicitly logged workout using /log-workout command.",
+      "logged_via": "slash_command",
+      "logging_time": null,
+      "schema_version": "2.0",
+      "user_verified": false,
+      "validation_flags": [],
+      "version": "1.0"
+    },
+    "methodology": "COMPTRAIN_STRENGTH",
+    "performance_metrics": {
+      "calories_burned": 450,
+      "energy_level_post": null,
+      "energy_level_pre": null,
+      "heart_rate": {
+        "avg": null,
+        "max": null,
+        "zones": {
+          "zone_1": null,
+          "zone_2": null,
+          "zone_3": null,
+          "zone_4": null,
+          "zone_5": null
+        }
       },
-      "mental_state": "focused",
-      "pacing_strategy": null
+      "intensity": 8,
+      "mood_post": null,
+      "mood_pre": null,
+      "perceived_exertion": 8
     },
-    "coach_notes": {
-      "coaching_cues_given": null,
-      "motivation_strategy": "Build on strength gains",
-      "adaptation_recommendations": [
-        "Consider earlier workout times to avoid heat",
-        "Ensure adequate cooling/ventilation"
-      ],
-      "safety_flags": [
-        "Hot environment training"
-      ],
-      "next_session_focus": "Recovery and hydration focus",
-      "areas_for_improvement": [
-        "Heat management in garage workouts"
-      ],
-      "positive_observations": [
-        "Strong performance on heavy working sets",
-        "Completed all prescribed rounds"
-      ],
-      "programming_intent": "Strength development followed by conditioning work"
-    },
-    "duration": 70,
     "user_id": "4sVTVPd6aJdRq",
-    "workout_type": "hybrid",
-    "location": "home",
-    "workout_id": "ws_4sVTVPd6aJdRq_1752332843772",
-    "methodology": "COMPTRAIN_STRENGTH"
+    "workout_id": "ws_4sVTVPd6aJdRq_1754356240457",
+    "workout_name": "Power Start Complex",
+    "workout_type": "hybrid"
   },
-  "extractionMetadata": {
-    "reviewedAt": "2025-07-12T15:07:23.773Z",
-    "reviewedBy": "system",
-    "extractedAt": "2025-07-12T15:07:23.773Z",
-    "confidence": 0.9499999999999998
-  },
-  "createdAt": "2025-07-12T15:07:23.774Z",
-  "updatedAt": "2025-07-12T15:07:23.774Z"
+  "workoutId": "ws_4sVTVPd6aJdRq_1754356240457"
 }

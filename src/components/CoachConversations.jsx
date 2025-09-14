@@ -6,12 +6,14 @@ import React, {
   useCallback,
 } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
+import { Tooltip } from "react-tooltip";
 import { useAuthorizeUser } from "../auth/hooks/useAuthorizeUser";
 import { getUserDisplayName } from "../auth/utils/authHelpers";
 import { AccessDenied, LoadingScreen } from "./shared/AccessDenied";
-import { themeClasses } from "../utils/synthwaveThemeClasses";
+import { containerPatterns, layoutPatterns, inputPatterns, avatarPatterns, iconButtonPatterns, buttonPatterns } from "../utils/uiPatterns";
 import { FullPageLoader, CenteredErrorState } from "./shared/ErrorStates";
-import { NeonBorder } from "./themes/SynthwaveComponents";
+import CoachHeader from "./shared/CoachHeader";
+import ChatInput from "./shared/ChatInput";
 import { parseMarkdown } from "../utils/markdownParser.jsx";
 import CoachConversationAgent from "../utils/agents/CoachConversationAgent";
 import { useToast } from "../contexts/ToastContext";
@@ -165,9 +167,7 @@ function CoachConversations() {
   const [editTitleValue, setEditTitleValue] = useState("");
   const [isSavingTitle, setIsSavingTitle] = useState(false);
 
-  // Slash command states
-  const [showSlashCommandTooltip, setShowSlashCommandTooltip] = useState(false);
-  const [selectedCommandIndex, setSelectedCommandIndex] = useState(0);
+  // Slash command states moved to ChatInput component
 
   // Command palette state
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
@@ -178,8 +178,6 @@ function CoachConversations() {
   const [isDeleting, setIsDeleting] = useState(false);
 
   // Modern chat features state
-  const [isRecording, setIsRecording] = useState(false);
-  const [recordingTime, setRecordingTime] = useState(0);
   const [isOnline] = useState(true);
   const textareaRef = useRef(null);
 
@@ -190,6 +188,51 @@ function CoachConversations() {
   const inputRef = useRef(null);
   const agentRef = useRef(null);
   const { success: showSuccess, error: showError } = useToast();
+
+  // Slash commands configuration
+  const availableSlashCommands = [
+    {
+      command: "/log-workout",
+      description: "Log a completed workout",
+      example: "/log-workout I did Fran in 8:57",
+    },
+    {
+      command: "/save-memory",
+      description: "Save a memory or note",
+      example: "/save-memory I prefer morning workouts",
+    },
+  ];
+
+  // Quick suggestions configuration
+  const quickSuggestions = [
+    { label: "Log Workout", message: "/log-workout " },
+    { label: "Daily Check-in", message: "I'm checking in for the day. What do I need to be aware of?" },
+    { label: "Progression", message: "I want to progress/increase the difficulty of my workouts." },
+    { label: "Motivation", message: "I'm feeling unmotivated. Can you help me get back on track?" },
+    { label: "WOD Creation", message: "Create a WOD for me today based on my goals and training plan." }
+  ];
+
+  // Chat tips content
+  const chatTips = {
+    items: [
+      {
+        title: "Slash Commands",
+        description: "Type '/' to see available commands like /log-workout or /save-memory for quick actions."
+      },
+      {
+        title: "Be Specific",
+        description: "The more details you provide about your workouts, goals, and challenges, the better your coach can help."
+      },
+      {
+        title: "Track Progress",
+        description: "Regularly log your workouts and share how you're feeling to help your coach adapt your training."
+      },
+      {
+        title: "Ask Questions",
+        description: "Don't hesitate to ask about form, modifications, nutrition, or anything fitness-related."
+      }
+    ]
+  };
 
   // Handle keyboard shortcuts
   useEffect(() => {
@@ -327,51 +370,55 @@ function CoachConversations() {
   const autoResizeTextarea = (textarea) => {
     if (!textarea) return;
 
-    // Reset height to auto to get the correct scrollHeight
-    textarea.style.height = "auto";
-
-    // Set height based on scrollHeight, with min and max constraints
     const minHeight = 48; // 3rem = 48px
     const maxHeight = 120; // Max 120px as per requirements
+
+    // Get current height to avoid unnecessary changes
+    const currentHeight = parseInt(textarea.style.height) || minHeight;
+
+    // If textarea is disabled and input is empty, force reset to minimum
+    if (textarea.disabled && !inputMessage.trim()) {
+      textarea.style.height = minHeight + "px";
+      textarea.style.overflowY = "hidden";
+      return;
+    }
+
+    // Temporarily enable textarea to get accurate scrollHeight if needed
+    const wasDisabled = textarea.disabled;
+    if (wasDisabled) {
+      textarea.disabled = false;
+    }
+
     const scrollHeight = textarea.scrollHeight;
 
-    if (scrollHeight <= maxHeight) {
-      textarea.style.height = Math.max(minHeight, scrollHeight) + "px";
-      textarea.style.overflowY = "hidden";
+    // Restore disabled state
+    if (wasDisabled) {
+      textarea.disabled = true;
+    }
+
+    // Determine target height
+    let targetHeight;
+    let targetOverflow;
+
+    if (scrollHeight <= minHeight) {
+      targetHeight = minHeight;
+      targetOverflow = "hidden";
+    } else if (scrollHeight <= maxHeight) {
+      targetHeight = scrollHeight;
+      targetOverflow = "hidden";
     } else {
-      textarea.style.height = maxHeight + "px";
-      textarea.style.overflowY = "auto";
+      targetHeight = maxHeight;
+      targetOverflow = "auto";
+    }
+
+    // Only update if height actually needs to change (avoid micro-adjustments)
+    if (Math.abs(currentHeight - targetHeight) > 1) {
+      textarea.style.height = targetHeight + "px";
+      textarea.style.overflowY = targetOverflow;
     }
   };
 
-  // Voice recording functions
-  const handleStartRecording = () => {
-    setIsRecording(true);
-    setRecordingTime(0);
-  };
-
-  const handleStopRecording = () => {
-    setIsRecording(false);
-    setRecordingTime(0);
-  };
-
-  // Format recording time
-  const formatRecordingTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
-  };
-
-  // Recording timer effect
-  useEffect(() => {
-    let interval;
-    if (isRecording) {
-      interval = setInterval(() => {
-        setRecordingTime((prev) => prev + 1);
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [isRecording]);
+  // Voice recording functions moved to ChatInput component
 
   useEffect(() => {
     // Use a small delay to ensure DOM is fully updated before scrolling
@@ -412,7 +459,7 @@ function CoachConversations() {
       setTimeout(() => {
         if (textareaRef.current) {
           textareaRef.current.focus();
-          autoResizeTextarea(textareaRef.current);
+          // Don't call autoResizeTextarea on focus to prevent height jumps
         }
       }, 100);
     }
@@ -428,7 +475,7 @@ function CoachConversations() {
       setTimeout(() => {
         if (textareaRef.current) {
           textareaRef.current.focus();
-          autoResizeTextarea(textareaRef.current);
+          // Don't call autoResizeTextarea on focus to prevent height jumps
         }
       }, 100);
     }
@@ -442,6 +489,18 @@ function CoachConversations() {
       autoResizeTextarea(textareaRef.current);
     }
   }, [inputMessage]);
+
+  // Additional effect to ensure textarea resizes properly when AI stops typing
+  useEffect(() => {
+    if (textareaRef.current && !coachConversationAgentState.isTyping) {
+      // Small delay to ensure the textarea is re-enabled before resizing
+      setTimeout(() => {
+        if (textareaRef.current) {
+          autoResizeTextarea(textareaRef.current);
+        }
+      }, 10);
+    }
+  }, [coachConversationAgentState.isTyping]);
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
@@ -457,10 +516,14 @@ function CoachConversations() {
     // Refocus input and reset size after clearing it
     setTimeout(() => {
       if (textareaRef.current) {
+        // Force reset to minimum height after clearing content
+        textareaRef.current.style.height = "48px";
+        textareaRef.current.style.overflowY = "hidden";
         textareaRef.current.focus();
+        // Call autoResize to ensure proper state
         autoResizeTextarea(textareaRef.current);
       }
-    }, 100);
+    }, 50);
 
     try {
       await agentRef.current.sendMessage(messageToSend);
@@ -472,48 +535,18 @@ function CoachConversations() {
     }
   };
 
-  const handleKeyPress = (e) => {
-    // Handle slash command navigation when tooltip is visible
-    if (showSlashCommandTooltip) {
-      const availableCommands = getAvailableSlashCommands();
+  // Message submission handler for ChatInput component
+  const handleMessageSubmit = async (messageContent) => {
+    if (!agentRef.current) return;
 
-      if (e.key === "ArrowDown") {
-        e.preventDefault();
-        setSelectedCommandIndex((prev) =>
-          prev < availableCommands.length - 1 ? prev + 1 : 0
-        );
-        return;
-      }
-
-      if (e.key === "ArrowUp") {
-        e.preventDefault();
-        setSelectedCommandIndex((prev) =>
-          prev > 0 ? prev - 1 : availableCommands.length - 1
-        );
-        return;
-      }
-
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        const selectedCommand = availableCommands[selectedCommandIndex];
-        setInputMessage(selectedCommand.command + " ");
-        setShowSlashCommandTooltip(false); // Close tooltip
-        return;
-      }
-
-      if (e.key === "Escape") {
-        e.preventDefault();
-        setShowSlashCommandTooltip(false); // Close tooltip
-        return;
-      }
-    }
-
-    // Default behavior for sending messages
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage(e);
+    try {
+      await agentRef.current.sendMessage(messageContent);
+    } catch (error) {
+      console.error("Error sending message:", error);
     }
   };
+
+  // Key press handling moved to ChatInput component
 
   const formatTime = (timestamp) => {
     return new Date(timestamp).toLocaleTimeString([], {
@@ -596,22 +629,7 @@ function CoachConversations() {
     setShowDeleteModal(false);
   };
 
-  // Helper function to detect slash commands
-  const parseSlashCommand = (message) => {
-    const slashCommandRegex = /^\/([a-zA-Z0-9-]+)\s*([\s\S]*)$/;
-    const match = message.match(slashCommandRegex);
-
-    if (!match) {
-      return { isSlashCommand: false };
-    }
-
-    const [, command, content] = match;
-    return {
-      isSlashCommand: true,
-      command: command.toLowerCase(),
-      content: content.trim(),
-    };
-  };
+  // Slash command parsing moved to ChatInput component
 
   // Helper function to render message content with line breaks
   const renderMessageContent = (message) => {
@@ -631,57 +649,121 @@ function CoachConversations() {
     }
   };
 
-  // Helper function to get available slash commands
-  const getAvailableSlashCommands = () => {
-    return [
-      {
-        command: "/log-workout",
-        description: "Log a completed workout",
-        example: "/log-workout I did Fran in 8:57",
-      },
-      {
-        command: "/save-memory",
-        description: "Save a memory or note",
-        example: "/save-memory I prefer morning workouts",
-      },
-    ];
-  };
-
-  // Simple function to check if we should show slash command tooltip
-  const shouldShowTooltip = () => {
-    return (
-      inputMessage.startsWith("/") &&
-      inputMessage.length > 0 &&
-      !inputMessage.includes(" ")
-    );
-  };
-
-  // Show/hide tooltip based on input
-  useEffect(() => {
-    if (shouldShowTooltip()) {
-      setShowSlashCommandTooltip(true);
-      setSelectedCommandIndex(0);
-    } else {
-      setShowSlashCommandTooltip(false);
-    }
-  }, [inputMessage]);
+  // Slash command functionality moved to ChatInput component
 
   // Show loading state while initializing coach or loading conversation (but not while deleting)
   if (
     !isDeleting &&
-    (coachConversationAgentState.isLoadingItem ||
+    (isValidatingUserId ||
+      coachConversationAgentState.isLoadingItem ||
       !coachConversationAgentState.coach ||
       !coachConversationAgentState.conversation ||
       (coachConversationAgentState.conversation &&
         coachConversationAgentState.conversation.conversationId !==
           conversationId))
   ) {
-    return <FullPageLoader text="Loading conversation..." />;
-  }
+    return (
+      <div className={`${layoutPatterns.pageContainer} min-h-screen pb-8`}>
+        <div className={`${layoutPatterns.contentWrapper} min-h-[calc(100vh-5rem)] flex flex-col`}>
+          {/* Header skeleton */}
+          <div className="mb-8 text-center">
+            <div className="h-12 bg-synthwave-text-muted/20 rounded animate-pulse w-64 mx-auto mb-6"></div>
+            <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-96 mx-auto mb-4"></div>
+            <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-80 mx-auto mb-4"></div>
+            <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-48 mx-auto"></div>
+          </div>
 
-  // Show loading while validating userId (but not while deleting)
-  if (!isDeleting && isValidatingUserId) {
-    return <LoadingScreen message="Loading conversation..." />;
+          {/* Coach header skeleton */}
+          <div className="mb-8">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
+              <div className="text-left">
+                <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-48 mb-2"></div>
+                <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-32"></div>
+              </div>
+            </div>
+          </div>
+
+          {/* Main Content Area skeleton */}
+          <div className="flex-1 flex justify-center">
+            <div className="w-full max-w-7xl">
+              <div className={`${containerPatterns.mainContent} h-[500px] flex flex-col`}>
+                {/* Messages Area skeleton */}
+                <div className="flex-1 overflow-y-auto overflow-hidden p-6 space-y-3">
+                  {/* Chat message skeletons */}
+                  {[1, 2].map((i) => (
+                    <div key={i} className={`flex items-end gap-2 ${i % 2 === 1 ? 'flex-row-reverse' : 'flex-row'}`}>
+                      {/* Avatar skeleton */}
+                      <div className="flex-shrink-0 w-8 h-8 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
+
+                      {/* Message bubble skeleton */}
+                      <div className={`max-w-[70%] ${i % 2 === 1 ? 'items-end' : 'items-start'} flex flex-col`}>
+                        <div className={`px-4 py-3 rounded-2xl ${i % 2 === 1 ? 'rounded-br-md' : 'rounded-bl-md'} bg-synthwave-text-muted/20 animate-pulse min-w-[600px] min-h-[130px]`}>
+                          <div className="space-y-1">
+                            <div className="h-4 bg-synthwave-text-muted/30 rounded animate-pulse w-full"></div>
+                            <div className="h-4 bg-synthwave-text-muted/30 rounded animate-pulse w-full"></div>
+                            <div className="h-4 bg-synthwave-text-muted/30 rounded animate-pulse w-full"></div>
+                            <div className="h-4 bg-synthwave-text-muted/30 rounded animate-pulse w-3/4"></div>
+                          </div>
+                        </div>
+
+                        {/* Timestamp and status skeleton */}
+                        <div className={`flex items-center gap-1 px-2 ${i % 2 === 1 ? 'justify-end mt-1' : 'justify-start'}`}>
+                          <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-12"></div>
+                          <div className="flex gap-1">
+                            <div className="w-3 h-3 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
+                            <div className="w-3 h-3 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Floating Input skeleton */}
+        <div className="fixed bottom-0 left-0 right-0 bg-synthwave-bg-card/95 backdrop-blur-lg border-t-2 border-synthwave-neon-pink/30 shadow-lg shadow-synthwave-neon-pink/20 z-50">
+          <div className="max-w-7xl mx-auto px-8 py-6">
+            {/* Input area skeleton */}
+            <div className="flex items-end gap-3">
+              {/* Action buttons skeleton */}
+              <div className="flex items-center gap-1">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="w-11 h-11 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
+                ))}
+              </div>
+
+              {/* Text input skeleton */}
+              <div className="flex-1 relative">
+                <div className="w-full h-12 bg-synthwave-text-muted/20 rounded-2xl animate-pulse"></div>
+              </div>
+
+              {/* Send button skeleton */}
+              <div className="w-12 h-12 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
+            </div>
+
+            {/* Status skeleton */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mt-2">
+              <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
+                <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-12"></div>
+              </div>
+            </div>
+
+            {/* Quick suggestions skeleton */}
+            <div className="flex flex-wrap gap-2 mt-4">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="h-8 bg-synthwave-text-muted/20 rounded-full animate-pulse w-24"></div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   // Handle userId validation errors
@@ -709,82 +791,20 @@ function CoachConversations() {
   }
 
   return (
-    <div className={`${themeClasses.container} min-h-screen pb-8`}>
-      <div className="max-w-7xl mx-auto px-8 py-12 min-h-[calc(100vh-5rem)] flex flex-col">
+    <div className={`${layoutPatterns.pageContainer} min-h-screen pb-8`}>
+      <div className={`${layoutPatterns.contentWrapper} min-h-[calc(100vh-5rem)] flex flex-col`}>
         {/* Header */}
         <div className="mb-8 text-center">
           <h1 className="font-russo font-black text-4xl md:text-5xl text-white mb-4 uppercase">
             Coach Conversation
           </h1>
 
-          {/* Coach Status */}
+          {/* Coach Header */}
           {coachConversationAgentState.coach && (
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <div className="relative">
-                <div className="w-12 h-12 bg-gradient-to-br from-synthwave-neon-cyan to-synthwave-neon-pink rounded-full flex items-center justify-center text-white font-bold text-lg">
-                  {coachConversationAgentState.coach.name?.charAt(0) || "C"}
-                </div>
-                {isOnline && (
-                  <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-400 border-2 border-synthwave-bg-primary rounded-full flex items-center justify-center">
-                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                  </div>
-                )}
-              </div>
-              <div className="text-left">
-                <div className="flex items-center gap-2">
-                  <h3 className="font-rajdhani font-semibold text-white text-lg">
-                    {coachConversationAgentState.coach.name}
-                  </h3>
-                  {isOnline && (
-                    <span className="px-2 py-0.5 bg-green-400/20 text-green-300 rounded-full text-xs font-medium font-rajdhani">
-                      Online
-                    </span>
-                  )}
-                </div>
-                <p className="text-sm text-synthwave-text-secondary font-rajdhani">
-                  {(() => {
-                    const config =
-                      coachConversationAgentState.coach.rawCoach?.coachConfig;
-
-                    // First priority: Use the new coach_description if available
-                    if (config?.coach_description) {
-                      return config.coach_description;
-                    }
-
-                    // Fallback: Use existing specialty
-                    if (coachConversationAgentState.coach.specialty) {
-                      return coachConversationAgentState.coach.specialty;
-                    }
-
-                    // Fallback: Build from technical config (simplified)
-                    const parts = [];
-
-                    if (config?.technical_config?.specializations?.length > 0) {
-                      parts.push(
-                        ...config.technical_config.specializations.map((s) =>
-                          s.replace(/_/g, " ")
-                        )
-                      );
-                    }
-
-                    if (
-                      parts.length === 0 &&
-                      config?.technical_config?.programming_focus?.length > 0
-                    ) {
-                      parts.push(
-                        ...config.technical_config.programming_focus.map((f) =>
-                          f.replace(/_/g, " ")
-                        )
-                      );
-                    }
-
-                    return parts.length > 0
-                      ? parts.slice(0, 2).join(" & ")
-                      : "Fitness Coach";
-                  })()}
-                </p>
-              </div>
-            </div>
+            <CoachHeader
+              coachData={coachConversationAgentState.coach}
+              isOnline={isOnline}
+            />
           )}
 
           <p className="font-rajdhani text-lg text-synthwave-text-secondary mb-6 max-w-3xl mx-auto">
@@ -855,12 +875,9 @@ function CoachConversations() {
         {/* Main Content Area */}
         <div className="flex-1 flex justify-center">
           <div className="w-full max-w-7xl">
-            <NeonBorder
-              color="cyan"
-              className="bg-synthwave-bg-card/50 h-full flex flex-col overflow-hidden"
-            >
+            <div className={`${containerPatterns.mainContent} h-full flex flex-col`}>
               {/* Messages Area - with bottom padding for floating input */}
-              <div className="flex-1 overflow-y-auto p-6 pb-32 space-y-4 custom-scrollbar">
+              <div className="flex-1 overflow-y-auto overflow-hidden p-6 pb-32 space-y-4">
                 {coachConversationAgentState.messages.map((message, index) => (
                   <div
                     key={message.id}
@@ -870,21 +887,16 @@ function CoachConversations() {
                   >
                     {/* Avatar */}
                     <div
-                      className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+                      className={`flex-shrink-0 ${
                         message.type === "user"
-                          ? "bg-gradient-to-br from-synthwave-neon-pink to-synthwave-neon-purple text-white"
-                          : "bg-gradient-to-br from-synthwave-neon-cyan to-synthwave-neon-pink text-white"
+                          ? avatarPatterns.userSmall
+                          : avatarPatterns.aiSmall
                       }`}
                     >
                       {message.type === "user" ? (
-                        <span className="font-bold text-sm">
-                          {getUserInitial()}
-                        </span>
+                        getUserInitial()
                       ) : (
-                        <span className="font-bold text-sm">
-                          {coachConversationAgentState.coach?.name?.charAt(0) ||
-                            "C"}
-                        </span>
+                        coachConversationAgentState.coach?.name?.charAt(0) || "C"
                       )}
                     </div>
 
@@ -895,19 +907,19 @@ function CoachConversations() {
                       <div
                         className={`px-4 py-3 rounded-2xl shadow-sm ${
                           message.type === "user"
-                            ? "bg-synthwave-neon-pink/70 text-white border border-synthwave-neon-pink/30 rounded-br-md shadow-lg shadow-synthwave-neon-pink/20"
-                            : "bg-synthwave-neon-cyan/10 text-synthwave-text-primary border border-synthwave-neon-cyan/30 rounded-bl-md"
+                            ? "bg-gradient-to-br from-synthwave-neon-pink/80 to-synthwave-neon-pink/60 text-white border-0 rounded-br-md shadow-xl shadow-synthwave-neon-pink/30 backdrop-blur-sm"
+                            : containerPatterns.aiChatBubble
                         }`}
                       >
-                        <div className="font-rajdhani text-sm leading-relaxed">
+                        <div className="font-rajdhani text-base leading-relaxed">
                           {renderMessageContent(message)}
                         </div>
                       </div>
 
                       <div
-                        className={`flex items-center gap-1 mt-1 px-2 ${message.type === "user" ? "justify-end" : "justify-start"}`}
+                        className={`flex items-center gap-1 px-2 mt-1 ${message.type === "user" ? "justify-end" : "justify-start"}`}
                       >
-                        <span className="text-xs text-synthwave-text-muted font-rajdhani">
+                        <span className="text-xs text-synthwave-text-secondary font-rajdhani">
                           {formatTime(message.timestamp)}
                         </span>
                         {message.type === "user" && (
@@ -930,13 +942,10 @@ function CoachConversations() {
                 {/* Typing Indicator */}
                 {coachConversationAgentState.isTyping && (
                   <div className="flex items-end gap-2 mb-1">
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-synthwave-neon-cyan to-synthwave-neon-pink text-white flex items-center justify-center">
-                      <span className="font-bold text-sm">
-                        {coachConversationAgentState.coach?.name?.charAt(0) ||
-                          "C"}
-                      </span>
+                    <div className={`flex-shrink-0 ${avatarPatterns.aiSmall}`}>
+                      {coachConversationAgentState.coach?.name?.charAt(0) || "C"}
                     </div>
-                    <div className="bg-synthwave-bg-card/80 border border-synthwave-neon-cyan/30 px-4 py-3 rounded-2xl rounded-bl-md">
+                    <div className={`${containerPatterns.aiChatBubble} px-4 py-3`}>
                       <div className="flex space-x-1">
                         <div className="w-2 h-2 bg-synthwave-neon-cyan rounded-full animate-bounce"></div>
                         <div
@@ -954,266 +963,31 @@ function CoachConversations() {
 
                 <div ref={messagesEndRef} />
               </div>
-            </NeonBorder>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Floating Input - Fixed at bottom of viewport, completely outside containers */}
-      <div className="fixed bottom-0 left-0 right-0 bg-synthwave-bg-card/95 backdrop-blur-lg border-t-2 border-synthwave-neon-pink/30 shadow-lg shadow-synthwave-neon-pink/20 z-50">
-        <div className="max-w-7xl mx-auto px-8 py-6">
-          {/* Recording indicator */}
-          {isRecording && (
-            <div className="mb-3 flex items-center justify-center">
-              <div className="bg-red-500 text-white px-4 py-2 rounded-full flex items-center gap-2 animate-pulse">
-                <div className="w-3 h-3 bg-white rounded-full"></div>
-                <span className="text-sm font-medium font-rajdhani">
-                  Recording {formatRecordingTime(recordingTime)}
-                </span>
-                <button
-                  onClick={handleStopRecording}
-                  className="ml-2 hover:bg-red-600 rounded-full p-1 transition-colors"
-                >
-                  <XIcon />
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Input area */}
-          <form onSubmit={handleSendMessage} className="flex items-end gap-3">
-            {/* Action buttons */}
-            <div className="flex items-center gap-1">
-              <button
-                type="button"
-                className="p-2 sm:p-3 text-synthwave-text-secondary hover:text-blue-400 hover:bg-blue-400/10 rounded-full transition-all group min-h-[44px] min-w-[44px] flex items-center justify-center"
-                title="Quick actions"
-              >
-                <PlusIcon />
-              </button>
-              <button
-                type="button"
-                className="p-2 sm:p-3 text-synthwave-text-secondary hover:text-green-400 hover:bg-green-400/10 rounded-full transition-all min-h-[44px] min-w-[44px] flex items-center justify-center"
-                title="Form check photos"
-              >
-                <CameraIcon />
-              </button>
-              <button
-                type="button"
-                className="p-2 sm:p-3 text-synthwave-text-secondary hover:text-purple-400 hover:bg-purple-400/10 rounded-full transition-all min-h-[44px] min-w-[44px] flex items-center justify-center"
-                title="File attachments"
-              >
-                <PaperclipIcon />
-              </button>
-              <button
-                type="button"
-                onClick={handleDeleteClick}
-                disabled={coachConversationAgentState.isTyping}
-                className="p-2 sm:p-3 text-synthwave-text-secondary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 rounded-full transition-all disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] min-w-[44px] flex items-center justify-center"
-                title="Delete conversation"
-              >
-                <TrashIcon />
-              </button>
-            </div>
-
-            {/* Text input */}
-            <div className="flex-1 relative">
-              <textarea
-                ref={textareaRef}
-                value={inputMessage}
-                onChange={(e) => {
-                  setInputMessage(e.target.value);
-                  autoResizeTextarea(e.target);
-                }}
-                onKeyDown={handleKeyPress}
-                placeholder="What's on your mind today? How can I help you with your training?"
-                rows={1}
-                className="w-full px-4 py-3 pr-12 bg-synthwave-bg-primary/50 border-2 border-synthwave-neon-pink/30 rounded-2xl text-synthwave-text-primary font-rajdhani outline-none ring-0 focus:outline-none focus:ring-0 focus-visible:outline-none focus:border-synthwave-neon-pink hover:border-synthwave-neon-pink/50 transition-all resize-none placeholder-synthwave-text-muted synthwave-scrollbar max-h-[120px] overflow-y-auto"
-                style={{
-                  outline: "none !important",
-                  boxShadow: "none !important",
-                  WebkitTapHighlightColor: "transparent",
-                }}
-                disabled={coachConversationAgentState.isTyping}
-              />
-              <button
-                type="button"
-                className="absolute right-3 bottom-3 p-1 text-synthwave-text-secondary hover:text-synthwave-neon-cyan rounded-full transition-colors"
-                title="Emoji"
-              >
-                <SmileIcon />
-              </button>
-
-              {/* Slash Command Tooltip */}
-              {showSlashCommandTooltip && (
-                <div className="absolute bottom-full mb-2 left-0 bg-synthwave-bg-card/95 border-2 border-synthwave-neon-pink/30 rounded-lg p-4 shadow-lg backdrop-blur-sm z-10 min-w-[400px]">
-                  <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
-                    Available Slash Commands
-                  </div>
-                  <div className="space-y-2">
-                    {getAvailableSlashCommands().map((cmd, index) => (
-                      <div
-                        key={index}
-                        className={`flex items-start space-x-3 py-1 px-2 rounded cursor-pointer transition-colors duration-200 border ${
-                          index === selectedCommandIndex
-                            ? "bg-synthwave-bg-primary/30 border-synthwave-neon-pink/20"
-                            : "hover:bg-synthwave-bg-primary/30 border-transparent"
-                        }`}
-                        onClick={() => {
-                          setInputMessage(cmd.command + " ");
-                          textareaRef.current?.focus();
-                        }}
-                      >
-                        <div
-                          className={`font-rajdhani text-sm ${
-                            index === selectedCommandIndex
-                              ? "text-synthwave-neon-pink"
-                              : "text-synthwave-neon-pink"
-                          }`}
-                        >
-                          {cmd.command}
-                        </div>
-                        <div className="flex-1">
-                          <div
-                            className={`font-rajdhani text-sm ${
-                              index === selectedCommandIndex
-                                ? "text-white"
-                                : "text-white"
-                            }`}
-                          >
-                            {cmd.description}
-                          </div>
-                          <div
-                            className={`font-rajdhani text-xs mt-1 ${
-                              index === selectedCommandIndex
-                                ? "text-synthwave-text-secondary"
-                                : "text-synthwave-text-muted"
-                            }`}
-                          >
-                            {cmd.example}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="font-rajdhani text-xs text-synthwave-text-muted mt-3 pt-2 border-t border-synthwave-neon-pink/20">
-                    Use ↑↓ to navigate, Enter to select, Esc to close
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Voice/Send buttons */}
-            <div className="flex items-center gap-2">
-              {inputMessage.trim() ? (
-                <button
-                  type="submit"
-                  disabled={coachConversationAgentState.isTyping}
-                  className="p-3 sm:p-4 bg-synthwave-neon-pink text-white rounded-full hover:bg-synthwave-neon-pink/80 transition-all transform hover:scale-105 active:scale-95 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-h-[48px] min-w-[48px]"
-                >
-                  {coachConversationAgentState.isTyping ? (
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  ) : (
-                    <SendIcon />
-                  )}
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onMouseDown={handleStartRecording}
-                  onMouseUp={handleStopRecording}
-                  onMouseLeave={handleStopRecording}
-                  onTouchStart={handleStartRecording}
-                  onTouchEnd={handleStopRecording}
-                  className={`p-3 sm:p-4 rounded-full transition-all transform hover:scale-105 active:scale-95 shadow-lg min-h-[48px] min-w-[48px] flex items-center justify-center ${
-                    isRecording
-                      ? "bg-red-500 text-white animate-pulse"
-                      : "bg-synthwave-bg-primary/50 text-synthwave-text-secondary hover:bg-synthwave-neon-cyan/20 hover:text-synthwave-neon-cyan"
-                  }`}
-                  title="Hold to record voice message"
-                >
-                  <MicIcon />
-                </button>
-              )}
-            </div>
-          </form>
-
-          {/* Status/Tips */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mt-2 text-xs text-synthwave-text-muted font-rajdhani">
-            <span className="text-center sm:text-left">
-              {coachConversationAgentState.coach?.name || "Coach"} is
-              {isOnline ? (
-                <span className="text-green-400 ml-1">
-                  online and ready to help with your training
-                </span>
-              ) : (
-                <span className="text-synthwave-text-secondary ml-1">away</span>
-              )}
-            </span>
-            <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4">
-              <span className="hidden sm:inline">
-                Press Enter to send • Shift+Enter for new line
-              </span>
-              <div className="flex items-center gap-1">
-                <div
-                  className={`w-2 h-2 rounded-full ${isOnline ? "bg-green-500 animate-pulse" : "bg-gray-500"}`}
-                ></div>
-                <span>{isOnline ? "Online" : "Away"}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Quick Topic Suggestions */}
-          <div className="flex flex-wrap gap-2 mt-4">
-            <button
-              className="bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/30 text-synthwave-neon-pink px-3 py-1 rounded-full text-sm font-rajdhani hover:bg-synthwave-neon-pink/10 transition-colors duration-300"
-              onClick={() => setInputMessage("/log-workout ")}
-            >
-              Log Workout
-            </button>
-            <button
-              className="bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/30 text-synthwave-neon-pink px-3 py-1 rounded-full text-sm font-rajdhani hover:bg-synthwave-neon-pink/10 transition-colors duration-300"
-              onClick={() =>
-                setInputMessage(
-                  "I'm checking in for the day. What do I need to be aware of?"
-                )
-              }
-            >
-              Daily Check-in
-            </button>
-            <button
-              className="bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/30 text-synthwave-neon-pink px-3 py-1 rounded-full text-sm font-rajdhani hover:bg-synthwave-neon-pink/10 transition-colors duration-300"
-              onClick={() =>
-                setInputMessage(
-                  "I want to progress/increase the difficulty of my workouts."
-                )
-              }
-            >
-              Progression
-            </button>
-            <button
-              className="bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/30 text-synthwave-neon-pink px-3 py-1 rounded-full text-sm font-rajdhani hover:bg-synthwave-neon-pink/10 transition-colors duration-300"
-              onClick={() =>
-                setInputMessage(
-                  "I'm feeling unmotivated. Can you help me get back on track?"
-                )
-              }
-            >
-              Motivation
-            </button>
-            <button
-              className="bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/30 text-synthwave-neon-pink px-3 py-1 rounded-full text-sm font-rajdhani hover:bg-synthwave-neon-pink/10 transition-colors duration-300"
-              onClick={() =>
-                setInputMessage(
-                  "Create a WOD for me today based on my goals and training plan."
-                )
-              }
-            >
-              WOD Creation
-            </button>
-          </div>
-        </div>
-      </div>
+      {/* Chat Input Component */}
+      <ChatInput
+        inputMessage={inputMessage}
+        setInputMessage={setInputMessage}
+        onSubmit={handleMessageSubmit}
+        isTyping={coachConversationAgentState.isTyping}
+        placeholder="How can I help with your training?"
+        coachName={coachConversationAgentState.coach?.name || "Coach"}
+        isOnline={isOnline}
+        showDeleteButton={true}
+        onDeleteClick={handleDeleteClick}
+        quickSuggestions={quickSuggestions}
+        enableRecording={true}
+        enableSlashCommands={true}
+        availableSlashCommands={availableSlashCommands}
+        showTipsButton={true}
+        tipsContent={chatTips}
+        tipsTitle="Chat Tips & Help"
+        textareaRef={textareaRef}
+      />
 
       {/* Command Palette */}
       <CommandPalette
@@ -1250,7 +1024,7 @@ function CoachConversations() {
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[10000]">
-          <div className="bg-synthwave-bg-card border-2 border-synthwave-neon-pink/30 rounded-lg shadow-2xl shadow-synthwave-neon-pink/20 p-6 max-w-md w-full mx-4">
+          <div className={`${containerPatterns.deleteModal} p-6 max-w-md w-full mx-4`}>
             <div className="text-center">
               <h3 className="text-synthwave-neon-pink font-rajdhani text-xl font-bold mb-2">
                 Delete Conversation
@@ -1264,14 +1038,14 @@ function CoachConversations() {
                 <button
                   onClick={handleDeleteCancel}
                   disabled={isDeleting}
-                  className={`flex-1 ${themeClasses.cyanButton} text-sm disabled:opacity-50 disabled:cursor-not-allowed`}
+                  className={`flex-1 ${buttonPatterns.secondary} text-sm disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleDeleteConfirm}
                   disabled={isDeleting}
-                  className={`flex-1 ${themeClasses.neonButton} text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2`}
+                  className={`flex-1 ${buttonPatterns.primary} text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2`}
                 >
                   {isDeleting ? (
                     <>
@@ -1290,6 +1064,7 @@ function CoachConversations() {
           </div>
         </div>
       )}
+
     </div>
   );
 }

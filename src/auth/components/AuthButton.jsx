@@ -1,4 +1,5 @@
 import React from 'react';
+import { buttonPatterns } from '../../utils/uiPatterns';
 
 const AuthButton = ({
   children,
@@ -10,39 +11,10 @@ const AuthButton = ({
   className = '',
   ...props
 }) => {
-  const baseClasses = `
-    w-full px-8 py-3 rounded-lg
-    font-rajdhani font-semibold text-lg uppercase tracking-wide
-    cursor-pointer transition-all duration-300
-    disabled:opacity-50 disabled:cursor-not-allowed
-    focus:outline-none focus:ring-0 outline-none
-    active:outline-none focus-visible:outline-none
-    border-0 focus:border-0 active:border-0
-  `;
-
   const variantClasses = {
-    primary: `
-      bg-transparent border-2 border-synthwave-neon-pink text-synthwave-neon-pink
-      hover:bg-synthwave-neon-pink hover:text-synthwave-bg-primary hover:-translate-y-1
-      hover:shadow-neon-pink active:translate-y-0
-      active:bg-synthwave-neon-pink active:text-synthwave-bg-primary active:border-synthwave-neon-pink
-      disabled:hover:bg-transparent disabled:hover:text-synthwave-neon-pink
-      disabled:hover:translate-y-0 disabled:hover:shadow-none
-    `,
-    secondary: `
-      bg-transparent border-2 border-synthwave-neon-cyan/30 text-synthwave-neon-cyan
-      hover:bg-synthwave-neon-cyan/10 hover:border-synthwave-neon-cyan hover:text-white hover:-translate-y-1
-      hover:shadow-lg hover:shadow-synthwave-neon-cyan/30 active:translate-y-0
-      disabled:hover:bg-transparent disabled:hover:text-synthwave-neon-cyan
-      disabled:hover:translate-y-0 disabled:hover:shadow-none
-    `,
-    link: `
-      bg-transparent border-none text-synthwave-neon-cyan p-2
-      hover:text-white hover:bg-synthwave-neon-cyan/10 hover:-translate-y-1
-      rounded-md active:translate-y-0
-      disabled:hover:bg-transparent disabled:hover:text-synthwave-neon-cyan
-      disabled:hover:translate-y-0
-    `
+    primary: `${buttonPatterns.primary} w-full`,
+    secondary: `${buttonPatterns.secondary} w-full`,
+    link: `w-full bg-transparent border-none text-synthwave-neon-cyan px-4 py-2 hover:text-white hover:bg-synthwave-neon-cyan/15 hover:-translate-y-0.5 rounded-xl active:translate-y-0 backdrop-blur-sm focus:ring-2 focus:ring-synthwave-neon-cyan/40 focus:ring-offset-0 focus:ring-offset-transparent transition-all duration-200 font-rajdhani font-medium uppercase tracking-wide disabled:hover:bg-transparent disabled:hover:text-synthwave-neon-cyan disabled:hover:translate-y-0 disabled:opacity-60 min-h-[48px] flex items-center justify-center`
   };
 
   return (
@@ -50,7 +22,7 @@ const AuthButton = ({
       type={type}
       onClick={onClick}
       disabled={disabled || loading}
-      className={`${baseClasses} ${variantClasses[variant]} ${className}`}
+      className={`${variantClasses[variant]} ${className}`}
       {...props}
     >
       {loading ? (

@@ -1,5 +1,6 @@
 import React, { forwardRef, useState } from 'react';
 import AuthErrorMessage from './AuthErrorMessage';
+import { inputPatterns } from '../../utils/uiPatterns';
 
 const AuthInput = forwardRef(({
   label,
@@ -62,21 +63,22 @@ const AuthInput = forwardRef(({
           disabled={disabled}
           className={`
             auth-input
-            w-full px-4 py-3 ${isPasswordField ? 'pr-12' : ''}
-            bg-synthwave-bg-primary/50
-            border-2 ${error ? 'border-synthwave-neon-cyan' : 'border-synthwave-neon-pink/30'}
-            rounded-lg
-            text-synthwave-text-primary
-            font-rajdhani
-            focus:outline-none
-            focus:border-synthwave-neon-pink
-            hover:border-synthwave-neon-pink/50
-            transition-colors duration-300
-            placeholder-synthwave-text-muted
+            ${error ? inputPatterns.error : inputPatterns.standard}
+            ${isPasswordField ? 'pr-12' : ''}
+            text-base
+            hover:border-synthwave-neon-pink/40 hover:bg-synthwave-bg-card/40
             disabled:opacity-50 disabled:cursor-not-allowed
-
+            focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0
             ${className}
           `}
+          style={{
+            boxShadow: 'none',
+            outline: 'none'
+          }}
+          onFocus={(e) => {
+            e.target.style.outline = 'none';
+            e.target.style.boxShadow = 'none';
+          }}
           {...props}
         />
         {isPasswordField && (

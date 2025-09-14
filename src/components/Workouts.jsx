@@ -3,7 +3,9 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import { useAuthorizeUser } from "../auth/hooks/useAuthorizeUser";
 import { AccessDenied, LoadingScreen } from "./shared/AccessDenied";
 import { themeClasses } from "../utils/synthwaveThemeClasses";
+import { buttonPatterns, containerPatterns, layoutPatterns } from "../utils/uiPatterns";
 import { NeonBorder } from "./themes/SynthwaveComponents";
+import CoachHeader from "./shared/CoachHeader";
 import WorkoutAgent from "../utils/agents/WorkoutAgent";
 import CoachAgent from "../utils/agents/CoachAgent";
 import { useToast } from "../contexts/ToastContext";
@@ -301,7 +303,7 @@ function Workouts() {
       }));
 
       setIsEditingTitle(false);
-      success("Workout title updated successfully");
+      info("Workout title updated successfully");
     } catch (error) {
       console.error("Error updating workout title:", error);
       error("Failed to update workout title");
@@ -362,11 +364,15 @@ function Workouts() {
     setWorkoutToDelete(null);
   };
 
-  // Close delete modal when pressing escape
+  // Close delete modal or cancel title edit when pressing escape
   useEffect(() => {
     const handleKeyDown = (event) => {
-      if (event.key === "Escape" && showDeleteModal) {
-        handleCancelDelete();
+      if (event.key === "Escape") {
+        if (showDeleteModal) {
+          handleCancelDelete();
+        } else if (isEditingTitle) {
+          handleCancelEdit();
+        }
       }
     };
 
@@ -375,7 +381,7 @@ function Workouts() {
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [showDeleteModal, handleCancelDelete]);
+  }, [showDeleteModal, isEditingTitle]);
 
   // Render workout list
   const renderWorkoutList = () => (
@@ -504,15 +510,67 @@ function Workouts() {
     </div>
   );
 
-  // Show loading state (only for main workout, not recent workouts)
-  // Show loading while validating userId or loading workout
+  // Show skeleton loading while validating userId or loading workout
   if (
     isValidatingUserId ||
     (workoutAgentState.isLoadingItem &&
       (!workoutAgentState.currentWorkout ||
         workoutAgentState.currentWorkout.workoutId !== workoutId))
   ) {
-    return <LoadingScreen message="Loading workout..." />;
+    return (
+      <div className={`${layoutPatterns.pageContainer} min-h-screen pb-8`}>
+        <div className={`${layoutPatterns.contentWrapper} min-h-[calc(100vh-5rem)] flex flex-col`}>
+          {/* Header skeleton */}
+          <div className="mb-8 text-center">
+            <div className="h-12 bg-synthwave-text-muted/20 rounded animate-pulse w-64 mx-auto mb-6"></div>
+
+            {/* Coach header skeleton */}
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
+              <div className="text-left">
+                <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-48 mb-2"></div>
+                <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-32"></div>
+              </div>
+            </div>
+
+            <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-96 mx-auto mb-4"></div>
+            <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-80 mx-auto mb-4"></div>
+            <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-48 mx-auto"></div>
+          </div>
+
+          {/* Main Content Area skeleton */}
+          <div className="flex-1">
+            <div className={`${containerPatterns.mainContent} h-full flex flex-col`}>
+              <div className="p-6 h-full overflow-y-auto space-y-6">
+                {/* Action buttons skeleton */}
+                <div className="flex justify-end space-x-2">
+                  <div className="w-12 h-12 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
+                  <div className="w-12 h-12 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
+                </div>
+
+                {/* Workout sections skeleton */}
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className={`${containerPatterns.cardMedium} p-6`}>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-6 h-6 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                        <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
+                      </div>
+                      <div className="w-4 h-4 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                    </div>
+                    <div className="space-y-3">
+                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-3/4"></div>
+                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-1/2"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   // Handle userId validation errors
@@ -542,41 +600,68 @@ function Workouts() {
   const workout = workoutAgentState.currentWorkout;
 
   return (
-    <div className={`${themeClasses.container} min-h-screen pb-8`}>
-      <div className="max-w-7xl mx-auto px-8 py-12 min-h-[calc(100vh-5rem)] flex flex-col">
+    <div className={`${layoutPatterns.pageContainer} min-h-screen pb-8`}>
+      <div className={`${layoutPatterns.contentWrapper} min-h-[calc(100vh-5rem)] flex flex-col`}>
         {/* Header */}
         <div className="mb-8 text-center">
           <h1 className="font-russo font-black text-4xl md:text-5xl text-white mb-6 uppercase">
             Workout Details
           </h1>
+
+          {/* Coach Header */}
+          {coachData && (
+            <CoachHeader coachData={coachData} isOnline={true} />
+          )}
+
           <p className="font-rajdhani text-lg text-synthwave-text-secondary max-w-3xl mx-auto mb-4">
             View detailed breakdown of your completed workout including exercises, sets, reps, and performance metrics.
             Use the tools above to manage or export your workout data.
           </p>
+          <div className="flex items-center justify-center space-x-2 text-synthwave-text-secondary font-rajdhani text-sm">
+            <div className="flex items-center space-x-1 bg-synthwave-bg-primary/30 px-2 py-1 rounded border border-synthwave-neon-pink/20">
+              <span className="text-synthwave-neon-pink">⌘</span>
+              <span>K</span>
+            </div>
+            <span>for Command Palette</span>
+            <div className="flex items-center space-x-1">
+              <span>(</span>
+              <svg className="w-4 h-4 text-synthwave-neon-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+              </svg>
+              <span>Works on any page )</span>
+            </div>
+          </div>
         </div>
 
         {/* Main Content Area */}
-        <div className="flex-1">
-          <NeonBorder
-            color="cyan"
-            className="bg-synthwave-bg-card/50 h-full overflow-hidden"
-          >
-            <div className="p-6 h-full overflow-y-auto custom-scrollbar">
-              {workout ? (
-                <WorkoutViewer
-                  workout={workout}
-                  onToggleView={handleToggleView}
-                  onDeleteWorkout={handleDeleteClick}
-                  viewMode={viewMode}
-                />
-
-              ) : (
-                <div className="flex items-center justify-center h-full">
-                  <EmptyState title="No workout data available" size="large" />
-                </div>
-              )}
+        <div className="flex-1 flex justify-center">
+          <div className="w-full max-w-7xl">
+            <div className={`${containerPatterns.mainContent} h-full flex flex-col`}>
+              <div className="p-6 h-full overflow-y-auto custom-scrollbar">
+                {workout ? (
+                  <WorkoutViewer
+                    workout={workout}
+                    onToggleView={handleToggleView}
+                    onDeleteWorkout={handleDeleteClick}
+                    viewMode={viewMode}
+                    isEditingTitle={isEditingTitle}
+                    editTitleValue={editTitleValue}
+                    isSavingTitle={isSavingTitle}
+                    onEditTitle={handleEditTitle}
+                    onSaveTitle={handleSaveTitle}
+                    onCancelEdit={handleCancelEdit}
+                    onTitleChange={setEditTitleValue}
+                    onTitleKeyPress={handleTitleKeyPress}
+                    formatDate={formatDate}
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-full">
+                    <EmptyState title="No workout data available" size="large" />
+                  </div>
+                )}
+              </div>
             </div>
-          </NeonBorder>
+          </div>
         </div>
       </div>
 
@@ -613,7 +698,7 @@ function Workouts() {
       {/* Delete Confirmation Modal */}
       {showDeleteModal && workoutToDelete && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[10000]">
-          <div className="bg-synthwave-bg-card border-2 border-synthwave-neon-pink/30 rounded-lg shadow-2xl shadow-synthwave-neon-pink/20 p-6 max-w-md w-full mx-4">
+          <div className={`${containerPatterns.deleteModal} p-6 max-w-md w-full mx-4`}>
             <div className="text-center">
               <h3 className="text-synthwave-neon-pink font-rajdhani text-xl font-bold mb-2">
                 Delete Workout
@@ -631,14 +716,14 @@ function Workouts() {
                 <button
                   onClick={handleCancelDelete}
                   disabled={isDeleting}
-                  className={`flex-1 ${themeClasses.cyanButton} text-sm disabled:opacity-50 disabled:cursor-not-allowed`}
+                  className={`flex-1 ${buttonPatterns.secondarySmall} text-sm disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleConfirmDelete}
                   disabled={isDeleting}
-                  className={`flex-1 ${themeClasses.neonButton} text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2`}
+                  className={`flex-1 ${buttonPatterns.primarySmall} text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2`}
                 >
                   {isDeleting ? (
                     <>

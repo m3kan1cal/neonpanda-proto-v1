@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { themeClasses } from '../utils/synthwaveThemeClasses';
-import { NeonBorder, ChevronDownIcon } from './themes/SynthwaveComponents';
+import { containerPatterns, layoutPatterns, typographyPatterns } from '../utils/uiPatterns';
+import { ChevronDownIcon } from './themes/SynthwaveComponents';
+import Footer from './shared/Footer';
 
 // Release icon
 const ReleaseIcon = () => (
@@ -9,15 +10,15 @@ const ReleaseIcon = () => (
   </svg>
 );
 
-// Collapsible section component (same as WorkoutViewer)
+// Modern collapsible section component using 2025 UI patterns
 const CollapsibleSection = ({ title, icon, children, defaultOpen = true, className = "" }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
-    <div className={`border border-synthwave-neon-pink/30 rounded-lg overflow-hidden ${className}`}>
+    <div className={`${containerPatterns.collapsibleSection} ${className}`}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-4 py-3 bg-synthwave-bg-primary/30 hover:bg-synthwave-bg-primary/50 transition-colors duration-200 flex items-center justify-between text-left"
+        className={containerPatterns.collapsibleHeader}
       >
         <div className="flex items-center space-x-3">
           <div className="text-synthwave-neon-pink">
@@ -32,7 +33,7 @@ const CollapsibleSection = ({ title, icon, children, defaultOpen = true, classNa
         </div>
       </button>
       {isOpen && (
-        <div className="p-4 bg-synthwave-bg-card/20">
+        <div className={containerPatterns.collapsibleContent}>
           {children}
         </div>
       )}
@@ -40,7 +41,51 @@ const CollapsibleSection = ({ title, icon, children, defaultOpen = true, classNa
   );
 };
 
+
 const changelogEntries = [
+  {
+    version: "Release v1.7.0",
+    date: "2025-09-10",
+    changes: {
+      added: [
+        "Modern 2025 UI/UX design system with glassmorphism and subtle animations",
+        "Comprehensive uiPatterns.js with standardized button, container, and typography patterns",
+        "Enhanced skeleton loading states with consistent structure across all management pages",
+        "Unified loading state logic combining userId validation and data loading phases",
+        "Modern glassmorphism containers replacing heavy neon borders throughout the application",
+        "Responsive quick stats bars with centered icon groups and content-driven width",
+        "Enhanced hover effects with subtle background changes and shadow animations",
+        "Modern toast notification system with gradient backgrounds and glassmorphism",
+        "Inline edit input patterns with consistent styling and proper focus states",
+        "Collapsible section patterns with modern rounded corners and backdrop blur effects"
+      ],
+      changed: [
+        "All skeleton loading structures standardized across TrainingGrounds, ManageWorkouts, ManageMemories, ManageCoachConversations, and ViewReports",
+        "Quick stats containers updated from grid layout to flex with centered alignment and consistent spacing",
+        "Quick stats container padding reduced from p-6 to p-4 for more compact appearance",
+        "Skeleton quick stats containers use p-6 padding for optimal visual height matching with live content",
+        "Quick stats items now have min-w-[120px] for consistent sizing and better responsive behavior",
+        "Removed fixed height constraints (h-16) from quick stats items allowing natural content flow",
+        "Updated all main content containers to use subtle glassmorphism instead of heavy neon borders",
+        "Border radius standardized to 2xl (16px) for cards and xl (12px) for smaller elements",
+        "Typography patterns applied consistently across all components for unified text hierarchy",
+        "Button patterns updated with modern hover effects including translate and shadow animations",
+        "Container patterns enhanced with backdrop-blur effects and subtle color transitions",
+        "Collapsible sections updated to use modern containerPatterns with enhanced visual depth"
+      ],
+      fixed: [
+        "Inconsistent skeleton loading heights between different pages now standardized",
+        "Quick stats bar alignment issues with icons not properly centered as a group",
+        "Skeleton loading width inconsistencies where containers didn't match live content proportions",
+        "Missing escape key functionality for workout title editing when input loses focus",
+        "Duplicate loading states in ManageCoachConversations causing redundant skeleton displays",
+        "Quick stats container width issues where skeleton was wider than live content",
+        "Visual inconsistencies in skeleton structure between management pages",
+        "Action button skeleton count mismatch (showing 3 buttons instead of actual 2)",
+        "Padding inconsistencies between skeleton and live quick stats containers"
+      ]
+    }
+  },
   {
     version: "Release v1.6.0",
     date: "2025-09-06",
@@ -266,14 +311,14 @@ const changelogEntries = [
 
 function Changelog() {
   return (
-    <div className={`${themeClasses.container} min-h-screen pb-8`}>
-      <div className="max-w-7xl mx-auto px-8 py-12 min-h-[calc(100vh-5rem)] flex flex-col">
+    <div className={`${layoutPatterns.pageContainer} min-h-screen pb-8`}>
+      <div className={`${layoutPatterns.contentWrapper} min-h-[calc(100vh-5rem)] flex flex-col`}>
         {/* Header */}
         <div className="mb-8 text-center">
-          <h1 className="font-russo font-black text-4xl md:text-5xl text-white mb-6 uppercase">
+          <h1 className={typographyPatterns.pageTitle}>
             Changelog
           </h1>
-          <p className="font-rajdhani text-lg text-synthwave-text-secondary max-w-3xl mx-auto mb-4">
+          <p className={`${typographyPatterns.description} max-w-3xl mx-auto mb-4`}>
             Track the latest updates, improvements, and changes to the platform.
             Stay informed about new features and bug fixes as they're released.
           </p>
@@ -281,14 +326,14 @@ function Changelog() {
 
         {/* Main Content Area */}
         <div className="flex-1">
-          <NeonBorder color="cyan" className="bg-synthwave-bg-card/50 h-full overflow-hidden">
+          <div className={`${containerPatterns.mainContent} h-full overflow-hidden`}>
             <div className="p-6 h-full overflow-y-auto custom-scrollbar space-y-6">
               {changelogEntries.map((entry, index) => (
                 <CollapsibleSection
                   key={index}
                   title={`${entry.version} - ${entry.date}`}
                   icon={<ReleaseIcon />}
-                  defaultOpen={true}
+                  defaultOpen={index === 0}
                 >
                   <div className="space-y-6">
 
@@ -352,9 +397,10 @@ function Changelog() {
                 </CollapsibleSection>
               ))}
             </div>
-          </NeonBorder>
+          </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

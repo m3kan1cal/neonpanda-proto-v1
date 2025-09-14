@@ -13,7 +13,7 @@ export default {
           'bg-primary': '#0a0a0a',
           'bg-secondary': '#1a0d2e',
           'bg-tertiary': '#16213e',
-          'bg-purple': '#16213e',
+          'bg-purple': '#2a1a4a',
           'bg-card': '#1e1e2e',
 
           // Neon colors

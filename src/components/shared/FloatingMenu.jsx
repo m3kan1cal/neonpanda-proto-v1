@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { CloseIcon } from '../themes/SynthwaveComponents';
+import { iconButtonPatterns, containerPatterns } from '../../utils/uiPatterns';
 
 // Modern Floating Icon Button Component
 export const FloatingIconButton = React.forwardRef(({ icon, isActive, onClick, title, className = "" }, ref) => (
@@ -7,11 +8,10 @@ export const FloatingIconButton = React.forwardRef(({ icon, isActive, onClick, t
     ref={ref}
     onClick={onClick}
     className={`
-      p-3 rounded-xl transition-all duration-200 backdrop-blur-sm border
-      focus:outline-none focus:ring-0
+      ${iconButtonPatterns.floating}
       ${isActive
-        ? 'bg-synthwave-neon-pink/20 border-synthwave-neon-pink text-synthwave-neon-pink shadow-lg shadow-synthwave-neon-pink/30 focus:border-synthwave-neon-pink focus:shadow-lg focus:shadow-synthwave-neon-pink/30'
-        : 'bg-synthwave-bg-card/40 border-synthwave-neon-pink/30 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 hover:border-synthwave-neon-pink/50 hover:shadow-md focus:border-synthwave-neon-pink/50 focus:bg-synthwave-neon-pink/10'
+        ? 'border-synthwave-neon-pink/50 bg-synthwave-bg-card shadow-lg shadow-synthwave-neon-pink/20'
+        : ''
       }
       ${className}
     `}
@@ -66,9 +66,7 @@ export const ModernPopover = ({ isOpen, onClose, anchorRef, children, title, cla
       <div
         ref={popoverRef}
         className={`
-          fixed z-50 bg-synthwave-bg-card/95 backdrop-blur-md
-          border-2 border-synthwave-neon-pink/30 rounded-xl shadow-2xl
-          shadow-synthwave-neon-pink/20 flex flex-col
+          fixed z-50 ${containerPatterns.cardMediumOpaque} flex flex-col
           ${className}
 
           /* Mobile positioning - bottom sheet style */
@@ -81,7 +79,7 @@ export const ModernPopover = ({ isOpen, onClose, anchorRef, children, title, cla
         `}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-synthwave-neon-pink/30 flex-shrink-0">
+        <div className="flex items-center justify-between p-4 border-b border-synthwave-neon-cyan/20 flex-shrink-0">
           <h3 className="font-russo font-bold text-white text-sm uppercase">
             {title}
           </h3>
@@ -94,13 +92,7 @@ export const ModernPopover = ({ isOpen, onClose, anchorRef, children, title, cla
         </div>
 
         {/* Scrollable content */}
-        <div
-          className="flex-1 overflow-y-auto synthwave-scrollbar"
-          style={{
-            scrollbarWidth: 'thin',
-            scrollbarColor: '#ff007f40 transparent'
-          }}
-        >
+        <div className={`flex-1 ${containerPatterns.scrollableCyan}`}>
           <div className="p-4">
             {children}
           </div>

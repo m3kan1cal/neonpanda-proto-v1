@@ -10,6 +10,8 @@ import { getCoachConfigs } from "./functions/get-coach-configs/resource";
 import { getCoachConfig } from "./functions/get-coach-config/resource";
 import { getCoachConfigStatus } from "./functions/get-coach-config-status/resource";
 import { getCoachCreatorSession } from "./functions/get-coach-creator-session/resource";
+import { getCoachCreatorSessions } from "./functions/get-coach-creator-sessions/resource";
+import { deleteCoachCreatorSession } from "./functions/delete-coach-creator-session/resource";
 import { getCoachTemplates } from "./functions/get-coach-templates/resource";
 import { getCoachTemplate } from "./functions/get-coach-template/resource";
 import { createCoachConfigFromTemplate } from "./functions/create-coach-config-from-template/resource";
@@ -64,6 +66,8 @@ const backend = defineBackend({
   getCoachConfig,
   getCoachConfigStatus,
   getCoachCreatorSession,
+  getCoachCreatorSessions,
+  deleteCoachCreatorSession,
   getCoachTemplates,
   getCoachTemplate,
   createCoachConfigFromTemplate,
@@ -109,6 +113,8 @@ const coreApi = apiGatewayv2.createCoreApi(
   backend.getCoachConfig.resources.lambda,
   backend.getCoachConfigStatus.resources.lambda,
   backend.getCoachCreatorSession.resources.lambda,
+  backend.getCoachCreatorSessions.resources.lambda,
+  backend.deleteCoachCreatorSession.resources.lambda,
   backend.getCoachTemplates.resources.lambda,
   backend.getCoachTemplate.resources.lambda,
   backend.createCoachConfigFromTemplate.resources.lambda,
@@ -154,6 +160,12 @@ coreTable.table.grantReadWriteData(
 );
 coreTable.table.grantReadWriteData(
   backend.getCoachCreatorSession.resources.lambda
+);
+coreTable.table.grantReadData(
+  backend.getCoachCreatorSessions.resources.lambda
+);
+coreTable.table.grantReadWriteData(
+  backend.deleteCoachCreatorSession.resources.lambda
 );
 
 // Grant DynamoDB permissions to coach template functions (read and write)
@@ -216,6 +228,8 @@ const allFunctions = [
   backend.getCoachConfig,
   backend.getCoachConfigStatus,
   backend.getCoachCreatorSession,
+  backend.getCoachCreatorSessions,
+  backend.deleteCoachCreatorSession,
   backend.createCoachConversation,
   backend.getCoachConversations,
   backend.getCoachConversation,

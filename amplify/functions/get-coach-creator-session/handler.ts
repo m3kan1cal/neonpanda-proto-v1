@@ -3,6 +3,7 @@ import { createOkResponse, createErrorResponse } from '../libs/api-helpers';
 import { getCoachCreatorSession } from '../../dynamodb/operations';
 import { CoachCreatorSession } from '../libs/coach-creator/types';
 import { getUserId, extractJWTClaims, authorizeUser } from '../libs/auth/jwt-utils';
+import { getProgress } from '../libs/coach-creator/session-management';
 
 export const handler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Promise<APIGatewayProxyResultV2> => {
   try {
@@ -31,8 +32,21 @@ export const handler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): P
       return createErrorResponse(404, 'Coach creator session not found or expired');
     }
 
-    // Return the session data as-is using the defined CoachCreatorSession interface
-    const sessionData: CoachCreatorSession = session.attributes;
+    // Get detailed progress information
+    const progressDetails = getProgress(session.attributes.userContext);
+
+    // Return the session data with progress details
+    const sessionData: CoachCreatorSession = {
+      ...session.attributes,
+      progressDetails: {
+        questionsCompleted: progressDetails.questionsCompleted,
+        totalQuestions: progressDetails.totalQuestions,
+        percentage: progressDetails.percentage,
+        sophisticationLevel: session.attributes.userContext.sophisticationLevel,
+        currentQuestion: session.attributes.userContext.currentQuestion
+      }
+    };
+
     return createOkResponse(sessionData);
 
   } catch (error) {

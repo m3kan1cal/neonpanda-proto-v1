@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuthorizeUser } from '../auth/hooks/useAuthorizeUser';
 import { themeClasses } from '../utils/synthwaveThemeClasses';
+import { containerPatterns, layoutPatterns } from '../utils/uiPatterns';
 import { isCurrentWeekReport, isNewWorkout, isRecentConversation } from '../utils/dateUtils';
 import {
   NeonBorder,
@@ -16,6 +17,7 @@ import {
   ChevronRightIcon
 } from './themes/SynthwaveComponents';
 import { FullPageLoader, CenteredErrorState, InlineError, EmptyState } from './shared/ErrorStates';
+import CoachHeader from './shared/CoachHeader';
 import CommandPalette from './shared/CommandPalette';
 import { FloatingMenuManager } from './shared/FloatingMenuManager';
 import CoachAgent from '../utils/agents/CoachAgent';
@@ -25,8 +27,8 @@ import ReportAgent from '../utils/agents/ReportAgent';
 
 // Local icons not in SynthwaveComponents
 const ProgramIcon = () => (
-  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
   </svg>
 );
 
@@ -91,6 +93,8 @@ function TrainingGrounds() {
   const [workoutState, setWorkoutState] = useState({
     recentWorkouts: [],
     totalWorkoutCount: 0,
+    trainingDaysCount: 0,
+    lastWorkoutDaysAgo: 0,
     isLoading: false,
     error: null,
   });
@@ -338,11 +342,10 @@ function TrainingGrounds() {
   const renderWorkoutList = () => (
     <div className="space-y-2">
       {workoutState.isLoadingRecentItems ? (
-        <div className="text-center py-8">
-          <div className="inline-flex items-center space-x-2 text-synthwave-text-secondary font-rajdhani">
-            <div className="w-4 h-4 border-2 border-synthwave-neon-pink border-t-transparent rounded-full animate-spin"></div>
-            <span>Loading workouts...</span>
-          </div>
+        <div className="space-y-3">
+          <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+          <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-3/4"></div>
+          <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-1/2"></div>
         </div>
       ) : workoutState.error ? (
         <InlineError
@@ -394,21 +397,77 @@ function TrainingGrounds() {
     </div>
   );
 
-  // Show loading while validating userId or loading coach data
-  if (isValidatingUserId || isLoadingCoachData) {
-    return <FullPageLoader text="Loading Training Grounds..." />;
-  }
+  // Handle authorization silently - redirect if unauthorized
+  useEffect(() => {
+    if (!isValidatingUserId && (userIdError || !isValidUserId)) {
+      // Redirect to login/auth page instead of showing error
+      navigate('/auth/login', { replace: true });
+    }
+  }, [isValidatingUserId, userIdError, isValidUserId, navigate]);
 
-  // Handle userId validation errors
-  if (userIdError || !isValidUserId) {
+  // Show skeleton loading while validating or if not authorized (will redirect)
+  if (isValidatingUserId || userIdError || !isValidUserId) {
     return (
-      <CenteredErrorState
-        title="Access Denied"
-        message={userIdError || "You can only access your own Training Grounds."}
-        buttonText="Back to Coaches"
-        onButtonClick={() => navigate('/coaches')}
-        variant="error"
-      />
+      <div className={layoutPatterns.pageContainer}>
+        <div className={layoutPatterns.contentWrapper}>
+          {/* Header skeleton */}
+          <div className="mb-8 text-center">
+            <div className="h-12 bg-synthwave-text-muted/20 rounded animate-pulse w-64 mx-auto mb-6"></div>
+
+            {/* Coach header skeleton */}
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
+              <div className="text-left">
+                <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-48 mb-2"></div>
+                <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-32"></div>
+              </div>
+            </div>
+
+            <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-96 mx-auto mb-4"></div>
+            <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-80 mx-auto mb-4"></div>
+            <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-48 mx-auto"></div>
+          </div>
+
+          {/* Compact Quick Stats skeleton */}
+          <div className="flex justify-center mb-8">
+            <div className="bg-synthwave-bg-card/60 border border-synthwave-neon-cyan/20 rounded-2xl shadow-xl shadow-synthwave-neon-cyan/20 p-6">
+                <div className="flex flex-wrap justify-center gap-4 md:gap-6">
+                  {[1, 2, 3, 4, 5, 6, 7].map((i) => (
+                    <div key={i} className="flex items-center gap-2 min-w-[120px]">
+                      <div className="p-2 bg-synthwave-text-muted/20 rounded-lg">
+                        <div className="w-4 h-4 bg-synthwave-text-muted/30 rounded"></div>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-8 mb-1"></div>
+                        <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-12"></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+            </div>
+          </div>
+
+          {/* Main sections skeleton */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="bg-synthwave-bg-card/60 border border-synthwave-neon-cyan/20 rounded-2xl shadow-xl shadow-synthwave-neon-cyan/20 p-6 h-80">
+                <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-32 mb-4"></div>
+                <div className="space-y-3 mb-6">
+                  <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                  <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-3/4"></div>
+                  <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-1/2"></div>
+                </div>
+                <div className="space-y-3">
+                  <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-5/6"></div>
+                  <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-4/5"></div>
+                  <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-3/5"></div>
+                  <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-2/3"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
     );
   }
 
@@ -437,8 +496,8 @@ function TrainingGrounds() {
   }
 
   return (
-    <div className={`${themeClasses.container} min-h-screen`}>
-      <div className="max-w-7xl mx-auto px-8 py-12">
+    <div className={layoutPatterns.pageContainer}>
+      <div className={layoutPatterns.contentWrapper}>
         {/* Header */}
         <div className="mb-8">
           {/* Title */}
@@ -446,6 +505,15 @@ function TrainingGrounds() {
             <h1 className="font-russo font-black text-4xl md:text-5xl text-white mb-6 uppercase">
               Training Grounds
             </h1>
+
+            {/* Coach Header */}
+            {coachData && (
+              <CoachHeader
+                coachData={coachData}
+                isOnline={true}
+              />
+            )}
+
             <p className="font-rajdhani text-lg text-synthwave-text-secondary max-w-3xl mx-auto mb-4">
               Track progress, access resources, stay connected, and manage your complete fitness journey. Everything you need to achieve your goals is centralized here.
             </p>
@@ -467,104 +535,153 @@ function TrainingGrounds() {
         </div>
 
 
-        {/* Quick Stats */}
-        <div className="flex justify-center mb-12">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 w-full max-w-4xl">
-          <div className="bg-synthwave-bg-card/30 border-2 border-synthwave-neon-pink/30 rounded-lg p-4 text-center">
-            {conversationAgentState.isLoadingConversationCount ? (
-              <>
-                <div className="text-2xl font-russo font-bold text-synthwave-neon-pink mb-1 flex items-center justify-center h-8">
-                  <div className="w-6 h-6 border-2 border-synthwave-neon-pink border-t-transparent rounded-full animate-spin"></div>
+        {/* Compact Quick Stats */}
+        <div className="flex justify-center mb-8">
+          <div className="bg-synthwave-bg-card/60 border border-synthwave-neon-cyan/20 rounded-2xl shadow-xl shadow-synthwave-neon-cyan/20 p-4">
+            <div className="flex flex-wrap justify-center gap-4 md:gap-6">
+                {/* Total Conversations */}
+                <div className="flex items-center gap-2 group cursor-pointer min-w-[120px]">
+                  <div className="p-2 bg-synthwave-neon-pink/10 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/20 hover:text-synthwave-neon-pink rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 flex items-center justify-center">
+                    <ConversationIcon />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    {conversationAgentState.isLoadingConversationCount ? (
+                      <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-8 mb-1"></div>
+                    ) : (
+                      <div className="text-lg font-russo font-bold text-white group-hover:scale-105 transition-transform duration-300">
+                        {conversationAgentState.conversationCount || 0}
+                      </div>
+                    )}
+                    <div className="text-xs text-synthwave-text-muted font-rajdhani uppercase tracking-wide">
+                      Chats
+                    </div>
+                  </div>
                 </div>
-                <div className="font-rajdhani text-sm text-synthwave-text-secondary">
-                  Total Conversations
+
+                {/* Total Messages */}
+                <div className="flex items-center gap-2 group cursor-pointer min-w-[120px]">
+                  <div className="p-2 bg-synthwave-neon-cyan/10 text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/20 hover:text-synthwave-neon-cyan rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 flex items-center justify-center">
+                    <MessagesIcon />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    {conversationAgentState.isLoadingConversationCount ? (
+                      <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-8 mb-1"></div>
+                    ) : (
+                      <div className="text-lg font-russo font-bold text-white group-hover:scale-105 transition-transform duration-300">
+                        {conversationAgentState.totalMessages || 0}
+                      </div>
+                    )}
+                    <div className="text-xs text-synthwave-text-muted font-rajdhani uppercase tracking-wide">
+                      Messages
+                    </div>
+                  </div>
                 </div>
-              </>
-            ) : (
-              <>
-                <div className="text-2xl font-russo font-bold text-synthwave-neon-pink mb-1">
-                  {conversationAgentState.conversationCount || 0}
+
+                {/* Total Workouts */}
+                <div className="flex items-center gap-2 group cursor-pointer min-w-[120px]">
+                  <div className="p-2 bg-synthwave-neon-purple/10 text-synthwave-neon-purple hover:bg-synthwave-neon-purple/20 hover:text-synthwave-neon-purple rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-purple/50 flex items-center justify-center">
+                    <WorkoutIcon />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    {workoutState.isLoadingCount ? (
+                      <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-8 mb-1"></div>
+                    ) : (
+                      <div className="text-lg font-russo font-bold text-white group-hover:scale-105 transition-transform duration-300">
+                        {workoutState.totalWorkoutCount || 0}
+                      </div>
+                    )}
+                    <div className="text-xs text-synthwave-text-muted font-rajdhani uppercase tracking-wide">
+                      Workouts
+                    </div>
+                  </div>
                 </div>
-                <div className="font-rajdhani text-sm text-synthwave-text-secondary">
-                  Total Conversations
+
+                {/* This Week's Workouts */}
+                <div className="flex items-center gap-2 group cursor-pointer min-w-[120px]">
+                  <div className="p-2 bg-synthwave-neon-pink/10 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/20 hover:text-synthwave-neon-pink rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 flex items-center justify-center">
+                    <WorkoutIcon />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    {workoutState.isLoadingCount ? (
+                      <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-8 mb-1"></div>
+                    ) : (
+                      <div className="text-lg font-russo font-bold text-white group-hover:scale-105 transition-transform duration-300">
+                        {workoutState.thisWeekWorkoutCount || 0}
+                      </div>
+                    )}
+                    <div className="text-xs text-synthwave-text-muted font-rajdhani uppercase tracking-wide">
+                      This Week
+                    </div>
+                  </div>
                 </div>
-              </>
-            )}
-          </div>
-          <div className="bg-synthwave-bg-card/30 border-2 border-synthwave-neon-pink/30 rounded-lg p-4 text-center">
-            {workoutState.isLoadingCount ? (
-              <>
-                <div className="text-2xl font-russo font-bold text-synthwave-neon-pink mb-1 flex items-center justify-center h-8">
-                  <div className="w-6 h-6 border-2 border-synthwave-neon-pink border-t-transparent rounded-full animate-spin"></div>
+
+
+                {/* Active Programs */}
+                <div className="flex items-center gap-2 group cursor-pointer min-w-[120px]">
+                  <div className="p-2 bg-synthwave-neon-purple/10 text-synthwave-neon-purple hover:bg-synthwave-neon-purple/20 hover:text-synthwave-neon-purple rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-purple/50 flex items-center justify-center">
+                    <ProgramIcon />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    {isLoadingCoachData ? (
+                      <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-8 mb-1"></div>
+                    ) : (
+                      <div className="text-lg font-russo font-bold text-white group-hover:scale-105 transition-transform duration-300">
+                        {coachData?.activePrograms || 0}
+                      </div>
+                    )}
+                    <div className="text-xs text-synthwave-text-muted font-rajdhani uppercase tracking-wide">
+                      Programs
+                    </div>
+                  </div>
                 </div>
-                <div className="font-rajdhani text-sm text-synthwave-text-secondary">
-                  Total Workouts
+
+                {/* Day Streak */}
+                <div className="flex items-center gap-2 group cursor-pointer min-w-[120px]">
+                  <div className="p-2 bg-synthwave-neon-pink/10 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/20 hover:text-synthwave-neon-pink rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 flex items-center justify-center">
+                    <LightningIcon />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    {workoutState.isLoadingTrainingDays ? (
+                      <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-8 mb-1"></div>
+                    ) : (
+                      <div className="text-lg font-russo font-bold text-white group-hover:scale-105 transition-transform duration-300">
+                        {workoutState.trainingDaysCount || 0}
+                      </div>
+                    )}
+                    <div className="text-xs text-synthwave-text-muted font-rajdhani uppercase tracking-wide">
+                      Days
+                    </div>
+                  </div>
                 </div>
-              </>
-            ) : (
-              <>
-                <div className="text-2xl font-russo font-bold text-synthwave-neon-pink mb-1">
-                  {workoutState.totalWorkoutCount || 0}
+
+                {/* Total Reports */}
+                <div className="flex items-center gap-2 group cursor-pointer min-w-[120px]">
+                  <div className="p-2 bg-synthwave-neon-cyan/10 text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/20 hover:text-synthwave-neon-cyan rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 flex items-center justify-center">
+                    <ReportIcon />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    {reportsState.isLoadingRecentItems ? (
+                      <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-8 mb-1"></div>
+                    ) : (
+                      <div className="text-lg font-russo font-bold text-white group-hover:scale-105 transition-transform duration-300">
+                        {reportsState.recentReports.length || 0}
+                      </div>
+                    )}
+                    <div className="text-xs text-synthwave-text-muted font-rajdhani uppercase tracking-wide">
+                      Reports
+                    </div>
+                  </div>
                 </div>
-                <div className="font-rajdhani text-sm text-synthwave-text-secondary">
-                  Total Workouts
-                </div>
-              </>
-            )}
-          </div>
-          <div className="bg-synthwave-bg-card/30 border-2 border-synthwave-neon-pink/30 rounded-lg p-4 text-center">
-            {isLoadingCoachData ? (
-              <>
-                <div className="text-2xl font-russo font-bold text-synthwave-neon-pink mb-1 flex items-center justify-center h-8">
-                  <div className="w-6 h-6 border-2 border-synthwave-neon-pink border-t-transparent rounded-full animate-spin"></div>
-                </div>
-                <div className="font-rajdhani text-sm text-synthwave-text-secondary">
-                  Active Programs
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="text-2xl font-russo font-bold text-synthwave-neon-pink mb-1">
-                  {coachData?.activePrograms || 0}
-                </div>
-                <div className="font-rajdhani text-sm text-synthwave-text-secondary">
-                  Active Programs
-                </div>
-              </>
-            )}
-          </div>
-          <div className="bg-synthwave-bg-card/30 border-2 border-synthwave-neon-pink/30 rounded-lg p-4 text-center">
-            {workoutState.isLoadingTrainingDays ? (
-              <>
-                <div className="text-2xl font-russo font-bold text-synthwave-neon-pink mb-1 flex items-center justify-center h-8">
-                  <div className="w-6 h-6 border-2 border-synthwave-neon-pink border-t-transparent rounded-full animate-spin"></div>
-                </div>
-                <div className="font-rajdhani text-sm text-synthwave-text-secondary">
-                  Days Training
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="text-2xl font-russo font-bold text-synthwave-neon-pink mb-1">
-                  {workoutState.trainingDaysCount || 0}
-                </div>
-                <div className="font-rajdhani text-sm text-synthwave-text-secondary">
-                  Days Training
-                </div>
-              </>
-            )}
-          </div>
+            </div>
           </div>
         </div>
 
         {/* Main Sections Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {/* Conversations Section */}
-          <div className="bg-synthwave-bg-card/50 border-2 border-synthwave-neon-pink/30 rounded-lg p-6 transition-all duration-300 hover:border-synthwave-neon-pink hover:-translate-y-1">
-            <div className="flex items-center space-x-3 mb-4">
-              <div className="text-synthwave-neon-pink">
-                <ConversationIcon />
-              </div>
+          <div className={`${containerPatterns.cardMedium} p-6`}>
+            <div className="flex items-start space-x-3 mb-4">
+              <div className="w-3 h-3 bg-synthwave-neon-pink rounded-full flex-shrink-0 mt-2"></div>
               <h3 className="font-russo font-bold text-white text-lg uppercase">
                 Conversations
               </h3>
@@ -576,11 +693,10 @@ function TrainingGrounds() {
             {/* Recent Conversations List */}
             <div className="space-y-2 mb-6">
               {conversationAgentState.isLoadingRecentItems ? (
-                <div className="text-center py-4">
-                  <div className="inline-flex items-center space-x-2 text-synthwave-text-secondary font-rajdhani text-sm">
-                    <div className="w-4 h-4 border-2 border-synthwave-neon-pink border-t-transparent rounded-full animate-spin"></div>
-                    <span>Loading conversations...</span>
-                  </div>
+                <div className="space-y-3">
+                  <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                  <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-3/4"></div>
+                  <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-1/2"></div>
                 </div>
               ) : conversationAgentState.recentConversations.length > 0 ? (
                 <>
@@ -625,11 +741,9 @@ function TrainingGrounds() {
           </div>
 
           {/* Workout History Section */}
-          <div className="bg-synthwave-bg-card/50 border-2 border-synthwave-neon-pink/30 rounded-lg p-6 transition-all duration-300 hover:border-synthwave-neon-pink hover:-translate-y-1">
-            <div className="flex items-center space-x-3 mb-4">
-              <div className="text-synthwave-neon-pink">
-                <WorkoutIcon />
-              </div>
+          <div className={`${containerPatterns.cardMedium} p-6`}>
+            <div className="flex items-start space-x-3 mb-4">
+              <div className="w-3 h-3 bg-synthwave-neon-pink rounded-full flex-shrink-0 mt-2"></div>
               <h3 className="font-russo font-bold text-white text-lg uppercase">
                 Workout History
               </h3>
@@ -645,11 +759,9 @@ function TrainingGrounds() {
           </div>
 
           {/* Reports & Insights Section */}
-          <div className="bg-synthwave-bg-card/50 border-2 border-synthwave-neon-pink/30 rounded-lg p-6 transition-all duration-300 hover:border-synthwave-neon-pink hover:-translate-y-1">
-            <div className="flex items-center space-x-3 mb-4">
-              <div className="text-synthwave-neon-pink">
-                <ReportIcon />
-              </div>
+          <div className={`${containerPatterns.cardMedium} p-6`}>
+            <div className="flex items-start space-x-3 mb-4">
+              <div className="w-3 h-3 bg-synthwave-neon-purple rounded-full flex-shrink-0 mt-2"></div>
               <h3 className="font-russo font-bold text-white text-lg uppercase">
                 Reports & Insights
               </h3>
@@ -658,11 +770,10 @@ function TrainingGrounds() {
 
             <div className="space-y-2 mb-2">
               {reportsState.isLoadingRecentItems ? (
-                <div className="text-center py-4">
-                  <div className="inline-flex items-center space-x-2 text-synthwave-text-secondary font-rajdhani text-sm">
-                    <div className="w-4 h-4 border-2 border-synthwave-neon-pink border-t-transparent rounded-full animate-spin"></div>
-                    <span>Loading reports...</span>
-                  </div>
+                <div className="space-y-3">
+                  <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                  <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-3/4"></div>
+                  <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-1/2"></div>
                 </div>
               ) : reportsState.error ? (
                 <InlineError
@@ -712,11 +823,9 @@ function TrainingGrounds() {
           </div>
 
           {/* Training Programs Section */}
-          <div className="bg-synthwave-bg-card/50 border-2 border-synthwave-neon-pink/30 rounded-lg p-6 transition-all duration-300 hover:border-synthwave-neon-pink hover:-translate-y-1">
-            <div className="flex items-center space-x-3 mb-4">
-              <div className="text-synthwave-neon-pink">
-                <ProgramIcon />
-              </div>
+          <div className={`${containerPatterns.cardMedium} p-6`}>
+            <div className="flex items-start space-x-3 mb-4">
+              <div className="w-3 h-3 bg-synthwave-neon-pink rounded-full flex-shrink-0 mt-2"></div>
               <h3 className="font-russo font-bold text-white text-lg uppercase">
                 Training Programs
               </h3>
@@ -732,11 +841,9 @@ function TrainingGrounds() {
           </div>
 
           {/* Resources & Tools Section */}
-          <div className="bg-synthwave-bg-card/50 border-2 border-synthwave-neon-pink/30 rounded-lg p-6 transition-all duration-300 hover:border-synthwave-neon-pink hover:-translate-y-1">
-            <div className="flex items-center space-x-3 mb-4">
-              <div className="text-synthwave-neon-pink">
-                <ResourcesIcon />
-              </div>
+          <div className={`${containerPatterns.cardMedium} p-6`}>
+            <div className="flex items-start space-x-3 mb-4">
+              <div className="w-3 h-3 bg-synthwave-neon-cyan rounded-full flex-shrink-0 mt-2"></div>
               <h3 className="font-russo font-bold text-white text-lg uppercase">
                 Resources & Tools
               </h3>
@@ -752,11 +859,9 @@ function TrainingGrounds() {
           </div>
 
           {/* Messages & Notifications Section */}
-          <div className="bg-synthwave-bg-card/50 border-2 border-synthwave-neon-pink/30 rounded-lg p-6 transition-all duration-300 hover:border-synthwave-neon-pink hover:-translate-y-1">
-            <div className="flex items-center space-x-3 mb-4">
-              <div className="text-synthwave-neon-pink">
-                <MessagesIcon />
-              </div>
+          <div className={`${containerPatterns.cardMedium} p-6`}>
+            <div className="flex items-start space-x-3 mb-4">
+              <div className="w-3 h-3 bg-synthwave-neon-purple rounded-full flex-shrink-0 mt-2"></div>
               <h3 className="font-russo font-bold text-white text-lg uppercase">
                 Messages & Notifications
               </h3>

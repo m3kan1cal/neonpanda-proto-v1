@@ -52,6 +52,13 @@ export interface CoachCreatorSession {
   startedAt: Date;
   lastActivity: Date;
   completedAt?: Date;
+  progressDetails?: {
+    questionsCompleted: number;
+    totalQuestions: number;
+    percentage: number;
+    sophisticationLevel: string;
+    currentQuestion: number;
+  };
 }
 
 export interface CoachPersonalityTemplate {

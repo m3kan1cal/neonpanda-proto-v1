@@ -42,6 +42,8 @@ export const AuthProvider = ({ children }) => {
 
       const userWithAttributes = {
         ...currentUser,
+        // Override username with preferred_username if available
+        username: attributes?.preferred_username || currentUser.username,
         attributes
       };
 
@@ -59,7 +61,7 @@ export const AuthProvider = ({ children }) => {
       // Batch state updates to prevent race condition
       setUser(userWithAttributes);
       setIsAuthenticated(true);
-      console.log("🔄 AuthContext: Setting loading to false (authenticated)");
+      console.info("🔄 AuthContext: Setting loading to false (authenticated)");
       setLoading(false);
 
     } catch (error) {
@@ -67,7 +69,7 @@ export const AuthProvider = ({ children }) => {
       // Batch state updates for unauthenticated state
       setUser(null);
       setIsAuthenticated(false);
-      console.log("🔄 AuthContext: Setting loading to false (not authenticated)");
+      console.info("🔄 AuthContext: Setting loading to false (not authenticated)");
       setLoading(false);
     }
   };
@@ -116,22 +118,22 @@ export const AuthProvider = ({ children }) => {
     try {
       setAuthError(null);
 
-      console.log('AuthContext: About to call Amplify signIn');
+      console.info('AuthContext: About to call Amplify signIn');
       const signInResult = await signIn({
         username: email,
         password
       });
 
-      console.log('AuthContext: Amplify signIn result:', signInResult);
-      console.log('AuthContext: signInResult.isSignedIn:', signInResult.isSignedIn);
-      console.log('AuthContext: signInResult.nextStep:', signInResult.nextStep);
+      console.info('AuthContext: Amplify signIn result:', signInResult);
+      console.info('AuthContext: signInResult.isSignedIn:', signInResult.isSignedIn);
+      console.info('AuthContext: signInResult.nextStep:', signInResult.nextStep);
 
       if (signInResult.isSignedIn) {
         await checkAuthState(); // Refresh user state
         return { success: true };
       } else {
         // Handle cases where sign in didn't complete
-        console.log('AuthContext: Sign in not completed, nextStep:', signInResult.nextStep);
+        console.info('AuthContext: Sign in not completed, nextStep:', signInResult.nextStep);
         if (signInResult.nextStep && signInResult.nextStep.signInStep === 'CONFIRM_SIGN_UP') {
           throw new Error('UserNotConfirmedException');
         }

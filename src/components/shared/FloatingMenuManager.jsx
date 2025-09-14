@@ -1,16 +1,20 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useToast } from '../../contexts/ToastContext';
-import { themeClasses } from '../../utils/synthwaveThemeClasses';
-import { isCurrentWeekReport, isNewWorkout, isRecentConversation } from '../../utils/dateUtils';
-import ReportAgent from '../../utils/agents/ReportAgent';
-import WorkoutAgent from '../../utils/agents/WorkoutAgent';
-import CoachConversationAgent from '../../utils/agents/CoachConversationAgent';
+import React, { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "../../contexts/ToastContext";
+import { buttonPatterns, iconButtonPatterns, containerPatterns } from "../../utils/uiPatterns";
+import {
+  isCurrentWeekReport,
+  isNewWorkout,
+  isRecentConversation,
+} from "../../utils/dateUtils";
+import ReportAgent from "../../utils/agents/ReportAgent";
+import WorkoutAgent from "../../utils/agents/WorkoutAgent";
+import CoachConversationAgent from "../../utils/agents/CoachConversationAgent";
 import {
   FloatingIconButton,
   ModernPopover,
-  FloatingIconBar
-} from './FloatingMenu';
+  FloatingIconBar,
+} from "./FloatingMenu";
 import {
   WorkoutIcon,
   WorkoutIconSmall,
@@ -23,8 +27,9 @@ import {
   MenuIcon,
   MemoryIcon,
   CoachIcon,
-  NewBadge
-} from '../themes/SynthwaveComponents';
+  CoachIconSmall,
+  NewBadge,
+} from "../themes/SynthwaveComponents";
 
 /**
  * FloatingMenuManager - A comprehensive floating menu system with agent management
@@ -33,10 +38,10 @@ import {
 export const FloatingMenuManager = ({
   userId,
   coachId,
-  currentPage = 'default',
+  currentPage = "default",
   className = "",
   onCommandPaletteToggle = null,
-  coachData = null
+  coachData = null,
 }) => {
   const navigate = useNavigate();
   const { success, error } = useToast();
@@ -80,7 +85,7 @@ export const FloatingMenuManager = ({
 
     if (!reportAgentRef.current) {
       reportAgentRef.current = new ReportAgent(userId, (newState) => {
-        setReportAgentState(prevState => ({
+        setReportAgentState((prevState) => ({
           ...prevState,
           recentReports: newState.recentReports || prevState.recentReports,
           isLoadingRecentItems: newState.isLoadingRecentItems || false,
@@ -89,7 +94,7 @@ export const FloatingMenuManager = ({
       });
 
       reportAgentRef.current.onError = (error) => {
-        console.error('Report agent error:', error);
+        console.error("Report agent error:", error);
       };
     }
 
@@ -107,7 +112,7 @@ export const FloatingMenuManager = ({
 
     if (!workoutAgentRef.current) {
       workoutAgentRef.current = new WorkoutAgent(userId, (newState) => {
-        setWorkoutAgentState(prevState => ({
+        setWorkoutAgentState((prevState) => ({
           ...prevState,
           isLoadingRecentItems: newState.isLoadingRecentItems || false,
           recentWorkouts: newState.recentWorkouts || [],
@@ -116,11 +121,14 @@ export const FloatingMenuManager = ({
       });
 
       workoutAgentRef.current.onError = (error) => {
-        console.error('Workout agent error:', error);
+        console.error("Workout agent error:", error);
       };
 
       workoutAgentRef.current.onNewWorkout = (workout) => {
-        const title = workoutAgentRef.current.formatWorkoutSummary(workout, true);
+        const title = workoutAgentRef.current.formatWorkoutSummary(
+          workout,
+          true
+        );
         success(`Workout logged: ${title}`);
       };
     }
@@ -143,7 +151,7 @@ export const FloatingMenuManager = ({
         coachId,
         conversationId: null,
         onStateChange: (newState) => {
-          setConversationAgentState(prevState => ({
+          setConversationAgentState((prevState) => ({
             ...prevState,
             recentConversations: newState.recentConversations || [],
             isLoadingRecentItems: newState.isLoadingRecentItems || false,
@@ -154,8 +162,8 @@ export const FloatingMenuManager = ({
           // Handle navigation if needed
         },
         onError: (error) => {
-          console.error('Conversation agent error:', error);
-        }
+          console.error("Conversation agent error:", error);
+        },
       });
     }
 
@@ -169,22 +177,33 @@ export const FloatingMenuManager = ({
 
   // Load data when popovers are opened
   useEffect(() => {
-    if (activePopover === 'conversations' && userId && coachId && conversationAgentRef.current) {
-      console.info('Loading conversations for popover...', { userId, coachId });
+    if (
+      activePopover === "conversations" &&
+      userId &&
+      coachId &&
+      conversationAgentRef.current
+    ) {
+      console.info("Loading conversations for popover...", { userId, coachId });
       conversationAgentRef.current.loadRecentConversations(userId, coachId, 10);
     }
   }, [activePopover, userId, coachId]);
 
   useEffect(() => {
-    if (activePopover === 'workouts' && userId && workoutAgentRef.current) {
-      console.info('Loading workouts for popover...', { userId, activePopover });
+    if (activePopover === "workouts" && userId && workoutAgentRef.current) {
+      console.info("Loading workouts for popover...", {
+        userId,
+        activePopover,
+      });
       workoutAgentRef.current.loadRecentWorkouts(10);
     }
   }, [activePopover, userId]);
 
   useEffect(() => {
-    if (activePopover === 'reports' && userId && reportAgentRef.current) {
-      console.info('Loading recent reports for popover...', { userId, activePopover });
+    if (activePopover === "reports" && userId && reportAgentRef.current) {
+      console.info("Loading recent reports for popover...", {
+        userId,
+        activePopover,
+      });
       reportAgentRef.current.loadRecentReports(10);
     }
   }, [activePopover, userId]);
@@ -193,9 +212,21 @@ export const FloatingMenuManager = ({
   const handleTogglePopover = (popoverType) => {
     if (activePopover === popoverType) {
       // Closing the popup - clear all agent states
-      setWorkoutAgentState({ recentWorkouts: [], isLoadingRecentItems: false, error: null });
-      setConversationAgentState({ recentConversations: [], isLoadingRecentItems: false, error: null });
-      setReportAgentState({ recentReports: [], isLoadingRecentItems: false, error: null });
+      setWorkoutAgentState({
+        recentWorkouts: [],
+        isLoadingRecentItems: false,
+        error: null,
+      });
+      setConversationAgentState({
+        recentConversations: [],
+        isLoadingRecentItems: false,
+        error: null,
+      });
+      setReportAgentState({
+        recentReports: [],
+        isLoadingRecentItems: false,
+        error: null,
+      });
       setActivePopover(null);
     } else {
       // Opening a different popup
@@ -205,26 +236,38 @@ export const FloatingMenuManager = ({
 
   const handleClosePopover = () => {
     // Clear all agent states to prevent stale content flashing
-    setWorkoutAgentState({ recentWorkouts: [], isLoadingRecentItems: false, error: null });
-    setConversationAgentState({ recentConversations: [], isLoadingRecentItems: false, error: null });
-    setReportAgentState({ recentReports: [], isLoadingRecentItems: false, error: null });
+    setWorkoutAgentState({
+      recentWorkouts: [],
+      isLoadingRecentItems: false,
+      error: null,
+    });
+    setConversationAgentState({
+      recentConversations: [],
+      isLoadingRecentItems: false,
+      error: null,
+    });
+    setReportAgentState({
+      recentReports: [],
+      isLoadingRecentItems: false,
+      error: null,
+    });
 
     setActivePopover(null);
   };
 
   const formatConversationDate = (dateString) => {
-    if (!dateString) return 'Unknown';
+    if (!dateString) return "Unknown";
 
     const date = new Date(dateString);
     const now = new Date();
     const diffInHours = Math.floor((now - date) / (1000 * 60 * 60));
 
     if (diffInHours < 1) {
-      return 'Just now';
+      return "Just now";
     } else if (diffInHours < 24) {
       return `${diffInHours}h ago`;
     } else if (diffInHours < 48) {
-      return 'Yesterday';
+      return "Yesterday";
     } else {
       const diffInDays = Math.floor(diffInHours / 24);
       return `${diffInDays}d ago`;
@@ -232,36 +275,64 @@ export const FloatingMenuManager = ({
   };
 
   const truncateTitle = (title, maxLength = 40) => {
-    if (!title || title.length <= maxLength) return title || 'Untitled';
-    return title.substring(0, maxLength) + '...';
+    if (!title || title.length <= maxLength) return title || "Untitled";
+    return title.substring(0, maxLength) + "...";
   };
 
   const handleConversationClick = (selectedConversationId) => {
-    navigate(`/training-grounds/coach-conversations?userId=${userId}&coachId=${coachId}&conversationId=${selectedConversationId}`);
+    navigate(
+      `/training-grounds/coach-conversations?userId=${userId}&coachId=${coachId}&conversationId=${selectedConversationId}`
+    );
   };
 
   const handleNewConversation = async () => {
-    if (!conversationAgentRef.current || !userId || !coachId || isCreatingConversation) return;
+    if (
+      !conversationAgentRef.current ||
+      !userId ||
+      !coachId ||
+      isCreatingConversation
+    )
+      return;
 
     setIsCreatingConversation(true);
 
     try {
-      console.info('FloatingMenuManager: Creating new conversation...', { userId, coachId });
-      const result = await conversationAgentRef.current.createConversation(userId, coachId);
+      console.info("FloatingMenuManager: Creating new conversation...", {
+        userId,
+        coachId,
+      });
+      const result = await conversationAgentRef.current.createConversation(
+        userId,
+        coachId
+      );
 
-      console.info('FloatingMenuManager: Conversation created successfully:', result);
+      console.info(
+        "FloatingMenuManager: Conversation created successfully:",
+        result
+      );
 
       if (result && result.conversationId) {
-        console.info('FloatingMenuManager: Navigating to conversation:', result.conversationId);
+        console.info(
+          "FloatingMenuManager: Navigating to conversation:",
+          result.conversationId
+        );
         handleClosePopover();
-        navigate(`/training-grounds/coach-conversations?userId=${userId}&coachId=${coachId}&conversationId=${result.conversationId}`);
+        navigate(
+          `/training-grounds/coach-conversations?userId=${userId}&coachId=${coachId}&conversationId=${result.conversationId}`
+        );
       } else {
-        console.error('FloatingMenuManager: No conversationId in result:', result);
-        error('Failed to create conversation - no ID returned');
+        console.error(
+          "FloatingMenuManager: No conversationId in result:",
+          result
+        );
+        error("Failed to create conversation - no ID returned");
       }
     } catch (error) {
-      console.error('FloatingMenuManager: Error creating new conversation:', error);
-      error('Failed to create conversation');
+      console.error(
+        "FloatingMenuManager: Error creating new conversation:",
+        error
+      );
+      error("Failed to create conversation");
       navigate(`/training-grounds?userId=${userId}&coachId=${coachId}`);
     } finally {
       setIsCreatingConversation(false);
@@ -270,9 +341,9 @@ export const FloatingMenuManager = ({
 
   // Get week date range from weekId
   const getWeekDateRange = (weekId) => {
-    if (!weekId) return 'Unknown week';
+    if (!weekId) return "Unknown week";
 
-    const [year, week] = weekId.split('-W');
+    const [year, week] = weekId.split("-W");
     if (!year || !week) return weekId;
 
     const firstDayOfYear = new Date(year, 0, 1);
@@ -286,26 +357,37 @@ export const FloatingMenuManager = ({
     weekEnd.setDate(weekStart.getDate() + 6);
 
     const formatDate = (date) => {
-      return date.toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric'
+      return date.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
       });
     };
 
     return `${formatDate(weekStart)} - ${formatDate(weekEnd)}`;
   };
 
-
-
   // Render functions
   const renderWorkoutList = () => (
     <div className="space-y-2">
       {workoutAgentState.isLoadingRecentItems ? (
-        <div className="text-center py-8">
-          <div className="inline-flex items-center space-x-2 text-synthwave-text-secondary font-rajdhani">
-            <div className="w-4 h-4 border-2 border-synthwave-neon-pink border-t-transparent rounded-full animate-spin"></div>
-            <span>Loading workouts...</span>
+        <div className="space-y-3">
+          <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
+            Recent Workouts
           </div>
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/20 rounded-lg p-3"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex-1 min-w-0">
+                  <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-3/4 mb-2"></div>
+                  <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-1/2"></div>
+                </div>
+                <div className="w-4 h-4 bg-synthwave-text-muted/20 rounded animate-pulse ml-2"></div>
+              </div>
+            </div>
+          ))}
         </div>
       ) : workoutAgentState.recentWorkouts.length === 0 ? (
         <div className="text-center py-8">
@@ -324,26 +406,51 @@ export const FloatingMenuManager = ({
               <div
                 key={workout.workoutId}
                 onClick={() => {
-                  navigate(`/training-grounds/workouts?userId=${userId}&workoutId=${workout.workoutId}&coachId=${coachId}`);
+                  navigate(
+                    `/training-grounds/workouts?userId=${userId}&workoutId=${workout.workoutId}&coachId=${coachId}`
+                  );
                   handleClosePopover();
                 }}
                 className="relative bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/20 hover:border-synthwave-neon-pink/40 hover:bg-synthwave-bg-primary/50 rounded-lg p-3 cursor-pointer transition-all duration-200"
               >
                 {/* NEW badge for workouts within 24 hours */}
                 {isNew && <NewBadge />}
-              <div className="flex items-center justify-between">
-                <div className="flex-1 min-w-0">
-                  <div className="font-rajdhani text-sm text-white font-medium truncate">
-                    {workoutAgentRef.current?.formatWorkoutSummary(workout, true) || 'Workout'}
+                <div className="flex items-center justify-between">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-rajdhani text-sm text-white font-medium truncate">
+                      {workoutAgentRef.current?.formatWorkoutSummary(
+                        workout,
+                        true
+                      ) || "Workout"}
+                    </div>
+                    <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                      {workoutAgentRef.current?.formatWorkoutTime(
+                        workout.completedAt
+                      ) || "Unknown time"}
+                      {workout.duration ? ` • ` : ""}
+                      <span className="text-synthwave-neon-cyan">
+                        {workout.duration
+                          ? `${Math.round(workout.duration / 60)}min`
+                          : ""}
+                      </span>
+                      {workout.extractionMetadata?.confidence ? ` • ` : ""}
+                      {workout.extractionMetadata?.confidence ? (
+                        <span
+                          className={`${workoutAgentRef.current?.getConfidenceColorClass(workout.extractionMetadata.confidence) || "text-synthwave-text-secondary"}`}
+                        >
+                          {workoutAgentRef.current?.getConfidenceDisplay(
+                            workout.extractionMetadata.confidence
+                          ) || "Unknown"}
+                        </span>
+                      ) : (
+                        ""
+                      )}
+                    </div>
                   </div>
-                  <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
-                    {workoutAgentRef.current?.formatWorkoutTime(workout.completedAt) || 'Unknown time'}{workout.duration ? ` • ` : ''}<span className="text-synthwave-neon-cyan">{workout.duration ? `${Math.round(workout.duration / 60)}min` : ''}</span>{workout.extractionMetadata?.confidence ? ` • ` : ''}{workout.extractionMetadata?.confidence ? <span className={`${workoutAgentRef.current?.getConfidenceColorClass(workout.extractionMetadata.confidence) || 'text-synthwave-text-secondary'}`}>{workoutAgentRef.current?.getConfidenceDisplay(workout.extractionMetadata.confidence) || 'Unknown'}</span> : ''}
+                  <div className="text-synthwave-neon-pink ml-2">
+                    <WorkoutIconSmall />
                   </div>
                 </div>
-                <div className="text-synthwave-neon-pink ml-2">
-                  <WorkoutIconSmall />
-                </div>
-              </div>
               </div>
             );
           })}
@@ -355,11 +462,24 @@ export const FloatingMenuManager = ({
   const renderReportList = () => (
     <div className="space-y-2">
       {reportAgentState.isLoadingRecentItems ? (
-        <div className="text-center py-8">
-          <div className="inline-flex items-center space-x-2 text-synthwave-text-secondary font-rajdhani">
-            <div className="w-4 h-4 border-2 border-synthwave-neon-pink border-t-transparent rounded-full animate-spin"></div>
-            <span>Loading reports...</span>
+        <div className="space-y-3">
+          <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
+            Recent Reports
           </div>
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/20 rounded-lg p-3"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex-1 min-w-0">
+                  <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-1/3 mb-2"></div>
+                  <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-2/3"></div>
+                </div>
+                <div className="w-4 h-4 bg-synthwave-text-muted/20 rounded animate-pulse ml-2"></div>
+              </div>
+            </div>
+          ))}
         </div>
       ) : reportAgentState.recentReports.length === 0 ? (
         <div className="text-center py-8">
@@ -378,7 +498,9 @@ export const FloatingMenuManager = ({
               <div
                 key={report.weekId}
                 onClick={() => {
-                  navigate(`/training-grounds/reports/weekly?userId=${userId}&weekId=${report.weekId}&coachId=${coachId}`);
+                  navigate(
+                    `/training-grounds/reports/weekly?userId=${userId}&weekId=${report.weekId}&coachId=${coachId}`
+                  );
                   handleClosePopover();
                 }}
                 className="relative bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/20 hover:border-synthwave-neon-pink/40 hover:bg-synthwave-bg-primary/50 rounded-lg p-3 cursor-pointer transition-all duration-200"
@@ -392,7 +514,10 @@ export const FloatingMenuManager = ({
                       Week {report.weekId}
                     </div>
                     <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
-                      {getWeekDateRange(report.weekId)} • <span className="text-synthwave-neon-cyan">{report.metadata?.workoutCount || 0} workouts</span>
+                      {getWeekDateRange(report.weekId)} •{" "}
+                      <span className="text-synthwave-neon-cyan">
+                        {report.metadata?.workoutCount || 0} workouts
+                      </span>
                     </div>
                   </div>
                   <div className="text-synthwave-neon-pink ml-2">
@@ -407,11 +532,8 @@ export const FloatingMenuManager = ({
     </div>
   );
 
-
-
-      const renderMainActionsMenu = () => (
+  const renderMainActionsMenu = () => (
     <div className="space-y-3">
-
       {/* CYAN BUTTONS - Management Actions */}
       {/* Training Grounds */}
       <button
@@ -419,10 +541,20 @@ export const FloatingMenuManager = ({
           navigate(`/training-grounds?userId=${userId}&coachId=${coachId}`);
           handleClosePopover();
         }}
-        className={`${themeClasses.cyanButton} text-sm px-4 py-3 w-full flex items-center justify-center space-x-2`}
+        className={`${buttonPatterns.secondary} text-sm px-4 py-3 w-full flex items-center justify-center space-x-2`}
       >
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+          />
         </svg>
         <span>Training Grounds</span>
       </button>
@@ -430,10 +562,12 @@ export const FloatingMenuManager = ({
       {/* Manage Workouts */}
       <button
         onClick={() => {
-          navigate(`/training-grounds/manage-workouts?userId=${userId}&coachId=${coachId}`);
+          navigate(
+            `/training-grounds/manage-workouts?userId=${userId}&coachId=${coachId}`
+          );
           handleClosePopover();
         }}
-        className={`${themeClasses.cyanButton} text-sm px-4 py-2 w-full flex items-center justify-center space-x-2`}
+        className={`${buttonPatterns.secondary} text-sm px-4 py-2 w-full flex items-center justify-center space-x-2`}
       >
         <WorkoutIconSmall />
         <span>Manage Workouts</span>
@@ -442,10 +576,12 @@ export const FloatingMenuManager = ({
       {/* Manage Memories */}
       <button
         onClick={() => {
-          navigate(`/training-grounds/manage-memories?userId=${userId}&coachId=${coachId}`);
+          navigate(
+            `/training-grounds/manage-memories?userId=${userId}&coachId=${coachId}`
+          );
           handleClosePopover();
         }}
-        className={`${themeClasses.cyanButton} text-sm px-4 py-2 w-full flex items-center justify-center space-x-2`}
+        className={`${buttonPatterns.secondary} text-sm px-4 py-2 w-full flex items-center justify-center space-x-2`}
       >
         <MemoryIcon />
         <span>Manage Memories</span>
@@ -454,10 +590,12 @@ export const FloatingMenuManager = ({
       {/* Manage Conversations */}
       <button
         onClick={() => {
-          navigate(`/training-grounds/manage-conversations?userId=${userId}&coachId=${coachId}`);
+          navigate(
+            `/training-grounds/manage-conversations?userId=${userId}&coachId=${coachId}`
+          );
           handleClosePopover();
         }}
-        className={`${themeClasses.cyanButton} text-sm px-4 py-2 w-full flex items-center justify-center space-x-2`}
+        className={`${buttonPatterns.secondary} text-sm px-4 py-2 w-full flex items-center justify-center space-x-2`}
       >
         <ChatIconSmall />
         <span>Manage Conversations</span>
@@ -466,10 +604,12 @@ export const FloatingMenuManager = ({
       {/* View Reports */}
       <button
         onClick={() => {
-          navigate(`/training-grounds/reports?userId=${userId}&coachId=${coachId}`);
+          navigate(
+            `/training-grounds/reports?userId=${userId}&coachId=${coachId}`
+          );
           handleClosePopover();
         }}
-        className={`${themeClasses.cyanButton} text-sm px-4 py-2 w-full flex items-center justify-center space-x-2`}
+        className={`${buttonPatterns.secondary} text-sm px-4 py-2 w-full flex items-center justify-center space-x-2`}
       >
         <ReportIconSmall />
         <span>View Reports</span>
@@ -480,13 +620,15 @@ export const FloatingMenuManager = ({
       <button
         onClick={() => {
           if (onCommandPaletteToggle) {
-            onCommandPaletteToggle('/log-workout ');
+            onCommandPaletteToggle("/log-workout ");
           } else {
-            console.info('Log Workout clicked - onCommandPaletteToggle not provided');
+            console.info(
+              "Log Workout clicked - onCommandPaletteToggle not provided"
+            );
           }
           handleClosePopover();
         }}
-        className={`${themeClasses.neonButton} text-sm px-4 py-3 w-full flex items-center justify-center space-x-2`}
+        className={`${buttonPatterns.primary} text-sm px-4 py-3 w-full flex items-center justify-center space-x-2`}
       >
         <WorkoutIconSmall />
         <span>Log Workout</span>
@@ -496,7 +638,7 @@ export const FloatingMenuManager = ({
       <button
         onClick={() => {
           if (onCommandPaletteToggle) {
-            onCommandPaletteToggle('/start-conversation ');
+            onCommandPaletteToggle("/start-conversation ");
           } else {
             // Fallback to original behavior if no command palette callback
             handleNewConversation();
@@ -504,7 +646,7 @@ export const FloatingMenuManager = ({
           handleClosePopover();
         }}
         disabled={isCreatingConversation}
-        className={`${themeClasses.neonButton} text-sm px-4 py-3 w-full flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed`}
+        className={`${buttonPatterns.primary} text-sm px-4 py-3 w-full flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed`}
       >
         {isCreatingConversation ? (
           <>
@@ -523,13 +665,15 @@ export const FloatingMenuManager = ({
       <button
         onClick={() => {
           if (onCommandPaletteToggle) {
-            onCommandPaletteToggle('/save-memory ');
+            onCommandPaletteToggle("/save-memory ");
           } else {
-            console.info('Save Memory clicked - onCommandPaletteToggle not provided');
+            console.info(
+              "Save Memory clicked - onCommandPaletteToggle not provided"
+            );
           }
           handleClosePopover();
         }}
-        className={`${themeClasses.neonButton} text-sm px-4 py-3 w-full flex items-center justify-center space-x-2`}
+        className={`${buttonPatterns.primary} text-sm px-4 py-3 w-full flex items-center justify-center space-x-2`}
       >
         <MemoryIcon />
         <span>Save Memory</span>
@@ -540,11 +684,24 @@ export const FloatingMenuManager = ({
   const renderConversationList = () => (
     <div className="space-y-2">
       {conversationAgentState.isLoadingRecentItems ? (
-        <div className="text-center py-8">
-          <div className="inline-flex items-center space-x-2 text-synthwave-text-secondary font-rajdhani">
-            <div className="w-4 h-4 border-2 border-synthwave-neon-pink border-t-transparent rounded-full animate-spin"></div>
-            <span>Loading conversations...</span>
+        <div className="space-y-3">
+          <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
+            Recent Conversations
           </div>
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/20 rounded-lg p-3"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex-1 min-w-0">
+                  <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-2/3 mb-2"></div>
+                  <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-1/2"></div>
+                </div>
+                <div className="w-4 h-4 bg-synthwave-text-muted/20 rounded animate-pulse ml-2"></div>
+              </div>
+            </div>
+          ))}
         </div>
       ) : conversationAgentState.recentConversations.length === 0 ? (
         <div className="text-center py-8">
@@ -558,7 +715,10 @@ export const FloatingMenuManager = ({
             Recent Conversations
           </div>
           {conversationAgentState.recentConversations.map((conv) => {
-            const isRecent = isRecentConversation(conv.metadata?.lastActivity, conv.createdAt);
+            const isRecent = isRecentConversation(
+              conv.metadata?.lastActivity,
+              conv.createdAt
+            );
             return (
               <div
                 key={conv.conversationId}
@@ -567,19 +727,25 @@ export const FloatingMenuManager = ({
               >
                 {/* NEW badge for conversations with recent activity */}
                 {isRecent && <NewBadge />}
-              <div className="flex items-center justify-between">
-                <div className="flex-1 min-w-0">
-                  <div className="font-rajdhani text-sm text-white font-medium truncate">
-                    {truncateTitle(conv.title)}
+                <div className="flex items-center justify-between">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-rajdhani text-sm text-white font-medium truncate">
+                      {truncateTitle(conv.title)}
+                    </div>
+                    <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                      {formatConversationDate(
+                        conv.metadata?.lastActivity || conv.createdAt
+                      )}{" "}
+                      •{" "}
+                      <span className="text-synthwave-neon-cyan">
+                        {conv.metadata?.totalMessages || 0} messages
+                      </span>
+                    </div>
                   </div>
-                  <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
-                    {formatConversationDate(conv.metadata?.lastActivity || conv.createdAt)} • <span className="text-synthwave-neon-cyan">{conv.metadata?.totalMessages || 0} messages</span>
+                  <div className="text-synthwave-neon-pink ml-2">
+                    <ChevronRightIcon />
                   </div>
                 </div>
-                <div className="text-synthwave-neon-pink ml-2">
-                  <ChevronRightIcon />
-                </div>
-              </div>
               </div>
             );
           })}
@@ -618,15 +784,21 @@ export const FloatingMenuManager = ({
             Coach Identity
           </div>
           <div className="space-y-3">
-            <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+            <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
               <div className="flex-1 min-w-0">
                 <div className="font-rajdhani text-sm text-white font-medium truncate">
-                  {config.coach_name?.replace(/_/g, ' ') || coachData.name}
+                  {config.coach_name?.replace(/_/g, " ") || coachData.name}
                 </div>
                 <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
                   {config.metadata?.created_date
-                    ? new Date(config.metadata.created_date).toLocaleDateString()
-                    : 'Unknown date'} • <span className="text-synthwave-neon-cyan">{config.metadata?.total_conversations || 0} conversations</span>
+                    ? new Date(
+                        config.metadata.created_date
+                      ).toLocaleDateString()
+                    : "Unknown date"}{" "}
+                  •{" "}
+                  <span className="text-synthwave-neon-cyan">
+                    {config.metadata?.total_conversations || 0} conversations
+                  </span>
                 </div>
               </div>
             </div>
@@ -641,24 +813,53 @@ export const FloatingMenuManager = ({
             </div>
             <div className="space-y-3">
               {config.selected_personality?.primary_template && (
-                <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+                <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
                   <div className="flex-1 min-w-0">
                     <div className="font-rajdhani text-sm text-white font-medium">
-                      Primary Personality: {config.selected_personality.primary_template.replace(/_/g, ' ').toUpperCase()}
+                      Primary Personality:{" "}
+                      {config.selected_personality.primary_template
+                        .replace(/_/g, " ")
+                        .toUpperCase()}
                     </div>
                     <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
-                      {config.selected_personality.secondary_influences?.length > 0 && (
-                        <>Influenced by: <span className="text-synthwave-neon-cyan">{config.selected_personality.secondary_influences.map(inf => inf.replace(/_/g, ' ')).join(', ')}</span></>
+                      {config.selected_personality.secondary_influences
+                        ?.length > 0 && (
+                        <>
+                          Influenced by:{" "}
+                          <span className="text-synthwave-neon-cyan">
+                            {config.selected_personality.secondary_influences
+                              .map((inf) => inf.replace(/_/g, " "))
+                              .join(", ")}
+                          </span>
+                        </>
                       )}
                       {config.selected_personality.blending_weights && (
-                        <> • Primary: <span className="text-synthwave-neon-cyan">{(config.selected_personality.blending_weights.primary * 100).toFixed(0)}%</span>, Secondary: <span className="text-synthwave-neon-purple">{(config.selected_personality.blending_weights.secondary * 100).toFixed(0)}%</span></>
+                        <>
+                          {" "}
+                          • Primary:{" "}
+                          <span className="text-synthwave-neon-cyan">
+                            {(
+                              config.selected_personality.blending_weights
+                                .primary * 100
+                            ).toFixed(0)}
+                            %
+                          </span>
+                          , Secondary:{" "}
+                          <span className="text-synthwave-neon-purple">
+                            {(
+                              config.selected_personality.blending_weights
+                                .secondary * 100
+                            ).toFixed(0)}
+                            %
+                          </span>
+                        </>
                       )}
                     </div>
                   </div>
                 </div>
               )}
               {config.selected_personality?.selection_reasoning && (
-                <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+                <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
                   <div className="flex-1 min-w-0">
                     <div className="font-rajdhani text-sm text-white font-medium">
                       Personality Selection Reasoning
@@ -670,25 +871,30 @@ export const FloatingMenuManager = ({
                 </div>
               )}
               {config.generated_prompts?.communication_style && (
-                <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+                <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
                   <div className="flex-1 min-w-0">
                     <div className="font-rajdhani text-sm text-white font-medium">
                       Communication Style Preview
                     </div>
                     <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1 leading-relaxed">
-                      {config.generated_prompts.communication_style.slice(0, 200)}...
+                      {config.generated_prompts.communication_style.slice(
+                        0,
+                        200
+                      )}
+                      ...
                     </div>
                   </div>
                 </div>
               )}
               {config.generated_prompts?.motivation_prompt && (
-                <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+                <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
                   <div className="flex-1 min-w-0">
                     <div className="font-rajdhani text-sm text-white font-medium">
                       Motivational Approach Preview
                     </div>
                     <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1 leading-relaxed">
-                      {config.generated_prompts.motivation_prompt.slice(0, 200)}...
+                      {config.generated_prompts.motivation_prompt.slice(0, 200)}
+                      ...
                     </div>
                   </div>
                 </div>
@@ -697,8 +903,6 @@ export const FloatingMenuManager = ({
           </div>
         )}
 
-
-
         {/* Selected Methodology */}
         {config.selected_methodology && (
           <div>
@@ -706,21 +910,40 @@ export const FloatingMenuManager = ({
               Training Methodology
             </div>
             <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+              <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
                 <div className="flex-1 min-w-0">
                   <div className="font-rajdhani text-sm text-white font-medium truncate">
-                    {config.selected_methodology.primary_methodology?.replace(/_/g, ' ') || 'Hybrid Training'}
+                    {config.selected_methodology.primary_methodology?.replace(
+                      /_/g,
+                      " "
+                    ) || "Hybrid Training"}
                   </div>
                   <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
-                    <span className="text-synthwave-neon-cyan">{config.selected_methodology.programming_emphasis}</span> • <span className="text-synthwave-neon-cyan">{config.selected_methodology.periodization_approach} periodization</span>
+                    <span className="text-synthwave-neon-cyan">
+                      {config.selected_methodology.programming_emphasis}
+                    </span>{" "}
+                    •{" "}
+                    <span className="text-synthwave-neon-cyan">
+                      {config.selected_methodology.periodization_approach}{" "}
+                      periodization
+                    </span>
                     {config.selected_methodology.creativity_emphasis && (
-                      <> • <span className="text-synthwave-neon-cyan">{config.selected_methodology.creativity_emphasis.replace(/_/g, ' ')}</span></>
+                      <>
+                        {" "}
+                        •{" "}
+                        <span className="text-synthwave-neon-cyan">
+                          {config.selected_methodology.creativity_emphasis.replace(
+                            /_/g,
+                            " "
+                          )}
+                        </span>
+                      </>
                     )}
                   </div>
                 </div>
               </div>
               {config.selected_methodology.methodology_reasoning && (
-                <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+                <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
                   <div className="flex-1 min-w-0">
                     <div className="font-rajdhani text-sm text-white font-medium">
                       Methodology Reasoning
@@ -732,13 +955,16 @@ export const FloatingMenuManager = ({
                 </div>
               )}
               {config.selected_methodology.workout_innovation && (
-                <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+                <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
                   <div className="flex-1 min-w-0">
                     <div className="font-rajdhani text-sm text-white font-medium">
                       Workout Innovation
                     </div>
                     <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
-                      Status: <span className="text-synthwave-neon-cyan">{config.selected_methodology.workout_innovation}</span>
+                      Status:{" "}
+                      <span className="text-synthwave-neon-cyan">
+                        {config.selected_methodology.workout_innovation}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -754,13 +980,27 @@ export const FloatingMenuManager = ({
               Technical Configuration
             </div>
             <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+              <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
                 <div className="flex-1 min-w-0">
                   <div className="font-rajdhani text-sm text-white font-medium truncate">
-                    {config.technical_config.experience_level?.toUpperCase() || 'INTERMEDIATE'} • {config.technical_config.training_frequency || 4} days/week
+                    {config.technical_config.experience_level?.toUpperCase() ||
+                      "INTERMEDIATE"}{" "}
+                    • {config.technical_config.training_frequency || 4}{" "}
+                    days/week
                   </div>
                   <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
-                    {config.technical_config.preferred_intensity?.replace(/_/g, ' ') || 'Moderate'} intensity • <span className="text-synthwave-neon-cyan">{config.technical_config.goal_timeline?.replace(/_/g, ' ') || '1 year'} timeline</span>
+                    {config.technical_config.preferred_intensity?.replace(
+                      /_/g,
+                      " "
+                    ) || "Moderate"}{" "}
+                    intensity •{" "}
+                    <span className="text-synthwave-neon-cyan">
+                      {config.technical_config.goal_timeline?.replace(
+                        /_/g,
+                        " "
+                      ) || "1 year"}{" "}
+                      timeline
+                    </span>
                   </div>
                 </div>
               </div>
@@ -775,46 +1015,66 @@ export const FloatingMenuManager = ({
               Safety & Limitations
             </div>
             <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+              <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
                 <div className="flex-1 min-w-0">
                   <div className="font-rajdhani text-sm text-white font-medium">
-                    {config.metadata.safety_profile.experienceLevel || 'Standard'} Safety Profile
+                    {config.metadata.safety_profile.experienceLevel ||
+                      "Standard"}{" "}
+                    Safety Profile
                   </div>
                   <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
-                    Experience Level: <span className="text-synthwave-neon-cyan">{config.metadata.safety_profile.experienceLevel || 'Standard'}</span>
+                    Experience Level:{" "}
+                    <span className="text-synthwave-neon-cyan">
+                      {config.metadata.safety_profile.experienceLevel ||
+                        "Standard"}
+                    </span>
                   </div>
                 </div>
               </div>
               {config.metadata.safety_profile.contraindications?.length > 0 && (
-                <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+                <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
                   <div className="flex-1 min-w-0">
                     <div className="font-rajdhani text-sm text-white font-medium">
-                      Contraindications ({config.metadata.safety_profile.contraindications.length})
+                      Contraindications (
+                      {config.metadata.safety_profile.contraindications.length})
                     </div>
                     <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
-                      {config.metadata.safety_profile.contraindications.map((contra, index) => (
-                        <div key={index} className="flex items-center space-x-2 mt-1">
-                          <span className="text-synthwave-neon-orange">•</span>
-                          <span>{contra.replace(/_/g, ' ')}</span>
-                        </div>
-                      ))}
+                      {config.metadata.safety_profile.contraindications.map(
+                        (contra, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center space-x-2 mt-1"
+                          >
+                            <span className="text-synthwave-neon-orange">
+                              •
+                            </span>
+                            <span>{contra.replace(/_/g, " ")}</span>
+                          </div>
+                        )
+                      )}
                     </div>
                   </div>
                 </div>
               )}
               {config.metadata.safety_profile.modifications?.length > 0 && (
-                <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+                <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
                   <div className="flex-1 min-w-0">
                     <div className="font-rajdhani text-sm text-white font-medium">
-                      Required Modifications ({config.metadata.safety_profile.modifications.length})
+                      Required Modifications (
+                      {config.metadata.safety_profile.modifications.length})
                     </div>
                     <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
-                      {config.metadata.safety_profile.modifications.map((mod, index) => (
-                        <div key={index} className="flex items-center space-x-2 mt-1">
-                          <span className="text-synthwave-neon-cyan">•</span>
-                          <span>{mod.replace(/_/g, ' ')}</span>
-                        </div>
-                      ))}
+                      {config.metadata.safety_profile.modifications.map(
+                        (mod, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center space-x-2 mt-1"
+                          >
+                            <span className="text-synthwave-neon-cyan">•</span>
+                            <span>{mod.replace(/_/g, " ")}</span>
+                          </div>
+                        )
+                      )}
                     </div>
                   </div>
                 </div>
@@ -824,22 +1084,38 @@ export const FloatingMenuManager = ({
         )}
 
         {/* Equipment Available */}
-        {(config.metadata?.safety_profile?.equipment || config.technical_config?.equipment_available) && (
+        {(config.metadata?.safety_profile?.equipment ||
+          config.technical_config?.equipment_available) && (
           <div>
             <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
               Available Equipment
             </div>
             <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+              <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
                 <div className="flex-1 min-w-0">
                   <div className="font-rajdhani text-sm text-white font-medium">
-                    Equipment Types ({(config.metadata?.safety_profile?.equipment || config.technical_config?.equipment_available || []).length} total)
+                    Equipment Types (
+                    {
+                      (
+                        config.metadata?.safety_profile?.equipment ||
+                        config.technical_config?.equipment_available ||
+                        []
+                      ).length
+                    }{" "}
+                    total)
                   </div>
                   <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
-                    {(config.metadata?.safety_profile?.equipment || config.technical_config?.equipment_available || []).map((equipment, index) => (
-                      <div key={index} className="flex items-center space-x-2 mt-1">
+                    {(
+                      config.metadata?.safety_profile?.equipment ||
+                      config.technical_config?.equipment_available ||
+                      []
+                    ).map((equipment, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center space-x-2 mt-1"
+                      >
                         <span className="text-synthwave-neon-cyan">•</span>
-                        <span>{equipment.replace(/_/g, ' ')}</span>
+                        <span>{equipment.replace(/_/g, " ")}</span>
                       </div>
                     ))}
                   </div>
@@ -856,70 +1132,100 @@ export const FloatingMenuManager = ({
               Coach Capabilities
             </div>
             <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+              <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
                 <div className="flex-1 min-w-0">
                   <div className="font-rajdhani text-sm text-white font-medium truncate">
                     Programming Adaptability
                   </div>
                   <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
-                    Level: <span className="text-synthwave-neon-cyan">{config.modification_capabilities.programming_adaptability || 'Medium'}</span>
+                    Level:{" "}
+                    <span className="text-synthwave-neon-cyan">
+                      {config.modification_capabilities
+                        .programming_adaptability || "Medium"}
+                    </span>
                   </div>
                 </div>
               </div>
-              <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+              <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
                 <div className="flex-1 min-w-0">
                   <div className="font-rajdhani text-sm text-white font-medium truncate">
                     Creative Programming
                   </div>
                   <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
-                    Level: <span className="text-synthwave-neon-cyan">{config.modification_capabilities.creative_programming || 'Medium'}</span>
+                    Level:{" "}
+                    <span className="text-synthwave-neon-cyan">
+                      {config.modification_capabilities.creative_programming ||
+                        "Medium"}
+                    </span>
                   </div>
                 </div>
               </div>
-              <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+              <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
                 <div className="flex-1 min-w-0">
                   <div className="font-rajdhani text-sm text-white font-medium truncate">
                     Personality Flexibility
                   </div>
                   <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
-                    Level: <span className="text-synthwave-neon-cyan">{config.modification_capabilities.personality_flexibility || 'Medium'}</span>
+                    Level:{" "}
+                    <span className="text-synthwave-neon-cyan">
+                      {config.modification_capabilities
+                        .personality_flexibility || "Medium"}
+                    </span>
                   </div>
                 </div>
               </div>
-              <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+              <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
                 <div className="flex-1 min-w-0">
                   <div className="font-rajdhani text-sm text-white font-medium truncate">
                     Workout Variety Emphasis
                   </div>
                   <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
-                    Level: <span className="text-synthwave-neon-cyan">{config.modification_capabilities.workout_variety_emphasis || 'Medium'}</span>
+                    Level:{" "}
+                    <span className="text-synthwave-neon-cyan">
+                      {config.modification_capabilities
+                        .workout_variety_emphasis || "Medium"}
+                    </span>
                   </div>
                 </div>
               </div>
-              <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+              <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
                 <div className="flex-1 min-w-0">
                   <div className="font-rajdhani text-sm text-white font-medium truncate">
                     Safety Override Level
                   </div>
                   <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
-                    Level: <span className="text-synthwave-neon-cyan">{config.modification_capabilities.safety_override_level || 'Limited'}</span>
+                    Level:{" "}
+                    <span className="text-synthwave-neon-cyan">
+                      {config.modification_capabilities.safety_override_level ||
+                        "Limited"}
+                    </span>
                   </div>
                 </div>
               </div>
               {/* Show all enabled modifications */}
               {config.modification_capabilities.enabled_modifications && (
-                <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+                <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
                   <div className="flex-1 min-w-0">
                     <div className="font-rajdhani text-sm text-white font-medium">
-                      Enabled Modifications ({config.modification_capabilities.enabled_modifications.length} total)
+                      Enabled Modifications (
+                      {
+                        config.modification_capabilities.enabled_modifications
+                          .length
+                      }{" "}
+                      total)
                     </div>
                     <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
-                      {config.modification_capabilities.enabled_modifications.map((modification, index) => (
-                        <div key={index} className="flex items-center space-x-2 mt-1">
-                          <span className="text-synthwave-neon-cyan">•</span>
-                          <span>{modification.replace(/_/g, ' ')}</span>
-                        </div>
-                      ))}
+                      {config.modification_capabilities.enabled_modifications.map(
+                        (modification, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center space-x-2 mt-1"
+                          >
+                            <span className="text-synthwave-neon-cyan">•</span>
+                            <span>{modification.replace(/_/g, " ")}</span>
+                          </div>
+                        )
+                      )}
                     </div>
                   </div>
                 </div>
@@ -929,30 +1235,45 @@ export const FloatingMenuManager = ({
         )}
 
         {/* Programming Focus & Specializations */}
-        {(config.technical_config?.programming_focus || config.technical_config?.specializations) && (
+        {(config.technical_config?.programming_focus ||
+          config.technical_config?.specializations) && (
           <div>
             <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
               Programming Focus
             </div>
             <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+              <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
                 <div className="flex-1 min-w-0">
                   <div className="font-rajdhani text-sm text-white font-medium">
                     Focus Areas & Specializations
                   </div>
                   <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
-                    {config.technical_config.programming_focus?.map((focus, index) => (
-                      <div key={index} className="flex items-center space-x-2 mt-1">
-                        <span className="text-synthwave-neon-cyan">•</span>
-                        <span className="text-synthwave-neon-secondary">{focus.replace(/_/g, ' ')}</span>
-                      </div>
-                    ))}
-                    {config.technical_config.specializations?.map((spec, index) => (
-                      <div key={`spec-${index}`} className="flex items-center space-x-2 mt-1">
-                        <span className="text-synthwave-neon-cyan">•</span>
-                        <span className="text-synthwave-neon-secondary">{spec.replace(/_/g, ' ')}</span>
-                      </div>
-                    ))}
+                    {config.technical_config.programming_focus?.map(
+                      (focus, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center space-x-2 mt-1"
+                        >
+                          <span className="text-synthwave-neon-cyan">•</span>
+                          <span className="text-synthwave-neon-secondary">
+                            {focus.replace(/_/g, " ")}
+                          </span>
+                        </div>
+                      )
+                    )}
+                    {config.technical_config.specializations?.map(
+                      (spec, index) => (
+                        <div
+                          key={`spec-${index}`}
+                          className="flex items-center space-x-2 mt-1"
+                        >
+                          <span className="text-synthwave-neon-cyan">•</span>
+                          <span className="text-synthwave-neon-secondary">
+                            {spec.replace(/_/g, " ")}
+                          </span>
+                        </div>
+                      )
+                    )}
                   </div>
                 </div>
               </div>
@@ -961,42 +1282,57 @@ export const FloatingMenuManager = ({
         )}
 
         {/* Injury Considerations & Modifications */}
-        {(config.technical_config?.injury_considerations || config.metadata?.safety_profile?.modifications) && (
+        {(config.technical_config?.injury_considerations ||
+          config.metadata?.safety_profile?.modifications) && (
           <div>
             <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
               Injury Considerations & Modifications
             </div>
             <div className="space-y-3">
               {config.technical_config?.injury_considerations && (
-                <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+                <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
                   <div className="flex-1 min-w-0">
                     <div className="font-rajdhani text-sm text-white font-medium">
-                      Injury Considerations ({config.technical_config.injury_considerations.length})
+                      Injury Considerations (
+                      {config.technical_config.injury_considerations.length})
                     </div>
                     <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
-                      {config.technical_config.injury_considerations.map((injury, index) => (
-                        <div key={index} className="flex items-center space-x-2 mt-1">
-                          <span className="text-synthwave-neon-orange">•</span>
-                          <span>{injury.replace(/_/g, ' ')}</span>
-                        </div>
-                      ))}
+                      {config.technical_config.injury_considerations.map(
+                        (injury, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center space-x-2 mt-1"
+                          >
+                            <span className="text-synthwave-neon-orange">
+                              •
+                            </span>
+                            <span>{injury.replace(/_/g, " ")}</span>
+                          </div>
+                        )
+                      )}
                     </div>
                   </div>
                 </div>
               )}
               {config.metadata?.safety_profile?.modifications && (
-                <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+                <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
                   <div className="flex-1 min-w-0">
                     <div className="font-rajdhani text-sm text-white font-medium">
-                      Required Modifications ({config.metadata.safety_profile.modifications.length})
+                      Required Modifications (
+                      {config.metadata.safety_profile.modifications.length})
                     </div>
                     <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
-                      {config.metadata.safety_profile.modifications.map((mod, index) => (
-                        <div key={index} className="flex items-center space-x-2 mt-1">
-                          <span className="text-synthwave-neon-cyan">•</span>
-                          <span>{mod.replace(/_/g, ' ')}</span>
-                        </div>
-                      ))}
+                      {config.metadata.safety_profile.modifications.map(
+                        (mod, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center space-x-2 mt-1"
+                          >
+                            <span className="text-synthwave-neon-cyan">•</span>
+                            <span>{mod.replace(/_/g, " ")}</span>
+                          </div>
+                        )
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1006,23 +1342,45 @@ export const FloatingMenuManager = ({
         )}
 
         {/* Time Constraints & Session Preferences */}
-        {(config.metadata?.safety_profile?.timeConstraints || config.technical_config?.time_constraints) && (
+        {(config.metadata?.safety_profile?.timeConstraints ||
+          config.technical_config?.time_constraints) && (
           <div>
             <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
               Time Constraints & Preferences
             </div>
             <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+              <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
                 <div className="flex-1 min-w-0">
                   <div className="font-rajdhani text-sm text-white font-medium truncate">
-                    {config.metadata?.safety_profile?.timeConstraints?.session_duration || config.technical_config?.time_constraints?.session_duration || 60} minute sessions
+                    {config.metadata?.safety_profile?.timeConstraints
+                      ?.session_duration ||
+                      config.technical_config?.time_constraints
+                        ?.session_duration ||
+                      60}{" "}
+                    minute sessions
                   </div>
                   <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
-                    {config.metadata?.safety_profile?.timeConstraints?.morning_preferred && (
-                      <>Preferred: <span className="text-synthwave-neon-cyan">Morning Training</span></>
+                    {config.metadata?.safety_profile?.timeConstraints
+                      ?.morning_preferred && (
+                      <>
+                        Preferred:{" "}
+                        <span className="text-synthwave-neon-cyan">
+                          Morning Training
+                        </span>
+                      </>
                     )}
-                    {config.metadata?.safety_profile?.timeConstraints?.preferred_time && (
-                      <> • Time: <span className="text-synthwave-neon-purple">{config.metadata.safety_profile.timeConstraints.preferred_time}</span></>
+                    {config.metadata?.safety_profile?.timeConstraints
+                      ?.preferred_time && (
+                      <>
+                        {" "}
+                        • Time:{" "}
+                        <span className="text-synthwave-neon-purple">
+                          {
+                            config.metadata.safety_profile.timeConstraints
+                              .preferred_time
+                          }
+                        </span>
+                      </>
                     )}
                   </div>
                 </div>
@@ -1038,18 +1396,28 @@ export const FloatingMenuManager = ({
               Learning Preferences
             </div>
             <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+              <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
                 <div className="flex-1 min-w-0">
                   <div className="font-rajdhani text-sm text-white font-medium">
-                    Preferred Learning Methods ({config.metadata.safety_profile.learningConsiderations.length})
+                    Preferred Learning Methods (
+                    {
+                      config.metadata.safety_profile.learningConsiderations
+                        .length
+                    }
+                    )
                   </div>
                   <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
-                    {config.metadata.safety_profile.learningConsiderations.map((learning, index) => (
-                      <div key={index} className="flex items-center space-x-2 mt-1">
-                        <span className="text-synthwave-neon-cyan">•</span>
-                        <span>{learning.replace(/_/g, ' ')}</span>
-                      </div>
-                    ))}
+                    {config.metadata.safety_profile.learningConsiderations.map(
+                      (learning, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center space-x-2 mt-1"
+                        >
+                          <span className="text-synthwave-neon-cyan">•</span>
+                          <span>{learning.replace(/_/g, " ")}</span>
+                        </div>
+                      )
+                    )}
                   </div>
                 </div>
               </div>
@@ -1058,22 +1426,41 @@ export const FloatingMenuManager = ({
         )}
 
         {/* Recovery Needs */}
-        {(config.metadata?.safety_profile?.recoveryNeeds || config.technical_config?.safety_constraints?.recovery_requirements) && (
+        {(config.metadata?.safety_profile?.recoveryNeeds ||
+          config.technical_config?.safety_constraints
+            ?.recovery_requirements) && (
           <div>
             <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
               Recovery Requirements
             </div>
             <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+              <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
                 <div className="flex-1 min-w-0">
                   <div className="font-rajdhani text-sm text-white font-medium">
-                    Recovery Focus Areas ({(config.metadata?.safety_profile?.recoveryNeeds || config.technical_config?.safety_constraints?.recovery_requirements || []).length})
+                    Recovery Focus Areas (
+                    {
+                      (
+                        config.metadata?.safety_profile?.recoveryNeeds ||
+                        config.technical_config?.safety_constraints
+                          ?.recovery_requirements ||
+                        []
+                      ).length
+                    }
+                    )
                   </div>
                   <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
-                    {(config.metadata?.safety_profile?.recoveryNeeds || config.technical_config?.safety_constraints?.recovery_requirements || []).map((recovery, index) => (
-                      <div key={index} className="flex items-center space-x-2 mt-1">
+                    {(
+                      config.metadata?.safety_profile?.recoveryNeeds ||
+                      config.technical_config?.safety_constraints
+                        ?.recovery_requirements ||
+                      []
+                    ).map((recovery, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center space-x-2 mt-1"
+                      >
                         <span className="text-synthwave-neon-cyan">•</span>
-                        <span>{recovery.replace(/_/g, ' ')}</span>
+                        <span>{recovery.replace(/_/g, " ")}</span>
                       </div>
                     ))}
                   </div>
@@ -1090,18 +1477,25 @@ export const FloatingMenuManager = ({
               Environmental Factors
             </div>
             <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+              <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
                 <div className="flex-1 min-w-0">
                   <div className="font-rajdhani text-sm text-white font-medium">
-                    Scheduling Constraints ({config.metadata.safety_profile.environmentalFactors.length})
+                    Scheduling Constraints (
+                    {config.metadata.safety_profile.environmentalFactors.length}
+                    )
                   </div>
                   <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
-                    {config.metadata.safety_profile.environmentalFactors.map((factor, index) => (
-                      <div key={index} className="flex items-center space-x-2 mt-1">
-                        <span className="text-synthwave-neon-cyan">•</span>
-                        <span>{factor.replace(/_/g, ' ')}</span>
-                      </div>
-                    ))}
+                    {config.metadata.safety_profile.environmentalFactors.map(
+                      (factor, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center space-x-2 mt-1"
+                        >
+                          <span className="text-synthwave-neon-cyan">•</span>
+                          <span>{factor.replace(/_/g, " ")}</span>
+                        </div>
+                      )
+                    )}
                   </div>
                 </div>
               </div>
@@ -1116,48 +1510,78 @@ export const FloatingMenuManager = ({
               Safety Monitoring
             </div>
             <div className="space-y-3">
-              {config.technical_config.safety_constraints.contraindicated_exercises && (
-                <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+              {config.technical_config.safety_constraints
+                .contraindicated_exercises && (
+                <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
                   <div className="flex-1 min-w-0">
                     <div className="font-rajdhani text-sm text-white font-medium">
-                      Contraindicated Exercises ({config.technical_config.safety_constraints.contraindicated_exercises.length})
+                      Contraindicated Exercises (
+                      {
+                        config.technical_config.safety_constraints
+                          .contraindicated_exercises.length
+                      }
+                      )
                     </div>
                     <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
-                      {config.technical_config.safety_constraints.contraindicated_exercises.map((exercise, index) => (
-                        <div key={index} className="flex items-center space-x-2 mt-1">
-                          <span className="text-synthwave-neon-orange">•</span>
-                          <span>{exercise.replace(/_/g, ' ')}</span>
-                        </div>
-                      ))}
+                      {config.technical_config.safety_constraints.contraindicated_exercises.map(
+                        (exercise, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center space-x-2 mt-1"
+                          >
+                            <span className="text-synthwave-neon-orange">
+                              •
+                            </span>
+                            <span>{exercise.replace(/_/g, " ")}</span>
+                          </div>
+                        )
+                      )}
                     </div>
                   </div>
                 </div>
               )}
               {config.technical_config.safety_constraints.safety_monitoring && (
-                <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+                <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
                   <div className="flex-1 min-w-0">
                     <div className="font-rajdhani text-sm text-white font-medium">
-                      Safety Monitoring ({config.technical_config.safety_constraints.safety_monitoring.length})
+                      Safety Monitoring (
+                      {
+                        config.technical_config.safety_constraints
+                          .safety_monitoring.length
+                      }
+                      )
                     </div>
                     <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
-                      {config.technical_config.safety_constraints.safety_monitoring.map((monitor, index) => (
-                        <div key={index} className="flex items-center space-x-2 mt-1">
-                          <span className="text-synthwave-neon-cyan">•</span>
-                          <span>{monitor.replace(/_/g, ' ')}</span>
-                        </div>
-                      ))}
+                      {config.technical_config.safety_constraints.safety_monitoring.map(
+                        (monitor, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center space-x-2 mt-1"
+                          >
+                            <span className="text-synthwave-neon-cyan">•</span>
+                            <span>{monitor.replace(/_/g, " ")}</span>
+                          </div>
+                        )
+                      )}
                     </div>
                   </div>
                 </div>
               )}
-              {config.technical_config.safety_constraints.volume_progression_limit && (
-                <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+              {config.technical_config.safety_constraints
+                .volume_progression_limit && (
+                <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
                   <div className="flex-1 min-w-0">
                     <div className="font-rajdhani text-sm text-white font-medium">
                       Volume Progression Limit
                     </div>
                     <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
-                      Limit: <span className="text-synthwave-neon-cyan">{config.technical_config.safety_constraints.volume_progression_limit}</span>
+                      Limit:{" "}
+                      <span className="text-synthwave-neon-cyan">
+                        {
+                          config.technical_config.safety_constraints
+                            .volume_progression_limit
+                        }
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -1174,35 +1598,47 @@ export const FloatingMenuManager = ({
             </div>
             <div className="space-y-3">
               {config.metadata.methodology_profile.experience && (
-                <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+                <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
                   <div className="flex-1 min-w-0">
                     <div className="font-rajdhani text-sm text-white font-medium">
-                      Training Experience ({config.metadata.methodology_profile.experience.length})
+                      Training Experience (
+                      {config.metadata.methodology_profile.experience.length})
                     </div>
                     <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
-                      {config.metadata.methodology_profile.experience.map((exp, index) => (
-                        <div key={index} className="flex items-center space-x-2 mt-1">
-                          <span className="text-synthwave-neon-cyan">•</span>
-                          <span>{exp.replace(/_/g, ' ')}</span>
-                        </div>
-                      ))}
+                      {config.metadata.methodology_profile.experience.map(
+                        (exp, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center space-x-2 mt-1"
+                          >
+                            <span className="text-synthwave-neon-cyan">•</span>
+                            <span>{exp.replace(/_/g, " ")}</span>
+                          </div>
+                        )
+                      )}
                     </div>
                   </div>
                 </div>
               )}
               {config.metadata.methodology_profile.preferences && (
-                <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+                <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
                   <div className="flex-1 min-w-0">
                     <div className="font-rajdhani text-sm text-white font-medium">
-                      Training Preferences ({config.metadata.methodology_profile.preferences.length})
+                      Training Preferences (
+                      {config.metadata.methodology_profile.preferences.length})
                     </div>
                     <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
-                      {config.metadata.methodology_profile.preferences.map((pref, index) => (
-                        <div key={index} className="flex items-center space-x-2 mt-1">
-                          <span className="text-synthwave-neon-cyan">•</span>
-                          <span>{pref.replace(/_/g, ' ')}</span>
-                        </div>
-                      ))}
+                      {config.metadata.methodology_profile.preferences.map(
+                        (pref, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center space-x-2 mt-1"
+                          >
+                            <span className="text-synthwave-neon-cyan">•</span>
+                            <span>{pref.replace(/_/g, " ")}</span>
+                          </div>
+                        )
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1218,7 +1654,7 @@ export const FloatingMenuManager = ({
               Creation Summary
             </div>
             <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+              <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
                 <div className="flex-1 min-w-0">
                   <div className="font-rajdhani text-sm text-white font-medium">
                     Coach Creator Session
@@ -1238,14 +1674,21 @@ export const FloatingMenuManager = ({
             System Information
           </div>
           <div className="space-y-3">
-            <div className="flex items-center justify-between p-3 bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg">
+            <div className={`flex items-center justify-between ${containerPatterns.infoCard}`}>
               <div className="flex-1 min-w-0">
                 <div className="font-rajdhani text-sm text-white font-medium truncate">
-                  {config.entityType || 'coachConfig'} • v{config.metadata?.version || '1.0'}
+                  {config.entityType || "coachConfig"} • v
+                  {config.metadata?.version || "1.0"}
                 </div>
                 <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
-                  ID: <span className="text-synthwave-neon-cyan">{config.coach_id?.split('_').pop() || 'main'}</span> •
-                  Updated: {config.updatedAt ? new Date(config.updatedAt).toLocaleDateString() : 'Unknown'}
+                  ID:{" "}
+                  <span className="text-synthwave-neon-cyan">
+                    {config.coach_id?.split("_").pop() || "main"}
+                  </span>{" "}
+                  • Updated:{" "}
+                  {config.updatedAt
+                    ? new Date(config.updatedAt).toLocaleDateString()
+                    : "Unknown"}
                 </div>
               </div>
             </div>
@@ -1265,37 +1708,37 @@ export const FloatingMenuManager = ({
         <FloatingIconButton
           ref={menuIconRef}
           icon={<MenuIcon />}
-          isActive={activePopover === 'menu'}
-          onClick={() => handleTogglePopover('menu')}
+          isActive={activePopover === "menu"}
+          onClick={() => handleTogglePopover("menu")}
           title="Quick Actions"
         />
         <FloatingIconButton
           ref={conversationsIconRef}
           icon={<ChatIconSmall />}
-          isActive={activePopover === 'conversations'}
-          onClick={() => handleTogglePopover('conversations')}
+          isActive={activePopover === "conversations"}
+          onClick={() => handleTogglePopover("conversations")}
           title="Recent Conversations"
         />
         <FloatingIconButton
           ref={workoutsIconRef}
           icon={<WorkoutIconSmall />}
-          isActive={activePopover === 'workouts'}
-          onClick={() => handleTogglePopover('workouts')}
+          isActive={activePopover === "workouts"}
+          onClick={() => handleTogglePopover("workouts")}
           title="Recent Workouts"
         />
         <FloatingIconButton
           ref={reportsIconRef}
           icon={<ReportIconSmall />}
-          isActive={activePopover === 'reports'}
-          onClick={() => handleTogglePopover('reports')}
+          isActive={activePopover === "reports"}
+          onClick={() => handleTogglePopover("reports")}
           title="Recent Reports"
         />
         {coachData && (
           <FloatingIconButton
             ref={coachIconRef}
-            icon={<CoachIcon />}
-            isActive={activePopover === 'coach'}
-            onClick={() => handleTogglePopover('coach')}
+            icon={<CoachIconSmall />}
+            isActive={activePopover === "coach"}
+            onClick={() => handleTogglePopover("coach")}
             title="Coach Details"
           />
         )}
@@ -1303,49 +1746,49 @@ export const FloatingMenuManager = ({
 
       {/* Modern Popovers - Only render content for active popover */}
       <ModernPopover
-        isOpen={activePopover === 'menu'}
+        isOpen={activePopover === "menu"}
         onClose={handleClosePopover}
         anchorRef={menuIconRef}
         title="Quick Actions"
       >
-        {activePopover === 'menu' && renderMainActionsMenu()}
+        {activePopover === "menu" && renderMainActionsMenu()}
       </ModernPopover>
 
       <ModernPopover
-        isOpen={activePopover === 'conversations'}
+        isOpen={activePopover === "conversations"}
         onClose={handleClosePopover}
         anchorRef={conversationsIconRef}
         title="Recent Conversations"
       >
-        {activePopover === 'conversations' && renderConversationList()}
+        {activePopover === "conversations" && renderConversationList()}
       </ModernPopover>
 
       <ModernPopover
-        isOpen={activePopover === 'workouts'}
+        isOpen={activePopover === "workouts"}
         onClose={handleClosePopover}
         anchorRef={workoutsIconRef}
         title="Recent Workouts"
       >
-        {activePopover === 'workouts' && renderWorkoutList()}
+        {activePopover === "workouts" && renderWorkoutList()}
       </ModernPopover>
 
       <ModernPopover
-        isOpen={activePopover === 'reports'}
+        isOpen={activePopover === "reports"}
         onClose={handleClosePopover}
         anchorRef={reportsIconRef}
         title="Recent Reports"
       >
-        {activePopover === 'reports' && renderReportList()}
+        {activePopover === "reports" && renderReportList()}
       </ModernPopover>
 
       {coachData && (
         <ModernPopover
-          isOpen={activePopover === 'coach'}
+          isOpen={activePopover === "coach"}
           onClose={handleClosePopover}
           anchorRef={coachIconRef}
           title="Coach Details"
         >
-          {activePopover === 'coach' && renderCoachDetails()}
+          {activePopover === "coach" && renderCoachDetails()}
         </ModernPopover>
       )}
     </>

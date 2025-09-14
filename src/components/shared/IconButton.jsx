@@ -1,5 +1,6 @@
 import React from 'react';
-import SimpleTooltip from './SimpleTooltip';
+import { Tooltip } from 'react-tooltip';
+import { iconButtonPatterns } from '../../utils/uiPatterns';
 
 const IconButton = ({
   children,
@@ -12,46 +13,69 @@ const IconButton = ({
   type = 'button',
   ...props
 }) => {
-  // Define button style variants
-  const variants = {
-    // Default floating menu style (pink)
-    default: "p-3 rounded-xl transition-all duration-200 backdrop-blur-sm border bg-synthwave-bg-card/40 border-synthwave-neon-pink/30 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 hover:border-synthwave-neon-pink/50 hover:shadow-md focus:outline-none focus:ring-0 focus:border-synthwave-neon-pink/50 focus:bg-synthwave-neon-pink/10 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center",
+  // Map old variants to new standardized iconButtonPatterns
+  const getButtonClass = (variant) => {
+    const variantMap = {
+      // Legacy variant mappings
+      'default': iconButtonPatterns.floating, // Keep floating style for existing usage
+      'cyan': iconButtonPatterns.bordered,    // Cyan border style maps to bordered
+      'active': iconButtonPatterns.solid,     // Active state maps to solid
+      'small': iconButtonPatterns.softBg,     // Small maps to soft background
 
-    // Cyan variant
-    cyan: "p-3 rounded-xl transition-all duration-200 backdrop-blur-sm border bg-synthwave-bg-card/40 border-synthwave-neon-cyan/30 text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 hover:border-synthwave-neon-cyan/50 hover:shadow-md focus:outline-none focus:ring-0 focus:border-synthwave-neon-cyan/50 focus:bg-synthwave-neon-cyan/10 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center",
+      // New standardized variants (direct mapping)
+      'minimal': iconButtonPatterns.minimal,
+      'softBg': iconButtonPatterns.softBg,
+      'bordered': iconButtonPatterns.bordered,
+      'solid': iconButtonPatterns.solid,
+      'solidCyan': iconButtonPatterns.solidCyan,
+      'floating': iconButtonPatterns.floating,
+      'glow': iconButtonPatterns.glow
+    };
 
-    // Active state (for floating menu)
-    active: "p-3 rounded-xl transition-all duration-200 backdrop-blur-sm border bg-synthwave-neon-pink/20 border-synthwave-neon-pink text-synthwave-neon-pink shadow-lg shadow-synthwave-neon-pink/30 focus:outline-none focus:ring-0 focus:border-synthwave-neon-pink focus:shadow-lg focus:shadow-synthwave-neon-pink/30 flex items-center justify-center",
-
-    // Small variant (for compact spaces)
-    small: "p-2 rounded-lg transition-all duration-200 backdrop-blur-sm border bg-synthwave-bg-card/40 border-synthwave-neon-pink/30 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 hover:border-synthwave-neon-pink/50 hover:shadow-md focus:outline-none focus:ring-0 focus:border-synthwave-neon-pink/50 focus:bg-synthwave-neon-pink/10 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+    return variantMap[variant] || iconButtonPatterns.solid; // Default to solid
   };
 
-  const buttonClass = `${variants[variant]} ${className}`;
+  const baseClass = getButtonClass(variant);
+  const disabledClass = disabled ? 'opacity-50 cursor-not-allowed' : '';
+  const buttonClass = `${baseClass} ${disabledClass} ${className}`;
 
-  const ButtonComponent = (
-    <button
-      type={type}
-      onClick={onClick}
-      disabled={disabled}
-      className={buttonClass}
-      {...props}
-    >
-      {children}
-    </button>
+  // Generate unique ID for tooltip
+  const tooltipId = tooltip ? `tooltip-${Math.random().toString(36).substr(2, 9)}` : undefined;
+
+  return (
+    <>
+      <button
+        type={type}
+        onClick={onClick}
+        disabled={disabled}
+        className={buttonClass}
+        data-tooltip-id={tooltipId}
+        data-tooltip-content={tooltip}
+        data-tooltip-place={tooltipPosition}
+        {...props}
+      >
+        {children}
+      </button>
+      {tooltip && (
+        <Tooltip
+          id={tooltipId}
+          offset={8}
+          delayShow={0}
+          style={{
+            backgroundColor: '#000000',
+            color: '#ffffff',
+            borderRadius: '8px',
+            fontSize: '14px',
+            fontFamily: 'Rajdhani, sans-serif',
+            padding: '8px 12px',
+            zIndex: 99999,
+            transform: 'translateX(-8px)'
+          }}
+          anchorSelect={`[data-tooltip-id="${tooltipId}"]`}
+        />
+      )}
+    </>
   );
-
-  // If tooltip is provided, wrap with SimpleTooltip component
-  if (tooltip) {
-    return (
-      <SimpleTooltip text={tooltip} position={tooltipPosition}>
-        {ButtonComponent}
-      </SimpleTooltip>
-    );
-  }
-
-  // Otherwise return plain button
-  return ButtonComponent;
 };
 
 export default IconButton;

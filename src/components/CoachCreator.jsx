@@ -1,11 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { Tooltip } from 'react-tooltip';
 import { useAuthorizeUser } from '../auth/hooks/useAuthorizeUser';
-import { themeClasses } from '../utils/synthwaveThemeClasses';
+import { getUserDisplayName } from '../auth/utils/authHelpers';
 import { AccessDenied, LoadingScreen } from './shared/AccessDenied';
-import { NeonBorder } from './themes/SynthwaveComponents';
+import { containerPatterns, layoutPatterns, buttonPatterns, avatarPatterns, inputPatterns, iconButtonPatterns } from '../utils/uiPatterns';
+import { SendIcon, PlusIcon, CameraIcon, PaperclipIcon, SmileIcon, MicIcon, TrashIcon } from './themes/SynthwaveComponents';
+import ChatInput from './shared/ChatInput';
+import ProgressIndicator from './shared/ProgressIndicator';
 import { parseMarkdown } from '../utils/markdownParser.jsx';
 import CoachCreatorAgent from '../utils/agents/CoachCreatorAgent';
+import CoachCreatorHeader from './shared/CoachCreatorHeader';
 
 // Icons for human and AI messages
 const UserIcon = () => (
@@ -23,84 +28,14 @@ const AIIcon = () => (
   </svg>
 );
 
-const SendIcon = () => (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-  </svg>
-);
+// SendIcon now imported from SynthwaveComponents
 
-const ClearIcon = () => (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-  </svg>
-);
 
-// Feature icons
-const TargetIcon = () => (
-  <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2l9 18-9-18-9 18 9-18z" />
-    <circle cx="12" cy="12" r="3" />
-    <circle cx="12" cy="12" r="8" />
-  </svg>
-);
+// Feature icons removed - no longer needed
 
-const PersonalizedIcon = () => (
-  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-  </svg>
-);
-
-const GoalFocusedIcon = () => (
-  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-  </svg>
-);
-
-const SafetyFirstIcon = () => (
-  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-  </svg>
-);
-
-// New icons for coach features
-const BrainIcon = () => (
-  <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-  </svg>
-);
-
-const AdaptiveIcon = () => (
-  <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-  </svg>
-);
-
-const ExpertIcon = () => (
-  <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-  </svg>
-);
-
-const InfoIcon = () => (
-  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-  </svg>
-);
-
-const ChevronLeftIcon = () => (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-  </svg>
-);
-
-const ChevronRightIcon = () => (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-  </svg>
-);
 
 const TypingIndicator = () => (
-  <div className="flex space-x-1 p-4">
+  <div className="flex space-x-1 px-4 py-3">
     <div className="w-2 h-2 bg-synthwave-neon-cyan rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
     <div className="w-2 h-2 bg-synthwave-neon-cyan rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
     <div className="w-2 h-2 bg-synthwave-neon-cyan rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
@@ -113,16 +48,37 @@ function CoachCreator() {
   const userId = searchParams.get('userId');
 
   // Authorize that URL userId matches authenticated user
-  const { isValidating: isValidatingUserId, isValid: isValidUserId, error: userIdError } = useAuthorizeUser(userId);
+  const {
+    isValidating: isValidatingUserId,
+    isValid: isValidUserId,
+    userAttributes,
+    error: userIdError
+  } = useAuthorizeUser(userId);
   const coachCreatorSessionId = searchParams.get('coachCreatorSessionId');
+
+  // Get user's first letter for avatar
+  const getUserInitial = () => {
+    if (!userAttributes) return 'U';
+
+    // Create a user object compatible with getUserDisplayName
+    const userForDisplayName = { attributes: userAttributes };
+    const displayName = getUserDisplayName(userForDisplayName);
+    return displayName.charAt(0).toUpperCase();
+  };
 
   // UI-specific state
   const [inputMessage, setInputMessage] = useState('');
-  const [showTips, setShowTips] = useState(false);
   const [redirectCountdown, setRedirectCountdown] = useState(6);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
   const agentRef = useRef(null);
+
+  // Delete modal state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Session loading error state
+  const [sessionLoadError, setSessionLoadError] = useState(null);
 
   // Add flag to prevent double execution from React StrictMode
   const isSendingMessage = useRef(false);
@@ -153,7 +109,8 @@ function CoachCreator() {
             newSearchParams.set('coachCreatorSessionId', data.sessionId);
             navigate(`/coach-creator?${newSearchParams.toString()}`, { replace: true });
           } else if (type === 'session-expired') {
-            navigate('/coach-creator', { replace: true });
+            // Don't navigate - let the error handling show the AccessDenied message
+            // The sessionLoadError state will be set by the catch block
           } else if (type === 'session-complete') {
             setRedirectCountdown(6);
             const countdownInterval = setInterval(() => {
@@ -173,6 +130,23 @@ function CoachCreator() {
           // Could show toast notification here
         }
       });
+
+      // Load existing session if we have both userId and sessionId
+      if (userId && coachCreatorSessionId) {
+        setTimeout(async () => {
+          try {
+            await agentRef.current.loadExistingSession(userId, coachCreatorSessionId);
+          } catch (error) {
+            console.error('Error loading existing session:', error);
+            // Set session load error for display
+            if (error.message === "Session not found or expired") {
+              setSessionLoadError("Coach creator session not found or has expired.");
+            } else {
+              setSessionLoadError("Failed to load coach creator session.");
+            }
+          }
+        }, 100);
+      }
     }
 
     return () => {
@@ -187,116 +161,57 @@ function CoachCreator() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const autoResizeTextarea = (textarea) => {
-    if (!textarea) return;
+  // Quick suggestions for coach creator
+  const quickSuggestions = [
+    { label: "Strength Training", message: "I want to build muscle and gain strength" },
+    { label: "Weight Loss", message: "I want to lose weight and improve cardio" },
+    { label: "Beginner", message: "I'm a beginner looking to get started" },
+    { label: "Intermediate", message: "I have intermediate experience with CrossFit and Olympic lifting" },
+    { label: "Advanced", message: "My main goals are to improve my olympic lifting through block periodization" }
+  ];
 
-    // Reset height to auto to get the correct scrollHeight
-    textarea.style.height = 'auto';
-
-    // Set height based on scrollHeight, with min and max constraints
-    const minHeight = 48; // 3rem = 48px
-    const maxHeight = 144; // 9rem = 144px (increased from 6rem)
-    const scrollHeight = textarea.scrollHeight;
-
-    if (scrollHeight <= maxHeight) {
-      textarea.style.height = Math.max(minHeight, scrollHeight) + 'px';
-      textarea.style.overflowY = 'hidden';
-    } else {
-      textarea.style.height = maxHeight + 'px';
-      textarea.style.overflowY = 'auto';
-    }
+  // Coach creation tips content
+  const coachCreatorTips = {
+    items: [
+      {
+        title: "Be Specific",
+        description: "The more details you share about your goals, experience, and preferences, the more personalized your coach becomes."
+      },
+      {
+        title: "Share Your Story",
+        description: "Tell me about your fitness journey, challenges, and what motivates you."
+      },
+      {
+        title: "Be Honest",
+        description: "Authentic information helps create a coach that truly understands and supports you."
+      }
+    ]
   };
 
   useEffect(() => {
     scrollToBottom();
   }, [agentState.messages, agentState.isTyping]);
 
-  // Focus input when chat interface is visible
+  // Auto-scroll to bottom on page load when messages are first loaded
   useEffect(() => {
-    if (userId && coachCreatorSessionId && inputRef.current) {
-      inputRef.current.focus();
-      autoResizeTextarea(inputRef.current);
+    if (agentState.messages.length > 0 && !agentState.isLoading) {
+      // Use a longer delay for initial load to ensure everything is rendered
+      const timeoutId = setTimeout(() => {
+        scrollToBottom();
+      }, 300);
+
+      return () => clearTimeout(timeoutId);
     }
-  }, [userId, coachCreatorSessionId]);
+  }, [agentState.messages.length, agentState.isLoading]);
 
-  // Auto-resize textarea when input message changes
-  useEffect(() => {
-    if (inputRef.current) {
-      autoResizeTextarea(inputRef.current);
-    }
-  }, [inputMessage]);
-
-  // Load existing session when agent is ready and URL parameters are present
-  useEffect(() => {
-    const loadExistingSession = async () => {
-      if (userId && coachCreatorSessionId && agentRef.current && agentState.messages.length <= 1) {
-        try {
-          await agentRef.current.loadExistingSession(userId, coachCreatorSessionId);
-        } catch (error) {
-          // Error handling is managed by the agent via onError callback
-        }
-      }
-    };
-
-    loadExistingSession();
-  }, [userId, coachCreatorSessionId, agentState.messages.length]);
-
-  const handleCreateCoach = async () => {
+  // Handle message submission
+  const handleMessageSubmit = async (messageContent) => {
     if (!agentRef.current) return;
-
-    try {
-      await agentRef.current.createSession(userId);
-    } catch (error) {
-      // Error handling is managed by the agent via onError callback
-    }
-  };
-
-  const handleSendMessage = async (e) => {
-    e.preventDefault();
-
-    // Prevent double execution from React StrictMode
-    if (isSendingMessage.current || !inputMessage.trim() || agentState.isLoading || !agentRef.current) return;
-
-    isSendingMessage.current = true;
-    const messageContent = inputMessage.trim();
-    setInputMessage('');
-
-    // Refocus input and reset size after clearing it
-    setTimeout(() => {
-      if (inputRef.current) {
-        inputRef.current.focus();
-        autoResizeTextarea(inputRef.current);
-      }
-    }, 100);
 
     try {
       await agentRef.current.sendMessage(messageContent);
     } catch (error) {
       // Error handling is managed by the agent via onError callback
-    } finally {
-      // Reset flag after message is sent (success or failure)
-      isSendingMessage.current = false;
-    }
-  };
-
-  const clearConversation = () => {
-    if (!agentRef.current) return;
-
-    agentRef.current.clearConversation();
-
-    // Focus input and reset size after clearing conversation
-    setTimeout(() => {
-      if (inputRef.current) {
-        inputRef.current.focus();
-        autoResizeTextarea(inputRef.current);
-      }
-    }, 100);
-  };
-
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage(e);
     }
   };
 
@@ -304,91 +219,162 @@ function CoachCreator() {
     return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  // Show loading while validating userId
-  if (isValidatingUserId) {
-    return <LoadingScreen message="Loading Coach Creator..." />;
-  }
+  // Delete handlers
+  const handleDeleteClick = () => {
+    setShowDeleteModal(true);
+  };
 
-  // Handle userId validation errors
-  if (userIdError || !isValidUserId) {
+  const handleConfirmDelete = async () => {
+    if (!userId || !coachCreatorSessionId) return;
+
+    setIsDeleting(true);
+    try {
+      await CoachCreatorAgent.deleteCoachCreatorSession(userId, coachCreatorSessionId);
+      // Redirect to coaches page after successful deletion
+      navigate(`/coaches?userId=${userId}`);
+    } catch (error) {
+      console.error('Error deleting coach creator session:', error);
+      // Close modal even on error
+      setShowDeleteModal(false);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteModal(false);
+  };
+
+  // Handle missing required parameters
+  useEffect(() => {
+    if (!userId || !coachCreatorSessionId) {
+      navigate(`/coaches${userId ? `?userId=${userId}` : ''}`, { replace: true });
+    }
+  }, [userId, coachCreatorSessionId, navigate]);
+
+  // Handle session loading errors first
+  if (sessionLoadError) {
     return (
       <AccessDenied
-        message={userIdError || "You can only access your own Coach Creator."}
+        message={sessionLoadError}
+        userId={userId}
       />
     );
   }
 
-  // Show initial coach creator UI if no userId or sessionId
+  // Handle userId validation errors - only show AccessDenied if validation is complete and failed
+  if (!isValidatingUserId && (userIdError || !isValidUserId)) {
+    return (
+      <AccessDenied
+        message={userIdError || "You can only access your own coach creation sessions."}
+        userId={userId}
+      />
+    );
+  }
+
+  // Redirect if missing required parameters
   if (!userId || !coachCreatorSessionId) {
-      return (
-    <div className={`${themeClasses.container} min-h-screen`}>
-      <div className="max-w-7xl mx-auto px-8 py-12">
-          {/* Header */}
-          <div className="text-center mb-16">
-                        <h1 className="font-russo font-black text-4xl md:text-5xl text-white mb-6 uppercase">
-              Create Your Personal Coach
-            </h1>
-            <p className="font-rajdhani text-xl text-synthwave-text-secondary max-w-3xl mx-auto leading-relaxed mb-8">
-              Get a personalized coach with adaptive intelligence that learns from your interactions and evolves with your progress.
-              Takes about 15-20 minutes to set up your perfect training partner.
-            </p>
+    return null;
+  }
 
-            {/* Create Coach Button */}
-            <button
-              onClick={handleCreateCoach}
-              className={`${themeClasses.neonButton} text-xl px-12 py-4 mb-16`}
-            >
-              Create My Coach
-            </button>
+  // Show skeleton loading while validating userId or loading agent state
+  if (isValidatingUserId || (agentState.isLoading && agentState.messages.length === 0)) {
+    return (
+      <div className={`${layoutPatterns.pageContainer} min-h-screen pb-8`}>
+        <div className={`${layoutPatterns.contentWrapper} min-h-[calc(100vh-5rem)] flex flex-col`}>
+          {/* Header skeleton */}
+          <div className="mb-8 text-center">
+            <div className="h-12 bg-synthwave-text-muted/20 rounded animate-pulse w-64 mx-auto mb-6"></div>
+
+            {/* Coach creator header skeleton */}
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
+              <div className="text-center">
+                <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-24 mb-2"></div>
+                <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-16"></div>
+              </div>
+            </div>
+
+            <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-96 mx-auto mb-4"></div>
+            <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-80 mx-auto mb-4"></div>
+            <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-48 mx-auto"></div>
           </div>
 
-          {/* Features Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {/* Feature 1 - Personalized */}
-            <NeonBorder color="pink" className="bg-synthwave-bg-card/50 p-8 text-center">
-              <div className="text-synthwave-neon-pink mb-6 flex justify-center">
-                <BrainIcon />
-              </div>
-              <h3 className="font-russo font-bold text-white text-lg uppercase mb-4">
-                Intelligent Coaching
-              </h3>
-              <p className="font-rajdhani text-synthwave-text-secondary leading-relaxed">
-                Intelligent coaching that understands your unique goals, limitations, and preferences to create truly personalized training programs.
-              </p>
-            </NeonBorder>
+          {/* Main Content Area skeleton */}
+          <div className="flex-1 flex justify-center">
+            <div className="w-full max-w-7xl">
+              <div className={`${containerPatterns.mainContent} h-[500px] flex flex-col`}>
+                {/* Messages Area skeleton */}
+                <div className="flex-1 overflow-y-auto overflow-hidden p-6 space-y-3">
+                  {/* Chat message skeletons */}
+                  {[1, 2].map((i) => (
+                    <div key={i} className={`flex items-end gap-2 ${i % 2 === 0 ? 'flex-row-reverse' : 'flex-row'}`}>
+                      {/* Avatar skeleton */}
+                      <div className="flex-shrink-0 w-8 h-8 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
 
-            {/* Feature 2 - Adaptive */}
-            <NeonBorder color="cyan" className="bg-synthwave-bg-card/50 p-8 text-center">
-              <div className="text-synthwave-neon-cyan mb-6 flex justify-center">
-                <AdaptiveIcon />
-              </div>
-              <h3 className="font-russo font-bold text-white text-lg uppercase mb-4">
-                Adaptive Programming
-              </h3>
-              <p className="font-rajdhani text-synthwave-text-secondary leading-relaxed">
-                Your coach evolves with you, adjusting workouts based on your progress, recovery, and changing goals.
-              </p>
-            </NeonBorder>
+                      {/* Message bubble skeleton */}
+                      <div className={`max-w-[70%] ${i % 2 === 0 ? 'items-end' : 'items-start'} flex flex-col`}>
+                        <div className={`px-4 py-3 rounded-2xl ${i % 2 === 0 ? 'rounded-br-md' : 'rounded-bl-md'} bg-synthwave-text-muted/20 animate-pulse min-w-[600px] min-h-[130px]`}>
+                          <div className="space-y-1">
+                            <div className="h-4 bg-synthwave-text-muted/30 rounded animate-pulse w-full"></div>
+                            <div className="h-4 bg-synthwave-text-muted/30 rounded animate-pulse w-full"></div>
+                            <div className="h-4 bg-synthwave-text-muted/30 rounded animate-pulse w-full"></div>
+                            <div className="h-4 bg-synthwave-text-muted/30 rounded animate-pulse w-3/4"></div>
+                          </div>
+                        </div>
 
-            {/* Feature 3 - Expert */}
-            <NeonBorder color="purple" className="bg-synthwave-bg-card/50 p-8 text-center">
-              <div className="text-synthwave-neon-purple mb-6 flex justify-center">
-                <ExpertIcon />
+                        {/* Timestamp and status skeleton */}
+                        <div className={`flex items-center gap-1 px-2 ${i % 2 === 0 ? 'justify-end mt-1' : 'justify-start'}`}>
+                          <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-12"></div>
+                          <div className="flex gap-1">
+                            <div className="w-3 h-3 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
+                            <div className="w-3 h-3 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <h3 className="font-russo font-bold text-white text-lg uppercase mb-4">
-                Expert Knowledge
-              </h3>
-              <p className="font-rajdhani text-synthwave-text-secondary leading-relaxed">
-                Built on proven training methodologies and safety protocols to help you achieve your goals effectively and safely.
-              </p>
-            </NeonBorder>
+            </div>
           </div>
+        </div>
 
-          {/* Additional Info */}
-          <div className="text-center mt-16">
-            <div className="inline-flex items-center space-x-2 text-synthwave-text-secondary font-rajdhani">
-              <InfoIcon />
-              <span>Your coach will be ready in about 15-20 minutes after creation</span>
+        {/* Floating Input skeleton */}
+        <div className="fixed bottom-0 left-0 right-0 bg-synthwave-bg-card/95 backdrop-blur-lg border-t-2 border-synthwave-neon-pink/30 shadow-lg shadow-synthwave-neon-pink/20 z-50">
+          <div className="max-w-7xl mx-auto px-8 py-6">
+            {/* Input area skeleton */}
+            <div className="flex items-end gap-3">
+              {/* Action buttons skeleton */}
+              <div className="flex items-center gap-1">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="w-11 h-11 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
+                ))}
+              </div>
+
+              {/* Text input skeleton */}
+              <div className="flex-1 relative">
+                <div className="w-full h-12 bg-synthwave-text-muted/20 rounded-2xl animate-pulse"></div>
+              </div>
+
+              {/* Send button skeleton */}
+              <div className="w-12 h-12 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
+            </div>
+
+            {/* Status skeleton */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mt-2">
+              <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
+                <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-12"></div>
+              </div>
+            </div>
+
+            {/* Quick suggestions skeleton */}
+            <div className="flex flex-wrap gap-2 mt-4">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="h-8 bg-synthwave-text-muted/20 rounded-full animate-pulse w-24"></div>
+              ))}
             </div>
           </div>
         </div>
@@ -396,263 +382,223 @@ function CoachCreator() {
     );
   }
 
-  // Original chat interface when userId and sessionId are present
-  return (
-    <>
-      <div className={`${themeClasses.container} min-h-screen pb-8`}>
-        <div className="max-w-7xl mx-auto px-8 py-12 min-h-[calc(100vh-5rem)] flex flex-col">
-          {/* Header */}
-          <div className="text-center mb-12">
-            <h1 className="font-russo font-black text-4xl md:text-5xl text-white mb-6 uppercase">
-              Create Your Personal Coach
-            </h1>
-            <p className="font-rajdhani text-xl text-synthwave-text-secondary max-w-3xl mx-auto leading-relaxed">
-              Get a personalized coach with adaptive intelligence that learns from your interactions and evolves with your progress.
-              Takes about 15-20 minutes to set up your perfect training partner.
-            </p>
-          </div>
+  // No longer showing features grid - redirect to coaches page if no sessionId
 
-          {/* Main Content Area */}
-          <div className="flex-1 flex justify-center">
-            {/* Chat Container - Centered */}
-            <div className="w-full max-w-7xl">
-              <NeonBorder color="cyan" className="bg-synthwave-bg-card/50 h-full flex flex-col overflow-hidden">
-                {/* Messages Area */}
-                <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
-                  {agentState.messages.map((message) => (
+  // Chat interface when userId and sessionId are present
+  return (
+    <div className={`${layoutPatterns.pageContainer} min-h-screen pb-8`}>
+      <div className={`${layoutPatterns.contentWrapper} min-h-[calc(100vh-5rem)] flex flex-col`}>
+        {/* Header */}
+        <div className="mb-8 text-center">
+          <h1 className="font-russo font-black text-4xl md:text-5xl text-white mb-4 uppercase">
+            Create Your Coach
+          </h1>
+
+          {/* Coach Creator Header */}
+          <CoachCreatorHeader isOnline={true} />
+
+          <p className="font-rajdhani text-lg text-synthwave-text-secondary mb-6 max-w-3xl mx-auto">
+            Get a personalized coach with adaptive intelligence that learns from your interactions and evolves with your progress.
+            Takes about 15-20 minutes to set up your perfect training partner.
+          </p>
+
+        </div>
+
+        {/* Main Content Area */}
+        <div className="flex-1 flex justify-center">
+          <div className="w-full max-w-7xl">
+            <div className={`${containerPatterns.mainContent} h-full flex flex-col`}>
+              {/* Messages Area - with bottom padding for floating input */}
+              <div className="flex-1 overflow-y-auto overflow-hidden p-6 pb-32 space-y-4 custom-scrollbar">
+                {agentState.messages.map((message) => (
+                  <div
+                    key={message.id}
+                    className={`flex items-end gap-2 mb-1 group ${
+                      message.type === 'user' ? 'flex-row-reverse' : 'flex-row'
+                    }`}
+                  >
+                    {/* Avatar */}
                     <div
-                      key={message.id}
-                      className={`flex items-start space-x-3 ${
-                        message.type === 'user' ? 'flex-row-reverse space-x-reverse' : ''
+                      className={`flex-shrink-0 ${
+                        message.type === 'user'
+                          ? avatarPatterns.userSmall
+                          : avatarPatterns.aiSmall
                       }`}
                     >
-                      {/* Avatar */}
-                      <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
-                        message.type === 'user'
-                          ? 'bg-synthwave-neon-pink/20 text-synthwave-neon-pink border border-synthwave-neon-pink/50'
-                          : 'bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan border border-synthwave-neon-cyan/50'
-                      }`}>
-                        {message.type === 'user' ? <UserIcon /> : <AIIcon />}
-                      </div>
+                      {message.type === 'user' ? (
+                        getUserInitial()
+                      ) : (
+                        'V'
+                      )}
+                    </div>
 
-                      {/* Message Bubble */}
-                      <div className={`flex-1 max-w-md ${message.type === 'user' ? 'text-right' : ''}`}>
-                        <div className={`inline-block p-4 rounded-2xl ${
+                    {/* Message Bubble */}
+                    <div
+                      className={`max-w-[70%] ${message.type === 'user' ? 'items-end' : 'items-start'} flex flex-col`}
+                    >
+                      <div
+                        className={`px-4 py-3 rounded-2xl shadow-sm ${
                           message.type === 'user'
-                            ? 'bg-synthwave-neon-pink/10 border border-synthwave-neon-pink/30 text-synthwave-text-primary'
-                            : 'bg-synthwave-neon-cyan/10 border border-synthwave-neon-cyan/30 text-synthwave-text-primary'
-                        }`}>
-                          <div className="font-rajdhani text-base leading-normal">
-                            {message.type === 'user' ? (
-                              <span className="whitespace-pre-wrap">{message.content}</span>
-                            ) : (
-                              parseMarkdown(message.content)
-                            )}
-                          </div>
-                        </div>
-                        <p className="text-xs text-synthwave-text-muted mt-1 px-2">
-                          {formatTime(message.timestamp)}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-
-                  {/* Typing Indicator */}
-                  {agentState.isTyping && (
-                    <div className="flex items-start space-x-3">
-                      <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan border border-synthwave-neon-cyan/50">
-                        <AIIcon />
-                      </div>
-                      <div className="bg-synthwave-neon-cyan/10 border border-synthwave-neon-cyan/30 rounded-2xl">
-                        <TypingIndicator />
-                      </div>
-                    </div>
-                  )}
-                  <div ref={messagesEndRef} />
-                </div>
-
-                {/* Input Area or Redirect Countdown */}
-                <div className="border-t border-synthwave-neon-cyan/30 p-6">
-                  {agentState.isRedirecting ? (
-                    /* Redirect Countdown Display */
-                    <div className="text-center space-y-4">
-                      <div className="flex items-center justify-center space-x-3">
-                        <div className="w-8 h-8 border-2 border-synthwave-neon-pink border-t-transparent rounded-full animate-spin"></div>
-                        <div className="text-center">
-                          <p className="font-rajdhani text-lg text-synthwave-neon-pink font-semibold">
-                            Coach creation complete!
-                          </p>
-                          <p className="font-rajdhani text-sm text-synthwave-text-secondary">
-                            Redirecting to your coaches in {redirectCountdown} seconds...
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Progress bar */}
-                      <div className="w-full bg-synthwave-bg-primary/50 rounded-full h-2 border border-synthwave-neon-pink/30">
-                        <div
-                          className="bg-synthwave-neon-pink h-full rounded-full transition-all duration-1000 shadow-neon-pink"
-                          style={{ width: `${((6 - redirectCountdown) / 6) * 100}%` }}
-                        ></div>
-                      </div>
-
-                      <button
-                        onClick={() => navigate(`/coaches?userId=${userId}`)}
-                        className="bg-transparent border border-synthwave-neon-pink/50 text-synthwave-neon-pink px-4 py-2 rounded font-rajdhani text-sm uppercase tracking-wide transition-all duration-300 hover:bg-synthwave-neon-pink/10 hover:border-synthwave-neon-pink"
+                            ? 'bg-gradient-to-br from-synthwave-neon-pink/80 to-synthwave-neon-pink/60 text-white border-0 rounded-br-md shadow-xl shadow-synthwave-neon-pink/30 backdrop-blur-sm'
+                            : containerPatterns.aiChatBubble
+                        }`}
                       >
-                        Go to Coaches Now
-                      </button>
-                    </div>
-                  ) : (
-                    /* Normal Input Form */
-                    <>
-                      <form onSubmit={handleSendMessage} className="flex items-end space-x-4">
-                        {/* Message Input */}
-                        <div className="flex-1 flex flex-col justify-end">
-                          <textarea
-                            ref={inputRef}
-                            value={inputMessage}
-                            onChange={(e) => {
-                              setInputMessage(e.target.value);
-                              autoResizeTextarea(e.target);
-                            }}
-                            onKeyPress={handleKeyPress}
-                            placeholder="Tell me about your fitness goals..."
-                            className="w-full px-4 py-3 bg-synthwave-bg-primary/50 border-2 border-synthwave-neon-cyan/30 rounded-lg text-synthwave-text-primary font-rajdhani focus:outline-none focus:border-synthwave-neon-cyan transition-all duration-200 resize-none placeholder-synthwave-text-muted"
-                            style={{ minHeight: '3rem' }}
-                          />
+                        <div className="font-rajdhani text-base leading-relaxed">
+                          {message.type === 'user' ? (
+                            <span className="whitespace-pre-wrap">{message.content}</span>
+                          ) : (
+                            parseMarkdown(message.content)
+                          )}
                         </div>
-
-                        {/* Action Buttons */}
-                        <div className="flex space-x-2">
-                          <button
-                            type="button"
-                            onClick={clearConversation}
-                            className="bg-transparent border-2 border-synthwave-text-secondary/50 text-synthwave-text-secondary hover:border-synthwave-text-secondary hover:text-synthwave-text-primary p-3 rounded-lg transition-all duration-300 hover:-translate-y-0.5"
-                            title="Clear conversation"
-                          >
-                            <ClearIcon />
-                          </button>
-
-                          <button
-                            type="submit"
-                            disabled={!inputMessage.trim() || agentState.isLoading}
-                            className={`${themeClasses.cyanButton} p-3 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 min-w-[3rem] flex items-center justify-center`}
-                            title="Send message"
-                          >
-                            {agentState.isLoading ? (
-                              <div className="w-4 h-4 border-2 border-synthwave-neon-cyan border-t-transparent rounded-full animate-spin"></div>
-                            ) : (
-                              <SendIcon />
-                            )}
-                          </button>
-                        </div>
-                      </form>
-
-                      {/* Quick Actions */}
-                      <div className="flex flex-wrap gap-2 mt-4">
-                        <button
-                          className="bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/30 text-synthwave-neon-pink px-3 py-1 rounded-full text-sm font-rajdhani hover:bg-synthwave-neon-pink/10 transition-colors duration-300"
-                          onClick={() => setInputMessage("I want to build muscle and gain strength")}
-                        >
-                          Strength Training
-                        </button>
-                        <button
-                          className="bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/30 text-synthwave-neon-pink px-3 py-1 rounded-full text-sm font-rajdhani hover:bg-synthwave-neon-pink/10 transition-colors duration-300"
-                          onClick={() => setInputMessage("I want to lose weight and improve cardio")}
-                        >
-                          Weight Loss
-                        </button>
-                        <button
-                          className="bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/30 text-synthwave-neon-pink px-3 py-1 rounded-full text-sm font-rajdhani hover:bg-synthwave-neon-pink/10 transition-colors duration-300"
-                          onClick={() => setInputMessage("I'm a beginner looking to get started")}
-                        >
-                          Beginner
-                        </button>
                       </div>
+
+                      <div
+                        className={`flex items-center gap-1 px-2 mt-1 ${message.type === "user" ? "justify-end" : "justify-start"}`}
+                      >
+                        <span className="text-xs text-synthwave-text-secondary font-rajdhani">
+                          {formatTime(message.timestamp)}
+                        </span>
+                        {message.type === "user" && (
+                          <div className="flex gap-1">
+                            <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink opacity-60"></div>
+                            <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink"></div>
+                          </div>
+                        )}
+                        {message.type === "ai" && (
+                          <div className="flex gap-1">
+                            <div className="w-3 h-3 rounded-full bg-synthwave-neon-cyan opacity-60"></div>
+                            <div className="w-3 h-3 rounded-full bg-synthwave-neon-cyan"></div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                {/* Typing Indicator */}
+                {agentState.isTyping && (
+                  <div className="flex items-end gap-2 mb-1">
+                    <div className={`flex-shrink-0 ${avatarPatterns.aiSmall}`}>
+                      V
+                    </div>
+                    <div className={`${containerPatterns.aiChatBubble}`}>
+                      <TypingIndicator />
+                    </div>
+                  </div>
+                )}
+
+                <div ref={messagesEndRef} />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      {/* Chat Input Section */}
+      {agentState.isRedirecting ? (
+        /* Redirect Countdown Display */
+        <div className="fixed bottom-0 left-0 right-0 bg-synthwave-bg-card/95 backdrop-blur-lg border-t-2 border-synthwave-neon-pink/30 shadow-lg shadow-synthwave-neon-pink/20 z-50">
+          <div className="max-w-7xl mx-auto px-8 py-6">
+            <div className="text-center space-y-4">
+              <div className="flex items-center justify-center space-x-3">
+                <div className="w-8 h-8 border-2 border-synthwave-neon-pink border-t-transparent rounded-full animate-spin"></div>
+                <div className="text-center">
+                  <p className="font-rajdhani text-lg text-synthwave-neon-pink font-semibold">
+                    Coach creation complete!
+                  </p>
+                  <p className="font-rajdhani text-sm text-synthwave-text-secondary">
+                    Redirecting to your coaches in {redirectCountdown} seconds...
+                  </p>
+                </div>
+              </div>
+
+              {/* Progress bar */}
+              <div className="w-full bg-synthwave-bg-primary/50 rounded-full h-2 border border-synthwave-neon-pink/30">
+                <div
+                  className="bg-synthwave-neon-pink h-full rounded-full transition-all duration-1000 shadow-neon-pink"
+                  style={{ width: `${((6 - redirectCountdown) / 6) * 100}%` }}
+                ></div>
+              </div>
+
+              <button
+                onClick={() => navigate(`/coaches?userId=${userId}`)}
+                className={buttonPatterns.secondary}
+              >
+                Go to Coaches Now
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <>
+
+          <ChatInput
+            inputMessage={inputMessage}
+            setInputMessage={setInputMessage}
+            onSubmit={handleMessageSubmit}
+            isTyping={agentState.isTyping}
+            placeholder="Tell me about your fitness goals..."
+            coachName="Vesper the Coach Creator"
+            isOnline={true}
+            showDeleteButton={true}
+            onDeleteClick={handleDeleteClick}
+            quickSuggestions={quickSuggestions}
+            enableRecording={true}
+            showTipsButton={true}
+            tipsContent={coachCreatorTips}
+            tipsTitle="Coach Creation Tips"
+            textareaRef={inputRef}
+            progressData={agentState.progress}
+          />
+        </>
+      )}
+
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[10000]">
+          <div className="p-6 max-w-md w-full mx-4 bg-synthwave-bg-card/95 border border-synthwave-neon-pink/30 rounded-2xl shadow-xl shadow-synthwave-neon-pink/20">
+            <div className="text-center">
+              <h3 className="text-synthwave-neon-pink font-rajdhani text-xl font-bold mb-2">
+                Delete Coach Creator Session
+              </h3>
+              <p className="font-rajdhani text-base text-synthwave-text-secondary mb-6">
+                Are you sure you want to delete this coach creator session? This action cannot be undone.
+              </p>
+
+              <div className="flex space-x-4">
+                <button
+                  onClick={handleCancelDelete}
+                  disabled={isDeleting}
+                  className="flex-1 bg-transparent border-2 border-synthwave-neon-cyan text-synthwave-neon-cyan px-6 py-3 rounded-lg font-rajdhani font-semibold text-sm uppercase tracking-wide cursor-pointer transition-all duration-300 hover:bg-synthwave-neon-cyan hover:text-synthwave-bg-primary hover:shadow-lg hover:shadow-synthwave-neon-cyan/30 hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmDelete}
+                  disabled={isDeleting}
+                  className="flex-1 bg-synthwave-neon-pink text-synthwave-bg-primary px-6 py-3 rounded-lg font-rajdhani font-semibold text-sm uppercase tracking-wide cursor-pointer transition-all duration-300 hover:bg-synthwave-neon-pink/90 hover:shadow-lg hover:shadow-synthwave-neon-pink/30 hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                >
+                  {isDeleting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                      <span>Deleting...</span>
+                    </>
+                  ) : (
+                    <>
+                      <TrashIcon />
+                      <span>Delete</span>
                     </>
                   )}
-                </div>
-              </NeonBorder>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Fixed Tips Panel - Right Edge */}
-      <div className="hidden lg:block">
-        {/* Toggle Button */}
-        <button
-          onClick={() => setShowTips(!showTips)}
-          className={`fixed top-1/2 -translate-y-1/2 bg-synthwave-bg-card/90 border-2 border-synthwave-neon-cyan/30 text-synthwave-neon-cyan hover:border-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 p-3 rounded-l-lg transition-all duration-300 hover:-translate-x-1 z-50 ${
-            showTips ? 'right-80' : 'right-0'
-          }`}
-          title={showTips ? "Hide tips" : "Show helpful tips"}
-        >
-          <div className="flex items-center space-x-1">
-            <InfoIcon />
-            {showTips ? <ChevronRightIcon /> : <ChevronLeftIcon />}
-          </div>
-        </button>
-
-        {/* Tips Panel - Slides from Right */}
-        <div className={`fixed top-20 right-0 h-[calc(100vh-5rem)] bg-synthwave-bg-card/95 backdrop-blur-sm border-l-2 border-synthwave-neon-cyan/30 transition-all duration-300 z-40 ${
-          showTips ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
-        }`}>
-          <div className="w-80 h-full overflow-y-auto p-6 space-y-6">
-            <h3 className="font-russo font-bold text-white text-lg uppercase mb-6 text-center border-b border-synthwave-neon-cyan/30 pb-4">
-              Helpful Tips
-            </h3>
-
-            {/* Tip 1 */}
-            <div className="flex items-start space-x-3">
-              <div className="text-synthwave-neon-pink flex-shrink-0 mt-1">
-                <PersonalizedIcon />
-              </div>
-              <div>
-                <h4 className="font-russo font-semibold text-white text-sm uppercase mb-1">
-                  Personalized
-                </h4>
-                <p className="text-xs font-rajdhani text-synthwave-text-secondary leading-relaxed">
-                  Your coach will be tailored to your experience level and specific goals
-                </p>
-              </div>
-            </div>
-
-            {/* Tip 2 */}
-            <div className="flex items-start space-x-3">
-              <div className="text-synthwave-neon-cyan flex-shrink-0 mt-1">
-                <GoalFocusedIcon />
-              </div>
-              <div>
-                <h4 className="font-russo font-semibold text-white text-sm uppercase mb-1">
-                  Goal-Focused
-                </h4>
-                <p className="text-xs font-rajdhani text-synthwave-text-secondary leading-relaxed">
-                  Programming that matches your specific objectives and timeline
-                </p>
-              </div>
-            </div>
-
-            {/* Tip 3 */}
-            <div className="flex items-start space-x-3">
-              <div className="text-synthwave-neon-purple flex-shrink-0 mt-1">
-                <SafetyFirstIcon />
-              </div>
-              <div>
-                <h4 className="font-russo font-semibold text-white text-sm uppercase mb-1">
-                  Safety-First
-                </h4>
-                <p className="text-xs font-rajdhani text-synthwave-text-secondary leading-relaxed">
-                  Considers your limitations and injury history for safe training
-                </p>
+                </button>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
-      <style jsx global>{`
+      <style>{`
         .custom-scrollbar::-webkit-scrollbar {
           width: 6px;
         }
@@ -667,7 +613,7 @@ function CoachCreator() {
           background: rgba(0, 255, 255, 0.5);
         }
       `}</style>
-    </>
+    </div>
   );
 }
 

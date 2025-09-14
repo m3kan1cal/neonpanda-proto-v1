@@ -1,9 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { themeClasses } from '../utils/synthwaveThemeClasses';
-import { NeonBorder } from './themes/SynthwaveComponents';
+import {
+  buttonPatterns,
+  containerPatterns,
+  layoutPatterns,
+  typographyPatterns
+} from '../utils/uiPatterns';
 import { useToast } from '../contexts/ToastContext';
 import ContactFormAgent from '../utils/agents/ContactFormAgent';
+import FormInput from './shared/FormInput';
+import Footer from './shared/Footer';
 
 function ContactForm() {
   const navigate = useNavigate();
@@ -30,6 +36,9 @@ function ContactForm() {
     success: false,
   });
 
+  // Form UI state
+  const [formUIState, setFormUIState] = useState('form'); // 'form' | 'success'
+
   // Initialize agent
   useEffect(() => {
     if (!agentRef.current) {
@@ -38,11 +47,8 @@ function ContactForm() {
           setAgentState(newState);
         },
         onSuccess: (message) => {
-          success(message);
-          // Navigate after a short delay to let user see the success message
-          setTimeout(() => {
-            navigate('/');
-          }, 1500);
+          // Show success state instead of toast + redirect
+          setFormUIState('success');
         },
         onError: (message) => {
           error(message);
@@ -110,6 +116,23 @@ function ContactForm() {
     navigate('/');
   };
 
+  const handleReturnHome = () => {
+    navigate('/');
+  };
+
+  const handleSubmitAnother = () => {
+    setFormUIState('form');
+    setFormData({
+      firstName: '',
+      lastName: '',
+      email: '',
+      subject: '',
+      message: '',
+      contactType: contactType
+    });
+    setErrors({});
+  };
+
   const getPageTitle = () => {
     switch (contactType) {
       case 'waitlist':
@@ -128,142 +151,147 @@ function ContactForm() {
       case 'collaborate':
         return 'Interested in helping shape the future of AI fitness coaching? We\'d love to hear from you and explore collaboration opportunities.';
       default:
-        return 'Have questions about CoachForge? We\'d love to hear from you.';
+        return 'Have questions about NeonPanda? We\'d love to hear from you.';
+    }
+  };
+
+  const getSuccessMessage = () => {
+    switch (contactType) {
+      case 'waitlist':
+        return {
+          title: 'Welcome to the Waitlist!',
+          message: 'You\'re officially on the list! We\'ll notify you as soon as NeonPanda is ready to transform your fitness journey. Get ready for the future of AI-powered coaching.',
+          icon: '🎉'
+        };
+      case 'collaborate':
+        return {
+          title: 'Let\'s Build the Future Together!',
+          message: 'Thank you for your interest in collaborating with NeonPanda. Our team will review your message and get back to you within 24-48 hours to discuss potential opportunities.',
+          icon: '🤝'
+        };
+      default:
+        return {
+          title: 'Message Sent Successfully!',
+          message: 'We\'ve received your message and our team will get back to you soon. Thank you for reaching out to NeonPanda!',
+          icon: '✅'
+        };
     }
   };
 
   return (
-          <div className={`${themeClasses.container} min-h-screen`}>
-      <div className="max-w-4xl mx-auto px-8 py-12">
+    <div className={layoutPatterns.pageContainer}>
+      <div className={layoutPatterns.contentWrapper}>
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="font-russo font-black text-4xl md:text-5xl text-white mb-6 uppercase">
-            {getPageTitle()}
+          <h1 className={typographyPatterns.pageTitle}>
+            {formUIState === 'success' ? getSuccessMessage().title : getPageTitle()}
           </h1>
-          <p className="font-rajdhani text-xl text-synthwave-text-secondary max-w-3xl mx-auto leading-relaxed">
-            {getPageDescription()}
+          <p className={`${typographyPatterns.description} max-w-3xl mx-auto`}>
+            {formUIState === 'success' ? getSuccessMessage().message : getPageDescription()}
           </p>
         </div>
 
+        {/* Success State */}
+        {formUIState === 'success' && (
+          <div className={`${containerPatterns.mainContent} p-8 md:p-12 text-center`}>
+            <div className="text-6xl mb-6">
+              {getSuccessMessage().icon}
+            </div>
+
+            <h2 className={`${typographyPatterns.sectionTitle} mb-6`}>
+              What's Next?
+            </h2>
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <button
+                onClick={handleReturnHome}
+                className={`${buttonPatterns.primary} min-w-48`}
+              >
+                Return Home
+              </button>
+
+              <button
+                onClick={handleSubmitAnother}
+                className={`${buttonPatterns.secondary} min-w-48`}
+              >
+                Submit Another
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Form */}
-        <NeonBorder color={contactType === 'waitlist' ? 'pink' : contactType === 'collaborate' ? 'cyan' : 'purple'}
-                   className="bg-synthwave-bg-card/50 p-8 md:p-12">
+        {formUIState === 'form' && (
+          <div className={`${containerPatterns.mainContent} p-8 md:p-12`}>
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Name Fields */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label htmlFor="firstName" className="block font-rajdhani text-lg text-synthwave-text-primary mb-2">
-                  First Name *
-                </label>
-                <input
-                  type="text"
-                  id="firstName"
-                  name="firstName"
-                  value={formData.firstName}
-                  onChange={handleInputChange}
-                  className={`w-full px-4 py-3 bg-synthwave-bg-primary/50 border-2 ${
-                    errors.firstName ? 'border-red-500' : 'border-synthwave-neon-cyan/30'
-                  } rounded-lg text-synthwave-text-primary font-rajdhani focus:outline-none focus:border-synthwave-neon-cyan transition-colors duration-300`}
-                  placeholder="Enter your first name"
-                />
-                {errors.firstName && (
-                  <p className="mt-2 text-red-400 font-rajdhani text-sm">{errors.firstName}</p>
-                )}
-              </div>
+              <FormInput
+                label="First Name"
+                name="firstName"
+                type="text"
+                value={formData.firstName}
+                onChange={handleInputChange}
+                placeholder="Enter your first name"
+                error={errors.firstName}
+                required
+              />
 
-              <div>
-                <label htmlFor="lastName" className="block font-rajdhani text-lg text-synthwave-text-primary mb-2">
-                  Last Name *
-                </label>
-                <input
-                  type="text"
-                  id="lastName"
-                  name="lastName"
-                  value={formData.lastName}
-                  onChange={handleInputChange}
-                  className={`w-full px-4 py-3 bg-synthwave-bg-primary/50 border-2 ${
-                    errors.lastName ? 'border-red-500' : 'border-synthwave-neon-cyan/30'
-                  } rounded-lg text-synthwave-text-primary font-rajdhani focus:outline-none focus:border-synthwave-neon-cyan transition-colors duration-300`}
-                  placeholder="Enter your last name"
-                />
-                {errors.lastName && (
-                  <p className="mt-2 text-red-400 font-rajdhani text-sm">{errors.lastName}</p>
-                )}
-              </div>
+              <FormInput
+                label="Last Name"
+                name="lastName"
+                type="text"
+                value={formData.lastName}
+                onChange={handleInputChange}
+                placeholder="Enter your last name"
+                error={errors.lastName}
+                required
+              />
             </div>
 
             {/* Email Field */}
-            <div>
-              <label htmlFor="email" className="block font-rajdhani text-lg text-synthwave-text-primary mb-2">
-                Email Address *
-              </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                className={`w-full px-4 py-3 bg-synthwave-bg-primary/50 border-2 ${
-                  errors.email ? 'border-red-500' : 'border-synthwave-neon-cyan/30'
-                } rounded-lg text-synthwave-text-primary font-rajdhani focus:outline-none focus:border-synthwave-neon-cyan transition-colors duration-300`}
-                placeholder="your.email@example.com"
-              />
-              {errors.email && (
-                <p className="mt-2 text-red-400 font-rajdhani text-sm">{errors.email}</p>
-              )}
-            </div>
+            <FormInput
+              label="Email Address"
+              name="email"
+              type="email"
+              value={formData.email}
+              onChange={handleInputChange}
+              placeholder="your.email@example.com"
+              error={errors.email}
+              required
+            />
 
             {/* Subject Field */}
-            <div>
-              <label htmlFor="subject" className="block font-rajdhani text-lg text-synthwave-text-primary mb-2">
-                Subject *
-              </label>
-              <input
-                type="text"
-                id="subject"
-                name="subject"
-                value={formData.subject}
-                onChange={handleInputChange}
-                className={`w-full px-4 py-3 bg-synthwave-bg-primary/50 border-2 ${
-                  errors.subject ? 'border-red-500' : 'border-synthwave-neon-cyan/30'
-                } rounded-lg text-synthwave-text-primary font-rajdhani focus:outline-none focus:border-synthwave-neon-cyan transition-colors duration-300`}
-                placeholder="Enter subject"
-              />
-              {errors.subject && (
-                <p className="mt-2 text-red-400 font-rajdhani text-sm">{errors.subject}</p>
-              )}
-            </div>
+            <FormInput
+              label="Subject"
+              name="subject"
+              type="text"
+              value={formData.subject}
+              onChange={handleInputChange}
+              placeholder="Enter subject"
+              error={errors.subject}
+              required
+            />
 
             {/* Message Field */}
-            <div>
-              <label htmlFor="message" className="block font-rajdhani text-lg text-synthwave-text-primary mb-2">
-                Message *
-              </label>
-              <textarea
-                id="message"
-                name="message"
-                value={formData.message}
-                onChange={handleInputChange}
-                rows={8}
-                className={`w-full px-4 py-3 bg-synthwave-bg-primary/50 border-2 ${
-                  errors.message ? 'border-red-500' : 'border-synthwave-neon-cyan/30'
-                } rounded-lg text-synthwave-text-primary font-rajdhani focus:outline-none focus:border-synthwave-neon-cyan transition-colors duration-300 resize-vertical`}
-                placeholder="Tell us more about your interest..."
-              />
-              {errors.message && (
-                <p className="mt-2 text-red-400 font-rajdhani text-sm">{errors.message}</p>
-              )}
-            </div>
+            <FormInput
+              label="Message"
+              name="message"
+              type="textarea"
+              value={formData.message}
+              onChange={handleInputChange}
+              placeholder="Tell us more about your interest..."
+              error={errors.message}
+              rows={8}
+              required
+            />
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-6">
               <button
                 type="submit"
                 disabled={agentState.isSubmitting}
-                className={`${
-                  contactType === 'waitlist' ? themeClasses.neonButton :
-                  contactType === 'collaborate' ? themeClasses.cyanButton : themeClasses.neonButton
-                } disabled:opacity-50 disabled:cursor-not-allowed min-w-48`}
+                className={`${buttonPatterns.primary} disabled:opacity-50 disabled:cursor-not-allowed min-w-48`}
               >
                 {agentState.isSubmitting ? 'Sending...' : 'Send Message'}
               </button>
@@ -271,14 +299,16 @@ function ContactForm() {
               <button
                 type="button"
                 onClick={handleCancel}
-                className="bg-transparent border-2 border-synthwave-text-secondary text-synthwave-text-secondary px-8 py-3 rounded-lg font-rajdhani font-semibold text-lg uppercase tracking-wide cursor-pointer transition-all duration-300 hover:border-synthwave-text-primary hover:text-synthwave-text-primary min-w-48"
+                className={`${buttonPatterns.secondary} min-w-48`}
               >
                 Cancel
               </button>
             </div>
           </form>
-        </NeonBorder>
+          </div>
+        )}
       </div>
+      <Footer />
     </div>
   );
 }
