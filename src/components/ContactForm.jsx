@@ -39,6 +39,11 @@ function ContactForm() {
   // Form UI state
   const [formUIState, setFormUIState] = useState('form'); // 'form' | 'success'
 
+  // Auto-scroll to top on page load
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   // Initialize agent
   useEffect(() => {
     if (!agentRef.current) {
@@ -136,7 +141,7 @@ function ContactForm() {
   const getPageTitle = () => {
     switch (contactType) {
       case 'waitlist':
-        return 'Join the Waitlist';
+        return 'Get Early Access';
       case 'collaborate':
         return 'Let\'s Collaborate';
       default:
@@ -147,11 +152,11 @@ function ContactForm() {
   const getPageDescription = () => {
     switch (contactType) {
       case 'waitlist':
-        return 'Ready to build your perfect AI coach? Join thousands of fitness enthusiasts waiting for the future of personalized coaching.';
+        return 'Ready to build your perfect AI coach? Get exclusive early access and be among the first to experience the future of personalized coaching.';
       case 'collaborate':
         return 'Interested in helping shape the future of AI fitness coaching? We\'d love to hear from you and explore collaboration opportunities.';
       default:
-        return 'Have questions about NeonPanda? We\'d love to hear from you.';
+        return 'Have questions about NeonPanda or curious about AI-powered fitness coaching? Whether you want to share feedback, explore our technology, or just connect, we\'d love to hear from you.';
     }
   };
 
@@ -159,8 +164,8 @@ function ContactForm() {
     switch (contactType) {
       case 'waitlist':
         return {
-          title: 'Welcome to the Waitlist!',
-          message: 'You\'re officially on the list! We\'ll notify you as soon as NeonPanda is ready to transform your fitness journey. Get ready for the future of AI-powered coaching.',
+          title: 'Early Access Granted!',
+          message: 'You\'re in! We\'ll notify you as soon as NeonPanda is ready to transform your fitness journey. Get ready for exclusive early access to the future of AI-powered coaching.',
           icon: '🎉'
         };
       case 'collaborate':

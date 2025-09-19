@@ -88,8 +88,8 @@ function Navigation({ user, signOut }) {
 
         {/* User Info and Navigation Menu */}
         <div className="flex items-center space-x-4">
-          {/* Logged in user */}
-          {user?.attributes ? (
+          {/* Show user info only when authenticated */}
+          {isAuthenticated && user?.attributes && (
             <div className="flex items-center space-x-3 text-synthwave-text-secondary font-rajdhani">
               {/* User Avatar */}
               <div className={avatarPatterns.userSmall}>
@@ -98,13 +98,6 @@ function Navigation({ user, signOut }) {
               <span className="text-synthwave-neon-pink font-medium">
                 {user.attributes.preferred_username || user.attributes.email}
               </span>
-            </div>
-          ) : (
-            <div className="flex items-center space-x-3 text-synthwave-text-secondary font-rajdhani">
-              {/* User Avatar Skeleton */}
-              <div className={avatarPatterns.skeletonSmall}></div>
-              {/* Username Skeleton */}
-              <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-24"></div>
             </div>
           )}
 
@@ -169,22 +162,23 @@ function Navigation({ user, signOut }) {
                   <ChangelogIconTiny />
                   <span>Changelog</span>
                 </Link>
-                <div className="border-t border-synthwave-neon-purple/20 my-2"></div>
-
                 {/* Secure/Authenticated-only navigation links */}
                 {isAuthenticated && authenticatedUserId && (
-                  <Link
-                    to={`/coaches?userId=${authenticatedUserId}`}
-                    onClick={closeDropdown}
-                    className={`flex items-center space-x-3 px-4 py-2 font-rajdhani font-medium transition-all duration-300 ${
-                      location.pathname === "/coaches"
-                        ? "text-synthwave-neon-purple bg-synthwave-neon-purple/10"
-                        : "text-synthwave-text-primary hover:text-synthwave-neon-purple hover:bg-synthwave-neon-purple/10"
-                    }`}
-                  >
-                    <CoachesIconTiny />
-                    <span>Your Coaches</span>
-                  </Link>
+                  <>
+                    <div className="border-t border-synthwave-neon-purple/20 my-2"></div>
+                    <Link
+                      to={`/coaches?userId=${authenticatedUserId}`}
+                      onClick={closeDropdown}
+                      className={`flex items-center space-x-3 px-4 py-2 font-rajdhani font-medium transition-all duration-300 ${
+                        location.pathname === "/coaches"
+                          ? "text-synthwave-neon-purple bg-synthwave-neon-purple/10"
+                          : "text-synthwave-text-primary hover:text-synthwave-neon-purple hover:bg-synthwave-neon-purple/10"
+                      }`}
+                    >
+                      <CoachesIconTiny />
+                      <span>Your Coaches</span>
+                    </Link>
+                  </>
                 )}
 
                 {/* Coach-specific navigation links - only show when coach context exists */}
@@ -235,7 +229,7 @@ function Navigation({ user, signOut }) {
                   className="flex items-center space-x-3 px-4 py-2 font-rajdhani font-medium text-synthwave-text-primary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-300"
                 >
                   <WaitlistIconTiny />
-                  <span>Join Waitlist</span>
+                  <span>Get Early Access</span>
                 </Link>
                 <Link
                   to="/contact?type=collaborate"
@@ -246,17 +240,19 @@ function Navigation({ user, signOut }) {
                   <span>Collaborate</span>
                 </Link>
 
-                {/* Sign Out Button */}
-                <button
-                  onClick={() => {
-                    signOut();
-                    closeDropdown();
-                  }}
-                  className="flex items-center space-x-3 px-4 py-2 font-rajdhani font-medium text-synthwave-text-primary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-300 w-full text-left"
-                >
-                  <SignOutIconTiny />
-                  <span>Sign Out</span>
-                </button>
+                {/* Sign Out Button - only show when authenticated */}
+                {isAuthenticated && (
+                  <button
+                    onClick={() => {
+                      signOut();
+                      closeDropdown();
+                    }}
+                    className="flex items-center space-x-3 px-4 py-2 font-rajdhani font-medium text-synthwave-text-primary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-300 w-full text-left"
+                  >
+                    <SignOutIconTiny />
+                    <span>Sign Out</span>
+                  </button>
+                )}
               </div>
             </div>
                       )}

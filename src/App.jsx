@@ -10,6 +10,10 @@ import {
 import Navigation from "./components/Navigation";
 import Breadcrumbs from "./components/Breadcrumbs";
 import LandingPage from "./components/LandingPage";
+import AboutUs from "./components/AboutUs";
+import Technology from "./components/Technology";
+import PrivacyPolicy from "./components/PrivacyPolicy";
+import TermsOfService from "./components/TermsOfService";
 import FAQs from "./components/FAQs";
 import ContactForm from "./components/ContactForm";
 import CoachCreator from "./components/CoachCreator";
@@ -57,6 +61,10 @@ function AppContent() {
         <Routes>
           {/* Public routes */}
           <Route path="/" element={<LandingPage />} />
+          <Route path="/about" element={<AboutUs />} />
+          <Route path="/technology" element={<Technology />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/terms" element={<TermsOfService />} />
           <Route path="/faqs" element={<FAQs />} />
           <Route path="/changelog" element={<Changelog />} />
           <Route path="/template/synthwave" element={<Theme />} />

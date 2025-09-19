@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { themeClasses } from "../../utils/synthwaveThemeClasses";
-import { inputPatterns } from "../../utils/uiPatterns";
+import { inputPatterns, scrollbarPatterns, injectScrollbarStyles } from "../../utils/uiPatterns";
 import CommandPaletteAgent from "../../utils/agents/CommandPaletteAgent";
 
 const CommandPalette = ({
@@ -108,6 +108,11 @@ const CommandPalette = ({
   };
 
   const displayState = getDisplayState();
+
+  // Inject scrollbar styles
+  useEffect(() => {
+    injectScrollbarStyles();
+  }, []);
 
   // Initialize agent
   useEffect(() => {
@@ -384,7 +389,7 @@ const CommandPalette = ({
                 <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
                   Content
                 </div>
-                <div className="font-rajdhani text-sm text-white whitespace-pre-wrap max-h-40 overflow-y-auto custom-scrollbar">
+                <div className={`font-rajdhani text-sm text-white whitespace-pre-wrap max-h-40 overflow-y-auto ${scrollbarPatterns.cyan}`}>
                   {displayState.content}
                 </div>
               </div>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { containerPatterns, layoutPatterns, typographyPatterns } from '../utils/uiPatterns';
 import { ChevronDownIcon } from './themes/SynthwaveComponents';
 import Footer from './shared/Footer';
@@ -43,6 +43,51 @@ const CollapsibleSection = ({ title, icon, children, defaultOpen = true, classNa
 
 
 const changelogEntries = [
+  {
+    version: "Release v1.8.0",
+    date: "2025-09-16",
+    changes: {
+      added: [
+        "Dynamic random hero image selection from 7 hero images with modern overlay effects",
+        "Modern glassmorphism overlay with backdrop blur for improved hero text readability",
+        "Parallax effect with fixed background attachment for hero section",
+        "User frustration agitation section with authentic testimonial-style comment boxes",
+        "6-step 'Get started in minutes' section with alternating neon pink/cyan numbered circles",
+        "Vibrant horizontal gradient bands (thin and thick) as visual section separators",
+        "Social proof section using glassmorphism comment boxes with subtle backgrounds",
+        "Auto-scroll functionality to top of page for ContactForm component",
+        "Centralized scrollbar styling system in uiPatterns.js with cyan and pink variants",
+        "Enhanced CTA section messaging focused on beta community and early access exclusivity",
+        "Inter font integration for modern web readability with sentence case headers",
+        "Footer component refactored into reusable shared component",
+        "Ethereal glows behind feature screenshots with adjustable opacity controls",
+        "Fading vertical lines between feature content and image placeholders"
+      ],
+      changed: [
+        "Landing page structure completely redesigned with Hero → Agitation → Features → Steps → CTA flow",
+        "Hero section updated to use dynamic random images instead of static hero-splash-2.jpg",
+        "Header typography changed from Russo (uppercase) to Inter (sentence case) for better readability",
+        "All section headers standardized to consistent font sizes (text-5xl md:text-6xl lg:text-7xl)",
+        "Feature section spacing increased with mb-48 between features for better visual separation",
+        "Feature headers now alternate between neon pink and neon cyan colors",
+        "Feature description text size increased to text-xl for better readability",
+        "Getting Started section background changed to dark slate-950/90 for visual distinction",
+        "CTA section messaging refined to focus on revolutionary impact and OG community benefits",
+        "Contact form default messaging updated from 'waitlist' to 'early access' terminology",
+        "Navigation dropdown 'Join Waitlist' changed to 'Get Early Access'",
+        "Feature glows adjusted from /15 to /14 opacity with blur reduced from blur-3xl to blur-2xl",
+        "Landing page footer structure moved from inline to reusable Footer component"
+      ],
+      fixed: [
+        "Feature glow visibility issues with opacity adjustments and blur radius optimization",
+        "CTA section content overlap and redundancy in messaging",
+        "Inconsistent header font sizes between different landing page sections",
+        "Command Palette and ChatInput scrollbar visibility with custom neon styling",
+        "Landing page visual hierarchy with proper gradient shadows and section separation",
+        "Hero content positioning and text readability with improved overlay system"
+      ]
+    }
+  },
   {
     version: "Release v1.7.0",
     date: "2025-09-10",
@@ -310,15 +355,20 @@ const changelogEntries = [
 ];
 
 function Changelog() {
+  // Auto-scroll to top when page loads
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   return (
     <div className={`${layoutPatterns.pageContainer} min-h-screen pb-8`}>
       <div className={`${layoutPatterns.contentWrapper} min-h-[calc(100vh-5rem)] flex flex-col`}>
         {/* Header */}
-        <div className="mb-8 text-center">
+        <div className="mb-12 text-center">
           <h1 className={typographyPatterns.pageTitle}>
             Changelog
           </h1>
-          <p className={`${typographyPatterns.description} max-w-3xl mx-auto mb-4`}>
+          <p className={`${typographyPatterns.description} max-w-3xl mx-auto`}>
             Track the latest updates, improvements, and changes to the platform.
             Stay informed about new features and bug fixes as they're released.
           </p>

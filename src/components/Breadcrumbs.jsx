@@ -20,6 +20,10 @@ function Breadcrumbs() {
 
   // Define route mappings for better display names
   const routeMap = {
+    'about': 'About Us',
+    'technology': 'Technology',
+    'privacy': 'Privacy Policy',
+    'terms': 'Terms of Service',
     'faqs': 'FAQs',
     'changelog': 'Changelog',
     'contact': 'Contact',

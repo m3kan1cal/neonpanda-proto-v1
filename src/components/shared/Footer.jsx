@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 
 function Footer() {
   return (
-    <footer className="bg-synthwave-bg-primary border-t border-synthwave-neon-cyan/20 py-16">
+    <footer className="relative z-10 bg-synthwave-bg-primary border-t border-synthwave-neon-cyan/20 py-16">
       <div className="max-w-7xl mx-auto px-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-12 mb-12">
 
@@ -40,48 +40,46 @@ function Footer() {
 
           {/* Navigation Links */}
           <div className="lg:col-span-1">
-            <h3 className="font-russo text-lg text-synthwave-neon-cyan mb-6 uppercase">Platform</h3>
+            <h3 className="font-inter text-xl md:text-2xl text-synthwave-neon-cyan mb-6 font-semibold">Platform</h3>
             <ul className="space-y-4 font-rajdhani">
-              <li><Link to="/contact?type=waitlist" className="text-synthwave-text-secondary hover:text-synthwave-neon-pink transition-colors">Join Waitlist</Link></li>
+              <li><Link to="/contact?type=waitlist" className="text-synthwave-text-secondary hover:text-synthwave-neon-pink transition-colors">Get Early Access</Link></li>
               <li><Link to="/contact?type=collaborate" className="text-synthwave-text-secondary hover:text-synthwave-neon-pink transition-colors">Collaborate</Link></li>
-              <li><Link to="/features" className="text-synthwave-text-secondary hover:text-synthwave-neon-pink transition-colors">Features</Link></li>
-              <li><Link to="/pricing" className="text-synthwave-text-secondary hover:text-synthwave-neon-pink transition-colors">Pricing</Link></li>
-              <li><Link to="/about" className="text-synthwave-text-secondary hover:text-synthwave-neon-pink transition-colors">About Us</Link></li>
+              <li><a href="#features" className="text-synthwave-text-secondary hover:text-synthwave-neon-pink transition-colors">Features</a></li>
+              <li><a href="#challenges" className="text-synthwave-text-secondary hover:text-synthwave-neon-pink transition-colors">Why NeonPanda?</a></li>
             </ul>
           </div>
 
           {/* Resources */}
           <div className="lg:col-span-1">
-            <h3 className="font-russo text-lg text-synthwave-neon-purple mb-6 uppercase">Resources</h3>
+            <h3 className="font-inter text-xl md:text-2xl text-synthwave-neon-pink mb-6 font-semibold">Resources</h3>
             <ul className="space-y-4 font-rajdhani">
-              <li><Link to="/blog" className="text-synthwave-text-secondary hover:text-synthwave-neon-pink transition-colors">Blog</Link></li>
-              <li><Link to="/faqs" className="text-synthwave-text-secondary hover:text-synthwave-neon-pink transition-colors">FAQ</Link></li>
-              <li><Link to="/support" className="text-synthwave-text-secondary hover:text-synthwave-neon-pink transition-colors">Support</Link></li>
-              <li><Link to="/docs" className="text-synthwave-text-secondary hover:text-synthwave-neon-pink transition-colors">Documentation</Link></li>
-              <li><Link to="/community" className="text-synthwave-text-secondary hover:text-synthwave-neon-pink transition-colors">Community</Link></li>
+              <li><Link to="/about" className="text-synthwave-text-secondary hover:text-synthwave-neon-pink transition-colors">About Us</Link></li>
+              <li><Link to="/technology" className="text-synthwave-text-secondary hover:text-synthwave-neon-pink transition-colors">Technology</Link></li>
+              <li><Link to="/faqs" className="text-synthwave-text-secondary hover:text-synthwave-neon-pink transition-colors">FAQs</Link></li>
+              <li><Link to="/changelog" className="text-synthwave-text-secondary hover:text-synthwave-neon-pink transition-colors">Changelog</Link></li>
             </ul>
           </div>
 
           {/* Contact Info */}
           <div className="lg:col-span-1">
-            <h3 className="font-russo text-lg text-synthwave-neon-pink mb-6 uppercase">Contact</h3>
+            <h3 className="font-inter text-xl md:text-2xl text-synthwave-neon-cyan mb-6 font-semibold">Contact</h3>
             <div className="space-y-4 font-rajdhani text-synthwave-text-secondary">
               <div>
-                <p className="font-semibold text-white mb-1">Email</p>
-                <a href="mailto:hello@NeonPanda.com" className="hover:text-synthwave-neon-pink transition-colors">
-                  hello@NeonPanda.com
+                <p className="font-semibold text-white mb-1">Developers</p>
+                <a href="mailto:developers@neonpanda.ai" className="hover:text-synthwave-neon-pink transition-colors">
+                  developers@neonpanda.ai
+                </a>
+              </div>
+              <div>
+                <p className="font-semibold text-white mb-1">Sales & Marketing</p>
+                <a href="mailto:sales@neonpanda.ai" className="hover:text-synthwave-neon-pink transition-colors">
+                  sales@neonpanda.ai
                 </a>
               </div>
               <div>
                 <p className="font-semibold text-white mb-1">Support</p>
-                <a href="mailto:support@NeonPanda.com" className="hover:text-synthwave-neon-pink transition-colors">
-                  support@NeonPanda.com
-                </a>
-              </div>
-              <div>
-                <p className="font-semibold text-white mb-1">Partnership</p>
-                <a href="mailto:partners@NeonPanda.com" className="hover:text-synthwave-neon-pink transition-colors">
-                  partners@NeonPanda.com
+                <a href="mailto:support@neonpanda.ai" className="hover:text-synthwave-neon-pink transition-colors">
+                  support@neonpanda.ai
                 </a>
               </div>
             </div>
@@ -101,7 +99,7 @@ function Footer() {
             </div>
             <div className="flex items-center space-x-2 font-rajdhani text-synthwave-text-secondary">
               <div className="w-2 h-2 bg-synthwave-neon-green rounded-full animate-pulse"></div>
-              <span>Status: Building the Future</span>
+              <span className="text-sm">Status: Building the Future</span>
             </div>
           </div>
         </div>

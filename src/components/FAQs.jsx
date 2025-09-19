@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   containerPatterns,
@@ -11,6 +11,11 @@ import Footer from './shared/Footer';
 function FAQs() {
   const navigate = useNavigate();
   const [openFAQ, setOpenFAQ] = useState(null);
+
+  // Auto-scroll to top when page loads
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   const faqs = [
     {
@@ -160,7 +165,7 @@ function FAQs() {
   };
 
   const handleSignUp = () => {
-    navigate('/auth?view=register'); // Goes to AuthRouter with register view
+    navigate('/contact?type=waitlist'); // Goes to waitlist form like AboutUs.jsx
   };
 
   const handleContactUs = () => {
@@ -173,10 +178,10 @@ function FAQs() {
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className={typographyPatterns.pageTitle}>
-            Frequently Asked Questions
+            Frequently Asked <span className="text-synthwave-neon-pink">Questions</span>
           </h1>
           <p className={`${typographyPatterns.description} max-w-3xl mx-auto`}>
-            Everything you need to know about creating your perfect AI fitness coach
+            Everything you need to know about creating your perfect AI fitness coach, building meaningful coaching relationships, and transforming your training with personalized guidance.
           </p>
         </div>
 
@@ -237,7 +242,7 @@ function FAQs() {
                 onClick={handleSignUp}
                 className={`${buttonPatterns.heroCTA} min-w-48`}
               >
-                Sign Up Now
+                Get Early Access
             </button>
               <button
                 onClick={handleContactUs}

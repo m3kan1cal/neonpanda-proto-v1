@@ -22,7 +22,10 @@ export const buttonPatterns = {
   secondaryMedium: "bg-transparent border-2 border-synthwave-neon-cyan text-synthwave-neon-cyan px-4 py-2 rounded-lg font-rajdhani font-semibold text-base uppercase tracking-wide cursor-pointer transition-all duration-200 hover:bg-synthwave-neon-cyan hover:text-synthwave-bg-primary hover:shadow-md hover:shadow-synthwave-neon-cyan/30 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary min-h-[40px] flex items-center justify-center",
 
   // Hero CTA (56px height) - Premium gradient button for landing pages and major CTAs
-  heroCTA: "px-8 py-4 bg-gradient-to-r from-synthwave-neon-pink to-synthwave-neon-purple text-white font-rajdhani font-bold text-xl uppercase tracking-wide rounded-xl transition-all duration-300 hover:shadow-xl hover:shadow-synthwave-neon-pink/40 hover:-translate-y-1 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary min-h-[56px] flex items-center justify-center cursor-pointer"
+  heroCTA: "px-8 py-4 bg-gradient-to-r from-synthwave-neon-pink to-synthwave-neon-purple text-white font-rajdhani font-bold text-xl uppercase tracking-wide rounded-xl transition-all duration-300 hover:shadow-xl hover:shadow-synthwave-neon-pink/40 hover:-translate-y-1 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary min-h-[56px] flex items-center justify-center cursor-pointer",
+
+  // Challenge Icon Container - Square gradient container for challenge/agitation icons
+  challengeIcon: "w-16 h-16 bg-gradient-to-br from-synthwave-neon-pink to-synthwave-neon-purple text-white rounded-xl transition-all duration-300 hover:shadow-xl hover:shadow-synthwave-neon-pink/40 hover:-translate-y-1 active:translate-y-0 flex items-center justify-center flex-shrink-0"
 };
 
 export const iconButtonPatterns = {
@@ -104,6 +107,21 @@ export const containerPatterns = {
   // Minimal containers (no borders)
   minimal: "bg-synthwave-bg-card/25 rounded-2xl shadow-xl transition-all duration-300 hover:bg-synthwave-bg-card/40 hover:-translate-y-1",
 
+  // Light Glass - Pure glassmorphism with white/transparent styling (from Theme.jsx)
+  lightGlass: "bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-6 shadow-xl",
+
+  // Medium Glass - Enhanced glassmorphism with themed background and colored shadows (from Theme.jsx)
+  mediumGlass: "bg-synthwave-bg-card/30 backdrop-blur-lg border border-synthwave-neon-cyan/20 rounded-2xl p-6 shadow-xl shadow-synthwave-neon-cyan/10",
+
+  // Medium Glass Pink - Pink variant for mission sections and pink-themed content
+  mediumGlassPink: "bg-synthwave-bg-card/30 backdrop-blur-lg border border-synthwave-neon-pink/20 rounded-2xl p-6 shadow-xl shadow-synthwave-neon-pink/10",
+
+  // Medium Glass Purple - Purple variant for purple-themed content
+  mediumGlassPurple: "bg-synthwave-bg-card/30 backdrop-blur-lg border border-synthwave-neon-purple/20 rounded-2xl p-6 shadow-xl shadow-synthwave-neon-purple/10",
+
+  // Bold Gradient - Multi-color neon gradient container (from Theme.jsx)
+  boldGradient: "bg-gradient-to-br from-synthwave-neon-pink/20 via-synthwave-neon-purple/10 to-synthwave-neon-cyan/20 border border-synthwave-neon-cyan/30 rounded-xl p-6",
+
   // Dashed border container for create/add actions
   dashedCard: "bg-synthwave-bg-card/20 backdrop-blur-sm border-2 border-dashed border-synthwave-neon-pink/30 rounded-2xl shadow-lg shadow-synthwave-neon-pink/10 transition-[background-color,border-color,box-shadow,transform] duration-0 hover:transition-[background-color,border-color,box-shadow,transform] hover:duration-300 hover:bg-synthwave-bg-card/40 hover:border-synthwave-neon-pink/50 hover:shadow-xl hover:shadow-synthwave-neon-pink/20 hover:-translate-y-1",
 
@@ -142,7 +160,10 @@ export const containerPatterns = {
   minimalCardStatic: "bg-synthwave-bg-card/20 border-0 rounded-2xl p-6",
 
   // Modern delete modal container - 2025 glassmorphism with red destructive theming
-  deleteModal: "bg-gradient-to-br from-red-500/10 via-synthwave-bg-card/40 to-red-400/10 backdrop-blur-xl border border-red-500/30 rounded-2xl shadow-2xl shadow-red-500/20 transition-all duration-300"
+  deleteModal: "bg-gradient-to-br from-red-500/10 via-synthwave-bg-card/40 to-red-400/10 backdrop-blur-xl border border-red-500/30 rounded-2xl shadow-2xl shadow-red-500/20 transition-all duration-300",
+
+  // Minimal Card - Exact "Minimal Card" from Theme.jsx with colored dots and hover effects
+  cardMinimal: "bg-synthwave-bg-card/20 hover:bg-synthwave-bg-card/40 border-0 rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-synthwave-neon-pink/10"
 };
 
 export const toastPatterns = {
@@ -158,7 +179,7 @@ export const toastPatterns = {
 
 export const layoutPatterns = {
   // Page containers
-  pageContainer: "bg-synthwave-gradient min-h-screen text-synthwave-text-primary font-orbitron",
+  pageContainer: "bg-synthwave-gradient min-h-screen text-synthwave-text-primary",
 
   // Content wrappers
   contentWrapper: "max-w-7xl mx-auto px-8 py-8",
@@ -194,18 +215,65 @@ export const avatarPatterns = {
 };
 
 export const typographyPatterns = {
-  // Headings
+  // Headings (Russo font - original patterns)
   heroTitle: "font-russo font-black text-5xl md:text-6xl lg:text-7xl text-white mb-8 drop-shadow-lg uppercase",
   pageTitle: "font-russo font-black text-4xl md:text-5xl text-white mb-6 uppercase",
   sectionTitle: "font-russo font-bold text-2xl md:text-3xl text-white mb-4 uppercase",
   cardTitle: "font-russo font-bold text-xl text-white uppercase",
 
+  // Inter font headings (for About Us and content-heavy pages)
+  pageTitleInter: "font-inter font-black text-4xl md:text-5xl text-white mb-6",
+  sectionTitleInter: "font-inter font-bold text-2xl md:text-3xl text-white mb-4",
+  cardTitleInter: "font-inter font-bold text-xl text-white",
+  subheadingInter: "font-inter font-semibold text-lg text-white",
+
   // Body text
-  heroSubtitle: "font-rajdhani text-2xl text-synthwave-text-secondary mb-6",
+  heroSubtitle: "font-rajdhani text-3xl text-synthwave-text-secondary mb-6",
   description: "font-rajdhani text-lg text-synthwave-text-secondary leading-relaxed",
   cardText: "font-rajdhani text-synthwave-text-secondary leading-relaxed",
   caption: "font-rajdhani text-sm text-synthwave-text-muted"
 };
+
+export const scrollbarPatterns = {
+  // Neon Cyan scrollbar - for command palette, content previews, and secondary interfaces
+  cyan: "custom-scrollbar-cyan",
+
+  // Neon Pink scrollbar - for chat inputs and primary content areas
+  pink: "custom-scrollbar-pink"
+};
+
+// Scrollbar Styles - Modern neon scrollbars for different UI contexts
+export const scrollbarStyles = `
+  /* Neon Cyan Scrollbar - for command palette, content previews, and secondary interfaces */
+  .custom-scrollbar-cyan::-webkit-scrollbar {
+    width: 6px;
+  }
+  .custom-scrollbar-cyan::-webkit-scrollbar-track {
+    background: rgba(21, 23, 35, 0.5);
+  }
+  .custom-scrollbar-cyan::-webkit-scrollbar-thumb {
+    background: rgba(0, 255, 255, 0.3);
+    border-radius: 3px;
+  }
+  .custom-scrollbar-cyan::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 255, 255, 0.5);
+  }
+
+  /* Neon Pink Scrollbar - for chat inputs and primary content areas */
+  .custom-scrollbar-pink::-webkit-scrollbar {
+    width: 6px;
+  }
+  .custom-scrollbar-pink::-webkit-scrollbar-track {
+    background: rgba(21, 23, 35, 0.5);
+  }
+  .custom-scrollbar-pink::-webkit-scrollbar-thumb {
+    background: rgba(255, 20, 147, 0.3);
+    border-radius: 3px;
+  }
+  .custom-scrollbar-pink::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 20, 147, 0.5);
+  }
+`;
 
 // Autofill Override CSS - Nuclear-level browser autofill styling prevention
 // Use this CSS in <style> tags or CSS files to completely override browser autofill behavior
@@ -240,6 +308,19 @@ export const autofillOverrideStyles = `
   }
 `;
 
+// Helper function to inject scrollbar styles into a component
+export const injectScrollbarStyles = () => {
+  // Check if styles are already injected
+  if (document.getElementById('scrollbar-styles')) {
+    return;
+  }
+
+  const style = document.createElement('style');
+  style.id = 'scrollbar-styles';
+  style.textContent = scrollbarStyles;
+  document.head.appendChild(style);
+};
+
 // Helper function to inject autofill override styles into a component
 export const injectAutofillStyles = () => {
   // Check if styles are already injected
@@ -266,3 +347,6 @@ export const injectAutofillStyles = () => {
 // <div className={avatarPatterns.aiSmall}>A</div>
 // <div className={avatarPatterns.coachLarge}>C</div>
 // <div className={avatarPatterns.skeletonSmall}></div>
+// <div className={`overflow-y-auto ${scrollbarPatterns.cyan}`}>Scrollable content</div>
+// <div className={`overflow-y-auto ${scrollbarPatterns.pink}`}>Chat content</div>
+// Call injectScrollbarStyles() in useEffect to enable scrollbar styling

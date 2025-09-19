@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Tooltip } from 'react-tooltip';
-import { inputPatterns, iconButtonPatterns, containerPatterns } from '../../utils/uiPatterns';
+import { inputPatterns, iconButtonPatterns, containerPatterns, scrollbarPatterns, injectScrollbarStyles } from '../../utils/uiPatterns';
 import {
   SendIcon,
   PlusIcon,
@@ -156,6 +156,11 @@ function ChatInput({
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
+
+  // Inject scrollbar styles
+  useEffect(() => {
+    injectScrollbarStyles();
+  }, []);
 
   // Recording timer effect
   useEffect(() => {
@@ -519,7 +524,7 @@ function ChatInput({
               onKeyDown={handleKeyPress}
               placeholder={placeholder}
               rows={1}
-              className={`${inputPatterns.chatInput} custom-scrollbar`}
+              className={`${inputPatterns.chatInput} ${scrollbarPatterns.pink}`}
               style={{
                 outline: "none !important",
                 boxShadow: "none !important",
@@ -803,22 +808,6 @@ function ChatInput({
         </>
       )}
 
-      {/* Custom scrollbar styling for ChatInput textarea - used by all pages that import ChatInput */}
-      <style>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: rgba(21, 23, 35, 0.5);
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: rgba(255, 20, 147, 0.3);
-          border-radius: 3px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: rgba(255, 20, 147, 0.5);
-        }
-      `}</style>
     </div>
   );
 }

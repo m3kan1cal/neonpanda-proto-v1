@@ -41,6 +41,7 @@ import { deleteMemory } from "./functions/delete-memory/resource";
 import { deleteCoachConversation } from "./functions/delete-coach-conversation/resource";
 import { apiGatewayv2 } from "./api/resource";
 import { dynamodbTable } from "./dynamodb/resource";
+import { createContactFormNotificationTopic } from "./sns/resource";
 import {
   grantBedrockPermissions,
   grantLambdaInvokePermissions,
@@ -142,8 +143,14 @@ const coreApi = apiGatewayv2.createCoreApi(
 // Create DynamoDB table
 const coreTable = dynamodbTable.createCoreTable(backend.contactForm.stack);
 
+// Create SNS topic for contact form notifications
+const contactFormNotifications = createContactFormNotificationTopic(backend.contactForm.stack);
+
 // Grant DynamoDB permissions to contact form function
 coreTable.table.grantWriteData(backend.contactForm.resources.lambda);
+
+// Grant SNS permissions to contact form function
+contactFormNotifications.topic.grantPublish(backend.contactForm.resources.lambda);
 
 // Grant DynamoDB permissions to coach creator functions (read and write)
 coreTable.table.grantReadWriteData(
@@ -270,6 +277,9 @@ allFunctions.forEach((func) => {
   func.addEnvironment("DYNAMODB_INITIAL_RETRY_DELAY", "1000");
   func.addEnvironment("DYNAMODB_SCALE_DOWN_DELAY_MINUTES", "10");
 });
+
+// Add SNS topic ARN to contact form function
+backend.contactForm.addEnvironment("CONTACT_FORM_TOPIC_ARN", contactFormNotifications.topic.topicArn);
 
 // Grant Bedrock permissions to functions that need it
 grantBedrockPermissions([

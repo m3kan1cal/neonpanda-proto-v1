@@ -126,8 +126,8 @@ export class ContactFormAgent {
 
     switch (contactType) {
       case 'waitlist':
-        defaultSubject = 'Interest in Joining the Waitlist';
-        defaultMessage = "Hi there!\n\nI'm interested in joining the waitlist for CoachForge. I'd love to be notified when the platform launches and learn more about creating my personalized AI fitness coach.\n\nLooking forward to hearing from you!";
+        defaultSubject = 'Request for Early Access';
+        defaultMessage = "Hi there!\n\nI'm excited to get early access to NeonPanda and help shape the future of AI fitness coaching! I'd love to be among the first to experience the platform, provide feedback during development, and earn lifetime perks as an early adopter.\n\nLooking forward to being part of the journey!";
         break;
       case 'collaborate':
         defaultSubject = 'Interest in Collaboration';
