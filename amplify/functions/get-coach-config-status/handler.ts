@@ -1,18 +1,30 @@
-import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
-import { createSuccessResponse, createErrorResponse } from '../libs/api-helpers';
-import { loadCoachCreatorSession, loadCoachConfig } from '../../dynamodb/operations';
+import { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResultV2 } from 'aws-lambda';
+import { createOkResponse, createErrorResponse } from '../libs/api-helpers';
+import { getCoachCreatorSession, getCoachConfig } from '../../dynamodb/operations';
+import { getUserId, extractJWTClaims, authorizeUser } from '../libs/auth/jwt-utils';
 
-export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> => {
+export const handler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Promise<APIGatewayProxyResultV2> => {
   try {
-    const userId = event.pathParameters?.userId;
-    const sessionId = event.pathParameters?.sessionId;
+    // Extract userId from path parameters and validate against JWT claims
+    const requestedUserId = event.pathParameters?.userId;
+    if (!requestedUserId) {
+      return createErrorResponse(400, 'Missing userId in path parameters.');
+    }
 
-    if (!userId || !sessionId) {
-      return createErrorResponse(400, 'Missing required fields: userId, sessionId');
+    // Authorize that the requested userId matches the authenticated user
+    authorizeUser(event, requestedUserId);
+
+    // Use the validated userId
+    const userId = requestedUserId;
+    const claims = extractJWTClaims(event);
+
+    const sessionId = event.pathParameters?.sessionId;
+    if (!sessionId) {
+      return createErrorResponse(400, 'Missing sessionId in path parameters.');
     }
 
     // Load the session to check config generation status
-    const session = await loadCoachCreatorSession(userId, sessionId);
+    const session = await getCoachCreatorSession(userId, sessionId);
     if (!session) {
       return createErrorResponse(404, 'Session not found or expired');
     }
@@ -21,7 +33,7 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
 
     // Check if session is complete
     if (!sessionData.isComplete) {
-      return createSuccessResponse({
+      return createOkResponse({
         status: 'SESSION_INCOMPLETE',
         message: 'Coach creator session is not yet complete'
       });
@@ -31,14 +43,14 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
     const configGenerationStatus = (sessionData as any).configGenerationStatus;
 
     if (!configGenerationStatus) {
-      return createSuccessResponse({
+      return createOkResponse({
         status: 'NOT_STARTED',
         message: 'Coach config generation has not been started'
       });
     }
 
     if (configGenerationStatus === 'IN_PROGRESS') {
-      return createSuccessResponse({
+      return createOkResponse({
         status: 'IN_PROGRESS',
         message: 'Coach config is being generated...',
         startedAt: (sessionData as any).configGenerationStartedAt
@@ -46,7 +58,7 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
     }
 
     if (configGenerationStatus === 'FAILED') {
-      return createSuccessResponse({
+      return createOkResponse({
         status: 'FAILED',
         message: 'Coach config generation failed',
         error: (sessionData as any).configGenerationError,
@@ -60,8 +72,8 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
       // Try to load the actual coach config to verify it exists
       if (coachConfigId) {
         try {
-          const coachConfig = await loadCoachConfig(userId, coachConfigId);
-          return createSuccessResponse({
+          const coachConfig = await getCoachConfig(userId, coachConfigId);
+          return createOkResponse({
             status: 'COMPLETE',
             message: 'Coach config generated successfully',
             coachConfigId,
@@ -71,7 +83,7 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
           });
         } catch (error) {
           console.error('Error loading coach config:', error);
-          return createSuccessResponse({
+          return createOkResponse({
             status: 'COMPLETE_BUT_ERROR',
             message: 'Coach config generation completed but config could not be loaded',
             coachConfigId,
@@ -81,7 +93,7 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
       }
     }
 
-    return createSuccessResponse({
+    return createOkResponse({
       status: 'UNKNOWN',
       message: 'Unknown config generation status',
       configGenerationStatus

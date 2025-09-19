@@ -32,6 +32,9 @@ export function createDynamoDBTable(scope: Construct) {
     readCapacity: 5,
     writeCapacity: 5,
 
+    // TTL Configuration for automatic cleanup
+    timeToLiveAttribute: 'ttl',
+
     // Enterprise features
     pointInTimeRecoverySpecification: {
       pointInTimeRecoveryEnabled: true,

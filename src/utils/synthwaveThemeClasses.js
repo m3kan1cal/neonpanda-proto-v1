@@ -14,7 +14,7 @@ export const themeClasses = {
   // Buttons
   neonButton: "bg-transparent border-2 border-synthwave-neon-pink text-synthwave-neon-pink px-8 py-3 rounded-lg font-rajdhani font-semibold text-lg uppercase tracking-wide cursor-pointer transition-all duration-300 hover:bg-synthwave-neon-pink hover:text-synthwave-bg-primary hover:shadow-neon-pink hover:-translate-y-1 active:translate-y-0",
 
-  cyanButton: "bg-transparent border-2 border-synthwave-neon-cyan text-synthwave-neon-cyan px-8 py-3 rounded-lg font-rajdhani font-semibold text-lg uppercase tracking-wide cursor-pointer transition-all duration-300 hover:bg-synthwave-neon-cyan hover:text-synthwave-bg-primary hover:shadow-neon-cyan hover:-translate-y-1 active:translate-y-0",
+  cyanButton: "bg-transparent border-2 border-synthwave-neon-cyan/30 text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 hover:border-synthwave-neon-cyan hover:text-white hover:-translate-y-1 hover:shadow-lg hover:shadow-synthwave-neon-cyan/30 active:translate-y-0 disabled:hover:bg-transparent disabled:hover:text-synthwave-neon-cyan disabled:hover:translate-y-0 disabled:hover:shadow-none font-rajdhani font-semibold text-lg uppercase tracking-wide cursor-pointer transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-0 outline-none px-8 py-3 rounded-lg",
 
   // Cards
   glowCard: "bg-card-gradient border border-synthwave-neon-pink/30 rounded-xl p-8 shadow-card transition-all duration-300 hover:border-synthwave-neon-pink hover:shadow-glow hover:-translate-y-2",

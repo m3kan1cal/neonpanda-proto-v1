@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { toastPatterns } from '../utils/uiPatterns';
 
 const Toast = ({ toast, onRemove }) => {
   const [isVisible, setIsVisible] = useState(false);
@@ -15,17 +16,17 @@ const Toast = ({ toast, onRemove }) => {
   };
 
     const getToastStyles = (type) => {
-    const baseStyles = "relative overflow-hidden bg-synthwave-bg-card/95 backdrop-blur-sm border rounded-lg p-4 shadow-lg font-rajdhani";
+    const baseStyles = "relative overflow-hidden font-rajdhani";
 
     switch (type) {
       case 'success':
-        return `${baseStyles} border-synthwave-neon-cyan/30 text-synthwave-neon-cyan`;
+        return `${baseStyles} ${toastPatterns.success}`;
       case 'error':
-        return `${baseStyles} border-red-500/30 text-red-400`;
+        return `${baseStyles} ${toastPatterns.error}`;
       case 'warning':
-        return `${baseStyles} border-yellow-500/30 text-yellow-400`;
+        return `${baseStyles} ${toastPatterns.warning}`;
       default:
-        return `${baseStyles} border-synthwave-neon-purple/30 text-synthwave-text-primary`;
+        return `${baseStyles} ${toastPatterns.info}`;
     }
   };
 

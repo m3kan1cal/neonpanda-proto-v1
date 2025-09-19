@@ -2,7 +2,12 @@ import React from 'react';
 
 // Enhanced markdown parser for basic formatting with synthwave styling
 export const parseMarkdown = (text) => {
+  // Ensure we have a string to work with
   if (!text) return text;
+  if (typeof text !== 'string') {
+    console.warn('parseMarkdown received non-string input:', text, typeof text);
+    return String(text || '');
+  }
 
   // Split by lines to preserve line breaks
   const lines = text.split('\n');
@@ -13,6 +18,26 @@ export const parseMarkdown = (text) => {
   while (i < lines.length) {
     const line = lines[i];
     const trimmedLine = line.trim();
+
+        // Check if this is a header (starts with # followed by space)
+    const headerMatch = /^(#{1,6})\s+(.+)/.exec(trimmedLine);
+
+    if (headerMatch) {
+      const headerText = headerMatch[2];
+
+      // Render headers as strong uppercase text instead of header elements
+      elements.push(
+        <div key={elementKey++} className="mb-3 mt-4">
+          <strong className="font-bold text-synthwave-neon-cyan uppercase">
+            {parseInlineFormatting(headerText)}
+          </strong>
+          <br />
+        </div>
+      );
+
+      i++;
+      continue;
+    }
 
     // Check if this is a list item (starts with - followed by space)
     const isListItem = /^-\s/.test(trimmedLine);
@@ -33,11 +58,11 @@ export const parseMarkdown = (text) => {
 
       // Create a list element
       elements.push(
-        <ul key={elementKey++} className="list-none space-y-2 my-3 pl-0">
+        <ul key={elementKey++} className="list-none space-y-1 my-2 pl-0">
           {listItems.map((item, itemIndex) => (
             <li key={itemIndex} className="flex items-start space-x-3">
-              <span className="text-white mt-1 flex-shrink-0 font-bold">•</span>
-              <span className="flex-1">{parseInlineFormatting(item)}</span>
+              <span className="text-white flex-shrink-0 font-bold">•</span>
+              <span className="flex-1 leading-normal">{parseInlineFormatting(item)}</span>
             </li>
           ))}
         </ul>
@@ -47,14 +72,13 @@ export const parseMarkdown = (text) => {
 
     // Handle empty lines
     if (!trimmedLine) {
-      elements.push(<br key={elementKey++} />);
+      elements.push(<div key={elementKey++} className="h-4" />);
     } else {
       // Handle regular lines with inline formatting
       elements.push(
-        <span key={elementKey++}>
+        <div key={elementKey++} className="leading-normal">
           {parseInlineFormatting(line)}
-          <br />
-        </span>
+        </div>
       );
     }
 
@@ -91,7 +115,7 @@ const parseInlineFormatting = (line) => {
     if (match[1]) {
       // Bold formatting
       parts.push(
-        <strong key={partKey++} className="font-bold text-synthwave-neon-cyan">
+        <strong key={partKey++} className="font-bold text-synthwave-neon-cyan uppercase">
           {match[2]}
         </strong>
       );

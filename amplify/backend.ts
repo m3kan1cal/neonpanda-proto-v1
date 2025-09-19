@@ -1,93 +1,397 @@
-import { defineBackend } from '@aws-amplify/backend';
-import { auth } from './auth/resource';
-import { data } from './data/resource';
-import { storage } from './storage/resource';
-import { helloWorld } from './functions/hello-world/resource';
-import { contactForm } from './functions/contact-form/resource';
-import { createCoachCreatorSession } from './functions/create-coach-creator-session/resource';
-import { updateCoachCreatorSession } from './functions/update-coach-creator-session/resource';
-import { createCoachConfig } from './functions/create-coach-config/resource';
-import { getCoachConfigs } from './functions/get-coach-configs/resource';
-import { getCoachConfig } from './functions/get-coach-config/resource';
-import { getCoachConfigStatus } from './functions/get-coach-config-status/resource';
-import { getCoachCreatorSession } from './functions/get-coach-creator-session/resource';
-import { apiGatewayv2 } from './api/resource';
-import { dynamodbTable } from './dynamodb/resource';
-import { grantBedrockPermissions, grantLambdaInvokePermissions } from './iam-policies';
-
+import { defineBackend } from "@aws-amplify/backend";
+import { auth } from "./auth/resource";
+import { postConfirmation } from "./functions/post-confirmation/resource";
+import { HttpUserPoolAuthorizer } from 'aws-cdk-lib/aws-apigatewayv2-authorizers';
+import { contactForm } from "./functions/contact-form/resource";
+import { createCoachCreatorSession } from "./functions/create-coach-creator-session/resource";
+import { updateCoachCreatorSession } from "./functions/update-coach-creator-session/resource";
+import { buildCoachConfig } from "./functions/build-coach-config/resource";
+import { getCoachConfigs } from "./functions/get-coach-configs/resource";
+import { getCoachConfig } from "./functions/get-coach-config/resource";
+import { getCoachConfigStatus } from "./functions/get-coach-config-status/resource";
+import { getCoachCreatorSession } from "./functions/get-coach-creator-session/resource";
+import { getCoachCreatorSessions } from "./functions/get-coach-creator-sessions/resource";
+import { deleteCoachCreatorSession } from "./functions/delete-coach-creator-session/resource";
+import { getCoachTemplates } from "./functions/get-coach-templates/resource";
+import { getCoachTemplate } from "./functions/get-coach-template/resource";
+import { createCoachConfigFromTemplate } from "./functions/create-coach-config-from-template/resource";
+import { createCoachConversation } from "./functions/create-coach-conversation/resource";
+import { getCoachConversations } from "./functions/get-coach-conversations/resource";
+import { getCoachConversation } from "./functions/get-coach-conversation/resource";
+import { updateCoachConversation } from "./functions/update-coach-conversation/resource";
+import { sendCoachConversationMessage } from "./functions/send-coach-conversation-message/resource";
+import { createWorkout } from "./functions/create-workout/resource";
+import { buildWorkout } from "./functions/build-workout/resource";
+import { buildConversationSummary } from "./functions/build-conversation-summary/resource";
+import { getWorkouts } from "./functions/get-workouts/resource";
+import { getWorkout } from "./functions/get-workout/resource";
+import { updateWorkout } from "./functions/update-workout/resource";
+import { deleteWorkout } from "./functions/delete-workout/resource";
+import { getWorkoutsCount } from "./functions/get-workouts-count/resource";
+import { getCoachConversationsCount } from "./functions/get-coach-conversations-count/resource";
+import {
+  buildWeeklyAnalytics,
+  createWeeklyAnalyticsSchedule,
+} from "./functions/build-weekly-analytics/resource";
+import { getWeeklyReports } from "./functions/get-weekly-reports/resource";
+import { getWeeklyReport } from "./functions/get-weekly-report/resource";
+import { getMemories } from "./functions/get-memories/resource";
+import { createMemory } from "./functions/create-memory/resource";
+import { deleteMemory } from "./functions/delete-memory/resource";
+import { deleteCoachConversation } from "./functions/delete-coach-conversation/resource";
+import { apiGatewayv2 } from "./api/resource";
+import { dynamodbTable } from "./dynamodb/resource";
+import { createContactFormNotificationTopic } from "./sns/resource";
+import {
+  grantBedrockPermissions,
+  grantLambdaInvokePermissions,
+  grantS3DebugPermissions,
+  grantS3AnalyticsPermissions,
+  grantCognitoAdminPermissions,
+  grantDynamoDBPermissions,
+  grantDynamoDBThroughputPermissions,
+} from "./iam-policies";
+import { config } from "./functions/libs/configs";
 
 /**
  * @see https://docs.amplify.aws/react/build-a-backend/ to add storage, functions, and more
  */
 const backend = defineBackend({
   auth,
-  data,
-  storage,
-  helloWorld,
+  postConfirmation,
   contactForm,
   createCoachCreatorSession,
   updateCoachCreatorSession,
-  createCoachConfig,
+  buildCoachConfig,
   getCoachConfigs,
   getCoachConfig,
   getCoachConfigStatus,
   getCoachCreatorSession,
+  getCoachCreatorSessions,
+  deleteCoachCreatorSession,
+  getCoachTemplates,
+  getCoachTemplate,
+  createCoachConfigFromTemplate,
+  createCoachConversation,
+  getCoachConversations,
+  getCoachConversation,
+  updateCoachConversation,
+  sendCoachConversationMessage,
+  createWorkout,
+  buildWorkout,
+  buildConversationSummary,
+  getWorkouts,
+  getWorkout,
+  updateWorkout,
+  deleteWorkout,
+  getWorkoutsCount,
+  getCoachConversationsCount,
+  buildWeeklyAnalytics,
+  getWeeklyReports,
+  getWeeklyReport,
+  getMemories,
+  createMemory,
+  deleteMemory,
+  deleteCoachConversation,
 });
 
+// Create User Pool authorizer
+const userPoolAuthorizer = new HttpUserPoolAuthorizer(
+  'UserPoolAuthorizer',
+  backend.auth.resources.userPool,
+  {
+    userPoolClients: [backend.auth.resources.userPoolClient],
+  }
+);
 
 // Create the Core API with all endpoints
 const coreApi = apiGatewayv2.createCoreApi(
-  backend.helloWorld.stack,
-  backend.helloWorld.resources.lambda,
+  backend.contactForm.stack,
   backend.contactForm.resources.lambda,
   backend.createCoachCreatorSession.resources.lambda,
   backend.updateCoachCreatorSession.resources.lambda,
   backend.getCoachConfigs.resources.lambda,
   backend.getCoachConfig.resources.lambda,
   backend.getCoachConfigStatus.resources.lambda,
-  backend.getCoachCreatorSession.resources.lambda
+  backend.getCoachCreatorSession.resources.lambda,
+  backend.getCoachCreatorSessions.resources.lambda,
+  backend.deleteCoachCreatorSession.resources.lambda,
+  backend.getCoachTemplates.resources.lambda,
+  backend.getCoachTemplate.resources.lambda,
+  backend.createCoachConfigFromTemplate.resources.lambda,
+  backend.createCoachConversation.resources.lambda,
+  backend.getCoachConversations.resources.lambda,
+  backend.getCoachConversation.resources.lambda,
+  backend.updateCoachConversation.resources.lambda,
+  backend.sendCoachConversationMessage.resources.lambda,
+  backend.createWorkout.resources.lambda,
+  backend.getWorkouts.resources.lambda,
+  backend.getWorkout.resources.lambda,
+  backend.updateWorkout.resources.lambda,
+  backend.deleteWorkout.resources.lambda,
+  backend.getWorkoutsCount.resources.lambda,
+  backend.getCoachConversationsCount.resources.lambda,
+  backend.getWeeklyReports.resources.lambda,
+  backend.getWeeklyReport.resources.lambda,
+  backend.getMemories.resources.lambda,
+  backend.createMemory.resources.lambda,
+  backend.deleteMemory.resources.lambda,
+  backend.deleteCoachConversation.resources.lambda,
+  userPoolAuthorizer
 );
 
 // Create DynamoDB table
-const coreTable = dynamodbTable.createCoreTable(backend.helloWorld.stack);
+const coreTable = dynamodbTable.createCoreTable(backend.contactForm.stack);
+
+// Create SNS topic for contact form notifications
+const contactFormNotifications = createContactFormNotificationTopic(backend.contactForm.stack);
 
 // Grant DynamoDB permissions to contact form function
 coreTable.table.grantWriteData(backend.contactForm.resources.lambda);
 
+// Grant SNS permissions to contact form function
+contactFormNotifications.topic.grantPublish(backend.contactForm.resources.lambda);
+
 // Grant DynamoDB permissions to coach creator functions (read and write)
-coreTable.table.grantReadWriteData(backend.createCoachCreatorSession.resources.lambda);
-coreTable.table.grantReadWriteData(backend.updateCoachCreatorSession.resources.lambda);
-coreTable.table.grantReadWriteData(backend.createCoachConfig.resources.lambda);
+coreTable.table.grantReadWriteData(
+  backend.createCoachCreatorSession.resources.lambda
+);
+coreTable.table.grantReadWriteData(
+  backend.updateCoachCreatorSession.resources.lambda
+);
+coreTable.table.grantReadWriteData(backend.buildCoachConfig.resources.lambda);
 coreTable.table.grantReadWriteData(backend.getCoachConfigs.resources.lambda);
 coreTable.table.grantReadWriteData(backend.getCoachConfig.resources.lambda);
-coreTable.table.grantReadWriteData(backend.getCoachConfigStatus.resources.lambda);
-coreTable.table.grantReadWriteData(backend.getCoachCreatorSession.resources.lambda);
+coreTable.table.grantReadWriteData(
+  backend.getCoachConfigStatus.resources.lambda
+);
+coreTable.table.grantReadWriteData(
+  backend.getCoachCreatorSession.resources.lambda
+);
+coreTable.table.grantReadData(
+  backend.getCoachCreatorSessions.resources.lambda
+);
+coreTable.table.grantReadWriteData(
+  backend.deleteCoachCreatorSession.resources.lambda
+);
 
-// Add environment variable for table name
-backend.contactForm.addEnvironment('DYNAMODB_TABLE_NAME', coreTable.table.tableName);
-backend.createCoachCreatorSession.addEnvironment('DYNAMODB_TABLE_NAME', coreTable.table.tableName);
-backend.updateCoachCreatorSession.addEnvironment('DYNAMODB_TABLE_NAME', coreTable.table.tableName);
-backend.getCoachCreatorSession.addEnvironment('DYNAMODB_TABLE_NAME', coreTable.table.tableName);
-backend.createCoachConfig.addEnvironment('DYNAMODB_TABLE_NAME', coreTable.table.tableName);
-backend.getCoachConfigs.addEnvironment('DYNAMODB_TABLE_NAME', coreTable.table.tableName);
-backend.getCoachConfig.addEnvironment('DYNAMODB_TABLE_NAME', coreTable.table.tableName);
-backend.getCoachConfigStatus.addEnvironment('DYNAMODB_TABLE_NAME', coreTable.table.tableName);
+// Grant DynamoDB permissions to coach template functions (read and write)
+coreTable.table.grantReadData(backend.getCoachTemplates.resources.lambda);
+coreTable.table.grantReadData(backend.getCoachTemplate.resources.lambda);
+coreTable.table.grantReadWriteData(
+  backend.createCoachConfigFromTemplate.resources.lambda
+);
+
+// Grant DynamoDB permissions to coach conversation functions (read and write)
+coreTable.table.grantReadWriteData(
+  backend.createCoachConversation.resources.lambda
+);
+coreTable.table.grantReadWriteData(
+  backend.getCoachConversations.resources.lambda
+);
+coreTable.table.grantReadWriteData(
+  backend.getCoachConversation.resources.lambda
+);
+coreTable.table.grantReadWriteData(
+  backend.updateCoachConversation.resources.lambda
+);
+coreTable.table.grantReadWriteData(
+  backend.sendCoachConversationMessage.resources.lambda
+);
+coreTable.table.grantReadWriteData(
+  backend.deleteCoachConversation.resources.lambda
+);
+
+// Grant DynamoDB permissions to workout functions (read and write)
+coreTable.table.grantReadData(backend.createWorkout.resources.lambda);
+coreTable.table.grantReadWriteData(backend.buildWorkout.resources.lambda);
+coreTable.table.grantReadWriteData(
+  backend.buildConversationSummary.resources.lambda
+);
+coreTable.table.grantReadWriteData(backend.getWorkouts.resources.lambda);
+coreTable.table.grantReadWriteData(backend.getWorkout.resources.lambda);
+coreTable.table.grantReadWriteData(backend.updateWorkout.resources.lambda);
+coreTable.table.grantReadWriteData(backend.deleteWorkout.resources.lambda);
+coreTable.table.grantReadData(backend.getWorkoutsCount.resources.lambda);
+coreTable.table.grantReadData(backend.getCoachConversationsCount.resources.lambda);
+coreTable.table.grantReadWriteData(
+  backend.buildWeeklyAnalytics.resources.lambda
+);
+coreTable.table.grantReadData(backend.getWeeklyReports.resources.lambda);
+coreTable.table.grantReadData(backend.getWeeklyReport.resources.lambda);
+
+// Grant DynamoDB permissions to memory functions
+coreTable.table.grantReadData(backend.getMemories.resources.lambda);
+coreTable.table.grantReadWriteData(backend.createMemory.resources.lambda);
+coreTable.table.grantReadWriteData(backend.deleteMemory.resources.lambda);
+
+// Add environment variables to all functions
+const allFunctions = [
+  backend.contactForm,
+  backend.createCoachCreatorSession,
+  backend.updateCoachCreatorSession,
+  backend.buildCoachConfig,
+  backend.getCoachConfigs,
+  backend.getCoachConfig,
+  backend.getCoachConfigStatus,
+  backend.getCoachCreatorSession,
+  backend.getCoachCreatorSessions,
+  backend.deleteCoachCreatorSession,
+  backend.createCoachConversation,
+  backend.getCoachConversations,
+  backend.getCoachConversation,
+  backend.updateCoachConversation,
+  backend.sendCoachConversationMessage,
+  backend.createWorkout,
+  backend.buildWorkout,
+  backend.buildConversationSummary,
+  backend.getWorkouts,
+  backend.getWorkout,
+  backend.updateWorkout,
+  backend.deleteWorkout,
+  backend.getWorkoutsCount,
+  backend.getCoachConversationsCount,
+  backend.buildWeeklyAnalytics,
+  backend.getWeeklyReports,
+  backend.getWeeklyReport,
+  backend.getMemories,
+  backend.createMemory,
+  backend.deleteMemory,
+  backend.deleteCoachConversation,
+  backend.getCoachTemplates,
+  backend.getCoachTemplate,
+  backend.createCoachConfigFromTemplate,
+];
+
+allFunctions.forEach((func) => {
+  func.addEnvironment("DYNAMODB_TABLE_NAME", coreTable.table.tableName);
+  func.addEnvironment("PINECONE_API_KEY", config.PINECONE_API_KEY);
+
+  // DynamoDB throughput scaling configuration
+  func.addEnvironment("DYNAMODB_BASE_READ_CAPACITY", "5");
+  func.addEnvironment("DYNAMODB_BASE_WRITE_CAPACITY", "5");
+  func.addEnvironment("DYNAMODB_MAX_READ_CAPACITY", "100");
+  func.addEnvironment("DYNAMODB_MAX_WRITE_CAPACITY", "50");
+  func.addEnvironment("DYNAMODB_SCALE_UP_FACTOR", "2.0");
+  func.addEnvironment("DYNAMODB_MAX_RETRIES", "5");
+  func.addEnvironment("DYNAMODB_INITIAL_RETRY_DELAY", "1000");
+  func.addEnvironment("DYNAMODB_SCALE_DOWN_DELAY_MINUTES", "10");
+});
+
+// Add SNS topic ARN to contact form function
+backend.contactForm.addEnvironment("CONTACT_FORM_TOPIC_ARN", contactFormNotifications.topic.topicArn);
 
 // Grant Bedrock permissions to functions that need it
 grantBedrockPermissions([
-  backend.helloWorld.resources.lambda,
   backend.updateCoachCreatorSession.resources.lambda,
-  backend.createCoachConfig.resources.lambda
+  backend.buildCoachConfig.resources.lambda,
+  backend.sendCoachConversationMessage.resources.lambda,
+  backend.buildWorkout.resources.lambda,
+  backend.buildConversationSummary.resources.lambda,
+  backend.buildWeeklyAnalytics.resources.lambda,
+  backend.createMemory.resources.lambda, // Added for AI scope detection
 ]);
 
-// Grant permission to updateCoachCreatorSession to invoke createCoachConfig
+// Grant S3 debug permissions to functions that need it
+grantS3DebugPermissions([
+  backend.buildWorkout.resources.lambda,
+  backend.sendCoachConversationMessage.resources.lambda,
+]);
+
+// Grant S3 analytics permissions to functions that need it
+grantS3AnalyticsPermissions([backend.buildWeeklyAnalytics.resources.lambda]);
+
+// Grant DynamoDB throughput management permissions to high-volume functions
+grantDynamoDBThroughputPermissions([
+  backend.getWorkouts.resources.lambda,
+  backend.getWorkoutsCount.resources.lambda,
+  backend.buildWeeklyAnalytics.resources.lambda,
+  backend.getWeeklyReports.resources.lambda,
+  backend.getCoachConversationsCount.resources.lambda,
+  backend.getCoachConversations.resources.lambda,
+]);
+
+// Grant permission to updateCoachCreatorSession to invoke buildCoachConfig
 grantLambdaInvokePermissions(
   backend.updateCoachCreatorSession.resources.lambda,
-  [backend.createCoachConfig.resources.lambda.functionArn]
+  [backend.buildCoachConfig.resources.lambda.functionArn]
 );
 
-// Add environment variable for the coach config function name
-backend.updateCoachCreatorSession.addEnvironment('CREATE_COACH_CONFIG_FUNCTION_NAME', backend.createCoachConfig.resources.lambda.functionName);
+// Grant permission to createWorkout to invoke buildWorkout
+grantLambdaInvokePermissions(
+  backend.createWorkout.resources.lambda,
+  [backend.buildWorkout.resources.lambda.functionArn]
+);
+
+// Grant permission to sendCoachConversationMessage to invoke buildWorkout and buildConversationSummary
+grantLambdaInvokePermissions(
+  backend.sendCoachConversationMessage.resources.lambda,
+  [
+    backend.buildWorkout.resources.lambda.functionArn,
+    backend.buildConversationSummary.resources.lambda.functionArn,
+  ]
+);
+
+// Grant permission to createCoachConversation to invoke sendCoachConversationMessage
+grantLambdaInvokePermissions(
+  backend.createCoachConversation.resources.lambda,
+  [backend.sendCoachConversationMessage.resources.lambda.functionArn]
+);
+
+backend.updateCoachCreatorSession.addEnvironment(
+  "BUILD_COACH_CONFIG_FUNCTION_NAME",
+  backend.buildCoachConfig.resources.lambda.functionName
+);
+
+backend.createWorkout.addEnvironment(
+  "BUILD_WORKOUT_FUNCTION_NAME",
+  backend.buildWorkout.resources.lambda.functionName
+);
+
+backend.sendCoachConversationMessage.addEnvironment(
+  "BUILD_WORKOUT_FUNCTION_NAME",
+  backend.buildWorkout.resources.lambda.functionName
+);
+backend.sendCoachConversationMessage.addEnvironment(
+  "BUILD_CONVERSATION_SUMMARY_FUNCTION_NAME",
+  backend.buildConversationSummary.resources.lambda.functionName
+);
+
+backend.createCoachConversation.addEnvironment(
+  "SEND_COACH_CONVERSATION_MESSAGE_FUNCTION_NAME",
+  backend.sendCoachConversationMessage.resources.lambda.functionName
+);
+
+// Create EventBridge schedule for weekly analytics
+const weeklyAnalyticsSchedule = createWeeklyAnalyticsSchedule(
+  backend.buildWeeklyAnalytics.stack,
+  backend.buildWeeklyAnalytics.resources.lambda
+);
+
+// Configure password policy and advanced security via CDK
+const { cfnUserPool } = backend.auth.resources.cfnResources;
+cfnUserPool.policies = {
+  passwordPolicy: {
+    minimumLength: 8,
+    requireLowercase: true,
+    requireUppercase: true,
+    requireNumbers: true,
+    requireSymbols: false,  // Keep user-friendly for fitness enthusiasts
+  },
+};
+
+// Configure post-confirmation Lambda IAM permissions via CDK
+const postConfirmationLambda = backend.postConfirmation.resources.lambda;
+
+// Grant permissions using centralized policy helpers
+grantCognitoAdminPermissions([postConfirmationLambda]);
+grantDynamoDBPermissions([postConfirmationLambda]);
+grantDynamoDBThroughputPermissions([postConfirmationLambda]);
+
+// Enable Cognito Advanced Security Features (Plus tier)
+cfnUserPool.userPoolAddOns = {
+  advancedSecurityMode: 'ENFORCED'  // Options: 'OFF', 'AUDIT', 'ENFORCED'
+};
 
 // Output the API URL and DynamoDB table info
 backend.addOutput({
@@ -96,17 +400,17 @@ backend.addOutput({
       [coreApi.httpApi.httpApiId!]: {
         endpoint: coreApi.httpApi.apiEndpoint,
         customEndpoint: `https://${coreApi.domainName}`,
-        region: backend.helloWorld.stack.region,
+        region: backend.contactForm.stack.region,
         apiName: coreApi.httpApi.httpApiName,
-        domainName: coreApi.domainName
-      }
+        domainName: coreApi.domainName,
+      },
     },
     dynamodb: {
       coreTable: {
         tableName: coreTable.table.tableName,
         tableArn: coreTable.table.tableArn,
-        region: backend.helloWorld.stack.region
-      }
-    }
-  }
+        region: backend.contactForm.stack.region,
+      },
+    },
+  },
 });

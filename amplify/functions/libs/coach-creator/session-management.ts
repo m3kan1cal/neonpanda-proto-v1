@@ -1,4 +1,5 @@
 import { CoachCreatorSession, UserContext, Question, SophisticationLevel } from './types';
+import { COACH_CREATOR_QUESTIONS, shouldSkipQuestion } from './question-management';
 
 
 // Factory function to create a new coach creator session with default values
@@ -27,18 +28,26 @@ export const createCoachCreatorSession = (userId: string): CoachCreatorSession =
   };
 };
 
-// Calculate progress
-export const getProgress = (userContext: UserContext): number => {
-  const { COACH_CREATOR_QUESTIONS, shouldSkipQuestion } = require('./question-management');
-
+// Calculate detailed progress information
+export const getProgress = (userContext: UserContext) => {
   if (!COACH_CREATOR_QUESTIONS || !Array.isArray(COACH_CREATOR_QUESTIONS)) {
     console.error('COACH_CREATOR_QUESTIONS is not available or not an array');
-    return 0;
+    return {
+      questionsCompleted: 0,
+      totalQuestions: 0,
+      percentage: 0
+    };
   }
 
   const totalQuestions = COACH_CREATOR_QUESTIONS.filter((q: any) => !shouldSkipQuestion(q, userContext)).length;
-  const completedQuestions = Object.keys(userContext.responses).length;
-  return Math.round((completedQuestions / totalQuestions) * 100);
+  const questionsCompleted = Object.keys(userContext.responses).length;
+  const percentage = totalQuestions > 0 ? Math.round((questionsCompleted / totalQuestions) * 100) : 0;
+
+  return {
+    questionsCompleted,
+    totalQuestions,
+    percentage
+  };
 };
 
 // Generate coach creator session summary for analytics

@@ -4,6 +4,52 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Set default page background to synthwave theme */
+html, body {
+  background-color: #16213e !important;
+  margin: 0;
+  padding: 0;
+}
+
+/* Control overscroll background without disabling behavior */
+html {
+  background-color: #16213e !important;
+  min-height: 100vh;
+  /* Allow overscroll but ensure background color is applied */
+  background-attachment: fixed;
+}
+
+/* Additional overscroll background control */
+body {
+  background-color: #16213e !important;
+  background-attachment: fixed;
+  /* Allow elastic scrolling on iOS */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Ensure root container covers full viewport */
+#root {
+  background-color: #16213e !important;
+  min-height: 100vh;
+  min-height: 100dvh; /* Dynamic viewport height for mobile */
+  width: 100%;
+  position: relative;
+}
+
+/* Additional fallback for any remaining white space */
+* {
+  box-sizing: border-box;
+}
+
+/* Hide browser's built-in password visibility toggles */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear,
+input[type="password"]::-webkit-credentials-auto-fill-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
 /* Custom utilities for text gradients */
 @layer utilities {
   .text-gradient-neon {
@@ -20,4 +66,90 @@
       linear-gradient(90deg, rgba(255, 0, 128, 0.1) 1px, transparent 1px);
     background-size: 50px 50px;
   }
+
+  .hide-scrollbar {
+    /* Hide scrollbar for webkit browsers */
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .synthwave-scrollbar::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .synthwave-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .synthwave-scrollbar::-webkit-scrollbar-thumb {
+    background: #ff007f40;
+    border-radius: 4px;
+  }
+
+  .synthwave-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #ff007f60;
+  }
+
+  /* Cyan scrollbar for popup containers */
+  .synthwave-scrollbar-cyan::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .synthwave-scrollbar-cyan::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .synthwave-scrollbar-cyan::-webkit-scrollbar-thumb {
+    background: #00ffff20;
+    border-radius: 4px;
+  }
+
+  .synthwave-scrollbar-cyan::-webkit-scrollbar-thumb:hover {
+    background: #00ffff40;
+  }
+}
+
+/* Custom Amplify Authenticator styles removed - now using custom auth components */
+
+/* Custom Auth Form Autofill Styling - Clean and effective approach */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:autofill {
+  /* Override the background color with a large, inset box-shadow */
+  -webkit-box-shadow: 0 0 0 30px rgb(10 10 10 / 0.2) inset !important;
+  box-shadow: 0 0 0 30px rgb(10 10 10 / 0.2) inset !important;
+
+  /* Enforce text color */
+  -webkit-text-fill-color: rgb(255 255 255 / 1) !important;
+  color: rgb(255 255 255 / 1) !important;
+
+  /* Enforce font family */
+  font-family: "Rajdhani", sans-serif !important;
+
+  /* Enforce other styles to match LoginForm */
+  border-color: rgb(255 0 128 / 0.3) !important;
+  border-width: 2px !important;
+  border-radius: 0.5rem !important;
+  padding: 0.75rem 1rem !important;
+}
+
+/* Hover state for autofilled inputs */
+input:-webkit-autofill:hover {
+  border-color: rgb(255 0 128 / 0.5) !important;
+}
+
+/* Focus state for autofilled inputs */
+input:-webkit-autofill:focus {
+  border-color: rgb(255 0 128 / 1) !important;
+  outline: none !important;
+}
+
+/* For transitions, set a very long transition duration to prevent background color changes */
+input:-webkit-autofill,
+input:autofill {
+  transition: background-color 5000s ease-in-out 0s !important;
 }

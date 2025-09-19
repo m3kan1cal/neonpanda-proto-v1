@@ -48,6 +48,38 @@ export const grantBedrockPermissions = (functions: IFunction[]): void => {
 };
 
 /**
+ * S3 policy for debugging logs storage
+ */
+export const createS3DebugPolicy = (): PolicyStatement => {
+  return new PolicyStatement({
+    effect: Effect.ALLOW,
+    actions: [
+      's3:PutObject',
+      's3:PutObjectAcl'
+    ],
+    resources: [
+      'arn:aws:s3:::midgard-sandbox-logs/debug/*'
+    ]
+  });
+};
+
+/**
+ * S3 policy for analytics storage
+ */
+export const createS3AnalyticsPolicy = (): PolicyStatement => {
+  return new PolicyStatement({
+    effect: Effect.ALLOW,
+    actions: [
+      's3:PutObject',
+      's3:PutObjectAcl'
+    ],
+    resources: [
+      'arn:aws:s3:::midgard-sandbox-logs/analytics/weekly-analytics/*'
+    ]
+  });
+};
+
+/**
  * Helper function to grant Lambda invoke permissions
  */
 export const grantLambdaInvokePermissions = (
@@ -56,4 +88,103 @@ export const grantLambdaInvokePermissions = (
 ): void => {
   const lambdaInvokePolicy = createLambdaInvokePolicy(targetFunctionArns);
   sourceFunction.addToRolePolicy(lambdaInvokePolicy);
+};
+
+/**
+ * Helper function to grant S3 debug permissions
+ */
+export const grantS3DebugPermissions = (functions: IFunction[]): void => {
+  const s3Policy = createS3DebugPolicy();
+  functions.forEach(func => {
+    func.addToRolePolicy(s3Policy);
+  });
+};
+
+/**
+ * Helper function to grant S3 analytics permissions
+ */
+export const grantS3AnalyticsPermissions = (functions: IFunction[]): void => {
+  const s3Policy = createS3AnalyticsPolicy();
+  functions.forEach(func => {
+    func.addToRolePolicy(s3Policy);
+  });
+};
+
+/**
+ * Cognito policy for post-confirmation Lambda to update user attributes
+ */
+export const createCognitoAdminPolicy = (): PolicyStatement => {
+  return new PolicyStatement({
+    effect: Effect.ALLOW,
+    actions: [
+      'cognito-idp:AdminUpdateUserAttributes',
+      'cognito-idp:AdminGetUser'
+    ],
+    resources: [
+      '*' // Post-confirmation triggers need access to the user pool they're attached to
+    ]
+  });
+};
+
+/**
+ * Helper function to grant Cognito admin permissions
+ */
+export const grantCognitoAdminPermissions = (functions: IFunction[]): void => {
+  const cognitoPolicy = createCognitoAdminPolicy();
+  functions.forEach(func => {
+    func.addToRolePolicy(cognitoPolicy);
+  });
+};
+
+/**
+ * DynamoDB policy for basic CRUD operations
+ */
+export const createDynamoDBPolicy = (): PolicyStatement => {
+  return new PolicyStatement({
+    effect: Effect.ALLOW,
+    actions: [
+      'dynamodb:PutItem',
+      'dynamodb:UpdateItem',
+      'dynamodb:GetItem',
+      'dynamodb:Query',
+      'dynamodb:DeleteItem'
+    ],
+    resources: ['*'] // Will be scoped by table name in environment
+  });
+};
+
+/**
+ * DynamoDB policy for throughput management operations
+ */
+export const createDynamoDBThroughputPolicy = (): PolicyStatement => {
+  return new PolicyStatement({
+    effect: Effect.ALLOW,
+    actions: [
+      'dynamodb:DescribeTable',
+      'dynamodb:UpdateTable',
+      'dynamodb:DescribeTimeToLive',
+      'dynamodb:ListTagsOfResource'
+    ],
+    resources: ['*'] // Will be scoped by table name in environment
+  });
+};
+
+/**
+ * Helper function to grant DynamoDB permissions
+ */
+export const grantDynamoDBPermissions = (functions: IFunction[]): void => {
+  const dynamoPolicy = createDynamoDBPolicy();
+  functions.forEach(func => {
+    func.addToRolePolicy(dynamoPolicy);
+  });
+};
+
+/**
+ * Helper function to grant DynamoDB throughput management permissions
+ */
+export const grantDynamoDBThroughputPermissions = (functions: IFunction[]): void => {
+  const throughputPolicy = createDynamoDBThroughputPolicy();
+  functions.forEach(func => {
+    func.addToRolePolicy(throughputPolicy);
+  });
 };

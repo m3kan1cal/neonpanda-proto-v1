@@ -2,7 +2,6 @@ import { CoachCreatorSession, PersonalityCoherenceCheck, CoachPersonalityTemplat
 import { callBedrockApi } from '../api-helpers';
 import { extractSafetyProfile, extractMethodologyPreferences, extractTrainingFrequency, extractSpecializations, extractGoalTimeline, extractIntensityPreference } from './data-extraction';
 import { generateCoachCreatorSessionSummary } from './session-management';
-import { storePineconeContext } from '../api-helpers';
 import { COACH_CREATOR_QUESTIONS } from './question-management';
 
 // Coach Personality Templates
@@ -524,38 +523,7 @@ export const validateCoachConfigSafety = async (coachConfig: CoachConfig, safety
   };
 };
 
-// Store coach creator summary in Pinecone for future analysis
-export const saveCoachCreatorSummary = async (userId: string, conversationSummary: string, metadata: any) => {
-  try {
-    // Prepare coach creator specific metadata
-    const coachCreatorMetadata = {
-      record_type: 'coach_creator_summary',
 
-      // Coach creator specific metadata from the function call
-      sophistication_level: metadata.sophistication_level || 'unknown',
-      selected_personality: metadata.selected_personality || 'unknown',
-      selected_methodology: metadata.selected_methodology || 'unknown',
-      safety_considerations: metadata.safety_considerations || 0,
-      creation_date: metadata.creation_date || new Date().toISOString(),
-
-      // Semantic search categories
-      topics: ['coach_creator', 'user_onboarding', 'personality_selection', 'methodology_selection'],
-
-      // Additional context for retrieval
-      outcome: 'coach_created'
-    };
-
-    // Use centralized storage function
-    await storePineconeContext(userId, conversationSummary, coachCreatorMetadata);
-
-  } catch (error) {
-    console.error('Failed to store Pinecone coach creator context:', error);
-
-    // Don't throw error to avoid breaking the coach creator process
-    // Pinecone storage is for analytics/future retrieval, not critical for immediate functionality
-    console.warn('Coach creator will continue despite Pinecone storage failure');
-  }
-};
 
 // Generate final coach configuration
 export const generateCoachConfig = async (session: CoachCreatorSession): Promise<CoachConfig> => {
@@ -610,6 +578,17 @@ ${SAFETY_RULES.filter(rule => rule.severity === 'critical').map(rule =>
 
 IMPORTANT: You must select the most appropriate personality template and methodology based on the user's complete profile. Do not just use defaults - analyze their responses and choose what will work best for THIS specific user.
 
+COACH DESCRIPTION GUIDELINES (for "coach_description" field):
+Create a concise 3-5 word description that captures the coach's primary specialty and approach. This will be displayed under the coach's name in the chat interface. Examples:
+- "Strength & Technical Excellence" (for powerlifting/technique focused)
+- "Functional Movement Expert Coach" (for mobility/movement quality focus)
+- "Endurance & Mental Toughness" (for cardio/mental resilience)
+- "Olympic Lifting Specialist" (for weightlifting technique)
+- "Competition Prep Coach" (for contest preparation)
+- "Beginner-Friendly Guide" (for new athletes)
+- "High-Intensity Conditioning Expert" (for conditioning focus)
+- "Injury Prevention Specialist" (for rehabilitation/safety focus)
+
 PERSONALITY SELECTION CRITERIA:
 - Beginner/returning to fitness/lacks confidence → Emma (Encouraging)
 - Intermediate/skill-focused/wants technical improvement → Marcus (Technical)
@@ -632,6 +611,7 @@ Generate a JSON configuration following this EXACT structure:
 {
   "coach_id": "user_${session.userId}_coach_main",
   "coach_name": "CreativePlayfulNameBasedOnPersonalityAndUserGoals",
+  "coach_description": "5WordsOrLessDescribingCoachSpecialty",
   "selected_personality": {
     "primary_template": "emma|marcus|diana|alex",
     "secondary_influences": ["template_id"],
@@ -645,7 +625,9 @@ Generate a JSON configuration following this EXACT structure:
     "primary_methodology": "methodology_id_from_templates",
     "methodology_reasoning": "Why this methodology fits user's goals and preferences",
     "programming_emphasis": "strength|conditioning|balanced",
-    "periodization_approach": "linear|conjugate|block|daily_undulating"
+    "periodization_approach": "linear|conjugate|block|daily_undulating",
+    "creativity_emphasis": "high_variety|medium_variety|low_variety",
+    "workout_innovation": "enabled|disabled"
   },
   "technical_config": {
     "methodology": "${methodologyPreferences.primary || 'hybrid'}",
@@ -678,6 +660,8 @@ Generate a JSON configuration following this EXACT structure:
     "enabled_modifications": ${JSON.stringify(Object.keys(COACH_MODIFICATION_OPTIONS))},
     "personality_flexibility": "high|medium|low",
     "programming_adaptability": "high|medium|low",
+    "creative_programming": "high|medium|low",
+    "workout_variety_emphasis": "high|medium|low",
     "safety_override_level": "none|limited|moderate"
   },
   "metadata": {
@@ -749,15 +733,8 @@ who completed ${session.questionHistory.length} questions. Create a coach that p
       console.warn('Personality coherence issues detected:', personalityValidation.conflicting_traits);
     }
 
-    // Store coach creator conversation summary in Pinecone for future analysis
-    const coachCreatorSummary = generateCoachCreatorSessionSummary(session);
-    await saveCoachCreatorSummary(session.userId, coachCreatorSummary, {
-      sophistication_level: session.userContext.sophisticationLevel,
-      selected_personality: coachConfig.selected_personality.primary_template,
-      selected_methodology: coachConfig.selected_methodology.primary_methodology,
-      safety_considerations: safetyProfile.injuries.length,
-      creation_date: new Date().toISOString()
-    });
+    // Note: Pinecone storage is now handled by the calling function (build-coach-config handler)
+    // This allows for better separation of concerns and proper error handling
 
     return coachConfig;
   } catch (error) {

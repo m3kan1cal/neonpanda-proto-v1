@@ -1,8 +1,6 @@
-import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
-import { LambdaClient, InvokeCommand, InvocationType } from '@aws-sdk/client-lambda';
-import { createSuccessResponse, createErrorResponse, callBedrockApi } from '../libs/api-helpers';
+import { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResultV2 } from 'aws-lambda';
+import { createOkResponse, createErrorResponse, callBedrockApi, invokeAsyncLambda } from '../libs/api-helpers';
 import { SophisticationLevel } from '../libs/coach-creator/types';
-import { generateCoachConfig } from '../libs/coach-creator/coach-generation';
 import {
   getProgress,
   storeUserResponse,
@@ -24,24 +22,34 @@ import {
 import {
   saveCoachCreatorSession,
   saveCoachConfig,
-  loadCoachCreatorSession,
+  getCoachCreatorSession,
 } from '../../dynamodb/operations';
+import { getUserId, extractJWTClaims, authorizeUser } from '../libs/auth/jwt-utils';
 
-// Initialize Lambda client for async invocation
-const lambdaClient = new LambdaClient({});
-
-export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> => {
+export const handler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Promise<APIGatewayProxyResultV2> => {
   try {
-    const userId = event.pathParameters?.userId;
+    // Extract userId from path parameters and validate against JWT claims
+    const requestedUserId = event.pathParameters?.userId;
+    if (!requestedUserId) {
+      return createErrorResponse(400, 'Missing userId in path parameters.');
+    }
+
+    // Authorize that the requested userId matches the authenticated user
+    authorizeUser(event, requestedUserId);
+
+    // Use the validated userId
+    const userId = requestedUserId;
+    const claims = extractJWTClaims(event);
+
     const sessionId = event.pathParameters?.sessionId;
     const { userResponse } = JSON.parse(event.body || '{}');
 
-    if (!userId || !sessionId || !userResponse) {
-      return createErrorResponse(400, 'Missing required fields: userId, sessionId, userResponse');
+    if (!sessionId || !userResponse) {
+      return createErrorResponse(400, 'Missing required fields: sessionId, userResponse');
     }
 
     // Load session
-    const session = await loadCoachCreatorSession(userId, sessionId);
+    const session = await getCoachCreatorSession(userId, sessionId);
     if (!session) {
       return createErrorResponse(404, 'Session not found or expired');
     }
@@ -116,18 +124,19 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
     // Trigger async coach config generation if complete
     if (isComplete) {
       try {
-        // Invoke the async coach config creation Lambda
-        const invokeParams = {
-          FunctionName: process.env.CREATE_COACH_CONFIG_FUNCTION_NAME || 'create-coach-config',
-          InvocationType: InvocationType.Event, // Async invocation
-          Payload: JSON.stringify({
+            const buildCoachConfigFunction = process.env.BUILD_COACH_CONFIG_FUNCTION_NAME;
+    if (!buildCoachConfigFunction) {
+      throw new Error('BUILD_COACH_CONFIG_FUNCTION_NAME environment variable not set');
+        }
+
+        await invokeAsyncLambda(
+          buildCoachConfigFunction,
+          {
             userId,
             sessionId
-          })
-        };
-
-        const command = new InvokeCommand(invokeParams);
-        await lambdaClient.send(command);
+          },
+          'coach config generation'
+        );
 
         console.info('Successfully triggered async coach config generation');
       } catch (error) {
@@ -139,10 +148,20 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
       }
     }
 
-    return createSuccessResponse({
+    // Get detailed progress information
+    const progressDetails = getProgress(session.attributes.userContext);
+
+    return createOkResponse({
       aiResponse: cleanedResponse,
       isComplete,
-      progress: getProgress(session.attributes.userContext),
+      progress: progressDetails.percentage,
+      progressDetails: {
+        questionsCompleted: progressDetails.questionsCompleted,
+        totalQuestions: progressDetails.totalQuestions,
+        percentage: progressDetails.percentage,
+        sophisticationLevel: session.attributes.userContext.sophisticationLevel,
+        currentQuestion: session.attributes.userContext.currentQuestion
+      },
       nextQuestion: nextQuestion ?
         nextQuestion.versions[session.attributes.userContext.sophisticationLevel as SophisticationLevel] ||
         nextQuestion.versions.UNKNOWN : null,

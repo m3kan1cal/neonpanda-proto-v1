@@ -13,6 +13,7 @@ export default {
           'bg-primary': '#0a0a0a',
           'bg-secondary': '#1a0d2e',
           'bg-tertiary': '#16213e',
+          'bg-purple': '#2a1a4a',
           'bg-card': '#1e1e2e',
 
           // Neon colors
@@ -34,7 +35,7 @@ export default {
         'russo': ['"Russo One"', 'sans-serif'],
       },
       backgroundImage: {
-        'synthwave-gradient': 'linear-gradient(135deg, #0a0a0a 0%, #1a0d2e 50%, #16213e 100%)',
+        'synthwave-gradient': 'linear-gradient(135deg, #16213e 0%, #16213e 50%, #16213e 100%)',
         'neon-gradient': 'linear-gradient(45deg, #ff0080 0%, #00ffff 100%)',
         'purple-gradient': 'linear-gradient(45deg, #8b5cf6 0%, #ff0080 100%)',
         'card-gradient': 'linear-gradient(145deg, #1e1e2e 0%, #2a2a3e 100%)',
