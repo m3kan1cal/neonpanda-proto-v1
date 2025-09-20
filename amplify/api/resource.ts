@@ -4,6 +4,7 @@ import * as apigatewayv2_integrations from 'aws-cdk-lib/aws-apigatewayv2-integra
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as certificatemanager from 'aws-cdk-lib/aws-certificatemanager';
 import { HttpUserPoolAuthorizer } from 'aws-cdk-lib/aws-apigatewayv2-authorizers';
+import { createBranchAwareResourceName, getBranchInfo } from '../functions/libs/branch-naming';
 
 export function createCoreApi(
   stack: Stack,
@@ -39,29 +40,57 @@ export function createCoreApi(
   deleteCoachConversationLambda: lambda.IFunction,
   userPoolAuthorizer: HttpUserPoolAuthorizer
 ) {
-  // Determine if this is a sandbox deployment
-  const isSandbox = stack.node.tryGetContext('amplify-backend-type') === 'sandbox';
-
-  // Create dynamic API name
-  const baseApiName = 'neonpanda-proto-api';
-  const apiName = isSandbox ? `${baseApiName}-dev` : baseApiName;
-
-  // Domain configuration
-  const baseDomain = 'neonpanda.ai';
-  const domainName = isSandbox ? `api-dev.${baseDomain}` : `api-prod.${baseDomain}`;
-
-  // Certificate ARN - You'll need to replace these with your actual certificate ARNs
-  // The certificate must be in the same region as your API Gateway
-  const certificateArn = stack.region === 'us-east-1'
-    ? 'arn:aws:acm:us-east-1:061920441871:certificate/09144037-9ab1-4161-8642-20b533aacc64'
-    : 'arn:aws:acm:us-west-2:061920441871:certificate/cb16d147-c35e-4406-a259-85e768ae943e';
-
-  // Import the existing certificate
-  const certificate = certificatemanager.Certificate.fromCertificateArn(
+  // Create branch-aware API name using utility
+  const { branchInfo, resourceName: apiName } = createBranchAwareResourceName(
     stack,
-    'ApiCertificate',
-    certificateArn
+    'neonpanda-proto-api',
+    'API Gateway'
   );
+
+  // Domain configuration - branch-aware
+  const baseDomain = 'neonpanda.ai';
+  let domainName: string | null = null;
+  let useCustomDomain = false;
+
+  if (branchInfo.isSandbox) {
+    // Local sandbox development - use default Amplify endpoint (no custom domain)
+    domainName = null;
+    useCustomDomain = false;
+  } else if (branchInfo.branchName === 'main') {
+    // Production from main branch
+    domainName = `api-prod.${baseDomain}`;
+    useCustomDomain = true;
+  } else {
+    // Non-production branches (develop, feature branches, etc.)
+    domainName = `api-dev.${baseDomain}`;
+    useCustomDomain = true;
+  }
+
+  console.info(`🌐 API Configuration:`, {
+    isSandbox: branchInfo.isSandbox,
+    branchName: branchInfo.branchName,
+    apiName,
+    domainName: domainName || 'default-amplify-endpoint',
+    useCustomDomain
+  });
+
+  // Certificate ARN - only needed for custom domains (not sandboxes)
+  let certificate = null;
+
+  if (useCustomDomain) {
+    const certificateArn = stack.region === 'us-east-1'
+      ? 'arn:aws:acm:us-east-1:061920441871:certificate/09144037-9ab1-4161-8642-20b533aacc64'
+      : 'arn:aws:acm:us-west-2:061920441871:certificate/cb16d147-c35e-4406-a259-85e768ae943e';
+
+    // Import the existing certificate
+    certificate = certificatemanager.Certificate.fromCertificateArn(
+      stack,
+      'ApiCertificate',
+      certificateArn
+    );
+
+    console.info(`📄 SSL Certificate imported for custom domain`);
+  }
 
   // Create HTTP API Gateway v2
   const httpApi = new apigatewayv2.HttpApi(stack, 'ProtoApi', {
@@ -491,18 +520,27 @@ export function createCoreApi(
     authorizer: userPoolAuthorizer
   });
 
-  // Create custom domain name
-  const customDomain = new apigatewayv2.DomainName(stack, 'ApiCustomDomain', {
-    domainName: domainName,
-    certificate: certificate,
-  });
+  // Conditionally create custom domain (only for deployed branches, not sandboxes)
+  let customDomain = null;
 
-  // Create API mapping
-  new apigatewayv2.ApiMapping(stack, 'ApiMapping', {
-    api: httpApi,
-    domainName: customDomain,
-    stage: httpApi.defaultStage,
-  });
+  if (useCustomDomain && domainName && certificate) {
+    // Create custom domain name
+    customDomain = new apigatewayv2.DomainName(stack, 'ApiCustomDomain', {
+      domainName: domainName,
+      certificate: certificate,
+    });
+
+    // Create API mapping
+    new apigatewayv2.ApiMapping(stack, 'ApiMapping', {
+      api: httpApi,
+      domainName: customDomain,
+      stage: httpApi.defaultStage,
+    });
+
+    console.info(`✅ Custom domain created: ${domainName}`);
+  } else {
+    console.info(`ℹ️  Using default Amplify endpoint (no custom domain for sandbox)`);
+  }
 
   // DNS records need to be created manually after deployment
   // The custom domain will provide the target for your DNS records

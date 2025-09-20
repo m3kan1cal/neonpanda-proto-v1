@@ -112,7 +112,7 @@ function LandingPage() {
         style={{
           backgroundImage: heroImage
             ? `url(${heroImage})`
-            : "url(/images/hero-splash-2.jpg)",
+            : "url(/images/hero/unsplash-hero-1.jpg)",
           backgroundSize: "cover",
           backgroundPosition: "center",
           backgroundAttachment: "fixed",

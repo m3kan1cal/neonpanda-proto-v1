@@ -36,8 +36,8 @@ const AuthLayout = ({ children, title, subtitle }) => {
           )}
         </div>
 
-        {/* Auth Form Container - using uiPatterns mainContent */}
-        <div className={`${containerPatterns.mainContent} p-8`}>
+        {/* Auth Form Container - using uiPatterns mainContentEnhanced */}
+        <div className={`${containerPatterns.mainContentEnhanced} p-8`}>
           {children}
         </div>
       </div>

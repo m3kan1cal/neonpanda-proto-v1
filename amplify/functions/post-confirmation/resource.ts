@@ -8,19 +8,9 @@ export const postConfirmation = defineFunction({
   memoryMB: 1024,
   resourceGroupName: 'auth',  // Assign to auth stack to avoid circular dependency
   environment: {
-    // Conditional table name based on environment
-    // TODO: Let's figure out a better way to do this in the future.
-    DYNAMODB_TABLE_NAME: (() => {
-      // Check if we're in sandbox mode
-      const isSandbox = process.env.AMPLIFY_ENVIRONMENT === 'sandbox' || !process.env.AMPLIFY_BRANCH;
-      const branch = process.env.AMPLIFY_BRANCH || 'sandbox';
-
-      if (branch === 'main' && !isSandbox) {
-        return 'NeonPanda-ProtoApi-AllItems-V2';  // Production table
-      } else {
-        return `NeonPanda-ProtoApi-AllItems-V2-Dev`;  // Branch/sandbox-specific table
-      }
-    })(),
-    PINECONE_API_KEY: process.env.PINECONE_API_KEY || ''
+    // Manual table name to avoid circular dependency (auth stack can't reference contactForm stack)
+    DYNAMODB_BASE_TABLE_NAME: 'NeonPanda-ProtoApi-AllItems-V2',
+    PINECONE_API_KEY: process.env.PINECONE_API_KEY || '',
+    // Note: BRANCH_NAME will be set dynamically in backend.ts since we need the computed branchName
   }
 });

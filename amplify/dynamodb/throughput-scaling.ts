@@ -1,9 +1,11 @@
 import { DynamoDBClient, UpdateTableCommand, DescribeTableCommand } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 import { ProvisionedThroughputExceededException } from "@aws-sdk/client-dynamodb";
+import { getTableName } from "../functions/libs/branch-naming";
 
 // DynamoDB client for throughput management
 const dynamoDbClient = new DynamoDBClient({});
+
 
 export interface ThroughputScalingConfig {
   baseReadCapacity: number;
@@ -255,11 +257,7 @@ export async function withThroughputScaling<T>(
   operationName: string = 'DynamoDB operation',
   config?: Partial<ThroughputScalingConfig>
 ): Promise<T> {
-  const tableName = process.env.DYNAMODB_TABLE_NAME;
-
-  if (!tableName) {
-    throw new Error("DYNAMODB_TABLE_NAME environment variable is not set");
-  }
+  const tableName = getTableName();
 
   const finalConfig = { ...getConfigFromEnv(), ...config };
   let lastError: Error | null = null;

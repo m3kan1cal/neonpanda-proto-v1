@@ -90,6 +90,9 @@ export const containerPatterns = {
   // Main content containers - Subtle glassmorphism (recommended)
   mainContent: "bg-synthwave-bg-card/30 backdrop-blur-xl border border-synthwave-neon-cyan/10 rounded-2xl shadow-xl shadow-synthwave-neon-cyan/5 hover:bg-synthwave-bg-card/40 hover:border-synthwave-neon-cyan/15",
 
+  // Enhanced glassmorphism - More visual impact with gradient backgrounds and stronger shadows
+  mainContentEnhanced: "bg-gradient-to-br from-synthwave-bg-card/40 to-synthwave-bg-card/20 backdrop-blur-2xl border border-synthwave-neon-cyan/15 rounded-2xl shadow-2xl shadow-synthwave-neon-cyan/10 hover:from-synthwave-bg-card/50 hover:to-synthwave-bg-card/30 hover:border-synthwave-neon-cyan/20 hover:shadow-2xl hover:shadow-synthwave-neon-cyan/15 transition-all duration-300",
+
   // Card containers - Different opacity levels
   cardLight: "bg-synthwave-bg-card/20 backdrop-blur-sm border border-synthwave-neon-pink/20 rounded-2xl shadow-lg shadow-synthwave-neon-pink/10 transition-all duration-300 hover:bg-synthwave-bg-card/40 hover:border-synthwave-neon-pink/40 hover:shadow-xl hover:shadow-synthwave-neon-pink/20 hover:-translate-y-1",
 

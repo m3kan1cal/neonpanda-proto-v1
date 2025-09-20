@@ -3,15 +3,17 @@ import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
 import { RemovalPolicy, Stack, Duration } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
+import { createBranchAwareResourceName } from '../functions/libs/branch-naming';
 
 export function createDynamoDBTable(scope: Construct) {
   const stack = Stack.of(scope);
 
-      // Determine if this is a sandbox deployment (same approach as API)
-  const isSandbox = stack.node.tryGetContext('amplify-backend-type') === 'sandbox';
-
-  const tableBaseName = 'NeonPanda-ProtoApi-AllItems-V2';
-  const tableName = isSandbox ? `${tableBaseName}-Dev` : tableBaseName;
+  // Create branch-aware table name using utility
+  const { branchInfo, resourceName: tableName } = createBranchAwareResourceName(
+    stack,
+    'NeonPanda-ProtoApi-AllItems-V2',
+    'DynamoDB Table'
+  );
 
   // Main DynamoDB table with enterprise configuration
   const table = new dynamodb.Table(scope, 'NeonPandaTable', {
@@ -140,9 +142,12 @@ export function createDynamoDBTable(scope: Construct) {
     });
   });
 
-  // Cost Alarm (simplified for development)
-  const alarmBaseName = 'NeonPanda-ProtoApi-HighCostAlarm';
-  const alarmName = isSandbox ? `${alarmBaseName}-Dev` : alarmBaseName;
+  // Create branch-aware alarm name using utility
+  const { resourceName: alarmName } = createBranchAwareResourceName(
+    stack,
+    'NeonPanda-ProtoApi-HighCostAlarm',
+    'CloudWatch Alarm'
+  );
 
   const costAlarm = new cloudwatch.Alarm(scope, 'DynamoDBCostAlarm', {
     alarmName: alarmName,
