@@ -73,7 +73,7 @@ function Navigation({ user, signOut }) {
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-synthwave-bg-primary/90 backdrop-blur-sm border-none outline-none mb-0 pb-0">
-      <div className="px-8 py-4 flex justify-between items-center">
+      <div className="px-6 py-3 flex justify-between items-center">
         {/* Logo/Brand */}
         <Link
           to="/"

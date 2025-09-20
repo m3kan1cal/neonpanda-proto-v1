@@ -101,7 +101,7 @@ function Breadcrumbs() {
 
   return (
     <nav className="fixed top-[72px] left-0 right-0 z-40">
-      <div className="px-8 py-2">
+      <div className="px-4 py-1">
         <div className="flex items-center space-x-2 text-sm font-rajdhani">
           {/* Home link */}
           <Link

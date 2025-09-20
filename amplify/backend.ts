@@ -400,6 +400,33 @@ const { resourceName: userPoolClientName } = createBranchAwareResourceName(
 );
 cfnUserPoolClient.clientName = userPoolClientName;
 
+// Configure User Pool Client with additional auth flows for API testing
+const baseAuthFlows = [
+  "ALLOW_USER_SRP_AUTH",      // Current default (what your React app uses)
+  "ALLOW_CUSTOM_AUTH",        // For custom auth flows
+  "ALLOW_REFRESH_TOKEN_AUTH"  // For token refresh
+];
+
+// Add API testing flows only for non-production environments
+const apiTestingFlows = [
+  "ALLOW_USER_PASSWORD_AUTH",      // For simple Postman automation
+  "ALLOW_ADMIN_USER_PASSWORD_AUTH" // For AWS CLI (bonus)
+];
+
+// Only enable API testing flows for sandbox and develop branches
+const shouldEnableApiTesting = branchInfo.isSandbox || branchInfo.branchName === 'develop';
+
+cfnUserPoolClient.explicitAuthFlows = shouldEnableApiTesting
+  ? [...baseAuthFlows, ...apiTestingFlows]
+  : baseAuthFlows;
+
+console.info('🔐 Auth Flows Configuration:', {
+  branch: branchInfo.branchName,
+  isSandbox: branchInfo.isSandbox,
+  apiTestingEnabled: shouldEnableApiTesting,
+  authFlows: cfnUserPoolClient.explicitAuthFlows
+});
+
 cfnUserPool.policies = {
   passwordPolicy: {
     minimumLength: 8,

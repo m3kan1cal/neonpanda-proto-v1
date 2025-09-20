@@ -15,20 +15,27 @@ const API_CONFIG = {
 
 // Determine the appropriate API URL based on environment
 function getDefaultApiUrl() {
-  // Check if we're in development mode
-  const isDevelopment = import.meta.env.DEV || import.meta.env.MODE === 'development';
+  const apiConfig = outputs.custom?.api?.[AMPLIFY_API_NAME];
+  const customEndpoint = apiConfig?.customEndpoint;
+  const endpoint = apiConfig?.endpoint;
 
-  // Get the custom endpoint from amplify_outputs.json
-  const customEndpoint = outputs.custom?.api?.[AMPLIFY_API_NAME]?.customEndpoint;
   console.info('API customEndpoint:', customEndpoint);
-  if (customEndpoint) {
-    // Use the endpoint provided by the backend (branch-aware domains or AWS default)
+  console.info('API endpoint:', endpoint);
+
+  // Use customEndpoint if it exists and is valid (not null or "https://null")
+  if (customEndpoint && customEndpoint !== 'https://null' && !customEndpoint.includes('/null')) {
+    console.info('✅ Using customEndpoint for branch/prod deployment');
     return customEndpoint;
   }
 
-  // This should rarely happen - amplify_outputs.json should always have the endpoint
-  // If it does happen, it likely means the backend hasn't been deployed yet
-  throw new Error('No API endpoint found. Please deploy your Amplify backend first.');
+  // Fall back to standard endpoint (used for sandbox deployments)
+  if (endpoint) {
+    console.info('✅ Using standard endpoint for sandbox deployment');
+    return endpoint;
+  }
+
+  // This should rarely happen - amplify_outputs.json should always have an endpoint
+  throw new Error('No API endpoint found in amplify_outputs.json. Please deploy your Amplify backend first.');
 }
 
 // Helper function to get full API URL
