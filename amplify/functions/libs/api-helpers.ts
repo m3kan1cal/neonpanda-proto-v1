@@ -530,7 +530,7 @@ export const storePineconeContext = async (
   }
 };
 
-// Store debugging data in S3 for analysis
+// Store debugging data in S3 for analysis - with branch-aware subfolders
 export const storeDebugDataInS3 = async (
   content: string,
   metadata: Record<string, any>,
@@ -540,18 +540,22 @@ export const storeDebugDataInS3 = async (
     const bucketName = "midgard-sandbox-logs";
     const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
 
+    // Get branch information for subfolder structure
+    const branchName = process.env.BRANCH_NAME || 'main';
+    const branchPrefix = `${branchName}/`;
+
     // Determine the folder structure based on the type of data
     let key: string;
     if (metadata.type === "weekly-analytics") {
-      // Analytics goes in its own top-level folder, not under debug
-      key = `analytics/weekly-analytics/${timestamp}_${metadata.userId || "unknown"}_${metadata.type || "raw-response"}.json`;
+      // Analytics goes in its own folder structure
+      key = `${branchPrefix}analytics/weekly-analytics/${timestamp}_${metadata.userId || "unknown"}_${metadata.type || "raw-response"}.json`;
     } else {
       // Other debug data goes under the debug prefix
       const folder =
         metadata.type === "coach-conversation-prompt"
           ? "coach-conversation"
           : "workout-extraction";
-      key = `${prefix}/${folder}/${timestamp}_${metadata.userId || "unknown"}_${metadata.type || "raw-response"}.json`;
+      key = `${branchPrefix}${prefix}/${folder}/${timestamp}_${metadata.userId || "unknown"}_${metadata.type || "raw-response"}.json`;
     }
 
     const debugData = {

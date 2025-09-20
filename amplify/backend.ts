@@ -2,6 +2,7 @@ import { defineBackend } from "@aws-amplify/backend";
 import { auth } from "./auth/resource";
 import { postConfirmation } from "./functions/post-confirmation/resource";
 import { HttpUserPoolAuthorizer } from 'aws-cdk-lib/aws-apigatewayv2-authorizers';
+import { getBranchInfo } from "./functions/libs/branch-naming";
 import { contactForm } from "./functions/contact-form/resource";
 import { createCoachCreatorSession } from "./functions/create-coach-creator-session/resource";
 import { updateCoachCreatorSession } from "./functions/update-coach-creator-session/resource";
@@ -146,6 +147,12 @@ const coreTable = dynamodbTable.createCoreTable(backend.contactForm.stack);
 // Create SNS topic for contact form notifications
 const contactFormNotifications = createContactFormNotificationTopic(backend.contactForm.stack);
 
+// Get branch information for S3 policies
+const branchInfo = getBranchInfo(backend.contactForm.stack);
+const branchName = branchInfo.isSandbox
+  ? `sandbox-${branchInfo.stackId}`
+  : branchInfo.branchName;
+
 // Grant DynamoDB permissions to contact form function
 coreTable.table.grantWriteData(backend.contactForm.resources.lambda);
 
@@ -225,7 +232,7 @@ coreTable.table.grantReadData(backend.getMemories.resources.lambda);
 coreTable.table.grantReadWriteData(backend.createMemory.resources.lambda);
 coreTable.table.grantReadWriteData(backend.deleteMemory.resources.lambda);
 
-// Add environment variables to all functions
+// Add environment variables to all functions (excluding post-confirmation due to circular dependency)
 const allFunctions = [
   backend.contactForm,
   backend.createCoachCreatorSession,
@@ -266,6 +273,7 @@ const allFunctions = [
 allFunctions.forEach((func) => {
   func.addEnvironment("DYNAMODB_TABLE_NAME", coreTable.table.tableName);
   func.addEnvironment("PINECONE_API_KEY", config.PINECONE_API_KEY);
+  func.addEnvironment("BRANCH_NAME", branchName);
 
   // DynamoDB throughput scaling configuration
   func.addEnvironment("DYNAMODB_BASE_READ_CAPACITY", "5");
@@ -277,6 +285,10 @@ allFunctions.forEach((func) => {
   func.addEnvironment("DYNAMODB_INITIAL_RETRY_DELAY", "1000");
   func.addEnvironment("DYNAMODB_SCALE_DOWN_DELAY_MINUTES", "10");
 });
+
+// Handle post-confirmation separately due to circular dependency
+// It's in the auth stack but needs to reference the DynamoDB table in contactForm stack
+backend.postConfirmation.addEnvironment("BRANCH_NAME", branchName);
 
 // Add SNS topic ARN to contact form function
 backend.contactForm.addEnvironment("CONTACT_FORM_TOPIC_ARN", contactFormNotifications.topic.topicArn);
@@ -296,10 +308,10 @@ grantBedrockPermissions([
 grantS3DebugPermissions([
   backend.buildWorkout.resources.lambda,
   backend.sendCoachConversationMessage.resources.lambda,
-]);
+], branchName);
 
 // Grant S3 analytics permissions to functions that need it
-grantS3AnalyticsPermissions([backend.buildWeeklyAnalytics.resources.lambda]);
+grantS3AnalyticsPermissions([backend.buildWeeklyAnalytics.resources.lambda], branchName);
 
 // Grant DynamoDB throughput management permissions to high-volume functions
 grantDynamoDBThroughputPermissions([

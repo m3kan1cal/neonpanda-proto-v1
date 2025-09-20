@@ -22,13 +22,13 @@ function getDefaultApiUrl() {
   const customEndpoint = outputs.custom?.api?.[AMPLIFY_API_NAME]?.customEndpoint;
   console.info('API customEndpoint:', customEndpoint);
   if (customEndpoint) {
-    // Use the endpoint provided by the backend (now branch-aware)
+    // Use the endpoint provided by the backend (branch-aware domains or AWS default)
     return customEndpoint;
   }
 
-  // Fallback to development endpoint if customEndpoint not found
-  // The backend now handles branch-specific domain assignment
-  return 'https://api-dev.neonpanda.ai';
+  // This should rarely happen - amplify_outputs.json should always have the endpoint
+  // If it does happen, it likely means the backend hasn't been deployed yet
+  throw new Error('No API endpoint found. Please deploy your Amplify backend first.');
 }
 
 // Helper function to get full API URL

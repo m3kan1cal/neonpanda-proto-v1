@@ -4,6 +4,7 @@ import * as apigatewayv2_integrations from 'aws-cdk-lib/aws-apigatewayv2-integra
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as certificatemanager from 'aws-cdk-lib/aws-certificatemanager';
 import { HttpUserPoolAuthorizer } from 'aws-cdk-lib/aws-apigatewayv2-authorizers';
+import { createBranchAwareResourceName, getBranchInfo } from '../functions/libs/branch-naming';
 
 export function createCoreApi(
   stack: Stack,
@@ -39,36 +40,23 @@ export function createCoreApi(
   deleteCoachConversationLambda: lambda.IFunction,
   userPoolAuthorizer: HttpUserPoolAuthorizer
 ) {
-  // Determine deployment environment
-  const isSandbox = stack.node.tryGetContext('amplify-backend-type') === 'sandbox';
-  const branchName = stack.node.tryGetContext('amplify-branch') || process.env.AWS_BRANCH || 'main';
-
-  // Create dynamic API name - branch-aware like domain strategy
-  const baseApiName = 'neonpanda-proto-api';
-  let apiName: string;
-
-  if (isSandbox) {
-    // Sandbox: Use unique identifier to avoid conflicts between developers
-    const stackId = stack.node.addr.slice(-8); // Last 8 chars of stack address
-    apiName = `${baseApiName}-sandbox-${stackId}`;
-  } else if (branchName === 'main') {
-    // Production from main branch
-    apiName = baseApiName;
-  } else {
-    // Non-production branches (develop, feature branches, etc.)
-    apiName = `${baseApiName}-${branchName}`;
-  }
+  // Create branch-aware API name using utility
+  const { branchInfo, resourceName: apiName } = createBranchAwareResourceName(
+    stack,
+    'neonpanda-proto-api',
+    'API Gateway'
+  );
 
   // Domain configuration - branch-aware
   const baseDomain = 'neonpanda.ai';
   let domainName: string | null = null;
   let useCustomDomain = false;
 
-  if (isSandbox) {
+  if (branchInfo.isSandbox) {
     // Local sandbox development - use default Amplify endpoint (no custom domain)
     domainName = null;
     useCustomDomain = false;
-  } else if (branchName === 'main') {
+  } else if (branchInfo.branchName === 'main') {
     // Production from main branch
     domainName = `api-prod.${baseDomain}`;
     useCustomDomain = true;
@@ -79,8 +67,8 @@ export function createCoreApi(
   }
 
   console.info(`🌐 API Configuration:`, {
-    isSandbox,
-    branchName,
+    isSandbox: branchInfo.isSandbox,
+    branchName: branchInfo.branchName,
     apiName,
     domainName: domainName || 'default-amplify-endpoint',
     useCustomDomain

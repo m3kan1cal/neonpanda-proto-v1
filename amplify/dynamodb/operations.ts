@@ -9,6 +9,7 @@ import {
 import {
   withThroughputScaling
 } from "./throughput-scaling";
+import { constructBranchAwareTableName } from "../functions/libs/branch-naming";
 import {
   CoachCreatorSession,
   DynamoDBItem,
@@ -31,6 +32,28 @@ import { WeeklyAnalytics } from "../functions/libs/analytics/types";
 // DynamoDB client setup
 const dynamoDbClient = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(dynamoDbClient);
+
+/**
+ * Get the DynamoDB table name, either from environment or by constructing it
+ * This handles the case where post-confirmation can't get the table name from CDK due to circular dependency
+ */
+function getTableName(): string {
+  // Try the standard environment variable first
+  const tableName = process.env.DYNAMODB_TABLE_NAME;
+  if (tableName) {
+    return tableName;
+  }
+
+  // Fallback for post-confirmation function - construct from base name and branch
+  const baseName = process.env.DYNAMODB_BASE_TABLE_NAME;
+  const branchName = process.env.BRANCH_NAME;
+
+  if (baseName) {
+    return constructBranchAwareTableName(baseName, branchName);
+  }
+
+  throw new Error("Neither DYNAMODB_TABLE_NAME nor DYNAMODB_BASE_TABLE_NAME environment variable is set");
+}
 
 // Note: DynamoDB operations now use withThroughputScaling wrapper for automatic scaling
 
@@ -73,11 +96,7 @@ export interface DynamoDBSaveResult {
 
 // Generic function to save any item to DynamoDB
 export async function saveToDynamoDB<T>(item: DynamoDBItem<T>): Promise<DynamoDBSaveResult> {
-  const tableName = process.env.DYNAMODB_TABLE_NAME;
-
-  if (!tableName) {
-    throw new Error("DYNAMODB_TABLE_NAME environment variable is not set");
-  }
+  const tableName = getTableName();
 
   let serializedItem: any;
   let itemSizeBytes: number = 0;
@@ -169,11 +188,7 @@ export async function loadFromDynamoDB<T>(
   sk: string,
   entityType?: string
 ): Promise<DynamoDBItem<T> | null> {
-  const tableName = process.env.DYNAMODB_TABLE_NAME;
-
-  if (!tableName) {
-    throw new Error("DYNAMODB_TABLE_NAME environment variable is not set");
-  }
+  const tableName = getTableName();
 
   const operationName = `Load ${entityType || 'item'} from DynamoDB`;
 
@@ -209,11 +224,7 @@ export async function queryFromDynamoDB<T>(
   skPrefix: string,
   entityType?: string
 ): Promise<DynamoDBItem<T>[]> {
-  const tableName = process.env.DYNAMODB_TABLE_NAME;
-
-  if (!tableName) {
-    throw new Error("DYNAMODB_TABLE_NAME environment variable is not set");
-  }
+  const tableName = getTableName();
 
   const operationName = `Query ${entityType || 'items'} from DynamoDB`;
 
@@ -428,10 +439,7 @@ export async function deleteCoachCreatorSession(
   userId: string,
   sessionId: string
 ): Promise<void> {
-  const tableName = process.env.DYNAMODB_TABLE_NAME;
-  if (!tableName) {
-    throw new Error("DYNAMODB_TABLE_NAME environment variable is not set");
-  }
+  const tableName = getTableName();
 
   try {
     const command = new DeleteCommand({
@@ -933,10 +941,7 @@ export async function deleteCoachConversation(
     throw new Error(`Conversation ${conversationId} not found for user ${userId}`);
   }
 
-  const tableName = process.env.DYNAMODB_TABLE_NAME;
-  if (!tableName) {
-    throw new Error("DYNAMODB_TABLE_NAME environment variable is not set");
-  }
+  const tableName = getTableName();
 
   try {
     const command = new DeleteCommand({
@@ -1322,10 +1327,7 @@ export async function deleteWorkout(
   userId: string,
   workoutId: string
 ): Promise<void> {
-  const tableName = process.env.DYNAMODB_TABLE_NAME;
-  if (!tableName) {
-    throw new Error("DYNAMODB_TABLE_NAME environment variable is not set");
-  }
+  const tableName = getTableName();
 
   try {
     const command = new DeleteCommand({
@@ -1519,11 +1521,7 @@ export async function getUserProfile(
 export async function getUserProfileByEmail(
   email: string
 ): Promise<DynamoDBItem<UserProfile> | null> {
-  const tableName = process.env.DYNAMODB_TABLE_NAME;
-
-  if (!tableName) {
-    throw new Error("DYNAMODB_TABLE_NAME environment variable is not set");
-  }
+  const tableName = getTableName();
 
   return withThroughputScaling(async () => {
     console.info(`Querying user profile by email: ${email}`);
@@ -1787,11 +1785,7 @@ export async function deleteMemory(
   userId: string,
   memoryId: string
 ): Promise<void> {
-  const tableName = process.env.DYNAMODB_TABLE_NAME;
-
-  if (!tableName) {
-    throw new Error("DYNAMODB_TABLE_NAME environment variable is not set");
-  }
+  const tableName = getTableName();
 
   try {
     const command = new DeleteCommand({
@@ -1833,11 +1827,7 @@ export async function queryAllEntitiesByType<T>(
   lastEvaluatedKey?: any;
   count: number;
 }> {
-  const tableName = process.env.DYNAMODB_TABLE_NAME;
-
-  if (!tableName) {
-    throw new Error("DYNAMODB_TABLE_NAME environment variable is not set");
-  }
+  const tableName = getTableName();
 
   return withThroughputScaling(async () => {
     console.info(

@@ -48,34 +48,34 @@ export const grantBedrockPermissions = (functions: IFunction[]): void => {
 };
 
 /**
- * S3 policy for debugging logs storage
+ * S3 policy for debugging logs storage - branch-aware subfolders
  */
-export const createS3DebugPolicy = (): PolicyStatement => {
+export const createS3DebugPolicy = (branchName: string = 'main'): PolicyStatement => {
+  const bucketPath = `arn:aws:s3:::midgard-sandbox-logs/${branchName}/debug/*`;
+
   return new PolicyStatement({
     effect: Effect.ALLOW,
     actions: [
       's3:PutObject',
       's3:PutObjectAcl'
     ],
-    resources: [
-      'arn:aws:s3:::midgard-sandbox-logs/debug/*'
-    ]
+    resources: [bucketPath]
   });
 };
 
 /**
- * S3 policy for analytics storage
+ * S3 policy for analytics storage - branch-aware subfolders
  */
-export const createS3AnalyticsPolicy = (): PolicyStatement => {
+export const createS3AnalyticsPolicy = (branchName: string = 'main'): PolicyStatement => {
+  const bucketPath = `arn:aws:s3:::midgard-sandbox-logs/${branchName}/analytics/weekly-analytics/*`;
+
   return new PolicyStatement({
     effect: Effect.ALLOW,
     actions: [
       's3:PutObject',
       's3:PutObjectAcl'
     ],
-    resources: [
-      'arn:aws:s3:::midgard-sandbox-logs/analytics/weekly-analytics/*'
-    ]
+    resources: [bucketPath]
   });
 };
 
@@ -93,8 +93,8 @@ export const grantLambdaInvokePermissions = (
 /**
  * Helper function to grant S3 debug permissions
  */
-export const grantS3DebugPermissions = (functions: IFunction[]): void => {
-  const s3Policy = createS3DebugPolicy();
+export const grantS3DebugPermissions = (functions: IFunction[], branchName: string = 'main'): void => {
+  const s3Policy = createS3DebugPolicy(branchName);
   functions.forEach(func => {
     func.addToRolePolicy(s3Policy);
   });
@@ -103,8 +103,8 @@ export const grantS3DebugPermissions = (functions: IFunction[]): void => {
 /**
  * Helper function to grant S3 analytics permissions
  */
-export const grantS3AnalyticsPermissions = (functions: IFunction[]): void => {
-  const s3Policy = createS3AnalyticsPolicy();
+export const grantS3AnalyticsPermissions = (functions: IFunction[], branchName: string = 'main'): void => {
+  const s3Policy = createS3AnalyticsPolicy(branchName);
   functions.forEach(func => {
     func.addToRolePolicy(s3Policy);
   });
