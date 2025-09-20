@@ -53,11 +53,19 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
 /* Custom utilities for text gradients */
 @layer utilities {
   .text-gradient-neon {
-    @apply bg-neon-gradient bg-clip-text text-transparent;
+    background: linear-gradient(45deg, #ff0080 0%, #00ffff 100%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
   }
 
   .text-gradient-purple {
-    @apply bg-purple-gradient bg-clip-text text-transparent;
+    background: linear-gradient(45deg, #8b5cf6 0%, #ff0080 100%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
   }
 
   .grid-bg {

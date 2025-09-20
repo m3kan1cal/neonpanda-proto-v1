@@ -129,12 +129,12 @@ const result = await scalingClient.executeWithScaling(
 The system provides comprehensive logging:
 
 ```
-🔄 Scaling up throughput for table: CoachForge-ProtoApi-AllItems-V2-Dev
+🔄 Scaling up throughput for table: NeonPanda-ProtoApi-AllItems-V2-Dev
 ⚠️ Query workout sessions hit throughput limit (attempt 1). Scaling up capacity...
-✅ Successfully scaled up throughput for CoachForge-ProtoApi-AllItems-V2-Dev
+✅ Successfully scaled up throughput for NeonPanda-ProtoApi-AllItems-V2-Dev
 ⏳ Waiting 1000ms before retrying Query workout sessions...
 ✅ Query workout sessions succeeded after scaling. Scheduling scale-down in 10 minutes
-🔽 Scaling down throughput for table: CoachForge-ProtoApi-AllItems-V2-Dev
+🔽 Scaling down throughput for table: NeonPanda-ProtoApi-AllItems-V2-Dev
 ```
 
 ### Metrics to Monitor

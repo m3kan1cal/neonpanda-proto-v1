@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document outlines the plan to consolidate button styling and components across the CoachForge frontend to improve maintainability, consistency, and developer experience.
+This document outlines the plan to consolidate button styling and components across the NeonPanda frontend to improve maintainability, consistency, and developer experience.
 
 ## Current State Analysis
 

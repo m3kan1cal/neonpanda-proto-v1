@@ -16,9 +16,9 @@ export const postConfirmation = defineFunction({
       const branch = process.env.AMPLIFY_BRANCH || 'sandbox';
 
       if (branch === 'main' && !isSandbox) {
-        return 'CoachForge-ProtoApi-AllItems-V2';  // Production table
+        return 'NeonPanda-ProtoApi-AllItems-V2';  // Production table
       } else {
-        return `CoachForge-ProtoApi-AllItems-V2-Dev`;  // Branch/sandbox-specific table
+        return `NeonPanda-ProtoApi-AllItems-V2-Dev`;  // Branch/sandbox-specific table
       }
     })(),
     PINECONE_API_KEY: process.env.PINECONE_API_KEY || ''

@@ -1,2 +1,2 @@
-# coachforge-proto-v1
+# neonpanda-proto-v1
 Repository for AI coach project.

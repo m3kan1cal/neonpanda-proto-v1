@@ -2,7 +2,7 @@
 
 # Get the exact table ARN first
 TABLE_ARN=$(aws dynamodb describe-table \
-  --table-name CoachForge-ProtoApi-AllItems-V2-Dev \
+  --table-name NeonPanda-ProtoApi-AllItems-V2-Dev \
   --query 'Table.TableArn' \
   --output text)
 
@@ -42,7 +42,7 @@ aws s3api put-bucket-policy \
 # 2. Create CloudTrail
 echo "Creating CloudTrail..."
 aws cloudtrail create-trail \
-  --name coachforge-dynamodb-trail \
+  --name neonpanda-dynamodb-trail \
   --s3-bucket-name midgard-sandbox-logs \
   --s3-key-prefix dynamodb-events/ \
   --include-global-service-events \
@@ -51,12 +51,12 @@ aws cloudtrail create-trail \
 
 # 3. Start logging
 echo "Starting CloudTrail logging..."
-aws cloudtrail start-logging --name coachforge-dynamodb-trail
+aws cloudtrail start-logging --name neonpanda-dynamodb-trail
 
 # 4. Set up event selectors with correct ARN
 echo "Setting up DynamoDB event selectors..."
 aws cloudtrail put-event-selectors \
-  --trail-name coachforge-dynamodb-trail \
+  --trail-name neonpanda-dynamodb-trail \
   --event-selectors "[
     {
       \"ReadWriteType\": \"All\",

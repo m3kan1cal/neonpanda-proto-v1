@@ -4,18 +4,18 @@ echo "🔧 Diagnosing and fixing CloudTrail setup..."
 
 # 1. Check if trail exists
 echo "📊 Checking CloudTrail status..."
-aws cloudtrail describe-trails --trail-name-list coachforge-dynamodb-trail
+aws cloudtrail describe-trails --trail-name-list neonpanda-dynamodb-trail
 
 # 2. Check logging status
 echo ""
 echo "📊 Checking logging status..."
-aws cloudtrail get-trail-status --name coachforge-dynamodb-trail
+aws cloudtrail get-trail-status --name neonpanda-dynamodb-trail
 
 # 3. Get table ARN
 echo ""
 echo "📊 Getting DynamoDB table ARN..."
 TABLE_ARN=$(aws dynamodb describe-table \
-  --table-name CoachForge-ProtoApi-AllItems-V2-Dev \
+  --table-name NeonPanda-ProtoApi-AllItems-V2-Dev \
   --query 'Table.TableArn' \
   --output text)
 echo "Table ARN: $TABLE_ARN"
@@ -23,13 +23,13 @@ echo "Table ARN: $TABLE_ARN"
 # 4. Check current event selectors
 echo ""
 echo "📊 Current event selectors:"
-aws cloudtrail get-event-selectors --trail-name coachforge-dynamodb-trail
+aws cloudtrail get-event-selectors --trail-name neonpanda-dynamodb-trail
 
 # 5. Fix event selectors if needed
 echo ""
 echo "🔧 Updating event selectors to ensure DynamoDB data events are captured..."
 aws cloudtrail put-event-selectors \
-  --trail-name coachforge-dynamodb-trail \
+  --trail-name neonpanda-dynamodb-trail \
   --event-selectors "[
     {
       \"ReadWriteType\": \"All\",

@@ -1,5 +1,5 @@
 import { nanoid } from 'nanoid';
-import { getWorkouts, getWorkout, updateWorkout, deleteWorkout, getWorkoutsCount, getRecentWorkouts, getTrainingDaysCount, createWorkout } from '../apis/workoutApi.js';
+import { getWorkouts, getWorkout, updateWorkout, deleteWorkout, getWorkoutsCount, getRecentWorkouts, getTrainingDaysCount, createWorkout, getWorkoutsByDateRange } from '../apis/workoutApi.js';
 
 /**
  * WorkoutAgent - Handles the business logic for workout management
@@ -333,8 +333,7 @@ export class WorkoutAgent {
         endOfWeek: endOfWeek.toISOString()
       });
 
-      // Import the API function
-      const { getWorkoutsByDateRange } = await import('../apis/workoutApi.js');
+      // Use the statically imported API function
       const result = await getWorkoutsByDateRange(this.userId, startOfWeek, endOfWeek);
 
       const thisWeekCount = result.workouts ? result.workouts.length : 0;

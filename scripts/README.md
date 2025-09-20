@@ -1,6 +1,6 @@
-# CoachForge Scripts
+# NeonPanda Scripts
 
-This directory contains utility scripts for the CoachForge application.
+This directory contains utility scripts for the NeonPanda application.
 
 ## Coach Templates Seeding Script
 
@@ -23,13 +23,13 @@ TABLE_NAME=YourTableName npm run seed-coach-templates
 #### With Custom AWS Region
 ```bash
 # Specify both table name and region
-AWS_REGION=us-west-2 TABLE_NAME=CoachForge-Prod npm run seed-coach-templates
+AWS_REGION=us-west-2 TABLE_NAME=NeonPanda-Prod npm run seed-coach-templates
 ```
 
 #### Direct Node Execution
 ```bash
 # Run directly with node
-TABLE_NAME=CoachForge-Dev node scripts/seed-coach-templates.js
+TABLE_NAME=NeonPanda-Dev node scripts/seed-coach-templates.js
 ```
 
 #### Help
@@ -42,7 +42,7 @@ node scripts/seed-coach-templates.js --help
 
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
-| `TABLE_NAME` | DynamoDB table name | `CoachForge-Dev` | Yes |
+| `TABLE_NAME` | DynamoDB table name | `NeonPanda-Dev` | Yes |
 | `AWS_REGION` | AWS region | `us-east-1` | No |
 
 ### Features
@@ -69,7 +69,7 @@ The script validates each template for:
 🚀 Starting Coach Templates Seeding Process...
 
 📋 Configuration:
-   - Table Name: CoachForge-Dev
+   - Table Name: NeonPanda-Dev
    - AWS Region: us-east-1
    - Templates Directory: /path/to/docs/templates
 

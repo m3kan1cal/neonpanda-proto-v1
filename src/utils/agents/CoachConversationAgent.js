@@ -6,6 +6,7 @@ import {
   getCoachConversation,
   getCoachConversations,
   deleteCoachConversation,
+  getCoachConversationsCount,
 } from "../apis/coachConversationApi";
 import { getCoach } from "../apis/coachApi";
 import CoachAgent from './CoachAgent';
@@ -186,8 +187,7 @@ export class CoachConversationAgent {
     try {
       console.info('Loading conversation count for:', { userId, coachId });
 
-      // Import the count API function
-      const { getCoachConversationsCount } = await import('../apis/coachConversationApi');
+      // Use the statically imported count API function
       const result = await getCoachConversationsCount(userId, coachId);
 
       console.info('Conversation count API result:', result);

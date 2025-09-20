@@ -1,9 +1,9 @@
 # Cognito Authentication Implementation Plan
-## CoachForge Platform - Custom UserId Strategy
+## NeonPanda Platform - Custom UserId Strategy
 
 ### Executive Summary
 
-This plan implements Amazon Cognito user authentication for the CoachForge platform using a **three-field user identity strategy**:
+This plan implements Amazon Cognito user authentication for the NeonPanda platform using a **three-field user identity strategy**:
 - **Email**: Primary login credential (unique, mutable)
 - **Username**: Public display handle (unique, mutable)
 - **Custom UserId**: Internal system identifier (unique, immutable)
@@ -48,9 +48,9 @@ export const auth = defineAuth({
   loginWith: {
     email: {
       verificationEmailStyle: "CODE",
-      verificationEmailSubject: "Welcome to CoachForge!",
+      verificationEmailSubject: "Welcome to NeonPanda!",
       verificationEmailBody: (createCode) =>
-        `Welcome to CoachForge! Your verification code is ${createCode()}`
+        `Welcome to NeonPanda! Your verification code is ${createCode()}`
     }
   },
   multifactor: {
@@ -432,7 +432,7 @@ const customComponents = {
   Header() {
     return (
       <div style={{ textAlign: 'center', padding: '2rem' }}>
-        <h1>Welcome to CoachForge</h1>
+        <h1>Welcome to NeonPanda</h1>
         <p>Your Personal AI Fitness Coach Platform</p>
       </div>
     )
@@ -690,7 +690,7 @@ export function MainApp({ signOut }) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div>
-              <h1 className="text-xl font-semibold">CoachForge</h1>
+              <h1 className="text-xl font-semibold">NeonPanda</h1>
             </div>
 
             <div className="flex items-center space-x-4">
@@ -877,4 +877,4 @@ export function MainApp({ signOut }) {
 
 ---
 
-This implementation plan provides a secure, scalable authentication system that integrates seamlessly with your existing CoachForge architecture while maintaining the custom userId pattern your API already uses.
+This implementation plan provides a secure, scalable authentication system that integrates seamlessly with your existing NeonPanda architecture while maintaining the custom userId pattern your API already uses.

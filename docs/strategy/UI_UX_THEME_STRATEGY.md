@@ -1,8 +1,8 @@
-# UI/UX Theme Strategy - CoachForge Synthwave Design System
+# UI/UX Theme Strategy - NeonPanda Synthwave Design System
 
 ## Overview
 
-This document defines the comprehensive UI/UX strategy for CoachForge's synthwave-themed fitness coaching platform. It establishes consistent design patterns, color semantics, and modern 2025 UI/UX standards that create a cohesive user experience while maintaining the distinctive synthwave aesthetic.
+This document defines the comprehensive UI/UX strategy for NeonPanda's synthwave-themed fitness coaching platform. It establishes consistent design patterns, color semantics, and modern 2025 UI/UX standards that create a cohesive user experience while maintaining the distinctive synthwave aesthetic.
 
 ## Table of Contents
 
@@ -550,11 +550,11 @@ Located: `src/utils/synthwaveThemeClasses.js`
 
 ## Conclusion
 
-This UI/UX Theme Strategy provides a comprehensive foundation for CoachForge's design system. By following these guidelines, we ensure consistent, accessible, and modern user experiences that align with both current design trends and the unique synthwave brand identity.
+This UI/UX Theme Strategy provides a comprehensive foundation for NeonPanda's design system. By following these guidelines, we ensure consistent, accessible, and modern user experiences that align with both current design trends and the unique synthwave brand identity.
 
 The semantic color system eliminates guesswork in design decisions, while the modern container and button standards create a cohesive, professional appearance that users can trust and navigate intuitively.
 
-Regular review and updates of this strategy will ensure CoachForge remains at the forefront of UI/UX design while maintaining its distinctive brand character.
+Regular review and updates of this strategy will ensure NeonPanda remains at the forefront of UI/UX design while maintaining its distinctive brand character.
 
 ---
 

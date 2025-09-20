@@ -19,7 +19,7 @@ const __dirname = path.dirname(__filename);
 
 // Configuration
 const TEMPLATES_DIR = path.join(__dirname, '../docs/templates');
-const TABLE_NAME = process.env.TABLE_NAME || 'CoachForge-Dev'; // Update with your actual table name
+const TABLE_NAME = process.env.TABLE_NAME || 'NeonPanda-Dev'; // Update with your actual table name
 const AWS_REGION = process.env.AWS_REGION || 'us-east-1';
 
 // Initialize DynamoDB client
@@ -226,8 +226,8 @@ Options:
   --dry-run     Validate templates without inserting (not implemented)
 
 Examples:
-  TABLE_NAME=CoachForge-Dev node scripts/seed-coach-templates.js
-  AWS_REGION=us-west-2 TABLE_NAME=CoachForge-Prod node scripts/seed-coach-templates.js
+  TABLE_NAME=NeonPanda-Dev node scripts/seed-coach-templates.js
+  AWS_REGION=us-west-2 TABLE_NAME=NeonPanda-Prod node scripts/seed-coach-templates.js
 `);
     process.exit(0);
   }
