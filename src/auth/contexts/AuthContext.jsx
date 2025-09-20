@@ -32,7 +32,7 @@ export const AuthProvider = ({ children }) => {
     checkAuthState();
   }, []);
 
-  const checkAuthState = async () => {
+  const checkAuthState = async (throwOnMissingUserId = false) => {
     try {
       setLoading(true);
       setAuthError(null);
@@ -53,7 +53,17 @@ export const AuthProvider = ({ children }) => {
 
       // Check if custom user ID is missing and create one if needed
       if (!attributes?.["custom:user_id"]) {
-        console.warn("⚠️ Custom User ID is missing. This user may need manual setup.");
+        const errorMessage = "⚠️ Custom User ID is missing. This user may need manual setup.";
+        console.warn(errorMessage);
+
+        if (throwOnMissingUserId) {
+          // Create a custom error that LoginForm can catch and display
+          const error = new Error("Account setup incomplete. Your account registration did not complete properly. Please contact support or try registering again.");
+          error.name = "IncompleteAccountSetupException";
+          error.userFriendlyMessage = "Account setup incomplete. Your account registration did not complete properly. Please contact support or try registering again.";
+          throw error;
+        }
+
         // TODO: Call an API endpoint to create the missing user profile and custom ID
         // For now, we'll let the user continue but they may have limited functionality
       }
@@ -129,7 +139,7 @@ export const AuthProvider = ({ children }) => {
       console.info('AuthContext: signInResult.nextStep:', signInResult.nextStep);
 
       if (signInResult.isSignedIn) {
-        await checkAuthState(); // Refresh user state
+        await checkAuthState(true); // Refresh user state and throw error if user ID missing
         return { success: true };
       } else {
         // Handle cases where sign in didn't complete

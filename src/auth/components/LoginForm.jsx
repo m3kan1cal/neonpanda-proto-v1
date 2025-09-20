@@ -128,6 +128,9 @@ const LoginForm = ({
             "Account not confirmed. Please verify your email address to continue."
           );
         }
+      } else if (error.name === "IncompleteAccountSetupException") {
+        console.info("IncompleteAccountSetupException detected - showing user-friendly error");
+        setGlobalError(error.userFriendlyMessage || error.message);
       } else if (error.name === "UserAlreadyAuthenticatedException") {
         console.info("User already authenticated, redirecting to main app");
         // The AuthContext will handle the redirect automatically
