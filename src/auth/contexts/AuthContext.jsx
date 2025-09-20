@@ -112,10 +112,30 @@ export const AuthProvider = ({ children }) => {
     try {
       setAuthError(null);
 
+      console.info('🔄 About to confirm signup for:', email);
+
       await confirmSignUp({
         username: email,
         confirmationCode
       });
+
+      console.info('✅ Signup confirmed successfully');
+
+      // Check if user was automatically signed in after confirmation
+      try {
+        const currentUser = await getCurrentUser();
+        console.info('🔍 User state after confirmSignUp:', currentUser);
+
+        if (currentUser) {
+          console.info('⚠️ User was automatically signed in after confirmation!');
+          // Update our auth state to reflect this
+          await checkAuthState();
+        } else {
+          console.info('ℹ️ User not automatically signed in - normal flow');
+        }
+      } catch (checkError) {
+        console.info('ℹ️ User not signed in after confirmation (expected):', checkError.message);
+      }
 
       return { success: true };
     } catch (error) {
