@@ -22,20 +22,13 @@ function getDefaultApiUrl() {
   const customEndpoint = outputs.custom?.api?.[AMPLIFY_API_NAME]?.customEndpoint;
   console.info('API customEndpoint:', customEndpoint);
   if (customEndpoint) {
-    // Replace 'dev' with 'prod' for production environment
-    if (isDevelopment) {
-      return customEndpoint; // Use as-is for development (api-dev.neonpanda.ai)
-    } else {
-      return customEndpoint.replace('-dev.', '-prod.'); // Change to api-prod.neonpanda.ai
-    }
+    // Use the endpoint provided by the backend (now branch-aware)
+    return customEndpoint;
   }
 
-  // Fallback to hardcoded values if customEndpoint not found
-  if (isDevelopment) {
-    return 'https://api-dev.neonpanda.ai';
-  } else {
-    return 'https://api-prod.neonpanda.ai';
-  }
+  // Fallback to development endpoint if customEndpoint not found
+  // The backend now handles branch-specific domain assignment
+  return 'https://api-dev.neonpanda.ai';
 }
 
 // Helper function to get full API URL
