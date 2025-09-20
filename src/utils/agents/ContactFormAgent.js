@@ -131,11 +131,11 @@ export class ContactFormAgent {
         break;
       case 'collaborate':
         defaultSubject = 'Interest in Collaboration';
-        defaultMessage = "Hi!\n\nI'm interested in collaborating with CoachForge and helping build the future of AI fitness coaching. I'd love to discuss how I can contribute to the project.\n\nPlease let me know more about collaboration opportunities!";
+        defaultMessage = "Hi!\n\nI'm interested in collaborating with NeonPanda and helping build the future of AI fitness coaching. I'd love to discuss how I can contribute to the project.\n\nPlease let me know more about collaboration opportunities!";
         break;
       default:
         defaultSubject = 'General Inquiry';
-        defaultMessage = "Hi there!\n\nI have a question about CoachForge and would love to learn more.\n\nThanks!";
+        defaultMessage = "Hi there!\n\nI have a question about NeonPanda and would love to learn more.\n\nThanks!";
     }
 
     return {

@@ -10,11 +10,11 @@ export function createDynamoDBTable(scope: Construct) {
       // Determine if this is a sandbox deployment (same approach as API)
   const isSandbox = stack.node.tryGetContext('amplify-backend-type') === 'sandbox';
 
-  const tableBaseName = 'CoachForge-ProtoApi-AllItems-V2';
+  const tableBaseName = 'NeonPanda-ProtoApi-AllItems-V2';
   const tableName = isSandbox ? `${tableBaseName}-Dev` : tableBaseName;
 
   // Main DynamoDB table with enterprise configuration
-  const table = new dynamodb.Table(scope, 'CoachForgeTable', {
+  const table = new dynamodb.Table(scope, 'NeonPandaTable', {
     tableName: tableName,
 
     // Composite primary key (pk + sk)
@@ -29,8 +29,8 @@ export function createDynamoDBTable(scope: Construct) {
 
     // Provisioned billing mode for predictable performance
     billingMode: dynamodb.BillingMode.PROVISIONED,
-    readCapacity: 5,
-    writeCapacity: 5,
+    readCapacity: 20,
+    writeCapacity: 20,
 
     // TTL Configuration for automatic cleanup
     timeToLiveAttribute: 'ttl',
@@ -57,8 +57,8 @@ export function createDynamoDBTable(scope: Construct) {
       name: 'gsi1sk',
       type: dynamodb.AttributeType.STRING,
     },
-    readCapacity: 5,
-    writeCapacity: 5,
+    readCapacity: 20,
+    writeCapacity: 20,
     projectionType: dynamodb.ProjectionType.ALL,
   });
 
@@ -72,8 +72,8 @@ export function createDynamoDBTable(scope: Construct) {
       name: 'gsi2sk',
       type: dynamodb.AttributeType.STRING,
     },
-    readCapacity: 5,
-    writeCapacity: 5,
+    readCapacity: 20,
+    writeCapacity: 20,
     projectionType: dynamodb.ProjectionType.ALL,
   });
 
@@ -87,14 +87,14 @@ export function createDynamoDBTable(scope: Construct) {
       name: 'pk',
       type: dynamodb.AttributeType.STRING,
     },
-    readCapacity: 5,
-    writeCapacity: 5,
+    readCapacity: 20,
+    writeCapacity: 20,
     projectionType: dynamodb.ProjectionType.ALL,
   });
 
   // Auto Scaling Configuration
   const readScaling = table.autoScaleReadCapacity({
-    minCapacity: 5,
+    minCapacity: 20,
     maxCapacity: 100,
   });
 
@@ -105,7 +105,7 @@ export function createDynamoDBTable(scope: Construct) {
   });
 
   const writeScaling = table.autoScaleWriteCapacity({
-    minCapacity: 5,
+    minCapacity: 20,
     maxCapacity: 50,
   });
 
@@ -118,7 +118,7 @@ export function createDynamoDBTable(scope: Construct) {
   // Auto Scaling for GSIs
   ['gsi1', 'gsi2', 'gsi3'].forEach((indexName) => {
     const gsiReadScaling = table.autoScaleGlobalSecondaryIndexReadCapacity(indexName, {
-      minCapacity: 5,
+      minCapacity: 20,
       maxCapacity: 100,
     });
 
@@ -129,7 +129,7 @@ export function createDynamoDBTable(scope: Construct) {
     });
 
     const gsiWriteScaling = table.autoScaleGlobalSecondaryIndexWriteCapacity(indexName, {
-      minCapacity: 5,
+      minCapacity: 20,
       maxCapacity: 50,
     });
 
@@ -141,7 +141,7 @@ export function createDynamoDBTable(scope: Construct) {
   });
 
   // Cost Alarm (simplified for development)
-  const alarmBaseName = 'CoachForge-ProtoApi-HighCostAlarm';
+  const alarmBaseName = 'NeonPanda-ProtoApi-HighCostAlarm';
   const alarmName = isSandbox ? `${alarmBaseName}-Dev` : alarmBaseName;
 
   const costAlarm = new cloudwatch.Alarm(scope, 'DynamoDBCostAlarm', {

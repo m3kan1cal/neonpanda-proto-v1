@@ -1,0 +1,50 @@
+version: 1
+applications:
+  - appRoot: .
+    frontend:
+      phases:
+        preBuild:
+          commands:
+            - nvm use 20
+            - npm install --cache .npm --prefer-offline
+
+            # Set the environment variables
+            - echo "DYNAMODB_TABLE_NAME=$DYNAMODB_TABLE_NAME" >> .env
+            - echo "PINECONE_API_KEY=$PINECONE_API_KEY" >> .env
+
+            # Deploy the backend
+            - npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
+        build:
+          commands:
+            # Build the frontend
+            - npm run build
+      artifacts:
+        baseDirectory: dist
+        files:
+          - '**/*'
+      cache:
+        paths:
+          - .npm/**/*
+    customHeaders:
+      - pattern: '**'
+        headers:
+          - key: 'X-Frame-Options'
+            value: 'DENY'
+          - key: 'X-XSS-Protection'
+            value: '1; mode=block'
+    redirects:
+      - source: '/coach-creator/'
+        target: '/coach-creator'
+        status: '301'
+      - source: '/coaches/'
+        target: '/coaches'
+        status: '301'
+      - source: '/faqs/'
+        target: '/faqs'
+        status: '301'
+      - source: '/contact/'
+        target: '/contact'
+        status: '301'
+      - source: '/<*>'
+        target: '/index.html'
+        status: '200'

@@ -8,6 +8,7 @@ import {
   layoutPatterns,
 } from "../utils/uiPatterns";
 import { themeClasses } from "../utils/synthwaveThemeClasses";
+import { getCoachConversations } from "../utils/apis/coachConversationApi";
 import CoachHeader from "./shared/CoachHeader";
 import { isRecentConversation } from "../utils/dateUtils";
 import { NeonBorder, NewBadge } from "./themes/SynthwaveComponents";
@@ -252,9 +253,6 @@ function ManageCoachConversations() {
         }
 
         // Load conversations for this specific coach
-        const { getCoachConversations } = await import(
-          "../utils/apis/coachConversationApi"
-        );
         const result = await getCoachConversations(userId, coachId);
         const conversations = (result.conversations || []).map((conv) => ({
           ...conv,

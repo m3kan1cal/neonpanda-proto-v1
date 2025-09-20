@@ -43,7 +43,7 @@ export function createCoreApi(
   const isSandbox = stack.node.tryGetContext('amplify-backend-type') === 'sandbox';
 
   // Create dynamic API name
-  const baseApiName = 'coachforge-proto-api';
+  const baseApiName = 'neonpanda-proto-api';
   const apiName = isSandbox ? `${baseApiName}-dev` : baseApiName;
 
   // Domain configuration

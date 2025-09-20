@@ -268,7 +268,7 @@ All 5 required endpoints implemented:
 
 ### Storage Schema ✅ **COMPLETE**
 ```
-DynamoDB Table: CoachForge-ProtoApi-AllItems-V2
+DynamoDB Table: NeonPanda-ProtoApi-AllItems-V2
 - Coach Configs: pk: user#{userId}, sk: coach#{coachId}
 - Conversations: pk: user#{userId}, sk: coachConversation#{coachId}#{conversationId}
 ```

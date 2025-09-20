@@ -9,7 +9,7 @@ if (!AMPLIFY_API_NAME) {
 
 // API Configuration
 const API_CONFIG = {
-  // CoachForge API endpoints
+  // NeonPanda API endpoints
   baseUrl: import.meta.env.VITE_API_URL || getDefaultApiUrl()
 };
 
