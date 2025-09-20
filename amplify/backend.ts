@@ -2,7 +2,7 @@ import { defineBackend } from "@aws-amplify/backend";
 import { auth } from "./auth/resource";
 import { postConfirmation } from "./functions/post-confirmation/resource";
 import { HttpUserPoolAuthorizer } from 'aws-cdk-lib/aws-apigatewayv2-authorizers';
-import { getBranchInfo } from "./functions/libs/branch-naming";
+import { getBranchInfo, createBranchAwareResourceName } from "./functions/libs/branch-naming";
 import { contactForm } from "./functions/contact-form/resource";
 import { createCoachCreatorSession } from "./functions/create-coach-creator-session/resource";
 import { updateCoachCreatorSession } from "./functions/update-coach-creator-session/resource";
@@ -382,6 +382,24 @@ const weeklyAnalyticsSchedule = createWeeklyAnalyticsSchedule(
 
 // Configure password policy and advanced security via CDK
 const { cfnUserPool } = backend.auth.resources.cfnResources;
+
+// Apply branch-aware naming to User Pool
+const { resourceName: userPoolName } = createBranchAwareResourceName(
+  backend.contactForm.stack,
+  'NeonPanda-UserPool',
+  'Cognito User Pool'
+);
+cfnUserPool.userPoolName = userPoolName;
+
+// Apply branch-aware naming to User Pool Client
+const { cfnUserPoolClient } = backend.auth.resources.cfnResources;
+const { resourceName: userPoolClientName } = createBranchAwareResourceName(
+  backend.contactForm.stack,
+  'NeonPanda-UserPoolClient',
+  'Cognito User Pool Client'
+);
+cfnUserPoolClient.clientName = userPoolClientName;
+
 cfnUserPool.policies = {
   passwordPolicy: {
     minimumLength: 8,
