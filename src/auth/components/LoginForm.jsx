@@ -14,7 +14,7 @@ const LoginForm = ({
   showVerificationSuccess,
   showPasswordResetSuccess,
 }) => {
-  const { signIn } = useAuth();
+  const { signIn, checkAuthState } = useAuth();
   const [globalError, setGlobalError] = useState("");
   const [showVerificationOption, setShowVerificationOption] = useState(false);
   const [unconfirmedEmail, setUnconfirmedEmail] = useState("");
@@ -132,9 +132,21 @@ const LoginForm = ({
         console.info("IncompleteAccountSetupException detected - showing user-friendly error");
         setGlobalError(error.userFriendlyMessage || error.message);
       } else if (error.name === "UserAlreadyAuthenticatedException") {
-        console.info("User already authenticated, redirecting to main app");
-        // The AuthContext will handle the redirect automatically
-        return;
+        console.warn("🚨 State mismatch detected: Amplify says user is signed in, but AuthContext shows null");
+        console.info("🔄 Attempting to sync AuthContext state with Amplify...");
+
+        try {
+          // Try to update our AuthContext state to match Amplify's internal state
+          await checkAuthState();
+          console.info("✅ Successfully synced AuthContext state with Amplify - should redirect now");
+          // The AuthRouter will handle the redirect automatically once state is synced
+          return;
+        } catch (syncError) {
+          console.error("❌ Failed to sync AuthContext state:", syncError);
+          console.info("🔄 This indicates a deeper authentication issue...");
+          setGlobalError("Authentication state error detected. Please sign out and sign in again, or refresh the page.");
+          return;
+        }
       } else if (error.name === "NotAuthorizedException") {
         setFieldError("password", "Incorrect email or password");
       } else if (error.name === "UserNotFoundException") {

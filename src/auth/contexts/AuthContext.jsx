@@ -75,12 +75,31 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
 
     } catch (error) {
+      console.error("❌ checkAuthState error:", error);
+      console.error("❌ checkAuthState error name:", error.name);
+      console.error("❌ checkAuthState error message:", error.message);
+
+      // Check if this is a specific auth failure that indicates inconsistent state
+      if (error.message?.includes('User does not exist') ||
+          error.message?.includes('NotAuthorizedException') ||
+          error.name === 'NotAuthorizedException') {
+        console.warn('🔄 Detected inconsistent auth state - user may need to be signed out');
+      }
+
       console.info("User not authenticated:", error.message);
       // Batch state updates for unauthenticated state
       setUser(null);
       setIsAuthenticated(false);
       console.info("🔄 AuthContext: Setting loading to false (not authenticated)");
       setLoading(false);
+
+      // Don't throw the error unless explicitly requested
+      if (throwOnMissingUserId && error.name === "IncompleteAccountSetupException") {
+        throw error;
+      }
+
+      // Re-throw other errors so the caller can handle them
+      throw error;
     }
   };
 
@@ -123,13 +142,63 @@ export const AuthProvider = ({ children }) => {
 
       // Check if user was automatically signed in after confirmation
       try {
+        console.info('🔍 Checking if user was auto-signed in after confirmation...');
         const currentUser = await getCurrentUser();
         console.info('🔍 User state after confirmSignUp:', currentUser);
 
         if (currentUser) {
           console.info('⚠️ User was automatically signed in after confirmation!');
-          // Update our auth state to reflect this
-          await checkAuthState();
+          console.info('🔍 Now testing if we can fetch user attributes...');
+
+          // Test fetching attributes with retry logic to handle race condition with post-confirmation trigger
+          let attributesFetched = false;
+          const maxRetries = 5;
+          const baseDelay = 1000; // Start with 1 second
+
+          for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+              console.info(`🔍 Attempt ${attempt}/${maxRetries}: Fetching user attributes...`);
+              const testAttributes = await fetchUserAttributes();
+              console.info('✅ Successfully fetched attributes after auto-signin:', Object.keys(testAttributes));
+              console.info('🆔 Custom User ID found:', testAttributes['custom:user_id'] || 'NOT_SET');
+
+              // If we can fetch attributes, proceed with normal auth state update
+              await checkAuthState();
+              console.info('✅ Successfully updated auth state after auto-signin');
+              attributesFetched = true;
+              break;
+
+            } catch (attributeError) {
+              console.warn(`❌ Attempt ${attempt}/${maxRetries} failed:`, attributeError.message);
+
+              if (attempt === maxRetries) {
+                console.error('❌ FINAL ATTEMPT FAILED to fetch attributes after auto-signin:', attributeError);
+                console.error('❌ Attribute error name:', attributeError.name);
+                console.error('❌ Attribute error message:', attributeError.message);
+                console.warn('🚨 This could be a race condition with post-confirmation trigger or a real failure!');
+                console.info('🔄 Signing user out to fix inconsistent state');
+
+                // If we can't get the user's attributes properly, sign them out
+                // This prevents the "UserAlreadyAuthenticatedException" issue
+                try {
+                  await signOut();
+                  console.info('✅ Successfully signed out user with broken auth state');
+                } catch (signOutError) {
+                  console.error('❌ Failed to sign out user:', signOutError);
+                }
+                break;
+              } else {
+                // Wait with exponential backoff before retrying
+                const delay = baseDelay * Math.pow(2, attempt - 1);
+                console.info(`⏳ Waiting ${delay}ms before retry ${attempt + 1} (race condition with post-confirmation trigger)...`);
+                await new Promise(resolve => setTimeout(resolve, delay));
+              }
+            }
+          }
+
+          if (!attributesFetched) {
+            console.error('❌ Failed to fetch attributes after all retry attempts');
+          }
         } else {
           console.info('ℹ️ User not automatically signed in - normal flow');
         }

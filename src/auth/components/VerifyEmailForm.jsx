@@ -56,6 +56,8 @@ const VerifyEmailForm = ({ email, onVerificationSuccess, onSwitchToLogin }) => {
       const result = await confirmSignUp(email, formData.confirmationCode.trim());
       console.info('✅ Email verification result:', result);
 
+      // The AuthContext now handles race conditions with retry logic, so no need for delay here
+
       // The confirmSignUp function now handles checking if user was auto-signed in
       // and updates auth state accordingly. We'll still call onVerificationSuccess
       // but the AuthRouter will handle redirecting appropriately based on auth state.
