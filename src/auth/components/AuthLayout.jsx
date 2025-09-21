@@ -25,7 +25,7 @@ const AuthLayout = ({ children, title, subtitle }) => {
           </p>
 
           {title && (
-            <h1 className="font-orbitron font-bold text-2xl text-white mb-2 uppercase">
+            <h1 className="font-rajdhani font-bold text-2xl text-white mb-2 uppercase">
               {title}
             </h1>
           )}

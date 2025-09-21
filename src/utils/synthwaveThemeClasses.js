@@ -1,7 +1,7 @@
 // utils/synthwaveThemeClasses.js
 export const themeClasses = {
   // Layout
-  container: "bg-synthwave-gradient min-h-screen text-synthwave-text-primary font-orbitron",
+  container: "bg-synthwave-gradient min-h-screen text-synthwave-text-primary font-rajdhani",
 
   // Hero section
   hero: "relative overflow-hidden py-24 px-8 text-center bg-synthwave-gradient before:absolute before:inset-0 before:bg-gradient-to-br before:from-synthwave-neon-pink/10 before:via-transparent before:to-synthwave-neon-cyan/10 before:pointer-events-none",

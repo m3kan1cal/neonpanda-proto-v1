@@ -30,7 +30,7 @@ export default {
         }
       },
       fontFamily: {
-        'orbitron': ['"Orbitron"', 'monospace'],
+        'inter': ['"Inter"', 'sans-serif'],
         'rajdhani': ['"Rajdhani"', 'sans-serif'],
         'russo': ['"Russo One"', 'sans-serif'],
       },
