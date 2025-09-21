@@ -44,6 +44,48 @@ const CollapsibleSection = ({ title, icon, children, defaultOpen = true, classNa
 
 const changelogEntries = [
   {
+    version: "Release v1.9.0",
+    date: "2025-09-20",
+    changes: {
+      added: [
+        "Branch-aware conditional authentication flows for enhanced production security",
+        "Comprehensive Postman authentication automation guide with USER_PASSWORD_AUTH flow",
+        "camelCase environment variable naming convention for modern API testing workflows",
+        "Enhanced glassmorphism container pattern (mainContentEnhanced) for improved UI depth",
+        "Automatic idToken extraction and storage in Postman pre-request scripts",
+        "Branch-aware resource naming utility functions for consistent infrastructure deployment",
+        "Exponential backoff retry mechanism for post-confirmation Lambda race conditions",
+        "Enhanced debug logging for DynamoDB table name resolution and branch detection",
+        "Consolidated getTableName() utility function for consistent table name management",
+        "Custom IncompleteAccountSetupException for better user error messaging in authentication flow"
+      ],
+      changed: [
+        "Navigation component padding reduced from px-8 py-4 to px-6 py-3 for more compact design",
+        "Breadcrumbs component padding reduced from px-8 py-2 to px-6 py-2 for visual consistency",
+        "API endpoint resolution now properly handles sandbox mode using endpoint instead of customEndpoint",
+        "Cognito User Pool Client auth flows now conditional: production uses only secure flows, dev/sandbox includes API testing flows",
+        "AuthContext handleConfirmSignUp now includes retry logic with exponential backoff for fetchUserAttributes",
+        "useEffect in AuthContext updated to use try/catch await pattern instead of .catch() for better error handling",
+        "LoginForm now syncs AuthContext state with Amplify internal state for UserAlreadyAuthenticatedException scenarios",
+        "AuthRouter redirect logic updated to handle users with missing custom:user_id more gracefully",
+        "Post-confirmation function environment variables simplified using DYNAMODB_BASE_TABLE_NAME and BRANCH_NAME",
+        "Branch naming logic consolidated into reusable utility functions for consistency across all resources"
+      ],
+      fixed: [
+        "API endpoint resolution bug where sandbox mode incorrectly used 'https://null' as endpoint",
+        "CloudFormation deployment failure due to incorrect enum values in explicitAuthFlows (ALLOW_SRP_AUTH → ALLOW_USER_SRP_AUTH)",
+        "Race condition between fetchUserAttributes and post-confirmation Lambda trigger during email verification",
+        "Authentication state synchronization mismatch causing users to get stuck on login page after verification",
+        "Uncaught promise rejections in checkAuthState function when called during component mount",
+        "Post-confirmation Lambda failures due to circular dependency in DynamoDB table name resolution",
+        "Duplicate getTableName() functions causing inconsistencies in throughput-scaling.ts and operations.ts",
+        "Missing custom user_id error not being displayed in LoginForm UI notification section",
+        "Breadcrumbs and Navigation component padding inconsistencies causing misaligned layout elements",
+        "Production security vulnerability where API testing authentication flows were enabled in all environments"
+      ]
+    }
+  },
+  {
     version: "Release v1.8.0",
     date: "2025-09-16",
     changes: {

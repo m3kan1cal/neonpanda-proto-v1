@@ -29,7 +29,16 @@ export const AuthProvider = ({ children }) => {
 
   // Check authentication status on mount
   useEffect(() => {
-    checkAuthState();
+    const initializeAuth = async () => {
+      try {
+        await checkAuthState();
+      } catch (error) {
+        // This should rarely happen now, but just in case
+        console.error('🚨 Uncaught error in checkAuthState on mount:', error);
+      }
+    };
+
+    initializeAuth();
   }, []);
 
   const checkAuthState = async (throwOnMissingUserId = false) => {
@@ -93,13 +102,13 @@ export const AuthProvider = ({ children }) => {
       console.info("🔄 AuthContext: Setting loading to false (not authenticated)");
       setLoading(false);
 
-      // Don't throw the error unless explicitly requested
+      // Only throw errors when explicitly requested
       if (throwOnMissingUserId && error.name === "IncompleteAccountSetupException") {
         throw error;
       }
 
-      // Re-throw other errors so the caller can handle them
-      throw error;
+      // For normal auth checking (like on mount), don't throw errors
+      // The state has already been set to unauthenticated above
     }
   };
 

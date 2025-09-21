@@ -18,7 +18,7 @@ import {
 function Navigation({ user, signOut }) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const location = useLocation();
-  const { isAuthenticated, user: authUser } = useAuth();
+  const { isAuthenticated, user: authUser, loading } = useAuth();
 
   // Get authenticated user's real userId (no fallback needed)
   const authenticatedUserId = authUser?.attributes?.['custom:user_id'];
@@ -73,7 +73,7 @@ function Navigation({ user, signOut }) {
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-synthwave-bg-primary/90 backdrop-blur-sm border-none outline-none mb-0 pb-0">
-      <div className="px-8 py-4 flex justify-between items-center">
+      <div className="px-6 py-3 flex justify-between items-center">
         {/* Logo/Brand */}
         <Link
           to="/"
@@ -88,8 +88,16 @@ function Navigation({ user, signOut }) {
 
         {/* User Info and Navigation Menu */}
         <div className="flex items-center space-x-4">
-          {/* Show user info only when authenticated */}
-          {isAuthenticated && user?.attributes && (
+          {/* Show user info with loading state */}
+          {loading && (
+            <div className="flex items-center space-x-3 text-synthwave-text-secondary font-rajdhani">
+              {/* Avatar skeleton - lighter shade */}
+              <div className="w-8 h-8 bg-synthwave-text-muted/10 rounded-full animate-pulse"></div>
+              {/* Username skeleton - lighter shade */}
+              <div className="h-4 w-20 bg-synthwave-text-muted/10 rounded animate-pulse"></div>
+            </div>
+          )}
+          {!loading && isAuthenticated && user?.attributes && (
             <div className="flex items-center space-x-3 text-synthwave-text-secondary font-rajdhani">
               {/* User Avatar */}
               <div className={avatarPatterns.userSmall}>

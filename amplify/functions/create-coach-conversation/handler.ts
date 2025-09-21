@@ -69,7 +69,10 @@ export const handler = async (
         if (sendMessageFunctionName) {
           const sendMessagePayload = {
             pathParameters: { userId, coachId, conversationId },
-            body: JSON.stringify({ userResponse: initialMessage.trim() }),
+            body: JSON.stringify({
+              userResponse: initialMessage.trim(),
+              messageTimestamp: new Date().toISOString()
+            }),
           };
 
           // For initial messages, we want to wait for completion so the conversation
