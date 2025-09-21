@@ -27,36 +27,55 @@ export const handler = async (
   event: APIGatewayProxyEventV2
 ): Promise<APIGatewayProxyResultV2> => {
   try {
+    console.info('🚀 Starting send-coach-conversation-message handler');
+
     const userId = event.pathParameters?.userId;
     const coachId = event.pathParameters?.coachId;
     const conversationId = event.pathParameters?.conversationId;
 
     if (!userId) {
+      console.error('❌ Validation failed: userId is required');
       return createErrorResponse(400, "userId is required");
     }
 
     if (!coachId) {
+      console.error('❌ Validation failed: coachId is required');
       return createErrorResponse(400, "coachId is required");
     }
 
     if (!conversationId) {
+      console.error('❌ Validation failed: conversationId is required');
       return createErrorResponse(400, "conversationId is required");
     }
 
     if (!event.body) {
+      console.error('❌ Validation failed: Request body is required');
       return createErrorResponse(400, "Request body is required");
     }
+
+    console.info('✅ Path parameters validated:', { userId, coachId, conversationId });
 
     const body = JSON.parse(event.body);
     const { userResponse, messageTimestamp } = body;
 
+    console.info('📥 Request body parsed:', {
+      hasUserResponse: !!userResponse,
+      userResponseType: typeof userResponse,
+      hasMessageTimestamp: !!messageTimestamp,
+      bodyKeys: Object.keys(body)
+    });
+
     if (!userResponse || typeof userResponse !== "string") {
+      console.error('❌ Validation failed: User response is required and must be string:', { userResponse, type: typeof userResponse });
       return createErrorResponse(400, "User response is required");
     }
 
     if (!messageTimestamp) {
+      console.error('❌ Validation failed: Message timestamp is required for accurate workout logging');
       return createErrorResponse(400, "Message timestamp is required for accurate workout logging");
     }
+
+    console.info('✅ All validations passed, starting message processing');
 
     // Load existing conversation
     const existingConversation = await getCoachConversation(
