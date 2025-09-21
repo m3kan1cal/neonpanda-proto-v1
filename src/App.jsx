@@ -56,7 +56,7 @@ function AppContent() {
       <Navigation user={user} signOut={signOut} />
       <Breadcrumbs />
       <div
-        className={`border-none outline-none bg-synthwave-bg-tertiary ${isHomePage ? "pt-[72px]" : "pt-24"}`}
+        className={`border-none outline-none bg-synthwave-bg-tertiary ${isHomePage ? "pt-[66px]" : "pt-24"}`}
       >
         <Routes>
           {/* Public routes */}

@@ -379,7 +379,7 @@ function ChatInput({
         {/* Input area */}
         <form onSubmit={handleSendMessage} className="flex items-end gap-3">
           {/* Action buttons */}
-          <div className="flex items-center gap-2 relative self-start" style={{marginTop: '4px'}}>
+          <div className="flex items-center gap-2 relative self-end mb-2">
             {/* Tips button */}
             {showTipsButton && tipsContent && (
               <button
