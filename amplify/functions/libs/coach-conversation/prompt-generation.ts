@@ -519,6 +519,31 @@ const generateConversationGuidelines = (configData: CoachConfig): string => {
     '- When discussing volume or training load, be precise about what you\'re calculating',
     '- Avoid making assumptions about workout data that wasn\'t explicitly provided',
     '',
+    '## CRITICAL MATHEMATICAL ACCURACY & UNIT CONVERSIONS',
+    '- ALWAYS double-check mathematical calculations before stating them in your response',
+    '- For distance conversions, use these exact conversion factors:',
+    '  * 1 mile = 1,609.34 meters (so 400m × 6 = 2,400m = 1.49 miles, NOT 2.4 miles)',
+    '  * 1 km = 1,000 meters',
+    '  * 1 mile = 5,280 feet',
+    '- Common distance calculation examples:',
+    '  * 6 × 400m = 2,400m = ~1.5 miles (NOT 2.4 miles)',
+    '  * 5 × 500m = 2,500m = ~1.55 miles',
+    '  * 4 × 800m = 3,200m = ~2.0 miles',
+    '- When calculating total distances:',
+    '  * Calculate total meters first: rounds × distance per round',
+    '  * Convert to miles: total meters ÷ 1,609.34',
+    '  * Round to reasonable precision (1-2 decimal places)',
+    '- For weight calculations:',
+    '  * Total volume = weight × total reps (not per set)',
+    '  * Example: 5 sets of 5 reps at 200lbs = 200 × 25 = 5,000lbs total volume',
+    '- For time calculations:',
+    '  * Convert consistently: 90 seconds = 1:30, not "1.5 minutes"',
+    '  * Use proper time format: MM:SS for times under an hour',
+    '- When in doubt about any calculation, either:',
+    '  * Acknowledge the workout without specific numbers, OR',
+    '  * State the calculation clearly: "6 rounds of 400m = 2,400 meters total (about 1.5 miles)"',
+    '- NEVER state mathematical facts you haven\'t verified - mathematical errors undermine coaching credibility',
+    '',
     '## CRITICAL: EQUIPMENT TERMINOLOGY AND REP COUNTING',
     '- "50# each hand" means 50 pounds PER DUMBBELL, NOT double the reps',
     '- "DB bench press 50# each hand" = normal reps with 50lb dumbbells in each hand',
@@ -557,6 +582,35 @@ const generateConversationGuidelines = (configData: CoachConfig): string => {
     '- Interval fatigue patterns: earlier intervals often have higher round counts than later ones due to accumulated fatigue'
   ];
 
+  // Add partner workout analysis guidelines
+  const partnerWorkoutGuidelines = [
+    '',
+    '## CRITICAL PARTNER WORKOUT ANALYSIS GUIDELINES',
+    '- PARTNER WORKOUTS: Carefully analyze workout context to determine if it was a partner format',
+    '- ALTERNATING PARTNER FORMAT ("I go, you rest"):',
+    '  * User typically performs HALF the total volume mentioned',
+    '  * "We did 10 rounds alternating" = user did ~5 rounds personally',
+    '  * "Partner WOD: 20 rounds total, switching every round" = user completed ~10 rounds',
+    '  * "Did Murph with my daughter, alternating exercises" = user did ~50 pull-ups, ~100 push-ups, ~150 squats',
+    '- SYNCHRONIZED PARTNER FORMAT ("we both did it together"):',
+    '  * User performs FULL volume alongside their partner',
+    '  * "We both did 5 rounds each" = user completed 5 full rounds',
+    '  * "Did Fran together at the same time" = user did full 21-15-9 scheme',
+    '- DETECTION KEYWORDS:',
+    '  * Alternating: "alternating", "switching", "taking turns", "partner style", "splitting the work"',
+    '  * Synchronized: "together", "same time", "both did", "in sync", "parallel"',
+    '- ANALYSIS APPROACH:',
+    '  * When reviewing logged partner workouts, confirm the format was interpreted correctly',
+    '  * If volume seems too high for individual effort, ask for clarification about partner format',
+    '  * Acknowledge partner training as great for motivation and accountability',
+    '  * Compare individual effort to previous solo performances, not total team output',
+    '- COACHING RESPONSE GUIDELINES:',
+    '  * Focus praise on the user\'s individual effort and portion of the work',
+    '  * "Great job on your 5 rounds in that partner WOD!" (not "Great job on those 10 rounds!")',
+    '  * Acknowledge the social/motivational benefits of partner training',
+    '  * Ask about partner format if workout volume seems unusually high for the user'
+  ];
+
   // Add methodology workout template guidelines
   const methodologyTemplateGuidelines = [
     '',
@@ -584,6 +638,8 @@ ${temporalReasoningGuidelines.join('\n')}
 ${exerciseRepetitionGuidelines.join('\n')}
 
 ${workoutAnalysisGuidelines.join('\n')}
+
+${partnerWorkoutGuidelines.join('\n')}
 
 ${methodologyTemplateGuidelines.join('\n')}`;
 };

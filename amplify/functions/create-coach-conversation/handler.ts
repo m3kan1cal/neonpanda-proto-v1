@@ -1,4 +1,3 @@
-import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from "aws-lambda";
 import {
   createCreatedResponse,
   createErrorResponse,
@@ -10,18 +9,12 @@ import {
   saveCoachConfig,
 } from "../../dynamodb/operations";
 import { CoachConversation } from "../libs/coach-conversation/types";
+import { withAuth, AuthenticatedHandler } from "../libs/auth/middleware";
 
-export const handler = async (
-  event: APIGatewayProxyEventV2
-): Promise<APIGatewayProxyResultV2> => {
-  try {
-    // Extract path parameters
-    const userId = event.pathParameters?.userId;
-    const coachId = event.pathParameters?.coachId;
-
-    if (!userId) {
-      return createErrorResponse(400, "userId is required");
-    }
+const baseHandler: AuthenticatedHandler = async (event) => {
+  // Auth handled by middleware - userId is already validated
+  const userId = event.user.userId;
+  const coachId = event.pathParameters?.coachId;
 
     if (!coachId) {
       return createErrorResponse(400, "coachId is required");
@@ -120,8 +113,6 @@ export const handler = async (
       },
       "Coach conversation created successfully"
     );
-  } catch (error) {
-    console.error("Error creating coach conversation:", error);
-    return createErrorResponse(500, "Internal server error");
-  }
 };
+
+export const handler = withAuth(baseHandler);

@@ -1,4 +1,3 @@
-import { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResultV2 } from 'aws-lambda';
 import {
   createCreatedResponse,
   createErrorResponse,
@@ -7,22 +6,11 @@ import {
 import { BuildWorkoutEvent } from "../libs/workout/types";
 import { CoachConfig } from "../libs/coach-creator/types";
 import { getCoachConfig } from "../../dynamodb/operations";
-import { getUserId, extractJWTClaims, authorizeUser } from '../libs/auth/jwt-utils';
+import { withAuth, AuthenticatedHandler } from '../libs/auth/middleware';
 
-export const handler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Promise<APIGatewayProxyResultV2> => {
-  try {
-    // Extract userId from path parameters and validate against JWT claims
-    const requestedUserId = event.pathParameters?.userId;
-    if (!requestedUserId) {
-      return createErrorResponse(400, 'Missing userId in path parameters.');
-    }
-
-    // Authorize that the requested userId matches the authenticated user
-    authorizeUser(event, requestedUserId);
-
-    // Use the validated userId
-    const userId = requestedUserId;
-    const claims = extractJWTClaims(event);
+const baseHandler: AuthenticatedHandler = async (event) => {
+  // Auth handled by middleware - userId is already validated
+  const userId = event.user.userId;
 
     console.info("🏋️ Create workout handler started:", {
       userId: userId,
@@ -136,8 +124,6 @@ export const handler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): P
 
     return createCreatedResponse(response);
 
-  } catch (error) {
-    console.error("❌ Unexpected error in create workout handler:", error);
-    return createErrorResponse(500, "An unexpected error occurred");
-  }
 };
+
+export const handler = withAuth(baseHandler);

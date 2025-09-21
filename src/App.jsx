@@ -32,12 +32,16 @@ import { ToastProvider } from "./contexts/ToastContext";
 import ToastContainer from "./components/ToastContainer";
 import { AuthProvider, useAuth, AuthRouter, ProtectedRoute } from "./auth";
 import { setAuthFailureHandler } from "./utils/apis/apiConfig";
+import { usePageTitle } from "./hooks/usePageTitle";
 
 function AppContent() {
   const location = useLocation();
   const navigate = useNavigate();
   const isHomePage = location.pathname === "/";
   const { user, signOut } = useAuth();
+
+  // Update page title based on current route
+  usePageTitle();
 
   // Set up the auth failure handler to use React Router navigation
   useEffect(() => {

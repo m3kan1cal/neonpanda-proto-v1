@@ -1,4 +1,3 @@
-import { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResultV2 } from "aws-lambda";
 import {
   createCreatedResponse,
   createErrorResponse,
@@ -10,24 +9,11 @@ import {
   detectMemoryCharacteristics,
 } from "../libs/memory";
 import { storeMemoryInPinecone } from "../libs/user/pinecone";
-import { getUserId, extractJWTClaims, authorizeUser } from '../libs/auth/jwt-utils';
+import { withAuth, AuthenticatedHandler } from '../libs/auth/middleware';
 
-export const handler = async (
-  event: APIGatewayProxyEventV2WithJWTAuthorizer
-): Promise<APIGatewayProxyResultV2> => {
-  try {
-    // Extract userId from path parameters and validate against JWT claims
-    const requestedUserId = event.pathParameters?.userId;
-    if (!requestedUserId) {
-      return createErrorResponse(400, 'Missing userId in path parameters.');
-    }
-
-    // Authorize that the requested userId matches the authenticated user
-    authorizeUser(event, requestedUserId);
-
-    // Use the validated userId
-    const userId = requestedUserId;
-    const claims = extractJWTClaims(event);
+const baseHandler: AuthenticatedHandler = async (event) => {
+  // Auth handled by middleware - userId is already validated
+  const userId = event.user.userId;
 
     if (!event.body) {
       return createErrorResponse(400, "Request body is required");
@@ -61,6 +47,7 @@ export const handler = async (
       }
     }
 
+  try {
     console.info("Creating memory:", {
       userId,
       contentLength: content.length,
@@ -137,3 +124,5 @@ export const handler = async (
     );
   }
 };
+
+export const handler = withAuth(baseHandler);

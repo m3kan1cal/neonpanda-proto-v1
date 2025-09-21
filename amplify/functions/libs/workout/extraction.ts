@@ -445,6 +445,30 @@ EXTRACTION GUIDELINES:
    set the appropriate blocking flags even if workout terms are present. These flags prevent inappropriate
    workout logging when users are asking questions rather than reporting completed workouts.
 
+6.5. CRITICAL PARTNER WORKOUT INTERPRETATION:
+   - PARTNER WORKOUTS: When users mention partner workouts, determine the work-sharing format
+   - ALTERNATING STYLE ("I go, you rest" format):
+     * User only performs approximately HALF the total volume mentioned
+     * Example: "We did 10 rounds, alternating" → User completed ~5 rounds personally
+     * Example: "Partner WOD: 20 rounds total, switching every round" → User did ~10 rounds
+     * Example: "Did Murph with my daughter, alternating exercises" → User did ~50 pull-ups, ~100 push-ups, ~150 squats (half of prescribed)
+   - SYNCHRONIZED STYLE ("we both do it together" format):
+     * User performs the FULL volume mentioned alongside their partner
+     * Example: "Partner workout: we both did 5 rounds each" → User completed 5 full rounds
+     * Example: "We did Fran together, same time" → User did full 21-15-9 scheme
+   - DETECTION KEYWORDS:
+     * Alternating style: "alternating", "switching", "I go you rest", "taking turns", "partner style", "splitting the work"
+     * Synchronized style: "together", "same time", "both did", "in sync", "parallel"
+   - VOLUME CALCULATION RULES:
+     * For alternating: rounds_completed = total_mentioned ÷ 2, reps = total_mentioned ÷ 2
+     * For synchronized: rounds_completed = total_mentioned, reps = total_mentioned
+     * When format is unclear, ask user or note in extraction_notes for clarification
+   - PARTNER WORKOUT EXAMPLES:
+     * "Did a partner WOD with my daughter, 20 rounds alternating" → rounds_completed: 10 (user's portion)
+     * "Partner Murph switching every exercise" → each exercise count ÷ 2 for user
+     * "We both crushed Fran at the same time" → full volume for user (synchronized)
+     * "10 rounds total, I did 5, she did 5" → rounds_completed: 5 (user's explicit portion)
+
 7. STANDARDIZATION:
    - Exercise names: Use standard terms (thruster not "front squat to press", pull-up not "chin-up")
    - Units: Be consistent (convert if needed, note original)
