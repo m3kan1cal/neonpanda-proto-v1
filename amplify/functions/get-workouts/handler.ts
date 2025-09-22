@@ -1,22 +1,10 @@
 import { createOkResponse, createErrorResponse } from '../libs/api-helpers';
 import { queryWorkouts } from '../../dynamodb/operations';
-import { getUserId, extractJWTClaims, authorizeUser } from '../libs/auth/jwt-utils';
-import type { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResultV2 } from 'aws-lambda';
+import { withAuth, AuthenticatedHandler } from '../libs/auth/middleware';
 
-export const handler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Promise<APIGatewayProxyResultV2> => {
-  try {
-    // Extract userId from path parameters and validate against JWT claims
-    const requestedUserId = event.pathParameters?.userId;
-    if (!requestedUserId) {
-      return createErrorResponse(400, 'Missing userId in path parameters.');
-    }
-
-    // Authorize that the requested userId matches the authenticated user
-    authorizeUser(event, requestedUserId);
-
-    // Use the validated userId
-    const userId = requestedUserId;
-    const claims = extractJWTClaims(event);
+const baseHandler: AuthenticatedHandler = async (event) => {
+  // Auth handled by middleware - userId is already validated
+  const userId = event.user.userId;
 
     // Parse query parameters for filtering
     const queryParams = event.queryStringParameters || {};
@@ -134,13 +122,10 @@ export const handler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): P
       } : undefined
     }));
 
-    return createOkResponse({
-      workouts: workoutSummaries,
-      totalCount: workoutSummaries.length
-    });
-
-  } catch (error) {
-    console.error('Error getting workout sessions:', error);
-    return createErrorResponse(500, 'Internal server error');
-  }
+  return createOkResponse({
+    workouts: workoutSummaries,
+    totalCount: workoutSummaries.length
+  });
 };
+
+export const handler = withAuth(baseHandler);

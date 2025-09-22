@@ -1,14 +1,10 @@
-import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
 import { createOkResponse, createErrorResponse } from '../libs/api-helpers';
 import { queryWeeklyAnalytics } from '../../dynamodb/operations';
+import { withAuth, AuthenticatedHandler } from '../libs/auth/middleware';
 
-export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGatewayProxyResultV2> => {
-  try {
-    const userId = event.pathParameters?.userId;
-
-    if (!userId) {
-      return createErrorResponse(400, 'userId is required');
-    }
+const baseHandler: AuthenticatedHandler = async (event) => {
+  // Auth handled by middleware - userId is already validated
+  const userId = event.user.userId;
 
     // Parse query parameters for filtering
     const queryParams = event.queryStringParameters || {};
@@ -87,8 +83,6 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
       filters: options
     });
 
-  } catch (error) {
-    console.error('Error querying weekly reports:', error);
-    return createErrorResponse(500, 'Internal server error');
-  }
 };
+
+export const handler = withAuth(baseHandler);

@@ -401,7 +401,7 @@ function TrainingGrounds() {
   useEffect(() => {
     if (!isValidatingUserId && (userIdError || !isValidUserId)) {
       // Redirect to login/auth page instead of showing error
-      navigate('/auth/login', { replace: true });
+      navigate('/auth', { replace: true });
     }
   }, [isValidatingUserId, userIdError, isValidUserId, navigate]);
 

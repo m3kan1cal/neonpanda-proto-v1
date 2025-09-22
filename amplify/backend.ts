@@ -40,9 +40,10 @@ import { getMemories } from "./functions/get-memories/resource";
 import { createMemory } from "./functions/create-memory/resource";
 import { deleteMemory } from "./functions/delete-memory/resource";
 import { deleteCoachConversation } from "./functions/delete-coach-conversation/resource";
+import { forwardLogsToSns } from "./functions/forward-logs-to-sns/resource";
 import { apiGatewayv2 } from "./api/resource";
 import { dynamodbTable } from "./dynamodb/resource";
-import { createContactFormNotificationTopic } from "./sns/resource";
+import { createContactFormNotificationTopic, createErrorMonitoringTopic } from "./sns/resource";
 import {
   grantBedrockPermissions,
   grantLambdaInvokePermissions,
@@ -53,6 +54,7 @@ import {
   grantDynamoDBThroughputPermissions,
 } from "./iam-policies";
 import { config } from "./functions/libs/configs";
+import { ErrorMonitoring } from "./functions/libs/error-monitoring";
 
 /**
  * @see https://docs.amplify.aws/react/build-a-backend/ to add storage, functions, and more
@@ -94,6 +96,7 @@ const backend = defineBackend({
   createMemory,
   deleteMemory,
   deleteCoachConversation,
+  forwardLogsToSns,
 });
 
 // Create User Pool authorizer
@@ -144,8 +147,19 @@ const coreApi = apiGatewayv2.createCoreApi(
 // Create DynamoDB table
 const coreTable = dynamodbTable.createCoreTable(backend.contactForm.stack);
 
-// Create SNS topic for contact form notifications
+// Create SNS topics for notifications
 const contactFormNotifications = createContactFormNotificationTopic(backend.contactForm.stack);
+const errorMonitoringTopic = createErrorMonitoringTopic(backend.contactForm.stack);
+
+// Set up centralized error monitoring for all Lambda functions
+const errorMonitoring = new ErrorMonitoring(
+  backend.contactForm.stack,
+  'ErrorMonitoring',
+  {
+    errorTopic: errorMonitoringTopic.topic,
+    forwarderFunction: backend.forwardLogsToSns.resources.lambda,
+  }
+);
 
 // Get branch information for S3 policies
 const branchInfo = getBranchInfo(backend.contactForm.stack);
@@ -286,9 +300,23 @@ allFunctions.forEach((func) => {
   func.addEnvironment("DYNAMODB_SCALE_DOWN_DELAY_MINUTES", "10");
 });
 
+// Set up error monitoring for all Lambda functions using allFunctions array
+console.info('🔍 Setting up error monitoring for all Lambda functions...');
+errorMonitoring.monitorFunctions(allFunctions);
+console.info(`✅ Error monitoring configured for ${allFunctions.length} Lambda functions (excluding forwarder)`);
+
 // Handle post-confirmation separately due to circular dependency
 // It's in the auth stack but needs to reference the DynamoDB table in contactForm stack
 backend.postConfirmation.addEnvironment("BRANCH_NAME", branchName);
+
+// Add error monitoring for post-confirmation function (in auth stack)
+errorMonitoring.monitorFunction(backend.postConfirmation.resources.lambda, 'postConfirmation');
+console.info('✅ Error monitoring configured for postConfirmation function');
+
+// Configure the log-to-SNS forwarder function (not monitored to avoid circular reference)
+backend.forwardLogsToSns.addEnvironment("SNS_TOPIC_ARN", errorMonitoringTopic.topicArn);
+errorMonitoringTopic.topic.grantPublish(backend.forwardLogsToSns.resources.lambda);
+console.info('✅ Log-to-SNS forwarder configured (excluded from error monitoring)');
 
 // Add SNS topic ARN to contact form function
 backend.contactForm.addEnvironment("CONTACT_FORM_TOPIC_ARN", contactFormNotifications.topic.topicArn);

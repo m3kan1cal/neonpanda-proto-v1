@@ -1,4 +1,3 @@
-import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from "aws-lambda";
 import {
   createOkResponse,
   createErrorResponse,
@@ -15,6 +14,7 @@ import { gatherConversationContext } from "../libs/coach-conversation/context";
 import { detectAndProcessWorkout } from "../libs/coach-conversation/workout-detection";
 import { queryMemories, detectAndProcessMemory } from "../libs/coach-conversation/memory-processing";
 import { generateAIResponse } from "../libs/coach-conversation/response-generation";
+import { withAuth, AuthenticatedHandler } from "../libs/auth/middleware";
 
 // Feature flags
 const FEATURE_FLAGS = {
@@ -23,20 +23,13 @@ const FEATURE_FLAGS = {
   ENABLE_CONVERSATION_SUMMARY: true
 };
 
-export const handler = async (
-  event: APIGatewayProxyEventV2
-): Promise<APIGatewayProxyResultV2> => {
-  try {
-    console.info('🚀 Starting send-coach-conversation-message handler');
+const baseHandler: AuthenticatedHandler = async (event) => {
+  console.info('🚀 Starting send-coach-conversation-message handler');
 
-    const userId = event.pathParameters?.userId;
-    const coachId = event.pathParameters?.coachId;
-    const conversationId = event.pathParameters?.conversationId;
-
-    if (!userId) {
-      console.error('❌ Validation failed: userId is required');
-      return createErrorResponse(400, "userId is required");
-    }
+  // Auth handled by middleware - userId is already validated
+  const userId = event.user.userId;
+  const coachId = event.pathParameters?.coachId;
+  const conversationId = event.pathParameters?.conversationId;
 
     if (!coachId) {
       console.error('❌ Validation failed: coachId is required');
@@ -307,8 +300,7 @@ export const handler = async (
         "Conversation updated successfully (response creation had issues)"
       );
     }
-  } catch (error) {
-    console.error("Error updating coach conversation:", error);
-    return createErrorResponse(500, "Internal server error");
-  }
 };
+
+// Export with allowInternalCalls for Lambda-to-Lambda invocation from create-coach-conversation
+export const handler = withAuth(baseHandler, { allowInternalCalls: true });

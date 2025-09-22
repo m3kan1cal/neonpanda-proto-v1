@@ -1,24 +1,12 @@
-import { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResultV2 } from 'aws-lambda';
 import { createOkResponse, createErrorResponse } from '../libs/api-helpers';
 import { getCoachCreatorSession } from '../../dynamodb/operations';
 import { CoachCreatorSession } from '../libs/coach-creator/types';
-import { getUserId, extractJWTClaims, authorizeUser } from '../libs/auth/jwt-utils';
 import { getProgress } from '../libs/coach-creator/session-management';
+import { withAuth, AuthenticatedHandler } from '../libs/auth/middleware';
 
-export const handler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Promise<APIGatewayProxyResultV2> => {
-  try {
-    // Extract userId from path parameters and validate against JWT claims
-    const requestedUserId = event.pathParameters?.userId;
-    if (!requestedUserId) {
-      return createErrorResponse(400, 'Missing userId in path parameters.');
-    }
-
-    // Authorize that the requested userId matches the authenticated user
-    authorizeUser(event, requestedUserId);
-
-    // Use the validated userId
-    const userId = requestedUserId;
-    const claims = extractJWTClaims(event);
+const baseHandler: AuthenticatedHandler = async (event) => {
+  // Auth handled by middleware - userId is already validated
+  const userId = event.user.userId;
 
     const sessionId = event.pathParameters?.sessionId;
     if (!sessionId) {
@@ -49,8 +37,6 @@ export const handler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): P
 
     return createOkResponse(sessionData);
 
-  } catch (error) {
-    console.error('Error loading coach creator session:', error);
-    return createErrorResponse(500, 'Internal server error', 'Failed to load coach creator session');
-  }
 };
+
+export const handler = withAuth(baseHandler);

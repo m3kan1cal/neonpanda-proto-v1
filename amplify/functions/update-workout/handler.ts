@@ -1,23 +1,11 @@
-import { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResultV2 } from 'aws-lambda';
 import { createOkResponse, createErrorResponse } from '../libs/api-helpers';
 import { updateWorkout, getWorkout } from '../../dynamodb/operations';
 import { Workout } from '../libs/workout/types';
-import { getUserId, extractJWTClaims, authorizeUser } from '../libs/auth/jwt-utils';
+import { withAuth, AuthenticatedHandler } from '../libs/auth/middleware';
 
-export const handler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Promise<APIGatewayProxyResultV2> => {
-  try {
-    // Extract userId from path parameters and validate against JWT claims
-    const requestedUserId = event.pathParameters?.userId;
-    if (!requestedUserId) {
-      return createErrorResponse(400, 'Missing userId in path parameters.');
-    }
-
-    // Authorize that the requested userId matches the authenticated user
-    authorizeUser(event, requestedUserId);
-
-    // Use the validated userId
-    const userId = requestedUserId;
-    const claims = extractJWTClaims(event);
+const baseHandler: AuthenticatedHandler = async (event) => {
+  // Auth handled by middleware - userId is already validated
+  const userId = event.user.userId;
 
     const workoutId = event.pathParameters?.workoutId;
     if (!workoutId) {
@@ -48,6 +36,7 @@ export const handler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): P
       return createErrorResponse(400, 'At least one field must be provided for update');
     }
 
+  try {
     console.info('Updating workout session:', {
       userId,
       workoutId,
@@ -95,3 +84,5 @@ export const handler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): P
     return createErrorResponse(500, 'Internal server error');
   }
 };
+
+export const handler = withAuth(baseHandler);

@@ -148,7 +148,7 @@ export const postConfirmation = defineFunction({
 ```
 
 ### Step 0.3: Create Auth Middleware (NEW)
-**File**: `amplify/functions/libs/auth-middleware.ts`
+**File**: `amplify/functions/libs/auth/middleware.ts`
 
 ```typescript
 import { createErrorResponse } from './api-helpers'
@@ -229,7 +229,7 @@ backend.auth.resource.addTrigger({
 **File**: `amplify/functions/get-workouts/handler.ts`
 
 ```typescript
-import { withAuth } from '../libs/auth-middleware'
+import { withAuth } from '../libs/auth/middleware'
 import { getWorkouts } from '../../dynamodb/operations'
 
 const baseHandler = async (event) => {

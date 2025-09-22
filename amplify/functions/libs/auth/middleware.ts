@@ -1,5 +1,5 @@
 import { APIGatewayProxyResultV2, APIGatewayProxyEventV2WithJWTAuthorizer } from 'aws-lambda'
-import { createErrorResponse } from './api-helpers'
+import { createErrorResponse } from '../api-helpers'
 
 export interface AuthenticatedEvent extends APIGatewayProxyEventV2WithJWTAuthorizer {
   user: {
@@ -11,7 +11,7 @@ export interface AuthenticatedEvent extends APIGatewayProxyEventV2WithJWTAuthori
 
 export type AuthenticatedHandler = (event: AuthenticatedEvent) => Promise<APIGatewayProxyResultV2>
 
-export const withAuth = (handler: AuthenticatedHandler, options = {}) => {
+export const withAuth = (handler: AuthenticatedHandler, options: { allowInternalCalls?: boolean } = {}) => {
   return async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Promise<APIGatewayProxyResultV2> => {
     // Dev mode bypass for testing
     if (process.env.NODE_ENV === 'development' && event.headers['x-dev-bypass'] === 'true') {
@@ -26,6 +26,42 @@ export const withAuth = (handler: AuthenticatedHandler, options = {}) => {
     }
 
     const claims = event.requestContext.authorizer?.jwt?.claims
+
+    // Handle internal Lambda-to-Lambda calls (no JWT context)
+    if (!claims && options.allowInternalCalls) {
+      // Internal calls come from other Lambda functions (already authenticated)
+      // Extract userId from pathParameters and trust it since the calling Lambda was authenticated
+      const userId = event.pathParameters?.userId
+
+      if (!userId) {
+        return createErrorResponse(400, 'userId required for internal call')
+      }
+
+      // Log all available path parameters for debugging and future extensibility
+      const availableParams = Object.keys(event.pathParameters || {})
+      console.info('🔗 Internal Lambda call detected:', {
+        userId,
+        availableParams,
+        pathParameters: event.pathParameters,
+        source: 'lambda-to-lambda'
+      })
+
+      // Create authenticated event preserving ALL original pathParameters
+      // This ensures extensibility for future Lambda-to-Lambda calls with different parameters
+      const authenticatedEvent = event as AuthenticatedEvent
+      authenticatedEvent.user = {
+        userId,
+        username: `internal_${userId}`, // Synthetic username for internal calls
+        email: `${userId}@internal.lambda` // Synthetic email for internal calls
+      }
+
+      // Ensure all pathParameters are preserved in the event
+      // This allows handlers to access conversationId, workoutId, or any future parameters
+      authenticatedEvent.pathParameters = event.pathParameters
+
+      return handler(authenticatedEvent)
+    }
+
     if (!claims) {
       return createErrorResponse(401, 'Authentication required')
     }

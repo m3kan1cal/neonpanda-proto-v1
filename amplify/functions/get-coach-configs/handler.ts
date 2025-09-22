@@ -1,36 +1,21 @@
-import { APIGatewayProxyEventV2WithJWTAuthorizer, APIGatewayProxyResultV2 } from 'aws-lambda';
 import { createOkResponse, createErrorResponse } from '../libs/api-helpers';
 import {
   queryCoachConfigs,
 } from '../../dynamodb/operations';
-import { getUserId, extractJWTClaims, authorizeUser } from '../libs/auth/jwt-utils';
+import { withAuth, AuthenticatedHandler } from '../libs/auth/middleware';
 
-export const handler = async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Promise<APIGatewayProxyResultV2> => {
-  try {
-    // Extract userId from path parameters and validate against JWT claims
-    const requestedUserId = event.pathParameters?.userId;
-    if (!requestedUserId) {
-      return createErrorResponse(400, 'Missing userId in path parameters.');
-    }
+const baseHandler: AuthenticatedHandler = async (event) => {
+  // Auth handled by middleware - userId is already validated
+  const userId = event.user.userId;
 
-    // Authorize that the requested userId matches the authenticated user
-    authorizeUser(event, requestedUserId);
+  // Get coach configs for the user
+  const coachConfigs = await queryCoachConfigs(userId);
 
-    // Use the validated userId
-    const userId = requestedUserId;
-    const claims = extractJWTClaims(event);
-
-    // Get coach configs for the user
-    const coachConfigs = await queryCoachConfigs(userId);
-
-    return createOkResponse({
-      userId,
-      coaches: coachConfigs.map(item => item.attributes),
-      count: coachConfigs.length
-    });
-
-  } catch (error) {
-    console.error('Error getting coach configs:', error);
-    return createErrorResponse(500, 'Internal server error');
-  }
+  return createOkResponse({
+    userId,
+    coaches: coachConfigs.map(item => item.attributes),
+    count: coachConfigs.length
+  });
 };
+
+export const handler = withAuth(baseHandler);

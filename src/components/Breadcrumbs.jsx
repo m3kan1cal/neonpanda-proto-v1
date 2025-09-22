@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { getRouteDisplayName, buildRouteWithParams } from '../utils/routeUtils';
 
 const ChevronRightIcon = () => (
   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -18,85 +19,16 @@ function Breadcrumbs() {
   const pathnames = location.pathname.split('/').filter(x => x);
   const searchParams = new URLSearchParams(location.search);
 
-  // Define route mappings for better display names
-  const routeMap = {
-    'about': 'About Us',
-    'technology': 'Technology',
-    'privacy': 'Privacy Policy',
-    'terms': 'Terms of Service',
-    'faqs': 'FAQs',
-    'changelog': 'Changelog',
-    'contact': 'Contact',
-    'coach-creator': 'Coach Creator',
-    'coaches': 'Coaches',
-    'training-grounds': 'Training Grounds',
-    'coach-conversations': 'Coach Conversations',
-    'workouts': 'Workouts',
-    'manage-workouts': 'Manage Workouts',
-    'manage-memories': 'Manage Memories',
-    'manage-conversations': 'Manage Coach Conversations',
-    'reports': 'View Reports',
-    'weekly': 'Weekly Reports'
-  };
+  // Route mappings now handled by shared utility
 
   // Don't show breadcrumbs on the home page
   if (location.pathname === '/') {
     return null;
   }
 
-  // Helper function to build route with query parameters
+  // Helper function now uses shared utility
   const buildRoute = (pathSegments, routeName) => {
-    const basePath = `/${pathSegments.join('/')}`;
-
-    // For Training Grounds, preserve userId and coachId if available
-    if (routeName === 'training-grounds' && searchParams.has('userId') && searchParams.has('coachId')) {
-      const userId = searchParams.get('userId');
-      const coachId = searchParams.get('coachId');
-      return `${basePath}?userId=${userId}&coachId=${coachId}`;
-    }
-
-    // For Manage Workouts, preserve userId and coachId if available
-    if (routeName === 'manage-workouts' && searchParams.has('userId') && searchParams.has('coachId')) {
-      const userId = searchParams.get('userId');
-      const coachId = searchParams.get('coachId');
-      return `${basePath}?userId=${userId}&coachId=${coachId}`;
-    }
-
-    // For Manage Memories, preserve userId and coachId if available
-    if (routeName === 'manage-memories' && searchParams.has('userId') && searchParams.has('coachId')) {
-      const userId = searchParams.get('userId');
-      const coachId = searchParams.get('coachId');
-      return `${basePath}?userId=${userId}&coachId=${coachId}`;
-    }
-
-    // For Manage Conversations, preserve userId and coachId if available
-    if (routeName === 'manage-conversations' && searchParams.has('userId') && searchParams.has('coachId')) {
-      const userId = searchParams.get('userId');
-      const coachId = searchParams.get('coachId');
-      return `${basePath}?userId=${userId}&coachId=${coachId}`;
-    }
-
-    // For Reports, preserve userId and coachId if available
-    if (routeName === 'reports' && searchParams.has('userId') && searchParams.has('coachId')) {
-      const userId = searchParams.get('userId');
-      const coachId = searchParams.get('coachId');
-      return `${basePath}?userId=${userId}&coachId=${coachId}`;
-    }
-
-    // For Weekly Reports, preserve userId, weekId, and coachId if available
-    if (routeName === 'weekly' && searchParams.has('userId')) {
-      const userId = searchParams.get('userId');
-      const weekId = searchParams.get('weekId');
-      const coachId = searchParams.get('coachId');
-
-      let params = `userId=${userId}`;
-      if (weekId) params += `&weekId=${weekId}`;
-      if (coachId) params += `&coachId=${coachId}`;
-
-      return `${basePath}?${params}`;
-    }
-
-    return basePath;
+    return buildRouteWithParams(pathSegments, routeName, searchParams);
   };
 
   return (
@@ -158,7 +90,7 @@ function Breadcrumbs() {
                 ...pathnames.slice(0, pathnames.indexOf('workouts')).map((name, index) => {
                   const pathSegments = pathnames.slice(0, index + 1);
                   const routeTo = buildRoute(pathSegments, name);
-                  const displayName = routeMap[name] || name.charAt(0).toUpperCase() + name.slice(1);
+                  const displayName = getRouteDisplayName(name);
 
                   return (
                     <React.Fragment key={name}>
@@ -201,7 +133,7 @@ function Breadcrumbs() {
                 ...pathnames.slice(0, pathnames.indexOf('coach-conversations')).map((name, index) => {
                   const pathSegments = pathnames.slice(0, index + 1);
                   const routeTo = buildRoute(pathSegments, name);
-                  const displayName = routeMap[name] || name.charAt(0).toUpperCase() + name.slice(1);
+                  const displayName = getRouteDisplayName(name);
 
                   return (
                     <React.Fragment key={name}>
@@ -239,7 +171,7 @@ function Breadcrumbs() {
               const pathSegments = pathnames.slice(0, index + 1);
               const routeTo = buildRoute(pathSegments, name);
               const isLast = index === pathnames.length - 1;
-              const displayName = routeMap[name] || name.charAt(0).toUpperCase() + name.slice(1);
+              const displayName = getRouteDisplayName(name);
 
               return (
                 <React.Fragment key={name}>
