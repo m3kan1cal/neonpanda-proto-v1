@@ -184,8 +184,8 @@ function ContactForm() {
   };
 
   return (
-    <div className={layoutPatterns.pageContainer}>
-      <div className={layoutPatterns.contentWrapper}>
+    <div className={`${layoutPatterns.pageContainer} flex flex-col`}>
+      <div className={`${layoutPatterns.contentWrapper} flex-grow`}>
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className={typographyPatterns.pageTitle}>
