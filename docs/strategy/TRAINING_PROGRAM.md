@@ -8,11 +8,13 @@ TRAINING PROGRAM:
 **START WITH POSTERIOR CHAIN POWER EXERCISE SUPERSET WITH ANTERIOR CHAIN FOR POWER DEVELOPMENT**
 4 sets, 6-8 reps, both exercises
 
-**THEN DO A HINGE, SQUAT, LUNGE, SPLIT SQUAT VARIATION FOR STRENGTH DEVELOPMENT**
+**THEN ALTERNATE BETWEEN THE FOLLOWING OPTIONS (1 OR 2) EVERY OTHER DAY (NEVER BOTH OPTIONS ON THE SAME DAY):**
+
+**OPTION 1: HINGE, SQUAT, LUNGE, SPLIT SQUAT VARIATION FOR STRENGTH DEVELOPMENT**
 4 sets, 6-10 reps
 
-**THEN SUPERSET A PUSH AND PULL EXERCISE FOR STRENGTH DEVELOPMENT**
-3-4 sets, 6-12 reps
+**OPTION 2: SUPERSET A PUSH AND PULL EXERCISE FOR STRENGTH DEVELOPMENT**
+4 sets, 6-10 reps
 
 **THEN DO A CROSSFIT AND/OR CONDITIONING WORKOUT**
 10-20 minutes, metabolic conditioning format
@@ -115,5 +117,4 @@ Calf raises
 - Power clean rotation (you loved the 175# progression)
 - Horizontal & vertical pulling emphasis
 - Weakness integration (burpee box jump-overs, push press, gymnastics, thrusters, angled wall walk holds)
-- Hinge movement frequency too low
 

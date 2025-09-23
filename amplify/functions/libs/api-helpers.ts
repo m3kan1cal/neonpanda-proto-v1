@@ -48,14 +48,16 @@ const s3Client = new S3Client({
 
 // Pinecone configuration
 const PINECONE_INDEX_NAME = "coach-creator-proto-v1-dev";
-const PINECONE_API_KEY = process.env.PINECONE_API_KEY || "pcsk_4tHp6N_MUauyYPRhqQjDZ9qyrWwe4nD7gRXuPz66SnbtkbAUQdUqkCfmcmzbAJfhYKSsyC";
+const PINECONE_API_KEY =
+  process.env.PINECONE_API_KEY ||
+  "pcsk_4tHp6N_MUauyYPRhqQjDZ9qyrWwe4nD7gRXuPz66SnbtkbAUQdUqkCfmcmzbAJfhYKSsyC";
 
 // Debug: Log Pinecone configuration at module load
-console.info('🔧 PINECONE_API_KEY validation:', {
+console.info("🔧 PINECONE_API_KEY validation:", {
   exists: !!PINECONE_API_KEY,
   length: PINECONE_API_KEY?.length,
   isPlaceholder: PINECONE_API_KEY === "pcsk_replace_me",
-  prefix: PINECONE_API_KEY?.substring(0, 12)
+  prefix: PINECONE_API_KEY?.substring(0, 12),
 });
 
 // Common CORS headers
@@ -138,7 +140,7 @@ export function getCurrentTimestamp(): string {
 }
 
 // Re-export from response-utils for backward compatibility
-export { fixMalformedJson } from './response-utils';
+export { fixMalformedJson } from "./response-utils";
 
 /**
  * Triggers a synchronous Lambda function invocation
@@ -181,7 +183,9 @@ export const invokeLambda = async (
 
     // Parse and return the response payload if it exists
     if (response.Payload) {
-      const responsePayload = JSON.parse(new TextDecoder().decode(response.Payload));
+      const responsePayload = JSON.parse(
+        new TextDecoder().decode(response.Payload)
+      );
       return responsePayload;
     }
 
@@ -304,7 +308,10 @@ ${systemPrompt}`;
  */
 const stripThinkingTags = (response: string): string => {
   // Remove everything between <thinking> and </thinking> tags (including the tags)
-  const withoutThinking = response.replace(/<thinking>[\s\S]*?<\/thinking>/gi, '');
+  const withoutThinking = response.replace(
+    /<thinking>[\s\S]*?<\/thinking>/gi,
+    ""
+  );
 
   // Clean up any extra whitespace that might be left
   return withoutThinking.trim();
@@ -347,7 +354,9 @@ export const callBedrockApi = async (
       ],
       system: [
         {
-          text: enableThinking ? enhancePromptForThinking(systemPrompt) : systemPrompt,
+          text: enableThinking
+            ? enhancePromptForThinking(systemPrompt)
+            : systemPrompt,
         },
       ],
       inferenceConfig: {
@@ -541,7 +550,7 @@ export const storeDebugDataInS3 = async (
     const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
 
     // Get branch information for subfolder structure
-    const branchName = process.env.BRANCH_NAME || 'main';
+    const branchName = process.env.BRANCH_NAME || "main";
     const branchPrefix = `${branchName}/`;
 
     // Determine the folder structure based on the type of data
@@ -670,63 +679,358 @@ const queryUserNamespace = async (
   }
 };
 
-// Helper function to query methodology namespace
+/**
+ * Standardized methodology query function with reranking support
+ * Replaces the complex getEnhancedMethodologyContext approach
+ */
 const queryMethodologyNamespace = async (
   userMessage: string,
   userId: string,
-  options: { topK: number }
+  options: { topK: number; enableReranking?: boolean }
 ): Promise<any[]> => {
   try {
-    // Use enhanced methodology context
-    const enhancedMethodologyMatches = await getEnhancedMethodologyContext(
-      userMessage,
-      userId,
-      {
-        topK: Math.ceil(options.topK / 2),
-        contextType: "conversation",
-      }
-    );
+    const { topK, enableReranking = RERANKING_CONFIG.enabled } = options;
+    const { index } = await getPineconeClient();
 
-    // Add record_type to methodology matches
-    const methodologyMatches = enhancedMethodologyMatches.map((match: any) => ({
-      ...match,
-      metadata: {
-        ...match.metadata,
-        record_type: "methodology",
-      },
-    }));
-
-    console.info("✅ Enhanced methodology namespace query successful:", {
-      matches: methodologyMatches.length,
+    console.info("🔍 Querying methodology namespace:", {
+      userMessage: userMessage.substring(0, 100),
+      topK,
+      rerankingEnabled: enableReranking,
+      namespace: "methodology",
     });
 
-    return methodologyMatches;
+    // Use higher topK if reranking is enabled
+    const queryTopK = enableReranking ? Math.max(topK * 2, 20) : topK;
+
+    const searchQuery = {
+      query: {
+        inputs: { text: userMessage },
+        topK: queryTopK,
+      },
+    };
+
+    const response = await index
+      .namespace("methodology")
+      .searchRecords(searchQuery);
+
+    if (!response.result.hits || response.result.hits.length === 0) {
+      console.info("📭 No methodology matches found");
+      return [];
+    }
+
+    // Normalize all methodology matches
+    let matches = response.result.hits.map((match) =>
+      normalizeMatch(match, "methodology")
+    );
+
+    // Apply reranking if enabled and we have sufficient results
+    if (enableReranking && matches.length > 1) {
+      try {
+        console.info("🔄 Applying reranking to methodology results:", {
+          originalCount: matches.length,
+          targetCount: topK,
+        });
+
+        matches = await rerankPineconeResults(userMessage, matches, {
+          topN: topK,
+        });
+      } catch (error) {
+        console.error(
+          "❌ Methodology reranking failed, using original results:",
+          error
+        );
+        matches = matches.slice(0, topK);
+      }
+    } else {
+      matches = matches.slice(0, topK);
+    }
+
+    console.info("✅ Standardized methodology query successful:", {
+      originalHits: response.result.hits.length,
+      finalMatches: matches.length,
+      wasReranked: enableReranking && response.result.hits.length > 1,
+    });
+
+    return matches;
   } catch (error) {
-    console.error("❌ Failed to query enhanced methodology context:", error);
+    console.error("❌ Failed to query methodology namespace:", error);
     return [];
   }
 };
 
+// Configuration for reranking
+const RERANKING_CONFIG = {
+  enabled: true, // Enable/disable reranking
+  model: "pinecone-rerank-v0", // Reranking model to use
+  initialTopK: 30, // Higher initial query results for reranking
+  finalTopN: 8, // Final number of reranked results
+  truncate: "END", // How to handle long documents
+  minScore: 0.5, // Lower threshold since reranking improves relevance
+  fallbackMinScore: 0.7, // Fallback minScore when reranking is disabled
+};
+
+/**
+ * Rerank search results using Pinecone's standalone rerank API
+ * @param query - Original user query
+ * @param matches - Search results to rerank
+ * @param options - Reranking options
+ * @returns Promise with reranked results maintaining original match structure
+ */
+const rerankPineconeResults = async (
+  query: string,
+  matches: any[],
+  options: {
+    topN?: number;
+    model?: string;
+    truncate?: string;
+  } = {}
+): Promise<any[]> => {
+  if (!RERANKING_CONFIG.enabled || matches.length === 0) {
+    return matches;
+  }
+
+  try {
+    const {
+      topN = RERANKING_CONFIG.finalTopN,
+      model = RERANKING_CONFIG.model,
+      truncate = RERANKING_CONFIG.truncate,
+    } = options;
+
+    // Validate Pinecone configuration for reranking
+    validatePineconeConfig();
+    const { client } = await getPineconeClient();
+
+    // Extract documents for reranking (use text content from matches)
+    const documents = matches.map((match, index) => {
+      // Get the best available text content - try all possible field locations
+      const text =
+        match.text ||
+        match.content ||
+        match.metadata?.text ||
+        match.metadata?.content ||
+        "";
+
+      const finalText = text.trim();
+
+      if (!finalText) {
+        console.warn(`⚠️ No text content found for match ${index}:`, {
+          id: match.id,
+          hasText: !!match.text,
+          hasContent: !!match.content,
+          hasMetadataText: !!match.metadata?.text,
+          hasMetadataContent: !!match.metadata?.content,
+          metadata: Object.keys(match.metadata || {}),
+        });
+        return `Record ID: ${match.id}`; // Fallback to ID if no text
+      }
+
+      return finalText;
+    });
+
+    console.info("🔄 Starting reranking process:", {
+      originalMatches: matches.length,
+      documentsExtracted: documents.length,
+      queryLength: query.length,
+      targetTopN: topN,
+      model,
+      // Debug: Show what fields were found in first few matches
+      firstMatchFields: matches.slice(0, 2).map((match, i) => ({
+        index: i,
+        id: match.id,
+        hasText: !!match.text,
+        hasContent: !!match.content,
+        hasMetadataText: !!match.metadata?.text,
+        hasMetadataContent: !!match.metadata?.content,
+        textLength: (match.text || "").length,
+        contentLength: (match.content || "").length,
+        metadataTextLength: (match.metadata?.text || "").length,
+        documentLength: documents[i]?.length || 0,
+      })),
+    });
+
+    // Call Pinecone rerank API
+    const rerankResponse = await client.inference.rerank(
+      model,
+      query,
+      documents,
+      {
+        topN: Math.min(topN, matches.length), // Don't request more than we have
+        returnDocuments: true, // Get the documents back with scores
+        parameters: {
+          truncate,
+        },
+      }
+    );
+
+    if (!rerankResponse.data || rerankResponse.data.length === 0) {
+      console.warn(
+        "⚠️ Reranking returned no results, falling back to original matches"
+      );
+      return matches.slice(0, topN);
+    }
+
+    // Map reranked results back to original match structure
+    const rerankedMatches = rerankResponse.data.map((rerankResult: any) => {
+      // Find the original match by index (rerank preserves document order)
+      const originalMatch = matches[rerankResult.index];
+
+      return {
+        ...originalMatch,
+        // Update with reranking score
+        score: rerankResult.score,
+        // Add reranking metadata
+        metadata: {
+          ...originalMatch.metadata,
+          originalScore: originalMatch.score,
+          rerankScore: rerankResult.score,
+          isReranked: true,
+        },
+      };
+    });
+
+    console.info("✅ Reranking successful:", {
+      originalCount: matches.length,
+      rerankedCount: rerankedMatches.length,
+      avgOriginalScore:
+        matches
+          .slice(0, rerankedMatches.length)
+          .reduce((sum: number, m: any) => sum + (m.score || 0), 0) /
+        rerankedMatches.length,
+      avgRerankScore:
+        rerankedMatches.reduce(
+          (sum: number, m: any) => sum + (m.score || 0),
+          0
+        ) / rerankedMatches.length,
+    });
+
+    return rerankedMatches;
+  } catch (error) {
+    console.error(
+      "❌ Reranking failed, falling back to original results:",
+      error
+    );
+    // Graceful degradation - return original matches
+    return matches.slice(0, options.topN || RERANKING_CONFIG.finalTopN);
+  }
+};
+
+/**
+ * Standardized function to extract text content from Pinecone match results
+ * Handles all possible field locations consistently across the codebase
+ */
+const extractTextContent = (match: any): string => {
+  // Standard priority order for text content extraction
+  const text =
+    match.text ||
+    match.content ||
+    match.metadata?.text ||
+    match.metadata?.content ||
+    "";
+
+  return text.trim();
+};
+
+/**
+ * Standardized function to normalize Pinecone match results
+ * Ensures consistent structure across all query types
+ */
+const normalizeMatch = (match: any, namespace?: string): any => {
+  const textContent = extractTextContent(match);
+
+  return {
+    ...match,
+    // Ensure text content is available in standard location
+    text: textContent,
+    content: textContent, // Backward compatibility
+    // Normalize metadata
+    metadata: {
+      ...match.metadata,
+      // Ensure record_type is set
+      record_type:
+        match.metadata?.record_type ||
+        (namespace === "methodology" ? "methodology" : "unknown"),
+    },
+  };
+};
+
 // Helper function to process and filter results
-const processAndFilterResults = (
+const processAndFilterResults = async (
   allMatches: any[],
-  options: { topK: number; minScore: number },
-  userId: string
+  options: { topK: number; minScore: number; enableReranking?: boolean },
+  userId: string,
+  originalQuery?: string
 ) => {
-  const { topK, minScore } = options;
+  const {
+    topK,
+    minScore,
+    enableReranking = RERANKING_CONFIG.enabled,
+  } = options;
   const userNamespace = getUserNamespace(userId);
 
-  // Sort by score descending and take top results
-  allMatches.sort((a, b) => (b.score || 0) - (a.score || 0));
-  const topMatches = allMatches.slice(0, topK);
+  console.info("Processing Pinecone results:", {
+    totalMatches: allMatches.length,
+    targetTopK: topK,
+    minScore,
+    rerankingEnabled: enableReranking && !!originalQuery,
+    hasQuery: !!originalQuery,
+  });
+
+  // Normalize all matches first for consistent structure
+  const normalizedMatches = allMatches.map((match) => normalizeMatch(match));
+
+  // Sort by score descending
+  normalizedMatches.sort((a, b) => (b.score || 0) - (a.score || 0));
+
+  let processedMatches = normalizedMatches;
+
+  // Apply reranking if enabled and we have a query
+  if (enableReranking && originalQuery && normalizedMatches.length > 1) {
+    try {
+      // Use more matches for reranking to improve quality
+      const matchesForReranking = normalizedMatches.slice(
+        0,
+        Math.min(RERANKING_CONFIG.initialTopK, normalizedMatches.length)
+      );
+
+      console.info("🔄 Applying reranking:", {
+        originalCount: normalizedMatches.length,
+        rerankingCount: matchesForReranking.length,
+        targetFinalCount: RERANKING_CONFIG.finalTopN,
+      });
+
+      processedMatches = await rerankPineconeResults(
+        originalQuery,
+        matchesForReranking,
+        {
+          topN: RERANKING_CONFIG.finalTopN,
+        }
+      );
+    } catch (error) {
+      console.error(
+        "❌ Reranking failed in processing, using original results:",
+        error
+      );
+      processedMatches = normalizedMatches.slice(0, topK);
+    }
+  } else {
+    // No reranking - use traditional topK filtering
+    processedMatches = normalizedMatches.slice(0, topK);
+  }
+
+  // Determine appropriate minimum score based on whether reranking was used
+  const effectiveMinScore =
+    enableReranking && originalQuery
+      ? RERANKING_CONFIG.minScore
+      : RERANKING_CONFIG.fallbackMinScore;
+  const finalMinScore = minScore || effectiveMinScore;
 
   // Filter results by minimum score and format for consumption
-  const relevantMatches = topMatches
-    .filter((match: any) => match.score && match.score >= minScore)
+  const relevantMatches = processedMatches
+    .filter((match: any) => match.score && match.score >= finalMinScore)
     .map((match: any) => ({
       id: match.id,
       score: match.score,
-      content: match.text || match.metadata?.text || "",
+      content: extractTextContent(match), // Use standardized extraction
       recordType: match.metadata?.record_type || "methodology",
       metadata: match.metadata,
       namespace:
@@ -735,12 +1039,18 @@ const processAndFilterResults = (
           : userNamespace,
     }));
 
-  console.info("Successfully processed Pinecone results:", {
+  const wasReranked =
+    enableReranking && originalQuery && normalizedMatches.length > 1;
+
+  console.info("✅ Successfully processed Pinecone results:", {
     indexName: PINECONE_INDEX_NAME,
     userId,
-    totalMatches: allMatches.length,
+    totalMatches: normalizedMatches.length,
+    processedMatches: processedMatches.length,
     relevantMatches: relevantMatches.length,
-    minScore,
+    finalMinScore,
+    wasReranked,
+    wasNormalized: true, // Indicate normalization was applied
     methodologyMatches: relevantMatches.filter(
       (m) => m.recordType === "methodology"
     ).length,
@@ -751,8 +1061,10 @@ const processAndFilterResults = (
   return {
     matches: relevantMatches,
     success: true,
-    totalMatches: allMatches.length,
+    totalMatches: normalizedMatches.length,
     relevantMatches: relevantMatches.length,
+    wasReranked,
+    wasNormalized: true,
   };
 };
 
@@ -774,6 +1086,7 @@ export const queryPineconeContext = async (
     includeConversationSummaries?: boolean;
     includeMethodology?: boolean;
     minScore?: number;
+    enableReranking?: boolean;
   } = {}
 ) => {
   try {
@@ -784,6 +1097,7 @@ export const queryPineconeContext = async (
       includeConversationSummaries = true,
       includeMethodology = true,
       minScore = 0.7,
+      enableReranking = RERANKING_CONFIG.enabled,
     } = options;
 
     // Validate configuration
@@ -795,26 +1109,47 @@ export const queryPineconeContext = async (
       namespace: getUserNamespace(userId),
       userId,
       indexName: PINECONE_INDEX_NAME,
+      rerankingEnabled: enableReranking,
+      finalTopK: topK,
     });
 
-    // Execute queries in parallel
+    // Determine query sizes based on reranking
+    const queryTopK = enableReranking ? RERANKING_CONFIG.initialTopK : topK;
+
+    // Execute queries in parallel with reranking support
     const [userMatches, methodologyMatches] = await Promise.all([
       queryUserNamespace(index, userId, userMessage, {
-        topK,
+        topK: queryTopK,
         includeWorkouts,
         includeCoachCreator,
         includeConversationSummaries,
       }),
       includeMethodology
-        ? queryMethodologyNamespace(userMessage, userId, { topK })
+        ? queryMethodologyNamespace(userMessage, userId, {
+            topK: queryTopK,
+            enableReranking,
+          })
         : Promise.resolve([]),
     ]);
 
     // Combine all matches
     const allMatches = [...userMatches, ...methodologyMatches];
 
-    // Process and return results
-    return processAndFilterResults(allMatches, { topK, minScore }, userId);
+    console.info("🔍 Retrieved initial Pinecone matches:", {
+      userMatches: userMatches.length,
+      methodologyMatches: methodologyMatches.length,
+      totalMatches: allMatches.length,
+      queryTopK,
+      willRerank: enableReranking && allMatches.length > 1,
+    });
+
+    // Process and return results (with reranking if enabled)
+    return await processAndFilterResults(
+      allMatches,
+      { topK, minScore, enableReranking },
+      userId,
+      userMessage // Pass original query for reranking
+    );
   } catch (error) {
     console.error("Failed to query Pinecone context:", error);
 
@@ -825,6 +1160,7 @@ export const queryPineconeContext = async (
       error: error instanceof Error ? error.message : "Unknown error",
       totalMatches: 0,
       relevantMatches: 0,
+      wasReranked: false,
     };
   }
 };
@@ -844,30 +1180,32 @@ export const deletePineconeContext = async (
     const { index } = await getPineconeClient();
     const userNamespace = getUserNamespace(userId);
 
-    console.info('🗑️ Deleting records from Pinecone by metadata filter:', {
+    console.info("🗑️ Deleting records from Pinecone by metadata filter:", {
       userId,
       namespace: userNamespace,
-      filter
+      filter,
     });
 
     // Delete directly by metadata filter - much simpler approach
     await index.namespace(userNamespace).deleteMany(filter);
 
-    console.info('✅ Successfully deleted records from Pinecone by metadata filter:', {
-      userId,
-      namespace: userNamespace,
-      filter
-    });
+    console.info(
+      "✅ Successfully deleted records from Pinecone by metadata filter:",
+      {
+        userId,
+        namespace: userNamespace,
+        filter,
+      }
+    );
 
     // Note: Pinecone deleteMany by filter doesn't return count, so we return success without count
     return { success: true, deletedCount: 1 }; // Assume at least 1 record was deleted
-
   } catch (error) {
-    console.error('❌ Failed to delete records from Pinecone:', error);
+    console.error("❌ Failed to delete records from Pinecone:", error);
     return {
       success: false,
       deletedCount: 0,
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : "Unknown error",
     };
   }
 };
@@ -882,94 +1220,154 @@ export const querySemanticMemories = async (
   options: {
     topK?: number;
     minScore?: number;
-    contextTypes?: string[]
+    contextTypes?: string[];
+    enableReranking?: boolean;
   } = {}
 ): Promise<any[]> => {
-  const { topK = 6, minScore = 0.7, contextTypes = [] } = options;
+  const {
+    topK = 6,
+    minScore = 0.7,
+    contextTypes = [],
+    enableReranking = RERANKING_CONFIG.enabled,
+  } = options;
 
   try {
     const { index } = await getPineconeClient();
     const userNamespace = getUserNamespace(userId);
 
-    console.info('🔍 Querying semantic memories from Pinecone:', {
+    console.info("🔍 Querying semantic memories from Pinecone:", {
       userId,
       userMessageLength: userMessage.length,
       topK,
       minScore,
       contextTypes,
-      namespace: userNamespace
+      namespace: userNamespace,
+      rerankingEnabled: enableReranking,
     });
+
+    // Determine query size based on reranking
+    const queryTopK = enableReranking
+      ? Math.max(topK * 3, RERANKING_CONFIG.initialTopK)
+      : topK;
 
     // Build filter for memory records
     let filter: Record<string, any> = {
-      record_type: 'user_memory'
+      record_type: "user_memory",
     };
 
     // Add context type filtering if specified
     if (contextTypes.length > 0) {
       filter = {
         ...filter,
-        $or: contextTypes.map(type => ({ memory_type: type }))
+        $or: contextTypes.map((type) => ({ memory_type: type })),
       };
     }
 
     const searchQuery = {
       query: {
         inputs: { text: userMessage },
-        topK
+        topK: queryTopK,
       },
-      filter
+      filter,
     };
 
-    const response = await index.namespace(userNamespace).searchRecords(searchQuery);
+    const response = await index
+      .namespace(userNamespace)
+      .searchRecords(searchQuery);
 
     if (!response.result.hits || response.result.hits.length === 0) {
-      console.info('📭 No semantic memories found in Pinecone:', {
+      console.info("📭 No semantic memories found in Pinecone:", {
         userId,
         contextTypes,
-        queryLength: userMessage.length
+        queryLength: userMessage.length,
       });
       return [];
     }
 
+    // Normalize all memory matches
+    let normalizedHits = response.result.hits.map((hit) => normalizeMatch(hit));
+
+    // Apply reranking if enabled and we have sufficient results
+    if (enableReranking && normalizedHits.length > 1) {
+      try {
+        console.info("🔄 Applying reranking to memory results:", {
+          originalCount: normalizedHits.length,
+          targetCount: topK,
+        });
+
+        normalizedHits = await rerankPineconeResults(
+          userMessage,
+          normalizedHits,
+          {
+            topN: topK,
+          }
+        );
+      } catch (error) {
+        console.error(
+          "❌ Memory reranking failed, using original results:",
+          error
+        );
+        normalizedHits = normalizedHits.slice(0, topK);
+      }
+    } else {
+      normalizedHits = normalizedHits.slice(0, topK);
+    }
+
+    // Determine effective minimum score based on reranking
+    const effectiveMinScore =
+      enableReranking && normalizedHits.length > 1
+        ? RERANKING_CONFIG.minScore
+        : minScore;
+
     // Filter by minimum score and convert to memory objects
-    const relevantMemories = response.result.hits
-      .filter((hit: any) => hit.score >= minScore)
+    const relevantMemories = normalizedHits
+      .filter((hit: any) => hit.score >= effectiveMinScore)
       .map((hit: any) => {
         // Convert Pinecone result back to UserMemory-like object
         return {
           memoryId: hit.metadata.memory_id,
           userId: hit.metadata.user_id || userId,
           coachId: hit.metadata.coach_id,
-          content: hit.text || hit.content,
+          content: extractTextContent(hit), // Use standardized extraction
           memoryType: hit.metadata.memory_type,
           metadata: {
             importance: hit.metadata.importance,
             createdAt: new Date(hit.metadata.created_at),
             usageCount: hit.metadata.usage_count || 0,
-            lastUsed: hit.metadata.last_used ? new Date(hit.metadata.last_used) : undefined,
-            tags: hit.metadata.tags || []
+            lastUsed: hit.metadata.last_used
+              ? new Date(hit.metadata.last_used)
+              : undefined,
+            tags: hit.metadata.tags || [],
+            // Add reranking metadata
+            originalScore: hit.metadata.originalScore,
+            rerankScore: hit.metadata.rerankScore,
+            wasReranked: !!hit.metadata.isReranked,
           },
           // Add Pinecone-specific metadata
           pineconeScore: hit.score,
-          pineconeId: hit.id
+          pineconeId: hit.id,
         };
       });
 
-    console.info('✅ Successfully retrieved semantic memories:', {
+    console.info("✅ Successfully retrieved semantic memories:", {
       userId,
       totalHits: response.result.hits.length,
       relevantMemories: relevantMemories.length,
-      minScore,
-      averageScore: relevantMemories.length > 0
-        ? (relevantMemories.reduce((sum, m) => sum + m.pineconeScore, 0) / relevantMemories.length).toFixed(3)
-        : 0
+      effectiveMinScore,
+      wasReranked: enableReranking && normalizedHits.length > 1,
+      wasNormalized: true, // Indicate normalization was applied
+      averageScore:
+        relevantMemories.length > 0
+          ? (
+              relevantMemories.reduce((sum, m) => sum + m.pineconeScore, 0) /
+              relevantMemories.length
+            ).toFixed(3)
+          : 0,
     });
 
     return relevantMemories;
-
   } catch (error) {
-    console.error('❌ Failed to query semantic memories from Pinecone:', error);
+    console.error("❌ Failed to query semantic memories from Pinecone:", error);
     // Return empty array to allow graceful fallback
     return [];
   }

@@ -924,7 +924,8 @@ export const calculateConfidence = (
  */
 export const extractCompletedAtTime = async (
   userMessage: string,
-  messageTimestamp?: string
+  messageTimestamp?: string,
+  userTimezone: string = 'America/Los_Angeles'
 ): Promise<Date | null> => {
   const referenceTime = messageTimestamp || new Date().toISOString();
   const messageDate = new Date(referenceTime);
@@ -933,7 +934,7 @@ export const extractCompletedAtTime = async (
   const timeSinceMessage = Math.round((Date.now() - messageDate.getTime()) / 1000);
   const userLocalTime = messageDate.toLocaleString('en-US', {
     hour12: false,
-    timeZone: 'America/New_York' // Default to Eastern for now - could be enhanced with user timezone detection
+    timeZone: userTimezone
   });
   const messageDay = messageDate.toLocaleDateString('en-US', {
     weekday: 'long',
@@ -946,13 +947,13 @@ You are a time extraction expert. Extract when the workout was actually complete
 
 USER MESSAGE: "${userMessage}"
 MESSAGE TYPED AT: ${referenceTime} (UTC)
-USER'S LOCAL TIME WHEN TYPED: ${userLocalTime} ET
+USER'S LOCAL TIME WHEN TYPED: ${userLocalTime} (${userTimezone})
 CURRENT SERVER TIME: ${new Date().toISOString()} (UTC)
 
 CONTEXT CLUES:
 - Time elapsed since message: ${timeSinceMessage} seconds
 - Message typed on: ${messageDay}
-- User's apparent timezone: America/New_York (Eastern)
+- User's timezone: ${userTimezone}
 
 CRITICAL REASONING RULES:
 1. Use MESSAGE TYPED AT as your reference point for ALL relative time calculations
@@ -963,9 +964,9 @@ CRITICAL REASONING RULES:
 6. If workout time seems unrealistic (future time), double-check your date calculation
 
 EXAMPLES:
-- Message typed at 11:30pm ET, user says "did Fran at 7pm ET" → 7pm ET TODAY (same date)
-- Message typed at 2am ET, user says "worked out this evening" → evening of PREVIOUS day
-- Message typed at 9am ET, user says "this morning at 6am" → 6am ET TODAY
+- Message typed at 11:30pm local time, user says "did Fran at 7pm" → 7pm local time TODAY (same date)
+- Message typed at 2am local time, user says "worked out this evening" → evening of PREVIOUS day
+- Message typed at 9am local time, user says "this morning at 6am" → 6am local time TODAY
 
 Return ONLY a JSON object with this format:
 {
@@ -975,9 +976,9 @@ Return ONLY a JSON object with this format:
 }
 
 Examples:
-- "I just finished at 11:42 AM Eastern" → {"completedAt": "2025-01-14T16:42:00.000Z", "confidence": 0.95, "reasoning": "Explicit time with timezone, converted EST to UTC"}
-- "I worked out this morning" → {"completedAt": "2025-01-14T14:00:00.000Z", "confidence": 0.8, "reasoning": "This morning interpreted as 9 AM local time"}
-- "Did my workout yesterday afternoon" → {"completedAt": "2025-01-13T19:00:00.000Z", "confidence": 0.7, "reasoning": "Yesterday afternoon assumed as 2 PM local time"}
+- "I just finished at 11:42 AM Pacific" → {"completedAt": "2025-01-14T19:42:00.000Z", "confidence": 0.95, "reasoning": "Explicit time with timezone, converted PST to UTC"}
+- "I worked out this morning" → {"completedAt": "2025-01-14T17:00:00.000Z", "confidence": 0.8, "reasoning": "This morning interpreted as 9 AM local time"}
+- "Did my workout yesterday afternoon" → {"completedAt": "2025-01-13T22:00:00.000Z", "confidence": 0.7, "reasoning": "Yesterday afternoon assumed as 2 PM local time"}
 - "Should I do Fran today?" → {"completedAt": null, "confidence": 0.9, "reasoning": "Future planning question, not completed workout"}
 - "What did I do last week?" → {"completedAt": null, "confidence": 0.9, "reasoning": "Inquiry about past, not logging new workout"}
 `;

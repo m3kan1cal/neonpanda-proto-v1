@@ -1,12 +1,13 @@
 import { CloudWatchLogsEvent, CloudWatchLogsDecodedData } from 'aws-lambda';
 import { SNSClient, PublishCommand } from '@aws-sdk/client-sns';
 import { gunzipSync } from 'zlib';
+import { sendErrorAlert } from '../libs/webhook-helpers';
 
 const snsClient = new SNSClient({});
 
 /**
- * Lambda function that forwards CloudWatch Logs to SNS
- * This function receives compressed CloudWatch log events and forwards error/warning logs to SNS
+ * Lambda function that forwards CloudWatch Logs to SNS and Google Chat
+ * This function receives compressed CloudWatch log events and forwards error/warning logs to both SNS and Google Chat
  */
 export const handler = async (event: CloudWatchLogsEvent) => {
   try {
@@ -75,6 +76,9 @@ export const handler = async (event: CloudWatchLogsEvent) => {
       errorCount: errorEvents.length,
       snsTopicArn
     });
+
+    // Also send to Google Chat
+    await sendErrorAlert(subject, messageBody);
 
   } catch (error) {
     console.error('Error processing CloudWatch logs:', error);

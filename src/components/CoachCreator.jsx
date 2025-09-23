@@ -340,44 +340,8 @@ function CoachCreator() {
           </div>
         </div>
 
-        {/* Floating Input skeleton */}
-        <div className="fixed bottom-0 left-0 right-0 bg-synthwave-bg-card/95 backdrop-blur-lg border-t-2 border-synthwave-neon-pink/30 shadow-lg shadow-synthwave-neon-pink/20 z-50">
-          <div className="max-w-7xl mx-auto px-8 py-6">
-            {/* Input area skeleton */}
-            <div className="flex items-end gap-3">
-              {/* Action buttons skeleton */}
-              <div className="flex items-center gap-1">
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="w-11 h-11 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
-                ))}
-              </div>
-
-              {/* Text input skeleton */}
-              <div className="flex-1 relative">
-                <div className="w-full h-12 bg-synthwave-text-muted/20 rounded-2xl animate-pulse"></div>
-              </div>
-
-              {/* Send button skeleton */}
-              <div className="w-12 h-12 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
-            </div>
-
-            {/* Status skeleton */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mt-2">
-              <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
-                <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-12"></div>
-              </div>
-            </div>
-
-            {/* Quick suggestions skeleton */}
-            <div className="flex flex-wrap gap-2 mt-4">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className="h-8 bg-synthwave-text-muted/20 rounded-full animate-pulse w-24"></div>
-              ))}
-            </div>
-          </div>
-        </div>
+        {/* Chat Input Skeleton */}
+        <ChatInput showSkeleton={true} />
       </div>
     );
   }
@@ -409,7 +373,7 @@ function CoachCreator() {
           <div className="w-full max-w-7xl">
             <div className={`${containerPatterns.mainContent} h-full flex flex-col`}>
               {/* Messages Area - with bottom padding for floating input */}
-              <div className="flex-1 overflow-y-auto overflow-hidden p-6 pb-32 space-y-4 custom-scrollbar">
+              <div className="flex-1 overflow-y-auto overflow-hidden p-6 pb-24 space-y-4 custom-scrollbar">
                 {agentState.messages.map((message) => (
                   <div
                     key={message.id}
@@ -541,9 +505,9 @@ function CoachCreator() {
             placeholder="Tell me about your fitness goals..."
             coachName="Vesper the Coach Creator"
             isOnline={true}
+            context="creation"
             showDeleteButton={true}
             onDeleteClick={handleDeleteClick}
-            quickSuggestions={quickSuggestions}
             enableRecording={true}
             showTipsButton={true}
             tipsContent={coachCreatorTips}

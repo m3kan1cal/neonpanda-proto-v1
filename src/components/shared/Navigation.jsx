@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { avatarPatterns, iconButtonPatterns, containerPatterns } from '../utils/uiPatterns';
-import { useAuth } from '../auth/contexts/AuthContext';
+import { avatarPatterns, iconButtonPatterns, containerPatterns } from '../../utils/uiPatterns';
+import { useAuth } from '../../auth/contexts/AuthContext';
 import {
   HomeIconTiny,
   FAQIconTiny,
@@ -12,8 +12,11 @@ import {
   ReportsIconTiny,
   WaitlistIconTiny,
   CollaborateIconTiny,
-  SignOutIconTiny
-} from './themes/SynthwaveComponents';
+  SignOutIconTiny,
+  AboutIconTiny,
+  TechnologyIconTiny,
+  SupportIconTiny
+} from '../themes/SynthwaveComponents';
 
 function Navigation({ user, signOut }) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -137,7 +140,7 @@ function Navigation({ user, signOut }) {
                 <Link
                   to="/"
                   onClick={closeDropdown}
-                  className={`flex items-center space-x-3 px-4 py-2 font-rajdhani font-medium transition-all duration-300 ${
+                  className={`flex items-center space-x-3 px-4 py-1.5 font-rajdhani font-medium transition-all duration-150 ${
                     location.pathname === "/"
                       ? "text-synthwave-neon-cyan bg-synthwave-neon-cyan/10"
                       : "text-synthwave-text-primary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10"
@@ -149,22 +152,46 @@ function Navigation({ user, signOut }) {
                 <Link
                   to="/faqs"
                   onClick={closeDropdown}
-                  className={`flex items-center space-x-3 px-4 py-2 font-rajdhani font-medium transition-all duration-300 ${
+                  className={`flex items-center space-x-3 px-4 py-1.5 font-rajdhani font-medium transition-all duration-150 ${
                     location.pathname === "/faqs"
-                      ? "text-synthwave-neon-pink bg-synthwave-neon-pink/10"
-                      : "text-synthwave-text-primary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10"
+                      ? "text-synthwave-neon-cyan bg-synthwave-neon-cyan/10"
+                      : "text-synthwave-text-primary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10"
                   }`}
                 >
                   <FAQIconTiny />
                   <span>FAQs</span>
                 </Link>
                 <Link
+                  to="/about"
+                  onClick={closeDropdown}
+                  className={`flex items-center space-x-3 px-4 py-1.5 font-rajdhani font-medium transition-all duration-150 ${
+                    location.pathname === "/about"
+                      ? "text-synthwave-neon-cyan bg-synthwave-neon-cyan/10"
+                      : "text-synthwave-text-primary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10"
+                  }`}
+                >
+                  <AboutIconTiny />
+                  <span>About Us</span>
+                </Link>
+                <Link
+                  to="/technology"
+                  onClick={closeDropdown}
+                  className={`flex items-center space-x-3 px-4 py-1.5 font-rajdhani font-medium transition-all duration-150 ${
+                    location.pathname === "/technology"
+                      ? "text-synthwave-neon-cyan bg-synthwave-neon-cyan/10"
+                      : "text-synthwave-text-primary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10"
+                  }`}
+                >
+                  <TechnologyIconTiny />
+                  <span>Technology</span>
+                </Link>
+                <Link
                   to="/changelog"
                   onClick={closeDropdown}
-                  className={`flex items-center space-x-3 px-4 py-2 font-rajdhani font-medium transition-all duration-300 ${
+                  className={`flex items-center space-x-3 px-4 py-1.5 font-rajdhani font-medium transition-all duration-150 ${
                     location.pathname === "/changelog"
-                      ? "text-synthwave-neon-purple bg-synthwave-neon-purple/10"
-                      : "text-synthwave-text-primary hover:text-synthwave-neon-purple hover:bg-synthwave-neon-purple/10"
+                      ? "text-synthwave-neon-cyan bg-synthwave-neon-cyan/10"
+                      : "text-synthwave-text-primary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10"
                   }`}
                 >
                   <ChangelogIconTiny />
@@ -177,10 +204,10 @@ function Navigation({ user, signOut }) {
                     <Link
                       to={`/coaches?userId=${authenticatedUserId}`}
                       onClick={closeDropdown}
-                      className={`flex items-center space-x-3 px-4 py-2 font-rajdhani font-medium transition-all duration-300 ${
+                      className={`flex items-center space-x-3 px-4 py-1.5 font-rajdhani font-medium transition-all duration-150 ${
                         location.pathname === "/coaches"
-                          ? "text-synthwave-neon-purple bg-synthwave-neon-purple/10"
-                          : "text-synthwave-text-primary hover:text-synthwave-neon-purple hover:bg-synthwave-neon-purple/10"
+                          ? "text-synthwave-neon-pink bg-synthwave-neon-pink/10"
+                          : "text-synthwave-text-primary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10"
                       }`}
                     >
                       <CoachesIconTiny />
@@ -195,7 +222,7 @@ function Navigation({ user, signOut }) {
                     <Link
                       to={`/training-grounds/manage-workouts?userId=${authenticatedUserId}&coachId=${currentCoachId}`}
                       onClick={closeDropdown}
-                      className={`flex items-center space-x-3 px-4 py-2 font-rajdhani font-medium transition-all duration-300 ${
+                      className={`flex items-center space-x-3 px-4 py-1.5 font-rajdhani font-medium transition-all duration-150 ${
                         location.pathname === "/training-grounds/manage-workouts"
                           ? "text-synthwave-neon-pink bg-synthwave-neon-pink/10"
                           : "text-synthwave-text-primary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10"
@@ -207,10 +234,10 @@ function Navigation({ user, signOut }) {
                     <Link
                       to={`/training-grounds/manage-memories?userId=${authenticatedUserId}&coachId=${currentCoachId}`}
                       onClick={closeDropdown}
-                      className={`flex items-center space-x-3 px-4 py-2 font-rajdhani font-medium transition-all duration-300 ${
+                      className={`flex items-center space-x-3 px-4 py-1.5 font-rajdhani font-medium transition-all duration-150 ${
                         location.pathname === "/training-grounds/manage-memories"
-                          ? "text-synthwave-neon-cyan bg-synthwave-neon-cyan/10"
-                          : "text-synthwave-text-primary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10"
+                          ? "text-synthwave-neon-pink bg-synthwave-neon-pink/10"
+                          : "text-synthwave-text-primary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10"
                       }`}
                     >
                       <MemoryIconTiny />
@@ -219,10 +246,10 @@ function Navigation({ user, signOut }) {
                     <Link
                       to={`/training-grounds/reports?userId=${authenticatedUserId}&coachId=${currentCoachId}`}
                       onClick={closeDropdown}
-                      className={`flex items-center space-x-3 px-4 py-2 font-rajdhani font-medium transition-all duration-300 ${
+                      className={`flex items-center space-x-3 px-4 py-1.5 font-rajdhani font-medium transition-all duration-150 ${
                         location.pathname === "/training-grounds/reports"
-                          ? "text-synthwave-neon-purple bg-synthwave-neon-purple/10"
-                          : "text-synthwave-text-primary hover:text-synthwave-neon-purple hover:bg-synthwave-neon-purple/10"
+                          ? "text-synthwave-neon-pink bg-synthwave-neon-pink/10"
+                          : "text-synthwave-text-primary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10"
                       }`}
                     >
                       <ReportsIconTiny />
@@ -234,15 +261,23 @@ function Navigation({ user, signOut }) {
                 <Link
                   to="/contact?type=waitlist"
                   onClick={closeDropdown}
-                  className="flex items-center space-x-3 px-4 py-2 font-rajdhani font-medium text-synthwave-text-primary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-300"
+                  className="flex items-center space-x-3 px-4 py-1.5 font-rajdhani font-medium text-synthwave-text-primary hover:text-synthwave-neon-purple hover:bg-synthwave-neon-purple/10 transition-all duration-150"
                 >
                   <WaitlistIconTiny />
                   <span>Get Early Access</span>
                 </Link>
                 <Link
+                  to="/contact?type=support"
+                  onClick={closeDropdown}
+                  className="flex items-center space-x-3 px-4 py-1.5 font-rajdhani font-medium text-synthwave-text-primary hover:text-synthwave-neon-purple hover:bg-synthwave-neon-purple/10 transition-all duration-150"
+                >
+                  <SupportIconTiny />
+                  <span>Support</span>
+                </Link>
+                <Link
                   to="/contact?type=collaborate"
                   onClick={closeDropdown}
-                  className="flex items-center space-x-3 px-4 py-2 font-rajdhani font-medium text-synthwave-text-primary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-300"
+                  className="flex items-center space-x-3 px-4 py-1.5 font-rajdhani font-medium text-synthwave-text-primary hover:text-synthwave-neon-purple hover:bg-synthwave-neon-purple/10 transition-all duration-150"
                 >
                   <CollaborateIconTiny />
                   <span>Collaborate</span>
@@ -255,7 +290,7 @@ function Navigation({ user, signOut }) {
                       signOut();
                       closeDropdown();
                     }}
-                    className="flex items-center space-x-3 px-4 py-2 font-rajdhani font-medium text-synthwave-text-primary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-300 w-full text-left"
+                    className="flex items-center space-x-3 px-4 py-1.5 font-rajdhani font-medium text-synthwave-text-primary hover:text-synthwave-neon-purple hover:bg-synthwave-neon-purple/10 transition-all duration-150 w-full text-left"
                   >
                     <SignOutIconTiny />
                     <span>Sign Out</span>

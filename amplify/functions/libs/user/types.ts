@@ -13,7 +13,9 @@ export interface UserProfile {
     url: string;
     s3Key: string;
   };
-  preferences: {};
+  preferences: {
+    timezone?: string; // User's preferred timezone (e.g., 'America/Los_Angeles')
+  };
   subscription: {};
   demographics: {};
   fitness: {};
