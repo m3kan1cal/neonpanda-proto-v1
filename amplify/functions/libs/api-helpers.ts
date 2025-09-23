@@ -672,7 +672,11 @@ const queryUserNamespace = async (
       matches: userResponse.result.hits.length,
     });
 
-    return userResponse.result.hits;
+    // Extract record data and combine with score before returning
+    return userResponse.result.hits.map((hit: any) => ({
+      ...hit.record,
+      score: hit.score,
+    }));
   } catch (error) {
     console.error("❌ Failed to query user namespace:", error);
     return [];
@@ -718,10 +722,13 @@ const queryMethodologyNamespace = async (
       return [];
     }
 
-    // Normalize all methodology matches
-    let matches = response.result.hits.map((match) =>
-      normalizeMatch(match, "methodology")
-    );
+    // Normalize all methodology matches - extract record data and combine with score
+    let matches = response.result.hits
+      .map((hit: any) => ({
+        ...hit.record,
+        score: hit.score,
+      }))
+      .map((match) => normalizeMatch(match, "methodology"));
 
     // Apply reranking if enabled and we have sufficient results
     if (enableReranking && matches.length > 1) {
@@ -1284,8 +1291,13 @@ export const querySemanticMemories = async (
       return [];
     }
 
-    // Normalize all memory matches
-    let normalizedHits = response.result.hits.map((hit) => normalizeMatch(hit));
+    // Normalize all memory matches - extract record data and combine with score
+    let normalizedHits = response.result.hits
+      .map((hit: any) => ({
+        ...hit.record,
+        score: hit.score,
+      }))
+      .map((hit) => normalizeMatch(hit));
 
     // Apply reranking if enabled and we have sufficient results
     if (enableReranking && normalizedHits.length > 1) {
