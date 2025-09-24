@@ -1,12 +1,13 @@
 import { CloudWatchLogsEvent, CloudWatchLogsDecodedData } from 'aws-lambda';
 import { SNSClient, PublishCommand } from '@aws-sdk/client-sns';
 import { gunzipSync } from 'zlib';
+import { sendErrorAlert } from '../libs/webhook-helpers';
 
 const snsClient = new SNSClient({});
 
 /**
- * Lambda function that forwards CloudWatch Logs to SNS
- * This function receives compressed CloudWatch log events and forwards error/warning logs to SNS
+ * Lambda function that forwards CloudWatch Logs to SNS and Google Chat
+ * This function receives compressed CloudWatch log events and forwards error/warning logs to both SNS and Google Chat
  */
 export const handler = async (event: CloudWatchLogsEvent) => {
   try {
@@ -22,18 +23,8 @@ export const handler = async (event: CloudWatchLogsEvent) => {
       logEvents: logData.logEvents.length
     });
 
-    // Filter for error/warning events
-    const errorEvents = logData.logEvents.filter(logEvent => {
-      const message = logEvent.message;
-      return (
-        message.includes('ERROR') ||
-        message.includes('Error') ||
-        message.includes('WARN') ||
-        message.includes('WARNING') ||
-        message.includes('"level":"ERROR"') ||
-        message.includes('"level":"WARN"')
-      );
-    });
+    // No additional filtering needed - CloudWatch filter already sent us relevant logs
+    const errorEvents = logData.logEvents;
 
     if (errorEvents.length === 0) {
       console.info('No error/warning events found, skipping SNS notification');
@@ -75,6 +66,9 @@ export const handler = async (event: CloudWatchLogsEvent) => {
       errorCount: errorEvents.length,
       snsTopicArn
     });
+
+    // Also send to Google Chat
+    await sendErrorAlert(subject, messageBody);
 
   } catch (error) {
     console.error('Error processing CloudWatch logs:', error);

@@ -341,7 +341,7 @@ export async function saveCoachCreatorSession(
   await saveToDynamoDB(itemWithTTL);
 }
 
-// Generic helper function to recursively convert all Date objects to ISO strings for DynamoDB storage
+// Generic helper function to recursively convert all Date objects to ISO strings and remove undefined values for DynamoDB storage
 function serializeForDynamoDB(obj: any): any {
   if (obj === null || obj === undefined) {
     return obj;
@@ -357,9 +357,25 @@ function serializeForDynamoDB(obj: any): any {
 
   if (typeof obj === "object") {
     const serialized: any = {};
+    const undefinedKeys: string[] = [];
+
     for (const [key, value] of Object.entries(obj)) {
-      serialized[key] = serializeForDynamoDB(value);
+      if (value !== undefined) {
+        serialized[key] = serializeForDynamoDB(value);
+      } else {
+        undefinedKeys.push(key);
+      }
     }
+
+    // Log undefined values for debugging while still preventing crashes
+    if (undefinedKeys.length > 0) {
+      console.warn("⚠️ Found undefined values in DynamoDB serialization:", {
+        undefinedKeys,
+        objectType: obj.constructor?.name || 'Object',
+        objectKeys: Object.keys(obj)
+      });
+    }
+
     return serialized;
   }
 

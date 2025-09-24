@@ -44,6 +44,47 @@ const CollapsibleSection = ({ title, icon, children, defaultOpen = true, classNa
 
 const changelogEntries = [
   {
+    version: "Release v2.0.0",
+    date: "2025-09-21",
+    changes: {
+      added: [
+        "Inter font integration to Tailwind CSS configuration for modern web typography",
+        "Dynamic browser tab titles that reflect current page/route using usePageTitle hook",
+        "Centralized route mapping utility (routeUtils.js) for consistent breadcrumbs and page titles",
+        "Critical mathematical accuracy guidelines for AI coach with precise conversion factors (1 mile = 1,609.34 meters)",
+        "Partner workout interpretation system for alternating vs synchronized volume calculations",
+        "withAuth middleware for centralized Lambda function authentication and authorization",
+        "Comprehensive error monitoring system with CloudWatch Logs → Lambda → SNS architecture",
+        "Email notifications to developers@neonpanda.ai for all Lambda function errors and warnings",
+        "Lambda bridge function (forward-logs-to-sns) for CloudWatch to SNS integration",
+        "Support for internal Lambda-to-Lambda invocations without JWT authentication",
+        "Automatic log group creation with 30-day retention policy for all monitored functions",
+        "High-level CDK constructs (SubscriptionFilter, LambdaDestination) for error monitoring infrastructure"
+      ],
+      changed: [
+        "Application base title updated from 'NeonPanda/AI' to 'NeonPanda' for cleaner branding",
+        "All 27 Lambda handlers migrated from manual authorizeUser to withAuth middleware pattern",
+        "AI coach prompt enhanced with step-by-step mathematical calculation examples and unit conversion guidelines",
+        "Workout extraction AI updated with partner WOD interpretation rules and volume calculation logic",
+        "Error monitoring excludes log forwarder function from self-monitoring to prevent circular references",
+        "ContactForm layout restructured with proper flexbox to prevent footer positioning issues",
+        "All Lambda functions now monitored at the same level with consistent error alerting",
+        "SNS topic naming standardized and simplified across error monitoring and contact form systems"
+      ],
+      fixed: [
+        "API endpoints returning 500 Internal Server Error when userId in URL doesn't match JWT (now returns 403 Forbidden)",
+        "Mathematical inaccuracies in AI coach responses (6 rounds × 400m incorrectly calculated as 2.4 miles instead of ~1.5 miles)",
+        "Partner workout volume miscalculation where users were credited with full reps instead of half for alternating WODs",
+        "CloudFormation deployment failures due to circular reference in error monitoring log groups",
+        "ContactForm footer jumping up after successful submission due to content height changes",
+        "CloudWatch Logs subscription filters requiring Lambda bridge instead of direct SNS integration",
+        "Missing path parameters (conversationId) in internal Lambda-to-Lambda calls",
+        "Authorization function throwing generic errors causing improper HTTP status codes",
+        "Log group references failing during deployment before Lambda functions were invoked"
+      ]
+    }
+  },
+  {
     version: "Release v1.9.0",
     date: "2025-09-20",
     changes: {

@@ -91,7 +91,9 @@ export const handler: PostConfirmationTriggerHandler = async (event: PostConfirm
         isActive: true
       },
       nickname: givenName || preferredUsername,
-      preferences: {},
+      preferences: {
+        timezone: 'America/Los_Angeles' // Default to Pacific Time for new users
+      },
       subscription: {},
       userId: customUserId,
       username: preferredUsername

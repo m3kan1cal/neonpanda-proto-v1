@@ -13,8 +13,19 @@ export type AuthenticatedHandler = (event: AuthenticatedEvent) => Promise<APIGat
 
 export const withAuth = (handler: AuthenticatedHandler, options: { allowInternalCalls?: boolean } = {}) => {
   return async (event: APIGatewayProxyEventV2WithJWTAuthorizer): Promise<APIGatewayProxyResultV2> => {
+    // DEBUG: Log the raw event structure
+    console.info('🔍 withAuth received event:', {
+      hasEvent: !!event,
+      eventKeys: Object.keys(event || {}),
+      hasRequestContext: !!event?.requestContext,
+      requestContextKeys: event?.requestContext ? Object.keys(event.requestContext) : null,
+      hasAuthorizer: !!event?.requestContext?.authorizer,
+      authorizerKeys: event?.requestContext?.authorizer ? Object.keys(event.requestContext.authorizer) : null,
+      rawEvent: JSON.stringify(event, null, 2),
+    });
+
     // Dev mode bypass for testing
-    if (process.env.NODE_ENV === 'development' && event.headers['x-dev-bypass'] === 'true') {
+    if (process.env.NODE_ENV === 'development' && event.headers?.['x-dev-bypass'] === 'true') {
       const authenticatedEvent = event as AuthenticatedEvent
       authenticatedEvent.user = {
         userId: 'dev_user_' + Math.random().toString(36).substr(2, 9),
@@ -25,7 +36,8 @@ export const withAuth = (handler: AuthenticatedHandler, options: { allowInternal
       return handler(authenticatedEvent)
     }
 
-    const claims = event.requestContext.authorizer?.jwt?.claims
+    // Safe access to claims with detailed error logging
+    const claims = event?.requestContext?.authorizer?.jwt?.claims
 
     // Handle internal Lambda-to-Lambda calls (no JWT context)
     if (!claims && options.allowInternalCalls) {

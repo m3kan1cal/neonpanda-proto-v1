@@ -7,8 +7,8 @@ import {
   useNavigate,
 } from "react-router-dom";
 
-import Navigation from "./components/Navigation";
-import Breadcrumbs from "./components/Breadcrumbs";
+import Navigation from "./components/shared/Navigation";
+import Breadcrumbs from "./components/shared/Breadcrumbs";
 import LandingPage from "./components/LandingPage";
 import AboutUs from "./components/AboutUs";
 import Technology from "./components/Technology";
@@ -29,7 +29,7 @@ import WeeklyReports from "./components/WeeklyReports";
 import Changelog from "./components/Changelog";
 import Theme from "./components/Theme";
 import { ToastProvider } from "./contexts/ToastContext";
-import ToastContainer from "./components/ToastContainer";
+import ToastContainer from "./components/shared/ToastContainer";
 import { AuthProvider, useAuth, AuthRouter, ProtectedRoute } from "./auth";
 import { setAuthFailureHandler } from "./utils/apis/apiConfig";
 import { usePageTitle } from "./hooks/usePageTitle";

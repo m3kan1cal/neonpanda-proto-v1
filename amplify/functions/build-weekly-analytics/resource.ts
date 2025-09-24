@@ -21,14 +21,14 @@ export function createWeeklyAnalyticsSchedule(
   stack: Stack,
   lambdaFunction: lambda.IFunction
 ) {
-  // Create EventBridge rule for weekly analytics (every Sunday at 6:00 AM UTC)
+  // Create EventBridge rule for weekly analytics (every Sunday at 9:00 AM UTC)
   const weeklyAnalyticsRule = new events.Rule(stack, "WeeklyAnalyticsRule", {
     description:
-      "Trigger weekly analytics processing every Sunday at 6:00 AM UTC",
+      "Trigger weekly analytics processing every Sunday at 9:00 AM UTC (accommodates Saturday night Pacific Time workouts)",
     schedule: events.Schedule.cron({
       minute: "0",
-      hour: "6",
-      weekDay: "1", // Sunday
+      hour: "9",
+      weekDay: "7", // Sunday (7 = Sunday, 1 = Monday in AWS EventBridge)
     }),
   });
 

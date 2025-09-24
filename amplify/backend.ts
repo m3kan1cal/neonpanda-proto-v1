@@ -315,6 +315,8 @@ console.info('✅ Error monitoring configured for postConfirmation function');
 
 // Configure the log-to-SNS forwarder function (not monitored to avoid circular reference)
 backend.forwardLogsToSns.addEnvironment("SNS_TOPIC_ARN", errorMonitoringTopic.topicArn);
+backend.forwardLogsToSns.addEnvironment("GOOGLE_CHAT_ERRORS_WEBHOOK_URL", config.GOOGLE_CHAT_ERRORS_WEBHOOK_URL);
+
 errorMonitoringTopic.topic.grantPublish(backend.forwardLogsToSns.resources.lambda);
 console.info('✅ Log-to-SNS forwarder configured (excluded from error monitoring)');
 

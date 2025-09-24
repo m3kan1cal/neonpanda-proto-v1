@@ -25,13 +25,13 @@ const PlusIcon = () => (
   </svg>
 );
 
-// Helper function to check if a template is new (created within last 30 days)
+// Helper function to check if a template is new (created within last 3 months)
 const isNewTemplate = (createdDate) => {
   if (!createdDate) return false;
   const templateDate = new Date(createdDate);
-  const thirtyDaysAgo = new Date();
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-  return templateDate >= thirtyDaysAgo;
+  const threeMonthsAgo = new Date();
+  threeMonthsAgo.setDate(threeMonthsAgo.getDate() - 90);
+  return templateDate >= threeMonthsAgo;
 };
 
 // Helper function to replace underscores with spaces and & with commas for display

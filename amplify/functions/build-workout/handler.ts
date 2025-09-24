@@ -304,14 +304,16 @@ export const handler = async (event: BuildWorkoutEvent) => {
       });
     }
 
-    // Determine completed time using AI extraction
-    const extractedTime = await extractCompletedAtTime(workoutContent, event.messageTimestamp);
+    // Determine completed time using AI extraction with user's timezone
+    const userTimezone = event.userTimezone || 'America/Los_Angeles'; // Default to Pacific Time
+    const extractedTime = await extractCompletedAtTime(workoutContent, event.messageTimestamp, userTimezone);
     const completedAt = event.completedAt
       ? new Date(event.completedAt)
       : extractedTime || new Date();
 
     console.info("Workout timing analysis:", {
       userMessage: workoutContent.substring(0, 100),
+      userTimezone,
       extractedTime: extractedTime ? extractedTime.toISOString() : null,
       finalCompletedAt: completedAt.toISOString(),
       currentTime: new Date().toISOString(),

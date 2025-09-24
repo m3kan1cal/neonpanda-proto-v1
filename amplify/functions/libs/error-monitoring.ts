@@ -62,9 +62,27 @@ export class ErrorMonitoring extends Construct {
     new SubscriptionFilter(this, `ErrorFilter-${lambdaFunction.node.id}`, {
       logGroup: logGroup,
       destination: new LambdaDestination(this.forwarderFunction),
-      // Use a comprehensive filter pattern that catches various error formats
-      filterPattern: FilterPattern.literal(
-        '{ $.level = "ERROR" || $.level = "WARN" || $.message = "*ERROR*" || $.message = "*Error*" || $.message = "*WARN*" || $.message = "*WARNING*" }'
+      // Use a filter pattern that works with plain text logs (not JSON)
+      filterPattern: FilterPattern.anyTerm(
+        "ERROR",
+        "WARN",
+        "WARNING",
+        "Error",
+        "Warn",
+        "Warning",
+        "FATAL",
+        "Exception",
+        "⚠️",
+        "❌",
+        "🚨",
+        "error",
+        "warn",
+        "warning",
+        "fatal",
+        "exception",
+        "CRITICAL",
+        "Critical",
+        "critical"
       ),
       filterName: `error-filter-${displayName}`,
     });
@@ -85,7 +103,9 @@ export class ErrorMonitoring extends Construct {
 
         // Skip monitoring the forwarder function itself to avoid circular reference
         if (lambdaFunction.functionArn === this.forwarderFunction.functionArn) {
-          console.info(`⏭️ Skipping self-monitoring for forwarder function: ${lambdaFunction.functionName}`);
+          console.info(
+            `⏭️ Skipping self-monitoring for forwarder function: ${lambdaFunction.functionName}`
+          );
           return;
         }
 
@@ -95,7 +115,9 @@ export class ErrorMonitoring extends Construct {
       else if (func.lambda) {
         // Skip monitoring the forwarder function itself to avoid circular reference
         if (func.lambda.functionArn === this.forwarderFunction.functionArn) {
-          console.info(`⏭️ Skipping self-monitoring for forwarder function: ${func.name}`);
+          console.info(
+            `⏭️ Skipping self-monitoring for forwarder function: ${func.name}`
+          );
           return;
         }
 

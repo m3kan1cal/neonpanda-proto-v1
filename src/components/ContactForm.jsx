@@ -292,7 +292,7 @@ function ContactForm() {
             />
 
             {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-6">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-3">
               <button
                 type="submit"
                 disabled={agentState.isSubmitting}

@@ -284,6 +284,7 @@ export interface BuildWorkoutEvent {
   isSlashCommand?: boolean; // Whether this was triggered by a slash command
   slashCommand?: string; // The slash command that was used (e.g., 'log-workout', 'log', 'workout')
   messageTimestamp?: string; // When the user typed the message (for better completion time accuracy)
+  userTimezone?: string; // User's timezone preference (e.g., 'America/Los_Angeles')
 }
 
 /**
