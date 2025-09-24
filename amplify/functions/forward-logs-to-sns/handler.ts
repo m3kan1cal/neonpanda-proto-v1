@@ -23,18 +23,8 @@ export const handler = async (event: CloudWatchLogsEvent) => {
       logEvents: logData.logEvents.length
     });
 
-    // Filter for error/warning events
-    const errorEvents = logData.logEvents.filter(logEvent => {
-      const message = logEvent.message;
-      return (
-        message.includes('ERROR') ||
-        message.includes('Error') ||
-        message.includes('WARN') ||
-        message.includes('WARNING') ||
-        message.includes('"level":"ERROR"') ||
-        message.includes('"level":"WARN"')
-      );
-    });
+    // No additional filtering needed - CloudWatch filter already sent us relevant logs
+    const errorEvents = logData.logEvents;
 
     if (errorEvents.length === 0) {
       console.info('No error/warning events found, skipping SNS notification');

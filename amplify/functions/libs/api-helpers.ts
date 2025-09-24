@@ -672,11 +672,21 @@ const queryUserNamespace = async (
       matches: userResponse.result.hits.length,
     });
 
+    // DEBUG: Log raw user namespace response structure
+    console.info("🔍 RAW USER NAMESPACE RESPONSE:", {
+      fullResponse: JSON.stringify(userResponse, null, 2),
+      hitsLength: userResponse.result.hits?.length,
+      firstHit: userResponse.result.hits?.[0] ? JSON.stringify(userResponse.result.hits[0], null, 2) : null,
+    });
+
     // Extract record data and combine with score before returning
-    return userResponse.result.hits.map((hit: any) => ({
-      ...hit.record,
-      score: hit.score,
-    }));
+    return userResponse.result.hits.map((hit: any) => {
+      console.info("🔍 PROCESSING USER HIT:", JSON.stringify(hit, null, 2));
+      return {
+        ...hit.record,
+        score: hit.score,
+      };
+    });
   } catch (error) {
     console.error("❌ Failed to query user namespace:", error);
     return [];
@@ -722,12 +732,22 @@ const queryMethodologyNamespace = async (
       return [];
     }
 
+    // DEBUG: Log raw response structure to understand exact format
+    console.info("🔍 RAW PINECONE RESPONSE STRUCTURE:", {
+      fullResponse: JSON.stringify(response, null, 2),
+      hitsLength: response.result.hits?.length,
+      firstHit: response.result.hits?.[0] ? JSON.stringify(response.result.hits[0], null, 2) : null,
+    });
+
     // Normalize all methodology matches - extract record data and combine with score
     let matches = response.result.hits
-      .map((hit: any) => ({
-        ...hit.record,
-        score: hit.score,
-      }))
+      .map((hit: any) => {
+        console.info("🔍 PROCESSING HIT:", JSON.stringify(hit, null, 2));
+        return {
+          ...hit.record,
+          score: hit.score,
+        };
+      })
       .map((match) => normalizeMatch(match, "methodology"));
 
     // Apply reranking if enabled and we have sufficient results
@@ -806,6 +826,13 @@ const rerankPineconeResults = async (
     // Validate Pinecone configuration for reranking
     validatePineconeConfig();
     const { client } = await getPineconeClient();
+
+    // DEBUG: Log what matches we're receiving for reranking
+    console.info("🔍 RERANKING INPUT MATCHES:", {
+      matchesCount: matches.length,
+      firstMatch: matches[0] ? JSON.stringify(matches[0], null, 2) : null,
+      allMatches: JSON.stringify(matches, null, 2),
+    });
 
     // Extract documents for reranking (use text content from matches)
     const documents = matches.map((match, index) => {
