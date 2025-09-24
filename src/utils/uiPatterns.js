@@ -180,6 +180,53 @@ export const toastPatterns = {
   info: "bg-gradient-to-br from-synthwave-neon-cyan/20 via-synthwave-neon-purple/10 to-synthwave-neon-pink/20 border border-synthwave-neon-cyan/40 rounded-xl px-4 py-3 backdrop-blur-sm shadow-lg shadow-synthwave-neon-cyan/20 text-synthwave-neon-cyan"
 };
 
+// Base tooltip style object for reuse
+const baseTooltipStyle = {
+  backgroundColor: '#000000',
+  color: '#ffffff',
+  borderRadius: '8px',
+  fontSize: '14px',
+  fontFamily: 'Rajdhani, sans-serif',
+  padding: '8px 12px',
+  zIndex: 99999
+};
+
+export const tooltipPatterns = {
+  // Standard tooltip configuration - consistent across the entire application
+  // Use with react-tooltip: <Tooltip {...tooltipPatterns.standard} />
+  standard: {
+    offset: 8,
+    delayShow: 0,
+    style: baseTooltipStyle
+  },
+
+  // Standard tooltip props for data attributes
+  // Use with elements: data-tooltip-id="my-tooltip" {...tooltipPatterns.dataProps}
+  dataProps: {
+    'data-tooltip-offset': 8,
+    'data-tooltip-delay-show': 0
+  },
+
+  // Custom positioning variants (extend standard with transform)
+  standardLeft: {
+    offset: 8,
+    delayShow: 0,
+    style: {
+      ...baseTooltipStyle,
+      transform: 'translateX(-8px)'
+    }
+  },
+
+  standardRight: {
+    offset: 8,
+    delayShow: 0,
+    style: {
+      ...baseTooltipStyle,
+      transform: 'translateX(8px)'
+    }
+  }
+};
+
 export const layoutPatterns = {
   // Page containers
   pageContainer: "bg-synthwave-gradient min-h-screen text-synthwave-text-primary",
@@ -352,4 +399,6 @@ export const injectAutofillStyles = () => {
 // <div className={avatarPatterns.skeletonSmall}></div>
 // <div className={`overflow-y-auto ${scrollbarPatterns.cyan}`}>Scrollable content</div>
 // <div className={`overflow-y-auto ${scrollbarPatterns.pink}`}>Chat content</div>
+// <Tooltip id="my-tooltip" {...tooltipPatterns.standard} />
+// <Tooltip id="left-tooltip" {...tooltipPatterns.standardLeft} />
 // Call injectScrollbarStyles() in useEffect to enable scrollbar styling

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Tooltip } from 'react-tooltip';
-import { iconButtonPatterns } from '../../utils/uiPatterns';
+import { iconButtonPatterns, tooltipPatterns } from '../../utils/uiPatterns';
 
 const IconButton = ({
   children,
@@ -59,18 +59,7 @@ const IconButton = ({
       {tooltip && (
         <Tooltip
           id={tooltipId}
-          offset={8}
-          delayShow={0}
-          style={{
-            backgroundColor: '#000000',
-            color: '#ffffff',
-            borderRadius: '8px',
-            fontSize: '14px',
-            fontFamily: 'Rajdhani, sans-serif',
-            padding: '8px 12px',
-            zIndex: 99999,
-            transform: 'translateX(-8px)'
-          }}
+          {...tooltipPatterns.standardLeft}
           anchorSelect={`[data-tooltip-id="${tooltipId}"]`}
         />
       )}

@@ -183,7 +183,11 @@ export const UNIVERSAL_ANALYTICS_SCHEMA_V1 = `{
           "date": "2025-08-04",
           "tonnage": 3125,
           "sets": 12,
-          "duration": 65
+          "duration": 65,
+          "avg_rpe": 7.5,
+          "avg_intensity": 8.2,
+          "workout_count": 1,
+          "primary_workout_id": "ws_example_123"
         }
       ],
       "movement_matrix": [

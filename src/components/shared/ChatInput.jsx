@@ -6,6 +6,7 @@ import {
   containerPatterns,
   scrollbarPatterns,
   injectScrollbarStyles,
+  tooltipPatterns,
 } from "../../utils/uiPatterns";
 import {
   SendIcon,
@@ -776,49 +777,19 @@ function ChatInput({
             {showTipsButton && tipsContent && (
               <Tooltip
                 id="tips-tooltip"
-                offset={8}
-                delayShow={0}
-                style={{
-                  backgroundColor: "#000",
-                  color: "#fff",
-                  borderRadius: "8px",
-                  fontFamily: "Rajdhani",
-                  fontSize: "14px",
-                  padding: "8px 12px",
-                  zIndex: 99999,
-                }}
+                {...tooltipPatterns.standard}
               />
             )}
             {(enablePhotoAttachment || enableFileAttachment) && (
               <Tooltip
                 id="quick-actions-tooltip"
-                offset={8}
-                delayShow={0}
-                style={{
-                  backgroundColor: "#000",
-                  color: "#fff",
-                  borderRadius: "8px",
-                  fontFamily: "Rajdhani",
-                  fontSize: "14px",
-                  padding: "8px 12px",
-                  zIndex: 99999,
-                }}
+                {...tooltipPatterns.standard}
               />
             )}
             {showDeleteButton && (
               <Tooltip
                 id="delete-conversation-tooltip"
-                offset={8}
-                delayShow={0}
-                style={{
-                  backgroundColor: "#000",
-                  color: "#fff",
-                  borderRadius: "8px",
-                  fontFamily: "Rajdhani",
-                  fontSize: "14px",
-                  padding: "8px 12px",
-                  zIndex: 99999,
-                }}
+                {...tooltipPatterns.standard}
               />
             )}
           </div>
@@ -854,17 +825,7 @@ function ChatInput({
             </button>
             <Tooltip
               id="emoji-tooltip"
-              offset={8}
-              delayShow={0}
-              style={{
-                backgroundColor: "#000",
-                color: "#fff",
-                borderRadius: "8px",
-                fontFamily: "Rajdhani",
-                fontSize: "14px",
-                padding: "8px 12px",
-                zIndex: 99999,
-              }}
+              {...tooltipPatterns.standard}
             />
 
             {/* Slash Command Tooltip */}
@@ -979,31 +940,11 @@ function ChatInput({
             {/* React Tooltips for Voice/Send buttons */}
             <Tooltip
               id="send-message-tooltip"
-              offset={8}
-              delayShow={0}
-              style={{
-                backgroundColor: "#000",
-                color: "#fff",
-                borderRadius: "8px",
-                fontFamily: "Rajdhani",
-                fontSize: "14px",
-                padding: "8px 12px",
-                zIndex: 99999,
-              }}
+              {...tooltipPatterns.standard}
             />
             <Tooltip
               id="voice-record-tooltip"
-              offset={8}
-              delayShow={0}
-              style={{
-                backgroundColor: "#000",
-                color: "#fff",
-                borderRadius: "8px",
-                fontFamily: "Rajdhani",
-                fontSize: "14px",
-                padding: "8px 12px",
-                zIndex: 99999,
-              }}
+              {...tooltipPatterns.standard}
             />
           </div>
         </form>
