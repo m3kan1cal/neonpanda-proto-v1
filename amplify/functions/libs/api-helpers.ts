@@ -672,19 +672,14 @@ const queryUserNamespace = async (
       matches: userResponse.result.hits.length,
     });
 
-    // DEBUG: Log raw user namespace response structure
-    console.info("🔍 RAW USER NAMESPACE RESPONSE:", {
-      fullResponse: JSON.stringify(userResponse, null, 2),
-      hitsLength: userResponse.result.hits?.length,
-      firstHit: userResponse.result.hits?.[0] ? JSON.stringify(userResponse.result.hits[0], null, 2) : null,
-    });
-
     // Extract record data and combine with score before returning
     return userResponse.result.hits.map((hit: any) => {
-      console.info("🔍 PROCESSING USER HIT:", JSON.stringify(hit, null, 2));
+      // Handle the actual Pinecone response structure
       return {
-        ...hit.record,
-        score: hit.score,
+        id: hit._id,
+        score: hit._score,
+        text: hit.fields?.text || "",
+        metadata: hit.fields || {},
       };
     });
   } catch (error) {
@@ -732,20 +727,15 @@ const queryMethodologyNamespace = async (
       return [];
     }
 
-    // DEBUG: Log raw response structure to understand exact format
-    console.info("🔍 RAW PINECONE RESPONSE STRUCTURE:", {
-      fullResponse: JSON.stringify(response, null, 2),
-      hitsLength: response.result.hits?.length,
-      firstHit: response.result.hits?.[0] ? JSON.stringify(response.result.hits[0], null, 2) : null,
-    });
-
     // Normalize all methodology matches - extract record data and combine with score
     let matches = response.result.hits
       .map((hit: any) => {
-        console.info("🔍 PROCESSING HIT:", JSON.stringify(hit, null, 2));
+        // Handle the actual Pinecone response structure
         return {
-          ...hit.record,
-          score: hit.score,
+          id: hit._id,
+          score: hit._score,
+          text: hit.fields?.text || "",
+          metadata: hit.fields || {},
         };
       })
       .map((match) => normalizeMatch(match, "methodology"));
@@ -827,12 +817,6 @@ const rerankPineconeResults = async (
     validatePineconeConfig();
     const { client } = await getPineconeClient();
 
-    // DEBUG: Log what matches we're receiving for reranking
-    console.info("🔍 RERANKING INPUT MATCHES:", {
-      matchesCount: matches.length,
-      firstMatch: matches[0] ? JSON.stringify(matches[0], null, 2) : null,
-      allMatches: JSON.stringify(matches, null, 2),
-    });
 
     // Extract documents for reranking (use text content from matches)
     const documents = matches.map((match, index) => {
@@ -1320,10 +1304,15 @@ export const querySemanticMemories = async (
 
     // Normalize all memory matches - extract record data and combine with score
     let normalizedHits = response.result.hits
-      .map((hit: any) => ({
-        ...hit.record,
-        score: hit.score,
-      }))
+      .map((hit: any) => {
+        // Handle the actual Pinecone response structure
+        return {
+          id: hit._id,
+          score: hit._score,
+          text: hit.fields?.text || "",
+          metadata: hit.fields || {},
+        };
+      })
       .map((hit) => normalizeMatch(hit));
 
     // Apply reranking if enabled and we have sufficient results
