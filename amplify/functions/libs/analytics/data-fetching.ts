@@ -574,6 +574,15 @@ DATE VALIDATION REQUIREMENTS:
 - If historical data spans multiple periods, only include current week data in daily_volume
 - Use YYYY-MM-DD format for all dates
 
+DAILY RPE/INTENSITY CALCULATION REQUIREMENTS:
+- For each day in daily_volume, calculate avg_rpe and avg_intensity from workout performance_metrics
+- avg_rpe: Average of all workouts' performance_metrics.perceived_exertion for that date (null if no RPE data)
+- avg_intensity: Average of all workouts' performance_metrics.intensity for that date (null if no intensity data)
+- workout_count: Total number of completed workouts for that date (integer, minimum 0)
+- primary_workout_id: workout_id of the first chronologically completed workout for navigation (null if no workouts)
+- Handle multiple workouts per day by averaging RPE/intensity values
+- Days with no workouts should still appear with workout_count: 0 and null values for averages
+
 CRITICAL: Return ONLY valid JSON in the exact format above. No markdown, no explanations, no text outside the JSON object. Start with { and end with }.`;
 };
 

@@ -109,7 +109,7 @@ const ValueDisplay = ({ label, value, dataPath, className = "" }) => {
   );
 };
 
-function WeeklyReportViewer({ report, onToggleView, viewMode = "formatted" }) {
+function WeeklyReportViewer({ report, onToggleView, viewMode = "formatted", heatMapComponent = null }) {
   if (!report) return null;
 
   const humanSummary = report.analyticsData?.human_summary || report.human_summary;
@@ -232,6 +232,9 @@ function WeeklyReportViewer({ report, onToggleView, viewMode = "formatted" }) {
           </div>
         </div>
       </CollapsibleSection>
+
+      {/* Weekly Training Intensity Heat Map - positioned after Report Summary */}
+      {heatMapComponent}
 
       {/* 1. Analysis Metadata */}
       <CollapsibleSection

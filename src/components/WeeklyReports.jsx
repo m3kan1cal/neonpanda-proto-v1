@@ -10,6 +10,46 @@ import ReportAgent from "../utils/agents/ReportAgent";
 import CoachAgent from "../utils/agents/CoachAgent";
 import { FloatingMenuManager } from './shared/FloatingMenuManager';
 import CommandPalette from './shared/CommandPalette';
+import WeeklyHeatMap from './WeeklyHeatMap';
+import { ChevronDownIcon } from './themes/SynthwaveComponents';
+
+// Icons for CollapsibleSection
+const CalendarHeatMapIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+  </svg>
+);
+
+// Collapsible section component - matches WeeklyReportViewer pattern
+const CollapsibleSection = ({ title, icon, children, defaultOpen = false, className = "" }) => {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+
+  return (
+    <div className={`${containerPatterns.collapsibleSection} overflow-hidden ${className}`}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className={containerPatterns.collapsibleHeader}
+      >
+        <div className="flex items-center space-x-3">
+          <div className="text-synthwave-neon-cyan">
+            {icon}
+          </div>
+          <h3 className="font-russo font-bold text-white text-base uppercase">
+            {title}
+          </h3>
+        </div>
+        <div className={`text-synthwave-neon-cyan transition-transform duration-300 ${isOpen ? 'rotate-0' : '-rotate-90'}`}>
+          <ChevronDownIcon />
+        </div>
+      </button>
+      {isOpen && (
+        <div className={containerPatterns.collapsibleContent}>
+          {children}
+        </div>
+      )}
+    </div>
+  );
+};
 
 function Reports() {
   const [searchParams] = useSearchParams();
@@ -244,12 +284,27 @@ function Reports() {
         <div className="flex-1 flex justify-center">
           <div className="w-full max-w-7xl">
             <div className={`${containerPatterns.mainContent} h-full flex flex-col`}>
-              <div className="p-6 h-full overflow-y-auto custom-scrollbar">
+              <div className="p-6 h-full overflow-y-auto custom-scrollbar space-y-6">
                 {report ? (
                   <WeeklyReportViewer
                     report={report}
                     onToggleView={handleToggleView}
                     viewMode={viewMode}
+                    heatMapComponent={
+                      <CollapsibleSection
+                        title="Weekly Training Intensity"
+                        icon={<CalendarHeatMapIcon />}
+                        defaultOpen={true}
+                      >
+                        <WeeklyHeatMap
+                          dailyVolumeData={report.analyticsData?.structured_analytics?.raw_aggregations?.daily_volume || []}
+                          weekStart={report.weekStart}
+                          weekEnd={report.weekEnd}
+                          userId={userId}
+                          coachId={coachId}
+                        />
+                      </CollapsibleSection>
+                    }
                   />
                 ) : (
                   <div className="flex items-center justify-center h-full">
