@@ -83,11 +83,12 @@ export async function queryMemories(
   messageContext?: string
 ): Promise<MemoryRetrievalResult> {
   let memories: UserMemory[] = [];
+  let retrievalDetection: any = null;
 
   try {
     if (userMessage) {
       // Use AI to determine if semantic memory retrieval is beneficial
-      const retrievalDetection = await detectMemoryRetrievalNeed(
+      retrievalDetection = await detectMemoryRetrievalNeed(
         userMessage,
         messageContext
       );
@@ -140,12 +141,27 @@ export async function queryMemories(
       memories = await queryMemoriesFromDb(userId, coachId, { limit: 10 });
     }
 
-    // Update usage statistics for retrieved memories
+    // Update usage statistics for retrieved memories with enhanced context
     if (memories.length > 0) {
       // Don't await these - update in background
       memories.forEach((memory) => {
-        updateMemory(memory.memoryId, userId).catch((err: any) =>
-          console.warn("Failed to update memory usage:", err)
+        const usageContext = {
+          userMessage,
+          messageContext,
+          contextTypes: retrievalDetection?.contextTypes || [],
+          retrievalMethod: (() => {
+            if (retrievalDetection?.needsSemanticRetrieval && retrievalDetection.confidence > 0.6) {
+              return 'hybrid'; // Both semantic and importance-based
+            } else if (retrievalDetection?.needsSemanticRetrieval) {
+              return 'semantic';
+            } else {
+              return 'importance';
+            }
+          })() as 'semantic' | 'importance' | 'hybrid',
+        };
+
+        updateMemory(memory.memoryId, userId, usageContext).catch((err: any) =>
+          console.warn("Failed to update memory usage with context:", err)
         );
       });
     }
@@ -258,6 +274,8 @@ export async function detectAndProcessMemory(
             importance: memoryCharacteristics.importance,
             isCoachSpecific: memoryCharacteristics.isCoachSpecific,
             confidence: memoryCharacteristics.confidence,
+            suggestedTags: memoryCharacteristics.suggestedTags,
+            exerciseTags: memoryCharacteristics.exerciseTags,
           });
 
           memory = {
@@ -272,9 +290,7 @@ export async function detectAndProcessMemory(
               createdAt: new Date(),
               lastUsed: new Date(),
               usageCount: 0,
-              tags: memoryCharacteristics.isCoachSpecific
-                ? ["coach_specific"]
-                : ["global"],
+              tags: [...(memoryCharacteristics.suggestedTags || []), ...(memoryCharacteristics.exerciseTags || [])], // Combine regular and exercise tags
             },
           };
         }
@@ -314,9 +330,7 @@ export async function detectAndProcessMemory(
               usageCount: 0,
               source: "conversation",
               importance: memoryCharacteristics.importance, // AI-determined importance
-              tags: memoryCharacteristics.isCoachSpecific
-                ? ["coach_specific"]
-                : ["global"],
+              tags: [...(memoryCharacteristics.suggestedTags || []), ...(memoryCharacteristics.exerciseTags || [])], // Combine regular and exercise tags
             },
           };
         }
@@ -345,6 +359,8 @@ export async function detectAndProcessMemory(
             ? `coach_specific (${memory.coachId})`
             : "global",
           type: isSlashCommandMemory ? "slash_command" : "natural_language",
+          tags: memory.metadata.tags,
+          tagCount: memory.metadata.tags?.length || 0,
         });
       }
     } catch (error) {

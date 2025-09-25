@@ -314,6 +314,10 @@ function ManageMemories() {
   // Render memory card (content-focused without header)
   const renderMemoryCard = (memory) => {
     const isNew = isNewWorkout(memory.metadata?.createdAt || memory.createdAt);
+
+    // Strip "tag: value" patterns from memory content for clean display
+    const cleanContent = memory.content.replace(/tag:\s*[^,]+/g, '').trim();
+
     return (
       <div
         key={memory.memoryId}
@@ -340,7 +344,7 @@ function ManageMemories() {
           <div className="flex items-start space-x-3 mb-3">
             <div className="w-3 h-3 bg-synthwave-neon-pink rounded-full flex-shrink-0 mt-2"></div>
             <div className="font-rajdhani text-synthwave-text-primary text-base leading-relaxed">
-              {memory.content}
+              {cleanContent}
             </div>
           </div>
 

@@ -57,9 +57,13 @@ export interface MemoryCharacteristicsResult {
   importance: "high" | "medium" | "low";
   isCoachSpecific: boolean;
   confidence: number;
+  suggestedTags: string[];
+  exerciseTags: string[];
   reasoning: {
     type: string;
     importance: string;
     scope: string;
+    tags: string;
+    exercises: string;
   };
 }
