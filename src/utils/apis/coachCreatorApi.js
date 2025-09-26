@@ -1,4 +1,5 @@
 import { getApiUrl, authenticatedFetch } from './apiConfig';
+import { handleStreamingApiRequest } from './streamingApiHelper';
 
 /**
  * API service for Coach Creator operations
@@ -38,7 +39,8 @@ export const updateCoachCreatorSession = async (userId, sessionId, userResponse)
   const response = await authenticatedFetch(url, {
     method: 'PUT',
     body: JSON.stringify({
-      userResponse
+      userResponse,
+      messageTimestamp: new Date().toISOString() // Add timestamp for consistency
     }),
   });
 
@@ -51,6 +53,32 @@ export const updateCoachCreatorSession = async (userId, sessionId, userResponse)
 
   return result;
 };
+
+/**
+ * Updates a coach creator session with user response (streaming)
+ * @param {string} userId - The user ID
+ * @param {string} sessionId - The session ID
+ * @param {string} userResponse - The user's response text
+ * @returns {AsyncGenerator} - Stream of response chunks
+ */
+export async function* updateCoachCreatorSessionStream(userId, sessionId, userResponse) {
+  const url = `${getApiUrl('')}/users/${userId}/coach-creator-sessions/${sessionId}?stream=true`;
+  const requestBody = {
+    userResponse,
+    messageTimestamp: new Date().toISOString()
+  };
+
+  yield* handleStreamingApiRequest(url, requestBody, {
+    method: 'PUT',
+    fallbackFunction: updateCoachCreatorSession,
+    fallbackParams: [userId, sessionId, userResponse],
+    operationName: 'coach creator session update',
+    errorMessages: {
+      notFound: 'Session not found or expired',
+      serviceUnavailable: 'Service temporarily unavailable - request took too long'
+    }
+  });
+}
 
 /**
  * Gets an existing coach creator session

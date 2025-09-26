@@ -41,10 +41,48 @@ const CollapsibleSection = ({ title, icon, children, defaultOpen = true, classNa
   );
 };
 
-
 const changelogEntries = [
   {
-    version: "Release v2.0.0",
+    version: "Release v1.0.20250925-beta",
+    date: "2025-09-25",
+    changes: {
+      added: [
+        "Calendar heat map visualization for weekly training intensity based on RPE and workout intensity",
+        "Interactive heat map squares with click navigation to daily workout details",
+        "Weekly training intensity statistics showing total workouts, training days, and average RPE",
+        "Color-coded intensity legend with purple (highest), neon pink (high), orange (medium), and yellow (low)",
+        "Enhanced AI-powered memory tagging system with exercise-specific tag detection",
+        "Exercise tag categories including exercise names, body parts, equipment, and movement patterns",
+        "Dynamic memory tagging based on usage patterns and context (frequently_used, recently_accessed, etc.)",
+        "Tag-enhanced semantic search in Pinecone for better memory retrieval",
+        "Standardized tooltip patterns across the application for consistent UI/UX",
+        "Collapsible section integration for weekly training intensity heat map",
+        "Enhanced memory characteristics detection with exercise-specific analysis"
+      ],
+      changed: [
+        "Weekly Reports page now includes calendar heat map positioned below weekly summary",
+        "Memory creation now includes AI-suggested exercise tags (lunge, lower_body, functional, etc.)",
+        "Pinecone memory storage now includes tags in searchable text content for better semantic matching",
+        "Memory display in ManageMemories.jsx now strips technical tag artifacts for clean user experience",
+        "Tooltip styling standardized across ChatInput, WeeklyHeatMap, and IconButton components",
+        "Memory update operations now include usage-based and context-based tag enhancement",
+        "AI memory analysis prompt enhanced with comprehensive exercise detection guidelines",
+        "Memory characteristics result interface updated to include exerciseTags field",
+        "Weekly training intensity container styling matches other report sections using uiPatterns"
+      ],
+      fixed: [
+        "Memory content display showing technical 'tag: value' artifacts to users",
+        "Inconsistent tooltip styling and positioning across different components",
+        "Weekly training intensity container positioning and styling inconsistencies",
+        "Memory tagging system not leveraging tags for semantic search improvements",
+        "Exercise-specific memories lacking proper categorization and retrieval",
+        "Tooltip positioning issues where tooltips appeared in center instead of top of buttons",
+        "Memory display confusion where users saw internal tagging system artifacts"
+      ]
+    }
+  },
+  {
+    version: "Release v1.0.20250921-beta",
     date: "2025-09-21",
     changes: {
       added: [
@@ -85,7 +123,7 @@ const changelogEntries = [
     }
   },
   {
-    version: "Release v1.9.0",
+    version: "Release v1.0.20250920-beta",
     date: "2025-09-20",
     changes: {
       added: [
@@ -127,7 +165,7 @@ const changelogEntries = [
     }
   },
   {
-    version: "Release v1.8.0",
+    version: "Release v1.0.20250916-beta",
     date: "2025-09-16",
     changes: {
       added: [
@@ -172,7 +210,7 @@ const changelogEntries = [
     }
   },
   {
-    version: "Release v1.7.0",
+    version: "Release v1.0.20250910-beta",
     date: "2025-09-10",
     changes: {
       added: [
@@ -215,7 +253,7 @@ const changelogEntries = [
     }
   },
   {
-    version: "Release v1.6.0",
+    version: "Release v1.0.20250906-beta",
     date: "2025-09-06",
     changes: {
       added: [
@@ -273,7 +311,7 @@ const changelogEntries = [
     }
   },
   {
-    version: "Release v1.5.0",
+    version: "Release v1.0.20250905-beta",
     date: "2025-09-05",
     changes: {
       added: [
@@ -301,8 +339,8 @@ const changelogEntries = [
     }
   },
   {
-    version: "Release v1.4.0",
-    date: "2025-09-05",
+    version: "Release v1.0.20250904-beta",
+    date: "2025-09-04",
     changes: {
       added: [
         "Dynamic DynamoDB throughput scaling system with automatic retry logic",
@@ -337,7 +375,7 @@ const changelogEntries = [
     }
   },
   {
-    version: "Release v1.3.0",
+    version: "Release v1.0.20250903-beta",
     date: "2025-09-03",
     changes: {
       added: [
@@ -370,7 +408,7 @@ const changelogEntries = [
     }
   },
   {
-    version: "Release v1.2.0",
+    version: "Release v1.0.20250902-beta",
     date: "2025-09-02",
     changes: {
       added: [
@@ -402,7 +440,7 @@ const changelogEntries = [
     }
   },
   {
-    version: "Release v1.1.0",
+    version: "Release v1.0.20250828-beta",
     date: "2025-08-28",
     changes: {
       added: [

@@ -2,10 +2,12 @@ import { nanoid } from "nanoid";
 import {
   createCoachCreatorSession,
   updateCoachCreatorSession,
+  updateCoachCreatorSessionStream,
   getCoachCreatorSession,
   getCoachCreatorSessions,
   deleteCoachCreatorSession,
 } from "../apis/coachCreatorApi";
+import { processStreamingChunks, createStreamingMessage, handleStreamingFallback, resetStreamingState, validateStreamingInput } from './streamingAgentHelper';
 
 // Initial message constant
 const INITIAL_MESSAGE =
@@ -35,7 +37,7 @@ export class CoachCreatorAgent {
           timestamp: new Date().toISOString(),
         },
       ],
-      isLoading: false,
+      isLoadingItem: false, // Standardized naming to match CoachConversations
       isTyping: false,
       isComplete: false,
       isRedirecting: false,
@@ -46,12 +48,17 @@ export class CoachCreatorAgent {
         estimatedTotal: 15, // Default estimate
         percentage: 0,
       },
+      // Streaming-specific state
+      isStreaming: false,
+      streamingMessage: '',
+      streamingMessageId: null,
     };
 
     // Bind methods
     this.createSession = this.createSession.bind(this);
     this.loadExistingSession = this.loadExistingSession.bind(this);
     this.sendMessage = this.sendMessage.bind(this);
+    this.sendMessageStream = this.sendMessageStream.bind(this);
     this.clearConversation = this.clearConversation.bind(this);
     this.handleCompletion = this.handleCompletion.bind(this);
   }
@@ -84,7 +91,7 @@ export class CoachCreatorAgent {
    */
   async createSession(providedUserId = null) {
     try {
-      this._updateState({ isLoading: true, error: null });
+      this._updateState({ isLoadingItem: true, error: null });
 
       // Generate userId if not provided
       const userId = providedUserId || this.userId || nanoid(21);
@@ -109,7 +116,7 @@ export class CoachCreatorAgent {
 
       this._updateState({
         messages: [initialMsg],
-        isLoading: false,
+        isLoadingItem: false,
       });
 
       // Notify navigation handler
@@ -119,7 +126,7 @@ export class CoachCreatorAgent {
     } catch (error) {
       console.error("Error creating coach creator session:", error);
       this._updateState({
-        isLoading: false,
+        isLoadingItem: false,
         error: "Failed to create coach creator session",
       });
       this.onError(error);
@@ -136,7 +143,7 @@ export class CoachCreatorAgent {
     }
 
     try {
-      this._updateState({ isLoading: true, error: null, messages: [] });
+      this._updateState({ isLoadingItem: true, error: null, messages: [] });
 
       console.info("Loading existing coach creator session:", sessionId);
       const sessionData = await getCoachCreatorSession(userId, sessionId);
@@ -201,7 +208,7 @@ export class CoachCreatorAgent {
           conversationMessages.length > 0
             ? conversationMessages
             : this.state.messages,
-        isLoading: false,
+        isLoadingItem: false,
         sessionData,
         progress: progressData,
       });
@@ -210,7 +217,7 @@ export class CoachCreatorAgent {
     } catch (error) {
       console.error("Error loading existing session:", error);
       this._updateState({
-        isLoading: false,
+        isLoadingItem: false,
         error: "Failed to load existing session",
       });
 
@@ -230,7 +237,7 @@ export class CoachCreatorAgent {
   async sendMessage(messageContent) {
     if (
       !messageContent.trim() ||
-      this.state.isLoading ||
+      this.state.isLoadingItem ||
       !this.userId ||
       !this.sessionId
     ) {
@@ -247,7 +254,7 @@ export class CoachCreatorAgent {
       };
 
       this._addMessage(userMessage);
-      this._updateState({ isLoading: true, isTyping: true, error: null });
+      this._updateState({ isLoadingItem: true, isTyping: true, error: null });
 
       // Send to API
       const result = await updateCoachCreatorSession(
@@ -311,7 +318,7 @@ export class CoachCreatorAgent {
       }
 
       this._updateState({
-        isLoading: false,
+        isLoadingItem: false,
         isTyping: false,
         sessionData: result.sessionData || this.state.sessionData,
         progress: updatedProgress,
@@ -337,13 +344,272 @@ export class CoachCreatorAgent {
 
       this._addMessage(errorResponse);
       this._updateState({
-        isLoading: false,
+        isLoadingItem: false,
         isTyping: false,
         error: "Failed to send message",
       });
 
       this.onError(error);
       throw error;
+    }
+  }
+
+  /**
+   * Sends a user message and processes the AI response with streaming
+   */
+  async sendMessageStream(messageContent) {
+    console.info('🎯 sendMessageStream called with:', {
+      messageContent: messageContent.substring(0, 50) + '...',
+      isTyping: this.state.isTyping,
+      isStreaming: this.state.isStreaming,
+      isLoadingItem: this.state.isLoadingItem
+    });
+
+    // Input validation using helper
+    if (!validateStreamingInput(this, messageContent)) {
+      console.warn('❌ sendMessageStream validation failed');
+      return;
+    }
+
+    try {
+      // Add user message
+      const userMessage = {
+        id: this._generateMessageId(),
+        type: "user",
+        content: messageContent.trim(),
+        timestamp: new Date().toISOString(),
+      };
+      this._addMessage(userMessage);
+
+      // Initialize streaming state
+      this._updateState({
+        isLoadingItem: true,
+        isStreaming: true,
+        isTyping: true,
+        streamingMessage: '',
+        error: null
+      });
+
+      // Create streaming message placeholder
+      const streamingMsg = createStreamingMessage(this);
+      this._updateState({ streamingMessageId: streamingMsg.messageId });
+
+      try {
+        // Get streaming response
+        const messageStream = updateCoachCreatorSessionStream(
+          this.userId,
+          this.sessionId,
+          messageContent.trim()
+        );
+
+        // Process the stream
+        return await processStreamingChunks(messageStream, {
+          onChunk: async (content) => {
+            // Append each chunk to the streaming message
+            console.info('📝 Processing chunk:', { content, length: content.length });
+            streamingMsg.append(content);
+          },
+
+          onComplete: async (chunk) => {
+            // Prepare AI response content
+            const aiResponseContent = this._buildCreatorResponse(chunk);
+            streamingMsg.update(aiResponseContent);
+
+            // Update progress and session state
+            const updatedProgress = this._updateProgress(chunk);
+            resetStreamingState(this, {
+              progress: updatedProgress,
+            });
+
+            // Handle completion
+            if (chunk.isComplete) {
+              this.handleCompletion();
+            }
+
+            console.info('✅ Streaming coach creator session completed:', {
+              isComplete: chunk.isComplete,
+              aiResponseLength: aiResponseContent.length,
+              progressCompleted: updatedProgress.questionsCompleted,
+              progressPercentage: updatedProgress.percentage
+            });
+            return chunk;
+          },
+
+          onFallback: async (data) => {
+            const aiResponseContent = this._buildCreatorResponse(data);
+            streamingMsg.update(aiResponseContent);
+
+            // Update progress and session state
+            const updatedProgress = this._updateProgress(data);
+            resetStreamingState(this, {
+              progress: updatedProgress,
+            });
+
+            // Handle completion (only if we have reliable completion data)
+            if (data?.isComplete === true) {
+              this.handleCompletion();
+            }
+            // Note: For fallback responses, isComplete may not be available
+            // so we avoid triggering completion unless explicitly true
+
+            console.info('🔄 Using fallback response for coach creator:', {
+              isComplete: data?.isComplete,
+              hasAiResponse: !!data?.aiResponse,
+              hasNextQuestion: !!data?.nextQuestion,
+              hasProgressDetails: !!data?.progressDetails
+            });
+            return data;
+          },
+
+          onError: async (errorMessage) => {
+            console.error("Coach creator streaming error:", errorMessage);
+          }
+        });
+
+      } catch (streamError) {
+        // Handle streaming failure with fallback
+        streamingMsg.remove();
+
+        return await handleStreamingFallback(
+          updateCoachCreatorSession,
+          [this.userId, this.sessionId, messageContent.trim()],
+          (result) => this._handleFallbackResult(result),
+          'coach creator session'
+        );
+      }
+
+    } catch (error) {
+      console.error("Error sending streaming coach creator message:", error);
+
+      // Clean up and add error message
+      this._cleanupStreamingError(error);
+      throw error;
+    }
+  }
+
+  /**
+   * Builds the AI response content with next question if applicable
+   */
+  _buildCreatorResponse(data) {
+    let aiResponseContent = data?.aiResponse || "Thank you for your response.";
+
+    // Add next question if available and session not complete
+    if (!data?.isComplete && data?.nextQuestion) {
+      aiResponseContent += `\n\n${data.nextQuestion}`;
+    }
+
+    return aiResponseContent;
+  }
+
+  /**
+   * Updates progress based on API response
+   */
+  _updateProgress(data) {
+    const updatedProgress = { ...this.state.progress };
+
+    if (data?.progressDetails) {
+      updatedProgress.questionsCompleted = data.progressDetails.questionsCompleted;
+      updatedProgress.estimatedTotal = data.progressDetails.totalQuestions;
+      updatedProgress.percentage = data.isComplete ? 100 : data.progressDetails.percentage;
+      updatedProgress.sophisticationLevel = data.progressDetails.sophisticationLevel;
+      updatedProgress.currentQuestion = data.progressDetails.currentQuestion;
+    }
+    // Note: For fallback responses, progressDetails may not be available
+    // In that case, we keep the existing progress state
+
+    return updatedProgress;
+  }
+
+  /**
+   * Handles fallback result processing for coach creator
+   */
+  async _handleFallbackResult(result) {
+    const aiResponseContent = this._buildCreatorResponse(result);
+
+    const aiResponse = {
+      id: this._generateMessageId(),
+      type: "ai",
+      content: aiResponseContent,
+      timestamp: new Date().toISOString(),
+    };
+
+    this._addMessage(aiResponse);
+
+    const updatedProgress = this._updateProgress(result);
+    resetStreamingState(this, {
+      progress: updatedProgress,
+    });
+
+    // Handle completion (only if we have reliable completion data)
+    if (result?.isComplete === true) {
+      this.handleCompletion();
+    }
+    // Note: For fallback responses, completion data may not be reliable
+
+    return result;
+  }
+
+  /**
+   * Cleans up streaming state and adds error message for coach creator
+   */
+  _cleanupStreamingError(error) {
+    // Clean up streaming state
+    if (this.state.streamingMessageId) {
+      this._removeMessage(this.state.streamingMessageId);
+    }
+
+    // Add error message
+    const errorResponse = {
+      id: this._generateMessageId(),
+      type: "ai",
+      content: "I'm sorry, I encountered an error processing your response. Please try again.",
+      timestamp: new Date().toISOString(),
+    };
+
+    this._addMessage(errorResponse);
+    resetStreamingState(this, { error: "Failed to send message" });
+
+    if (typeof this.onError === 'function') {
+      this.onError(error);
+    }
+  }
+
+  /**
+   * Appends content to the currently streaming message
+   */
+  _appendToStreamingMessage(messageId, chunk) {
+    const currentContent = this.state.streamingMessage || '';
+    const newContent = currentContent + chunk;
+    this._updateStreamingMessage(messageId, newContent);
+  }
+
+  /**
+   * Updates the content of a streaming message by ID
+   */
+  _updateStreamingMessage(messageId, content) {
+    this.state = {
+      ...this.state,
+      messages: this.state.messages.map(msg =>
+        msg.id === messageId ? { ...msg, content } : msg
+      ),
+      // Update streamingMessage in agent state for UI helpers
+      streamingMessage: content
+    };
+    if (typeof this.onStateChange === 'function') {
+      this.onStateChange(this.state);
+    }
+  }
+
+  /**
+   * Removes a message by ID
+   */
+  _removeMessage(messageId) {
+    this.state = {
+      ...this.state,
+      messages: this.state.messages.filter(msg => msg.id !== messageId)
+    };
+    if (typeof this.onStateChange === 'function') {
+      this.onStateChange(this.state);
     }
   }
 
@@ -384,11 +650,15 @@ export class CoachCreatorAgent {
 
     this._updateState({
       messages: [initialMessage],
-      isLoading: false,
+      isLoadingItem: false,
       isTyping: false,
       isComplete: false,
       isRedirecting: false,
       error: null,
+      // Reset streaming state
+      isStreaming: false,
+      streamingMessage: '',
+      streamingMessageId: null,
     });
   }
 

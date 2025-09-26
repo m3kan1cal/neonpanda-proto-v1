@@ -789,13 +789,14 @@ export async function sendCoachConversationMessage(
   }
 
   // Update the conversation with new messages and metadata
+  const existingMessages = existingConversation.attributes.messages || [];
   const updatedConversation: CoachConversation = {
     ...existingConversation.attributes,
-    messages,
+    messages: [...existingMessages, ...messages],
     metadata: {
       ...existingConversation.attributes.metadata,
       lastActivity: new Date(),
-      totalMessages: messages.length,
+      totalMessages: existingMessages.length + messages.length,
     },
   };
 
@@ -807,7 +808,7 @@ export async function sendCoachConversationMessage(
   };
 
   const previousMessageCount = existingConversation.attributes.messages?.length || 0;
-  const messagesAdded = messages.length - previousMessageCount;
+  const messagesAdded = messages.length;
 
   let saveResult: DynamoDBSaveResult;
 

@@ -20,6 +20,7 @@ import CoachCreator from "./components/CoachCreator";
 import Coaches from "./components/Coaches";
 import TrainingGrounds from "./components/TrainingGrounds";
 import CoachConversations from "./components/CoachConversations";
+import StreamingDebugTest from "./components/StreamingDebugTest";
 import Workouts from "./components/Workouts";
 import ManageWorkouts from "./components/ManageWorkouts";
 import ManageMemories from "./components/ManageMemories";
@@ -85,6 +86,7 @@ function AppContent() {
             path="/training-grounds/coach-conversations"
             element={<ProtectedRoute><CoachConversations /></ProtectedRoute>}
           />
+          <Route path="/streaming-debug-test" element={<ProtectedRoute><StreamingDebugTest /></ProtectedRoute>} />
           <Route path="/training-grounds/workouts" element={<ProtectedRoute><Workouts /></ProtectedRoute>} />
           <Route
             path="/training-grounds/manage-workouts"

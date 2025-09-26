@@ -5,6 +5,7 @@ import type {
 import {
   BedrockRuntimeClient,
   ConverseCommand,
+  ConverseStreamCommand,
 } from "@aws-sdk/client-bedrock-runtime";
 import {
   LambdaClient,
@@ -474,6 +475,109 @@ export const callBedrockApi = async (
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";
     throw new Error(`Claude API failed: ${errorMessage}`);
+  }
+};
+
+// Amazon Bedrock Converse Stream API call for real-time streaming responses
+export const callBedrockApiStream = async (
+  systemPrompt: string,
+  userMessage: string,
+  modelId: string = CLAUDE_SONNET_4_MODEL_ID,
+  enableThinking: boolean = false
+): Promise<AsyncGenerator<string, void, unknown>> => {
+  try {
+    console.info("=== BEDROCK STREAMING API CALL START ===");
+    console.info("AWS Region:", process.env.AWS_REGION || "us-west-2");
+    console.info("Model ID:", modelId);
+    console.info("System prompt length:", systemPrompt.length);
+    console.info("User message length:", userMessage.length);
+    console.info("Thinking enabled:", enableThinking);
+
+    const command = new ConverseStreamCommand({
+      modelId: modelId,
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              text: userMessage,
+            },
+          ],
+        },
+      ],
+      system: [
+        {
+          text: enableThinking
+            ? enhancePromptForThinking(systemPrompt)
+            : systemPrompt,
+        },
+      ],
+      inferenceConfig: {
+        maxTokens: getMaxTokensForModel(modelId),
+        temperature: TEMPERATURE,
+      },
+    });
+
+    console.info("Converse stream command created successfully...");
+
+    const response = await bedrockClient.send(command);
+
+    if (!response.stream) {
+      throw new Error("No stream received from Bedrock");
+    }
+
+    console.info("Stream response received from Bedrock");
+
+    // Return an async generator that yields chunks as they come in
+    return async function* streamGenerator() {
+      try {
+        let fullResponse = "";
+
+        for await (const chunk of response.stream!) {
+          if (chunk.contentBlockDelta?.delta?.text) {
+            const deltaText = chunk.contentBlockDelta.delta.text;
+            fullResponse += deltaText;
+            yield deltaText;
+          }
+
+          // Handle end of stream
+          if (chunk.messageStop) {
+            console.info("=== BEDROCK STREAMING API CALL SUCCESS ===");
+            console.info("Stream complete. Total response length:", fullResponse.length);
+
+            // If thinking was enabled, we need to handle the thinking tags in the full response
+            // For streaming, we'll yield the raw content and let the client handle thinking tag removal if needed
+            break;
+          }
+        }
+
+      } catch (streamError: any) {
+        console.error("Error processing stream:", streamError);
+        throw streamError;
+      }
+    }();
+
+  } catch (error: any) {
+    console.error("=== BEDROCK STREAMING API CALL FAILED ===");
+    console.error("Error type:", typeof error);
+    console.error("Error constructor:", error.constructor?.name);
+    console.error("Error message:", error.message);
+    console.error("Error stack:", error.stack);
+
+    // Log additional AWS-specific error details
+    if (error.$fault) {
+      console.error("AWS Fault:", error.$fault);
+    }
+    if (error.$service) {
+      console.error("AWS Service:", error.$service);
+    }
+    if (error.$metadata) {
+      console.error("AWS Metadata:", error.$metadata);
+    }
+
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    throw new Error(`Claude Streaming API failed: ${errorMessage}`);
   }
 };
 

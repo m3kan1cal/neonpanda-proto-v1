@@ -217,7 +217,7 @@ function ChatInput({
             {/* Action buttons skeleton - 3 buttons to match actual component */}
             <div className="flex items-center gap-2">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="w-11 h-11 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
+                <div key={i} className="w-11 h-11 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
               ))}
             </div>
 
@@ -227,7 +227,7 @@ function ChatInput({
             </div>
 
             {/* Send button skeleton */}
-            <div className="w-12 h-12 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
+            <div className="w-12 h-12 bg-synthwave-text-muted/20 rounded-2xl animate-pulse"></div>
           </div>
 
           {/* Status skeleton */}

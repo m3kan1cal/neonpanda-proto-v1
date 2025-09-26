@@ -2,6 +2,7 @@ import { nanoid } from "nanoid";
 import {
   createCoachConversation,
   sendCoachConversationMessage,
+  sendCoachConversationMessageStream,
   updateCoachConversation,
   getCoachConversation,
   getCoachConversations,
@@ -10,6 +11,7 @@ import {
 } from "../apis/coachConversationApi";
 import { getCoach } from "../apis/coachApi";
 import CoachAgent from './CoachAgent';
+import { processStreamingChunks, createStreamingMessage, handleStreamingFallback, resetStreamingState, validateStreamingInput } from './streamingAgentHelper';
 
 /**
  * CoachConversationAgent - Handles the business logic for coach conversations
@@ -39,6 +41,10 @@ export class CoachConversationAgent {
       conversationCount: 0,
       totalMessages: 0,
       isLoadingConversationCount: false,
+      // Streaming-specific state
+      isStreaming: false,
+      streamingMessage: '',
+      streamingMessageId: null,
     };
 
     // Bind methods
@@ -47,6 +53,7 @@ export class CoachConversationAgent {
     this.loadCoachDetails = this.loadCoachDetails.bind(this);
     this.loadRecentConversations = this.loadRecentConversations.bind(this);
     this.sendMessage = this.sendMessage.bind(this);
+    this.sendMessageStream = this.sendMessageStream.bind(this);
     this.clearConversation = this.clearConversation.bind(this);
     this.generateConversationTitle = this.generateConversationTitle.bind(this);
     this.deleteCoachConversation = this.deleteCoachConversation.bind(this);
@@ -374,6 +381,13 @@ export class CoachConversationAgent {
    * Sends a user message and processes the AI response
    */
   async sendMessage(messageContent) {
+    console.info('📞 sendMessage called with:', {
+      messageContent: messageContent.substring(0, 50) + '...',
+      isTyping: this.state.isTyping,
+      isStreaming: this.state.isStreaming,
+      isLoadingItem: this.state.isLoadingItem
+    });
+
     if (
       !messageContent.trim() ||
       this.state.isTyping ||
@@ -382,6 +396,7 @@ export class CoachConversationAgent {
       !this.coachId ||
       !this.conversationId
     ) {
+      console.warn('❌ sendMessage validation failed');
       return;
     }
 
@@ -462,6 +477,232 @@ export class CoachConversationAgent {
   }
 
   /**
+   * Sends a user message and processes the AI response with streaming
+   */
+  async sendMessageStream(messageContent) {
+    console.info('🎯 sendMessageStream called with:', {
+      messageContent: messageContent.substring(0, 50) + '...',
+      isTyping: this.state.isTyping,
+      isStreaming: this.state.isStreaming,
+      isLoadingItem: this.state.isLoadingItem
+    });
+
+    // Input validation
+    if (!validateStreamingInput(this, messageContent)) {
+      console.warn('❌ sendMessageStream validation failed');
+      return;
+    }
+
+    try {
+      // Add user message
+      const userMessage = {
+        id: this._generateMessageId(),
+        type: "user",
+        content: messageContent.trim(),
+        timestamp: new Date().toISOString(),
+      };
+      this._addMessage(userMessage);
+
+      // Create streaming message placeholder first
+      const streamingMsg = createStreamingMessage(this);
+
+      // Initialize streaming state atomically with message ID
+      this._updateState({
+        isStreaming: true,
+        isTyping: true,
+        streamingMessage: '',
+        streamingMessageId: streamingMsg.messageId,
+        error: null
+      });
+
+      try {
+        // Get streaming response
+        const messageStream = sendCoachConversationMessageStream(
+          this.userId,
+          this.coachId,
+          this.conversationId,
+          messageContent.trim()
+        );
+
+        // Process the stream
+        return await processStreamingChunks(messageStream, {
+          onChunk: async (content) => {
+            // Append each chunk to the streaming message
+            console.info('📝 Processing chunk:', { content, length: content.length });
+            streamingMsg.append(content);
+          },
+
+          onComplete: async (chunk) => {
+            // Finalize message
+            streamingMsg.update(chunk.fullMessage);
+
+            // Reset streaming state and update conversation
+            resetStreamingState(this, {
+              conversation: chunk.conversationId ?
+                { ...this.state.conversation, conversationId: chunk.conversationId } :
+                this.state.conversation
+            });
+
+            return chunk;
+          },
+
+          onFallback: async (data) => {
+            const aiResponseContent = this._extractAiResponse(data);
+            streamingMsg.update(aiResponseContent);
+
+            // Reset streaming state and update conversation
+            resetStreamingState(this, {
+              conversation: data?.conversationId ?
+                { ...this.state.conversation, conversationId: data.conversationId } :
+                this.state.conversation
+            });
+
+            return data;
+          },
+
+          onError: async (errorMessage) => {
+            console.error("Streaming error:", errorMessage);
+          }
+        });
+
+      } catch (streamError) {
+        // Handle streaming failure with fallback
+        streamingMsg.remove();
+
+        return await handleStreamingFallback(
+          sendCoachConversationMessage,
+          [this.userId, this.coachId, this.conversationId, messageContent.trim()],
+          (result, isErrorFallback) => this._handleFallbackResult(result),
+          'conversation message'
+        );
+      }
+
+    } catch (error) {
+      console.error("Error sending streaming message:", error);
+
+      // Clean up and add error message
+      this._cleanupStreamingError(error);
+      throw error;
+    }
+  }
+
+  /**
+   * Extracts AI response content from API response
+   */
+  _extractAiResponse(data) {
+    let aiResponseContent = "Thank you for your message.";
+
+    if (data?.aiResponse && typeof data.aiResponse === 'object') {
+      aiResponseContent = data.aiResponse.content || aiResponseContent;
+    } else if (typeof data?.aiResponse === 'string') {
+      aiResponseContent = data.aiResponse;
+    }
+
+    return aiResponseContent;
+  }
+
+  /**
+   * Handles fallback result processing
+   */
+  async _handleFallbackResult(result) {
+    const aiResponseContent = this._extractAiResponse(result);
+
+    const aiResponse = {
+      id: this._generateMessageId(),
+      type: "ai",
+      content: aiResponseContent,
+      timestamp: new Date().toISOString(),
+    };
+
+    this._addMessage(aiResponse);
+    resetStreamingState(this, {
+      conversation: result?.conversationId ?
+        { ...this.state.conversation, conversationId: result.conversationId } :
+        this.state.conversation
+    });
+
+    return result;
+  }
+
+  /**
+   * Cleans up streaming state and adds error message
+   */
+  _cleanupStreamingError(error) {
+    // Clean up streaming state
+    if (this.state.streamingMessageId) {
+      this._removeMessage(this.state.streamingMessageId);
+    }
+
+    // Add error message
+    const errorResponse = {
+      id: this._generateMessageId(),
+      type: "ai",
+      content: "I'm sorry, I encountered an error processing your message. Please try again.",
+      timestamp: new Date().toISOString(),
+    };
+
+    this._addMessage(errorResponse);
+    resetStreamingState(this, { error: "Failed to send message" });
+
+    if (typeof this.onError === 'function') {
+      this.onError(error);
+    }
+  }
+
+  /**
+   * Appends content to the currently streaming message
+   */
+  _appendToStreamingMessage(messageId, chunk) {
+    const currentContent = this.state.streamingMessage || '';
+    const newContent = currentContent + chunk;
+    console.info('🔄 _appendToStreamingMessage:', {
+      messageId,
+      chunkLength: chunk.length,
+      currentLength: currentContent.length,
+      newLength: newContent.length
+    });
+    this._updateStreamingMessage(messageId, newContent);
+  }
+
+  /**
+   * Updates the content of a streaming message by ID
+   */
+  _updateStreamingMessage(messageId, content) {
+    // Create a new messages array with the updated message
+    const messages = this.state.messages.map(msg =>
+      msg.id === messageId ? { ...msg, content } : msg
+    );
+
+    // Use _updateState to ensure proper state management
+    this._updateState({
+      messages,
+      streamingMessage: content,
+      _lastUpdate: Date.now()
+    });
+
+    console.info('🔄 _updateStreamingMessage after _updateState:', {
+      messageId,
+      contentLength: content.length,
+      agentStateStreamingMessageLength: this.state.streamingMessage.length,
+      agentStateIsStreaming: this.state.isStreaming,
+      agentStateStreamingMessageId: this.state.streamingMessageId
+    });
+  }
+
+  /**
+   * Removes a message by ID
+   */
+  _removeMessage(messageId) {
+    this.state = {
+      ...this.state,
+      messages: this.state.messages.filter(msg => msg.id !== messageId)
+    };
+    if (typeof this.onStateChange === 'function') {
+      this.onStateChange(this.state);
+    }
+  }
+
+  /**
    * Clears the conversation and resets to initial state
    */
   clearConversation() {
@@ -470,6 +711,10 @@ export class CoachConversationAgent {
       isLoadingItem: false,
       isTyping: false,
       error: null,
+      // Reset streaming state
+      isStreaming: false,
+      streamingMessage: '',
+      streamingMessageId: null,
       conversation: null,
     });
   }
