@@ -789,13 +789,14 @@ export async function sendCoachConversationMessage(
   }
 
   // Update the conversation with new messages and metadata
+  const existingMessages = existingConversation.attributes.messages || [];
   const updatedConversation: CoachConversation = {
     ...existingConversation.attributes,
-    messages,
+    messages: [...existingMessages, ...messages],
     metadata: {
       ...existingConversation.attributes.metadata,
       lastActivity: new Date(),
-      totalMessages: messages.length,
+      totalMessages: existingMessages.length + messages.length,
     },
   };
 
@@ -807,7 +808,7 @@ export async function sendCoachConversationMessage(
   };
 
   const previousMessageCount = existingConversation.attributes.messages?.length || 0;
-  const messagesAdded = messages.length - previousMessageCount;
+  const messagesAdded = messages.length;
 
   let saveResult: DynamoDBSaveResult;
 
@@ -1743,11 +1744,18 @@ export async function queryMemories(
 }
 
 /**
- * Update usage statistics for a memory
+ * Update usage statistics for a memory with enhanced tagging
  */
 export async function updateMemory(
   memoryId: string,
-  userId: string
+  userId: string,
+  usageContext?: {
+    userMessage?: string;
+    messageContext?: string;
+    contextTypes?: string[];
+    retrievalMethod?: 'semantic' | 'importance' | 'hybrid';
+    conversationId?: string;
+  }
 ): Promise<void> {
   const memory = await loadFromDynamoDB<UserMemory>(
     `user#${userId}`,
@@ -1763,13 +1771,92 @@ export async function updateMemory(
   // Update usage statistics
   memory.attributes.metadata.usageCount += 1;
   memory.attributes.metadata.lastUsed = new Date();
+
+  // Enhanced tagging based on usage context
+  const currentTags = memory.attributes.metadata.tags || [];
+  const newTags = [...currentTags];
+
+  // Add usage-based tags
+  if (memory.attributes.metadata.usageCount >= 5) {
+    if (!newTags.includes('frequently_used')) {
+      newTags.push('frequently_used');
+    }
+  }
+
+  if (memory.attributes.metadata.usageCount >= 10) {
+    if (!newTags.includes('highly_accessed')) {
+      newTags.push('highly_accessed');
+    }
+  }
+
+  if (memory.attributes.metadata.usageCount >= 20) {
+    if (!newTags.includes('critical_memory')) {
+      newTags.push('critical_memory');
+    }
+  }
+
+  // Add context-based tags from usage context
+  if (usageContext?.contextTypes) {
+    usageContext.contextTypes.forEach(contextType => {
+      if (!newTags.includes(contextType)) {
+        newTags.push(contextType);
+      }
+    });
+  }
+
+  // Add retrieval method tags
+  if (usageContext?.retrievalMethod) {
+    const methodTag = `${usageContext.retrievalMethod}_retrieved`;
+    if (!newTags.includes(methodTag)) {
+      newTags.push(methodTag);
+    }
+  }
+
+  // Add recency tags
+  const now = new Date();
+  const lastUsed = new Date(memory.attributes.metadata.lastUsed);
+  const daysSinceLastUsed = (now.getTime() - lastUsed.getTime()) / (1000 * 60 * 60 * 24);
+
+  if (daysSinceLastUsed <= 1) {
+    if (!newTags.includes('recently_accessed')) {
+      newTags.push('recently_accessed');
+    }
+  }
+
+  // Limit tags to prevent bloat (max 10 tags)
+  memory.attributes.metadata.tags = newTags.slice(0, 10);
   memory.updatedAt = new Date().toISOString();
 
+  // Update DynamoDB
   await saveToDynamoDB(memory);
-  console.info("Memory usage updated:", {
+
+  // Update Pinecone with new tags if usage context provided
+  if (usageContext) {
+    try {
+      // Import the Pinecone function dynamically to avoid circular dependencies
+      const { storeMemoryInPinecone } = await import('../functions/libs/user/pinecone');
+      await storeMemoryInPinecone(memory.attributes);
+      console.info("Memory updated in Pinecone with enhanced tags:", {
+        memoryId,
+        userId,
+        tagCount: memory.attributes.metadata.tags.length,
+      });
+    } catch (error) {
+      console.warn("Failed to update memory in Pinecone:", error);
+    }
+  }
+
+  console.info("Memory usage updated with enhanced tags:", {
     memoryId,
     userId,
     newUsageCount: memory.attributes.metadata.usageCount,
+    tagCount: memory.attributes.metadata.tags.length,
+    newTags: memory.attributes.metadata.tags,
+    usageContext: usageContext ? {
+      hasUserMessage: !!usageContext.userMessage,
+      contextTypes: usageContext.contextTypes,
+      retrievalMethod: usageContext.retrievalMethod,
+    } : null,
   });
 }
 

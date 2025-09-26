@@ -199,7 +199,10 @@ export function parseCoachConversationSummary(
         createdAt: new Date(),
         messageRange,
         triggerReason: event.triggerReason,
-        complexityIndicators: event.complexityIndicators,
+        // Only include complexityIndicators if it's defined and not empty
+        ...(event.complexityIndicators && event.complexityIndicators.length > 0 && {
+          complexityIndicators: event.complexityIndicators
+        }),
         confidence
       }
     };

@@ -174,14 +174,14 @@ Analyze this message and respond with the JSON format specified.`;
 }
 
 /**
- * Combined function to detect memory type, importance, and scope in a single AI call
+ * Combined function to detect memory type, importance, scope, and suggest relevant tags in a single AI call
  * This is more efficient and provides better consistency than separate calls
  */
 export async function detectMemoryCharacteristics(
   memoryContent: string,
   coachName?: string
 ): Promise<MemoryCharacteristicsResult> {
-  const systemPrompt = `You are an AI assistant that analyzes user memories to determine their type, importance, and scope for fitness coaching.
+  const systemPrompt = `You are an AI assistant that analyzes user memories to determine their type, importance, scope, and suggest relevant tags for fitness coaching.
 
 MEMORY TYPES:
 - preference: Training preferences, communication style, etc.
@@ -213,6 +213,56 @@ GLOBAL memories apply to ALL coaches and are about:
 - Dietary restrictions or preferences
 - Past training history and experience
 
+TAG SUGGESTIONS:
+Select 3-5 relevant tags from these categories:
+
+CONTENT TAGS:
+- preference: Training preferences, likes/dislikes
+- goal: Fitness goals, targets, aspirations
+- constraint: Limitations, restrictions, boundaries
+- instruction: Coaching directions, methodologies
+- context: Personal background, lifestyle factors
+
+CONTEXT TAGS:
+- workout_planning: Program design, scheduling, periodization
+- form_analysis: Technique, movement quality, corrections
+- motivation: Mental state, encouragement, drive
+- scheduling: Time management, availability, timing
+- nutrition: Diet, supplements, fueling
+- injury_management: Pain, recovery, modifications
+- equipment: Gear, tools, facility access
+- communication: Feedback style, interaction preferences
+
+SCOPE TAGS:
+- coach_specific: Tied to specific coach relationship
+- global: Applies to all coaches
+- methodology_specific: Tied to training approach
+
+TEMPORAL TAGS:
+- morning: Morning-related preferences/constraints
+- evening: Evening-related preferences/constraints
+- weekend: Weekend-specific activities/constraints
+- seasonal: Seasonal variations, weather-related
+
+IMPORTANCE TAGS:
+- critical: Safety-critical, must-know information
+- important: High-value context for coaching
+- helpful: Nice-to-know additional context
+
+EXERCISE DETECTION:
+If the memory mentions specific exercises, add relevant exercise tags:
+- Exercise names: "lunges" → ["lunge", "lower_body", "functional"]
+- Exercise types: "I love compound movements" → ["compound", "preference"]
+- Body parts: "I prefer upper body exercises" → ["upper_body", "preference"]
+- Equipment: "I only have dumbbells" → ["dumbbell", "equipment", "constraint"]
+
+EXERCISE TAG CATEGORIES:
+- Exercise names: squat, deadlift, lunge, push_up, pull_up, bench_press, overhead_press, row, curl, extension, lateral_raise, tricep_dip, etc.
+- Exercise types: compound, isolation, functional, cardio, plyometric, isometric
+- Body parts: upper_body, lower_body, core, chest, back, shoulders, arms, legs, glutes, abs, quads, hamstrings, calves
+- Equipment: bodyweight, dumbbell, barbell, kettlebell, machine, cable, resistance_band, medicine_ball
+- Movement patterns: push, pull, squat, hinge, lunge, carry, rotation, lateral, vertical, horizontal
+
 RESPONSE FORMAT:
 You must respond with ONLY a valid JSON object with this exact structure:
 {
@@ -220,10 +270,14 @@ You must respond with ONLY a valid JSON object with this exact structure:
   "importance": "high|medium|low",
   "isCoachSpecific": boolean,
   "confidence": number (0.0 to 1.0),
+  "suggestedTags": ["tag1", "tag2", "tag3", "tag4", "tag5"],
+  "exerciseTags": ["exercise1", "exercise2"],
   "reasoning": {
     "type": "brief explanation of type classification",
     "importance": "brief explanation of importance level",
-    "scope": "brief explanation of why this is coach-specific or global"
+    "scope": "brief explanation of why this is coach-specific or global",
+    "tags": "brief explanation of tag choices",
+    "exercises": "brief explanation of exercise tags"
   }
 }
 
@@ -232,7 +286,13 @@ GUIDELINES:
 - Safety/injury constraints are always "high" importance and global
 - Goals are typically "medium" or "high" importance and global
 - Coach-specific memories should have clear references to coaching relationship or style
-- Be conservative: most user context should be global unless explicitly about coaching relationship`;
+- Be conservative: most user context should be global unless explicitly about coaching relationship
+- Select tags that will help with memory retrieval and context understanding
+- Prioritize tags that describe the content and context, not just the type
+- Include 3-5 tags maximum to avoid tag bloat
+- For exercise-related memories, include relevant exercise tags (exercise names, body parts, equipment, movement patterns)
+- Exercise tags should capture the specific exercises mentioned and their characteristics
+- If no exercises are mentioned, leave exerciseTags as an empty array []`;
 
   const userPrompt = `${coachName ? `COACH NAME: ${coachName}\n\n` : ""}MEMORY TO ANALYZE:\n"${memoryContent}"
 
@@ -271,10 +331,16 @@ Analyze this memory and respond with the JSON format specified.`;
       typeof result.confidence !== "number" ||
       result.confidence < 0 ||
       result.confidence > 1 ||
+      !Array.isArray(result.suggestedTags) ||
+      result.suggestedTags.length === 0 ||
+      result.suggestedTags.length > 5 ||
+      !Array.isArray(result.exerciseTags) ||
       !result.reasoning ||
       typeof result.reasoning.type !== "string" ||
       typeof result.reasoning.importance !== "string" ||
-      typeof result.reasoning.scope !== "string"
+      typeof result.reasoning.scope !== "string" ||
+      typeof result.reasoning.tags !== "string" ||
+      typeof result.reasoning.exercises !== "string"
     ) {
       throw new Error("Invalid response format from memory characteristics detection");
     }
@@ -289,10 +355,14 @@ Analyze this memory and respond with the JSON format specified.`;
       importance: "medium",
       isCoachSpecific: false,
       confidence: 0,
+      suggestedTags: ["preference", "helpful"],
+      exerciseTags: [],
       reasoning: {
         type: "Error occurred during analysis, using default type",
         importance: "Error occurred during analysis, using default importance",
-        scope: "Error occurred during analysis, defaulting to global"
+        scope: "Error occurred during analysis, defaulting to global",
+        tags: "Error occurred during analysis, using default tags",
+        exercises: "Error occurred during analysis, using default exercise tags"
       }
     };
   }

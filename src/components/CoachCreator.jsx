@@ -1,4 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, memo } from 'react';
+import { flushSync } from "react-dom";
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Tooltip } from 'react-tooltip';
 import { useAuthorizeUser } from '../auth/hooks/useAuthorizeUser';
@@ -11,6 +12,16 @@ import ProgressIndicator from './shared/ProgressIndicator';
 import { parseMarkdown } from '../utils/markdownParser.jsx';
 import CoachCreatorAgent from '../utils/agents/CoachCreatorAgent';
 import CoachCreatorHeader from './shared/CoachCreatorHeader';
+import { useToast } from '../contexts/ToastContext';
+import {
+  sendMessageWithStreaming,
+  isMessageStreaming,
+  getMessageDisplayContent,
+  getStreamingMessageClasses,
+  getTypingState,
+  handleStreamingError,
+  supportsStreaming
+} from "../utils/ui/streamingUiHelper.jsx";
 
 // Icons for human and AI messages
 const UserIcon = () => (
@@ -42,10 +53,118 @@ const TypingIndicator = () => (
   </div>
 );
 
+// Memoized MessageItem component to prevent unnecessary re-renders during streaming
+const MessageItem = memo(({
+  message,
+  agentState,
+  getUserInitial,
+  formatTime,
+  renderMessageContent
+}) => {
+  return (
+    <div
+      className={`flex items-end gap-2 mb-1 group ${
+        message.type === "user" ? "flex-row-reverse" : "flex-row"
+      }`}
+    >
+      {/* Avatar */}
+      <div
+        className={`flex-shrink-0 ${
+          message.type === "user"
+            ? avatarPatterns.userSmall
+            : avatarPatterns.aiSmall
+        }`}
+      >
+        {message.type === "user" ? (
+          getUserInitial()
+        ) : (
+          'V'
+        )}
+      </div>
+
+      {/* Message Bubble */}
+      <div
+        className={`max-w-[70%] ${message.type === "user" ? "items-end" : "items-start"} flex flex-col`}
+      >
+        <div
+          className={getStreamingMessageClasses(
+            message,
+            agentState,
+            `px-4 py-3 rounded-2xl shadow-sm ${
+              message.type === "user"
+                ? "bg-gradient-to-br from-synthwave-neon-pink/80 to-synthwave-neon-pink/60 text-white border-0 rounded-br-md shadow-xl shadow-synthwave-neon-pink/30 backdrop-blur-sm"
+                : containerPatterns.aiChatBubble
+            }`
+          )}
+        >
+          <div className="font-rajdhani text-base leading-relaxed">
+            {renderMessageContent(message)}
+          </div>
+        </div>
+
+        <div
+          className={`flex items-center gap-1 px-2 mt-1 ${message.type === "user" ? "justify-end" : "justify-start"}`}
+        >
+          <span className="text-xs text-synthwave-text-secondary font-rajdhani">
+            {formatTime(message.timestamp)}
+          </span>
+          {message.type === "user" && (
+            <div className="flex gap-1">
+              <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink opacity-60"></div>
+              <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink"></div>
+            </div>
+          )}
+          {message.type === "ai" && (
+            <div className="flex gap-1">
+              <div className="w-3 h-3 rounded-full bg-synthwave-neon-cyan opacity-60"></div>
+              <div className="w-3 h-3 rounded-full bg-synthwave-neon-cyan"></div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}, (prevProps, nextProps) => {
+  // Custom comparison function for React.memo
+  // Re-render if:
+  // 1. Message content changed (for streaming updates)
+  // 2. Message ID changed (different message)
+  // 3. Agent streaming state changed (affects this message's rendering)
+
+  const messageChanged =
+    prevProps.message.id !== nextProps.message.id ||
+    prevProps.message.content !== nextProps.message.content;
+
+  const streamingStateChanged =
+    prevProps.agentState.isStreaming !== nextProps.agentState.isStreaming ||
+    prevProps.agentState.streamingMessageId !== nextProps.agentState.streamingMessageId ||
+    prevProps.agentState.streamingMessage !== nextProps.agentState.streamingMessage;
+
+  const shouldRerender = messageChanged || streamingStateChanged;
+
+  if (nextProps.message.type === 'ai' && nextProps.agentState.isStreaming) {
+    console.info('🎬 MessageItem memo check:', {
+      messageId: nextProps.message.id,
+      messageChanged,
+      streamingStateChanged,
+      shouldRerender,
+      streamingMessageLength: nextProps.agentState.streamingMessage?.length || 0
+    });
+  }
+
+  // Return true if props are equal (no re-render needed)
+  // Return false if props changed (re-render needed)
+  return !shouldRerender;
+});
+
+// Add display name for debugging
+MessageItem.displayName = 'MessageItem';
+
 function CoachCreator() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const userId = searchParams.get('userId');
+  const { success: showSuccess, error: showError } = useToast();
 
   // Authorize that URL userId matches authenticated user
   const {
@@ -86,11 +205,15 @@ function CoachCreator() {
   // Agent state (managed by CoachCreatorAgent)
   const [agentState, setAgentState] = useState({
     messages: [],
-    isLoading: false,
+    isLoadingItem: false, // Standardized naming to match CoachConversations
     isTyping: false,
     isComplete: false,
     isRedirecting: false,
-    error: null
+    error: null,
+    // Streaming-specific state (aligned with CoachConversations)
+    isStreaming: false,
+    streamingMessage: '',
+    streamingMessageId: null,
   });
 
   // Initialize agent
@@ -100,7 +223,36 @@ function CoachCreator() {
         userId,
         sessionId: coachCreatorSessionId,
         onStateChange: (newState) => {
-          setAgentState(newState);
+          console.info('🔥 onStateChange received:', {
+            isStreaming: newState.isStreaming,
+            streamingMessageId: newState.streamingMessageId,
+            streamingMessageLength: newState.streamingMessage?.length || 0,
+            messagesCount: newState.messages?.length || 0
+          });
+
+          // Use flushSync for streaming updates to force immediate synchronous rendering
+          if (newState.isStreaming || newState.streamingMessage) {
+            flushSync(() => {
+              setAgentState(prevState => {
+                console.info('🚀 React SYNC state update (streaming):', {
+                  prevStreamingLength: prevState.streamingMessage?.length || 0,
+                  newStreamingLength: newState.streamingMessage?.length || 0,
+                  isStreaming: newState.isStreaming
+                });
+                return newState;
+              });
+            });
+          } else {
+            // Normal async update for non-streaming changes
+            setAgentState(prevState => {
+              console.info('🚀 React ASYNC state update (normal):', {
+                prevStreamingLength: prevState.streamingMessage?.length || 0,
+                newStreamingLength: newState.streamingMessage?.length || 0,
+                isStreaming: newState.isStreaming
+              });
+              return newState;
+            });
+          }
         },
         onNavigation: (type, data) => {
           if (type === 'session-created') {
@@ -194,7 +346,7 @@ function CoachCreator() {
 
   // Auto-scroll to bottom on page load when messages are first loaded
   useEffect(() => {
-    if (agentState.messages.length > 0 && !agentState.isLoading) {
+    if (agentState.messages.length > 0 && !agentState.isLoadingItem) {
       // Use a longer delay for initial load to ensure everything is rendered
       const timeoutId = setTimeout(() => {
         scrollToBottom();
@@ -202,21 +354,64 @@ function CoachCreator() {
 
       return () => clearTimeout(timeoutId);
     }
-  }, [agentState.messages.length, agentState.isLoading]);
+  }, [agentState.messages.length, agentState.isLoadingItem]);
 
   // Handle message submission
   const handleMessageSubmit = async (messageContent) => {
     if (!agentRef.current) return;
 
     try {
-      await agentRef.current.sendMessage(messageContent);
+      await sendMessageWithStreaming(agentRef.current, messageContent, {
+        enableStreaming: supportsStreaming(),
+        onStreamingStart: () => {
+          console.info('🔄 Started streaming message in CoachCreator');
+        },
+        onStreamingError: (error) => {
+          handleStreamingError(error, { error: showError });
+        }
+      });
     } catch (error) {
-      // Error handling is managed by the agent via onError callback
+      console.error("Error sending message:", error);
+      handleStreamingError(error, { error: showError });
     }
   };
 
   const formatTime = (timestamp) => {
     return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  // Helper function to render message content with line breaks and streaming support
+  // Removed useCallback to prevent memoization issues during streaming
+  const renderMessageContent = (message) => {
+    // Debug: Log what React component is seeing
+    if (message.id === agentState.streamingMessageId) {
+      console.info('🎭 renderMessageContent for streaming message:', {
+        messageId: message.id,
+        isStreaming: agentState.isStreaming,
+        streamingMessageId: agentState.streamingMessageId,
+        streamingMessageLength: agentState.streamingMessage?.length || 0,
+        messageContentLength: message.content?.length || 0,
+        streamingMessagePreview: agentState.streamingMessage?.substring(0, 30) + '...' || '[empty]'
+      });
+    }
+
+    // Get the appropriate content (streaming or final)
+    const displayContent = getMessageDisplayContent(message, agentState);
+
+    if (message.type === "ai") {
+      // AI messages use full markdown parsing
+      return parseMarkdown(displayContent);
+    } else {
+      // User messages: simple line break rendering
+      if (!displayContent) return displayContent;
+
+      return displayContent.split("\n").map((line, index, array) => (
+        <span key={index}>
+          {line}
+          {index < array.length - 1 && <br />}
+        </span>
+      ));
+    }
   };
 
   // Delete handlers
@@ -278,7 +473,7 @@ function CoachCreator() {
   }
 
   // Show skeleton loading while validating userId or loading agent state
-  if (isValidatingUserId || (agentState.isLoading && agentState.messages.length === 0)) {
+  if (isValidatingUserId || (agentState.isLoadingItem && agentState.messages.length === 0)) {
     return (
       <div className={`${layoutPatterns.pageContainer} min-h-screen pb-8`}>
         <div className={`${layoutPatterns.contentWrapper} min-h-[calc(100vh-5rem)] flex flex-col`}>
@@ -354,102 +549,50 @@ function CoachCreator() {
       <div className={`${layoutPatterns.contentWrapper} min-h-[calc(100vh-5rem)] flex flex-col`}>
         {/* Header */}
         <div className="mb-8 text-center">
-          <h1 className="font-russo font-black text-4xl md:text-5xl text-white mb-4 uppercase">
+          <h1 className="font-russo font-black text-4xl md:text-5xl text-white mb-6 uppercase">
             Create Your Coach
           </h1>
 
           {/* Coach Creator Header */}
           <CoachCreatorHeader isOnline={true} />
 
-          <p className="font-rajdhani text-lg text-synthwave-text-secondary mb-6 max-w-3xl mx-auto">
+          <p className="font-rajdhani text-lg text-synthwave-text-secondary max-w-3xl mx-auto mb-4">
             Get a personalized coach with adaptive intelligence that learns from your interactions and evolves with your progress.
             Takes about 15-20 minutes to set up your perfect training partner.
           </p>
-
         </div>
 
         {/* Main Content Area */}
         <div className="flex-1 flex justify-center">
           <div className="w-full max-w-7xl">
             <div className={`${containerPatterns.mainContent} h-full flex flex-col`}>
-              {/* Messages Area - with bottom padding for floating input */}
-              <div className="flex-1 overflow-y-auto overflow-hidden p-6 pb-24 space-y-4 custom-scrollbar">
+              {/* Messages Area - with bottom padding for floating input + progress indicator */}
+              <div className="flex-1 overflow-y-auto overflow-hidden p-6 pb-40 space-y-4 custom-scrollbar">
                 {agentState.messages.map((message) => (
-                  <div
+                  <MessageItem
                     key={message.id}
-                    className={`flex items-end gap-2 mb-1 group ${
-                      message.type === 'user' ? 'flex-row-reverse' : 'flex-row'
-                    }`}
-                  >
-                    {/* Avatar */}
-                    <div
-                      className={`flex-shrink-0 ${
-                        message.type === 'user'
-                          ? avatarPatterns.userSmall
-                          : avatarPatterns.aiSmall
-                      }`}
-                    >
-                      {message.type === 'user' ? (
-                        getUserInitial()
-                      ) : (
-                        'V'
-                      )}
-                    </div>
-
-                    {/* Message Bubble */}
-                    <div
-                      className={`max-w-[70%] ${message.type === 'user' ? 'items-end' : 'items-start'} flex flex-col`}
-                    >
-                      <div
-                        className={`px-4 py-3 rounded-2xl shadow-sm ${
-                          message.type === 'user'
-                            ? 'bg-gradient-to-br from-synthwave-neon-pink/80 to-synthwave-neon-pink/60 text-white border-0 rounded-br-md shadow-xl shadow-synthwave-neon-pink/30 backdrop-blur-sm'
-                            : containerPatterns.aiChatBubble
-                        }`}
-                      >
-                        <div className="font-rajdhani text-base leading-relaxed">
-                          {message.type === 'user' ? (
-                            <span className="whitespace-pre-wrap">{message.content}</span>
-                          ) : (
-                            parseMarkdown(message.content)
-                          )}
-                        </div>
-                      </div>
-
-                      <div
-                        className={`flex items-center gap-1 px-2 mt-1 ${message.type === "user" ? "justify-end" : "justify-start"}`}
-                      >
-                        <span className="text-xs text-synthwave-text-secondary font-rajdhani">
-                          {formatTime(message.timestamp)}
-                        </span>
-                        {message.type === "user" && (
-                          <div className="flex gap-1">
-                            <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink opacity-60"></div>
-                            <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink"></div>
-                          </div>
-                        )}
-                        {message.type === "ai" && (
-                          <div className="flex gap-1">
-                            <div className="w-3 h-3 rounded-full bg-synthwave-neon-cyan opacity-60"></div>
-                            <div className="w-3 h-3 rounded-full bg-synthwave-neon-cyan"></div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+                    message={message}
+                    agentState={agentState}
+                    getUserInitial={getUserInitial}
+                    formatTime={formatTime}
+                    renderMessageContent={renderMessageContent}
+                  />
                 ))}
 
-                {/* Typing Indicator */}
-                {agentState.isTyping && (
-                  <div className="flex items-end gap-2 mb-1">
-                    <div className={`flex-shrink-0 ${avatarPatterns.aiSmall}`}>
-                      V
+                {/* Typing Indicator - Show only when typing but not actively streaming content */}
+                {(() => {
+                  const typingState = getTypingState(agentState);
+                  return typingState.showTypingIndicator && (
+                    <div className="flex items-end gap-2 mb-1">
+                      <div className={`flex-shrink-0 ${avatarPatterns.aiSmall}`}>
+                        V
+                      </div>
+                      <div className={`${containerPatterns.aiChatBubble}`}>
+                        <TypingIndicator />
+                      </div>
                     </div>
-                    <div className={`${containerPatterns.aiChatBubble}`}>
-                      <TypingIndicator />
-                    </div>
-                  </div>
-                )}
+                  );
+                })()}
 
                 <div ref={messagesEndRef} />
               </div>
@@ -501,7 +644,7 @@ function CoachCreator() {
             inputMessage={inputMessage}
             setInputMessage={setInputMessage}
             onSubmit={handleMessageSubmit}
-            isTyping={agentState.isTyping}
+            isTyping={getTypingState(agentState).isTyping}
             placeholder="Tell me about your fitness goals..."
             coachName="Vesper the Coach Creator"
             isOnline={true}
@@ -511,7 +654,7 @@ function CoachCreator() {
             enableRecording={true}
             showTipsButton={true}
             tipsContent={coachCreatorTips}
-            tipsTitle="Coach Creation Tips"
+            tipsTitle="Coach creation tips"
             textareaRef={inputRef}
             progressData={agentState.progress}
           />

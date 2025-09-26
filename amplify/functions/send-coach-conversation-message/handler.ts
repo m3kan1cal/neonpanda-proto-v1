@@ -13,7 +13,7 @@ import { detectAndProcessConversationSummary } from "../libs/coach-conversation/
 import { gatherConversationContext } from "../libs/coach-conversation/context";
 import { detectAndProcessWorkout } from "../libs/coach-conversation/workout-detection";
 import { queryMemories, detectAndProcessMemory } from "../libs/coach-conversation/memory-processing";
-import { generateAIResponse } from "../libs/coach-conversation/response-generation";
+import { generateAIResponse, generateAIResponseStream } from "../libs/coach-conversation/response-generation";
 import { withAuth, AuthenticatedHandler } from "../libs/auth/middleware";
 
 // Feature flags
@@ -47,6 +47,10 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     }
 
     console.info('✅ Path parameters validated:', { userId, coachId, conversationId });
+
+    // Check if streaming is requested
+    const isStreamingRequested = event.queryStringParameters?.stream === 'true';
+    console.info('🔄 Streaming mode:', isStreamingRequested ? 'ENABLED' : 'DISABLED');
 
     const body = JSON.parse(event.body);
     const { userResponse, messageTimestamp } = body;
@@ -184,7 +188,19 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       };
     }
 
-    // Generate AI response with all context
+    // Generate AI response with all context - handle streaming vs non-streaming
+    if (isStreamingRequested) {
+      console.info('🔄 Processing streaming request');
+      return await handleStreamingResponse(
+        userId, coachId, conversationId,
+        userResponse, messageTimestamp,
+        existingConversation, coachConfig,
+        context, workoutResult, memoryRetrieval,
+        existingMessages, conversationContext
+      );
+    }
+
+    // Non-streaming path (existing logic)
     let responseResult;
     try {
       responseResult = await generateAIResponse(
@@ -301,6 +317,202 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       );
     }
 };
+
+// Streaming response handler
+async function handleStreamingResponse(
+  userId: string, coachId: string, conversationId: string,
+  userResponse: string, messageTimestamp: string,
+  existingConversation: any, coachConfig: any,
+  context: any, workoutResult: any, memoryRetrieval: any,
+  existingMessages: any[], conversationContext: any
+) {
+  try {
+    console.info('🔄 Starting streaming response generation');
+
+    // Create user message first
+    const newUserMessage: CoachMessage = {
+      id: `msg_${Date.now()}_user`,
+      role: "user",
+      content: userResponse,
+      timestamp: new Date(messageTimestamp),
+    };
+
+    // Start streaming AI response
+    const streamResult = await generateAIResponseStream(
+      coachConfig,
+      context,
+      workoutResult,
+      memoryRetrieval,
+      userResponse,
+      existingMessages,
+      conversationContext,
+      userId,
+      coachId,
+      conversationId
+    );
+
+    // Return streaming response
+    return {
+      statusCode: 200,
+      headers: {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type,Authorization',
+      },
+      body: await generateSSEStream(
+        streamResult.responseStream,
+        newUserMessage,
+        userId, coachId, conversationId,
+        existingConversation, coachConfig,
+        context, workoutResult, memoryRetrieval,
+        streamResult.promptMetadata, existingMessages, userResponse
+      ),
+      isBase64Encoded: false,
+    };
+
+  } catch (error) {
+    console.error('❌ Error in streaming response:', error);
+
+    // Fallback to non-streaming on error
+    console.info('🔄 Falling back to non-streaming response');
+    try {
+      const responseResult = await generateAIResponse(
+        coachConfig,
+        context,
+        workoutResult,
+        memoryRetrieval,
+        userResponse,
+        existingMessages,
+        conversationContext,
+        userId,
+        coachId,
+        conversationId
+      );
+
+      return {
+        statusCode: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Headers': 'Content-Type,Authorization',
+        },
+        body: JSON.stringify({
+          type: 'fallback',
+          userResponse: {
+            id: `msg_${Date.now()}_user`,
+            role: 'user',
+            content: userResponse,
+            timestamp: messageTimestamp,
+          },
+          aiResponse: {
+            id: `msg_${Date.now()}_assistant`,
+            role: 'assistant',
+            content: responseResult.aiResponseContent,
+            timestamp: new Date().toISOString(),
+          },
+          conversationId,
+        }),
+      };
+    } catch (fallbackError) {
+      console.error('❌ Fallback also failed:', fallbackError);
+      return createErrorResponse(500, 'Failed to generate response');
+    }
+  }
+}
+
+// Generate Server-Sent Events stream
+async function generateSSEStream(
+  responseStream: AsyncGenerator<string, void, unknown>,
+  newUserMessage: CoachMessage,
+  userId: string, coachId: string, conversationId: string,
+  existingConversation: any, coachConfig: any,
+  context: any, workoutResult: any, memoryRetrieval: any,
+  promptMetadata: any, existingMessages: any[], userResponse: string
+): Promise<string> {
+  let fullAIResponse = '';
+  let sseOutput = '';
+
+  try {
+    // Stream the AI response chunks
+    for await (const chunk of responseStream) {
+      fullAIResponse += chunk;
+      const chunkData = {
+        type: 'chunk',
+        content: chunk
+      };
+      sseOutput += `data: ${JSON.stringify(chunkData)}\n\n`;
+    }
+
+    // Create final AI message
+    const newAiMessage: CoachMessage = {
+      id: `msg_${Date.now()}_assistant`,
+      role: "assistant",
+      content: fullAIResponse,
+      timestamp: new Date(),
+    };
+
+    // Save messages to conversation after streaming completes
+    console.info('💾 Saving messages to DynamoDB after streaming');
+    await sendCoachConversationMessage(
+      userId,
+      coachId,
+      conversationId,
+      [newUserMessage, newAiMessage]
+    );
+
+    // Trigger async conversation summary if enabled
+    if (FEATURE_FLAGS.ENABLE_CONVERSATION_SUMMARY) {
+      try {
+        const allMessages = [...existingConversation.attributes.messages, newUserMessage, newAiMessage];
+        const messageContext = existingMessages.slice(-3)
+          .map((msg: any) => `${msg.role}: ${msg.content}`)
+          .join('\n');
+
+        await detectAndProcessConversationSummary(
+          userId,
+          coachId,
+          conversationId,
+          userResponse,
+          allMessages.length,
+          messageContext
+        );
+      } catch (summaryError) {
+        console.warn('⚠️ Conversation summary processing failed (non-critical):', summaryError);
+      }
+    }
+
+    // Send completion message
+    const completeData = {
+      type: 'complete',
+      fullMessage: fullAIResponse,
+      userMessage: newUserMessage,
+      aiMessage: newAiMessage,
+      conversationId,
+      pineconeContext: {
+        used: context?.pineconeMatches?.length > 0,
+        matches: context?.pineconeMatches?.length || 0,
+        contextLength: context?.pineconeContext?.length || 0,
+      }
+    };
+    sseOutput += `data: ${JSON.stringify(completeData)}\n\n`;
+
+    console.info('✅ Streaming response completed successfully');
+    return sseOutput;
+
+  } catch (streamError) {
+    console.error('❌ Error during streaming:', streamError);
+
+    // Send error message in stream format
+    const errorData = {
+      type: 'error',
+      message: 'An error occurred during streaming'
+    };
+    sseOutput += `data: ${JSON.stringify(errorData)}\n\n`;
+    return sseOutput;
+  }
+}
 
 // Export with allowInternalCalls for Lambda-to-Lambda invocation from create-coach-conversation
 export const handler = withAuth(baseHandler, { allowInternalCalls: true });

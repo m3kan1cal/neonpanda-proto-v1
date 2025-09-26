@@ -1,4 +1,5 @@
 import { getApiUrl, authenticatedFetch } from './apiConfig';
+import { handleStreamingApiRequest } from './streamingApiHelper';
 
 /**
  * API service for Coach Conversation operations
@@ -126,6 +127,33 @@ export const sendCoachConversationMessage = async (userId, coachId, conversation
     throw error;
   }
 };
+
+/**
+ * Sends a message to a coach conversation with streaming response
+ * @param {string} userId - The user ID
+ * @param {string} coachId - The coach ID
+ * @param {string} conversationId - The conversation ID
+ * @param {string} userResponse - The user's message/response
+ * @returns {AsyncGenerator} - Stream of message chunks
+ */
+export async function* sendCoachConversationMessageStream(userId, coachId, conversationId, userResponse) {
+  const url = `${getApiUrl('')}/users/${userId}/coaches/${coachId}/conversations/${conversationId}/send-message?stream=true`;
+  const requestBody = {
+    userResponse,
+    messageTimestamp: new Date().toISOString()
+  };
+
+  yield* handleStreamingApiRequest(url, requestBody, {
+    method: 'POST',
+    fallbackFunction: sendCoachConversationMessage,
+    fallbackParams: [userId, coachId, conversationId, userResponse],
+    operationName: 'coach conversation message',
+    errorMessages: {
+      notFound: 'Conversation not found',
+      serviceUnavailable: 'Service temporarily unavailable - request took too long'
+    }
+  });
+}
 
 /**
  * Updates coach conversation metadata (title, tags, isActive)

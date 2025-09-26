@@ -4,7 +4,9 @@ import React, {
   useEffect,
   useMemo,
   useCallback,
+  memo,
 } from "react";
+import { flushSync } from "react-dom";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Tooltip } from "react-tooltip";
 import { useAuthorizeUser } from "../auth/hooks/useAuthorizeUser";
@@ -17,6 +19,15 @@ import ChatInput from "./shared/ChatInput";
 import { parseMarkdown } from "../utils/markdownParser.jsx";
 import CoachConversationAgent from "../utils/agents/CoachConversationAgent";
 import { useToast } from "../contexts/ToastContext";
+import {
+  sendMessageWithStreaming,
+  isMessageStreaming,
+  getMessageDisplayContent,
+  getStreamingMessageClasses,
+  getTypingState,
+  handleStreamingError,
+  supportsStreaming
+} from "../utils/ui/streamingUiHelper.jsx";
 import { FloatingMenuManager } from "./shared/FloatingMenuManager";
 import CommandPalette from "./shared/CommandPalette";
 import IconButton from "./shared/IconButton";
@@ -134,6 +145,117 @@ const TypingIndicator = () => (
   </div>
 );
 
+// Memoized MessageItem component to prevent unnecessary re-renders
+const MessageItem = memo(({
+  message,
+  agentState,
+  coachName,
+  getUserInitial,
+  formatTime,
+  renderMessageContent
+}) => {
+  return (
+    <div
+      className={`flex items-end gap-2 mb-1 group ${
+        message.type === "user" ? "flex-row-reverse" : "flex-row"
+      }`}
+    >
+      {/* Avatar */}
+      <div
+        className={`flex-shrink-0 ${
+          message.type === "user"
+            ? avatarPatterns.userSmall
+            : avatarPatterns.aiSmall
+        }`}
+      >
+        {message.type === "user" ? (
+          getUserInitial()
+        ) : (
+          coachName?.charAt(0) || "C"
+        )}
+      </div>
+
+      {/* Message Bubble */}
+      <div
+        className={`max-w-[70%] ${message.type === "user" ? "items-end" : "items-start"} flex flex-col`}
+      >
+        <div
+          className={getStreamingMessageClasses(
+            message,
+            agentState,
+            `px-4 py-3 rounded-2xl shadow-sm ${
+              message.type === "user"
+                ? "bg-gradient-to-br from-synthwave-neon-pink/80 to-synthwave-neon-pink/60 text-white border-0 rounded-br-md shadow-xl shadow-synthwave-neon-pink/30 backdrop-blur-sm"
+                : containerPatterns.aiChatBubble
+            }`
+          )}
+        >
+          <div className="font-rajdhani text-base leading-relaxed">
+            {renderMessageContent(message)}
+          </div>
+        </div>
+
+        <div
+          className={`flex items-center gap-1 px-2 mt-1 ${message.type === "user" ? "justify-end" : "justify-start"}`}
+        >
+          <span className="text-xs text-synthwave-text-secondary font-rajdhani">
+            {formatTime(message.timestamp)}
+          </span>
+          {message.type === "user" && (
+            <div className="flex gap-1">
+              <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink opacity-60"></div>
+              <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink"></div>
+            </div>
+          )}
+          {message.type === "ai" && (
+            <div className="flex gap-1">
+              <div className="w-3 h-3 rounded-full bg-synthwave-neon-cyan opacity-60"></div>
+              <div className="w-3 h-3 rounded-full bg-synthwave-neon-cyan"></div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}, (prevProps, nextProps) => {
+  // Custom comparison function for React.memo
+  // Re-render if:
+  // 1. Message content changed (for streaming updates)
+  // 2. Message ID changed (different message)
+  // 3. Agent streaming state changed (affects this message's rendering)
+  // 4. Coach name changed (affects avatar)
+
+  const messageChanged =
+    prevProps.message.id !== nextProps.message.id ||
+    prevProps.message.content !== nextProps.message.content;
+
+  const streamingStateChanged =
+    prevProps.agentState.isStreaming !== nextProps.agentState.isStreaming ||
+    prevProps.agentState.streamingMessageId !== nextProps.agentState.streamingMessageId ||
+    prevProps.agentState.streamingMessage !== nextProps.agentState.streamingMessage;
+
+  const coachNameChanged = prevProps.coachName !== nextProps.coachName;
+
+  const shouldRerender = messageChanged || streamingStateChanged || coachNameChanged;
+
+  if (nextProps.message.type === 'ai' && nextProps.agentState.isStreaming) {
+    console.info('🎬 MessageItem memo check:', {
+      messageId: nextProps.message.id,
+      messageChanged,
+      streamingStateChanged,
+      shouldRerender,
+      streamingMessageLength: nextProps.agentState.streamingMessage?.length || 0
+    });
+  }
+
+  // Return true if props are equal (no re-render needed)
+  // Return false if props changed (re-render needed)
+  return !shouldRerender;
+});
+
+// Add display name for debugging
+MessageItem.displayName = 'MessageItem';
+
 function CoachConversations() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -150,14 +272,14 @@ function CoachConversations() {
   } = useAuthorizeUser(userId);
 
   // Get user's first letter for avatar
-  const getUserInitial = () => {
+  const getUserInitial = useCallback(() => {
     if (!userAttributes) return 'U';
 
     // Create a user object compatible with getUserDisplayName
     const userForDisplayName = { attributes: userAttributes };
     const displayName = getUserDisplayName(userForDisplayName);
     return displayName.charAt(0).toUpperCase();
-  };
+  }, [userAttributes]);
 
   // UI-specific state
   const [inputMessage, setInputMessage] = useState("");
@@ -262,15 +384,14 @@ function CoachConversations() {
       conversation: null,
       recentConversations: [],
       isLoadingRecentItems: false,
+      // Initialize streaming state
+      isStreaming: false,
+      streamingMessage: '',
+      streamingMessageId: null,
     });
 
-  // Debug: Log when coach data changes
-  useEffect(() => {
-    console.info(
-      "Component received coach data:",
-      coachConversationAgentState.coach
-    );
-  }, [coachConversationAgentState.coach]);
+  // Debug: Track component re-renders during streaming
+
 
   // Redirect if missing required parameters
   useEffect(() => {
@@ -298,7 +419,36 @@ function CoachConversations() {
         coachId,
         conversationId,
         onStateChange: (newState) => {
-          setCoachConversationAgentState(newState);
+          console.info('🔥 onStateChange received:', {
+            isStreaming: newState.isStreaming,
+            streamingMessageId: newState.streamingMessageId,
+            streamingMessageLength: newState.streamingMessage?.length || 0,
+            messagesCount: newState.messages?.length || 0
+          });
+
+          // Use flushSync for streaming updates to force immediate synchronous rendering
+          if (newState.isStreaming || newState.streamingMessage) {
+            flushSync(() => {
+              setCoachConversationAgentState(prevState => {
+                console.info('🚀 React SYNC state update (streaming):', {
+                  prevStreamingLength: prevState.streamingMessage?.length || 0,
+                  newStreamingLength: newState.streamingMessage?.length || 0,
+                  isStreaming: newState.isStreaming
+                });
+                return newState;
+              });
+            });
+          } else {
+            // Normal async update for non-streaming changes
+            setCoachConversationAgentState(prevState => {
+              console.info('🚀 React ASYNC state update (normal):', {
+                prevStreamingLength: prevState.streamingMessage?.length || 0,
+                newStreamingLength: newState.streamingMessage?.length || 0,
+                isStreaming: newState.isStreaming
+              });
+              return newState;
+            });
+          }
         },
         onNavigation: (type, data) => {
           if (type === "conversation-not-found") {
@@ -526,9 +676,18 @@ function CoachConversations() {
     }, 50);
 
     try {
-      await agentRef.current.sendMessage(messageToSend);
+      await sendMessageWithStreaming(agentRef.current, messageToSend, {
+        enableStreaming: supportsStreaming(),
+        onStreamingStart: () => {
+          // Streaming started
+        },
+        onStreamingError: (error) => {
+          handleStreamingError(error, { error: showError });
+        }
+      });
     } catch (error) {
       console.error("Error sending message:", error);
+      handleStreamingError(error, { error: showError });
     } finally {
       // Reset flag after message is sent (success or failure)
       isSendingMessage.current = false;
@@ -540,20 +699,29 @@ function CoachConversations() {
     if (!agentRef.current) return;
 
     try {
-      await agentRef.current.sendMessage(messageContent);
+      await sendMessageWithStreaming(agentRef.current, messageContent, {
+        enableStreaming: supportsStreaming(),
+        onStreamingStart: () => {
+          // Streaming started
+        },
+        onStreamingError: (error) => {
+          handleStreamingError(error, { error: showError });
+        }
+      });
     } catch (error) {
       console.error("Error sending message:", error);
+      handleStreamingError(error, { error: showError });
     }
   };
 
   // Key press handling moved to ChatInput component
 
-  const formatTime = (timestamp) => {
+  const formatTime = useCallback((timestamp) => {
     return new Date(timestamp).toLocaleTimeString([], {
       hour: "2-digit",
       minute: "2-digit",
     });
-  };
+  }, []);
 
   const handleEditTitle = () => {
     setEditTitleValue(coachConversationAgentState.conversation?.title || "");
@@ -631,16 +799,32 @@ function CoachConversations() {
 
   // Slash command parsing moved to ChatInput component
 
-  // Helper function to render message content with line breaks
+  // Helper function to render message content with line breaks and streaming support
+  // Removed useCallback to prevent memoization issues during streaming
   const renderMessageContent = (message) => {
+    // Debug: Log what React component is seeing
+    if (message.id === coachConversationAgentState.streamingMessageId) {
+      console.info('🎭 renderMessageContent for streaming message:', {
+        messageId: message.id,
+        isStreaming: coachConversationAgentState.isStreaming,
+        streamingMessageId: coachConversationAgentState.streamingMessageId,
+        streamingMessageLength: coachConversationAgentState.streamingMessage?.length || 0,
+        messageContentLength: message.content?.length || 0,
+        streamingMessagePreview: coachConversationAgentState.streamingMessage?.substring(0, 30) + '...' || '[empty]'
+      });
+    }
+
+    // Get the appropriate content (streaming or final)
+    const displayContent = getMessageDisplayContent(message, coachConversationAgentState);
+
     if (message.type === "ai") {
       // AI messages use full markdown parsing
-      return parseMarkdown(message.content);
+      return parseMarkdown(displayContent);
     } else {
       // User messages: simple line break rendering
-      if (!message.content) return message.content;
+      if (!displayContent) return displayContent;
 
-      return message.content.split("\n").map((line, index, array) => (
+      return displayContent.split("\n").map((line, index, array) => (
         <span key={index}>
           {line}
           {index < array.length - 1 && <br />}
@@ -648,6 +832,9 @@ function CoachConversations() {
       ));
     }
   };
+
+  // Typing state without memoization to ensure real-time updates during streaming
+  const typingState = getTypingState(coachConversationAgentState);
 
   // Slash command functionality moved to ChatInput component
 
@@ -841,88 +1028,39 @@ function CoachConversations() {
           <div className="w-full max-w-7xl">
             <div className={`${containerPatterns.mainContent} h-full flex flex-col`}>
               {/* Messages Area - with bottom padding for floating input */}
-              <div className="flex-1 overflow-y-auto overflow-hidden p-6 pb-24 space-y-4">
+              <div className="flex-1 overflow-y-auto overflow-hidden p-6 pb-28 space-y-4">
                 {coachConversationAgentState.messages.map((message, index) => (
-                  <div
+                  <MessageItem
                     key={message.id}
-                    className={`flex items-end gap-2 mb-1 group ${
-                      message.type === "user" ? "flex-row-reverse" : "flex-row"
-                    }`}
-                  >
-                    {/* Avatar */}
-                    <div
-                      className={`flex-shrink-0 ${
-                        message.type === "user"
-                          ? avatarPatterns.userSmall
-                          : avatarPatterns.aiSmall
-                      }`}
-                    >
-                      {message.type === "user" ? (
-                        getUserInitial()
-                      ) : (
-                        coachConversationAgentState.coach?.name?.charAt(0) || "C"
-                      )}
-                    </div>
-
-                    {/* Message Bubble */}
-                    <div
-                      className={`max-w-[70%] ${message.type === "user" ? "items-end" : "items-start"} flex flex-col`}
-                    >
-                      <div
-                        className={`px-4 py-3 rounded-2xl shadow-sm ${
-                          message.type === "user"
-                            ? "bg-gradient-to-br from-synthwave-neon-pink/80 to-synthwave-neon-pink/60 text-white border-0 rounded-br-md shadow-xl shadow-synthwave-neon-pink/30 backdrop-blur-sm"
-                            : containerPatterns.aiChatBubble
-                        }`}
-                      >
-                        <div className="font-rajdhani text-base leading-relaxed">
-                          {renderMessageContent(message)}
-                        </div>
-                      </div>
-
-                      <div
-                        className={`flex items-center gap-1 px-2 mt-1 ${message.type === "user" ? "justify-end" : "justify-start"}`}
-                      >
-                        <span className="text-xs text-synthwave-text-secondary font-rajdhani">
-                          {formatTime(message.timestamp)}
-                        </span>
-                        {message.type === "user" && (
-                          <div className="flex gap-1">
-                            <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink opacity-60"></div>
-                            <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink"></div>
-                          </div>
-                        )}
-                        {message.type === "ai" && (
-                          <div className="flex gap-1">
-                            <div className="w-3 h-3 rounded-full bg-synthwave-neon-cyan opacity-60"></div>
-                            <div className="w-3 h-3 rounded-full bg-synthwave-neon-cyan"></div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+                    message={message}
+                    agentState={coachConversationAgentState}
+                    coachName={coachConversationAgentState.coach?.name}
+                    getUserInitial={getUserInitial}
+                    formatTime={formatTime}
+                    renderMessageContent={renderMessageContent}
+                  />
                 ))}
 
-                {/* Typing Indicator */}
-                {coachConversationAgentState.isTyping && (
-                  <div className="flex items-end gap-2 mb-1">
-                    <div className={`flex-shrink-0 ${avatarPatterns.aiSmall}`}>
-                      {coachConversationAgentState.coach?.name?.charAt(0) || "C"}
-                    </div>
-                    <div className={`${containerPatterns.aiChatBubble} px-4 py-3`}>
-                      <div className="flex space-x-1">
-                        <div className="w-2 h-2 bg-synthwave-neon-cyan rounded-full animate-bounce"></div>
-                        <div
-                          className="w-2 h-2 bg-synthwave-neon-cyan rounded-full animate-bounce"
-                          style={{ animationDelay: "0.1s" }}
-                        ></div>
-                        <div
-                          className="w-2 h-2 bg-synthwave-neon-cyan rounded-full animate-bounce"
-                          style={{ animationDelay: "0.2s" }}
-                        ></div>
+                {/* Typing Indicator - Show only when typing but not actively streaming content */}
+                {typingState.showTypingIndicator && (
+                    <div className="flex items-end gap-2 mb-1">
+                      <div className={`flex-shrink-0 ${avatarPatterns.aiSmall}`}>
+                        {coachConversationAgentState.coach?.name?.charAt(0) || "C"}
+                      </div>
+                      <div className={`${containerPatterns.aiChatBubble} px-4 py-3`}>
+                        <div className="flex space-x-1">
+                          <div className="w-2 h-2 bg-synthwave-neon-cyan rounded-full animate-bounce"></div>
+                          <div
+                            className="w-2 h-2 bg-synthwave-neon-cyan rounded-full animate-bounce"
+                            style={{ animationDelay: "0.1s" }}
+                          ></div>
+                          <div
+                            className="w-2 h-2 bg-synthwave-neon-cyan rounded-full animate-bounce"
+                            style={{ animationDelay: "0.2s" }}
+                          ></div>
+                        </div>
                       </div>
                     </div>
-                  </div>
                 )}
 
                 <div ref={messagesEndRef} />
@@ -937,7 +1075,7 @@ function CoachConversations() {
         inputMessage={inputMessage}
         setInputMessage={setInputMessage}
         onSubmit={handleMessageSubmit}
-        isTyping={coachConversationAgentState.isTyping}
+        isTyping={typingState.isTyping}
         placeholder="How can I help with your training?"
         coachName={coachConversationAgentState.coach?.name || "Coach"}
         isOnline={isOnline}
@@ -949,7 +1087,7 @@ function CoachConversations() {
         availableSlashCommands={availableSlashCommands}
         showTipsButton={true}
         tipsContent={chatTips}
-        tipsTitle="Chat Tips & Help"
+        tipsTitle="Chat tips & help"
         textareaRef={textareaRef}
       />
 

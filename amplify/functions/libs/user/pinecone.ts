@@ -39,15 +39,24 @@ export const storeMemoryInPinecone = async (memory: UserMemory): Promise<{ succe
       logged_at: new Date().toISOString()
     };
 
-    // Use centralized storage function
-    const result = await storePineconeContext(memory.userId, memory.content, metadata);
+    // Enhance searchable content by including tags for better semantic matching
+    const enhancedContent = [
+      memory.content,
+      ...(memory.metadata.tags || []).map(tag => `tag: ${tag}`)
+    ].join(' ');
+
+    // Use centralized storage function with enhanced content
+    const result = await storePineconeContext(memory.userId, enhancedContent, metadata);
 
     console.info('✅ Successfully stored memory in Pinecone:', {
       memoryId: memory.memoryId,
       recordId: result.recordId,
       namespace: result.namespace,
       importance: memory.metadata.importance,
-      contentLength: memory.content.length
+      contentLength: memory.content.length,
+      enhancedContentLength: enhancedContent.length,
+      tagCount: memory.metadata.tags?.length || 0,
+      tags: memory.metadata.tags || []
     });
 
     return result;
