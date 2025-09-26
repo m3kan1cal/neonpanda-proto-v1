@@ -43,6 +43,47 @@ const CollapsibleSection = ({ title, icon, children, defaultOpen = true, classNa
 
 const changelogEntries = [
   {
+    version: "Release v1.0.20250926-beta",
+    date: "2025-09-26",
+    changes: {
+      added: [
+        "Streaming chat implementation alignment between CoachCreator and CoachConversations components",
+        "Advanced React state management with flushSync for real-time streaming UI updates",
+        "Memoized MessageItem component for optimized streaming message rendering",
+        "Streaming-aware content display with progressive message building",
+        "Enhanced streaming state management in CoachCreatorAgent with detailed logging",
+        "Input validation using validateStreamingInput helper for consistent error handling",
+        "messageTimestamp field support in coach creator session updates for improved accuracy",
+        "Network-level streaming debug logging with timestamps for troubleshooting",
+        "Streaming debug test utilities for isolating streaming implementation issues",
+        "Conditional complexityIndicators handling in conversation summary metadata to prevent DynamoDB serialization warnings"
+      ],
+      changed: [
+        "CoachCreator component streaming implementation aligned with CoachConversations reference implementation",
+        "CoachCreatorAgent streaming state management upgraded to match CoachConversationAgent patterns",
+        "CoachCreator API request structure updated to include messageTimestamp for consistency",
+        "CoachCreator header layout spacing adjusted to match WeeklyReports pattern (h1 mb-6, description mb-4)",
+        "ChatInput skeleton loading button shapes updated from rounded-full to rounded-lg/rounded-2xl to match real buttons",
+        "CoachCreator messages area bottom padding increased from pb-36 to pb-40 for proper ChatInput clearance",
+        "CoachConversations messages area bottom padding increased from pb-24 to pb-28 for consistent spacing",
+        "Backend Lambda handler updated to accept and process messageTimestamp in coach creator session updates",
+        "Streaming API helper enhanced with comprehensive network-level logging for debugging",
+        "Conversation summary parsing now conditionally includes complexityIndicators only when defined and non-empty"
+      ],
+      fixed: [
+        "Vertical spacing issue where last AI chat message bubble would go behind ChatInput in CoachCreator",
+        "Header layout inconsistencies between CoachCreator and WeeklyReports components",
+        "ChatInput skeleton loading showing circular buttons instead of rounded square/rectangle shapes",
+        "DynamoDB serialization warnings caused by undefined complexityIndicators in conversation summaries",
+        "Streaming implementation inconsistencies between CoachCreator and CoachConversations components",
+        "Missing messageTimestamp field in coach creator session API requests",
+        "Insufficient bottom padding in chat message areas causing UI overlap issues",
+        "Skeleton loading state not accurately representing real component button shapes",
+        "Header spacing inconsistencies affecting visual hierarchy and component alignment"
+      ]
+    }
+  },
+  {
     version: "Release v1.0.20250925-beta",
     date: "2025-09-25",
     changes: {
