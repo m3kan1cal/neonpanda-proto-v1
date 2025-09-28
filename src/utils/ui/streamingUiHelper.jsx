@@ -58,22 +58,11 @@ export async function sendMessageWithStreaming(agent, messageContent, options = 
  * @returns {boolean} - Whether this message is currently streaming
  */
 export function isMessageStreaming(message, agentState) {
-  const result = !!(
+  return !!(
     agentState.isStreaming &&
     agentState.streamingMessageId &&
     message.id === agentState.streamingMessageId
   );
-
-  if (message.type === 'ai' && agentState.isStreaming) {
-    console.info('🔍 isMessageStreaming check:', {
-      messageId: message.id,
-      streamingMessageId: agentState.streamingMessageId,
-      isStreaming: agentState.isStreaming,
-      result
-    });
-  }
-
-  return result;
 }
 
 /**
@@ -88,25 +77,10 @@ export function getMessageDisplayContent(message, agentState) {
   // If this message is currently streaming, use the streaming content
   if (streaming) {
     const content = agentState.streamingMessage || message.content || '';
-    console.info('🎨 getMessageDisplayContent - streaming message:', {
-      messageId: message.id,
-      streamingMessageId: agentState.streamingMessageId,
-      streamingMessageLength: agentState.streamingMessage?.length || 0,
-      messageContentLength: message.content?.length || 0,
-      finalContent: content.length,
-      isStreaming: agentState.isStreaming,
-      streamingMessagePreview: agentState.streamingMessage?.substring(0, 30) + '...' || '[empty]',
-      messageContentPreview: message.content?.substring(0, 30) + '...' || '[empty]'
-    });
     return content;
   }
 
   // Otherwise use the final message content
-  console.info('🎨 getMessageDisplayContent - final message:', {
-    messageId: message.id,
-    contentLength: message.content?.length || 0,
-    isStreaming: agentState.isStreaming
-  });
   return message.content || '';
 }
 

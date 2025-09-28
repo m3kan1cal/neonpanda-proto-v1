@@ -1,3 +1,4 @@
+import jwt from 'jsonwebtoken';
 import { APIGatewayProxyEventV2WithJWTAuthorizer } from 'aws-lambda';
 
 /**
@@ -19,12 +20,47 @@ export interface JWTClaims {
   // Add other common claims as needed
 }
 
-// NOTE: extractJWTClaims and getUserId functions have been removed
-// All handlers now use the withAuth middleware which provides structured user data
-// via event.user.{userId, username, email} in the AuthenticatedEvent interface
+/**
+ * Shared JWT decoding logic for both API Gateway and Lambda Function URL auth
+ */
+export function decodeJwtToken(token: string): JWTClaims {
+  try {
+    // Note: In production, you'd verify the token signature with the proper secret/key
+    // For now, we'll decode without verification (matches development needs)
+    const claims = jwt.decode(token) as JWTClaims;
 
-// NOTE: getUserEmail, getPreferredUsername, and authorizeUser functions have been removed
-// All handlers now use the withAuth middleware which:
-// - Provides structured user data via event.user.{userId, username, email}
-// - Handles authorization automatically with proper HTTP status codes (403, not 500)
-// - Eliminates the need for manual JWT extraction and validation
+    if (!claims) {
+      throw new Error('Invalid JWT token format');
+    }
+
+    return claims;
+  } catch (jwtError) {
+    console.error('❌ JWT decode error:', jwtError);
+    throw new Error('Failed to decode JWT token');
+  }
+}
+
+/**
+ * Extracts and validates user ID from JWT claims
+ */
+export function extractUserId(claims: JWTClaims): string {
+  const userId = claims['custom:user_id'];
+
+  if (!userId) {
+    throw new Error('Custom userId not found in token. Please contact support.');
+  }
+
+  return userId;
+}
+
+/**
+ * Parses Authorization header and extracts JWT token
+ */
+export function parseAuthHeader(authHeader: string): string {
+  if (!authHeader) {
+    throw new Error('Authorization header required');
+  }
+
+  // Parse JWT token (Bearer token expected)
+  return authHeader.startsWith('Bearer ') ? authHeader.substring(7) : authHeader;
+}

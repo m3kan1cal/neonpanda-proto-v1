@@ -74,13 +74,7 @@ export async function* handleStreamingApiRequest(url, requestBody, options = {})
         const { done, value } = await reader.read();
         if (done) break;
 
-        const chunkTimestamp = new Date().toISOString();
         const decodedChunk = decoder.decode(value, { stream: true });
-        console.info(`🌐 Network chunk received [${chunkTimestamp}]:`, {
-          chunkSize: value.length,
-          decodedLength: decodedChunk.length,
-          preview: decodedChunk.substring(0, 100) + '...'
-        });
 
         buffer += decodedChunk;
         const lines = buffer.split('\n');
@@ -94,11 +88,6 @@ export async function* handleStreamingApiRequest(url, requestBody, options = {})
               const jsonStr = line.slice(6); // Remove 'data: ' prefix
               if (jsonStr.trim()) {
                 const data = JSON.parse(jsonStr);
-                console.info('📦 SSE chunk received:', {
-                  type: data.type,
-                  contentLength: data.content?.length || 0,
-                  content: data.content?.substring(0, 50) + '...' || 'no content'
-                });
                 yield data;
 
                 // If this is the completion message, we're done

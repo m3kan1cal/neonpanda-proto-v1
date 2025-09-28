@@ -7,11 +7,17 @@ import {
   MemoryDetectionEvent,
   MemoryDetectionResult,
   MemoryRetrievalNeedResult,
-  MemoryCharacteristicsResult
+  MemoryCharacteristicsResult,
 } from "./types";
 
 /**
- * Detects if the user message requires semantic memory retrieval using AI analysis
+ * @deprecated DEPRECATED: This function has been replaced by the Smart Request Router.
+ *
+ * Use `analyzeRequestCapabilities()` from `../coach-conversation/detection.ts` instead.
+ * The smart router provides the same functionality via `routerResult.memoryProcessing.needsRetrieval`
+ * along with comprehensive analysis of all processing needs in a single AI call.
+ *
+ * This function will be removed in a future version.
  */
 export async function detectMemoryRetrievalNeed(
   userMessage: string,
@@ -148,7 +154,43 @@ Analyze this message and respond with the JSON format specified.`;
       userPrompt,
       MODEL_IDS.NOVA_MICRO
     );
-    const result = JSON.parse(response.trim());
+    // Clean the response to handle potential markdown wrapping
+    let cleanedResponse = response.trim();
+
+    // Remove markdown code blocks if present
+    if (cleanedResponse.startsWith("```json")) {
+      cleanedResponse = cleanedResponse
+        .replace(/^```json\s*/, "")
+        .replace(/\s*```$/, "");
+    } else if (cleanedResponse.startsWith("```")) {
+      cleanedResponse = cleanedResponse
+        .replace(/^```\s*/, "")
+        .replace(/\s*```$/, "");
+    }
+
+    // Remove any leading/trailing whitespace again
+    cleanedResponse = cleanedResponse.trim();
+
+    let result;
+    try {
+      result = JSON.parse(cleanedResponse);
+    } catch (parseError) {
+      const errorMessage = parseError instanceof Error ? parseError.message : String(parseError);
+      console.error("❌ JSON parsing failed for memory characteristics:", {
+        originalResponse: response,
+        cleanedResponse: cleanedResponse,
+        originalLength: response.length,
+        cleanedLength: cleanedResponse.length,
+        parseError: errorMessage,
+        startsWithJson: cleanedResponse.startsWith('```json'),
+        startsWithBackticks: cleanedResponse.startsWith('```'),
+        firstChar: cleanedResponse.charAt(0),
+        lastChar: cleanedResponse.charAt(cleanedResponse.length - 1),
+      });
+      throw new Error(
+        `Invalid response format from memory characteristics detection: ${errorMessage}`
+      );
+    }
 
     // Validate the response structure
     if (
@@ -176,6 +218,17 @@ Analyze this message and respond with the JSON format specified.`;
 /**
  * Combined function to detect memory type, importance, scope, and suggest relevant tags in a single AI call
  * This is more efficient and provides better consistency than separate calls
+ */
+/**
+ * @deprecated DEPRECATED: This function has been replaced by the Smart Request Router.
+ *
+ * Use `analyzeRequestCapabilities()` from `../coach-conversation/detection.ts` instead.
+ * The smart router provides the same functionality via `routerResult.memoryProcessing.memoryCharacteristics`
+ * along with comprehensive analysis of all processing needs in a single AI call.
+ *
+ * For consolidated memory analysis, use `analyzeMemoryNeeds()` from this same file.
+ *
+ * This function will be removed in a future version.
  */
 export async function detectMemoryCharacteristics(
   memoryContent: string,
@@ -263,8 +316,13 @@ EXERCISE TAG CATEGORIES:
 - Equipment: bodyweight, dumbbell, barbell, kettlebell, machine, cable, resistance_band, medicine_ball
 - Movement patterns: push, pull, squat, hinge, lunge, carry, rotation, lateral, vertical, horizontal
 
-RESPONSE FORMAT:
-You must respond with ONLY a valid JSON object with this exact structure:
+CRITICAL RESPONSE REQUIREMENTS:
+1. RESPOND WITH PURE JSON ONLY - NO MARKDOWN, NO BACKTICKS, NO EXPLANATIONS
+2. START IMMEDIATELY WITH { AND END WITH }
+3. DO NOT WRAP IN TRIPLE BACKTICKS OR ANY OTHER FORMATTING
+4. INCLUDE ALL REQUIRED FIELDS EXACTLY AS SPECIFIED
+
+REQUIRED JSON STRUCTURE:
 {
   "type": "preference|goal|constraint|instruction|context",
   "importance": "high|medium|low",
@@ -280,6 +338,13 @@ You must respond with ONLY a valid JSON object with this exact structure:
     "exercises": "brief explanation of exercise tags"
   }
 }
+
+CRITICAL TYPE SELECTION RULE:
+- You MUST choose EXACTLY ONE type from: preference, goal, constraint, instruction, context
+- DO NOT use compound types like "preference|constraint" or "goal|preference"
+- If a memory has multiple aspects, choose the PRIMARY/DOMINANT type
+- For safety-related items (injuries, limitations), always choose "constraint"
+- For training preferences (timing, style), choose "preference"
 
 GUIDELINES:
 - Default to "preference", "medium", and global (false) if unsure
@@ -312,7 +377,45 @@ Analyze this memory and respond with the JSON format specified.`;
       userPrompt,
       MODEL_IDS.NOVA_MICRO
     );
-    const result = JSON.parse(response.trim());
+    // Clean the response to handle potential markdown wrapping
+    let cleanedResponse = response.trim();
+
+    // Remove markdown code blocks if present
+    if (cleanedResponse.startsWith("```json")) {
+      cleanedResponse = cleanedResponse
+        .replace(/^```json\s*/, "")
+        .replace(/\s*```$/, "");
+    } else if (cleanedResponse.startsWith("```")) {
+      cleanedResponse = cleanedResponse
+        .replace(/^```\s*/, "")
+        .replace(/\s*```$/, "");
+    }
+
+    // Remove any leading/trailing whitespace again
+    cleanedResponse = cleanedResponse.trim();
+
+    let result;
+    try {
+      result = JSON.parse(cleanedResponse);
+    } catch (parseError) {
+      const errorMessage = parseError instanceof Error ? parseError.message : String(parseError);
+      console.error("❌ JSON parsing failed for memory characteristics:", {
+        originalResponse: response.substring(0, 500) + (response.length > 500 ? "..." : ""),
+        cleanedResponse: cleanedResponse.substring(0, 500) + (cleanedResponse.length > 500 ? "..." : ""),
+        originalLength: response.length,
+        cleanedLength: cleanedResponse.length,
+        parseError: errorMessage,
+        startsWithJson: cleanedResponse.startsWith('```json'),
+        startsWithBackticks: cleanedResponse.startsWith('```'),
+        firstChar: cleanedResponse.charAt(0),
+        lastChar: cleanedResponse.charAt(cleanedResponse.length - 1),
+        memoryContent: memoryContent.substring(0, 100) + (memoryContent.length > 100 ? "..." : ""),
+        coachName: coachName || "unknown"
+      });
+      throw new Error(
+        `Invalid response format from memory characteristics detection: ${errorMessage}`
+      );
+    }
 
     // Validate the response structure
     const validTypes = [
@@ -342,12 +445,26 @@ Analyze this memory and respond with the JSON format specified.`;
       typeof result.reasoning.tags !== "string" ||
       typeof result.reasoning.exercises !== "string"
     ) {
-      throw new Error("Invalid response format from memory characteristics detection");
+      console.error("❌ Memory characteristics validation failed:", {
+        type: result.type,
+        validTypes: validTypes,
+        typeValid: validTypes.includes(result.type)
+      });
+      throw new Error(
+        "Invalid response format from memory characteristics detection"
+      );
     }
 
     return result;
   } catch (error) {
     console.error("Error in memory characteristics detection:", error);
+
+    // Log the error context for debugging
+    console.error("❌ Memory characteristics detection failed:", {
+      memoryContent: memoryContent.substring(0, 100) + (memoryContent.length > 100 ? "..." : ""),
+      coachName: coachName || "unknown",
+      errorType: error instanceof Error ? error.constructor.name : typeof error
+    });
 
     // Return safe fallback
     return {
@@ -362,8 +479,186 @@ Analyze this memory and respond with the JSON format specified.`;
         importance: "Error occurred during analysis, using default importance",
         scope: "Error occurred during analysis, defaulting to global",
         tags: "Error occurred during analysis, using default tags",
-        exercises: "Error occurred during analysis, using default exercise tags"
-      }
+        exercises:
+          "Error occurred during analysis, using default exercise tags",
+      },
+    };
+  }
+}
+
+/**
+ * Consolidated Memory Analysis - Combines retrieval need detection and characteristics analysis
+ * Replaces separate detectMemoryRetrievalNeed() and detectMemoryCharacteristics() calls
+ *
+ * @param userMessage - The user's message to analyze
+ * @param messageContext - Optional context from recent conversation
+ * @param coachName - Optional coach name for scope determination
+ * @returns Promise with combined memory analysis results
+ */
+export async function analyzeMemoryNeeds(
+  userMessage: string,
+  messageContext?: string,
+  coachName?: string
+): Promise<{
+  needsRetrieval: boolean;
+  isMemoryRequest: boolean;
+  memoryCharacteristics?: MemoryCharacteristicsResult;
+  retrievalContext?: MemoryRetrievalNeedResult;
+  processingTime: number;
+}> {
+  const startTime = Date.now();
+
+  const systemPrompt = `You are an AI assistant that performs comprehensive memory analysis for fitness coaching conversations.
+
+TASK: Analyze the user's message to determine:
+1. Whether retrieving past memories would enhance the coaching response
+2. Whether the user is requesting to save/remember something
+3. If memory saving is needed, classify the memory characteristics
+
+ANALYSIS FRAMEWORK:
+
+=== MEMORY RETRIEVAL ASSESSMENT ===
+Retrieval is beneficial for:
+- Questions about past workouts, goals, or preferences
+- References to previous conversations or coaching approaches
+- Progress comparisons or trend analysis requests
+- Personalized advice requests that benefit from context
+- Form or technique questions that reference past issues
+- Goal-setting discussions that build on previous conversations
+
+Context Types for Retrieval:
+- goals: Goal-setting, aspirations, targets
+- preferences: Training preferences, communication style
+- constraints: Physical limitations, time constraints, equipment
+- progress: Past achievements, improvements, setbacks
+- techniques: Form issues, technique preferences, coaching cues
+- motivation: Motivational triggers, inspiration sources
+
+=== MEMORY REQUEST DETECTION ===
+User wants to save something when they:
+- Explicitly ask: "Remember that I...", "I want you to know...", "For future reference..."
+- Share important preferences: "I prefer...", "I don't like...", "I work best with..."
+- Set goals or constraints: "My goal is...", "I can't do...", "I have limited time..."
+- Give coaching instructions: "When I do X, remind me to...", "Always check my form on..."
+- Use slash commands: "/save-memory [content]"
+
+=== MEMORY CHARACTERISTICS (if memory request detected) ===
+Memory Types:
+- preference: Training preferences, communication style, workout timing
+- goal: Fitness goals, targets, aspirations, milestones
+- constraint: Physical limitations, time constraints, equipment limitations
+- instruction: Specific coaching instructions, form cues, reminders
+
+Importance Levels:
+- high: Critical for safe and effective coaching (injuries, major goals, key preferences)
+- medium: Important for personalized coaching (preferences, minor constraints)
+- low: Nice-to-have context (casual preferences, general information)
+
+Scope Determination:
+- isCoachSpecific: true if the memory is specific to this coaching relationship
+- isCoachSpecific: false if it's general user information applicable to any coach
+
+Suggested Tags: Relevant keywords for easy retrieval (max 5 tags)
+
+RESPONSE FORMAT:
+You must respond with ONLY a valid JSON object:
+
+{
+  "needsRetrieval": boolean,
+  "retrievalReasoning": "brief explanation of retrieval decision",
+  "contextTypes": ["goals", "preferences", "constraints", "progress", "techniques", "motivation"],
+  "retrievalConfidence": number (0.0 to 1.0),
+  "isMemoryRequest": boolean,
+  "memoryRequestReasoning": "brief explanation of memory request detection",
+  "memoryCharacteristics": {
+    "type": "preference" | "goal" | "constraint" | "instruction" | null,
+    "importance": "low" | "medium" | "high",
+    "isCoachSpecific": boolean,
+    "suggestedTags": ["tag1", "tag2", "tag3"],
+    "reasoning": "brief explanation of characteristics analysis"
+  } | null,
+  "overallConfidence": number (0.0 to 1.0)
+}`;
+
+  const userPrompt = `ANALYZE THIS MESSAGE:
+Message: "${userMessage}"
+${messageContext ? `Recent Context: "${messageContext}"` : ""}
+${coachName ? `Coach Name: ${coachName}` : ""}
+
+Provide comprehensive memory analysis following the framework above.`;
+
+  try {
+    console.info("🧠 Consolidated Memory Analysis starting:", {
+      messageLength: userMessage.length,
+      hasContext: !!messageContext,
+      hasCoachName: !!coachName,
+    });
+
+    const response = await callBedrockApi(
+      systemPrompt,
+      userPrompt,
+      MODEL_IDS.NOVA_MICRO // Fast and cost-effective for memory analysis
+    );
+
+    const result = JSON.parse(response);
+    const processingTime = Date.now() - startTime;
+
+    // Transform result to match expected interface
+    const consolidatedResult = {
+      needsRetrieval: result.needsRetrieval,
+      isMemoryRequest: result.isMemoryRequest,
+      memoryCharacteristics: result.memoryCharacteristics
+        ? {
+            type: result.memoryCharacteristics.type,
+            importance: result.memoryCharacteristics.importance,
+            isCoachSpecific: result.memoryCharacteristics.isCoachSpecific,
+            confidence: result.overallConfidence,
+            suggestedTags: result.memoryCharacteristics.suggestedTags,
+            exerciseTags: [], // Not analyzed in consolidated version
+            reasoning: {
+              type: result.memoryCharacteristics.reasoning,
+              importance: result.memoryCharacteristics.reasoning,
+              scope: result.memoryCharacteristics.reasoning,
+              tags: result.memoryCharacteristics.reasoning,
+              exercises: "Not analyzed in consolidated version",
+            },
+          }
+        : undefined,
+      retrievalContext: result.needsRetrieval
+        ? {
+            needsSemanticRetrieval: result.needsRetrieval,
+            confidence: result.retrievalConfidence,
+            contextTypes: result.contextTypes,
+            reasoning: result.retrievalReasoning,
+          }
+        : undefined,
+      processingTime,
+    };
+
+    console.info("✅ Consolidated Memory Analysis completed:", {
+      needsRetrieval: consolidatedResult.needsRetrieval,
+      isMemoryRequest: consolidatedResult.isMemoryRequest,
+      memoryType: consolidatedResult.memoryCharacteristics?.type,
+      processingTime,
+      confidence: result.overallConfidence,
+    });
+
+    return consolidatedResult;
+  } catch (error) {
+    console.error("❌ Consolidated Memory Analysis failed:", error);
+
+    // Return safe fallback
+    return {
+      needsRetrieval: true, // Default to enabling retrieval
+      isMemoryRequest: false,
+      memoryCharacteristics: undefined,
+      retrievalContext: {
+        needsSemanticRetrieval: true,
+        confidence: 0.5,
+        contextTypes: ["preferences", "goals"],
+        reasoning: "Fallback: Analysis failed, enabling basic retrieval",
+      },
+      processingTime: Date.now() - startTime,
     };
   }
 }

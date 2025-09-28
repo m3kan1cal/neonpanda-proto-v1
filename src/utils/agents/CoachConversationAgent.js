@@ -9,6 +9,8 @@ import {
   deleteCoachConversation,
   getCoachConversationsCount,
 } from "../apis/coachConversationApi";
+import { sendCoachConversationMessageStreamLambda } from '../apis/streamingLambdaApi';
+import { isStreamingEnabled } from '../apis/apiConfig';
 import { getCoach } from "../apis/coachApi";
 import CoachAgent from './CoachAgent';
 import { processStreamingChunks, createStreamingMessage, handleStreamingFallback, resetStreamingState, validateStreamingInput } from './streamingAgentHelper';
@@ -480,12 +482,6 @@ export class CoachConversationAgent {
    * Sends a user message and processes the AI response with streaming
    */
   async sendMessageStream(messageContent) {
-    console.info('🎯 sendMessageStream called with:', {
-      messageContent: messageContent.substring(0, 50) + '...',
-      isTyping: this.state.isTyping,
-      isStreaming: this.state.isStreaming,
-      isLoadingItem: this.state.isLoadingItem
-    });
 
     // Input validation
     if (!validateStreamingInput(this, messageContent)) {
@@ -516,25 +512,67 @@ export class CoachConversationAgent {
       });
 
       try {
-        // Get streaming response
-        const messageStream = sendCoachConversationMessageStream(
-          this.userId,
-          this.coachId,
-          this.conversationId,
-          messageContent.trim()
-        );
+        // Get streaming response - try Lambda Function URL first, fallback to API Gateway
+        let messageStream;
+        let streamingMethod = 'api-gateway';
+
+        if (isStreamingEnabled()) {
+          try {
+            console.info('🚀 Attempting Lambda Function URL streaming');
+            messageStream = sendCoachConversationMessageStreamLambda(
+              this.userId,
+              this.coachId,
+              this.conversationId,
+              messageContent.trim()
+            );
+            streamingMethod = 'lambda-function-url';
+          } catch (lambdaError) {
+            console.warn('⚠️ Lambda Function URL streaming failed, falling back to API Gateway:', lambdaError);
+            messageStream = sendCoachConversationMessageStream(
+              this.userId,
+              this.coachId,
+              this.conversationId,
+              messageContent.trim()
+            );
+            streamingMethod = 'api-gateway-fallback';
+          }
+        } else {
+          console.info('📞 Using API Gateway streaming (Lambda Function URL disabled)');
+          messageStream = sendCoachConversationMessageStream(
+            this.userId,
+            this.coachId,
+            this.conversationId,
+            messageContent.trim()
+          );
+        }
+
+        console.info(`✅ Streaming method selected: ${streamingMethod}`);
 
         // Process the stream
         return await processStreamingChunks(messageStream, {
           onChunk: async (content) => {
             // Append each chunk to the streaming message
-            console.info('📝 Processing chunk:', { content, length: content.length });
             streamingMsg.append(content);
           },
 
           onComplete: async (chunk) => {
-            // Finalize message
-            streamingMsg.update(chunk.fullMessage);
+            // Debug: Log the complete event structure
+            console.info('🏁 Complete event received:', {
+              hasAiMessage: !!chunk.aiMessage,
+              hasFullMessage: !!chunk.fullMessage,
+              aiMessageContent: chunk.aiMessage?.content?.substring(0, 100) + '...' || '[none]',
+              fullMessage: chunk.fullMessage?.substring(0, 100) + '...' || '[none]',
+              chunkKeys: Object.keys(chunk)
+            });
+
+            // Finalize message - use aiMessage.content from the complete event
+            const finalContent = chunk.aiMessage?.content || chunk.fullMessage || '';
+
+            // CRITICAL: Update the message content first, then reset streaming state
+            streamingMsg.update(finalContent);
+
+            // Wait a brief moment to ensure the UI has updated with the final content
+            await new Promise(resolve => setTimeout(resolve, 50));
 
             // Reset streaming state and update conversation
             resetStreamingState(this, {
@@ -655,12 +693,6 @@ export class CoachConversationAgent {
   _appendToStreamingMessage(messageId, chunk) {
     const currentContent = this.state.streamingMessage || '';
     const newContent = currentContent + chunk;
-    console.info('🔄 _appendToStreamingMessage:', {
-      messageId,
-      chunkLength: chunk.length,
-      currentLength: currentContent.length,
-      newLength: newContent.length
-    });
     this._updateStreamingMessage(messageId, newContent);
   }
 
@@ -680,13 +712,7 @@ export class CoachConversationAgent {
       _lastUpdate: Date.now()
     });
 
-    console.info('🔄 _updateStreamingMessage after _updateState:', {
-      messageId,
-      contentLength: content.length,
-      agentStateStreamingMessageLength: this.state.streamingMessage.length,
-      agentStateIsStreaming: this.state.isStreaming,
-      agentStateStreamingMessageId: this.state.streamingMessageId
-    });
+    // Streaming message updated
   }
 
   /**

@@ -15,7 +15,10 @@
 export async function processStreamingChunks(messageStream, { onChunk, onComplete, onFallback, onError }) {
   try {
     for await (const chunk of messageStream) {
-      if (chunk.type === 'chunk') {
+      if (chunk.type === 'start') {
+        // Start event - streaming has begun, no action needed
+        continue;
+      } else if (chunk.type === 'chunk') {
         await onChunk(chunk.content);
       } else if (chunk.type === 'complete') {
         return await onComplete(chunk);
@@ -49,22 +52,16 @@ export function createStreamingMessage(agent) {
 
   agent._addMessage(placeholderMessage);
 
-  console.info('🔄 createStreamingMessage created placeholder:', {
-    messageId,
-    totalMessages: agent.state.messages.length,
-    streamingMessageId: agent.state.streamingMessageId
-  });
+  // Placeholder message created
 
   return {
     messageId,
     append: (chunk) => {
       // Append chunk to current streaming content
-      console.info('📝 StreamingMessage.append:', { messageId, chunkLength: chunk.length });
       agent._appendToStreamingMessage(messageId, chunk);
     },
     update: (content) => {
       // Set full content (used for final update)
-      console.info('📝 StreamingMessage.update:', { messageId, contentLength: content.length });
       agent._updateStreamingMessage(messageId, content);
     },
     remove: () => {

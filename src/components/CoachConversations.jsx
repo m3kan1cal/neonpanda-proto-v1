@@ -238,16 +238,6 @@ const MessageItem = memo(({
 
   const shouldRerender = messageChanged || streamingStateChanged || coachNameChanged;
 
-  if (nextProps.message.type === 'ai' && nextProps.agentState.isStreaming) {
-    console.info('🎬 MessageItem memo check:', {
-      messageId: nextProps.message.id,
-      messageChanged,
-      streamingStateChanged,
-      shouldRerender,
-      streamingMessageLength: nextProps.agentState.streamingMessage?.length || 0
-    });
-  }
-
   // Return true if props are equal (no re-render needed)
   // Return false if props changed (re-render needed)
   return !shouldRerender;
@@ -419,35 +409,14 @@ function CoachConversations() {
         coachId,
         conversationId,
         onStateChange: (newState) => {
-          console.info('🔥 onStateChange received:', {
-            isStreaming: newState.isStreaming,
-            streamingMessageId: newState.streamingMessageId,
-            streamingMessageLength: newState.streamingMessage?.length || 0,
-            messagesCount: newState.messages?.length || 0
-          });
-
           // Use flushSync for streaming updates to force immediate synchronous rendering
           if (newState.isStreaming || newState.streamingMessage) {
             flushSync(() => {
-              setCoachConversationAgentState(prevState => {
-                console.info('🚀 React SYNC state update (streaming):', {
-                  prevStreamingLength: prevState.streamingMessage?.length || 0,
-                  newStreamingLength: newState.streamingMessage?.length || 0,
-                  isStreaming: newState.isStreaming
-                });
-                return newState;
-              });
+              setCoachConversationAgentState(newState);
             });
           } else {
             // Normal async update for non-streaming changes
-            setCoachConversationAgentState(prevState => {
-              console.info('🚀 React ASYNC state update (normal):', {
-                prevStreamingLength: prevState.streamingMessage?.length || 0,
-                newStreamingLength: newState.streamingMessage?.length || 0,
-                isStreaming: newState.isStreaming
-              });
-              return newState;
-            });
+            setCoachConversationAgentState(newState);
           }
         },
         onNavigation: (type, data) => {
@@ -802,18 +771,6 @@ function CoachConversations() {
   // Helper function to render message content with line breaks and streaming support
   // Removed useCallback to prevent memoization issues during streaming
   const renderMessageContent = (message) => {
-    // Debug: Log what React component is seeing
-    if (message.id === coachConversationAgentState.streamingMessageId) {
-      console.info('🎭 renderMessageContent for streaming message:', {
-        messageId: message.id,
-        isStreaming: coachConversationAgentState.isStreaming,
-        streamingMessageId: coachConversationAgentState.streamingMessageId,
-        streamingMessageLength: coachConversationAgentState.streamingMessage?.length || 0,
-        messageContentLength: message.content?.length || 0,
-        streamingMessagePreview: coachConversationAgentState.streamingMessage?.substring(0, 30) + '...' || '[empty]'
-      });
-    }
-
     // Get the appropriate content (streaming or final)
     const displayContent = getMessageDisplayContent(message, coachConversationAgentState);
 
@@ -1029,7 +986,9 @@ function CoachConversations() {
             <div className={`${containerPatterns.mainContent} h-full flex flex-col`}>
               {/* Messages Area - with bottom padding for floating input */}
               <div className="flex-1 overflow-y-auto overflow-hidden p-6 pb-28 space-y-4">
-                {coachConversationAgentState.messages.map((message, index) => (
+                {coachConversationAgentState.messages
+                  .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp)) // Ensure chronological order
+                  .map((message, index) => (
                   <MessageItem
                     key={message.id}
                     message={message}

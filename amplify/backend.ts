@@ -2,6 +2,8 @@ import { defineBackend } from "@aws-amplify/backend";
 import { auth } from "./auth/resource";
 import { postConfirmation } from "./functions/post-confirmation/resource";
 import { HttpUserPoolAuthorizer } from 'aws-cdk-lib/aws-apigatewayv2-authorizers';
+import { FunctionUrlAuthType, InvokeMode, HttpMethod } from 'aws-cdk-lib/aws-lambda';
+import { Duration } from 'aws-cdk-lib';
 import { getBranchInfo, createBranchAwareResourceName } from "./functions/libs/branch-naming";
 import { contactForm } from "./functions/contact-form/resource";
 import { createCoachCreatorSession } from "./functions/create-coach-creator-session/resource";
@@ -21,6 +23,7 @@ import { getCoachConversations } from "./functions/get-coach-conversations/resou
 import { getCoachConversation } from "./functions/get-coach-conversation/resource";
 import { updateCoachConversation } from "./functions/update-coach-conversation/resource";
 import { sendCoachConversationMessage } from "./functions/send-coach-conversation-message/resource";
+import { streamCoachConversation } from "./functions/stream-coach-conversation/resource";
 import { createWorkout } from "./functions/create-workout/resource";
 import { buildWorkout } from "./functions/build-workout/resource";
 import { buildConversationSummary } from "./functions/build-conversation-summary/resource";
@@ -80,6 +83,7 @@ const backend = defineBackend({
   getCoachConversation,
   updateCoachConversation,
   sendCoachConversationMessage,
+  streamCoachConversation,
   createWorkout,
   buildWorkout,
   buildConversationSummary,
@@ -220,6 +224,9 @@ coreTable.table.grantReadWriteData(
   backend.sendCoachConversationMessage.resources.lambda
 );
 coreTable.table.grantReadWriteData(
+  backend.streamCoachConversation.resources.lambda
+);
+coreTable.table.grantReadWriteData(
   backend.deleteCoachConversation.resources.lambda
 );
 
@@ -263,6 +270,7 @@ const allFunctions = [
   backend.getCoachConversation,
   backend.updateCoachConversation,
   backend.sendCoachConversationMessage,
+  backend.streamCoachConversation,
   backend.createWorkout,
   backend.buildWorkout,
   backend.buildConversationSummary,
@@ -328,6 +336,7 @@ grantBedrockPermissions([
   backend.updateCoachCreatorSession.resources.lambda,
   backend.buildCoachConfig.resources.lambda,
   backend.sendCoachConversationMessage.resources.lambda,
+  backend.streamCoachConversation.resources.lambda,
   backend.buildWorkout.resources.lambda,
   backend.buildConversationSummary.resources.lambda,
   backend.buildWeeklyAnalytics.resources.lambda,
@@ -338,6 +347,7 @@ grantBedrockPermissions([
 grantS3DebugPermissions([
   backend.buildWorkout.resources.lambda,
   backend.sendCoachConversationMessage.resources.lambda,
+  backend.streamCoachConversation.resources.lambda,
 ], branchName);
 
 // Grant S3 analytics permissions to functions that need it
@@ -374,6 +384,15 @@ grantLambdaInvokePermissions(
   ]
 );
 
+// Grant permission to streamCoachConversation to invoke buildWorkout and buildConversationSummary
+grantLambdaInvokePermissions(
+  backend.streamCoachConversation.resources.lambda,
+  [
+    backend.buildWorkout.resources.lambda.functionArn,
+    backend.buildConversationSummary.resources.lambda.functionArn,
+  ]
+);
+
 // Grant permission to createCoachConversation to invoke sendCoachConversationMessage
 grantLambdaInvokePermissions(
   backend.createCoachConversation.resources.lambda,
@@ -399,10 +418,41 @@ backend.sendCoachConversationMessage.addEnvironment(
   backend.buildConversationSummary.resources.lambda.functionName
 );
 
+backend.streamCoachConversation.addEnvironment(
+  "BUILD_WORKOUT_FUNCTION_NAME",
+  backend.buildWorkout.resources.lambda.functionName
+);
+backend.streamCoachConversation.addEnvironment(
+  "BUILD_CONVERSATION_SUMMARY_FUNCTION_NAME",
+  backend.buildConversationSummary.resources.lambda.functionName
+);
+
 backend.createCoachConversation.addEnvironment(
   "SEND_COACH_CONVERSATION_MESSAGE_FUNCTION_NAME",
   backend.sendCoachConversationMessage.resources.lambda.functionName
 );
+
+// Configure Lambda Function URL for streaming chat (not API Gateway)
+const streamingFunctionUrl = backend.streamCoachConversation.resources.lambda.addFunctionUrl({
+  authType: FunctionUrlAuthType.NONE, // We'll handle JWT auth in the function itself
+  cors: {
+    allowedOrigins: ['*'], // Configure appropriately for production
+    allowedMethods: [HttpMethod.POST], // OPTIONS is handled automatically by Lambda Function URLs
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Cache-Control'], // Add more headers
+    maxAge: Duration.days(1),
+  },
+  invokeMode: InvokeMode.RESPONSE_STREAM, // Enable streaming responses
+});
+
+// Add the streaming function URL to backend outputs
+backend.addOutput({
+  custom: {
+    coachConversationStreamingApi: {
+      functionUrl: streamingFunctionUrl.url,
+      region: backend.streamCoachConversation.stack.region,
+    }
+  }
+});
 
 // Create EventBridge schedule for weekly analytics
 const weeklyAnalyticsSchedule = createWeeklyAnalyticsSchedule(
