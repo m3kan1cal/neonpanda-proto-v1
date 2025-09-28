@@ -9,7 +9,14 @@ import { MethodologyIntent, EnhancedMethodologyOptions } from './coach-conversat
 const PINECONE_QUERY_ENABLED = true;
 
 /**
- * Determine if the user's message would benefit from Pinecone semantic search using AI analysis
+ * @deprecated DEPRECATED: This function has been replaced by the Smart Request Router.
+ *
+ * Use `analyzeRequestCapabilities()` from `./coach-conversation/detection.ts` instead.
+ * The smart router provides the same functionality via `routerResult.contextNeeds.needsPineconeSearch`
+ * along with comprehensive analysis of all processing needs in a single AI call.
+ *
+ * This function will be removed in a future version.
+ *
  * @param userMessage - The user's message to analyze
  * @param messageContext - Optional context from the conversation
  * @returns Promise<boolean> indicating if Pinecone search should be used

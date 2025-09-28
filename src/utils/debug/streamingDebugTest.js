@@ -3,7 +3,7 @@
  * This will help us identify if the issue is in the API, parsing, or UI layer
  */
 
-import { sendCoachConversationMessageStream } from '../apis/coachConversationApi';
+import { sendCoachConversationMessageStreamLambda } from '../apis/streamingLambdaApi';
 
 /**
  * Test raw streaming API response
@@ -17,7 +17,7 @@ export async function testRawStreamingAPI(userId, coachId, conversationId, testM
   console.info('Parameters:', { userId, coachId, conversationId, testMessage });
 
   try {
-    const messageStream = sendCoachConversationMessageStream(userId, coachId, conversationId, testMessage);
+    const messageStream = sendCoachConversationMessageStreamLambda(userId, coachId, conversationId, testMessage);
 
     let chunkCount = 0;
     let totalContent = '';
@@ -86,7 +86,7 @@ export async function testStreamingWithManualProcessing(userId, coachId, convers
   console.info('🔧 Testing streaming with manual chunk processing...');
 
   try {
-    const messageStream = sendCoachConversationMessageStream(userId, coachId, conversationId, testMessage);
+    const messageStream = sendCoachConversationMessageStreamLambda(userId, coachId, conversationId, testMessage);
 
     let streamingContent = '';
     let isStreaming = true;
@@ -137,43 +137,22 @@ export async function testStreamingWithManualProcessing(userId, coachId, convers
  * Test the streaming API helper directly
  */
 export async function testStreamingApiHelper(userId, coachId, conversationId, testMessage = "Hello, this is a helper test.") {
-  console.info('🛠️ Testing streaming API helper directly...');
+  console.info('🛠️ Testing Lambda Function URL directly...');
 
   try {
-    const { handleStreamingApiRequest } = await import('../apis/streamingApiHelper');
+    const { testLambdaStreamingConnection } = await import('../apis/streamingLambdaApi');
 
-    const url = `/api/users/${userId}/coaches/${coachId}/conversations/${conversationId}/send-message?stream=true`;
-    const requestBody = {
-      userResponse: testMessage,
-      messageTimestamp: new Date().toISOString()
-    };
+    console.info('📡 Calling Lambda Function URL directly with:', { userId, coachId, conversationId, testMessage });
 
-    const options = {
-      method: 'POST',
-      operationName: 'debug test',
-      errorMessages: {
-        notFound: 'Conversation not found',
-        serviceUnavailable: 'Service temporarily unavailable'
-      }
-    };
-
-    console.info('📡 Calling handleStreamingApiRequest with:', { url, requestBody, options });
-
-    const stream = handleStreamingApiRequest(url, requestBody, options);
-
-    let chunkCount = 0;
-    for await (const chunk of stream) {
-      chunkCount++;
-      console.info(`📦 Helper chunk ${chunkCount}:`, chunk);
-    }
+    const result = await testLambdaStreamingConnection(userId, coachId, conversationId, testMessage);
 
     return {
       success: true,
-      chunkCount
+      ...result
     };
 
   } catch (error) {
-    console.error('❌ Streaming API helper test failed:', error);
+    console.error('❌ Lambda Function URL test failed:', error);
     return {
       success: false,
       error: error.message
@@ -244,7 +223,7 @@ export async function testStreamingAgentHelper(userId, coachId, conversationId, 
 
     // Test 3: Process streaming chunks
     console.info('🧪 Test 3: Process streaming chunks');
-    const messageStream = sendCoachConversationMessageStream(userId, coachId, conversationId, testMessage);
+    const messageStream = sendCoachConversationMessageStreamLambda(userId, coachId, conversationId, testMessage);
 
     let chunkCount = 0;
     let accumulatedContent = '';

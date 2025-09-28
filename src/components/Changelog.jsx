@@ -43,6 +43,54 @@ const CollapsibleSection = ({ title, icon, children, defaultOpen = true, classNa
 
 const changelogEntries = [
   {
+    version: "Release v1.0.20250929-beta",
+    date: "2025-09-29",
+    changes: {
+      added: [
+        "Real-time Server-Sent Events (SSE) streaming for coach conversations using AWS Lambda Function URLs",
+        "Smart Request Router system reducing AI API calls by 85% through intelligent routing decisions",
+        "Creative contextual updates with energetic coach language ('Scouting your training data...', 'Going beast mode on your data...')",
+        "Natural coach acknowledgments with random selection from 9 authentic phrases ('Alright, let's work.', 'I hear you.', 'Got it, let's go.')",
+        "Comprehensive streaming utilities library (libs/streaming/) with SSE formatters, authentication middleware, and path utilities",
+        "Lambda Function URL configuration with RESPONSE_STREAM mode for true real-time streaming",
+        "Progressive contextual updates showing AI analysis stages (initial greeting, workout analysis, memory analysis, pattern analysis, insights brewing)",
+        "Chunk optimization system with intelligent buffering for smooth streaming delivery through Lambda Function URLs",
+        "Complete streaming authentication middleware with JWT validation and user authorization",
+        "Advanced error handling with graceful fallback from streaming to non-streaming API",
+        "Streaming state management with real-time UI updates using React flushSync for immediate rendering",
+        "Consolidated memory analysis functions combining detectMemoryRetrievalNeed and detectMemoryCharacteristics",
+        "Smart router integration with Nova Micro and Claude Haiku models for fast, accurate routing decisions"
+      ],
+      changed: [
+        "Coach conversation streaming now prioritizes Lambda Function URL over API Gateway for real-time performance",
+        "Contextual updates system enhanced with creative, energetic language replacing corporate speak",
+        "AI detection functions consolidated into single smart router call (analyzeRequestCapabilities) for 60-70% faster processing",
+        "Streaming handler refactored to use AWS pipeline approach with async generators for true concurrent streaming",
+        "Console logging dramatically reduced from 42,000+ logs to essential error/completion logs for optimal browser performance",
+        "Contextual updates now properly accumulated in final saved messages with identical formatting to streaming display",
+        "Coach acknowledgments changed from robotic 'Processing your message...' to authentic coach responses",
+        "Memory processing optimized with consolidated analyzeMemoryNeeds function replacing separate detection calls",
+        "Streaming chunks now include proper line breaks (\\n\\n) for consistent formatting between streaming and final messages",
+        "Complete event handling updated to use aiMessage.content from Lambda response for proper message finalization",
+        "Frontend streaming integration enhanced with optimized chunk processing and seamless UI transitions"
+      ],
+      fixed: [
+        "Browser performance issues caused by excessive console logging (42,000+ log entries) during streaming",
+        "Contextual updates not being saved in final conversation messages despite appearing during streaming",
+        "Empty chat bubble issue when streaming completed due to race condition in onComplete handler",
+        "Unwanted quotes appearing around contextual updates during streaming but not in final messages",
+        "Contextual updates running together as one sentence during streaming instead of proper line spacing",
+        "Race condition between streamingMsg.update() and resetStreamingState() causing UI to go empty",
+        "SSE parsing duplication bug in test script causing exponential event accumulation",
+        "Memory characteristics detection errors due to AI returning compound types instead of single types",
+        "Lambda permission errors for buildWorkout and buildConversationSummary function invocations",
+        "Streaming method selection logic now properly handles Lambda Function URL availability",
+        "Unknown chunk type 'start' errors in streaming agent helper resolved with proper event handling",
+        "Content-type validation in test script updated to accept application/octet-stream for Lambda Function URLs"
+      ]
+    }
+  },
+  {
     version: "Release v1.0.20250926-beta",
     date: "2025-09-26",
     changes: {

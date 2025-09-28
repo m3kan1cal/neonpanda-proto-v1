@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { runAllStreamingTests, testRawStreamingAPI, testStreamingWithManualProcessing, testStreamingApiHelper, testStreamingAgentHelper } from '../utils/debug/streamingDebugTest';
+import { testLambdaStreamingConnection, checkLambdaStreamingHealth } from '../utils/apis/streamingLambdaApi';
 
 /**
  * Debug test page for streaming functionality
@@ -11,6 +12,7 @@ export default function StreamingDebugTest() {
   const [testResults, setTestResults] = useState(null);
   const [isRunning, setIsRunning] = useState(false);
   const [customMessage, setCustomMessage] = useState("Hello, this is a streaming debug test message.");
+  const [streamingEvents, setStreamingEvents] = useState([]);
 
   // Get URL parameters
   const userId = searchParams.get('userId');
@@ -57,6 +59,68 @@ export default function StreamingDebugTest() {
 
   const clearResults = () => {
     setTestResults(null);
+    setStreamingEvents([]);
+  };
+
+  // Real-time streaming test with visual feedback
+  const testRealTimeStreaming = async () => {
+    if (!userId || !coachId || !conversationId) {
+      alert('Missing required parameters: userId, coachId, conversationId');
+      return;
+    }
+
+    setIsRunning(true);
+    setStreamingEvents([]);
+    setTestResults(prev => ({ ...prev, realTimeTest: 'Running real-time streaming test...' }));
+
+    try {
+      const { sendCoachConversationMessageStreamLambda } = await import('../utils/apis/streamingLambdaApi');
+
+      const startTime = Date.now();
+      let eventCount = 0;
+
+      const stream = sendCoachConversationMessageStreamLambda(userId, coachId, conversationId, customMessage);
+
+      for await (const event of stream) {
+        eventCount++;
+        const timestamp = Date.now();
+        const timeSinceStart = timestamp - startTime;
+
+        const eventData = {
+          id: eventCount,
+          type: event.type,
+          content: event.content || '[no content]',
+          timestamp: new Date(timestamp).toISOString(),
+          timeSinceStart: timeSinceStart + 'ms',
+          receivedAt: timestamp
+        };
+
+        // Add event to the live display
+        setStreamingEvents(prev => [...prev, eventData]);
+
+        // Log with precise timing
+        console.info(`🕐 Real-time event #${eventCount} [+${timeSinceStart}ms]:`, {
+          type: event.type,
+          content: event.content?.substring(0, 30) + (event.content?.length > 30 ? '...' : ''),
+          timeSinceStart: timeSinceStart + 'ms'
+        });
+      }
+
+      setTestResults(prev => ({
+        ...prev,
+        realTimeTest: {
+          success: true,
+          eventCount,
+          totalTime: Date.now() - startTime + 'ms',
+          averageDelay: Math.round((Date.now() - startTime) / eventCount) + 'ms per event'
+        }
+      }));
+
+    } catch (error) {
+      setTestResults(prev => ({ ...prev, realTimeTest: { success: false, error: error.message } }));
+    } finally {
+      setIsRunning(false);
+    }
   };
 
   return (
@@ -173,7 +237,66 @@ export default function StreamingDebugTest() {
           >
             Test Agent Helper
           </button>
+
+          <button
+            onClick={() => runTest(testLambdaStreamingConnection, 'lambdaStreaming')}
+            disabled={isRunning}
+            style={{
+              padding: '10px 15px',
+              background: '#673ab7',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: isRunning ? 'not-allowed' : 'pointer'
+            }}
+          >
+            Test Lambda Function URL
+          </button>
+
+          <button
+            onClick={testRealTimeStreaming}
+            disabled={isRunning}
+            style={{
+              padding: '10px 15px',
+              background: '#f44336',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: isRunning ? 'not-allowed' : 'pointer',
+              fontWeight: 'bold'
+            }}
+          >
+            🕐 Real-Time Streaming Test
+          </button>
         </div>
+      </div>
+
+      <div style={{ marginBottom: '20px' }}>
+        <h3>Health Check</h3>
+        <button
+          onClick={async () => {
+            setIsRunning(true);
+            try {
+              const health = await checkLambdaStreamingHealth();
+              setTestResults(prev => ({ ...prev, healthCheck: health }));
+            } catch (error) {
+              setTestResults(prev => ({ ...prev, healthCheck: { error: error.message } }));
+            } finally {
+              setIsRunning(false);
+            }
+          }}
+          disabled={isRunning}
+          style={{
+            padding: '10px 15px',
+            background: '#607d8b',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: isRunning ? 'not-allowed' : 'pointer'
+          }}
+        >
+          Check Lambda Streaming Health
+        </button>
       </div>
 
       <div style={{ marginBottom: '20px' }}>
@@ -212,6 +335,39 @@ export default function StreamingDebugTest() {
           </button>
         </div>
       </div>
+
+      {streamingEvents.length > 0 && (
+        <div style={{
+          background: '#e8f5e8',
+          padding: '20px',
+          borderRadius: '8px',
+          border: '2px solid #4caf50',
+          marginBottom: '20px'
+        }}>
+          <h3>🕐 Live Streaming Events (Real-Time)</h3>
+          <div style={{
+            background: '#fff',
+            padding: '15px',
+            borderRadius: '4px',
+            maxHeight: '400px',
+            overflow: 'auto',
+            fontSize: '12px',
+            fontFamily: 'monospace'
+          }}>
+            {streamingEvents.map((event, index) => (
+              <div key={event.id} style={{
+                padding: '5px 0',
+                borderBottom: index < streamingEvents.length - 1 ? '1px solid #eee' : 'none',
+                color: event.type === 'start' ? '#2196f3' :
+                      event.type === 'chunk' ? '#ff9800' :
+                      event.type === 'complete' ? '#4caf50' : '#f44336'
+              }}>
+                <strong>#{event.id} [{event.timeSinceStart}]</strong> {event.type}: {event.content}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {testResults && (
         <div style={{

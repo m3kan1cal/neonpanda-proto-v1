@@ -60,9 +60,7 @@ export const handler = async (event: BuildWorkoutEvent) => {
     console.info("Generated extraction prompt:", {
       promptLength: extractionPrompt.length,
       userMessage: workoutContent,
-      promptPreview:
-        extractionPrompt.substring(0, 1000) +
-        (extractionPrompt.length > 1000 ? "..." : ""),
+      // Note: Prompt preview removed to avoid triggering SNS alerts on "CRITICAL" keyword
     });
 
     console.info("Calling Claude for workout extraction...");

@@ -114,6 +114,15 @@ export const isWorkoutSlashCommand = (slashCommandResult: SlashCommandResult): b
  * // Returns: false (planning/advice, not completed workout)
  * ```
  */
+/**
+ * @deprecated DEPRECATED: This function has been replaced by the Smart Request Router.
+ *
+ * Use `analyzeRequestCapabilities()` from `../coach-conversation/detection.ts` instead.
+ * The smart router provides the same functionality via `routerResult.workoutDetection.isWorkoutLog`
+ * along with comprehensive analysis of all processing needs in a single AI call.
+ *
+ * This function will be removed in a future version.
+ */
 export const isWorkoutLog = async (message: string): Promise<boolean> => {
   if (!message || typeof message !== 'string') {
     return false;

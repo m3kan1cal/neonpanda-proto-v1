@@ -18,6 +18,7 @@ import { getEnhancedMethodologyContext } from "./pinecone-utils";
 
 // Amazon Bedrock Converse API configuration
 const CLAUDE_SONNET_4_MODEL_ID = "us.anthropic.claude-sonnet-4-20250514-v1:0";
+const CLAUDE_HAIKU_MODEL_ID = "anthropic.claude-3-5-haiku-20241022-v1:0"; // Updated to Claude 3.5 Haiku
 const NOVA_MICRO_MODEL_ID = "us.amazon.nova-micro-v1:0";
 
 // Increased for complex workout extractions with many rounds (Claude 4 supports much higher limits)
@@ -28,6 +29,8 @@ const TEMPERATURE = 0.7;
 export const MODEL_IDS = {
   CLAUDE_SONNET_4_FULL: CLAUDE_SONNET_4_MODEL_ID,
   CLAUDE_SONNET_4_DISPLAY: "claude-sonnet-4",
+  CLAUDE_HAIKU_FULL: CLAUDE_HAIKU_MODEL_ID,
+  CLAUDE_HAIKU_DISPLAY: "claude-3.5-haiku",
   NOVA_MICRO: NOVA_MICRO_MODEL_ID,
   NOVA_MICRO_DISPLAY: "nova-micro",
 } as const;
@@ -265,9 +268,11 @@ export const invokeAsyncLambda = async (
 // Get model-specific token limits
 const getMaxTokensForModel = (modelId: string): number => {
   if (modelId.includes("nova-micro")) {
-    return 8000; // Conservative limit for Nova Micro (actual limit is 10k)
+    return 8000; // Very conservative limit for Nova Micro (for short contextual updates)
+  } else if (modelId.includes("haiku")) {
+    return 6000; // Conservative limit for Haiku (for short contextual updates)
   }
-  return MAX_TOKENS; // Default for Claude models
+  return MAX_TOKENS; // Default for Claude Sonnet models
 };
 
 /**
