@@ -24,16 +24,9 @@ export async function sendMessageWithStreaming(agent, messageContent, options = 
     return;
   }
 
-  console.info('🚀 sendMessageWithStreaming called:', {
-    enableStreaming,
-    hasSendMessageStream: !!agent.sendMessageStream,
-    hasSendMessage: !!agent.sendMessage
-  });
-
   // Try streaming first if enabled
   if (enableStreaming && agent.sendMessageStream) {
     try {
-      console.info('🔄 Attempting streaming message send');
       onStreamingStart();
       return await agent.sendMessageStream(messageContent);
     } catch (streamingError) {
@@ -47,7 +40,6 @@ export async function sendMessageWithStreaming(agent, messageContent, options = 
   }
 
   // Use non-streaming directly
-  console.info('📞 Using non-streaming sendMessage directly');
   return await agent.sendMessage(messageContent);
 }
 

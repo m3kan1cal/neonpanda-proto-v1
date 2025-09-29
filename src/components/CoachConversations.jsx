@@ -16,6 +16,8 @@ import { containerPatterns, layoutPatterns, inputPatterns, avatarPatterns, iconB
 import { FullPageLoader, CenteredErrorState } from "./shared/ErrorStates";
 import CoachHeader from "./shared/CoachHeader";
 import ChatInput from "./shared/ChatInput";
+import UserAvatar from "./shared/UserAvatar";
+import { getUserInitial as getInitialFromUsername } from "./shared/UserAvatar";
 import { parseMarkdown } from "../utils/markdownParser.jsx";
 import CoachConversationAgent from "../utils/agents/CoachConversationAgent";
 import { useToast } from "../contexts/ToastContext";
@@ -150,6 +152,8 @@ const MessageItem = memo(({
   message,
   agentState,
   coachName,
+  userEmail,
+  userDisplayName,
   getUserInitial,
   formatTime,
   renderMessageContent
@@ -161,17 +165,17 @@ const MessageItem = memo(({
       }`}
     >
       {/* Avatar */}
-      <div
-        className={`flex-shrink-0 ${
-          message.type === "user"
-            ? avatarPatterns.userSmall
-            : avatarPatterns.aiSmall
-        }`}
-      >
+      <div className="flex-shrink-0">
         {message.type === "user" ? (
-          getUserInitial()
+          <UserAvatar
+            email={userEmail}
+            username={userDisplayName}
+            size={32}
+          />
         ) : (
-          coachName?.charAt(0) || "C"
+          <div className={avatarPatterns.aiSmall}>
+            {coachName?.charAt(0) || "C"}
+          </div>
         )}
       </div>
 
@@ -235,8 +239,10 @@ const MessageItem = memo(({
     prevProps.agentState.streamingMessage !== nextProps.agentState.streamingMessage;
 
   const coachNameChanged = prevProps.coachName !== nextProps.coachName;
+  const userChanged = prevProps.userEmail !== nextProps.userEmail ||
+    prevProps.userDisplayName !== nextProps.userDisplayName;
 
-  const shouldRerender = messageChanged || streamingStateChanged || coachNameChanged;
+  const shouldRerender = messageChanged || streamingStateChanged || coachNameChanged || userChanged;
 
   // Return true if props are equal (no re-render needed)
   // Return false if props changed (re-render needed)
@@ -261,7 +267,7 @@ function CoachConversations() {
     error: userIdError,
   } = useAuthorizeUser(userId);
 
-  // Get user's first letter for avatar
+  // Get user's first letter for avatar and email for Gravatar
   const getUserInitial = useCallback(() => {
     if (!userAttributes) return 'U';
 
@@ -270,6 +276,10 @@ function CoachConversations() {
     const displayName = getUserDisplayName(userForDisplayName);
     return displayName.charAt(0).toUpperCase();
   }, [userAttributes]);
+
+  // Get user email for Gravatar
+  const userEmail = userAttributes?.email;
+  const userDisplayName = userAttributes ? getUserDisplayName({ attributes: userAttributes }) : 'User';
 
   // UI-specific state
   const [inputMessage, setInputMessage] = useState("");
@@ -433,12 +443,6 @@ function CoachConversations() {
         },
       });
 
-      console.info("Agent initialized, loading conversation...", {
-        userId,
-        coachId,
-        conversationId,
-      });
-
       // Load the conversation after agent is ready
       setTimeout(() => {
         if (agentRef.current) {
@@ -453,11 +457,6 @@ function CoachConversations() {
       }, 50);
     } else {
       // Agent exists, but conversationId changed - load new conversation
-      console.info("Agent exists, loading new conversation...", {
-        userId,
-        coachId,
-        conversationId,
-      });
       agentRef.current.loadExistingConversation(
         userId,
         coachId,
@@ -994,6 +993,8 @@ function CoachConversations() {
                     message={message}
                     agentState={coachConversationAgentState}
                     coachName={coachConversationAgentState.coach?.name}
+                    userEmail={userEmail}
+                    userDisplayName={userDisplayName}
                     getUserInitial={getUserInitial}
                     formatTime={formatTime}
                     renderMessageContent={renderMessageContent}

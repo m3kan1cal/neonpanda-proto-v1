@@ -192,7 +192,8 @@ async function loadConversationData(
   userId: string,
   coachId: string,
   conversationId: string,
-  userResponse: string
+  userResponse: string,
+  shouldQueryPinecone?: boolean
 ): Promise<ConversationData> {
   const existingConversation = await getCoachConversation(
     userId,
@@ -211,7 +212,8 @@ async function loadConversationData(
   console.info("✅ Conversation and coach config loaded successfully");
 
   // Gather all conversation context (workouts + Pinecone)
-  const context = await gatherConversationContext(userId, userResponse);
+  // Pass through the shouldQueryPinecone flag from smart router (if provided)
+  const context = await gatherConversationContext(userId, userResponse, shouldQueryPinecone);
 
   return {
     existingConversation,
@@ -298,26 +300,21 @@ async function* processCoachConversationAsync(
   // Step 1: Validate parameters (fast)
   const params = await validateAndExtractParams(event);
 
-  // Step 2: Start loading conversation data and smart router analysis concurrently
-  const conversationDataPromise = loadConversationData(
-    params.userId,
-    params.coachId,
-    params.conversationId,
-    params.userResponse
-  );
-
-  // SMART ROUTER: Single AI call to determine ALL processing needs
-  const routerAnalysisPromise = analyzeRequestCapabilities(
+  // Step 2: SMART ROUTER FIRST - Single AI call to determine ALL processing needs
+  const routerAnalysis = await analyzeRequestCapabilities(
     params.userResponse,
     undefined, // messageContext - could be added later
     0 // conversationLength - could be calculated later
   );
 
-  // Wait for both to complete
-  const [conversationData, routerAnalysis] = await Promise.all([
-    conversationDataPromise,
-    routerAnalysisPromise
-  ]);
+  // Step 3: Load conversation data using smart router's Pinecone decision
+  const conversationData = await loadConversationData(
+    params.userId,
+    params.coachId,
+    params.conversationId,
+    params.userResponse,
+    routerAnalysis.contextNeeds.needsPineconeSearch  // Use smart router flag
+  );
 
   console.info(`🧠 Smart Router Analysis:`, {
     userIntent: routerAnalysis.userIntent,
@@ -325,12 +322,13 @@ async function* processCoachConversationAsync(
     isWorkoutLog: routerAnalysis.workoutDetection.isWorkoutLog,
     needsMemoryRetrieval: routerAnalysis.memoryProcessing.needsRetrieval,
     needsPineconeSearch: routerAnalysis.contextNeeds.needsPineconeSearch,
+    pineconeSearchUsed: routerAnalysis.contextNeeds.needsPineconeSearch,  // Will control actual query
     hasComplexity: routerAnalysis.conversationComplexity.hasComplexity,
     processingTime: routerAnalysis.routerMetadata.processingTime,
     fallbackUsed: routerAnalysis.routerMetadata.fallbackUsed
   });
 
-  // Step 2.5: Generate initial acknowledgment ONLY if router determines it's appropriate
+  // Step 4: Generate initial acknowledgment ONLY if router determines it's appropriate
   let contextualUpdates: string[] = [];
 
   if (routerAnalysis.showContextualUpdates) {
@@ -354,7 +352,7 @@ async function* processCoachConversationAsync(
     }
   }
 
-  // Step 3: Process business logic based on router decisions
+  // Step 5: Process business logic based on router decisions
   const businessLogicParams = { ...params, ...conversationData };
   let workoutResult: any = null;
   let memoryResult: any = null;
@@ -503,7 +501,7 @@ async function* processCoachConversationAsync(
       ).length + 1,
   };
 
-  // Step 4: Stream AI chunks in REAL-TIME
+  // Step 6: Stream AI chunks in REAL-TIME
   let fullAIResponse = "";
 
   // IMPORTANT: Accumulate contextual updates into the final response
@@ -583,7 +581,7 @@ async function* processCoachConversationAsync(
     promptMetadata: null,
   };
 
-  // Step 5: Save to DB and yield completion event (with router analysis)
+  // Step 7: Save to DB and yield completion event (with router analysis)
   const completeEvent = await saveConversationAndYieldComplete(
     finalResults,
     params,

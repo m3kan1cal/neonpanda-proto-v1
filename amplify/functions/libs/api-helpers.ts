@@ -17,7 +17,8 @@ import { Pinecone } from "@pinecone-database/pinecone";
 import { getEnhancedMethodologyContext } from "./pinecone-utils";
 
 // Amazon Bedrock Converse API configuration
-const CLAUDE_SONNET_4_MODEL_ID = "us.anthropic.claude-sonnet-4-20250514-v1:0";
+// const CLAUDE_SONNET_4_MODEL_ID = "us.anthropic.claude-sonnet-4-20250514-v1:0";
+const CLAUDE_SONNET_4_MODEL_ID = "us.anthropic.claude-sonnet-4-5-20250929-v1:0";
 const CLAUDE_HAIKU_MODEL_ID = "anthropic.claude-3-5-haiku-20241022-v1:0"; // Updated to Claude 3.5 Haiku
 const NOVA_MICRO_MODEL_ID = "us.amazon.nova-micro-v1:0";
 

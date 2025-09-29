@@ -14,10 +14,15 @@ export interface ConversationContextResult {
 /**
  * Gathers all contextual data needed for the conversation
  * Including recent workouts and semantic search context from Pinecone
+ *
+ * @param userId - The user ID
+ * @param userMessage - The user's message
+ * @param shouldQueryPinecone - Optional flag to control Pinecone query (defaults to AI-based decision)
  */
 export async function gatherConversationContext(
   userId: string,
-  userMessage: string
+  userMessage: string,
+  shouldQueryPinecone?: boolean
 ): Promise<ConversationContextResult> {
   // Load recent workouts for context
   let recentWorkouts: any[] = [];
@@ -51,11 +56,16 @@ export async function gatherConversationContext(
   // Query Pinecone for semantic context if appropriate
   let pineconeContext = "";
   let pineconeMatches: any[] = [];
-  const shouldQueryPinecone = await shouldUsePineconeSearch(userMessage);
 
-  if (shouldQueryPinecone) {
+  // Use provided flag, or fall back to AI-based decision for backward compatibility
+  const shouldQuery = shouldQueryPinecone !== undefined
+    ? shouldQueryPinecone
+    : await shouldUsePineconeSearch(userMessage);
+
+  if (shouldQuery) {
     try {
-      console.info("🔍 Querying Pinecone for semantic context:", {
+      const decisionSource = shouldQueryPinecone !== undefined ? 'smart-router' : 'ai-analysis';
+      console.info(`🔍 Querying Pinecone for semantic context (decision: ${decisionSource}):`, {
         userId,
         userMessageLength: userMessage.length,
         messagePreview: userMessage.substring(0, 100) + "...",

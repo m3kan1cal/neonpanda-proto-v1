@@ -29,12 +29,6 @@ export async function* sendCoachConversationMessageStreamLambda(userId, coachId,
     messageTimestamp: new Date().toISOString()
   };
 
-  console.info('🚀 Lambda Function URL streaming request:', {
-    url: url.replace(/\/users\/[^\/]+\//, '/users/[userId]/'), // Mask sensitive data
-    bodyKeys: Object.keys(requestBody),
-    userResponseLength: userResponse.length
-  });
-
   try {
     // Get authentication headers
     const authHeaders = await getAuthHeaders();
@@ -44,7 +38,6 @@ export async function* sendCoachConversationMessageStreamLambda(userId, coachId,
     }
 
     const streamStartTime = Date.now();
-    console.info('🚀 Starting Lambda streaming at:', new Date().toISOString());
 
     // Make the streaming request
     const response = await fetch(url, {
@@ -76,15 +69,7 @@ export async function* sendCoachConversationMessageStreamLambda(userId, coachId,
         const { done, value } = await reader.read();
         if (done) break;
 
-        const chunkTimestamp = new Date();
-        const chunkTimestampStr = chunkTimestamp.toISOString();
         const decodedChunk = decoder.decode(value, { stream: true });
-
-        console.info(`📡 Lambda SSE chunk received [${chunkTimestampStr}]:`, {
-          chunkSize: value.length,
-          decodedLength: decodedChunk.length,
-          preview: decodedChunk.substring(0, 100) + (decodedChunk.length > 100 ? '...' : '')
-        });
 
         buffer += decodedChunk;
         const lines = buffer.split('\n');
@@ -99,21 +84,10 @@ export async function* sendCoachConversationMessageStreamLambda(userId, coachId,
               if (jsonStr.trim()) {
                 const data = JSON.parse(jsonStr);
 
-                const eventTimestamp = new Date().toISOString();
-                console.info(`📦 Lambda SSE event received [${eventTimestamp}]:`, {
-                  type: data.type,
-                  contentLength: data.content?.length || 0,
-                  content: data.content ? `"${data.content.substring(0, 50)}${data.content.length > 50 ? '...' : ''}"` : '[no content]',
-                  hasMessageId: !!data.messageId,
-                  status: data.status,
-                  timeSinceStart: (Date.now() - streamStartTime) + 'ms'
-                });
-
                 yield data;
 
                 // If this is the completion event, we're done
                 if (data.type === 'complete') {
-                  console.info('✅ Lambda streaming completed successfully');
                   return;
                 }
 

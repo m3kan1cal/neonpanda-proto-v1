@@ -32,7 +32,6 @@ export const createCoachConversation = async (userId, coachId, title, initialMes
   }
 
   const result = await response.json();
-  console.info('Coach conversation created:', result);
 
   return result;
 };
@@ -59,7 +58,6 @@ export const getCoachConversation = async (userId, coachId, conversationId) => {
   }
 
   const result = await response.json();
-  console.info('Coach conversation loaded:', result);
 
   return result;
 };
@@ -78,13 +76,6 @@ export const sendCoachConversationMessage = async (userId, coachId, conversation
   const timeoutId = setTimeout(() => controller.abort(), 45000); // 45 second timeout
 
   try {
-    console.info('🚀 Sending coach conversation message:', {
-      userId,
-      coachId,
-      conversationId,
-      messageLength: userResponse.length
-    });
-
     const url = `${getApiUrl('')}/users/${userId}/coaches/${coachId}/conversations/${conversationId}/send-message`;
     const response = await authenticatedFetch(url, {
       method: 'POST',
@@ -108,11 +99,6 @@ export const sendCoachConversationMessage = async (userId, coachId, conversation
     }
 
     const result = await response.json();
-    console.info('✅ Coach conversation message sent successfully:', {
-      userMessageId: result.userResponse?.id,
-      aiMessageId: result.aiResponse?.id,
-      conversationId: result.conversationId
-    });
 
     return result;
   } catch (error) {
@@ -182,7 +168,6 @@ export const updateCoachConversation = async (userId, coachId, conversationId, m
   }
 
   const result = await response.json();
-  console.info('Coach conversation metadata updated:', result);
 
   return result;
 };
@@ -205,7 +190,6 @@ export const getCoachConversations = async (userId, coachId) => {
   }
 
   const result = await response.json();
-  console.info('Coach conversations loaded:', result);
 
   return result;
 };
@@ -217,8 +201,6 @@ export const getCoachConversations = async (userId, coachId) => {
  * @returns {Promise<Object>} - The API response with conversation count
  */
 export const getCoachConversationsCount = async (userId, coachId) => {
-  console.info('Making API call to get conversation count for user:', userId, 'coach:', coachId);
-
   const url = `${getApiUrl('')}/users/${userId}/coaches/${coachId}/conversations/count`;
 
   try {
@@ -241,7 +223,6 @@ export const getCoachConversationsCount = async (userId, coachId) => {
     }
 
     const data = await response.json();
-    console.info('Successfully retrieved conversation count:', data);
     return data;
   } catch (error) {
     console.error('Error getting conversation count:', error);
@@ -257,8 +238,6 @@ export const getCoachConversationsCount = async (userId, coachId) => {
  * @returns {Promise<Object>} - The API response object
  */
 export const deleteCoachConversation = async (userId, coachId, conversationId) => {
-  console.info('Deleting coach conversation:', { userId, coachId, conversationId });
-
   const url = `${getApiUrl('')}/users/${userId}/coaches/${coachId}/conversations/${conversationId}`;
 
   try {
@@ -294,12 +273,6 @@ export const deleteCoachConversation = async (userId, coachId, conversationId) =
     }
 
     const data = await response.json();
-    console.info('Successfully deleted conversation:', {
-      conversationId,
-      coachId,
-      userId,
-      pineconeCleanup: data.pineconeCleanup
-    });
 
     return data;
   } catch (error) {
