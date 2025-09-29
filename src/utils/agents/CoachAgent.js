@@ -109,7 +109,6 @@ export class CoachAgent {
     this._updateState({ isLoading: true, error: null });
 
     try {
-      console.info('Loading coaches for userId:', this.userId);
       const result = await getCoaches(this.userId);
       const coaches = result.coaches || [];
 
@@ -146,7 +145,6 @@ export class CoachAgent {
     this._updateState({ templatesLoading: true, templatesError: null });
 
     try {
-      console.info('Loading coach templates');
       const result = await getCoachTemplates();
       const templates = result.templates || [];
 
@@ -181,9 +179,7 @@ export class CoachAgent {
     }
 
     try {
-      console.info('Loading coach details:', { userId, coachId });
       const coachData = await getCoach(userId, coachId);
-      console.info('Raw coach data received:', coachData);
 
       if (!coachData) {
         throw new Error('Coach not found');
@@ -210,7 +206,6 @@ export class CoachAgent {
         rawCoach: coachData // Keep the full coach object for any additional data needed
       };
 
-      console.info('Formatted coach details:', formattedCoachData);
       return formattedCoachData;
 
     } catch (error) {
@@ -230,13 +225,11 @@ export class CoachAgent {
       // Generate userId if not provided
       const userId = providedUserId || this.userId || nanoid(21);
 
-      console.info('Creating coach from template:', { templateId, userId });
 
       // Create coach from template via API
       const result = await createCoachFromTemplate(userId, templateId);
       const { coachConfig } = result;
 
-      console.info('Coach created from template successfully:', coachConfig);
 
       // Reload coaches to show the new one
       await this.loadCoaches();
@@ -263,7 +256,6 @@ export class CoachAgent {
       // Generate userId if not provided
       const userId = providedUserId || this.userId || nanoid(21);
 
-      console.info('Creating new coach creator session for userId:', userId);
 
       // Create coach creator session via API
       const result = await createCoachCreatorSession(userId);

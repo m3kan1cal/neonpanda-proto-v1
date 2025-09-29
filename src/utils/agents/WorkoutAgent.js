@@ -8,9 +8,6 @@ import { getWorkouts, getWorkout, updateWorkout, deleteWorkout, getWorkoutsCount
  */
 export class WorkoutAgent {
   constructor(userId, onStateChange = null) {
-    console.info('WorkoutAgent: Constructor called');
-    console.info('WorkoutAgent: userId:', userId || '(not provided - will be set later)');
-
     this.userId = userId;
     this.onStateChange = onStateChange;
 
@@ -47,8 +44,6 @@ export class WorkoutAgent {
     // Internal tracking
     this.pollInterval = null;
     this.lastWorkoutCount = 0;
-
-    console.info('WorkoutAgent: Constructor complete', userId ? 'with userId' : '(userId will be set later)');
   }
 
   /**
@@ -114,20 +109,15 @@ export class WorkoutAgent {
    * Sets the user ID and loads initial data
    */
   async setUserId(userId) {
-    console.info('WorkoutAgent.setUserId called with:', userId);
-
     if (!userId) {
       console.error('WorkoutAgent.setUserId: userId is required');
       return;
     }
 
     this.userId = userId;
-    console.info('WorkoutAgent.setUserId: userId set to:', this.userId);
 
     // Load initial data with single optimized call
     await this.loadWorkoutStats();
-
-    console.info('WorkoutAgent.setUserId: Initial data loaded');
   }
 
   /**
@@ -135,8 +125,6 @@ export class WorkoutAgent {
    * Calculates: total count, recent workouts, this week count, training days, last workout days ago
    */
   async loadWorkoutStats() {
-    console.info('WorkoutAgent.loadWorkoutStats: Starting optimized data loading');
-
     if (!this.userId) {
       console.error('WorkoutAgent.loadWorkoutStats: No userId set');
       return;
@@ -158,7 +146,6 @@ export class WorkoutAgent {
         sortOrder: 'desc'
       });
 
-      console.info('WorkoutAgent.loadWorkoutStats: Got API result:', result);
 
       const workouts = result.workouts || [];
       const totalCount = result.totalCount || workouts.length;
@@ -224,7 +211,6 @@ export class WorkoutAgent {
         lastCheckTime: Date.now()
       });
 
-      console.info('WorkoutAgent.loadWorkoutStats: All metrics loaded successfully');
 
     } catch (error) {
       console.error('WorkoutAgent.loadWorkoutStats: Error loading workout stats:', error);
@@ -241,8 +227,6 @@ export class WorkoutAgent {
    * Loads total workout count for the user
    */
   async loadTotalWorkoutCount() {
-    console.info('WorkoutAgent.loadTotalWorkoutCount called');
-
     if (!this.userId) {
       console.error('WorkoutAgent.loadTotalWorkoutCount: No userId set');
       return;
@@ -252,7 +236,6 @@ export class WorkoutAgent {
 
     try {
       const result = await getWorkoutsCount(this.userId);
-      console.info('WorkoutAgent.loadTotalWorkoutCount: Got count:', result);
 
       this._updateState({
         totalWorkoutCount: result.totalCount || 0,
@@ -273,8 +256,6 @@ export class WorkoutAgent {
    * Loads training days count for the user
    */
   async loadTrainingDaysCount(options = {}) {
-    console.info('WorkoutAgent.loadTrainingDaysCount called');
-
     if (!this.userId) {
       console.error('WorkoutAgent.loadTrainingDaysCount: No userId set');
       return;
@@ -284,7 +265,6 @@ export class WorkoutAgent {
 
     try {
       const trainingDaysCount = await getTrainingDaysCount(this.userId, options);
-      console.info('WorkoutAgent.loadTrainingDaysCount: Got count:', trainingDaysCount);
 
       this._updateState({
         trainingDaysCount: trainingDaysCount || 0,
@@ -305,8 +285,6 @@ export class WorkoutAgent {
    * Loads this week's workout count for the user
    */
   async loadThisWeekWorkoutCount() {
-    console.info('WorkoutAgent.loadThisWeekWorkoutCount called');
-
     if (!this.userId) {
       console.error('WorkoutAgent.loadThisWeekWorkoutCount: No userId set');
       return;
@@ -328,16 +306,11 @@ export class WorkoutAgent {
       endOfWeek.setDate(startOfWeek.getDate() + 6);
       endOfWeek.setHours(23, 59, 59, 999); // End of day
 
-      console.info('WorkoutAgent.loadThisWeekWorkoutCount: Week range:', {
-        startOfWeek: startOfWeek.toISOString(),
-        endOfWeek: endOfWeek.toISOString()
-      });
 
       // Use the statically imported API function
       const result = await getWorkoutsByDateRange(this.userId, startOfWeek, endOfWeek);
 
       const thisWeekCount = result.workouts ? result.workouts.length : 0;
-      console.info('WorkoutAgent.loadThisWeekWorkoutCount: Got count:', thisWeekCount);
 
       this._updateState({
         thisWeekWorkoutCount: thisWeekCount,
@@ -358,8 +331,6 @@ export class WorkoutAgent {
    * Loads recent workouts for the user
    */
   async loadRecentWorkouts(limit = 10) {
-    console.info('WorkoutAgent.loadRecentWorkouts called with limit:', limit);
-
     if (!this.userId) {
       console.error('WorkoutAgent.loadRecentWorkouts: No userId set');
       return;
@@ -373,15 +344,12 @@ export class WorkoutAgent {
         sortBy: 'completedAt',
         sortOrder: 'desc'  // Most recent first
       });
-      console.info('WorkoutAgent.loadRecentWorkouts: Got result:', result);
 
       // Extract workouts from the API response
       const workouts = result.workouts || [];
-      console.info('WorkoutAgent.loadRecentWorkouts: Extracted workouts:', workouts);
 
       // Calculate days since last workout
       const lastWorkoutDaysAgo = this._calculateLastWorkoutDaysAgo(workouts);
-      console.info('WorkoutAgent.loadRecentWorkouts: Calculated lastWorkoutDaysAgo:', lastWorkoutDaysAgo);
 
       this._updateState({
         recentWorkouts: workouts,
@@ -409,14 +377,12 @@ export class WorkoutAgent {
     this._updateState({ isLoadingAllItems: true, error: null });
 
     try {
-      console.info('Loading all workouts for userId:', this.userId, 'with options:', options);
       const result = await getWorkouts(this.userId, options);
       // API returns 'workouts' property, not 'workouts'
       const allWorkouts = result.workouts || [];
 
       // Calculate days since last workout from all workouts
       const lastWorkoutDaysAgo = this._calculateLastWorkoutDaysAgo(allWorkouts);
-      console.info('WorkoutAgent.loadAllWorkouts: Calculated lastWorkoutDaysAgo:', lastWorkoutDaysAgo);
 
       this._updateState({
         allWorkouts,
@@ -447,7 +413,6 @@ export class WorkoutAgent {
     this._updateState({ isLoadingItem: true, error: null });
 
     try {
-      console.info('Loading workout details for:', workoutId);
       const result = await getWorkout(this.userId, workoutId);
 
       this._updateState({ isLoadingItem: false });
@@ -524,7 +489,6 @@ export class WorkoutAgent {
       this.checkForNewWorkouts();
     }, 120000); // 2 minutes instead of 30 seconds
 
-    console.info('Started polling for new workouts');
   }
 
   /**
@@ -534,7 +498,6 @@ export class WorkoutAgent {
     if (this.pollInterval) {
       clearInterval(this.pollInterval);
       this.pollInterval = null;
-      console.info('Stopped polling for new workouts');
     }
   }
 
@@ -640,7 +603,6 @@ export class WorkoutAgent {
     }
 
     try {
-      console.info("Updating workout metadata:", { userId, workoutId, updates });
 
       // Call API to update workout
       const result = await updateWorkout(userId, workoutId, updates);
@@ -665,7 +627,6 @@ export class WorkoutAgent {
         await this.loadAllWorkouts();
       }
 
-      console.info("Workout metadata updated successfully");
       return result;
     } catch (error) {
       console.error("Error updating workout metadata:", error);
@@ -692,16 +653,10 @@ export class WorkoutAgent {
     }
 
     try {
-      console.info("Creating workout:", {
-        userId: this.userId,
-        workoutContent: workoutContent.substring(0, 100) + '...',
-        options
-      });
 
       // Call API to create workout
       const result = await createWorkout(this.userId, workoutContent.trim(), options);
 
-      console.info("Workout creation initiated successfully");
       return result;
     } catch (error) {
       console.error("Error creating workout:", error);
@@ -724,7 +679,6 @@ export class WorkoutAgent {
     }
 
     try {
-      console.info("Deleting workout:", { userId, workoutId });
 
       // Call API to delete workout
       const result = await deleteWorkout(userId, workoutId);
@@ -735,7 +689,6 @@ export class WorkoutAgent {
         allWorkouts: this.state.allWorkouts.filter(w => w.workoutId !== workoutId)
       });
 
-      console.info("Workout deleted successfully");
       return result;
     } catch (error) {
       console.error("Error deleting workout:", error);

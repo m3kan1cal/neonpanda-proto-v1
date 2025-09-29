@@ -53,6 +53,39 @@ export const generateSystemPrompt = (
 
 `);
 
+  // 0.5 CURRENT DATE & TIME CONTEXT (Essential for temporal awareness)
+  const currentDateTime = new Date();
+  const dateOptions: Intl.DateTimeFormatOptions = {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    timeZone: 'America/Los_Angeles' // Default to Pacific Time, could be made user-configurable
+  };
+  const timeOptions: Intl.DateTimeFormatOptions = {
+    hour: 'numeric',
+    minute: '2-digit',
+    timeZone: 'America/Los_Angeles',
+    timeZoneName: 'short'
+  };
+
+  const formattedDate = currentDateTime.toLocaleDateString('en-US', dateOptions);
+  const formattedTime = currentDateTime.toLocaleTimeString('en-US', timeOptions);
+
+  promptSections.push(`📅 CURRENT DATE & TIME:
+**Today is ${formattedDate}**
+Current time: ${formattedTime}
+
+CRITICAL TEMPORAL AWARENESS:
+- Use THIS date as your reference point for all temporal reasoning
+- When users say "today", "this morning", "earlier", they mean ${formattedDate}
+- "Yesterday" means ${new Date(currentDateTime.getTime() - 86400000).toLocaleDateString('en-US', {weekday: 'long', month: 'long', day: 'numeric'})}
+- "Tomorrow" means ${new Date(currentDateTime.getTime() + 86400000).toLocaleDateString('en-US', {weekday: 'long', month: 'long', day: 'numeric'})}
+- Conversation history timestamps may be from previous days - compare them against TODAY'S date
+- If a user mentions doing something "this morning" and it's now afternoon, that happened earlier TODAY (${formattedDate}), not yesterday
+
+`);
+
     // 1. Core Identity & Personality
   promptSections.push(`# COACH IDENTITY & PERSONALITY
 ${personality_prompt}

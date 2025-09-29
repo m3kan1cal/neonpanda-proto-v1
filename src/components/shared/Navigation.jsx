@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { avatarPatterns, iconButtonPatterns, containerPatterns } from '../../utils/uiPatterns';
 import { useAuth } from '../../auth/contexts/AuthContext';
+import UserAvatar from './UserAvatar';
 import {
   HomeIconTiny,
   FAQIconTiny,
@@ -102,10 +103,12 @@ function Navigation({ user, signOut }) {
           )}
           {!loading && isAuthenticated && user?.attributes && (
             <div className="flex items-center space-x-3 text-synthwave-text-secondary font-rajdhani">
-              {/* User Avatar */}
-              <div className={avatarPatterns.userSmall}>
-                {(user.attributes.preferred_username || user.attributes.email || 'U').charAt(0).toUpperCase()}
-              </div>
+              {/* User Avatar with Gravatar integration */}
+              <UserAvatar
+                email={user.attributes.email}
+                username={user.attributes.preferred_username || user.attributes.email}
+                size={32}
+              />
               <span className="text-synthwave-neon-pink font-medium">
                 {user.attributes.preferred_username || user.attributes.email}
               </span>

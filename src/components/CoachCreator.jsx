@@ -9,6 +9,7 @@ import { containerPatterns, layoutPatterns, buttonPatterns, avatarPatterns, inpu
 import { SendIcon, PlusIcon, CameraIcon, PaperclipIcon, SmileIcon, MicIcon, TrashIcon } from './themes/SynthwaveComponents';
 import ChatInput from './shared/ChatInput';
 import ProgressIndicator from './shared/ProgressIndicator';
+import UserAvatar from './shared/UserAvatar';
 import { parseMarkdown } from '../utils/markdownParser.jsx';
 import CoachCreatorAgent from '../utils/agents/CoachCreatorAgent';
 import CoachCreatorHeader from './shared/CoachCreatorHeader';
@@ -57,6 +58,8 @@ const TypingIndicator = () => (
 const MessageItem = memo(({
   message,
   agentState,
+  userEmail,
+  userDisplayName,
   getUserInitial,
   formatTime,
   renderMessageContent
@@ -68,17 +71,17 @@ const MessageItem = memo(({
       }`}
     >
       {/* Avatar */}
-      <div
-        className={`flex-shrink-0 ${
-          message.type === "user"
-            ? avatarPatterns.userSmall
-            : avatarPatterns.aiSmall
-        }`}
-      >
+      <div className="flex-shrink-0">
         {message.type === "user" ? (
-          getUserInitial()
+          <UserAvatar
+            email={userEmail}
+            username={userDisplayName}
+            size={32}
+          />
         ) : (
-          'V'
+          <div className={avatarPatterns.aiSmall}>
+            V
+          </div>
         )}
       </div>
 
@@ -140,7 +143,10 @@ const MessageItem = memo(({
     prevProps.agentState.streamingMessageId !== nextProps.agentState.streamingMessageId ||
     prevProps.agentState.streamingMessage !== nextProps.agentState.streamingMessage;
 
-  const shouldRerender = messageChanged || streamingStateChanged;
+  const userChanged = prevProps.userEmail !== nextProps.userEmail ||
+    prevProps.userDisplayName !== nextProps.userDisplayName;
+
+  const shouldRerender = messageChanged || streamingStateChanged || userChanged;
 
   if (nextProps.message.type === 'ai' && nextProps.agentState.isStreaming) {
     console.info('🎬 MessageItem memo check:', {
@@ -184,6 +190,10 @@ function CoachCreator() {
     const displayName = getUserDisplayName(userForDisplayName);
     return displayName.charAt(0).toUpperCase();
   };
+
+  // Get user email for Gravatar
+  const userEmail = userAttributes?.email;
+  const userDisplayName = userAttributes ? getUserDisplayName({ attributes: userAttributes }) : 'User';
 
   // UI-specific state
   const [inputMessage, setInputMessage] = useState('');
@@ -573,6 +583,8 @@ function CoachCreator() {
                     key={message.id}
                     message={message}
                     agentState={agentState}
+                    userEmail={userEmail}
+                    userDisplayName={userDisplayName}
                     getUserInitial={getUserInitial}
                     formatTime={formatTime}
                     renderMessageContent={renderMessageContent}

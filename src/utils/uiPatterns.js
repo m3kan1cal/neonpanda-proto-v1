@@ -252,11 +252,11 @@ export const avatarPatterns = {
   large: "font-russo font-bold text-lg",
 
   // Complete avatar containers with styling
-  userSmall: "w-8 h-8 bg-gradient-to-br from-synthwave-neon-pink to-synthwave-neon-purple rounded-full flex items-center justify-center text-white font-russo font-bold text-sm",
+  userSmall: "w-8 h-8 bg-gradient-to-br from-synthwave-neon-pink to-synthwave-neon-purple rounded-full flex items-center justify-center text-white font-russo font-bold text-sm shadow-lg shadow-synthwave-neon-pink/20 ring-2 ring-synthwave-neon-pink/30",
 
-  aiSmall: "w-8 h-8 bg-gradient-to-br from-synthwave-neon-cyan to-synthwave-neon-pink rounded-full flex items-center justify-center text-white font-russo font-bold text-sm",
+  aiSmall: "w-8 h-8 bg-gradient-to-br from-synthwave-neon-cyan to-synthwave-neon-pink rounded-full flex items-center justify-center text-white font-russo font-bold text-sm shadow-lg shadow-synthwave-neon-cyan/20 ring-2 ring-synthwave-neon-cyan/30",
 
-  coachLarge: "w-12 h-12 bg-gradient-to-br from-synthwave-neon-cyan to-synthwave-neon-pink rounded-full flex items-center justify-center text-white font-russo font-bold text-lg",
+  coachLarge: "w-12 h-12 bg-gradient-to-br from-synthwave-neon-cyan to-synthwave-neon-pink rounded-full flex items-center justify-center text-white font-russo font-bold text-lg shadow-xl shadow-synthwave-neon-cyan/30 ring-2 ring-synthwave-neon-cyan/30",
 
   // Skeleton loading states for avatars
   skeletonSmall: "w-8 h-8 bg-synthwave-text-muted/20 rounded-full animate-pulse",

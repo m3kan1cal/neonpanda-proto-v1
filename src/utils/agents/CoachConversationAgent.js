@@ -113,15 +113,11 @@ export class CoachConversationAgent {
    */
   async loadCoachDetails(userId, coachId) {
     try {
-      console.info("Loading coach details:", { userId, coachId });
       const coachData = await getCoach(userId, coachId);
-      console.info("Raw coach data received:", coachData);
-      console.info("Coach name from API:", coachData.coachConfig?.coach_name);
 
       // Format coach data like TrainingGrounds does
       const coachAgent = new CoachAgent();
       const formattedName = coachAgent.formatCoachName(coachData.coachConfig?.coach_name);
-      console.info("Formatted coach name:", formattedName);
 
       const formattedCoachData = {
         name: formattedName,
@@ -131,7 +127,6 @@ export class CoachConversationAgent {
         rawCoach: coachData // Keep the full coach object for any additional data needed
       };
 
-      console.info("Final formatted coach data:", formattedCoachData);
       this._updateState({ coach: formattedCoachData });
       return formattedCoachData;
     } catch (error) {
@@ -156,7 +151,6 @@ export class CoachConversationAgent {
     this._updateState({ isLoadingRecentItems: true });
 
     try {
-      console.info('Loading historical conversations for:', { userId, coachId, limit });
       const result = await getCoachConversations(userId, coachId);
 
       // Sort by last activity (most recent first) and apply limit
@@ -173,7 +167,6 @@ export class CoachConversationAgent {
         isLoadingRecentItems: false
       });
 
-      console.info('Historical conversations loaded:', sortedConversations);
       return sortedConversations;
     } catch (error) {
       console.error('Error loading historical conversations:', error);
@@ -194,12 +187,8 @@ export class CoachConversationAgent {
     this._updateState({ isLoadingConversationCount: true });
 
     try {
-      console.info('Loading conversation count for:', { userId, coachId });
-
       // Use the statically imported count API function
       const result = await getCoachConversationsCount(userId, coachId);
-
-      console.info('Conversation count API result:', result);
 
       this._updateState({
         conversationCount: result.totalCount || 0,
@@ -207,7 +196,6 @@ export class CoachConversationAgent {
         isLoadingConversationCount: false
       });
 
-      console.info('Conversation count and messages loaded:', { totalCount: result.totalCount, totalMessages: result.totalMessages });
       return { totalCount: result.totalCount, totalMessages: result.totalMessages };
     } catch (error) {
       console.error('Error loading conversation count:', error);
@@ -231,13 +219,6 @@ export class CoachConversationAgent {
 
       // Generate title if not provided
       const conversationTitle = title || this.generateConversationTitle();
-
-      console.info("Creating new coach conversation:", {
-        userId,
-        coachId,
-        title: conversationTitle,
-        hasInitialMessage: !!initialMessage
-      });
 
       // Create conversation via API (with optional initial message)
       const result = await createCoachConversation(userId, coachId, conversationTitle, initialMessage);
@@ -289,8 +270,6 @@ export class CoachConversationAgent {
     try {
       this._updateState({ isLoadingItem: true, error: null });
 
-      console.info("Loading existing coach conversation:", { userId, coachId, conversationId });
-
       // Load conversation and coach details in parallel
       const [conversationData] = await Promise.all([
         getCoachConversation(userId, coachId, conversationId),
@@ -301,10 +280,6 @@ export class CoachConversationAgent {
       this.userId = userId;
       this.coachId = coachId;
       this.conversationId = conversationId;
-
-      // Debug: Log the full API response structure
-      console.info("Full API response structure:", conversationData);
-      console.info("API response keys:", Object.keys(conversationData || {}));
 
       // Extract the actual conversation data (API wraps it in a 'conversation' property)
       const actualConversation = conversationData.conversation || conversationData;
@@ -339,17 +314,6 @@ export class CoachConversationAgent {
         });
       }
 
-      // Debug: Log message loading info
-      console.info("Loaded conversation messages:", {
-        totalMessages: conversationMessages.length,
-        messagesFromAPI: messagesArray.length,
-        messageOrder: conversationMessages.map(msg => ({
-          type: msg.type,
-          timestamp: msg.timestamp,
-          preview: msg.content.substring(0, 50) + (msg.content.length > 50 ? '...' : '')
-        }))
-      });
-
       // Update state with loaded messages
       this._updateState({
         conversation: actualConversation,
@@ -383,13 +347,6 @@ export class CoachConversationAgent {
    * Sends a user message and processes the AI response
    */
   async sendMessage(messageContent) {
-    console.info('📞 sendMessage called with:', {
-      messageContent: messageContent.substring(0, 50) + '...',
-      isTyping: this.state.isTyping,
-      isStreaming: this.state.isStreaming,
-      isLoadingItem: this.state.isLoadingItem
-    });
-
     if (
       !messageContent.trim() ||
       this.state.isTyping ||
@@ -518,7 +475,6 @@ export class CoachConversationAgent {
 
         if (isStreamingEnabled()) {
           try {
-            console.info('🚀 Attempting Lambda Function URL streaming');
             messageStream = sendCoachConversationMessageStreamLambda(
               this.userId,
               this.coachId,
@@ -537,7 +493,6 @@ export class CoachConversationAgent {
             streamingMethod = 'api-gateway-fallback';
           }
         } else {
-          console.info('📞 Using API Gateway streaming (Lambda Function URL disabled)');
           messageStream = sendCoachConversationMessageStream(
             this.userId,
             this.coachId,
@@ -545,8 +500,6 @@ export class CoachConversationAgent {
             messageContent.trim()
           );
         }
-
-        console.info(`✅ Streaming method selected: ${streamingMethod}`);
 
         // Process the stream
         return await processStreamingChunks(messageStream, {
@@ -556,15 +509,6 @@ export class CoachConversationAgent {
           },
 
           onComplete: async (chunk) => {
-            // Debug: Log the complete event structure
-            console.info('🏁 Complete event received:', {
-              hasAiMessage: !!chunk.aiMessage,
-              hasFullMessage: !!chunk.fullMessage,
-              aiMessageContent: chunk.aiMessage?.content?.substring(0, 100) + '...' || '[none]',
-              fullMessage: chunk.fullMessage?.substring(0, 100) + '...' || '[none]',
-              chunkKeys: Object.keys(chunk)
-            });
-
             // Finalize message - use aiMessage.content from the complete event
             const finalContent = chunk.aiMessage?.content || chunk.fullMessage || '';
 

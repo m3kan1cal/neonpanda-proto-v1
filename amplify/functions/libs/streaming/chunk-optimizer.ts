@@ -6,9 +6,9 @@
 // Optimal buffer sizes for Lambda Function URL streaming
 export const STREAMING_BUFFER_CONFIG = {
   /** Minimum buffer size before considering flush triggers (chars) */
-  MIN_BUFFER_SIZE: 30,
+  MIN_BUFFER_SIZE: 20,
   /** Maximum buffer size before forcing flush (chars) */
-  MAX_BUFFER_SIZE: 60,
+  MAX_BUFFER_SIZE: 40,
   /** Punctuation marks that trigger immediate flush when above min size */
   FLUSH_TRIGGERS: ['.', '!', '?', ':', ';', ','] as const,
 } as const;
