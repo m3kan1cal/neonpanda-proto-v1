@@ -44,6 +44,8 @@ import { createMemory } from "./functions/create-memory/resource";
 import { deleteMemory } from "./functions/delete-memory/resource";
 import { deleteCoachConversation } from "./functions/delete-coach-conversation/resource";
 import { forwardLogsToSns } from "./functions/forward-logs-to-sns/resource";
+import { getUserProfile } from "./functions/get-user-profile/resource";
+import { updateUserProfile } from "./functions/update-user-profile/resource";
 import { apiGatewayv2 } from "./api/resource";
 import { dynamodbTable } from "./dynamodb/resource";
 import { createContactFormNotificationTopic, createErrorMonitoringTopic } from "./sns/resource";
@@ -101,6 +103,8 @@ const backend = defineBackend({
   deleteMemory,
   deleteCoachConversation,
   forwardLogsToSns,
+  getUserProfile,
+  updateUserProfile,
 });
 
 // Create User Pool authorizer
@@ -145,6 +149,8 @@ const coreApi = apiGatewayv2.createCoreApi(
   backend.createMemory.resources.lambda,
   backend.deleteMemory.resources.lambda,
   backend.deleteCoachConversation.resources.lambda,
+  backend.getUserProfile.resources.lambda,
+  backend.updateUserProfile.resources.lambda,
   userPoolAuthorizer
 );
 
@@ -253,6 +259,10 @@ coreTable.table.grantReadData(backend.getMemories.resources.lambda);
 coreTable.table.grantReadWriteData(backend.createMemory.resources.lambda);
 coreTable.table.grantReadWriteData(backend.deleteMemory.resources.lambda);
 
+// Grant DynamoDB permissions to user profile functions
+coreTable.table.grantReadData(backend.getUserProfile.resources.lambda);
+coreTable.table.grantReadWriteData(backend.updateUserProfile.resources.lambda);
+
 // Add environment variables to all functions (excluding post-confirmation due to circular dependency)
 const allFunctions = [
   backend.contactForm,
@@ -290,6 +300,8 @@ const allFunctions = [
   backend.getCoachTemplates,
   backend.getCoachTemplate,
   backend.createCoachConfigFromTemplate,
+  backend.getUserProfile,
+  backend.updateUserProfile,
 ];
 
 allFunctions.forEach((func) => {
@@ -524,6 +536,18 @@ const postConfirmationLambda = backend.postConfirmation.resources.lambda;
 grantCognitoAdminPermissions([postConfirmationLambda]);
 grantDynamoDBPermissions([postConfirmationLambda]);
 grantDynamoDBThroughputPermissions([postConfirmationLambda]);
+
+// Grant Cognito admin permissions to user profile update function
+// Note: Using wildcard IAM policy to avoid circular dependency
+grantCognitoAdminPermissions([backend.updateUserProfile.resources.lambda]);
+
+// Add USER_POOL_ID environment variable to update-user-profile
+// Note: This references auth stack but doesn't create circular dependency
+// because we're just passing the ID as a string, not creating a resource dependency
+backend.updateUserProfile.addEnvironment(
+  "USER_POOL_ID",
+  backend.auth.resources.userPool.userPoolId
+);
 
 // Enable Cognito Advanced Security Features (Plus tier)
 cfnUserPool.userPoolAddOns = {

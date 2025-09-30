@@ -23,7 +23,7 @@ import {
 function Navigation({ user, signOut }) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const location = useLocation();
-  const { isAuthenticated, user: authUser, loading } = useAuth();
+  const { isAuthenticated, user: authUser, userProfile, loading } = useAuth();
 
   // Get authenticated user's real userId (no fallback needed)
   const authenticatedUserId = authUser?.attributes?.['custom:user_id'];
@@ -112,12 +112,12 @@ function Navigation({ user, signOut }) {
               >
                 <UserAvatar
                   email={user.attributes.email}
-                  username={user.attributes.preferred_username || user.attributes.email}
+                  username={userProfile?.displayName || user.attributes.preferred_username || user.attributes.email}
                   size={32}
                 />
               </Link>
               <span className="text-synthwave-neon-pink font-medium">
-                {user.attributes.preferred_username || user.attributes.email}
+                {userProfile?.displayName || user.attributes.preferred_username || user.attributes.email}
               </span>
             </div>
           )}
@@ -233,7 +233,7 @@ function Navigation({ user, signOut }) {
                       }`}
                     >
                       <SettingsIconTiny />
-                      <span>Settings</span>
+                      <span>Your Settings</span>
                     </Link>
                   </>
                 )}

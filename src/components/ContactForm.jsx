@@ -228,7 +228,7 @@ function ContactForm() {
         {/* Form */}
         {formUIState === 'form' && (
           <div className={`${containerPatterns.mainContent} p-8 md:p-12`}>
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit}>
             {/* Name Fields */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <FormInput

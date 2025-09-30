@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { containerPatterns, layoutPatterns, typographyPatterns } from '../utils/uiPatterns';
+import { containerPatterns, layoutPatterns, typographyPatterns, formPatterns } from '../utils/uiPatterns';
 import { ChevronDownIcon } from './themes/SynthwaveComponents';
 import Footer from './shared/Footer';
 
@@ -42,6 +42,29 @@ const CollapsibleSection = ({ title, icon, children, defaultOpen = true, classNa
 };
 
 const changelogEntries = [
+  {
+    version: "Release v1.0.20250930-beta",
+    date: "2025-09-30",
+    changes: {
+      added: [
+        "Conditional coach_id field inclusion in Pinecone metadata to comply with null value restrictions",
+        "Smarter safety validation that only warns when injuries exist without contraindicated exercises"
+      ],
+      changed: [
+        "Standardized streaming agent loading state management using only isLoadingItem property",
+        "Coach config safety validation now checks for actual injuries before warning about missing contraindications",
+        "Pinecone memory metadata construction updated to omit undefined coach_id fields instead of sending null",
+        "Removed legacy isLoading check from resetStreamingState in favor of standardized isLoadingItem"
+      ],
+      fixed: [
+        "CoachCreator streaming blocked after first message due to isLoadingItem flag not being reset in resetStreamingState",
+        "Pinecone storage errors when saving global memories with 'Invalid type for field coach_id... got null'",
+        "False positive safety warnings appearing on every conversation message for users with no injuries",
+        "CloudWatch logs cluttered with unnecessary contraindicated exercises warnings for healthy users",
+        "Second message submission failing in coach creator sessions due to validation thinking isLoadingItem was still true"
+      ]
+    }
+  },
   {
     version: "Release v1.0.20250929-beta",
     date: "2025-09-29",
@@ -599,7 +622,7 @@ function Changelog() {
 
               {entry.changes.added && (
                 <div className="mb-6">
-                  <h3 className="font-rajdhani font-bold text-white text-lg mb-3 flex items-center space-x-2">
+                  <h3 className={formPatterns.subsectionHeader}>
                     <svg className="w-5 h-5 text-synthwave-neon-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                     </svg>
@@ -618,7 +641,7 @@ function Changelog() {
 
               {entry.changes.changed && (
                 <div className="mb-6">
-                  <h3 className="font-rajdhani font-bold text-white text-lg mb-3 flex items-center space-x-2">
+                  <h3 className={formPatterns.subsectionHeader}>
                     <svg className="w-5 h-5 text-synthwave-neon-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                     </svg>
@@ -637,7 +660,7 @@ function Changelog() {
 
               {entry.changes.fixed && (
                 <div className="mb-6">
-                  <h3 className="font-rajdhani font-bold text-white text-lg mb-3 flex items-center space-x-2">
+                  <h3 className={formPatterns.subsectionHeader}>
                     <svg className="w-5 h-5 text-synthwave-neon-pink" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
