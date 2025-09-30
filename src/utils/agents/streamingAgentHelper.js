@@ -105,9 +105,9 @@ export function resetStreamingState(agent, additionalState = {}) {
     ...additionalState
   };
 
-  // Add isLoading reset for coach creator agents
-  if (agent.state.hasOwnProperty('isLoading')) {
-    resetState.isLoading = false;
+  // Reset loading state if present (standardized as isLoadingItem)
+  if (agent.state.hasOwnProperty('isLoadingItem')) {
+    resetState.isLoadingItem = false;
   }
 
   agent._updateState(resetState);

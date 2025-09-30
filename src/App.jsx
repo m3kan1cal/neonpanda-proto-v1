@@ -28,6 +28,7 @@ import ManageCoachConversations from "./components/ManageCoachConversations";
 import ViewReports from "./components/ViewReports";
 import WeeklyReports from "./components/WeeklyReports";
 import Changelog from "./components/Changelog";
+import Settings from "./components/Settings";
 import Theme from "./components/Theme";
 import { ToastProvider } from "./contexts/ToastContext";
 import ToastContainer from "./components/shared/ToastContainer";
@@ -81,6 +82,7 @@ function AppContent() {
           {/* Protected routes */}
           <Route path="/coach-creator" element={<ProtectedRoute><CoachCreator /></ProtectedRoute>} />
           <Route path="/coaches" element={<ProtectedRoute><Coaches /></ProtectedRoute>} />
+          <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
           <Route path="/training-grounds" element={<ProtectedRoute><TrainingGrounds /></ProtectedRoute>} />
           <Route
             path="/training-grounds/coach-conversations"

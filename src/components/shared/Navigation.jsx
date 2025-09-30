@@ -16,7 +16,8 @@ import {
   SignOutIconTiny,
   AboutIconTiny,
   TechnologyIconTiny,
-  SupportIconTiny
+  SupportIconTiny,
+  SettingsIconTiny
 } from '../themes/SynthwaveComponents';
 
 function Navigation({ user, signOut }) {
@@ -103,12 +104,18 @@ function Navigation({ user, signOut }) {
           )}
           {!loading && isAuthenticated && user?.attributes && (
             <div className="flex items-center space-x-3 text-synthwave-text-secondary font-rajdhani">
-              {/* User Avatar with Gravatar integration */}
-              <UserAvatar
-                email={user.attributes.email}
-                username={user.attributes.preferred_username || user.attributes.email}
-                size={32}
-              />
+              {/* User Avatar with Gravatar integration - clickable to go to settings */}
+              <Link
+                to={`/settings?userId=${authenticatedUserId}`}
+                className="hover:opacity-80 transition-opacity duration-200"
+                title="Settings"
+              >
+                <UserAvatar
+                  email={user.attributes.email}
+                  username={user.attributes.preferred_username || user.attributes.email}
+                  size={32}
+                />
+              </Link>
               <span className="text-synthwave-neon-pink font-medium">
                 {user.attributes.preferred_username || user.attributes.email}
               </span>
@@ -215,6 +222,18 @@ function Navigation({ user, signOut }) {
                     >
                       <CoachesIconTiny />
                       <span>Your Coaches</span>
+                    </Link>
+                    <Link
+                      to={`/settings?userId=${authenticatedUserId}`}
+                      onClick={closeDropdown}
+                      className={`flex items-center space-x-3 px-4 py-1.5 font-rajdhani font-medium transition-all duration-150 ${
+                        location.pathname === "/settings"
+                          ? "text-synthwave-neon-pink bg-synthwave-neon-pink/10"
+                          : "text-synthwave-text-primary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10"
+                      }`}
+                    >
+                      <SettingsIconTiny />
+                      <span>Settings</span>
                     </Link>
                   </>
                 )}
