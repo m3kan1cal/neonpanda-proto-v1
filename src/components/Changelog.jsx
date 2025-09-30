@@ -24,7 +24,7 @@ const CollapsibleSection = ({ title, icon, children, defaultOpen = true, classNa
           <div className="text-synthwave-neon-pink">
             {icon}
           </div>
-          <h3 className="font-russo font-bold text-white text-sm uppercase">
+          <h3 className="font-russo font-bold text-white text-base uppercase">
             {title}
           </h3>
         </div>
