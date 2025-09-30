@@ -10,6 +10,7 @@ import {
   fetchUserAttributes,
   fetchAuthSession
 } from 'aws-amplify/auth';
+import { getUserProfile } from '../../utils/apis/userProfileApi';
 
 const AuthContext = createContext({});
 
@@ -24,6 +25,7 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
+  const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState(null);
 
@@ -262,6 +264,7 @@ export const AuthProvider = ({ children }) => {
 
       await signOut();
       setUser(null);
+      setUserProfile(null); // Clear profile on sign out
       setIsAuthenticated(false);
 
       return { success: true };
@@ -270,6 +273,30 @@ export const AuthProvider = ({ children }) => {
       throw error;
     }
   };
+
+  // Fetch user profile from DynamoDB when user is authenticated
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (isAuthenticated && user?.attributes?.['custom:user_id']) {
+        try {
+          const userId = user.attributes['custom:user_id'];
+          console.info('📋 Fetching user profile for userId:', userId);
+          const response = await getUserProfile(userId);
+          setUserProfile(response.profile);
+          console.info('✅ User profile loaded:', response.profile.displayName);
+        } catch (error) {
+          console.error('❌ Error fetching user profile:', error);
+          // Don't block app if profile fetch fails - user can still use Cognito attributes
+          setUserProfile(null);
+        }
+      } else {
+        // Clear profile when user logs out or is not authenticated
+        setUserProfile(null);
+      }
+    };
+
+    fetchProfile();
+  }, [isAuthenticated, user]);
 
   const handleResetPassword = async (email) => {
     try {
@@ -332,6 +359,7 @@ export const AuthProvider = ({ children }) => {
     // State
     isAuthenticated,
     user,
+    userProfile, // Add profile to context
     loading,
     authError,
 

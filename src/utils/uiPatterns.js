@@ -63,6 +63,20 @@ export const iconButtonPatterns = {
   actionSmallCyan: "p-2 sm:p-2.5 bg-synthwave-bg-primary/50 text-synthwave-text-secondary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/20 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 min-h-[40px] min-w-[40px] flex items-center justify-center"
 };
 
+export const formPatterns = {
+  // Label for form inputs (AuthInput, FormInput, Settings)
+  label: "block font-rajdhani text-lg text-synthwave-text-secondary mb-2 font-medium uppercase tracking-wide",
+
+  // Error message text below inputs
+  errorText: "mt-2 text-red-400 font-rajdhani text-sm",
+
+  // Helper/description text below inputs
+  helperText: "font-rajdhani text-sm text-synthwave-text-secondary",
+
+  // Subsection headers (like "Added", "Changed", "Fixed" in Changelog)
+  subsectionHeader: "font-rajdhani font-bold text-white text-lg mb-3 flex items-center space-x-2"
+};
+
 export const inputPatterns = {
   // Standard input field with glassmorphism - enhanced for autocomplete stability
   standard: "w-full px-4 py-3 bg-synthwave-bg-card/30 backdrop-blur-sm border border-synthwave-neon-pink/20 rounded-xl text-synthwave-text-primary placeholder-synthwave-text-muted font-rajdhani transition-all duration-300 outline-none focus:outline-none focus:border-synthwave-neon-pink focus:bg-synthwave-bg-card/50 focus:ring-2 focus:ring-synthwave-neon-pink/20 focus:ring-offset-0 focus:ring-offset-transparent focus:shadow-none min-h-[48px] [-webkit-appearance:none] [appearance:none] [&:-webkit-autofill]:!px-4 [&:-webkit-autofill]:!py-3 [&:-webkit-autofill]:!min-h-[48px] [&:-webkit-autofill]:!border-[1px] [&:-webkit-autofill]:!border-solid [&:-webkit-autofill]:!bg-synthwave-bg-card/30 [&:-webkit-autofill]:!border-synthwave-neon-pink/20 [&:-webkit-autofill]:!rounded-xl [&:-webkit-autofill]:!shadow-none [&:-webkit-autofill]:!outline-none [&:-webkit-autofill]:!box-shadow-[0_0_0_1000px_rgba(15,23,42,0.3)_inset] [&:-webkit-autofill:hover]:!px-4 [&:-webkit-autofill:hover]:!py-3 [&:-webkit-autofill:hover]:!min-h-[48px] [&:-webkit-autofill:hover]:!border-[1px] [&:-webkit-autofill:hover]:!border-solid [&:-webkit-autofill:hover]:!bg-synthwave-bg-card/30 [&:-webkit-autofill:hover]:!border-synthwave-neon-pink/20 [&:-webkit-autofill:hover]:!rounded-xl [&:-webkit-autofill:hover]:!shadow-none [&:-webkit-autofill:hover]:!outline-none [&:-webkit-autofill:hover]:!box-shadow-[0_0_0_1000px_rgba(15,23,42,0.3)_inset] [&:-webkit-autofill:focus]:!px-4 [&:-webkit-autofill:focus]:!py-3 [&:-webkit-autofill:focus]:!min-h-[48px] [&:-webkit-autofill:focus]:!border-[1px] [&:-webkit-autofill:focus]:!border-solid [&:-webkit-autofill:focus]:!bg-synthwave-bg-card/50 [&:-webkit-autofill:focus]:!border-synthwave-neon-pink [&:-webkit-autofill:focus]:!rounded-xl [&:-webkit-autofill:focus]:!shadow-none [&:-webkit-autofill:focus]:!outline-none [&:-webkit-autofill:focus]:!box-shadow-[0_0_0_1000px_rgba(15,23,42,0.5)_inset]",
@@ -83,7 +97,10 @@ export const inputPatterns = {
   textarea: "w-full px-4 py-3 bg-synthwave-bg-card/30 backdrop-blur-sm border border-synthwave-neon-pink/20 rounded-xl text-synthwave-text-primary placeholder-synthwave-text-muted font-rajdhani transition-all duration-300 outline-none focus:outline-none focus:border-synthwave-neon-pink focus:bg-synthwave-bg-card/50 focus:ring-2 focus:ring-synthwave-neon-pink/20 focus:ring-offset-0 focus:ring-offset-transparent focus:shadow-none min-h-[120px] resize-vertical [-webkit-appearance:none] [appearance:none]",
 
   // Error state textarea - enhanced for autocomplete stability
-  textareaError: "w-full px-4 py-3 bg-synthwave-bg-card/30 backdrop-blur-sm border border-red-400 rounded-xl text-synthwave-text-primary placeholder-synthwave-text-muted font-rajdhani transition-all duration-300 outline-none focus:outline-none focus:border-red-500 focus:bg-synthwave-bg-card/50 focus:ring-2 focus:ring-red-400/20 focus:ring-offset-0 focus:ring-offset-transparent focus:shadow-none min-h-[120px] resize-vertical [-webkit-appearance:none] [appearance:none]"
+  textareaError: "w-full px-4 py-3 bg-synthwave-bg-card/30 backdrop-blur-sm border border-red-400 rounded-xl text-synthwave-text-primary placeholder-synthwave-text-muted font-rajdhani transition-all duration-300 outline-none focus:outline-none focus:border-red-500 focus:bg-synthwave-bg-card/50 focus:ring-2 focus:ring-red-400/20 focus:ring-offset-0 focus:ring-offset-transparent focus:shadow-none min-h-[120px] resize-vertical [-webkit-appearance:none] [appearance:none]",
+
+  // Select dropdown - matches standard input styling but for select elements
+  select: "w-full px-4 py-3 bg-synthwave-bg-card/30 backdrop-blur-sm border border-synthwave-neon-pink/20 rounded-xl text-synthwave-text-primary placeholder-synthwave-text-muted font-rajdhani transition-all duration-300 outline-none focus:outline-none focus:border-synthwave-neon-pink focus:bg-synthwave-bg-card/50 focus:ring-2 focus:ring-synthwave-neon-pink/20 focus:ring-offset-0 focus:ring-offset-transparent focus:shadow-none min-h-[48px] [-webkit-appearance:none] [appearance:none] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:border-synthwave-neon-pink/40 hover:bg-synthwave-bg-card/40"
 };
 
 export const containerPatterns = {
@@ -385,20 +402,41 @@ export const injectAutofillStyles = () => {
 };
 
 // Usage Examples:
+// Buttons:
 // <button className={buttonPatterns.primary}>Create New</button>
+//
+// Form Patterns:
+// <label className={formPatterns.label}>Email</label>
+// <p className={formPatterns.errorText}>This field is required</p>
+// <p className={formPatterns.helperText}>Helper text description</p>
+// <h3 className={formPatterns.subsectionHeader}><span>Section Title</span></h3>
+//
+// Inputs:
 // <input className={inputPatterns.standard} placeholder="Enter text..." />
 // <textarea className={inputPatterns.textarea} placeholder="Enter message..." />
+// <select className={inputPatterns.select}><option>Choice 1</option></select>
+//
+// Containers:
 // <div className={containerPatterns.cardMedium}>...</div>
 // <div className={toastPatterns.success}>Success message</div>
+//
+// Typography:
 // <h1 className={typographyPatterns.pageTitle}>Page Title</h1>
+//
+// Avatars:
 // <span className={avatarPatterns.small}>U</span>
 // <span className={avatarPatterns.large}>C</span>
 // <div className={avatarPatterns.userSmall}>U</div>
 // <div className={avatarPatterns.aiSmall}>A</div>
 // <div className={avatarPatterns.coachLarge}>C</div>
 // <div className={avatarPatterns.skeletonSmall}></div>
+//
+// Scrollbars:
 // <div className={`overflow-y-auto ${scrollbarPatterns.cyan}`}>Scrollable content</div>
 // <div className={`overflow-y-auto ${scrollbarPatterns.pink}`}>Chat content</div>
+//
+// Tooltips:
 // <Tooltip id="my-tooltip" {...tooltipPatterns.standard} />
 // <Tooltip id="left-tooltip" {...tooltipPatterns.standardLeft} />
+//
 // Call injectScrollbarStyles() in useEffect to enable scrollbar styling

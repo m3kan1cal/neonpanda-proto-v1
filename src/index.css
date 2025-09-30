@@ -143,6 +143,10 @@ input:autofill {
   border-width: 2px !important;
   border-radius: 0.5rem !important;
   padding: 0.75rem 1rem !important;
+
+  /* Ensure inputs remain clickable after autofill */
+  pointer-events: auto !important;
+  cursor: text !important;
 }
 
 /* Hover state for autofilled inputs */

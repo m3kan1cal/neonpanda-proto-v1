@@ -1,6 +1,6 @@
 import React, { forwardRef, useState } from 'react';
 import AuthErrorMessage from './AuthErrorMessage';
-import { inputPatterns } from '../../utils/uiPatterns';
+import { inputPatterns, formPatterns } from '../../utils/uiPatterns';
 
 const AuthInput = forwardRef(({
   label,
@@ -46,7 +46,7 @@ const AuthInput = forwardRef(({
       {label && (
         <label
           htmlFor={name}
-          className="block font-rajdhani text-lg text-synthwave-text-secondary mb-2 font-medium uppercase tracking-wide"
+          className={formPatterns.label}
         >
           {label} {required && <span className="text-synthwave-neon-pink">*</span>}
         </label>
@@ -67,17 +67,24 @@ const AuthInput = forwardRef(({
             ${isPasswordField ? 'pr-12' : ''}
             text-base
             hover:border-synthwave-neon-pink/40 hover:bg-synthwave-bg-card/40
-            disabled:opacity-50 disabled:cursor-not-allowed
+            disabled:cursor-not-allowed disabled:text-synthwave-text-muted disabled:border-synthwave-neon-pink/20
             focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0
             ${className}
           `}
           style={{
             boxShadow: 'none',
-            outline: 'none'
+            outline: 'none',
+            pointerEvents: 'auto'
           }}
           onFocus={(e) => {
             e.target.style.outline = 'none';
             e.target.style.boxShadow = 'none';
+          }}
+          onMouseDown={(e) => {
+            // Workaround for autofill overlay: Force focus before click completes
+            setTimeout(() => {
+              e.target.focus();
+            }, 0);
           }}
           {...props}
         />

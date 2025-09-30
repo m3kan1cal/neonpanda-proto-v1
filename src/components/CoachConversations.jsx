@@ -277,9 +277,10 @@ function CoachConversations() {
     return displayName.charAt(0).toUpperCase();
   }, [userAttributes]);
 
-  // Get user email for Gravatar
+  // Get user email and display name from profile (preferred) or Cognito (fallback)
+  const { userProfile } = useAuth();
   const userEmail = userAttributes?.email;
-  const userDisplayName = userAttributes ? getUserDisplayName({ attributes: userAttributes }) : 'User';
+  const userDisplayName = userProfile?.displayName || (userAttributes ? getUserDisplayName({ attributes: userAttributes }) : 'User');
 
   // UI-specific state
   const [inputMessage, setInputMessage] = useState("");

@@ -38,6 +38,8 @@ export function createCoreApi(
   createMemoryLambda: lambda.IFunction,
   deleteMemoryLambda: lambda.IFunction,
   deleteCoachConversationLambda: lambda.IFunction,
+  getUserProfileLambda: lambda.IFunction,
+  updateUserProfileLambda: lambda.IFunction,
   userPoolAuthorizer: HttpUserPoolAuthorizer
 ) {
   // Create branch-aware API name using utility
@@ -267,6 +269,17 @@ export function createCoreApi(
     deleteCoachConversationLambda
   );
 
+  // Create Lambda integrations for user profile functions
+  const getUserProfileIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
+    'GetUserProfileIntegration',
+    getUserProfileLambda
+  );
+
+  const updateUserProfileIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
+    'UpdateUserProfileIntegration',
+    updateUserProfileLambda
+  );
+
   // Create integrations object for route configuration
   const integrations = {
     contactForm: contactFormIntegration,
@@ -298,7 +311,9 @@ export function createCoreApi(
     getMemories: getMemoriesIntegration,
     createMemory: createMemoryIntegration,
     deleteMemory: deleteMemoryIntegration,
-    deleteCoachConversation: deleteCoachConversationIntegration
+    deleteCoachConversation: deleteCoachConversationIntegration,
+    getUserProfile: getUserProfileIntegration,
+    updateUserProfile: updateUserProfileIntegration
   };
 
   // *******************************************************
@@ -517,6 +532,21 @@ export function createCoreApi(
     path: '/users/{userId}/memories/{memoryId}',
     methods: [apigatewayv2.HttpMethod.DELETE],
     integration: integrations.deleteMemory,
+    authorizer: userPoolAuthorizer
+  });
+
+  // User Profile Routes
+  httpApi.addRoutes({
+    path: '/users/{userId}/profile',
+    methods: [apigatewayv2.HttpMethod.GET],
+    integration: integrations.getUserProfile,
+    authorizer: userPoolAuthorizer
+  });
+
+  httpApi.addRoutes({
+    path: '/users/{userId}/profile',
+    methods: [apigatewayv2.HttpMethod.PUT],
+    integration: integrations.updateUserProfile,
     authorizer: userPoolAuthorizer
   });
 

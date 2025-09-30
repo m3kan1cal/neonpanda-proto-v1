@@ -1,21 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { containerPatterns, layoutPatterns, typographyPatterns, buttonPatterns } from '../utils/uiPatterns';
+import { updatePassword } from 'aws-amplify/auth';
+import { containerPatterns, layoutPatterns, typographyPatterns, buttonPatterns, inputPatterns, formPatterns } from '../utils/uiPatterns';
 import { useAuthorizeUser } from '../auth/hooks/useAuthorizeUser';
 import { getUserDisplayName } from '../auth/utils/authHelpers';
 import { useAuth } from '../auth/contexts/AuthContext';
 import { AccessDenied, LoadingScreen } from './shared/AccessDenied';
 import UserAvatar from './shared/UserAvatar';
+import FormInput from './shared/FormInput';
 import AuthInput from '../auth/components/AuthInput';
 import AuthButton from '../auth/components/AuthButton';
 import { useToast } from '../contexts/ToastContext';
 import Footer from './shared/Footer';
+import { getUserProfile, updateUserProfile } from '../utils/apis/userProfileApi';
 import {
   ProfileIcon,
   SecurityIcon,
   PreferencesIcon,
   DangerIcon,
-  ChevronDownIcon
+  ChevronDownIcon,
+  InfoIcon
 } from './themes/SynthwaveComponents';
 
 // Collapsible section component
@@ -89,6 +93,11 @@ function Settings() {
   const [originalTimezone, setOriginalTimezone] = useState('America/Los_Angeles');
   const [isSavingPreferences, setIsSavingPreferences] = useState(false);
 
+  // Auto-scroll to top on page load
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   // Redirect if no userId
   useEffect(() => {
     if (!userId) {
@@ -96,26 +105,49 @@ function Settings() {
     }
   }, [userId, navigate]);
 
-  // Load user profile data
+  // Load user profile data from DynamoDB
   useEffect(() => {
-    if (userAttributes) {
-      // TODO: Load from DynamoDB user profile
-      // For now, populate from Cognito attributes
-      const newProfileData = {
-        email: userAttributes.email || '',
-        firstName: userAttributes.given_name || '',
-        lastName: userAttributes.family_name || '',
-        displayName: getUserDisplayName({ attributes: userAttributes }),
-        nickname: userAttributes.nickname || userAttributes.given_name || '',
-        username: userAttributes.preferred_username || ''
-      };
-      setProfileData(newProfileData);
+    const loadProfile = async () => {
+      if (userId && userAttributes) {
+        try {
+          const response = await getUserProfile(userId);
+          const profile = response.profile;
 
-      // Set original timezone (from DB in the future)
-      setOriginalTimezone('America/Los_Angeles');
-      setTimezone('America/Los_Angeles');
-    }
-  }, [userAttributes]);
+          // Populate form with DynamoDB data
+          const newProfileData = {
+            email: profile.email || userAttributes.email || '',
+            firstName: profile.firstName || userAttributes.given_name || '',
+            lastName: profile.lastName || userAttributes.family_name || '',
+            displayName: profile.displayName || getUserDisplayName({ attributes: userAttributes }),
+            nickname: profile.nickname || userAttributes.nickname || userAttributes.given_name || '',
+            username: profile.username || userAttributes.preferred_username || ''
+          };
+          setProfileData(newProfileData);
+
+          // Set timezone from profile preferences
+          const userTimezone = profile.preferences?.timezone || 'America/Los_Angeles';
+          setOriginalTimezone(userTimezone);
+          setTimezone(userTimezone);
+        } catch (error) {
+          console.error('Error loading user profile:', error);
+          // Fallback to Cognito attributes if DynamoDB fetch fails
+          const newProfileData = {
+            email: userAttributes.email || '',
+            firstName: userAttributes.given_name || '',
+            lastName: userAttributes.family_name || '',
+            displayName: getUserDisplayName({ attributes: userAttributes }),
+            nickname: userAttributes.nickname || userAttributes.given_name || '',
+            username: userAttributes.preferred_username || ''
+          };
+          setProfileData(newProfileData);
+          setOriginalTimezone('America/Los_Angeles');
+          setTimezone('America/Los_Angeles');
+        }
+      }
+    };
+
+    loadProfile();
+  }, [userId, userAttributes]);
 
   // Handle profile field changes
   const handleProfileChange = (e) => {
@@ -130,11 +162,20 @@ function Settings() {
   const handleSaveProfile = async () => {
     setIsSavingProfile(true);
     try {
-      // TODO: Call update-user-profile API
+      // Prepare updates (exclude email and userId as they're immutable)
+      const updates = {
+        firstName: profileData.firstName,
+        lastName: profileData.lastName,
+        displayName: profileData.displayName,
+        nickname: profileData.nickname,
+        // username is immutable (GSI key), so we don't send it
+      };
+
+      await updateUserProfile(userId, updates);
       showSuccess('Profile updated successfully');
     } catch (error) {
       console.error('Error updating profile:', error);
-      showError('Failed to update profile');
+      showError(error.message || 'Failed to update profile');
     } finally {
       setIsSavingProfile(false);
     }
@@ -194,12 +235,32 @@ function Settings() {
 
     setIsSavingPassword(true);
     try {
-      // TODO: Call Amplify updatePassword
+      // Call Amplify updatePassword
+      await updatePassword({
+        oldPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword
+      });
+
       showSuccess('Password changed successfully');
       setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
     } catch (error) {
       console.error('Error changing password:', error);
-      showError('Failed to change password');
+
+      // Handle specific Amplify error messages
+      let errorMessage = 'Failed to change password';
+      if (error.name === 'NotAuthorizedException') {
+        errorMessage = 'Current password is incorrect';
+        setPasswordErrors(prev => ({ ...prev, currentPassword: errorMessage }));
+      } else if (error.name === 'InvalidPasswordException') {
+        errorMessage = 'New password does not meet requirements';
+        setPasswordErrors(prev => ({ ...prev, newPassword: errorMessage }));
+      } else if (error.name === 'LimitExceededException') {
+        errorMessage = 'Too many attempts. Please try again later.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      showError(errorMessage);
     } finally {
       setIsSavingPassword(false);
     }
@@ -215,12 +276,18 @@ function Settings() {
   const handleSaveTimezone = async () => {
     setIsSavingPreferences(true);
     try {
-      // TODO: Call update-user-profile API with preferences
+      // Update preferences in DynamoDB
+      await updateUserProfile(userId, {
+        preferences: {
+          timezone: timezone
+        }
+      });
+
       setOriginalTimezone(timezone);
       showSuccess('Timezone updated successfully');
     } catch (error) {
       console.error('Error updating timezone:', error);
-      showError('Failed to update timezone');
+      showError(error.message || 'Failed to update timezone');
     } finally {
       setIsSavingPreferences(false);
     }
@@ -238,9 +305,82 @@ function Settings() {
     window.location.href = `mailto:support@neonpanda.ai?subject=${subject}&body=${body}`;
   };
 
-  // Show loading state
+  // Show skeleton loading state
   if (isValidatingUserId) {
-    return <LoadingScreen />;
+    return (
+      <div className={`${layoutPatterns.pageContainer} min-h-screen`}>
+        <div className={`${layoutPatterns.contentWrapper} min-h-[calc(100vh-5rem)] flex flex-col pb-8`}>
+          {/* Header Skeleton */}
+          <div className="mb-12 text-center">
+            <div className="h-12 w-64 bg-synthwave-text-muted/10 rounded animate-pulse mx-auto mb-4"></div>
+            <div className="h-4 w-96 bg-synthwave-text-muted/10 rounded animate-pulse mx-auto mb-2"></div>
+            <div className="h-4 w-80 bg-synthwave-text-muted/10 rounded animate-pulse mx-auto"></div>
+          </div>
+
+          {/* Main Content Skeleton */}
+          <div className="flex-1">
+            <div className={`${containerPatterns.mainContent} h-full overflow-hidden`}>
+              <div className="p-6 h-full overflow-y-auto custom-scrollbar space-y-6">
+
+                {/* Profile Section Skeleton */}
+                <div className={containerPatterns.collapsibleSection}>
+                  <div className={containerPatterns.collapsibleHeader}>
+                    <div className="flex items-center space-x-3">
+                      <div className="w-5 h-5 bg-synthwave-text-muted/10 rounded animate-pulse"></div>
+                      <div className="h-4 w-40 bg-synthwave-text-muted/10 rounded animate-pulse"></div>
+                    </div>
+                  </div>
+                  <div className={containerPatterns.collapsibleContent}>
+                    {/* Avatar Skeleton */}
+                    <div className="flex items-center space-x-4 mb-6">
+                      <div className="w-16 h-16 bg-synthwave-text-muted/10 rounded-full animate-pulse"></div>
+                      <div className="flex-1">
+                        <div className="h-4 w-32 bg-synthwave-text-muted/10 rounded animate-pulse mb-2"></div>
+                        <div className="h-3 w-64 bg-synthwave-text-muted/10 rounded animate-pulse"></div>
+                      </div>
+                    </div>
+                    {/* Form Fields Skeleton */}
+                    {[1, 2, 3, 4, 5, 6].map((i) => (
+                      <div key={i} className="mb-6">
+                        <div className="h-4 w-24 bg-synthwave-text-muted/10 rounded animate-pulse mb-2"></div>
+                        <div className="h-12 w-full bg-synthwave-text-muted/10 rounded-xl animate-pulse"></div>
+                        {/* Helper text skeleton for first two fields (Email and Username) */}
+                        {(i === 1 || i === 2) && (
+                          <div className="flex items-start space-x-2 mt-2">
+                            <div className="w-4 h-4 bg-synthwave-text-muted/10 rounded-full animate-pulse mt-0.5 flex-shrink-0"></div>
+                            <div className="h-3 w-48 bg-synthwave-text-muted/10 rounded animate-pulse"></div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                    {/* Buttons Skeleton */}
+                    <div className="flex space-x-4 pt-4">
+                      <div className="h-12 flex-1 bg-synthwave-text-muted/10 rounded-lg animate-pulse"></div>
+                      <div className="h-12 flex-1 bg-synthwave-text-muted/10 rounded-lg animate-pulse"></div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Other Sections Skeleton */}
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className={containerPatterns.collapsibleSection}>
+                    <div className={containerPatterns.collapsibleHeader}>
+                      <div className="flex items-center space-x-3">
+                        <div className="w-5 h-5 bg-synthwave-text-muted/10 rounded animate-pulse"></div>
+                        <div className="h-4 w-32 bg-synthwave-text-muted/10 rounded animate-pulse"></div>
+                      </div>
+                      <div className="w-5 h-5 bg-synthwave-text-muted/10 rounded animate-pulse"></div>
+                    </div>
+                  </div>
+                ))}
+
+              </div>
+            </div>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
   }
 
   // Handle authorization errors
@@ -261,7 +401,7 @@ function Settings() {
         {/* Header */}
         <div className="mb-12 text-center">
           <h1 className={typographyPatterns.pageTitle}>
-            Settings
+            Your Settings
           </h1>
           <p className={`${typographyPatterns.description} max-w-3xl mx-auto`}>
             Manage your account settings, profile information, security preferences, and timezone settings.
@@ -289,35 +429,47 @@ function Settings() {
                       size={64}
                     />
                     <div>
-                      <p className="font-rajdhani font-semibold text-white mb-1">Profile Picture</p>
-                      <p className="font-rajdhani text-sm text-synthwave-text-secondary mb-2">
-                        Powered by <a href="https://gravatar.com" target="_blank" rel="noopener noreferrer" className="text-synthwave-neon-cyan hover:text-synthwave-neon-pink transition-colors">Gravatar</a>
-                      </p>
-                      <p className="font-rajdhani text-xs text-synthwave-text-muted">
-                        To change your avatar, create a free Gravatar account using your email address.
+                      <p className={formPatterns.label}>Profile Picture</p>
+                      <p className={formPatterns.helperText}>
+                        Powered by <a href="https://gravatar.com" target="_blank" rel="noopener noreferrer" className="text-synthwave-neon-cyan hover:text-synthwave-neon-pink transition-colors">Gravatar</a>. To change your avatar, create a free Gravatar account using your email address.
                       </p>
                     </div>
                   </div>
 
                   {/* Profile Form - Always visible */}
-                  <form onSubmit={(e) => { e.preventDefault(); handleSaveProfile(); }} className="space-y-0">
-                    <div className="mb-6">
-                      <label className="block font-rajdhani text-lg text-synthwave-text-secondary mb-2 font-medium uppercase tracking-wide">
-                        Email
-                      </label>
-                      <input
-                        name="email"
-                        type="email"
-                        value={profileData.email}
-                        disabled
-                        className="w-full px-4 py-3 bg-synthwave-bg-card/30 backdrop-blur-sm border border-synthwave-neon-pink/20 rounded-xl text-synthwave-text-primary font-rajdhani transition-all duration-300 outline-none min-h-[48px] opacity-50 cursor-not-allowed"
-                      />
-                      <p className="font-rajdhani text-xs text-synthwave-text-muted mt-2">
-                        Email cannot be changed
+                  <form onSubmit={(e) => { e.preventDefault(); handleSaveProfile(); }}>
+                    <FormInput
+                      label="Email"
+                      name="email"
+                      type="email"
+                      value={profileData.email}
+                      disabled
+                    />
+                    <div className="flex items-start space-x-2 -mt-4 mb-6">
+                      <div className="text-synthwave-neon-cyan mt-0.5 flex-shrink-0">
+                        <InfoIcon />
+                      </div>
+                      <p className={`${formPatterns.helperText} text-synthwave-neon-cyan`}>
+                        Email cannot be changed.
                       </p>
                     </div>
 
-                    <AuthInput
+                    <FormInput
+                      label="Username"
+                      name="username"
+                      type="text"
+                      value={profileData.username}
+                      disabled
+                    />
+                    <div className="flex items-start space-x-2 -mt-4 mb-6">
+                      <div className="text-synthwave-neon-cyan mt-0.5 flex-shrink-0">
+                        <InfoIcon />
+                      </div>
+                      <p className={`${formPatterns.helperText} text-synthwave-neon-cyan`}>
+                        Username cannot be changed. Update your Display Name below to change how you appear to others on the platform.
+                      </p>
+                    </div>
+                    <FormInput
                       label="First Name"
                       name="firstName"
                       type="text"
@@ -325,7 +477,7 @@ function Settings() {
                       onChange={handleProfileChange}
                       disabled={isSavingProfile}
                     />
-                    <AuthInput
+                    <FormInput
                       label="Last Name"
                       name="lastName"
                       type="text"
@@ -333,7 +485,7 @@ function Settings() {
                       onChange={handleProfileChange}
                       disabled={isSavingProfile}
                     />
-                    <AuthInput
+                    <FormInput
                       label="Display Name"
                       name="displayName"
                       type="text"
@@ -341,19 +493,11 @@ function Settings() {
                       onChange={handleProfileChange}
                       disabled={isSavingProfile}
                     />
-                    <AuthInput
+                    <FormInput
                       label="Nickname"
                       name="nickname"
                       type="text"
                       value={profileData.nickname}
-                      onChange={handleProfileChange}
-                      disabled={isSavingProfile}
-                    />
-                    <AuthInput
-                      label="Username"
-                      name="username"
-                      type="text"
-                      value={profileData.username}
                       onChange={handleProfileChange}
                       disabled={isSavingProfile}
                     />
@@ -364,6 +508,7 @@ function Settings() {
                         variant="primary"
                         loading={isSavingProfile}
                         disabled={isSavingProfile}
+                        className="flex-1"
                       >
                         Save Changes
                       </AuthButton>
@@ -372,6 +517,7 @@ function Settings() {
                         variant="secondary"
                         onClick={handleCancelProfile}
                         disabled={isSavingProfile}
+                        className="flex-1"
                       >
                         Cancel
                       </AuthButton>
@@ -386,7 +532,7 @@ function Settings() {
                 icon={<SecurityIcon />}
                 defaultOpen={false}
               >
-                <form onSubmit={handleSavePassword} className="space-y-0">
+                <form onSubmit={handleSavePassword}>
                   <AuthInput
                     label="Current Password"
                     name="currentPassword"
@@ -419,8 +565,8 @@ function Settings() {
                   />
 
                   {/* Password Requirements */}
-                  <div className="text-xs font-rajdhani text-synthwave-neon-cyan space-y-1 mb-4 mt-2">
-                    <p className="font-medium text-synthwave-neon-cyan">Password must contain:</p>
+                  <div className="text-sm font-rajdhani text-synthwave-neon-cyan space-y-1 mb-4 mt-6">
+                    <p className="font-medium">Password must contain:</p>
                     <ul className="list-disc list-inside space-y-1 ml-2">
                       <li>At least 8 characters</li>
                       <li>One uppercase letter</li>
@@ -436,6 +582,7 @@ function Settings() {
                       variant="primary"
                       loading={isSavingPassword}
                       disabled={isSavingPassword}
+                      className="flex-1"
                     >
                       Update Password
                     </AuthButton>
@@ -444,6 +591,7 @@ function Settings() {
                       variant="secondary"
                       onClick={handleCancelPassword}
                       disabled={isSavingPassword}
+                      className="flex-1"
                     >
                       Cancel
                     </AuthButton>
@@ -457,15 +605,16 @@ function Settings() {
                 icon={<PreferencesIcon />}
                 defaultOpen={false}
               >
-                <div className="space-y-0">
+                <div>
                   <div className="mb-6">
-                    <label className="block font-rajdhani text-lg text-synthwave-text-secondary mb-2 font-medium uppercase tracking-wide">
+                    <label htmlFor="timezone" className={formPatterns.label}>
                       Timezone
                     </label>
                     <select
+                      id="timezone"
                       value={timezone}
                       onChange={(e) => setTimezone(e.target.value)}
-                      className="w-full px-4 py-3 bg-synthwave-bg-card/30 backdrop-blur-sm border border-synthwave-neon-pink/20 rounded-xl text-synthwave-text-primary font-rajdhani transition-all duration-300 outline-none focus:outline-none focus:border-synthwave-neon-pink focus:bg-synthwave-bg-card/50 focus:ring-2 focus:ring-synthwave-neon-pink/20 focus:ring-offset-0 focus:ring-offset-transparent focus:shadow-none min-h-[48px] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                      className={inputPatterns.select}
                       disabled={isSavingPreferences}
                     >
                       <optgroup label="US Time Zones">
@@ -484,9 +633,14 @@ function Settings() {
                         <option value="America/Sao_Paulo">São Paulo (BRT)</option>
                       </optgroup>
                     </select>
-                      <p className="font-rajdhani text-sm text-synthwave-text-secondary mt-2">
+                    <div className="flex items-start space-x-2 mt-2">
+                      <div className="text-synthwave-neon-cyan mt-0.5 flex-shrink-0">
+                        <InfoIcon />
+                      </div>
+                      <p className={`${formPatterns.helperText} text-synthwave-neon-cyan`}>
                         This affects how dates and times are displayed throughout the application.
                       </p>
+                    </div>
                   </div>
 
                   <div className="flex space-x-4 pt-4">
@@ -495,6 +649,7 @@ function Settings() {
                       onClick={handleSaveTimezone}
                       loading={isSavingPreferences}
                       disabled={isSavingPreferences}
+                      className="flex-1"
                     >
                       Save Preferences
                     </AuthButton>
@@ -502,6 +657,7 @@ function Settings() {
                       variant="secondary"
                       onClick={handleCancelTimezone}
                       disabled={isSavingPreferences}
+                      className="flex-1"
                     >
                       Cancel
                     </AuthButton>
@@ -531,9 +687,14 @@ function Settings() {
                     >
                       Delete Account
                     </button>
-                    <p className="font-rajdhani text-xs text-synthwave-text-muted mt-3">
-                      This will open your email client to contact our support team.
-                    </p>
+                    <div className="flex items-start space-x-2 mt-3">
+                      <div className="text-synthwave-neon-cyan mt-0.5 flex-shrink-0">
+                        <InfoIcon />
+                      </div>
+                      <p className="font-rajdhani text-sm text-synthwave-text-secondary">
+                        This will open your email client to contact our support team.
+                      </p>
+                    </div>
                   </div>
                 </div>
               </CollapsibleSection>

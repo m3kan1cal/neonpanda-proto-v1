@@ -26,7 +26,8 @@ export const storeMemoryInPinecone = async (memory: UserMemory): Promise<{ succe
       memory_id: memory.memoryId,
       memory_type: memory.memoryType,
       importance: memory.metadata.importance,
-      coach_id: memory.coachId,
+      // Only include coach_id if it has a value (Pinecone rejects null/undefined)
+      ...(memory.coachId && { coach_id: memory.coachId }),
       created_at: memory.metadata.createdAt.toISOString(),
       usage_count: memory.metadata.usageCount,
       tags: memory.metadata.tags || [],

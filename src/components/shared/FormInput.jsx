@@ -1,5 +1,5 @@
-import React, { forwardRef, useEffect } from 'react';
-import { inputPatterns, injectAutofillStyles } from '../../utils/uiPatterns';
+import React, { forwardRef } from 'react';
+import { inputPatterns, formPatterns } from '../../utils/uiPatterns';
 
 const FormInput = forwardRef(({
   label,
@@ -18,54 +18,62 @@ const FormInput = forwardRef(({
   const isTextarea = type === 'textarea';
   const InputComponent = isTextarea ? 'textarea' : 'input';
 
-  const getInputClassName = () => {
-    const basePattern = error
-      ? (isTextarea ? inputPatterns.textareaError : inputPatterns.error)
-      : (isTextarea ? inputPatterns.textarea : inputPatterns.standard);
-
-    return `${basePattern} focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 hover:border-synthwave-neon-pink/40 hover:bg-synthwave-bg-card/40 ${className}`;
+  const getInputPattern = () => {
+    if (error) {
+      return isTextarea ? inputPatterns.textareaError : inputPatterns.error;
+    }
+    return isTextarea ? inputPatterns.textarea : inputPatterns.standard;
   };
-
-  const handleFocus = (e) => {
-    e.target.style.outline = 'none';
-    e.target.style.boxShadow = 'none';
-  };
-
-  // Inject autofill override styles on component mount
-  useEffect(() => {
-    injectAutofillStyles();
-  }, []);
 
   return (
-    <div className={error ? 'input-error' : ''}>
+    <div className="mb-6">
       {label && (
         <label
           htmlFor={name}
-          className="block font-rajdhani text-lg text-synthwave-text-primary mb-2 font-medium uppercase tracking-wide"
+          className={formPatterns.label}
         >
           {label} {required && <span className="text-synthwave-neon-pink">*</span>}
         </label>
       )}
-      <InputComponent
-        ref={ref}
-        type={isTextarea ? undefined : type}
-        id={name}
-        name={name}
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        disabled={disabled}
-        rows={isTextarea ? rows : undefined}
-        className={getInputClassName()}
-        style={{
-          boxShadow: 'none',
-          outline: 'none'
-        }}
-        onFocus={handleFocus}
-        {...props}
-      />
+      <div className="relative">
+        <InputComponent
+          ref={ref}
+          type={isTextarea ? undefined : type}
+          id={name}
+          name={name}
+          value={value}
+          onChange={onChange}
+          placeholder={placeholder}
+          disabled={disabled}
+          rows={isTextarea ? rows : undefined}
+          className={`
+            ${getInputPattern()}
+            text-base
+            hover:border-synthwave-neon-pink/40 hover:bg-synthwave-bg-card/40
+            disabled:cursor-not-allowed disabled:text-synthwave-text-muted disabled:border-synthwave-neon-pink/20
+            focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0
+            ${className}
+          `}
+          style={{
+            boxShadow: 'none',
+            outline: 'none',
+            pointerEvents: 'auto'
+          }}
+          onFocus={(e) => {
+            e.target.style.outline = 'none';
+            e.target.style.boxShadow = 'none';
+          }}
+          onMouseDown={(e) => {
+            // Workaround for autofill overlay: Force focus before click completes
+            setTimeout(() => {
+              e.target.focus();
+            }, 0);
+          }}
+          {...props}
+        />
+      </div>
       {error && (
-        <p className="mt-2 text-red-400 font-rajdhani text-sm">{error}</p>
+        <p className={formPatterns.errorText}>{error}</p>
       )}
     </div>
   );
