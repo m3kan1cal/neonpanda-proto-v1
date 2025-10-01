@@ -180,17 +180,65 @@ export async function detectAndProcessConversationSummary(
  * @param userMessage - The user's message to analyze
  * @param messageContext - Optional context from recent conversation
  * @param conversationLength - Number of messages in conversation for complexity assessment
+ * @param userTimezone - Optional user timezone for temporal context (e.g., 'America/Los_Angeles')
+ * @param criticalTrainingDirective - Optional critical training directive for context
  * @returns Promise<SmartRequestRouter> with all processing decisions
  */
 export async function analyzeRequestCapabilities(
   userMessage: string,
   messageContext?: string,
-  conversationLength: number = 0
+  conversationLength: number = 0,
+  userTimezone?: string,
+  criticalTrainingDirective?: { content: string; enabled: boolean }
 ): Promise<SmartRequestRouter> {
   const startTime = Date.now();
 
-  const systemPrompt = `You are an AI assistant that analyzes user messages in fitness coaching conversations to determine ALL processing capabilities needed in a single comprehensive analysis.
+  // Build temporal context section if timezone is provided
+  const effectiveTimezone = userTimezone || 'America/Los_Angeles';
+  const currentDateTime = new Date();
+  const dateOptions: Intl.DateTimeFormatOptions = {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    timeZone: effectiveTimezone,
+  };
+  const timeOptions: Intl.DateTimeFormatOptions = {
+    hour: "numeric",
+    minute: "2-digit",
+    timeZone: effectiveTimezone,
+    timeZoneName: "short",
+  };
+  const formattedDate = currentDateTime.toLocaleDateString("en-US", dateOptions);
+  const formattedTime = currentDateTime.toLocaleTimeString("en-US", timeOptions);
 
+  const temporalContextSection = userTimezone ? `
+
+📅 TEMPORAL CONTEXT:
+**Current Date**: ${formattedDate}
+**Current Time**: ${formattedTime}
+**User Timezone**: ${effectiveTimezone}
+
+CRITICAL: Use this temporal context when analyzing workout detection and temporal references:
+- "this morning" means earlier TODAY (${formattedDate}), not yesterday
+- "yesterday" means the calendar day before today
+- "earlier" or "earlier today" means earlier on ${formattedDate}
+- Consider current time (${formattedTime}) when interpreting time-based references
+
+` : '';
+
+  // Build directive context section if enabled
+  const directiveContextSection = criticalTrainingDirective?.enabled && criticalTrainingDirective?.content ? `
+
+🚨 CRITICAL TRAINING DIRECTIVE:
+${criticalTrainingDirective.content}
+
+IMPORTANT: This directive provides crucial context about the user's training priorities and constraints. Consider it when analyzing their message intent, especially for workout logging and goal-related discussions.
+
+` : '';
+
+  const systemPrompt = `You are an AI assistant that analyzes user messages in fitness coaching conversations to determine ALL processing capabilities needed in a single comprehensive analysis.
+${temporalContextSection}${directiveContextSection}
 TASK: Analyze the user's message and determine:
 1. User intent and whether contextual updates should be shown
 2. Workout logging detection and classification
@@ -429,6 +477,9 @@ Provide comprehensive analysis following the framework above.`;
       messageLength: userMessage.length,
       hasContext: !!messageContext,
       conversationLength,
+      hasTimezone: !!userTimezone,
+      timezone: effectiveTimezone,
+      hasCriticalDirective: criticalTrainingDirective?.enabled || false,
     });
 
     const response = await callBedrockApi(

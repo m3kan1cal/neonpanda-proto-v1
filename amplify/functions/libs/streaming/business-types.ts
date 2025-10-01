@@ -19,6 +19,7 @@ export interface ConversationData {
   existingConversation: any;
   coachConfig: any;
   context: any;
+  userProfile?: any; // User profile for timezone and preferences
 }
 
 // Combined business logic parameters

@@ -51,6 +51,9 @@ export async function generateAIResponse(
       });
     }
 
+    // Extract user timezone from profile (fallback to Pacific Time if not set)
+    const userTimezone = userProfile?.attributes?.preferences?.timezone;
+
     // Generate comprehensive system prompt using coach conversation utilities
     const promptOptions = {
       includeConversationGuidelines: true,
@@ -61,6 +64,7 @@ export async function generateAIResponse(
       workoutContext: context.recentWorkouts, // Add recent workout summaries for context
       userMemories: memoryResult.memories, // Add memories for personalization
       criticalTrainingDirective: userProfile?.attributes?.criticalTrainingDirective, // Add critical training directive if set
+      userTimezone, // Pass user's timezone for temporal context
     };
 
     const { systemPrompt, metadata } = generateSystemPrompt(
@@ -214,6 +218,9 @@ export async function generateAIResponseStream(
       });
     }
 
+    // Extract user timezone from profile (fallback to Pacific Time if not set)
+    const userTimezone = userProfile?.attributes?.preferences?.timezone;
+
     // Generate comprehensive system prompt using coach conversation utilities
     const promptOptions = {
       includeConversationGuidelines: true,
@@ -224,6 +231,7 @@ export async function generateAIResponseStream(
       workoutContext: context.recentWorkouts, // Add recent workout summaries for context
       userMemories: memoryResult.memories, // Add memories for personalization
       criticalTrainingDirective: userProfile?.attributes?.criticalTrainingDirective, // Add critical training directive if set
+      userTimezone, // Pass user's timezone for temporal context
     };
 
     const { systemPrompt, metadata } = generateSystemPrompt(

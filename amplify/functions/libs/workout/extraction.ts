@@ -267,7 +267,8 @@ export const validateWorkoutStructure = (workoutData: any): {
 export const buildWorkoutExtractionPrompt = (
   userMessage: string,
   coachConfig: CoachConfig,
-  criticalTrainingDirective?: { content: string; enabled: boolean }
+  criticalTrainingDirective?: { content: string; enabled: boolean },
+  userTimezone?: string
 ): string => {
   const isComplex = isComplexWorkout(userMessage);
 
@@ -284,8 +285,45 @@ This directive takes precedence over all other instructions except safety constr
 `
     : '';
 
+  // Build timezone context section
+  const effectiveTimezone = userTimezone || 'America/Los_Angeles';
+  const currentDateTime = new Date();
+  const dateOptions: Intl.DateTimeFormatOptions = {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    timeZone: effectiveTimezone,
+  };
+  const timeOptions: Intl.DateTimeFormatOptions = {
+    hour: "numeric",
+    minute: "2-digit",
+    timeZone: effectiveTimezone,
+    timeZoneName: "short",
+  };
+  const formattedDate = currentDateTime.toLocaleDateString("en-US", dateOptions);
+  const formattedTime = currentDateTime.toLocaleTimeString("en-US", timeOptions);
+
+  const timezoneSection = `📅 TEMPORAL CONTEXT:
+**Current Date**: ${formattedDate}
+**Current Time**: ${formattedTime}
+**User Timezone**: ${effectiveTimezone}
+
+CRITICAL TEMPORAL AWARENESS FOR WORKOUT LOGGING:
+- Use THIS date/time as your reference for interpreting relative time phrases
+- "this morning" means earlier TODAY (${formattedDate}), not yesterday
+- "yesterday" means the calendar day before today
+- "earlier today" or "earlier" means sometime earlier on ${formattedDate}
+- Consider the current time (${formattedTime}) when interpreting time references
+- If user says "this morning" and it's now afternoon/evening, the workout was earlier TODAY
+- Only mark a workout as "yesterday" if it was truly completed on the previous calendar day
+
+---
+
+`;
+
   return `
-${directiveSection}${isComplex ? "COMPLEX WORKOUT DETECTED - APPLY AGGRESSIVE OPTIMIZATION!" : ""}
+${directiveSection}${timezoneSection}${isComplex ? "COMPLEX WORKOUT DETECTED - APPLY AGGRESSIVE OPTIMIZATION!" : ""}
 
 CRITICAL JSON FORMATTING RULES:
 - Return ONLY valid JSON. No markdown backticks, no explanations, no text outside JSON
