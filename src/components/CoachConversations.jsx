@@ -986,7 +986,7 @@ function CoachConversations() {
           <div className="w-full max-w-7xl">
             <div className={`${containerPatterns.mainContent} h-full flex flex-col`}>
               {/* Messages Area - with bottom padding for floating input */}
-              <div className="flex-1 overflow-y-auto overflow-hidden p-6 pb-28 space-y-4">
+              <div className="flex-1 overflow-y-auto overflow-hidden p-6 pb-32 space-y-4">
                 {coachConversationAgentState.messages
                   .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp)) // Ensure chronological order
                   .map((message, index) => (
@@ -1051,6 +1051,7 @@ function CoachConversations() {
         tipsContent={chatTips}
         tipsTitle="Chat tips & help"
         textareaRef={textareaRef}
+        conversationSize={coachConversationAgentState.conversationSize}
       />
 
       {/* Command Palette */}

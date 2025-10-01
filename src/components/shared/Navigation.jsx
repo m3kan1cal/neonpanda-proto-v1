@@ -147,6 +147,7 @@ function Navigation({ user, signOut }) {
           {isDropdownOpen && (
             <div className={`absolute right-0 mt-2 w-64 z-[10002] ${containerPatterns.cardMediumOpaque}`}>
               <div className="py-2">
+                {/* Public Pages Section */}
                 <Link
                   to="/"
                   onClick={closeDropdown}
@@ -207,7 +208,8 @@ function Navigation({ user, signOut }) {
                   <ChangelogIconTiny />
                   <span>Changelog</span>
                 </Link>
-                {/* Secure/Authenticated-only navigation links */}
+
+                {/* User Account Section - only show when authenticated */}
                 {isAuthenticated && authenticatedUserId && (
                   <>
                     <div className="border-t border-synthwave-neon-purple/20 my-2"></div>
@@ -238,9 +240,10 @@ function Navigation({ user, signOut }) {
                   </>
                 )}
 
-                {/* Coach-specific navigation links - only show when coach context exists */}
+                {/* Coach-Specific Training Section - only show when coach context exists */}
                 {hasCoachContext && (
                   <>
+                    <div className="border-t border-synthwave-neon-purple/20 my-2"></div>
                     <Link
                       to={`/training-grounds/manage-workouts?userId=${authenticatedUserId}&coachId=${currentCoachId}`}
                       onClick={closeDropdown}
@@ -279,6 +282,8 @@ function Navigation({ user, signOut }) {
                     </Link>
                   </>
                 )}
+
+                {/* Help & Community Section */}
                 <div className="border-t border-synthwave-neon-purple/20 my-2"></div>
                 <Link
                   to="/contact?type=waitlist"
@@ -305,18 +310,21 @@ function Navigation({ user, signOut }) {
                   <span>Collaborate</span>
                 </Link>
 
-                {/* Sign Out Button - only show when authenticated */}
+                {/* Sign Out Section - only show when authenticated */}
                 {isAuthenticated && (
-                  <button
-                    onClick={() => {
-                      signOut();
-                      closeDropdown();
-                    }}
-                    className="flex items-center space-x-3 px-4 py-1.5 font-rajdhani font-medium text-synthwave-text-primary hover:text-synthwave-neon-purple hover:bg-synthwave-neon-purple/10 transition-all duration-150 w-full text-left"
-                  >
-                    <SignOutIconTiny />
-                    <span>Sign Out</span>
-                  </button>
+                  <>
+                    <div className="border-t border-synthwave-neon-purple/20 my-2"></div>
+                    <button
+                      onClick={() => {
+                        signOut();
+                        closeDropdown();
+                      }}
+                      className="flex items-center space-x-3 px-4 py-1.5 font-rajdhani font-medium text-synthwave-text-primary hover:text-synthwave-neon-purple hover:bg-synthwave-neon-purple/10 transition-all duration-150 w-full text-left"
+                    >
+                      <SignOutIconTiny />
+                      <span>Sign Out</span>
+                    </button>
+                  </>
                 )}
               </div>
             </div>

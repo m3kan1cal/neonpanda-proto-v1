@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, memo } from 'react';
 import { flushSync } from "react-dom";
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Tooltip } from 'react-tooltip';
+import { useAuth } from '../auth/contexts/AuthContext';
 import { useAuthorizeUser } from '../auth/hooks/useAuthorizeUser';
 import { getUserDisplayName } from '../auth/utils/authHelpers';
 import { AccessDenied, LoadingScreen } from './shared/AccessDenied';
@@ -578,7 +579,7 @@ function CoachCreator() {
           <div className="w-full max-w-7xl">
             <div className={`${containerPatterns.mainContent} h-full flex flex-col`}>
               {/* Messages Area - with bottom padding for floating input + progress indicator */}
-              <div className="flex-1 overflow-y-auto overflow-hidden p-6 pb-40 space-y-4 custom-scrollbar">
+              <div className="flex-1 overflow-y-auto overflow-hidden p-6 pb-32 space-y-4 custom-scrollbar">
                 {agentState.messages.map((message) => (
                   <MessageItem
                     key={message.id}

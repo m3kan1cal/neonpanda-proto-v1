@@ -314,11 +314,12 @@ export class CoachConversationAgent {
         });
       }
 
-      // Update state with loaded messages
+      // Update state with loaded messages and conversation size
       this._updateState({
         conversation: actualConversation,
         messages: conversationMessages,
         isLoadingItem: false,
+        conversationSize: conversationData.conversationSize || null,
       });
 
       return conversationData;
@@ -518,11 +519,12 @@ export class CoachConversationAgent {
             // Wait a brief moment to ensure the UI has updated with the final content
             await new Promise(resolve => setTimeout(resolve, 50));
 
-            // Reset streaming state and update conversation
+            // Reset streaming state and update conversation with size data
             resetStreamingState(this, {
               conversation: chunk.conversationId ?
                 { ...this.state.conversation, conversationId: chunk.conversationId } :
-                this.state.conversation
+                this.state.conversation,
+              conversationSize: chunk.conversationSize || null
             });
 
             return chunk;
@@ -532,11 +534,12 @@ export class CoachConversationAgent {
             const aiResponseContent = this._extractAiResponse(data);
             streamingMsg.update(aiResponseContent);
 
-            // Reset streaming state and update conversation
+            // Reset streaming state and update conversation with size data
             resetStreamingState(this, {
               conversation: data?.conversationId ?
                 { ...this.state.conversation, conversationId: data.conversationId } :
-                this.state.conversation
+                this.state.conversation,
+              conversationSize: data?.conversationSize || null
             });
 
             return data;
