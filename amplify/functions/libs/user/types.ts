@@ -24,9 +24,15 @@ export interface UserProfile {
   };
   athleteProfile?: {
     summary: string; // AI-generated natural language athlete profile
-    lastUpdated: Date; // When this profile was last generated
+    updatedAt: Date; // When this profile was last generated
     version: number; // For tracking profile evolution
     confidence: number; // AI confidence in the profile accuracy (0-1)
     sources: string[]; // Data sources used (e.g., "workouts", "conversations", "memories")
+  };
+  criticalTrainingDirective?: {
+    content: string; // The directive text (max 500 characters)
+    enabled: boolean; // Whether the directive is active
+    createdAt: Date; // When the directive was first created
+    updatedAt: Date; // When the directive was last updated
   };
 }

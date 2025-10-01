@@ -54,7 +54,8 @@ export const handler = async (event: BuildWorkoutEvent) => {
     // Build extraction prompt using Universal Workout Schema
     const extractionPrompt = buildWorkoutExtractionPrompt(
       workoutContent,
-      event.coachConfig
+      event.coachConfig,
+      event.criticalTrainingDirective
     );
 
     console.info("Generated extraction prompt:", {

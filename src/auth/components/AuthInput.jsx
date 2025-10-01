@@ -66,7 +66,7 @@ const AuthInput = forwardRef(({
             ${error ? inputPatterns.error : inputPatterns.standard}
             ${isPasswordField ? 'pr-12' : ''}
             text-base
-            hover:border-synthwave-neon-pink/40 hover:bg-synthwave-bg-card/40
+            hover:border-synthwave-neon-pink/40 hover:bg-synthwave-bg-primary/50
             disabled:cursor-not-allowed disabled:text-synthwave-text-muted disabled:border-synthwave-neon-pink/20
             focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0
             ${className}

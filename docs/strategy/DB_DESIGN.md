@@ -136,7 +136,7 @@
     },
     "athleteProfile": {
       "summary": "string",        // AI-generated natural language profile of you as an athlete
-      "lastUpdated": "Date",      // When your profile was last generated
+      "updatedAt": "Date",        // When your profile was last generated
       "version": "number",        // For tracking your profile evolution
       "confidence": "number",     // AI confidence in your profile accuracy (0-1)
       "sources": ["array"]        // Data sources used (e.g., "workouts", "conversations", "memories")

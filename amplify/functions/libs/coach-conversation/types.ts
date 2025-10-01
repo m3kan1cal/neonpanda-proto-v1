@@ -166,6 +166,10 @@ export interface PromptGenerationOptions {
   additionalConstraints?: string[];
   workoutContext?: WorkoutContext[];
   userMemories?: UserMemory[];
+  criticalTrainingDirective?: {
+    content: string;
+    enabled: boolean;
+  };
 }
 
 /**

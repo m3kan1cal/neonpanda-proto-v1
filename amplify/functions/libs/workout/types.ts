@@ -5,7 +5,7 @@
  * workout functionality including extraction, detection, and processing.
  */
 
-import { CoachConfig } from '../coach-creator/types';
+import { CoachConfig } from "../coach-creator/types";
 
 /**
  * Discipline classification result from AI analysis
@@ -13,8 +13,18 @@ import { CoachConfig } from '../coach-creator/types';
 export interface DisciplineClassification {
   isQualitative: boolean;
   requiresPreciseMetrics: boolean;
-  environment: 'indoor' | 'outdoor' | 'mixed';
-  primaryFocus: 'strength' | 'endurance' | 'power' | 'speed' | 'agility' | 'flexibility' | 'balance' | 'technique' | 'coordination' | 'mixed';
+  environment: "indoor" | "outdoor" | "mixed";
+  primaryFocus:
+    | "strength"
+    | "endurance"
+    | "power"
+    | "speed"
+    | "agility"
+    | "flexibility"
+    | "balance"
+    | "technique"
+    | "coordination"
+    | "mixed";
   confidence: number;
   reasoning: string;
 }
@@ -104,9 +114,20 @@ export interface DisciplineSpecific {
  * CrossFit-specific workout structure
  */
 export interface CrossFitWorkout {
-  workout_format: 'for_time' | 'amrap' | 'emom' | 'tabata' | 'ladder' | 'chipper' | 'death_by' | 'intervals' | 'strength_then_metcon' | 'hero_workout' | 'custom';
+  workout_format:
+    | "for_time"
+    | "amrap"
+    | "emom"
+    | "tabata"
+    | "ladder"
+    | "chipper"
+    | "death_by"
+    | "intervals"
+    | "strength_then_metcon"
+    | "hero_workout"
+    | "custom";
   time_cap?: number;
-  rx_status: 'rx' | 'scaled' | 'modified';
+  rx_status: "rx" | "scaled" | "modified";
   rounds: CrossFitRound[];
   performance_data?: {
     total_time?: number;
@@ -115,7 +136,7 @@ export interface CrossFitWorkout {
     round_times?: number[];
     score?: {
       value: number | string;
-      type: 'time' | 'rounds' | 'reps' | 'weight' | 'distance' | 'points';
+      type: "time" | "rounds" | "reps" | "weight" | "distance" | "points";
       unit?: string;
     };
   };
@@ -184,7 +205,7 @@ export interface PRAchievement {
   improvement?: number;
   improvement_percentage?: number;
   date_previous?: string;
-  significance: 'minor' | 'moderate' | 'major';
+  significance: "minor" | "moderate" | "major";
   context?: string;
 }
 
@@ -285,6 +306,7 @@ export interface BuildWorkoutEvent {
   slashCommand?: string; // The slash command that was used (e.g., 'log-workout', 'log', 'workout')
   messageTimestamp?: string; // When the user typed the message (for better completion time accuracy)
   userTimezone?: string; // User's timezone preference (e.g., 'America/Los_Angeles')
+  criticalTrainingDirective?: { content: string; enabled: boolean }; // User's critical training directive
 }
 
 /**

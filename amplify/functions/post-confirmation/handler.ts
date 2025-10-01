@@ -72,7 +72,7 @@ export const handler: PostConfirmationTriggerHandler = async (event: PostConfirm
     const userProfile: UserProfile = {
       athleteProfile: {
         confidence: 0,
-        lastUpdated: new Date(),
+        updatedAt: new Date(),
         sources: [],
         summary: '',
         version: 1
@@ -96,7 +96,13 @@ export const handler: PostConfirmationTriggerHandler = async (event: PostConfirm
       },
       subscription: {},
       userId: customUserId,
-      username: preferredUsername
+      username: preferredUsername,
+      criticalTrainingDirective: {
+        content: '',
+        enabled: false,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
     }
 
     await saveUserProfile(userProfile)

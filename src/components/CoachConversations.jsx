@@ -11,6 +11,7 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import { Tooltip } from "react-tooltip";
 import { useAuthorizeUser } from "../auth/hooks/useAuthorizeUser";
 import { getUserDisplayName } from "../auth/utils/authHelpers";
+import { useAuth } from "../auth/contexts/AuthContext";
 import { AccessDenied, LoadingScreen } from "./shared/AccessDenied";
 import { containerPatterns, layoutPatterns, inputPatterns, avatarPatterns, iconButtonPatterns, buttonPatterns } from "../utils/uiPatterns";
 import { FullPageLoader, CenteredErrorState } from "./shared/ErrorStates";

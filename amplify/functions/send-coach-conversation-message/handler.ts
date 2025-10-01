@@ -7,6 +7,7 @@ import {
   getCoachConversation,
   sendCoachConversationMessage,
   getCoachConfig,
+  getUserProfile,
 } from "../../dynamodb/operations";
 import { CoachMessage } from "../libs/coach-conversation/types";
 import { detectAndProcessConversationSummary } from "../libs/coach-conversation/detection";
@@ -90,6 +91,14 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       return createErrorResponse(404, "Coach configuration not found");
     }
 
+    // Load user profile for critical training directive
+    const userProfile = await getUserProfile(userId);
+    console.info('📋 User profile loaded:', {
+      hasProfile: !!userProfile,
+      hasCriticalDirective: !!userProfile?.attributes?.criticalTrainingDirective,
+      directiveEnabled: userProfile?.attributes?.criticalTrainingDirective?.enabled
+    });
+
     // Gather all conversation context (workouts + Pinecone)
     const context = await gatherConversationContext(userId, userResponse);
 
@@ -126,7 +135,8 @@ const baseHandler: AuthenticatedHandler = async (event) => {
           conversationId,
           coachConfig,
           conversationContext,
-          messageTimestamp
+          messageTimestamp,
+          userProfile
         );
       } catch (error) {
         console.error('❌ Error in workout detection, using fallback:', error);
@@ -196,7 +206,8 @@ const baseHandler: AuthenticatedHandler = async (event) => {
         userResponse, messageTimestamp,
         existingConversation, coachConfig,
         context, workoutResult, memoryRetrieval,
-        existingMessages, conversationContext
+        existingMessages, conversationContext,
+        userProfile
       );
     }
 
@@ -213,7 +224,8 @@ const baseHandler: AuthenticatedHandler = async (event) => {
         conversationContext,
         userId,
         coachId,
-        conversationId
+        conversationId,
+        userProfile
       );
     } catch (error) {
       console.error('❌ Error in AI response generation, using fallback:', error);
@@ -324,7 +336,8 @@ async function handleStreamingResponse(
   userResponse: string, messageTimestamp: string,
   existingConversation: any, coachConfig: any,
   context: any, workoutResult: any, memoryRetrieval: any,
-  existingMessages: any[], conversationContext: any
+  existingMessages: any[], conversationContext: any,
+  userProfile: any
 ) {
   try {
     console.info('🔄 Starting streaming response generation');
@@ -348,7 +361,8 @@ async function handleStreamingResponse(
       conversationContext,
       userId,
       coachId,
-      conversationId
+      conversationId,
+      userProfile
     );
 
     // Return streaming response
@@ -388,7 +402,8 @@ async function handleStreamingResponse(
         conversationContext,
         userId,
         coachId,
-        conversationId
+        conversationId,
+        userProfile
       );
 
       return {

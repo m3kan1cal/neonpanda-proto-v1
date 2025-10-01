@@ -4,7 +4,7 @@
   "attributes": {
     "athleteProfile": {
       "confidence": 0,
-      "lastUpdated": "2025-09-01T04:28:29.707Z",
+      "updatedAt": "2025-09-01T04:28:29.707Z",
       "sources": [],
       "summary": "",
       "version": 1
@@ -26,7 +26,13 @@
     "preferences": {},
     "subscription": {},
     "userId": "rrtxJI6gdbXnHBxN2WWkQ",
-    "username": "shouldroforion"
+    "username": "shouldroforion",
+    "criticalTrainingDirective": {
+      "content": "",
+      "enabled": false,
+      "createdAt": "2025-09-01T04:28:29.707Z",
+      "updatedAt": "2025-09-01T04:28:29.707Z"
+    }
   },
   "createdAt": "2025-09-01T04:28:29.707Z",
   "entityType": "user",

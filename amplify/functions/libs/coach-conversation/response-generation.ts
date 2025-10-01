@@ -25,7 +25,8 @@ export async function generateAIResponse(
   conversationContext: any,
   userId: string,
   coachId: string,
-  conversationId: string
+  conversationId: string,
+  userProfile?: any
 ): Promise<ResponseGenerationResult> {
   let aiResponseContent: string;
   let promptMetadata: any = null;
@@ -59,6 +60,7 @@ export async function generateAIResponse(
       additionalConstraints: workoutResult.workoutDetectionContext, // Add workout context if detected
       workoutContext: context.recentWorkouts, // Add recent workout summaries for context
       userMemories: memoryResult.memories, // Add memories for personalization
+      criticalTrainingDirective: userProfile?.attributes?.criticalTrainingDirective, // Add critical training directive if set
     };
 
     const { systemPrompt, metadata } = generateSystemPrompt(
@@ -187,7 +189,8 @@ export async function generateAIResponseStream(
   conversationContext: any,
   userId: string,
   coachId: string,
-  conversationId: string
+  conversationId: string,
+  userProfile?: any
 ): Promise<ResponseGenerationStreamResult> {
   let promptMetadata: any = null;
 
@@ -220,6 +223,7 @@ export async function generateAIResponseStream(
       additionalConstraints: workoutResult.workoutDetectionContext, // Add workout context if detected
       workoutContext: context.recentWorkouts, // Add recent workout summaries for context
       userMemories: memoryResult.memories, // Add memories for personalization
+      criticalTrainingDirective: userProfile?.attributes?.criticalTrainingDirective, // Add critical training directive if set
     };
 
     const { systemPrompt, metadata } = generateSystemPrompt(

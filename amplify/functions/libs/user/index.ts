@@ -7,5 +7,10 @@
 
 export {
   UserProfile,
-
 } from './types';
+
+export {
+  validateCriticalTrainingDirective,
+  normalizeCriticalTrainingDirective,
+  DirectiveValidationResult,
+} from './validation';
