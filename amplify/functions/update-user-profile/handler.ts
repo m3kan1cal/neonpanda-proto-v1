@@ -2,6 +2,7 @@ import { createOkResponse, createErrorResponse } from '../libs/api-helpers';
 import { updateUserProfile, getUserProfile } from '../../dynamodb/operations';
 import { withAuth, AuthenticatedHandler } from '../libs/auth/middleware';
 import { syncProfileToCognito, extractCognitoUsername } from '../libs/user/cognito';
+import { validateCriticalTrainingDirective, normalizeCriticalTrainingDirective } from '../libs/user/validation';
 
 const baseHandler: AuthenticatedHandler = async (event) => {
   // Auth handled by middleware - userId is already validated
@@ -25,6 +26,18 @@ const baseHandler: AuthenticatedHandler = async (event) => {
   // Validate: prevent userId changes
   if (updates.userId) {
     return createErrorResponse(400, 'User ID cannot be changed');
+  }
+
+  // Validate and normalize criticalTrainingDirective if provided
+  if (updates.criticalTrainingDirective) {
+    const validationResult = validateCriticalTrainingDirective(updates.criticalTrainingDirective);
+
+    if (!validationResult.isValid) {
+      return createErrorResponse(400, validationResult.error!);
+    }
+
+    // Normalize with timestamps
+    updates.criticalTrainingDirective = normalizeCriticalTrainingDirective(updates.criticalTrainingDirective);
   }
 
   try {

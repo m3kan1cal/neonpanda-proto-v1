@@ -3,12 +3,13 @@ import { containerPatterns, layoutPatterns } from '../../utils/uiPatterns';
 
 const AuthLayout = ({ children, title, subtitle }) => {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 overflow-y-auto overscroll-y-contain bg-synthwave-bg-primary">
       {/* Full-page modal mask with diagonal dark gradient */}
-      <div className={`absolute inset-0 ${layoutPatterns.authBackground}`}></div>
+      <div className={`fixed inset-0 ${layoutPatterns.authBackground}`}></div>
 
       {/* Auth form container */}
-      <div className="relative w-full max-w-md z-10">
+      <div className="relative min-h-full flex items-center justify-center p-4 py-8">
+        <div className="relative w-full max-w-md z-10">
         {/* Header */}
         <div className="text-center mb-6">
           <div className="flex items-center justify-center mb-3">
@@ -36,9 +37,10 @@ const AuthLayout = ({ children, title, subtitle }) => {
           )}
         </div>
 
-        {/* Auth Form Container - using uiPatterns mainContentEnhanced */}
-        <div className={`${containerPatterns.mainContentEnhanced} p-8`}>
+        {/* Auth Form Container - using uiPatterns authForm */}
+        <div className={`${containerPatterns.authForm} p-8`}>
           {children}
+        </div>
         </div>
       </div>
     </div>

@@ -22,6 +22,7 @@ import {
   saveCoachCreatorSession,
   saveCoachConfig,
   getCoachCreatorSession,
+  getUserProfile,
 } from '../../dynamodb/operations';
 import { withAuth, AuthenticatedHandler } from '../libs/auth/middleware';
 
@@ -46,6 +47,9 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       return createErrorResponse(404, 'Session not found or expired');
     }
 
+    // Load user profile for critical training directive
+    const userProfile = await getUserProfile(userId);
+
     // Get current question
     const currentQuestion = getCurrentQuestion(session.attributes.userContext);
     if (!currentQuestion) {
@@ -56,7 +60,8 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     const questionPrompt = buildQuestionPrompt(
       currentQuestion,
       session.attributes.userContext,
-      session.attributes.questionHistory
+      session.attributes.questionHistory,
+      userProfile?.attributes?.criticalTrainingDirective
     );
 
     if (isStreamingRequested) {

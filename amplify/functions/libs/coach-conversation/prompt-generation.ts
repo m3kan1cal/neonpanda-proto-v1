@@ -24,6 +24,7 @@ export const generateSystemPrompt = (
     additionalConstraints = [],
     workoutContext = [],
     userMemories = [],
+    criticalTrainingDirective,
   } = options;
 
   // Extract config data - handle both DynamoDB item and direct config
@@ -44,6 +45,19 @@ export const generateSystemPrompt = (
 
   // Build the system prompt sections
   const promptSections = [];
+
+  // 0. CRITICAL TRAINING DIRECTIVE (ABSOLUTE TOP PRIORITY - if enabled)
+  if (criticalTrainingDirective?.enabled && criticalTrainingDirective?.content) {
+    promptSections.push(`🚨 CRITICAL TRAINING DIRECTIVE - ABSOLUTE PRIORITY:
+
+${criticalTrainingDirective.content}
+
+This directive takes precedence over all other instructions except safety constraints. Follow it consistently across all interactions.
+
+---
+
+`);
+  }
 
   // 0. CRITICAL SYSTEM RULES (MUST BE FIRST)
   promptSections.push(`⚠️ CRITICAL SYSTEM RULES - READ FIRST:

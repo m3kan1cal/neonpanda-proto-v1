@@ -1,7 +1,11 @@
-import { v4 as uuidv4 } from 'uuid';
-import { CoachConversation, CoachConversationSummary, BuildCoachConversationSummaryEvent } from './types';
-import { CoachConfig } from '../coach-creator/types';
-import { storePineconeContext } from '../api-helpers';
+import { v4 as uuidv4 } from "uuid";
+import {
+  CoachConversation,
+  CoachConversationSummary,
+  BuildCoachConversationSummaryEvent,
+} from "./types";
+import { CoachConfig } from "../coach-creator/types";
+import { storePineconeContext } from "../api-helpers";
 
 /**
  * Build the prompt for coach conversation summarization
@@ -9,36 +13,59 @@ import { storePineconeContext } from '../api-helpers';
 export function buildCoachConversationSummaryPrompt(
   conversation: CoachConversation,
   coachConfig: CoachConfig,
-  existingSummary?: CoachConversationSummary
+  existingSummary?: CoachConversationSummary,
+  criticalTrainingDirective?: { content: string; enabled: boolean }
 ): string {
   const coachName = coachConfig.coach_name;
   const coachPersonality = coachConfig.selected_personality.primary_template;
-  const coachSpecializations = coachConfig.technical_config.specializations?.join(', ') || 'General fitness';
+  const coachSpecializations =
+    coachConfig.technical_config.specializations?.join(", ") ||
+    "General fitness";
+
+  // Build directive section if enabled
+  const directiveSection =
+    criticalTrainingDirective?.enabled && criticalTrainingDirective?.content
+      ? `
+
+🚨 CRITICAL TRAINING DIRECTIVE - ABSOLUTE PRIORITY:
+
+${criticalTrainingDirective.content}
+
+This directive takes precedence over all other instructions except safety constraints. Consider this when summarizing the user's preferences and communication style.
+
+---
+`
+      : "";
 
   const messages = conversation.messages
-    .map(msg => `${msg.role.toUpperCase()}: ${msg.content}`)
-    .join('\n\n');
+    .map((msg) => `${msg.role.toUpperCase()}: ${msg.content}`)
+    .join("\n\n");
 
-  const existingSummaryContext = existingSummary ? `
+  const existingSummaryContext = existingSummary
+    ? `
 PREVIOUS SUMMARY TO BUILD UPON:
 Narrative: ${existingSummary.narrative}
-Current Goals: ${existingSummary.structuredData.current_goals.join(', ')}
-Recent Progress: ${existingSummary.structuredData.recent_progress.join(', ')}
+Current Goals: ${existingSummary.structuredData.current_goals.join(", ")}
+Recent Progress: ${existingSummary.structuredData.recent_progress.join(", ")}
 Communication Style: ${existingSummary.structuredData.preferences.communication_style}
-Training Preferences: ${existingSummary.structuredData.preferences.training_preferences.join(', ')}
-Methodology Preferences: ${existingSummary.structuredData.methodology_preferences ?
-  `Mentioned: ${existingSummary.structuredData.methodology_preferences.mentioned_methodologies?.join(', ') || 'None'},
-   Preferred: ${existingSummary.structuredData.methodology_preferences.preferred_approaches?.join(', ') || 'None'}` : 'None captured yet'}
+Training Preferences: ${existingSummary.structuredData.preferences.training_preferences.join(", ")}
+Methodology Preferences: ${
+        existingSummary.structuredData.methodology_preferences
+          ? `Mentioned: ${existingSummary.structuredData.methodology_preferences.mentioned_methodologies?.join(", ") || "None"},
+          Preferred: ${existingSummary.structuredData.methodology_preferences.preferred_approaches?.join(", ") || "None"}`
+          : "None captured yet"
+}
 Emotional State: ${existingSummary.structuredData.emotional_state.current_mood} (motivation: ${existingSummary.structuredData.emotional_state.motivation_level})
-Key Insights: ${existingSummary.structuredData.key_insights.join(', ')}
-Important Context: ${existingSummary.structuredData.important_context.join(', ')}
+Key Insights: ${existingSummary.structuredData.key_insights.join(", ")}
+Important Context: ${existingSummary.structuredData.important_context.join(", ")}
 
 INSTRUCTIONS: This is a cumulative summary. Build upon the previous summary, updating and evolving it with new information from the recent conversation. Don't repeat old information unless it's still relevant or has changed.
-` : `
+`
+    : `
 INSTRUCTIONS: This is the first summary for this conversation. Create a comprehensive summary that captures the foundation of the coaching relationship.
 `;
 
-  return `You are an AI assistant helping to create conversation memory summaries for fitness coaches. Your task is to analyze a conversation between a user and their AI fitness coach "${coachName}" (${coachPersonality} personality, specializing in ${coachSpecializations}) and create a comprehensive summary that will help the coach provide better, more personalized coaching in future conversations.
+  return `${directiveSection}You are an AI assistant helping to create conversation memory summaries for fitness coaches. Your task is to analyze a conversation between a user and their AI fitness coach "${coachName}" (${coachPersonality} personality, specializing in ${coachSpecializations}) and create a comprehensive summary that will help the coach provide better, more personalized coaching in future conversations.
 
 ${existingSummaryContext}
 
@@ -126,54 +153,72 @@ export function parseCoachConversationSummary(
 ): CoachConversationSummary {
   try {
     // Extract narrative (everything before "## STRUCTURED DATA" or similar)
-    const narrativeMatch = aiResponse.match(/## NARRATIVE SUMMARY[^\n]*\n([\s\S]*?)(?=## STRUCTURED DATA|$)/i);
-    const narrative = narrativeMatch ? narrativeMatch[1].trim() : '';
+    const narrativeMatch = aiResponse.match(
+      /## NARRATIVE SUMMARY[^\n]*\n([\s\S]*?)(?=## STRUCTURED DATA|$)/i
+    );
+    const narrative = narrativeMatch ? narrativeMatch[1].trim() : "";
 
     // Extract JSON (look for JSON block)
-    const jsonMatch = aiResponse.match(/```json\s*([\s\S]*?)\s*```/) ||
-                      aiResponse.match(/{\s*"current_goals"[\s\S]*?}/);
+    const jsonMatch =
+      aiResponse.match(/```json\s*([\s\S]*?)\s*```/) ||
+      aiResponse.match(/{\s*"current_goals"[\s\S]*?}/);
 
     if (!jsonMatch) {
-      throw new Error('Could not find structured data JSON in AI response');
+      throw new Error("Could not find structured data JSON in AI response");
     }
 
     const structuredData = JSON.parse(jsonMatch[1] || jsonMatch[0]);
 
     // Validate required fields
-    if (!structuredData.current_goals || !Array.isArray(structuredData.current_goals)) {
+    if (
+      !structuredData.current_goals ||
+      !Array.isArray(structuredData.current_goals)
+    ) {
       structuredData.current_goals = [];
     }
-    if (!structuredData.recent_progress || !Array.isArray(structuredData.recent_progress)) {
+    if (
+      !structuredData.recent_progress ||
+      !Array.isArray(structuredData.recent_progress)
+    ) {
       structuredData.recent_progress = [];
     }
     if (!structuredData.preferences) {
       structuredData.preferences = {
-        communication_style: '',
+        communication_style: "",
         training_preferences: [],
-        schedule_constraints: []
+        schedule_constraints: [],
       };
     }
     if (!structuredData.methodology_preferences) {
       structuredData.methodology_preferences = {
         mentioned_methodologies: [],
         preferred_approaches: [],
-        methodology_questions: []
+        methodology_questions: [],
       };
     }
     if (!structuredData.emotional_state) {
       structuredData.emotional_state = {
-        current_mood: '',
-        motivation_level: '',
-        confidence_level: ''
+        current_mood: "",
+        motivation_level: "",
+        confidence_level: "",
       };
     }
-    if (!structuredData.key_insights || !Array.isArray(structuredData.key_insights)) {
+    if (
+      !structuredData.key_insights ||
+      !Array.isArray(structuredData.key_insights)
+    ) {
       structuredData.key_insights = [];
     }
-    if (!structuredData.important_context || !Array.isArray(structuredData.important_context)) {
+    if (
+      !structuredData.important_context ||
+      !Array.isArray(structuredData.important_context)
+    ) {
       structuredData.important_context = [];
     }
-    if (!structuredData.conversation_tags || !Array.isArray(structuredData.conversation_tags)) {
+    if (
+      !structuredData.conversation_tags ||
+      !Array.isArray(structuredData.conversation_tags)
+    ) {
       structuredData.conversation_tags = [];
     }
 
@@ -183,9 +228,9 @@ export function parseCoachConversationSummary(
     // Get message range
     const messages = conversation.messages;
     const messageRange = {
-      startMessageId: messages[0]?.id || '',
-      endMessageId: messages[messages.length - 1]?.id || '',
-      totalMessages: messages.length
+      startMessageId: messages[0]?.id || "",
+      endMessageId: messages[messages.length - 1]?.id || "",
+      totalMessages: messages.length,
     };
 
     const summary: CoachConversationSummary = {
@@ -200,25 +245,31 @@ export function parseCoachConversationSummary(
         messageRange,
         triggerReason: event.triggerReason,
         // Only include complexityIndicators if it's defined and not empty
-        ...(event.complexityIndicators && event.complexityIndicators.length > 0 && {
-          complexityIndicators: event.complexityIndicators
-        }),
-        confidence
-      }
+        ...(event.complexityIndicators &&
+          event.complexityIndicators.length > 0 && {
+            complexityIndicators: event.complexityIndicators,
+          }),
+        confidence,
+      },
     };
 
     return summary;
   } catch (error) {
-    console.error('Error parsing conversation summary:', error);
-    console.error('AI Response:', aiResponse);
-    throw new Error(`Failed to parse conversation summary: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    console.error("Error parsing conversation summary:", error);
+    console.error("AI Response:", aiResponse);
+    throw new Error(
+      `Failed to parse conversation summary: ${error instanceof Error ? error.message : "Unknown error"}`
+    );
   }
 }
 
 /**
  * Calculate confidence score for conversation summary
  */
-function calculateSummaryConfidence(narrative: string, structuredData: any): number {
+function calculateSummaryConfidence(
+  narrative: string,
+  structuredData: any
+): number {
   let confidence = 0;
 
   // Narrative quality (0-40 points)
@@ -236,16 +287,22 @@ function calculateSummaryConfidence(narrative: string, structuredData: any): num
     { field: structuredData.recent_progress, weight: 10 },
     { field: structuredData.preferences?.communication_style, weight: 8 },
     { field: structuredData.preferences?.training_preferences, weight: 7 },
-    { field: structuredData.methodology_preferences?.mentioned_methodologies, weight: 6 },
-    { field: structuredData.methodology_preferences?.preferred_approaches, weight: 5 },
+    {
+      field: structuredData.methodology_preferences?.mentioned_methodologies,
+      weight: 6,
+    },
+    {
+      field: structuredData.methodology_preferences?.preferred_approaches,
+      weight: 5,
+    },
     { field: structuredData.emotional_state?.current_mood, weight: 7 },
-    { field: structuredData.emotional_state?.motivation_level, weight: 5 }
+    { field: structuredData.emotional_state?.motivation_level, weight: 5 },
   ];
 
   fields.forEach(({ field, weight }) => {
     if (Array.isArray(field) && field.length > 0) {
       confidence += weight;
-    } else if (typeof field === 'string' && field.trim().length > 0) {
+    } else if (typeof field === "string" && field.trim().length > 0) {
       confidence += weight;
     }
   });
@@ -264,19 +321,19 @@ export async function storeCoachConversationSummaryInPinecone(
     const searchableContent = `
 ${summary.narrative}
 
-Goals: ${summary.structuredData.current_goals.join(', ')}
-Recent Progress: ${summary.structuredData.recent_progress.join(', ')}
+Goals: ${summary.structuredData.current_goals.join(", ")}
+Recent Progress: ${summary.structuredData.recent_progress.join(", ")}
 Communication Style: ${summary.structuredData.preferences.communication_style}
-Training Preferences: ${summary.structuredData.preferences.training_preferences.join(', ')}
-Methodology Preferences: ${summary.structuredData.methodology_preferences.mentioned_methodologies.join(', ')} | Preferred Approaches: ${summary.structuredData.methodology_preferences.preferred_approaches.join(', ')} | Questions: ${summary.structuredData.methodology_preferences.methodology_questions.join(', ')}
+Training Preferences: ${summary.structuredData.preferences.training_preferences.join(", ")}
+Methodology Preferences: ${summary.structuredData.methodology_preferences.mentioned_methodologies.join(", ")} | Preferred Approaches: ${summary.structuredData.methodology_preferences.preferred_approaches.join(", ")} | Questions: ${summary.structuredData.methodology_preferences.methodology_questions.join(", ")}
 Emotional State: ${summary.structuredData.emotional_state.current_mood} (motivation: ${summary.structuredData.emotional_state.motivation_level})
-Key Insights: ${summary.structuredData.key_insights.join(', ')}
-Important Context: ${summary.structuredData.important_context.join(', ')}
+Key Insights: ${summary.structuredData.key_insights.join(", ")}
+Important Context: ${summary.structuredData.important_context.join(", ")}
     `.trim();
 
     // Create metadata for Pinecone
     const metadata = {
-      type: 'conversation_summary',
+      type: "conversation_summary",
       userId: summary.userId,
       coachId: summary.coachId,
       conversationId: summary.conversationId,
@@ -290,31 +347,31 @@ Important Context: ${summary.structuredData.important_context.join(', ')}
       hasProgress: summary.structuredData.recent_progress.length > 0,
       hasEmotionalState: !!summary.structuredData.emotional_state.current_mood,
       hasInsights: summary.structuredData.key_insights.length > 0,
-      hasMethodologyPreferences: summary.structuredData.methodology_preferences.mentioned_methodologies.length > 0 || summary.structuredData.methodology_preferences.preferred_approaches.length > 0
+      hasMethodologyPreferences:
+        summary.structuredData.methodology_preferences.mentioned_methodologies
+          .length > 0 ||
+        summary.structuredData.methodology_preferences.preferred_approaches
+          .length > 0,
     };
 
     // Store in Pinecone using the same pattern as workout summaries
     const recordId = `conversation_summary_${summary.userId}_${summary.conversationId}`;
 
-    await storePineconeContext(
-      summary.userId,
-      searchableContent,
-      metadata
-    );
+    await storePineconeContext(summary.userId, searchableContent, metadata);
 
-    console.info('✅ Conversation summary stored in Pinecone:', {
+    console.info("✅ Conversation summary stored in Pinecone:", {
       recordId,
       summaryId: summary.summaryId,
       contentLength: searchableContent.length,
-      confidence: summary.metadata.confidence
+      confidence: summary.metadata.confidence,
     });
 
     return { success: true, recordId };
   } catch (error) {
-    console.error('❌ Error storing conversation summary in Pinecone:', error);
+    console.error("❌ Error storing conversation summary in Pinecone:", error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : "Unknown error",
     };
   }
 }

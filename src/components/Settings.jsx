@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { updatePassword } from 'aws-amplify/auth';
-import { containerPatterns, layoutPatterns, typographyPatterns, buttonPatterns, inputPatterns, formPatterns } from '../utils/uiPatterns';
+import { containerPatterns, layoutPatterns, typographyPatterns, buttonPatterns, inputPatterns, formPatterns, scrollbarPatterns } from '../utils/uiPatterns';
 import { useAuthorizeUser } from '../auth/hooks/useAuthorizeUser';
 import { getUserDisplayName } from '../auth/utils/authHelpers';
 import { useAuth } from '../auth/contexts/AuthContext';
@@ -93,6 +93,18 @@ function Settings() {
   const [originalTimezone, setOriginalTimezone] = useState('America/Los_Angeles');
   const [isSavingPreferences, setIsSavingPreferences] = useState(false);
 
+  // State for Critical Training Directive
+  const [directiveData, setDirectiveData] = useState({
+    content: '',
+    enabled: false
+  });
+  const [originalDirective, setOriginalDirective] = useState({
+    content: '',
+    enabled: false
+  });
+  const [isSavingDirective, setIsSavingDirective] = useState(false);
+  const [directiveCharCount, setDirectiveCharCount] = useState(0);
+
   // Auto-scroll to top on page load
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -128,6 +140,12 @@ function Settings() {
           const userTimezone = profile.preferences?.timezone || 'America/Los_Angeles';
           setOriginalTimezone(userTimezone);
           setTimezone(userTimezone);
+
+          // Set Critical Training Directive from profile
+          const directive = profile.criticalTrainingDirective || { content: '', enabled: false };
+          setDirectiveData(directive);
+          setOriginalDirective(directive);
+          setDirectiveCharCount(directive.content?.length || 0);
         } catch (error) {
           console.error('Error loading user profile:', error);
           // Fallback to Cognito attributes if DynamoDB fetch fails
@@ -296,6 +314,53 @@ function Settings() {
   // Handle timezone cancel
   const handleCancelTimezone = () => {
     setTimezone(originalTimezone);
+  };
+
+  // Handle Critical Training Directive change
+  const handleDirectiveChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    if (type === 'checkbox') {
+      setDirectiveData(prev => ({ ...prev, [name]: checked }));
+    } else {
+      setDirectiveData(prev => ({ ...prev, [name]: value }));
+      setDirectiveCharCount(value.length);
+    }
+  };
+
+  // Handle Critical Training Directive save
+  const handleSaveDirective = async () => {
+    setIsSavingDirective(true);
+    try {
+      // Update directive in DynamoDB
+      await updateUserProfile(userId, {
+        criticalTrainingDirective: {
+          content: directiveData.content,
+          enabled: directiveData.enabled,
+          createdAt: originalDirective.createdAt || new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        }
+      });
+
+      setOriginalDirective(directiveData);
+      showSuccess('Critical Training Directive updated successfully');
+    } catch (error) {
+      console.error('Error updating Critical Training Directive:', error);
+      showError(error.message || 'Failed to update directive');
+    } finally {
+      setIsSavingDirective(false);
+    }
+  };
+
+  // Handle Critical Training Directive cancel
+  const handleCancelDirective = () => {
+    setDirectiveData(originalDirective);
+    setDirectiveCharCount(originalDirective.content?.length || 0);
+  };
+
+  // Handle Clear Directive
+  const handleClearDirective = () => {
+    setDirectiveData({ content: '', enabled: false });
+    setDirectiveCharCount(0);
   };
 
   // Handle delete account request
@@ -657,6 +722,92 @@ function Settings() {
                       variant="secondary"
                       onClick={handleCancelTimezone}
                       disabled={isSavingPreferences}
+                      className="flex-1"
+                    >
+                      Cancel
+                    </AuthButton>
+                  </div>
+                </div>
+              </CollapsibleSection>
+
+              {/* Critical Training Directive Section */}
+              <CollapsibleSection
+                title="Critical Training Directive"
+                icon={<PreferencesIcon />}
+                defaultOpen={false}
+              >
+                <div>
+                  <div className="mb-6">
+                    <label htmlFor="directive-content" className={formPatterns.label}>
+                      Directive Content ({directiveCharCount}/500 characters)
+                    </label>
+                    <textarea
+                      id="directive-content"
+                      name="content"
+                      value={directiveData.content}
+                      onChange={handleDirectiveChange}
+                      disabled={isSavingDirective}
+                      maxLength={500}
+                      rows={4}
+                      placeholder="e.g., Always provide concise, technically precise coaching with minimal fluff. Focus on systematic progression and data-driven decisions."
+                      className={`${inputPatterns.textarea} ${scrollbarPatterns.pink} resize-none`}
+                    />
+
+                    <div className="mt-3 mb-4 space-y-2">
+                      <div className="flex items-start space-x-2">
+                        <div className="text-synthwave-neon-cyan mt-0.5 flex-shrink-0">
+                          <InfoIcon />
+                        </div>
+                        <p className={`${formPatterns.helperText} text-synthwave-neon-cyan`}>
+                          This directive will be followed across ALL training interactions - coach conversations,
+                          workout logging, analytics reports, and coach creation. Note that safety constraints always take precedence.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mb-4">
+                      <label className="flex items-center space-x-3 cursor-pointer group">
+                        <div className="relative">
+                          <input
+                            type="checkbox"
+                            name="enabled"
+                            checked={directiveData.enabled}
+                            onChange={handleDirectiveChange}
+                            disabled={isSavingDirective}
+                            className={`${inputPatterns.checkbox} peer relative`}
+                          />
+                          {directiveData.enabled && (
+                            <svg
+                              className="absolute inset-0 w-5 h-5 text-white pointer-events-none"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </div>
+                        <span className="font-rajdhani text-white font-medium group-hover:text-synthwave-neon-pink transition-colors duration-300">
+                          Enforce for all training interactions
+                        </span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="flex space-x-4 pt-4">
+                    <AuthButton
+                      variant="primary"
+                      onClick={handleSaveDirective}
+                      loading={isSavingDirective}
+                      disabled={isSavingDirective}
+                      className="flex-1"
+                    >
+                      Save Directive
+                    </AuthButton>
+                    <AuthButton
+                      variant="secondary"
+                      onClick={handleCancelDirective}
+                      disabled={isSavingDirective}
                       className="flex-1"
                     >
                       Cancel

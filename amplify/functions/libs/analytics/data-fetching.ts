@@ -379,8 +379,22 @@ export const fetchUserWeeklyData = async (
  */
 const buildAnalyticsPrompt = (
   weeklyData: UserWeeklyData,
-  userProfile?: any
+  userProfile?: any,
+  criticalTrainingDirective?: { content: string; enabled: boolean }
 ): string => {
+  // Build directive section if enabled
+  const directiveSection = criticalTrainingDirective?.enabled && criticalTrainingDirective?.content
+    ? `🚨 CRITICAL TRAINING DIRECTIVE - ABSOLUTE PRIORITY:
+
+${criticalTrainingDirective.content}
+
+This directive takes precedence over all other instructions except safety constraints. Apply this when analyzing and summarizing the training data.
+
+---
+
+`
+    : '';
+
   // Build comprehensive athlete profile from AI profile + memories
   let athleteProfile = "";
 
@@ -428,7 +442,7 @@ const buildAnalyticsPrompt = (
     })
     .join("\n\n");
 
-  return `You are an elite strength and conditioning analyst examining weekly training data in Universal Workout Schema (UWS) format.
+  return `${directiveSection}You are an elite strength and conditioning analyst examining weekly training data in Universal Workout Schema (UWS) format.
 
 CRITICAL JSON FORMATTING RULES:
 - Return ONLY valid JSON. No markdown backticks, no explanations, no text outside JSON
@@ -600,8 +614,12 @@ export const generateAnalytics = async (
   );
 
   try {
-    // Build the analytics prompt with user profile
-    const analyticsPrompt = buildAnalyticsPrompt(weeklyData, userProfile);
+    // Build the analytics prompt with user profile and critical training directive
+    const analyticsPrompt = buildAnalyticsPrompt(
+      weeklyData,
+      userProfile,
+      userProfile?.attributes?.criticalTrainingDirective
+    );
 
     console.info(
       `📝 Analytics prompt built: ${analyticsPrompt.length} characters`

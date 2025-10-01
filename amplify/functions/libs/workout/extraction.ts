@@ -266,12 +266,26 @@ export const validateWorkoutStructure = (workoutData: any): {
  */
 export const buildWorkoutExtractionPrompt = (
   userMessage: string,
-  coachConfig: CoachConfig
+  coachConfig: CoachConfig,
+  criticalTrainingDirective?: { content: string; enabled: boolean }
 ): string => {
   const isComplex = isComplexWorkout(userMessage);
 
+  // Build directive section if enabled
+  const directiveSection = criticalTrainingDirective?.enabled && criticalTrainingDirective?.content
+    ? `🚨 CRITICAL TRAINING DIRECTIVE - ABSOLUTE PRIORITY:
+
+${criticalTrainingDirective.content}
+
+This directive takes precedence over all other instructions except safety constraints. Apply this when interpreting and structuring the workout data.
+
+---
+
+`
+    : '';
+
   return `
-${isComplex ? "COMPLEX WORKOUT DETECTED - APPLY AGGRESSIVE OPTIMIZATION!" : ""}
+${directiveSection}${isComplex ? "COMPLEX WORKOUT DETECTED - APPLY AGGRESSIVE OPTIMIZATION!" : ""}
 
 CRITICAL JSON FORMATTING RULES:
 - Return ONLY valid JSON. No markdown backticks, no explanations, no text outside JSON

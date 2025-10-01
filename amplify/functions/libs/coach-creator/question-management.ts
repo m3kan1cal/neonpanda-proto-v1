@@ -572,8 +572,21 @@ export const getNextQuestionId = (userContext: UserContext): number | null => {
 export const buildQuestionPrompt = (
   question: Question,
   userContext: UserContext,
-  conversationHistory?: any[]
+  conversationHistory?: any[],
+  criticalTrainingDirective?: { content: string; enabled: boolean }
 ): string => {
+  // Build directive section if enabled
+  const directiveSection = criticalTrainingDirective?.enabled && criticalTrainingDirective?.content
+    ? `🚨 CRITICAL TRAINING DIRECTIVE - ABSOLUTE PRIORITY:
+
+${criticalTrainingDirective.content}
+
+This directive takes precedence over all other instructions except safety constraints. Apply this when asking questions and understanding the user's needs.
+
+---
+
+`
+    : '';
   const questionVersion =
     question.versions[userContext.sophisticationLevel] ||
     question.versions.UNKNOWN;
@@ -596,7 +609,7 @@ CRITICAL: Review the conversation history above. DO NOT ask questions that have 
     : '';
 
   const questionContext = `
-CURRENT QUESTION FOCUS: ${question.topic}
+${directiveSection}CURRENT QUESTION FOCUS: ${question.topic}
 USER SOPHISTICATION: ${userContext.sophisticationLevel}
 ${historyContext}
 QUESTION TO ASK:

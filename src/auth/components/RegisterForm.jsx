@@ -203,7 +203,7 @@ const RegisterForm = ({ onSwitchToLogin, onRegistrationSuccess }) => {
         />
 
         {/* Password Requirements */}
-        <div className="text-xs font-rajdhani text-synthwave-neon-cyan space-y-1">
+        <div className="text-sm font-rajdhani text-synthwave-neon-cyan space-y-1">
           <p className="font-medium text-synthwave-neon-cyan">Password must contain:</p>
           <ul className="list-disc list-inside space-y-1 ml-2">
             <li>At least 8 characters</li>

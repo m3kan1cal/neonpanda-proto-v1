@@ -27,7 +27,8 @@ export async function detectAndProcessWorkout(
   conversationId: string,
   coachConfig: any,
   conversationContext: any,
-  messageTimestamp?: string
+  messageTimestamp?: string,
+  userProfile?: any
 ): Promise<WorkoutDetectionResult> {
   // Check for workout logging detection (natural language OR slash commands)
 
@@ -125,6 +126,7 @@ export async function detectAndProcessWorkout(
           ? slashCommand.command || undefined
           : undefined,
         messageTimestamp, // Pass messageTimestamp to workout extraction
+        criticalTrainingDirective: userProfile?.attributes?.criticalTrainingDirective, // Pass critical training directive
       };
 
       await invokeAsyncLambda(
