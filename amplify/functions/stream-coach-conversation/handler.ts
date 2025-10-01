@@ -14,6 +14,7 @@ import {
   getCoachConversation,
   sendCoachConversationMessage,
   getCoachConfig,
+  getUserProfile,
 } from "../../dynamodb/operations";
 import { CoachMessage } from "../libs/coach-conversation/types";
 import { gatherConversationContext } from "../libs/coach-conversation/context";
@@ -193,7 +194,8 @@ async function loadConversationData(
   coachId: string,
   conversationId: string,
   userResponse: string,
-  shouldQueryPinecone?: boolean
+  shouldQueryPinecone?: boolean,
+  userProfile?: any // Optional: if already loaded, we can reuse it
 ): Promise<ConversationData> {
   const existingConversation = await getCoachConversation(
     userId,
@@ -209,7 +211,14 @@ async function loadConversationData(
     throw new Error("Coach configuration not found");
   }
 
-  console.info("✅ Conversation and coach config loaded successfully");
+  // Use provided user profile or load it (for backward compatibility with other callers)
+  const profile = userProfile || await getUserProfile(userId);
+
+  console.info("✅ Conversation, coach config, and user profile loaded successfully", {
+    hasUserProfile: !!profile,
+    userTimezone: profile?.attributes?.preferences?.timezone,
+    profileWasReused: !!userProfile,
+  });
 
   // Gather all conversation context (workouts + Pinecone)
   // Pass through the shouldQueryPinecone flag from smart router (if provided)
@@ -219,6 +228,7 @@ async function loadConversationData(
     existingConversation,
     coachConfig,
     context,
+    userProfile: profile,
   };
 }
 
@@ -300,20 +310,35 @@ async function* processCoachConversationAsync(
   // Step 1: Validate parameters (fast)
   const params = await validateAndExtractParams(event);
 
-  // Step 2: SMART ROUTER FIRST - Single AI call to determine ALL processing needs
+  // Step 2: Load user profile FIRST (needed for smart router temporal context)
+  const userProfile = await getUserProfile(params.userId);
+  const userTimezone = userProfile?.attributes?.preferences?.timezone;
+  const criticalTrainingDirective = userProfile?.attributes?.criticalTrainingDirective;
+
+  console.info("✅ User profile loaded for smart router:", {
+    hasProfile: !!userProfile,
+    timezone: userTimezone || 'America/Los_Angeles (default)',
+    hasCriticalDirective: criticalTrainingDirective?.enabled || false,
+  });
+
+  // Step 3: SMART ROUTER - Single AI call with temporal context to determine ALL processing needs
   const routerAnalysis = await analyzeRequestCapabilities(
     params.userResponse,
     undefined, // messageContext - could be added later
-    0 // conversationLength - could be calculated later
+    0, // conversationLength - could be calculated later
+    userTimezone,
+    criticalTrainingDirective
   );
 
-  // Step 3: Load conversation data using smart router's Pinecone decision
+  // Step 4: Load conversation data using smart router's Pinecone decision
+  // Pass userProfile to avoid reloading it
   const conversationData = await loadConversationData(
     params.userId,
     params.coachId,
     params.conversationId,
     params.userResponse,
-    routerAnalysis.contextNeeds.needsPineconeSearch  // Use smart router flag
+    routerAnalysis.contextNeeds.needsPineconeSearch, // Use smart router flag
+    userProfile // Reuse already-loaded profile
   );
 
   console.info(`🧠 Smart Router Analysis:`, {
@@ -530,7 +555,8 @@ async function* processCoachConversationAsync(
       conversationContext,
       params.userId,
       params.coachId,
-      params.conversationId
+      params.conversationId,
+      conversationData.userProfile
     );
 
     // Yield AI response chunks using optimized buffering strategy

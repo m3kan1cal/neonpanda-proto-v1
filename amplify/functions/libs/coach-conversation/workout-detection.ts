@@ -126,6 +126,7 @@ export async function detectAndProcessWorkout(
           ? slashCommand.command || undefined
           : undefined,
         messageTimestamp, // Pass messageTimestamp to workout extraction
+        userTimezone: userProfile?.attributes?.preferences?.timezone, // Pass user timezone for temporal context
         criticalTrainingDirective: userProfile?.attributes?.criticalTrainingDirective, // Pass critical training directive
       };
 

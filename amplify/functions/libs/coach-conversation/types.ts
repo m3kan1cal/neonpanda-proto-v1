@@ -170,6 +170,7 @@ export interface PromptGenerationOptions {
     content: string;
     enabled: boolean;
   };
+  userTimezone?: string; // User's timezone for temporal context (e.g., 'America/Los_Angeles')
 }
 
 /**

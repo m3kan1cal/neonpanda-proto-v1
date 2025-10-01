@@ -25,6 +25,7 @@ export const generateSystemPrompt = (
     workoutContext = [],
     userMemories = [],
     criticalTrainingDirective,
+    userTimezone,
   } = options;
 
   // Extract config data - handle both DynamoDB item and direct config
@@ -70,17 +71,20 @@ This directive takes precedence over all other instructions except safety constr
 
   // 0.5 CURRENT DATE & TIME CONTEXT (Essential for temporal awareness)
   const currentDateTime = new Date();
+  // Use user's timezone if available, otherwise default to Pacific Time
+  const effectiveTimezone = userTimezone || "America/Los_Angeles";
+
   const dateOptions: Intl.DateTimeFormatOptions = {
     weekday: "long",
     year: "numeric",
     month: "long",
     day: "numeric",
-    timeZone: "America/Los_Angeles", // Default to Pacific Time, could be made user-configurable
+    timeZone: effectiveTimezone,
   };
   const timeOptions: Intl.DateTimeFormatOptions = {
     hour: "numeric",
     minute: "2-digit",
-    timeZone: "America/Los_Angeles",
+    timeZone: effectiveTimezone,
     timeZoneName: "short",
   };
 
@@ -96,14 +100,16 @@ This directive takes precedence over all other instructions except safety constr
   promptSections.push(`📅 CURRENT DATE & TIME:
 **Today is ${formattedDate}**
 Current time: ${formattedTime}
+Timezone: ${effectiveTimezone}
 
 CRITICAL TEMPORAL AWARENESS:
 - Use THIS date as your reference point for all temporal reasoning
 - When users say "today", "this morning", "earlier", they mean ${formattedDate}
-- "Yesterday" means ${new Date(currentDateTime.getTime() - 86400000).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
-- "Tomorrow" means ${new Date(currentDateTime.getTime() + 86400000).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
+- "Yesterday" means ${new Date(currentDateTime.getTime() - 86400000).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", timeZone: effectiveTimezone })}
+- "Tomorrow" means ${new Date(currentDateTime.getTime() + 86400000).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", timeZone: effectiveTimezone })}
 - Conversation history timestamps may be from previous days - compare them against TODAY'S date
 - If a user mentions doing something "this morning" and it's now afternoon, that happened earlier TODAY (${formattedDate}), not yesterday
+- All times are in the user's timezone (${effectiveTimezone})
 
 `);
 

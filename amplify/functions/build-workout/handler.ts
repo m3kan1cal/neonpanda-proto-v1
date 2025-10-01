@@ -55,7 +55,8 @@ export const handler = async (event: BuildWorkoutEvent) => {
     const extractionPrompt = buildWorkoutExtractionPrompt(
       workoutContent,
       event.coachConfig,
-      event.criticalTrainingDirective
+      event.criticalTrainingDirective,
+      event.userTimezone
     );
 
     console.info("Generated extraction prompt:", {
