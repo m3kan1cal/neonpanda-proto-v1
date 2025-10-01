@@ -204,8 +204,11 @@ function ChatInput({
   // Refs for parent component access
   textareaRef = null,
 
-  // Progress indicator (inline with quick suggestions)
+  // Progress indicator for coach creation (inline with quick suggestions)
   progressData = null,
+
+  // Conversation size indicator (inline with status)
+  conversationSize = null,
 }) {
   // Early return for skeleton loading state
   if (showSkeleton) {
@@ -236,6 +239,17 @@ function ChatInput({
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
               <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-12"></div>
+            </div>
+          </div>
+
+          {/* Progress/Size Indicator skeleton */}
+          <div className="mt-4 flex justify-end">
+            <div className="max-w-xs w-full">
+              <div className="flex items-center justify-between mb-1">
+                <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-32"></div>
+                <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-8"></div>
+              </div>
+              <div className="w-full h-1.5 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
             </div>
           </div>
 
@@ -446,6 +460,13 @@ function ChatInput({
     }
   }, [progressData?.percentage, progressData?.questionsCompleted]);
 
+  // Debug log for conversation size changes
+  useEffect(() => {
+    if (conversationSize) {
+      console.info("ChatInput - Conversation size updated:", conversationSize);
+    }
+  }, [conversationSize?.percentage, conversationSize?.sizeKB]);
+
   const handleSendMessage = async (e) => {
     e.preventDefault();
 
@@ -569,6 +590,8 @@ function ChatInput({
     showTipsModal,
     showQuickActionsPopup,
     showQuickPromptsSubmenu,
+    progressData,
+    conversationSize,
   ]);
 
   return (
@@ -974,7 +997,7 @@ function ChatInput({
           </div>
         </div>
 
-        {/* Progress Indicator */}
+        {/* Coach Creation Progress Indicator */}
         {progressData && (
           <div className="mt-4 flex justify-end">
             <div className="max-w-xs w-full">
@@ -994,11 +1017,44 @@ function ChatInput({
                 </span>
               </div>
 
-              {/* Small Cyan Progress Bar */}
+              {/* Cyan Progress Bar */}
               <div className="w-full bg-synthwave-bg-primary/50 rounded-full h-1.5 border border-synthwave-neon-cyan/20">
                 <div
                   className="bg-gradient-to-r from-synthwave-neon-cyan/60 to-synthwave-neon-cyan h-full rounded-full transition-all duration-500 shadow-synthwave-neon-cyan/10"
                   style={{ width: `${progressData.percentage}%` }}
+                ></div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Conversation Size Indicator */}
+        {conversationSize && (
+          <div className="mt-4 flex justify-end">
+            <div className="max-w-xs w-full">
+              <div className="flex items-center justify-between">
+                <span className="font-rajdhani text-xs text-synthwave-text-muted">
+                  {conversationSize.isApproachingLimit && '⚠️ '}
+                  Conversation Size: {conversationSize.sizeKB.toFixed(1)}KB / {conversationSize.maxSizeKB}KB
+                </span>
+                <span className={`font-rajdhani text-xs font-medium ${
+                  conversationSize.isApproachingLimit ? 'text-synthwave-neon-pink' : 'text-synthwave-neon-cyan'
+                }`}>
+                  {conversationSize.percentage}%
+                </span>
+              </div>
+
+              {/* Size Progress Bar - changes color when approaching limit */}
+              <div className={`w-full bg-synthwave-bg-primary/50 rounded-full h-1.5 border ${
+                conversationSize.isApproachingLimit ? 'border-synthwave-neon-pink/20' : 'border-synthwave-neon-cyan/20'
+              }`}>
+                <div
+                  className={`h-full rounded-full transition-all duration-500 ${
+                    conversationSize.isApproachingLimit
+                      ? 'bg-gradient-to-r from-synthwave-neon-pink/60 to-synthwave-neon-pink shadow-lg shadow-synthwave-neon-pink/20'
+                      : 'bg-gradient-to-r from-synthwave-neon-cyan/60 to-synthwave-neon-cyan shadow-synthwave-neon-cyan/10'
+                  }`}
+                  style={{ width: `${conversationSize.percentage}%` }}
                 ></div>
               </div>
             </div>

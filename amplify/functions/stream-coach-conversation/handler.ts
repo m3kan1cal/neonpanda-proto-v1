@@ -602,13 +602,25 @@ async function saveConversationAndYieldComplete(
   const { context } = conversationData;
   const { newUserMessage, newAiMessage } = results;
 
-  // Save messages to DynamoDB
-  await sendCoachConversationMessage(userId, coachId, conversationId, [
+  // Save messages to DynamoDB - capture the save result for size tracking
+  const saveResult = await sendCoachConversationMessage(userId, coachId, conversationId, [
     newUserMessage,
     newAiMessage,
   ]);
 
   console.info("✅ Conversation updated successfully");
+
+  // Extract size information from the save result
+  const itemSizeKB = parseFloat(saveResult?.dynamodbResult?.itemSizeKB || '0');
+  const sizePercentage = Math.min(Math.round((itemSizeKB / 400) * 100), 100);
+  const isApproachingLimit = itemSizeKB > 350; // 87.5% threshold
+
+  console.info('📊 Conversation size:', {
+    sizeKB: itemSizeKB,
+    percentage: sizePercentage,
+    isApproachingLimit,
+    maxSizeKB: 400
+  });
 
   // Trigger async conversation summary if enabled
   if (FEATURE_FLAGS.ENABLE_CONVERSATION_SUMMARY) {
@@ -645,7 +657,7 @@ async function saveConversationAndYieldComplete(
   const pineconeMatches = context?.pineconeMatches || [];
   const pineconeContextText = context?.pineconeContext || "";
 
-  // Return completion event
+  // Return completion event with conversation size tracking
   const completeEvent = formatCompleteEvent({
     messageId: newAiMessage.id,
     userMessage: newUserMessage,
@@ -656,6 +668,12 @@ async function saveConversationAndYieldComplete(
       matches: pineconeMatches.length,
       contextLength: pineconeContextText.length,
     },
+    conversationSize: {
+      sizeKB: itemSizeKB,
+      percentage: sizePercentage,
+      maxSizeKB: 400,
+      isApproachingLimit
+    }
   });
 
   console.info(

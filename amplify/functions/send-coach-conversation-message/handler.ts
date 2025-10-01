@@ -265,12 +265,25 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       newAiMessage,
     ];
 
+    // Capture the save result for size tracking
     const conversationSaveResult = await sendCoachConversationMessage(
       userId,
       coachId,
       conversationId,
       updatedMessages
     );
+
+    // Extract size information from the save result
+    const itemSizeKB = parseFloat(conversationSaveResult?.dynamodbResult?.itemSizeKB || '0');
+    const sizePercentage = Math.min(Math.round((itemSizeKB / 400) * 100), 100);
+    const isApproachingLimit = itemSizeKB > 350; // 87.5% threshold
+
+    console.info('📊 Conversation size:', {
+      sizeKB: itemSizeKB,
+      percentage: sizePercentage,
+      isApproachingLimit,
+      maxSizeKB: 400
+    });
 
     // Check if we should trigger conversation summary (after conversation is fully updated)
     if (FEATURE_FLAGS.ENABLE_CONVERSATION_SUMMARY) {
@@ -314,6 +327,12 @@ const baseHandler: AuthenticatedHandler = async (event) => {
             matches: pineconeMatches.length,
             contextLength: pineconeContext.length,
           },
+          conversationSize: {
+            sizeKB: itemSizeKB,
+            percentage: sizePercentage,
+            maxSizeKB: 400,
+            isApproachingLimit
+          }
         },
         "Conversation updated successfully"
       );
@@ -468,14 +487,26 @@ async function generateSSEStream(
       timestamp: new Date(),
     };
 
-    // Save messages to conversation after streaming completes
+    // Save messages to conversation after streaming completes - capture result for size tracking
     console.info('💾 Saving messages to DynamoDB after streaming');
-    await sendCoachConversationMessage(
+    const saveResult = await sendCoachConversationMessage(
       userId,
       coachId,
       conversationId,
       [newUserMessage, newAiMessage]
     );
+
+    // Extract size information from the save result
+    const itemSizeKB = parseFloat(saveResult?.dynamodbResult?.itemSizeKB || '0');
+    const sizePercentage = Math.min(Math.round((itemSizeKB / 400) * 100), 100);
+    const isApproachingLimit = itemSizeKB > 350; // 87.5% threshold
+
+    console.info('📊 Conversation size:', {
+      sizeKB: itemSizeKB,
+      percentage: sizePercentage,
+      isApproachingLimit,
+      maxSizeKB: 400
+    });
 
     // Trigger async conversation summary if enabled
     if (FEATURE_FLAGS.ENABLE_CONVERSATION_SUMMARY) {
@@ -498,7 +529,7 @@ async function generateSSEStream(
       }
     }
 
-    // Send completion message
+    // Send completion message with conversation size tracking
     const completeData = {
       type: 'complete',
       fullMessage: fullAIResponse,
@@ -509,6 +540,12 @@ async function generateSSEStream(
         used: context?.pineconeMatches?.length > 0,
         matches: context?.pineconeMatches?.length || 0,
         contextLength: context?.pineconeContext?.length || 0,
+      },
+      conversationSize: {
+        sizeKB: itemSizeKB,
+        percentage: sizePercentage,
+        maxSizeKB: 400,
+        isApproachingLimit
       }
     };
     sseOutput += `data: ${JSON.stringify(completeData)}\n\n`;

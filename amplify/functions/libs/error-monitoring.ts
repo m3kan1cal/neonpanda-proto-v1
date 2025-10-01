@@ -62,14 +62,13 @@ export class ErrorMonitoring extends Construct {
     new SubscriptionFilter(this, `ErrorFilter-${lambdaFunction.node.id}`, {
       logGroup: logGroup,
       destination: new LambdaDestination(this.forwarderFunction),
-      // Use a filter pattern that works with plain text logs (not JSON)
-      filterPattern: FilterPattern.anyTerm(
-        "ERROR",
-        "WARN",
-        "WARNING",
-        "FATAL",
-        "CRITICAL",
-        "EXCEPTION",
+      // Match only actual ERROR/WARN log levels in Lambda's tab-delimited format
+      // Lambda log format: TIMESTAMP\tREQUEST_ID\tLOG_LEVEL\tMESSAGE
+      // This pattern matches the third field (log level) specifically, preventing false positives
+      // when error keywords appear in message content (e.g., "CRITICAL" in prompts)
+      // ✅ Tested and validated in CloudWatch Console
+      filterPattern: FilterPattern.literal(
+        '[timestamp, request_id, level=ERROR || level=WARN || level=WARNING || level=FATAL || level=CRITICAL, ...]'
       ),
       filterName: `error-filter-${displayName}`,
     });
