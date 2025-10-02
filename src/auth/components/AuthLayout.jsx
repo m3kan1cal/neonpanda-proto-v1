@@ -8,7 +8,7 @@ const AuthLayout = ({ children, title, subtitle }) => {
       <div className={`fixed inset-0 ${layoutPatterns.authBackground}`}></div>
 
       {/* Auth form container */}
-      <div className="relative min-h-full flex items-start justify-center p-4 pt-12 pb-8">
+      <div className="relative min-h-full flex items-start md:items-center justify-center p-4 pt-12 md:pt-4 pb-8">
         <div className="relative w-full max-w-md z-10">
         {/* Header */}
         <div className="text-center mb-6">

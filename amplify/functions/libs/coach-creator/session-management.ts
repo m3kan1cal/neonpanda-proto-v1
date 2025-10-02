@@ -102,15 +102,24 @@ export const addQuestionHistory = (
   currentQuestion: Question,
   userResponse: string,
   aiResponse: string,
-  detectedSophistication: string
+  detectedSophistication: string,
+  imageS3Keys?: string[]
 ): void => {
-  session.questionHistory.push({
+  const historyEntry: any = {
     questionId: currentQuestion.id,
     userResponse,
     aiResponse,
     detectedSophistication,
     timestamp: new Date()
-  });
+  };
+
+  // Add image metadata if present
+  if (imageS3Keys && imageS3Keys.length > 0) {
+    historyEntry.imageS3Keys = imageS3Keys;
+    historyEntry.messageType = 'text_with_images';
+  }
+
+  session.questionHistory.push(historyEntry);
 };
 
 // Check if user wants to finish the coach creator process

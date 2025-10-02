@@ -22,6 +22,7 @@ import { getUserInitial as getInitialFromUsername } from "./shared/UserAvatar";
 import { parseMarkdown } from "../utils/markdownParser.jsx";
 import CoachConversationAgent from "../utils/agents/CoachConversationAgent";
 import { useToast } from "../contexts/ToastContext";
+import ImageWithPresignedUrl from "./shared/ImageWithPresignedUrl";
 import {
   sendMessageWithStreaming,
   isMessageStreaming,
@@ -665,11 +666,11 @@ function CoachConversations() {
   };
 
   // Message submission handler for ChatInput component
-  const handleMessageSubmit = async (messageContent) => {
+  const handleMessageSubmit = async (messageContent, imageS3Keys = []) => {
     if (!agentRef.current) return;
 
     try {
-      await sendMessageWithStreaming(agentRef.current, messageContent, {
+      await sendMessageWithStreaming(agentRef.current, messageContent, imageS3Keys, {
         enableStreaming: supportsStreaming(),
         onStreamingStart: () => {
           // Streaming started
@@ -775,20 +776,34 @@ function CoachConversations() {
     // Get the appropriate content (streaming or final)
     const displayContent = getMessageDisplayContent(message, coachConversationAgentState);
 
-    if (message.type === "ai") {
-      // AI messages use full markdown parsing
-      return parseMarkdown(displayContent);
-    } else {
-      // User messages: simple line break rendering
-      if (!displayContent) return displayContent;
+    return (
+      <>
+        {/* Render images if present */}
+        {message.imageS3Keys && message.imageS3Keys.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-2">
+            {message.imageS3Keys.map((s3Key, index) => (
+              <ImageWithPresignedUrl key={index} s3Key={s3Key} userId={userId} index={index} />
+            ))}
+          </div>
+        )}
 
-      return displayContent.split("\n").map((line, index, array) => (
-        <span key={index}>
-          {line}
-          {index < array.length - 1 && <br />}
-        </span>
-      ));
-    }
+        {/* Render text content */}
+        {displayContent && (
+          message.type === "ai" ? (
+            // AI messages use full markdown parsing
+            parseMarkdown(displayContent)
+          ) : (
+            // User messages: simple line break rendering
+            displayContent.split("\n").map((line, index, array) => (
+              <span key={index}>
+                {line}
+                {index < array.length - 1 && <br />}
+              </span>
+            ))
+          )
+        )}
+      </>
+    );
   };
 
   // Typing state without memoization to ensure real-time updates during streaming
@@ -853,7 +868,7 @@ function CoachConversations() {
                         </div>
 
                         {/* Timestamp and status skeleton */}
-                        <div className={`flex items-center gap-1 px-2 ${i % 2 === 1 ? 'justify-end mt-1' : 'justify-start'}`}>
+                        <div className={`flex items-center gap-1 px-2 mt-1 ${i % 2 === 1 ? 'justify-end' : 'justify-start'}`}>
                           <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-12"></div>
                           <div className="flex gap-1">
                             <div className="w-3 h-3 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
@@ -1034,6 +1049,7 @@ function CoachConversations() {
 
       {/* Chat Input Component */}
       <ChatInput
+        userId={userId}
         inputMessage={inputMessage}
         setInputMessage={setInputMessage}
         onSubmit={handleMessageSubmit}

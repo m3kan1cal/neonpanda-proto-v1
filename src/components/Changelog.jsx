@@ -43,6 +43,54 @@ const CollapsibleSection = ({ title, icon, children, defaultOpen = true, classNa
 
 const changelogEntries = [
   {
+    version: "Release v1.0.20251002-beta",
+    date: "2025-10-02",
+    changes: {
+      added: [
+        "Image upload functionality for both CoachConversations and CoachCreator pages with drag-and-drop and paste support",
+        "Private S3 bucket (midgard-apps) with branch-aware naming for secure image storage",
+        "Presigned URL generation for secure client-side image uploads (generate-upload-urls Lambda)",
+        "Presigned URL generation for secure image downloads from private S3 bucket (generate-download-urls Lambda)",
+        "ImageWithPresignedUrl shared component for consistent image display across pages",
+        "Multimodal AI vision support using Claude Sonnet 4.5 via AWS Bedrock Converse API",
+        "Image hydration system (image-hydration.ts) to download images from S3 and format for Claude API",
+        "Client-side image processing utilities (imageProcessing.js) with HEIC conversion and compression",
+        "useImageUpload React hook for managing image selection, preview, and upload state",
+        "Per-image upload progress indicators with loading spinners on each image preview",
+        "Copy-paste image functionality directly into ChatInput on desktop browsers",
+        "Image preview display within message bubbles for both user and AI messages",
+        "Inline image display with 128x128px thumbnails using neon maroon styling",
+        "Support for up to 5 images per message with automatic validation",
+        "S3 bucket lifecycle policy for automatic cleanup of old images after 90 days",
+        "Dynamic S3 bucket name injection into amplify_outputs.json for frontend access"
+      ],
+      changed: [
+        "CoachConversationAgent and CoachCreatorAgent now accept imageS3Keys parameter in message sending",
+        "ChatInput component extended with image upload UI and file selection capabilities",
+        "update-coach-creator-session handler now uses multimodal Bedrock API when images are present",
+        "send-coach-conversation-message and stream-coach-conversation handlers updated for image support",
+        "CoachMessage interface extended with messageType and imageS3Keys properties",
+        "Backend validation ensures S3 keys are user-scoped (must start with user-uploads/{userId}/)",
+        "Message submission now clears images immediately after upload for better UX",
+        "Image previews styled with imagePreviewPatterns from uiPatterns.js for consistency",
+        "Inline images display with neon maroon borders (border-synthwave-neon-maroon/80) and backgrounds",
+        "authenticatedFetch now prepends API base URL to relative URLs for correct routing",
+        "Image preview thumbnails reduced from 80px to 64px for more compact display"
+      ],
+      fixed: [
+        "Missing APPS_BUCKET_NAME environment variable in update-coach-creator-session Lambda",
+        "Missing S3 read permissions for update-coach-creator-session Lambda function",
+        "Missing messageType property causing buildMultimodalContent to skip image processing in CoachCreator",
+        "Frontend making API calls to localhost instead of deployed API Gateway for image downloads",
+        "Image remove button being cut off on top due to overflow-hidden on parent container",
+        "Images not disappearing from ChatInput after message submission",
+        "ImageWithPresignedUrl component duplicated in CoachCreator.jsx and CoachConversations.jsx",
+        "CoachCreatorAgent and CoachConversationAgent not loading imageS3Keys from DynamoDB into frontend state",
+        "Image borders and styling not standing out against user message container backgrounds"
+      ]
+    }
+  },
+  {
     version: "Release v1.0.20250930-beta",
     date: "2025-09-30",
     changes: {

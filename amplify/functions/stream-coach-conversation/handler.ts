@@ -161,10 +161,24 @@ async function validateAndExtractParams(
     throw new Error("Invalid JSON in request body");
   }
 
-  const { userResponse, messageTimestamp } = body;
+  const { userResponse, messageTimestamp, imageS3Keys } = body;
 
-  if (!userResponse || typeof userResponse !== "string") {
-    throw new Error("userResponse is required and must be a string");
+  // Validation: Either text or images required
+  if (!userResponse && (!imageS3Keys || imageS3Keys.length === 0)) {
+    throw new Error("Either text or images required");
+  }
+
+  if (imageS3Keys && imageS3Keys.length > 5) {
+    throw new Error("Maximum 5 images per message");
+  }
+
+  // Verify S3 keys belong to this user
+  if (imageS3Keys) {
+    for (const key of imageS3Keys) {
+      if (!key.startsWith(`user-uploads/${userId}/`)) {
+        throw new Error(`Invalid image key: ${key}`);
+      }
+    }
   }
 
   if (!messageTimestamp) {
@@ -185,6 +199,7 @@ async function validateAndExtractParams(
     conversationId: conversationId as string,
     userResponse,
     messageTimestamp,
+    imageS3Keys, // NEW: Include imageS3Keys
   };
 }
 
@@ -515,8 +530,10 @@ async function* processCoachConversationAsync(
   const newUserMessage: CoachMessage = {
     id: `msg_${Date.now()}_user`,
     role: "user",
-    content: params.userResponse,
+    content: params.userResponse || '',
     timestamp: new Date(params.messageTimestamp),
+    messageType: params.imageS3Keys && params.imageS3Keys.length > 0 ? 'text_with_images' : 'text',
+    imageS3Keys: params.imageS3Keys || undefined,
   };
 
   const conversationContext = {
@@ -556,7 +573,8 @@ async function* processCoachConversationAsync(
       params.userId,
       params.coachId,
       params.conversationId,
-      conversationData.userProfile
+      conversationData.userProfile,
+      params.imageS3Keys // NEW: Pass imageS3Keys
     );
 
     // Yield AI response chunks using optimized buffering strategy

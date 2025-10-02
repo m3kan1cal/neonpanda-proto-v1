@@ -22,7 +22,6 @@ export const createCoachCreatorSession = async (userId) => {
   }
 
   const result = await response.json();
-  console.info('Coach creator session created:', result);
 
   return result;
 };
@@ -32,16 +31,23 @@ export const createCoachCreatorSession = async (userId) => {
  * @param {string} userId - The user ID
  * @param {string} sessionId - The session ID
  * @param {string} userResponse - The user's response text
+ * @param {string[]} [imageS3Keys] - Optional array of S3 keys for uploaded images
  * @returns {Promise<Object>} - The API response with aiResponse, isComplete, etc.
  */
-export const updateCoachCreatorSession = async (userId, sessionId, userResponse) => {
+export const updateCoachCreatorSession = async (userId, sessionId, userResponse, imageS3Keys = []) => {
   const url = `${getApiUrl('')}/users/${userId}/coach-creator-sessions/${sessionId}`;
+  const requestBody = {
+    userResponse,
+    messageTimestamp: new Date().toISOString() // Add timestamp for consistency
+  };
+
+  if (imageS3Keys && imageS3Keys.length > 0) {
+    requestBody.imageS3Keys = imageS3Keys;
+  }
+
   const response = await authenticatedFetch(url, {
     method: 'PUT',
-    body: JSON.stringify({
-      userResponse,
-      messageTimestamp: new Date().toISOString() // Add timestamp for consistency
-    }),
+    body: JSON.stringify(requestBody),
   });
 
   if (!response.ok) {
@@ -49,7 +55,6 @@ export const updateCoachCreatorSession = async (userId, sessionId, userResponse)
   }
 
   const result = await response.json();
-  console.info('Coach creator session updated:', result);
 
   return result;
 };
@@ -59,19 +64,24 @@ export const updateCoachCreatorSession = async (userId, sessionId, userResponse)
  * @param {string} userId - The user ID
  * @param {string} sessionId - The session ID
  * @param {string} userResponse - The user's response text
+ * @param {string[]} [imageS3Keys] - Optional array of S3 keys for uploaded images
  * @returns {AsyncGenerator} - Stream of response chunks
  */
-export async function* updateCoachCreatorSessionStream(userId, sessionId, userResponse) {
+export async function* updateCoachCreatorSessionStream(userId, sessionId, userResponse, imageS3Keys = []) {
   const url = `${getApiUrl('')}/users/${userId}/coach-creator-sessions/${sessionId}?stream=true`;
   const requestBody = {
     userResponse,
     messageTimestamp: new Date().toISOString()
   };
 
+  if (imageS3Keys && imageS3Keys.length > 0) {
+    requestBody.imageS3Keys = imageS3Keys;
+  }
+
   yield* handleStreamingApiRequest(url, requestBody, {
     method: 'PUT',
     fallbackFunction: updateCoachCreatorSession,
-    fallbackParams: [userId, sessionId, userResponse],
+    fallbackParams: [userId, sessionId, userResponse, imageS3Keys],
     operationName: 'coach creator session update',
     errorMessages: {
       notFound: 'Session not found or expired',
@@ -100,7 +110,6 @@ export const getCoachCreatorSession = async (userId, sessionId) => {
   }
 
   const result = await response.json();
-  console.info('Coach creator session loaded:', result);
 
   return result;
 };
@@ -142,8 +151,6 @@ export const getCoachCreatorSessions = async (userId, options = {}) => {
   }
 
   const result = await response.json();
-  console.info('Coach creator sessions loaded:', result);
-
   return result;
 };
 
@@ -167,7 +174,6 @@ export const deleteCoachCreatorSession = async (userId, sessionId) => {
   }
 
   const result = await response.json();
-  console.info('Coach creator session deleted:', result);
 
   return result;
 };

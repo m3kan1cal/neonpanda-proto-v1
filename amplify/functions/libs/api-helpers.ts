@@ -587,6 +587,166 @@ export const callBedrockApiStream = async (
   }
 };
 
+/**
+ * Amazon Bedrock Converse API call with multimodal content support (text + images)
+ * Use this when you need to pass a full messages array with image content blocks
+ *
+ * @param systemPrompt - System prompt to set AI behavior
+ * @param messages - Full Converse API messages array (e.g., from buildMultimodalContent)
+ * @param modelId - Model ID to use (defaults to Claude Sonnet 4)
+ * @returns Promise with AI response text
+ */
+export const callBedrockApiMultimodal = async (
+  systemPrompt: string,
+  messages: any[], // Full Converse API messages array with images
+  modelId: string = CLAUDE_SONNET_4_MODEL_ID
+): Promise<string> => {
+  try {
+    console.info("=== BEDROCK MULTIMODAL API CALL START ===");
+    console.info("AWS Region:", process.env.AWS_REGION || "us-west-2");
+    console.info("Model ID:", modelId);
+    console.info("System prompt length:", systemPrompt.length);
+    console.info("Messages count:", messages.length);
+    console.info("Has images:", messages.some(m =>
+      m.content?.some((c: any) => c.image)
+    ));
+
+    const command = new ConverseCommand({
+      modelId: modelId,
+      messages: messages,
+      system: [{ text: systemPrompt }],
+      inferenceConfig: {
+        maxTokens: getMaxTokensForModel(modelId),
+        temperature: TEMPERATURE,
+      },
+    });
+
+    console.info("Multimodal converse command created successfully...");
+
+    const response = await bedrockClient.send(command);
+
+    console.info("Response received from Bedrock");
+    console.info("Response metadata:", response.$metadata);
+
+    if (!response.output?.message?.content?.[0]?.text) {
+      console.error(
+        "Invalid response structure:",
+        JSON.stringify(response, null, 2)
+      );
+      throw new Error("Invalid response format from Bedrock");
+    }
+
+    const responseText = response.output.message.content[0].text;
+
+    console.info(
+      "Successfully extracted response text, length:",
+      responseText.length
+    );
+    console.info("=== BEDROCK MULTIMODAL API CALL SUCCESS ===");
+
+    return responseText;
+  } catch (error: any) {
+    console.error("=== BEDROCK MULTIMODAL API CALL FAILED ===");
+    console.error("Error type:", typeof error);
+    console.error("Error message:", error.message);
+    console.error("Error stack:", error.stack);
+
+    if (error.$metadata) {
+      console.error("AWS Metadata:", error.$metadata);
+    }
+
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    throw new Error(`Claude Multimodal API failed: ${errorMessage}`);
+  }
+};
+
+/**
+ * Amazon Bedrock Converse Stream API call with multimodal content support (text + images)
+ * Use this when you need streaming responses with image support
+ *
+ * @param systemPrompt - System prompt to set AI behavior
+ * @param messages - Full Converse API messages array (e.g., from buildMultimodalContent)
+ * @param modelId - Model ID to use (defaults to Claude Sonnet 4)
+ * @returns Promise with async generator that yields response chunks
+ */
+export const callBedrockApiMultimodalStream = async (
+  systemPrompt: string,
+  messages: any[], // Full Converse API messages array with images
+  modelId: string = CLAUDE_SONNET_4_MODEL_ID
+): Promise<AsyncGenerator<string, void, unknown>> => {
+  try {
+    console.info("=== BEDROCK MULTIMODAL STREAMING API CALL START ===");
+    console.info("AWS Region:", process.env.AWS_REGION || "us-west-2");
+    console.info("Model ID:", modelId);
+    console.info("System prompt length:", systemPrompt.length);
+    console.info("Messages count:", messages.length);
+    console.info("Has images:", messages.some(m =>
+      m.content?.some((c: any) => c.image)
+    ));
+
+    const command = new ConverseStreamCommand({
+      modelId: modelId,
+      messages: messages,
+      system: [{ text: systemPrompt }],
+      inferenceConfig: {
+        maxTokens: getMaxTokensForModel(modelId),
+        temperature: TEMPERATURE,
+      },
+    });
+
+    console.info("Multimodal converse stream command created successfully...");
+
+    const response = await bedrockClient.send(command);
+
+    if (!response.stream) {
+      throw new Error("No stream received from Bedrock");
+    }
+
+    console.info("Stream response received from Bedrock");
+
+    // Return an async generator that yields chunks as they come in
+    return async function* streamGenerator() {
+      try {
+        let fullResponse = "";
+
+        for await (const chunk of response.stream!) {
+          if (chunk.contentBlockDelta?.delta?.text) {
+            const deltaText = chunk.contentBlockDelta.delta.text;
+            fullResponse += deltaText;
+            yield deltaText;
+          }
+
+          // Handle end of stream
+          if (chunk.messageStop) {
+            console.info("=== BEDROCK MULTIMODAL STREAMING API CALL SUCCESS ===");
+            console.info("Stream complete. Total response length:", fullResponse.length);
+            break;
+          }
+        }
+
+      } catch (streamError: any) {
+        console.error("Error processing multimodal stream:", streamError);
+        throw streamError;
+      }
+    }();
+
+  } catch (error: any) {
+    console.error("=== BEDROCK MULTIMODAL STREAMING API CALL FAILED ===");
+    console.error("Error type:", typeof error);
+    console.error("Error message:", error.message);
+    console.error("Error stack:", error.stack);
+
+    if (error.$metadata) {
+      console.error("AWS Metadata:", error.$metadata);
+    }
+
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    throw new Error(`Claude Multimodal Streaming API failed: ${errorMessage}`);
+  }
+};
+
 // Pinecone client initialization helper
 export const getPineconeClient = async () => {
   const pc = new Pinecone({

@@ -54,18 +54,36 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     console.info('🔄 Streaming mode:', isStreamingRequested ? 'ENABLED' : 'DISABLED');
 
     const body = JSON.parse(event.body);
-    const { userResponse, messageTimestamp } = body;
+    const { userResponse, messageTimestamp, imageS3Keys } = body;
 
     console.info('📥 Request body parsed:', {
       hasUserResponse: !!userResponse,
       userResponseType: typeof userResponse,
       hasMessageTimestamp: !!messageTimestamp,
+      hasImages: !!imageS3Keys,
+      imageCount: imageS3Keys?.length || 0,
       bodyKeys: Object.keys(body)
     });
 
-    if (!userResponse || typeof userResponse !== "string") {
-      console.error('❌ Validation failed: User response is required and must be string:', { userResponse, type: typeof userResponse });
-      return createErrorResponse(400, "User response is required");
+    // Validation: Either text or images required
+    if (!userResponse && (!imageS3Keys || imageS3Keys.length === 0)) {
+      console.error('❌ Validation failed: Either text or images required');
+      return createErrorResponse(400, "Either text or images required");
+    }
+
+    if (imageS3Keys && imageS3Keys.length > 5) {
+      console.error('❌ Validation failed: Maximum 5 images per message');
+      return createErrorResponse(400, "Maximum 5 images per message");
+    }
+
+    // Verify S3 keys belong to this user
+    if (imageS3Keys) {
+      for (const key of imageS3Keys) {
+        if (!key.startsWith(`user-uploads/${userId}/`)) {
+          console.error('❌ Validation failed: Invalid image key:', { key, userId });
+          return createErrorResponse(403, "Invalid image key");
+        }
+      }
     }
 
     if (!messageTimestamp) {
@@ -106,8 +124,10 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     const newUserMessage: CoachMessage = {
       id: `msg_${Date.now()}_user`,
       role: "user",
-      content: userResponse,
+      content: userResponse || '',
       timestamp: new Date(),
+      messageType: imageS3Keys && imageS3Keys.length > 0 ? 'text_with_images' : 'text',
+      imageS3Keys: imageS3Keys || undefined,
     };
 
     // Calculate conversation context from existing messages
@@ -207,7 +227,8 @@ const baseHandler: AuthenticatedHandler = async (event) => {
         existingConversation, coachConfig,
         context, workoutResult, memoryRetrieval,
         existingMessages, conversationContext,
-        userProfile
+        userProfile,
+        imageS3Keys // NEW: Pass imageS3Keys
       );
     }
 
@@ -225,7 +246,8 @@ const baseHandler: AuthenticatedHandler = async (event) => {
         userId,
         coachId,
         conversationId,
-        userProfile
+        userProfile,
+        imageS3Keys // NEW: Pass imageS3Keys
       );
     } catch (error) {
       console.error('❌ Error in AI response generation, using fallback:', error);
@@ -356,7 +378,8 @@ async function handleStreamingResponse(
   existingConversation: any, coachConfig: any,
   context: any, workoutResult: any, memoryRetrieval: any,
   existingMessages: any[], conversationContext: any,
-  userProfile: any
+  userProfile: any,
+  imageS3Keys?: string[] // NEW: Add imageS3Keys parameter
 ) {
   try {
     console.info('🔄 Starting streaming response generation');
@@ -365,8 +388,10 @@ async function handleStreamingResponse(
     const newUserMessage: CoachMessage = {
       id: `msg_${Date.now()}_user`,
       role: "user",
-      content: userResponse,
+      content: userResponse || '',
       timestamp: new Date(messageTimestamp),
+      messageType: imageS3Keys && imageS3Keys.length > 0 ? 'text_with_images' : 'text',
+      imageS3Keys: imageS3Keys || undefined,
     };
 
     // Start streaming AI response
@@ -381,7 +406,8 @@ async function handleStreamingResponse(
       userId,
       coachId,
       conversationId,
-      userProfile
+      userProfile,
+      imageS3Keys // NEW: Pass imageS3Keys
     );
 
     // Return streaming response

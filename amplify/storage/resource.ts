@@ -1,0 +1,62 @@
+import * as s3 from 'aws-cdk-lib/aws-s3';
+import { RemovalPolicy, Stack, Duration } from 'aws-cdk-lib';
+import { Construct } from 'constructs';
+import { createBranchAwareResourceName } from '../functions/libs/branch-naming';
+
+export function createAppsBucket(scope: Construct) {
+  const stack = Stack.of(scope);
+
+  // Use standard branch-aware naming: midgard-apps, midgard-apps-develop, midgard-apps-sandbox-{id}
+  const { branchInfo, resourceName: bucketName } = createBranchAwareResourceName(
+    stack,
+    'midgard-apps',
+    'S3 Apps Bucket'
+  );
+
+  const bucket = new s3.Bucket(scope, 'AppsBucket', {
+    bucketName: bucketName,
+
+    // Security
+    publicReadAccess: false,
+    blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+
+    // CORS for direct uploads from frontend
+    cors: [
+      {
+        allowedMethods: [
+          s3.HttpMethods.GET,
+          s3.HttpMethods.PUT,
+          s3.HttpMethods.HEAD,
+        ],
+        allowedOrigins: ['*'], // Tighten this in production
+        allowedHeaders: ['*'],
+        exposedHeaders: ['ETag'],
+        maxAge: 3000,
+      },
+    ],
+
+    // Lifecycle: Delete images after 90 days
+    lifecycleRules: [
+      {
+        id: 'DeleteOldImages',
+        prefix: 'user-uploads/',
+        expiration: Duration.days(90),
+        enabled: true,
+      },
+    ],
+
+    // Encryption and removal
+    encryption: s3.BucketEncryption.S3_MANAGED,
+    removalPolicy: RemovalPolicy.DESTROY, // RETAIN for production
+    autoDeleteObjects: true, // Only for dev
+  });
+
+  console.info(`✅ Apps bucket created: ${bucketName} (branch: ${branchInfo.branchName})`);
+
+  return {
+    bucket,
+    bucketName,
+    branchInfo,
+  };
+}
+

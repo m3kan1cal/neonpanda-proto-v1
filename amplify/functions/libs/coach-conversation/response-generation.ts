@@ -1,8 +1,17 @@
-import { callBedrockApi, callBedrockApiStream, MODEL_IDS, storeDebugDataInS3 } from "../api-helpers";
+import {
+  callBedrockApi,
+  callBedrockApiStream,
+  callBedrockApiMultimodal,
+  callBedrockApiMultimodalStream,
+  MODEL_IDS,
+  storeDebugDataInS3
+} from "../api-helpers";
 import { generateSystemPrompt, validateCoachConfig, generateSystemPromptPreview } from "./prompt-generation";
 import { ConversationContextResult } from "./context";
 import { WorkoutDetectionResult } from "./workout-detection";
 import { MemoryRetrievalResult } from "./memory-processing";
+import { buildMultimodalContent } from "./image-hydration";
+import { CoachMessage } from "./types";
 
 // Configuration constants
 const ENABLE_S3_DEBUG_LOGGING = false; // Set to true to enable system prompt debugging in S3
@@ -26,7 +35,8 @@ export async function generateAIResponse(
   userId: string,
   coachId: string,
   conversationId: string,
-  userProfile?: any
+  userProfile?: any,
+  imageS3Keys?: string[] // NEW: Add imageS3Keys parameter
 ): Promise<ResponseGenerationResult> {
   let aiResponseContent: string;
   let promptMetadata: any = null;
@@ -155,10 +165,41 @@ Provide contextually relevant responses that demonstrate continuity with the ong
     }
 
     try {
-      aiResponseContent = await callBedrockApi(
-        systemPromptWithHistory,
-        userMessage
-      );
+      // Check if this is a multimodal request (has images)
+      const hasImages = imageS3Keys && imageS3Keys.length > 0;
+
+      if (hasImages) {
+        // Build conversation with images using Converse API format
+        const currentUserMessage: CoachMessage = {
+          id: `msg_${Date.now()}_user`,
+          role: 'user',
+          content: userMessage || '',
+          timestamp: new Date(),
+          messageType: 'text_with_images',
+          imageS3Keys: imageS3Keys,
+        };
+
+        const allMessages: CoachMessage[] = [...existingMessages, currentUserMessage];
+        const converseMessages = await buildMultimodalContent(allMessages);
+
+        console.info('🖼️ Using multimodal Converse API with images', {
+          messageCount: converseMessages.length,
+          imagesCount: imageS3Keys.length,
+        });
+
+        // Use centralized multimodal helper from api-helpers
+        aiResponseContent = await callBedrockApiMultimodal(
+          systemPromptWithHistory,
+          converseMessages,
+          MODEL_IDS.CLAUDE_SONNET_4_FULL
+        );
+      } else {
+        // Standard text-only response
+        aiResponseContent = await callBedrockApi(
+          systemPromptWithHistory,
+          userMessage
+        );
+      }
     } catch (error) {
       console.error("Claude API error:", error);
       throw new Error("Failed to process response with AI");
@@ -194,7 +235,8 @@ export async function generateAIResponseStream(
   userId: string,
   coachId: string,
   conversationId: string,
-  userProfile?: any
+  userProfile?: any,
+  imageS3Keys?: string[] // NEW: Add imageS3Keys parameter
 ): Promise<ResponseGenerationStreamResult> {
   let promptMetadata: any = null;
 
@@ -322,15 +364,51 @@ Provide contextually relevant responses that demonstrate continuity with the ong
     }
 
     try {
-      const responseStream = await callBedrockApiStream(
-        systemPromptWithHistory,
-        userMessage
-      );
+      // Check if this is a multimodal request (has images)
+      const hasImages = imageS3Keys && imageS3Keys.length > 0;
 
-      return {
-        responseStream,
-        promptMetadata
-      };
+      if (hasImages) {
+        // Build conversation with images using Converse API format
+        const currentUserMessage: CoachMessage = {
+          id: `msg_${Date.now()}_user`,
+          role: 'user',
+          content: userMessage || '',
+          timestamp: new Date(),
+          messageType: 'text_with_images',
+          imageS3Keys: imageS3Keys,
+        };
+
+        const allMessages: CoachMessage[] = [...existingMessages, currentUserMessage];
+        const converseMessages = await buildMultimodalContent(allMessages);
+
+        console.info('🖼️ Using multimodal Converse Stream API with images', {
+          messageCount: converseMessages.length,
+          imagesCount: imageS3Keys.length,
+        });
+
+        // Use centralized multimodal streaming helper from api-helpers
+        const responseStream = await callBedrockApiMultimodalStream(
+          systemPromptWithHistory,
+          converseMessages,
+          MODEL_IDS.CLAUDE_SONNET_4_FULL
+        );
+
+        return {
+          responseStream,
+          promptMetadata
+        };
+      } else {
+        // Standard text-only streaming response
+        const responseStream = await callBedrockApiStream(
+          systemPromptWithHistory,
+          userMessage
+        );
+
+        return {
+          responseStream,
+          promptMetadata
+        };
+      }
     } catch (error) {
       console.error("Claude Streaming API error:", error);
       throw new Error("Failed to process response with AI streaming");

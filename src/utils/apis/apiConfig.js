@@ -19,22 +19,17 @@ function getDefaultApiUrl() {
   const customEndpoint = apiConfig?.customEndpoint;
   const endpoint = apiConfig?.endpoint;
 
-  console.info("API customEndpoint:", customEndpoint);
-  console.info("API endpoint:", endpoint);
-
   // Use customEndpoint if it exists and is valid (not null or "https://null")
   if (
     customEndpoint &&
     customEndpoint !== "https://null" &&
     !customEndpoint.includes("/null")
   ) {
-    console.info("✅ Using customEndpoint for branch/prod deployment");
     return customEndpoint;
   }
 
   // Fall back to standard endpoint (used for sandbox deployments)
   if (endpoint) {
-    console.info("✅ Using standard endpoint for sandbox deployment");
     return endpoint;
   }
 
@@ -60,7 +55,7 @@ export const getAuthHeaders = async (forceRefresh = false) => {
       ...(token && { Authorization: `Bearer ${token}` }),
     };
   } catch (error) {
-    console.warn("Error getting auth token:", error);
+    // Silent failure - return headers without token
     return {
       "Content-Type": "application/json",
     };
@@ -69,9 +64,12 @@ export const getAuthHeaders = async (forceRefresh = false) => {
 
 // Authenticated fetch wrapper with automatic token refresh on 401
 export const authenticatedFetch = async (url, options = {}) => {
+  // Construct full URL (if url is relative, prepend API base URL)
+  const fullUrl = url.startsWith('http') ? url : getApiUrl(url);
+
   // First attempt with current token
   let authHeaders = await getAuthHeaders();
-  let response = await fetch(url, {
+  let response = await fetch(fullUrl, {
     ...options,
     headers: {
       ...authHeaders,
@@ -82,9 +80,6 @@ export const authenticatedFetch = async (url, options = {}) => {
   // If we get a 401 (Unauthorized), this likely means refresh token expired or session revoked
   // Amplify normally handles token refresh automatically, so 401s indicate serious auth issues
   if (response.status === 401) {
-    console.warn(
-      "Received 401 - likely refresh token expired or session revoked"
-    );
     handleAuthFailure();
   }
 
@@ -101,16 +96,11 @@ export const setAuthFailureHandler = (handler) => {
 
 // Handle authentication failures
 const handleAuthFailure = () => {
-  console.warn("Authentication failed - attempting to redirect to login");
-
   if (authFailureHandler) {
     // Use the custom handler if available (preferred - uses React Router)
     authFailureHandler();
   } else {
     // Fallback to window.location as last resort
-    console.warn(
-      "No custom auth failure handler set, using window.location fallback"
-    );
     window.location.href = "/auth";
   }
 };
@@ -148,7 +138,6 @@ function getStreamingFunctionUrl() {
     return null;
   }
 
-  console.info('✅ Using coach conversation streaming function URL from amplify_outputs.json:', streamingConfig.functionUrl);
   return streamingConfig.functionUrl;
 }
 

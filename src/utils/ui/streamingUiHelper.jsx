@@ -7,20 +7,22 @@
  * Handles message sending with streaming first, fallback to non-streaming
  * @param {Object} agent - The agent instance (CoachConversationAgent or CoachCreatorAgent)
  * @param {string} messageContent - The message to send
+ * @param {string[]} imageS3Keys - Optional array of S3 keys for images
  * @param {Object} options - Configuration options
  * @param {Function} options.onStreamingStart - Called when streaming starts
  * @param {Function} options.onStreamingError - Called if streaming fails
  * @param {boolean} options.enableStreaming - Whether to use streaming (default: true)
  * @returns {Promise} - Result from sending the message
  */
-export async function sendMessageWithStreaming(agent, messageContent, options = {}) {
+export async function sendMessageWithStreaming(agent, messageContent, imageS3Keys = [], options = {}) {
   const {
     onStreamingStart = () => {},
     onStreamingError = () => {},
     enableStreaming = true
   } = options;
 
-  if (!agent || !messageContent.trim()) {
+  // Allow sending if there's text OR images
+  if (!agent || (!messageContent.trim() && (!imageS3Keys || imageS3Keys.length === 0))) {
     return;
   }
 
@@ -28,7 +30,7 @@ export async function sendMessageWithStreaming(agent, messageContent, options = 
   if (enableStreaming && agent.sendMessageStream) {
     try {
       onStreamingStart();
-      return await agent.sendMessageStream(messageContent);
+      return await agent.sendMessageStream(messageContent, imageS3Keys);
     } catch (streamingError) {
       console.warn('⚠️ Streaming failed, falling back to non-streaming:', streamingError);
       onStreamingError(streamingError);
@@ -40,7 +42,7 @@ export async function sendMessageWithStreaming(agent, messageContent, options = 
   }
 
   // Use non-streaming directly
-  return await agent.sendMessage(messageContent);
+  return await agent.sendMessage(messageContent, imageS3Keys);
 }
 
 /**
