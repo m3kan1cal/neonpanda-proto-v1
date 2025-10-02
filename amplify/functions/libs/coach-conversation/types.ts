@@ -16,6 +16,11 @@ export interface CoachMessage {
   role: "user" | "assistant";
   content: string;
   timestamp: Date;
+
+  // NEW: Image support
+  messageType?: 'text' | 'text_with_images' | 'voice';
+  imageS3Keys?: string[]; // S3 keys like "user-uploads/user-123/abc.jpg"
+
   metadata?: {
     tokens?: number;
     model?: string;

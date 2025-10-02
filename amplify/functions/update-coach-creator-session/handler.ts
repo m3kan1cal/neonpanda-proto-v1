@@ -1,4 +1,14 @@
-import { createOkResponse, createErrorResponse, callBedrockApi, callBedrockApiStream, invokeAsyncLambda } from '../libs/api-helpers';
+import {
+  createOkResponse,
+  createErrorResponse,
+  callBedrockApi,
+  callBedrockApiStream,
+  callBedrockApiMultimodal,
+  callBedrockApiMultimodalStream,
+  invokeAsyncLambda,
+  MODEL_IDS
+} from '../libs/api-helpers';
+import { buildMultimodalContent } from '../libs/coach-conversation/image-hydration';
 import { SophisticationLevel } from '../libs/coach-creator/types';
 import {
   getProgress,
@@ -31,10 +41,26 @@ const baseHandler: AuthenticatedHandler = async (event) => {
   const userId = event.user.userId;
 
     const sessionId = event.pathParameters?.sessionId;
-    const { userResponse, messageTimestamp } = JSON.parse(event.body || '{}');
+    const { userResponse, messageTimestamp, imageS3Keys } = JSON.parse(event.body || '{}');
 
     if (!sessionId || !userResponse) {
       return createErrorResponse(400, 'Missing required fields: sessionId, userResponse');
+    }
+
+    // Validate imageS3Keys if present
+    if (imageS3Keys) {
+      if (!Array.isArray(imageS3Keys)) {
+        return createErrorResponse(400, 'imageS3Keys must be an array');
+      }
+      if (imageS3Keys.length > 5) {
+        return createErrorResponse(400, 'Maximum 5 images allowed per message');
+      }
+      // Verify all keys belong to this user
+      for (const key of imageS3Keys) {
+        if (!key.startsWith(`user-uploads/${userId}/`)) {
+          return createErrorResponse(403, 'Invalid S3 key: access denied');
+        }
+      }
     }
 
     // Check if streaming is requested
@@ -68,7 +94,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       console.info('🔄 Processing streaming coach creator request');
       return await handleCoachCreatorStreamingResponse(
         userId, sessionId, userResponse, messageTimestamp,
-        session, currentQuestion, questionPrompt
+        session, currentQuestion, questionPrompt, imageS3Keys
       );
     }
 
@@ -76,7 +102,29 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     let rawAiResponse: string;
 
     try {
-      rawAiResponse = await callBedrockApi(questionPrompt, userResponse);
+      // Check if images are present and use multimodal API
+      if (imageS3Keys && imageS3Keys.length > 0) {
+        console.info('🖼️ Processing coach creator request with images:', { imageCount: imageS3Keys.length });
+
+        // Build multimodal content for single message
+        const messages: any[] = [{
+          id: `msg_${Date.now()}_user`,
+          role: 'user' as const,
+          content: userResponse || '',
+          timestamp: new Date(messageTimestamp),
+          messageType: 'text_with_images' as const,
+          imageS3Keys: imageS3Keys,
+        }];
+
+        const converseMessages = await buildMultimodalContent(messages);
+        rawAiResponse = await callBedrockApiMultimodal(
+          questionPrompt,
+          converseMessages,
+          MODEL_IDS.CLAUDE_SONNET_4_FULL
+        );
+      } else {
+        rawAiResponse = await callBedrockApi(questionPrompt, userResponse);
+      }
     } catch (error) {
       console.error('Claude API error:', error);
       return createErrorResponse(500, 'Failed to process response with AI');
@@ -101,7 +149,8 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       currentQuestion,
       userResponse,
       cleanedResponse,
-      detectedLevel || 'UNKNOWN'
+      detectedLevel || 'UNKNOWN',
+      imageS3Keys
     );
 
     // Check if complete BEFORE incrementing currentQuestion
@@ -181,13 +230,36 @@ const baseHandler: AuthenticatedHandler = async (event) => {
 // Streaming response handler for coach creator
 async function handleCoachCreatorStreamingResponse(
   userId: string, sessionId: string, userResponse: string, messageTimestamp: string,
-  session: any, currentQuestion: any, questionPrompt: string
+  session: any, currentQuestion: any, questionPrompt: string, imageS3Keys?: string[]
 ) {
   try {
     console.info('🔄 Starting streaming coach creator response generation');
 
-    // Start streaming AI response
-    const responseStream = await callBedrockApiStream(questionPrompt, userResponse);
+    // Start streaming AI response - check for images
+    let responseStream: AsyncGenerator<string, void, unknown>;
+
+    if (imageS3Keys && imageS3Keys.length > 0) {
+      console.info('🖼️ Processing streaming coach creator request with images:', { imageCount: imageS3Keys.length });
+
+      // Build multimodal content for single message
+      const messages: any[] = [{
+        id: `msg_${Date.now()}_user`,
+        role: 'user' as const,
+        content: userResponse || '',
+        timestamp: new Date(messageTimestamp),
+        messageType: 'text_with_images' as const,
+        imageS3Keys: imageS3Keys,
+      }];
+
+      const converseMessages = await buildMultimodalContent(messages);
+      responseStream = await callBedrockApiMultimodalStream(
+        questionPrompt,
+        converseMessages,
+        MODEL_IDS.CLAUDE_SONNET_4_FULL
+      );
+    } else {
+      responseStream = await callBedrockApiStream(questionPrompt, userResponse);
+    }
 
     // Return streaming response
     return {
@@ -202,7 +274,7 @@ async function handleCoachCreatorStreamingResponse(
       body: await generateCoachCreatorSSEStream(
         responseStream,
         userId, sessionId, userResponse, messageTimestamp,
-        session, currentQuestion
+        session, currentQuestion, imageS3Keys
       ),
       isBase64Encoded: false,
     };
@@ -240,7 +312,7 @@ async function handleCoachCreatorStreamingResponse(
 async function generateCoachCreatorSSEStream(
   responseStream: AsyncGenerator<string, void, unknown>,
   userId: string, sessionId: string, userResponse: string, messageTimestamp: string,
-  session: any, currentQuestion: any
+  session: any, currentQuestion: any, imageS3Keys?: string[]
 ): Promise<string> {
   let fullAIResponse = '';
   let sseOutput = '';
@@ -275,7 +347,8 @@ async function generateCoachCreatorSSEStream(
       currentQuestion,
       userResponse,
       cleanedResponse,
-      detectedLevel || 'UNKNOWN'
+      detectedLevel || 'UNKNOWN',
+      imageS3Keys
     );
 
     // Check if complete BEFORE incrementing currentQuestion

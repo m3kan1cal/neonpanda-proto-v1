@@ -372,14 +372,6 @@ function Coaches() {
     return null;
   }
 
-  // Debug logging - temporary
-  console.info('🐛 Coaches Debug:', {
-    isCreatingCustomCoach,
-    agentStateIsLoading: agentState.isLoading,
-    hasInProgressCoach: !!agentState.inProgressCoach,
-    agentStateError: agentState.error
-  });
-
   // Show coaches list
   return (
     <div className={layoutPatterns.pageContainer}>

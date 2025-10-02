@@ -46,8 +46,11 @@ import { deleteCoachConversation } from "./functions/delete-coach-conversation/r
 import { forwardLogsToSns } from "./functions/forward-logs-to-sns/resource";
 import { getUserProfile } from "./functions/get-user-profile/resource";
 import { updateUserProfile } from "./functions/update-user-profile/resource";
+import { generateUploadUrls } from "./functions/generate-upload-urls/resource";
+import { generateDownloadUrls } from "./functions/generate-download-urls/resource";
 import { apiGatewayv2 } from "./api/resource";
 import { dynamodbTable } from "./dynamodb/resource";
+import { createAppsBucket } from "./storage/resource";
 import { createContactFormNotificationTopic, createErrorMonitoringTopic } from "./sns/resource";
 import {
   grantBedrockPermissions,
@@ -57,6 +60,7 @@ import {
   grantCognitoAdminPermissions,
   grantDynamoDBPermissions,
   grantDynamoDBThroughputPermissions,
+  grantS3AppsPermissions,
 } from "./iam-policies";
 import { config } from "./functions/libs/configs";
 import { ErrorMonitoring } from "./functions/libs/error-monitoring";
@@ -105,6 +109,8 @@ const backend = defineBackend({
   forwardLogsToSns,
   getUserProfile,
   updateUserProfile,
+  generateUploadUrls,
+  generateDownloadUrls,
 });
 
 // Create User Pool authorizer
@@ -151,11 +157,16 @@ const coreApi = apiGatewayv2.createCoreApi(
   backend.deleteCoachConversation.resources.lambda,
   backend.getUserProfile.resources.lambda,
   backend.updateUserProfile.resources.lambda,
+  backend.generateUploadUrls.resources.lambda,
+  backend.generateDownloadUrls.resources.lambda,
   userPoolAuthorizer
 );
 
 // Create DynamoDB table
 const coreTable = dynamodbTable.createCoreTable(backend.contactForm.stack);
+
+// Create apps bucket for image storage (uses standard branch-aware naming)
+const appsBucket = createAppsBucket(backend.contactForm.stack);
 
 // Create SNS topics for notifications
 const contactFormNotifications = createContactFormNotificationTopic(backend.contactForm.stack);
@@ -263,6 +274,12 @@ coreTable.table.grantReadWriteData(backend.deleteMemory.resources.lambda);
 coreTable.table.grantReadData(backend.getUserProfile.resources.lambda);
 coreTable.table.grantReadWriteData(backend.updateUserProfile.resources.lambda);
 
+// Grant DynamoDB read permission to generate upload URLs function
+coreTable.table.grantReadData(backend.generateUploadUrls.resources.lambda);
+
+// Grant DynamoDB read permission to generate download URLs function
+coreTable.table.grantReadData(backend.generateDownloadUrls.resources.lambda);
+
 // Add environment variables to all functions (excluding post-confirmation due to circular dependency)
 const allFunctions = [
   backend.contactForm,
@@ -302,6 +319,7 @@ const allFunctions = [
   backend.createCoachConfigFromTemplate,
   backend.getUserProfile,
   backend.updateUserProfile,
+  backend.generateUploadUrls,
 ];
 
 allFunctions.forEach((func) => {
@@ -318,6 +336,17 @@ allFunctions.forEach((func) => {
   func.addEnvironment("DYNAMODB_MAX_RETRIES", "5");
   func.addEnvironment("DYNAMODB_INITIAL_RETRY_DELAY", "1000");
   func.addEnvironment("DYNAMODB_SCALE_DOWN_DELAY_MINUTES", "10");
+});
+
+// Add apps bucket name to functions that need it
+[
+  backend.generateUploadUrls,
+  backend.generateDownloadUrls,
+  backend.sendCoachConversationMessage,
+  backend.streamCoachConversation,
+  backend.updateCoachCreatorSession,
+].forEach((func) => {
+  func.addEnvironment('APPS_BUCKET_NAME', appsBucket.bucketName);
 });
 
 // Set up error monitoring for all Lambda functions using allFunctions array
@@ -364,6 +393,15 @@ grantS3DebugPermissions([
 
 // Grant S3 analytics permissions to functions that need it
 grantS3AnalyticsPermissions([backend.buildWeeklyAnalytics.resources.lambda], branchName);
+
+// Grant S3 apps bucket permissions to functions that need it
+grantS3AppsPermissions([
+  backend.generateUploadUrls.resources.lambda,
+  backend.generateDownloadUrls.resources.lambda,
+  backend.sendCoachConversationMessage.resources.lambda,
+  backend.streamCoachConversation.resources.lambda,
+  backend.updateCoachCreatorSession.resources.lambda,
+], appsBucket.branchInfo);
 
 // Grant DynamoDB throughput management permissions to high-volume functions
 grantDynamoDBThroughputPermissions([
@@ -554,7 +592,7 @@ cfnUserPool.userPoolAddOns = {
   advancedSecurityMode: 'ENFORCED'  // Options: 'OFF', 'AUDIT', 'ENFORCED'
 };
 
-// Output the API URL and DynamoDB table info
+// Output the API URL, DynamoDB table info, and S3 bucket info
 backend.addOutput({
   custom: {
     api: {
@@ -570,6 +608,12 @@ backend.addOutput({
       coreTable: {
         tableName: coreTable.table.tableName,
         tableArn: coreTable.table.tableArn,
+        region: backend.contactForm.stack.region,
+      },
+    },
+    storage: {
+      appsBucket: {
+        bucketName: appsBucket.bucketName,
         region: backend.contactForm.stack.region,
       },
     },

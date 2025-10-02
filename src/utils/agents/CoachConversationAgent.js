@@ -310,6 +310,8 @@ export class CoachConversationAgent {
             type: message.role === 'user' ? 'user' : 'ai',
             content: messageContent,
             timestamp: message.timestamp || new Date().toISOString(),
+            imageS3Keys: message.imageS3Keys || undefined,
+            messageType: message.messageType || undefined,
           });
         });
       }
@@ -347,9 +349,10 @@ export class CoachConversationAgent {
   /**
    * Sends a user message and processes the AI response
    */
-  async sendMessage(messageContent) {
+  async sendMessage(messageContent, imageS3Keys = []) {
+    // Allow sending if there's text OR images
     if (
-      !messageContent.trim() ||
+      (!messageContent.trim() && (!imageS3Keys || imageS3Keys.length === 0)) ||
       this.state.isTyping ||
       this.state.isLoadingItem ||
       !this.userId ||
@@ -367,6 +370,7 @@ export class CoachConversationAgent {
         type: "user",
         content: messageContent.trim(),
         timestamp: new Date().toISOString(),
+        imageS3Keys: imageS3Keys && imageS3Keys.length > 0 ? imageS3Keys : undefined,
       };
 
       this._addMessage(userMessage);
@@ -377,7 +381,8 @@ export class CoachConversationAgent {
         this.userId,
         this.coachId,
         this.conversationId,
-        messageContent.trim()
+        messageContent.trim(),
+        imageS3Keys
       );
 
             // Extract AI response content from the message object
@@ -439,10 +444,10 @@ export class CoachConversationAgent {
   /**
    * Sends a user message and processes the AI response with streaming
    */
-  async sendMessageStream(messageContent) {
+  async sendMessageStream(messageContent, imageS3Keys = []) {
 
-    // Input validation
-    if (!validateStreamingInput(this, messageContent)) {
+    // Input validation - allow text OR images
+    if (!validateStreamingInput(this, messageContent, imageS3Keys)) {
       console.warn('❌ sendMessageStream validation failed');
       return;
     }
@@ -454,6 +459,7 @@ export class CoachConversationAgent {
         type: "user",
         content: messageContent.trim(),
         timestamp: new Date().toISOString(),
+        imageS3Keys: imageS3Keys && imageS3Keys.length > 0 ? imageS3Keys : undefined,
       };
       this._addMessage(userMessage);
 
@@ -480,7 +486,8 @@ export class CoachConversationAgent {
               this.userId,
               this.coachId,
               this.conversationId,
-              messageContent.trim()
+              messageContent.trim(),
+              imageS3Keys
             );
             streamingMethod = 'lambda-function-url';
           } catch (lambdaError) {
@@ -489,7 +496,8 @@ export class CoachConversationAgent {
               this.userId,
               this.coachId,
               this.conversationId,
-              messageContent.trim()
+              messageContent.trim(),
+              imageS3Keys
             );
             streamingMethod = 'api-gateway-fallback';
           }
@@ -498,7 +506,8 @@ export class CoachConversationAgent {
             this.userId,
             this.coachId,
             this.conversationId,
-            messageContent.trim()
+            messageContent.trim(),
+            imageS3Keys
           );
         }
 
@@ -556,7 +565,7 @@ export class CoachConversationAgent {
 
         return await handleStreamingFallback(
           sendCoachConversationMessage,
-          [this.userId, this.coachId, this.conversationId, messageContent.trim()],
+          [this.userId, this.coachId, this.conversationId, messageContent.trim(), imageS3Keys],
           (result, isErrorFallback) => this._handleFallbackResult(result),
           'conversation message'
         );

@@ -58,10 +58,6 @@ export const AuthProvider = ({ children }) => {
         attributes
       };
 
-      // Debug logging to match existing App.jsx pattern
-      console.info("🔐 Authenticated user:", userWithAttributes);
-      console.info("🆔 Custom User ID:", attributes?.["custom:user_id"]);
-
       // Check if custom user ID is missing and create one if needed
       if (!attributes?.["custom:user_id"]) {
         const errorMessage = "⚠️ Custom User ID is missing. This user may need manual setup.";
@@ -82,7 +78,6 @@ export const AuthProvider = ({ children }) => {
       // Batch state updates to prevent race condition
       setUser(userWithAttributes);
       setIsAuthenticated(true);
-      console.info("🔄 AuthContext: Setting loading to false (authenticated)");
       setLoading(false);
 
     } catch (error) {
@@ -97,11 +92,9 @@ export const AuthProvider = ({ children }) => {
         console.warn('🔄 Detected inconsistent auth state - user may need to be signed out');
       }
 
-      console.info("User not authenticated:", error.message);
       // Batch state updates for unauthenticated state
       setUser(null);
       setIsAuthenticated(false);
-      console.info("🔄 AuthContext: Setting loading to false (not authenticated)");
       setLoading(false);
 
       // Only throw errors when explicitly requested
@@ -280,10 +273,8 @@ export const AuthProvider = ({ children }) => {
       if (isAuthenticated && user?.attributes?.['custom:user_id']) {
         try {
           const userId = user.attributes['custom:user_id'];
-          console.info('📋 Fetching user profile for userId:', userId);
           const response = await getUserProfile(userId);
           setUserProfile(response.profile);
-          console.info('✅ User profile loaded:', response.profile.displayName);
         } catch (error) {
           console.error('❌ Error fetching user profile:', error);
           // Don't block app if profile fetch fails - user can still use Cognito attributes

@@ -14,9 +14,10 @@ import { STREAMING_CONFIG, getStreamingUrl, isStreamingEnabled } from './apiConf
  * @param {string} coachId - The coach ID
  * @param {string} conversationId - The conversation ID
  * @param {string} userResponse - The user's message/response
+ * @param {string[]} imageS3Keys - Optional array of S3 keys for images
  * @returns {AsyncGenerator} - Stream of SSE events
  */
-export async function* sendCoachConversationMessageStreamLambda(userId, coachId, conversationId, userResponse) {
+export async function* sendCoachConversationMessageStreamLambda(userId, coachId, conversationId, userResponse, imageS3Keys = []) {
   if (!isStreamingEnabled()) {
     throw new Error('Lambda Function URL streaming is not enabled or configured');
   }
@@ -28,6 +29,11 @@ export async function* sendCoachConversationMessageStreamLambda(userId, coachId,
     userResponse,
     messageTimestamp: new Date().toISOString()
   };
+
+  // Add imageS3Keys if present
+  if (imageS3Keys && imageS3Keys.length > 0) {
+    requestBody.imageS3Keys = imageS3Keys;
+  }
 
   try {
     // Get authentication headers

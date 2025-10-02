@@ -1,5 +1,6 @@
 import { PolicyStatement, Effect, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { IFunction } from 'aws-cdk-lib/aws-lambda';
+import { BranchInfo, getBranchAwareResourceName } from './functions/libs/branch-naming';
 
 /**
  * Bedrock policy for Claude Sonnet 4 inference profile and other AI models
@@ -186,5 +187,40 @@ export const grantDynamoDBThroughputPermissions = (functions: IFunction[]): void
   const throughputPolicy = createDynamoDBThroughputPolicy();
   functions.forEach(func => {
     func.addToRolePolicy(throughputPolicy);
+  });
+};
+
+/**
+ * S3 policy for apps bucket - branch-aware
+ * Uses standard naming: midgard-apps, midgard-apps-develop, midgard-apps-sandbox-{id}
+ */
+export const createS3AppsPolicy = (branchInfo: BranchInfo): PolicyStatement => {
+  // Use standard branch-aware naming helper
+  const bucketName = getBranchAwareResourceName(branchInfo, { baseName: 'midgard-apps' });
+  const bucketPath = `arn:aws:s3:::${bucketName}/user-uploads/*`;
+
+  return new PolicyStatement({
+    effect: Effect.ALLOW,
+    actions: [
+      's3:GetObject',
+      's3:PutObject',
+      's3:PutObjectAcl',
+      's3:DeleteObject'
+    ],
+    resources: [bucketPath]
+  });
+};
+
+/**
+ * Helper function to grant S3 apps bucket permissions to functions
+ */
+export const grantS3AppsPermissions = (
+  functions: IFunction[],
+  branchInfo: BranchInfo
+): void => {
+  const policy = createS3AppsPolicy(branchInfo);
+
+  functions.forEach(func => {
+    func.addToRolePolicy(policy);
   });
 };

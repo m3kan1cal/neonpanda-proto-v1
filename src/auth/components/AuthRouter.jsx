@@ -36,29 +36,16 @@ const AuthRouter = () => {
 
   // Redirect authenticated users to coaches page
   useEffect(() => {
-    console.info('🔍 AuthRouter redirect check:', {
-      isAuthenticated,
-      hasUser: !!user,
-      currentView,
-      userAttributes: user?.attributes ? Object.keys(user.attributes) : 'no user'
-    });
-
     if (isAuthenticated && user) {
       const customUserId = user.attributes?.["custom:user_id"];
 
       if (customUserId) {
-        console.info("🚀 Redirecting authenticated user to coaches page with userId:", customUserId);
         navigate(`/coaches?userId=${customUserId}`);
       } else {
-        console.warn("⚠️ Redirecting authenticated user without custom userId - will show error in app");
         // Still redirect authenticated users even if custom ID is missing
         // The main app can handle the missing ID scenario with appropriate error messaging
         navigate('/coaches');
       }
-    } else if (isAuthenticated && !user) {
-      console.warn('⚠️ isAuthenticated=true but no user object - possible timing issue');
-    } else if (!isAuthenticated && user) {
-      console.warn('⚠️ isAuthenticated=false but user object exists - possible timing issue');
     }
   }, [isAuthenticated, user, navigate, currentView]);
 

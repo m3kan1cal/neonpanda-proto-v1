@@ -48,14 +48,9 @@ function AppContent() {
   // Set up the auth failure handler to use React Router navigation
   useEffect(() => {
     setAuthFailureHandler(() => {
-      console.info('Token refresh failed, navigating to /auth');
       navigate('/auth', { replace: true });
     });
   }, [navigate]);
-
-  // Debug: Log user info to console (matching existing pattern)
-  console.info("🔐 Authenticated user:", user);
-  console.info("🆔 Custom User ID:", user?.attributes?.["custom:user_id"]);
 
   return (
     <div className="min-h-screen">

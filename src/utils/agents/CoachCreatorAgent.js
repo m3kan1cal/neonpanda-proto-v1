@@ -145,7 +145,6 @@ export class CoachCreatorAgent {
     try {
       this._updateState({ isLoadingItem: true, error: null, messages: [] });
 
-      console.info("Loading existing coach creator session:", sessionId);
       const sessionData = await getCoachCreatorSession(userId, sessionId);
 
       // Update agent state
@@ -189,6 +188,8 @@ export class CoachCreatorAgent {
               type: "user",
               content: historyItem.userResponse,
               timestamp: historyItem.timestamp || new Date().toISOString(),
+              imageS3Keys: historyItem.imageS3Keys || undefined,
+              messageType: historyItem.messageType || undefined,
             });
           }
 
@@ -233,8 +234,10 @@ export class CoachCreatorAgent {
 
   /**
    * Sends a user message and processes the AI response
+   * @param {string} messageContent - The user's message
+   * @param {string[]} [imageS3Keys] - Optional array of S3 keys for uploaded images
    */
-  async sendMessage(messageContent) {
+  async sendMessage(messageContent, imageS3Keys = []) {
     if (
       !messageContent.trim() ||
       this.state.isLoadingItem ||
@@ -251,6 +254,8 @@ export class CoachCreatorAgent {
         type: "user",
         content: messageContent.trim(),
         timestamp: new Date().toISOString(),
+        imageS3Keys: imageS3Keys && imageS3Keys.length > 0 ? imageS3Keys : undefined,
+        messageType: imageS3Keys && imageS3Keys.length > 0 ? 'text_with_images' : 'text',
       };
 
       this._addMessage(userMessage);
@@ -260,7 +265,8 @@ export class CoachCreatorAgent {
       const result = await updateCoachCreatorSession(
         this.userId,
         this.sessionId,
-        messageContent.trim()
+        messageContent.trim(),
+        imageS3Keys
       );
 
       // Prepare AI response
@@ -356,17 +362,13 @@ export class CoachCreatorAgent {
 
   /**
    * Sends a user message and processes the AI response with streaming
+   * @param {string} messageContent - The user's message
+   * @param {string[]} [imageS3Keys] - Optional array of S3 keys for uploaded images
    */
-  async sendMessageStream(messageContent) {
-    console.info('🎯 sendMessageStream called with:', {
-      messageContent: messageContent.substring(0, 50) + '...',
-      isTyping: this.state.isTyping,
-      isStreaming: this.state.isStreaming,
-      isLoadingItem: this.state.isLoadingItem
-    });
+  async sendMessageStream(messageContent, imageS3Keys = []) {
 
     // Input validation using helper
-    if (!validateStreamingInput(this, messageContent)) {
+    if (!validateStreamingInput(this, messageContent, imageS3Keys)) {
       console.warn('❌ sendMessageStream validation failed');
       return;
     }
@@ -378,6 +380,8 @@ export class CoachCreatorAgent {
         type: "user",
         content: messageContent.trim(),
         timestamp: new Date().toISOString(),
+        imageS3Keys: imageS3Keys && imageS3Keys.length > 0 ? imageS3Keys : undefined,
+        messageType: imageS3Keys && imageS3Keys.length > 0 ? 'text_with_images' : 'text',
       };
       this._addMessage(userMessage);
 
@@ -399,14 +403,14 @@ export class CoachCreatorAgent {
         const messageStream = updateCoachCreatorSessionStream(
           this.userId,
           this.sessionId,
-          messageContent.trim()
+          messageContent.trim(),
+          imageS3Keys
         );
 
         // Process the stream
         return await processStreamingChunks(messageStream, {
           onChunk: async (content) => {
             // Append each chunk to the streaming message
-            console.info('📝 Processing chunk:', { content, length: content.length });
             streamingMsg.append(content);
           },
 
@@ -426,12 +430,6 @@ export class CoachCreatorAgent {
               this.handleCompletion();
             }
 
-            console.info('✅ Streaming coach creator session completed:', {
-              isComplete: chunk.isComplete,
-              aiResponseLength: aiResponseContent.length,
-              progressCompleted: updatedProgress.questionsCompleted,
-              progressPercentage: updatedProgress.percentage
-            });
             return chunk;
           },
 
@@ -706,7 +704,6 @@ export class CoachCreatorAgent {
     }
 
     try {
-      console.info('Loading in-progress coach creator sessions');
       const result = await getCoachCreatorSessions(userId, {
         isComplete: false,
         limit: 10,

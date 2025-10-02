@@ -68,21 +68,31 @@ export const getCoachConversation = async (userId, coachId, conversationId) => {
  * @param {string} coachId - The coach ID
  * @param {string} conversationId - The conversation ID
  * @param {string} userResponse - The user's message/response
+ * @param {string[]} imageS3Keys - Optional array of S3 keys for images
  * @returns {Promise<Object>} - The API response with user message and coach reply
  */
-export const sendCoachConversationMessage = async (userId, coachId, conversationId, userResponse) => {
+export const sendCoachConversationMessage = async (userId, coachId, conversationId, userResponse, imageS3Keys = []) => {
   // Create AbortController for timeout handling
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 45000); // 45 second timeout
 
   try {
     const url = `${getApiUrl('')}/users/${userId}/coaches/${coachId}/conversations/${conversationId}/send-message`;
+
+    // Build request body
+    const body = {
+      userResponse,
+      messageTimestamp: new Date().toISOString() // When user typed the message
+    };
+
+    // Add imageS3Keys if present
+    if (imageS3Keys && imageS3Keys.length > 0) {
+      body.imageS3Keys = imageS3Keys;
+    }
+
     const response = await authenticatedFetch(url, {
       method: 'POST',
-      body: JSON.stringify({
-        userResponse,
-        messageTimestamp: new Date().toISOString() // When user typed the message
-      }),
+      body: JSON.stringify(body),
       signal: controller.signal
     });
 
@@ -120,19 +130,25 @@ export const sendCoachConversationMessage = async (userId, coachId, conversation
  * @param {string} coachId - The coach ID
  * @param {string} conversationId - The conversation ID
  * @param {string} userResponse - The user's message/response
+ * @param {string[]} imageS3Keys - Optional array of S3 keys for images
  * @returns {AsyncGenerator} - Stream of message chunks
  */
-export async function* sendCoachConversationMessageStream(userId, coachId, conversationId, userResponse) {
+export async function* sendCoachConversationMessageStream(userId, coachId, conversationId, userResponse, imageS3Keys = []) {
   const url = `${getApiUrl('')}/users/${userId}/coaches/${coachId}/conversations/${conversationId}/send-message?stream=true`;
   const requestBody = {
     userResponse,
     messageTimestamp: new Date().toISOString()
   };
 
+  // Add imageS3Keys if present
+  if (imageS3Keys && imageS3Keys.length > 0) {
+    requestBody.imageS3Keys = imageS3Keys;
+  }
+
   yield* handleStreamingApiRequest(url, requestBody, {
     method: 'POST',
     fallbackFunction: sendCoachConversationMessage,
-    fallbackParams: [userId, coachId, conversationId, userResponse],
+    fallbackParams: [userId, coachId, conversationId, userResponse, imageS3Keys],
     operationName: 'coach conversation message',
     errorMessages: {
       notFound: 'Conversation not found',

@@ -15,6 +15,7 @@ import { parseMarkdown } from '../utils/markdownParser.jsx';
 import CoachCreatorAgent from '../utils/agents/CoachCreatorAgent';
 import CoachCreatorHeader from './shared/CoachCreatorHeader';
 import { useToast } from '../contexts/ToastContext';
+import ImageWithPresignedUrl from './shared/ImageWithPresignedUrl';
 import {
   sendMessageWithStreaming,
   isMessageStreaming,
@@ -149,16 +150,6 @@ const MessageItem = memo(({
 
   const shouldRerender = messageChanged || streamingStateChanged || userChanged;
 
-  if (nextProps.message.type === 'ai' && nextProps.agentState.isStreaming) {
-    console.info('🎬 MessageItem memo check:', {
-      messageId: nextProps.message.id,
-      messageChanged,
-      streamingStateChanged,
-      shouldRerender,
-      streamingMessageLength: nextProps.agentState.streamingMessage?.length || 0
-    });
-  }
-
   // Return true if props are equal (no re-render needed)
   // Return false if props changed (re-render needed)
   return !shouldRerender;
@@ -235,35 +226,14 @@ function CoachCreator() {
         userId,
         sessionId: coachCreatorSessionId,
         onStateChange: (newState) => {
-          console.info('🔥 onStateChange received:', {
-            isStreaming: newState.isStreaming,
-            streamingMessageId: newState.streamingMessageId,
-            streamingMessageLength: newState.streamingMessage?.length || 0,
-            messagesCount: newState.messages?.length || 0
-          });
-
           // Use flushSync for streaming updates to force immediate synchronous rendering
           if (newState.isStreaming || newState.streamingMessage) {
             flushSync(() => {
-              setAgentState(prevState => {
-                console.info('🚀 React SYNC state update (streaming):', {
-                  prevStreamingLength: prevState.streamingMessage?.length || 0,
-                  newStreamingLength: newState.streamingMessage?.length || 0,
-                  isStreaming: newState.isStreaming
-                });
-                return newState;
-              });
+              setAgentState(newState);
             });
           } else {
             // Normal async update for non-streaming changes
-            setAgentState(prevState => {
-              console.info('🚀 React ASYNC state update (normal):', {
-                prevStreamingLength: prevState.streamingMessage?.length || 0,
-                newStreamingLength: newState.streamingMessage?.length || 0,
-                isStreaming: newState.isStreaming
-              });
-              return newState;
-            });
+            setAgentState(newState);
           }
         },
         onNavigation: (type, data) => {
@@ -369,14 +339,14 @@ function CoachCreator() {
   }, [agentState.messages.length, agentState.isLoadingItem]);
 
   // Handle message submission
-  const handleMessageSubmit = async (messageContent) => {
+  const handleMessageSubmit = async (messageContent, imageS3Keys = []) => {
     if (!agentRef.current) return;
 
     try {
-      await sendMessageWithStreaming(agentRef.current, messageContent, {
+      await sendMessageWithStreaming(agentRef.current, messageContent, imageS3Keys, {
         enableStreaming: supportsStreaming(),
         onStreamingStart: () => {
-          console.info('🔄 Started streaming message in CoachCreator');
+          // Streaming started
         },
         onStreamingError: (error) => {
           handleStreamingError(error, { error: showError });
@@ -395,35 +365,37 @@ function CoachCreator() {
   // Helper function to render message content with line breaks and streaming support
   // Removed useCallback to prevent memoization issues during streaming
   const renderMessageContent = (message) => {
-    // Debug: Log what React component is seeing
-    if (message.id === agentState.streamingMessageId) {
-      console.info('🎭 renderMessageContent for streaming message:', {
-        messageId: message.id,
-        isStreaming: agentState.isStreaming,
-        streamingMessageId: agentState.streamingMessageId,
-        streamingMessageLength: agentState.streamingMessage?.length || 0,
-        messageContentLength: message.content?.length || 0,
-        streamingMessagePreview: agentState.streamingMessage?.substring(0, 30) + '...' || '[empty]'
-      });
-    }
-
     // Get the appropriate content (streaming or final)
     const displayContent = getMessageDisplayContent(message, agentState);
 
-    if (message.type === "ai") {
-      // AI messages use full markdown parsing
-      return parseMarkdown(displayContent);
-    } else {
-      // User messages: simple line break rendering
-      if (!displayContent) return displayContent;
+    return (
+      <>
+        {/* Render images if present */}
+        {message.imageS3Keys && message.imageS3Keys.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-2">
+            {message.imageS3Keys.map((s3Key, index) => (
+              <ImageWithPresignedUrl key={index} s3Key={s3Key} userId={userId} index={index} />
+            ))}
+          </div>
+        )}
 
-      return displayContent.split("\n").map((line, index, array) => (
-        <span key={index}>
-          {line}
-          {index < array.length - 1 && <br />}
-        </span>
-      ));
-    }
+        {/* Render text content */}
+        {displayContent && (
+          message.type === "ai" ? (
+            // AI messages use full markdown parsing
+            parseMarkdown(displayContent)
+          ) : (
+            // User messages: simple line break rendering
+            displayContent.split("\n").map((line, index, array) => (
+              <span key={index}>
+                {line}
+                {index < array.length - 1 && <br />}
+              </span>
+            ))
+          )
+        )}
+      </>
+    );
   };
 
   // Delete handlers
@@ -655,6 +627,7 @@ function CoachCreator() {
         <>
 
           <ChatInput
+            userId={userId}
             inputMessage={inputMessage}
             setInputMessage={setInputMessage}
             onSubmit={handleMessageSubmit}

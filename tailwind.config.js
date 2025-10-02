@@ -22,6 +22,7 @@ export default {
           'neon-purple': '#8b5cf6',
           'neon-green': '#39ff14',
           'neon-orange': '#ff6b35',
+          'neon-maroon': '#8b0045', // Deep maroon for contrast against pink
 
           // Text colors
           'text-primary': '#ffffff',
@@ -48,6 +49,7 @@ export default {
         'neon-pink': '0 0 20px #ff0080, 0 0 40px #ff0080, 0 0 60px #ff0080',
         'neon-cyan': '0 0 20px #00ffff, 0 0 40px #00ffff, 0 0 60px #00ffff',
         'neon-purple': '0 0 20px #8b5cf6, 0 0 40px #8b5cf6, 0 0 60px #8b5cf6',
+        'neon-maroon': '0 0 15px rgba(139, 0, 69, 0.5), 0 0 30px rgba(139, 0, 69, 0.3)',
         'glow': '0 0 30px rgba(255, 0, 128, 0.3)',
         'card': '0 8px 32px rgba(0, 0, 0, 0.5)',
       },

@@ -40,6 +40,8 @@ export function createCoreApi(
   deleteCoachConversationLambda: lambda.IFunction,
   getUserProfileLambda: lambda.IFunction,
   updateUserProfileLambda: lambda.IFunction,
+  generateUploadUrlsLambda: lambda.IFunction,
+  generateDownloadUrlsLambda: lambda.IFunction,
   userPoolAuthorizer: HttpUserPoolAuthorizer
 ) {
   // Create branch-aware API name using utility
@@ -280,6 +282,16 @@ export function createCoreApi(
     updateUserProfileLambda
   );
 
+  const generateUploadUrlsIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
+    'GenerateUploadUrlsIntegration',
+    generateUploadUrlsLambda
+  );
+
+  const generateDownloadUrlsIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
+    'GenerateDownloadUrlsIntegration',
+    generateDownloadUrlsLambda
+  );
+
   // Create integrations object for route configuration
   const integrations = {
     contactForm: contactFormIntegration,
@@ -313,7 +325,9 @@ export function createCoreApi(
     deleteMemory: deleteMemoryIntegration,
     deleteCoachConversation: deleteCoachConversationIntegration,
     getUserProfile: getUserProfileIntegration,
-    updateUserProfile: updateUserProfileIntegration
+    updateUserProfile: updateUserProfileIntegration,
+    generateUploadUrls: generateUploadUrlsIntegration,
+    generateDownloadUrls: generateDownloadUrlsIntegration
   };
 
   // *******************************************************
@@ -548,6 +562,22 @@ export function createCoreApi(
     methods: [apigatewayv2.HttpMethod.PUT],
     integration: integrations.updateUserProfile,
     authorizer: userPoolAuthorizer
+  });
+
+  // Image Upload Routes (PROTECTED)
+  httpApi.addRoutes({
+    path: '/users/{userId}/generate-upload-urls',
+    methods: [apigatewayv2.HttpMethod.POST],
+    integration: integrations.generateUploadUrls,
+    authorizer: userPoolAuthorizer // REQUIRED - JWT auth
+  });
+
+  // Image Download Routes (PROTECTED)
+  httpApi.addRoutes({
+    path: '/users/{userId}/generate-download-urls',
+    methods: [apigatewayv2.HttpMethod.POST],
+    integration: integrations.generateDownloadUrls,
+    authorizer: userPoolAuthorizer // REQUIRED - JWT auth
   });
 
   // Conditionally create custom domain (only for deployed branches, not sandboxes)

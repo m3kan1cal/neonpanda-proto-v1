@@ -8,9 +8,6 @@ import { CoachConversationAgent } from "./CoachConversationAgent.js";
  */
 export class CommandPaletteAgent {
   constructor(userId, workoutAgent, onStateChange = null, onNavigation = null) {
-    console.info("CommandPaletteAgent: Constructor called");
-    console.info("CommandPaletteAgent: userId:", userId || "(not provided)");
-
     this.userId = userId;
     this.workoutAgent = workoutAgent;
     this.onStateChange = onStateChange;
@@ -41,8 +38,6 @@ export class CommandPaletteAgent {
       error: null,
       lastExecutedCommand: null,
     };
-
-    console.info("CommandPaletteAgent: Constructor complete");
   }
 
   /**

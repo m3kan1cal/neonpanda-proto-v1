@@ -117,11 +117,15 @@ export function resetStreamingState(agent, additionalState = {}) {
  * Common input validation for streaming messages
  * @param {Object} agent - The agent instance
  * @param {string} messageContent - The message content to validate
+ * @param {string[]} imageS3Keys - Optional array of image S3 keys
  * @returns {boolean} - Whether input is valid
  */
-export function validateStreamingInput(agent, messageContent) {
+export function validateStreamingInput(agent, messageContent, imageS3Keys = []) {
+  // Allow sending if there's text OR images
+  const hasContent = messageContent.trim() || (imageS3Keys && imageS3Keys.length > 0);
+
   return !!(
-    messageContent.trim() &&
+    hasContent &&
     !agent.state.isTyping &&
     !agent.state.isStreaming &&
     !agent.state.isLoadingItem &&

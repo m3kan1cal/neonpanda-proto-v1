@@ -106,6 +106,23 @@ export const inputPatterns = {
   checkbox: "appearance-none w-5 h-5 rounded border border-synthwave-neon-pink/20 bg-synthwave-bg-primary/30 backdrop-blur-sm text-synthwave-neon-pink focus:ring-2 focus:ring-synthwave-neon-pink/20 focus:ring-offset-0 cursor-pointer checked:bg-gradient-to-br checked:from-synthwave-neon-purple checked:to-synthwave-neon-pink checked:border-synthwave-neon-pink transition-all duration-300 hover:border-synthwave-neon-pink/40 checked:shadow-lg checked:shadow-synthwave-neon-pink/50 disabled:opacity-50 disabled:cursor-not-allowed"
 };
 
+export const imagePreviewPatterns = {
+  // Image preview container - for uploaded/selected images (overflow-visible to show remove button)
+  container: "relative flex-shrink-0 w-16 h-16 rounded-lg border-2 border-synthwave-neon-cyan/30 bg-synthwave-bg-primary",
+
+  // Image element - rounded to match container
+  image: "w-full h-full object-cover rounded-md",
+
+  // Remove button - neon pink themed, positioned on corner border
+  removeButton: "absolute -top-2 -right-2 bg-synthwave-neon-pink text-white rounded-full p-1 hover:bg-synthwave-neon-pink/80 transition-colors duration-200 shadow-lg shadow-synthwave-neon-pink/50",
+
+  // Size label - bottom overlay with rounded bottom corners
+  sizeLabel: "absolute bottom-0 left-0 right-0 bg-black/70 text-white text-xs px-1 py-0.5 font-rajdhani rounded-b-md",
+
+  // Grid container for multiple images (pt-2 for remove button clearance)
+  grid: "flex items-center gap-2 overflow-x-auto pt-2 pb-2 synthwave-scrollbar-cyan"
+};
+
 export const containerPatterns = {
   // Main content containers - Subtle glassmorphism (recommended)
   mainContent: "bg-synthwave-bg-card/30 backdrop-blur-xl border border-synthwave-neon-cyan/10 rounded-2xl shadow-xl shadow-synthwave-neon-cyan/5 hover:bg-synthwave-bg-card/40 hover:border-synthwave-neon-cyan/15",
@@ -446,5 +463,14 @@ export const injectAutofillStyles = () => {
 // Tooltips:
 // <Tooltip id="my-tooltip" {...tooltipPatterns.standard} />
 // <Tooltip id="left-tooltip" {...tooltipPatterns.standardLeft} />
+//
+// Image Previews:
+// <div className={imagePreviewPatterns.grid}>
+//   <div className={imagePreviewPatterns.container}>
+//     <img className={imagePreviewPatterns.image} src="..." />
+//     <button className={imagePreviewPatterns.removeButton}>X</button>
+//     <div className={imagePreviewPatterns.sizeLabel}>100KB</div>
+//   </div>
+// </div>
 //
 // Call injectScrollbarStyles() in useEffect to enable scrollbar styling

@@ -8,12 +8,6 @@ import { getMemories, deleteMemory, createMemory } from "../apis/memoryApi.js";
  */
 export class MemoryAgent {
   constructor(userId, onStateChange = null) {
-    console.info("MemoryAgent: Constructor called");
-    console.info(
-      "MemoryAgent: userId:",
-      userId || "(not provided - will be set later)"
-    );
-
     this.userId = userId;
     this.onStateChange = onStateChange;
 
@@ -40,11 +34,6 @@ export class MemoryAgent {
 
     // Add alias for backward compatibility
     this.state = this.memoryState;
-
-    console.info(
-      "MemoryAgent: Constructor complete",
-      userId ? "with userId" : "(userId will be set later)"
-    );
   }
 
   /**

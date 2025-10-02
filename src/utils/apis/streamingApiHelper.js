@@ -26,11 +26,6 @@ export async function* handleStreamingApiRequest(url, requestBody, options = {})
     errorMessages = {}
   } = options;
 
-  console.info(`🔄 Starting streaming ${operationName}:`, {
-    url: url.replace(/\/[^\/]*\/[^\/]*\/[^\/]*\//, '/[userId]/[id]/[id]/'), // Mask sensitive IDs
-    bodyKeys: Object.keys(requestBody || {})
-  });
-
   try {
     const response = await authenticatedFetch(url, {
       method,
@@ -49,9 +44,7 @@ export async function* handleStreamingApiRequest(url, requestBody, options = {})
 
     // Check if response is streaming (SSE)
     const contentType = response.headers.get('content-type');
-    console.info('🔍 Response Content-Type:', contentType);
     if (!contentType?.includes('text/plain')) {
-      console.warn('⚠️ Expected SSE response but got:', contentType, '- falling back to non-streaming');
       // Fallback to non-streaming response
       const fallbackResult = await response.json();
       yield {
@@ -96,7 +89,7 @@ export async function* handleStreamingApiRequest(url, requestBody, options = {})
                 }
               }
             } catch (parseError) {
-              console.warn('⚠️ Failed to parse SSE data:', parseError, 'Line:', line);
+              console.error('Failed to parse SSE data:', parseError);
             }
           }
         }
@@ -109,7 +102,6 @@ export async function* handleStreamingApiRequest(url, requestBody, options = {})
     console.error(`❌ Error in streaming ${operationName}:`, error);
 
     // Fallback to non-streaming API
-    console.info('🔄 Falling back to non-streaming API');
     try {
       const fallbackResult = await fallbackFunction(...fallbackParams);
       yield {

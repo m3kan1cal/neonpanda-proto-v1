@@ -5,6 +5,7 @@ import {
   iconButtonPatterns,
   containerPatterns,
   scrollbarPatterns,
+  imagePreviewPatterns,
   injectScrollbarStyles,
   tooltipPatterns,
 } from "../../utils/uiPatterns";
@@ -18,6 +19,7 @@ import {
   XIcon,
   TrashIcon,
 } from "../themes/SynthwaveComponents";
+import { useImageUpload } from "../../hooks/useImageUpload";
 
 // Question mark icon for tips (standardized size)
 const QuestionIcon = () => (
@@ -168,6 +170,9 @@ function ChatInput({
   isTyping = false,
   placeholder = "How can I help with your training?",
 
+  // User ID for image uploads
+  userId,
+
   // Coach info
   coachName = "Coach",
   isOnline = true,
@@ -271,9 +276,24 @@ function ChatInput({
   const [showQuickPromptsSubmenu, setShowQuickPromptsSubmenu] = useState(false);
   const internalTextareaRef = useRef(null);
   const isSendingMessage = useRef(false);
+  const photoInputRef = useRef(null);
 
   // Use provided ref or internal ref
   const activeTextareaRef = textareaRef || internalTextareaRef;
+
+  // Image upload hook
+  const {
+    selectedImages,
+    isUploading,
+    uploadProgress,
+    uploadingImageIds,
+    error: imageError,
+    selectImages,
+    uploadImages,
+    removeImage,
+    clearImages,
+    setError: setImageError,
+  } = useImageUpload();
 
   // Auto-resize textarea logic
   const autoResizeTextarea = (textarea) => {
@@ -353,6 +373,47 @@ function ChatInput({
         activeTextareaRef.current.setSelectionRange(textLength, textLength);
       }
     }, 50);
+  };
+
+  // Handle photo selection from file input
+  const handlePhotoSelect = async (e) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      try {
+        await selectImages(files);
+      } catch (err) {
+        console.error('Error selecting images:', err);
+      }
+    }
+    // Reset file input
+    if (photoInputRef.current) {
+      photoInputRef.current.value = '';
+    }
+  };
+
+  // Handle paste event for images
+  const handlePaste = async (e) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+
+    const imageFiles = [];
+
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (item.type.startsWith('image/')) {
+        e.preventDefault();
+        const file = item.getAsFile();
+        if (file) imageFiles.push(file);
+      }
+    }
+
+    if (imageFiles.length > 0) {
+      try {
+        await selectImages(imageFiles);
+      } catch (err) {
+        console.error('Error processing pasted images:', err);
+      }
+    }
   };
 
   // Format recording time
@@ -454,45 +515,57 @@ function ChatInput({
   }, [showQuickActionsPopup, showQuickPromptsSubmenu]);
 
   // Debug log for progress changes
-  useEffect(() => {
-    if (progressData) {
-      console.info("ChatInput - Progress data updated:", progressData);
-    }
-  }, [progressData?.percentage, progressData?.questionsCompleted]);
 
-  // Debug log for conversation size changes
+  // Add paste event listener for images
   useEffect(() => {
-    if (conversationSize) {
-      console.info("ChatInput - Conversation size updated:", conversationSize);
-    }
-  }, [conversationSize?.percentage, conversationSize?.sizeKB]);
+    const textarea = activeTextareaRef.current;
+    if (!textarea) return;
+
+    textarea.addEventListener('paste', handlePaste);
+
+    return () => {
+      textarea.removeEventListener('paste', handlePaste);
+    };
+  }, [selectedImages]);
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
 
-    // Prevent double execution from React StrictMode
-    if (isSendingMessage.current || !inputMessage.trim()) return;
+    // Allow sending if there's text OR images
+    if (isSendingMessage.current || (!inputMessage.trim() && selectedImages.length === 0)) return;
 
     isSendingMessage.current = true;
     const messageToSend = inputMessage.trim();
-    setInputMessage("");
-
-    // Refocus input and reset size after clearing it
-    setTimeout(() => {
-      if (activeTextareaRef.current) {
-        // Force reset to minimum height after clearing content
-        activeTextareaRef.current.style.height = "48px";
-        activeTextareaRef.current.style.overflowY = "hidden";
-        activeTextareaRef.current.focus();
-        // Call autoResize to ensure proper state
-        autoResizeTextarea(activeTextareaRef.current);
-      }
-    }, 50);
 
     try {
-      await onSubmit(messageToSend);
+      // Upload images if any
+      let imageS3Keys = [];
+      if (selectedImages.length > 0 && userId) {
+        imageS3Keys = await uploadImages(userId);
+      }
+
+      // Clear input and images BEFORE sending
+      setInputMessage("");
+      clearImages();
+
+      // Refocus input and reset size after clearing it
+      setTimeout(() => {
+        if (activeTextareaRef.current) {
+          // Force reset to minimum height after clearing content
+          activeTextareaRef.current.style.height = "48px";
+          activeTextareaRef.current.style.overflowY = "hidden";
+          activeTextareaRef.current.focus();
+          // Call autoResize to ensure proper state
+          autoResizeTextarea(activeTextareaRef.current);
+        }
+      }, 50);
+
+      // Send message with images
+      await onSubmit(messageToSend, imageS3Keys);
+
     } catch (error) {
       console.error("Error sending message:", error);
+      // Don't clear images on error so user can retry
     } finally {
       // Reset flag after message is sent (success or failure)
       isSendingMessage.current = false;
@@ -600,6 +673,60 @@ function ChatInput({
       data-chat-input-container
     >
       <div className="max-w-7xl mx-auto px-8 py-6">
+        {/* Image Preview Grid */}
+        {selectedImages.length > 0 && (
+          <div className="mb-2 pl-[156px]">
+            <div className={imagePreviewPatterns.grid}>
+              {selectedImages.map(image => (
+                <div
+                  key={image.id}
+                  className={imagePreviewPatterns.container}
+                >
+                  <img
+                    src={image.previewUrl}
+                    alt={image.name}
+                    className={imagePreviewPatterns.image}
+                  />
+
+                  {/* Loading spinner overlay */}
+                  {uploadingImageIds.has(image.id) && (
+                    <div className="absolute inset-0 bg-black/50 rounded-md flex items-center justify-center">
+                      <div className="w-6 h-6 border-2 border-synthwave-neon-cyan border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => removeImage(image.id)}
+                    className={imagePreviewPatterns.removeButton}
+                    disabled={uploadingImageIds.has(image.id)}
+                  >
+                    <XIcon className="w-3 h-3" />
+                  </button>
+                  <div className={imagePreviewPatterns.sizeLabel}>
+                    {(image.size / 1024).toFixed(0)}KB
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Error Display */}
+        {imageError && (
+          <div className="mb-3">
+            <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 flex items-start justify-between">
+              <span className="text-sm font-rajdhani text-red-400">{imageError}</span>
+              <button
+                type="button"
+                onClick={() => setImageError(null)}
+                className="text-red-400 hover:text-red-300"
+              >
+                <XIcon className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
         {/* Recording indicator */}
         {isRecording && (
           <div className="mb-3 flex items-center justify-center">
@@ -620,6 +747,15 @@ function ChatInput({
 
         {/* Input area */}
         <form onSubmit={handleSendMessage} className="flex items-end gap-3">
+          {/* Hidden file input */}
+          <input
+            ref={photoInputRef}
+            type="file"
+            accept="image/*,.heic,.heif"
+            multiple
+            style={{ display: 'none' }}
+            onChange={handlePhotoSelect}
+          />
           {/* Action buttons */}
           <div className="flex items-center gap-2 relative self-end mb-2">
             {/* Tips button */}
@@ -753,9 +889,12 @@ function ChatInput({
                             setShowQuickActionsPopup(false);
                             if (onPhotoAttachment) {
                               onPhotoAttachment();
+                            } else {
+                              // Default: trigger file input
+                              photoInputRef.current?.click();
                             }
                           }}
-                          className="flex items-center space-x-3 px-4 py-2 font-rajdhani font-medium text-synthwave-text-primary hover:text-green-400 hover:bg-green-400/10 transition-all duration-300 w-full text-left"
+                          className="flex items-center space-x-3 px-4 py-2 font-rajdhani font-medium text-synthwave-text-primary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-300 w-full text-left"
                         >
                           <CameraIcon />
                           <span>Attach Photos</span>
