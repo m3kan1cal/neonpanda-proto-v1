@@ -2,18 +2,22 @@ import { nanoid } from "nanoid";
 import {
   createCoachConversation,
   sendCoachConversationMessage,
-  sendCoachConversationMessageStream,
+  streamCoachConversation,
   updateCoachConversation,
   getCoachConversation,
   getCoachConversations,
   deleteCoachConversation,
   getCoachConversationsCount,
 } from "../apis/coachConversationApi";
-import { sendCoachConversationMessageStreamLambda } from '../apis/streamingLambdaApi';
-import { isStreamingEnabled } from '../apis/apiConfig';
 import { getCoach } from "../apis/coachApi";
-import CoachAgent from './CoachAgent';
-import { processStreamingChunks, createStreamingMessage, handleStreamingFallback, resetStreamingState, validateStreamingInput } from './streamingAgentHelper';
+import CoachAgent from "./CoachAgent";
+import {
+  processStreamingChunks,
+  createStreamingMessage,
+  handleStreamingFallback,
+  resetStreamingState,
+  validateStreamingInput,
+} from "./streamingAgentHelper";
 
 /**
  * CoachConversationAgent - Handles the business logic for coach conversations
@@ -45,8 +49,10 @@ export class CoachConversationAgent {
       isLoadingConversationCount: false,
       // Streaming-specific state
       isStreaming: false,
-      streamingMessage: '',
+      streamingMessage: "",
       streamingMessageId: null,
+      // Contextual updates (ephemeral UX feedback)
+      contextualUpdate: null, // { content: string, stage: string }
     };
 
     // Bind methods
@@ -66,7 +72,7 @@ export class CoachConversationAgent {
    */
   _updateState(newState) {
     this.state = { ...this.state, ...newState };
-    if (typeof this.onStateChange === 'function') {
+    if (typeof this.onStateChange === "function") {
       this.onStateChange(this.state);
     }
   }
@@ -99,12 +105,12 @@ export class CoachConversationAgent {
     // Generate default title with human-friendly date
     const now = new Date();
     return now.toLocaleDateString(undefined, {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
     });
   }
 
@@ -117,14 +123,22 @@ export class CoachConversationAgent {
 
       // Format coach data like TrainingGrounds does
       const coachAgent = new CoachAgent();
-      const formattedName = coachAgent.formatCoachName(coachData.coachConfig?.coach_name);
+      const formattedName = coachAgent.formatCoachName(
+        coachData.coachConfig?.coach_name
+      );
 
       const formattedCoachData = {
         name: formattedName,
-        specialization: coachAgent.getSpecializationDisplay(coachData.coachConfig?.technical_config?.specializations),
-        experienceLevel: coachAgent.getExperienceLevelDisplay(coachData.coachConfig?.technical_config?.experience_level),
-        programmingFocus: coachAgent.getProgrammingFocusDisplay(coachData.coachConfig?.technical_config?.programming_focus),
-        rawCoach: coachData // Keep the full coach object for any additional data needed
+        specialization: coachAgent.getSpecializationDisplay(
+          coachData.coachConfig?.technical_config?.specializations
+        ),
+        experienceLevel: coachAgent.getExperienceLevelDisplay(
+          coachData.coachConfig?.technical_config?.experience_level
+        ),
+        programmingFocus: coachAgent.getProgrammingFocusDisplay(
+          coachData.coachConfig?.technical_config?.programming_focus
+        ),
+        rawCoach: coachData, // Keep the full coach object for any additional data needed
       };
 
       this._updateState({ coach: formattedCoachData });
@@ -132,7 +146,7 @@ export class CoachConversationAgent {
     } catch (error) {
       console.error("Error loading coach details:", error);
       this._updateState({ error: "Failed to load coach details" });
-      if (typeof this.onError === 'function') {
+      if (typeof this.onError === "function") {
         this.onError(error);
       }
       throw error;
@@ -164,15 +178,15 @@ export class CoachConversationAgent {
 
       this._updateState({
         recentConversations: sortedConversations,
-        isLoadingRecentItems: false
+        isLoadingRecentItems: false,
       });
 
       return sortedConversations;
     } catch (error) {
-      console.error('Error loading historical conversations:', error);
+      console.error("Error loading historical conversations:", error);
       this._updateState({
         recentConversations: [],
-        isLoadingRecentItems: false
+        isLoadingRecentItems: false,
       });
       return [];
     }
@@ -193,18 +207,21 @@ export class CoachConversationAgent {
       this._updateState({
         conversationCount: result.totalCount || 0,
         totalMessages: result.totalMessages || 0,
-        isLoadingConversationCount: false
+        isLoadingConversationCount: false,
       });
 
-      return { totalCount: result.totalCount, totalMessages: result.totalMessages };
+      return {
+        totalCount: result.totalCount,
+        totalMessages: result.totalMessages,
+      };
     } catch (error) {
-      console.error('Error loading conversation count:', error);
-      console.error('Error details:', error.message);
+      console.error("Error loading conversation count:", error);
+      console.error("Error details:", error.message);
       // Don't show error for count as it's not critical
       this._updateState({
         conversationCount: 0,
         totalMessages: 0,
-        isLoadingConversationCount: false
+        isLoadingConversationCount: false,
       });
       return { totalCount: 0, totalMessages: 0 };
     }
@@ -213,7 +230,12 @@ export class CoachConversationAgent {
   /**
    * Creates a new coach conversation
    */
-  async createConversation(userId, coachId, title = null, initialMessage = null) {
+  async createConversation(
+    userId,
+    coachId,
+    title = null,
+    initialMessage = null
+  ) {
     try {
       this._updateState({ isLoadingItem: true, error: null });
 
@@ -221,7 +243,12 @@ export class CoachConversationAgent {
       const conversationTitle = title || this.generateConversationTitle();
 
       // Create conversation via API (with optional initial message)
-      const result = await createCoachConversation(userId, coachId, conversationTitle, initialMessage);
+      const result = await createCoachConversation(
+        userId,
+        coachId,
+        conversationTitle,
+        initialMessage
+      );
       const conversation = result.conversation;
       const conversationId = conversation.conversationId;
 
@@ -241,8 +268,12 @@ export class CoachConversationAgent {
       });
 
       // Notify navigation handler
-      if (typeof this.onNavigation === 'function') {
-        this.onNavigation("conversation-created", { userId, coachId, conversationId });
+      if (typeof this.onNavigation === "function") {
+        this.onNavigation("conversation-created", {
+          userId,
+          coachId,
+          conversationId,
+        });
       }
 
       return { userId, coachId, conversationId, conversation };
@@ -252,7 +283,7 @@ export class CoachConversationAgent {
         isLoadingItem: false,
         error: "Failed to create coach conversation",
       });
-      if (typeof this.onError === 'function') {
+      if (typeof this.onError === "function") {
         this.onError(error);
       }
       throw error;
@@ -273,7 +304,7 @@ export class CoachConversationAgent {
       // Load conversation and coach details in parallel
       const [conversationData] = await Promise.all([
         getCoachConversation(userId, coachId, conversationId),
-        this.loadCoachDetails(userId, coachId)
+        this.loadCoachDetails(userId, coachId),
       ]);
 
       // Update agent state
@@ -282,7 +313,8 @@ export class CoachConversationAgent {
       this.conversationId = conversationId;
 
       // Extract the actual conversation data (API wraps it in a 'conversation' property)
-      const actualConversation = conversationData.conversation || conversationData;
+      const actualConversation =
+        conversationData.conversation || conversationData;
       const messagesArray = actualConversation.messages || [];
 
       // Reconstruct conversation from message history
@@ -299,15 +331,19 @@ export class CoachConversationAgent {
 
         sortedMessages.forEach((message) => {
           // Ensure content is a string
-          let messageContent = message.content || '';
-          if (typeof messageContent !== 'string') {
-            console.warn("Message content is not a string, converting:", messageContent, typeof messageContent);
-            messageContent = String(messageContent || '');
+          let messageContent = message.content || "";
+          if (typeof messageContent !== "string") {
+            console.warn(
+              "Message content is not a string, converting:",
+              messageContent,
+              typeof messageContent
+            );
+            messageContent = String(messageContent || "");
           }
 
           conversationMessages.push({
             id: messageId++,
-            type: message.role === 'user' ? 'user' : 'ai',
+            type: message.role === "user" ? "user" : "ai",
             content: messageContent,
             timestamp: message.timestamp || new Date().toISOString(),
             imageS3Keys: message.imageS3Keys || undefined,
@@ -334,12 +370,12 @@ export class CoachConversationAgent {
 
       // Handle conversation not found
       if (error.message === "Conversation not found") {
-        if (typeof this.onNavigation === 'function') {
+        if (typeof this.onNavigation === "function") {
           this.onNavigation("conversation-not-found");
         }
       }
 
-      if (typeof this.onError === 'function') {
+      if (typeof this.onError === "function") {
         this.onError(error);
       }
       throw error;
@@ -359,7 +395,7 @@ export class CoachConversationAgent {
       !this.coachId ||
       !this.conversationId
     ) {
-      console.warn('❌ sendMessage validation failed');
+      console.warn("❌ sendMessage validation failed");
       return;
     }
 
@@ -370,7 +406,8 @@ export class CoachConversationAgent {
         type: "user",
         content: messageContent.trim(),
         timestamp: new Date().toISOString(),
-        imageS3Keys: imageS3Keys && imageS3Keys.length > 0 ? imageS3Keys : undefined,
+        imageS3Keys:
+          imageS3Keys && imageS3Keys.length > 0 ? imageS3Keys : undefined,
       };
 
       this._addMessage(userMessage);
@@ -385,21 +422,28 @@ export class CoachConversationAgent {
         imageS3Keys
       );
 
-            // Extract AI response content from the message object
+      // Extract AI response content from the message object
       let aiResponseContent = "Thank you for your message."; // Default fallback
 
-      if (result.aiResponse && typeof result.aiResponse === 'object') {
+      if (result.aiResponse && typeof result.aiResponse === "object") {
         // API returns aiResponse as a message object with content property
-        aiResponseContent = result.aiResponse.content || "Thank you for your message.";
-      } else if (typeof result.aiResponse === 'string') {
+        aiResponseContent =
+          result.aiResponse.content || "Thank you for your message.";
+      } else if (typeof result.aiResponse === "string") {
         // Fallback if API returns string directly
         aiResponseContent = result.aiResponse;
       }
 
       // Ensure content is a string
-      if (typeof aiResponseContent !== 'string') {
-        console.warn("AI response content is not a string, converting:", aiResponseContent, typeof aiResponseContent);
-        aiResponseContent = String(aiResponseContent || "Thank you for your message.");
+      if (typeof aiResponseContent !== "string") {
+        console.warn(
+          "AI response content is not a string, converting:",
+          aiResponseContent,
+          typeof aiResponseContent
+        );
+        aiResponseContent = String(
+          aiResponseContent || "Thank you for your message."
+        );
       }
 
       const aiResponse = {
@@ -412,7 +456,7 @@ export class CoachConversationAgent {
       this._addMessage(aiResponse);
       this._updateState({
         isTyping: false,
-        conversation: result.conversation || this.state.conversation
+        conversation: result.conversation || this.state.conversation,
       });
 
       return result;
@@ -434,7 +478,7 @@ export class CoachConversationAgent {
         error: "Failed to send message",
       });
 
-      if (typeof this.onError === 'function') {
+      if (typeof this.onError === "function") {
         this.onError(error);
       }
       throw error;
@@ -445,10 +489,9 @@ export class CoachConversationAgent {
    * Sends a user message and processes the AI response with streaming
    */
   async sendMessageStream(messageContent, imageS3Keys = []) {
-
     // Input validation - allow text OR images
     if (!validateStreamingInput(this, messageContent, imageS3Keys)) {
-      console.warn('❌ sendMessageStream validation failed');
+      console.warn("❌ sendMessageStream validation failed");
       return;
     }
 
@@ -459,7 +502,8 @@ export class CoachConversationAgent {
         type: "user",
         content: messageContent.trim(),
         timestamp: new Date().toISOString(),
-        imageS3Keys: imageS3Keys && imageS3Keys.length > 0 ? imageS3Keys : undefined,
+        imageS3Keys:
+          imageS3Keys && imageS3Keys.length > 0 ? imageS3Keys : undefined,
       };
       this._addMessage(userMessage);
 
@@ -470,70 +514,66 @@ export class CoachConversationAgent {
       this._updateState({
         isStreaming: true,
         isTyping: true,
-        streamingMessage: '',
+        streamingMessage: "",
         streamingMessageId: streamingMsg.messageId,
-        error: null
+        error: null,
       });
 
       try {
-        // Get streaming response - try Lambda Function URL first, fallback to API Gateway
-        let messageStream;
-        let streamingMethod = 'api-gateway';
-
-        if (isStreamingEnabled()) {
-          try {
-            messageStream = sendCoachConversationMessageStreamLambda(
-              this.userId,
-              this.coachId,
-              this.conversationId,
-              messageContent.trim(),
-              imageS3Keys
-            );
-            streamingMethod = 'lambda-function-url';
-          } catch (lambdaError) {
-            console.warn('⚠️ Lambda Function URL streaming failed, falling back to API Gateway:', lambdaError);
-            messageStream = sendCoachConversationMessageStream(
-              this.userId,
-              this.coachId,
-              this.conversationId,
-              messageContent.trim(),
-              imageS3Keys
-            );
-            streamingMethod = 'api-gateway-fallback';
-          }
-        } else {
-          messageStream = sendCoachConversationMessageStream(
-            this.userId,
-            this.coachId,
-            this.conversationId,
-            messageContent.trim(),
-            imageS3Keys
-          );
-        }
+        // Get streaming response (API layer handles Lambda → API Gateway → non-streaming fallback)
+        const messageStream = streamCoachConversation(
+          this.userId,
+          this.coachId,
+          this.conversationId,
+          messageContent.trim(),
+          imageS3Keys
+        );
 
         // Process the stream
         return await processStreamingChunks(messageStream, {
+          onContextual: async (content, stage) => {
+            // Update contextual state (ephemeral UX feedback)
+            this._updateState({
+              contextualUpdate: {
+                content: content.trim(),
+                stage: stage || 'processing',
+              },
+            });
+          },
+
           onChunk: async (content) => {
+            // Clear contextual update when real AI response starts
+            if (this.state.contextualUpdate) {
+              this._updateState({ contextualUpdate: null });
+            }
+
             // Append each chunk to the streaming message
             streamingMsg.append(content);
           },
 
           onComplete: async (chunk) => {
+            // Clear contextual update on completion
+            this._updateState({ contextualUpdate: null });
+
             // Finalize message - use aiMessage.content from the complete event
-            const finalContent = chunk.aiMessage?.content || chunk.fullMessage || '';
+            const finalContent =
+              chunk.aiMessage?.content || chunk.fullMessage || "";
 
             // CRITICAL: Update the message content first, then reset streaming state
             streamingMsg.update(finalContent);
 
             // Wait a brief moment to ensure the UI has updated with the final content
-            await new Promise(resolve => setTimeout(resolve, 50));
+            await new Promise((resolve) => setTimeout(resolve, 50));
 
             // Reset streaming state and update conversation with size data
             resetStreamingState(this, {
-              conversation: chunk.conversationId ?
-                { ...this.state.conversation, conversationId: chunk.conversationId } :
-                this.state.conversation,
-              conversationSize: chunk.conversationSize || null
+              conversation: chunk.conversationId
+                ? {
+                    ...this.state.conversation,
+                    conversationId: chunk.conversationId,
+                  }
+                : this.state.conversation,
+              conversationSize: chunk.conversationSize || null,
             });
 
             return chunk;
@@ -545,10 +585,13 @@ export class CoachConversationAgent {
 
             // Reset streaming state and update conversation with size data
             resetStreamingState(this, {
-              conversation: data?.conversationId ?
-                { ...this.state.conversation, conversationId: data.conversationId } :
-                this.state.conversation,
-              conversationSize: data?.conversationSize || null
+              conversation: data?.conversationId
+                ? {
+                    ...this.state.conversation,
+                    conversationId: data.conversationId,
+                  }
+                : this.state.conversation,
+              conversationSize: data?.conversationSize || null,
             });
 
             return data;
@@ -556,21 +599,25 @@ export class CoachConversationAgent {
 
           onError: async (errorMessage) => {
             console.error("Streaming error:", errorMessage);
-          }
+          },
         });
-
       } catch (streamError) {
         // Handle streaming failure with fallback
         streamingMsg.remove();
 
         return await handleStreamingFallback(
           sendCoachConversationMessage,
-          [this.userId, this.coachId, this.conversationId, messageContent.trim(), imageS3Keys],
+          [
+            this.userId,
+            this.coachId,
+            this.conversationId,
+            messageContent.trim(),
+            imageS3Keys,
+          ],
           (result, isErrorFallback) => this._handleFallbackResult(result),
-          'conversation message'
+          "conversation message"
         );
       }
-
     } catch (error) {
       console.error("Error sending streaming message:", error);
 
@@ -586,9 +633,9 @@ export class CoachConversationAgent {
   _extractAiResponse(data) {
     let aiResponseContent = "Thank you for your message.";
 
-    if (data?.aiResponse && typeof data.aiResponse === 'object') {
+    if (data?.aiResponse && typeof data.aiResponse === "object") {
       aiResponseContent = data.aiResponse.content || aiResponseContent;
-    } else if (typeof data?.aiResponse === 'string') {
+    } else if (typeof data?.aiResponse === "string") {
       aiResponseContent = data.aiResponse;
     }
 
@@ -610,9 +657,9 @@ export class CoachConversationAgent {
 
     this._addMessage(aiResponse);
     resetStreamingState(this, {
-      conversation: result?.conversationId ?
-        { ...this.state.conversation, conversationId: result.conversationId } :
-        this.state.conversation
+      conversation: result?.conversationId
+        ? { ...this.state.conversation, conversationId: result.conversationId }
+        : this.state.conversation,
     });
 
     return result;
@@ -631,14 +678,15 @@ export class CoachConversationAgent {
     const errorResponse = {
       id: this._generateMessageId(),
       type: "ai",
-      content: "I'm sorry, I encountered an error processing your message. Please try again.",
+      content:
+        "I'm sorry, I encountered an error processing your message. Please try again.",
       timestamp: new Date().toISOString(),
     };
 
     this._addMessage(errorResponse);
     resetStreamingState(this, { error: "Failed to send message" });
 
-    if (typeof this.onError === 'function') {
+    if (typeof this.onError === "function") {
       this.onError(error);
     }
   }
@@ -647,7 +695,7 @@ export class CoachConversationAgent {
    * Appends content to the currently streaming message
    */
   _appendToStreamingMessage(messageId, chunk) {
-    const currentContent = this.state.streamingMessage || '';
+    const currentContent = this.state.streamingMessage || "";
     const newContent = currentContent + chunk;
     this._updateStreamingMessage(messageId, newContent);
   }
@@ -657,7 +705,7 @@ export class CoachConversationAgent {
    */
   _updateStreamingMessage(messageId, content) {
     // Create a new messages array with the updated message
-    const messages = this.state.messages.map(msg =>
+    const messages = this.state.messages.map((msg) =>
       msg.id === messageId ? { ...msg, content } : msg
     );
 
@@ -665,7 +713,7 @@ export class CoachConversationAgent {
     this._updateState({
       messages,
       streamingMessage: content,
-      _lastUpdate: Date.now()
+      _lastUpdate: Date.now(),
     });
 
     // Streaming message updated
@@ -677,9 +725,9 @@ export class CoachConversationAgent {
   _removeMessage(messageId) {
     this.state = {
       ...this.state,
-      messages: this.state.messages.filter(msg => msg.id !== messageId)
+      messages: this.state.messages.filter((msg) => msg.id !== messageId),
     };
-    if (typeof this.onStateChange === 'function') {
+    if (typeof this.onStateChange === "function") {
       this.onStateChange(this.state);
     }
   }
@@ -695,7 +743,7 @@ export class CoachConversationAgent {
       error: null,
       // Reset streaming state
       isStreaming: false,
-      streamingMessage: '',
+      streamingMessage: "",
       streamingMessageId: null,
       conversation: null,
     });
@@ -705,15 +753,33 @@ export class CoachConversationAgent {
    * Updates coach conversation metadata (title, tags, isActive)
    */
   async updateCoachConversation(userId, coachId, conversationId, metadata) {
-    if (!userId || !coachId || !conversationId || !metadata || Object.keys(metadata).length === 0) {
-      throw new Error("User ID, Coach ID, Conversation ID, and metadata are required");
+    if (
+      !userId ||
+      !coachId ||
+      !conversationId ||
+      !metadata ||
+      Object.keys(metadata).length === 0
+    ) {
+      throw new Error(
+        "User ID, Coach ID, Conversation ID, and metadata are required"
+      );
     }
 
     try {
-      console.info("Updating conversation metadata:", { userId, coachId, conversationId, metadata });
+      console.info("Updating conversation metadata:", {
+        userId,
+        coachId,
+        conversationId,
+        metadata,
+      });
 
       // Call API to update metadata
-      const result = await updateCoachConversation(userId, coachId, conversationId, metadata);
+      const result = await updateCoachConversation(
+        userId,
+        coachId,
+        conversationId,
+        metadata
+      );
 
       // Update local state with new metadata
       const updatedConversation = {
@@ -722,12 +788,14 @@ export class CoachConversationAgent {
         metadata: {
           ...this.state.conversation?.metadata,
           ...(metadata.tags && { tags: metadata.tags }),
-          ...(metadata.isActive !== undefined && { isActive: metadata.isActive }),
-        }
+          ...(metadata.isActive !== undefined && {
+            isActive: metadata.isActive,
+          }),
+        },
       };
 
       this._updateState({
-        conversation: updatedConversation
+        conversation: updatedConversation,
       });
 
       // Refresh historical conversations to show updated metadata
@@ -740,9 +808,9 @@ export class CoachConversationAgent {
     } catch (error) {
       console.error("Error updating conversation metadata:", error);
       this._updateState({
-        error: "Failed to update conversation metadata"
+        error: "Failed to update conversation metadata",
       });
-      if (typeof this.onError === 'function') {
+      if (typeof this.onError === "function") {
         this.onError(error);
       }
       throw error;
@@ -760,10 +828,18 @@ export class CoachConversationAgent {
     try {
       this._updateState({ isLoadingItem: true, error: null });
 
-      console.info("Deleting coach conversation:", { userId, coachId, conversationId });
+      console.info("Deleting coach conversation:", {
+        userId,
+        coachId,
+        conversationId,
+      });
 
       // Call API to delete conversation
-      const result = await deleteCoachConversation(userId, coachId, conversationId);
+      const result = await deleteCoachConversation(
+        userId,
+        coachId,
+        conversationId
+      );
 
       // Refresh the recent conversations list to reflect the deletion
       if (this.state.recentConversations.length > 0) {
@@ -779,10 +855,10 @@ export class CoachConversationAgent {
       console.error("Error deleting conversation:", error);
       this._updateState({
         isLoadingItem: false,
-        error: "Failed to delete conversation"
+        error: "Failed to delete conversation",
       });
 
-      if (typeof this.onError === 'function') {
+      if (typeof this.onError === "function") {
         this.onError(error);
       }
 

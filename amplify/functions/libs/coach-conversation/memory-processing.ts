@@ -80,7 +80,8 @@ export async function queryMemories(
   userId: string,
   coachId: string,
   userMessage?: string,
-  messageContext?: string
+  messageContext?: string,
+  options?: { enableReranking?: boolean; minScore?: number }
 ): Promise<MemoryRetrievalResult> {
   let memories: UserMemory[] = [];
   let retrievalDetection: any = null;
@@ -108,6 +109,8 @@ export async function queryMemories(
           querySemanticMemories(userId, userMessage, {
             topK: 10,
             contextTypes: retrievalDetection.contextTypes,
+            enableReranking: options?.enableReranking,
+            minScore: options?.minScore,
           }),
           queryMemoriesFromDb(userId, coachId, {
             limit: 4,

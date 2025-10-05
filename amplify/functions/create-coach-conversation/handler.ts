@@ -1,7 +1,7 @@
 import {
   createCreatedResponse,
   createErrorResponse,
-  invokeLambda,
+  invokeAsyncLambda,
 } from "../libs/api-helpers";
 import {
   saveCoachConversation,
@@ -68,14 +68,14 @@ const baseHandler: AuthenticatedHandler = async (event) => {
             }),
           };
 
-          // For initial messages, we want to wait for completion so the conversation
-          // is fully set up when the user sees it
-          await invokeLambda(
+          // Trigger async processing of initial message (fire-and-forget)
+          // The conversation is created immediately and the message processes in the background
+          await invokeAsyncLambda(
             sendMessageFunctionName,
             sendMessagePayload,
             "initial message processing"
           );
-          console.info("Initial message sent and processed successfully");
+          console.info("Initial message triggered for async processing");
         } else {
           console.warn(
             "SEND_COACH_CONVERSATION_MESSAGE_FUNCTION_NAME not configured - skipping initial message"

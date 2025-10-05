@@ -12,6 +12,7 @@ import {
   DisciplineClassification,
 } from "./types";
 import { storeDebugDataInS3, callBedrockApi, MODEL_IDS } from "../api-helpers";
+import { JSON_FORMATTING_INSTRUCTIONS_MINIFIED, JSON_FORMATTING_INSTRUCTIONS_STANDARD } from '../prompt-helpers';
 import { cleanResponse, fixMalformedJson } from "../response-utils";
 import { getSchemaWithContext } from "../schemas/universal-workout-schema";
 
@@ -325,26 +326,7 @@ CRITICAL TEMPORAL AWARENESS FOR WORKOUT LOGGING:
   return `
 ${directiveSection}${timezoneSection}${isComplex ? "COMPLEX WORKOUT DETECTED - APPLY AGGRESSIVE OPTIMIZATION!" : ""}
 
-CRITICAL JSON FORMATTING RULES:
-- Return ONLY valid JSON. No markdown backticks, no explanations, no text outside JSON
-- Response must start with { and end with }
-- NEVER include trailing commas before closing braces } or brackets ]
-- Use double quotes for all strings, never single quotes
-- Ensure all arrays and objects are properly closed
-- If unsure about a value, use null instead of omitting the field
-- Test JSON validity before responding
-- CRITICAL: Generate MINIFIED JSON with NO extra whitespace, newlines, or formatting
-- Remove all unnecessary spaces, tabs, and line breaks to minimize payload size
-- Example: {"key":"value","array":[1,2,3]} NOT { "key": "value", "array": [ 1, 2, 3 ] }
-
-CRITICAL JSON STRUCTURE VALIDATION:
-- Each opening brace { must have exactly ONE matching closing brace }
-- Each opening bracket [ must have exactly ONE matching closing bracket ]
-- Count your braces: total opening braces must equal total closing braces exactly
-- Count your brackets: total opening brackets must equal total closing brackets exactly
-- For complex nested structures with 20+ rounds, be extra careful with overall balance
-- Multiple consecutive closing characters (like }]}) are VALID when closing nested structures
-- Focus on total count balance, not consecutive characters
+${JSON_FORMATTING_INSTRUCTIONS_MINIFIED}
 
 EXTRACTION REQUIREMENTS:
 - Include ALL schema fields, use null for missing data
@@ -1020,7 +1002,9 @@ EXAMPLES:
 - Message typed at 2am local time, user says "worked out this evening" → evening of PREVIOUS day
 - Message typed at 9am local time, user says "this morning at 6am" → 6am local time TODAY
 
-Return ONLY a JSON object with this format:
+${JSON_FORMATTING_INSTRUCTIONS_STANDARD}
+
+RESPONSE SCHEMA:
 {
   "completedAt": "2025-01-XX[T]XX:XX:XX.XXXZ" or null,
   "confidence": 0.0-1.0,
@@ -1046,7 +1030,7 @@ Examples:
     const response = await callBedrockApi(
       timeExtractionPrompt,
       userMessage,
-      MODEL_IDS.NOVA_MICRO
+      MODEL_IDS.CLAUDE_HAIKU_FULL
     );
 
     const result = JSON.parse(response.trim());
@@ -1234,7 +1218,7 @@ Return confidence 0.8+ for clear classifications, 0.5-0.7 for moderate cases, <0
     const response = await callBedrockApi(
       classificationPrompt,
       discipline,
-      MODEL_IDS.NOVA_MICRO
+      MODEL_IDS.CLAUDE_HAIKU_FULL
     );
     const result = JSON.parse(response.trim());
 

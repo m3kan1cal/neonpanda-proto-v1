@@ -6,6 +6,7 @@
  */
 
 import { invokeAsyncLambda, callBedrockApi, MODEL_IDS } from "../api-helpers";
+import { JSON_FORMATTING_INSTRUCTIONS_STANDARD } from "../prompt-helpers";
 import { SmartRequestRouter } from "../streaming/business-types";
 
 /**
@@ -44,8 +45,9 @@ COMPLEXITY INDICATORS:
 - Competition/performance context ("competition", "event", "performance", "season")
 - Nutrition/lifestyle factors ("diet", "lifestyle", "habits", "body composition")
 
-RESPONSE FORMAT:
-You must respond with ONLY a valid JSON object:
+${JSON_FORMATTING_INSTRUCTIONS_STANDARD}
+
+RESPONSE SCHEMA:
 {
   "hasComplexity": boolean,
   "confidence": number (0.0 to 1.0),
@@ -67,7 +69,7 @@ Analyze this message for complexity triggers that would warrant conversation sum
     const response = await callBedrockApi(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.NOVA_MICRO
+      MODEL_IDS.CLAUDE_HAIKU_FULL
     );
     const result = JSON.parse(response);
 
@@ -407,11 +409,7 @@ Determine optimal processing order:
 - memoryFirst: true if memory processing is most important
 - contextFirst: true if context search should happen first
 
-CRITICAL RESPONSE REQUIREMENTS:
-1. RESPOND WITH PURE JSON ONLY - NO MARKDOWN, NO BACKTICKS, NO EXPLANATIONS
-2. START IMMEDIATELY WITH { AND END WITH }
-3. DO NOT WRAP IN TRIPLE BACKTICKS OR ANY OTHER FORMATTING
-4. INCLUDE ALL REQUIRED FIELDS EXACTLY AS SPECIFIED
+${JSON_FORMATTING_INSTRUCTIONS_STANDARD}
 
 REQUIRED JSON STRUCTURE:
 {

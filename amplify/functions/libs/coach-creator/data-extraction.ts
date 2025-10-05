@@ -1,160 +1,263 @@
-import { SophisticationLevel } from './types';
-import { Question } from './types';
+import { SophisticationLevel } from "./types";
+import { Question } from "./types";
 
 // Extract methodology preferences from user responses
-export const extractMethodologyPreferences = (responses: Record<string, string>) => {
+// Note: Explicit methodology question was removed in streamlined version
+// Now inferring from goals, movement focus, and competition goals
+export const extractMethodologyPreferences = (
+  responses: Record<string, string>
+) => {
   const methodologyPrefs = {
-    primary: '' as string,
+    primary: "" as string,
     focus: [] as string[],
     experience: [] as string[],
-    preferences: [] as string[]
+    preferences: [] as string[],
   };
 
-  // From methodology_preferences question (16)
-  const methodologyResponse = responses['16'] || '';
-  if (methodologyResponse.toLowerCase().includes('comptrain')) {
-    methodologyPrefs.primary = 'comptrain_strength';
-    methodologyPrefs.experience.push('comptrain');
+  // Infer from goals_and_timeline (question 1)
+  const goalsResponse = responses["1"] || "";
+  const goalsLower = goalsResponse.toLowerCase();
+
+  // Check for methodology mentions in goals
+  if (goalsLower.includes("comptrain")) {
+    methodologyPrefs.primary = "comptrain_strength";
+    methodologyPrefs.experience.push("comptrain");
   }
-  if (methodologyResponse.toLowerCase().includes('mayhem')) {
-    methodologyPrefs.primary = 'mayhem_conditioning';
-    methodologyPrefs.experience.push('mayhem');
+  if (goalsLower.includes("mayhem")) {
+    methodologyPrefs.primary = "mayhem_conditioning";
+    methodologyPrefs.experience.push("mayhem");
   }
-  if (methodologyResponse.toLowerCase().includes('hwpo')) {
-    methodologyPrefs.primary = 'hwpo_training';
-    methodologyPrefs.experience.push('hwpo');
+  if (goalsLower.includes("hwpo")) {
+    methodologyPrefs.primary = "hwpo_training";
+    methodologyPrefs.experience.push("hwpo");
   }
-  if (methodologyResponse.toLowerCase().includes('invictus')) {
-    methodologyPrefs.primary = 'invictus_fitness';
-    methodologyPrefs.experience.push('invictus');
+  if (goalsLower.includes("invictus")) {
+    methodologyPrefs.primary = "invictus_fitness";
+    methodologyPrefs.experience.push("invictus");
   }
-  if (methodologyResponse.toLowerCase().includes('misfit')) {
-    methodologyPrefs.primary = 'misfit_athletics';
-    methodologyPrefs.experience.push('misfit');
-  }
-  if (methodologyResponse.toLowerCase().includes('functional bodybuilding')) {
-    methodologyPrefs.primary = 'functional_bodybuilding';
-    methodologyPrefs.experience.push('functional_bodybuilding');
-  }
-  if (methodologyResponse.toLowerCase().includes('opex')) {
-    methodologyPrefs.primary = 'opex_fitness';
-    methodologyPrefs.experience.push('opex');
-  }
-  if (methodologyResponse.toLowerCase().includes('linchpin')) {
-    methodologyPrefs.primary = 'crossfit_linchpin';
-    methodologyPrefs.experience.push('linchpin');
-  }
-  if (methodologyResponse.toLowerCase().includes('prvn')) {
-    methodologyPrefs.primary = 'prvn_fitness';
-    methodologyPrefs.experience.push('prvn');
+  if (goalsLower.includes("misfit")) {
+    methodologyPrefs.primary = "misfit_athletics";
+    methodologyPrefs.experience.push("misfit");
   }
 
-  // From programming_philosophy question (7)
-  const programmingResponse = responses['7'] || '';
-  if (programmingResponse.toLowerCase().includes('volume')) {
-    methodologyPrefs.focus.push('volume_emphasis');
+  // Infer focus from movement_focus_and_love (question 7)
+  const movementResponse = responses["7"] || "";
+  const movementLower = movementResponse.toLowerCase();
+
+  if (
+    movementLower.includes("olympic") ||
+    movementLower.includes("snatch") ||
+    movementLower.includes("clean")
+  ) {
+    methodologyPrefs.focus.push("olympic_lifting");
   }
-  if (programmingResponse.toLowerCase().includes('intensity')) {
-    methodologyPrefs.focus.push('intensity_emphasis');
+  if (
+    movementLower.includes("gymnastics") ||
+    movementLower.includes("muscle-up") ||
+    movementLower.includes("handstand")
+  ) {
+    methodologyPrefs.focus.push("gymnastics");
   }
-  if (programmingResponse.toLowerCase().includes('conjugate')) {
-    methodologyPrefs.preferences.push('conjugate_method');
+  if (movementLower.includes("strength") || movementLower.includes("heavy")) {
+    methodologyPrefs.focus.push("strength");
+  }
+  if (
+    movementLower.includes("conditioning") ||
+    movementLower.includes("cardio") ||
+    movementLower.includes("engine")
+  ) {
+    methodologyPrefs.focus.push("conditioning");
   }
 
-  // From goal_discovery question (1)
-  const goalsResponse = responses['1'] || '';
-  if (goalsResponse.toLowerCase().includes('strength')) {
-    methodologyPrefs.focus.push('strength');
-  }
-  if (goalsResponse.toLowerCase().includes('conditioning') || goalsResponse.toLowerCase().includes('cardio')) {
-    methodologyPrefs.focus.push('conditioning');
-  }
-  if (goalsResponse.toLowerCase().includes('compete')) {
-    methodologyPrefs.focus.push('competition_prep');
+  // Infer from competition goals (question 10)
+  const competitionResponse = responses["10"] || "";
+  if (competitionResponse.toLowerCase().includes("compete")) {
+    methodologyPrefs.focus.push("competition_prep");
   }
 
   return methodologyPrefs;
 };
 
 // Extract training frequency from responses
-export const extractTrainingFrequency = (responses: Record<string, string>): number => {
-  const frequencyResponse = responses['3'] || '';
+// Updated to question 4: training_frequency_and_time
+export const extractTrainingFrequency = (
+  responses: Record<string, string>
+): number => {
+  const frequencyResponse = responses["4"] || "";
+  const freqLower = frequencyResponse.toLowerCase();
 
-  if (frequencyResponse.includes('2') || frequencyResponse.includes('two')) return 2;
-  if (frequencyResponse.includes('3') || frequencyResponse.includes('three')) return 3;
-  if (frequencyResponse.includes('4') || frequencyResponse.includes('four')) return 4;
-  if (frequencyResponse.includes('5') || frequencyResponse.includes('five')) return 5;
-  if (frequencyResponse.includes('6') || frequencyResponse.includes('six')) return 6;
-  if (frequencyResponse.includes('7') || frequencyResponse.includes('seven') || frequencyResponse.includes('daily')) return 7;
+  // Look for numbers or words indicating frequency
+  if (freqLower.includes("2") || freqLower.includes("two")) return 2;
+  if (freqLower.includes("3") || freqLower.includes("three")) return 3;
+  if (freqLower.includes("4") || freqLower.includes("four")) return 4;
+  if (freqLower.includes("5") || freqLower.includes("five")) return 5;
+  if (freqLower.includes("6") || freqLower.includes("six")) return 6;
+  if (
+    freqLower.includes("7") ||
+    freqLower.includes("seven") ||
+    freqLower.includes("daily")
+  )
+    return 7;
 
   return 4; // Default to 4 days per week
 };
 
 // Extract specializations from responses
-export const extractSpecializations = (responses: Record<string, string>): string[] => {
+// Updated question IDs: 1 (goals), 7 (movement focus), 10 (competition)
+export const extractSpecializations = (
+  responses: Record<string, string>
+): string[] => {
   const specializations = [];
 
-  const goalsResponse = responses['1'] || '';
-  const strengthWeaknessResponse = responses['10'] || '';
-  const competitionResponse = responses['13'] || '';
+  const goalsResponse = responses["1"] || "";
+  const goalsLower = goalsResponse.toLowerCase();
 
-  if (goalsResponse.toLowerCase().includes('olympic') || strengthWeaknessResponse.toLowerCase().includes('olympic')) {
-    specializations.push('olympic_lifting');
+  const movementResponse = responses["7"] || "";
+  const movementLower = movementResponse.toLowerCase();
+
+  const competitionResponse = responses["10"] || "";
+  const compLower = competitionResponse.toLowerCase();
+
+  // Olympic lifting
+  if (
+    goalsLower.includes("olympic") ||
+    movementLower.includes("olympic") ||
+    movementLower.includes("snatch") ||
+    movementLower.includes("clean and jerk")
+  ) {
+    specializations.push("olympic_lifting");
   }
-  if (goalsResponse.toLowerCase().includes('powerlifting') || strengthWeaknessResponse.toLowerCase().includes('powerlifting')) {
-    specializations.push('powerlifting');
+
+  // Powerlifting
+  if (
+    goalsLower.includes("powerlifting") ||
+    movementLower.includes("powerlifting") ||
+    (movementLower.includes("squat") &&
+      movementLower.includes("deadlift") &&
+      movementLower.includes("bench"))
+  ) {
+    specializations.push("powerlifting");
   }
-  if (goalsResponse.toLowerCase().includes('gymnastics') || strengthWeaknessResponse.toLowerCase().includes('gymnastics')) {
-    specializations.push('gymnastics');
+
+  // Gymnastics
+  if (
+    goalsLower.includes("gymnastics") ||
+    movementLower.includes("gymnastics") ||
+    movementLower.includes("muscle-up") ||
+    movementLower.includes("handstand")
+  ) {
+    specializations.push("gymnastics");
   }
-  if (goalsResponse.toLowerCase().includes('endurance') || strengthWeaknessResponse.toLowerCase().includes('endurance')) {
-    specializations.push('endurance');
+
+  // Endurance
+  if (
+    goalsLower.includes("endurance") ||
+    movementLower.includes("endurance") ||
+    movementLower.includes("running") ||
+    movementLower.includes("cardio")
+  ) {
+    specializations.push("endurance");
   }
-  if (competitionResponse.toLowerCase().includes('masters')) {
-    specializations.push('masters_competition');
+
+  // Masters competition
+  if (compLower.includes("masters")) {
+    specializations.push("masters_competition");
   }
 
   return specializations;
 };
 
 // Extract goal timeline from responses
-export const extractGoalTimeline = (responses: Record<string, string>): string => {
-  const goalsResponse = responses['1'] || '';
-  const competitionResponse = responses['13'] || '';
+// Updated question IDs: 1 (goals_and_timeline), 10 (competition_goals)
+export const extractGoalTimeline = (
+  responses: Record<string, string>
+): string => {
+  const goalsResponse = responses["1"] || "";
+  const goalsLower = goalsResponse.toLowerCase();
 
-  if (goalsResponse.toLowerCase().includes('3 month') || competitionResponse.toLowerCase().includes('3 month')) {
-    return '3_months';
+  const competitionResponse = responses["10"] || "";
+  const compLower = competitionResponse.toLowerCase();
+
+  // Look for timeline indicators
+  if (goalsLower.includes("3 month") || compLower.includes("3 month")) {
+    return "3_months";
   }
-  if (goalsResponse.toLowerCase().includes('6 month') || competitionResponse.toLowerCase().includes('6 month')) {
-    return '6_months';
+  if (goalsLower.includes("6 month") || compLower.includes("6 month")) {
+    return "6_months";
   }
-  if (goalsResponse.toLowerCase().includes('year') || competitionResponse.toLowerCase().includes('year')) {
-    return '1_year';
+  if (
+    goalsLower.includes("year") ||
+    goalsLower.includes("12 month") ||
+    compLower.includes("year") ||
+    compLower.includes("12 month")
+  ) {
+    return "1_year";
   }
 
-  return '6_months'; // Default timeline
+  // Short-term indicators
+  if (
+    goalsLower.includes("soon") ||
+    goalsLower.includes("quickly") ||
+    goalsLower.includes("asap")
+  ) {
+    return "3_months";
+  }
+
+  // Long-term indicators
+  if (
+    goalsLower.includes("eventually") ||
+    goalsLower.includes("long term") ||
+    goalsLower.includes("long-term")
+  ) {
+    return "1_year";
+  }
+
+  return "6_months"; // Default timeline
 };
 
 // Extract intensity preference from responses
-export const extractIntensityPreference = (responses: Record<string, string>): string => {
-  const programmingResponse = responses['7'] || '';
-  const motivationResponse = responses['8'] || '';
-  const lifestyleResponse = responses['11'] || '';
+// Updated question IDs: 7 (movement_focus_and_love), 8 (coaching_style_and_motivation)
+// Note: lifestyle_factors question was removed, so can't check stress levels
+export const extractIntensityPreference = (
+  responses: Record<string, string>
+): string => {
+  const movementResponse = responses["7"] || "";
+  const movementLower = movementResponse.toLowerCase();
 
-  if (programmingResponse.toLowerCase().includes('high intensity') || motivationResponse.toLowerCase().includes('push')) {
-    return 'high';
-  }
-  if (lifestyleResponse.toLowerCase().includes('stress') || lifestyleResponse.toLowerCase().includes('busy')) {
-    return 'low';
+  const coachingResponse = responses["8"] || "";
+  const coachingLower = coachingResponse.toLowerCase();
+
+  // High intensity indicators
+  if (
+    coachingLower.includes("push") ||
+    coachingLower.includes("challenging") ||
+    coachingLower.includes("hard") ||
+    movementLower.includes("intense") ||
+    movementLower.includes("high intensity")
+  ) {
+    return "high";
   }
 
-  return 'moderate'; // Default to moderate intensity
+  // Low intensity indicators
+  if (
+    coachingLower.includes("patient") ||
+    coachingLower.includes("gentle") ||
+    coachingLower.includes("easy") ||
+    movementLower.includes("moderate")
+  ) {
+    return "low";
+  }
+
+  return "moderate"; // Default to moderate intensity
 };
 
 // Enhanced safety profile extraction
+// Updated to new question structure
 export const extractSafetyProfile = (responses: Record<string, string>) => {
   const safetyProfile = {
-    experienceLevel: 'BEGINNER' as SophisticationLevel,
+    experienceLevel: "BEGINNER" as SophisticationLevel,
+    age: null as number | null,
+    ageGroup: "" as string,
     injuries: [] as string[],
     contraindications: [] as string[],
     modifications: [] as string[],
@@ -163,103 +266,289 @@ export const extractSafetyProfile = (responses: Record<string, string>) => {
     riskFactors: [] as string[],
     timeConstraints: {} as Record<string, any>,
     environmentalFactors: [] as string[],
-    learningConsiderations: [] as string[]
+    movementPreferences: [] as string[],
+    movementAvoidances: [] as string[],
   };
 
-  // From experience_assessment (question 2)
-  const experienceResponse = responses['2'] || '';
-  if (experienceResponse.toLowerCase().includes('advanced') || experienceResponse.toLowerCase().includes('years')) {
-    safetyProfile.experienceLevel = 'ADVANCED';
-  } else if (experienceResponse.toLowerCase().includes('intermediate') || experienceResponse.toLowerCase().includes('year')) {
-    safetyProfile.experienceLevel = 'INTERMEDIATE';
+  // Extract age from age_and_life_stage (question 2)
+  const ageResponse = responses["2"] || "";
+  const ageMatch = ageResponse.match(/\d+/);
+  if (ageMatch) {
+    safetyProfile.age = parseInt(ageMatch[0]);
+
+    // Set age group
+    if (safetyProfile.age < 30) {
+      safetyProfile.ageGroup = "under_30";
+    } else if (safetyProfile.age < 40) {
+      safetyProfile.ageGroup = "30_39";
+    } else if (safetyProfile.age < 50) {
+      safetyProfile.ageGroup = "40_49";
+      safetyProfile.recoveryNeeds.push("masters_recovery");
+      safetyProfile.riskFactors.push("age_related_recovery");
+    } else if (safetyProfile.age < 60) {
+      safetyProfile.ageGroup = "50_59";
+      safetyProfile.recoveryNeeds.push(
+        "masters_recovery",
+        "joint_health_priority"
+      );
+      safetyProfile.riskFactors.push(
+        "age_related_recovery",
+        "hormonal_changes"
+      );
+    } else {
+      safetyProfile.ageGroup = "60_plus";
+      safetyProfile.recoveryNeeds.push(
+        "masters_recovery",
+        "joint_health_priority",
+        "longevity_focus"
+      );
+      safetyProfile.riskFactors.push(
+        "age_related_recovery",
+        "increased_injury_risk"
+      );
+    }
   }
 
-  // Enhanced injury analysis from injury_limitations (question 4)
-  const injuryResponse = responses['4'] || '';
+  // Extract experience level from experience_level (question 3)
+  const experienceResponse = responses["3"] || "";
+  const expLower = experienceResponse.toLowerCase();
+
+  if (
+    expLower.includes("advanced") ||
+    expLower.includes("years") ||
+    expLower.includes("competed")
+  ) {
+    safetyProfile.experienceLevel = "ADVANCED";
+  } else if (
+    expLower.includes("intermediate") ||
+    expLower.includes("year") ||
+    expLower.includes("pretty consistent") ||
+    expLower.includes("familiar")
+  ) {
+    safetyProfile.experienceLevel = "INTERMEDIATE";
+  } else {
+    safetyProfile.experienceLevel = "BEGINNER";
+    safetyProfile.riskFactors.push("novice_athlete");
+  }
+
+  // Enhanced injury analysis from injuries_and_limitations (question 5)
+  const injuryResponse = responses["5"] || "";
+  const injuryLower = injuryResponse.toLowerCase();
 
   // Knee injuries
-  if (injuryResponse.toLowerCase().includes('knee')) {
-    safetyProfile.injuries.push('knee_issues');
-    safetyProfile.contraindications.push('box_jumps', 'high_impact_plyometrics', 'deep_pistol_squats');
-    safetyProfile.modifications.push('step_ups_instead_of_jumps', 'controlled_squatting', 'knee_friendly_lunges');
+  if (injuryLower.includes("knee")) {
+    safetyProfile.injuries.push("knee_issues");
+    safetyProfile.contraindications.push(
+      "box_jumps",
+      "high_impact_plyometrics",
+      "deep_pistol_squats"
+    );
+    safetyProfile.modifications.push(
+      "step_ups_instead_of_jumps",
+      "controlled_squatting",
+      "knee_friendly_lunges"
+    );
+    safetyProfile.riskFactors.push("knee_injury_history");
   }
 
   // Shoulder injuries
-  if (injuryResponse.toLowerCase().includes('shoulder')) {
-    safetyProfile.injuries.push('shoulder_issues');
-    safetyProfile.contraindications.push('overhead_pressing', 'heavy_pulling', 'kipping_movements');
-    safetyProfile.modifications.push('limited_overhead_range', 'band_assistance', 'strict_movements_only');
+  if (injuryLower.includes("shoulder")) {
+    safetyProfile.injuries.push("shoulder_issues");
+    safetyProfile.contraindications.push(
+      "overhead_pressing",
+      "heavy_pulling",
+      "kipping_movements"
+    );
+    safetyProfile.modifications.push(
+      "limited_overhead_range",
+      "band_assistance",
+      "strict_movements_only"
+    );
+    safetyProfile.riskFactors.push("shoulder_injury_history");
   }
 
   // Back injuries
-  if (injuryResponse.toLowerCase().includes('back') || injuryResponse.toLowerCase().includes('spine')) {
-    safetyProfile.injuries.push('back_issues');
-    safetyProfile.contraindications.push('heavy_deadlifts', 'loaded_flexion', 'overhead_squats');
-    safetyProfile.modifications.push('elevated_deadlifts', 'neutral_spine_emphasis', 'core_stability_focus');
+  if (
+    injuryLower.includes("back") ||
+    injuryLower.includes("spine") ||
+    injuryLower.includes("lower back")
+  ) {
+    safetyProfile.injuries.push("back_issues");
+    safetyProfile.contraindications.push(
+      "heavy_deadlifts",
+      "loaded_flexion",
+      "overhead_squats"
+    );
+    safetyProfile.modifications.push(
+      "elevated_deadlifts",
+      "neutral_spine_emphasis",
+      "core_stability_focus"
+    );
+    safetyProfile.riskFactors.push("back_injury_history");
   }
 
   // Wrist/elbow injuries
-  if (injuryResponse.toLowerCase().includes('wrist') || injuryResponse.toLowerCase().includes('elbow')) {
-    safetyProfile.injuries.push('upper_extremity_issues');
-    safetyProfile.contraindications.push('heavy_pressing', 'gymnastics_skills', 'barbell_cycling');
-    safetyProfile.modifications.push('dumbbell_alternatives', 'neutral_grip_options', 'reduced_gripping_time');
+  if (injuryLower.includes("wrist") || injuryLower.includes("elbow")) {
+    safetyProfile.injuries.push("upper_extremity_issues");
+    safetyProfile.contraindications.push(
+      "heavy_pressing",
+      "gymnastics_skills",
+      "barbell_cycling"
+    );
+    safetyProfile.modifications.push(
+      "dumbbell_alternatives",
+      "neutral_grip_options",
+      "reduced_gripping_time"
+    );
+    safetyProfile.riskFactors.push("upper_extremity_injury_history");
   }
 
-  // Equipment analysis from equipment_environment (question 5)
-  const equipmentResponse = responses['5'] || '';
-  if (equipmentResponse.toLowerCase().includes('barbell')) safetyProfile.equipment.push('barbell');
-  if (equipmentResponse.toLowerCase().includes('dumbbell')) safetyProfile.equipment.push('dumbbells');
-  if (equipmentResponse.toLowerCase().includes('kettlebell')) safetyProfile.equipment.push('kettlebells');
-  if (equipmentResponse.toLowerCase().includes('pull')) safetyProfile.equipment.push('pull_up_bar');
-  if (equipmentResponse.toLowerCase().includes('rings')) safetyProfile.equipment.push('rings');
-  if (equipmentResponse.toLowerCase().includes('home')) {
-    safetyProfile.equipment.push('home_gym');
-    safetyProfile.riskFactors.push('limited_equipment');
-    safetyProfile.environmentalFactors.push('unsupervised_training');
+  // Hip injuries
+  if (injuryLower.includes("hip")) {
+    safetyProfile.injuries.push("hip_issues");
+    safetyProfile.contraindications.push("deep_squats", "pistol_squats");
+    safetyProfile.modifications.push("box_squats", "limited_range_work");
+    safetyProfile.riskFactors.push("hip_injury_history");
   }
 
-  // Time constraints from time_constraints (question 9)
-  const timeResponse = responses['9'] || '';
-  if (timeResponse.includes('30')) {
-    safetyProfile.timeConstraints = { session_length: 30, intensity_focus: 'high', warmup_time: 'limited' };
-    safetyProfile.riskFactors.push('insufficient_warmup_time');
-  } else if (timeResponse.includes('45')) {
-    safetyProfile.timeConstraints = { session_length: 45, intensity_focus: 'moderate', warmup_time: 'adequate' };
-  } else if (timeResponse.includes('60')) {
-    safetyProfile.timeConstraints = { session_length: 60, intensity_focus: 'moderate', warmup_time: 'adequate' };
+  // Ankle injuries
+  if (injuryLower.includes("ankle")) {
+    safetyProfile.injuries.push("ankle_issues");
+    safetyProfile.contraindications.push(
+      "box_jumps",
+      "running",
+      "double_unders"
+    );
+    safetyProfile.modifications.push(
+      "low_impact_alternatives",
+      "ankle_stability_work"
+    );
+    safetyProfile.riskFactors.push("ankle_injury_history");
   }
 
-  // Lifestyle factors from lifestyle_factors (question 11)
-  const lifestyleResponse = responses['11'] || '';
-  if (lifestyleResponse.toLowerCase().includes('stress') || lifestyleResponse.toLowerCase().includes('busy')) {
-    safetyProfile.recoveryNeeds.push('stress_management', 'flexible_scheduling');
-    safetyProfile.riskFactors.push('high_life_stress');
+  // Equipment analysis from equipment_and_environment (question 6)
+  const equipmentResponse = responses["6"] || "";
+  const equipmentLower = equipmentResponse.toLowerCase();
+
+  if (equipmentLower.includes("barbell"))
+    safetyProfile.equipment.push("barbell");
+  if (equipmentLower.includes("dumbbell"))
+    safetyProfile.equipment.push("dumbbells");
+  if (equipmentLower.includes("kettlebell"))
+    safetyProfile.equipment.push("kettlebells");
+  if (equipmentLower.includes("pull"))
+    safetyProfile.equipment.push("pull_up_bar");
+  if (equipmentLower.includes("rings")) safetyProfile.equipment.push("rings");
+  if (equipmentLower.includes("rower")) safetyProfile.equipment.push("rower");
+  if (equipmentLower.includes("bike") || equipmentLower.includes("assault"))
+    safetyProfile.equipment.push("assault_bike");
+  if (equipmentLower.includes("ski erg"))
+    safetyProfile.equipment.push("ski_erg");
+
+  // Environment factors
+  if (equipmentLower.includes("home") || equipmentLower.includes("garage")) {
+    safetyProfile.equipment.push("home_gym");
+    safetyProfile.environmentalFactors.push("unsupervised_training");
+    safetyProfile.riskFactors.push(
+      "limited_equipment",
+      "no_coaching_supervision"
+    );
   }
-  if (lifestyleResponse.toLowerCase().includes('sleep') || lifestyleResponse.toLowerCase().includes('tired')) {
-    safetyProfile.recoveryNeeds.push('sleep_optimization', 'fatigue_monitoring');
-    safetyProfile.riskFactors.push('sleep_deprivation');
+  if (
+    equipmentLower.includes("crossfit") ||
+    equipmentLower.includes("affiliate") ||
+    equipmentLower.includes("box")
+  ) {
+    safetyProfile.environmentalFactors.push("coached_environment");
   }
-  if (lifestyleResponse.toLowerCase().includes('travel')) {
-    safetyProfile.recoveryNeeds.push('travel_adaptations');
-    safetyProfile.environmentalFactors.push('inconsistent_training_environment');
+  if (
+    equipmentLower.includes("limited") ||
+    equipmentLower.includes("basic") ||
+    equipmentLower.includes("minimal")
+  ) {
+    safetyProfile.riskFactors.push("limited_equipment");
   }
 
-  // Recovery preferences from recovery_preferences (question 17)
-  const recoveryResponse = responses['17'] || '';
-  if (recoveryResponse.toLowerCase().includes('track') || recoveryResponse.toLowerCase().includes('hrv')) {
-    safetyProfile.recoveryNeeds.push('data_driven_recovery');
-  }
-  if (recoveryResponse.toLowerCase().includes('stretch') || recoveryResponse.toLowerCase().includes('mobility')) {
-    safetyProfile.recoveryNeeds.push('mobility_emphasis');
+  // Time constraints from training_frequency_and_time (question 4)
+  const timeResponse = responses["4"] || "";
+  const timeLower = timeResponse.toLowerCase();
+
+  if (timeLower.includes("30")) {
+    safetyProfile.timeConstraints = {
+      session_length: 30,
+      intensity_focus: "high",
+      warmup_time: "limited",
+    };
+    safetyProfile.riskFactors.push("insufficient_warmup_time");
+  } else if (timeLower.includes("45")) {
+    safetyProfile.timeConstraints = {
+      session_length: 45,
+      intensity_focus: "moderate",
+      warmup_time: "adequate",
+    };
+  } else if (timeLower.includes("60") || timeLower.includes("hour")) {
+    safetyProfile.timeConstraints = {
+      session_length: 60,
+      intensity_focus: "moderate",
+      warmup_time: "adequate",
+    };
+  } else if (timeLower.includes("90")) {
+    safetyProfile.timeConstraints = {
+      session_length: 90,
+      intensity_focus: "moderate",
+      warmup_time: "extended",
+    };
   }
 
-  // Learning style considerations from learning_style (question 18)
-  const learningResponse = responses['18'] || '';
-  if (learningResponse.toLowerCase().includes('visual')) {
-    safetyProfile.learningConsiderations.push('visual_demonstrations_required');
+  // Movement preferences and avoidances from movement_focus_and_love (question 7)
+  const movementResponse = responses["7"] || "";
+  const movementLower = movementResponse.toLowerCase();
+
+  // Things they love/want to focus on
+  if (
+    movementLower.includes("olympic") ||
+    movementLower.includes("snatch") ||
+    movementLower.includes("clean")
+  ) {
+    safetyProfile.movementPreferences.push("olympic_lifting");
   }
-  if (learningResponse.toLowerCase().includes('hands') || learningResponse.toLowerCase().includes('try')) {
-    safetyProfile.learningConsiderations.push('hands_on_practice_needed');
+  if (
+    movementLower.includes("gymnastics") ||
+    movementLower.includes("muscle-up") ||
+    movementLower.includes("handstand")
+  ) {
+    safetyProfile.movementPreferences.push("gymnastics");
+  }
+  if (movementLower.includes("lifting") || movementLower.includes("strength")) {
+    safetyProfile.movementPreferences.push("strength_training");
+  }
+  if (
+    movementLower.includes("running") &&
+    !movementLower.includes("hate running")
+  ) {
+    safetyProfile.movementPreferences.push("running");
+  }
+
+  // Things they want to avoid/minimize
+  if (
+    movementLower.includes("hate running") ||
+    movementLower.includes("avoid running") ||
+    movementLower.includes("skip running") ||
+    movementLower.includes("no running")
+  ) {
+    safetyProfile.movementAvoidances.push("running");
+  }
+  if (
+    movementLower.includes("hate cardio") ||
+    movementLower.includes("avoid cardio")
+  ) {
+    safetyProfile.movementAvoidances.push("cardio");
+  }
+  if (
+    movementLower.includes("overhead") &&
+    (movementLower.includes("avoid") || movementLower.includes("difficult"))
+  ) {
+    safetyProfile.movementAvoidances.push("overhead_movements");
   }
 
   return safetyProfile;
@@ -276,13 +565,15 @@ export const extractSophisticationSignals = (
     const userResponseLower = userResponse.toLowerCase();
 
     // Check signals for all sophistication levels
-    Object.entries(question.sophisticationSignals).forEach(([level, signals]) => {
-      signals.forEach((signal: string) => {
-        if (userResponseLower.includes(signal.toLowerCase())) {
-          detectedSignals.push(signal);
-        }
-      });
-    });
+    Object.entries(question.sophisticationSignals).forEach(
+      ([level, signals]) => {
+        signals.forEach((signal: string) => {
+          if (userResponseLower.includes(signal.toLowerCase())) {
+            detectedSignals.push(signal);
+          }
+        });
+      }
+    );
   }
 
   return detectedSignals;

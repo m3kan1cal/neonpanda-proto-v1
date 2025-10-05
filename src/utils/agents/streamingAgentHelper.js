@@ -7,17 +7,23 @@
  * Processes streaming chunks and delegates to handlers
  * @param {AsyncGenerator} messageStream - The streaming API response
  * @param {Function} onChunk - Called for each content chunk (chunk)
+ * @param {Function} onContextual - Called for contextual updates (chunk) - optional
  * @param {Function} onComplete - Called when streaming completes (chunk)
  * @param {Function} onFallback - Called for fallback response (data)
  * @param {Function} onError - Called for errors (errorMessage)
  * @returns {Promise} - Result from the appropriate handler
  */
-export async function processStreamingChunks(messageStream, { onChunk, onComplete, onFallback, onError }) {
+export async function processStreamingChunks(messageStream, { onChunk, onContextual, onComplete, onFallback, onError }) {
   try {
     for await (const chunk of messageStream) {
       if (chunk.type === 'start') {
         // Start event - streaming has begun, no action needed
         continue;
+      } else if (chunk.type === 'contextual') {
+        // Contextual update - ephemeral UX feedback, not saved to conversation
+        if (onContextual) {
+          await onContextual(chunk.content, chunk.stage);
+        }
       } else if (chunk.type === 'chunk') {
         await onChunk(chunk.content);
       } else if (chunk.type === 'complete') {

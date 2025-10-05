@@ -22,6 +22,7 @@ export interface SseCompleteEvent {
 export type SseEvent =
   | { type: "start"; status: "initialized" }
   | { type: "chunk"; content: string }
+  | { type: "contextual"; content: string; stage?: string } // Ephemeral UX feedback (not saved to conversation)
   | SseCompleteEvent
   | { type: "error"; message: string; code?: string };
 

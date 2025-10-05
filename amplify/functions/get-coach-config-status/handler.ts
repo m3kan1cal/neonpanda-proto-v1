@@ -27,35 +27,35 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       });
     }
 
-    // Check config generation status
-    const configGenerationStatus = (sessionData as any).configGenerationStatus;
+    // Check config generation status using new nested structure
+    const configGeneration = sessionData.configGeneration;
 
-    if (!configGenerationStatus) {
+    if (!configGeneration) {
       return createOkResponse({
         status: 'NOT_STARTED',
         message: 'Coach config generation has not been started'
       });
     }
 
-    if (configGenerationStatus === 'IN_PROGRESS') {
+    if (configGeneration.status === 'IN_PROGRESS') {
       return createOkResponse({
         status: 'IN_PROGRESS',
         message: 'Coach config is being generated...',
-        startedAt: (sessionData as any).configGenerationStartedAt
+        startedAt: configGeneration.startedAt
       });
     }
 
-    if (configGenerationStatus === 'FAILED') {
+    if (configGeneration.status === 'FAILED') {
       return createOkResponse({
         status: 'FAILED',
         message: 'Coach config generation failed',
-        error: (sessionData as any).configGenerationError,
-        failedAt: (sessionData as any).configGenerationFailedAt
+        error: configGeneration.error,
+        failedAt: configGeneration.failedAt
       });
     }
 
-    if (configGenerationStatus === 'COMPLETE') {
-      const coachConfigId = (sessionData as any).coachConfigId;
+    if (configGeneration.status === 'COMPLETE') {
+      const coachConfigId = configGeneration.coachConfigId;
 
       // Try to load the actual coach config to verify it exists
       if (coachConfigId) {
@@ -66,7 +66,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
             message: 'Coach config generated successfully',
             coachConfigId,
             coachName: coachConfig?.attributes?.coach_name,
-            completedAt: (sessionData as any).configGenerationCompletedAt,
+            completedAt: configGeneration.completedAt,
             coachConfig: coachConfig?.attributes
           });
         } catch (error) {
@@ -75,7 +75,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
             status: 'COMPLETE_BUT_ERROR',
             message: 'Coach config generation completed but config could not be loaded',
             coachConfigId,
-            completedAt: (sessionData as any).configGenerationCompletedAt
+            completedAt: configGeneration.completedAt
           });
         }
       }
@@ -84,7 +84,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     return createOkResponse({
       status: 'UNKNOWN',
       message: 'Unknown config generation status',
-      configGenerationStatus
+      configGenerationStatus: configGeneration.status
     });
 
 };

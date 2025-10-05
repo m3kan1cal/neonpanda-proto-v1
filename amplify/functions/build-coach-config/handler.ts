@@ -33,8 +33,10 @@ export const handler: Handler<CoachConfigEvent> = async (event: CoachConfigEvent
     // Update session to indicate config generation is in progress
     const updatedSession = {
       ...session.attributes,
-      configGenerationStatus: 'IN_PROGRESS',
-      configGenerationStartedAt: new Date(),
+      configGeneration: {
+        status: 'IN_PROGRESS' as const,
+        startedAt: new Date()
+      },
       lastActivity: new Date()
     };
     await saveCoachCreatorSession(updatedSession);
@@ -59,12 +61,16 @@ export const handler: Handler<CoachConfigEvent> = async (event: CoachConfigEvent
       coachConfig
     );
 
-    // Update session to indicate completion
+    // Update session to indicate completion and soft delete
     const completedSession = {
       ...session.attributes,
-      configGenerationStatus: 'COMPLETE',
-      configGenerationCompletedAt: new Date(),
-      coachConfigId: coachConfig.coach_id,
+      configGeneration: {
+        ...session.attributes.configGeneration,
+        status: 'COMPLETE' as const,
+        completedAt: new Date(),
+        coachConfigId: coachConfig.coach_id
+      },
+      isDeleted: true, // Soft delete - session data preserved for history
       lastActivity: new Date()
     };
     await saveCoachCreatorSession(completedSession);
@@ -95,9 +101,12 @@ export const handler: Handler<CoachConfigEvent> = async (event: CoachConfigEvent
       try {
         const failedSession = {
           ...session.attributes,
-          configGenerationStatus: 'FAILED',
-          configGenerationFailedAt: new Date(),
-          configGenerationError: error instanceof Error ? error.message : 'Unknown error',
+          configGeneration: {
+            ...session.attributes.configGeneration,
+            status: 'FAILED' as const,
+            failedAt: new Date(),
+            error: error instanceof Error ? error.message : 'Unknown error'
+          },
           lastActivity: new Date()
         };
         await saveCoachCreatorSession(failedSession);

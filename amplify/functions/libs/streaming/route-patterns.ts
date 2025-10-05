@@ -11,8 +11,10 @@
 
 // Core streaming route patterns
 export const STREAMING_ROUTE_PATTERNS = {
-  // Coach conversation streaming (currently implemented)
+  // Coach conversation streaming
   COACH_CONVERSATION: 'users/{userId}/coaches/{coachId}/conversations/{conversationId}/stream',
+  // Coach creator session streaming
+  COACH_CREATOR_SESSION: 'users/{userId}/coach-creator-sessions/{sessionId}/stream',
 } as const;
 
 // Array of all available patterns (for validation and logging)
@@ -24,6 +26,14 @@ export const ROUTE_PATTERN_METADATA = {
     name: 'Coach Conversation Streaming',
     description: 'Real-time streaming for coach conversations with AI responses',
     requiredParams: ['userId', 'coachId', 'conversationId'],
+    optionalParams: [],
+    authRequired: true,
+    validateUserMatch: true,
+  },
+  [STREAMING_ROUTE_PATTERNS.COACH_CREATOR_SESSION]: {
+    name: 'Coach Creator Session Streaming',
+    description: 'Real-time streaming for coach creator sessions with context-aware AI responses',
+    requiredParams: ['userId', 'sessionId'],
     optionalParams: [],
     authRequired: true,
     validateUserMatch: true,

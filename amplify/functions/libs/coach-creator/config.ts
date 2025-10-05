@@ -1,8 +1,8 @@
 // Global Configuration Constants for Coach Creator Agent
 
 // Version and API Configuration
-export const COACH_CREATOR_VERSION = "1.0.0";
-export const MAX_QUESTIONS_PER_SESSION = 18;
+export const COACH_CREATOR_VERSION = "2.0.0";
+export const MAX_QUESTIONS_PER_SESSION = 10;
 export const SESSION_TIMEOUT_MINUTES = 30;
 export const MIN_QUESTIONS_FOR_COACH_CREATION = 8;
 

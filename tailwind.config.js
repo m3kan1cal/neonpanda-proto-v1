@@ -31,6 +31,7 @@ export default {
         }
       },
       fontFamily: {
+        'bangers': ['"Bangers"', 'sans-serif'],
         'inter': ['"Inter"', 'sans-serif'],
         'rajdhani': ['"Rajdhani"', 'sans-serif'],
         'russo': ['"Russo One"', 'sans-serif'],

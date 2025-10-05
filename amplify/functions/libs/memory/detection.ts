@@ -3,6 +3,7 @@
  */
 
 import { callBedrockApi, MODEL_IDS } from "../api-helpers";
+import { JSON_FORMATTING_INSTRUCTIONS_STANDARD } from "../prompt-helpers";
 import {
   MemoryDetectionEvent,
   MemoryDetectionResult,
@@ -46,8 +47,9 @@ CONTEXT TYPES:
 - context: Personal background, lifestyle factors, emotional patterns
 - motivational: Past emotional states, motivation patterns, support strategies
 
-RESPONSE FORMAT:
-You must respond with ONLY a valid JSON object:
+${JSON_FORMATTING_INSTRUCTIONS_STANDARD}
+
+RESPONSE SCHEMA:
 {
   "needsSemanticRetrieval": boolean,
   "confidence": number (0.0 to 1.0),
@@ -70,7 +72,7 @@ Analyze this message and determine if retrieving stored memories would enhance t
     const response = await callBedrockApi(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.NOVA_MICRO
+      MODEL_IDS.CLAUDE_HAIKU_FULL
     );
     const result = JSON.parse(response);
 
@@ -117,8 +119,9 @@ MEMORY TYPES:
 - instruction: Specific coaching instructions or approaches
 - context: Personal context, background, lifestyle factors
 
-RESPONSE FORMAT:
-You must respond with ONLY a valid JSON object with this exact structure:
+${JSON_FORMATTING_INSTRUCTIONS_STANDARD}
+
+RESPONSE SCHEMA:
 {
   "isMemoryRequest": boolean,
   "confidence": number (0.0 to 1.0),
@@ -152,7 +155,7 @@ Analyze this message and respond with the JSON format specified.`;
     const response = await callBedrockApi(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.NOVA_MICRO
+      MODEL_IDS.CLAUDE_HAIKU_FULL
     );
     // Clean the response to handle potential markdown wrapping
     let cleanedResponse = response.trim();
@@ -375,7 +378,7 @@ Analyze this memory and respond with the JSON format specified.`;
     const response = await callBedrockApi(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.NOVA_MICRO
+      MODEL_IDS.CLAUDE_HAIKU_FULL
     );
     // Clean the response to handle potential markdown wrapping
     let cleanedResponse = response.trim();
@@ -560,9 +563,9 @@ Scope Determination:
 
 Suggested Tags: Relevant keywords for easy retrieval (max 5 tags)
 
-RESPONSE FORMAT:
-You must respond with ONLY a valid JSON object:
+${JSON_FORMATTING_INSTRUCTIONS_STANDARD}
 
+REQUIRED JSON STRUCTURE:
 {
   "needsRetrieval": boolean,
   "retrievalReasoning": "brief explanation of retrieval decision",
@@ -597,7 +600,7 @@ Provide comprehensive memory analysis following the framework above.`;
     const response = await callBedrockApi(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.NOVA_MICRO // Fast and cost-effective for memory analysis
+      MODEL_IDS.CLAUDE_HAIKU_FULL // Reliable for critical memory analysis
     );
 
     const result = JSON.parse(response);

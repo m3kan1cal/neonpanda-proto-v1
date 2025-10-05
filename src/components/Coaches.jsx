@@ -18,6 +18,7 @@ import {
 } from './themes/SynthwaveComponents';
 import CoachAgent from '../utils/agents/CoachAgent';
 import CoachCreatorAgent from '../utils/agents/CoachCreatorAgent';
+import { useToast } from '../contexts/ToastContext';
 
 const PlusIcon = () => (
   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -44,6 +45,7 @@ function Coaches() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const userId = searchParams.get('userId');
+  const toast = useToast();
 
   // Authorize that URL userId matches authenticated user
   const { isValidating: isValidatingUserId, isValid: isValidUserId, error: userIdError } = useAuthorizeUser(userId);
@@ -67,6 +69,9 @@ function Coaches() {
   const [sessionToDelete, setSessionToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Retry build state
+  const [retryingSessionId, setRetryingSessionId] = useState(null);
+
   // Local loading states for button feedback
   const [isCreatingCustomCoach, setIsCreatingCustomCoach] = useState(false);
   const [creatingTemplateId, setCreatingTemplateId] = useState(null);
@@ -76,14 +81,47 @@ function Coaches() {
     window.scrollTo(0, 0);
   }, []);
 
-  // Load in-progress sessions
+  // Load in-progress sessions and check for building/failed coaches
   const loadInProgressSessions = async () => {
     if (!userId) return;
 
     setSessionsLoading(true);
     try {
-      const sessions = await CoachCreatorAgent.getInProgressSessions(userId);
-      setInProgressSessions(sessions);
+      // Get incomplete sessions (still answering questions)
+      const incompleteSessions = await CoachCreatorAgent.getInProgressSessions(userId);
+
+      // Get completed sessions (to check for building/failed status)
+      const completedSessions = await CoachCreatorAgent.getCompletedSessions(userId);
+
+      // Filter for sessions that are building or failed
+      const buildingOrFailedSessions = completedSessions.filter(session =>
+        session.configGeneration?.status === 'IN_PROGRESS' ||
+        session.configGeneration?.status === 'FAILED'
+      );
+
+      // Combine all sessions for display
+      const allActiveSessions = [...incompleteSessions, ...buildingOrFailedSessions];
+      setInProgressSessions(allActiveSessions);
+
+      // If there's a building session, set up polling and in-progress coach card
+      const buildingSession = buildingOrFailedSessions.find(
+        session => session.configGeneration?.status === 'IN_PROGRESS'
+      );
+
+      if (buildingSession) {
+        // Show building session as in-progress coach
+        agentRef.current?._updateState({
+          inProgressCoach: {
+            sessionId: buildingSession.sessionId,
+            timestamp: new Date(buildingSession.lastActivity || buildingSession.completedAt).getTime(),
+            status: 'generating',
+            message: 'Generating AI Coach Configuration'
+          }
+        });
+
+        // Start polling for this session
+        agentRef.current?.startPolling(buildingSession.sessionId);
+      }
     } catch (error) {
       console.error('Error loading in-progress sessions:', error);
       setInProgressSessions([]);
@@ -132,7 +170,37 @@ function Coaches() {
     setSessionToDelete(null);
   };
 
+  // Handle retry build for failed coach config builds
+  const handleRetryBuild = async (session) => {
+    if (!userId || !session.sessionId) return;
 
+    setRetryingSessionId(session.sessionId);
+    try {
+      await agentRef.current?.createCoachFromSession(session.sessionId, userId);
+      // Update the session status locally to show it's building again
+      setInProgressSessions(prev => prev.map(s =>
+        s.sessionId === session.sessionId
+          ? {
+              ...s,
+              configGeneration: {
+                status: 'IN_PROGRESS',
+                startedAt: new Date().toISOString()
+              },
+              lastActivity: new Date().toISOString()
+            }
+          : s
+      ));
+      toast.success('Coach build started successfully');
+    } catch (error) {
+      console.error('Error retrying coach config build:', error);
+      // Clear the agent error state to prevent it from showing on the page
+      agentRef.current?._updateState({ error: null });
+      // Show toast instead
+      toast.error('Failed to retry build. Please try again.');
+    } finally {
+      setRetryingSessionId(null);
+    }
+  };
 
   // Initialize agent
   useEffect(() => {
@@ -441,7 +509,7 @@ function Coaches() {
                   {!isCreatingCustomCoach && (
                     <div className="bg-synthwave-neon-pink/10 border border-synthwave-neon-pink/30 rounded-lg px-3 py-1 mb-4">
                       <p className="font-rajdhani text-synthwave-neon-pink text-xs font-semibold">
-                        Takes 15-20 minutes
+                        Takes 25-30 minutes
                       </p>
                     </div>
                   )}
@@ -477,32 +545,62 @@ function Coaches() {
 
             {/* In-Progress Coach Card */}
             {agentState.inProgressCoach && (
-              <div className={`${containerPatterns.loadingCard} p-6 relative overflow-hidden`}>
-                {/* Animated background overlay */}
-                <div className="absolute inset-0 bg-gradient-to-r from-synthwave-neon-cyan/5 to-synthwave-neon-pink/5 animate-pulse"></div>
+              <div className={`${
+                agentState.inProgressCoach.status === 'failed' || agentState.inProgressCoach.status === 'timeout'
+                  ? 'bg-synthwave-bg-card/60 border-2 border-synthwave-neon-pink/50 rounded-2xl shadow-xl shadow-synthwave-neon-pink/20 hover:shadow-2xl hover:shadow-synthwave-neon-pink/30 transition-all duration-300 hover:-translate-y-1'
+                  : 'bg-synthwave-bg-card/30 backdrop-blur-lg border border-synthwave-neon-cyan/20 rounded-2xl shadow-xl shadow-synthwave-neon-cyan/10 hover:border-synthwave-neon-cyan/30 hover:bg-synthwave-bg-card/40 transition-all duration-300'
+              } p-6 relative overflow-hidden`}>
+                {/* Animated background overlay - only for generating state */}
+                {agentState.inProgressCoach.status === 'generating' && (
+                  <div className="absolute inset-0 bg-gradient-to-r from-synthwave-neon-cyan/5 to-synthwave-neon-pink/5 animate-pulse"></div>
+                )}
 
                 <div className="relative z-10">
-                  {/* Coach Icon with loading animation */}
-                  <div className="text-synthwave-neon-cyan mb-6 flex justify-center">
-                    <div className="relative">
-                      <CoachIcon />
-                      <div className="absolute inset-0 border-2 border-synthwave-neon-cyan border-t-transparent rounded-full animate-spin"></div>
-                    </div>
+                  {/* Status Icon */}
+                  <div className={`mb-6 flex justify-center ${
+                    agentState.inProgressCoach.status === 'failed' || agentState.inProgressCoach.status === 'timeout'
+                      ? 'text-synthwave-neon-pink'
+                      : 'text-synthwave-neon-cyan'
+                  }`}>
+                    {agentState.inProgressCoach.status === 'failed' || agentState.inProgressCoach.status === 'timeout' ? (
+                      <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    ) : (
+                      <div className="relative">
+                        <CoachIcon />
+                        <div className="absolute inset-0 border-2 border-synthwave-neon-cyan border-t-transparent rounded-full animate-spin"></div>
+                      </div>
+                    )}
                   </div>
 
-                  {/* Coach Name */}
+                  {/* Status Title */}
                   <h3 className="font-russo font-bold text-white text-xl uppercase mb-4 text-center">
-                    Creating Your Coach...
+                    {agentState.inProgressCoach.status === 'failed' ? 'Coach Creation Failed' :
+                     agentState.inProgressCoach.status === 'timeout' ? 'Coach Creation Timed Out' :
+                     'Creating Your Coach...'}
                   </h3>
 
                   {/* Status Details */}
                   <div className="space-y-3">
-                    <div className="flex items-center space-x-2 text-synthwave-neon-cyan">
-                      <div className="w-5 h-5 border-2 border-synthwave-neon-cyan border-t-transparent rounded-full animate-spin"></div>
-                      <span className="font-rajdhani text-sm">
-                        Generating AI Coach Configuration
-                      </span>
-                    </div>
+                    {/* Error message for failed state */}
+                    {(agentState.inProgressCoach.status === 'failed' || agentState.inProgressCoach.status === 'timeout') && (
+                      <div className="bg-synthwave-neon-pink/10 border border-synthwave-neon-pink/30 rounded-lg p-3 mb-3">
+                        <p className="font-rajdhani text-sm text-synthwave-neon-pink">
+                          {agentState.inProgressCoach.error || 'An error occurred during coach creation'}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Loading message for generating state */}
+                    {agentState.inProgressCoach.status === 'generating' && (
+                      <div className="flex items-center space-x-2 text-synthwave-neon-cyan">
+                        <div className="w-5 h-5 border-2 border-synthwave-neon-cyan border-t-transparent rounded-full animate-spin"></div>
+                        <span className="font-rajdhani text-sm">
+                          {agentState.inProgressCoach.message || 'Generating AI Coach Configuration'}
+                        </span>
+                      </div>
+                    )}
 
                     <div className="flex items-center space-x-2 text-synthwave-text-secondary">
                       <CalendarIcon />
@@ -511,19 +609,41 @@ function Coaches() {
                       </span>
                     </div>
 
-                    <div className="text-center pt-4 border-t border-synthwave-neon-cyan/20">
-                      <span className="font-rajdhani text-xs text-synthwave-text-muted">
-                        This usually takes 2-5 minutes
-                      </span>
-                    </div>
+                    {agentState.inProgressCoach.status === 'generating' && (
+                      <div className="text-center pt-4 border-t border-synthwave-neon-cyan/20">
+                        <span className="font-rajdhani text-xs text-synthwave-text-muted">
+                          This usually takes 2-5 minutes
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Retry button for failed/timeout state */}
+                    {(agentState.inProgressCoach.status === 'failed' || agentState.inProgressCoach.status === 'timeout') && (
+                      <div className="pt-4 border-t border-synthwave-neon-pink/20">
+                        <button
+                          onClick={() => {
+                            // Clear the failed in-progress coach and allow user to try again
+                            agentRef.current?.clearInProgressCoach();
+                          }}
+                          className={`${buttonPatterns.secondary} w-full text-sm`}
+                        >
+                          Dismiss
+                        </button>
+                        <p className="font-rajdhani text-xs text-synthwave-text-muted text-center mt-2">
+                          You can try creating a new coach or contact support if this problem persists.
+                        </p>
+                      </div>
+                    )}
                   </div>
 
-                  {/* Progress indicator */}
-                  <div className="mt-6">
-                    <div className="w-full bg-synthwave-bg-primary/50 rounded-full h-2 border border-synthwave-neon-cyan/30">
-                      <div className="bg-synthwave-neon-cyan h-full rounded-full animate-pulse shadow-neon-cyan" style={{ width: '60%' }}></div>
+                  {/* Progress indicator - only for generating state */}
+                  {agentState.inProgressCoach.status === 'generating' && (
+                    <div className="mt-6">
+                      <div className="w-full bg-synthwave-bg-primary/50 rounded-full h-2 border border-synthwave-neon-cyan/30">
+                        <div className="bg-synthwave-neon-cyan h-full rounded-full animate-pulse shadow-neon-cyan" style={{ width: '60%' }}></div>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
             )}
@@ -625,77 +745,173 @@ function Coaches() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-              {inProgressSessions.map((session) => (
-                <div
-                  key={session.sessionId}
-                  onClick={() => {
-                    const newSearchParams = new URLSearchParams();
-                    newSearchParams.set('userId', userId);
-                    newSearchParams.set('coachCreatorSessionId', session.sessionId);
-                    navigate(`/coach-creator?${newSearchParams.toString()}`);
-                  }}
-                  className={`${containerPatterns.dashedCard} p-6 group`}
-                >
-                  {/* Session Header */}
-                  <div className="flex items-start space-x-3 mb-4">
-                    <div className="w-3 h-3 bg-synthwave-neon-pink rounded-full flex-shrink-0 mt-2"></div>
-                    <div className="flex-1">
-                      <h3 className="font-russo font-bold text-white text-lg uppercase">
-                        Coach Creator Session
-                      </h3>
-                    </div>
-                  </div>
+              {inProgressSessions.map((session) => {
+                // Determine session status and styling
+                const isBuilding = session.configGeneration?.status === 'IN_PROGRESS';
+                const isFailed = session.configGeneration?.status === 'FAILED';
+                const isIncomplete = !session.isComplete;
 
-                  {/* Session Details */}
-                  <div className="space-y-3 mb-2">
-                    <div className="flex items-center space-x-2 text-synthwave-text-secondary">
-                      <CalendarIcon />
-                      <span className="font-rajdhani text-sm">
-                        Started {agentRef.current?.formatDate(session.startedAt)}
-                      </span>
+                // Get card styling based on status - all driven by uiPatterns.js for consistency
+                let cardClass, dotColor, statusColor;
+                if (isFailed) {
+                  // Failed state: Pink theme with bold borders for emphasis
+                  cardClass = `${containerPatterns.dashedCardPinkBold} p-6 group`;
+                  dotColor = 'bg-synthwave-neon-pink';
+                  statusColor = 'text-synthwave-neon-pink';
+                } else if (isBuilding) {
+                  // Building state: Cyan theme for in-progress indication
+                  cardClass = `${containerPatterns.dashedCardCyan} p-6`;
+                  dotColor = 'bg-synthwave-neon-cyan';
+                  statusColor = 'text-synthwave-neon-cyan';
+                } else {
+                  // Incomplete state: Purple theme with full interactivity
+                  cardClass = `${containerPatterns.dashedCardPurple} p-6 group cursor-pointer`;
+                  dotColor = 'bg-synthwave-neon-purple';
+                  statusColor = 'text-synthwave-neon-purple';
+                }
+
+                return (
+                  <div
+                    key={session.sessionId}
+                    onClick={() => {
+                      // Only allow clicking for incomplete sessions
+                      if (isIncomplete && !isBuilding && !isFailed) {
+                        const newSearchParams = new URLSearchParams();
+                        newSearchParams.set('userId', userId);
+                        newSearchParams.set('coachCreatorSessionId', session.sessionId);
+                        navigate(`/coach-creator?${newSearchParams.toString()}`);
+                      }
+                    }}
+                    className={cardClass}
+                  >
+                    {/* Session Header */}
+                    <div className="flex items-start space-x-3 mb-4">
+                      <div className={`w-3 h-3 ${dotColor} rounded-full flex-shrink-0 mt-2`}></div>
+                      <div className="flex-1">
+                        <h3 className="font-russo font-bold text-white text-lg uppercase">
+                          Coach Creator Session
+                        </h3>
+                      </div>
                     </div>
 
-                    <div className="flex items-center space-x-2 text-synthwave-text-secondary">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <span className="font-rajdhani text-sm">
-                        Last activity {agentRef.current?.formatDate(session.lastActivity)}
-                      </span>
-                    </div>
-
-                    {session.questionsCompleted && (
-                      <div className="flex items-center space-x-2 text-synthwave-neon-cyan">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
+                    {/* Session Details */}
+                    <div className="space-y-3 mb-2">
+                      {/* Status - matches format of other metadata fields */}
+                      <div className={`flex items-center space-x-2 ${statusColor}`}>
+                        {isFailed ? (
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        ) : isBuilding ? (
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                          </svg>
+                        ) : (
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                        )}
                         <span className="font-rajdhani text-sm font-medium">
-                          {session.questionsCompleted} questions answered
+                          {isFailed ? 'Build Failed' : isBuilding ? 'Building Coach' : 'Answering Questions'}
                         </span>
                       </div>
-                    )}
-                  </div>
 
-                  {/* Action Links */}
-                  <div className="pt-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2 bg-transparent border-none text-synthwave-neon-pink px-2 py-1 hover:text-white hover:bg-synthwave-neon-pink/10 rounded-lg transition-all duration-200 font-rajdhani font-medium uppercase tracking-wide hover:cursor-pointer">
-                        <ArrowRightIcon />
-                        <span>Continue Session</span>
+                      <div className="flex items-center space-x-2 text-synthwave-text-secondary">
+                        <CalendarIcon />
+                        <span className="font-rajdhani text-sm">
+                          Started {agentRef.current?.formatDate(session.startedAt)}
+                        </span>
                       </div>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation(); // Prevent card click
-                          handleDeleteClick(session);
-                        }}
-                        className="bg-transparent border-none text-synthwave-neon-pink px-2 py-1 hover:text-white hover:bg-synthwave-neon-pink/10 rounded-lg transition-all duration-200 font-rajdhani font-medium uppercase tracking-wide hover:cursor-pointer"
-                      >
-                        Delete
-                      </button>
+
+                      <div className="flex items-center space-x-2 text-synthwave-text-secondary">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span className="font-rajdhani text-sm">
+                          Last activity {agentRef.current?.formatDate(session.lastActivity)}
+                        </span>
+                      </div>
+
+                      {session.questionsCompleted && (
+                        <div className="flex items-center space-x-2 text-synthwave-neon-cyan">
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <span className="font-rajdhani text-sm font-medium">
+                            {session.questionsCompleted} questions answered
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Show error message for failed builds */}
+                      {isFailed && session.configGeneration?.error && (
+                        <div className="bg-synthwave-neon-pink/10 border border-synthwave-neon-pink/30 rounded-lg p-3 mt-3">
+                          <p className="font-rajdhani text-xs text-synthwave-neon-pink">
+                            {session.configGeneration.error}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Action Links */}
+                    <div className="pt-2">
+                      {isIncomplete && !isBuilding && !isFailed ? (
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2 bg-transparent border-none text-synthwave-neon-purple px-2 py-1 hover:text-white hover:bg-synthwave-neon-purple/10 rounded-lg transition-all duration-200 font-rajdhani font-medium uppercase tracking-wide hover:cursor-pointer">
+                            <ArrowRightIcon />
+                            <span>Continue Session</span>
+                          </div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation(); // Prevent card click
+                              handleDeleteClick(session);
+                            }}
+                            className="bg-transparent border-none text-synthwave-neon-pink px-2 py-1 hover:text-white hover:bg-synthwave-neon-pink/10 rounded-lg transition-all duration-200 font-rajdhani font-medium uppercase tracking-wide hover:cursor-pointer"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      ) : isFailed ? (
+                        <div className="flex items-center justify-between">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation(); // Prevent card click
+                              handleRetryBuild(session);
+                            }}
+                            disabled={retryingSessionId === session.sessionId}
+                            className="flex items-center space-x-2 bg-transparent border-none text-synthwave-neon-cyan px-2 py-1 hover:text-white hover:bg-synthwave-neon-cyan/10 rounded-lg transition-all duration-200 font-rajdhani font-medium uppercase tracking-wide hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <svg
+                              className={`w-4 h-4 ${retryingSessionId === session.sessionId ? 'animate-spin-ccw' : ''}`}
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                            <span>{retryingSessionId === session.sessionId ? 'Retrying...' : 'Retry Build'}</span>
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation(); // Prevent card click
+                              handleDeleteClick(session);
+                            }}
+                            className="bg-transparent border-none text-synthwave-neon-pink px-2 py-1 hover:text-white hover:bg-synthwave-neon-pink/10 rounded-lg transition-all duration-200 font-rajdhani font-medium uppercase tracking-wide hover:cursor-pointer"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="text-center">
+                          <p className="font-rajdhani text-xs text-synthwave-text-muted">
+                            Coach configuration is being generated...
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
@@ -862,6 +1078,21 @@ function Coaches() {
           </div>
         </div>
       )}
+
+      {/* Counter-clockwise spin animation for retry button */}
+      <style>{`
+        @keyframes spin-ccw {
+          from {
+            transform: rotate(0deg);
+          }
+          to {
+            transform: rotate(-360deg);
+          }
+        }
+        .animate-spin-ccw {
+          animation: spin-ccw 1s linear infinite;
+        }
+      `}</style>
     </div>
   );
 }

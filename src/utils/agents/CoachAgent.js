@@ -1,6 +1,6 @@
 import { nanoid } from 'nanoid';
-import { getCoaches, getCoach, getCoachTemplates, createCoachFromTemplate } from '../apis/coachApi';
-import { createCoachCreatorSession } from '../apis/coachCreatorApi';
+import { getCoaches, getCoach, getCoachTemplates, createCoachFromTemplate, createCoachFromSession } from '../apis/coachApi';
+import { createCoachCreatorSession, getCoachConfigStatus } from '../apis/coachCreatorApi';
 
 /**
  * CoachAgent - Handles the business logic for coach management
@@ -35,7 +35,6 @@ export class CoachAgent {
     this.loadTemplates = this.loadTemplates.bind(this);
     this.createNewCoach = this.createNewCoach.bind(this);
     this.createCoachFromTemplate = this.createCoachFromTemplate.bind(this);
-    this.checkInProgressCoach = this.checkInProgressCoach.bind(this);
     this.startPolling = this.startPolling.bind(this);
     this.stopPolling = this.stopPolling.bind(this);
     this.cleanup = this.cleanup.bind(this);
@@ -43,20 +42,6 @@ export class CoachAgent {
     // Don't auto-initialize - let the component call initialize() when ready
   }
 
-  /**
-   * Initialize the agent - call this after the component is ready
-   */
-  initialize() {
-    if (this.userId) {
-      this.state.isLoading = true;
-      this.checkInProgressCoach();
-      this.loadCoaches();
-      this.loadTemplates();
-    } else {
-      // Load templates even without userId for template browsing
-      this.loadTemplates();
-    }
-  }
 
   /**
    * Updates internal state and notifies listeners
@@ -76,7 +61,6 @@ export class CoachAgent {
   setUserId(userId) {
     if (this.userId !== userId) {
       this.userId = userId;
-      this.checkInProgressCoach();
       if (userId) {
         // Set loading state immediately before starting to load
         this._updateState({ isLoading: true });
@@ -92,7 +76,6 @@ export class CoachAgent {
   initialize() {
     if (this.userId) {
       this._updateState({ isLoading: true, error: null });
-      this.checkInProgressCoach();
       this.loadCoaches();
       this.loadTemplates();
     } else {
@@ -117,11 +100,17 @@ export class CoachAgent {
         isLoading: false
       });
 
-      // Check if we should remove in-progress coach (if it now exists in the coaches list)
+      // Check if we should clear in-progress coach (if it now exists in the coaches list)
       if (this.state.inProgressCoach && coaches.length > 0) {
-        this._updateState({ inProgressCoach: null });
-        this._removeInProgressData();
-        this.stopPolling();
+        const inProgressSessionId = this.state.inProgressCoach.sessionId;
+        const coachExists = coaches.some(c =>
+          c.metadata?.coach_creator_session_id === inProgressSessionId
+        );
+
+        if (coachExists) {
+          this._updateState({ inProgressCoach: null });
+          this.stopPolling();
+        }
       }
 
       return coaches;
@@ -247,6 +236,38 @@ export class CoachAgent {
   }
 
   /**
+   * Creates a coach from a completed coach creator session (retry build)
+   */
+  async createCoachFromSession(sessionId, providedUserId = null) {
+    try {
+      this._updateState({ error: null });
+
+      // Generate userId if not provided
+      const userId = providedUserId || this.userId;
+
+      if (!userId || !sessionId) {
+        throw new Error('User ID and Session ID are required');
+      }
+
+      // Create coach from session via API
+      const result = await createCoachFromSession(userId, sessionId);
+
+      // Reload coaches to show the new one (it will be building)
+      await this.loadCoaches();
+
+      return result;
+
+    } catch (error) {
+      console.error('Error creating coach from session:', error);
+      this._updateState({
+        error: 'Failed to create coach from session. Please try again.'
+      });
+      this.onError(error);
+      throw error;
+    }
+  }
+
+  /**
    * Creates a new coach creator session and navigates to it
    */
   async createNewCoach(providedUserId = null) {
@@ -277,61 +298,89 @@ export class CoachAgent {
   }
 
   /**
-   * Checks for in-progress coach creation from localStorage
+   * Checks for in-progress coach builds from DynamoDB sessions
+   * Called by Coaches page, not by agent directly
    */
-  checkInProgressCoach() {
-    if (!this.userId) return;
-
-    const inProgressData = localStorage.getItem(`inProgress_${this.userId}`);
-    if (inProgressData) {
-      try {
-        const data = JSON.parse(inProgressData);
-        const now = Date.now();
-        const elapsed = now - data.timestamp;
-
-        // Show in-progress coach for up to 10 minutes
-        if (elapsed < 10 * 60 * 1000) {
-          this._updateState({ inProgressCoach: data });
-          this.startPolling();
-        } else {
-          // Remove expired in-progress data
-          this._removeInProgressData();
-        }
-      } catch (error) {
-        console.error('Error parsing in-progress data:', error);
-        this._removeInProgressData();
-      }
-    }
+  async checkInProgressCoachBuilds() {
+    // This will be handled by the Coaches page loading sessions
+    // with isComplete: true and configGenerationStatus: 'IN_PROGRESS'
+    return null;
   }
 
   /**
    * Starts polling for coach completion
+   * Used when there's a known in-progress build (from DynamoDB session)
    */
-  startPolling() {
+  startPolling(sessionId) {
     if (this.pollInterval) return; // Already polling
+    if (!sessionId) {
+      console.error('Cannot start polling without sessionId');
+      return;
+    }
+
+    console.log(`Starting polling for coach build from session ${sessionId}`);
 
     this.pollInterval = setInterval(async () => {
       try {
+        // Check if coach has been created
         const result = await getCoaches(this.userId);
         if (result.coaches?.length > 0) {
-          // Coach has been created, update state and stop polling
-          this._updateState({
-            coaches: result.coaches,
-            inProgressCoach: null
-          });
-          this._removeInProgressData();
-          this.stopPolling();
+          // Check if any coach was created from this session
+          const newCoach = result.coaches.find(c =>
+            c.metadata?.coach_creator_session_id === sessionId
+          );
+
+          if (newCoach) {
+            // Coach has been created, update state and stop polling
+            this._updateState({
+              coaches: result.coaches,
+              inProgressCoach: null
+            });
+            this.stopPolling();
+            return;
+          }
+        }
+
+        // If no coach yet, check the session status
+        try {
+          const statusResponse = await getCoachConfigStatus(this.userId, sessionId);
+
+          if (statusResponse.status === 'FAILED') {
+            // Build failed - update state and stop polling
+            this._updateState({
+              inProgressCoach: {
+                sessionId,
+                status: 'failed',
+                error: statusResponse.message || 'Coach configuration generation failed'
+              }
+            });
+            this.stopPolling();
+            return;
+          }
+
+          if (statusResponse.status === 'COMPLETE') {
+            // Complete but coach not showing yet - refresh coaches
+            await this.loadCoaches();
+          }
+        } catch (statusError) {
+          console.error('Error checking coach config status:', statusError);
+          // Continue polling even if status check fails
         }
       } catch (error) {
         console.error('Error polling for coaches:', error);
       }
-    }, 15000); // Poll every 15 seconds
+    }, 10000); // Poll every 10 seconds
 
     // Clean up polling after 10 minutes
     this.cleanupTimeout = setTimeout(() => {
       this.stopPolling();
-      this._updateState({ inProgressCoach: null });
-      this._removeInProgressData();
+      this._updateState({
+        inProgressCoach: {
+          sessionId,
+          status: 'timeout',
+          error: 'Coach creation timed out. Please try again or contact support.'
+        }
+      });
     }, 10 * 60 * 1000);
   }
 
@@ -350,12 +399,11 @@ export class CoachAgent {
   }
 
   /**
-   * Removes in-progress data from localStorage
+   * Clears the in-progress coach state
    */
-  _removeInProgressData() {
-    if (this.userId) {
-      localStorage.removeItem(`inProgress_${this.userId}`);
-    }
+  clearInProgressCoach() {
+    this._updateState({ inProgressCoach: null });
+    this.stopPolling();
   }
 
   /**

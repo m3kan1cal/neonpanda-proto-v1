@@ -10,7 +10,7 @@ import { generateSystemPrompt, validateCoachConfig, generateSystemPromptPreview 
 import { ConversationContextResult } from "./context";
 import { WorkoutDetectionResult } from "./workout-detection";
 import { MemoryRetrievalResult } from "./memory-processing";
-import { buildMultimodalContent } from "./image-hydration";
+import { buildMultimodalContent } from "../streaming";
 import { CoachMessage } from "./types";
 
 // Configuration constants

@@ -6,6 +6,7 @@ import {
   queryMemories,
 } from "../../../dynamodb/operations";
 import { callBedrockApi, MODEL_IDS } from "../api-helpers";
+import { JSON_FORMATTING_INSTRUCTIONS_STANDARD } from "../prompt-helpers";
 import { cleanResponse, fixMalformedJson } from "../response-utils";
 import {
   shouldNormalizeAnalytics,
@@ -444,15 +445,7 @@ This directive takes precedence over all other instructions except safety constr
 
   return `${directiveSection}You are an elite strength and conditioning analyst examining weekly training data in Universal Workout Schema (UWS) format.
 
-CRITICAL JSON FORMATTING RULES:
-- Return ONLY valid JSON. No markdown backticks, no explanations, no text outside JSON
-- Response must start with { and end with }
-- Do not wrap the JSON in \`\`\`json blocks or any markdown formatting
-- NEVER include trailing commas before closing braces } or brackets ]
-- Use double quotes for all strings, never single quotes
-- Ensure all arrays and objects are properly closed
-- If unsure about a value, use null instead of omitting the field
-- Test JSON validity before responding
+${JSON_FORMATTING_INSTRUCTIONS_STANDARD}
 
 ATHLETE CONTEXT:
 ${athleteProfile}

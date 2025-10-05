@@ -4,7 +4,6 @@ import * as events from "aws-cdk-lib/aws-events";
 import * as targets from "aws-cdk-lib/aws-events-targets";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import { Stack } from "aws-cdk-lib";
-import { createS3AnalyticsPolicy } from "../../iam-policies";
 
 
 export const buildWeeklyAnalytics = defineFunction({

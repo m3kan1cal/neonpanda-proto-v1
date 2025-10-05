@@ -109,8 +109,6 @@ function TrainingGrounds() {
 
   // Create stable callback reference with useCallback
   const handleWorkoutStateChange = useCallback((newState) => {
-    console.info('TrainingGrounds: WorkoutAgent state changed:', newState);
-
     // Map specific loading states to general isLoading for backward compatibility
     const mappedState = {
       ...newState,
@@ -212,13 +210,11 @@ function TrainingGrounds() {
   // Initialize workout agent with stable callback
   useEffect(() => {
     if (!workoutAgentRef.current) {
-      console.info('TrainingGrounds: Creating new WorkoutAgent with stable callback');
       workoutAgentRef.current = new WorkoutAgent(null, handleWorkoutStateChange);
     }
 
     return () => {
       if (workoutAgentRef.current) {
-        console.info('TrainingGrounds: Cleaning up WorkoutAgent');
         workoutAgentRef.current.destroy();
         workoutAgentRef.current = null;
       }
@@ -253,22 +249,14 @@ function TrainingGrounds() {
       conversationAgentRef.current.loadConversationCount(userId, coachId);
     }
     if (workoutAgentRef.current && userId) {
-      console.info('TrainingGrounds: Setting userId and loading workouts for:', userId);
       workoutAgentRef.current.setUserId(userId);
       // Note: setUserId already loads recent workouts, total count, and training days count
 
       // Force a re-render to ensure CommandPalette gets updated WorkoutAgent
       // This is a workaround for the race condition between agent initialization and userId setting
       setWorkoutState(prev => ({ ...prev, lastCheckTime: Date.now() }));
-    } else {
-      console.warn('TrainingGrounds: NOT setting userId for WorkoutAgent:', {
-        hasWorkoutAgent: !!workoutAgentRef.current,
-        userId: userId,
-        userIdType: typeof userId
-      });
     }
     if (reportsAgentRef.current && userId) {
-      console.info('TrainingGrounds: Setting userId and loading reports for:', userId);
       reportsAgentRef.current.setUserId(userId);
       reportsAgentRef.current.loadRecentReports(5);
     }

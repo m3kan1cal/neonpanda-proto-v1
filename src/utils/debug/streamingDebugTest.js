@@ -3,7 +3,7 @@
  * This will help us identify if the issue is in the API, parsing, or UI layer
  */
 
-import { sendCoachConversationMessageStreamLambda } from '../apis/streamingLambdaApi';
+import { streamCoachConversationLambda } from '../apis/streamingLambdaApi';
 
 /**
  * Test raw streaming API response
@@ -17,7 +17,7 @@ export async function testRawStreamingAPI(userId, coachId, conversationId, testM
   console.info('Parameters:', { userId, coachId, conversationId, testMessage });
 
   try {
-    const messageStream = sendCoachConversationMessageStreamLambda(userId, coachId, conversationId, testMessage);
+    const messageStream = streamCoachConversationLambda(userId, coachId, conversationId, testMessage);
 
     let chunkCount = 0;
     let totalContent = '';
@@ -86,7 +86,7 @@ export async function testStreamingWithManualProcessing(userId, coachId, convers
   console.info('🔧 Testing streaming with manual chunk processing...');
 
   try {
-    const messageStream = sendCoachConversationMessageStreamLambda(userId, coachId, conversationId, testMessage);
+    const messageStream = streamCoachConversationLambda(userId, coachId, conversationId, testMessage);
 
     let streamingContent = '';
     let isStreaming = true;
@@ -223,7 +223,7 @@ export async function testStreamingAgentHelper(userId, coachId, conversationId, 
 
     // Test 3: Process streaming chunks
     console.info('🧪 Test 3: Process streaming chunks');
-    const messageStream = sendCoachConversationMessageStreamLambda(userId, coachId, conversationId, testMessage);
+    const messageStream = streamCoachConversationLambda(userId, coachId, conversationId, testMessage);
 
     let chunkCount = 0;
     let accumulatedContent = '';

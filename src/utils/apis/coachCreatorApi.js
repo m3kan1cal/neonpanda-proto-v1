@@ -1,5 +1,6 @@
-import { getApiUrl, authenticatedFetch } from './apiConfig';
+import { getApiUrl, authenticatedFetch, isStreamingEnabled } from './apiConfig';
 import { handleStreamingApiRequest } from './streamingApiHelper';
+import { streamCoachCreatorSessionLambda } from './streamingLambdaApi';
 
 /**
  * API service for Coach Creator operations
@@ -60,14 +61,27 @@ export const updateCoachCreatorSession = async (userId, sessionId, userResponse,
 };
 
 /**
- * Updates a coach creator session with user response (streaming)
+ * Streams a coach creator session update
+ * Fallback chain: Lambda Function URL → API Gateway streaming → non-streaming
  * @param {string} userId - The user ID
  * @param {string} sessionId - The session ID
  * @param {string} userResponse - The user's response text
  * @param {string[]} [imageS3Keys] - Optional array of S3 keys for uploaded images
  * @returns {AsyncGenerator} - Stream of response chunks
  */
-export async function* updateCoachCreatorSessionStream(userId, sessionId, userResponse, imageS3Keys = []) {
+export async function* streamCoachCreatorSession(userId, sessionId, userResponse, imageS3Keys = []) {
+  // Try Lambda Function URL first if enabled
+  if (isStreamingEnabled('coachCreatorSession')) {
+    try {
+      yield* streamCoachCreatorSessionLambda(userId, sessionId, userResponse, imageS3Keys);
+      return; // Success - exit
+    } catch (lambdaError) {
+      console.warn('⚠️ Lambda Function URL streaming failed, falling back to API Gateway:', lambdaError);
+      // Continue to API Gateway fallback
+    }
+  }
+
+  // Fallback to API Gateway streaming (existing code)
   const url = `${getApiUrl('')}/users/${userId}/coach-creator-sessions/${sessionId}?stream=true`;
   const requestBody = {
     userResponse,
@@ -177,3 +191,27 @@ export const deleteCoachCreatorSession = async (userId, sessionId) => {
 
   return result;
 };
+
+/**
+ * Gets the coach config generation status for a completed session
+ * @param {string} userId - The user ID
+ * @param {string} sessionId - The session ID
+ * @returns {Promise<Object>} - The status response with status, message, and optional error
+ */
+export const getCoachConfigStatus = async (userId, sessionId) => {
+  const url = `${getApiUrl('')}/users/${userId}/coach-creator-sessions/${sessionId}/status`;
+  const response = await authenticatedFetch(url, {
+    method: 'GET',
+  });
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      throw new Error('Session not found');
+    }
+    throw new Error(`API Error: ${response.status}`);
+  }
+
+  const result = await response.json();
+  return result;
+};
+

@@ -316,13 +316,11 @@ export async function getCoachConfig(
 // Simplified function to save coach creator session directly
 export async function saveCoachCreatorSession(
   session: CoachCreatorSession,
-  ttlDays?: number
+  ttlDays?: number // Kept for backward compatibility but no longer used
 ): Promise<void> {
-  // Default TTL: 7 days for incomplete, 30 days for complete sessions
-  // Can be overridden with ttlDays parameter for special cases
-  const calculatedTtlDays = ttlDays || (session.isComplete ? 30 : 7);
-  const ttlTimestamp =
-    Math.floor(Date.now() / 1000) + calculatedTtlDays * 24 * 60 * 60;
+  // Note: TTL removed - coach creator sessions are permanent records
+  // Only soft-deleted (isDeleted flag) when coach build succeeds
+  // Hard-deleted only when user manually deletes incomplete session
 
   const item = createDynamoDBItem<CoachCreatorSession>(
     "coachCreatorSession",
@@ -332,13 +330,8 @@ export async function saveCoachCreatorSession(
     session.lastActivity.toISOString()
   );
 
-  // Add TTL to the item and use the generic saveToDynamoDB function (which handles Date serialization)
-  const itemWithTTL = {
-    ...item,
-    ttl: ttlTimestamp,
-  };
-
-  await saveToDynamoDB(itemWithTTL);
+  // No TTL timestamp - sessions persist indefinitely
+  await saveToDynamoDB(item);
 }
 
 // Generic helper function to recursively convert all Date objects to ISO strings and remove undefined values for DynamoDB storage
@@ -493,6 +486,11 @@ export async function queryCoachCreatorSessions(
       // Apply filters
       let filteredSessions = allSessions;
 
+      // Filter out soft-deleted sessions by default (unless explicitly requested)
+      filteredSessions = filteredSessions.filter(
+        (session) => !session.attributes.isDeleted
+      );
+
       // Filter by completion status
       if (options?.isComplete !== undefined) {
         filteredSessions = filteredSessions.filter(
@@ -583,6 +581,9 @@ export async function queryCoachConfigs(
         "coach#",
         "coachConfig"
       );
+
+      console.info(`📊 queryCoachConfigs: Found ${items.length} coach configs for user ${userId}`);
+      console.info(`📊 Coach IDs:`, items.map(item => item.attributes?.coach_id));
 
       // Filter to include only the properties we need, leveraging the original structure
       return items.map((item) => {

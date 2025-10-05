@@ -42,10 +42,14 @@ import {
   STREAMING_ROUTE_PATTERNS,
   formatStartEvent,
   formatChunkEvent,
+  formatContextualEvent,
   formatCompleteEvent,
   formatAuthErrorEvent,
   formatValidationErrorEvent,
   createOptimizedChunkStream,
+  validateStreamingRequestBody,
+  getRandomCoachAcknowledgement,
+  buildMessageContextFromMessages,
   type ValidationParams,
   type ConversationData,
   type BusinessLogicParams,
@@ -149,48 +153,18 @@ async function validateAndExtractParams(
     conversationId,
   });
 
-  // Parse and validate request body
-  if (!event.body) {
-    throw new Error("Request body is required");
-  }
-
-  let body;
-  try {
-    body = JSON.parse(event.body);
-  } catch (parseError) {
-    throw new Error("Invalid JSON in request body");
-  }
-
-  const { userResponse, messageTimestamp, imageS3Keys } = body;
-
-  // Validation: Either text or images required
-  if (!userResponse && (!imageS3Keys || imageS3Keys.length === 0)) {
-    throw new Error("Either text or images required");
-  }
-
-  if (imageS3Keys && imageS3Keys.length > 5) {
-    throw new Error("Maximum 5 images per message");
-  }
-
-  // Verify S3 keys belong to this user
-  if (imageS3Keys) {
-    for (const key of imageS3Keys) {
-      if (!key.startsWith(`user-uploads/${userId}/`)) {
-        throw new Error(`Invalid image key: ${key}`);
-      }
-    }
-  }
-
-  if (!messageTimestamp) {
-    throw new Error(
-      "Message timestamp is required for accurate workout logging"
-    );
-  }
+  // Parse and validate request body using shared utility
+  const { userResponse, messageTimestamp, imageS3Keys } =
+    validateStreamingRequestBody(event.body, userId as string, {
+      requireUserResponse: false, // Either text or images is OK
+      maxImages: 5,
+    });
 
   console.info("✅ Request body validated:", {
     hasUserResponse: !!userResponse,
     hasMessageTimestamp: !!messageTimestamp,
-    userResponseLength: userResponse.length,
+    userResponseLength: userResponse?.length || 0,
+    imageCount: imageS3Keys?.length || 0,
   });
 
   return {
@@ -270,6 +244,8 @@ const streamingHandler: StreamingHandler = async (
 
   // Use pipeline to stream events as they're generated (proper real-time streaming)
   await pipeline(sseEventStream, responseStream);
+
+  console.info("✅ Streaming pipeline completed successfully");
 };
 
 // Generator function that yields SSE events with TRUE real-time streaming
@@ -285,22 +261,10 @@ async function* createCoachConversationEventStream(
     // Start async processing but yield progress events as we go
     const processingPromise = processCoachConversationAsync(event, context);
 
-    // Yield coach-like acknowledgment immediately while processing starts
-    const coachAcknowledgments = [
-      "Alright, let's work.",
-      "I hear you.",
-      "Let's figure this out.",
-      "Got it, let's go.",
-      "Right on.",
-      "Let's dive in.",
-      "I'm on it.",
-      "Let's tackle this.",
-      "Copy that."
-    ];
-
-    const randomAcknowledgment = coachAcknowledgments[Math.floor(Math.random() * coachAcknowledgments.length)];
-    yield formatChunkEvent(randomAcknowledgment + "\n");
-    console.info(`📡 Yielded coach acknowledgment: "${randomAcknowledgment}"`);
+    // Yield coach-like acknowledgment immediately while processing starts (as contextual update)
+    const randomAcknowledgment = getRandomCoachAcknowledgement();
+    yield formatContextualEvent(randomAcknowledgment, 'initial_greeting');
+    console.info(`📡 Yielded coach acknowledgment (contextual): "${randomAcknowledgment}"`);
 
     // Now yield events as they become available from the async processing
     for await (const event of processingPromise) {
@@ -384,8 +348,7 @@ async function* processCoachConversationAsync(
         `📡 Initial acknowledgment ready: "${initialAcknowledgment.substring(0, 50)}..."`
       );
       contextualUpdates.push(initialAcknowledgment);
-      // Add line breaks for proper streaming display
-      const acknowledgmentEvent = formatChunkEvent(initialAcknowledgment + '\n\n');
+      const acknowledgmentEvent = formatContextualEvent(initialAcknowledgment, 'initial_greeting');
       yield acknowledgmentEvent;
     } catch (error) {
       console.error("⚠️ Initial acknowledgment failed:", error);
@@ -410,8 +373,7 @@ async function* processCoachConversationAsync(
         { stage: "analyzing_workouts" }
       );
       contextualUpdates.push(workoutUpdate);
-      // Add line breaks for proper streaming display
-      yield formatChunkEvent(workoutUpdate + '\n\n');
+      yield formatContextualEvent(workoutUpdate, 'workout_analysis');
     }
 
     workoutResult = await processWorkoutDetection(businessLogicParams);
@@ -444,17 +406,19 @@ async function* processCoachConversationAsync(
         }
       );
       contextualUpdates.push(memoryUpdate);
-      // Add line breaks for proper streaming display
-      yield formatChunkEvent(memoryUpdate + '\n\n');
+      yield formatContextualEvent(memoryUpdate, 'memory_analysis');
     }
+
+    // Build message context using shared utility
+    const messageContext = buildMessageContextFromMessages(
+      conversationData.existingConversation.attributes.messages,
+      5  // Increased for better conversational context
+    );
 
     // Use consolidated memory analysis instead of separate calls
     const consolidatedMemoryAnalysis = await analyzeMemoryNeeds(
       params.userResponse,
-      conversationData.existingConversation.attributes.messages
-        .slice(-3)
-        .map((msg: any) => `${msg.role}: ${msg.content}`)
-        .join("\n"),
+      messageContext,
       conversationData.coachConfig.attributes.coach_name
     );
 
@@ -464,10 +428,7 @@ async function* processCoachConversationAsync(
         params.userId,
         params.coachId,
         params.userResponse,
-        conversationData.existingConversation.attributes.messages
-          .slice(-3)
-          .map((msg: any) => `${msg.role}: ${msg.content}`)
-          .join("\n")
+        messageContext // Reuse the messageContext we already built above
       );
     } else {
       memoryRetrieval = { memories: [] };
@@ -506,8 +467,7 @@ async function* processCoachConversationAsync(
       }
     );
     contextualUpdates.push(patternUpdate);
-    // Add line breaks for proper streaming display
-    yield formatChunkEvent(patternUpdate + '\n\n');
+    yield formatContextualEvent(patternUpdate, 'pattern_analysis');
 
     // Yield pre-AI insights tease
     const insightsUpdate = await generateContextualUpdate(
@@ -522,8 +482,7 @@ async function* processCoachConversationAsync(
       }
     );
     contextualUpdates.push(insightsUpdate);
-    // Add line breaks for proper streaming display
-    yield formatChunkEvent(insightsUpdate + '\n\n');
+    yield formatContextualEvent(insightsUpdate, 'insights_brewing');
   }
 
   // Create user message and conversation context
@@ -533,7 +492,7 @@ async function* processCoachConversationAsync(
     content: params.userResponse || '',
     timestamp: new Date(params.messageTimestamp),
     messageType: params.imageS3Keys && params.imageS3Keys.length > 0 ? 'text_with_images' : 'text',
-    imageS3Keys: params.imageS3Keys || undefined,
+    ...(params.imageS3Keys && params.imageS3Keys.length > 0 ? { imageS3Keys: params.imageS3Keys } : {}),
   };
 
   const conversationContext = {
@@ -546,18 +505,11 @@ async function* processCoachConversationAsync(
   // Step 6: Stream AI chunks in REAL-TIME
   let fullAIResponse = "";
 
-  // IMPORTANT: Accumulate contextual updates into the final response
-  if (routerAnalysis.showContextualUpdates && contextualUpdates.length > 0) {
-    // Add contextual updates to the final response with proper formatting
-    const contextualUpdatesText = contextualUpdates
-      .filter(update => update && update.trim())
-      .join('\n\n');
-
-    if (contextualUpdatesText) {
-      fullAIResponse += `${contextualUpdatesText}\n\n`;
-      console.info(`📝 Added ${contextualUpdates.length} contextual updates to final response (${contextualUpdatesText.length} chars)`);
-    }
-  }
+  // CONTEXTUAL UPDATES ARE EPHEMERAL UX FEEDBACK ONLY
+  // They are streamed to the user during processing but NOT saved in conversation history.
+  // This matches the coach creator behavior and keeps the conversation clean.
+  // The contextualUpdates array is built above but intentionally NOT added to fullAIResponse.
+  console.info(`📝 Contextual updates streamed but not saved (${contextualUpdates.length} updates, ephemeral UX only)`);
 
   try {
     console.info("🚀 Starting REAL-TIME AI streaming...");

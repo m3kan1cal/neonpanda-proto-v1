@@ -48,6 +48,7 @@ export interface CoachCreatorSession {
   userContext: UserContext;
   questionHistory: any[];
   isComplete: boolean;
+  isDeleted?: boolean; // Soft delete flag - set to true when coach build succeeds
   generatedCoachConfig?: any;
   startedAt: Date;
   lastActivity: Date;
@@ -58,6 +59,14 @@ export interface CoachCreatorSession {
     percentage: number;
     sophisticationLevel: string;
     currentQuestion: number;
+  };
+  configGeneration?: {
+    status: 'IN_PROGRESS' | 'COMPLETE' | 'FAILED';
+    startedAt: Date;
+    completedAt?: Date;
+    failedAt?: Date;
+    error?: string;
+    coachConfigId?: string;
   };
 }
 

@@ -3,7 +3,7 @@ import { auth } from "./auth/resource";
 import { postConfirmation } from "./functions/post-confirmation/resource";
 import { HttpUserPoolAuthorizer } from 'aws-cdk-lib/aws-apigatewayv2-authorizers';
 import { FunctionUrlAuthType, InvokeMode, HttpMethod } from 'aws-cdk-lib/aws-lambda';
-import { Duration } from 'aws-cdk-lib';
+import { Duration, RemovalPolicy } from 'aws-cdk-lib';
 import { getBranchInfo, createBranchAwareResourceName } from "./functions/libs/branch-naming";
 import { contactForm } from "./functions/contact-form/resource";
 import { createCoachCreatorSession } from "./functions/create-coach-creator-session/resource";
@@ -18,12 +18,14 @@ import { deleteCoachCreatorSession } from "./functions/delete-coach-creator-sess
 import { getCoachTemplates } from "./functions/get-coach-templates/resource";
 import { getCoachTemplate } from "./functions/get-coach-template/resource";
 import { createCoachConfigFromTemplate } from "./functions/create-coach-config-from-template/resource";
+import { createCoachConfig } from "./functions/create-coach-config/resource";
 import { createCoachConversation } from "./functions/create-coach-conversation/resource";
 import { getCoachConversations } from "./functions/get-coach-conversations/resource";
 import { getCoachConversation } from "./functions/get-coach-conversation/resource";
 import { updateCoachConversation } from "./functions/update-coach-conversation/resource";
 import { sendCoachConversationMessage } from "./functions/send-coach-conversation-message/resource";
 import { streamCoachConversation } from "./functions/stream-coach-conversation/resource";
+import { streamCoachCreatorSession } from "./functions/stream-coach-creator-session/resource";
 import { createWorkout } from "./functions/create-workout/resource";
 import { buildWorkout } from "./functions/build-workout/resource";
 import { buildConversationSummary } from "./functions/build-conversation-summary/resource";
@@ -52,18 +54,10 @@ import { apiGatewayv2 } from "./api/resource";
 import { dynamodbTable } from "./dynamodb/resource";
 import { createAppsBucket } from "./storage/resource";
 import { createContactFormNotificationTopic, createErrorMonitoringTopic } from "./sns/resource";
-import {
-  grantBedrockPermissions,
-  grantLambdaInvokePermissions,
-  grantS3DebugPermissions,
-  grantS3AnalyticsPermissions,
-  grantCognitoAdminPermissions,
-  grantDynamoDBPermissions,
-  grantDynamoDBThroughputPermissions,
-  grantS3AppsPermissions,
-} from "./iam-policies";
 import { config } from "./functions/libs/configs";
-import { ErrorMonitoring } from "./functions/libs/error-monitoring";
+import { Effect, PolicyStatement, ServicePrincipal } from "aws-cdk-lib/aws-iam";
+import { syncLogSubscriptions, createSyncLogSubscriptionsSchedule } from "./functions/sync-log-subscriptions/resource";
+import { SharedPolicies, grantLambdaInvokePermissions } from './shared-policies';
 
 /**
  * @see https://docs.amplify.aws/react/build-a-backend/ to add storage, functions, and more
@@ -84,12 +78,14 @@ const backend = defineBackend({
   getCoachTemplates,
   getCoachTemplate,
   createCoachConfigFromTemplate,
+  createCoachConfig,
   createCoachConversation,
   getCoachConversations,
   getCoachConversation,
   updateCoachConversation,
   sendCoachConversationMessage,
   streamCoachConversation,
+  streamCoachCreatorSession,
   createWorkout,
   buildWorkout,
   buildConversationSummary,
@@ -111,6 +107,7 @@ const backend = defineBackend({
   updateUserProfile,
   generateUploadUrls,
   generateDownloadUrls,
+  syncLogSubscriptions,
 });
 
 // Create User Pool authorizer
@@ -137,6 +134,7 @@ const coreApi = apiGatewayv2.createCoreApi(
   backend.getCoachTemplates.resources.lambda,
   backend.getCoachTemplate.resources.lambda,
   backend.createCoachConfigFromTemplate.resources.lambda,
+  backend.createCoachConfig.resources.lambda,
   backend.createCoachConversation.resources.lambda,
   backend.getCoachConversations.resources.lambda,
   backend.getCoachConversation.resources.lambda,
@@ -172,116 +170,31 @@ const appsBucket = createAppsBucket(backend.contactForm.stack);
 const contactFormNotifications = createContactFormNotificationTopic(backend.contactForm.stack);
 const errorMonitoringTopic = createErrorMonitoringTopic(backend.contactForm.stack);
 
-// Set up centralized error monitoring for all Lambda functions
-const errorMonitoring = new ErrorMonitoring(
-  backend.contactForm.stack,
-  'ErrorMonitoring',
-  {
-    errorTopic: errorMonitoringTopic.topic,
-    forwarderFunction: backend.forwardLogsToSns.resources.lambda,
-  }
-);
-
 // Get branch information for S3 policies
 const branchInfo = getBranchInfo(backend.contactForm.stack);
 const branchName = branchInfo.isSandbox
   ? `sandbox-${branchInfo.stackId}`
   : branchInfo.branchName;
 
-// Grant DynamoDB permissions to contact form function
-coreTable.table.grantWriteData(backend.contactForm.resources.lambda);
-
-// Grant SNS permissions to contact form function
-contactFormNotifications.topic.grantPublish(backend.contactForm.resources.lambda);
-
-// Grant DynamoDB permissions to coach creator functions (read and write)
-coreTable.table.grantReadWriteData(
-  backend.createCoachCreatorSession.resources.lambda
-);
-coreTable.table.grantReadWriteData(
-  backend.updateCoachCreatorSession.resources.lambda
-);
-coreTable.table.grantReadWriteData(backend.buildCoachConfig.resources.lambda);
-coreTable.table.grantReadWriteData(backend.getCoachConfigs.resources.lambda);
-coreTable.table.grantReadWriteData(backend.getCoachConfig.resources.lambda);
-coreTable.table.grantReadWriteData(
-  backend.getCoachConfigStatus.resources.lambda
-);
-coreTable.table.grantReadWriteData(
-  backend.getCoachCreatorSession.resources.lambda
-);
-coreTable.table.grantReadData(
-  backend.getCoachCreatorSessions.resources.lambda
-);
-coreTable.table.grantReadWriteData(
-  backend.deleteCoachCreatorSession.resources.lambda
+// ============================================================================
+// CREATE SHARED IAM POLICIES
+// ============================================================================
+// This avoids the 20KB Lambda policy size limit by using managed policies
+// instead of inline grants. Managed policies are referenced by ARN and don't
+// count toward the per-function policy size limit.
+const sharedPolicies = new SharedPolicies(
+  backend.contactForm.stack,
+  coreTable.table,
+  branchName,
+  appsBucket.bucket.bucketArn
 );
 
-// Grant DynamoDB permissions to coach template functions (read and write)
-coreTable.table.grantReadData(backend.getCoachTemplates.resources.lambda);
-coreTable.table.grantReadData(backend.getCoachTemplate.resources.lambda);
-coreTable.table.grantReadWriteData(
-  backend.createCoachConfigFromTemplate.resources.lambda
-);
+// ============================================================================
+// PERMISSION GRANTS - Using Shared Managed Policies
+// ============================================================================
 
-// Grant DynamoDB permissions to coach conversation functions (read and write)
-coreTable.table.grantReadWriteData(
-  backend.createCoachConversation.resources.lambda
-);
-coreTable.table.grantReadWriteData(
-  backend.getCoachConversations.resources.lambda
-);
-coreTable.table.grantReadWriteData(
-  backend.getCoachConversation.resources.lambda
-);
-coreTable.table.grantReadWriteData(
-  backend.updateCoachConversation.resources.lambda
-);
-coreTable.table.grantReadWriteData(
-  backend.sendCoachConversationMessage.resources.lambda
-);
-coreTable.table.grantReadWriteData(
-  backend.streamCoachConversation.resources.lambda
-);
-coreTable.table.grantReadWriteData(
-  backend.deleteCoachConversation.resources.lambda
-);
-
-// Grant DynamoDB permissions to workout functions (read and write)
-coreTable.table.grantReadData(backend.createWorkout.resources.lambda);
-coreTable.table.grantReadWriteData(backend.buildWorkout.resources.lambda);
-coreTable.table.grantReadWriteData(
-  backend.buildConversationSummary.resources.lambda
-);
-coreTable.table.grantReadWriteData(backend.getWorkouts.resources.lambda);
-coreTable.table.grantReadWriteData(backend.getWorkout.resources.lambda);
-coreTable.table.grantReadWriteData(backend.updateWorkout.resources.lambda);
-coreTable.table.grantReadWriteData(backend.deleteWorkout.resources.lambda);
-coreTable.table.grantReadData(backend.getWorkoutsCount.resources.lambda);
-coreTable.table.grantReadData(backend.getCoachConversationsCount.resources.lambda);
-coreTable.table.grantReadWriteData(
-  backend.buildWeeklyAnalytics.resources.lambda
-);
-coreTable.table.grantReadData(backend.getWeeklyReports.resources.lambda);
-coreTable.table.grantReadData(backend.getWeeklyReport.resources.lambda);
-
-// Grant DynamoDB permissions to memory functions
-coreTable.table.grantReadData(backend.getMemories.resources.lambda);
-coreTable.table.grantReadWriteData(backend.createMemory.resources.lambda);
-coreTable.table.grantReadWriteData(backend.deleteMemory.resources.lambda);
-
-// Grant DynamoDB permissions to user profile functions
-coreTable.table.grantReadData(backend.getUserProfile.resources.lambda);
-coreTable.table.grantReadWriteData(backend.updateUserProfile.resources.lambda);
-
-// Grant DynamoDB read permission to generate upload URLs function
-coreTable.table.grantReadData(backend.generateUploadUrls.resources.lambda);
-
-// Grant DynamoDB read permission to generate download URLs function
-coreTable.table.grantReadData(backend.generateDownloadUrls.resources.lambda);
-
-// Add environment variables to all functions (excluding post-confirmation due to circular dependency)
-const allFunctions = [
+// Functions needing DynamoDB READ/WRITE access
+[
   backend.contactForm,
   backend.createCoachCreatorSession,
   backend.updateCoachCreatorSession,
@@ -290,128 +203,157 @@ const allFunctions = [
   backend.getCoachConfig,
   backend.getCoachConfigStatus,
   backend.getCoachCreatorSession,
-  backend.getCoachCreatorSessions,
   backend.deleteCoachCreatorSession,
+  backend.createCoachConfigFromTemplate,
+  backend.createCoachConfig,
   backend.createCoachConversation,
   backend.getCoachConversations,
   backend.getCoachConversation,
   backend.updateCoachConversation,
   backend.sendCoachConversationMessage,
   backend.streamCoachConversation,
-  backend.createWorkout,
+  backend.streamCoachCreatorSession,
+  backend.deleteCoachConversation,
   backend.buildWorkout,
   backend.buildConversationSummary,
   backend.getWorkouts,
   backend.getWorkout,
   backend.updateWorkout,
   backend.deleteWorkout,
+  backend.buildWeeklyAnalytics,
+  backend.createMemory,
+  backend.deleteMemory,
+  backend.updateUserProfile,
+  // NOTE: postConfirmation excluded to avoid circular dependency with auth stack
+].forEach(func => {
+  sharedPolicies.attachDynamoDbReadWrite(func.resources.lambda);
+});
+
+// Functions needing DynamoDB READ-ONLY access (includes throughput management)
+[
+  backend.getCoachCreatorSessions,
+  backend.getCoachTemplates,
+  backend.getCoachTemplate,
+  backend.createWorkout,
   backend.getWorkoutsCount,
   backend.getCoachConversationsCount,
-  backend.buildWeeklyAnalytics,
   backend.getWeeklyReports,
   backend.getWeeklyReport,
   backend.getMemories,
-  backend.createMemory,
-  backend.deleteMemory,
-  backend.deleteCoachConversation,
-  backend.getCoachTemplates,
-  backend.getCoachTemplate,
-  backend.createCoachConfigFromTemplate,
   backend.getUserProfile,
-  backend.updateUserProfile,
   backend.generateUploadUrls,
-];
-
-allFunctions.forEach((func) => {
-  func.addEnvironment("DYNAMODB_TABLE_NAME", coreTable.table.tableName);
-  func.addEnvironment("PINECONE_API_KEY", config.PINECONE_API_KEY);
-  func.addEnvironment("BRANCH_NAME", branchName);
-
-  // DynamoDB throughput scaling configuration
-  func.addEnvironment("DYNAMODB_BASE_READ_CAPACITY", "5");
-  func.addEnvironment("DYNAMODB_BASE_WRITE_CAPACITY", "5");
-  func.addEnvironment("DYNAMODB_MAX_READ_CAPACITY", "100");
-  func.addEnvironment("DYNAMODB_MAX_WRITE_CAPACITY", "50");
-  func.addEnvironment("DYNAMODB_SCALE_UP_FACTOR", "2.0");
-  func.addEnvironment("DYNAMODB_MAX_RETRIES", "5");
-  func.addEnvironment("DYNAMODB_INITIAL_RETRY_DELAY", "1000");
-  func.addEnvironment("DYNAMODB_SCALE_DOWN_DELAY_MINUTES", "10");
+  backend.generateDownloadUrls,
+].forEach(func => {
+  sharedPolicies.attachDynamoDbReadOnly(func.resources.lambda);
 });
 
-// Add apps bucket name to functions that need it
+// Functions needing BEDROCK access
+[
+  backend.updateCoachCreatorSession,
+  backend.streamCoachCreatorSession,
+  backend.buildCoachConfig,
+  backend.sendCoachConversationMessage,
+  backend.streamCoachConversation,
+  backend.buildWorkout,
+  backend.buildConversationSummary,
+  backend.buildWeeklyAnalytics,
+  backend.createMemory,
+].forEach(func => {
+  sharedPolicies.attachBedrockAccess(func.resources.lambda);
+});
+
+// Functions needing S3 DEBUG bucket access
+[
+  backend.buildWorkout,
+  backend.sendCoachConversationMessage,
+  backend.streamCoachConversation,
+  backend.streamCoachCreatorSession,
+].forEach(func => {
+  sharedPolicies.attachS3DebugAccess(func.resources.lambda);
+});
+
+// Function needing S3 ANALYTICS bucket access
+sharedPolicies.attachS3AnalyticsAccess(backend.buildWeeklyAnalytics.resources.lambda);
+
+// Functions needing S3 APPS bucket access (for image storage)
 [
   backend.generateUploadUrls,
   backend.generateDownloadUrls,
   backend.sendCoachConversationMessage,
   backend.streamCoachConversation,
+  backend.streamCoachCreatorSession,
   backend.updateCoachCreatorSession,
-].forEach((func) => {
-  func.addEnvironment('APPS_BUCKET_NAME', appsBucket.bucketName);
+].forEach(func => {
+  sharedPolicies.attachS3AppsAccess(func.resources.lambda);
 });
 
-// Set up error monitoring for all Lambda functions using allFunctions array
-console.info('🔍 Setting up error monitoring for all Lambda functions...');
-errorMonitoring.monitorFunctions(allFunctions);
-console.info(`✅ Error monitoring configured for ${allFunctions.length} Lambda functions (excluding forwarder)`);
+// Functions needing COGNITO admin access
+[
+  // NOTE: postConfirmation excluded to avoid circular dependency with auth stack
+  backend.updateUserProfile,
+].forEach(func => {
+  sharedPolicies.attachCognitoAdmin(func.resources.lambda);
+});
 
-// Handle post-confirmation separately due to circular dependency
-// It's in the auth stack but needs to reference the DynamoDB table in contactForm stack
-backend.postConfirmation.addEnvironment("BRANCH_NAME", branchName);
+// ============================================================================
+// SPECIAL CASE: postConfirmation (Auth Trigger)
+// ============================================================================
+// postConfirmation is in the auth stack, so we CANNOT grant cross-stack permissions
+// Use inline policies with wildcards to avoid circular dependency
+backend.postConfirmation.resources.lambda.addToRolePolicy(
+  new PolicyStatement({
+    effect: Effect.ALLOW,
+    actions: [
+      'dynamodb:GetItem',
+      'dynamodb:PutItem',
+      'dynamodb:UpdateItem',
+      'dynamodb:DeleteItem',
+      'dynamodb:Query',
+      'dynamodb:Scan',
+      'dynamodb:DescribeTable',
+      'dynamodb:UpdateTable',
+    ],
+    resources: ['*'], // Must use wildcard - table ARN would create circular dependency
+  })
+);
 
-// Add error monitoring for post-confirmation function (in auth stack)
-errorMonitoring.monitorFunction(backend.postConfirmation.resources.lambda, 'postConfirmation');
-console.info('✅ Error monitoring configured for postConfirmation function');
+// Grant Cognito admin permissions using inline policy
+backend.postConfirmation.resources.lambda.addToRolePolicy(
+  new PolicyStatement({
+    effect: Effect.ALLOW,
+    actions: [
+      'cognito-idp:AdminGetUser',
+      'cognito-idp:AdminUpdateUserAttributes',
+      'cognito-idp:AdminDeleteUser',
+      'cognito-idp:AdminSetUserPassword',
+      'cognito-idp:ListUsers',
+    ],
+    resources: ['*'],
+  })
+);
 
-// Configure the log-to-SNS forwarder function (not monitored to avoid circular reference)
-backend.forwardLogsToSns.addEnvironment("SNS_TOPIC_ARN", errorMonitoringTopic.topicArn);
-backend.forwardLogsToSns.addEnvironment("GOOGLE_CHAT_ERRORS_WEBHOOK_URL", config.GOOGLE_CHAT_ERRORS_WEBHOOK_URL);
+// ============================================================================
+// SNS PERMISSIONS
+// ============================================================================
 
+// Grant SNS permissions to contact form function
+contactFormNotifications.topic.grantPublish(backend.contactForm.resources.lambda);
+
+// Grant SNS publish permissions to forwardLogsToSns
 errorMonitoringTopic.topic.grantPublish(backend.forwardLogsToSns.resources.lambda);
-console.info('✅ Log-to-SNS forwarder configured (excluded from error monitoring)');
 
-// Add SNS topic ARN to contact form function
-backend.contactForm.addEnvironment("CONTACT_FORM_TOPIC_ARN", contactFormNotifications.topic.topicArn);
+// CRITICAL: Explicitly ensure forwardLogsToSns has NO managed policies
+// (in case CloudFormation hasn't cleaned up old ones from previous deployments)
+const forwardLogsRole = backend.forwardLogsToSns.resources.lambda.role;
+if (forwardLogsRole) {
+  // The role should only have inline policies from SNS grant and CloudWatch permission
+  // No managed policies should be attached
+  console.info('🧹 forwardLogsToSns role configured with minimal inline policies only');
+}
 
-// Grant Bedrock permissions to functions that need it
-grantBedrockPermissions([
-  backend.updateCoachCreatorSession.resources.lambda,
-  backend.buildCoachConfig.resources.lambda,
-  backend.sendCoachConversationMessage.resources.lambda,
-  backend.streamCoachConversation.resources.lambda,
-  backend.buildWorkout.resources.lambda,
-  backend.buildConversationSummary.resources.lambda,
-  backend.buildWeeklyAnalytics.resources.lambda,
-  backend.createMemory.resources.lambda, // Added for AI scope detection
-]);
-
-// Grant S3 debug permissions to functions that need it
-grantS3DebugPermissions([
-  backend.buildWorkout.resources.lambda,
-  backend.sendCoachConversationMessage.resources.lambda,
-  backend.streamCoachConversation.resources.lambda,
-], branchName);
-
-// Grant S3 analytics permissions to functions that need it
-grantS3AnalyticsPermissions([backend.buildWeeklyAnalytics.resources.lambda], branchName);
-
-// Grant S3 apps bucket permissions to functions that need it
-grantS3AppsPermissions([
-  backend.generateUploadUrls.resources.lambda,
-  backend.generateDownloadUrls.resources.lambda,
-  backend.sendCoachConversationMessage.resources.lambda,
-  backend.streamCoachConversation.resources.lambda,
-  backend.updateCoachCreatorSession.resources.lambda,
-], appsBucket.branchInfo);
-
-// Grant DynamoDB throughput management permissions to high-volume functions
-grantDynamoDBThroughputPermissions([
-  backend.getWorkouts.resources.lambda,
-  backend.getWorkoutsCount.resources.lambda,
-  backend.buildWeeklyAnalytics.resources.lambda,
-  backend.getWeeklyReports.resources.lambda,
-  backend.getCoachConversationsCount.resources.lambda,
-  backend.getCoachConversations.resources.lambda,
-]);
+// ============================================================================
+// LAMBDA INVOKE PERMISSIONS
+// ============================================================================
 
 // Grant permission to updateCoachCreatorSession to invoke buildCoachConfig
 grantLambdaInvokePermissions(
@@ -443,12 +385,173 @@ grantLambdaInvokePermissions(
   ]
 );
 
+// Grant permission to streamCoachCreatorSession to invoke buildCoachConfig
+grantLambdaInvokePermissions(
+  backend.streamCoachCreatorSession.resources.lambda,
+  [backend.buildCoachConfig.resources.lambda.functionArn]
+);
+
+// Grant permission to createCoachConfig to invoke buildCoachConfig
+grantLambdaInvokePermissions(
+  backend.createCoachConfig.resources.lambda,
+  [backend.buildCoachConfig.resources.lambda.functionArn]
+);
+
 // Grant permission to createCoachConversation to invoke sendCoachConversationMessage
 grantLambdaInvokePermissions(
   backend.createCoachConversation.resources.lambda,
   [backend.sendCoachConversationMessage.resources.lambda.functionArn]
 );
 
+// ============================================================================
+// CLOUDWATCH LOGS PERMISSIONS
+// ============================================================================
+
+// Grant CloudWatch permission to forwarder
+backend.forwardLogsToSns.resources.lambda.addPermission("AllowCloudWatchLogs", {
+  principal: new ServicePrincipal("logs.amazonaws.com"),
+  action: "lambda:InvokeFunction",
+  sourceArn: `arn:aws:logs:${backend.contactForm.stack.region}:${backend.contactForm.stack.account}:log-group:/aws/lambda/*`,
+});
+
+// Configure forwarder
+backend.forwardLogsToSns.addEnvironment("SNS_TOPIC_ARN", errorMonitoringTopic.topicArn);
+backend.forwardLogsToSns.addEnvironment("GOOGLE_CHAT_ERRORS_WEBHOOK_URL", config.GOOGLE_CHAT_ERRORS_WEBHOOK_URL);
+
+// Grant permissions to sync Lambda
+backend.syncLogSubscriptions.resources.lambda.addToRolePolicy(
+  new PolicyStatement({
+    effect: Effect.ALLOW,
+    actions: ['logs:DescribeLogGroups', 'logs:PutSubscriptionFilter', 'logs:DescribeSubscriptionFilters'],
+    resources: ['*'],
+  })
+);
+
+// ============================================================================
+// ENVIRONMENT VARIABLES
+// ============================================================================
+
+// Add environment variables to all functions
+// EXCLUDED: postConfirmation (circular dependency), forwardLogsToSns (utility function, doesn't need app resources), syncLogSubscriptions (utility function)
+const allFunctions = [
+  backend.contactForm,
+  backend.createCoachCreatorSession,
+  backend.updateCoachCreatorSession,
+  backend.buildCoachConfig,
+  backend.getCoachConfigs,
+  backend.getCoachConfig,
+  backend.getCoachConfigStatus,
+  backend.getCoachCreatorSession,
+  backend.getCoachCreatorSessions,
+  backend.deleteCoachCreatorSession,
+  backend.createCoachConversation,
+  backend.getCoachConversations,
+  backend.getCoachConversation,
+  backend.updateCoachConversation,
+  backend.sendCoachConversationMessage,
+  backend.streamCoachConversation,
+  backend.streamCoachCreatorSession,
+  backend.createWorkout,
+  backend.buildWorkout,
+  backend.buildConversationSummary,
+  backend.getWorkouts,
+  backend.getWorkout,
+  backend.updateWorkout,
+  backend.deleteWorkout,
+  backend.getWorkoutsCount,
+  backend.getCoachConversationsCount,
+  backend.buildWeeklyAnalytics,
+  backend.getWeeklyReports,
+  backend.getWeeklyReport,
+  backend.getMemories,
+  backend.createMemory,
+  backend.deleteMemory,
+  backend.deleteCoachConversation,
+  backend.getCoachTemplates,
+  backend.getCoachTemplate,
+  backend.createCoachConfigFromTemplate,
+  backend.createCoachConfig,
+  backend.getUserProfile,
+  backend.updateUserProfile,
+  backend.generateUploadUrls,
+  // NOTE: forwardLogsToSns and syncLogSubscriptions excluded - they're utility functions that don't need app resources
+];
+
+allFunctions.forEach((func) => {
+  func.addEnvironment("DYNAMODB_TABLE_NAME", coreTable.table.tableName);
+  func.addEnvironment("PINECONE_API_KEY", config.PINECONE_API_KEY);
+  func.addEnvironment("BRANCH_NAME", branchName);
+
+  // DynamoDB throughput scaling configuration
+  func.addEnvironment("DYNAMODB_BASE_READ_CAPACITY", "5");
+  func.addEnvironment("DYNAMODB_BASE_WRITE_CAPACITY", "5");
+  func.addEnvironment("DYNAMODB_MAX_READ_CAPACITY", "100");
+  func.addEnvironment("DYNAMODB_MAX_WRITE_CAPACITY", "50");
+  func.addEnvironment("DYNAMODB_SCALE_UP_FACTOR", "2.0");
+  func.addEnvironment("DYNAMODB_MAX_RETRIES", "5");
+  func.addEnvironment("DYNAMODB_INITIAL_RETRY_DELAY", "1000");
+  func.addEnvironment("DYNAMODB_SCALE_DOWN_DELAY_MINUTES", "10");
+});
+
+// Add apps bucket name to functions that need it
+[
+  backend.generateUploadUrls,
+  backend.generateDownloadUrls,
+  backend.sendCoachConversationMessage,
+  backend.streamCoachConversation,
+  backend.streamCoachCreatorSession,
+  backend.updateCoachCreatorSession,
+].forEach((func) => {
+  func.addEnvironment('APPS_BUCKET_NAME', appsBucket.bucketName);
+});
+
+// Add environment variables to sync Lambda
+// Log group naming patterns differ between sandbox and branch deployments:
+// - Sandbox: /aws/lambda/amplify-{appName}--{functionLogicalId}-{randomSuffix}
+//   Stack:   amplify-{appName}-{username}-sandbox-{hash}-...
+// - Branch:  /aws/lambda/amplify-{appId}-{functionName}-{randomSuffix}
+//   Stack:   amplify-{appId}-{branch}-{hash}-...
+let logGroupPrefix: string;
+const stackParts = backend.contactForm.stack.stackName.split('-');
+
+if (branchInfo.isSandbox) {
+  // Sandbox: Extract app name from stack (2nd segment)
+  // Example: amplify-neonpandaprotov1-mlfowler-sandbox-...
+  if (stackParts.length >= 2 && stackParts[0] === 'amplify') {
+    const appName = stackParts[1];
+    logGroupPrefix = `/aws/lambda/amplify-${appName}`;
+  } else {
+    // Fallback
+    logGroupPrefix = '/aws/lambda/amplify-neonpandaprotov1';
+  }
+} else {
+  // Branch: Extract app ID (2nd segment)
+  // Example: amplify-d2y0pmelq37lyh-develop-...
+  if (stackParts.length >= 2 && stackParts[0] === 'amplify') {
+    const appId = stackParts[1];
+    logGroupPrefix = `/aws/lambda/amplify-${appId}`;
+  } else {
+    // Fallback
+    logGroupPrefix = '/aws/lambda/amplify';
+  }
+}
+
+console.info('📋 Log group configuration:', {
+  isSandbox: branchInfo.isSandbox,
+  branchName: branchInfo.branchName,
+  stackName: backend.contactForm.stack.stackName,
+  logGroupPrefix
+});
+
+backend.syncLogSubscriptions.addEnvironment('LOG_GROUP_PREFIX', logGroupPrefix);
+backend.syncLogSubscriptions.addEnvironment('DESTINATION_ARN', backend.forwardLogsToSns.resources.lambda.functionArn);
+backend.syncLogSubscriptions.addEnvironment('FILTER_PATTERN', '[timestamp, request_id, level=ERROR || level=WARN || level=WARNING || level=FATAL || level=CRITICAL, ...]');
+backend.syncLogSubscriptions.addEnvironment('IMMEDIATE_RUN', 'true');
+
+// Add SNS topic ARN to contact form function
+backend.contactForm.addEnvironment("CONTACT_FORM_TOPIC_ARN", contactFormNotifications.topic.topicArn);
+
+// Add function name environment variables
 backend.updateCoachCreatorSession.addEnvironment(
   "BUILD_COACH_CONFIG_FUNCTION_NAME",
   backend.buildCoachConfig.resources.lambda.functionName
@@ -477,10 +580,30 @@ backend.streamCoachConversation.addEnvironment(
   backend.buildConversationSummary.resources.lambda.functionName
 );
 
+backend.streamCoachCreatorSession.addEnvironment(
+  "BUILD_COACH_CONFIG_FUNCTION_NAME",
+  backend.buildCoachConfig.resources.lambda.functionName
+);
+
+backend.createCoachConfig.addEnvironment(
+  "BUILD_COACH_CONFIG_FUNCTION_NAME",
+  backend.buildCoachConfig.resources.lambda.functionName
+);
+
 backend.createCoachConversation.addEnvironment(
   "SEND_COACH_CONVERSATION_MESSAGE_FUNCTION_NAME",
   backend.sendCoachConversationMessage.resources.lambda.functionName
 );
+
+// Add USER_POOL_ID environment variable to update-user-profile
+backend.updateUserProfile.addEnvironment(
+  "USER_POOL_ID",
+  backend.auth.resources.userPool.userPoolId
+);
+
+// ============================================================================
+// LAMBDA FUNCTION URLS FOR STREAMING
+// ============================================================================
 
 // Configure Lambda Function URL for streaming chat (not API Gateway)
 const streamingFunctionUrl = backend.streamCoachConversation.resources.lambda.addFunctionUrl({
@@ -488,27 +611,48 @@ const streamingFunctionUrl = backend.streamCoachConversation.resources.lambda.ad
   cors: {
     allowedOrigins: ['*'], // Configure appropriately for production
     allowedMethods: [HttpMethod.POST], // OPTIONS is handled automatically by Lambda Function URLs
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Cache-Control'], // Add more headers
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Cache-Control'],
     maxAge: Duration.days(1),
   },
   invokeMode: InvokeMode.RESPONSE_STREAM, // Enable streaming responses
 });
 
-// Add the streaming function URL to backend outputs
-backend.addOutput({
-  custom: {
-    coachConversationStreamingApi: {
-      functionUrl: streamingFunctionUrl.url,
-      region: backend.streamCoachConversation.stack.region,
-    }
-  }
+// Configure Lambda Function URL for streaming coach creator sessions
+const streamingCoachCreatorFunctionUrl = backend.streamCoachCreatorSession.resources.lambda.addFunctionUrl({
+  authType: FunctionUrlAuthType.NONE, // We'll handle JWT auth in the function itself
+  cors: {
+    allowedOrigins: ['*'], // Configure appropriately for production
+    allowedMethods: [HttpMethod.PUT], // Coach creator uses PUT (update semantics)
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Cache-Control'],
+    maxAge: Duration.days(1),
+  },
+  invokeMode: InvokeMode.RESPONSE_STREAM, // Enable streaming responses
 });
 
-// Create EventBridge schedule for weekly analytics
+// ============================================================================
+// SCHEDULED TASKS
+// ============================================================================
+
+// Create EventBridge schedule for log subscription sync (daily at 2am UTC)
+const syncLogSubscriptionsSchedule = createSyncLogSubscriptionsSchedule(
+  backend.syncLogSubscriptions.stack,
+  backend.syncLogSubscriptions.resources.lambda
+);
+
+console.info('✅ Log subscription sync scheduled (daily at 2am UTC)');
+console.info('✅ New functions automatically monitored within 24 hours');
+
+// Create EventBridge schedule for weekly analytics (Sundays at 9am UTC)
 const weeklyAnalyticsSchedule = createWeeklyAnalyticsSchedule(
   backend.buildWeeklyAnalytics.stack,
   backend.buildWeeklyAnalytics.resources.lambda
 );
+
+console.info('✅ Weekly analytics scheduled (Sundays at 9am UTC)');
+
+// ============================================================================
+// COGNITO USER POOL CONFIGURATION
+// ============================================================================
 
 // Configure password policy and advanced security via CDK
 const { cfnUserPool } = backend.auth.resources.cfnResources;
@@ -567,30 +711,28 @@ cfnUserPool.policies = {
   },
 };
 
-// Configure post-confirmation Lambda IAM permissions via CDK
-const postConfirmationLambda = backend.postConfirmation.resources.lambda;
-
-// Grant permissions using centralized policy helpers
-grantCognitoAdminPermissions([postConfirmationLambda]);
-grantDynamoDBPermissions([postConfirmationLambda]);
-grantDynamoDBThroughputPermissions([postConfirmationLambda]);
-
-// Grant Cognito admin permissions to user profile update function
-// Note: Using wildcard IAM policy to avoid circular dependency
-grantCognitoAdminPermissions([backend.updateUserProfile.resources.lambda]);
-
-// Add USER_POOL_ID environment variable to update-user-profile
-// Note: This references auth stack but doesn't create circular dependency
-// because we're just passing the ID as a string, not creating a resource dependency
-backend.updateUserProfile.addEnvironment(
-  "USER_POOL_ID",
-  backend.auth.resources.userPool.userPoolId
-);
-
 // Enable Cognito Advanced Security Features (Plus tier)
 cfnUserPool.userPoolAddOns = {
   advancedSecurityMode: 'ENFORCED'  // Options: 'OFF', 'AUDIT', 'ENFORCED'
 };
+
+// ============================================================================
+// OUTPUTS
+// ============================================================================
+
+// Add the streaming function URLs to backend outputs
+backend.addOutput({
+  custom: {
+    coachConversationStreamingApi: {
+      functionUrl: streamingFunctionUrl.url,
+      region: backend.streamCoachConversation.stack.region,
+    },
+    coachCreatorSessionStreamingApi: {
+      functionUrl: streamingCoachCreatorFunctionUrl.url,
+      region: backend.streamCoachCreatorSession.stack.region,
+    }
+  }
+});
 
 // Output the API URL, DynamoDB table info, and S3 bucket info
 backend.addOutput({
