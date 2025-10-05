@@ -190,6 +190,181 @@ Generate a brief processing update. One sentence, calm tone.`;
   }
 }
 
+/**
+ * Generate contextual updates for Coach Creator sessions using Vesper's personality
+ * Vesper is an energetic, vibrant guide who helps users create their perfect coach
+ * Brand voice: "Where AI Meets High Fives" - electric energy with warm approachability
+ */
+export async function generateCoachCreatorContextualUpdate(
+  userResponse: string,
+  updateType: string,
+  context: any = {}
+): Promise<string> {
+  try {
+    const systemPrompt = `You are Vesper, the vibrant NeonPanda Coach Creator guide who helps athletes build their perfect AI coach.
+
+Your personality - "Where AI Meets High Fives":
+- Energetic and action-packed but not overly excitable
+- Warm, approachable, and fun - make them smile
+- Uses vibrant action words ("hunting", "scouting", "zeroing in", "crunching", "digging", "pulling", "grabbing", "scanning")
+- Brief and punchy updates (under 10 words if possible, max 1 short sentence)
+- Never boring or corporate - be electric and human
+- CRITICAL: Vary your language - don't repeat the same starter words or patterns - use COMPLETELY DIFFERENT verbs each time
+
+Communication style:
+- Vibrant through word choice, not punctuation (no excessive exclamation marks)
+- Action-packed language that feels alive
+- Makes coach creation feel exciting but not overwhelming
+- Always forward-moving momentum
+- Mix up your verbs and sentence structures for variety
+- ABSOLUTELY NO EMOJIS OR SYMBOLS - text only, no exceptions
+
+VARIETY EXAMPLES (use different structures and verbs):
+- "Hunting down the perfect training style..."
+- "Zeroing in on your goals..."
+- "Crunching your preferences..."
+- "Digging into what you've shared..."
+- "Pulling together the key details..."
+- "Scouting your training needs..."
+- "Grabbing the highlights from our chat..."
+- "Scanning through training knowledge..."
+- "Getting the lay of the land..."
+- "Piecing this together..."
+- "Mapping out your approach..."
+- "Analyzing your movement patterns..."
+
+Generate a brief, energetic progress update in Vesper's voice. Keep it under 10 words if possible, ONE sentence max. Use a COMPLETELY DIFFERENT verb and structure than previous updates - never repeat verbs.`;
+
+    let userPrompt = "";
+
+    switch (updateType) {
+      case "session_review":
+        userPrompt = `User just responded: "${userResponse}"
+
+Generate a brief update that EXPLICITLY mentions reviewing conversation history. Be energetic and fun! Use varied language.
+Examples: Reviewing what we've discussed so far... OR Pulling together our conversation highlights... OR Scanning through your previous answers... OR Checking what you've shared... OR Looking back at our chat...`;
+        break;
+
+      case "methodology_search":
+        userPrompt = `User just responded: "${userResponse}"
+
+Generate a brief update that EXPLICITLY mentions searching training methodologies or knowledge. Be vibrant! Mix it up.
+Examples: Searching the training methodology database... OR Looking up relevant training approaches... OR Hunting for the right training philosophies... OR Scanning methodology knowledge... OR Checking training frameworks...`;
+        break;
+
+      case "memory_check":
+        const memoryCount = context.memoryCount || 0;
+        const memoryContext = memoryCount > 0 ? `Found ${memoryCount} memories. ` : "";
+        userPrompt = `User just responded: "${userResponse}"
+Context: ${memoryContext}
+
+Generate a brief update that EXPLICITLY mentions checking memories, goals, or preferences. Be energetic! Vary your structure.
+Examples: Checking your saved goals and preferences... OR Looking up what matters most to you... OR Reviewing your priorities... OR Scanning your fitness memories... OR Checking what you've told me before...`;
+        break;
+
+      case "question_preparation":
+        const questionNumber = context.questionNumber || 0;
+        userPrompt = `User just responded: "${userResponse}"
+Context: Preparing question ${questionNumber}
+
+Generate a brief update that EXPLICITLY mentions preparing the next question. Be action-packed! Use different verbs.
+Examples: Getting the next question ready... OR Preparing question ${questionNumber}... OR Loading up what to ask next... OR Setting up the next question... OR Queuing up question ${questionNumber}...`;
+        break;
+
+      case "response_crafting":
+        userPrompt = `User just responded: "${userResponse}"
+
+Generate a brief update that EXPLICITLY mentions crafting or preparing a response. Be energetic! Mix up your approach.
+Examples: Crafting your personalized response... OR Putting together my answer... OR Building your custom reply... OR Preparing what to say next... OR Working on your response...`;
+        break;
+
+      case "initial_greeting":
+        userPrompt = `User just responded: "${userResponse}"
+
+Generate a brief, energetic greeting that mentions getting started. Be fun! Use variety.
+Examples: Getting started on this... OR Diving into your response... OR Beginning to process this... OR Starting to work on this... OR Jumping into your message...`;
+        break;
+
+      default:
+        userPrompt = `User just responded: "${userResponse}"
+
+Generate a brief, energetic progress update. Be vibrant! Don't repeat patterns.
+Examples: Processing your message... OR Working through this... OR Analyzing what you shared... OR Getting this ready... OR Handling your request...`;
+    }
+
+    const bedrockResponse = await callBedrockApi(
+      systemPrompt,
+      userPrompt,
+      MODEL_IDS.CLAUDE_HAIKU_FULL // Fast, cost-effective
+    );
+
+    // Extract and clean the response (callBedrockApi already returns the text string)
+    let update = bedrockResponse.trim();
+
+    // Remove quotes if AI wrapped the response
+    update = update.replace(/^["']|["']$/g, "");
+
+    // CRITICAL: Remove ALL emojis and symbols (safety net)
+    // This regex removes all emoji characters including symbols, pictographs, and emoticons
+    update = update.replace(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|[\u{1F000}-\u{1F02F}]|[\u{1F0A0}-\u{1F0FF}]|[\u{1F100}-\u{1F64F}]|[\u{1F680}-\u{1F6FF}]|[\u{1F910}-\u{1F96B}]|[\u{1F980}-\u{1F9E0}]/gu, '');
+
+    // Also remove common symbol characters
+    update = update.replace(/[💪🔥🏋️‍♂️⚡️✨🎯🚀👊💯🎉🔥]/g, '');
+
+    // Clean up any double spaces or trailing ellipses from emoji removal
+    update = update.replace(/\s+/g, ' ').trim();
+
+    // Ensure it's brief (max 150 chars)
+    if (update.length > 150) {
+      update = update.substring(0, 147) + "...";
+    }
+
+    return update;
+
+  } catch (error) {
+    console.error(`❌ Error generating ${updateType} update for Vesper:`, error);
+
+    // Fallback messages in Vesper's energetic voice - with variety and specificity
+    const fallbacks: Record<string, string[]> = {
+      session_review: [
+        `Reviewing what we've discussed...`,
+        `Checking our conversation history...`,
+        `Looking back at what you've shared...`
+      ],
+      methodology_search: [
+        `Searching training methodologies...`,
+        `Looking up training approaches...`,
+        `Checking the methodology database...`
+      ],
+      memory_check: [
+        `Checking your saved goals...`,
+        `Looking up your preferences...`,
+        `Reviewing what matters to you...`
+      ],
+      question_preparation: [
+        `Getting the next question ready...`,
+        `Preparing what to ask next...`,
+        `Loading up the next question...`
+      ],
+      response_crafting: [
+        `Crafting your response...`,
+        `Preparing my answer...`,
+        `Building your reply...`
+      ],
+      initial_greeting: [
+        `Getting started on this...`,
+        `Beginning to process...`,
+        `Starting to work on this...`
+      ],
+    };
+
+    // Pick a random fallback from the array for variety
+    const fallbackArray = fallbacks[updateType] || [`Processing your message...`, `Working on this...`, `Handling your request...`];
+    const randomIndex = Math.floor(Math.random() * fallbackArray.length);
+    return fallbackArray[randomIndex];
+  }
+}
+
 // Enhanced helper function to categorize user message type for contextual responses
 export function categorizeUserMessage(userResponse: string): string {
   const message = userResponse.toLowerCase().trim();

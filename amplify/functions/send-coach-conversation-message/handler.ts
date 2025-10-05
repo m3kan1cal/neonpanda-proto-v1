@@ -127,7 +127,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       content: userResponse || '',
       timestamp: new Date(),
       messageType: imageS3Keys && imageS3Keys.length > 0 ? 'text_with_images' : 'text',
-      imageS3Keys: imageS3Keys || undefined,
+      ...(imageS3Keys && imageS3Keys.length > 0 ? { imageS3Keys: imageS3Keys } : {}),
     };
 
     // Calculate conversation context from existing messages
@@ -391,7 +391,7 @@ async function handleStreamingResponse(
       content: userResponse || '',
       timestamp: new Date(messageTimestamp),
       messageType: imageS3Keys && imageS3Keys.length > 0 ? 'text_with_images' : 'text',
-      imageS3Keys: imageS3Keys || undefined,
+      ...(imageS3Keys && imageS3Keys.length > 0 ? { imageS3Keys: imageS3Keys } : {}),
     };
 
     // Start streaming AI response

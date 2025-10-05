@@ -1,5 +1,6 @@
 import { CoachCreatorSession, PersonalityCoherenceCheck, CoachPersonalityTemplate, MethodologyTemplate, SafetyRule, CoachModificationCapabilities, CoachConfig } from './types';
 import { callBedrockApi } from '../api-helpers';
+import { JSON_FORMATTING_INSTRUCTIONS_STANDARD } from '../prompt-helpers';
 import { extractSafetyProfile, extractMethodologyPreferences, extractTrainingFrequency, extractSpecializations, extractGoalTimeline, extractIntensityPreference } from './data-extraction';
 import { generateCoachCreatorSessionSummary } from './session-management';
 import { COACH_CREATOR_QUESTIONS } from './question-management';
@@ -609,7 +610,7 @@ METHODOLOGY SELECTION CRITERIA:
 Generate a JSON configuration following this EXACT structure:
 
 {
-  "coach_id": "user_${session.userId}_coach_main",
+  "coach_id": "user_${session.userId}_coach_${Date.now()}",
   "coach_name": "CreativePlayfulNameBasedOnPersonalityAndUserGoals",
   "coach_description": "5WordsOrLessDescribingCoachSpecialty",
   "selected_personality": {
@@ -692,7 +693,7 @@ CRITICAL REQUIREMENTS:
 5. Safety constraints must be comprehensively integrated based on injuries and limitations
 6. The configuration must be internally consistent and coherent
 
-RESPONSE FORMAT: Return ONLY raw JSON. Do not wrap in markdown code blocks or backticks. Do not include any explanatory text before or after the JSON. Start your response with { and end with }.`;
+${JSON_FORMATTING_INSTRUCTIONS_STANDARD}`;
 
   const coachConfigResponse = await callBedrockApi(
     finalPrompt,
@@ -700,9 +701,35 @@ RESPONSE FORMAT: Return ONLY raw JSON. Do not wrap in markdown code blocks or ba
 who completed ${session.questionHistory.length} questions. Create a coach that perfectly matches my specific needs and goals.`
   );
 
+  // Parse JSON with fallback cleaning and fixing (handles markdown-wrapped JSON)
+  let coachConfig: CoachConfig;
   try {
-    const coachConfig: CoachConfig = JSON.parse(coachConfigResponse);
+    coachConfig = JSON.parse(coachConfigResponse);
+  } catch (parseError) {
+    console.warn('JSON parsing failed, attempting to clean and fix response...');
+    try {
+      const { cleanResponse, fixMalformedJson } = await import('../response-utils');
+      const cleanedResponse = cleanResponse(coachConfigResponse);
+      const fixedResponse = fixMalformedJson(cleanedResponse);
+      coachConfig = JSON.parse(fixedResponse);
+      console.info('Successfully parsed response after cleaning and fixing');
+    } catch (fallbackError) {
+      console.error('Failed to parse coach config response after all attempts:', {
+        originalResponse: coachConfigResponse.substring(0, 500),
+        parseError: parseError instanceof Error ? parseError.message : 'Unknown error',
+        fallbackError: fallbackError instanceof Error ? fallbackError.message : 'Unknown error'
+      });
+      throw new Error(`Invalid JSON response: ${parseError instanceof Error ? parseError.message : 'Parse failed'}`);
+    }
+  }
 
+  // Set created_date programmatically (not from AI response)
+  if (!coachConfig.metadata) {
+    coachConfig.metadata = {} as any;
+  }
+  coachConfig.metadata.created_date = new Date().toISOString();
+
+  try {
     // Validate required fields exist
     if (!coachConfig.coach_name) {
       throw new Error('Missing coach name');

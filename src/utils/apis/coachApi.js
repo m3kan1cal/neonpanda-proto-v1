@@ -150,3 +150,39 @@ export const createCoachFromTemplate = async (userId, templateId) => {
     throw error;
   }
 };
+
+/**
+ * Creates a coach config from a completed coach creator session
+ * @param {string} userId - The user ID
+ * @param {string} sessionId - The session ID
+ * @returns {Promise<Object>} - The API response with confirmation
+ */
+export const createCoachFromSession = async (userId, sessionId) => {
+  const url = `${getApiUrl('')}/users/${userId}/coaches/from-session/${sessionId}`;
+
+  try {
+    const response = await authenticatedFetch(url, {
+      method: 'POST',
+      body: JSON.stringify({}),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('createCoachFromSession: Error response:', errorText);
+      let errorMessage;
+      try {
+        const errorData = JSON.parse(errorText);
+        errorMessage = errorData.error || errorData.message || `API Error: ${response.status}`;
+      } catch (parseError) {
+        errorMessage = `API Error: ${response.status}`;
+      }
+      throw new Error(errorMessage);
+    }
+
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error('createCoachFromSession: API Error:', error);
+    throw error;
+  }
+};

@@ -41,6 +41,18 @@ export function formatChunkEvent(content: string): string {
 }
 
 /**
+ * Creates a formatted SSE contextual event for ephemeral UX feedback
+ * These updates inform users of processing stages but are NOT saved to conversation history
+ */
+export function formatContextualEvent(content: string, stage?: string): string {
+  return formatSseEvent({
+    type: "contextual",
+    content,
+    ...(stage ? { stage } : {})
+  });
+}
+
+/**
  * Creates a formatted SSE progress event for user feedback
  */
 export function formatProgressEvent(progressType: ProgressEventType, message?: string): string {

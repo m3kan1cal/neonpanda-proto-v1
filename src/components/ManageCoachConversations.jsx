@@ -576,7 +576,7 @@ function ManageCoachConversations() {
         <div className="max-w-7xl mx-auto px-8 py-12 min-h-[calc(100vh-5rem)] flex flex-col">
           {/* Header skeleton */}
           <div className="mb-8 text-center">
-            <div className="h-12 bg-synthwave-text-muted/20 rounded animate-pulse w-64 mx-auto mb-6"></div>
+            <div className="h-12 bg-synthwave-text-muted/20 rounded animate-pulse w-[28rem] mx-auto mb-6"></div>
 
             {/* Coach header skeleton */}
             <div className="flex items-center justify-center gap-3 mb-4">

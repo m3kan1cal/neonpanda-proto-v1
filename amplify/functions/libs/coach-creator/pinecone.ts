@@ -59,7 +59,7 @@ export const storeCoachCreatorSummaryInPinecone = async (
 
       // Personality details
       personality_reasoning: coachConfig.selected_personality.selection_reasoning,
-      personality_blending: coachConfig.selected_personality.blending_weights,
+      personality_blending: JSON.stringify(coachConfig.selected_personality.blending_weights),
 
       // Safety and constraints
       injury_considerations: coachConfig.technical_config.injury_considerations,
@@ -72,8 +72,12 @@ export const storeCoachCreatorSummaryInPinecone = async (
 
       // Additional context for retrieval
       outcome: 'coach_created',
-      user_satisfaction: coachConfig.metadata.user_satisfaction,
-      logged_at: new Date().toISOString()
+      logged_at: new Date().toISOString(),
+
+      // Only include user_satisfaction if it has a value (Pinecone doesn't accept null)
+      ...(coachConfig.metadata.user_satisfaction !== null && coachConfig.metadata.user_satisfaction !== undefined
+        ? { user_satisfaction: coachConfig.metadata.user_satisfaction }
+        : {})
     };
 
     // Use centralized storage function

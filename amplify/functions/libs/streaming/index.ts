@@ -46,6 +46,18 @@ export * from './route-patterns';
 // Chunk optimization utilities
 export * from './chunk-optimizer';
 
+// Request validation utilities
+export * from './request-validation';
+
+// Acknowledgement utilities
+export * from './acknowledgements';
+
+// Multimodal helpers (includes S3 image fetching and Bedrock formatting)
+export * from './multimodal-helpers';
+
+// Memory helpers
+export * from './memory-helpers';
+
 // Note: Authentication middleware moved to ../auth/middleware.ts
 
 // Convenience re-exports for common patterns
@@ -53,6 +65,7 @@ export {
   formatSseEvent,
   formatStartEvent,
   formatChunkEvent,
+  formatContextualEvent,
   formatProgressEvent,
   formatErrorEvent,
   formatCompleteEvent,

@@ -107,21 +107,11 @@ export function constructBranchAwareTableName(baseName: string, branchName?: str
  * This handles the case where post-confirmation can't get the table name from CDK due to circular dependency
  */
 export function getTableName(): string {
-  console.info('🔍 getTableName() called with environment:', {
-    DYNAMODB_TABLE_NAME: process.env.DYNAMODB_TABLE_NAME || 'NOT_SET',
-    DYNAMODB_BASE_TABLE_NAME: process.env.DYNAMODB_BASE_TABLE_NAME || 'NOT_SET',
-    BRANCH_NAME: process.env.BRANCH_NAME || 'NOT_SET',
-    AWS_LAMBDA_FUNCTION_NAME: process.env.AWS_LAMBDA_FUNCTION_NAME || 'NOT_SET'
-  });
-
   // Try the standard environment variable first
   const tableName = process.env.DYNAMODB_TABLE_NAME;
   if (tableName) {
-    console.info('✅ Using DYNAMODB_TABLE_NAME:', tableName);
     return tableName;
   }
-
-  console.info('⚠️ DYNAMODB_TABLE_NAME not found, trying fallback construction');
 
   // Fallback for post-confirmation function - construct from base name and branch
   const baseName = process.env.DYNAMODB_BASE_TABLE_NAME;
@@ -129,7 +119,6 @@ export function getTableName(): string {
 
   if (baseName) {
     const constructedName = constructBranchAwareTableName(baseName, branchName);
-    console.info('✅ Constructed table name:', constructedName, 'from base:', baseName, 'branch:', branchName);
     return constructedName;
   }
 

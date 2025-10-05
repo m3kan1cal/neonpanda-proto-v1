@@ -56,6 +56,22 @@ const TypingIndicator = () => (
   </div>
 );
 
+// Contextual update indicator - shows AI processing stages
+const ContextualUpdateIndicator = ({ content, stage }) => {
+  return (
+    <div className="flex items-end gap-2 mb-1">
+      <div className={`flex-shrink-0 ${avatarPatterns.aiSmall}`}>
+        V
+      </div>
+      <div className="px-4 py-2">
+        <span className="font-rajdhani text-base italic animate-pulse text-synthwave-text-secondary/70">
+          {content}
+        </span>
+      </div>
+    </div>
+  );
+};
+
 // Memoized MessageItem component to prevent unnecessary re-renders during streaming
 const MessageItem = memo(({
   message,
@@ -190,7 +206,7 @@ function CoachCreator() {
 
   // UI-specific state
   const [inputMessage, setInputMessage] = useState('');
-  const [redirectCountdown, setRedirectCountdown] = useState(6);
+  const [showCompletionModal, setShowCompletionModal] = useState(false);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
   const agentRef = useRef(null);
@@ -246,17 +262,10 @@ function CoachCreator() {
             // Don't navigate - let the error handling show the AccessDenied message
             // The sessionLoadError state will be set by the catch block
           } else if (type === 'session-complete') {
-            setRedirectCountdown(6);
-            const countdownInterval = setInterval(() => {
-              setRedirectCountdown(prev => {
-                if (prev <= 1) {
-                  clearInterval(countdownInterval);
-                  navigate(`/coaches?userId=${data.userId}`);
-                  return 0;
-                }
-                return prev - 1;
-              });
-            }, 1000);
+            // Delay showing completion modal to give user time to read final AI message
+            setTimeout(() => {
+              setShowCompletionModal(true);
+            }, 6000); // 6 second delay for better UX
           }
         },
         onError: (error) => {
@@ -502,14 +511,14 @@ function CoachCreator() {
                           </div>
                         </div>
 
-                        {/* Timestamp and status skeleton */}
-                        <div className={`flex items-center gap-1 px-2 ${i % 2 === 0 ? 'justify-end mt-1' : 'justify-start'}`}>
-                          <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-12"></div>
-                          <div className="flex gap-1">
-                            <div className="w-3 h-3 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
-                            <div className="w-3 h-3 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
-                          </div>
+                      {/* Timestamp and status skeleton */}
+                      <div className={`flex items-center gap-1 px-2 mt-1 ${i % 2 === 0 ? 'justify-end' : 'justify-start'}`}>
+                        <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-12"></div>
+                        <div className="flex gap-1">
+                          <div className="w-3 h-3 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
+                          <div className="w-3 h-3 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
                         </div>
+                      </div>
                       </div>
                     </div>
                   ))}
@@ -551,8 +560,18 @@ function CoachCreator() {
           <div className="w-full max-w-7xl">
             <div className={`${containerPatterns.mainContent} h-full flex flex-col`}>
               {/* Messages Area - with bottom padding for floating input + progress indicator */}
-              <div className="flex-1 overflow-y-auto overflow-hidden p-6 pb-32 space-y-4 custom-scrollbar">
-                {agentState.messages.map((message) => (
+              <div className="flex-1 overflow-y-auto overflow-hidden p-6 pb-48 space-y-4 custom-scrollbar">
+                {agentState.messages
+                  .filter((message) => {
+                    // Filter out empty streaming placeholder messages
+                    const streaming = isMessageStreaming(message, agentState);
+                    const hasContent = message.content && message.content.trim().length > 0;
+                    const hasStreamingContent = agentState.streamingMessage && agentState.streamingMessage.trim().length > 0;
+
+                    // Show message if: (1) it has content, OR (2) it's streaming and has streaming content
+                    return hasContent || (streaming && hasStreamingContent);
+                  })
+                  .map((message) => (
                   <MessageItem
                     key={message.id}
                     message={message}
@@ -565,10 +584,18 @@ function CoachCreator() {
                   />
                 ))}
 
+                {/* Contextual Update Indicator - Shows AI processing stages (ephemeral) */}
+                {agentState.contextualUpdate && (
+                  <ContextualUpdateIndicator
+                    content={agentState.contextualUpdate.content}
+                    stage={agentState.contextualUpdate.stage}
+                  />
+                )}
+
                 {/* Typing Indicator - Show only when typing but not actively streaming content */}
                 {(() => {
                   const typingState = getTypingState(agentState);
-                  return typingState.showTypingIndicator && (
+                  return typingState.showTypingIndicator && !agentState.contextualUpdate && (
                     <div className="flex items-end gap-2 mb-1">
                       <div className={`flex-shrink-0 ${avatarPatterns.aiSmall}`}>
                         V
@@ -588,42 +615,8 @@ function CoachCreator() {
       </div>
 
 
-      {/* Chat Input Section */}
-      {agentState.isRedirecting ? (
-        /* Redirect Countdown Display */
-        <div className="fixed bottom-0 left-0 right-0 bg-synthwave-bg-card/95 backdrop-blur-lg border-t-2 border-synthwave-neon-pink/30 shadow-lg shadow-synthwave-neon-pink/20 z-50">
-          <div className="max-w-7xl mx-auto px-8 py-6">
-            <div className="text-center space-y-4">
-              <div className="flex items-center justify-center space-x-3">
-                <div className="w-8 h-8 border-2 border-synthwave-neon-pink border-t-transparent rounded-full animate-spin"></div>
-                <div className="text-center">
-                  <p className="font-rajdhani text-lg text-synthwave-neon-pink font-semibold">
-                    Coach creation complete!
-                  </p>
-                  <p className="font-rajdhani text-sm text-synthwave-text-secondary">
-                    Redirecting to your coaches in {redirectCountdown} seconds...
-                  </p>
-                </div>
-              </div>
-
-              {/* Progress bar */}
-              <div className="w-full bg-synthwave-bg-primary/50 rounded-full h-2 border border-synthwave-neon-pink/30">
-                <div
-                  className="bg-synthwave-neon-pink h-full rounded-full transition-all duration-1000 shadow-neon-pink"
-                  style={{ width: `${((6 - redirectCountdown) / 6) * 100}%` }}
-                ></div>
-              </div>
-
-              <button
-                onClick={() => navigate(`/coaches?userId=${userId}`)}
-                className={buttonPatterns.secondary}
-              >
-                Go to Coaches Now
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : (
+      {/* Chat Input Section - always show unless there's an error */}
+      {!agentState.isRedirecting && (
         <>
 
           <ChatInput
@@ -652,7 +645,7 @@ function CoachCreator() {
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[10000]">
-          <div className="p-6 max-w-md w-full mx-4 bg-synthwave-bg-card/95 border border-synthwave-neon-pink/30 rounded-2xl shadow-xl shadow-synthwave-neon-pink/20">
+          <div className={`${containerPatterns.deleteModal} p-6 max-w-md w-full mx-4`}>
             <div className="text-center">
               <h3 className="text-synthwave-neon-pink font-rajdhani text-xl font-bold mb-2">
                 Delete Coach Creator Session
@@ -665,14 +658,14 @@ function CoachCreator() {
                 <button
                   onClick={handleCancelDelete}
                   disabled={isDeleting}
-                  className="flex-1 bg-transparent border-2 border-synthwave-neon-cyan text-synthwave-neon-cyan px-6 py-3 rounded-lg font-rajdhani font-semibold text-sm uppercase tracking-wide cursor-pointer transition-all duration-300 hover:bg-synthwave-neon-cyan hover:text-synthwave-bg-primary hover:shadow-lg hover:shadow-synthwave-neon-cyan/30 hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                  className={`flex-1 ${buttonPatterns.secondary} text-sm disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleConfirmDelete}
                   disabled={isDeleting}
-                  className="flex-1 bg-synthwave-neon-pink text-synthwave-bg-primary px-6 py-3 rounded-lg font-rajdhani font-semibold text-sm uppercase tracking-wide cursor-pointer transition-all duration-300 hover:bg-synthwave-neon-pink/90 hover:shadow-lg hover:shadow-synthwave-neon-pink/30 hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                  className={`flex-1 ${buttonPatterns.primary} text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2`}
                 >
                   {isDeleting ? (
                     <>
@@ -685,6 +678,77 @@ function CoachCreator() {
                       <span>Delete</span>
                     </>
                   )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Completion Modal */}
+      {showCompletionModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[10000]">
+          <div className={`${containerPatterns.successModal} p-6 max-w-md w-full mx-4`}>
+            <div className="text-center">
+              {/* Header with inline icon */}
+              <div className="flex items-center justify-center space-x-3 mb-2">
+                <div className="w-8 h-8 rounded-full bg-synthwave-neon-cyan/10 border-2 border-synthwave-neon-cyan flex items-center justify-center flex-shrink-0">
+                  <svg className="w-4 h-4 text-synthwave-neon-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <h3 className="text-synthwave-neon-cyan font-rajdhani text-xl font-bold">
+                  Coach Creator Session Complete!
+                </h3>
+              </div>
+
+              <p className="font-rajdhani text-base text-synthwave-text-secondary mb-6">
+                Great work! W're now crafting a personalized coach tailored specifically to your journey.
+              </p>
+
+              {/* Status Information - Enhanced Glassmorphism (matches Theme.jsx Option 2) */}
+              <div className={`${containerPatterns.subcontainerEnhanced} mb-6 text-left`}>
+                <div className="space-y-2">
+                  <div className="flex items-start space-x-2">
+                    <svg className="w-5 h-5 text-synthwave-neon-cyan flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <p className="font-rajdhani text-sm text-synthwave-text-secondary">
+                      We're now building your custom AI coach configuration
+                    </p>
+                  </div>
+                  <div className="flex items-start space-x-2">
+                    <svg className="w-5 h-5 text-synthwave-neon-pink flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <p className="font-rajdhani text-sm text-synthwave-text-secondary">
+                      This usually takes 2-5 minutes to complete
+                    </p>
+                  </div>
+                  <div className="flex items-start space-x-2">
+                    <svg className="w-5 h-5 text-synthwave-neon-purple flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <p className="font-rajdhani text-sm text-synthwave-text-secondary">
+                      You can monitor the build progress on your Coaches page
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex space-x-4">
+                <button
+                  onClick={() => setShowCompletionModal(false)}
+                  className={`flex-1 ${buttonPatterns.secondary} text-sm`}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => navigate(`/coaches?userId=${userId}`)}
+                  className={`flex-1 ${buttonPatterns.primary} text-sm`}
+                >
+                  Go to Coaches
                 </button>
               </div>
             </div>

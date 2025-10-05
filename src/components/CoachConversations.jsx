@@ -149,6 +149,22 @@ const TypingIndicator = () => (
   </div>
 );
 
+// Contextual update indicator - shows AI processing stages
+const ContextualUpdateIndicator = ({ content, stage, coachName }) => {
+  return (
+    <div className="flex items-end gap-2 mb-1">
+      <div className={`flex-shrink-0 ${avatarPatterns.aiSmall}`}>
+        {coachName?.charAt(0) || "C"}
+      </div>
+      <div className="px-4 py-2">
+        <span className="font-rajdhani text-base italic animate-pulse text-synthwave-text-secondary/70">
+          {content}
+        </span>
+      </div>
+    </div>
+  );
+};
+
 // Memoized MessageItem component to prevent unnecessary re-renders
 const MessageItem = memo(({
   message,
@@ -393,6 +409,13 @@ function CoachConversations() {
       streamingMessageId: null,
     });
 
+  // Polling state for newly created conversations
+  const [isPollingForMessages, setIsPollingForMessages] = useState(false);
+  const pollingIntervalRef = useRef(null);
+  const pollingTimeoutRef = useRef(null);
+  const pollingConversationIdRef = useRef(null); // Track which conversation is being polled
+  const hasAttemptedPollingRef = useRef(null); // Track if we've tried to start polling for this conversation
+
   // Debug: Track component re-renders during streaming
 
 
@@ -474,6 +497,90 @@ function CoachConversations() {
       }
     };
   }, [userId, coachId, conversationId, navigate]);
+
+  // Effect 1: Reset polling state when conversationId changes
+  useEffect(() => {
+    hasAttemptedPollingRef.current = null;
+    pollingConversationIdRef.current = null;
+
+    // Cleanup any existing polling from previous conversation
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+      pollingIntervalRef.current = null;
+    }
+    if (pollingTimeoutRef.current) {
+      clearTimeout(pollingTimeoutRef.current);
+      pollingTimeoutRef.current = null;
+    }
+    setIsPollingForMessages(false);
+  }, [conversationId]);
+
+  // Effect 2: Start polling when conversation loads (only once per conversationId)
+  useEffect(() => {
+    // Skip if we've already attempted polling for this conversation
+    if (hasAttemptedPollingRef.current === conversationId) {
+      return;
+    }
+
+    // Skip if we don't have the basic requirements
+    if (!userId || !coachId || !conversationId) return;
+    if (!coachConversationAgentState.conversation) return;
+    if (coachConversationAgentState.messages.length > 0) return;
+
+    // Mark that we've attempted polling for this conversation
+    hasAttemptedPollingRef.current = conversationId;
+
+    const startTime = Date.now();
+    console.info(`🔄 [${new Date().toLocaleTimeString()}.${Date.now() % 1000}] Starting polling for initial messages in conversation: ${conversationId}`);
+
+    // Capture values in closure
+    const currentConversationId = conversationId;
+    const currentUserId = userId;
+    const currentCoachId = coachId;
+
+    // Track which conversation we're polling
+    pollingConversationIdRef.current = conversationId;
+
+    // Set UI flag to keep skeleton visible
+    setIsPollingForMessages(true);
+
+    // Poll every 3 seconds
+    const intervalId = setInterval(() => {
+      const elapsedSeconds = ((Date.now() - startTime) / 1000).toFixed(1);
+      console.info(`🔄 [${new Date().toLocaleTimeString()}.${Date.now() % 1000}] Polling for messages... (${elapsedSeconds}s elapsed)`);
+      if (agentRef.current) {
+        agentRef.current.loadExistingConversation(currentUserId, currentCoachId, currentConversationId);
+      }
+    }, 3000);
+    pollingIntervalRef.current = intervalId;
+
+    // Stop polling after 90 seconds
+    const timeoutId = setTimeout(() => {
+      console.info(`⏱️ [${new Date().toLocaleTimeString()}.${Date.now() % 1000}] Polling timeout reached (90s), stopping polling`);
+      setIsPollingForMessages(false);
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
+        pollingConversationIdRef.current = null;
+      }
+    }, 90000);
+    pollingTimeoutRef.current = timeoutId;
+  }, [conversationId, userId, coachId, coachConversationAgentState.conversation]); // React to conversation loading
+
+  // Effect 3: Stop polling when messages arrive
+  useEffect(() => {
+    if (coachConversationAgentState.messages.length > 0 && pollingIntervalRef.current) {
+      console.info(`✅ [${new Date().toLocaleTimeString()}.${Date.now() % 1000}] Messages loaded (${coachConversationAgentState.messages.length} messages), stopping polling`);
+      setIsPollingForMessages(false);
+      clearInterval(pollingIntervalRef.current);
+      pollingIntervalRef.current = null;
+      pollingConversationIdRef.current = null;
+      if (pollingTimeoutRef.current) {
+        clearTimeout(pollingTimeoutRef.current);
+        pollingTimeoutRef.current = null;
+      }
+    }
+  }, [coachConversationAgentState.messages.length]);
 
   const scrollToBottom = () => {
     if (messagesEndRef.current) {
@@ -667,7 +774,15 @@ function CoachConversations() {
 
   // Message submission handler for ChatInput component
   const handleMessageSubmit = async (messageContent, imageS3Keys = []) => {
-    if (!agentRef.current) return;
+    // Prevent double execution from React StrictMode or duplicate events
+    if (isSendingMessage.current || !agentRef.current) return;
+
+    // Validate input - require either text or images
+    if (!messageContent?.trim() && (!imageS3Keys || imageS3Keys.length === 0)) {
+      return;
+    }
+
+    isSendingMessage.current = true;
 
     try {
       await sendMessageWithStreaming(agentRef.current, messageContent, imageS3Keys, {
@@ -682,6 +797,9 @@ function CoachConversations() {
     } catch (error) {
       console.error("Error sending message:", error);
       handleStreamingError(error, { error: showError });
+    } finally {
+      // Reset flag after message is sent (success or failure)
+      isSendingMessage.current = false;
     }
   };
 
@@ -816,6 +934,7 @@ function CoachConversations() {
     !isDeleting &&
     (isValidatingUserId ||
       coachConversationAgentState.isLoadingItem ||
+      isPollingForMessages ||
       !coachConversationAgentState.coach ||
       !coachConversationAgentState.conversation ||
       (coachConversationAgentState.conversation &&
@@ -827,7 +946,7 @@ function CoachConversations() {
         <div className={`${layoutPatterns.contentWrapper} min-h-[calc(100vh-5rem)] flex flex-col`}>
           {/* Header skeleton */}
           <div className="mb-8 text-center">
-            <div className="h-12 bg-synthwave-text-muted/20 rounded animate-pulse w-64 mx-auto mb-6"></div>
+            <div className="h-12 bg-synthwave-text-muted/20 rounded animate-pulse w-[28rem] mx-auto mb-6"></div>
             <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-96 mx-auto mb-4"></div>
             <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-80 mx-auto mb-4"></div>
             <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-48 mx-auto"></div>
@@ -1001,9 +1120,18 @@ function CoachConversations() {
           <div className="w-full max-w-7xl">
             <div className={`${containerPatterns.mainContent} h-full flex flex-col`}>
               {/* Messages Area - with bottom padding for floating input */}
-              <div className="flex-1 overflow-y-auto overflow-hidden p-6 pb-32 space-y-4">
+              <div className="flex-1 overflow-y-auto overflow-hidden p-6 pb-48 space-y-4">
                 {coachConversationAgentState.messages
                   .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp)) // Ensure chronological order
+                  .filter((message) => {
+                    // Filter out empty streaming placeholder messages
+                    const streaming = isMessageStreaming(message, coachConversationAgentState);
+                    const hasContent = message.content && message.content.trim().length > 0;
+                    const hasStreamingContent = coachConversationAgentState.streamingMessage && coachConversationAgentState.streamingMessage.trim().length > 0;
+
+                    // Show message if: (1) it has content, OR (2) it's streaming and has streaming content
+                    return hasContent || (streaming && hasStreamingContent);
+                  })
                   .map((message, index) => (
                   <MessageItem
                     key={message.id}
@@ -1018,8 +1146,17 @@ function CoachConversations() {
                   />
                 ))}
 
+                {/* Contextual Update Indicator - Shows AI processing stages (ephemeral) */}
+                {coachConversationAgentState.contextualUpdate && (
+                  <ContextualUpdateIndicator
+                    content={coachConversationAgentState.contextualUpdate.content}
+                    stage={coachConversationAgentState.contextualUpdate.stage}
+                    coachName={coachConversationAgentState.coach?.name}
+                  />
+                )}
+
                 {/* Typing Indicator - Show only when typing but not actively streaming content */}
-                {typingState.showTypingIndicator && (
+                {typingState.showTypingIndicator && !coachConversationAgentState.contextualUpdate && (
                     <div className="flex items-end gap-2 mb-1">
                       <div className={`flex-shrink-0 ${avatarPatterns.aiSmall}`}>
                         {coachConversationAgentState.coach?.name?.charAt(0) || "C"}

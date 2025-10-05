@@ -7,6 +7,7 @@
 
 import { QuickWorkoutExtraction } from './types';
 import { callBedrockApi, MODEL_IDS } from '../api-helpers';
+import { JSON_FORMATTING_INSTRUCTIONS_STANDARD } from '../prompt-helpers';
 
 /**
  * Supported workout slash commands
@@ -134,7 +135,9 @@ Analyze this message to determine if it describes a COMPLETED WORKOUT that shoul
 
 MESSAGE: "${message}"
 
-Return ONLY a JSON response in this exact format:
+${JSON_FORMATTING_INSTRUCTIONS_STANDARD}
+
+REQUIRED JSON STRUCTURE:
 {
   "isWorkoutLog": boolean,
   "confidence": number,
@@ -239,7 +242,7 @@ CRITICAL: When in doubt, DO NOT classify as workout logging. It's better to miss
       messagePreview: message.substring(0, 100)
     });
 
-    const response = await callBedrockApi(detectionPrompt, message, MODEL_IDS.NOVA_MICRO);
+    const response = await callBedrockApi(detectionPrompt, message, MODEL_IDS.CLAUDE_HAIKU_FULL);
 
     console.info('🔍 Received response from AI workout detection:', {
       responseLength: response.length,
@@ -281,7 +284,9 @@ Extract key workout information from this message for immediate coach feedback.
 
 MESSAGE: "${message}"
 
-Return ONLY a JSON response in this exact format:
+${JSON_FORMATTING_INSTRUCTIONS_STANDARD}
+
+REQUIRED JSON STRUCTURE:
 {
   "workoutName": "string|null",
   "discipline": "crossfit|powerlifting|running|bodybuilding|hiit|general|null",
@@ -316,7 +321,7 @@ Examples:
 - "Crushed 5 rounds of that brutal hotel workout" → roundsDetected: "5", intensityDetected: "brutal", locationContext: "hotel"
 - "Deadlifted 315 for 3 reps, new PR!" → discipline: "powerlifting", weightDetected: "315", repCountDetected: "3", intensityDetected: "PR"`;
 
-    const response = await callBedrockApi(extractionPrompt, message, MODEL_IDS.NOVA_MICRO);
+    const response = await callBedrockApi(extractionPrompt, message, MODEL_IDS.CLAUDE_HAIKU_FULL);
   const result = JSON.parse(response);
 
   console.info('AI quick workout extraction:', {

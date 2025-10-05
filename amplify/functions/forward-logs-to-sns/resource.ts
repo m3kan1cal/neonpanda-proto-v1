@@ -5,5 +5,5 @@ export const forwardLogsToSns = defineFunction({
   name: "forward-logs-to-sns",
   entry: "./handler.ts",
   timeoutSeconds: 30,
-  memoryMB: 1024
+  memoryMB: 1024,
 });

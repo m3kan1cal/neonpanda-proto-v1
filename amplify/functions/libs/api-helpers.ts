@@ -959,32 +959,28 @@ const queryUserNamespace = async (
 };
 
 /**
- * Standardized methodology query function with reranking support
- * Replaces the complex getEnhancedMethodologyContext approach
+ * Standardized methodology query function
+ * Returns raw Pinecone results - reranking happens in processAndFilterResults
  */
 const queryMethodologyNamespace = async (
   userMessage: string,
   userId: string,
-  options: { topK: number; enableReranking?: boolean }
+  options: { topK: number }
 ): Promise<any[]> => {
   try {
-    const { topK, enableReranking = RERANKING_CONFIG.enabled } = options;
+    const { topK } = options;
     const { index } = await getPineconeClient();
 
     console.info("🔍 Querying methodology namespace:", {
       userMessage: userMessage.substring(0, 100),
       topK,
-      rerankingEnabled: enableReranking,
       namespace: "methodology",
     });
-
-    // Use higher topK if reranking is enabled
-    const queryTopK = enableReranking ? Math.max(topK * 2, 20) : topK;
 
     const searchQuery = {
       query: {
         inputs: { text: userMessage },
-        topK: queryTopK,
+        topK: topK,
       },
     };
 
@@ -998,7 +994,7 @@ const queryMethodologyNamespace = async (
     }
 
     // Normalize all methodology matches - extract record data and combine with score
-    let matches = response.result.hits
+    const matches = response.result.hits
       .map((hit: any) => {
         // Handle the actual Pinecone response structure
         return {
@@ -1010,32 +1006,9 @@ const queryMethodologyNamespace = async (
       })
       .map((match) => normalizeMatch(match, "methodology"));
 
-    // Apply reranking if enabled and we have sufficient results
-    if (enableReranking && matches.length > 1) {
-      try {
-        console.info("🔄 Applying reranking to methodology results:", {
-          originalCount: matches.length,
-          targetCount: topK,
-        });
-
-        matches = await rerankPineconeResults(userMessage, matches, {
-          topN: topK,
-        });
-      } catch (error) {
-        console.error(
-          "❌ Methodology reranking failed, using original results:",
-          error
-        );
-        matches = matches.slice(0, topK);
-      }
-    } else {
-      matches = matches.slice(0, topK);
-    }
-
-    console.info("✅ Standardized methodology query successful:", {
+    console.info("✅ Methodology query successful:", {
       originalHits: response.result.hits.length,
-      finalMatches: matches.length,
-      wasReranked: enableReranking && response.result.hits.length > 1,
+      matches: matches.length,
     });
 
     return matches;
@@ -1052,8 +1025,8 @@ const RERANKING_CONFIG = {
   initialTopK: 30, // Higher initial query results for reranking
   finalTopN: 8, // Final number of reranked results
   truncate: "END", // How to handle long documents
-  minScore: 0.5, // Lower threshold since reranking improves relevance
-  fallbackMinScore: 0.7, // Fallback minScore when reranking is disabled
+  minScore: 0.3, // Lower threshold since reranking improves relevance
+  fallbackMinScore: 0.5, // Fallback minScore when reranking is disabled
 };
 
 /**
@@ -1404,7 +1377,7 @@ export const queryPineconeContext = async (
     // Determine query sizes based on reranking
     const queryTopK = enableReranking ? RERANKING_CONFIG.initialTopK : topK;
 
-    // Execute queries in parallel with reranking support
+    // Execute queries in parallel
     const [userMatches, methodologyMatches] = await Promise.all([
       queryUserNamespace(index, userId, userMessage, {
         topK: queryTopK,
@@ -1415,7 +1388,6 @@ export const queryPineconeContext = async (
       includeMethodology
         ? queryMethodologyNamespace(userMessage, userId, {
             topK: queryTopK,
-            enableReranking,
           })
         : Promise.resolve([]),
     ]);

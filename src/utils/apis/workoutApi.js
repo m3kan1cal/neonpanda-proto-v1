@@ -52,17 +52,10 @@ export const getWorkouts = async (userId, options = {}) => {
   const queryString = params.toString();
   const url = `${getApiUrl("")}/users/${userId}/workouts${queryString ? "?" + queryString : ""}`;
 
-  console.info("getWorkouts: Making API call to:", url);
-  console.info("getWorkouts: userId:", userId);
-  console.info("getWorkouts: options:", options);
-
   try {
     const response = await authenticatedFetch(url, {
       method: "GET",
     });
-
-    console.info("getWorkouts: Response status:", response.status);
-    console.info("getWorkouts: Response ok:", response.ok);
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -83,7 +76,6 @@ export const getWorkouts = async (userId, options = {}) => {
     }
 
     const result = await response.json();
-    console.info("getWorkouts: Workouts loaded:", result);
     return result;
   } catch (error) {
     console.error("getWorkouts: API Error:", error);
@@ -100,14 +92,10 @@ export const getWorkouts = async (userId, options = {}) => {
 export const getWorkout = async (userId, workoutId) => {
   const url = `${getApiUrl("")}/users/${userId}/workouts/${workoutId}`;
 
-  console.info("getWorkout: Making API call to:", url);
-
   try {
     const response = await authenticatedFetch(url, {
       method: "GET",
     });
-
-    console.info("getWorkout: Response status:", response.status);
 
     if (!response.ok) {
       if (response.status === 404) {
@@ -132,7 +120,6 @@ export const getWorkout = async (userId, workoutId) => {
     }
 
     const result = await response.json();
-    console.info("getWorkout: Workout loaded:", result);
     return result;
   } catch (error) {
     console.error("getWorkout: API Error:", error);
@@ -155,16 +142,11 @@ export const getWorkout = async (userId, workoutId) => {
 export const updateWorkout = async (userId, workoutId, updates) => {
   const url = `${getApiUrl("")}/users/${userId}/workouts/${workoutId}`;
 
-  console.info("updateWorkout: Making API call to:", url);
-  console.info("updateWorkout: updates:", updates);
-
   try {
     const response = await authenticatedFetch(url, {
       method: "PUT",
       body: JSON.stringify(updates),
     });
-
-    console.info("updateWorkout: Response status:", response.status);
 
     if (!response.ok) {
       if (response.status === 404) {
@@ -192,7 +174,6 @@ export const updateWorkout = async (userId, workoutId, updates) => {
     }
 
     const result = await response.json();
-    console.info("updateWorkout: Workout updated:", result);
     return result;
   } catch (error) {
     console.error("updateWorkout: API Error:", error);
@@ -252,11 +233,6 @@ export const getWorkoutsByDiscipline = async (
 
 // Get workout sessions count for a user
 export async function getWorkoutsCount(userId, options = {}) {
-  console.info(
-    "Making API call to get workout sessions count for user:",
-    userId
-  );
-
   const queryParams = new URLSearchParams();
 
   // Add optional filters
@@ -274,14 +250,10 @@ export async function getWorkoutsCount(userId, options = {}) {
 
   const url = `${getApiUrl("")}${path}`;
 
-  console.info("getWorkoutsCount: Making API call to:", url);
-
   try {
     const response = await authenticatedFetch(url, {
       method: "GET",
     });
-
-    console.info("getWorkoutsCount: Response status:", response.status);
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -302,10 +274,6 @@ export async function getWorkoutsCount(userId, options = {}) {
     }
 
     const data = await response.json();
-    console.info(
-      "getWorkoutsCount: Successfully retrieved workout sessions count:",
-      data
-    );
     return data;
   } catch (error) {
     console.error("getWorkoutsCount: API Error:", error);
@@ -327,12 +295,6 @@ export async function getWorkoutsCount(userId, options = {}) {
  * @returns {Promise<number>} - The number of unique training days
  */
 export const getTrainingDaysCount = async (userId, options = {}) => {
-  console.info(
-    "getTrainingDaysCount: Calculating training days for user:",
-    userId
-  );
-  console.info("getTrainingDaysCount: options:", options);
-
   try {
     // Get all workouts with the specified filters, but no limit to ensure we get all data
     const result = await getWorkouts(userId, {
@@ -343,7 +305,6 @@ export const getTrainingDaysCount = async (userId, options = {}) => {
     });
 
     const workouts = result.workouts || [];
-    console.info("getTrainingDaysCount: Retrieved workouts:", workouts.length);
 
     if (workouts.length === 0) {
       return 0;
@@ -370,15 +331,6 @@ export const getTrainingDaysCount = async (userId, options = {}) => {
     });
 
     const trainingDaysCount = uniqueDates.size;
-    console.info(
-      "getTrainingDaysCount: Unique training days found:",
-      trainingDaysCount
-    );
-    console.info(
-      "getTrainingDaysCount: Unique dates:",
-      Array.from(uniqueDates).sort()
-    );
-
     return trainingDaysCount;
   } catch (error) {
     console.error(
@@ -409,16 +361,11 @@ export const createWorkout = async (userId, workoutContent, options = {}) => {
     slashCommand: "/log-workout",
   };
 
-  console.info("createWorkout: Making API call to:", url);
-  console.info("createWorkout: requestBody:", requestBody);
-
   try {
     const response = await authenticatedFetch(url, {
       method: "POST",
       body: JSON.stringify(requestBody),
     });
-
-    console.info("createWorkout: Response status:", response.status);
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -439,7 +386,6 @@ export const createWorkout = async (userId, workoutContent, options = {}) => {
     }
 
     const result = await response.json();
-    console.info("createWorkout: Workout creation initiated:", result);
     return result;
   } catch (error) {
     console.error("createWorkout: API Error:", error);
@@ -456,14 +402,10 @@ export const createWorkout = async (userId, workoutContent, options = {}) => {
 export const deleteWorkout = async (userId, workoutId) => {
   const url = `${getApiUrl("")}/users/${userId}/workouts/${workoutId}`;
 
-  console.info("deleteWorkout: Making API call to:", url);
-
   try {
     const response = await authenticatedFetch(url, {
       method: "DELETE",
     });
-
-    console.info("deleteWorkout: Response status:", response.status);
 
     if (!response.ok) {
       if (response.status === 404) {
@@ -488,7 +430,6 @@ export const deleteWorkout = async (userId, workoutId) => {
     }
 
     const result = await response.json();
-    console.info("deleteWorkout: Workout deleted:", result);
     return result;
   } catch (error) {
     console.error("deleteWorkout: API Error:", error);

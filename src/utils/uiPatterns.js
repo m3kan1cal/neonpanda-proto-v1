@@ -85,7 +85,7 @@ export const inputPatterns = {
   chatInput: "w-full px-4 py-3 pr-12 bg-synthwave-bg-primary/50 border-2 border-synthwave-neon-pink/30 rounded-2xl text-synthwave-text-primary font-rajdhani outline-none ring-0 focus:outline-none focus:ring-0 focus-visible:outline-none focus:border-synthwave-neon-pink focus:px-4 focus:py-3 hover:border-synthwave-neon-pink/50 transition-colors resize-none placeholder-synthwave-text-muted synthwave-scrollbar max-h-[120px] overflow-y-auto min-h-[48px] box-border",
 
   // Command palette input field - same styling but without right padding
-  commandInput: "w-full px-4 py-3 bg-synthwave-bg-primary/50 border-2 border-synthwave-neon-pink/30 rounded-2xl text-synthwave-text-primary font-rajdhani outline-none ring-0 focus:outline-none focus:ring-0 focus-visible:outline-none focus:border-synthwave-neon-pink hover:border-synthwave-neon-pink/50 transition-all resize-none placeholder-synthwave-text-muted synthwave-scrollbar max-h-[120px] overflow-y-auto min-h-[48px]",
+  commandInput: "w-full px-4 py-3 bg-synthwave-bg-primary/50 border-2 border-synthwave-neon-pink/30 rounded-2xl text-synthwave-text-primary font-rajdhani outline-none ring-0 focus:outline-none focus:ring-0 focus-visible:outline-none focus:border-synthwave-neon-pink focus:px-4 focus:py-3 hover:border-synthwave-neon-pink/50 transition-colors resize-none placeholder-synthwave-text-muted synthwave-scrollbar max-h-[120px] overflow-y-auto min-h-[48px] box-border",
 
   // Error state input - enhanced for autocomplete stability
   error: "w-full px-4 py-3 bg-synthwave-bg-primary/30 backdrop-blur-sm border border-red-400 rounded-xl text-synthwave-text-primary placeholder-synthwave-text-muted font-rajdhani transition-all duration-300 outline-none focus:outline-none focus:border-red-500 focus:bg-synthwave-bg-primary/50 focus:ring-2 focus:ring-red-400/20 focus:ring-offset-0 focus:ring-offset-transparent focus:shadow-none min-h-[48px] [-webkit-appearance:none] [appearance:none] [&:-webkit-autofill]:!px-4 [&:-webkit-autofill]:!py-3 [&:-webkit-autofill]:!min-h-[48px] [&:-webkit-autofill]:!border-[1px] [&:-webkit-autofill]:!border-solid [&:-webkit-autofill]:!bg-synthwave-bg-primary/30 [&:-webkit-autofill]:!border-red-400 [&:-webkit-autofill]:!rounded-xl [&:-webkit-autofill]:!shadow-none [&:-webkit-autofill]:!outline-none [&:-webkit-autofill]:!box-shadow-[0_0_0_1000px_rgba(15,23,42,0.47)_inset] [&:-webkit-autofill:hover]:!px-4 [&:-webkit-autofill:hover]:!py-3 [&:-webkit-autofill:hover]:!min-h-[48px] [&:-webkit-autofill:hover]:!border-[1px] [&:-webkit-autofill:hover]:!border-solid [&:-webkit-autofill:hover]:!bg-synthwave-bg-primary/30 [&:-webkit-autofill:hover]:!border-red-400 [&:-webkit-autofill:hover]:!rounded-xl [&:-webkit-autofill:hover]:!shadow-none [&:-webkit-autofill:hover]:!outline-none [&:-webkit-autofill:hover]:!box-shadow-[0_0_0_1000px_rgba(15,23,42,0.47)_inset] [&:-webkit-autofill:focus]:!px-4 [&:-webkit-autofill:focus]:!py-3 [&:-webkit-autofill:focus]:!min-h-[48px] [&:-webkit-autofill:focus]:!border-[1px] [&:-webkit-autofill:focus]:!border-solid [&:-webkit-autofill:focus]:!bg-synthwave-bg-primary/50 [&:-webkit-autofill:focus]:!border-red-500 [&:-webkit-autofill:focus]:!rounded-xl [&:-webkit-autofill:focus]:!shadow-none [&:-webkit-autofill:focus]:!outline-none [&:-webkit-autofill:focus]:!box-shadow-[0_0_0_1000px_rgba(15,23,42,0.5)_inset]",
@@ -162,8 +162,18 @@ export const containerPatterns = {
   // Bold Gradient - Multi-color neon gradient container (from Theme.jsx)
   boldGradient: "bg-gradient-to-br from-synthwave-neon-pink/20 via-synthwave-neon-purple/10 to-synthwave-neon-cyan/20 border border-synthwave-neon-cyan/30 rounded-xl p-6",
 
-  // Dashed border container for create/add actions
-  dashedCard: "bg-synthwave-bg-card/20 backdrop-blur-sm border-2 border-dashed border-synthwave-neon-pink/30 rounded-2xl shadow-lg shadow-synthwave-neon-pink/10 transition-[background-color,border-color,box-shadow,transform] duration-0 hover:transition-[background-color,border-color,box-shadow,transform] hover:duration-300 hover:bg-synthwave-bg-card/40 hover:border-synthwave-neon-pink/50 hover:shadow-xl hover:shadow-synthwave-neon-pink/20 hover:-translate-y-1",
+  // Dashed border containers for create/add actions and in-progress states
+  // Base pink variant - for create actions and failed states
+  dashedCard: "bg-synthwave-bg-card/20 backdrop-blur-sm border-2 border-dashed border-synthwave-neon-pink/30 rounded-2xl shadow-lg shadow-synthwave-neon-pink/10 transition-all duration-300 hover:bg-synthwave-bg-card/40 hover:border-synthwave-neon-pink/50 hover:shadow-xl hover:shadow-synthwave-neon-pink/20 hover:-translate-y-1",
+
+  // Pink variant for failed states - higher opacity borders for emphasis
+  dashedCardPinkBold: "bg-synthwave-bg-card/20 backdrop-blur-sm border-2 border-dashed border-synthwave-neon-pink/50 rounded-2xl shadow-lg shadow-synthwave-neon-pink/10 transition-all duration-300 hover:bg-synthwave-bg-card/30 hover:border-synthwave-neon-pink/70 hover:shadow-xl hover:shadow-synthwave-neon-pink/20 hover:-translate-y-1",
+
+  // Cyan variant for building states
+  dashedCardCyan: "bg-synthwave-bg-card/20 backdrop-blur-sm border-2 border-dashed border-synthwave-neon-cyan/50 rounded-2xl shadow-lg shadow-synthwave-neon-cyan/10 transition-all duration-300 hover:bg-synthwave-bg-card/30 hover:border-synthwave-neon-cyan/70 hover:shadow-xl hover:shadow-synthwave-neon-cyan/20 hover:-translate-y-1",
+
+  // Purple variant for incomplete states
+  dashedCardPurple: "bg-synthwave-bg-card/20 backdrop-blur-sm border-2 border-dashed border-synthwave-neon-purple/30 rounded-2xl shadow-lg shadow-synthwave-neon-purple/10 transition-all duration-300 hover:bg-synthwave-bg-card/40 hover:border-synthwave-neon-purple/50 hover:shadow-xl hover:shadow-synthwave-neon-purple/20 hover:-translate-y-1",
 
   // Content-focused card without headers (for memories, notes, messages)
   contentCard: "bg-synthwave-bg-card/60 border border-synthwave-neon-cyan/20 rounded-2xl p-6 shadow-xl shadow-synthwave-neon-cyan/20 hover:border-synthwave-neon-cyan/40 hover:bg-synthwave-bg-card/40 transition-all duration-300 hover:-translate-y-1",
@@ -202,11 +212,17 @@ export const containerPatterns = {
   // Modern delete modal container - 2025 glassmorphism with red destructive theming
   deleteModal: "bg-gradient-to-br from-red-500/10 via-synthwave-bg-card/40 to-red-400/10 backdrop-blur-xl border border-red-500/30 rounded-2xl shadow-2xl shadow-red-500/20 transition-all duration-300",
 
+  // Modern success modal container - 2025 glassmorphism with cyan success theming
+  successModal: "bg-gradient-to-br from-synthwave-neon-cyan/10 via-synthwave-bg-card/40 to-synthwave-neon-cyan/10 backdrop-blur-xl border border-synthwave-neon-cyan/30 rounded-2xl shadow-2xl shadow-synthwave-neon-cyan/20 transition-all duration-300",
+
   // Minimal Card - Exact "Minimal Card" from Theme.jsx with colored dots and hover effects
   cardMinimal: "bg-synthwave-bg-card/20 hover:bg-synthwave-bg-card/40 border-0 rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-synthwave-neon-pink/10",
 
   // Auth Form Container - Opaque glassmorphism for scrollable auth forms (prevents white bleed on mobile)
-  authForm: "bg-gradient-to-br from-synthwave-bg-card/90 to-synthwave-bg-card/80 backdrop-blur-xl border border-synthwave-neon-cyan/15 rounded-2xl shadow-2xl shadow-synthwave-neon-cyan/10 hover:from-synthwave-bg-card/95 hover:to-synthwave-bg-card/85 hover:border-synthwave-neon-cyan/20 hover:shadow-2xl hover:shadow-synthwave-neon-cyan/15 transition-all duration-300"
+  authForm: "bg-gradient-to-br from-synthwave-bg-card/90 to-synthwave-bg-card/80 backdrop-blur-xl border border-synthwave-neon-cyan/15 rounded-2xl shadow-2xl shadow-synthwave-neon-cyan/10 hover:from-synthwave-bg-card/95 hover:to-synthwave-bg-card/85 hover:border-synthwave-neon-cyan/20 hover:shadow-2xl hover:shadow-synthwave-neon-cyan/15 transition-all duration-300",
+
+  // Subcontainer Enhanced - Matches Theme.jsx "Option 2: Enhanced Glassmorphism" subcontainer (no border)
+  subcontainerEnhanced: "bg-synthwave-bg-primary/25 backdrop-blur-sm rounded-xl p-3"
 };
 
 export const toastPatterns = {
@@ -443,6 +459,10 @@ export const injectAutofillStyles = () => {
 // Containers:
 // <div className={containerPatterns.cardMedium}>...</div>
 // <div className={containerPatterns.authForm}>Auth form content</div>
+// <div className={containerPatterns.dashedCard}>Create action card</div>
+// <div className={containerPatterns.dashedCardPinkBold}>Failed state card</div>
+// <div className={containerPatterns.dashedCardCyan}>Building state card</div>
+// <div className={containerPatterns.dashedCardPurple}>Incomplete state card</div>
 // <div className={toastPatterns.success}>Success message</div>
 //
 // Typography:

@@ -1,558 +1,403 @@
 import { Question, UserContext, SophisticationLevel } from "./types";
 
+// ============================================================================
+// NEONPANDA COACH CREATOR QUESTIONS - BRAND-ALIGNED V2
+// ============================================================================
+// Goal: 10-15 minute conversation with electric energy and playful warmth
+// Brand: "Where AI Meets High Fives" - vibrant, approachable, action-packed
+// Tone: Make them smile while gathering what matters
+// ============================================================================
 
-// Question Configuration - Backend only
 export const COACH_CREATOR_QUESTIONS: Question[] = [
   {
     id: 1,
-    topic: "goal_discovery",
+    topic: "goals_and_timeline",
     required: true,
     versions: {
-      UNKNOWN: "What brings you here? Tell me about your main fitness goals.",
-      BEGINNER: "What brings you here? Tell me about your main fitness goals.",
-      INTERMEDIATE: "What brings you here? Tell me about your main fitness goals.",
-      ADVANCED: "What brings you here? Tell me about your main fitness goals."
+      UNKNOWN: "Let's start with the fun part - what are you chasing? What brings you here and what do you want to accomplish?",
+      BEGINNER: "What are you hoping to achieve? Whether it's feeling stronger, moving better, or crushing a specific goal - tell me what you're after.",
+      INTERMEDIATE: "What's driving you right now? Walk me through your goals and what you want to accomplish in the next few months.",
+      ADVANCED: "What's your target? Competition prep, skill mastery, performance breakthrough - what are you building toward and what's your timeline?",
     },
     sophisticationSignals: {
       UNKNOWN: [],
-      BEGINNER: ["lose weight", "get in shape", "feel better", "start working out"],
-      INTERMEDIATE: ["improve my lifts", "muscle-up", "PR", "crossfit", "clean and jerk"],
-      ADVANCED: ["compete", "regionals", "methodology", "periodization", "comptrain"]
+      BEGINNER: [
+        "lose weight", "get in shape", "feel better", "start working out", "healthier", "tone up",
+        // Energy/personality signals
+        "excited", "nervous", "not sure", "hope", "want to try", "intimidated"
+      ],
+      INTERMEDIATE: [
+        "improve my lifts", "muscle-up", "PR", "crossfit", "clean and jerk", "snatch", "handstand", "double unders",
+        // Energy/personality signals
+        "pumped", "ready", "stoked", "crush", "fire up", "commit"
+      ],
+      ADVANCED: [
+        "compete", "regionals", "semifinals", "methodology", "periodization", "comptrain", "mayhem", "qualify",
+        // Energy/personality signals
+        "game time", "beast mode", "grind", "attack", "dominate", "systematic"
+      ],
     },
     followUpLogic: {
-      UNKNOWN: "Ask for clarification on general goals",
-      BEGINNER: "Ask for clarification, explain basic concepts if needed",
-      INTERMEDIATE: "Dive deeper into specific skills or performance goals",
-      ADVANCED: "Discuss methodology preferences and competition timeline"
-    }
+      UNKNOWN: "Clarify specific outcomes they want and rough timeline - keep it exciting",
+      BEGINNER: "Make sure goals feel achievable, explore their 'why' with encouragement",
+      INTERMEDIATE: "Understand specific performance targets and when they want to hit them",
+      ADVANCED: "Dive into competition timeline, benchmarks, and what winning looks like for them",
+    },
   },
   {
     id: 2,
-    topic: "experience_assessment",
+    topic: "age_and_life_stage",
     required: true,
     versions: {
-      UNKNOWN: "Tell me about your fitness background. How long have you been training?",
-      BEGINNER: "How long have you been working out? What type of exercise have you done?",
-      INTERMEDIATE: "What's your CrossFit experience? How long have you been training?",
-      ADVANCED: "Walk me through your training background and competitive experience."
+      UNKNOWN: "What's your age? This helps me dial in programming that matches where your body's at right now.",
+      BEGINNER: "How old are you? Just helps me design training that fits your recovery needs and life stage.",
+      INTERMEDIATE: "Age? It affects how we approach intensity, volume, and recovery - matters for smart programming.",
+      ADVANCED: "What's your age and any life stage considerations? Masters programming, hormonal factors, and longevity all play into optimization.",
     },
     sophisticationSignals: {
       UNKNOWN: [],
-      BEGINNER: ["just started", "few months", "on and off", "not very long"],
-      INTERMEDIATE: ["1-2 years", "crossfit", "intermediate", "know the basics"],
-      ADVANCED: ["competed", "years of experience", "advanced", "coach"]
+      BEGINNER: ["just turned", "late twenties", "early thirties", "mid forties", "getting older"],
+      INTERMEDIATE: ["40", "45", "50", "masters", "not as young"],
+      ADVANCED: ["masters athlete", "age group", "competitive masters", "hormonal considerations", "longevity focus"],
     },
     followUpLogic: {
-      UNKNOWN: "Clarify training consistency and types of exercise",
-      BEGINNER: "Focus on building foundation and understanding basics",
-      INTERMEDIATE: "Assess specific movement competencies and goals",
-      ADVANCED: "Discuss training philosophy and methodology preferences"
-    }
+      UNKNOWN: "Assess age-appropriate programming without making them feel limited",
+      BEGINNER: "If 40+, gently ask about joint health and recovery; if under 25, focus on building solid foundation",
+      INTERMEDIATE: "For 40+, discuss realistic volume and recovery time; for under 30, emphasize work capacity development",
+      ADVANCED: "If 45+, integrate masters-specific considerations; balance performance goals with longevity",
+    },
   },
   {
     id: 3,
-    topic: "training_frequency",
+    topic: "experience_level",
     required: true,
     versions: {
-      UNKNOWN: "How many days per week can you realistically train?",
-      BEGINNER: "How many days per week can you commit to working out?",
-      INTERMEDIATE: "What's your ideal training frequency per week?",
-      ADVANCED: "What training frequency supports your goals? How do you structure weekly training?"
+      UNKNOWN: "Tell me about your fitness journey so far - how long have you been at it and what's your background?",
+      BEGINNER: "What's your experience with working out? New to this or been training for a while?",
+      INTERMEDIATE: "Walk me through your CrossFit background - how long you've been training and where you're at now?",
+      ADVANCED: "Give me the rundown on your training history - years in the sport, competitive experience, any coaching background?",
     },
     sophisticationSignals: {
       UNKNOWN: [],
-      BEGINNER: ["2-3 days", "whenever I can", "not sure", "depends"],
-      INTERMEDIATE: ["3-4 days", "pretty consistent", "5 days"],
-      ADVANCED: ["5-6 days", "structured", "periodized", "depends on cycle"]
+      BEGINNER: ["just started", "few months", "on and off", "beginner", "new to this", "never really"],
+      INTERMEDIATE: [
+        "1-2 years", "crossfit", "intermediate", "know the basics", "pretty consistent", "familiar with"
+      ],
+      ADVANCED: ["competed", "years of experience", "advanced", "coach", "regionals", "coaching others"],
     },
     followUpLogic: {
-      UNKNOWN: "Help establish realistic expectations",
-      BEGINNER: "Emphasize consistency over frequency",
-      INTERMEDIATE: "Discuss training split and recovery needs",
-      ADVANCED: "Explore periodization and volume preferences"
-    }
+      UNKNOWN: "Understand consistency and what types of training they've done",
+      BEGINNER: "Focus on building confidence and setting realistic expectations",
+      INTERMEDIATE: "Assess movement competencies and where they want to level up",
+      ADVANCED: "Understand training philosophy and what methodologies they've experienced",
+    },
   },
   {
     id: 4,
-    topic: "injury_limitations",
+    topic: "training_frequency_and_time",
     required: true,
     versions: {
-      UNKNOWN: "Do you have any injuries or physical limitations I should know about?",
-      BEGINNER: "Any injuries, aches, or pains I should know about for your program?",
-      INTERMEDIATE: "What injuries or movement limitations should I consider?",
-      ADVANCED: "Walk me through your injury history and movement restrictions."
+      UNKNOWN: "How many days can you show up each week, and what's your time budget per session?",
+      BEGINNER: "What does your schedule look like? How many days per week can you train, and how much time works per session?",
+      INTERMEDIATE: "What's your training frequency and typical session length? What fits your life right now?",
+      ADVANCED: "How do you structure your training week? Frequency, session duration, and any scheduling constraints to work around?",
     },
     sophisticationSignals: {
       UNKNOWN: [],
-      BEGINNER: ["sore back", "bad knees", "nothing serious"],
-      INTERMEDIATE: ["shoulder issues", "previous surgery", "mobility issues"],
-      ADVANCED: ["managed through", "prehab", "movement patterns"]
+      BEGINNER: ["2-3 days", "30 minutes", "not much time", "busy schedule", "weekends", "whenever I can"],
+      INTERMEDIATE: ["3-4 days", "hour", "pretty consistent", "45-60 minutes", "most days"],
+      ADVANCED: ["5-6 days", "90 minutes", "split sessions", "flexible", "depends on cycle", "double days"],
     },
     followUpLogic: {
-      UNKNOWN: "Assess severity and impact on exercise selection",
-      BEGINNER: "Focus on safe movement patterns and modifications",
-      INTERMEDIATE: "Discuss specific exercise modifications",
-      ADVANCED: "Integrate injury management into programming"
-    }
+      UNKNOWN: "Establish realistic training volume - make sure it's sustainable",
+      BEGINNER: "Emphasize consistency over volume; ensure time commitment feels doable",
+      INTERMEDIATE: "Optimize training split and session structure for their life",
+      ADVANCED: "Discuss periodization of volume and how sessions fit into bigger picture",
+    },
   },
   {
     id: 5,
-    topic: "equipment_environment",
+    topic: "injuries_and_limitations",
     required: true,
     versions: {
-      UNKNOWN: "Where will you be training? What equipment do you have access to?",
-      BEGINNER: "Will you be training at a gym or at home? What equipment is available?",
-      INTERMEDIATE: "What's your training setup? Gym, home gym, or mix?",
-      ADVANCED: "Describe your training environment and equipment access."
+      UNKNOWN: "Any injuries, aches, or physical limitations I should know about? I want to make sure your training is both safe and effective.",
+      BEGINNER: "Do you have any injuries or areas that bother you? Old injuries, current aches, anything to be aware of?",
+      INTERMEDIATE: "What's your injury history? Any current limitations or movements we need to work around?",
+      ADVANCED: "Walk me through your injury history and movement restrictions - what needs managing or modifying?",
     },
     sophisticationSignals: {
       UNKNOWN: [],
-      BEGINNER: ["planet fitness", "home", "basic equipment", "not much"],
-      INTERMEDIATE: ["crossfit gym", "well equipped", "barbell", "full gym"],
-      ADVANCED: ["compete gym", "fully equipped", "specialty equipment"]
+      BEGINNER: ["sore back", "bad knees", "nothing serious", "sometimes hurts", "old injury"],
+      INTERMEDIATE: ["shoulder issues", "previous surgery", "mobility problems", "manage it", "tweaked"],
+      ADVANCED: ["prehab", "movement patterns", "compensations", "chronic issue", "load management"],
     },
     followUpLogic: {
-      UNKNOWN: "Match programming to available resources",
-      BEGINNER: "Focus on fundamental movements with available equipment",
-      INTERMEDIATE: "Optimize programming for specific equipment setup",
-      ADVANCED: "Consider equipment-specific periodization"
-    }
+      UNKNOWN: "Assess severity and how it impacts exercise selection",
+      BEGINNER: "Focus on safe movements and building good patterns from the start",
+      INTERMEDIATE: "Understand specific modifications and progressions needed",
+      ADVANCED: "Integrate injury management and prehab into programming strategy",
+    },
   },
   {
     id: 6,
-    topic: "coaching_style_preference",
+    topic: "equipment_and_environment",
     required: true,
     versions: {
-      UNKNOWN: "What type of coaching style motivates you most?",
-      BEGINNER: "Do you prefer encouraging coaching or more direct feedback? What motivates you?",
-      INTERMEDIATE: "What coaching approach works best - technical detail, motivation, or balanced?",
-      ADVANCED: "Describe your ideal coaching relationship and communication style."
+      UNKNOWN: "What's your training setup looking like - CrossFit box, garage warrior, or something in between?",
+      BEGINNER: "Where will you be training? Gym, home setup, or a mix? What equipment do you have access to?",
+      INTERMEDIATE: "What's your training playground - full CrossFit affiliate, home gym, globo gym? Walk me through your equipment access.",
+      ADVANCED: "Describe your training environment and equipment - full affiliate setup, home gym, or hybrid situation?",
     },
     sophisticationSignals: {
       UNKNOWN: [],
-      BEGINNER: ["encouraging", "patient", "positive", "help me learn"],
-      INTERMEDIATE: ["balanced", "technical but motivating", "detail oriented"],
-      ADVANCED: ["direct", "technical precision", "methodology focused"]
+      BEGINNER: ["planet fitness", "home", "basic equipment", "dumbbells", "not much", "apartment"],
+      INTERMEDIATE: ["crossfit gym", "barbell", "pull-up bar", "pretty well equipped", "most things"],
+      ADVANCED: ["affiliate", "fully equipped", "competition setup", "rower", "assault bike", "specialty bars"],
     },
     followUpLogic: {
-      UNKNOWN: "Explore what motivates them and what doesn't",
-      BEGINNER: "Focus on supportive, educational approach",
-      INTERMEDIATE: "Balance technical knowledge with motivation",
-      ADVANCED: "Emphasize technical precision and performance optimization"
-    }
+      UNKNOWN: "Match programming to what they actually have access to",
+      BEGINNER: "Focus on fundamental movements with available equipment",
+      INTERMEDIATE: "Optimize for their specific setup and gym culture",
+      ADVANCED: "Consider equipment-specific programming and specialty work options",
+    },
   },
   {
     id: 7,
-    topic: "programming_philosophy",
-    required: false,
-    skipConditions: (ctx) => ctx.sophisticationLevel === 'BEGINNER',
+    topic: "movement_focus_and_love",
+    required: true,
     versions: {
-      UNKNOWN: "Do you prefer higher volume with moderate intensity, or lower volume with higher intensity?",
-      BEGINNER: "", // Skipped for beginners
-      INTERMEDIATE: "Do you prefer higher volume with moderate intensity, or lower volume with higher intensity? How do you usually feel about workout frequency and recovery?",
-      ADVANCED: "What's your programming philosophy? Do you prefer high volume, high intensity, or a specific periodization approach?"
+      UNKNOWN: "What kinds of movements or exercises do you actually enjoy? And is there anything you want to focus on improving or would rather skip?",
+      BEGINNER: "What type of exercise lights you up? Are there movements you'd like to learn or things you want to avoid?",
+      INTERMEDIATE: "What movements do you love? What are you chasing skill-wise? Anything you'd rather minimize or skip?",
+      ADVANCED: "Talk me through your movement strengths and what fires you up - specific skills to master? Any focus areas or things to de-emphasize?",
     },
     sophisticationSignals: {
       UNKNOWN: [],
-      BEGINNER: [],
-      INTERMEDIATE: ["moderate", "balance", "depends on the day", "recovery focused"],
-      ADVANCED: ["conjugate", "linear", "block", "undulating", "westside", "volume phases"]
+      BEGINNER: ["walking", "like lifting", "cardio is hard", "not sure", "hate running", "enjoy"],
+      INTERMEDIATE: [
+        "love Olympic lifting", "gymnastics", "want muscle-up", "strong deadlift", "weak overhead", "passionate about"
+      ],
+      ADVANCED: [
+        "barbell bias", "gymnastics focused", "engine work", "power endurance", "technical proficiency", "movement quality"
+      ],
     },
     followUpLogic: {
-      UNKNOWN: "Help them understand programming concepts",
-      BEGINNER: "",
-      INTERMEDIATE: "Discuss recovery preferences and volume tolerance",
-      ADVANCED: "Deep dive into specific methodology preferences"
-    }
+      UNKNOWN: "Understand what they enjoy (key for sticking with it) and any focus areas",
+      BEGINNER: "Identify what they actually like doing - this drives adherence",
+      INTERMEDIATE: "Clarify specific skill goals and movement preferences to build around",
+      ADVANCED: "Understand training bias and whether to lean into strengths or address limiters",
+    },
   },
   {
     id: 8,
-    topic: "motivation_accountability",
+    topic: "coaching_style_and_motivation",
     required: true,
     versions: {
-      UNKNOWN: "What keeps you motivated? How do you stay accountable?",
-      BEGINNER: "What helps keep you motivated to stick with a workout routine?",
-      INTERMEDIATE: "How do you stay motivated when training gets tough?",
-      ADVANCED: "What motivates you during challenging training phases?"
+      UNKNOWN: "What kind of coaching style works best for you? More encouraging and supportive, or direct and challenging? What keeps you going when it gets tough?",
+      BEGINNER: "Do you want a coach who's super encouraging and patient, or someone who pushes you harder? What helps you stay motivated?",
+      INTERMEDIATE: "What coaching approach fires you up - technical and detail-oriented, motivational and energizing, or a balance of both?",
+      ADVANCED: "Describe your ideal coaching dynamic - direct technical feedback, motivational push, strategic guidance? What drives you during challenging phases?",
     },
     sophisticationSignals: {
       UNKNOWN: [],
-      BEGINNER: ["need reminders", "easy to skip", "motivation problems"],
-      INTERMEDIATE: ["mostly consistent", "occasional struggles", "goal focused"],
-      ADVANCED: ["self motivated", "process focused", "long-term thinking"]
+      BEGINNER: ["encouraging", "patient", "positive", "need support", "help me learn", "gentle"],
+      INTERMEDIATE: ["balanced", "technical but fun", "detail oriented", "push me some", "mix of both"],
+      ADVANCED: ["direct feedback", "technical precision", "hold me accountable", "data driven", "no sugar coating"],
     },
     followUpLogic: {
-      UNKNOWN: "Identify specific motivation triggers and barriers",
-      BEGINNER: "Build in strong accountability and encouragement",
-      INTERMEDIATE: "Focus on goal-oriented motivation with progress tracking",
-      ADVANCED: "Emphasize process goals and performance optimization"
-    }
+      UNKNOWN: "Identify what motivates them and what coaching style resonates",
+      BEGINNER: "Match with supportive, educational approach (Emma-style) that builds confidence",
+      INTERMEDIATE: "Balance technical knowledge with motivation (Marcus or Alex style)",
+      ADVANCED: "Emphasize performance optimization and accountability (Diana or Marcus style)",
+    },
   },
   {
     id: 9,
-    topic: "time_constraints",
-    required: true,
-    versions: {
-      UNKNOWN: "How much time can you typically dedicate to each workout session?",
-      BEGINNER: "How much time do you have for each workout? What fits your schedule best?",
-      INTERMEDIATE: "What's your typical workout duration? Any time constraints I should know about?",
-      ADVANCED: "How do you structure your training sessions? What time constraints affect your programming?"
-    },
-    sophisticationSignals: {
-      UNKNOWN: [],
-      BEGINNER: ["30 minutes", "not much time", "quick workouts", "busy schedule"],
-      INTERMEDIATE: ["45-60 minutes", "hour or so", "depends on the day"],
-      ADVANCED: ["90 minutes", "split sessions", "flexible timing", "periodized sessions"]
-    },
-    followUpLogic: {
-      UNKNOWN: "Help design realistic workout durations",
-      BEGINNER: "Focus on efficient, time-effective programming",
-      INTERMEDIATE: "Balance workout quality with time availability",
-      ADVANCED: "Optimize session structure for time constraints and goals"
-    }
-  },
-  {
-    id: 10,
-    topic: "strength_weaknesses",
-    required: true,
-    versions: {
-      UNKNOWN: "What are your biggest strengths and weaknesses in fitness?",
-      BEGINNER: "What exercises or activities do you feel most and least confident with?",
-      INTERMEDIATE: "What movements or skills are your strongest and weakest areas?",
-      ADVANCED: "Analyze your strengths and limiters - what needs the most attention in your training?"
-    },
-    sophisticationSignals: {
-      UNKNOWN: [],
-      BEGINNER: ["good at walking", "weak everywhere", "not sure", "cardio is hard"],
-      INTERMEDIATE: ["strong deadlift", "weak overhead", "cardio needs work", "mobility issues"],
-      ADVANCED: ["strength bias", "aerobic deficiency", "motor pattern", "power endurance"]
-    },
-    followUpLogic: {
-      UNKNOWN: "Help identify basic movement patterns and preferences",
-      BEGINNER: "Focus on fundamental movement assessment",
-      INTERMEDIATE: "Assess specific CrossFit movement competencies",
-      ADVANCED: "Analyze training biases and systematically address limiters"
-    }
-  },
-  {
-    id: 11,
-    topic: "lifestyle_factors",
-    required: true,
-    versions: {
-      UNKNOWN: "Tell me about your lifestyle - work, sleep, stress levels, family commitments?",
-      BEGINNER: "What's your daily routine like? Work schedule, family time, sleep habits?",
-      INTERMEDIATE: "How do lifestyle factors like work stress, sleep, and family time affect your training?",
-      ADVANCED: "Walk me through your lifestyle factors and how they impact your recovery and training adaptation."
-    },
-    sophisticationSignals: {
-      UNKNOWN: [],
-      BEGINNER: ["busy with kids", "work a lot", "don't sleep much", "stressed"],
-      INTERMEDIATE: ["manage stress okay", "decent sleep", "work-life balance"],
-      ADVANCED: ["optimize recovery", "track sleep", "manage training load", "lifestyle periodization"]
-    },
-    followUpLogic: {
-      UNKNOWN: "Assess how lifestyle affects training capacity",
-      BEGINNER: "Design programming around lifestyle constraints",
-      INTERMEDIATE: "Balance training stress with life stress",
-      ADVANCED: "Integrate lifestyle optimization into training periodization"
-    }
-  },
-  {
-    id: 12,
-    topic: "nutrition_approach",
-    required: true,
-    versions: {
-      UNKNOWN: "How do you currently approach nutrition? Any specific diet or eating patterns?",
-      BEGINNER: "Tell me about your eating habits. Do you follow any particular diet?",
-      INTERMEDIATE: "What's your approach to nutrition? How does it support your training?",
-      ADVANCED: "Describe your nutrition strategy and how you periodize it with your training."
-    },
-    sophisticationSignals: {
-      UNKNOWN: [],
-      BEGINNER: ["eat whatever", "try to eat healthy", "no real plan", "diet on and off"],
-      INTERMEDIATE: ["track macros sometimes", "paleo", "zone diet", "pretty consistent"],
-      ADVANCED: ["periodize nutrition", "performance nutrition", "body composition phases", "supplement timing"]
-    },
-    followUpLogic: {
-      UNKNOWN: "Assess nutritional awareness and current habits",
-      BEGINNER: "Focus on basic nutritional habits that support training",
-      INTERMEDIATE: "Optimize nutrition for training performance and goals",
-      ADVANCED: "Integrate advanced nutrition strategies with training periodization"
-    }
-  },
-  {
-    id: 13,
-    topic: "competition_goals",
-    required: false,
-    skipConditions: (ctx) => ctx.sophisticationLevel === 'BEGINNER',
-    versions: {
-      UNKNOWN: "Are you interested in competing in any fitness events or competitions?",
-      BEGINNER: "", // Skipped for beginners
-      INTERMEDIATE: "Are you interested in competing? Local competitions, online challenges, anything like that?",
-      ADVANCED: "What are your competition goals? Timeline, specific events, performance targets?"
-    },
-    sophisticationSignals: {
-      UNKNOWN: [],
-      BEGINNER: [],
-      INTERMEDIATE: ["maybe someday", "local competition", "online challenge", "sounds fun"],
-      ADVANCED: ["regionals", "semifinals", "masters", "specific timeline", "qualify for"]
-    },
-    followUpLogic: {
-      UNKNOWN: "Explore interest in performance benchmarks",
-      BEGINNER: "",
-      INTERMEDIATE: "Assess competition readiness and interest level",
-      ADVANCED: "Plan specific competition preparation and periodization"
-    }
-  },
-  {
-    id: 14,
-    topic: "coach_relationship_preferences",
-    required: true,
-    versions: {
-      UNKNOWN: "How often would you like to check in? Daily guidance, weekly planning, or as-needed support?",
-      BEGINNER: "How much guidance do you want? Daily check-ins, weekly plans, or just when you ask?",
-      INTERMEDIATE: "What kind of ongoing relationship works best? Regular check-ins, program adjustments, progress reviews?",
-      ADVANCED: "How do you prefer to structure our coaching relationship? Communication frequency, feedback loops, program modifications?"
-    },
-    sophisticationSignals: {
-      UNKNOWN: [],
-      BEGINNER: ["need daily help", "lots of guidance", "tell me what to do", "check on me"],
-      INTERMEDIATE: ["weekly check-ins", "adjust as needed", "some autonomy", "regular feedback"],
-      ADVANCED: ["minimal check-ins", "data-driven adjustments", "collaborative", "autonomous execution"]
-    },
-    followUpLogic: {
-      UNKNOWN: "Determine appropriate level of coaching support",
-      BEGINNER: "Plan for frequent, supportive interaction and guidance",
-      INTERMEDIATE: "Balance autonomy with regular coaching touchpoints",
-      ADVANCED: "Establish collaborative, performance-focused coaching relationship"
-    }
-  },
-  {
-    id: 15,
     topic: "success_metrics",
     required: true,
     versions: {
-      UNKNOWN: "How will you know when our coaching is working? What does success look like to you?",
-      BEGINNER: "What would make you feel like this coaching is successful? What changes are you hoping to see?",
-      INTERMEDIATE: "How do you measure training success? Performance metrics, how you feel, consistency?",
-      ADVANCED: "What are your key performance indicators for successful coaching? How do you want to track progress?"
+      UNKNOWN: "Picture yourself crushing it in 3 months - what does that look like? How will you know you're winning?",
+      BEGINNER: "What would make you feel like this coaching is working? What changes are you hoping to see?",
+      INTERMEDIATE: "How do you measure progress - PRs, consistency, how you feel, body composition? What matters most?",
+      ADVANCED: "What are your key performance indicators? How do you want to track progress and define success?",
     },
     sophisticationSignals: {
       UNKNOWN: [],
-      BEGINNER: ["feel better", "lose weight", "get stronger", "stick to routine"],
-      INTERMEDIATE: ["PR goals", "consistent training", "movement quality", "body composition"],
-      ADVANCED: ["performance metrics", "training adaptations", "competition results", "systematic progress"]
+      BEGINNER: ["feel better", "lose weight", "get stronger", "stick to routine", "more energy"],
+      INTERMEDIATE: ["PR goals", "consistent training", "movement quality", "look better", "performance"],
+      ADVANCED: [
+        "performance metrics", "competition results", "systematic progress", "benchmark improvements", "percentile ranking"
+      ],
     },
     followUpLogic: {
-      UNKNOWN: "Define clear, measurable success criteria",
-      BEGINNER: "Establish simple, motivating progress markers",
-      INTERMEDIATE: "Set specific performance and consistency goals",
-      ADVANCED: "Develop comprehensive performance tracking and optimization metrics"
-    }
+      UNKNOWN: "Define what winning looks like in their terms",
+      BEGINNER: "Establish simple, motivating progress markers they can feel",
+      INTERMEDIATE: "Set specific performance and consistency goals that drive them",
+      ADVANCED: "Develop comprehensive tracking with both leading and lagging indicators",
+    },
   },
   {
-    id: 16,
-    topic: "methodology_preferences",
+    id: 10,
+    topic: "competition_goals",
     required: false,
-    skipConditions: (ctx) => ctx.sophisticationLevel === 'BEGINNER',
+    skipConditions: (ctx) => ctx.sophisticationLevel === "BEGINNER",
     versions: {
-      UNKNOWN: "Have you heard of any specific training methodologies or programs you're interested in?",
-      BEGINNER: "", // Skipped
-      INTERMEDIATE: "Are you familiar with any specific CrossFit methodologies like CompTrain, Mayhem, HWPO, or others?",
-      ADVANCED: "What training methodologies have you used? Any preference for CompTrain, Mayhem, HWPO, Invictus, Misfit, or other approaches?"
+      UNKNOWN: "Any interest in competing or testing yourself in events down the road?",
+      BEGINNER: "", // Skipped for beginners
+      INTERMEDIATE: "Thinking about competing? Local throwdowns, online challenges, or just training for yourself?",
+      ADVANCED: "What are your competition goals? Specific events, timeline, qualification targets?",
     },
     sophisticationSignals: {
       UNKNOWN: [],
       BEGINNER: [],
-      INTERMEDIATE: ["comptrain", "mayhem", "hwpo", "heard of", "tried before", "invictus"],
-      ADVANCED: ["misfit athletics", "opex", "linchpin", "functional bodybuilding", "westside", "conjugate", "linear periodization", "block periodization"]
+      INTERMEDIATE: [
+        "maybe someday", "local competition", "online challenge", "sounds fun", "quarterfinals", "interested"
+      ],
+      ADVANCED: [
+        "semifinals", "regionals", "masters worlds", "specific timeline", "qualify for", "podium"
+      ],
     },
     followUpLogic: {
-      UNKNOWN: "Introduce basic methodology concepts if interested",
+      UNKNOWN: "Gauge interest in performance benchmarks and testing",
       BEGINNER: "",
-      INTERMEDIATE: "Explore their experience with different approaches",
-      ADVANCED: "Deep dive into methodology preferences and reasoning"
-    }
+      INTERMEDIATE: "Assess competition readiness and whether to program toward events",
+      ADVANCED: "Plan competition prep periodization and specific event timeline",
+    },
   },
-  {
-    id: 17,
-    topic: "recovery_preferences",
-    required: true,
-    versions: {
-      UNKNOWN: "How do you currently handle recovery? Sleep, stretching, rest days?",
-      BEGINNER: "How do you feel after workouts? Do you do anything special for recovery?",
-      INTERMEDIATE: "What's your approach to recovery? Sleep, nutrition, mobility work, rest days?",
-      ADVANCED: "Walk me through your recovery protocols and how you monitor recovery status."
-    },
-    sophisticationSignals: {
-      UNKNOWN: [],
-      BEGINNER: ["sore", "tired", "don't really", "just rest"],
-      INTERMEDIATE: ["stretch", "foam roll", "try to sleep", "take rest days"],
-      ADVANCED: ["hrv", "sleep tracking", "mobility protocols", "periodized recovery"]
-    },
-    followUpLogic: {
-      UNKNOWN: "Assess current recovery awareness and needs",
-      BEGINNER: "Educate on basic recovery importance and simple protocols",
-      INTERMEDIATE: "Optimize current recovery practices and add structure",
-      ADVANCED: "Integrate advanced recovery monitoring and periodization"
-    }
-  },
-  {
-    id: 18,
-    topic: "learning_style",
-    required: true,
-    versions: {
-      UNKNOWN: "How do you prefer to learn new things? Visual, hands-on, detailed explanations?",
-      BEGINNER: "When learning something new, do you prefer someone to show you, explain it, or let you try it?",
-      INTERMEDIATE: "What's the best way for you to learn new movements or concepts?",
-      ADVANCED: "How do you prefer to receive technical feedback and learn complex movement patterns?"
-    },
-    sophisticationSignals: {
-      UNKNOWN: [],
-      BEGINNER: ["show me", "let me try", "simple explanation", "demonstrate"],
-      INTERMEDIATE: ["visual learner", "hands-on", "break it down", "practice"],
-      ADVANCED: ["video analysis", "kinesthetic", "detailed breakdown", "iterative refinement"]
-    },
-    followUpLogic: {
-      UNKNOWN: "Determine optimal teaching and communication approach",
-      BEGINNER: "Focus on demonstration and simple, clear instruction",
-      INTERMEDIATE: "Balance explanation with hands-on practice and feedback",
-      ADVANCED: "Provide detailed analysis and multiple learning modalities"
-    }
-  }
 ];
 
-// Enhanced Question Topics
-export const ENHANCED_QUESTION_TOPICS = [
-  "goal_discovery",
-  "experience_assessment",
-  "training_frequency",
-  "injury_limitations",
-  "equipment_environment",
-  "coaching_style_preference",
-  "programming_philosophy", // skipped for beginners
-  "motivation_accountability",
-  "time_constraints",
-  "strength_weaknesses",
-  "lifestyle_factors",
-  "nutrition_approach",
-  "competition_goals", // skipped for beginners
-  "coach_relationship_preferences",
-  "success_metrics",
-  "methodology_preferences",
-  "recovery_preferences",
-  "learning_style"
-];
+// ============================================================================
+// BASE COACH CREATOR PROMPT - BRAND-ALIGNED & ELECTRIC
+// ============================================================================
 
 export const BASE_COACH_CREATOR_PROMPT = `
-You are an expert fitness coach creator who helps users design custom AI coaches through natural conversation.
+You are Vesper, the NeonPanda Coach Creator - the vibrant guide who builds custom AI coaches on the NeonPanda platform.
 
-YOUR CORE MISSION:
-Your primary goal is to gather enough information to create a highly personalized AI coach that will genuinely help this specific user achieve their fitness goals safely and sustainably.
+WHAT IS NEONPANDA:
+NeonPanda is where electric intelligence meets approachable excellence. We're not just building AI coaches – we're creating relationships that transform lives, one workout at a time.
+NeonPanda isn't just another fitness app – it's the bridge between cutting-edge AI and genuine human connection. By making AI coaching feel less artificial and more personal, we're creating a new category in fitness technology.
+Practically: NeonPanda is the AI-powered training platform where users track workouts, measure progress, and work with their personalized AI coach. You're building a coach that will live here on this platform - guiding their training, analyzing their workouts, and helping them crush their goals through the NeonPanda system.
 
-YOUR PERSONALITY:
-- Knowledgeable but approachable CrossFit expert with 10+ years of coaching experience
-- Patient with beginners, sophisticated with advanced users - never talk down to anyone
-- Genuinely curious about their specific situation and challenges
-- Ask follow-up questions to clarify and understand context deeply
-- Adapt your language complexity based on user responses
-- Warm and encouraging while maintaining professional expertise
+YOUR MISSION:
+Get the essential info to build an amazing custom coach for this person on the NeonPanda platform, then get them TO their coach fast. You're the electric bridge between them and their personalized training partner.
 
-CONVERSATION PRINCIPLES:
-- This is a CONVERSATION, not an interrogation - natural flow but efficient
-- Build on previous answers by asking relevant follow-ups, brief acknowledgment first
-- Ask "why" and "how" questions when context is genuinely needed
-- If they give short answers, acknowledge briefly and move forward
-- Reference previous responses when it helps connect questions naturally
-- Balance getting useful information with making them feel heard
-- NEVER repeat questions or ask for information already provided in the conversation history
-- Use previously shared information to inform and contextualize new questions
+YOUR VIBE - "WHERE AI MEETS HIGH FIVES":
+- Electric energy with warm approachability - think neon-lit gym that somehow feels cozy
+- Playful power - PhD-smart but makes people smile
+- Action-packed language (crush, chase, fire up, show up, light up)
+- Not shouty or over-excited - vibrant through word choice, not punctuation
+- Make this feel like speed-dating for fitness coaches, not a medical intake
+
+CONVERSATION STYLE:
+- Keep it moving forward with natural momentum
+- Brief, warm acknowledgments ("Got it", "Perfect", "Love that")
+- Ask follow-ups only when you genuinely need clarity
+- Reference previous answers naturally when relevant, don't over-summarize
+- Match their energy - if they're fired up, match it; if cautious, be supportive
+- Make them smile at least once during this conversation
+
+LANGUAGE THAT WORKS:
+✓ "What are you chasing?"
+✓ "What lights you up?"
+✓ "Picture yourself crushing it..."
+✓ "What's your training playground?"
+✓ "Show up and train"
+✗ "Tell me about your goals" (too generic)
+✗ "What is your training frequency?" (too clinical)
+✗ "I ask because..." (too apologetic)
 
 SOPHISTICATION DETECTION:
-Listen for these signals in user responses to adapt your coaching approach:
-- BEGINNER: General terms ("get in shape", "lose weight"), asks basic questions, uncertain about terminology
-- INTERMEDIATE: Specific movements ("clean & jerk", "muscle-up"), mentions PRs, understands basic concepts
-- ADVANCED: Methodology names, programming concepts, competition references, technical language
+Listen for both technical knowledge AND personality energy:
 
-ADAPTIVE QUESTIONING STRATEGY:
-- Start broader and get more specific based on their sophistication level
-- For BEGINNERS: Focus on building confidence, use simple language, explain concepts
-- For INTERMEDIATE: Balance technical detail with practical application, assess competencies
-- For ADVANCED: Dive deep into methodology, programming philosophy, and performance optimization
+BEGINNER signals:
+- Technical: "lose weight", "get in shape", "feel better"
+- Energy: "excited but nervous", "not sure", "hope to", "want to try"
+- Approach: Encouraging, educational, confidence-building
 
-COACH PERSONALITY AWARENESS:
-Be aware that you're helping create one of four coach types, and use this context:
-- EMMA (The Encouraging Coach): Patient, safety-focused, confidence-building - perfect for building strong foundations
-- MARCUS (The Technical Skills Coach): Skill-focused, analytical, methodical - ideal for mastering movement and performance
-- DIANA (The Performance Coach): Demanding, results-driven, strategic - designed for competitive excellence
-- ALEX (The Lifestyle Coach): Practical, adaptable, sustainable - built for busy people balancing life and fitness
+INTERMEDIATE signals:
+- Technical: "muscle-up", "PR", "CrossFit", "clean and jerk"
+- Energy: "ready", "pumped", "stoked", "crush"
+- Approach: Balance technical detail with motivation
 
-METHODOLOGY AWARENESS:
-Show knowledge of major CrossFit methodologies when relevant:
-- CompTrain (strength-focused), Mayhem (conditioning), HWPO (balanced competition prep)
-- Invictus (injury prevention), Misfit (high-volume), Functional Bodybuilding (movement quality)
-- OPEX (individualized), Linchpin (GPP), PRVN (balanced development)
-Only reference these if the user shows intermediate+ sophistication or asks about them.
+ADVANCED signals:
+- Technical: "periodization", "comptrain", "compete", "regionals"
+- Energy: "game time", "systematic", "grind", "attack"
+- Approach: Technical precision, performance focus, direct feedback
 
-SAFETY INTEGRATION:
-Always consider safety factors during questioning:
-- Injury history and current limitations - ask for specifics, not just yes/no
-- Experience level and exercise complexity - ensure recommendations match competency
-- Realistic goal timelines and progression rates - challenge unrealistic expectations kindly
-- Equipment availability and safety - only recommend what they can do safely
-- Recovery needs and overtraining prevention - assess lifestyle stress factors
-- Environmental factors - training alone, supervision, space constraints
+ENERGY MATCHING:
+- High energy response → Match their enthusiasm with vibrant language
+- Analytical response → Balance data with motivation, keep it human
+- Cautious response → Be encouraging and confidence-building
+- Competitive language → Feed that fire with action-packed questions
 
-CONVERSATION FLOW TECHNIQUES:
-- Use brief but friendly and warm acknowledgments, including casual language like "cool", "okay", "got it", "makes sense", "that helps", "perfect"
-- Transition smoothly: "That helps. Now...", "Great. Next I'm curious about...", "Perfect. Let's talk about..."
-- Only elaborate when clarification is truly needed
-- Summarize briefly only for long/complex answers to show understanding
-- Connect dots efficiently: "Since you train 3x/week..." or "Given your shoulder injury history..." but keep it natural
-- Reference previous answers ONLY when directly relevant to current question - don't over-reference
+CRITICAL: SAFETY FIRST
+Always capture enough for safe programming:
+- Age and recovery considerations
+- Injury history and current limitations
+- Experience level and movement competency
+- Realistic goals and timelines
+- Equipment and environment safety
 
-HANDLING DIFFICULT RESPONSES:
-- If they say "I don't know": Help them think through it with examples or scenarios
-- If they're vague: Ask for specific examples or recent experiences
-- If they seem overwhelmed: Simplify and reassure them this is normal
-- If they have unrealistic goals: Guide them gently toward realistic expectations
-- If they mention past failures: Acknowledge and explore what they learned
+HANDLING RESPONSES:
+- Short answer? Brief acknowledgment, move forward
+- Vague answer? One clarifying question, then progress
+- Long answer? Pull key points, acknowledge naturally, transition
+- Unrealistic goals? Guide honestly but supportively toward what's achievable
 
 RESPONSE FORMAT:
-1. Brief acknowledgment (default: include, but keep it short)
-2. Ask clarifying follow-up questions if needed (1-2 max to avoid overwhelming)
-3. Smooth transition to the next question
-4. Ask the current question conversationally and clearly
+1. Brief, warm acknowledgment (natural, not robotic)
+2. Clarifying question if genuinely needed (max 1-2)
+3. Smooth transition to next question
+4. Ask question with energy appropriate to their vibe
 5. End with: SOPHISTICATION_LEVEL: [BEGINNER|INTERMEDIATE|ADVANCED]
 
-CONCISENESS RULES (CRITICAL - FOLLOW STRICTLY):
-- DEFAULT: Move directly to the next question after brief acknowledgment
-- ONLY acknowledge if their answer was particularly vulnerable, surprising, or needs clarification
-- ONLY summarize what they just said back to them if the answer was particularly long or complex
-- Keep total response under 100 words when possible - SHORTER IS BETTER
-- Focus on forward momentum, not backward reflection
-- DO NOT list or recap previous answers unless absolutely necessary for context
-- Use conversation history silently - don't announce that you remember things
-- Avoid phrases like "Based on what you've told me" or "From our conversation so far"
+KEEP IT TIGHT:
+- Aim for 50-75 words per response
+- Longer only when clarification truly needed
+- Forward momentum with warmth, not speed without soul
+- Efficiency through natural conversation, not rushed interrogation
 
-TONE AND LANGUAGE:
-- Conversational and warm but efficient - friendly and focused
-- Use "you" naturally to keep it personal but don't overdo it
-- Avoid fitness jargon unless they use it first
-- Match their communication style while maintaining warmth
-- Stay professional and encouraging while gathering information
+FINAL QUESTION BEHAVIOR:
+When you reach question 10 (or 9 if 10 skipped):
+- Continue natural conversation if they're still sharing
+- Watch for completion signals: "that's it", "I'm ready", "let's do it", "sounds good"
+- When they signal readiness:
+  * Brief thanks for their time
+  * Honest explanation: "I'll build your custom coach config on NeonPanda - takes 2-5 minutes"
+  * Platform context: Their coach will live here to guide training, track workouts, and measure progress
+  * Clear next step: "You'll see build progress on your Coaches page"
+  * Simple close: "Ready to create your coach?"
+- Keep completion under 75 words
+- BE HONEST - don't hallucinate features or imply coach already exists
 
-CONTEXT AWARENESS:
-- Remember this is someone investing time in creating a custom coach - they're motivated
-- They may have tried other programs or coaches before - be sensitive to past experiences
-- Creating a coach is a vulnerable process - they're sharing personal information
-- The quality of information you gather directly impacts their success with their AI coach
-
-Your success is measured by how well the final AI coach serves this specific user's needs.
+Remember: You're the enthusiastic guide helping them find their perfect training partner. Make this quick, fun, and valuable. Their custom coach is waiting on the other side.
 `;
 
-// Helper functions
-export const shouldSkipQuestion = (question: Question, userContext: UserContext): boolean => {
+// ============================================================================
+// QUESTION TOPICS (Streamlined)
+// ============================================================================
+
+export const STREAMLINED_QUESTION_TOPICS = [
+  "goals_and_timeline",
+  "age_and_life_stage",
+  "experience_level",
+  "training_frequency_and_time",
+  "injuries_and_limitations",
+  "equipment_and_environment",
+  "movement_focus_and_love",
+  "coaching_style_and_motivation",
+  "success_metrics",
+  "competition_goals", // Optional, skipped for beginners
+];
+
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+export const shouldSkipQuestion = (
+  question: Question,
+  userContext: UserContext
+): boolean => {
   if (question.skipConditions) {
     return question.skipConditions(userContext);
   }
@@ -560,75 +405,14 @@ export const shouldSkipQuestion = (question: Question, userContext: UserContext)
 };
 
 export const getNextQuestionId = (userContext: UserContext): number | null => {
-  const remainingQuestions = COACH_CREATOR_QUESTIONS.filter(q =>
-    q.id > userContext.currentQuestion &&
-    !shouldSkipQuestion(q, userContext)
+  const remainingQuestions = COACH_CREATOR_QUESTIONS.filter(
+    (q) =>
+      q.id > userContext.currentQuestion && !shouldSkipQuestion(q, userContext)
   );
 
   return remainingQuestions.length > 0 ? remainingQuestions[0].id : null;
 };
 
-// Build dynamic prompt for question
-export const buildQuestionPrompt = (
-  question: Question,
-  userContext: UserContext,
-  conversationHistory?: any[],
-  criticalTrainingDirective?: { content: string; enabled: boolean }
-): string => {
-  // Build directive section if enabled
-  const directiveSection = criticalTrainingDirective?.enabled && criticalTrainingDirective?.content
-    ? `🚨 CRITICAL TRAINING DIRECTIVE - ABSOLUTE PRIORITY:
-
-${criticalTrainingDirective.content}
-
-This directive takes precedence over all other instructions except safety constraints. Apply this when asking questions and understanding the user's needs.
-
----
-
-`
-    : '';
-  const questionVersion =
-    question.versions[userContext.sophisticationLevel] ||
-    question.versions.UNKNOWN;
-
-  // Format conversation history for AI context
-  const historyContext = conversationHistory && conversationHistory.length > 0
-    ? `
-CONVERSATION HISTORY:
-${conversationHistory.map((entry, index) => `
-Q${entry.questionId}: ${COACH_CREATOR_QUESTIONS.find(q => q.id === entry.questionId)?.topic || 'Unknown'}
-User: ${entry.userResponse}
-You: ${entry.aiResponse}
-`).join('\n')}
-
-ALREADY COVERED TOPICS:
-${conversationHistory.map(entry => COACH_CREATOR_QUESTIONS.find(q => q.id === entry.questionId)?.topic).filter(Boolean).join(', ')}
-
-CRITICAL: Review the conversation history above. DO NOT ask questions that have already been answered or covered. Build naturally on what you already know about this user. USE THIS CONTEXT SILENTLY - don't explicitly reference previous answers unless directly relevant to the current question.
-`
-    : '';
-
-  const questionContext = `
-${directiveSection}CURRENT QUESTION FOCUS: ${question.topic}
-USER SOPHISTICATION: ${userContext.sophisticationLevel}
-${historyContext}
-QUESTION TO ASK:
-${questionVersion}
-
-SOPHISTICATION DETECTION SIGNALS:
-${Object.entries(question.sophisticationSignals)
-  .filter(([level, signals]) => signals.length > 0)
-  .map(([level, signals]) => `- ${level}: ${signals.join(", ")}`)
-  .join("\n")}
-
-FOLLOW-UP GUIDANCE:
-${question.followUpLogic[userContext.sophisticationLevel] || question.followUpLogic.UNKNOWN}
-`;
-
-  return BASE_COACH_CREATOR_PROMPT + questionContext;
-};
-
-// Get current question
 export const getCurrentQuestion = (
   userContext: UserContext
 ): Question | null => {
@@ -638,19 +422,165 @@ export const getCurrentQuestion = (
   );
 };
 
-// Get next question
 export const getNextQuestion = (userContext: UserContext): Question | null => {
   const nextQuestionId = getNextQuestionId(userContext);
   if (!nextQuestionId) return null;
   return COACH_CREATOR_QUESTIONS.find((q) => q.id === nextQuestionId) || null;
 };
 
-// Utility functions for processing AI responses
-export const extractSophisticationLevel = (aiResponse: string): SophisticationLevel | null => {
-  const match = aiResponse.match(/SOPHISTICATION_LEVEL:\s*(BEGINNER|INTERMEDIATE|ADVANCED)/);
-  return match ? match[1] as SophisticationLevel : null;
+// ============================================================================
+// BUILD DYNAMIC PROMPT
+// ============================================================================
+
+export const buildQuestionPrompt = (
+  question: Question,
+  userContext: UserContext,
+  conversationHistory?: any[],
+  criticalTrainingDirective?: { content: string; enabled: boolean },
+  methodologyContext?: string,
+  memoryContext?: string
+): string => {
+  // Build directive section if enabled
+  const directiveSection =
+    criticalTrainingDirective?.enabled && criticalTrainingDirective?.content
+      ? `🚨 CRITICAL DIRECTIVE - APPLY THIS:
+${criticalTrainingDirective.content}
+
+This takes precedence when understanding user needs and asking questions.
+---
+
+`
+      : "";
+
+  // Get question version for user's sophistication level
+  const questionVersion =
+    question.versions[userContext.sophisticationLevel] ||
+    question.versions.UNKNOWN;
+
+  // Format conversation history concisely
+  const historyContext =
+    conversationHistory && conversationHistory.length > 0
+      ? `
+CONVERSATION SO FAR:
+${conversationHistory
+  .map((entry) => {
+    const q = COACH_CREATOR_QUESTIONS.find((q) => q.id === entry.questionId);
+    return `Q${entry.questionId} (${q?.topic || "unknown"}): ${entry.userResponse.substring(0, 100)}${entry.userResponse.length > 100 ? "..." : ""}`;
+  })
+  .join("\n")}
+
+CRITICAL: Use this history naturally. Don't repeat questions or ask for info already shared. Reference previous answers when relevant to build momentum.
+`
+      : "";
+
+  // Memory context if available
+  const memorySection =
+    memoryContext && memoryContext.trim()
+      ? `
+WHAT I KNOW ABOUT THIS USER:
+${memoryContext}
+
+Use these insights to personalize questions and make connections.
+`
+      : "";
+
+  // Methodology context if available
+  const methodologySection =
+    methodologyContext && methodologyContext.trim()
+      ? `
+TRAINING KNOWLEDGE BASE:
+${methodologyContext}
+
+Use this to inform questions and provide context when helpful.
+`
+      : "";
+
+  // Check if final question
+  const nextQuestionId = getNextQuestionId(userContext);
+  const isOnFinalQuestion = nextQuestionId === null;
+
+  const finalQuestionGuidance = isOnFinalQuestion
+    ? `
+
+🎯 YOU'RE ON THE FINAL QUESTION:
+
+CONTINUE NATURALLY:
+- If they're elaborating or sharing more, keep the conversation going
+- Ask follow-ups if genuinely helpful
+- Have a real conversation - don't rush to the finish line
+
+WATCH FOR COMPLETION SIGNALS:
+- "That's everything", "I'm ready", "Let's do it", "Sounds good"
+- "Yeah, that covers it", "Let's create the coach", "What's next?"
+
+WHEN THEY'RE READY:
+1. Brief acknowledgment and thanks
+2. Honest explanation: "I'll build your custom coach config on NeonPanda - takes 2-5 minutes"
+3. Clear expectation: "You'll see build progress on your Coaches page, then you can start working together"
+4. Context reminder: Your coach will live here on the NeonPanda platform to guide training and track progress
+5. Simple close: "Ready to create your coach?"
+6. Keep it under 75 words
+
+DON'T HALLUCINATE:
+- ❌ "Your coach will create your program immediately"
+- ❌ "Check-ins start right away"
+- ❌ "Your coach is active now"
+- ✅ "Once the build is complete, you can start working with your coach on NeonPanda"
+- ✅ "Your coach will be ready on the platform to guide your training"
+`
+      : "";
+
+  // Build complete prompt
+  const questionContext = `
+${directiveSection}CURRENT QUESTION: ${question.topic}
+USER LEVEL: ${userContext.sophisticationLevel}
+${historyContext}${memorySection}${methodologySection}
+ASK THIS QUESTION:
+${questionVersion}
+
+SOPHISTICATION SIGNALS (Technical + Energy):
+${Object.entries(question.sophisticationSignals)
+  .filter(([level, signals]) => signals.length > 0)
+  .map(([level, signals]) => `${level}: ${signals.join(", ")}`)
+  .join("\n")}
+
+FOLLOW-UP GUIDANCE:
+${question.followUpLogic[userContext.sophisticationLevel] || question.followUpLogic.UNKNOWN}
+${finalQuestionGuidance}
+`;
+
+  return BASE_COACH_CREATOR_PROMPT + questionContext;
+};
+
+// ============================================================================
+// AI RESPONSE PROCESSING
+// ============================================================================
+
+export const extractSophisticationLevel = (
+  aiResponse: string
+): SophisticationLevel | null => {
+  const match = aiResponse.match(
+    /SOPHISTICATION_LEVEL:\s*(BEGINNER|INTERMEDIATE|ADVANCED)/
+  );
+  return match ? (match[1] as SophisticationLevel) : null;
 };
 
 export const cleanResponse = (aiResponse: string): string => {
-  return aiResponse.replace(/SOPHISTICATION_LEVEL:\s*(BEGINNER|INTERMEDIATE|ADVANCED)/g, '').trim();
+  return aiResponse
+    .replace(/SOPHISTICATION_LEVEL:\s*(BEGINNER|INTERMEDIATE|ADVANCED)/g, "")
+    .trim();
+};
+
+// ============================================================================
+// EXPORT CONFIGURATION
+// ============================================================================
+
+export const STREAMLINED_CONFIG = {
+  totalQuestions: COACH_CREATOR_QUESTIONS.length,
+  coreQuestions: COACH_CREATOR_QUESTIONS.filter((q) => q.required).length,
+  optionalQuestions: COACH_CREATOR_QUESTIONS.filter((q) => !q.required).length,
+  estimatedDuration: "10-15 minutes",
+  designGoal: "Get users to their custom coach quickly while gathering essentials",
+  brandAlignment: "Electric energy + playful warmth = 'Where AI Meets High Fives'",
+  toneGuidelines: "Vibrant through word choice, not punctuation. Make them smile.",
 };

@@ -43,6 +43,155 @@ const CollapsibleSection = ({ title, icon, children, defaultOpen = true, classNa
 
 const changelogEntries = [
   {
+    version: "Release v1.0.20251005-beta",
+    date: "2025-10-05",
+    changes: {
+      added: [
+        "NeonPanda brand philosophy and mission integrated into coach creator (Vesper) personality prompt",
+        "WHAT IS NEONPANDA section explaining platform's purpose: tracking workouts, measuring progress, and AI coach guidance",
+        "Brand positioning statement: 'electric intelligence meets approachable excellence' for consistent voice",
+        "Platform context emphasizing NeonPanda as bridge between cutting-edge AI and genuine human connection",
+        "Left-aligned contextual update indicators with coach avatar for improved visual flow and consistency",
+        "Empty streaming placeholder message filtering to prevent empty AI chat bubbles from displaying",
+        "Consistent contextual update implementation across both CoachCreator and CoachConversations pages"
+      ],
+      changed: [
+        "Contextual update formatting in streaming handlers removed extra linebreaks (\\n\\n) for cleaner display",
+        "Contextual update UI simplified to text-only display without emoji decorations in CoachCreator and CoachConversations",
+        "Coach creator prompt enhanced to emphasize Vesper is building coaches for the NeonPanda platform",
+        "Vesper personality description updated to include NeonPanda's mission of creating relationships that transform lives",
+        "Platform messaging updated to highlight NeonPanda creates a new category in fitness technology",
+        "Contextual update text size increased from text-sm to text-base for improved readability",
+        "Quick acknowledgments converted from chunk events to contextual events (ephemeral, not saved to conversation history)",
+        "Emoji picker repositioned to anchor bottom edge just above emoji button for better visual alignment",
+        "Contextual updates now display with coach avatar in left-aligned format matching message bubbles"
+      ],
+      fixed: [
+        "Extra spacing in contextual updates causing unnecessary whitespace between updates and AI responses",
+        "Emoji decorations in contextual update indicators conflicting with text-only design system",
+        "Inconsistent spacing in chat display during streaming contextual updates",
+        "Empty pulsing AI chat bubble appearing before first chunk arrives during streaming",
+        "Quick acknowledgments being unnecessarily saved to conversation history as permanent messages",
+        "Inconsistent contextual update display and behavior between CoachCreator and CoachConversations pages"
+      ]
+    }
+  },
+  {
+    version: "Release v1.0.20251004-beta",
+    date: "2025-10-04",
+    changes: {
+      added: [
+        "Emoji picker integration in ChatInput component using emoji-picker-react library",
+        "Fitness & Activities emoji category prioritized as 2nd position for quick access to workout-related emojis",
+        "Comprehensive emoji picker styling matching synthwave theme with custom CSS overrides",
+        "Cyan-themed scrollbar in emoji picker matching uiPatterns.js design system",
+        "Search input in emoji picker styled to match ChatInput text input with focus and blur effects",
+        "Toast notification system (ToastContext) for non-intrusive error and success messages",
+        "Retry build functionality for failed coach creator sessions via 'Create Coach from Session' API",
+        "AI-generated contextual updates to coach creator flow using 'Vesper' personality (mysterious, intuitive female guide)",
+        "Five strategic contextual update points in coach creator: initial greeting, session review, methodology search, memory check, and response crafting",
+        "SharedPolicies class for centralized IAM policy management across Lambda functions",
+        "Dynamic LOG_GROUP_PREFIX generation for sync-log-subscriptions based on deployment type",
+        "DashedCard UI pattern variants (dashedCard, dashedCardPinkBold, dashedCardCyan, dashedCardPurple) in uiPatterns.js",
+        "SuccessModal pattern in uiPatterns.js for cyan-themed success modals",
+        "SubcontainerEnhanced pattern in uiPatterns.js matching Theme.jsx glassmorphism design",
+        "Bangers Google Font integration for creative text styling with sans-serif fallback",
+        "create-coach-config Lambda function for manual coach creation from completed sessions",
+        "Nested configGeneration object in CoachCreatorSession TypeScript interface for better data modeling"
+      ],
+      changed: [
+        "Coach creator session deletions now perform hard deletes when user-initiated from Coaches page",
+        "Coach config build process now performs soft deletes (isDeleted: true) on successful completion",
+        "In-progress coach creator session cards styling updated to use dashedCard variants from uiPatterns.js",
+        "Status display for in-progress sessions refactored to use icons and consistent text format matching metadata display",
+        "Completion modal styling updated to cyan theme with inline icon, successModal pattern, and subcontainerEnhanced style",
+        "Completion modal messaging enhanced to be more contextual and avoid 'AI' terminology",
+        "Retry build functionality moved from CoachCreatorAgent to CoachAgent for proper API organization",
+        "Coach creator flow now uses maximum of 10 questions (reduced from 18) for streamlined user experience",
+        "CoachCreatorAgent immediate streaming acknowledgement and isTyping state for faster visual feedback",
+        "Coach creator prompt updated to align with 'NeonPanda' branding (electric, vibrant, playful)",
+        "coachConfigId pattern changed from user_${userId}_coach_main to user_${userId}_coach_${Date.now()} for uniqueness",
+        "created_date in coach config metadata now set programmatically instead of AI-generated to ensure accuracy",
+        "personality_blending object now JSON.stringify'd before storing in Pinecone metadata",
+        "Backend Lambda functions excluded from allFunctions array (forwardLogsToSns, syncLogSubscriptions) to prevent IAM policy size limits",
+        "postConfirmation Lambda now uses inline IAM policies to resolve circular dependency issues",
+        "Emoji picker category order optimized: Recently Used, Fitness & Activities, Smileys & People, Food & Drink, Objects",
+        "Chat message spacing increased from pb-32 to pb-48 (192px) for better breathing room between messages and input",
+        "Data extraction functions updated to align with new 10-question structure (extractMethodologyPreferences, extractTrainingFrequency, etc.)",
+        "Session summary generation updated to reflect new 10-question flow and mapping",
+        "Frontend fallback estimates corrected for INTERMEDIATE sophistication level (9 → 10 questions)"
+      ],
+      fixed: [
+        "Browser alert popups and on-screen errors replaced with toast notifications for better UX",
+        "Failed coach creator sessions not being returned to frontend due to old configGenerationStatus data structure",
+        "Create custom coach card hover effects inconsistent with other coach cards on Coaches page",
+        "Missing DynamoDB environment variables in create-coach-config Lambda causing failures",
+        "CloudFormation circular dependency error related to auth stack and DynamoDB table grants",
+        "IAM policy size limit exceeded (20,612 > 20,480 bytes) for forwardLogsToSns Lambda role",
+        "Pinecone storage error due to personality_blending being stored as object instead of stringified JSON",
+        "coachConfigId overwrites due to static '_main' suffix instead of unique timestamp-based pattern",
+        "created_date showing incorrect AI-generated date (2025-01-04) instead of actual creation timestamp",
+        "Completion modal showing by default instead of only when session is actually complete",
+        "Completion modal subcontainer border style not matching Theme.jsx glassmorphism design",
+        "Coach creator slower initial acknowledgement compared to coach conversation flow",
+        "LOG_GROUP_PREFIX for sync-log-subscriptions using static value instead of dynamic branch-aware naming",
+        "Linting errors in contextual-updates.ts related to MODEL_IDS.HAIKU and bedrockResponse.content",
+        "INTERMEDIATE sophistication level showing estimated total of 9 questions instead of 10",
+        "Unused data extraction functions (extractSessionDuration, extractCoachingStylePreferences) cluttering codebase",
+        "Emoji picker internal CSS classes overriding custom synthwave styling for category labels",
+        "Emoji picker placeholder text overlapping with search icon due to insufficient left padding",
+        "Emoji sizes too large (28px) in picker, reduced to 24px for better density and scanning"
+      ]
+    }
+  },
+  {
+    version: "Release v1.0.20251003-beta",
+    date: "2025-10-03",
+    changes: {
+      added: [
+        "Centralized JSON formatting instructions utility (libs/prompt-helpers.ts) for consistent AI prompt engineering",
+        "Reusable getJsonFormattingInstructions() function with options for minified and standard variants",
+        "Comprehensive JSON structure validation rules (brace/bracket counting, trailing comma prevention)",
+        "JSON_FORMATTING_INSTRUCTIONS_STANDARD constant for general use cases",
+        "JSON_FORMATTING_INSTRUCTIONS_MINIFIED constant for large payloads (workouts with 20+ rounds)",
+        "Explicit markdown formatting prohibition in all AI prompts to prevent ```json wrapper issues",
+        "Battle-tested JSON formatting rules applied across 15 backend functions for consistency",
+        "AI-powered finish intent detection in coach creator using Claude Haiku for natural conversation flow",
+        "JSON formatting instructions to 6 critical detection functions (checkUserWantsToFinish, detectConversationComplexity, detectMemoryRetrievalNeed, detectMemoryRequest, shouldUsePineconeSearch, extractCompletedAtTime)"
+      ],
+      changed: [
+        "Coach config generation now uses standardized JSON instructions from prompt-helpers",
+        "Workout extraction now uses minified variant of JSON instructions for large payloads",
+        "Analytics generation now uses standardized JSON instructions from prompt-helpers",
+        "Smart request router (analyzeRequestCapabilities) now uses standardized JSON instructions",
+        "Memory analysis (analyzeMemoryNeeds) now uses comprehensive JSON formatting rules",
+        "Pinecone methodology intent analysis now uses standardized JSON instructions",
+        "Workout detection functions now use standardized JSON instructions",
+        "Conversation summary generation now uses comprehensive JSON formatting rules",
+        "All AI prompts generating JSON now follow identical, comprehensive formatting guidelines",
+        "Dates stored in UTC and automatically converted to user's local timezone for display",
+        "Migrated 11 critical detection/decision tasks from Nova Micro to Claude Haiku for superior reliability (workout detection, memory analysis, conversation complexity, Pinecone search decisions, time extraction, discipline classification)",
+        "checkUserWantsToFinish() converted from synchronous keyword matching to async AI-powered intent detection",
+        "stream-coach-creator-session and update-coach-creator-session handlers updated to await async checkUserWantsToFinish()",
+        "Nova Micro now only used for low-stakes tasks (contextual UI messages and simple binary classifications)"
+      ],
+      fixed: [
+        "Coach config generation JSON parsing failures when Bedrock returns markdown-wrapped JSON (```json...```)",
+        "lastActivity timestamp not updating in coach creator session cards on Coaches page",
+        "lastActivity field not being saved in stream-coach-creator-session handler",
+        "lastActivity field not being saved in update-coach-creator-session handler (both streaming and non-streaming paths)",
+        "Inconsistent JSON formatting instructions across different AI functions causing parsing variability",
+        "Missing fallback parsing logic (cleanResponse/fixMalformedJson) in coach config generation",
+        "JSON parsing errors from AI responses with markdown code blocks or structural issues",
+        "Trailing comma errors in AI-generated JSON responses due to insufficient validation rules",
+        "Coach creator '3 times to finish' bug where users needed to respond multiple times before coach creation triggered",
+        "Keyword-based finish detection missing natural affirmative responses ('yep', 'sounds good', 'okay', 'sure')",
+        "Nova Micro reliability issues with critical decision-making tasks requiring nuanced understanding",
+        "Potential JSON parsing errors in 6 detection functions due to missing formatting instructions"
+      ]
+    }
+  },
+  {
     version: "Release v1.0.20251002-beta",
     date: "2025-10-02",
     changes: {

@@ -3,6 +3,7 @@
  */
 
 import { callBedrockApi, MODEL_IDS, getPineconeClient } from './api-helpers';
+import { JSON_FORMATTING_INSTRUCTIONS_STANDARD } from './prompt-helpers';
 import { MethodologyIntent, EnhancedMethodologyOptions } from './coach-conversation/types';
 
 // Configuration
@@ -45,8 +46,9 @@ SEMANTIC SEARCH INDICATORS:
 - Complex questions requiring background knowledge or context
 - Requests for explanations that would benefit from stored methodology content
 
-RESPONSE FORMAT:
-You must respond with ONLY a valid JSON object:
+${JSON_FORMATTING_INSTRUCTIONS_STANDARD}
+
+RESPONSE SCHEMA:
 {
   "shouldUseSemanticSearch": boolean,
   "confidence": number (0.0 to 1.0),
@@ -68,7 +70,7 @@ Analyze this message and determine if semantic search would enhance the coaching
     const response = await callBedrockApi(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.NOVA_MICRO
+      MODEL_IDS.CLAUDE_HAIKU_FULL
     );
     const result = JSON.parse(response);
 
@@ -96,7 +98,9 @@ Determine:
 3. Is this asking about the principles/philosophy behind a methodology?
 4. What methodology(ies) are mentioned?
 
-Return ONLY valid JSON in this format:
+${JSON_FORMATTING_INSTRUCTIONS_STANDARD}
+
+REQUIRED JSON STRUCTURE:
 {
   "isComparison": boolean,
   "isImplementationQuestion": boolean,
@@ -111,7 +115,7 @@ Examples:
 - "What's better, 5/3/1 or Starting Strength?" → {"isComparison": true, "isImplementationQuestion": false, "isPrincipleQuestion": false, "methodologies": ["5/3/1", "starting_strength"], "primaryMethodology": "5/3/1"}`;
 
   try {
-    const response = await callBedrockApi(analysisPrompt, userMessage, MODEL_IDS.NOVA_MICRO);
+    const response = await callBedrockApi(analysisPrompt, userMessage, MODEL_IDS.CLAUDE_HAIKU_FULL);
     return JSON.parse(response);
   } catch (error) {
     console.error('Failed to analyze methodology intent:', error);

@@ -74,12 +74,12 @@ export default function StreamingDebugTest() {
     setTestResults(prev => ({ ...prev, realTimeTest: 'Running real-time streaming test...' }));
 
     try {
-      const { sendCoachConversationMessageStreamLambda } = await import('../utils/apis/streamingLambdaApi');
+      const { streamCoachConversationLambda } = await import('../utils/apis/streamingLambdaApi');
 
       const startTime = Date.now();
       let eventCount = 0;
 
-      const stream = sendCoachConversationMessageStreamLambda(userId, coachId, conversationId, customMessage);
+      const stream = streamCoachConversationLambda(userId, coachId, conversationId, customMessage);
 
       for await (const event of stream) {
         eventCount++;

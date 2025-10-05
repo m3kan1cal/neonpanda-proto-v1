@@ -6,6 +6,7 @@ import {
 } from "./types";
 import { CoachConfig } from "../coach-creator/types";
 import { storePineconeContext } from "../api-helpers";
+import { JSON_FORMATTING_INSTRUCTIONS_STANDARD } from "../prompt-helpers";
 
 /**
  * Build the prompt for coach conversation summarization
@@ -85,8 +86,10 @@ Write a flowing narrative that captures:
 - Training methodologies discussed, preferred, or referenced
 - Any methodology-specific programming or approach preferences
 
+${JSON_FORMATTING_INSTRUCTIONS_STANDARD}
+
 ## STRUCTURED DATA
-Provide the following in valid JSON format:
+Provide the following as a JSON object:
 
 {
   "current_goals": ["specific goal 1", "specific goal 2"],

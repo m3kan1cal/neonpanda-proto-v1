@@ -106,20 +106,27 @@ const handleAuthFailure = () => {
 };
 
 // ============================================================================
-// COACH CONVERSATION STREAMING CONFIGURATION (Lambda Function URLs)
+// STREAMING CONFIGURATION (Lambda Function URLs)
 // ============================================================================
 
-// Coach Conversation Streaming Lambda Function URL Configuration
+// Generic Lambda Function URL Streaming Configuration
+// Supports multiple streaming endpoints (coach conversations, coach creator sessions, etc.)
 export const STREAMING_CONFIG = {
-  // Lambda Function URL for direct coach conversation streaming (bypasses API Gateway)
-  // Dynamically loaded from amplify_outputs.json
-  functionUrl: getStreamingFunctionUrl(),
+  // Coach Conversation Streaming
+  coachConversation: {
+    functionUrl: getCoachConversationStreamingUrl(),
+  },
+
+  // Coach Creator Session Streaming
+  coachCreatorSession: {
+    functionUrl: getCoachCreatorStreamingUrl(),
+  },
 
   // Feature toggle - can be controlled via environment variable
   enabled: import.meta.env.VITE_USE_LAMBDA_STREAMING !== "false", // Default to true
 
-  // Timeout for streaming requests (30 seconds)
-  timeout: 30000,
+  // Timeout for streaming requests (90 seconds - allows time for contextual updates and AI processing)
+  timeout: 90000,
 
   // Retry configuration
   maxRetries: 1,
@@ -128,9 +135,9 @@ export const STREAMING_CONFIG = {
 
 /**
  * Get the coach conversation streaming function URL from amplify_outputs.json
- * @returns {string} - The Lambda Function URL for coach conversation streaming
+ * @returns {string | null} - The Lambda Function URL for coach conversation streaming
  */
-function getStreamingFunctionUrl() {
+function getCoachConversationStreamingUrl() {
   const streamingConfig = outputs.custom?.coachConversationStreamingApi;
 
   if (!streamingConfig?.functionUrl) {
@@ -142,26 +149,62 @@ function getStreamingFunctionUrl() {
 }
 
 /**
- * Get the full coach conversation streaming URL for a given path
- * @param {string} path - The path to append (should start with 'users/')
- * @returns {string} - Full coach conversation streaming URL
+ * Get the coach creator session streaming function URL from amplify_outputs.json
+ * @returns {string | null} - The Lambda Function URL for coach creator session streaming
  */
-export const getStreamingUrl = (path) => {
+function getCoachCreatorStreamingUrl() {
+  const streamingConfig = outputs.custom?.coachCreatorSessionStreamingApi;
+
+  if (!streamingConfig?.functionUrl) {
+    console.warn('⚠️ No coach creator session streaming function URL found in amplify_outputs.json');
+    return null;
+  }
+
+  return streamingConfig.functionUrl;
+}
+
+/**
+ * Get the full streaming URL for a given endpoint type and path
+ * @param {string} endpointType - The endpoint type ('coachConversation' or 'coachCreatorSession')
+ * @param {string} path - The path to append (should start with 'users/')
+ * @returns {string} - Full streaming URL
+ */
+export const getStreamingUrl = (endpointType, path) => {
+  const functionUrl = STREAMING_CONFIG[endpointType]?.functionUrl;
+
+  if (!functionUrl) {
+    throw new Error(`No function URL found for endpoint type: ${endpointType}`);
+  }
+
   // Ensure path doesn't start with '/' to avoid double slashes
   const cleanPath = path.startsWith("/") ? path.substring(1) : path;
-  return `${STREAMING_CONFIG.functionUrl}${cleanPath}`;
+  return `${functionUrl}${cleanPath}`;
 };
 
 /**
- * Check if coach conversation Lambda Function URL streaming is available and enabled
- * @returns {boolean} - Whether coach conversation streaming should be used
+ * Check if Lambda Function URL streaming is available and enabled
+ * @param {string} endpointType - Optional endpoint type to check ('coachConversation' or 'coachCreatorSession')
+ * @returns {boolean} - Whether streaming should be used
  */
-export const isStreamingEnabled = () => {
+export const isStreamingEnabled = (endpointType = null) => {
+  if (!STREAMING_CONFIG.enabled) {
+    return false;
+  }
+
+  // If checking a specific endpoint type
+  if (endpointType) {
+    const functionUrl = STREAMING_CONFIG[endpointType]?.functionUrl;
+    return (
+      functionUrl &&
+      functionUrl !== "your-function-url-here" &&
+      functionUrl !== null
+    );
+  }
+
+  // If no specific endpoint, check if ANY streaming is available
   return (
-    STREAMING_CONFIG.enabled &&
-    STREAMING_CONFIG.functionUrl &&
-    STREAMING_CONFIG.functionUrl !== "your-function-url-here" &&
-    STREAMING_CONFIG.functionUrl !== null
+    isStreamingEnabled('coachConversation') ||
+    isStreamingEnabled('coachCreatorSession')
   );
 };
 
