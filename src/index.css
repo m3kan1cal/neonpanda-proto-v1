@@ -5,10 +5,20 @@
 @tailwind utilities;
 
 /* Set default page background to synthwave theme */
-html, body {
+html {
+  height: 100%;
+  height: -webkit-fill-available; /* iOS Safari fix */
   background-color: #16213e !important;
   margin: 0;
   padding: 0;
+}
+
+body {
+  background-color: #16213e !important;
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  min-height: -webkit-fill-available; /* iOS Safari fix */
 }
 
 /* Control overscroll background without disabling behavior */
@@ -32,8 +42,18 @@ body {
   background-color: #16213e !important;
   min-height: 100vh;
   min-height: 100dvh; /* Dynamic viewport height for mobile */
+  min-height: -webkit-fill-available; /* iOS Safari fix */
   width: 100%;
   position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+/* iOS-specific fix for viewport height */
+@supports (-webkit-touch-callout: none) {
+  #root {
+    min-height: -webkit-fill-available;
+  }
 }
 
 /* Additional fallback for any remaining white space */
@@ -117,6 +137,17 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
 
   .synthwave-scrollbar-cyan::-webkit-scrollbar-thumb:hover {
     background: #00ffff40;
+  }
+
+  /* Hide scrollbar on mobile for cleaner breadcrumb navigation */
+  @media (max-width: 768px) {
+    .scrollbar-hide-on-mobile::-webkit-scrollbar {
+      display: none;
+    }
+    .scrollbar-hide-on-mobile {
+      -ms-overflow-style: none;  /* IE and Edge */
+      scrollbar-width: none;  /* Firefox */
+    }
   }
 }
 

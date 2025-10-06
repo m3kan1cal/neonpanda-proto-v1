@@ -219,18 +219,25 @@ function ChatInput({
   // Early return for skeleton loading state
   if (showSkeleton) {
     return (
-      <div className="fixed bottom-0 left-0 right-0 bg-synthwave-bg-card/95 backdrop-blur-lg border-t-2 border-synthwave-neon-pink/30 shadow-lg shadow-synthwave-neon-pink/20 z-50">
-        <div className="max-w-7xl mx-auto px-8 py-6 pb-8">
+      <div
+        className="fixed bottom-0 left-0 right-0 bg-synthwave-bg-card/95 backdrop-blur-lg border-t-2 border-synthwave-neon-pink/30 shadow-lg shadow-synthwave-neon-pink/20 z-50"
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 py-4 sm:py-6">
           {/* Input area skeleton */}
-          <div className="flex items-end gap-3">
-            {/* Action buttons skeleton - 3 buttons to match actual component */}
+          <div className="flex items-end gap-2 sm:gap-3">
+            {/* Action buttons skeleton - 1 button on mobile, 3 on desktop */}
             <div className="flex items-center gap-2">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="w-11 h-11 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
-              ))}
+              {/* Mobile: 1 button */}
+              <div className="sm:hidden w-11 h-11 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
+              {/* Desktop: 3 buttons */}
+              <div className="hidden sm:flex items-center gap-2">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="w-11 h-11 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
+                ))}
+              </div>
             </div>
 
-            {/* Text input skeleton - increased height to better match actual component */}
+            {/* Text input skeleton */}
             <div className="flex-1 relative">
               <div className="w-full h-12 bg-synthwave-text-muted/20 rounded-2xl animate-pulse"></div>
             </div>
@@ -239,17 +246,17 @@ function ChatInput({
             <div className="w-12 h-12 bg-synthwave-text-muted/20 rounded-2xl animate-pulse"></div>
           </div>
 
-          {/* Status skeleton */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mt-2">
-            <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
+          {/* Status skeleton - compact on mobile */}
+          <div className="flex items-center justify-between gap-2 mt-2">
+            <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-32 sm:w-48"></div>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
               <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-12"></div>
             </div>
           </div>
 
-          {/* Progress/Size Indicator skeleton */}
-          <div className="mt-4 flex justify-end">
+          {/* Progress/Size Indicator skeleton - hide on mobile */}
+          <div className="mt-4 justify-end hidden sm:flex">
             <div className="max-w-xs w-full">
               <div className="flex items-center justify-between mb-1">
                 <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-32"></div>
@@ -700,13 +707,13 @@ function ChatInput({
 
   return (
     <div
-      className="fixed bottom-0 left-0 right-0 bg-synthwave-bg-card/95 backdrop-blur-lg border-t-2 border-synthwave-neon-pink/30 shadow-lg shadow-synthwave-neon-pink/20 z-50"
+      className="fixed bottom-0 left-0 right-0 bg-synthwave-bg-card/95 backdrop-blur-lg border-t-2 border-synthwave-neon-pink/30 shadow-lg shadow-synthwave-neon-pink/20 z-50 pb-[env(safe-area-inset-bottom)]"
       data-chat-input-container
     >
-      <div className="max-w-7xl mx-auto px-8 py-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-8 py-4 sm:py-6">
         {/* Image Preview Grid */}
         {selectedImages.length > 0 && (
-          <div className="mb-2 pl-[156px]">
+          <div className="mb-2 pl-0 sm:pl-[156px]">
             <div className={imagePreviewPatterns.grid}>
               {selectedImages.map(image => (
                 <div
@@ -777,7 +784,7 @@ function ChatInput({
         )}
 
         {/* Input area */}
-        <form onSubmit={handleSendMessage} className="flex items-end gap-3">
+        <form onSubmit={handleSendMessage} className="flex items-end gap-2 sm:gap-3">
           {/* Hidden file input */}
           <input
             ref={photoInputRef}
@@ -789,12 +796,12 @@ function ChatInput({
           />
           {/* Action buttons */}
           <div className="flex items-center gap-2 relative self-end mb-2">
-            {/* Tips button */}
+            {/* Tips button - hide on mobile, show on desktop */}
             {showTipsButton && tipsContent && (
               <button
                 type="button"
                 onClick={() => setShowTipsModal(true)}
-                className={iconButtonPatterns.actionSmallCyan}
+                className={`${iconButtonPatterns.actionSmallCyan} hidden sm:flex`}
                 data-tooltip-id="tips-tooltip"
                 data-tooltip-content={tipsTitle}
                 data-tooltip-place="top"
@@ -802,8 +809,8 @@ function ChatInput({
                 <QuestionIcon />
               </button>
             )}
-            {/* Quick Actions button - only show if at least one attachment type is enabled */}
-            {(enablePhotoAttachment || enableFileAttachment) && (
+            {/* Quick Actions button - always show (contains everything on mobile) */}
+            {(enablePhotoAttachment || enableFileAttachment || showTipsButton || showDeleteButton) && (
               <div className="relative" data-quick-actions-container>
                 <button
                   type="button"
@@ -824,7 +831,7 @@ function ChatInput({
                     className={`absolute bottom-full mb-2 left-0 w-56 z-50 ${containerPatterns.cardMediumOpaque}`}
                   >
                     <div className="py-2">
-                      {/* Quick Prompts Menu Item */}
+                      {/* Quick Prompts Menu Item - always show */}
                       <div className="relative">
                         <button
                           type="button"
@@ -910,8 +917,10 @@ function ChatInput({
                         )}
                       </div>
 
-                      {/* Divider */}
-                      <div className="my-2 border-t border-synthwave-neon-pink/20"></div>
+                      {/* Divider - only show if there are attachment options */}
+                      {(enablePhotoAttachment || enableFileAttachment) && (
+                        <div className="my-2 border-t border-synthwave-neon-pink/20"></div>
+                      )}
 
                       {enablePhotoAttachment && (
                         <button
@@ -947,17 +956,54 @@ function ChatInput({
                           <span>Attach Files</span>
                         </button>
                       )}
+
+                      {/* Divider before utility actions */}
+                      {(showTipsButton || showDeleteButton) && (
+                        <div className="my-2 border-t border-synthwave-neon-pink/20"></div>
+                      )}
+
+                      {/* Tips - show in menu on mobile, standalone button on desktop */}
+                      {showTipsButton && tipsContent && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowQuickActionsPopup(false);
+                            setShowTipsModal(true);
+                          }}
+                          className="sm:hidden flex items-center space-x-3 px-4 py-2 font-rajdhani font-medium text-synthwave-text-primary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-300 w-full text-left"
+                        >
+                          <QuestionIcon />
+                          <span>Tips & Help</span>
+                        </button>
+                      )}
+
+                      {/* Delete - show in menu on mobile, standalone button on desktop */}
+                      {showDeleteButton && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowQuickActionsPopup(false);
+                            onDeleteClick && onDeleteClick();
+                          }}
+                          className="sm:hidden flex items-center space-x-3 px-4 py-2 font-rajdhani font-medium text-synthwave-text-primary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-300 w-full text-left"
+                        >
+                          <TrashIcon />
+                          <span>Delete Session</span>
+                        </button>
+                      )}
                     </div>
                   </div>
                 )}
               </div>
             )}
+            {/* Delete button - hide on mobile, show on desktop */}
+            {/* Delete button - hide on mobile, show on desktop */}
             {showDeleteButton && (
               <button
                 type="button"
                 onClick={onDeleteClick}
                 disabled={isTyping}
-                className={iconButtonPatterns.actionSmallPink}
+                className={`${iconButtonPatterns.actionSmallPink} hidden sm:flex`}
                 data-tooltip-id="delete-conversation-tooltip"
                 data-tooltip-content="Delete conversation"
                 data-tooltip-place="top"
@@ -997,7 +1043,7 @@ function ChatInput({
                 autoResizeTextarea(e.target);
               }}
               onKeyDown={handleKeyPress}
-              placeholder={placeholder}
+              placeholder={window.innerWidth < 640 ? "Talk to me..." : placeholder}
               rows={1}
               className={`${inputPatterns.chatInput} ${scrollbarPatterns.pink} !text-synthwave-text-secondary`}
               style={{
@@ -1293,9 +1339,10 @@ function ChatInput({
           </div>
         </form>
 
-        {/* Status/Tips */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mt-2 text-xs text-synthwave-text-muted font-rajdhani">
-          <span className="text-center sm:text-left">
+        {/* Status */}
+        <div className="flex items-center justify-between gap-2 mt-2 text-xs text-synthwave-text-muted font-rajdhani">
+          {/* Desktop: Full status message */}
+          <span className="hidden sm:block">
             {coachName} is
             {isOnline ? (
               <span className="text-green-400 ml-1">
@@ -1305,11 +1352,24 @@ function ChatInput({
               <span className="text-synthwave-text-secondary ml-1">away</span>
             )}
           </span>
-          <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4">
+          {/* Mobile: Compact status */}
+          <span className="sm:hidden flex items-center gap-1.5">
+            <span>{coachName}</span>
+            <span className="text-synthwave-text-secondary">•</span>
+            <div className="flex items-center gap-1">
+              <div
+                className={`w-2 h-2 rounded-full ${isOnline ? "bg-green-500 animate-pulse" : "bg-gray-500"}`}
+              ></div>
+              <span>{isOnline ? "Online" : "Away"}</span>
+            </div>
+          </span>
+          <div className="flex items-center gap-4">
+            {/* Desktop: Show keyboard shortcuts */}
             <span className="hidden sm:inline">
               Press Enter to send • Shift+Enter for new line
             </span>
-            <div className="flex items-center gap-1">
+            {/* Desktop: Status indicator */}
+            <div className="hidden sm:flex items-center gap-1">
               <div
                 className={`w-2 h-2 rounded-full ${isOnline ? "bg-green-500 animate-pulse" : "bg-gray-500"}`}
               ></div>
@@ -1318,9 +1378,9 @@ function ChatInput({
           </div>
         </div>
 
-        {/* Coach Creation Progress Indicator */}
+        {/* Coach Creation Progress Indicator - hide on mobile */}
         {progressData && (
-          <div className="mt-4 flex justify-end">
+          <div className="mt-4 justify-end hidden sm:flex">
             <div className="max-w-xs w-full">
               <div className="flex items-center justify-between">
                 <span className="font-rajdhani text-xs">
@@ -1363,9 +1423,9 @@ function ChatInput({
           </div>
         )}
 
-        {/* Conversation Size Indicator */}
+        {/* Conversation Size Indicator - hide on mobile */}
         {conversationSize && (
-          <div className="mt-4 flex justify-end">
+          <div className="mt-4 justify-end hidden sm:flex">
             <div className="max-w-xs w-full">
               <div className="flex items-center justify-between">
                 <span className="font-rajdhani text-xs text-synthwave-text-muted">
