@@ -24,6 +24,8 @@ export function createContactFormNotificationTopic(stack: Stack) {
 
   return {
     topic: contactFormTopic,
+    topicArn: contactFormTopic.topicArn,
+    topicName: topicName,
   };
 }
 
@@ -49,6 +51,32 @@ export function createErrorMonitoringTopic(stack: Stack) {
   return {
     topic: errorMonitoringTopic,
     topicArn: errorMonitoringTopic.topicArn,
+    topicName: topicName,
+  };
+}
+
+export function createUserRegistrationTopic(stack: Stack) {
+  // Create branch-aware topic name using utility
+  const { branchInfo, resourceName: topicName } = createBranchAwareResourceName(
+    stack,
+    'user-registration',
+    'SNS Topic'
+  );
+
+  // Create SNS topic for user registration notifications
+  const userRegistrationTopic = new sns.Topic(stack, 'UserRegistrationTopic', {
+    topicName: topicName,
+    displayName: `NeonPanda User Registration${branchInfo.branchName === 'main' ? '' : ` (${branchInfo.branchName})`}`,
+  });
+
+  // Add email subscription for support team
+  userRegistrationTopic.addSubscription(
+    new subscriptions.EmailSubscription('support@neonpanda.ai')
+  );
+
+  return {
+    topic: userRegistrationTopic,
+    topicArn: userRegistrationTopic.topicArn,
     topicName: topicName,
   };
 }

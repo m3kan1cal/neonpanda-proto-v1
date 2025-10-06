@@ -6,6 +6,7 @@ import {
 import type { PostConfirmationTriggerEvent, PostConfirmationTriggerHandler } from 'aws-lambda'
 import { saveUserProfile, getUserProfileByEmail } from '../../dynamodb/operations'
 import type { UserProfile } from '../libs/user/types'
+import { publishUserRegistrationNotification, type UserRegistrationData } from '../libs/sns-helpers'
 
 const cognitoClient = new CognitoIdentityProviderClient({
   region: process.env.AWS_REGION
@@ -48,6 +49,24 @@ export const handler: PostConfirmationTriggerHandler = async (event: PostConfirm
 
       await cognitoClient.send(cognitoCommand)
       console.info(`Successfully linked existing profile ${existingCustomUserId} to Cognito user: ${event.userName}`)
+
+      // Send SNS notification for existing user re-linking
+      try {
+        const registrationData: UserRegistrationData = {
+          userId: existingCustomUserId,
+          username: preferredUsername,
+          email: email,
+          firstName: givenName,
+          lastName: familyName,
+          displayName: existingProfile.attributes.displayName || `${givenName} ${familyName}`.trim() || preferredUsername,
+          timestamp: new Date().toISOString(),
+          isNewProfile: false
+        };
+        await publishUserRegistrationNotification(registrationData);
+      } catch (snsError) {
+        console.error('Failed to send SNS notification for existing user:', snsError);
+        // Don't throw - continue with registration even if SNS fails
+      }
 
       return event
     }
@@ -107,6 +126,24 @@ export const handler: PostConfirmationTriggerHandler = async (event: PostConfirm
 
     await saveUserProfile(userProfile)
     console.info(`Successfully created user profile for: ${customUserId}`)
+
+    // Send SNS notification for new user registration
+    try {
+      const registrationData: UserRegistrationData = {
+        userId: customUserId,
+        username: preferredUsername,
+        email: email,
+        firstName: givenName,
+        lastName: familyName,
+        displayName: userProfile.displayName,
+        timestamp: new Date().toISOString(),
+        isNewProfile: true
+      };
+      await publishUserRegistrationNotification(registrationData);
+    } catch (snsError) {
+      console.error('Failed to send SNS notification for new user:', snsError);
+      // Don't throw - continue with registration even if SNS fails
+    }
 
     return event
 
