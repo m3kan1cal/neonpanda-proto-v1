@@ -53,7 +53,7 @@ import { generateDownloadUrls } from "./functions/generate-download-urls/resourc
 import { apiGatewayv2 } from "./api/resource";
 import { dynamodbTable } from "./dynamodb/resource";
 import { createAppsBucket } from "./storage/resource";
-import { createContactFormNotificationTopic, createErrorMonitoringTopic } from "./sns/resource";
+import { createContactFormNotificationTopic, createErrorMonitoringTopic, createUserRegistrationTopic } from "./sns/resource";
 import { config } from "./functions/libs/configs";
 import { Effect, PolicyStatement, ServicePrincipal } from "aws-cdk-lib/aws-iam";
 import { syncLogSubscriptions, createSyncLogSubscriptionsSchedule } from "./functions/sync-log-subscriptions/resource";
@@ -169,6 +169,7 @@ const appsBucket = createAppsBucket(backend.contactForm.stack);
 // Create SNS topics for notifications
 const contactFormNotifications = createContactFormNotificationTopic(backend.contactForm.stack);
 const errorMonitoringTopic = createErrorMonitoringTopic(backend.contactForm.stack);
+const userRegistrationTopic = createUserRegistrationTopic(backend.postConfirmation.stack);
 
 // Get branch information for S3 policies
 const branchInfo = getBranchInfo(backend.contactForm.stack);
@@ -338,6 +339,9 @@ backend.postConfirmation.resources.lambda.addToRolePolicy(
 
 // Grant SNS permissions to contact form function
 contactFormNotifications.topic.grantPublish(backend.contactForm.resources.lambda);
+
+// Grant SNS publish permissions to post-confirmation function
+userRegistrationTopic.topic.grantPublish(backend.postConfirmation.resources.lambda);
 
 // Grant SNS publish permissions to forwardLogsToSns
 errorMonitoringTopic.topic.grantPublish(backend.forwardLogsToSns.resources.lambda);
@@ -550,6 +554,9 @@ backend.syncLogSubscriptions.addEnvironment('IMMEDIATE_RUN', 'true');
 
 // Add SNS topic ARN to contact form function
 backend.contactForm.addEnvironment("CONTACT_FORM_TOPIC_ARN", contactFormNotifications.topic.topicArn);
+
+// Add SNS topic ARN to post-confirmation function
+backend.postConfirmation.addEnvironment("USER_REGISTRATION_TOPIC_ARN", userRegistrationTopic.topicArn);
 
 // Add function name environment variables
 backend.updateCoachCreatorSession.addEnvironment(
