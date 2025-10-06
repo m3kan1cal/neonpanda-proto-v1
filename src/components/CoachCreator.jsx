@@ -105,7 +105,7 @@ const MessageItem = memo(({
 
       {/* Message Bubble */}
       <div
-        className={`max-w-[70%] ${message.type === "user" ? "items-end" : "items-start"} flex flex-col`}
+        className={`max-w-[95%] sm:max-w-[70%] ${message.type === "user" ? "items-end" : "items-start"} flex flex-col`}
       >
         <div
           className={getStreamingMessageClasses(
@@ -558,9 +558,9 @@ function CoachCreator() {
         {/* Main Content Area */}
         <div className="flex-1 flex justify-center">
           <div className="w-full max-w-7xl">
-            <div className={`${containerPatterns.mainContent} h-full flex flex-col`}>
+            <div className={`sm:${containerPatterns.mainContent} h-full flex flex-col`}>
               {/* Messages Area - with bottom padding for floating input + progress indicator */}
-              <div className="flex-1 overflow-y-auto overflow-hidden p-6 pb-48 space-y-4 custom-scrollbar">
+              <div className="flex-1 overflow-y-auto overflow-hidden p-3 sm:p-6 pb-32 sm:pb-48 space-y-4 custom-scrollbar">
                 {agentState.messages
                   .filter((message) => {
                     // Filter out empty streaming placeholder messages
