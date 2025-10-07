@@ -468,7 +468,7 @@ function Coaches() {
         )}
 
         {/* Coaches Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto auto-rows-fr">
             {/* Add New Coach Card */}
             <div
               onClick={isCreatingCustomCoach ? undefined : handleCreateCoach}
@@ -744,7 +744,7 @@ function Coaches() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto auto-rows-fr">
               {inProgressSessions.map((session) => {
                 // Determine session status and styling
                 const isBuilding = session.configGeneration?.status === 'IN_PROGRESS';
@@ -952,7 +952,7 @@ function Coaches() {
 
           {/* Templates Grid */}
           {!agentState.templatesLoading && agentState.templates && agentState.templates.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto auto-rows-fr">
               {agentState.templates.map((template) => (
                 <div
                   key={template.template_id}

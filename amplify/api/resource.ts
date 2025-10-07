@@ -41,6 +41,7 @@ export function createCoreApi(
   deleteCoachConversationLambda: lambda.IFunction,
   getUserProfileLambda: lambda.IFunction,
   updateUserProfileLambda: lambda.IFunction,
+  checkUserAvailabilityLambda: lambda.IFunction,
   generateUploadUrlsLambda: lambda.IFunction,
   generateDownloadUrlsLambda: lambda.IFunction,
   userPoolAuthorizer: HttpUserPoolAuthorizer
@@ -298,6 +299,11 @@ export function createCoreApi(
     generateDownloadUrlsLambda
   );
 
+  const checkUserAvailabilityIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
+    'CheckUserAvailabilityIntegration',
+    checkUserAvailabilityLambda
+  );
+
   // Create integrations object for route configuration
   const integrations = {
     contactForm: contactFormIntegration,
@@ -333,6 +339,7 @@ export function createCoreApi(
     deleteCoachConversation: deleteCoachConversationIntegration,
     getUserProfile: getUserProfileIntegration,
     updateUserProfile: updateUserProfileIntegration,
+    checkUserAvailability: checkUserAvailabilityIntegration,
     generateUploadUrls: generateUploadUrlsIntegration,
     generateDownloadUrls: generateDownloadUrlsIntegration
   };
@@ -346,6 +353,13 @@ export function createCoreApi(
     path: '/contact',
     methods: [apigatewayv2.HttpMethod.POST],
     integration: integrations.contactForm
+  });
+
+  // User Availability Check (PUBLIC - for registration)
+  httpApi.addRoutes({
+    path: '/users/check-availability',
+    methods: [apigatewayv2.HttpMethod.GET],
+    integration: integrations.checkUserAvailability
   });
 
   // Coach Templates (PUBLIC - as requested by user)

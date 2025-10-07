@@ -707,7 +707,7 @@ function ChatInput({
 
   return (
     <div
-      className="fixed bottom-0 left-0 right-0 bg-synthwave-bg-card/95 backdrop-blur-lg border-t-2 border-synthwave-neon-pink/30 shadow-lg shadow-synthwave-neon-pink/20 z-50 pb-[env(safe-area-inset-bottom)]"
+      className="fixed bottom-0 left-0 right-0 bg-synthwave-bg-card/95 backdrop-blur-lg border-t-2 border-synthwave-neon-pink/30 shadow-lg shadow-synthwave-neon-pink/20 z-50"
       data-chat-input-container
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-8 py-4 sm:py-6">

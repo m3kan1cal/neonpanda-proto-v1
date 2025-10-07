@@ -48,6 +48,7 @@ import { deleteCoachConversation } from "./functions/delete-coach-conversation/r
 import { forwardLogsToSns } from "./functions/forward-logs-to-sns/resource";
 import { getUserProfile } from "./functions/get-user-profile/resource";
 import { updateUserProfile } from "./functions/update-user-profile/resource";
+import { checkUserAvailability } from "./functions/check-user-availability/resource";
 import { generateUploadUrls } from "./functions/generate-upload-urls/resource";
 import { generateDownloadUrls } from "./functions/generate-download-urls/resource";
 import { apiGatewayv2 } from "./api/resource";
@@ -105,6 +106,7 @@ const backend = defineBackend({
   forwardLogsToSns,
   getUserProfile,
   updateUserProfile,
+  checkUserAvailability,
   generateUploadUrls,
   generateDownloadUrls,
   syncLogSubscriptions,
@@ -155,6 +157,7 @@ const coreApi = apiGatewayv2.createCoreApi(
   backend.deleteCoachConversation.resources.lambda,
   backend.getUserProfile.resources.lambda,
   backend.updateUserProfile.resources.lambda,
+  backend.checkUserAvailability.resources.lambda,
   backend.generateUploadUrls.resources.lambda,
   backend.generateDownloadUrls.resources.lambda,
   userPoolAuthorizer
@@ -242,6 +245,7 @@ const sharedPolicies = new SharedPolicies(
   backend.getWeeklyReport,
   backend.getMemories,
   backend.getUserProfile,
+  backend.checkUserAvailability,
   backend.generateUploadUrls,
   backend.generateDownloadUrls,
 ].forEach(func => {
@@ -266,6 +270,7 @@ const sharedPolicies = new SharedPolicies(
 // Functions needing S3 DEBUG bucket access
 [
   backend.buildWorkout,
+  backend.buildConversationSummary,
   backend.sendCoachConversationMessage,
   backend.streamCoachConversation,
   backend.streamCoachCreatorSession,
@@ -292,6 +297,7 @@ sharedPolicies.attachS3AnalyticsAccess(backend.buildWeeklyAnalytics.resources.la
 [
   // NOTE: postConfirmation excluded to avoid circular dependency with auth stack
   backend.updateUserProfile,
+  backend.checkUserAvailability,
 ].forEach(func => {
   sharedPolicies.attachCognitoAdmin(func.resources.lambda);
 });
@@ -477,6 +483,7 @@ const allFunctions = [
   backend.createCoachConfig,
   backend.getUserProfile,
   backend.updateUserProfile,
+  backend.checkUserAvailability,
   backend.generateUploadUrls,
   // NOTE: forwardLogsToSns and syncLogSubscriptions excluded - they're utility functions that don't need app resources
 ];
@@ -557,6 +564,9 @@ backend.contactForm.addEnvironment("CONTACT_FORM_TOPIC_ARN", contactFormNotifica
 
 // Add SNS topic ARN to post-confirmation function
 backend.postConfirmation.addEnvironment("USER_REGISTRATION_TOPIC_ARN", userRegistrationTopic.topicArn);
+
+// Add USER_POOL_ID to checkUserAvailability function
+backend.checkUserAvailability.addEnvironment("USER_POOL_ID", backend.auth.resources.userPool.userPoolId);
 
 // Add function name environment variables
 backend.updateCoachCreatorSession.addEnvironment(

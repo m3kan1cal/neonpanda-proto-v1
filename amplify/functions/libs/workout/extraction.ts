@@ -1220,6 +1220,37 @@ Return confidence 0.8+ for clear classifications, 0.5-0.7 for moderate cases, <0
       discipline,
       MODEL_IDS.CLAUDE_HAIKU_FULL
     );
+
+    // Store prompt and response in S3 for debugging
+    try {
+      await storeDebugDataInS3(
+        classificationPrompt,
+        {
+          discipline,
+          hasWorkoutContext: !!workoutData,
+          workoutName: workoutData?.workout_name,
+          workoutType: workoutData?.workout_type,
+          promptLength: classificationPrompt.length,
+          type: "discipline-classification-prompt",
+        },
+        "workout-discipline"
+      );
+
+      await storeDebugDataInS3(
+        response,
+        {
+          discipline,
+          responseLength: response.length,
+          type: "discipline-classification-response",
+        },
+        "workout-discipline"
+      );
+
+      console.info("✅ Stored discipline classification prompt + response in S3");
+    } catch (s3Error) {
+      console.warn("⚠️ Failed to store discipline classification in S3 (non-critical):", s3Error);
+    }
+
     const result = JSON.parse(response.trim());
 
     console.info("AI discipline classification result:", {

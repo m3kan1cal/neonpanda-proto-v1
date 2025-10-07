@@ -6,12 +6,19 @@ import { createBranchAwareResourceName } from '../functions/libs/branch-naming';
 export function createAppsBucket(scope: Construct) {
   const stack = Stack.of(scope);
 
-  // Use standard branch-aware naming: midgard-apps, midgard-apps-develop, midgard-apps-sandbox-{id}
-  const { branchInfo, resourceName: bucketName } = createBranchAwareResourceName(
+  // Use standard branch-aware naming, but S3 buckets always get suffix (including -main)
+  const { branchInfo, resourceName } = createBranchAwareResourceName(
     stack,
     'midgard-apps',
     'S3 Apps Bucket'
   );
+
+  // Override for S3: ensure main branch also gets -main suffix
+  const bucketName = branchInfo.isSandbox
+    ? resourceName  // sandbox-{id} stays as is
+    : branchInfo.branchName === 'main'
+    ? `${resourceName}-main`  // Explicitly add -main for production
+    : resourceName;  // Other branches already have suffix from branch naming
 
   const bucket = new s3.Bucket(scope, 'AppsBucket', {
     bucketName: bucketName,
@@ -59,4 +66,3 @@ export function createAppsBucket(scope: Construct) {
     branchInfo,
   };
 }
-

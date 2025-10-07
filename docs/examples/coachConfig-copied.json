@@ -1,8 +1,8 @@
 {
-  "pk": "user#4sVTVPd6aJdRq",
-  "sk": "coach#user_4sVTVPd6aJdRq_coach_1756078034317",
+  "pk": "user#63gocaz-j-AYRsb0094ik",
+  "sk": "coach#user_63gocaz-j-AYRsb0094ik_coach_1756078034317",
   "attributes": {
-    "coach_id": "user_4sVTVPd6aJdRq_coach_1756078034317",
+    "coach_id": "user_63gocaz-j-AYRsb0094ik_coach_1756078034317",
     "coach_name": "Victoria_The_Masters_Champion",
     "generated_prompts": {
       "communication_style": "Communicate with respect for decades of CrossFit and heavy lifting experience while maintaining performance focus on competitive CrossFit and functional strength development. Use sophisticated training language that acknowledges deep strength training expertise while providing cutting-edge insights for masters CrossFit competition. Balance competitive drive with intelligent progression in heavy lifting and complex movements. Emphasize legacy building and age-group excellence in CrossFit competition. Provide data-driven feedback that leverages experience for optimal strength and performance gains.",
@@ -85,6 +85,7 @@
       "version": "1.0"
     },
     "modification_capabilities": {
+      "creative_programming": "high",
       "enabled_modifications": [
         "progression_speed_adjustments",
         "exercise_modifications",
@@ -95,16 +96,15 @@
       ],
       "personality_flexibility": "moderate",
       "programming_adaptability": "high",
-      "creative_programming": "high",
-      "workout_variety_emphasis": "high",
-      "safety_override_level": "moderate"
+      "safety_override_level": "moderate",
+      "workout_variety_emphasis": "high"
     },
     "selected_methodology": {
+      "creativity_emphasis": "high_variety",
       "methodology_reasoning": "Block Periodization methodology is perfect for competitive masters athletes as it emphasizes concentrated loading on minimal training targets, advanced recovery integration, and systematic competition preparation. The block structure (Accumulation → Transmutation → Realization) aligns with their extensive experience while addressing age-related recovery needs through focused periodization. This allows heavy lifting development in Accumulation blocks, CrossFit-specific skills in Transmutation blocks, and competition peaking in Realization blocks.",
       "periodization_approach": "block",
       "primary_methodology": "BLOCK_PERIODIZATION",
       "programming_emphasis": "strength_focused_crossfit_competition_preparation",
-      "creativity_emphasis": "high_variety",
       "workout_innovation": "enabled"
     },
     "selected_personality": {

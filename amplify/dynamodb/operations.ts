@@ -1559,6 +1559,52 @@ export async function getUserProfileByEmail(
 }
 
 /**
+ * Get a user profile by username using GSI-2
+ */
+export async function getUserProfileByUsername(
+  username: string
+): Promise<DynamoDBItem<UserProfile> | null> {
+  const tableName = getTableName();
+
+  return withThroughputScaling(async () => {
+    console.info(`Querying user profile by username: ${username}`);
+
+    const command = new QueryCommand({
+      TableName: tableName,
+      IndexName: "gsi2",
+      KeyConditionExpression: "gsi2pk = :gsi2pk AND gsi2sk = :gsi2sk",
+      ExpressionAttributeValues: {
+        ":gsi2pk": `username#${username}`,
+        ":gsi2sk": "profile",
+      },
+      Limit: 1, // Should only be one user per username
+    });
+
+    const result = await docClient.send(command);
+    const items = (result.Items || []) as DynamoDBItem<UserProfile>[];
+
+    if (items.length === 0) {
+      console.info(`No user profile found for username: ${username}`);
+      return null;
+    }
+
+    if (items.length > 1) {
+      console.warn(`⚠️ Multiple user profiles found for username: ${username}`, {
+        count: items.length,
+        userIds: items.map(item => item.attributes.userId)
+      });
+    }
+
+    console.info(`User profile found for username: ${username}`, {
+      userId: items[0].attributes.userId,
+      email: items[0].attributes.email
+    });
+
+    return items[0];
+  }, `Query user profile by username: ${username}`);
+}
+
+/**
  * Update a user profile
  */
 export async function updateUserProfile(

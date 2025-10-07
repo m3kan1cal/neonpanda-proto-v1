@@ -3,6 +3,7 @@ import {
   createErrorResponse,
   callBedrockApi,
   MODEL_IDS,
+  storeDebugDataInS3,
 } from "../libs/api-helpers";
 import { saveWorkout } from "../../dynamodb/operations";
 import {
@@ -90,6 +91,54 @@ export const handler = async (event: BuildWorkoutEvent) => {
         extractedData.substring(0, 500) +
         (extractedData.length > 500 ? "..." : ""),
     });
+
+    // Store extraction prompt and response in S3 for debugging
+    try {
+      const promptSizeKB = (extractionPrompt.length / 1024).toFixed(2);
+      const responseSizeKB = (extractedData.length / 1024).toFixed(2);
+
+      await storeDebugDataInS3(
+        extractionPrompt,
+        {
+          userId: event.userId,
+          coachId: event.coachId,
+          conversationId: event.conversationId,
+          coachName: event.coachConfig.coach_name,
+          detectionType: event.isSlashCommand ? "slash_command" : "natural_language",
+          slashCommand: event.slashCommand || null,
+          workoutContentLength: workoutContent.length,
+          promptSizeKB,
+          isComplexWorkout,
+          enableThinking,
+          type: "workout-extraction-prompt",
+        },
+        "workout-extraction"
+      );
+
+      await storeDebugDataInS3(
+        extractedData,
+        {
+          userId: event.userId,
+          coachId: event.coachId,
+          conversationId: event.conversationId,
+          responseSizeKB,
+          responseLength: extractedData.length,
+          detectionType: event.isSlashCommand ? "slash_command" : "natural_language",
+          type: "workout-extraction-response",
+        },
+        "workout-extraction"
+      );
+
+      console.info("✅ Stored workout extraction prompt + response in S3", {
+        promptSizeKB,
+        responseSizeKB,
+      });
+    } catch (s3Error) {
+      console.warn(
+        "⚠️ Failed to store extraction data in S3 (non-critical):",
+        s3Error
+      );
+    }
 
     console.info("Parsing extracted data...");
 

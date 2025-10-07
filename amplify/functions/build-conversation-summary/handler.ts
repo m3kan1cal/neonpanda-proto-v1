@@ -2,6 +2,7 @@ import {
   createOkResponse,
   createErrorResponse,
   callBedrockApi,
+  storeDebugDataInS3,
 } from "../libs/api-helpers";
 import {
   saveCoachConversationSummary,
@@ -111,6 +112,25 @@ export const handler = async (event: BuildCoachConversationSummaryEvent) => {
         (summaryPrompt.length > 1000 ? "..." : ""),
     });
 
+    // Store prompt in S3 for debugging
+    try {
+      await storeDebugDataInS3(
+        summaryPrompt,
+        {
+          userId: event.userId,
+          coachId: event.coachId,
+          conversationId: event.conversationId,
+          messageCount: conversation.messages.length,
+          hasExistingSummary: !!existingSummary,
+          promptLength: summaryPrompt.length,
+        },
+        "conversation-summary"
+      );
+      console.info("✅ Stored conversation summary prompt in S3 for debugging");
+    } catch (err) {
+      console.warn("⚠️ Failed to store prompt in S3 (non-critical):", err);
+    }
+
     // Call Claude for conversation summarization
     console.info("🤖 Calling Claude for conversation summarization...");
     const conversationContent = conversation.messages
@@ -124,6 +144,24 @@ export const handler = async (event: BuildCoachConversationSummaryEvent) => {
       responsePreview:
         aiResponse.substring(0, 500) + (aiResponse.length > 500 ? "..." : ""),
     });
+
+    // Store AI response in S3 for debugging
+    try {
+      await storeDebugDataInS3(
+        aiResponse,
+        {
+          userId: event.userId,
+          coachId: event.coachId,
+          conversationId: event.conversationId,
+          responseLength: aiResponse.length,
+          messageCount: conversation.messages.length,
+        },
+        "conversation-summary"
+      );
+      console.info("✅ Stored conversation summary AI response in S3 for debugging");
+    } catch (err) {
+      console.warn("⚠️ Failed to store AI response in S3 (non-critical):", err);
+    }
 
     // Parse and validate the conversation summary
     console.info("⚙️ Parsing conversation summary...");

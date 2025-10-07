@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useAuthForm } from '../hooks/useAuthForm';
 import { getErrorMessage, validateEmail, validatePassword, validateUsername, validateName } from '../utils/authHelpers';
+import { formPatterns } from '../../utils/uiPatterns';
+import { checkUserAvailability } from '../../utils/apis/userApi';
 import AuthLayout from './AuthLayout';
 import AuthInput from './AuthInput';
 import AuthButton from './AuthButton';
@@ -10,6 +12,14 @@ import AuthErrorMessage from './AuthErrorMessage';
 const RegisterForm = ({ onSwitchToLogin, onRegistrationSuccess }) => {
   const { signUp } = useAuth();
   const [globalError, setGlobalError] = useState('');
+
+  // Availability checking state
+  const [emailAvailability, setEmailAvailability] = useState({ status: 'idle', available: null }); // idle, checking, available, taken
+  const [usernameAvailability, setUsernameAvailability] = useState({ status: 'idle', available: null });
+
+  // Debounce timers
+  const emailCheckTimer = useRef(null);
+  const usernameCheckTimer = useRef(null);
 
   const {
     formData,
@@ -27,6 +37,93 @@ const RegisterForm = ({ onSwitchToLogin, onRegistrationSuccess }) => {
     password: '',
     confirmPassword: ''
   });
+
+  // Check email availability with debounce
+  const checkEmailAvailability = async (email) => {
+    if (!email || !validateEmail(email)) {
+      setEmailAvailability({ status: 'idle', available: null });
+      return;
+    }
+
+    setEmailAvailability({ status: 'checking', available: null });
+
+    try {
+      const response = await checkUserAvailability('email', email);
+
+      setEmailAvailability({
+        status: response.available ? 'available' : 'taken',
+        available: response.available
+      });
+    } catch (error) {
+      console.error('Error checking email availability:', error);
+      setEmailAvailability({ status: 'idle', available: null });
+    }
+  };
+
+  // Check username availability with debounce
+  const checkUsernameAvailability = async (username) => {
+    const usernameError = validateUsername(username);
+    if (!username || usernameError) {
+      setUsernameAvailability({ status: 'idle', available: null });
+      return;
+    }
+
+    setUsernameAvailability({ status: 'checking', available: null });
+
+    try {
+      const response = await checkUserAvailability('username', username);
+
+      setUsernameAvailability({
+        status: response.available ? 'available' : 'taken',
+        available: response.available
+      });
+    } catch (error) {
+      console.error('Error checking username availability:', error);
+      setUsernameAvailability({ status: 'idle', available: null });
+    }
+  };
+
+  // Effect for email checking with debounce
+  useEffect(() => {
+    if (emailCheckTimer.current) {
+      clearTimeout(emailCheckTimer.current);
+    }
+
+    if (formData.email) {
+      emailCheckTimer.current = setTimeout(() => {
+        checkEmailAvailability(formData.email);
+      }, 500);
+    } else {
+      setEmailAvailability({ status: 'idle', available: null });
+    }
+
+    return () => {
+      if (emailCheckTimer.current) {
+        clearTimeout(emailCheckTimer.current);
+      }
+    };
+  }, [formData.email]);
+
+  // Effect for username checking with debounce
+  useEffect(() => {
+    if (usernameCheckTimer.current) {
+      clearTimeout(usernameCheckTimer.current);
+    }
+
+    if (formData.username) {
+      usernameCheckTimer.current = setTimeout(() => {
+        checkUsernameAvailability(formData.username);
+      }, 500);
+    } else {
+      setUsernameAvailability({ status: 'idle', available: null });
+    }
+
+    return () => {
+      if (usernameCheckTimer.current) {
+        clearTimeout(usernameCheckTimer.current);
+      }
+    };
+  }, [formData.username]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -132,29 +229,97 @@ const RegisterForm = ({ onSwitchToLogin, onRegistrationSuccess }) => {
           <AuthErrorMessage error={globalError} className="text-center p-3 bg-synthwave-neon-cyan/10 rounded-lg" />
         )}
 
-        <AuthInput
-          label="Email"
-          name="email"
-          type="email"
-          value={formData.email}
-          onChange={handleInputChange}
-          placeholder="Enter your email address"
-          error={errors.email}
-          required
-          disabled={isSubmitting}
-        />
+        <div>
+          <AuthInput
+            label="Email"
+            name="email"
+            type="email"
+            value={formData.email}
+            onChange={handleInputChange}
+            placeholder="Enter your email address"
+            error={errors.email}
+            required
+            disabled={isSubmitting}
+          />
+          {/* Email Availability Indicator */}
+          {emailAvailability.status !== 'idle' && (
+            <div className={formPatterns.availabilityContainer}>
+              <span className={formPatterns.availabilityIcon}>
+                {emailAvailability.status === 'checking' && (
+                  <svg className="animate-spin h-4 w-4 text-synthwave-text-muted" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                )}
+                {emailAvailability.status === 'available' && (
+                  <svg className="h-4 w-4 text-synthwave-neon-cyan" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                )}
+                {emailAvailability.status === 'taken' && (
+                  <svg className="h-4 w-4 text-synthwave-neon-pink" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                )}
+              </span>
+              <span className={
+                emailAvailability.status === 'checking' ? formPatterns.availabilityChecking :
+                emailAvailability.status === 'available' ? formPatterns.availabilityAvailable :
+                formPatterns.availabilityTaken
+              }>
+                {emailAvailability.status === 'checking' && 'Checking availability...'}
+                {emailAvailability.status === 'available' && 'Email available'}
+                {emailAvailability.status === 'taken' && 'Email already registered'}
+              </span>
+            </div>
+          )}
+        </div>
 
-        <AuthInput
-          label="Username"
-          name="username"
-          type="text"
-          value={formData.username}
-          onChange={handleInputChange}
-          placeholder="Choose a username (e.g., fitness_warrior)"
-          error={errors.username}
-          required
-          disabled={isSubmitting}
-        />
+        <div>
+          <AuthInput
+            label="Username"
+            name="username"
+            type="text"
+            value={formData.username}
+            onChange={handleInputChange}
+            placeholder="Choose a username (e.g., fitness_warrior)"
+            error={errors.username}
+            required
+            disabled={isSubmitting}
+          />
+          {/* Username Availability Indicator */}
+          {usernameAvailability.status !== 'idle' && (
+            <div className={formPatterns.availabilityContainer}>
+              <span className={formPatterns.availabilityIcon}>
+                {usernameAvailability.status === 'checking' && (
+                  <svg className="animate-spin h-4 w-4 text-synthwave-text-muted" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                )}
+                {usernameAvailability.status === 'available' && (
+                  <svg className="h-4 w-4 text-synthwave-neon-cyan" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                )}
+                {usernameAvailability.status === 'taken' && (
+                  <svg className="h-4 w-4 text-synthwave-neon-pink" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                )}
+              </span>
+              <span className={
+                usernameAvailability.status === 'checking' ? formPatterns.availabilityChecking :
+                usernameAvailability.status === 'available' ? formPatterns.availabilityAvailable :
+                formPatterns.availabilityTaken
+              }>
+                {usernameAvailability.status === 'checking' && 'Checking availability...'}
+                {usernameAvailability.status === 'available' && 'Username available'}
+                {usernameAvailability.status === 'taken' && 'Username already taken'}
+              </span>
+            </div>
+          )}
+        </div>
 
         <AuthInput
           label="First Name"
@@ -219,7 +384,13 @@ const RegisterForm = ({ onSwitchToLogin, onRegistrationSuccess }) => {
             type="submit"
             variant="primary"
             loading={isSubmitting}
-            disabled={isSubmitting}
+            disabled={
+              isSubmitting ||
+              emailAvailability.status === 'checking' ||
+              emailAvailability.status === 'taken' ||
+              usernameAvailability.status === 'checking' ||
+              usernameAvailability.status === 'taken'
+            }
           >
             Create Account
           </AuthButton>
