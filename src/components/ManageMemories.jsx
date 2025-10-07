@@ -14,6 +14,7 @@ import { AccessDenied, LoadingScreen } from "./shared/AccessDenied";
 import { useToast } from "../contexts/ToastContext";
 import { MemoryAgent } from "../utils/agents/MemoryAgent";
 import CoachAgent from "../utils/agents/CoachAgent";
+import { WorkoutAgent } from "../utils/agents/WorkoutAgent";
 import { FloatingMenuManager } from "./shared/FloatingMenuManager";
 import CommandPalette from "./shared/CommandPalette";
 import {
@@ -151,6 +152,7 @@ function ManageMemories() {
 
   const memoryAgentRef = useRef(null);
   const coachAgentRef = useRef(null);
+  const workoutAgentRef = useRef(null);
 
   const { addToast, success, error, info } = useToast();
 
@@ -170,6 +172,22 @@ function ManageMemories() {
       document.removeEventListener("keydown", handleKeyboardShortcuts);
     };
   }, [isCommandPaletteOpen]);
+
+  // Initialize workout agent
+  useEffect(() => {
+    if (!userId) return;
+
+    if (!workoutAgentRef.current) {
+      workoutAgentRef.current = new WorkoutAgent(userId);
+    }
+
+    return () => {
+      if (workoutAgentRef.current) {
+        workoutAgentRef.current.destroy();
+        workoutAgentRef.current = null;
+      }
+    };
+  }, [userId]);
 
   // Load coach data for FloatingMenuManager
   useEffect(() => {
@@ -769,7 +787,7 @@ function ManageMemories() {
           setCommandPaletteCommand("");
         }}
         prefilledCommand={commandPaletteCommand}
-        workoutAgent={null} // Will need to be provided if workout functionality is needed
+        workoutAgent={workoutAgentRef.current}
         userId={userId}
         coachId={coachId}
         onNavigation={(type, data) => {
