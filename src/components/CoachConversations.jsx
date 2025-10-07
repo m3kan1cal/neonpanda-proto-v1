@@ -21,6 +21,7 @@ import UserAvatar from "./shared/UserAvatar";
 import { getUserInitial as getInitialFromUsername } from "./shared/UserAvatar";
 import { parseMarkdown } from "../utils/markdownParser.jsx";
 import CoachConversationAgent from "../utils/agents/CoachConversationAgent";
+import { WorkoutAgent } from "../utils/agents/WorkoutAgent";
 import { useToast } from "../contexts/ToastContext";
 import ImageWithPresignedUrl from "./shared/ImageWithPresignedUrl";
 import {
@@ -328,6 +329,7 @@ function CoachConversations() {
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
   const agentRef = useRef(null);
+  const workoutAgentRef = useRef(null);
   const { success: showSuccess, error: showError } = useToast();
 
   // Slash commands configuration
@@ -426,6 +428,22 @@ function CoachConversations() {
       return;
     }
   }, [userId, coachId, conversationId, navigate]);
+
+  // Initialize workout agent
+  useEffect(() => {
+    if (!userId) return;
+
+    if (!workoutAgentRef.current) {
+      workoutAgentRef.current = new WorkoutAgent(userId);
+    }
+
+    return () => {
+      if (workoutAgentRef.current) {
+        workoutAgentRef.current.destroy();
+        workoutAgentRef.current = null;
+      }
+    };
+  }, [userId]);
 
   // Initialize agent
   useEffect(() => {
@@ -1217,7 +1235,7 @@ function CoachConversations() {
           setCommandPaletteCommand("");
         }}
         prefilledCommand={commandPaletteCommand}
-        workoutAgent={null} // Will need to be provided if workout functionality is needed
+        workoutAgent={workoutAgentRef.current}
         userId={userId}
         coachId={coachId}
         onNavigation={(type, data) => {
