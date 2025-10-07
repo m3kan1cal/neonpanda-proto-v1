@@ -74,7 +74,22 @@ export const formPatterns = {
   helperText: "font-rajdhani text-sm text-synthwave-text-secondary",
 
   // Subsection headers (like "Added", "Changed", "Fixed" in Changelog)
-  subsectionHeader: "font-rajdhani font-bold text-white text-lg mb-3 flex items-center space-x-2"
+  subsectionHeader: "font-rajdhani font-bold text-white text-lg mb-3 flex items-center space-x-2",
+
+  // Availability indicator container (negative margin pulls it up into AuthInput's mb-6 space)
+  availabilityContainer: "-mt-4 flex items-center gap-2",
+
+  // Availability indicator text - available (cyan)
+  availabilityAvailable: "text-synthwave-neon-cyan font-rajdhani text-sm font-medium",
+
+  // Availability indicator text - taken (pink/red)
+  availabilityTaken: "text-synthwave-neon-pink font-rajdhani text-sm font-medium",
+
+  // Availability indicator text - checking (muted)
+  availabilityChecking: "text-synthwave-text-muted font-rajdhani text-sm font-medium",
+
+  // Availability icon container (for checkmark/X)
+  availabilityIcon: "flex-shrink-0"
 };
 
 export const inputPatterns = {

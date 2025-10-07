@@ -14,7 +14,7 @@ import { buildMultimodalContent } from "../streaming";
 import { CoachMessage } from "./types";
 
 // Configuration constants
-const ENABLE_S3_DEBUG_LOGGING = false; // Set to true to enable system prompt debugging in S3
+const ENABLE_S3_DEBUG_LOGGING = true; // Always log system prompts to S3 for debugging and monitoring
 
 export interface ResponseGenerationResult {
   aiResponseContent: string;
@@ -128,9 +128,16 @@ USE THIS CONTEXT SILENTLY - don't explicitly reference previous exchanges unless
 Provide contextually relevant responses that demonstrate continuity with the ongoing coaching relationship.`;
     }
 
-    // Store system prompt with history in S3 for debugging (only if enabled)
+    // Store system prompt with history in S3 for debugging (always enabled)
     if (ENABLE_S3_DEBUG_LOGGING) {
       try {
+        const promptSizeKB = (systemPromptWithHistory.length / 1024).toFixed(2);
+        const baseSizeKB = (systemPrompt.length / 1024).toFixed(2);
+        const pineconeContextSize = context.pineconeContext?.length || 0;
+        const pineconeContextKB = (pineconeContextSize / 1024).toFixed(2);
+        const historySize = systemPromptWithHistory.length - systemPrompt.length - pineconeContextSize;
+        const historySizeKB = (historySize / 1024).toFixed(2);
+
         const s3Location = await storeDebugDataInS3(
           systemPromptWithHistory,
           {
@@ -138,27 +145,51 @@ Provide contextually relevant responses that demonstrate continuity with the ong
             coachId,
             conversationId,
             coachName: coachConfig.attributes.coach_name,
-            userMessage: userMessage,
+            userMessage: userMessage?.substring(0, 200) || '(no text, images only)',
             sessionNumber: conversationContext.sessionNumber,
-            promptLength: systemPromptWithHistory.length,
-            workoutContext: context.recentWorkouts.length > 0,
+            // Size breakdown
+            totalPromptLength: systemPromptWithHistory.length,
+            totalPromptSizeKB: promptSizeKB,
+            basePromptLength: systemPrompt.length,
+            basePromptSizeKB: baseSizeKB,
+            conversationHistoryLength: historySize,
+            conversationHistorySizeKB: historySizeKB,
+            pineconeContextLength: pineconeContextSize,
+            pineconeContextSizeKB: pineconeContextKB,
+            // Context flags
+            hasImages: imageS3Keys && imageS3Keys.length > 0,
+            imageCount: imageS3Keys?.length || 0,
+            hasWorkoutContext: context.recentWorkouts.length > 0,
+            recentWorkoutsCount: context.recentWorkouts.length,
             workoutDetected: workoutResult.isWorkoutLogging,
-            pineconeContext: context.pineconeMatches.length > 0,
+            hasPineconeContext: context.pineconeMatches.length > 0,
             pineconeMatches: context.pineconeMatches.length,
-            type: "coach-conversation-prompt",
+            hasMemories: memoryResult.memories?.length > 0,
+            memoriesCount: memoryResult.memories?.length || 0,
+            messageCount: existingMessages.length,
+            hasCriticalDirective: !!userProfile?.attributes?.criticalTrainingDirective?.enabled,
+            userTimezone: userProfile?.attributes?.preferences?.timezone || 'America/Los_Angeles',
+            type: "coach-conversation-prompt-non-stream",
           },
-          "debug"
+          "coach-conversation"
         );
 
-        console.info("System prompt stored in S3 for debugging:", {
+        console.info("✅ System prompt stored in S3 for debug/monitoring:", {
           location: s3Location,
-          promptLength: systemPromptWithHistory.length,
-          workoutContextIncluded: context.recentWorkouts.length > 0,
-          pineconeContextIncluded: context.pineconeMatches.length > 0,
+          totalSizeKB: promptSizeKB,
+          baseSizeKB: baseSizeKB,
+          historySizeKB: historySizeKB,
+          pineconeContextKB: pineconeContextKB,
+          components: {
+            base: `${baseSizeKB}KB`,
+            history: `${historySizeKB}KB`,
+            pinecone: `${pineconeContextKB}KB`,
+            total: `${promptSizeKB}KB`
+          }
         });
       } catch (s3Error) {
         console.warn(
-          "Failed to store system prompt in S3 (continuing anyway):",
+          "⚠️ Failed to store system prompt in S3 (non-critical):",
           s3Error
         );
       }
@@ -327,9 +358,16 @@ USE THIS CONTEXT SILENTLY - don't explicitly reference previous exchanges unless
 Provide contextually relevant responses that demonstrate continuity with the ongoing coaching relationship.`;
     }
 
-    // Store system prompt with history in S3 for debugging (only if enabled)
+    // Store system prompt with history in S3 for debugging (always enabled)
     if (ENABLE_S3_DEBUG_LOGGING) {
       try {
+        const promptSizeKB = (systemPromptWithHistory.length / 1024).toFixed(2);
+        const baseSizeKB = (systemPrompt.length / 1024).toFixed(2);
+        const pineconeContextSize = context.pineconeContext?.length || 0;
+        const pineconeContextKB = (pineconeContextSize / 1024).toFixed(2);
+        const historySize = systemPromptWithHistory.length - systemPrompt.length - pineconeContextSize;
+        const historySizeKB = (historySize / 1024).toFixed(2);
+
         const s3Location = await storeDebugDataInS3(
           systemPromptWithHistory,
           {
@@ -337,27 +375,51 @@ Provide contextually relevant responses that demonstrate continuity with the ong
             coachId,
             conversationId,
             coachName: coachConfig.attributes.coach_name,
-            userMessage: userMessage,
+            userMessage: userMessage?.substring(0, 200) || '(no text, images only)',
             sessionNumber: conversationContext.sessionNumber,
-            promptLength: systemPromptWithHistory.length,
-            workoutContext: context.recentWorkouts.length > 0,
+            // Size breakdown
+            totalPromptLength: systemPromptWithHistory.length,
+            totalPromptSizeKB: promptSizeKB,
+            basePromptLength: systemPrompt.length,
+            basePromptSizeKB: baseSizeKB,
+            conversationHistoryLength: historySize,
+            conversationHistorySizeKB: historySizeKB,
+            pineconeContextLength: pineconeContextSize,
+            pineconeContextSizeKB: pineconeContextKB,
+            // Context flags
+            hasImages: imageS3Keys && imageS3Keys.length > 0,
+            imageCount: imageS3Keys?.length || 0,
+            hasWorkoutContext: context.recentWorkouts.length > 0,
+            recentWorkoutsCount: context.recentWorkouts.length,
             workoutDetected: workoutResult.isWorkoutLogging,
-            pineconeContext: context.pineconeMatches.length > 0,
+            hasPineconeContext: context.pineconeMatches.length > 0,
             pineconeMatches: context.pineconeMatches.length,
+            hasMemories: memoryResult.memories?.length > 0,
+            memoriesCount: memoryResult.memories?.length || 0,
+            messageCount: existingMessages.length,
+            hasCriticalDirective: !!userProfile?.attributes?.criticalTrainingDirective?.enabled,
+            userTimezone: userTimezone || 'America/Los_Angeles',
             type: "coach-conversation-prompt-stream",
           },
-          "debug"
+          "coach-conversation"
         );
 
-        console.info("System prompt stored in S3 for streaming debug:", {
+        console.info("✅ System prompt stored in S3 for debug/monitoring:", {
           location: s3Location,
-          promptLength: systemPromptWithHistory.length,
-          workoutContextIncluded: context.recentWorkouts.length > 0,
-          pineconeContextIncluded: context.pineconeMatches.length > 0,
+          totalSizeKB: promptSizeKB,
+          baseSizeKB: baseSizeKB,
+          historySizeKB: historySizeKB,
+          pineconeContextKB: pineconeContextKB,
+          components: {
+            base: `${baseSizeKB}KB`,
+            history: `${historySizeKB}KB`,
+            pinecone: `${pineconeContextKB}KB`,
+            total: `${promptSizeKB}KB`
+          }
         });
       } catch (s3Error) {
         console.warn(
-          "Failed to store system prompt in S3 for streaming (continuing anyway):",
+          "⚠️ Failed to store system prompt in S3 (non-critical):",
           s3Error
         );
       }

@@ -7,7 +7,7 @@ import outputs from "../../amplify_outputs.json";
 
 /**
  * Get the S3 bucket name based on the current environment
- * Pattern: midgard-apps-sandbox-{id}, midgard-apps-develop, midgard-apps
+ * Pattern: midgard-apps-main, midgard-apps-develop, midgard-apps-sandbox-{id}
  */
 export function getAppsBucketName() {
   // Read from Amplify outputs (set during deployment)

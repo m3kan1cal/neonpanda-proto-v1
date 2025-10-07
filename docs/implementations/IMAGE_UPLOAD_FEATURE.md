@@ -86,7 +86,7 @@ s3://midgard-apps-sandbox-{id}/
 **File**: `amplify/storage/resource.ts`
 
 **Function**: `createAppsBucket()`
-- Branch-aware naming: `midgard-apps`, `midgard-apps-develop`, `midgard-apps-sandbox-{id}`
+- Branch-aware naming: `midgard-apps-main`, `midgard-apps-develop`, `midgard-apps-sandbox-{id}`
 - Private bucket with `blockPublicAccess: BLOCK_ALL`
 - CORS configured for direct uploads
 - 90-day lifecycle policy on `user-uploads/` prefix
@@ -697,7 +697,7 @@ git push origin main
 ## 📝 Key Technical Details
 
 ### Branch-Aware Naming
-- **Main**: `midgard-apps`
+- **Main**: `midgard-apps-main`
 - **Develop**: `midgard-apps-develop`
 - **Sandbox**: `midgard-apps-sandbox-{stackId}`
 

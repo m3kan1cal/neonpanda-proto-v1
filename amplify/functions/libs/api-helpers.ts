@@ -827,14 +827,10 @@ export const storeDebugDataInS3 = async (
     let key: string;
     if (metadata.type === "weekly-analytics") {
       // Analytics goes in its own folder structure
-      key = `${branchPrefix}analytics/weekly-analytics/${timestamp}_${metadata.userId || "unknown"}_${metadata.type || "raw-response"}.json`;
+      key = `${branchPrefix}analytics/weekly-analytics/${timestamp}_${metadata.userId || "unknown"}_${metadata.type || "raw-response"}.txt`;
     } else {
-      // Other debug data goes under the debug prefix
-      const folder =
-        metadata.type === "coach-conversation-prompt"
-          ? "coach-conversation"
-          : "workout-extraction";
-      key = `${branchPrefix}${prefix}/${folder}/${timestamp}_${metadata.userId || "unknown"}_${metadata.type || "raw-response"}.json`;
+      // Other debug data uses the prefix parameter as the folder name
+      key = `${branchPrefix}${prefix}/${timestamp}_${metadata.userId || "unknown"}_${metadata.type || "raw-response"}.txt`;
     }
 
     const debugData = {

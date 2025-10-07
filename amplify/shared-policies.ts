@@ -122,8 +122,8 @@ export class SharedPolicies {
           effect: Effect.ALLOW,
           actions: ["s3:PutObject", "s3:GetObject", "s3:ListBucket"],
           resources: [
-            `arn:aws:s3:::neonpanda-debug-${branchName}`,
-            `arn:aws:s3:::neonpanda-debug-${branchName}/*`,
+            `arn:aws:s3:::midgard-sandbox-logs`,
+            `arn:aws:s3:::midgard-sandbox-logs/*`,
           ],
         }),
       ],
@@ -143,8 +143,8 @@ export class SharedPolicies {
             effect: Effect.ALLOW,
             actions: ["s3:PutObject", "s3:GetObject", "s3:ListBucket"],
             resources: [
-              `arn:aws:s3:::neonpanda-analytics-${branchName}`,
-              `arn:aws:s3:::neonpanda-analytics-${branchName}/*`,
+              `arn:aws:s3:::midgard-sandbox-logs`,
+              `arn:aws:s3:::midgard-sandbox-logs/*`,
             ],
           }),
         ],
@@ -482,11 +482,17 @@ export const grantDynamoDBThroughputPermissions = (functions: IFunction[]): void
 
 /**
  * S3 policy for apps bucket - branch-aware
- * Uses standard naming: midgard-apps, midgard-apps-develop, midgard-apps-sandbox-{id}
+ * Uses naming: midgard-apps-main, midgard-apps-develop, midgard-apps-sandbox-{id}
  */
 export const createS3AppsPolicy = (branchInfo: BranchInfo): PolicyStatement => {
   // Use standard branch-aware naming helper
-  const bucketName = getBranchAwareResourceName(branchInfo, { baseName: 'midgard-apps' });
+  let bucketName = getBranchAwareResourceName(branchInfo, { baseName: 'midgard-apps' });
+
+  // Override for S3: ensure main branch also gets -main suffix (matches bucket creation logic)
+  if (!branchInfo.isSandbox && branchInfo.branchName === 'main') {
+    bucketName = `${bucketName}-main`;
+  }
+
   const bucketPath = `arn:aws:s3:::${bucketName}/user-uploads/*`;
 
   return new PolicyStatement({
