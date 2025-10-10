@@ -23,9 +23,13 @@ export {
 
 export {
   buildCoachConversationSummaryPrompt,
-  parseCoachConversationSummary,
-  storeCoachConversationSummaryInPinecone
+  parseCoachConversationSummary
 } from './summary';
+
+export {
+  storeCoachConversationSummaryInPinecone,
+  deleteConversationSummaryFromPinecone
+} from './pinecone';
 
 export {
   detectConversationComplexity

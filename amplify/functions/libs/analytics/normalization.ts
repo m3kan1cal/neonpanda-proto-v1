@@ -102,7 +102,7 @@ export const normalizeAnalytics = async (
       normalizationPrompt,
       "analytics_normalization",
       undefined, // Use default model
-      enableThinking
+      { enableThinking }
     );
 
     // Parse JSON with fallback cleaning and fixing

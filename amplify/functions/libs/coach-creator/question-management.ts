@@ -439,7 +439,12 @@ export const buildQuestionPrompt = (
   criticalTrainingDirective?: { content: string; enabled: boolean },
   methodologyContext?: string,
   memoryContext?: string
-): string => {
+): {
+  staticPrompt: string;
+  dynamicPrompt: string;
+  conversationHistory: any[];
+  fullPrompt: string;
+} => {
   // Build directive section if enabled
   const directiveSection =
     criticalTrainingDirective?.enabled && criticalTrainingDirective?.content
@@ -457,7 +462,7 @@ This takes precedence when understanding user needs and asking questions.
     question.versions[userContext.sophisticationLevel] ||
     question.versions.UNKNOWN;
 
-  // Format conversation history concisely
+  // Format conversation history with FULL context (no truncation)
   const historyContext =
     conversationHistory && conversationHistory.length > 0
       ? `
@@ -465,7 +470,10 @@ CONVERSATION SO FAR:
 ${conversationHistory
   .map((entry) => {
     const q = COACH_CREATOR_QUESTIONS.find((q) => q.id === entry.questionId);
-    return `Q${entry.questionId} (${q?.topic || "unknown"}): ${entry.userResponse.substring(0, 100)}${entry.userResponse.length > 100 ? "..." : ""}`;
+    return `Q${entry.questionId} (${q?.topic || "unknown"}):
+Vesper asked: ${entry.aiResponse}
+User responded: ${entry.userResponse}
+`;
   })
   .join("\n")}
 
@@ -530,11 +538,11 @@ DON'T HALLUCINATE:
 `
       : "";
 
-  // Build complete prompt
+  // Build dynamic prompt WITHOUT history (history will be in messages array for caching)
   const questionContext = `
 ${directiveSection}CURRENT QUESTION: ${question.topic}
 USER LEVEL: ${userContext.sophisticationLevel}
-${historyContext}${memorySection}${methodologySection}
+${memorySection}${methodologySection}
 ASK THIS QUESTION:
 ${questionVersion}
 
@@ -549,8 +557,151 @@ ${question.followUpLogic[userContext.sophisticationLevel] || question.followUpLo
 ${finalQuestionGuidance}
 `;
 
-  return BASE_COACH_CREATOR_PROMPT + questionContext;
+  // Return separated prompts for caching
+  const staticPrompt = BASE_COACH_CREATOR_PROMPT;
+  const dynamicPrompt = questionContext;
+
+  // For backwards compatibility: fullPrompt includes history as text
+  const fullPromptWithHistory = staticPrompt + dynamicPrompt + historyContext;
+
+  return {
+    staticPrompt,
+    dynamicPrompt,
+    conversationHistory: conversationHistory || [],
+    fullPrompt: fullPromptWithHistory,
+  };
 };
+
+// ============================================================================
+// CONVERSATION HISTORY CACHING
+// ============================================================================
+
+// Configuration constants for stepped cache boundary
+const HISTORY_CACHE_STEP_SIZE = 6; // Move cache boundary every 6 Q&A pairs
+const MIN_HISTORY_CACHE_THRESHOLD = 8; // Start caching at 8+ Q&A entries
+
+/**
+ * Build messages array with stepped conversation history caching
+ * Similar to coach conversation history caching but for questionHistory
+ *
+ * Implements a "stepped cache boundary" to improve cache hit rates.
+ * The cache boundary moves in increments (HISTORY_CACHE_STEP_SIZE) once the session
+ * reaches a minimum threshold (MIN_HISTORY_CACHE_THRESHOLD).
+ *
+ * @param questionHistory - All Q&A pairs from the session
+ * @param currentUserResponse - The new user response
+ * @returns Formatted messages array with cache points inserted
+ */
+export function buildCoachCreatorMessagesWithCaching(
+  questionHistory: any[],
+  currentUserResponse: string
+): any[] {
+  const totalEntries = questionHistory.length;
+
+  // Short sessions: no history caching
+  if (totalEntries < MIN_HISTORY_CACHE_THRESHOLD) {
+    console.info(`📝 Short coach creator session (${totalEntries} Q&As) - no history caching`);
+
+    const messages: any[] = [];
+    questionHistory.forEach(entry => {
+      // Skip entries with empty user responses (e.g., initial greeting)
+      if (!entry.userResponse || entry.userResponse.trim() === '') {
+        return;
+      }
+
+      messages.push({
+        role: 'user',
+        content: [{ text: entry.userResponse }]
+      });
+      messages.push({
+        role: 'assistant',
+        content: [{ text: entry.aiResponse }]
+      });
+    });
+
+    // Add current user message
+    messages.push({
+      role: 'user',
+      content: [{ text: currentUserResponse }]
+    });
+
+    return messages;
+  }
+
+  // Calculate the cache boundary based on step size
+  // Example:
+  // 8-13 Q&As -> cache 6, dynamic remaining
+  // 14-19 Q&As -> cache 12, dynamic remaining
+  // 20+ Q&As -> cache 18, dynamic remaining
+  const cacheBoundary = Math.floor((totalEntries - MIN_HISTORY_CACHE_THRESHOLD) / HISTORY_CACHE_STEP_SIZE)
+                       * HISTORY_CACHE_STEP_SIZE + HISTORY_CACHE_STEP_SIZE;
+  const actualCacheBoundary = Math.min(cacheBoundary, totalEntries - 2); // Ensure at least 2 dynamic entries
+
+  const olderEntries = questionHistory.slice(0, actualCacheBoundary);
+  const dynamicEntries = questionHistory.slice(actualCacheBoundary);
+
+  console.info(`💰 STEPPED COACH CREATOR HISTORY CACHING: Boundary at ${actualCacheBoundary} Q&As`, {
+    totalEntries,
+    cached: olderEntries.length,
+    dynamic: dynamicEntries.length,
+    stepSize: HISTORY_CACHE_STEP_SIZE,
+    nextBoundary: actualCacheBoundary + HISTORY_CACHE_STEP_SIZE,
+    minThreshold: MIN_HISTORY_CACHE_THRESHOLD
+  });
+
+  const messages: any[] = [];
+
+  // Add older (cached) Q&A pairs
+  olderEntries.forEach(entry => {
+    // Skip entries with empty user responses (e.g., initial greeting)
+    if (!entry.userResponse || entry.userResponse.trim() === '') {
+      return;
+    }
+
+    messages.push({
+      role: 'user',
+      content: [{ text: entry.userResponse }]
+    });
+    messages.push({
+      role: 'assistant',
+      content: [{ text: entry.aiResponse }]
+    });
+  });
+
+  // Insert the cachePoint after the cached history
+  messages.push({
+    role: 'user', // Cache points are typically associated with a user message
+    content: [
+      { text: '---coach-creator-history-cache-boundary---' }, // A marker for debugging
+      { cachePoint: { type: 'default' } }
+    ]
+  });
+
+  // Add dynamic (recent) Q&A pairs
+  dynamicEntries.forEach(entry => {
+    // Skip entries with empty user responses (e.g., initial greeting)
+    if (!entry.userResponse || entry.userResponse.trim() === '') {
+      return;
+    }
+
+    messages.push({
+      role: 'user',
+      content: [{ text: entry.userResponse }]
+    });
+    messages.push({
+      role: 'assistant',
+      content: [{ text: entry.aiResponse }]
+    });
+  });
+
+  // Add current user message
+  messages.push({
+    role: 'user',
+    content: [{ text: currentUserResponse }]
+  });
+
+  return messages;
+}
 
 // ============================================================================
 // AI RESPONSE PROCESSING

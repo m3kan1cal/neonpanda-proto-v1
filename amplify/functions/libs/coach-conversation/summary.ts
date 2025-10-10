@@ -1,11 +1,9 @@
-import { v4 as uuidv4 } from "uuid";
 import {
   CoachConversation,
   CoachConversationSummary,
   BuildCoachConversationSummaryEvent,
 } from "./types";
 import { CoachConfig } from "../coach-creator/types";
-import { storePineconeContext } from "../api-helpers";
 import { JSON_FORMATTING_INSTRUCTIONS_STANDARD } from "../prompt-helpers";
 
 /**
@@ -237,7 +235,7 @@ export function parseCoachConversationSummary(
     };
 
     const summary: CoachConversationSummary = {
-      summaryId: uuidv4(),
+      summaryId: `conversation_summary_${event.userId}_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
       userId: event.userId,
       coachId: event.coachId,
       conversationId: event.conversationId,
@@ -313,68 +311,3 @@ function calculateSummaryConfidence(
   return Math.min(confidence, 100);
 }
 
-/**
- * Store coach conversation summary in Pinecone for semantic search
- */
-export async function storeCoachConversationSummaryInPinecone(
-  summary: CoachConversationSummary
-): Promise<{ success: boolean; recordId?: string; error?: string }> {
-  try {
-    // Create searchable content combining narrative and key structured data
-    const searchableContent = `
-${summary.narrative}
-
-Goals: ${summary.structuredData.current_goals.join(", ")}
-Recent Progress: ${summary.structuredData.recent_progress.join(", ")}
-Communication Style: ${summary.structuredData.preferences.communication_style}
-Training Preferences: ${summary.structuredData.preferences.training_preferences.join(", ")}
-Methodology Preferences: ${summary.structuredData.methodology_preferences.mentioned_methodologies.join(", ")} | Preferred Approaches: ${summary.structuredData.methodology_preferences.preferred_approaches.join(", ")} | Questions: ${summary.structuredData.methodology_preferences.methodology_questions.join(", ")}
-Emotional State: ${summary.structuredData.emotional_state.current_mood} (motivation: ${summary.structuredData.emotional_state.motivation_level})
-Key Insights: ${summary.structuredData.key_insights.join(", ")}
-Important Context: ${summary.structuredData.important_context.join(", ")}
-    `.trim();
-
-    // Create metadata for Pinecone
-    const metadata = {
-      type: "conversation_summary",
-      userId: summary.userId,
-      coachId: summary.coachId,
-      conversationId: summary.conversationId,
-      summaryId: summary.summaryId,
-      createdAt: summary.metadata.createdAt.toISOString(),
-      messageCount: summary.metadata.messageRange.totalMessages,
-      triggerReason: summary.metadata.triggerReason,
-      confidence: summary.metadata.confidence,
-      // Add structured data for filtering
-      hasGoals: summary.structuredData.current_goals.length > 0,
-      hasProgress: summary.structuredData.recent_progress.length > 0,
-      hasEmotionalState: !!summary.structuredData.emotional_state.current_mood,
-      hasInsights: summary.structuredData.key_insights.length > 0,
-      hasMethodologyPreferences:
-        summary.structuredData.methodology_preferences.mentioned_methodologies
-          .length > 0 ||
-        summary.structuredData.methodology_preferences.preferred_approaches
-          .length > 0,
-    };
-
-    // Store in Pinecone using the same pattern as workout summaries
-    const recordId = `conversation_summary_${summary.userId}_${summary.conversationId}`;
-
-    await storePineconeContext(summary.userId, searchableContent, metadata);
-
-    console.info("✅ Conversation summary stored in Pinecone:", {
-      recordId,
-      summaryId: summary.summaryId,
-      contentLength: searchableContent.length,
-      confidence: summary.metadata.confidence,
-    });
-
-    return { success: true, recordId };
-  } catch (error) {
-    console.error("❌ Error storing conversation summary in Pinecone:", error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
-    };
-  }
-}

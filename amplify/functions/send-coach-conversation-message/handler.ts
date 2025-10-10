@@ -14,7 +14,7 @@ import { detectAndProcessConversationSummary } from "../libs/coach-conversation/
 import { gatherConversationContext } from "../libs/coach-conversation/context";
 import { detectAndProcessWorkout } from "../libs/coach-conversation/workout-detection";
 import { queryMemories, detectAndProcessMemory } from "../libs/coach-conversation/memory-processing";
-import { generateAIResponse, generateAIResponseStream } from "../libs/coach-conversation/response-generation";
+import { generateAIResponse, generateAIResponseStream } from "../libs/coach-conversation/response-orchestrator";
 import { withAuth, AuthenticatedHandler } from "../libs/auth/middleware";
 
 // Feature flags
@@ -491,13 +491,13 @@ async function generateSSEStream(
   context: any, workoutResult: any, memoryRetrieval: any,
   promptMetadata: any, existingMessages: any[], userResponse: string
 ): Promise<string> {
-  let fullAIResponse = '';
+  let fullAiResponse = '';
   let sseOutput = '';
 
   try {
     // Stream the AI response chunks
     for await (const chunk of responseStream) {
-      fullAIResponse += chunk;
+      fullAiResponse += chunk;
       const chunkData = {
         type: 'chunk',
         content: chunk
@@ -509,7 +509,7 @@ async function generateSSEStream(
     const newAiMessage: CoachMessage = {
       id: `msg_${Date.now()}_assistant`,
       role: "assistant",
-      content: fullAIResponse,
+      content: fullAiResponse,
       timestamp: new Date(),
     };
 
@@ -558,7 +558,7 @@ async function generateSSEStream(
     // Send completion message with conversation size tracking
     const completeData = {
       type: 'complete',
-      fullMessage: fullAIResponse,
+      fullMessage: fullAiResponse,
       userMessage: newUserMessage,
       aiMessage: newAiMessage,
       conversationId,

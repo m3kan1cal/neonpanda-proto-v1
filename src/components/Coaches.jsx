@@ -364,9 +364,9 @@ function Coaches() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
               {[1, 2].map((i) => (
-                <div key={i} className={`${containerPatterns.dashedCard} p-6 opacity-60`}>
+                <div key={i} className={`${containerPatterns.dashedCardCyan} p-6 opacity-60`}>
                   <div className="flex items-start space-x-3 mb-4">
-                    <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full flex-shrink-0 mt-2"></div>
+                    <div className="w-3 h-3 bg-synthwave-neon-cyan/30 rounded-full flex-shrink-0 mt-2"></div>
                     <div className="flex-1">
                       <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
                     </div>
@@ -382,7 +382,7 @@ function Coaches() {
                     </div>
                   </div>
                   <div className="pt-4">
-                    <div className="h-4 bg-synthwave-neon-pink/30 rounded animate-pulse w-36"></div>
+                    <div className="h-4 bg-synthwave-neon-cyan/30 rounded animate-pulse w-36"></div>
                   </div>
                 </div>
               ))}
@@ -468,7 +468,7 @@ function Coaches() {
         )}
 
         {/* Coaches Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto auto-rows-fr">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto auto-rows-fr animate-fadeIn">
             {/* Add New Coach Card */}
             <div
               onClick={isCreatingCustomCoach ? undefined : handleCreateCoach}
@@ -652,7 +652,13 @@ function Coaches() {
             {agentState.coaches && agentState.coaches.map((coach) => (
               <div
                 key={coach.coach_id}
-                className={`${containerPatterns.cardMedium} p-6 flex flex-col justify-between h-full`}
+                onClick={() => {
+                  const newSearchParams = new URLSearchParams();
+                  newSearchParams.set('userId', userId);
+                  newSearchParams.set('coachId', coach.coach_id);
+                  navigate(`/training-grounds?${newSearchParams.toString()}`);
+                }}
+                className={`${containerPatterns.cardMedium} p-6 flex flex-col justify-between h-full cursor-pointer`}
               >
                 <div className="flex-1">
                   {/* Coach Name */}
@@ -715,18 +721,14 @@ function Coaches() {
 
                 {/* Action Button */}
                 <div className="mt-6">
-                  <button
-                    onClick={() => {
-                      const newSearchParams = new URLSearchParams();
-                      newSearchParams.set('userId', userId);
-                      newSearchParams.set('coachId', coach.coach_id);
-                      navigate(`/training-grounds?${newSearchParams.toString()}`);
-                    }}
+                  <div
                     className={`${buttonPatterns.secondaryMedium} w-full space-x-2`}
+                    tabIndex={0}
+                    role="button"
                   >
                     <HomeIcon />
                     <span>Enter Training Grounds</span>
-                  </button>
+                  </div>
                 </div>
               </div>
             ))}
@@ -764,10 +766,10 @@ function Coaches() {
                   dotColor = 'bg-synthwave-neon-cyan';
                   statusColor = 'text-synthwave-neon-cyan';
                 } else {
-                  // Incomplete state: Purple theme with full interactivity
-                  cardClass = `${containerPatterns.dashedCardPurple} p-6 group cursor-pointer`;
-                  dotColor = 'bg-synthwave-neon-purple';
-                  statusColor = 'text-synthwave-neon-purple';
+                  // Incomplete state: Cyan theme with full interactivity
+                  cardClass = `${containerPatterns.dashedCardCyan} p-6 group cursor-pointer`;
+                  dotColor = 'bg-synthwave-neon-cyan';
+                  statusColor = 'text-synthwave-neon-cyan';
                 }
 
                 return (
@@ -857,7 +859,7 @@ function Coaches() {
                     <div className="pt-2">
                       {isIncomplete && !isBuilding && !isFailed ? (
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-2 bg-transparent border-none text-synthwave-neon-purple px-2 py-1 hover:text-white hover:bg-synthwave-neon-purple/10 rounded-lg transition-all duration-200 font-rajdhani font-medium uppercase tracking-wide hover:cursor-pointer">
+                          <div className="flex items-center space-x-2 bg-transparent border-none text-synthwave-neon-cyan px-2 py-1 hover:text-white hover:bg-synthwave-neon-cyan/10 rounded-lg transition-all duration-200 font-rajdhani font-medium uppercase tracking-wide hover:cursor-pointer">
                             <ArrowRightIcon />
                             <span>Continue Session</span>
                           </div>
@@ -956,7 +958,14 @@ function Coaches() {
               {agentState.templates.map((template) => (
                 <div
                   key={template.template_id}
-                  className={`${containerPatterns.templateCard} p-6 relative flex flex-col justify-between h-full`}
+                  onClick={() => {
+                    if (userId && creatingTemplateId !== template.template_id) {
+                      handleCreateFromTemplate(template.template_id);
+                    }
+                  }}
+                  className={`${containerPatterns.templateCard} p-6 relative flex flex-col justify-between h-full ${
+                    userId && creatingTemplateId !== template.template_id ? 'cursor-pointer' : creatingTemplateId === template.template_id ? 'cursor-wait' : 'cursor-not-allowed'
+                  }`}
                 >
                   <div className="flex-1">
                     {/* New Badge */}
@@ -997,15 +1006,15 @@ function Coaches() {
 
                   {/* Action Button */}
                   <div className="text-center">
-                    <button
-                      onClick={() => handleCreateFromTemplate(template.template_id)}
-                      disabled={!userId || creatingTemplateId === template.template_id}
+                    <div
                       className={`w-full space-x-2 ${userId
                           ? creatingTemplateId === template.template_id
-                            ? `${buttonPatterns.primaryMedium} opacity-75 cursor-not-allowed`
+                            ? buttonPatterns.primaryMediumLoading
                             : buttonPatterns.primaryMedium
-                          : 'bg-gray-600/20 border border-gray-600/50 text-gray-500 cursor-not-allowed px-4 py-2 rounded-lg font-rajdhani font-semibold text-base uppercase tracking-wide min-h-[40px] flex items-center justify-center'
+                          : buttonPatterns.primaryMediumDisabled
                         }`}
+                      tabIndex={userId && creatingTemplateId !== template.template_id ? 0 : -1}
+                      role="button"
                     >
                       {creatingTemplateId === template.template_id ? (
                         <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
@@ -1020,7 +1029,7 @@ function Coaches() {
                           : 'Login Required'
                         }
                       </span>
-                    </button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -1052,14 +1061,14 @@ function Coaches() {
                 <button
                   onClick={handleCancelDelete}
                   disabled={isDeleting}
-                  className={`flex-1 ${buttonPatterns.secondary} text-sm disabled:opacity-50 disabled:cursor-not-allowed`}
+                  className={`flex-1 ${buttonPatterns.secondarySmall} text-base disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleConfirmDelete}
                   disabled={isDeleting}
-                  className={`flex-1 ${buttonPatterns.primary} text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2`}
+                  className={`flex-1 ${buttonPatterns.primarySmall} text-base disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2`}
                 >
                   {isDeleting ? (
                     <>
@@ -1079,7 +1088,7 @@ function Coaches() {
         </div>
       )}
 
-      {/* Counter-clockwise spin animation for retry button */}
+      {/* Custom animations */}
       <style>{`
         @keyframes spin-ccw {
           from {
@@ -1091,6 +1100,18 @@ function Coaches() {
         }
         .animate-spin-ccw {
           animation: spin-ccw 1s linear infinite;
+        }
+
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+        .animate-fadeIn {
+          animation: fadeIn 0.3s ease-in;
         }
       `}</style>
     </div>

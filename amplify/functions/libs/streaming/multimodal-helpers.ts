@@ -13,6 +13,7 @@ import {
   callBedrockApiStream,
   callBedrockApiMultimodalStream,
   MODEL_IDS,
+  BedrockApiOptions,
 } from "../api-helpers";
 
 const s3Client = new S3Client({
@@ -158,10 +159,13 @@ export function buildMultimodalMessage(
 /**
  * Get AI response stream based on whether images are present
  * Abstracts the choice between regular and multimodal streaming
+ *
+ * @param options - Optional Bedrock API options for caching support
  */
 export async function getAIResponseStream(
   prompt: string,
-  input: MultimodalMessageInput
+  input: MultimodalMessageInput,
+  options?: BedrockApiOptions
 ): Promise<AsyncGenerator<string, void, unknown>> {
   const { userResponse, imageS3Keys } = input;
 
@@ -177,22 +181,20 @@ export async function getAIResponseStream(
     // Convert to Bedrock format
     const converseMessages = await buildMultimodalContent(messages);
 
-    // Return multimodal stream
+    // Return multimodal stream with caching support
     return await callBedrockApiMultimodalStream(
       prompt,
       converseMessages,
-      MODEL_IDS.CLAUDE_SONNET_4_FULL
+      MODEL_IDS.CLAUDE_SONNET_4_FULL,
+      options
     );
   } else {
-    // Return regular text stream
-    return await callBedrockApiStream(prompt, userResponse);
+    // Return regular text stream with caching support
+    return await callBedrockApiStream(
+      prompt,
+      userResponse,
+      MODEL_IDS.CLAUDE_SONNET_4_FULL,
+      options
+    );
   }
 }
-
-/**
- * Default error message for AI failures
- * Consistent across all streaming handlers
- */
-export const AI_ERROR_FALLBACK_MESSAGE =
-  "I apologize, but I'm having trouble generating a response right now. Your message has been saved and I'll be back to help you soon!";
-

@@ -472,15 +472,15 @@ import { extractSophisticationSignals } from '../libs/coach-creator/data-extract
 │    - If images: callBedrockApiMultimodalStream()               │
 │    - Else: callBedrockApiStream()                              │
 │    - For each token received from Bedrock:                     │
-│      ├─ Accumulate in fullAIResponse                           │
+│      ├─ Accumulate in fullAiResponse                           │
 │      ├─ yield formatChunkEvent(token)                          │
 │      └─→ Frontend: Append token to placeholder message         │
 └────────────────────────────────────────────────────────────────┘
                               ↓
 ┌────────────────────────────────────────────────────────────────┐
 │  Step 7: Process Complete Response                             │
-│    - extractSophisticationLevel(fullAIResponse)                │
-│    - cleanResponse(fullAIResponse)                             │
+│    - extractSophisticationLevel(fullAiResponse)                │
+│    - cleanResponse(fullAiResponse)                             │
 │    - extractSophisticationSignals(userResponse)                │
 │    - Calculate progress (questions completed, remaining)       │
 │    - Determine next question                                   │

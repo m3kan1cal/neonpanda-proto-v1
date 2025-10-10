@@ -71,7 +71,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     });
 
     // Generate unique memory ID
-    const memoryId = generateMemoryId();
+    const memoryId = generateMemoryId(userId);
 
     // Create the memory object with AI-determined values
     const memory: UserMemory = {

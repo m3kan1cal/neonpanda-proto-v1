@@ -177,8 +177,8 @@ export const getEnhancedMethodologyContext = async (
         ...match,
         metadata: {
           ...match.metadata,
-          record_type: 'methodology',
-          query_type: getQueryType(messageAnalysis, query === userMessage)
+          recordType: 'methodology',
+          queryType: getQueryType(messageAnalysis, query === userMessage)
         }
       }));
 
@@ -224,10 +224,10 @@ export function formatEnhancedMethodologyContext(methodologyMatches: any[]): str
   if (methodologyMatches.length === 0) return '';
 
   const contextByType = {
-    principles: methodologyMatches.filter(m => m.metadata?.query_type === 'principles'),
-    implementation: methodologyMatches.filter(m => m.metadata?.query_type === 'implementation'),
-    comparison: methodologyMatches.filter(m => m.metadata?.query_type === 'comparison'),
-    general: methodologyMatches.filter(m => !m.metadata?.query_type || m.metadata.query_type === 'original')
+    principles: methodologyMatches.filter(m => m.metadata?.queryType === 'principles'),
+    implementation: methodologyMatches.filter(m => m.metadata?.queryType === 'implementation'),
+    comparison: methodologyMatches.filter(m => m.metadata?.queryType === 'comparison'),
+    general: methodologyMatches.filter(m => !m.metadata?.queryType || m.metadata.queryType === 'original')
   };
 
   let contextString = '';

@@ -73,6 +73,61 @@ function combineAndDeduplicateMemories(
 }
 
 /**
+ * Auto-heal: Ensure a memory exists in Pinecone
+ * If the memory is missing from Pinecone (e.g., manually deleted), re-index it
+ */
+async function ensureMemoryInPinecone(
+  memory: UserMemory,
+  userId: string
+): Promise<void> {
+  try {
+    // Only re-index if the memory has valid memoryId and content
+    if (!memory.memoryId) {
+      console.warn("⚠️ Skipping Pinecone upsert: memory has no memoryId", {
+        hasContent: !!memory.content,
+        contentPreview: memory.content?.substring(0, 100),
+        pineconeId: (memory as any).pineconeId,
+        pineconeScore: (memory as any).pineconeScore,
+        memoryType: memory.memoryType,
+        userId: memory.userId,
+        coachId: memory.coachId,
+        hasPineconeMetadata: !!(memory as any).pineconeId,
+        metadataKeys: memory.metadata ? Object.keys(memory.metadata) : [],
+        fullMemoryObject: JSON.stringify(memory, null, 2),
+      });
+      return;
+    }
+
+    if (!memory.content || memory.content.length === 0) {
+      console.warn("⚠️ Skipping Pinecone upsert: memory has no content", {
+        memoryId: memory.memoryId,
+      });
+      return;
+    }
+
+    // Always upsert to ensure consistency (Pinecone upserts are idempotent)
+    // This will update if exists, create if missing
+    console.info("🔄 Ensuring memory exists in Pinecone:", {
+      memoryId: memory.memoryId,
+      userId,
+      type: memory.memoryType,
+    });
+
+    await storeMemoryInPinecone(memory);
+
+    console.info("✅ Memory ensured in Pinecone:", {
+      memoryId: memory.memoryId,
+    });
+  } catch (error) {
+    console.error("❌ Failed to ensure memory in Pinecone:", {
+      memoryId: memory.memoryId,
+      error,
+    });
+    // Don't throw - this is a background healing operation
+  }
+}
+
+/**
  * Retrieves existing memories for context using AI-guided approach (BEFORE AI response generation)
  * Simplified for prototype - uses AI detection to determine semantic vs standard retrieval
  */
@@ -145,9 +200,28 @@ export async function queryMemories(
     }
 
     // Update usage statistics for retrieved memories with enhanced context
+    // Also ensure memories are indexed in Pinecone (auto-heal if missing)
     if (memories.length > 0) {
       // Don't await these - update in background
       memories.forEach((memory) => {
+        // Skip memories without a valid memoryId
+        if (!memory.memoryId) {
+          console.warn("⚠️ Skipping memory usage update: memory has no memoryId", {
+            hasContent: !!memory.content,
+            hasMetadata: !!memory.metadata,
+            contentPreview: memory.content?.substring(0, 100),
+            pineconeId: (memory as any).pineconeId,
+            pineconeScore: (memory as any).pineconeScore,
+            memoryType: memory.memoryType,
+            userId: memory.userId,
+            coachId: memory.coachId,
+            hasPineconeMetadata: !!(memory as any).pineconeId,
+            metadataKeys: memory.metadata ? Object.keys(memory.metadata) : [],
+            fullMemoryObject: JSON.stringify(memory, null, 2),
+          });
+          return;
+        }
+
         const usageContext = {
           userMessage,
           messageContext,
@@ -163,8 +237,15 @@ export async function queryMemories(
           })() as 'semantic' | 'importance' | 'hybrid',
         };
 
+        // Update memory usage in DynamoDB
         updateMemory(memory.memoryId, userId, usageContext).catch((err: any) =>
           console.warn("Failed to update memory usage with context:", err)
+        );
+
+        // Auto-heal: Ensure memory is indexed in Pinecone
+        // If it's missing from Pinecone (e.g., manually deleted), re-index it
+        ensureMemoryInPinecone(memory, userId).catch((err: any) =>
+          console.warn("Failed to ensure memory in Pinecone:", err)
         );
       });
     }
@@ -282,7 +363,7 @@ export async function detectAndProcessMemory(
           });
 
           memory = {
-            memoryId: generateMemoryId(),
+            memoryId: generateMemoryId(userId),
             userId,
             coachId: memoryCharacteristics.isCoachSpecific ? coachId : undefined, // AI determines scope
             memoryType: memoryCharacteristics.type, // AI-determined type
@@ -322,7 +403,7 @@ export async function detectAndProcessMemory(
           );
 
           memory = {
-            memoryId: generateMemoryId(),
+            memoryId: generateMemoryId(userId),
             userId,
             coachId: memoryCharacteristics.isCoachSpecific ? coachId : undefined,
             content: memoryDetection.extractedMemory.content,

@@ -1,5 +1,5 @@
 import { CoachCreatorSession, PersonalityCoherenceCheck, CoachPersonalityTemplate, MethodologyTemplate, SafetyRule, CoachModificationCapabilities, CoachConfig } from './types';
-import { callBedrockApi } from '../api-helpers';
+import { callBedrockApi, storeDebugDataInS3 } from '../api-helpers';
 import { JSON_FORMATTING_INSTRUCTIONS_STANDARD } from '../prompt-helpers';
 import { extractSafetyProfile, extractMethodologyPreferences, extractTrainingFrequency, extractSpecializations, extractGoalTimeline, extractIntensityPreference } from './data-extraction';
 import { generateCoachCreatorSessionSummary } from './session-management';
@@ -695,11 +695,48 @@ CRITICAL REQUIREMENTS:
 
 ${JSON_FORMATTING_INSTRUCTIONS_STANDARD}`;
 
+  // Store prompt in S3 for debugging
+  const promptContent = `SYSTEM PROMPT:\n${finalPrompt}\n\nUSER MESSAGE:\nGenerate my comprehensive coach configuration. I am a ${session.userContext.sophisticationLevel.toLowerCase()} level user who completed ${session.questionHistory.length} questions. Create a coach that perfectly matches my specific needs and goals.`;
+
+  try {
+    await storeDebugDataInS3(
+      promptContent,
+      {
+        userId: session.userId,
+        sessionId: session.sessionId,
+        sophisticationLevel: session.userContext.sophisticationLevel,
+        questionCount: session.questionHistory.length,
+        promptLength: promptContent.length,
+      },
+      'coach-config'
+    );
+    console.info('✅ Stored coach config prompt in S3 for debugging');
+  } catch (err) {
+    console.warn('⚠️ Failed to store coach config prompt in S3 (non-critical):', err);
+  }
+
   const coachConfigResponse = await callBedrockApi(
     finalPrompt,
     `Generate my comprehensive coach configuration. I am a ${session.userContext.sophisticationLevel.toLowerCase()} level user
 who completed ${session.questionHistory.length} questions. Create a coach that perfectly matches my specific needs and goals.`
   );
+
+  // Store response in S3 for debugging
+  try {
+    await storeDebugDataInS3(
+      coachConfigResponse,
+      {
+        userId: session.userId,
+        sessionId: session.sessionId,
+        sophisticationLevel: session.userContext.sophisticationLevel,
+        responseLength: coachConfigResponse.length,
+      },
+      'coach-config'
+    );
+    console.info('✅ Stored coach config response in S3 for debugging');
+  } catch (err) {
+    console.warn('⚠️ Failed to store coach config response in S3 (non-critical):', err);
+  }
 
   // Parse JSON with fallback cleaning and fixing (handles markdown-wrapped JSON)
   let coachConfig: CoachConfig;
