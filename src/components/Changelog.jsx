@@ -43,6 +43,58 @@ const CollapsibleSection = ({ title, icon, children, defaultOpen = true, classNa
 
 const changelogEntries = [
   {
+    version: "Release v1.0.20251010-beta",
+    date: "2025-10-10",
+    changes: {
+      added: [
+        "Amazon Bedrock Prompt Caching with static/dynamic prompt separation achieving 100% cache hit rates and 90-135% cost reduction per request",
+        "Parallel data loading for coach conversations with Router + Conversation + Config operations executing concurrently in 5-6 seconds",
+        "Parallel data loading for coach creator sessions with Router + Session + Profile operations executing concurrently",
+        "Cache optimization system with static prompts (coach config, methodology, safety constraints) cached at 2,982 tokens per request",
+        "Cache performance monitoring showing consistent $0.008051 savings per request with negative costs (reading cached tokens cheaper than new tokens)",
+        "Comprehensive cache hit rate logging with inputTokens, outputTokens, cacheRead, and cacheCreated metrics in CloudWatch",
+        "Parallel pattern/insights generation overlapped with memory saving operations for maximum throughput",
+        "Smart Router intelligent decision making with confidence-based context retrieval (0.3 low → skip expensive ops, 0.8 high → full context)",
+        "Consolidated Memory Analysis system combining retrieval need detection and characteristics analysis in single AI call (60-70% faster)",
+        "Promise.all() parallelization pattern for Router analysis, conversation loading, and config fetching",
+        "Auto-discovery mode (--all flag) for migrate-pinecone-ids.js script to find and migrate all namespaces automatically",
+        "listAllNamespaces() function using describeIndexStats() API for namespace discovery with record counts",
+        "Final summary reporting for bulk migrations showing total namespaces, success/failure counts, and aggregate statistics",
+        "Per-namespace migration tracking with individual success/failure status and resilient error handling",
+        "Enhanced Pinecone query logging with match counts, processing times, and relevance score distributions",
+        "Memory usage tracking with enhanced tagging (workout_planning, form_analysis, injury_management, etc.)"
+      ],
+      changed: [
+        "Coach conversation streaming handler refactored to use parallel Promise.all() for Router + Conversation + Config loading (5-6 second total vs 15+ sequential)",
+        "Coach creator streaming handler refactored to use parallel Promise.all() for Router + Session + Profile loading",
+        "Bedrock API calls now use static prompt caching blocks for coach configuration, methodology context, and safety constraints",
+        "System prompt structure split into static (cached) and dynamic (per-request) sections for optimal cache utilization",
+        "Cache configuration now tracks and logs detailed metrics: cacheRead, cacheCreated, inputTokens, outputTokens, and cost savings",
+        "Response generation functions updated to support cache_control blocks for efficient token reuse across requests",
+        "Pinecone reranking score filtering now uses correct threshold (0.3) for reranked results instead of semantic search threshold (0.7)",
+        "Pinecone metadata field naming standardized to camelCase (userId) across all record types (conversation summaries, memories, workouts, coach creator)",
+        "Memory text content enhanced with tag keywords (tag: workout_planning tag: form_analysis) for improved semantic search matching",
+        "Smart Router now skips unnecessary Pinecone/Memory queries for simple acknowledgments (confidence < 0.5)",
+        "Memory retrieval logic now queries across all coaches (null coachId) for broader context availability",
+        "Reranking configuration optimized with minScore: 0.3 for reranked results and fallbackMinScore: 0.5 for semantic search",
+        "migrate-pinecone-ids.js script enhanced to support both single namespace and bulk migration modes with progress tracking",
+        "Conversation summary Pinecone storage no longer includes redundant userId field (automatically added by storePineconeContext)"
+      ],
+      fixed: [
+        "Critical Pinecone reranking bug where all 34 matches were filtered out due to mismatched score scales (0.7 threshold applied to 0.3-scale reranked scores)",
+        "Performance bottleneck in data loading where Router + Conversation + Config operations were sequential (15+ seconds) instead of parallel (5-6 seconds)",
+        "Cache inefficiency where entire system prompt was regenerated on every request instead of caching static sections",
+        "Bedrock API costs unnecessarily high due to re-reading static coach configuration tokens on every message",
+        "Reranking minScore logic incorrectly prioritizing caller's minScore parameter instead of RERANKING_CONFIG.minScore for reranked results",
+        "Inconsistent metadata field naming in Pinecone records with both userId (camelCase) and user_id (snake_case) causing duplicate storage",
+        "Conversation summaries creating duplicate user identification fields in Pinecone metadata",
+        "Pinecone query results being discarded after reranking due to incompatible score threshold validation",
+        "Memory retrieval potentially missing relevant context due to coach-specific scoping instead of global search",
+        "Migration script failing to continue when single namespace encountered errors (now resilient with per-namespace error handling)"
+      ]
+    }
+  },
+  {
     version: "Release v1.0.20251005-beta",
     date: "2025-10-05",
     changes: {

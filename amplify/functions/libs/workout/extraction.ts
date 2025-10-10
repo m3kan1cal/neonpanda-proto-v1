@@ -12,6 +12,7 @@ import {
   DisciplineClassification,
 } from "./types";
 import { storeDebugDataInS3, callBedrockApi, MODEL_IDS } from "../api-helpers";
+import { parseResponseWithFallbacks } from "../response-utils";
 import { JSON_FORMATTING_INSTRUCTIONS_MINIFIED, JSON_FORMATTING_INSTRUCTIONS_STANDARD } from '../prompt-helpers';
 import { cleanResponse, fixMalformedJson } from "../response-utils";
 import { getSchemaWithContext } from "../schemas/universal-workout-schema";
@@ -777,7 +778,7 @@ export const parseAndValidateWorkoutData = async (
       type: "large-raw-response",
       length: extractedData.length,
       timestamp: new Date().toISOString(),
-    }).catch((error) => {
+    }, "workout-extraction").catch((error) => {
       console.warn("Failed to store large response in S3:", error);
     });
 
@@ -823,7 +824,8 @@ export const parseAndValidateWorkoutData = async (
     validateWorkoutTimes(workoutData);
 
     // Set system-generated fields
-    workoutData.workout_id = `ws_${userId}_${Date.now()}`;
+    const shortId = Math.random().toString(36).substring(2, 11);
+    workoutData.workout_id = `workout_summary_${userId}_${Date.now()}_${shortId}`;
     workoutData.user_id = userId;
 
     // Ensure required fields have defaults
@@ -878,7 +880,7 @@ export const parseAndValidateWorkoutData = async (
         length: extractedData.length,
         error: error instanceof Error ? error.message : "Unknown error",
         timestamp: new Date().toISOString(),
-      });
+      }, "workout-extraction");
       console.error("Problematic response stored in S3:", s3Location);
     } catch (s3Error) {
       console.warn("Failed to store problematic response in S3:", s3Error);
@@ -1165,7 +1167,8 @@ ${
     : ""
 }
 
-Return ONLY a JSON response in this exact format:
+CRITICAL: Return ONLY the JSON object below. DO NOT include any explanatory text, commentary, or additional context before or after the JSON.
+
 {
   "isQualitative": boolean,
   "requiresPreciseMetrics": boolean,
@@ -1251,7 +1254,8 @@ Return confidence 0.8+ for clear classifications, 0.5-0.7 for moderate cases, <0
       console.warn("⚠️ Failed to store discipline classification in S3 (non-critical):", s3Error);
     }
 
-    const result = JSON.parse(response.trim());
+    // Use existing response parsing utility
+    const result = parseResponseWithFallbacks(response);
 
     console.info("AI discipline classification result:", {
       discipline,

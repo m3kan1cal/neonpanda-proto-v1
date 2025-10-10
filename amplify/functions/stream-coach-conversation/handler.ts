@@ -9,7 +9,7 @@ const pipeline = util.promisify(stream.pipeline);
 // No import or declaration is required - it's automatically available
 
 // Import business logic utilities
-import { MODEL_IDS } from "../libs/api-helpers";
+import { MODEL_IDS, AI_ERROR_FALLBACK_MESSAGE } from "../libs/api-helpers";
 import {
   getCoachConversation,
   sendCoachConversationMessage,
@@ -25,7 +25,7 @@ import {
   MemoryRetrievalResult,
 } from "../libs/coach-conversation/memory-processing";
 import { detectAndProcessConversationSummary, analyzeRequestCapabilities } from "../libs/coach-conversation/detection";
-import { generateAIResponseStream } from "../libs/coach-conversation/response-generation";
+import { generateAIResponseStream } from "../libs/coach-conversation/response-orchestrator";
 import { generateContextualUpdate, categorizeUserMessage } from "../libs/coach-conversation/contextual-updates";
 import { analyzeMemoryNeeds } from "../libs/memory/detection";
 
@@ -288,6 +288,9 @@ const streamingHandler: StreamingHandler = async (
   await pipeline(sseEventStream, responseStream);
 
   console.info("✅ Streaming pipeline completed successfully");
+
+  // FIX: Prevent Lambda from hanging - all streaming is complete, don't wait for event loop
+  context.callbackWaitsForEmptyEventLoop = false;
 };
 
 // Generator function that yields SSE events with TRUE real-time streaming
@@ -734,12 +737,12 @@ async function* processCoachConversationAsync(
   };
 
   // Step 6: Stream AI chunks in REAL-TIME
-  let fullAIResponse = "";
+  let fullAiResponse = "";
 
   // CONTEXTUAL UPDATES ARE EPHEMERAL UX FEEDBACK ONLY
   // They are streamed to the user during processing but NOT saved in conversation history.
   // This matches the coach creator behavior and keeps the conversation clean.
-  // The contextualUpdates array is built above but intentionally NOT added to fullAIResponse.
+  // The contextualUpdates array is built above but intentionally NOT added to fullAiResponse.
   console.info(`📝 Contextual updates streamed but not saved (${contextualUpdates.length} updates, ephemeral UX only)`);
 
   try {
@@ -766,7 +769,7 @@ async function* processCoachConversationAsync(
 
     for await (const optimizedChunk of optimizedChunkStream) {
       const chunkTime = Date.now() - aiStartTime;
-      fullAIResponse += optimizedChunk;
+      fullAiResponse += optimizedChunk;
 
       yield formatChunkEvent(optimizedChunk);
       console.info(
@@ -777,33 +780,28 @@ async function* processCoachConversationAsync(
     console.info("✅ Real-time AI streaming completed successfully");
   } catch (error) {
     console.error("❌ Error in AI response generation, using fallback:", error);
-    fullAIResponse +=
-      "I apologize, but I'm having trouble generating a response right now. Your message has been saved and I'll be back to help you soon!";
+    fullAiResponse += AI_ERROR_FALLBACK_MESSAGE;
   }
 
-  // OPTIMIZATION: Await memory saving now (after AI streaming, before building conversation)
-  // This was fire-and-forget during Phase 2 to avoid blocking
+  // OPTIMIZATION: Memory saving is fire-and-forget (don't wait for completion)
+  // We initiated the save during Phase 2/3, now just let it run in background
   if (memorySavingPromise) {
-    console.info("⏳ Awaiting memory saving completion for conversation history...");
-    try {
-      memoryResult = await memorySavingPromise;
-      console.info("✅ Memory saving completed");
-    } catch (error) {
-      console.error("⚠️ Memory saving failed (handled gracefully):", error);
-      memoryResult = { memoryFeedback: null };
-    }
+    memorySavingPromise.catch(err => {
+      console.error("⚠️ Memory saving failed (non-critical):", err);
+    });
+    console.info("🔥 Memory saving running in background");
   }
 
-  // Add memory feedback if any memory was processed
-  if (FEATURE_FLAGS.ENABLE_MEMORY_PROCESSING && memoryResult?.memoryFeedback) {
-    fullAIResponse = `${memoryResult.memoryFeedback}\n\n${fullAIResponse}`;
+  // Add generic memory acknowledgment if a save was initiated
+  if (FEATURE_FLAGS.ENABLE_MEMORY_PROCESSING && memorySavingPromise) {
+    fullAiResponse = `I'll remember this.\n\n${fullAiResponse}`;
   }
 
   // Create final AI message with complete response
   const newAiMessage: CoachMessage = {
     id: `msg_${Date.now()}_assistant`,
     role: "assistant",
-    content: fullAIResponse,
+    content: fullAiResponse,
     timestamp: new Date(),
     metadata: {
       model: MODEL_IDS.CLAUDE_SONNET_4_DISPLAY,
@@ -870,20 +868,14 @@ async function saveConversationAndYieldComplete(
       ? (conversationData.existingConversation.attributes.messages.length + 2)
       : conversationData.existingConversation.attributes.messages.length;
 
+    // Truly fire-and-forget - no await, no promise chaining (prevents event loop hang)
     detectAndProcessConversationSummary(
       userId,
       coachId,
       conversationId,
       params.userResponse,
       currentMessageCount
-    ).then(() => {
-      console.info("✅ Conversation summary processing completed (background)");
-    }).catch((summaryError) => {
-      console.warn(
-        "⚠️ Conversation summary processing failed (non-critical, background):",
-        summaryError
-      );
-    });
+    );
 
     console.info("🚀 Conversation summary triggered (fire-and-forget)");
   }

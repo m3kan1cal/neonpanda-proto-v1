@@ -337,7 +337,7 @@ Enhanced contextual updates with creative, energetic language:
   - Kept only essential error and completion logs for debugging
 - ✅ **Contextual Updates Integration** - Fixed contextual updates not being saved in final messages
   - Added `contextualUpdates` array to accumulate all contextual updates
-  - Modified `fullAIResponse` to include contextual updates with proper `\n\n` formatting
+  - Modified `fullAiResponse` to include contextual updates with proper `\n\n` formatting
   - Ensured streaming and final message have identical content
 - ✅ **UI Transition Fix** - Resolved empty chat bubble issue on streaming completion
   - Fixed race condition in `onComplete` handler with proper timing

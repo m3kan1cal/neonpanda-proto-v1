@@ -541,7 +541,7 @@ export const FloatingMenuManager = ({
           navigate(`/training-grounds?userId=${userId}&coachId=${coachId}`);
           handleClosePopover();
         }}
-        className={`${buttonPatterns.secondary} text-sm px-4 py-3 w-full flex items-center justify-center space-x-2`}
+        className={`${buttonPatterns.secondaryCompact} w-full space-x-2`}
       >
         <svg
           className="w-5 h-5"
@@ -567,7 +567,7 @@ export const FloatingMenuManager = ({
           );
           handleClosePopover();
         }}
-        className={`${buttonPatterns.secondary} text-sm px-4 py-2 w-full flex items-center justify-center space-x-2`}
+        className={`${buttonPatterns.secondaryCompact} w-full space-x-2`}
       >
         <WorkoutIconSmall />
         <span>Manage Workouts</span>
@@ -581,7 +581,7 @@ export const FloatingMenuManager = ({
           );
           handleClosePopover();
         }}
-        className={`${buttonPatterns.secondary} text-sm px-4 py-2 w-full flex items-center justify-center space-x-2`}
+        className={`${buttonPatterns.secondaryCompact} w-full space-x-2`}
       >
         <MemoryIcon />
         <span>Manage Memories</span>
@@ -595,7 +595,7 @@ export const FloatingMenuManager = ({
           );
           handleClosePopover();
         }}
-        className={`${buttonPatterns.secondary} text-sm px-4 py-2 w-full flex items-center justify-center space-x-2`}
+        className={`${buttonPatterns.secondaryCompact} w-full space-x-2`}
       >
         <ChatIconSmall />
         <span>Manage Conversations</span>
@@ -609,7 +609,7 @@ export const FloatingMenuManager = ({
           );
           handleClosePopover();
         }}
-        className={`${buttonPatterns.secondary} text-sm px-4 py-2 w-full flex items-center justify-center space-x-2`}
+        className={`${buttonPatterns.secondaryCompact} w-full space-x-2`}
       >
         <ReportIconSmall />
         <span>View Reports</span>
@@ -628,7 +628,7 @@ export const FloatingMenuManager = ({
           }
           handleClosePopover();
         }}
-        className={`${buttonPatterns.primary} text-sm px-4 py-3 w-full flex items-center justify-center space-x-2`}
+        className={`${buttonPatterns.primaryCompact} w-full space-x-2`}
       >
         <WorkoutIconSmall />
         <span>Log Workout</span>
@@ -646,7 +646,7 @@ export const FloatingMenuManager = ({
           handleClosePopover();
         }}
         disabled={isCreatingConversation}
-        className={`${buttonPatterns.primary} text-sm px-4 py-3 w-full flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed`}
+        className={`${buttonPatterns.primaryCompact} w-full space-x-2 disabled:opacity-50 disabled:cursor-not-allowed`}
       >
         {isCreatingConversation ? (
           <>
@@ -673,7 +673,7 @@ export const FloatingMenuManager = ({
           }
           handleClosePopover();
         }}
-        className={`${buttonPatterns.primary} text-sm px-4 py-3 w-full flex items-center justify-center space-x-2`}
+        className={`${buttonPatterns.primaryCompact} w-full space-x-2`}
       >
         <MemoryIcon />
         <span>Save Memory</span>

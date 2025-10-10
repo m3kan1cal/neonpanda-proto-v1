@@ -348,7 +348,7 @@ async function* createCoachCreatorEventStream(
     );
 
     // Step 6: Stream AI response (single call)
-    let fullAIResponse = '';
+    let fullAiResponse = '';
 
     try {
       console.info('🚀 Starting AI response streaming...');
@@ -385,22 +385,22 @@ async function* createCoachCreatorEventStream(
 
       // Stream AI response chunks
       for await (const chunk of responseStream) {
-        fullAIResponse += chunk;
+        fullAiResponse += chunk;
         yield formatChunkEvent(chunk);
       }
 
       console.info('✅ AI response streaming completed:', {
-        responseLength: fullAIResponse.length
+        responseLength: fullAiResponse.length
       });
     } catch (aiError) {
       console.error('❌ Error in AI response generation:', aiError);
-      fullAIResponse = "I apologize, but I'm having trouble generating a response right now. Your message has been saved and I'll be back to help you soon!";
+      fullAiResponse = "I apologize, but I'm having trouble generating a response right now. Your message has been saved and I'll be back to help you soon!";
     }
 
     // Step 7: Process response
     const processedResponse = await processSessionUpdate(
       params,
-      fullAIResponse,
+      fullAiResponse,
       sessionData,
       currentQuestion
     );

@@ -130,7 +130,7 @@ function extractMetadata(content, filename) {
     level,
     topics: [...new Set(topics)], // Remove duplicates
     filename,
-    logged_at: new Date().toISOString()
+    loggedAt: new Date().toISOString()
   };
 }
 

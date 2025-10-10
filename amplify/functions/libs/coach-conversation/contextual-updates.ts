@@ -19,7 +19,7 @@
 
 import { callBedrockApi, MODEL_IDS } from "../api-helpers";
 
-// Generate contextual updates using Claude 3.5 Haiku for progressive user feedback
+// Generate contextual updates using Amazon Nova Micro for fast, cost-effective progressive user feedback
 export async function generateContextualUpdate(
   coachConfig: any,
   userResponse: string,
@@ -145,24 +145,13 @@ Examples: Brewing up something good... or Crafting the perfect response... or Fl
 Generate a brief processing update. One sentence, calm tone.`;
     }
 
-    // Try Haiku first, fallback to Nova Micro if not available
-    let update;
-    try {
-      update = await callBedrockApi(
-        systemPrompt,
-        userPrompt,
-        MODEL_IDS.CLAUDE_HAIKU_FULL,
-        false // No thinking needed for quick responses
-      );
-    } catch (error) {
-      console.warn(`⚠️ Haiku model failed, trying Nova Micro fallback:`, error);
-      update = await callBedrockApi(
-        systemPrompt,
-        userPrompt,
-        MODEL_IDS.NOVA_MICRO,
-        false // No thinking needed for quick responses
-      );
-    }
+    // Use Nova Micro for fast, cost-effective contextual updates
+    const update = await callBedrockApi(
+      systemPrompt,
+      userPrompt,
+      MODEL_IDS.NOVA_MICRO
+      // No thinking needed for quick responses (default is false)
+    );
 
     // Clean up the response - remove any quotes that might have been added
     let cleanedUpdate = update.trim();
@@ -295,7 +284,7 @@ Examples: Processing your message... OR Working through this... OR Analyzing wha
     const bedrockResponse = await callBedrockApi(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.CLAUDE_HAIKU_FULL // Fast, cost-effective
+      MODEL_IDS.NOVA_MICRO // Ultra-fast, very cost-effective for contextual updates
     );
 
     // Extract and clean the response (callBedrockApi already returns the text string)
@@ -943,8 +932,8 @@ Does this need detailed coach analysis (COMPLEX) or is it a simple response (SIM
   const response = await callBedrockApi(
     systemPrompt,
     userPrompt,
-    MODEL_IDS.NOVA_MICRO, // Fastest, cheapest model for intent classification
-    false // No thinking needed for simple classification
+    MODEL_IDS.NOVA_MICRO // Fastest, cheapest model for intent classification
+    // No thinking needed for simple classification (default is false)
   );
 
   return response.trim().toUpperCase() === "COMPLEX";

@@ -213,7 +213,7 @@ async function* createCoachConversationEventStream(event, context) {
   // Main AI Response Stream
   const streamResult = await generateAIResponseStream(...);
   for await (const chunk of optimizedChunkStream) {
-    fullAIResponse += chunk;
+    fullAiResponse += chunk;
     yield formatChunkEvent(chunk);
   }
 
@@ -249,18 +249,18 @@ async function* createCoachCreatorEventStream(event, context) {
   );
 
   // Single AI Response Stream (no contextual updates needed)
-  let fullAIResponse = '';
+  let fullAiResponse = '';
   const streamResult = await generateAIResponseStream(questionPrompt, params);
 
   for await (const chunk of streamResult) {
-    fullAIResponse += chunk;
+    fullAiResponse += chunk;
     yield formatChunkEvent(chunk);
   }
 
   // Process response (sophistication detection, progress tracking)
   const processedResponse = await processSessionUpdate(
     params,
-    fullAIResponse,
+    fullAiResponse,
     sessionData,
     currentQuestion
   );

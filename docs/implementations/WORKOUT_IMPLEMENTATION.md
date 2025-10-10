@@ -161,7 +161,7 @@ export const handler = async (event: any) => {
 
   // Create workout
   const workout = {
-    workoutId: `ws_${userId}_${Date.now()}`,
+    workoutId: `workout_summary_${userId}_${Date.now()}`,
     userId,
     coachIds: [coachId],
     coachNames: [coachConfig.name],

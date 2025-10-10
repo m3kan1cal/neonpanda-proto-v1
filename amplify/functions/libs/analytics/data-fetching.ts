@@ -623,7 +623,7 @@ export const generateAnalytics = async (
       analyticsPrompt,
       "analytics_generation",
       MODEL_IDS.CLAUDE_SONNET_4_FULL, // Use default model (Sonnet 4)
-      true // Enable thinking
+      { enableThinking: true } // Enable thinking
     );
 
     console.info(

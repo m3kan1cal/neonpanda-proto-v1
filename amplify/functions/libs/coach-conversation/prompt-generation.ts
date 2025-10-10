@@ -11,11 +11,20 @@ import {
 /**
  * Generates a complete system prompt from a coach configuration
  * This combines all individual prompts into a coherent coaching personality
+ *
+ * NEW: Supports Bedrock prompt caching by separating static (cacheable) and dynamic content
  */
 export const generateSystemPrompt = (
   coachConfigInput: CoachConfigInput,
-  options: PromptGenerationOptions = {}
-): SystemPrompt => {
+  options: PromptGenerationOptions & {
+    existingMessages?: any[];  // Conversation history (moved from response-generation)
+    pineconeContext?: string;  // Semantic context
+    includeCacheControl?: boolean;  // Whether to separate static/dynamic for caching
+  } = {}
+): SystemPrompt & {
+  staticPrompt?: string;  // Cacheable portion (coach config, guidelines, etc.)
+  dynamicPrompt?: string; // Non-cacheable portion (date, workouts, history, etc.)
+} => {
   const {
     includeConversationGuidelines = true,
     includeUserContext = true,
@@ -26,6 +35,9 @@ export const generateSystemPrompt = (
     userMemories = [],
     criticalTrainingDirective,
     userTimezone,
+    existingMessages = [],
+    pineconeContext,
+    includeCacheControl = false,
   } = options;
 
   // Extract config data - handle both DynamoDB item and direct config
@@ -44,12 +56,19 @@ export const generateSystemPrompt = (
     learning_adaptation_prompt,
   } = configData.generated_prompts;
 
-  // Build the system prompt sections
-  const promptSections = [];
+  // Build STATIC prompt sections (cacheable) - coach config, guidelines, constraints
+  const staticPromptSections = [];
 
-  // 0. CRITICAL TRAINING DIRECTIVE (ABSOLUTE TOP PRIORITY - if enabled)
+  // Build DYNAMIC prompt sections (not cached) - date/time, workouts, memories, history
+  const dynamicPromptSections = [];
+
+  // ============================================================================
+  // STATIC CONTENT (CACHEABLE - Coach Configuration & Guidelines)
+  // ============================================================================
+
+  // 1. CRITICAL TRAINING DIRECTIVE (if enabled)
   if (criticalTrainingDirective?.enabled && criticalTrainingDirective?.content) {
-    promptSections.push(`🚨 CRITICAL TRAINING DIRECTIVE - ABSOLUTE PRIORITY:
+    staticPromptSections.push(`🚨 CRITICAL TRAINING DIRECTIVE - ABSOLUTE PRIORITY:
 
 ${criticalTrainingDirective.content}
 
@@ -60,8 +79,8 @@ This directive takes precedence over all other instructions except safety constr
 `);
   }
 
-  // 0. CRITICAL SYSTEM RULES (MUST BE FIRST)
-  promptSections.push(`⚠️ CRITICAL SYSTEM RULES - READ FIRST:
+  // 2. CRITICAL SYSTEM RULES
+  staticPromptSections.push(`⚠️ CRITICAL SYSTEM RULES - READ FIRST:
 1. NEVER generate memory confirmations (messages starting with "✅")
 2. NEVER say "I've remembered", "I've saved", or "I've noted" in response to memory commands
 3. The system automatically handles ALL memory confirmations - DO NOT duplicate them
@@ -69,52 +88,8 @@ This directive takes precedence over all other instructions except safety constr
 
 `);
 
-  // 0.5 CURRENT DATE & TIME CONTEXT (Essential for temporal awareness)
-  const currentDateTime = new Date();
-  // Use user's timezone if available, otherwise default to Pacific Time
-  const effectiveTimezone = userTimezone || "America/Los_Angeles";
-
-  const dateOptions: Intl.DateTimeFormatOptions = {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    timeZone: effectiveTimezone,
-  };
-  const timeOptions: Intl.DateTimeFormatOptions = {
-    hour: "numeric",
-    minute: "2-digit",
-    timeZone: effectiveTimezone,
-    timeZoneName: "short",
-  };
-
-  const formattedDate = currentDateTime.toLocaleDateString(
-    "en-US",
-    dateOptions
-  );
-  const formattedTime = currentDateTime.toLocaleTimeString(
-    "en-US",
-    timeOptions
-  );
-
-  promptSections.push(`📅 CURRENT DATE & TIME:
-**Today is ${formattedDate}**
-Current time: ${formattedTime}
-Timezone: ${effectiveTimezone}
-
-CRITICAL TEMPORAL AWARENESS:
-- Use THIS date as your reference point for all temporal reasoning
-- When users say "today", "this morning", "earlier", they mean ${formattedDate}
-- "Yesterday" means ${new Date(currentDateTime.getTime() - 86400000).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", timeZone: effectiveTimezone })}
-- "Tomorrow" means ${new Date(currentDateTime.getTime() + 86400000).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", timeZone: effectiveTimezone })}
-- Conversation history timestamps may be from previous days - compare them against TODAY'S date
-- If a user mentions doing something "this morning" and it's now afternoon, that happened earlier TODAY (${formattedDate}), not yesterday
-- All times are in the user's timezone (${effectiveTimezone})
-
-`);
-
-  // 1. Core Identity & Personality
-  promptSections.push(`# COACH IDENTITY & PERSONALITY
+  // 3. Core Identity & Personality
+  staticPromptSections.push(`# COACH IDENTITY & PERSONALITY
 ${personality_prompt}
 
 ## Personality Integration & Blending
@@ -144,8 +119,8 @@ ${communication_style}
 # LEARNING & ADAPTATION APPROACH
 ${learning_adaptation_prompt}`);
 
-  // 2. Methodology & Programming Expertise
-  promptSections.push(`# TRAINING METHODOLOGY & PROGRAMMING
+  // 4. Methodology & Programming Expertise
+  staticPromptSections.push(`# TRAINING METHODOLOGY & PROGRAMMING
 ${methodology_prompt}
 
 ## Methodology Selection Rationale
@@ -178,12 +153,12 @@ Your primary focus is on: ${configData.technical_config.programming_focus.join("
 ## Experience Level Adaptation
 You are coaching a ${configData.technical_config.experience_level} level athlete. Adjust your explanations, expectations, and progressions accordingly.`);
 
-  // 3. Motivation & Encouragement
-  promptSections.push(`# MOTIVATION & ENCOURAGEMENT STRATEGY
+  // 5. Motivation & Encouragement
+  staticPromptSections.push(`# MOTIVATION & ENCOURAGEMENT STRATEGY
 ${motivation_prompt}`);
 
-  // 4. Safety & Constraints (Critical Section)
-  promptSections.push(`# SAFETY PROTOCOLS & CONSTRAINTS
+  // 6. Safety & Constraints (Critical Section)
+  staticPromptSections.push(`# SAFETY PROTOCOLS & CONSTRAINTS
 ${safety_integrated_prompt}
 
 ## Critical Safety Rules
@@ -221,12 +196,12 @@ Available equipment: ${configData.metadata.safety_profile.equipment?.join(", ") 
 ## Recovery Requirements
 ${configData.technical_config.safety_constraints.recovery_requirements.join(", ")}`);
 
-  // 5. Detailed User Background (if enabled and available)
+  // 7. Detailed User Background (if enabled and available)
   if (
     includeDetailedBackground &&
     configData.metadata?.coach_creator_session_summary
   ) {
-    promptSections.push(`# DETAILED USER BACKGROUND
+    staticPromptSections.push(`# DETAILED USER BACKGROUND
 Based on the coach creation session, here's what you know about this user:
 
 ${configData.metadata.coach_creator_session_summary}
@@ -246,40 +221,20 @@ ${configData.technical_config.goal_timeline}
 ${configData.technical_config.preferred_intensity}`);
   }
 
-  // 5.5. Memories (if available)
-  if (userMemories.length > 0) {
-    const memoriesSection = generateMemoriesSection(userMemories);
-    promptSections.push(memoriesSection);
-  }
-
-  // 6. User Context (if provided and enabled)
-  if (includeUserContext && conversationContext) {
-    const userContextSection = generateUserContext(conversationContext);
-    if (userContextSection) {
-      promptSections.push(userContextSection);
-    }
-  }
-
-  // 7. Recent Workout Context (if available)
-  if (workoutContext.length > 0) {
-    const workoutContextSection = generateWorkoutContext(workoutContext);
-    promptSections.push(workoutContextSection);
-  }
-
-  // 8. Conversation Guidelines (if enabled)
+  // 8. Conversation Guidelines (CONDENSED VERSION - if enabled)
   if (includeConversationGuidelines) {
-    promptSections.push(generateConversationGuidelines(configData));
+    staticPromptSections.push(generateCondensedConversationGuidelines(configData));
   }
 
   // 9. Additional Constraints (if any)
   if (additionalConstraints.length > 0) {
-    promptSections.push(`# ADDITIONAL CONSTRAINTS
+    staticPromptSections.push(`# ADDITIONAL CONSTRAINTS
 ${additionalConstraints.map((constraint) => `- ${constraint}`).join("\n")}`);
   }
 
   // 10. Coach Adaptation Capabilities
   if (configData.modification_capabilities) {
-    promptSections.push(`# COACH ADAPTATION CAPABILITIES
+    staticPromptSections.push(`# COACH ADAPTATION CAPABILITIES
 Your ability to adapt and modify approaches:
 - Personality Flexibility: ${configData.modification_capabilities.personality_flexibility}
 - Programming Adaptability: ${configData.modification_capabilities.programming_adaptability}
@@ -292,7 +247,7 @@ Use these capabilities to better serve the athlete while maintaining your core c
   }
 
   // 11. Final Instructions
-  promptSections.push(`# FINAL INSTRUCTIONS
+  staticPromptSections.push(`# FINAL INSTRUCTIONS
 You are now ready to coach this athlete. Remember:
 - Stay true to your personality: ${configData.selected_personality.primary_template}
 - Apply your methodology: ${configData.selected_methodology.primary_methodology}
@@ -302,8 +257,74 @@ You are now ready to coach this athlete. Remember:
 
 Begin each conversation by acknowledging the user and being ready to help them with their training.`);
 
+  // ============================================================================
+  // DYNAMIC CONTENT (NOT CACHED - Date/Time, Workouts, Memories, History)
+  // ============================================================================
+
+  // 1. CURRENT DATE & TIME (always at start of dynamic section)
+  const currentDateTime = new Date();
+  const effectiveTimezone = userTimezone || "America/Los_Angeles";
+
+  const dateOptions: Intl.DateTimeFormatOptions = {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    timeZone: effectiveTimezone,
+  };
+  const timeOptions: Intl.DateTimeFormatOptions = {
+    hour: "numeric",
+    minute: "2-digit",
+    timeZone: effectiveTimezone,
+    timeZoneName: "short",
+  };
+
+  const formattedDate = currentDateTime.toLocaleDateString("en-US", dateOptions);
+  const formattedTime = currentDateTime.toLocaleTimeString("en-US", timeOptions);
+
+  dynamicPromptSections.push(`📅 CURRENT DATE & TIME
+**Today: ${formattedDate}** | ${formattedTime} ${effectiveTimezone}
+
+⚠️ TEMPORAL ANCHOR: All temporal references (today/tomorrow/yesterday) and future planning must use THIS date, not workout completion dates. If user reports past workout with >3 day gap, acknowledge the time elapsed.`);
+
+  // 2. Memories (if available)
+  if (userMemories.length > 0) {
+    const memoriesSection = generateMemoriesSection(userMemories);
+    dynamicPromptSections.push(memoriesSection);
+  }
+
+  // 3. User Context (if provided and enabled)
+  if (includeUserContext && conversationContext) {
+    const userContextSection = generateUserContext(conversationContext);
+    if (userContextSection) {
+      dynamicPromptSections.push(userContextSection);
+    }
+  }
+
+  // 4. Recent Workout Context (if available)
+  if (workoutContext.length > 0) {
+    const workoutContextSection = generateWorkoutContext(workoutContext);
+    dynamicPromptSections.push(workoutContextSection);
+  }
+
+  // 5. Pinecone Semantic Context (if available)
+  if (pineconeContext) {
+    dynamicPromptSections.push(`# SEMANTIC CONTEXT
+${pineconeContext}
+
+IMPORTANT: Use the semantic context above to provide more informed and contextual responses. Reference relevant past workouts or patterns when appropriate, but don't explicitly mention that you're using stored context.`);
+  }
+
+  // 6. Conversation History - REMOVED
+  // History is now handled in the messages array for better caching
+  // (See response-orchestrator.ts for history caching implementation)
+
   // Combine all sections
-  const systemPrompt = promptSections.join("\n\n---\n\n");
+  const staticPrompt = staticPromptSections.join("\n\n---\n\n");
+  const dynamicPrompt = dynamicPromptSections.join("\n\n---\n\n");
+  const systemPrompt = includeCacheControl
+    ? `${staticPrompt}\n\n---\n\n${dynamicPrompt}`
+    : `${staticPrompt}\n\n---\n\n${dynamicPrompt}`;
 
   // Generate metadata
   const metadata = {
@@ -320,6 +341,7 @@ Begin each conversation by acknowledging the user and being ready to help them w
   return {
     systemPrompt,
     metadata,
+    ...(includeCacheControl && { staticPrompt, dynamicPrompt }),
   };
 };
 
@@ -529,256 +551,82 @@ const groupWorkoutsByTimeframe = (
 };
 
 /**
- * Generates conversation guidelines specific to the coach
+ * Generates CONDENSED conversation guidelines (for caching optimization)
+ * This is a streamlined version that maintains all critical instructions
+ * while significantly reducing token count
  */
-const generateConversationGuidelines = (configData: CoachConfig): string => {
-  const guidelines = [
-    "- Maintain consistency with your established personality and coaching style",
-    "- Reference previous conversations when relevant (you will have access to conversation history)",
-    "- Ask clarifying questions when you need more information about their training",
-    "- Provide specific, actionable advice based on your methodology",
-    "- Always prioritize safety and respect the established constraints",
-    "- Adapt your response length and complexity to their experience level",
-    "- Use encouraging language that matches your motivational style",
-    "",
-    "⚠️ MEMORY CONFIRMATION RULES:",
-    '- NEVER generate memory confirmations starting with "✅"',
-    '- NEVER say "I\'ve remembered", "I\'ve saved", or "I\'ve noted" when responding to memory commands',
-    "- The system automatically handles ALL memory confirmations",
-    "- If you see a memory confirmation in the conversation, DO NOT repeat or acknowledge it",
-    "- Respond naturally to the user's content without mentioning the memory save process",
-  ];
+const generateCondensedConversationGuidelines = (configData: CoachConfig): string => {
+  // Get equipment list for dynamic insertion
+  const equipmentList = configData.technical_config.equipment_available.join(", ") || "standard equipment";
+  const sessionDuration = configData.technical_config.time_constraints.session_duration || "60 minutes";
+  const weeklyFrequency = configData.technical_config.time_constraints.weekly_frequency ||
+                         `${configData.technical_config.training_frequency} days`;
 
-  // Add personality-specific guidelines
-  const personalityTemplate = configData.selected_personality.primary_template;
-  switch (personalityTemplate) {
-    case "marcus":
-      guidelines.push(
-        "- Provide detailed technical explanations when discussing movements or programming"
-      );
-      guidelines.push(
-        "- Focus on skill development and systematic progression"
-      );
-      break;
-    case "emma":
-      guidelines.push(
-        "- Use encouraging and supportive language, especially when discussing challenges"
-      );
-      guidelines.push("- Break down complex concepts into manageable steps");
-      break;
-    case "diana":
-      guidelines.push(
-        "- Challenge them appropriately and celebrate achievements"
-      );
-      guidelines.push(
-        "- Focus on performance improvements and competitive preparation"
-      );
-      break;
-    case "alex":
-      guidelines.push(
-        "- Consider their lifestyle and time constraints in all recommendations"
-      );
-      guidelines.push("- Provide practical, sustainable solutions");
-      break;
-  }
+  return `## CONVERSATION GUIDELINES
 
-  // Add methodology-specific guidelines
-  const methodology = configData.selected_methodology.primary_methodology;
-  if (methodology.includes("strength")) {
-    guidelines.push(
-      "- Emphasize progressive overload and strength-building principles"
-    );
-  }
-  if (methodology.includes("conditioning")) {
-    guidelines.push(
-      "- Focus on metabolic conditioning and work capacity development"
-    );
-  }
+### Core Coaching Principles
+- Maintain consistency with your established personality and coaching style
+- Reference conversation history naturally when relevant
+- Ask clarifying questions when you need training information
+- Provide specific, actionable advice based on your methodology
+- Always prioritize safety and respect established constraints
+- Adapt response length/complexity to athlete's experience level
+- Use encouraging language matching your motivational style
 
-  // Add equipment-specific guidelines if available
-  if (configData.technical_config.equipment_available.length > 0) {
-    guidelines.push(
-      `- Consider available equipment: ${configData.technical_config.equipment_available.join(", ")}`
-    );
-  }
+### Memory Handling (CRITICAL)
+- NEVER generate memory confirmations (messages starting with "✅")
+- NEVER say "I've remembered", "I've saved", or "I've noted"
+- System handles ALL memory confirmations automatically
+- Respond naturally to content without acknowledging save process
 
-  // Add time constraint guidelines if available
-  if (configData.technical_config.time_constraints.session_duration) {
-    guidelines.push(
-      `- Keep sessions within ${configData.technical_config.time_constraints.session_duration} timeframe`
-    );
-  }
+### Practical Considerations
+- Consider available equipment: ${equipmentList}
+- Keep sessions within ${sessionDuration} timeframe
+- Respect ${weeklyFrequency} weekly frequency
 
-  // Add temporal reasoning guidelines
-  const temporalReasoningGuidelines = [
-    "",
-    "## TEMPORAL REASONING GUIDELINES",
-    "- CRITICAL: Pay careful attention to timing references and workout completion times",
-    "- When users log workouts, use the actual completion time, not when they're telling you about it",
-    '- If a user says "I did a workout this morning" and it\'s currently afternoon, the workout was earlier TODAY, not yesterday',
-    '- If a user mentions a specific time (e.g., "finished at 11:42 AM Eastern"), that\'s when the workout was completed',
-    '- "Yesterday" specifically means the previous calendar day - don\'t use this unless the workout was actually completed yesterday',
-    '- "This morning", "earlier today", "today" all refer to the SAME DAY as the conversation',
-    '- When users ask about "last week", consider workouts from 7-14 days ago, but also relevant recent workouts if they provide context',
-    '- When users ask about "this week", include workouts from 0-7 days ago',
-    '- "Recently" typically means within the last 3-5 days',
-    "- Users often use overlapping time references - don't treat time periods as mutually exclusive",
-    "- When responding to time-based queries, consider the logical time period the user intends, not just literal calendar boundaries",
-    "- Provide comprehensive answers that include all relevant workouts within the requested timeframe",
-    "- ALWAYS verify workout timing context from the workout data before making temporal references",
-  ];
+---
 
-  // Add exercise repetition prevention guidelines
-  const exerciseRepetitionGuidelines = [
-    "",
-    "## EXERCISE REPETITION PREVENTION",
-    "- CRITICAL: NEVER repeat the exact same exercises from recent workouts unless explicitly requested",
-    "- If a user did an exercise within the last 24-48 hours, avoid programming that same exercise",
-    "- When suggesting workouts, always check recent workout context for exercise overlap",
-    "- Prioritize exercise variety and movement pattern diversity",
-    '- If user specifically asks for the same exercise, acknowledge their recent work: "I see you did [exercise] yesterday, but since you\'re asking for it again..."',
-    "- Focus on complementary exercises that target similar muscle groups through different movement patterns",
-    "- Example: If they did squats yesterday, suggest lunges, step-ups, or single-leg work instead of more squats",
-  ];
+## TEMPORAL & WORKOUT ANALYSIS ACCURACY
 
-  // Add critical workout analysis guidelines
-  const workoutAnalysisGuidelines = [
-    "",
-    "## CRITICAL WORKOUT ANALYSIS GUIDELINES",
-    "- When analyzing any workout data, be extremely careful with mathematical calculations",
-    "- DOUBLE-CHECK ALL MATHEMATICAL CALCULATIONS before mentioning specific numbers",
-    "- For circuit/round-based workouts: Total reps = rounds × reps per round (e.g., 5 rounds × 5 reps = 25 total reps)",
-    "- For multi-exercise workouts: Calculate each exercise separately, never combine different exercises",
-    "- For time-based workouts: Reference the actual time mentioned, never estimate or guess",
-    "- For weight calculations: Use exact weights mentioned, multiply by actual reps performed",
-    "- If unsure about any calculation, acknowledge the workout without specific numbers",
-    "- Focus on effort, consistency, and progress rather than just raw numbers when possible",
-    "- When discussing volume or training load, be precise about what you're calculating",
-    "- Avoid making assumptions about workout data that wasn't explicitly provided",
-    "",
-    "## CRITICAL MATHEMATICAL ACCURACY & UNIT CONVERSIONS",
-    "- ALWAYS double-check mathematical calculations before stating them in your response",
-    "- For distance conversions, use these exact conversion factors:",
-    "  * 1 mile = 1,609.34 meters (so 400m × 6 = 2,400m = 1.49 miles, NOT 2.4 miles)",
-    "  * 1 km = 1,000 meters",
-    "  * 1 mile = 5,280 feet",
-    "- Common distance calculation examples:",
-    "  * 6 × 400m = 2,400m = ~1.5 miles (NOT 2.4 miles)",
-    "  * 5 × 500m = 2,500m = ~1.55 miles",
-    "  * 4 × 800m = 3,200m = ~2.0 miles",
-    "- When calculating total distances:",
-    "  * Calculate total meters first: rounds × distance per round",
-    "  * Convert to miles: total meters ÷ 1,609.34",
-    "  * Round to reasonable precision (1-2 decimal places)",
-    "- For weight calculations:",
-    "  * Total volume = weight × total reps (not per set)",
-    "  * Example: 5 sets of 5 reps at 200lbs = 200 × 25 = 5,000lbs total volume",
-    "- For time calculations:",
-    '  * Convert consistently: 90 seconds = 1:30, not "1.5 minutes"',
-    "  * Use proper time format: MM:SS for times under an hour",
-    "- When in doubt about any calculation, either:",
-    "  * Acknowledge the workout without specific numbers, OR",
-    '  * State the calculation clearly: "6 rounds of 400m = 2,400 meters total (about 1.5 miles)"',
-    "- NEVER state mathematical facts you haven't verified - mathematical errors undermine coaching credibility",
-    "",
-    "## CRITICAL: EQUIPMENT TERMINOLOGY AND REP COUNTING",
-    '- "50# each hand" means 50 pounds PER DUMBBELL, NOT double the reps',
-    '- "DB bench press 50# each hand" = normal reps with 50lb dumbbells in each hand',
-    '- "Each hand" refers to WEIGHT PER HAND, not reps per hand',
-    "- Examples:",
-    '  * "20 DB bench press 50# each hand" = 20 total reps using 50lb dumbbells',
-    '  * "4 rounds of 20 reps" = 4 × 20 = 80 total reps, NOT 160',
-    '  * "10 reps each arm" = 10 per arm = 20 total reps (this is different from weight notation)',
-    '- NEVER double rep counts for dumbbell exercises unless explicitly stated "reps per arm"',
-    '- Weight notation ("each hand", "per hand") describes equipment load, not repetition count',
-    '- Rep notation ("each arm", "per arm") describes repetition count per limb',
-    "",
-    "## WORKOUT TIMING ANALYSIS GUIDELINES",
-    "- CRITICAL: Base temporal references on the actual workout completion time, not the conversation time",
-    '- If a workout shows completion time of today, do NOT refer to it as "yesterday" even if logged later',
-    "- Use workout timestamps to determine correct relative timing (today vs yesterday vs this week)",
-    "- When referencing previous workouts, check their actual completion dates for accurate temporal context",
-    '- Be precise about timing: "this morning\'s workout" vs "yesterday\'s session" based on actual data',
-    "",
-    "## ADDITIONAL EQUIPMENT TERMINOLOGY",
-    '- "Dual DBs" or "dual dumbbells" means using TWO dumbbells simultaneously for ONE movement',
-    '- Example: "30 reps dual DBs" = 30 total reps using two dumbbells at once, NOT 30 reps × 2 dumbbells',
-    '- "Single DB" means using one dumbbell for the movement',
-    '- "Alternating" means switching between arms/sides but count total reps, not per side',
-    '- "Each arm" or "per arm" means multiply by 2 (e.g., "10 reps each arm" = 20 total reps)',
-    "- When in doubt about equipment terminology, count the TOTAL movement repetitions performed",
-    "",
-    "## INTERVAL-BASED WORKOUT ANALYSIS",
-    "- For interval workouts (e.g., 4 x 5min intervals), analyze each interval segment separately",
-    "- When counting rounds for specific exercises, only count the rounds WHERE THAT EXERCISE APPEARS",
-    "- Example: If a workout has 4 intervals, but only 2 intervals contain AMRAPs, count only those 2 AMRAP segments",
-    "- Do not add running rounds to AMRAP rounds - they are separate movement patterns",
-    '- For AMRAP segments: "3 rounds + 2 rounds = 5 total rounds" (not "3+3+2+2" if there are only 2 AMRAP segments)',
-    '- Always specify what you\'re counting: "power clean rounds", "total workout rounds", "AMRAP segments", etc.',
-    "- When discussing performance across intervals, compare like with like (AMRAP 1 vs AMRAP 2, not interval 1 vs interval 3)",
-    "- Interval fatigue patterns: earlier intervals often have higher round counts than later ones due to accumulated fatigue",
-  ];
+### Time References (CRITICAL)
+- Anchor all temporal references to CURRENT DATE in prompt header, not workout completion dates
+- When user reports past workout: calculate days from workout date to current date; if >3 days, acknowledge gap
+- "Today/tomorrow/yesterday" always relative to current date shown in prompt
+- Verify workout timestamps before making temporal claims; don't assume "last night" = yesterday
 
-  // Add partner workout analysis guidelines
-  const partnerWorkoutGuidelines = [
-    "",
-    "## CRITICAL PARTNER WORKOUT ANALYSIS GUIDELINES",
-    "- PARTNER WORKOUTS: Carefully analyze workout context to determine if it was a partner format",
-    '- ALTERNATING PARTNER FORMAT ("I go, you rest"):',
-    "  * User typically performs HALF the total volume mentioned",
-    '  * "We did 10 rounds alternating" = user did ~5 rounds personally',
-    '  * "Partner WOD: 20 rounds total, switching every round" = user completed ~10 rounds',
-    '  * "Did Murph with my daughter, alternating exercises" = user did ~50 pull-ups, ~100 push-ups, ~150 squats',
-    '- SYNCHRONIZED PARTNER FORMAT ("we both did it together"):',
-    "  * User performs FULL volume alongside their partner",
-    '  * "We both did 5 rounds each" = user completed 5 full rounds',
-    '  * "Did Fran together at the same time" = user did full 21-15-9 scheme',
-    "- DETECTION KEYWORDS:",
-    '  * Alternating: "alternating", "switching", "taking turns", "partner style", "splitting the work"',
-    '  * Synchronized: "together", "same time", "both did", "in sync", "parallel"',
-    "- ANALYSIS APPROACH:",
-    "  * When reviewing logged partner workouts, confirm the format was interpreted correctly",
-    "  * If volume seems too high for individual effort, ask for clarification about partner format",
-    "  * Acknowledge partner training as great for motivation and accountability",
-    "  * Compare individual effort to previous solo performances, not total team output",
-    "- COACHING RESPONSE GUIDELINES:",
-    "  * Focus praise on the user's individual effort and portion of the work",
-    '  * "Great job on your 5 rounds in that partner WOD!" (not "Great job on those 10 rounds!")',
-    "  * Acknowledge the social/motivational benefits of partner training",
-    "  * Ask about partner format if workout volume seems unusually high for the user",
-  ];
+### Mathematical Precision (DOUBLE-CHECK ALL CALCULATIONS)
+**Distance conversions:**
+- 1 mile = 1,609.34 meters (NOT 1,000m)
+- Example: 400m × 6 = 2,400m = 1.49 miles (NOT 2.4 miles)
 
-  // Add methodology workout template guidelines
-  const methodologyTemplateGuidelines = [
-    "",
-    "## METHODOLOGY WORKOUT TEMPLATE GUIDELINES",
-    "- When users ask for workouts, use methodology knowledge from Pinecone to provide appropriate templates",
-    "- Replace movement placeholders with specific exercises based on user equipment and preferences",
-    "- Adjust rep ranges based on user fitness level and movement complexity",
-    "- Modify time domains based on user schedule and training phase",
-    "- Scale intensity based on user experience and recovery status",
-    "- Movement Substitution Guidelines:",
-    "  • Movement A: Typically compound barbell or heavy movement (squat, deadlift, press)",
-    "  • Movement B: Usually bodyweight or lighter implement (push-ups, pull-ups, dumbbell work)",
-    "  • Movement C: Often monostructural cardio or core movement (row, run, bike, planks)",
-    "  • Cardio: Running, rowing, biking, skiing, or bodyweight cardio equivalent",
-    "- Ensure all recommended workouts align with the user's chosen methodology principles",
-    "- Provide scaling options for different fitness levels when giving workout recommendations",
-    "- Include appropriate warm-up and cool-down suggestions with workout templates",
-  ];
+**Volume calculations:**
+- Total reps = rounds × reps per round (5 rounds × 5 reps = 25 total, NOT 50)
+- Calculate each exercise separately in multi-exercise workouts
 
-  return `# CONVERSATION GUIDELINES
-${guidelines.join("\n")}
+**Weight notation vs. Rep notation:**
+- "50# each hand" = 50lbs per dumbbell (normal rep count)
+- "Dual DBs" = using two dumbbells simultaneously (normal rep count)
+- "10 reps each arm" = 10 per arm = 20 total reps
 
-${temporalReasoningGuidelines.join("\n")}
+**When uncertain:** Acknowledge workout without specific numbers rather than guess
 
-${exerciseRepetitionGuidelines.join("\n")}
+### Interval & Partner Workout Analysis
+**Intervals:** Only count rounds where specific exercises appear (don't combine running rounds with AMRAP rounds)
 
-${workoutAnalysisGuidelines.join("\n")}
+**Partner formats:**
+- Alternating ("I go, you rest"): User did ~50% of stated volume
+- Synchronized ("together"): User did full volume
+- Keywords: "alternating", "switching", "taking turns" vs. "together", "same time", "both did"
 
-${partnerWorkoutGuidelines.join("\n")}
+### Exercise Programming
+- NEVER repeat exercises from last 24-48 hours unless requested
+- Check recent workout context for exercise overlap
+- Prioritize movement variety and complementary patterns
 
-${methodologyTemplateGuidelines.join("\n")}`;
+### Methodology Templates
+- Use Pinecone methodology knowledge when suggesting workouts
+- Adapt templates to user's equipment, experience, and schedule
+- Movement A = compound/barbell | Movement B = bodyweight/dumbbells | Movement C = cardio/core`;
 };
 
 /**

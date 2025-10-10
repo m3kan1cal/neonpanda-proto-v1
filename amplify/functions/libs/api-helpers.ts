@@ -36,6 +36,10 @@ export const MODEL_IDS = {
   NOVA_MICRO_DISPLAY: "nova-micro",
 } as const;
 
+// AI error fallback message for streaming handlers
+export const AI_ERROR_FALLBACK_MESSAGE =
+  "I apologize, but I'm having trouble generating a response right now. Your message has been saved and I'll be back to help you soon!";
+
 // Create Bedrock Runtime client
 const bedrockClient = new BedrockRuntimeClient({
   region: process.env.AWS_REGION || "us-west-2",
@@ -324,14 +328,126 @@ const stripThinkingTags = (response: string): string => {
   return withoutThinking.trim();
 };
 
+/**
+ * Options for Bedrock API calls with caching and thinking support
+ */
+export interface BedrockApiOptions {
+  /** Enable extended thinking for complex reasoning (adds thinking tags to prompt) */
+  enableThinking?: boolean;
+
+  /** Static (cacheable) portion of the prompt - gets 90% cost discount on cache hits */
+  staticPrompt?: string;
+
+  /** Dynamic (non-cacheable) portion of the prompt - changes per request */
+  dynamicPrompt?: string;
+}
+
+/**
+ * Builds system parameters with cache control and optional thinking support
+ * Centralizes the logic for all Bedrock API functions
+ *
+ * @param systemPrompt - Base system prompt
+ * @param options - Optional BedrockApiOptions with caching and thinking flags
+ * @returns Object with systemParams array and enableThinking flag
+ */
+function buildSystemParams(
+  systemPrompt: string,
+  options?: BedrockApiOptions
+): { systemParams: any[]; enableThinking: boolean } {
+  const enableThinking = options?.enableThinking || false;
+
+  // Build system parameter with cache control if static/dynamic prompts are provided
+  if (options?.staticPrompt && options?.dynamicPrompt) {
+    console.info("🔥 CACHE OPTIMIZATION: Using static/dynamic prompt structure");
+    console.info("Static prompt size:", (options.staticPrompt.length / 1024).toFixed(2), "KB");
+    console.info("Dynamic prompt size:", (options.dynamicPrompt.length / 1024).toFixed(2), "KB");
+
+    // Apply thinking to static prompt if enabled
+    const baseStaticPrompt = enableThinking
+      ? enhancePromptForThinking(options.staticPrompt)
+      : options.staticPrompt;
+
+    return {
+      systemParams: [
+        {
+          text: baseStaticPrompt // Static content (with thinking if enabled)
+        },
+        {
+          cachePoint: { type: "default" } // Cache marker (separate object)
+        },
+        {
+          text: options.dynamicPrompt // Dynamic content (not cached)
+        }
+      ],
+      enableThinking
+    };
+  }
+
+  // Fallback: Use single system prompt (no caching)
+  return {
+    systemParams: [{
+      text: enableThinking
+        ? enhancePromptForThinking(systemPrompt)
+        : systemPrompt
+    }],
+    enableThinking
+  };
+}
+
+/**
+ * Helper function to log cache performance metrics from Bedrock response
+ */
+function logCachePerformance(usage: any, context: string = "API call") {
+  if (!usage) {
+    console.warn(`⚠️ No usage data available for ${context}`);
+    return;
+  }
+
+  const inputTokens = usage.inputTokens || 0;
+  const cacheReadTokens = usage.cacheReadInputTokens || 0;
+  const cacheCreateTokens = usage.cacheCreationInputTokens || 0;
+  const outputTokens = usage.outputTokens || 0;
+
+  // Calculate cache hit rate
+  const totalCacheableTokens = cacheReadTokens + cacheCreateTokens;
+  const cacheHitRate = totalCacheableTokens > 0
+    ? (cacheReadTokens / totalCacheableTokens * 100).toFixed(1)
+    : "0.0";
+
+  // Calculate cost savings (approximate)
+  // Normal: $3/1M tokens, Cached read: $0.30/1M tokens (90% discount), Cache creation: $3.75/1M tokens (25% markup)
+  const normalCost = inputTokens * 0.000003; // $3 per 1M tokens
+  const cachedCost = cacheReadTokens * 0.0000003; // $0.30 per 1M tokens
+  const creationCost = cacheCreateTokens * 0.00000375; // $3.75 per 1M tokens
+  const actualCost = cachedCost + creationCost + ((inputTokens - cacheReadTokens - cacheCreateTokens) * 0.000003);
+  const savings = normalCost - actualCost;
+
+  console.info("💰 CACHE PERFORMANCE:", {
+    context,
+    inputTokens,
+    outputTokens,
+    cacheRead: cacheReadTokens,
+    cacheCreated: cacheCreateTokens,
+    cacheHitRate: `${cacheHitRate}%`,
+    costs: {
+      withoutCache: `$${normalCost.toFixed(6)}`,
+      withCache: `$${actualCost.toFixed(6)}`,
+      saved: `$${savings.toFixed(6)} (${savings > 0 ? ((savings / normalCost) * 100).toFixed(1) : 0}%)`
+    }
+  });
+}
+
 // Amazon Bedrock Converse API call with optional thinking capabilities
 export const callBedrockApi = async (
   systemPrompt: string,
   userMessage: string,
   modelId: string = CLAUDE_SONNET_4_MODEL_ID,
-  enableThinking: boolean = false
+  options?: BedrockApiOptions
 ): Promise<string> => {
   try {
+    // Build system parameters with cache control and thinking support
+    const { systemParams, enableThinking } = buildSystemParams(systemPrompt, options);
+
     console.info("=== BEDROCK API CALL START ===");
     console.info("AWS Region:", process.env.AWS_REGION || "us-west-2");
     console.info("Model ID:", modelId);
@@ -359,13 +475,7 @@ export const callBedrockApi = async (
           ],
         },
       ],
-      system: [
-        {
-          text: enableThinking
-            ? enhancePromptForThinking(systemPrompt)
-            : systemPrompt,
-        },
-      ],
+      system: systemParams,
       inferenceConfig: {
         maxTokens: getMaxTokensForModel(modelId),
         temperature: TEMPERATURE,
@@ -489,9 +599,12 @@ export const callBedrockApiStream = async (
   systemPrompt: string,
   userMessage: string,
   modelId: string = CLAUDE_SONNET_4_MODEL_ID,
-  enableThinking: boolean = false
+  options?: BedrockApiOptions
 ): Promise<AsyncGenerator<string, void, unknown>> => {
   try {
+    // Build system parameters with cache control and thinking support
+    const { systemParams, enableThinking } = buildSystemParams(systemPrompt, options);
+
     console.info("=== BEDROCK STREAMING API CALL START ===");
     console.info("AWS Region:", process.env.AWS_REGION || "us-west-2");
     console.info("Model ID:", modelId);
@@ -511,13 +624,7 @@ export const callBedrockApiStream = async (
           ],
         },
       ],
-      system: [
-        {
-          text: enableThinking
-            ? enhancePromptForThinking(systemPrompt)
-            : systemPrompt,
-        },
-      ],
+      system: systemParams,
       inferenceConfig: {
         maxTokens: getMaxTokensForModel(modelId),
         temperature: TEMPERATURE,
@@ -594,19 +701,25 @@ export const callBedrockApiStream = async (
  * @param systemPrompt - System prompt to set AI behavior
  * @param messages - Full Converse API messages array (e.g., from buildMultimodalContent)
  * @param modelId - Model ID to use (defaults to Claude Sonnet 4)
+ * @param options - Optional parameters including staticPrompt and dynamicPrompt for caching
  * @returns Promise with AI response text
  */
 export const callBedrockApiMultimodal = async (
   systemPrompt: string,
   messages: any[], // Full Converse API messages array with images
-  modelId: string = CLAUDE_SONNET_4_MODEL_ID
+  modelId: string = CLAUDE_SONNET_4_MODEL_ID,
+  options?: BedrockApiOptions
 ): Promise<string> => {
   try {
+    // Build system parameters with cache control and thinking support
+    const { systemParams, enableThinking } = buildSystemParams(systemPrompt, options);
+
     console.info("=== BEDROCK MULTIMODAL API CALL START ===");
     console.info("AWS Region:", process.env.AWS_REGION || "us-west-2");
     console.info("Model ID:", modelId);
     console.info("System prompt length:", systemPrompt.length);
     console.info("Messages count:", messages.length);
+    console.info("Thinking enabled:", enableThinking);
     console.info("Has images:", messages.some(m =>
       m.content?.some((c: any) => c.image)
     ));
@@ -614,7 +727,7 @@ export const callBedrockApiMultimodal = async (
     const command = new ConverseCommand({
       modelId: modelId,
       messages: messages,
-      system: [{ text: systemPrompt }],
+      system: systemParams,
       inferenceConfig: {
         maxTokens: getMaxTokensForModel(modelId),
         temperature: TEMPERATURE,
@@ -627,6 +740,11 @@ export const callBedrockApiMultimodal = async (
 
     console.info("Response received from Bedrock");
     console.info("Response metadata:", response.$metadata);
+
+    // Log cache performance metrics if available
+    if (response.usage) {
+      logCachePerformance(response.usage, "Multimodal API");
+    }
 
     if (!response.output?.message?.content?.[0]?.text) {
       console.error(
@@ -668,19 +786,25 @@ export const callBedrockApiMultimodal = async (
  * @param systemPrompt - System prompt to set AI behavior
  * @param messages - Full Converse API messages array (e.g., from buildMultimodalContent)
  * @param modelId - Model ID to use (defaults to Claude Sonnet 4)
+ * @param options - Optional parameters including staticPrompt and dynamicPrompt for caching
  * @returns Promise with async generator that yields response chunks
  */
 export const callBedrockApiMultimodalStream = async (
   systemPrompt: string,
   messages: any[], // Full Converse API messages array with images
-  modelId: string = CLAUDE_SONNET_4_MODEL_ID
+  modelId: string = CLAUDE_SONNET_4_MODEL_ID,
+  options?: BedrockApiOptions
 ): Promise<AsyncGenerator<string, void, unknown>> => {
   try {
+    // Build system parameters with cache control and thinking support
+    const { systemParams, enableThinking } = buildSystemParams(systemPrompt, options);
+
     console.info("=== BEDROCK MULTIMODAL STREAMING API CALL START ===");
     console.info("AWS Region:", process.env.AWS_REGION || "us-west-2");
     console.info("Model ID:", modelId);
     console.info("System prompt length:", systemPrompt.length);
     console.info("Messages count:", messages.length);
+    console.info("Thinking enabled:", enableThinking);
     console.info("Has images:", messages.some(m =>
       m.content?.some((c: any) => c.image)
     ));
@@ -688,7 +812,7 @@ export const callBedrockApiMultimodalStream = async (
     const command = new ConverseStreamCommand({
       modelId: modelId,
       messages: messages,
-      system: [{ text: systemPrompt }],
+      system: systemParams,
       inferenceConfig: {
         maxTokens: getMaxTokensForModel(modelId),
         temperature: TEMPERATURE,
@@ -709,6 +833,7 @@ export const callBedrockApiMultimodalStream = async (
     return async function* streamGenerator() {
       try {
         let fullResponse = "";
+        let streamEnded = false;
 
         for await (const chunk of response.stream!) {
           if (chunk.contentBlockDelta?.delta?.text) {
@@ -717,11 +842,32 @@ export const callBedrockApiMultimodalStream = async (
             yield deltaText;
           }
 
-          // Handle end of stream
+          // Mark stream as ended but continue to capture metadata
           if (chunk.messageStop) {
             console.info("=== BEDROCK MULTIMODAL STREAMING API CALL SUCCESS ===");
             console.info("Stream complete. Total response length:", fullResponse.length);
-            break;
+            streamEnded = true;
+            // DON'T break yet - metadata event comes after messageStop
+          }
+
+          // Capture metadata event (comes after messageStop)
+          if ((chunk as any).metadata) {
+            const metadata = (chunk as any).metadata;
+            console.info("📊 Metadata event received after messageStop");
+
+            if (metadata.usage) {
+              console.info("📊 Usage data found in metadata");
+              logCachePerformance(metadata.usage, "Multimodal Streaming API");
+            }
+
+            if (metadata.metrics) {
+              console.info("📊 Stream metrics:", metadata.metrics);
+            }
+
+            // Now we can break after capturing metadata
+            if (streamEnded) {
+              break;
+            }
           }
         }
 
@@ -773,12 +919,34 @@ export const storePineconeContext = async (
   try {
     const { index } = await getPineconeClient();
     const userNamespace = getUserNamespace(userId);
-    const recordId = `${metadata.record_type || "context"}_${userId}_${Date.now()}`;
+
+    // Use metadata ID directly as Pinecone ID for stable, consistent upserting
+    // This ensures the same record always maps to the same Pinecone ID
+    let recordId: string;
+
+    if (metadata.memoryId) {
+      // User memory records
+      recordId = metadata.memoryId; // e.g., "user_memory_userId_1759850315502_5cqgsat0i"
+    } else if (metadata.workoutId) {
+      // Workout summary records
+      recordId = metadata.workoutId; // e.g., "workout_summary_userId_1759837953791_shortId"
+    } else if (metadata.summaryId) {
+      // Conversation summary or coach creator summary records
+      recordId = metadata.summaryId; // e.g., "conversation_summary_..." or "coach_creator_summary_..."
+    } else {
+      // No ID field found - this is an error
+      console.error("❌ No ID field found in metadata for Pinecone record", {
+        userId,
+        metadata,
+        availableFields: Object.keys(metadata)
+      });
+      throw new Error(`Cannot store Pinecone record without ID field (memoryId, workoutId, or summaryId)`);
+    }
 
     // Prepare metadata for Pinecone storage (additional fields beyond the embedded text)
     const additionalFields = {
       // Core identification
-      user_id: userId,
+      userId: userId,  // Using camelCase for consistency
       timestamp: new Date().toISOString(),
 
       // Merge provided metadata
@@ -917,7 +1085,7 @@ const queryUserNamespace = async (
         topK: topK,
       },
       filter: {
-        record_type: { $in: userRecordTypeFilters },
+        recordType: { $in: userRecordTypeFilters },
       },
     };
 
@@ -1199,15 +1367,15 @@ const normalizeMatch = (match: any, namespace?: string): any => {
     // Ensure text content is available in standard location
     text: textContent,
     content: textContent, // Backward compatibility
-    // Normalize metadata
-    metadata: {
-      ...match.metadata,
-      // Ensure record_type is set
-      record_type:
-        match.metadata?.record_type ||
-        (namespace === "methodology" ? "methodology" : "unknown"),
-    },
-  };
+  // Normalize metadata
+  metadata: {
+    ...match.metadata,
+    // Ensure recordType is set
+    recordType:
+      match.metadata?.recordType ||
+      (namespace === "methodology" ? "methodology" : "unknown"),
+  },
+};
 };
 
 // Helper function to process and filter results
@@ -1274,27 +1442,26 @@ const processAndFilterResults = async (
     processedMatches = normalizedMatches.slice(0, topK);
   }
 
-  // Determine appropriate minimum score based on whether reranking was used
-  const effectiveMinScore =
-    enableReranking && originalQuery
-      ? RERANKING_CONFIG.minScore
-      : RERANKING_CONFIG.fallbackMinScore;
-  const finalMinScore = minScore || effectiveMinScore;
+  // When reranking is enabled, use reranking minScore (different scale: 0.3)
+  // Otherwise, use passed minScore or fallback minScore (0.5)
+  const finalMinScore = (enableReranking && originalQuery)
+    ? RERANKING_CONFIG.minScore
+    : (minScore || RERANKING_CONFIG.fallbackMinScore);
 
   // Filter results by minimum score and format for consumption
   const relevantMatches = processedMatches
     .filter((match: any) => match.score && match.score >= finalMinScore)
-    .map((match: any) => ({
-      id: match.id,
-      score: match.score,
-      content: extractTextContent(match), // Use standardized extraction
-      recordType: match.metadata?.record_type || "methodology",
-      metadata: match.metadata,
-      namespace:
-        match.metadata?.record_type === "methodology"
-          ? "methodology"
-          : userNamespace,
-    }));
+  .map((match: any) => ({
+    id: match.id,
+    score: match.score,
+    content: extractTextContent(match), // Use standardized extraction
+    recordType: match.metadata?.recordType || "methodology",
+    metadata: match.metadata,
+    namespace:
+      match.metadata?.recordType === "methodology"
+        ? "methodology"
+        : userNamespace,
+  }));
 
   const wasReranked =
     enableReranking && originalQuery && normalizedMatches.length > 1;
@@ -1508,14 +1675,14 @@ export const querySemanticMemories = async (
 
     // Build filter for memory records
     let filter: Record<string, any> = {
-      record_type: "user_memory",
+      recordType: "user_memory",
     };
 
     // Add context type filtering if specified
     if (contextTypes.length > 0) {
       filter = {
         ...filter,
-        $or: contextTypes.map((type) => ({ memory_type: type })),
+        $or: contextTypes.map((type) => ({ memoryType: type })),
       };
     }
 
@@ -1587,21 +1754,36 @@ export const querySemanticMemories = async (
 
     // Filter by minimum score and convert to memory objects
     const relevantMemories = normalizedHits
-      .filter((hit: any) => hit.score >= effectiveMinScore)
+      .filter((hit: any) => {
+        // Must meet score threshold
+        if (hit.score < effectiveMinScore) return false;
+
+        // Must have memoryId (skip old context records without proper IDs)
+        if (!hit.metadata.memoryId) {
+          console.warn("⚠️ Skipping Pinecone record without memoryId:", {
+            pineconeId: hit.id,
+            recordType: hit.metadata.recordType,
+            contentPreview: extractTextContent(hit)?.substring(0, 100),
+          });
+          return false;
+        }
+
+        return true;
+      })
       .map((hit: any) => {
         // Convert Pinecone result back to UserMemory-like object
         return {
-          memoryId: hit.metadata.memory_id,
-          userId: hit.metadata.user_id || userId,
-          coachId: hit.metadata.coach_id,
+          memoryId: hit.metadata.memoryId,
+          userId: hit.metadata.userId || userId,
+          coachId: hit.metadata.coachId,
           content: extractTextContent(hit), // Use standardized extraction
-          memoryType: hit.metadata.memory_type,
+          memoryType: hit.metadata.memoryType,
           metadata: {
             importance: hit.metadata.importance,
-            createdAt: new Date(hit.metadata.created_at),
-            usageCount: hit.metadata.usage_count || 0,
-            lastUsed: hit.metadata.last_used
-              ? new Date(hit.metadata.last_used)
+            createdAt: new Date(hit.metadata.createdAt),
+            usageCount: hit.metadata.usageCount || 0,
+            lastUsed: hit.metadata.lastUsed
+              ? new Date(hit.metadata.lastUsed)
               : undefined,
             tags: hit.metadata.tags || [],
             // Add reranking metadata

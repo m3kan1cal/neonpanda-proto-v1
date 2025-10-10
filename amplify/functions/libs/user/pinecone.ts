@@ -3,53 +3,63 @@
  * Handles storage and retrieval of user memories for semantic search
  */
 
-import { storePineconeContext, deletePineconeContext } from '../api-helpers';
-import { UserMemory } from '../memory/types';
+import { storePineconeContext, deletePineconeContext } from "../api-helpers";
+import { UserMemory } from "../memory/types";
 
 /**
  * Store user memory in Pinecone for semantic search
  * Follows the same pattern as workout and coach creator summaries
  */
-export const storeMemoryInPinecone = async (memory: UserMemory): Promise<{ success: boolean; recordId?: string; error?: string }> => {
+export const storeMemoryInPinecone = async (
+  memory: UserMemory
+): Promise<{ success: boolean; recordId?: string; error?: string }> => {
   try {
-    console.info('🧠 Storing memory in Pinecone:', {
+    console.info("🧠 Storing memory in Pinecone:", {
       memoryId: memory.memoryId,
       userId: memory.userId,
       coachId: memory.coachId,
       type: memory.memoryType,
       importance: memory.metadata.importance,
-      contentLength: memory.content.length
+      contentLength: memory.content.length,
     });
 
     const metadata = {
-      record_type: 'user_memory',
-      memory_id: memory.memoryId,
-      memory_type: memory.memoryType,
+      recordType: "user_memory",
+      memoryId: memory.memoryId,
+      memoryType: memory.memoryType,
       importance: memory.metadata.importance,
-      // Only include coach_id if it has a value (Pinecone rejects null/undefined)
-      ...(memory.coachId && { coach_id: memory.coachId }),
-      created_at: memory.metadata.createdAt.toISOString(),
-      usage_count: memory.metadata.usageCount,
+      // Only include coachId if it has a value (Pinecone rejects null/undefined)
+      ...(memory.coachId && { coachId: memory.coachId }),
+      createdAt: memory.metadata.createdAt.toISOString(),
+      usageCount: memory.metadata.usageCount,
       tags: memory.metadata.tags || [],
 
       // Additional semantic search categories for better matching
-      topics: [`memory_${memory.memoryType}`, 'user_context', 'personalization'],
+      topics: [
+        `memory_${memory.memoryType}`,
+        "user_context",
+        "personalization",
+      ],
 
       // Add context for retrieval
-      is_global: !memory.coachId || memory.coachId === null, // True if memory applies to all coaches
-      logged_at: new Date().toISOString()
+      isGlobal: !memory.coachId || memory.coachId === null, // True if memory applies to all coaches
+      loggedAt: new Date().toISOString(),
     };
 
     // Enhance searchable content by including tags for better semantic matching
     const enhancedContent = [
       memory.content,
-      ...(memory.metadata.tags || []).map(tag => `tag: ${tag}`)
-    ].join(' ');
+      ...(memory.metadata.tags || []).map((tag) => `tag: ${tag}`),
+    ].join(" ");
 
     // Use centralized storage function with enhanced content
-    const result = await storePineconeContext(memory.userId, enhancedContent, metadata);
+    const result = await storePineconeContext(
+      memory.userId,
+      enhancedContent,
+      metadata
+    );
 
-    console.info('✅ Successfully stored memory in Pinecone:', {
+    console.info("✅ Successfully stored memory in Pinecone:", {
       memoryId: memory.memoryId,
       recordId: result.recordId,
       namespace: result.namespace,
@@ -57,20 +67,21 @@ export const storeMemoryInPinecone = async (memory: UserMemory): Promise<{ succe
       contentLength: memory.content.length,
       enhancedContentLength: enhancedContent.length,
       tagCount: memory.metadata.tags?.length || 0,
-      tags: memory.metadata.tags || []
+      tags: memory.metadata.tags || [],
     });
 
     return result;
-
   } catch (error) {
-    console.error('❌ Failed to store memory in Pinecone:', error);
+    console.error("❌ Failed to store memory in Pinecone:", error);
 
     // Don't throw error to avoid breaking the memory creation process
     // Pinecone storage is for semantic search enhancement, not critical for core functionality
-    console.warn('Memory creation will continue despite Pinecone storage failure');
+    console.warn(
+      "Memory creation will continue despite Pinecone storage failure"
+    );
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : "Unknown error",
     };
   }
 };
@@ -84,38 +95,37 @@ export const deleteMemoryFromPinecone = async (
   memoryId: string
 ): Promise<{ success: boolean; deletedCount: number; error?: string }> => {
   try {
-    console.info('🗑️ Deleting memory from Pinecone:', {
+    console.info("🗑️ Deleting memory from Pinecone:", {
       userId,
-      memoryId
+      memoryId,
     });
 
     const result = await deletePineconeContext(userId, {
-      memory_id: memoryId,
-      record_type: 'user_memory'
+      memoryId: memoryId,
+      recordType: "user_memory",
     });
 
     if (result.success) {
-      console.info('✅ Successfully deleted memory from Pinecone:', {
+      console.info("✅ Successfully deleted memory from Pinecone:", {
         userId,
         memoryId,
-        deletedCount: result.deletedCount
+        deletedCount: result.deletedCount,
       });
     } else {
-      console.warn('⚠️ Failed to delete memory from Pinecone:', {
+      console.warn("⚠️ Failed to delete memory from Pinecone:", {
         userId,
         memoryId,
-        error: result.error
+        error: result.error,
       });
     }
 
     return result;
-
   } catch (error) {
-    console.error('❌ Failed to delete memory from Pinecone:', error);
+    console.error("❌ Failed to delete memory from Pinecone:", error);
     return {
       success: false,
       deletedCount: 0,
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : "Unknown error",
     };
   }
 };

@@ -82,7 +82,7 @@ export const handler = async (event: BuildWorkoutEvent) => {
       extractionPrompt,
       workoutContent,
       MODEL_IDS.CLAUDE_SONNET_4_FULL,
-      enableThinking
+      { enableThinking }
     );
 
     console.info("Claude extraction completed. Raw response:", {

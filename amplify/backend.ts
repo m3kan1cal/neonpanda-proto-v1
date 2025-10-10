@@ -270,6 +270,7 @@ const sharedPolicies = new SharedPolicies(
 // Functions needing S3 DEBUG bucket access
 [
   backend.buildWorkout,
+  backend.buildCoachConfig,
   backend.buildConversationSummary,
   backend.sendCoachConversationMessage,
   backend.streamCoachConversation,

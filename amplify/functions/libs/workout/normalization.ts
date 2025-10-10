@@ -178,7 +178,7 @@ const performNormalization = async (
       normalizationPrompt,
       "workout_normalization",
       undefined, // Use default model
-      enableThinking
+      { enableThinking }
     );
 
     // Parse JSON with fallback cleaning and fixing

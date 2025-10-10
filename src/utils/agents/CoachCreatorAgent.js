@@ -211,6 +211,10 @@ export class CoachCreatorAgent {
         });
       }
 
+      // Check if session is already complete (coach config already generated)
+      const isSessionComplete = sessionData.isComplete ||
+                                sessionData.configGeneration?.status === 'COMPLETE';
+
       // Update state with loaded messages or keep initial message
       this._updateState({
         messages:
@@ -220,6 +224,7 @@ export class CoachCreatorAgent {
         isLoadingItem: false,
         sessionData,
         progress: progressData,
+        isComplete: isSessionComplete,
       });
 
       return sessionData;

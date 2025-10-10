@@ -12,6 +12,9 @@ const pipeline = util.promisify(stream.pipeline);
 import {
   invokeAsyncLambda,
   queryPineconeContext,
+  callBedrockApiMultimodalStream,
+  MODEL_IDS,
+  AI_ERROR_FALLBACK_MESSAGE,
 } from "../libs/api-helpers";
 import {
   getCoachCreatorSession,
@@ -28,6 +31,7 @@ import {
   getNextQuestion,
   extractSophisticationLevel,
   cleanResponse,
+  buildCoachCreatorMessagesWithCaching,
 } from "../libs/coach-creator/question-management";
 import {
   getProgress,
@@ -60,7 +64,6 @@ import {
   validateStreamingRequestBody,
   getRandomCoachCreatorAcknowledgement,
   getAIResponseStream,
-  AI_ERROR_FALLBACK_MESSAGE,
   buildMessageContext,
   formatMemoryContext,
 } from "../libs/streaming";
@@ -168,7 +171,7 @@ async function loadSessionData(
  */
 async function processSessionUpdate(
   params: ValidationParams,
-  fullAIResponse: string,
+  fullAiResponse: string,
   sessionData: SessionData,
   currentQuestion: any
 ): Promise<{
@@ -182,8 +185,8 @@ async function processSessionUpdate(
   console.info("⚙️ Processing session update");
 
   // Extract sophistication and clean response
-  const detectedLevel = extractSophisticationLevel(fullAIResponse);
-  const cleanedResponse = cleanResponse(fullAIResponse);
+  const detectedLevel = extractSophisticationLevel(fullAiResponse);
+  const cleanedResponse = cleanResponse(fullAiResponse);
 
   // Extract signals from user response
   const detectedSignals = extractSophisticationSignals(
@@ -346,19 +349,25 @@ async function* createCoachCreatorEventStream(
     console.info("🔍 Step 1: Validating parameters");
     const params = await validateAndExtractParams(event);
 
-    // Step 2: Load session data
-    console.info("📂 Step 2: Loading session data");
+    // Step 2: Load session data (PARALLELIZED with contextual update)
+    console.info("📂 Step 2: Loading session data + generating contextual update");
+    const phase1StartTime = Date.now();
 
-    // Contextual update: Starting processing (Vesper's voice)
-    const startingUpdate = await generateCoachCreatorContextualUpdate(
-      params.userResponse,
-      "session_review",
-      {}
-    );
+    // Parallel execution: session loading + contextual update generation
+    const [startingUpdate, sessionData] = await Promise.all([
+      generateCoachCreatorContextualUpdate(
+        params.userResponse,
+        "session_review",
+        {}
+      ),
+      loadSessionData(params.userId, params.sessionId)
+    ]);
+
+    const phase1Time = Date.now() - phase1StartTime;
+    console.info(`✅ Phase 1 parallel loading completed in ${phase1Time}ms`);
+
     yield formatContextualEvent(startingUpdate, 'session_review');
     console.info("💬 Yielded starting update (Vesper):", startingUpdate);
-
-    const sessionData = await loadSessionData(params.userId, params.sessionId);
 
     // Step 3: Get current question
     console.info("❓ Step 3: Getting current question");
@@ -369,139 +378,163 @@ async function* createCoachCreatorEventStream(
       throw new Error("No current question found");
     }
 
-    // Step 4: Query Pinecone for methodology context
-    console.info("📚 Step 4: Querying Pinecone for methodology context");
+    // Step 4-5: PARALLELIZED context gathering (methodology + memory)
+    console.info("⚡ Step 4-5: Parallel context gathering (methodology + memory + contextual updates)");
+    const phase2StartTime = Date.now();
 
-    // Contextual update: Gathering methodology context (Vesper's voice)
-    const contextUpdate = await generateCoachCreatorContextualUpdate(
-      params.userResponse,
-      "methodology_search",
-      {}
+    // Get question text for Pinecone search query
+    const questionText =
+      currentQuestion?.versions[
+        sessionData.session.attributes.userContext
+          .sophisticationLevel as SophisticationLevel
+      ] ||
+      currentQuestion?.versions.UNKNOWN ||
+      "";
+    const searchQuery = `${params.userResponse} ${questionText}`;
+
+    // Build message context for memory analysis
+    const messageContext = buildMessageContext(
+      sessionData.session.attributes.questionHistory,
+      5  // Increased for better conversational context
     );
+
+    // Parallel execution: methodology + memory + contextual updates
+    const [
+      { methodologyContext, contextUpdate },
+      { memoryContext, memoryUpdate }
+    ] = await Promise.all([
+      // Parallel operation 1: Methodology context + contextual update
+      (async () => {
+        let methodologyContext = "";
+        let contextUpdate = "";
+
+        try {
+          // Parallel: generate contextual update + query Pinecone
+          const [update, pineconeResults] = await Promise.all([
+            generateCoachCreatorContextualUpdate(
+              params.userResponse,
+              "methodology_search",
+              {}
+            ),
+            queryPineconeContext(
+              params.userId,
+              searchQuery,
+              {
+                topK: 5,
+                includeMethodology: true,
+                includeWorkouts: false,
+                includeCoachCreator: false,
+                includeConversationSummaries: false,
+                enableReranking: false, // Disabled for performance
+                minScore: 0.25,
+              }
+            )
+          ]);
+
+          contextUpdate = update;
+          const pineconeMatches = pineconeResults.matches || [];
+
+          if (pineconeMatches.length > 0) {
+            methodologyContext = pineconeMatches
+              .map((match: any) => match.content || "")
+              .filter((text) => text.length > 0)
+              .join("\n\n")
+              .substring(0, 2000);
+
+            console.info("✅ Pinecone methodology context retrieved:", {
+              matches: pineconeMatches.length,
+              contextLength: methodologyContext.length,
+            });
+          } else {
+            console.info("ℹ️ No Pinecone methodology matches found");
+          }
+        } catch (error) {
+          console.warn("⚠️ Methodology context failed (non-critical):", error);
+          // Generate fallback contextual update
+          contextUpdate = "Gathering methodology context...";
+        }
+
+        return { methodologyContext, contextUpdate };
+      })(),
+
+      // Parallel operation 2: Memory context + contextual update
+      (async () => {
+        let memoryContext = "";
+        let memoryUpdate = "";
+
+        try {
+          // Parallel: generate contextual update + analyze memory needs
+          const [update, memoryAnalysis] = await Promise.all([
+            generateCoachCreatorContextualUpdate(
+              params.userResponse,
+              "memory_check",
+              {}
+            ),
+            analyzeMemoryNeeds(
+              params.userResponse,
+              messageContext,
+              "Coach Creator"
+            )
+          ]);
+
+          memoryUpdate = update;
+
+          console.info("🧠 Memory analysis result:", {
+            needsRetrieval: memoryAnalysis.needsRetrieval,
+            reason: memoryAnalysis.retrievalContext?.reasoning,
+          });
+
+          // Only query memories if needed
+          if (memoryAnalysis.needsRetrieval) {
+            const memoryResults = await queryMemories(
+              params.userId,
+              null as any, // Query across ALL coaches
+              params.userResponse,
+              messageContext,
+              {
+                enableReranking: false, // Disabled for performance
+                minScore: 0.25,
+              }
+            );
+
+            const userMemories = memoryResults.memories || [];
+
+            if (userMemories.length > 0) {
+              // Format memory context using shared utility
+              memoryContext = formatMemoryContext(userMemories, 2000);
+
+              console.info("✅ User memories retrieved:", {
+                count: userMemories.length,
+                contextLength: memoryContext.length,
+              });
+            } else {
+              console.info("📭 No relevant memories found");
+            }
+          } else {
+            console.info("⏭️ Memory retrieval not needed for this response");
+          }
+        } catch (error) {
+          console.warn("⚠️ Memory processing failed (non-critical):", error);
+          // Generate fallback contextual update
+          memoryUpdate = "Checking your memories...";
+        }
+
+        return { memoryContext, memoryUpdate };
+      })()
+    ]);
+
+    const phase2Time = Date.now() - phase2StartTime;
+    console.info(`✅ Phase 2 parallel context gathering completed in ${phase2Time}ms`);
+
+    // Yield contextual updates immediately after parallel completion
     yield formatContextualEvent(contextUpdate, 'methodology_search');
     console.info("💬 Yielded context update (Vesper):", contextUpdate);
-
-    let methodologyContext = "";
-
-    try {
-      // Get question text from current sophistication level
-      const questionText =
-        currentQuestion?.versions[
-          sessionData.session.attributes.userContext
-            .sophisticationLevel as SophisticationLevel
-        ] ||
-        currentQuestion?.versions.UNKNOWN ||
-        "";
-      const searchQuery = `${params.userResponse} ${questionText}`;
-
-      const pineconeStartTime = Date.now();
-      const pineconeResults = await queryPineconeContext(
-        params.userId,
-        searchQuery,
-        {
-          topK: 5,
-          includeMethodology: true,
-          includeWorkouts: false,
-          includeCoachCreator: false,
-          includeConversationSummaries: false,
-          enableReranking: false, // Disabled for performance - coach creator queries are specific enough
-          minScore: 0.25, // Lower threshold - semantic scores are typically 0.22-0.30 range
-        }
-      );
-      const pineconeElapsedMs = Date.now() - pineconeStartTime;
-      console.info(`⏱️ Pinecone methodology query completed in ${pineconeElapsedMs}ms`);
-
-      const pineconeMatches = pineconeResults.matches || [];
-
-      if (pineconeMatches.length > 0) {
-        methodologyContext = pineconeMatches
-          .map((match: any) => match.content || "")
-          .filter((text) => text.length > 0)
-          .join("\n\n")
-          .substring(0, 2000); // Limit to 2000 chars
-
-        console.info("✅ Pinecone methodology context retrieved:", {
-          matches: pineconeMatches.length,
-          contextLength: methodologyContext.length,
-        });
-      } else {
-        console.info("ℹ️ No Pinecone methodology matches found");
-      }
-    } catch (pineconeError) {
-      console.warn("⚠️ Pinecone query failed (non-critical):", pineconeError);
-      // Continue without methodology context
-    }
-
-    // Step 5: Smart memory detection + retrieval
-    console.info("🧠 Step 5: Analyzing memory needs");
-
-    // Contextual update: Checking memories (Vesper's voice)
-    const memoryUpdate = await generateCoachCreatorContextualUpdate(
-      params.userResponse,
-      "memory_check",
-      {}
-    );
     yield formatContextualEvent(memoryUpdate, 'memory_check');
     console.info("💬 Yielded memory update (Vesper):", memoryUpdate);
 
-    let memoryContext = "";
-
-    try {
-      // Build message context using shared utility
-      const messageContext = buildMessageContext(
-        sessionData.session.attributes.questionHistory,
-        5  // Increased for better conversational context
-      );
-
-      // Detect if memory retrieval is needed
-      const memoryAnalysis = await analyzeMemoryNeeds(
-        params.userResponse,
-        messageContext,
-        "Coach Creator"
-      );
-
-      console.info("🧠 Memory analysis result:", {
-        needsRetrieval: memoryAnalysis.needsRetrieval,
-        reason: memoryAnalysis.retrievalContext?.reasoning,
-      });
-
-      // Only query memories if needed
-      if (memoryAnalysis.needsRetrieval) {
-        const memoryResults = await queryMemories(
-          params.userId,
-          null as any, // Query across ALL coaches
-          params.userResponse,
-          messageContext,
-          {
-            enableReranking: false, // Disabled for performance - coach creator queries are specific
-            minScore: 0.25, // Lower threshold - semantic scores are typically 0.22-0.30 range
-          }
-        );
-
-        const userMemories = memoryResults.memories || [];
-
-        if (userMemories.length > 0) {
-          // Format memory context using shared utility
-          memoryContext = formatMemoryContext(userMemories, 2000);
-
-          console.info("✅ User memories retrieved:", {
-            count: userMemories.length,
-            contextLength: memoryContext.length,
-          });
-        } else {
-          console.info("📭 No relevant memories found");
-        }
-      } else {
-        console.info("⏭️ Memory retrieval not needed for this response");
-      }
-    } catch (memoryError) {
-      console.warn("⚠️ Memory processing failed (non-critical):", memoryError);
-      // Continue without memories
-    }
-
-    // Step 6: Build question prompt with contexts
+    // Step 6: Build question prompt with contexts (separated for caching)
     console.info("📝 Step 6: Building question prompt with contexts");
-    const questionPrompt = buildQuestionPrompt(
+    const promptResult = buildQuestionPrompt(
       currentQuestion,
       sessionData.session.attributes.userContext,
       sessionData.session.attributes.questionHistory,
@@ -509,6 +542,8 @@ async function* createCoachCreatorEventStream(
       methodologyContext,
       memoryContext
     );
+
+    const { staticPrompt, dynamicPrompt, conversationHistory } = promptResult;
 
     // Step 7: Contextual update before AI response (Vesper's voice)
     const craftingUpdate = await generateCoachCreatorContextualUpdate(
@@ -519,37 +554,71 @@ async function* createCoachCreatorEventStream(
     yield formatContextualEvent(craftingUpdate, 'response_crafting');
     console.info("💬 Yielded crafting update (Vesper):", craftingUpdate);
 
-    // Step 8: Stream AI response (single call)
-    console.info("🚀 Step 8: Starting AI response streaming");
-    let fullAIResponse = "";
+    // Step 8: Stream AI response with caching support
+    console.info("🚀 Step 8: Starting AI response streaming with cache optimization");
+    let fullAiResponse = "";
 
     try {
-      // Get AI response stream using shared utility (handles both text-only and multimodal)
-      const responseStream = await getAIResponseStream(questionPrompt, {
-        userResponse: params.userResponse,
-        messageTimestamp: params.messageTimestamp,
-        imageS3Keys: params.imageS3Keys,
-      });
+      // Check if we should use conversation history caching
+      const shouldUseHistoryCaching = conversationHistory && conversationHistory.length >= 8;
+
+      let responseStream: AsyncGenerator<string, void, unknown>;
+
+      if (shouldUseHistoryCaching) {
+        // Use multimodal API with conversation history caching
+        const messagesWithCaching = buildCoachCreatorMessagesWithCaching(
+          conversationHistory,
+          params.userResponse
+        );
+
+        console.info('💰 Using conversation history caching for coach creator', {
+          totalHistory: conversationHistory.length,
+          messagesCount: messagesWithCaching.length,
+        });
+
+        // Use multimodal stream API (supports text-only with caching)
+        responseStream = await callBedrockApiMultimodalStream(
+          staticPrompt + dynamicPrompt, // System prompt with cache points
+          messagesWithCaching,
+          MODEL_IDS.CLAUDE_SONNET_4_FULL,
+          { staticPrompt, dynamicPrompt } // Enable prompt caching
+        );
+      } else {
+        // Short sessions: use standard streaming with basic prompt caching
+        console.info('📝 Using standard streaming (session too short for history caching)', {
+          historyLength: conversationHistory?.length || 0,
+        });
+
+        responseStream = await getAIResponseStream(
+          promptResult.fullPrompt, // Use full prompt for backwards compatibility
+          {
+            userResponse: params.userResponse,
+            messageTimestamp: params.messageTimestamp,
+            imageS3Keys: params.imageS3Keys,
+          },
+          { staticPrompt, dynamicPrompt } // Enable basic prompt caching
+        );
+      }
 
       // Stream AI response chunks
       for await (const chunk of responseStream) {
-        fullAIResponse += chunk;
+        fullAiResponse += chunk;
         yield formatChunkEvent(chunk);
       }
 
       console.info("✅ AI response streaming completed:", {
-        responseLength: fullAIResponse.length,
+        responseLength: fullAiResponse.length,
       });
-    } catch (aiError) {
-      console.error("❌ Error in AI response generation:", aiError);
-      fullAIResponse = AI_ERROR_FALLBACK_MESSAGE;
+    } catch (error) {
+      console.error("❌ Error in AI response generation, using fallback:", error);
+      fullAiResponse += AI_ERROR_FALLBACK_MESSAGE;
     }
 
     // Step 9: Process and save session
     console.info("⚙️ Step 9: Processing session update");
     const processedResponse = await processSessionUpdate(
       params,
-      fullAIResponse,
+      fullAiResponse,
       sessionData,
       currentQuestion
     );
@@ -592,6 +661,9 @@ const internalStreamingHandler: StreamingHandler = async (
     await pipeline(sseEventStream, responseStream);
 
     console.info("✅ Streaming pipeline completed successfully");
+
+    // FIX: Prevent Lambda from hanging - all streaming is complete, don't wait for event loop
+    context.callbackWaitsForEmptyEventLoop = false;
   } catch (error) {
     console.error("❌ Fatal error in streaming handler:", error);
     // Error will be caught by Lambda runtime

@@ -26,51 +26,51 @@ export const storeWorkoutSummaryInPinecone = async (
   try {
     // Prepare workout-specific metadata for Pinecone
     const workoutMetadata = {
-      record_type: 'workout_summary',
+      recordType: 'workout_summary',
 
       // Core workout identification
-      workout_id: workoutData.workout_id,
+      workoutId: workoutData.workout_id,
       discipline: workoutData.discipline,
-      workout_name: workoutData.workout_name || 'Custom Workout',
-      workout_type: workoutData.workout_type,
+      workoutName: workoutData.workout_name || 'Custom Workout',
+      workoutType: workoutData.workout_type,
       methodology: workoutData.methodology,
 
       // Performance metrics (filter out null values)
       ...(workoutData.duration !== null && { duration: workoutData.duration }),
       ...(workoutData.performance_metrics?.intensity !== null && workoutData.performance_metrics?.intensity !== undefined && { intensity: workoutData.performance_metrics.intensity }),
-      ...(workoutData.performance_metrics?.perceived_exertion !== null && workoutData.performance_metrics?.perceived_exertion !== undefined && { perceived_exertion: workoutData.performance_metrics.perceived_exertion }),
+      ...(workoutData.performance_metrics?.perceived_exertion !== null && workoutData.performance_metrics?.perceived_exertion !== undefined && { perceivedExertion: workoutData.performance_metrics.perceived_exertion }),
 
       // Discipline-specific data (filter out null values)
       ...(workoutData.discipline === 'crossfit' && workoutData.discipline_specific?.crossfit && {
-        workout_format: workoutData.discipline_specific.crossfit.workout_format,
-        rx_status: workoutData.discipline_specific.crossfit.rx_status,
-        ...(workoutData.discipline_specific.crossfit.performance_data?.total_time !== null && workoutData.discipline_specific.crossfit.performance_data?.total_time !== undefined && { total_time: workoutData.discipline_specific.crossfit.performance_data.total_time }),
-        ...(workoutData.discipline_specific.crossfit.performance_data?.rounds_completed !== null && workoutData.discipline_specific.crossfit.performance_data?.rounds_completed !== undefined && { rounds_completed: workoutData.discipline_specific.crossfit.performance_data.rounds_completed }),
-        ...(workoutData.discipline_specific.crossfit.performance_data?.total_reps !== null && workoutData.discipline_specific.crossfit.performance_data?.total_reps !== undefined && { total_reps: workoutData.discipline_specific.crossfit.performance_data.total_reps }),
+        workoutFormat: workoutData.discipline_specific.crossfit.workout_format,
+        rxStatus: workoutData.discipline_specific.crossfit.rx_status,
+        ...(workoutData.discipline_specific.crossfit.performance_data?.total_time !== null && workoutData.discipline_specific.crossfit.performance_data?.total_time !== undefined && { totalTime: workoutData.discipline_specific.crossfit.performance_data.total_time }),
+        ...(workoutData.discipline_specific.crossfit.performance_data?.rounds_completed !== null && workoutData.discipline_specific.crossfit.performance_data?.rounds_completed !== undefined && { roundsCompleted: workoutData.discipline_specific.crossfit.performance_data.rounds_completed }),
+        ...(workoutData.discipline_specific.crossfit.performance_data?.total_reps !== null && workoutData.discipline_specific.crossfit.performance_data?.total_reps !== undefined && { totalReps: workoutData.discipline_specific.crossfit.performance_data.total_reps }),
       }),
 
       // Completion and extraction metadata
-      completed_at: workout.completedAt.toISOString(),
-      extraction_confidence: workout.extractionMetadata.confidence,
-      data_completeness: workoutData.metadata?.data_completeness,
+      completedAt: workout.completedAt.toISOString(),
+      extractionConfidence: workout.extractionMetadata.confidence,
+      dataCompleteness: workoutData.metadata?.data_completeness,
 
       // Coach context
-      coach_id: workout.coachIds[0],
-      coach_name: workout.coachNames[0],
-      conversation_id: workout.conversationId,
+      coachId: workout.coachIds[0],
+      coachName: workout.coachNames[0],
+      conversationId: workout.conversationId,
 
       // Semantic search categories
       topics: ['workout_performance', 'training_log', workoutData.discipline, workoutData.workout_type],
 
       // PR achievements (if any)
       ...(workoutData.pr_achievements && workoutData.pr_achievements.length > 0 && {
-        pr_achievements: workoutData.pr_achievements.map(pr => pr.pr_type),
-        has_pr: true
+        prAchievements: workoutData.pr_achievements.map(pr => pr.pr_type),
+        hasPr: true
       }),
 
       // Additional context for retrieval (filter out null values)
       ...(workoutData.location !== null && { location: workoutData.location }),
-      logged_at: new Date().toISOString()
+      loggedAt: new Date().toISOString()
     };
 
     // Use centralized storage function
@@ -115,8 +115,8 @@ export const deleteWorkoutSummaryFromPinecone = async (
 
     // Use centralized deletion function with workout-specific filter
     const result = await deletePineconeContext(userId, {
-      record_type: 'workout_summary',
-      workout_id: workoutId
+      recordType: 'workout_summary',
+      workoutId: workoutId
     });
 
     if (result.success) {

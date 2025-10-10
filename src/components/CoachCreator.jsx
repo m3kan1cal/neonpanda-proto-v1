@@ -620,31 +620,26 @@ function CoachCreator() {
       </div>
 
 
-      {/* Chat Input Section - always show unless there's an error */}
-      {!agentState.isRedirecting && (
-        <>
-
-          <ChatInput
-            userId={userId}
-            inputMessage={inputMessage}
-            setInputMessage={setInputMessage}
-            onSubmit={handleMessageSubmit}
-            isTyping={getTypingState(agentState).isTyping}
-            placeholder="Tell me about your fitness goals..."
-            coachName="Vesper the Coach Creator"
-            isOnline={true}
-            context="creation"
-            showDeleteButton={true}
-            onDeleteClick={handleDeleteClick}
-            enableRecording={true}
-            showTipsButton={true}
-            tipsContent={coachCreatorTips}
-            tipsTitle="Coach creation tips"
-            textareaRef={inputRef}
-            progressData={agentState.progress}
-          />
-        </>
-      )}
+      {/* Chat Input Section - always show, but disable when session is complete */}
+      <ChatInput
+        userId={userId}
+        inputMessage={inputMessage}
+        setInputMessage={setInputMessage}
+        onSubmit={handleMessageSubmit}
+        isTyping={getTypingState(agentState).isTyping || agentState.isComplete}
+        placeholder="Tell me about your fitness goals..."
+        coachName="Vesper the Coach Creator"
+        isOnline={true}
+        context="creation"
+        showDeleteButton={true}
+        onDeleteClick={handleDeleteClick}
+        enableRecording={true}
+        showTipsButton={true}
+        tipsContent={coachCreatorTips}
+        tipsTitle="Coach creation tips"
+        textareaRef={inputRef}
+        progressData={agentState.progress}
+      />
 
 
       {/* Delete Confirmation Modal */}
@@ -663,14 +658,14 @@ function CoachCreator() {
                 <button
                   onClick={handleCancelDelete}
                   disabled={isDeleting}
-                  className={`flex-1 ${buttonPatterns.secondary} text-sm disabled:opacity-50 disabled:cursor-not-allowed`}
+                  className={`flex-1 ${buttonPatterns.secondarySmall} text-base disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleConfirmDelete}
                   disabled={isDeleting}
-                  className={`flex-1 ${buttonPatterns.primary} text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2`}
+                  className={`flex-1 ${buttonPatterns.primarySmall} text-base disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2`}
                 >
                   {isDeleting ? (
                     <>
@@ -745,13 +740,13 @@ function CoachCreator() {
               <div className="flex space-x-4">
                 <button
                   onClick={() => setShowCompletionModal(false)}
-                  className={`flex-1 ${buttonPatterns.secondary} text-sm`}
+                  className={`flex-1 ${buttonPatterns.secondarySmall} text-base`}
                 >
                   Cancel
                 </button>
                 <button
                   onClick={() => navigate(`/coaches?userId=${userId}`)}
-                  className={`flex-1 ${buttonPatterns.primary} text-sm`}
+                  className={`flex-1 ${buttonPatterns.primarySmall} text-base`}
                 >
                   Go to Coaches
                 </button>

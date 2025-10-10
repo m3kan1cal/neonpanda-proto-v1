@@ -256,11 +256,11 @@ async function* createCoachCreatorEventStream(event, context) {
   );
 
   // Stream AI response (single call)
-  let fullAIResponse = '';
+  let fullAiResponse = '';
   const streamResult = await generateAIResponseStream(...);
 
   for await (const chunk of streamResult) {
-    fullAIResponse += chunk;
+    fullAiResponse += chunk;
     yield formatChunkEvent(chunk);
   }
 

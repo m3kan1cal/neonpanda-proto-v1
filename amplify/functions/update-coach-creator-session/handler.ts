@@ -198,7 +198,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
   }
 
   // Build prompt with contexts
-  const questionPrompt = buildQuestionPrompt(
+  const questionPromptResult = buildQuestionPrompt(
     currentQuestion,
     session.attributes.userContext,
     session.attributes.questionHistory,
@@ -206,6 +206,9 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     methodologyContext, // NEW: Methodology context from Pinecone
     memoryContext // NEW: User memory context
   );
+
+  // Extract fullPrompt for backwards compatibility with non-streaming path
+  const questionPrompt = questionPromptResult.fullPrompt;
 
   if (isStreamingRequested) {
     console.info("🔄 Processing streaming coach creator request");
@@ -477,13 +480,13 @@ async function generateCoachCreatorSSEStream(
   currentQuestion: any,
   imageS3Keys?: string[]
 ): Promise<string> {
-  let fullAIResponse = "";
+  let fullAiResponse = "";
   let sseOutput = "";
 
   try {
     // Stream the AI response chunks
     for await (const chunk of responseStream) {
-      fullAIResponse += chunk;
+      fullAiResponse += chunk;
       const chunkData = {
         type: "chunk",
         content: chunk,
@@ -492,8 +495,8 @@ async function generateCoachCreatorSSEStream(
     }
 
     // Process the complete response (following existing logic)
-    const detectedLevel = extractSophisticationLevel(fullAIResponse);
-    const cleanedResponse = cleanResponse(fullAIResponse);
+    const detectedLevel = extractSophisticationLevel(fullAiResponse);
+    const cleanedResponse = cleanResponse(fullAiResponse);
 
     // Extract signals from user response
     const detectedSignals = extractSophisticationSignals(
