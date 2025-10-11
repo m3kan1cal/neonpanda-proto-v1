@@ -181,6 +181,14 @@ function Reports() {
     setViewMode(viewMode === "formatted" ? "raw" : "formatted");
   };
 
+  // Create coach name handler using the agent's helper method (no toast for WeeklyReports)
+  const handleSaveCoachName = coachAgentRef.current?.createCoachNameHandler(
+    userId,
+    coachId,
+    setCoachData,
+    null // No toast notifications in WeeklyReports
+  );
+
   // Show skeleton loading while validating userId or loading report
   if (isValidatingUserId || reportAgentState.isLoadingItem) {
     return (
@@ -275,7 +283,12 @@ function Reports() {
 
           {/* Coach Header */}
           {coachData && (
-            <CoachHeader coachData={coachData} isOnline={true} />
+            <CoachHeader
+              coachData={coachData}
+              isOnline={true}
+              isEditable={true}
+              onSaveName={handleSaveCoachName}
+            />
           )}
 
           <p className="font-rajdhani text-lg text-synthwave-text-secondary max-w-3xl mx-auto mb-4">

@@ -97,3 +97,60 @@ export const isRecentConversation = (lastActivity, createdAt) => {
     return false;
   }
 };
+
+/**
+ * Get formatted date range for a weekly report
+ * Uses actual weekStart/weekEnd if available (most accurate),
+ * otherwise falls back to parsing weekId for backwards compatibility
+ *
+ * @param {Object} report - Report object with weekStart, weekEnd, and/or weekId
+ * @returns {string} - Formatted date range (e.g., "Sep 28 - Oct 4")
+ */
+export const getWeekDateRange = (report) => {
+  // Use actual weekStart/weekEnd if available (more accurate than parsing weekId)
+  if (report?.weekStart && report?.weekEnd) {
+    const formatDate = (dateStr) => {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric'
+      });
+    };
+    return `${formatDate(report.weekStart)} - ${formatDate(report.weekEnd)}`;
+  }
+
+  // Fallback to weekId parsing (for backwards compatibility)
+  const weekId = report?.weekId;
+  if (!weekId) return 'Unknown week';
+
+  const [year, week] = weekId.split('-W');
+  if (!year || !week) return weekId;
+
+  const firstDayOfYear = new Date(year, 0, 1);
+  const daysToFirstMonday = (8 - firstDayOfYear.getDay()) % 7;
+  const firstMonday = new Date(year, 0, 1 + daysToFirstMonday);
+
+  const weekStart = new Date(firstMonday);
+  weekStart.setDate(firstMonday.getDate() + (parseInt(week) - 1) * 7);
+
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekStart.getDate() + 6);
+
+  const formatDate = (date) => {
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  return `${formatDate(weekStart)} - ${formatDate(weekEnd)}`;
+};
+
+/**
+ * Format workout count with proper pluralization
+ * @param {number} count - Number of workouts
+ * @returns {string} - Formatted string (e.g., "1 workout" or "5 workouts")
+ */
+export const formatWorkoutCount = (count) => {
+  return `${count} workout${count === 1 ? '' : 's'}`;
+};

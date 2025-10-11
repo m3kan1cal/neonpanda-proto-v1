@@ -1,7 +1,13 @@
 import React from 'react';
 import { avatarPatterns } from '../../utils/uiPatterns';
+import { InlineEditField } from '../common/InlineEditField';
 
-const CoachHeader = ({ coachData, isOnline = true }) => {
+const CoachHeader = ({
+  coachData,
+  isOnline = true,
+  isEditable = false,
+  onSaveName
+}) => {
   if (!coachData) return null;
 
   return (
@@ -18,9 +24,22 @@ const CoachHeader = ({ coachData, isOnline = true }) => {
       </div>
       <div className="text-left">
         <div className="flex items-center gap-2">
-          <h3 className="font-rajdhani font-semibold text-white text-lg">
-            {coachData.name}
-          </h3>
+          {isEditable && onSaveName ? (
+            <InlineEditField
+              value={coachData.name}
+              onSave={onSaveName}
+              placeholder="Enter coach name..."
+              maxLength={50}
+              showCharacterCount={false}
+              size="medium"
+              displayClassName="font-rajdhani font-semibold text-white text-lg"
+              tooltipPrefix={`coach-name-edit`}
+            />
+          ) : (
+            <h3 className="font-rajdhani font-semibold text-white text-lg">
+              {coachData.name}
+            </h3>
+          )}
           {isOnline && (
             <span className="px-2 py-0.5 bg-green-400/20 text-green-300 rounded-full text-xs font-medium font-rajdhani">
               Online

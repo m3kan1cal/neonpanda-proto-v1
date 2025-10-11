@@ -76,66 +76,69 @@ export interface DynamoDBSaveResult {
 // Generic function to save any item to DynamoDB
 export async function saveToDynamoDB<T>(item: DynamoDBItem<T>): Promise<DynamoDBSaveResult> {
   const tableName = getTableName();
+  const operationName = `Save ${item.entityType} to DynamoDB`;
 
-  let serializedItem: any;
-  let itemSizeBytes: number = 0;
-  let itemSizeKB: string = 'unknown';
+  return withThroughputScaling(async () => {
+    let serializedItem: any;
+    let itemSizeBytes: number = 0;
+    let itemSizeKB: string = 'unknown';
 
-  try {
-    // Serialize the entire item to handle any Date objects anywhere in the structure
-    serializedItem = serializeForDynamoDB(item);
+    try {
+      // Serialize the entire item to handle any Date objects anywhere in the structure
+      serializedItem = serializeForDynamoDB(item);
 
-    // Check item size before saving (DynamoDB has 400KB limit)
-    itemSizeBytes = JSON.stringify(serializedItem).length;
-    itemSizeKB = (itemSizeBytes / 1024).toFixed(2);
+      // Check item size before saving (DynamoDB has 400KB limit)
+      itemSizeBytes = JSON.stringify(serializedItem).length;
+      itemSizeKB = (itemSizeBytes / 1024).toFixed(2);
 
-    // Warn if approaching DynamoDB size limit
-    if (itemSizeBytes > 350000) {
-      console.warn(`⚠️ Large item approaching DynamoDB limit: ${itemSizeKB}KB (400KB max)`, {
-        entityType: item.entityType,
-        itemSizeKB
-      });
-    }
-
-    const command = new PutCommand({
-      TableName: tableName,
-      Item: serializedItem,
-    });
-
-    const putResult = await docClient.send(command);
-
-    const result: DynamoDBSaveResult = {
-      success: true,
-      httpStatusCode: putResult.$metadata?.httpStatusCode,
-      requestId: putResult.$metadata?.requestId,
-      attempts: putResult.$metadata?.attempts,
-      totalRetryDelay: putResult.$metadata?.totalRetryDelay,
-      itemSizeKB
-    };
-
-    return result;
-
-  } catch (error) {
-    const errorResult: DynamoDBSaveResult = {
-      success: false,
-      itemSizeKB: itemSizeKB || 'unknown',
-      errorDetails: {
-        message: error instanceof Error ? error.message : 'Unknown error',
-        name: error instanceof Error ? error.name : 'Unknown',
-        code: (error as any)?.code || 'No code'
+      // Warn if approaching DynamoDB size limit
+      if (itemSizeBytes > 350000) {
+        console.warn(`⚠️ Large item approaching DynamoDB limit: ${itemSizeKB}KB (400KB max)`, {
+          entityType: item.entityType,
+          itemSizeKB
+        });
       }
-    };
 
-    console.error(`❌ Error saving ${item.entityType} data to DynamoDB:`, {
-      ...errorResult,
-      errorStack: error instanceof Error ? error.stack : 'No stack',
-      pk: item.pk,
-      sk: item.sk
-    });
+      const command = new PutCommand({
+        TableName: tableName,
+        Item: serializedItem,
+      });
 
-    // Still throw the error for backward compatibility, but also return result info
-    throw error;
-  }
+      const putResult = await docClient.send(command);
+
+      const result: DynamoDBSaveResult = {
+        success: true,
+        httpStatusCode: putResult.$metadata?.httpStatusCode,
+        requestId: putResult.$metadata?.requestId,
+        attempts: putResult.$metadata?.attempts,
+        totalRetryDelay: putResult.$metadata?.totalRetryDelay,
+        itemSizeKB
+      };
+
+      return result;
+
+    } catch (error) {
+      const errorResult: DynamoDBSaveResult = {
+        success: false,
+        itemSizeKB: itemSizeKB || 'unknown',
+        errorDetails: {
+          message: error instanceof Error ? error.message : 'Unknown error',
+          name: error instanceof Error ? error.name : 'Unknown',
+          code: (error as any)?.code || 'No code'
+        }
+      };
+
+      console.error(`❌ Error saving ${item.entityType} data to DynamoDB:`, {
+        ...errorResult,
+        errorStack: error instanceof Error ? error.stack : 'No stack',
+        pk: item.pk,
+        sk: item.sk
+      });
+
+      // Still throw the error for backward compatibility, but also return result info
+      throw error;
+    }
+  }, operationName);
 }
 
 // Enhanced save function that explicitly checks the result and provides detailed error info
@@ -237,6 +240,42 @@ export async function queryFromDynamoDB<T>(
   }, operationName);
 }
 
+// Generic function to delete an item from DynamoDB
+export async function deleteFromDynamoDB(
+  pk: string,
+  sk: string,
+  entityType?: string
+): Promise<void> {
+  const tableName = getTableName();
+  const operationName = `Delete ${entityType || 'item'} from DynamoDB`;
+
+  return withThroughputScaling(async () => {
+    try {
+      const command = new DeleteCommand({
+        TableName: tableName,
+        Key: {
+          pk,
+          sk,
+        },
+        // Add condition to ensure the item exists before deleting
+        ConditionExpression: "attribute_exists(pk)",
+      });
+
+      await docClient.send(command);
+      
+      if (entityType) {
+        console.info(`${entityType} deleted from DynamoDB successfully`);
+      }
+    } catch (error: any) {
+      if (error.name === "ConditionalCheckFailedException") {
+        throw new Error(`${entityType || 'Item'} not found: ${pk}/${sk}`);
+      }
+      console.error(`Error deleting ${entityType || 'item'} from DynamoDB:`, error);
+      throw error;
+    }
+  }, operationName);
+}
+
 // Helper function to create a DynamoDB item with consistent structure
 export function createDynamoDBItem<T>(
   entityType: string,
@@ -313,6 +352,43 @@ export async function getCoachConfig(
   );
 }
 
+// Function to update coach config metadata (coach name, description, etc.)
+export async function updateCoachConfig(
+  userId: string,
+  coachId: string,
+  updates: Partial<CoachConfig>
+): Promise<CoachConfig> {
+  // First load the existing coach config
+  const existingConfig = await getCoachConfig(userId, coachId);
+
+  if (!existingConfig) {
+    throw new Error(`Coach config not found: ${coachId}`);
+  }
+
+  // Deep merge updates into existing config to preserve nested properties
+  const updatedCoachConfig: CoachConfig = deepMerge(
+    existingConfig.attributes,
+    updates
+  );
+
+  // Create updated item maintaining original timestamps but updating the updatedAt field
+  const updatedItem = {
+    ...existingConfig,
+    attributes: updatedCoachConfig,
+    updatedAt: new Date().toISOString(),
+  };
+
+  await saveToDynamoDB(updatedItem);
+
+  console.info("Coach config updated successfully:", {
+    coachId,
+    userId,
+    updatedFields: Object.keys(updates),
+  });
+
+  return updatedCoachConfig;
+}
+
 // Simplified function to save coach creator session directly
 export async function saveCoachCreatorSession(
   session: CoachCreatorSession,
@@ -332,6 +408,44 @@ export async function saveCoachCreatorSession(
 
   // No TTL timestamp - sessions persist indefinitely
   await saveToDynamoDB(item);
+}
+
+// ===========================
+// HELPER FUNCTIONS
+// ===========================
+
+/**
+ * Deep merge utility function for safely merging partial updates into existing objects.
+ * This prevents accidental data loss when updating nested properties.
+ * 
+ * @param target - The existing object to merge into
+ * @param source - The partial update object to merge from
+ * @returns A new object with deep-merged properties
+ * 
+ * Behavior:
+ * - Nested objects are recursively merged
+ * - Arrays are replaced (not merged)
+ * - Date objects are replaced (not merged)
+ * - Primitives are replaced
+ * - Missing target properties are initialized as empty objects
+ */
+function deepMerge(target: any, source: any): any {
+  const result = { ...target };
+  for (const key in source) {
+    if (
+      source[key] &&
+      typeof source[key] === "object" &&
+      !Array.isArray(source[key]) &&
+      !(source[key] instanceof Date)
+    ) {
+      // Recursively merge nested objects
+      result[key] = deepMerge(target[key] || {}, source[key]);
+    } else {
+      // Direct assignment for primitives, arrays, and dates
+      result[key] = source[key];
+    }
+  }
+  return result;
 }
 
 // Generic helper function to recursively convert all Date objects to ISO strings and remove undefined values for DynamoDB storage
@@ -427,29 +541,20 @@ export async function deleteCoachCreatorSession(
   userId: string,
   sessionId: string
 ): Promise<void> {
-  const tableName = getTableName();
-
   try {
-    const command = new DeleteCommand({
-      TableName: tableName,
-      Key: {
-        pk: `user#${userId}`,
-        sk: `coachCreatorSession#${sessionId}`,
-      },
-      // Add condition to ensure the item exists before deleting
-      ConditionExpression: "attribute_exists(pk)",
-    });
-
-    await docClient.send(command);
+    await deleteFromDynamoDB(
+      `user#${userId}`,
+      `coachCreatorSession#${sessionId}`,
+      "coachCreatorSession"
+    );
     console.info("Coach creator session deleted successfully:", {
       sessionId,
       userId,
     });
   } catch (error: any) {
-    if (error.name === "ConditionalCheckFailedException") {
+    if (error instanceof Error && error.message.includes('not found')) {
       throw new Error(`Coach creator session ${sessionId} not found for user ${userId}`);
     }
-    console.error("Error deleting coach creator session:", error);
     throw error;
   }
 }
@@ -472,16 +577,13 @@ export async function queryCoachCreatorSessions(
     sortOrder?: "asc" | "desc";
   }
 ): Promise<DynamoDBItem<CoachCreatorSession>[]> {
-  const operationName = `Query coach creator sessions for user ${userId}`;
-
-  return withThroughputScaling(async () => {
-    try {
-      // Get all coach creator sessions for the user
-      const allSessions = await queryFromDynamoDB<CoachCreatorSession>(
-        `user#${userId}`,
-        "coachCreatorSession#",
-        "coachCreatorSession"
-      );
+  try {
+    // Get all coach creator sessions for the user
+    const allSessions = await queryFromDynamoDB<CoachCreatorSession>(
+      `user#${userId}`,
+      "coachCreatorSession#",
+      "coachCreatorSession"
+    );
 
       // Apply filters
       let filteredSessions = allSessions;
@@ -560,27 +662,23 @@ export async function queryCoachCreatorSessions(
       });
 
       return filteredSessions;
-    } catch (error) {
-      console.error(`Error querying coach creator sessions for user ${userId}:`, error);
-      throw error;
-    }
-  }, operationName);
+  } catch (error) {
+    console.error(`Error querying coach creator sessions for user ${userId}:`, error);
+    throw error;
+  }
 }
 
 // Function to load coach configs for a specific user (with limited properties)
 export async function queryCoachConfigs(
   userId: string
 ): Promise<DynamoDBItem<CoachConfigSummary>[]> {
-  const operationName = `Query coach configs for user ${userId}`;
-
-  return withThroughputScaling(async () => {
-    try {
-      // Use the generic query function to get all coach configs for the user
-      const items = await queryFromDynamoDB<any>(
-        `user#${userId}`,
-        "coach#",
-        "coachConfig"
-      );
+  try {
+    // Use the generic query function to get all coach configs for the user
+    const items = await queryFromDynamoDB<any>(
+      `user#${userId}`,
+      "coach#",
+      "coachConfig"
+    );
 
       console.info(`📊 queryCoachConfigs: Found ${items.length} coach configs for user ${userId}`);
       console.info(`📊 Coach IDs:`, items.map(item => item.attributes?.coach_id));
@@ -616,11 +714,10 @@ export async function queryCoachConfigs(
           },
         };
       });
-    } catch (error) {
-      console.error(`Error loading coach configs for user ${userId}:`, error);
-      throw error;
-    }
-  }, operationName);
+  } catch (error) {
+    console.error(`Error loading coach configs for user ${userId}:`, error);
+    throw error;
+  }
 }
 
 // Function to save a coach conversation
@@ -656,16 +753,13 @@ export async function queryCoachConversations(
   userId: string,
   coachId: string
 ): Promise<DynamoDBItem<CoachConversationListItem>[]> {
-  const operationName = `Query coach conversations for user ${userId}, coach ${coachId}`;
-
-  return withThroughputScaling(async () => {
-    try {
-      // Use the generic query function to get all coach conversations for the user + coach
-      const items = await queryFromDynamoDB<any>(
-        `user#${userId}`,
-        `coachConversation#${coachId}#`,
-        "coachConversation"
-      );
+  try {
+    // Use the generic query function to get all coach conversations for the user + coach
+    const items = await queryFromDynamoDB<any>(
+      `user#${userId}`,
+      `coachConversation#${coachId}#`,
+      "coachConversation"
+    );
 
       // Filter to exclude messages array, keeping only summary properties
       return items.map((item) => {
@@ -676,14 +770,13 @@ export async function queryCoachConversations(
           attributes: summaryAttributes,
         };
       });
-    } catch (error) {
-      console.error(
-        `Error loading coach conversations for user ${userId}, coach ${coachId}:`,
-        error
-      );
-      throw error;
-    }
-  }, operationName);
+  } catch (error) {
+    console.error(
+      `Error loading coach conversations for user ${userId}, coach ${coachId}:`,
+      error
+    );
+    throw error;
+  }
 }
 
 // Function to load all conversations with full messages (for individual conversation access)
@@ -691,15 +784,11 @@ export async function queryCoachConversationsWithMessages(
   userId: string,
   coachId: string
 ): Promise<DynamoDBItem<CoachConversation>[]> {
-  const operationName = `Query coach conversations with messages for user ${userId}, coach ${coachId}`;
-
-  return withThroughputScaling(async () => {
-    return await queryFromDynamoDB<CoachConversation>(
-      `user#${userId}`,
-      `coachConversation#${coachId}#`,
-      "coachConversation"
-    );
-  }, operationName);
+  return await queryFromDynamoDB<CoachConversation>(
+    `user#${userId}`,
+    `coachConversation#${coachId}#`,
+    "coachConversation"
+  );
 }
 
 // Interface for conversation message save result
@@ -892,19 +981,21 @@ export async function updateCoachConversation(
     throw new Error(`Conversation not found: ${conversationId}`);
   }
 
-  // Update the conversation metadata
-  const updatedConversation: CoachConversation = {
-    ...existingConversation.attributes,
-    ...(updateData.title !== undefined && { title: updateData.title }),
+  // Prepare update with lastActivity timestamp
+  const updates = {
+    ...updateData,
     metadata: {
-      ...existingConversation.attributes.metadata,
       ...(updateData.tags !== undefined && { tags: updateData.tags }),
-      ...(updateData.isActive !== undefined && {
-        isActive: updateData.isActive,
-      }),
+      ...(updateData.isActive !== undefined && { isActive: updateData.isActive }),
       lastActivity: new Date(),
     },
   };
+
+  // Deep merge to preserve nested properties
+  const updatedConversation: CoachConversation = deepMerge(
+    existingConversation.attributes,
+    updates
+  );
 
   // Create updated item maintaining original timestamps but updating the updatedAt field
   const updatedItem = {
@@ -938,29 +1029,20 @@ export async function deleteCoachConversation(
     throw new Error(`Conversation ${conversationId} not found for user ${userId}`);
   }
 
-  const tableName = getTableName();
-
   try {
-    const command = new DeleteCommand({
-      TableName: tableName,
-      Key: {
-        pk: targetConversation.pk,
-        sk: targetConversation.sk,
-      },
-      // Add condition to ensure the item still exists before deleting
-      ConditionExpression: "attribute_exists(pk)",
-    });
-
-    await docClient.send(command);
+    await deleteFromDynamoDB(
+      targetConversation.pk,
+      targetConversation.sk,
+      "coachConversation"
+    );
     console.info("Coach conversation deleted successfully:", {
       conversationId,
       userId,
     });
   } catch (error: any) {
-    if (error.name === "ConditionalCheckFailedException") {
+    if (error instanceof Error && error.message.includes('not found')) {
       throw new Error(`Conversation ${conversationId} not found for user ${userId}`);
     }
-    console.error("Error deleting coach conversation:", error);
     throw error;
   }
 }
@@ -1258,43 +1340,21 @@ export async function updateWorkout(
     throw new Error(`Workout not found: ${workoutId}`);
   }
 
-  // Deep merge function for nested objects
-  const deepMerge = (target: any, source: any): any => {
-    const result = { ...target };
-    for (const key in source) {
-      if (
-        source[key] &&
-        typeof source[key] === "object" &&
-        !Array.isArray(source[key])
-      ) {
-        result[key] = deepMerge(target[key] || {}, source[key]);
-      } else {
-        result[key] = source[key];
-      }
-    }
-    return result;
-  };
+  // Deep merge updates into existing session to preserve nested properties
+  const updatedSession: Workout = deepMerge(
+    existingSession.attributes,
+    updates
+  );
 
-  // Update the session with new data using deep merge
-  const updatedSession: Workout = {
-    ...existingSession.attributes,
-    ...updates,
-    // Deep merge workoutData if it exists in updates
-    workoutData: updates.workoutData
-      ? deepMerge(existingSession.attributes.workoutData, updates.workoutData)
-      : existingSession.attributes.workoutData,
-    // Sync root-level workoutName with workoutData.workout_name if it's being updated
-    workoutName:
-      updates.workoutData?.workout_name ||
-      existingSession.attributes.workoutName,
-    // Always update the extraction metadata to track changes
-    extractionMetadata: {
-      ...existingSession.attributes.extractionMetadata,
-      ...updates.extractionMetadata,
-      // Track when the update was made
-      reviewedAt: new Date(),
-    },
-  };
+  // Sync root-level workoutName with workoutData.workout_name if it was updated
+  if (updates.workoutData?.workout_name) {
+    updatedSession.workoutName = updates.workoutData.workout_name;
+  }
+
+  // Track when the update was made in extraction metadata
+  if (updatedSession.extractionMetadata) {
+    updatedSession.extractionMetadata.reviewedAt = new Date();
+  }
 
   // Create updated item maintaining original timestamps but updating the updatedAt field
   const updatedItem = {
@@ -1324,29 +1384,20 @@ export async function deleteWorkout(
   userId: string,
   workoutId: string
 ): Promise<void> {
-  const tableName = getTableName();
-
   try {
-    const command = new DeleteCommand({
-      TableName: tableName,
-      Key: {
-        pk: `user#${userId}`,
-        sk: `workout#${workoutId}`,
-      },
-      // Add condition to ensure the item exists before deleting
-      ConditionExpression: "attribute_exists(pk)",
-    });
-
-    await docClient.send(command);
+    await deleteFromDynamoDB(
+      `user#${userId}`,
+      `workout#${workoutId}`,
+      "workout"
+    );
     console.info("Workout deleted successfully:", {
       workoutId,
       userId,
     });
   } catch (error: any) {
-    if (error.name === "ConditionalCheckFailedException") {
+    if (error instanceof Error && error.message.includes('not found')) {
       throw new Error(`Workout ${workoutId} not found for user ${userId}`);
     }
-    console.error("Error deleting workout:", error);
     throw error;
   }
 }
@@ -1392,16 +1443,13 @@ export async function queryConversationsCount(
   userId: string,
   coachId: string
 ): Promise<{ totalCount: number; totalMessages: number }> {
-  const operationName = `Query conversations count for user ${userId}, coach ${coachId}`;
-
-  return withThroughputScaling(async () => {
-    try {
-      // Get all conversations for the user and coach
-      const allConversations = await queryFromDynamoDB<CoachConversationListItem>(
-        `user#${userId}`,
-        `coachConversation#${coachId}#`,
-        "coachConversation"
-      );
+  try {
+    // Get all conversations for the user and coach
+    const allConversations = await queryFromDynamoDB<CoachConversationListItem>(
+      `user#${userId}`,
+      `coachConversation#${coachId}#`,
+      "coachConversation"
+    );
 
       const totalCount = allConversations.length;
       const totalMessages = allConversations.reduce((sum, conversation) => {
@@ -1416,30 +1464,26 @@ export async function queryConversationsCount(
       });
 
       return { totalCount, totalMessages };
-    } catch (error) {
-      console.error(
-        `Error counting conversations for user ${userId} and coach ${coachId}:`,
-        error
-      );
-      throw error;
-    }
-  }, operationName);
+  } catch (error) {
+    console.error(
+      `Error counting conversations for user ${userId} and coach ${coachId}:`,
+      error
+    );
+    throw error;
+  }
 }
 
 export async function queryCoachConversationSummaries(
   userId: string,
   coachId?: string
 ): Promise<DynamoDBItem<CoachConversationSummary>[]> {
-  const operationName = `Query conversation summaries for user ${userId}${coachId ? `, coach ${coachId}` : ''}`;
-
-  return withThroughputScaling(async () => {
-    try {
-      // Query all conversation summaries for the user
-      const items = await queryFromDynamoDB<CoachConversationSummary>(
-        `user#${userId}`,
-        "conversation#",
-        "conversationSummary"
-      );
+  try {
+    // Query all conversation summaries for the user
+    const items = await queryFromDynamoDB<CoachConversationSummary>(
+      `user#${userId}`,
+      "conversation#",
+      "conversationSummary"
+    );
 
       // Filter by coach if specified
       const filteredItems = coachId
@@ -1453,14 +1497,13 @@ export async function queryCoachConversationSummaries(
       });
 
       return filteredItems;
-    } catch (error) {
-      console.error(
-        `Error querying conversation summaries for user ${userId}:`,
-        error
-      );
-      throw error;
-    }
-  }, operationName);
+  } catch (error) {
+    console.error(
+      `Error querying conversation summaries for user ${userId}:`,
+      error
+    );
+    throw error;
+  }
 }
 
 // ===========================
@@ -1519,6 +1562,7 @@ export async function getUserProfileByEmail(
   email: string
 ): Promise<DynamoDBItem<UserProfile> | null> {
   const tableName = getTableName();
+  const operationName = `Query user profile by email: ${email}`;
 
   return withThroughputScaling(async () => {
     console.info(`Querying user profile by email: ${email}`);
@@ -1555,7 +1599,7 @@ export async function getUserProfileByEmail(
     });
 
     return items[0];
-  }, `Query user profile by email: ${email}`);
+  }, operationName);
 }
 
 /**
@@ -1565,6 +1609,7 @@ export async function getUserProfileByUsername(
   username: string
 ): Promise<DynamoDBItem<UserProfile> | null> {
   const tableName = getTableName();
+  const operationName = `Query user profile by username: ${username}`;
 
   return withThroughputScaling(async () => {
     console.info(`Querying user profile by username: ${username}`);
@@ -1601,7 +1646,7 @@ export async function getUserProfileByUsername(
     });
 
     return items[0];
-  }, `Query user profile by username: ${username}`);
+  }, operationName);
 }
 
 /**
@@ -1618,24 +1663,7 @@ export async function updateUserProfile(
     throw new Error(`User profile not found: ${userId}`);
   }
 
-  // Deep merge function for nested objects
-  const deepMerge = (target: any, source: any): any => {
-    const result = { ...target };
-    for (const key in source) {
-      if (
-        source[key] &&
-        typeof source[key] === "object" &&
-        !Array.isArray(source[key])
-      ) {
-        result[key] = deepMerge(target[key] || {}, source[key]);
-      } else {
-        result[key] = source[key];
-      }
-    }
-    return result;
-  };
-
-  // Update the profile with new data using deep merge
+  // Deep merge updates into existing profile to preserve nested properties
   const updatedProfile: UserProfile = deepMerge(existingProfile.attributes, updates);
 
   // Create updated item maintaining original timestamps but updating the updatedAt field
@@ -1703,14 +1731,11 @@ export async function queryMemories(
     limit?: number;
   }
 ): Promise<UserMemory[]> {
-  const operationName = `Query memories for user ${userId}${coachId ? `, coach ${coachId}` : ''}`;
-
-  return withThroughputScaling(async () => {
-    const items = await queryFromDynamoDB<UserMemory>(
-      `user#${userId}`,
-      "userMemory#",
-      "userMemory"
-    );
+  const items = await queryFromDynamoDB<UserMemory>(
+    `user#${userId}`,
+    "userMemory#",
+    "userMemory"
+  );
 
   let filteredItems = items.map((item) => item.attributes);
 
@@ -1786,8 +1811,7 @@ export async function queryMemories(
     },
   });
 
-    return filteredItems;
-  }, operationName);
+  return filteredItems;
 }
 
 /**
@@ -1914,29 +1938,20 @@ export async function deleteMemory(
   userId: string,
   memoryId: string
 ): Promise<void> {
-  const tableName = getTableName();
-
   try {
-    const command = new DeleteCommand({
-      TableName: tableName,
-      Key: {
-        pk: `user#${userId}`,
-        sk: `userMemory#${memoryId}`,
-      },
-      // Add condition to ensure the item exists before deleting
-      ConditionExpression: "attribute_exists(pk)",
-    });
-
-    await docClient.send(command);
+    await deleteFromDynamoDB(
+      `user#${userId}`,
+      `userMemory#${memoryId}`,
+      "userMemory"
+    );
     console.info("Memory deleted successfully:", {
       memoryId,
       userId,
     });
   } catch (error: any) {
-    if (error.name === "ConditionalCheckFailedException") {
+    if (error instanceof Error && error.message.includes('not found')) {
       throw new Error(`Memory ${memoryId} not found for user ${userId}`);
     }
-    console.error("Error deleting memory:", error);
     throw error;
   }
 }
@@ -2159,16 +2174,13 @@ export async function getWeeklyAnalytics(
 export async function queryCoachTemplates(): Promise<
   DynamoDBItem<CoachTemplate>[]
 > {
-  const operationName = `Query coach templates`;
-
-  return withThroughputScaling(async () => {
-    try {
-      // Query all coach templates using the global template partition
-      const items = await queryFromDynamoDB<CoachTemplate>(
-        "template#global",
-        "coachTemplate#",
-        "coachTemplate"
-      );
+  try {
+    // Query all coach templates using the global template partition
+    const items = await queryFromDynamoDB<CoachTemplate>(
+      "template#global",
+      "coachTemplate#",
+      "coachTemplate"
+    );
 
       // Filter to only active templates and sort by popularity/name
       const activeTemplates = items.filter(
@@ -2193,11 +2205,10 @@ export async function queryCoachTemplates(): Promise<
       });
 
       return activeTemplates;
-    } catch (error) {
-      console.error("Error querying coach templates from DynamoDB:", error);
-      throw error;
-    }
-  }, operationName);
+  } catch (error) {
+    console.error("Error querying coach templates from DynamoDB:", error);
+    throw error;
+  }
 }
 
 /**

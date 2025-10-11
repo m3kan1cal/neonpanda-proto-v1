@@ -10,6 +10,7 @@ import {
   TrashIcon
 } from './themes/SynthwaveComponents';
 import IconButton from './shared/IconButton';
+import InlineEditField from './common/InlineEditField';
 
 const MetricsIcon = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -502,69 +503,13 @@ const CoachNotes = ({ notes }) => {
   );
 };
 
-// Icons needed for the title editing
-const EditIcon = () => (
-  <svg
-    className="w-4 h-4"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-    />
-  </svg>
-);
-
-const SaveIcon = () => (
-  <svg
-    className="w-4 h-4"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M5 13l4 4L19 7"
-    />
-  </svg>
-);
-
-const CancelIcon = () => (
-  <svg
-    className="w-4 h-4"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M6 18L18 6M6 6l12 12"
-    />
-  </svg>
-);
-
 // Main WorkoutViewer component
 const WorkoutViewer = ({
   workout,
   onToggleView,
   onDeleteWorkout,
   viewMode = "formatted",
-  isEditingTitle,
-  editTitleValue,
-  isSavingTitle,
-  onEditTitle,
-  onSaveTitle,
-  onCancelEdit,
-  onTitleChange,
-  onTitleKeyPress,
+  onSaveWorkoutTitle,
   formatDate
 }) => {
   if (!workout || !workout.workoutData) {
@@ -648,110 +593,16 @@ const WorkoutViewer = ({
       <div className="flex items-center justify-between">
         {/* Workout Title Section - Left Side */}
         <div className="flex-1">
-          {isEditingTitle ? (
-            <div className="flex items-center space-x-2">
-              <input
-                type="text"
-                value={editTitleValue}
-                onChange={(e) => onTitleChange && onTitleChange(e.target.value)}
-                onKeyDown={onTitleKeyPress}
-                className={inputPatterns.inlineEdit}
-                placeholder="Enter workout name..."
-                autoFocus
-              />
-              <button
-                onClick={onSaveTitle}
-                disabled={isSavingTitle || !editTitleValue?.trim()}
-                className={`p-1.5 bg-synthwave-neon-pink text-synthwave-bg-primary hover:bg-synthwave-neon-pink/90 hover:shadow-lg hover:shadow-synthwave-neon-pink/30 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary ${isSavingTitle ? 'opacity-50 cursor-not-allowed' : ''}`}
-                data-tooltip-id="save-workout-tooltip"
-                data-tooltip-content="Save title (Enter)"
-                data-tooltip-place="bottom"
-              >
-                {isSavingTitle ? (
-                  <div className="w-4 h-4 flex items-center justify-center">
-                    <div className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin"></div>
-                  </div>
-                ) : (
-                  <SaveIcon />
-                )}
-              </button>
-              <button
-                onClick={onCancelEdit}
-                disabled={isSavingTitle}
-                className={`p-1.5 border border-synthwave-neon-cyan/30 text-synthwave-neon-cyan hover:border-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 ${isSavingTitle ? 'opacity-50 cursor-not-allowed' : ''}`}
-                data-tooltip-id="cancel-edit-tooltip"
-                data-tooltip-content="Cancel (Esc)"
-                data-tooltip-place="bottom"
-              >
-                <CancelIcon />
-              </button>
-              <Tooltip
-                id="save-workout-tooltip"
-                offset={8}
-                delayShow={0}
-                style={{
-                  backgroundColor: '#000',
-                  color: '#fff',
-                  borderRadius: '8px',
-                  fontFamily: 'Rajdhani',
-                  fontSize: '14px',
-                  padding: '12px',
-                  zIndex: 99999,
-                  transform: 'translateX(-3px)'
-                }}
-              />
-              <Tooltip
-                id="cancel-edit-tooltip"
-                offset={8}
-                delayShow={0}
-                style={{
-                  backgroundColor: '#000',
-                  color: '#fff',
-                  borderRadius: '8px',
-                  fontFamily: 'Rajdhani',
-                  fontSize: '14px',
-                  padding: '12px',
-                  zIndex: 99999,
-                  transform: 'translateX(-3px)'
-                }}
-              />
-            </div>
-          ) : (
-            <div className="flex items-center space-x-1 group">
-              <h2 className="font-rajdhani font-bold text-2xl">
-                <span className="text-synthwave-neon-pink">Workout: </span>
-                <span className="text-white">{workout.workoutData?.workout_name || "Unnamed Workout"}</span>
-              </h2>
-              {onEditTitle && (
-                <>
-                  <button
-                    onClick={onEditTitle}
-                    className="p-1.5 text-synthwave-neon-pink hover:text-synthwave-neon-pink/80 hover:bg-synthwave-neon-pink/10 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary"
-                    data-tooltip-id="edit-workout-tooltip"
-                    data-tooltip-content="Edit workout name"
-                    data-tooltip-place="bottom"
-                  >
-                    <EditIcon />
-                  </button>
-                  <Tooltip
-                    id="edit-workout-tooltip"
-                    offset={8}
-                    delayShow={0}
-                    style={{
-                      backgroundColor: '#000',
-                      color: '#fff',
-                      borderRadius: '8px',
-                      fontFamily: 'Rajdhani',
-                      fontSize: '14px',
-                      padding: '12px',
-                      zIndex: 99999,
-                      transform: 'translateX(-3px)'
-                    }}
-                  />
-                </>
-              )}
-            </div>
-          )}
+          <div className="flex items-center space-x-1">
+            <span className="font-rajdhani font-bold text-2xl text-synthwave-neon-pink">Workout: </span>
+            <InlineEditField
+              value={workout.workoutData?.workout_name || "Unnamed Workout"}
+              onSave={onSaveWorkoutTitle}
+              placeholder="Enter workout name..."
+              size="large"
+              displayClassName="font-rajdhani font-bold text-2xl text-white"
+            />
+          </div>
         </div>
 
         {/* Action Buttons - Right Side */}

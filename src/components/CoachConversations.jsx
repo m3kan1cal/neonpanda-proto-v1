@@ -16,11 +16,13 @@ import { AccessDenied, LoadingScreen } from "./shared/AccessDenied";
 import { containerPatterns, layoutPatterns, inputPatterns, avatarPatterns, iconButtonPatterns, buttonPatterns } from "../utils/uiPatterns";
 import { FullPageLoader, CenteredErrorState } from "./shared/ErrorStates";
 import CoachHeader from "./shared/CoachHeader";
+import { InlineEditField } from "./common/InlineEditField";
 import ChatInput from "./shared/ChatInput";
 import UserAvatar from "./shared/UserAvatar";
 import { getUserInitial as getInitialFromUsername } from "./shared/UserAvatar";
 import { parseMarkdown } from "../utils/markdownParser.jsx";
 import CoachConversationAgent from "../utils/agents/CoachConversationAgent";
+import CoachAgent from "../utils/agents/CoachAgent";
 import { WorkoutAgent } from "../utils/agents/WorkoutAgent";
 import { useToast } from "../contexts/ToastContext";
 import ImageWithPresignedUrl from "./shared/ImageWithPresignedUrl";
@@ -81,54 +83,6 @@ const AIIcon = () => (
       strokeLinejoin="round"
       strokeWidth={2}
       d="M9 13h6"
-    />
-  </svg>
-);
-
-const EditIcon = () => (
-  <svg
-    className="w-4 h-4"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-    />
-  </svg>
-);
-
-const SaveIcon = () => (
-  <svg
-    className="w-4 h-4"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M5 13l4 4L19 7"
-    />
-  </svg>
-);
-
-const CancelIcon = () => (
-  <svg
-    className="w-4 h-4"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M6 18L18 6M6 6l12 12"
     />
   </svg>
 );
@@ -305,9 +259,6 @@ function CoachConversations() {
   const [inputMessage, setInputMessage] = useState("");
   const [showNewConversation, setShowNewConversation] =
     useState(!conversationId);
-  const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const [editTitleValue, setEditTitleValue] = useState("");
-  const [isSavingTitle, setIsSavingTitle] = useState(false);
 
   // Slash command states moved to ChatInput component
 
@@ -329,6 +280,7 @@ function CoachConversations() {
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
   const agentRef = useRef(null);
+  const coachAgentRef = useRef(null);
   const workoutAgentRef = useRef(null);
   const { success: showSuccess, error: showError } = useToast();
 
@@ -442,8 +394,28 @@ function CoachConversations() {
         workoutAgentRef.current.destroy();
         workoutAgentRef.current = null;
       }
+      if (coachAgentRef.current) {
+        coachAgentRef.current.destroy();
+        coachAgentRef.current = null;
+      }
     };
   }, [userId]);
+
+  // Initialize CoachAgent for coach name editing
+  useEffect(() => {
+    if (!userId || !coachId) return;
+
+    if (!coachAgentRef.current) {
+      coachAgentRef.current = new CoachAgent({ userId });
+    }
+
+    return () => {
+      if (coachAgentRef.current) {
+        coachAgentRef.current.destroy();
+        coachAgentRef.current = null;
+      }
+    };
+  }, [userId, coachId]);
 
   // Initialize agent
   useEffect(() => {
@@ -748,6 +720,20 @@ function CoachConversations() {
     }
   }, [coachConversationAgentState.isTyping]);
 
+  // Create coach name handler using the agent's helper method
+  const handleSaveCoachName = coachAgentRef.current?.createCoachNameHandler(
+    userId,
+    coachId,
+    (newName) => setCoachConversationAgentState((prevState) => ({
+      ...prevState,
+      coach: {
+        ...prevState.coach,
+        name: newName,
+      },
+    })),
+    { success: showSuccess, error: showError }
+  );
+
   const handleSendMessage = async (e) => {
     e.preventDefault();
 
@@ -832,42 +818,23 @@ function CoachConversations() {
     });
   }, []);
 
-  const handleEditTitle = () => {
-    setEditTitleValue(coachConversationAgentState.conversation?.title || "");
-    setIsEditingTitle(true);
-  };
+  const handleSaveConversationTitle = async (newTitle) => {
+    if (!agentRef.current) {
+      throw new Error('Conversation agent not initialized');
+    }
 
-  const handleSaveTitle = async () => {
-    if (!editTitleValue.trim() || !agentRef.current) return;
-
-    setIsSavingTitle(true);
     try {
       await agentRef.current.updateCoachConversation(
         userId,
         coachId,
         conversationId,
-        { title: editTitleValue.trim() }
+        { title: newTitle.trim() }
       );
-      setIsEditingTitle(false);
+      showSuccess('Conversation title updated successfully');
     } catch (error) {
       console.error("Error updating conversation title:", error);
-      // Could show toast notification here
-    } finally {
-      setIsSavingTitle(false);
-    }
-  };
-
-  const handleCancelEdit = () => {
-    setIsEditingTitle(false);
-    setEditTitleValue("");
-  };
-
-  const handleTitleKeyPress = (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      handleSaveTitle();
-    } else if (e.key === "Escape") {
-      handleCancelEdit();
+      showError('Failed to update conversation title');
+      throw error;
     }
   };
 
@@ -1058,7 +1025,7 @@ function CoachConversations() {
       <div className={`${layoutPatterns.contentWrapper} min-h-[calc(100vh-5rem)] flex flex-col`}>
         {/* Header */}
         <div className="mb-8 text-center">
-          <h1 className="font-russo font-black text-4xl md:text-5xl text-white mb-4 uppercase">
+          <h1 className="font-russo font-black text-4xl md:text-5xl text-white mb-6 uppercase">
             Coach Conversation
           </h1>
 
@@ -1067,70 +1034,46 @@ function CoachConversations() {
             <CoachHeader
               coachData={coachConversationAgentState.coach}
               isOnline={isOnline}
+              isEditable={true}
+              onSaveName={handleSaveCoachName}
             />
           )}
 
-          <p className="font-rajdhani text-lg text-synthwave-text-secondary mb-6 max-w-3xl mx-auto">
+          <p className="font-rajdhani text-lg text-synthwave-text-secondary max-w-3xl mx-auto mb-4">
             Get personalized coaching, workout advice, and motivation from your
             AI coach. The more you share, the more your coach learns about you
             and provides better guidance.
           </p>
+          <div className="flex items-center justify-center space-x-2 text-synthwave-text-secondary font-rajdhani text-sm mb-4">
+            <div className="flex items-center space-x-1 bg-synthwave-bg-primary/30 px-2 py-1 rounded border border-synthwave-neon-pink/20">
+              <span className="text-synthwave-neon-pink">⌘</span>
+              <span>+ K</span>
+            </div>
+            <span>for Command Palette</span>
+            <div className="flex items-center space-x-1">
+              <span>(</span>
+              <svg className="w-4 h-4 text-synthwave-neon-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+              </svg>
+              <span>Works on any page )</span>
+            </div>
+          </div>
 
           {/* Conversation Title */}
           {coachConversationAgentState.conversation &&
             coachConversationAgentState.conversation.title && (
-              <div className="font-rajdhani text-lg text-synthwave-text-secondary mb-2">
-                {isEditingTitle ? (
-                  <div className="flex items-center justify-center space-x-2">
-                    <input
-                      type="text"
-                      value={editTitleValue}
-                      onChange={(e) => setEditTitleValue(e.target.value)}
-                      onKeyDown={handleTitleKeyPress}
-                      className="bg-synthwave-bg-primary/50 border-2 border-synthwave-neon-cyan/30 rounded px-3 py-1 text-synthwave-neon-cyan font-rajdhani text-lg focus:outline-none focus:border-synthwave-neon-cyan transition-all duration-200"
-                      placeholder="Enter conversation title..."
-                      autoFocus
-                    />
-                    <button
-                      onClick={handleSaveTitle}
-                      disabled={isSavingTitle || !editTitleValue.trim()}
-                      className="text-synthwave-neon-cyan hover:text-white transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                      title="Save title"
-                    >
-                      {isSavingTitle ? (
-                        <div className="w-4 h-4 border-2 border-synthwave-neon-cyan border-t-transparent rounded-full animate-spin"></div>
-                      ) : (
-                        <SaveIcon />
-                      )}
-                    </button>
-                    <button
-                      onClick={handleCancelEdit}
-                      disabled={isSavingTitle}
-                      className="text-synthwave-text-secondary hover:text-synthwave-neon-pink transition-colors duration-300 disabled:opacity-50"
-                      title="Cancel"
-                    >
-                      <CancelIcon />
-                    </button>
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-center space-x-2">
-                    <span>
-                      <span className="text-synthwave-neon-pink">
-                        Conversation:{" "}
-                      </span>
-                      <span className="text-synthwave-text-secondary">
-                        {coachConversationAgentState.conversation.title}
-                      </span>
-                    </span>
-                    <button
-                      onClick={handleEditTitle}
-                      className="text-synthwave-text-secondary hover:text-synthwave-neon-cyan transition-colors duration-300"
-                      title="Edit title"
-                    >
-                      <EditIcon />
-                    </button>
-                  </div>
-                )}
+              <div className="font-rajdhani text-lg text-synthwave-text-secondary mb-2 flex items-center justify-center">
+                <span className="text-synthwave-neon-pink mr-2">Conversation:</span>
+                <InlineEditField
+                  value={coachConversationAgentState.conversation.title}
+                  onSave={handleSaveConversationTitle}
+                  placeholder="Enter conversation title..."
+                  maxLength={100}
+                  showCharacterCount={false}
+                  size="medium"
+                  displayClassName="text-synthwave-text-secondary font-rajdhani text-lg"
+                  tooltipPrefix="conversation-title"
+                />
               </div>
             )}
         </div>

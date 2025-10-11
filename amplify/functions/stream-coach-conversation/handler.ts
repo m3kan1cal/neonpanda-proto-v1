@@ -929,10 +929,21 @@ const authenticatedStreamingHandler = async (
   });
 
   try {
+    // Check if this is a health check or OPTIONS request (these don't have proper paths/auth)
+    const method = event.requestContext?.http?.method;
+    const path = event.rawPath || '';
+    
+    if (!path || path === '/' || method === 'OPTIONS') {
+      console.info("⚠️ Ignoring health check or OPTIONS request:", { method, path });
+      // Just close the stream for these requests
+      responseStream.end();
+      return;
+    }
+
     // OPTIONS requests are handled automatically by Lambda Function URL CORS config
     console.info("🚀 Processing streaming request:", {
-      method: event.requestContext?.http?.method,
-      path: event.rawPath,
+      method,
+      path,
     });
 
     // Call the authenticated handler

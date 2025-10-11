@@ -11,12 +11,33 @@ import { storeDebugDataInS3 } from "../api-helpers";
 
 /**
  * Helper function to generate week ID from date range
+ * Uses Sunday-based week counting (matching our analytics week definition)
+ * Week 1 starts on the first Sunday of the year
  */
 const generateWeekId = (weekStart: Date): string => {
   const year = weekStart.getFullYear();
   const startOfYear = new Date(year, 0, 1);
-  const daysDiff = Math.floor((weekStart.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000));
-  const weekNumber = Math.ceil((daysDiff + startOfYear.getDay() + 1) / 7);
+
+  // Find the first Sunday of the year
+  const firstSunday = new Date(startOfYear);
+  const dayOfWeek = startOfYear.getDay(); // 0 = Sunday
+  if (dayOfWeek !== 0) {
+    // Move to the first Sunday
+    firstSunday.setDate(startOfYear.getDate() + (7 - dayOfWeek));
+  }
+
+  // Calculate weeks since first Sunday
+  const daysDiff = Math.floor((weekStart.getTime() - firstSunday.getTime()) / (24 * 60 * 60 * 1000));
+  const weekNumber = Math.floor(daysDiff / 7) + 1;
+
+  // Handle edge case: dates before first Sunday are week 0 (or previous year's last week)
+  if (weekStart < firstSunday) {
+    // This date belongs to the previous year's week numbering
+    const prevYear = year - 1;
+    const prevYearEnd = new Date(prevYear, 11, 31);
+    return generateWeekId(prevYearEnd); // Recursively get previous year's last week
+  }
+
   return `${year}-W${weekNumber.toString().padStart(2, '0')}`;
 };
 

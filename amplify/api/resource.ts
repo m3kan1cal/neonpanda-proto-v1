@@ -13,6 +13,7 @@ export function createCoreApi(
   updateCoachCreatorSessionLambda: lambda.IFunction,
   getCoachConfigsLambda: lambda.IFunction,
   getCoachConfigLambda: lambda.IFunction,
+  updateCoachConfigLambda: lambda.IFunction,
   getCoachConfigStatusLambda: lambda.IFunction,
   getCoachCreatorSessionLambda: lambda.IFunction,
   getCoachCreatorSessionsLambda: lambda.IFunction,
@@ -156,6 +157,11 @@ export function createCoreApi(
   const getCoachConfigIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
     'GetCoachConfigIntegration',
     getCoachConfigLambda
+  );
+
+  const updateCoachConfigIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
+    'UpdateCoachConfigIntegration',
+    updateCoachConfigLambda
   );
 
   const getCoachConfigStatusIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
@@ -314,6 +320,7 @@ export function createCoreApi(
     deleteCoachCreatorSession: deleteCoachCreatorSessionIntegration,
     getCoachConfigs: getCoachConfigsIntegration,
     getCoachConfig: getCoachConfigIntegration,
+    updateCoachConfig: updateCoachConfigIntegration,
     getCoachConfigStatus: getCoachConfigStatusIntegration,
     getCoachTemplates: getCoachTemplatesIntegration,
     getCoachTemplate: getCoachTemplateIntegration,
@@ -473,6 +480,13 @@ export function createCoreApi(
     path: '/users/{userId}/coaches/{coachId}',
     methods: [apigatewayv2.HttpMethod.GET],
     integration: integrations.getCoachConfig,
+    authorizer: userPoolAuthorizer
+  });
+
+  httpApi.addRoutes({
+    path: '/users/{userId}/coaches/{coachId}',
+    methods: [apigatewayv2.HttpMethod.PUT],
+    integration: integrations.updateCoachConfig,
     authorizer: userPoolAuthorizer
   });
 

@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuthorizeUser } from '../auth/hooks/useAuthorizeUser';
+import { useToast } from '../contexts/ToastContext';
 import { themeClasses } from '../utils/synthwaveThemeClasses';
 import { containerPatterns, layoutPatterns } from '../utils/uiPatterns';
-import { isCurrentWeekReport, isNewWorkout, isRecentConversation } from '../utils/dateUtils';
+import { isCurrentWeekReport, isNewWorkout, isRecentConversation, getWeekDateRange, formatWorkoutCount } from '../utils/dateUtils';
 import {
   NeonBorder,
   NewBadge,
@@ -64,6 +65,7 @@ function TrainingGrounds() {
 
   // Authorize that URL userId matches authenticated user
   const { isValidating: isValidatingUserId, isValid: isValidUserId, error: userIdError } = useAuthorizeUser(userId);
+  const { success: showSuccess, error: showError } = useToast();
 
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [commandPaletteCommand, setCommandPaletteCommand] = useState('');
@@ -277,6 +279,33 @@ function TrainingGrounds() {
     navigate(`/training-grounds/coach-conversations?userId=${userId}&coachId=${coachId}&conversationId=${conversationId}`);
   };
 
+  // Create coach name handler using the agent's helper method
+  // Note: TrainingGrounds needs to reload coach data after update
+  const handleSaveCoachName = async (newName) => {
+    if (!coachAgentRef.current || !newName || !newName.trim()) {
+      return false;
+    }
+
+    try {
+      await coachAgentRef.current.updateCoachConfig(
+        userId,
+        coachId,
+        { coach_name: newName.trim() }
+      );
+
+      // Reload coach data to reflect changes
+      const loadedCoachData = await coachAgentRef.current.loadCoachDetails(userId, coachId);
+      setCoachData(loadedCoachData);
+
+      showSuccess('Coach name updated successfully');
+      return true;
+    } catch (error) {
+      console.error('Error updating coach name:', error);
+      showError('Failed to update coach name');
+      return false;
+    }
+  };
+
   const formatConversationDate = (dateString) => {
     if (!dateString) return 'Unknown';
 
@@ -299,32 +328,6 @@ function TrainingGrounds() {
   const truncateTitle = (title, maxLength = 30) => {
     if (!title || title.length <= maxLength) return title || 'Untitled';
     return title.substring(0, maxLength) + '...';
-  };
-
-  const getWeekDateRange = (weekId) => {
-    if (!weekId) return 'Unknown week';
-
-    const [year, week] = weekId.split('-W');
-    if (!year || !week) return weekId;
-
-    const firstDayOfYear = new Date(year, 0, 1);
-    const daysToFirstMonday = (8 - firstDayOfYear.getDay()) % 7;
-    const firstMonday = new Date(year, 0, 1 + daysToFirstMonday);
-
-    const weekStart = new Date(firstMonday);
-    weekStart.setDate(firstMonday.getDate() + (parseInt(week) - 1) * 7);
-
-    const weekEnd = new Date(weekStart);
-    weekEnd.setDate(weekStart.getDate() + 6);
-
-    const formatDate = (date) => {
-      return date.toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric'
-      });
-    };
-
-    return `${formatDate(weekStart)} - ${formatDate(weekEnd)}`;
   };
 
   const renderWorkoutList = () => (
@@ -499,6 +502,8 @@ function TrainingGrounds() {
               <CoachHeader
                 coachData={coachData}
                 isOnline={true}
+                isEditable={true}
+                onSaveName={handleSaveCoachName}
               />
             )}
 
@@ -795,7 +800,7 @@ function TrainingGrounds() {
                               Week {rep.weekId}
                             </div>
                             <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
-                              {getWeekDateRange(rep.weekId)} • <span className="text-synthwave-neon-cyan">{rep.metadata?.workoutCount || 0} workouts</span>
+                              {getWeekDateRange(rep)} • <span className="text-synthwave-neon-cyan">{formatWorkoutCount(rep.analyticsData?.structured_analytics?.metadata?.sessions_completed || rep.metadata?.workoutCount || 0)}</span>
                             </div>
                           </div>
                           <div className="ml-2 text-synthwave-neon-pink">
@@ -865,7 +870,6 @@ function TrainingGrounds() {
           </div>
         </div>
       </div>
-
 
       {/* Command Palette */}
       <CommandPalette

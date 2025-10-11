@@ -112,6 +112,23 @@ MEMORY REQUEST INDICATORS:
 - "Always remember..."
 - Similar phrases expressing desire for persistent memory
 
+CRITICAL: DO NOT DETECT WORKOUT LOGS AS MEMORY REQUESTS
+Workouts are already stored in two separate systems:
+1. Pinecone: Stores workout summaries for semantic search and progress tracking
+2. DynamoDB: Stores complete workout records with full details
+
+DO NOT save as memories:
+- Workout performance data (e.g., "I did Fran in 8:57", "Deadlifted 315 for 5 reps")
+- Exercise logs with sets, reps, weights, times, or distances
+- Training session reports or workout completions
+- Slash commands like "/log-workout" (handled by workout system)
+- Messages that are primarily about logging today's training activity
+
+These are handled by the workout logging system (/log-workout) and should NEVER trigger memory saves.
+
+EXCEPTION: Future workout goals ARE memories (e.g., "I want to deadlift 315 by June" = goal memory)
+Only the GOAL is a memory, not the actual workout performance when achieved.
+
 MEMORY TYPES:
 - preference: Training preferences, communication style, etc.
 - goal: Fitness goals, targets, aspirations
@@ -238,6 +255,9 @@ export async function detectMemoryCharacteristics(
   coachName?: string
 ): Promise<MemoryCharacteristicsResult> {
   const systemPrompt = `You are an AI assistant that analyzes user memories to determine their type, importance, scope, and suggest relevant tags for fitness coaching.
+
+CRITICAL: This function should ONLY be called for content that has already been identified as a memory request.
+DO NOT process workout performance logs - these are handled by the workout logging system and stored separately in Pinecone and DynamoDB.
 
 MEMORY TYPES:
 - preference: Training preferences, communication style, etc.
@@ -544,6 +564,23 @@ User wants to save something when they:
 - Set goals or constraints: "My goal is...", "I can't do...", "I have limited time..."
 - Give coaching instructions: "When I do X, remind me to...", "Always check my form on..."
 - Use slash commands: "/save-memory [content]"
+
+CRITICAL: DO NOT DETECT WORKOUT LOGS AS MEMORY REQUESTS
+Workouts are already stored in two separate systems:
+1. Pinecone: Stores workout summaries for semantic search and progress tracking
+2. DynamoDB: Stores complete workout records with full details
+
+DO NOT save as memories:
+- Workout performance data (e.g., "I did Fran in 8:57", "Deadlifted 315 for 5 reps")
+- Exercise logs with sets, reps, weights, times, or distances
+- Training session reports or workout completions
+- Slash commands like "/log-workout" (handled by workout system)
+- Messages that are primarily about logging today's training activity
+
+These are handled by the workout logging system (/log-workout) and should NEVER trigger memory saves.
+
+EXCEPTION: Future workout goals ARE memories (e.g., "I want to deadlift 315 by June" = goal memory)
+Only the GOAL is a memory, not the actual workout performance when achieved.
 
 === MEMORY CHARACTERISTICS (if memory request detected) ===
 Memory Types:

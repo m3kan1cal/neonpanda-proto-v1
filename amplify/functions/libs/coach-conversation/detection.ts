@@ -344,6 +344,23 @@ Memory Request Detection:
 - Coaching instructions: "When I do X, remind me to...", "Always check my form on..."
 - /save-memory slash commands
 
+CRITICAL: DO NOT DETECT WORKOUT LOGS AS MEMORY REQUESTS
+Workouts are already stored in two separate systems:
+1. Pinecone: Stores workout summaries for semantic search and progress tracking
+2. DynamoDB: Stores complete workout records with full details
+
+DO NOT save as memories:
+- Workout performance data (e.g., "I did Fran in 8:57", "Deadlifted 315 for 5 reps")
+- Exercise logs with sets, reps, weights, times, or distances
+- Training session reports or workout completions
+- Slash commands like "/log-workout" (handled by workout system)
+- Messages that are primarily about logging today's training activity
+
+These are handled by the workout logging system (/log-workout) and should NEVER trigger memory saves.
+
+EXCEPTION: Future workout goals ARE memories (e.g., "I want to deadlift 315 by June" = goal memory)
+Only the GOAL is a memory, not the actual workout performance when achieved.
+
 Memory Characteristics (if memory request detected):
 Memory Types:
 - preference: Training preferences, communication style, workout timing

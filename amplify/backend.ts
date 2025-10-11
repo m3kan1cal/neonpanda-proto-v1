@@ -11,6 +11,7 @@ import { updateCoachCreatorSession } from "./functions/update-coach-creator-sess
 import { buildCoachConfig } from "./functions/build-coach-config/resource";
 import { getCoachConfigs } from "./functions/get-coach-configs/resource";
 import { getCoachConfig } from "./functions/get-coach-config/resource";
+import { updateCoachConfig } from "./functions/update-coach-config/resource";
 import { getCoachConfigStatus } from "./functions/get-coach-config-status/resource";
 import { getCoachCreatorSession } from "./functions/get-coach-creator-session/resource";
 import { getCoachCreatorSessions } from "./functions/get-coach-creator-sessions/resource";
@@ -72,6 +73,7 @@ const backend = defineBackend({
   buildCoachConfig,
   getCoachConfigs,
   getCoachConfig,
+  updateCoachConfig,
   getCoachConfigStatus,
   getCoachCreatorSession,
   getCoachCreatorSessions,
@@ -129,6 +131,7 @@ const coreApi = apiGatewayv2.createCoreApi(
   backend.updateCoachCreatorSession.resources.lambda,
   backend.getCoachConfigs.resources.lambda,
   backend.getCoachConfig.resources.lambda,
+  backend.updateCoachConfig.resources.lambda,
   backend.getCoachConfigStatus.resources.lambda,
   backend.getCoachCreatorSession.resources.lambda,
   backend.getCoachCreatorSessions.resources.lambda,
@@ -205,6 +208,7 @@ const sharedPolicies = new SharedPolicies(
   backend.buildCoachConfig,
   backend.getCoachConfigs,
   backend.getCoachConfig,
+  backend.updateCoachConfig,
   backend.getCoachConfigStatus,
   backend.getCoachCreatorSession,
   backend.deleteCoachCreatorSession,
@@ -451,6 +455,7 @@ const allFunctions = [
   backend.buildCoachConfig,
   backend.getCoachConfigs,
   backend.getCoachConfig,
+  backend.updateCoachConfig,
   backend.getCoachConfigStatus,
   backend.getCoachCreatorSession,
   backend.getCoachCreatorSessions,
