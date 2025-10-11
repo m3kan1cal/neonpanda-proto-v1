@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { themeClasses } from '../utils/synthwaveThemeClasses';
-import { containerPatterns, iconButtonPatterns, toastPatterns, inputPatterns, buttonPatterns } from '../utils/uiPatterns';
+import { containerPatterns, iconButtonPatterns, toastPatterns, inputPatterns, buttonPatterns, inlineEditPatterns } from '../utils/uiPatterns';
 import { NeonBorder, WorkoutIcon, SendIcon, ConversationIcon, ReportIcon, LightningIcon } from './themes/SynthwaveComponents';
 
 // Import existing components for reference
 import AuthButton from '../auth/components/AuthButton';
 import IconButton from './shared/IconButton';
+import InlineEditField from './common/InlineEditField';
 
 // Sample icons for demonstration
 const SampleIcon = () => (
@@ -85,6 +86,16 @@ function Theme() {
               }`}
             >
               Containers
+            </button>
+            <button
+              onClick={() => setActiveCategory('patterns')}
+              className={`px-6 py-3 rounded-md font-rajdhani font-semibold transition-all duration-300 ${
+                activeCategory === 'patterns'
+                  ? 'bg-synthwave-neon-purple text-white'
+                  : 'text-synthwave-neon-purple hover:bg-synthwave-neon-purple/10'
+              }`}
+            >
+              Patterns
             </button>
           </div>
         </div>
@@ -2179,6 +2190,266 @@ function Theme() {
                           <li className="flex items-start space-x-2">
                             <span className="text-synthwave-neon-cyan mt-1">•</span>
                             <span><strong>Loading States:</strong> Skeleton screens and progress indicators for better UX</span>
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                  </section>
+                </div>
+              )}
+
+              {/* PATTERNS SECTION */}
+              {activeCategory === 'patterns' && (
+                <div className="space-y-12">
+                  <h2 className="font-russo text-3xl text-synthwave-neon-pink mb-8 text-center uppercase">
+                    Interactive Patterns
+                  </h2>
+
+                  {/* Inline Edit Pattern */}
+                  <section className="space-y-6">
+                    <h3 className="font-russo text-xl text-white mb-4 uppercase border-b border-synthwave-neon-pink/30 pb-2">
+                      Inline Edit Pattern (InlineEditField.jsx)
+                    </h3>
+
+                    <div className="bg-synthwave-bg-card/30 border border-synthwave-neon-cyan/20 rounded-xl p-6 space-y-4">
+                      <p className="text-synthwave-text-primary font-rajdhani">
+                        <strong className="text-synthwave-neon-cyan">Overview:</strong> Standardized inline editing pattern
+                        with consistent sizing, colors, tooltips, and keyboard shortcuts. Used for editing coach names, conversation
+                        titles, and workout titles across the application.
+                      </p>
+                      <p className="text-synthwave-text-primary font-rajdhani">
+                        <strong className="text-synthwave-neon-cyan">Key Features:</strong> Three size variants (small/medium/large),
+                        pink accent color matching FormInput/AuthInput, consistent tooltips (edit=top, actions=bottom), keyboard
+                        shortcuts (Enter to save, Esc to cancel), loading states, and flexible validation.
+                      </p>
+                    </div>
+
+                    {/* Small Size */}
+                    <div className="space-y-4">
+                      <h4 className="font-rajdhani text-lg text-synthwave-neon-cyan font-semibold">Small Size</h4>
+                      <div className="bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-xl p-6">
+                        <div className="space-y-4">
+                          <div className="flex items-center space-x-2">
+                            <span className="text-synthwave-text-secondary font-rajdhani text-sm">Example:</span>
+                            <InlineEditField
+                              value="Small Text Example"
+                              onSave={async (newValue) => { console.log('Saved:', newValue); return true; }}
+                              placeholder="Enter small text..."
+                              size="small"
+                            />
+                          </div>
+                          <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+                            Used for compact UI elements, labels, or tags. Icon size: Edit w-4 h-4, Actions w-3 h-3.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Medium Size */}
+                    <div className="space-y-4">
+                      <h4 className="font-rajdhani text-lg text-synthwave-neon-cyan font-semibold">Medium Size (Default)</h4>
+                      <div className="bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-xl p-6">
+                        <div className="space-y-4">
+                          <div className="flex items-center space-x-2">
+                            <span className="text-synthwave-text-secondary font-rajdhani">Example:</span>
+                            <InlineEditField
+                              value="Medium Text Example"
+                              onSave={async (newValue) => { console.log('Saved:', newValue); return true; }}
+                              placeholder="Enter medium text..."
+                              size="medium"
+                            />
+                          </div>
+                          <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+                            Used for standard titles like coach names and conversation titles. Icon size: Edit w-5 h-5, Actions w-4 h-4.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Large Size */}
+                    <div className="space-y-4">
+                      <h4 className="font-rajdhani text-lg text-synthwave-neon-cyan font-semibold">Large Size</h4>
+                      <div className="bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-xl p-6">
+                        <div className="space-y-4">
+                          <div className="flex items-center space-x-2">
+                            <span className="text-synthwave-text-secondary font-rajdhani text-lg">Example:</span>
+                            <InlineEditField
+                              value="Large Text Example"
+                              onSave={async (newValue) => { console.log('Saved:', newValue); return true; }}
+                              placeholder="Enter large text..."
+                              size="large"
+                            />
+                          </div>
+                          <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+                            Used for prominent headers like workout titles. Icon size: Edit w-6 h-6, Actions w-5 h-5.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* States */}
+                    <div className="space-y-4">
+                      <h4 className="font-rajdhani text-lg text-synthwave-neon-cyan font-semibold">States & Behavior</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg p-4">
+                          <h5 className="font-rajdhani text-synthwave-neon-pink font-semibold mb-2">Display Mode</h5>
+                          <ul className="space-y-1 text-synthwave-text-secondary font-rajdhani text-sm">
+                            <li>• Hover reveals edit icon</li>
+                            <li>• Pink accent on hover</li>
+                            <li>• Tooltip: "Edit [item] name" (top, offset 4px)</li>
+                            <li>• Click to enter edit mode</li>
+                          </ul>
+                        </div>
+                        <div className="bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg p-4">
+                          <h5 className="font-rajdhani text-synthwave-neon-pink font-semibold mb-2">Edit Mode</h5>
+                          <ul className="space-y-1 text-synthwave-text-secondary font-rajdhani text-sm">
+                            <li>• Pink border input field</li>
+                            <li>• Save button (Enter) - pink bg</li>
+                            <li>• Cancel button (Esc) - cyan border</li>
+                            <li>• Tooltips bottom, offset 8px</li>
+                          </ul>
+                        </div>
+                        <div className="bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg p-4">
+                          <h5 className="font-rajdhani text-synthwave-neon-pink font-semibold mb-2">Loading State</h5>
+                          <ul className="space-y-1 text-synthwave-text-secondary font-rajdhani text-sm">
+                            <li>• Spinner replaces save icon</li>
+                            <li>• Buttons disabled</li>
+                            <li>• 50% opacity</li>
+                            <li>• Prevents interaction</li>
+                          </ul>
+                        </div>
+                        <div className="bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg p-4">
+                          <h5 className="font-rajdhani text-synthwave-neon-pink font-semibold mb-2">Validation</h5>
+                          <ul className="space-y-1 text-synthwave-text-secondary font-rajdhani text-sm">
+                            <li>• Flexible validation patterns</li>
+                            <li>• Save button disabled if invalid</li>
+                            <li>• onSave returns true/false</li>
+                            <li>• Error handling by parent</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Code Example */}
+                    <div className="space-y-4">
+                      <h4 className="font-rajdhani text-lg text-synthwave-neon-cyan font-semibold">Usage Example</h4>
+                      <div className="bg-synthwave-bg-primary/50 border border-synthwave-neon-cyan/30 rounded-lg p-4">
+                        <pre className="text-synthwave-text-primary font-mono text-xs overflow-x-auto">
+{`// Import the component
+import InlineEditField from './common/InlineEditField';
+
+// Basic usage
+<InlineEditField
+  value={coachData.name}
+  onSave={handleSaveCoachName}
+  placeholder="Enter coach name..."
+  size="medium"
+/>
+
+// With custom display styling
+<InlineEditField
+  value={workout.title}
+  onSave={handleSaveWorkoutTitle}
+  placeholder="Enter workout name..."
+  size="large"
+  displayClassName="font-rajdhani font-bold text-2xl text-white"
+/>
+
+// Using CoachAgent helper (eliminates duplicate code)
+const handleSaveCoachName = coachAgent.createCoachNameHandler(
+  userId,
+  coachId,
+  setCoachData,
+  { success, error }
+);`}
+                        </pre>
+                      </div>
+                    </div>
+
+                    {/* Pattern Details */}
+                    <div className="bg-synthwave-bg-card/30 border border-synthwave-neon-cyan/20 rounded-xl p-6 space-y-4">
+                      <h4 className="font-rajdhani text-lg text-synthwave-neon-cyan font-semibold">Pattern Configuration</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <h5 className="font-rajdhani text-synthwave-neon-pink font-semibold mb-2">Icon Sizes</h5>
+                          <ul className="space-y-1 text-synthwave-text-secondary font-rajdhani text-sm">
+                            <li>• <strong>Small:</strong> Edit w-4 h-4, Actions w-3 h-3</li>
+                            <li>• <strong>Medium:</strong> Edit w-5 h-5, Actions w-4 h-4</li>
+                            <li>• <strong>Large:</strong> Edit w-6 h-6, Actions w-5 h-5</li>
+                          </ul>
+                        </div>
+                        <div>
+                          <h5 className="font-rajdhani text-synthwave-neon-pink font-semibold mb-2">Colors</h5>
+                          <ul className="space-y-1 text-synthwave-text-secondary font-rajdhani text-sm">
+                            <li>• <strong>Primary:</strong> Neon pink (#ff6ec7)</li>
+                            <li>• <strong>Secondary:</strong> Neon cyan (#00f0ff)</li>
+                            <li>• <strong>Input Border:</strong> Pink on focus</li>
+                            <li>• <strong>Buttons:</strong> Pink primary, cyan secondary</li>
+                          </ul>
+                        </div>
+                        <div>
+                          <h5 className="font-rajdhani text-synthwave-neon-pink font-semibold mb-2">Tooltips</h5>
+                          <ul className="space-y-1 text-synthwave-text-secondary font-rajdhani text-sm">
+                            <li>• <strong>Edit:</strong> Top placement, offset 4px</li>
+                            <li>• <strong>Actions:</strong> Bottom placement, offset 8px</li>
+                            <li>• <strong>Transform:</strong> translateX(-8px)</li>
+                            <li>• <strong>Style:</strong> Black bg, white text, 8px radius</li>
+                          </ul>
+                        </div>
+                        <div>
+                          <h5 className="font-rajdhani text-synthwave-neon-pink font-semibold mb-2">Keyboard Shortcuts</h5>
+                          <ul className="space-y-1 text-synthwave-text-secondary font-rajdhani text-sm">
+                            <li>• <strong>Enter:</strong> Save changes</li>
+                            <li>• <strong>Escape:</strong> Cancel edit</li>
+                            <li>• <strong>Auto-focus:</strong> Input on edit</li>
+                            <li>• <strong>Disabled:</strong> When loading</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Implementation Notes */}
+                    <div className="bg-synthwave-neon-pink/10 border border-synthwave-neon-pink/20 rounded-lg p-4">
+                      <p className="text-synthwave-neon-pink font-rajdhani text-sm">
+                        <strong>Implementation:</strong> This pattern consolidates 3 different inline edit implementations
+                        (coach name, conversation title, workout title) into a single reusable component, eliminating ~190 lines
+                        of duplicate code. All patterns are defined in <code className="bg-synthwave-bg-primary px-1 rounded">inlineEditPatterns</code>
+                        {' '}from <code className="bg-synthwave-bg-primary px-1 rounded">uiPatterns.js</code>.
+                      </p>
+                    </div>
+
+                    {/* Best Practices */}
+                    <div className="bg-synthwave-bg-card/30 border border-synthwave-neon-cyan/30 rounded-xl p-6">
+                      <div className="space-y-4">
+                        <h4 className="font-rajdhani text-lg text-synthwave-neon-cyan font-semibold">Best Practices:</h4>
+                        <ul className="space-y-2 text-synthwave-text-primary font-rajdhani">
+                          <li className="flex items-start space-x-2">
+                            <span className="text-synthwave-neon-cyan mt-1">•</span>
+                            <span><strong>Size Selection:</strong> Use small for labels, medium for standard titles, large for prominent headers</span>
+                          </li>
+                          <li className="flex items-start space-x-2">
+                            <span className="text-synthwave-neon-cyan mt-1">•</span>
+                            <span><strong>Validation:</strong> Return true/false from onSave to control edit mode exit</span>
+                          </li>
+                          <li className="flex items-start space-x-2">
+                            <span className="text-synthwave-neon-cyan mt-1">•</span>
+                            <span><strong>Toast Notifications:</strong> Show success/error messages in onSave handler</span>
+                          </li>
+                          <li className="flex items-start space-x-2">
+                            <span className="text-synthwave-neon-cyan mt-1">•</span>
+                            <span><strong>Agent Integration:</strong> Use CoachAgent.createCoachNameHandler() to eliminate duplicate code</span>
+                          </li>
+                          <li className="flex items-start space-x-2">
+                            <span className="text-synthwave-neon-cyan mt-1">•</span>
+                            <span><strong>Display Styling:</strong> Use displayClassName prop for custom text styling</span>
+                          </li>
+                          <li className="flex items-start space-x-2">
+                            <span className="text-synthwave-neon-cyan mt-1">•</span>
+                            <span><strong>Accessibility:</strong> Keyboard shortcuts (Enter/Esc) and tooltips included</span>
+                          </li>
+                          <li className="flex items-start space-x-2">
+                            <span className="text-synthwave-neon-cyan mt-1">•</span>
+                            <span><strong>Loading States:</strong> Component handles loading UI automatically during save</span>
                           </li>
                         </ul>
                       </div>

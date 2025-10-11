@@ -320,6 +320,19 @@ function ManageCoachConversations() {
     };
   }, [showDeleteModal]);
 
+  // Create coach name handler using the agent's helper method
+  const handleSaveCoachName = coachAgentRef.current?.createCoachNameHandler(
+    userId,
+    coachId,
+    (newName) => setConversationAgentState((prevState) => ({
+      ...prevState,
+      coaches: prevState.coaches.map((coach) =>
+        coach.coachId === coachId ? { ...coach, name: newName } : coach
+      ),
+    })),
+    { success, error }
+  );
+
   const handleDeleteClick = (conversation) => {
     setConversationToDelete(conversation);
     setShowDeleteModal(true);
@@ -699,7 +712,12 @@ function ManageCoachConversations() {
 
               {/* Coach Status */}
               {conversationAgentState.coaches[0] && (
-                <CoachHeader coachData={conversationAgentState.coaches[0]} />
+                <CoachHeader
+                  coachData={conversationAgentState.coaches[0]}
+                  isOnline={true}
+                  isEditable={true}
+                  onSaveName={handleSaveCoachName}
+                />
               )}
 
               <p className="font-rajdhani text-lg text-synthwave-text-secondary max-w-3xl mx-auto mb-4">

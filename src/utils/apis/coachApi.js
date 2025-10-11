@@ -74,6 +74,48 @@ export const getCoach = async (userId, coachId) => {
 };
 
 /**
+ * Updates coach config metadata (coach name, description, etc.)
+ * @param {string} userId - The user ID
+ * @param {string} coachId - The coach ID
+ * @param {Object} metadata - The metadata to update
+ * @param {string} [metadata.coach_name] - The coach name
+ * @returns {Promise<Object>} - The API response with updated coach config
+ */
+export const updateCoachConfig = async (userId, coachId, metadata) => {
+  const url = `${getApiUrl('')}/users/${userId}/coaches/${coachId}`;
+
+  try {
+    const response = await authenticatedFetch(url, {
+      method: 'PUT',
+      body: JSON.stringify(metadata),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('updateCoachConfig: Error response:', errorText);
+      let errorMessage;
+      try {
+        const errorData = JSON.parse(errorText);
+        errorMessage = errorData.error || errorData.message || `API Error: ${response.status}`;
+      } catch (parseError) {
+        errorMessage = `API Error: ${response.status}`;
+      }
+      
+      if (response.status === 404) {
+        throw new Error('Coach not found');
+      }
+      throw new Error(errorMessage);
+    }
+
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error('updateCoachConfig: API Error:', error);
+    throw error;
+  }
+};
+
+/**
  * Gets all available coach templates
  * @returns {Promise<Object>} - The API response with templates array
  */

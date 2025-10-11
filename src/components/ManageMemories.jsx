@@ -294,6 +294,14 @@ function ManageMemories() {
     };
   }, [showDeleteModal]);
 
+  // Create coach name handler using the agent's helper method
+  const handleSaveCoachName = coachAgentRef.current?.createCoachNameHandler(
+    userId,
+    coachId,
+    setCoachData,
+    { success, error }
+  );
+
   const handleDeleteClick = (memory) => {
     setMemoryToDelete(memory);
     setShowDeleteModal(true);
@@ -650,7 +658,14 @@ function ManageMemories() {
               </h1>
 
               {/* Coach Status */}
-              {coachData && <CoachHeader coachData={coachData} />}
+              {coachData && (
+                <CoachHeader
+                  coachData={coachData}
+                  isOnline={true}
+                  isEditable={true}
+                  onSaveName={handleSaveCoachName}
+                />
+              )}
 
               <p className="font-rajdhani text-lg text-synthwave-text-secondary max-w-3xl mx-auto mb-4">
                 Review and manage your stored memories and preferences. Track

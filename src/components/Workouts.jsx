@@ -20,54 +20,6 @@ import {
 } from "./shared/ErrorStates";
 import { CloseIcon, WorkoutIcon } from "./themes/SynthwaveComponents";
 
-const EditIcon = () => (
-  <svg
-    className="w-4 h-4"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-    />
-  </svg>
-);
-
-const SaveIcon = () => (
-  <svg
-    className="w-4 h-4"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M5 13l4 4L19 7"
-    />
-  </svg>
-);
-
-const CancelIcon = () => (
-  <svg
-    className="w-4 h-4"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M6 18L18 6M6 6l12 12"
-    />
-  </svg>
-);
-
 const JsonIcon = () => (
   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
@@ -86,11 +38,6 @@ function Workouts() {
 
   // View state
   const [viewMode, setViewMode] = useState("formatted"); // 'formatted' or 'raw'
-
-  // Workout title editing state
-  const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const [editTitleValue, setEditTitleValue] = useState("");
-  const [isSavingTitle, setIsSavingTitle] = useState(false);
 
   // Delete confirmation state
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -250,6 +197,14 @@ function Workouts() {
     setViewMode(viewMode === "formatted" ? "raw" : "formatted");
   };
 
+  // Create coach name handler using the agent's helper method
+  const handleSaveCoachName = coachAgentRef.current?.createCoachNameHandler(
+    userId,
+    coachId,
+    setCoachData,
+    { success, error }
+  );
+
   const formatDate = (dateString) => {
     if (!dateString) return "Unknown";
     const date = new Date(dateString);
@@ -262,30 +217,19 @@ function Workouts() {
     });
   };
 
-  // Workout title editing handlers
-  const handleEditTitle = () => {
-    setEditTitleValue(
-      workoutAgentState.currentWorkout?.workoutData?.workout_name || ""
-    );
-    setIsEditingTitle(true);
-  };
+  // Workout title editing handler
+  const handleSaveWorkoutTitle = async (newTitle) => {
+    if (!newTitle.trim() || !workoutAgentRef.current || !workoutAgentState.currentWorkout) {
+      return false;
+    }
 
-  const handleSaveTitle = async () => {
-    if (
-      !editTitleValue.trim() ||
-      !workoutAgentRef.current ||
-      !workoutAgentState.currentWorkout
-    )
-      return;
-
-    setIsSavingTitle(true);
     try {
       await workoutAgentRef.current.updateWorkout(
         userId,
         workoutAgentState.currentWorkout.workoutId,
         {
           workoutData: {
-            workout_name: editTitleValue.trim(),
+            workout_name: newTitle.trim(),
           },
         }
       );
@@ -297,32 +241,17 @@ function Workouts() {
           ...prevState.currentWorkout,
           workoutData: {
             ...prevState.currentWorkout.workoutData,
-            workout_name: editTitleValue.trim(),
+            workout_name: newTitle.trim(),
           },
         },
       }));
 
-      setIsEditingTitle(false);
-      info("Workout title updated successfully");
-    } catch (error) {
-      console.error("Error updating workout title:", error);
+      success("Workout title updated successfully");
+      return true;
+    } catch (err) {
+      console.error("Error updating workout title:", err);
       error("Failed to update workout title");
-    } finally {
-      setIsSavingTitle(false);
-    }
-  };
-
-  const handleCancelEdit = () => {
-    setIsEditingTitle(false);
-    setEditTitleValue("");
-  };
-
-  const handleTitleKeyPress = (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      handleSaveTitle();
-    } else if (e.key === "Escape") {
-      handleCancelEdit();
+      return false;
     }
   };
 
@@ -364,15 +293,11 @@ function Workouts() {
     setWorkoutToDelete(null);
   };
 
-  // Close delete modal or cancel title edit when pressing escape
+  // Close delete modal when pressing escape
   useEffect(() => {
     const handleKeyDown = (event) => {
-      if (event.key === "Escape") {
-        if (showDeleteModal) {
-          handleCancelDelete();
-        } else if (isEditingTitle) {
-          handleCancelEdit();
-        }
+      if (event.key === "Escape" && showDeleteModal) {
+        handleCancelDelete();
       }
     };
 
@@ -381,7 +306,7 @@ function Workouts() {
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [showDeleteModal, isEditingTitle]);
+  }, [showDeleteModal]);
 
   // Render workout list
   const renderWorkoutList = () => (
@@ -610,7 +535,12 @@ function Workouts() {
 
           {/* Coach Header */}
           {coachData && (
-            <CoachHeader coachData={coachData} isOnline={true} />
+            <CoachHeader
+              coachData={coachData}
+              isOnline={true}
+              isEditable={true}
+              onSaveName={handleSaveCoachName}
+            />
           )}
 
           <p className="font-rajdhani text-lg text-synthwave-text-secondary max-w-3xl mx-auto mb-4">
@@ -644,14 +574,7 @@ function Workouts() {
                     onToggleView={handleToggleView}
                     onDeleteWorkout={handleDeleteClick}
                     viewMode={viewMode}
-                    isEditingTitle={isEditingTitle}
-                    editTitleValue={editTitleValue}
-                    isSavingTitle={isSavingTitle}
-                    onEditTitle={handleEditTitle}
-                    onSaveTitle={handleSaveTitle}
-                    onCancelEdit={handleCancelEdit}
-                    onTitleChange={setEditTitleValue}
-                    onTitleKeyPress={handleTitleKeyPress}
+                    onSaveWorkoutTitle={handleSaveWorkoutTitle}
                     formatDate={formatDate}
                   />
                 ) : (

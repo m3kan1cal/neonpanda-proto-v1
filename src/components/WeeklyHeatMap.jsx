@@ -48,9 +48,8 @@ const HeatMapSquare = ({ dayData, userId, coachId, date }) => {
 
     const rpeText = dayData.avg_rpe ? `RPE ${dayData.avg_rpe.toFixed(1)}` : 'No RPE';
     const intensityText = dayData.avg_intensity ? `Intensity ${dayData.avg_intensity.toFixed(1)}` : 'No Intensity';
-    const workoutText = dayData.workout_count === 1 ? '1 workout' : `${dayData.workout_count} workouts`;
 
-    return `${formatDate(date)}: ${rpeText} • ${intensityText} • ${workoutText}`;
+    return `${formatDate(date)}: ${rpeText} • ${intensityText}`;
   };
 
   const hasWorkout = dayData?.workout_count > 0;
@@ -195,10 +194,24 @@ const WeeklyHeatMap = ({ dailyVolumeData, weekStart, weekEnd, userId, coachId })
       {/* Legend */}
       <HeatMapLegend />
 
-      {/* Tooltip - using standardized tooltip pattern */}
+      {/* Tooltip - using standardized tooltip pattern with custom positioning */}
       <Tooltip
         id="heat-map-tooltip"
-        {...tooltipPatterns.standard}
+        offset={24}
+        delayShow={0}
+        place="top"
+        style={{
+          backgroundColor: '#000',
+          color: '#fff',
+          borderRadius: '8px',
+          fontFamily: 'Rajdhani',
+          fontSize: '14px',
+          padding: '8px 12px',
+          zIndex: 99999,
+          maxWidth: '150px',
+          whiteSpace: 'normal',
+          wordWrap: 'break-word'
+        }}
       />
     </div>
   );

@@ -1,5 +1,5 @@
 import { nanoid } from 'nanoid';
-import { getCoaches, getCoach, getCoachTemplates, createCoachFromTemplate, createCoachFromSession } from '../apis/coachApi';
+import { getCoaches, getCoach, getCoachTemplates, createCoachFromTemplate, createCoachFromSession, updateCoachConfig } from '../apis/coachApi';
 import { createCoachCreatorSession, getCoachConfigStatus } from '../apis/coachCreatorApi';
 
 /**
@@ -20,6 +20,7 @@ export class CoachAgent {
       coaches: [],
       templates: [],
       isLoading: false,
+      isUpdating: false,
       templatesLoading: false,
       error: null,
       templatesError: null,
@@ -404,6 +405,128 @@ export class CoachAgent {
   clearInProgressCoach() {
     this._updateState({ inProgressCoach: null });
     this.stopPolling();
+  }
+
+  /**
+   * Updates coach config metadata (coach name, description, etc.)
+   * @param {string} userId - The user ID
+   * @param {string} coachId - The coach ID
+   * @param {Object} metadata - The metadata to update (e.g., { coach_name: "New Name" })
+   * @returns {Promise<Object>} - The updated coach config
+   */
+  async updateCoachConfig(userId, coachId, metadata) {
+    try {
+      this._updateState({ isUpdating: true, error: null });
+
+      const result = await updateCoachConfig(userId, coachId, metadata);
+
+      // Update the coach in local state
+      const updatedCoaches = this.state.coaches.map(coach => {
+        if (coach.coachId === coachId) {
+          return {
+            ...coach,
+            coachConfig: {
+              ...coach.coachConfig,
+              ...metadata
+            },
+            // Update formatted name if coach_name changed
+            name: metadata.coach_name ? this.formatCoachName(metadata.coach_name) : coach.name
+          };
+        }
+        return coach;
+      });
+
+      this._updateState({
+        coaches: updatedCoaches,
+        isUpdating: false
+      });
+
+      console.info('Coach config updated successfully in agent:', {
+        coachId,
+        userId,
+        updatedFields: Object.keys(metadata)
+      });
+
+      return result;
+    } catch (error) {
+      console.error('Error updating coach config:', error);
+      this._updateState({
+        error: error.message,
+        isUpdating: false
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Convenience method to update coach name with state management
+   * Returns a function that can be used directly as the onSave handler for InlineEditField
+   *
+   * @param {string} userId - The user ID
+   * @param {string} coachId - The coach ID
+   * @param {Function} updateCoachName - Function to update coach name in component state
+   *                                      Can be setCoachData or a custom updater
+   * @param {Object} toast - Toast notification object with success/error methods
+   * @returns {Function} - Handler function that takes newName and returns Promise<boolean>
+   *
+   * @example
+   * // Simple state setter
+   * const handleSaveCoachName = coachAgent.createCoachNameHandler(
+   *   userId, coachId, setCoachData, { success, error }
+   * );
+   *
+   * @example
+   * // Custom state updater for nested state
+   * const handleSaveCoachName = coachAgent.createCoachNameHandler(
+   *   userId,
+   *   coachId,
+   *   (newName) => setCoachState(prev => ({ ...prev, coach: { ...prev.coach, name: newName }})),
+   *   { success, error }
+   * );
+   */
+  createCoachNameHandler(userId, coachId, updateCoachName, toast) {
+    return async (newName) => {
+      if (!newName || !newName.trim()) {
+        return false;
+      }
+
+      try {
+        await this.updateCoachConfig(userId, coachId, { coach_name: newName.trim() });
+
+        // Update coach name in component state using provided updater
+        if (updateCoachName) {
+          if (typeof updateCoachName === 'function') {
+            // Check if it's a simple setter or needs the new name
+            const updateFn = updateCoachName.length === 0
+              ? () => updateCoachName(newName.trim())
+              : updateCoachName;
+
+            if (updateCoachName.length === 1) {
+              // It's a custom updater that takes the new name
+              updateFn(newName.trim());
+            } else {
+              // It's a setState function
+              updateCoachName((prevData) => ({
+                ...prevData,
+                name: newName.trim(),
+              }));
+            }
+          }
+        }
+
+        if (toast?.success) {
+          toast.success('Coach name updated successfully');
+        }
+
+        return true;
+      } catch (error) {
+        console.error('Error updating coach name:', error);
+        if (toast?.error) {
+          toast.error('Failed to update coach name');
+        }
+        return false;
+      }
+    };
   }
 
   /**

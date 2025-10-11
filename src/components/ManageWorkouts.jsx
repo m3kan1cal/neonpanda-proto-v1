@@ -269,6 +269,14 @@ function ManageWorkouts() {
     loadWorkouts();
   }, [userId]);
 
+  // Create coach name handler using the agent's helper method
+  const handleSaveCoachName = coachAgentRef.current?.createCoachNameHandler(
+    userId,
+    coachId,
+    setCoachData,
+    { success, error }
+  );
+
   // Handle delete click
   const handleDeleteClick = (workout) => {
     setWorkoutToDelete(workout);
@@ -736,7 +744,12 @@ function ManageWorkouts() {
 
               {/* Coach Header */}
               {coachData && (
-                <CoachHeader coachData={coachData} />
+                <CoachHeader
+                  coachData={coachData}
+                  isOnline={true}
+                  isEditable={true}
+                  onSaveName={handleSaveCoachName}
+                />
               )}
 
               <p className="font-rajdhani text-lg text-synthwave-text-secondary max-w-3xl mx-auto mb-4">

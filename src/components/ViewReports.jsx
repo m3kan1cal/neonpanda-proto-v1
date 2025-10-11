@@ -4,7 +4,7 @@ import { useAuthorizeUser } from '../auth/hooks/useAuthorizeUser';
 import { AccessDenied } from './shared/AccessDenied';
 import { containerPatterns, buttonPatterns, layoutPatterns } from '../utils/uiPatterns';
 import { NeonBorder, NewBadge } from './themes/SynthwaveComponents';
-import { isCurrentWeekReport } from '../utils/dateUtils';
+import { isCurrentWeekReport, getWeekDateRange, formatWorkoutCount } from '../utils/dateUtils';
 import { useToast } from '../contexts/ToastContext';
 import ReportAgent from '../utils/agents/ReportAgent';
 import CoachAgent from '../utils/agents/CoachAgent';
@@ -225,8 +225,6 @@ function ViewReports() {
     loadReports();
   }, [userId]);
 
-
-
   // Format date for display
   const formatReportDate = (dateString) => {
     const date = new Date(dateString);
@@ -244,38 +242,11 @@ function ViewReports() {
     };
   };
 
-  // Get week date range from weekId (for report cards)
-  const getWeekDateRange = (weekId) => {
-    if (!weekId) return 'Unknown week';
-
-    // Parse weekId format: YYYY-WW
-    const [year, week] = weekId.split('-W');
-    if (!year || !week) return weekId;
-
-    const firstDayOfYear = new Date(year, 0, 1);
-    const daysToFirstMonday = (8 - firstDayOfYear.getDay()) % 7;
-    const firstMonday = new Date(year, 0, 1 + daysToFirstMonday);
-
-    const weekStart = new Date(firstMonday);
-    weekStart.setDate(firstMonday.getDate() + (parseInt(week) - 1) * 7);
-
-    const weekEnd = new Date(weekStart);
-    weekEnd.setDate(weekStart.getDate() + 6);
-
-    const formatDate = (date) => {
-      return date.toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric'
-      });
-    };
-
-    return `${formatDate(weekStart)} - ${formatDate(weekEnd)}`;
-  };
-
   // Render report card
   const renderReportCard = (report) => {
-    const dateRange = getWeekDateRange(report.weekId);
-    const workoutCount = report.metadata?.workoutCount || 0;
+    const dateRange = getWeekDateRange(report);
+    // Use AI's actual session count (deduped) instead of raw workout count from DB
+    const workoutCount = report.analyticsData?.structured_analytics?.metadata?.sessions_completed || report.metadata?.workoutCount || 0;
     const conversationCount = report.metadata?.conversationCount || 0;
     const memoryCount = report.metadata?.memoryCount || 0;
     const analysisConfidence = report.metadata?.analysisConfidence || 'medium';
@@ -382,7 +353,7 @@ function ViewReports() {
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
-              Workouts
+              {workoutCount === 1 ? 'Workout' : 'Workouts'}
             </div>
           </div>
 
@@ -436,13 +407,13 @@ function ViewReports() {
     );
   };
 
-
-
-
-
-
-
-
+  // Create coach name handler using the agent's helper method
+  const handleSaveCoachName = coachAgentRef.current?.createCoachNameHandler(
+    userId,
+    coachId,
+    setCoachData,
+    { success: (msg) => addToast(msg, 'success'), error: (msg) => addToast(msg, 'error') }
+  );
 
   // Close tooltip when clicking outside or pressing escape
   useEffect(() => {
@@ -620,7 +591,12 @@ function ViewReports() {
 
               {/* Coach Header */}
               {coachData && (
-                <CoachHeader coachData={coachData} />
+                <CoachHeader
+                  coachData={coachData}
+                  isOnline={true}
+                  isEditable={true}
+                  onSaveName={handleSaveCoachName}
+                />
               )}
 
               <p className="font-rajdhani text-lg text-synthwave-text-secondary max-w-3xl mx-auto mb-4">

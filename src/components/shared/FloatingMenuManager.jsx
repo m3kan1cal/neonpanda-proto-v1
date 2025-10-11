@@ -6,6 +6,8 @@ import {
   isCurrentWeekReport,
   isNewWorkout,
   isRecentConversation,
+  getWeekDateRange,
+  formatWorkoutCount,
 } from "../../utils/dateUtils";
 import ReportAgent from "../../utils/agents/ReportAgent";
 import WorkoutAgent from "../../utils/agents/WorkoutAgent";
@@ -339,33 +341,6 @@ export const FloatingMenuManager = ({
     }
   };
 
-  // Get week date range from weekId
-  const getWeekDateRange = (weekId) => {
-    if (!weekId) return "Unknown week";
-
-    const [year, week] = weekId.split("-W");
-    if (!year || !week) return weekId;
-
-    const firstDayOfYear = new Date(year, 0, 1);
-    const daysToFirstMonday = (8 - firstDayOfYear.getDay()) % 7;
-    const firstMonday = new Date(year, 0, 1 + daysToFirstMonday);
-
-    const weekStart = new Date(firstMonday);
-    weekStart.setDate(firstMonday.getDate() + (parseInt(week) - 1) * 7);
-
-    const weekEnd = new Date(weekStart);
-    weekEnd.setDate(weekStart.getDate() + 6);
-
-    const formatDate = (date) => {
-      return date.toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-      });
-    };
-
-    return `${formatDate(weekStart)} - ${formatDate(weekEnd)}`;
-  };
-
   // Render functions
   const renderWorkoutList = () => (
     <div className="space-y-2">
@@ -514,9 +489,9 @@ export const FloatingMenuManager = ({
                       Week {report.weekId}
                     </div>
                     <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
-                      {getWeekDateRange(report.weekId)} •{" "}
+                      {getWeekDateRange(report)} •{" "}
                       <span className="text-synthwave-neon-cyan">
-                        {report.metadata?.workoutCount || 0} workouts
+                        {formatWorkoutCount(report.analyticsData?.structured_analytics?.metadata?.sessions_completed || report.metadata?.workoutCount || 0)}
                       </span>
                     </div>
                   </div>
