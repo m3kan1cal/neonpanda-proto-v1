@@ -11,28 +11,33 @@ export interface WeekRange {
 }
 
 /**
- * Get the current week's date range (Sunday to Saturday)
- * Analytics run on Sunday, so "current week" is the week that just ended
+ * Get the current week's date range (Monday to Sunday, ISO-8601)
+ * Analytics run on Sunday morning, so "current week" is the week that just ended
  */
 export const getCurrentWeekRange = (): WeekRange => {
   const now = new Date();
 
-  // Get the most recent Sunday (yesterday if today is Monday, or last week if today is Sunday)
-  const weekStart = new Date(now);
-  const daysSinceLastSunday = now.getDay(); // 0 = Sunday, 1 = Monday, etc.
+  // ISO-8601: Week starts on Monday (day 1), ends on Sunday (day 7)
+  // Convert JavaScript's getDay() (0=Sunday) to ISO day (1=Monday, 7=Sunday)
+  const currentDayOfWeek = now.getDay();
+  const isoDay = currentDayOfWeek === 0 ? 7 : currentDayOfWeek; // Sunday becomes 7
 
-  if (daysSinceLastSunday === 0) {
-    // Today is Sunday, so we want last week's range
-    weekStart.setDate(now.getDate() - 7);
+  // When analytics runs on Sunday morning, we want the week that just ended
+  // (Monday to Sunday of the previous week)
+  const weekStart = new Date(now);
+
+  if (isoDay === 7) {
+    // Today is Sunday - go back 6 days to get last Monday (start of week that just ended)
+    weekStart.setDate(now.getDate() - 6);
   } else {
-    // Go back to the most recent Sunday
-    weekStart.setDate(now.getDate() - daysSinceLastSunday);
+    // Other days - go back to previous Monday (7 + days since Monday)
+    weekStart.setDate(now.getDate() - isoDay - 6);
   }
 
   // Set to start of day (00:00:00)
   weekStart.setHours(0, 0, 0, 0);
 
-  // Week end is the following Saturday at end of day (23:59:59.999)
+  // Week end is 6 days after Monday (Sunday) at end of day (23:59:59.999)
   const weekEnd = new Date(weekStart);
   weekEnd.setDate(weekStart.getDate() + 6);
   weekEnd.setHours(23, 59, 59, 999);

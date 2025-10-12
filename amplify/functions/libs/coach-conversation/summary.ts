@@ -71,25 +71,12 @@ ${existingSummaryContext}
 CONVERSATION TO ANALYZE:
 ${messages}
 
-Please create a conversation summary with the following structure:
-
-## NARRATIVE SUMMARY (150-300 words)
-Write a flowing narrative that captures:
-- The essence of the coaching relationship and communication dynamic
-- Key goals, challenges, and progress discussed
-- Important personal context and constraints
-- Emotional state and motivation patterns
-- Notable insights or breakthroughs
-- Communication style preferences
-- Training methodologies discussed, preferred, or referenced
-- Any methodology-specific programming or approach preferences
+Please create a comprehensive conversation summary as a JSON object with the following structure:
 
 ${JSON_FORMATTING_INSTRUCTIONS_STANDARD}
 
-## STRUCTURED DATA
-Provide the following as a JSON object:
-
 {
+  "narrative": "A flowing 150-300 word narrative that captures: the essence of the coaching relationship and communication dynamic, key goals/challenges/progress discussed, important personal context and constraints, emotional state and motivation patterns, notable insights or breakthroughs, communication style preferences, training methodologies discussed/preferred/referenced, and any methodology-specific programming or approach preferences",
   "current_goals": ["specific goal 1", "specific goal 2"],
   "recent_progress": ["progress item 1", "progress item 2"],
   "preferences": {
@@ -153,22 +140,48 @@ export function parseCoachConversationSummary(
   conversation: CoachConversation
 ): CoachConversationSummary {
   try {
-    // Extract narrative (everything before "## STRUCTURED DATA" or similar)
-    const narrativeMatch = aiResponse.match(
-      /## NARRATIVE SUMMARY[^\n]*\n([\s\S]*?)(?=## STRUCTURED DATA|$)/i
-    );
-    const narrative = narrativeMatch ? narrativeMatch[1].trim() : "";
+    console.log("Parsing AI response...", {
+      responseLength: aiResponse.length,
+      responsePreview: aiResponse.substring(0, 200)
+    });
 
-    // Extract JSON (look for JSON block)
-    const jsonMatch =
-      aiResponse.match(/```json\s*([\s\S]*?)\s*```/) ||
-      aiResponse.match(/{\s*"current_goals"[\s\S]*?}/);
+    // Extract JSON from markdown code blocks or raw JSON
+    let jsonMatch = aiResponse.match(/```json\s*([\s\S]*?)\s*```/);
 
     if (!jsonMatch) {
+      // Try to find raw JSON object starting with "narrative" or "current_goals"
+      jsonMatch = aiResponse.match(/{\s*"(narrative|current_goals)"[\s\S]*}/);
+    }
+
+    if (!jsonMatch) {
+      console.error("Error parsing conversation summary:", {
+        aiResponsePreview: aiResponse.substring(0, 500)
+      });
+      console.error("AI Response:", aiResponse);
       throw new Error("Could not find structured data JSON in AI response");
     }
 
-    const structuredData = JSON.parse(jsonMatch[1] || jsonMatch[0]);
+    const jsonString = jsonMatch[1] || jsonMatch[0];
+    console.log("Extracted JSON string:", {
+      length: jsonString.length,
+      preview: jsonString.substring(0, 200)
+    });
+
+    const parsedData = JSON.parse(jsonString);
+
+    // Extract narrative from the parsed data (can be at top level or nested)
+    const narrative = parsedData.narrative || parsedData.narrative_summary || "";
+
+    // The rest is structured data (remove narrative if it exists at top level)
+    const structuredData = { ...parsedData };
+    if (structuredData.narrative) delete structuredData.narrative;
+    if (structuredData.narrative_summary) delete structuredData.narrative_summary;
+
+    console.log("Parsed conversation data:", {
+      narrativeLength: narrative.length,
+      hasGoals: !!structuredData.current_goals,
+      hasProgress: !!structuredData.recent_progress
+    });
 
     // Validate required fields
     if (
