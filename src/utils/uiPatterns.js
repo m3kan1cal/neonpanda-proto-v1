@@ -449,6 +449,32 @@ export const scrollbarPatterns = {
   pink: "custom-scrollbar-pink"
 };
 
+// Changelog List Patterns - Text-based information display in lists
+// Used for displaying version history, updates, and structured text content
+// These patterns follow modern UI/UX best practices for scannable, clickable list items
+export const changelogListPatterns = {
+  // Container for the list of versions
+  container: "space-y-2",
+
+  // Individual version item - clickable with hover effects
+  versionItem: "group flex items-center justify-between px-4 py-3 bg-synthwave-bg-card/20 hover:bg-synthwave-bg-card/40 border border-synthwave-neon-cyan/10 hover:border-synthwave-neon-cyan/30 rounded-lg transition-all duration-200 cursor-pointer",
+
+  // Version text (left side)
+  versionText: "font-rajdhani text-base text-synthwave-text-primary group-hover:text-synthwave-neon-cyan transition-colors duration-200",
+
+  // Change count badge (right side) - subtle pill showing total changes
+  changeBadge: "px-3 py-1 bg-synthwave-neon-cyan/10 group-hover:bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan text-sm font-rajdhani font-medium rounded-full transition-all duration-200",
+
+  // Date text - muted secondary text
+  dateText: "font-rajdhani text-sm text-synthwave-text-muted",
+
+  // Version and date wrapper (for vertical stacking if needed)
+  versionInfo: "flex flex-col gap-0.5",
+
+  // Icon for external link indicator (optional)
+  linkIcon: "w-4 h-4 text-synthwave-text-muted group-hover:text-synthwave-neon-cyan opacity-0 group-hover:opacity-100 transition-all duration-200"
+};
+
 // Scrollbar Styles - Modern neon scrollbars for different UI contexts
 export const scrollbarStyles = `
   /* Neon Cyan Scrollbar - for command palette, content previews, and secondary interfaces */

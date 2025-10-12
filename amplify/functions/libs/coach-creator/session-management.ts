@@ -67,7 +67,7 @@ export const getProgress = (userContext: UserContext) => {
 };
 
 // Generate coach creator session summary for analytics
-// Updated to match new question structure (10 questions, streamlined)
+// Updated to match new question structure (11 questions, streamlined)
 export const generateCoachCreatorSessionSummary = (
   session: CoachCreatorSession
 ): string => {
@@ -75,6 +75,7 @@ export const generateCoachCreatorSessionSummary = (
   const sophistication = session.userContext.sophisticationLevel;
 
   // New question mapping:
+  // 0: coach_gender_preference
   // 1: goals_and_timeline
   // 2: age_and_life_stage
   // 3: experience_level
@@ -86,6 +87,7 @@ export const generateCoachCreatorSessionSummary = (
   // 9: success_metrics
   // 10: competition_goals (optional)
 
+  const genderPreference = responses["0"] || "No preference";
   const goals = responses["1"] || "Not specified";
   const age = responses["2"] || "Not specified";
   const experience = responses["3"] || "Not specified";
@@ -99,6 +101,7 @@ export const generateCoachCreatorSessionSummary = (
 
   return (
     `User ${session.userId} completed coach creator as ${sophistication.toLowerCase()} level athlete. ` +
+    `Gender preference: ${genderPreference.slice(0, 30)}... | ` +
     `Goals: ${goals.slice(0, 100)}... | ` +
     `Age: ${age.slice(0, 50)}... | ` +
     `Experience: ${experience.slice(0, 100)}... | ` +

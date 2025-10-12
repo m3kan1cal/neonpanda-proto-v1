@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { useAuthorizeUser } from '../auth/hooks/useAuthorizeUser';
 import { useToast } from '../contexts/ToastContext';
 import { themeClasses } from '../utils/synthwaveThemeClasses';
-import { containerPatterns, layoutPatterns } from '../utils/uiPatterns';
+import { containerPatterns, layoutPatterns, changelogListPatterns } from '../utils/uiPatterns';
 import { isCurrentWeekReport, isNewWorkout, isRecentConversation, getWeekDateRange, formatWorkoutCount } from '../utils/dateUtils';
+import { getLatestVersions, getTotalChanges, generateVersionAnchor } from '../utils/changelogData';
 import {
   NeonBorder,
   NewBadge,
@@ -15,7 +16,11 @@ import {
   LightningIcon,
   LightningIconSmall,
   ChevronLeftIcon,
-  ChevronRightIcon
+  ChevronRightIcon,
+  ProgramIcon,
+  ResourcesIcon,
+  MessagesIcon,
+  BarChartIcon
 } from './themes/SynthwaveComponents';
 import { FullPageLoader, CenteredErrorState, InlineError, EmptyState } from './shared/ErrorStates';
 import CoachHeader from './shared/CoachHeader';
@@ -25,37 +30,6 @@ import CoachAgent from '../utils/agents/CoachAgent';
 import CoachConversationAgent from '../utils/agents/CoachConversationAgent';
 import WorkoutAgent from '../utils/agents/WorkoutAgent';
 import ReportAgent from '../utils/agents/ReportAgent';
-
-// Local icons not in SynthwaveComponents
-const ProgramIcon = () => (
-  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-  </svg>
-);
-
-const ResourcesIcon = () => (
-  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-  </svg>
-);
-
-const MessagesIcon = () => (
-  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-  </svg>
-);
-
-const InfoIcon = () => (
-  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-  </svg>
-);
-
-const BarChartIcon = () => (
-  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-  </svg>
-);
 
 function TrainingGrounds() {
   const [searchParams] = useSearchParams();
@@ -862,10 +836,43 @@ function TrainingGrounds() {
             <p className="font-rajdhani text-synthwave-text-secondary text-sm mb-6">
               Important messages and notifications from your coach and the platform.
             </p>
-            <div className="text-center py-8">
-              <div className="font-rajdhani text-synthwave-text-muted text-sm">
-                This feature is in active development and is coming soon
-              </div>
+
+            {/* Recent Changelog Versions */}
+            <div className="space-y-2 mb-2">
+              <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">Recent Updates</div>
+              {getLatestVersions(5).map((entry, index) => {
+                const counts = getTotalChanges(entry);
+                // Check if release is within 3 days
+                const releaseDate = new Date(entry.date);
+                const today = new Date();
+                const diffInDays = Math.floor((today - releaseDate) / (1000 * 60 * 60 * 24));
+                const isNewRelease = diffInDays <= 3;
+
+                return (
+                  <Link
+                    key={index}
+                    to={`/changelog#${generateVersionAnchor(entry.version)}`}
+                    className="relative bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/20 hover:border-synthwave-neon-pink/40 hover:bg-synthwave-bg-primary/50 rounded-lg p-3 cursor-pointer transition-all duration-200 flex items-center justify-between"
+                  >
+                    {/* NEW badge for releases within 3 days */}
+                    {isNewRelease && <NewBadge />}
+
+                    <div className="flex-1 min-w-0">
+                      <div className="font-rajdhani text-sm text-white font-medium truncate">
+                        {entry.version}
+                      </div>
+                      <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
+                        {entry.date} • <span className="text-synthwave-neon-cyan">{counts.total} changes</span>
+                      </div>
+                    </div>
+                    <div className="ml-2 text-synthwave-neon-pink">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                      </svg>
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
           </div>
         </div>

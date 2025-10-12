@@ -10,6 +10,29 @@ import { Question, UserContext, SophisticationLevel } from "./types";
 
 export const COACH_CREATOR_QUESTIONS: Question[] = [
   {
+    id: 0,
+    topic: "coach_gender_preference",
+    required: false,
+    versions: {
+      UNKNOWN: "Before we dive in, do you have a gender preference for your coach? Some people connect better with a male or female coaching style. You can say 'male', 'female', or 'no preference' - totally up to you!",
+      BEGINNER: "Quick question - would you prefer a male coach, female coach, or does it not matter to you? Just want to make sure you're comfortable!",
+      INTERMEDIATE: "Do you have a preference for your coach's gender - male, female, or no preference?",
+      ADVANCED: "Any preference on coach gender - male, female, or neutral? Just helps me match the right coaching style.",
+    },
+    sophisticationSignals: {
+      UNKNOWN: [],
+      BEGINNER: [],
+      INTERMEDIATE: [],
+      ADVANCED: [],
+    },
+    followUpLogic: {
+      UNKNOWN: "Acknowledge their preference and move forward - keep it light and natural",
+      BEGINNER: "Validate their choice and reassure them it's about comfort",
+      INTERMEDIATE: "Note preference and continue",
+      ADVANCED: "Record preference and proceed",
+    },
+  },
+  {
     id: 1,
     topic: "goals_and_timeline",
     required: true,
