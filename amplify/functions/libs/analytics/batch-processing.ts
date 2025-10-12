@@ -11,32 +11,37 @@ import { storeDebugDataInS3 } from "../api-helpers";
 
 /**
  * Helper function to generate week ID from date range
- * Uses Sunday-based week counting (matching our analytics week definition)
- * Week 1 starts on the first Sunday of the year
+ * Uses ISO-8601 week numbering (Monday-based weeks)
+ * Week 1 is the first week containing a Thursday (or equivalently, Jan 4)
  */
 const generateWeekId = (weekStart: Date): string => {
-  const year = weekStart.getFullYear();
-  const startOfYear = new Date(year, 0, 1);
+  // ISO-8601 week calculation
+  // Week 1 is the first week with a Thursday in it (or containing Jan 4)
 
-  // Find the first Sunday of the year
-  const firstSunday = new Date(startOfYear);
-  const dayOfWeek = startOfYear.getDay(); // 0 = Sunday
-  if (dayOfWeek !== 0) {
-    // Move to the first Sunday
-    firstSunday.setDate(startOfYear.getDate() + (7 - dayOfWeek));
-  }
+  const target = new Date(weekStart);
+  target.setHours(0, 0, 0, 0);
 
-  // Calculate weeks since first Sunday
-  const daysDiff = Math.floor((weekStart.getTime() - firstSunday.getTime()) / (24 * 60 * 60 * 1000));
-  const weekNumber = Math.floor(daysDiff / 7) + 1;
+  // Get the ISO day (1=Monday, 7=Sunday)
+  const dayOfWeek = target.getDay();
+  const isoDay = dayOfWeek === 0 ? 7 : dayOfWeek;
 
-  // Handle edge case: dates before first Sunday are week 0 (or previous year's last week)
-  if (weekStart < firstSunday) {
-    // This date belongs to the previous year's week numbering
-    const prevYear = year - 1;
-    const prevYearEnd = new Date(prevYear, 11, 31);
-    return generateWeekId(prevYearEnd); // Recursively get previous year's last week
-  }
+  // Get Thursday of this week (ISO week is defined by its Thursday)
+  const thursday = new Date(target);
+  thursday.setDate(target.getDate() + (4 - isoDay));
+
+  // Get the year from Thursday's date (handles edge cases near year boundaries)
+  const year = thursday.getFullYear();
+
+  // Get Thursday of week 1 (Jan 4 is always in week 1)
+  const jan4 = new Date(year, 0, 4);
+  const jan4Day = jan4.getDay();
+  const jan4IsoDay = jan4Day === 0 ? 7 : jan4Day;
+  const week1Thursday = new Date(jan4);
+  week1Thursday.setDate(jan4.getDate() + (4 - jan4IsoDay));
+
+  // Calculate week number by counting weeks between Thursdays
+  const weeksDiff = Math.round((thursday.getTime() - week1Thursday.getTime()) / (7 * 24 * 60 * 60 * 1000));
+  const weekNumber = weeksDiff + 1;
 
   return `${year}-W${weekNumber.toString().padStart(2, '0')}`;
 };
