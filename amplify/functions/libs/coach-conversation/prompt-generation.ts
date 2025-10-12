@@ -54,6 +54,7 @@ export const generateSystemPrompt = (
     methodology_prompt,
     communication_style,
     learning_adaptation_prompt,
+    gender_tone_prompt = 'Maintain a balanced, professional coaching approach that blends confidence with empathy. Use inclusive language and focus on the individual athlete regardless of gender identity.', // Fallback for legacy coaches
   } = configData.generated_prompts;
 
   // Build STATIC prompt sections (cacheable) - coach config, guidelines, constraints
@@ -115,6 +116,9 @@ ${configData.selected_personality.selection_reasoning || "Selected personality a
 
 # COMMUNICATION STYLE & APPROACH
 ${communication_style}
+
+# GENDER TONE & COMMUNICATION STYLE
+${gender_tone_prompt}
 
 # LEARNING & ADAPTATION APPROACH
 ${learning_adaptation_prompt}`);
@@ -644,7 +648,7 @@ export const validateCoachConfig = (
       ? coachConfigInput.attributes
       : coachConfigInput;
 
-  // Check required prompt components
+  // Check required prompt components (excluding gender_tone_prompt for backwards compatibility)
   const requiredPrompts = [
     "personality_prompt",
     "safety_integrated_prompt",
@@ -652,6 +656,7 @@ export const validateCoachConfig = (
     "methodology_prompt",
     "communication_style",
     "learning_adaptation_prompt",
+    // Note: gender_tone_prompt is optional for backwards compatibility with legacy coaches
   ];
 
   requiredPrompts.forEach((prompt) => {

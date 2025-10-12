@@ -171,6 +171,7 @@ export interface CoachConfig {
   coach_id: string;
   coach_name: string;
   coach_description?: string;
+  gender_preference?: 'male' | 'female' | 'neutral'; // Optional for backwards compatibility
   selected_personality: {
     primary_template: string;
     secondary_influences?: string[];
@@ -218,6 +219,7 @@ export interface CoachConfig {
     methodology_prompt: string;
     communication_style: string;
     learning_adaptation_prompt: string;
+    gender_tone_prompt?: string; // Optional for backwards compatibility with legacy coaches
   };
   modification_capabilities: {
     enabled_modifications: string[];

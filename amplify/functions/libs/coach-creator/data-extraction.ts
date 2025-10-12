@@ -1,6 +1,103 @@
 import { SophisticationLevel } from "./types";
 import { Question } from "./types";
 
+// Extract gender preference from user response (Question 0)
+export const extractGenderPreference = (
+  responses: Record<string, string>
+): 'male' | 'female' | 'neutral' => {
+  const genderResponse = (responses['0'] || '').toLowerCase().trim();
+
+  // Male preference indicators
+  const maleIndicators = [
+    'male',
+    'man',
+    'guy',
+    'dude',
+    'bro',
+    'masculine',
+    'he',
+    'him',
+    'his',
+    'gentleman',
+    'gentlemen',
+    'sir',
+    'boy',
+  ];
+
+  // Female preference indicators
+  const femaleIndicators = [
+    'female',
+    'woman',
+    'lady',
+    'girl',
+    'gal',
+    'chick',
+    'feminine',
+    'she',
+    'her',
+    'miss',
+    "ma'am",
+    'maam',
+    'sis',
+    'sister',
+  ];
+
+  // Neutral/no preference indicators
+  const neutralIndicators = [
+    'no preference',
+    'neutral',
+    "doesn't matter",
+    "does not matter",
+    "don't care",
+    "do not care",
+    "dont care",
+    'either',
+    'either way',
+    'whatever',
+    'any',
+    'both',
+    "it doesn't matter",
+    "doesn't bother me",
+    "no pref",
+    'non-binary',
+    'nonbinary',
+    'non binary',
+    'they',
+    'them',
+    'their',
+    'agender',
+  ];
+
+  // Check for neutral indicators first (most explicit)
+  if (neutralIndicators.some(indicator => genderResponse.includes(indicator))) {
+    return 'neutral';
+  }
+
+  // Check for female indicators
+  // Must check before male to catch "female" before "male" substring match
+  const hasFemaleIndicator = femaleIndicators.some(indicator =>
+    genderResponse.includes(indicator)
+  );
+
+  // Check for male indicators
+  // Make sure it's not "female" being detected as "male"
+  const hasMaleIndicator = maleIndicators.some(indicator =>
+    genderResponse.includes(indicator)
+  ) && !genderResponse.includes('female'); // Exclude "female" containing "male"
+
+  // Return based on what was detected
+  if (hasFemaleIndicator && !hasMaleIndicator) {
+    return 'female';
+  }
+
+  if (hasMaleIndicator && !hasFemaleIndicator) {
+    return 'male';
+  }
+
+  // If both detected or neither detected, default to neutral
+  return 'neutral';
+};
+
 // Extract methodology preferences from user responses
 // Note: Explicit methodology question was removed in streamlined version
 // Now inferring from goals, movement focus, and competition goals

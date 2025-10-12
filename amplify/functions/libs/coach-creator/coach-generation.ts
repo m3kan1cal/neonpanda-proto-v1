@@ -1,7 +1,7 @@
 import { CoachCreatorSession, PersonalityCoherenceCheck, CoachPersonalityTemplate, MethodologyTemplate, SafetyRule, CoachModificationCapabilities, CoachConfig } from './types';
 import { callBedrockApi, storeDebugDataInS3 } from '../api-helpers';
 import { JSON_FORMATTING_INSTRUCTIONS_STANDARD } from '../prompt-helpers';
-import { extractSafetyProfile, extractMethodologyPreferences, extractTrainingFrequency, extractSpecializations, extractGoalTimeline, extractIntensityPreference } from './data-extraction';
+import { extractSafetyProfile, extractMethodologyPreferences, extractTrainingFrequency, extractSpecializations, extractGoalTimeline, extractIntensityPreference, extractGenderPreference } from './data-extraction';
 import { generateCoachCreatorSessionSummary } from './session-management';
 import { COACH_CREATOR_QUESTIONS } from './question-management';
 
@@ -537,6 +537,7 @@ export const generateCoachConfig = async (session: CoachCreatorSession): Promise
 
   const safetyProfile = extractSafetyProfile(session.userContext.responses);
   const methodologyPreferences = extractMethodologyPreferences(session.userContext.responses);
+  const genderPreference = extractGenderPreference(session.userContext.responses);
 
   const finalPrompt = `You are an expert coach creator generating a comprehensive AI coach configuration. Your goal is to create a highly personalized coach that perfectly matches this user's needs, goals, and constraints.
 
@@ -545,6 +546,23 @@ ${userProfile}
 
 USER SOPHISTICATION: ${session.userContext.sophisticationLevel}
 SESSION DURATION: ${session.questionHistory.length} questions completed
+
+COACH GENDER PREFERENCE: ${genderPreference}
+${genderPreference === 'male' ? 
+  `CRITICAL: Create a MALE coach persona. The coach should:
+  - Identify as male and use male pronouns (he/him)
+  - Embody masculine coaching characteristics: confident, direct, assertive, straight-talking
+  - Use masculine language patterns and energy in all communications
+  - Display typical male coach traits: competitiveness, challenge-driven, results-focused
+  - Think and communicate like a male fitness coach would` : 
+  genderPreference === 'female' ? 
+  `CRITICAL: Create a FEMALE coach persona. The coach should:
+  - Identify as female and use female pronouns (she/her)
+  - Embody feminine coaching characteristics: warm, empathetic, nurturing, supportive
+  - Use feminine language patterns and energy in all communications
+  - Display typical female coach traits: relationship-building, holistic approach, encouragement-focused
+  - Think and communicate like a female fitness coach would` : 
+  `NEUTRAL: Create a gender-neutral coach persona with balanced professional characteristics`}
 
 SAFETY PROFILE:
 ${JSON.stringify(safetyProfile, null, 2)}
@@ -613,6 +631,7 @@ Generate a JSON configuration following this EXACT structure:
   "coach_id": "user_${session.userId}_coach_${Date.now()}",
   "coach_name": "CreativePlayfulNameBasedOnPersonalityAndUserGoals",
   "coach_description": "5WordsOrLessDescribingCoachSpecialty",
+  "gender_preference": "${genderPreference}",
   "selected_personality": {
     "primary_template": "emma|marcus|diana|alex",
     "secondary_influences": ["template_id"],
@@ -655,7 +674,12 @@ Generate a JSON configuration following this EXACT structure:
     "motivation_prompt": "Design motivation approach based on user's stated preferences and learning style...",
     "methodology_prompt": "Programming approach integrating selected methodology with safety constraints...",
     "communication_style": "Response format and interaction style based on user's learning preferences...",
-    "learning_adaptation_prompt": "Teaching approach based on user's learning style and experience level..."
+    "learning_adaptation_prompt": "Teaching approach based on user's learning style and experience level...",
+    "gender_tone_prompt": "${genderPreference === 'male' ? 
+      'You are a MALE fitness coach. Identify as male, use he/him pronouns, and embody masculine coaching characteristics throughout all interactions. Adopt a confident, direct, assertive communication style with straight-talk language patterns. Display competitiveness, challenge-driven motivation, and results-focused energy. Think, speak, and coach like a male fitness professional - be bold, direct, and commanding in your approach while maintaining professionalism.' : 
+      genderPreference === 'female' ? 
+      'You are a FEMALE fitness coach. Identify as female, use she/her pronouns, and embody feminine coaching characteristics throughout all interactions. Adopt a warm, empathetic, nurturing communication style with supportive language patterns. Display relationship-building skills, holistic thinking, and encouragement-focused energy. Think, speak, and coach like a female fitness professional - be compassionate, detailed, and emotionally intelligent in your approach while maintaining high standards.' : 
+      'Maintain a gender-neutral coaching persona with balanced professional characteristics. Blend confidence with empathy in your communication style.'}"
   },
   "modification_capabilities": {
     "enabled_modifications": ${JSON.stringify(Object.keys(COACH_MODIFICATION_OPTIONS))},
@@ -680,10 +704,22 @@ COACH NAME GENERATION REQUIREMENTS:
 Generate a creative, playful coach name that:
 - Incorporates the selected personality template name (Emma, Marcus, Diana, or Alex)
 - Reflects the user's primary goals and training focus
+- ${genderPreference !== 'neutral' ? `MUST align with ${genderPreference} gender - select ${genderPreference === 'male' ? 'Marcus, Alex (masculine version), or create a masculine variant' : 'Emma, Diana, or create a feminine variant'}` : 'Uses gender-neutral naming patterns'}
 - Is fun and memorable but still professional
 - Examples: "Marcus_the_Form_Master", "Emma_Your_Confidence_Coach", "Diana_the_PR_Crusher", "Alex_Your_Balance_Buddy"
 - Keep it under 25 characters and use underscores or hyphens for readability
 - Make it unique and personalized to THIS user's specific goals and personality match
+
+CRITICAL GENDER REQUIREMENTS:
+${genderPreference === 'male' ? 
+  `- The coach MUST BE MALE - use masculine names, male pronouns, and male persona
+  - Personality prompt must establish coach as male and embody masculine coaching traits
+  - All generated prompts should reinforce male coach identity and characteristics` :
+  genderPreference === 'female' ?
+  `- The coach MUST BE FEMALE - use feminine names, female pronouns, and female persona
+  - Personality prompt must establish coach as female and embody feminine coaching traits
+  - All generated prompts should reinforce female coach identity and characteristics` :
+  `- The coach should be gender-neutral with balanced characteristics`}
 
 CRITICAL REQUIREMENTS:
 1. Analyze the user's complete profile and select the MOST APPROPRIATE personality and methodology

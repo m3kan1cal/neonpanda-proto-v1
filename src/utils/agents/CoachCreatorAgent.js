@@ -316,15 +316,15 @@ export class CoachCreatorAgent {
           result.sessionData.userContext.sophisticationLevel || "UNKNOWN";
 
         // Estimate total questions based on sophistication level
-        let estimatedTotal = 10; // Default (updated to match new 10-question flow)
+        let estimatedTotal = 11; // Default (updated to match new 11-question flow: 0-10)
         if (sophisticationLevel === "BEGINNER") {
-          estimatedTotal = 9; // Question 10 skipped for beginners
+          estimatedTotal = 10; // Question 10 skipped for beginners (questions 0-9)
         } else if (sophisticationLevel === "INTERMEDIATE") {
-          estimatedTotal = 10; // All questions including competition goals
+          estimatedTotal = 11; // All questions including competition goals (questions 0-10)
         } else if (sophisticationLevel === "ADVANCED") {
-          estimatedTotal = 10;
+          estimatedTotal = 11;
         } else if (sophisticationLevel === "UNKNOWN") {
-          estimatedTotal = Math.max(8, currentQuestion + 4); // Adjust estimate as we progress
+          estimatedTotal = Math.max(9, currentQuestion + 4); // Adjust estimate as we progress
         }
 
         updatedProgress.questionsCompleted = questionsCompleted;

@@ -39,7 +39,8 @@ export {
   extractTrainingFrequency,
   extractSpecializations,
   extractGoalTimeline,
-  extractIntensityPreference
+  extractIntensityPreference,
+  extractGenderPreference
 } from './data-extraction';
 
 // Pinecone integration
