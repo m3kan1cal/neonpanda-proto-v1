@@ -7,6 +7,7 @@ import { Tooltip } from 'react-tooltip';
 import CompactCoachCard from './shared/CompactCoachCard';
 import CommandPaletteButton from './shared/CommandPaletteButton';
 import CommandPalette from './shared/CommandPalette';
+import { InlineEditField } from './shared/InlineEditField';
 import {
   NeonBorder,
   NewBadge,
@@ -351,12 +352,6 @@ function Coaches() {
             {/* Right: Command button skeleton */}
             <div className="h-10 w-16 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
           </header>
-
-          {/* Description skeleton */}
-          <div className="text-center mb-16">
-            <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-96 mx-auto mb-4"></div>
-            <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-80 mx-auto"></div>
-          </div>
 
           {/* Coaches grid skeleton */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
@@ -727,21 +722,41 @@ function Coaches() {
             {agentState.coaches && agentState.coaches.map((coach) => (
               <div
                 key={coach.coach_id}
-                onClick={() => {
-                  const newSearchParams = new URLSearchParams();
-                  newSearchParams.set('userId', userId);
-                  newSearchParams.set('coachId', coach.coach_id);
-                  navigate(`/training-grounds?${newSearchParams.toString()}`);
-                }}
-                className={`${containerPatterns.cardMedium} p-6 flex flex-col justify-between h-full cursor-pointer`}
+                className={`${containerPatterns.cardMedium} p-6 flex flex-col justify-between h-full`}
               >
                 <div className="flex-1">
-                  {/* Coach Name */}
+                  {/* Coach Name with Inline Edit */}
                   <div className="flex items-start space-x-3 mb-4">
                     <div className="w-3 h-3 bg-synthwave-neon-cyan rounded-full flex-shrink-0 mt-2"></div>
-                    <h3 className="font-russo font-bold text-white text-xl uppercase">
-                      {agentRef.current?.formatCoachName(coach.coach_name)}
-                    </h3>
+                    <InlineEditField
+                      value={agentRef.current?.formatCoachName(coach.coach_name)}
+                      onSave={async (newName) => {
+                        if (!newName || !newName.trim()) {
+                          throw new Error('Coach name cannot be empty');
+                        }
+                        await agentRef.current?.updateCoachConfig(userId, coach.coach_id, {
+                          coach_name: newName.trim()
+                        });
+                        // Update local state directly instead of full refresh
+                        setAgentState(prevState => ({
+                          ...prevState,
+                          coaches: prevState.coaches.map(c =>
+                            c.coach_id === coach.coach_id
+                              ? { ...c, coach_name: newName.trim() }
+                              : c
+                          )
+                        }));
+                        toast.success('Coach name updated successfully');
+                      }}
+                      placeholder="Coach name..."
+                      maxLength={50}
+                      size="large"
+                      displayClassName="font-russo font-bold text-white text-xl uppercase"
+                      tooltipPrefix={`coach-${coach.coach_id}`}
+                      onError={(error) => {
+                        toast.error(error.message || 'Failed to update coach name');
+                      }}
+                    />
                   </div>
 
                   {/* Coach Details */}
@@ -796,14 +811,18 @@ function Coaches() {
 
                 {/* Action Button */}
                 <div className="mt-6">
-                  <div
+                  <button
+                    onClick={() => {
+                      const newSearchParams = new URLSearchParams();
+                      newSearchParams.set('userId', userId);
+                      newSearchParams.set('coachId', coach.coach_id);
+                      navigate(`/training-grounds?${newSearchParams.toString()}`);
+                    }}
                     className={`${buttonPatterns.secondaryMedium} w-full space-x-2`}
-                    tabIndex={0}
-                    role="button"
                   >
                     <HomeIcon />
                     <span>Enter Training Grounds</span>
-                  </div>
+                  </button>
                 </div>
               </div>
             ))}

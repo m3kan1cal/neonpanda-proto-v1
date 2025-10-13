@@ -15,6 +15,7 @@ import CommandPalette from './shared/CommandPalette';
 import CoachHeader from './shared/CoachHeader';
 import CompactCoachCard from './shared/CompactCoachCard';
 import CommandPaletteButton from './shared/CommandPaletteButton';
+import QuickStats from './shared/QuickStats';
 import {
   StackIcon,
   CalendarMonthIcon,
@@ -486,21 +487,14 @@ function ViewReports() {
             <div className="h-10 w-16 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
           </header>
 
-          {/* Compact Quick Stats skeleton */}
-          <div className="flex justify-center mb-8">
-            <div className="bg-synthwave-bg-card/60 border border-synthwave-neon-cyan/20 rounded-2xl shadow-xl shadow-synthwave-neon-cyan/20 p-6">
-              <div className="flex flex-wrap justify-center gap-4 md:gap-6">
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="flex items-center gap-2 min-w-[120px]">
-                    <div className="w-2 h-2 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
-                    <div className="min-w-0 flex-1">
-                      <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-8 mb-1"></div>
-                      <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-12"></div>
-                    </div>
-                  </div>
-                ))}
+          {/* Quick Stats skeleton */}
+          <div className="flex flex-wrap items-center gap-3 md:gap-4 mb-3 -mt-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="flex items-center gap-2">
+                <div className="w-7 h-7 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
+                <div className="h-6 w-8 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
               </div>
-            </div>
+            ))}
           </div>
 
           {/* Report cards skeleton */}
@@ -633,79 +627,73 @@ function ViewReports() {
             </div>
           </header>
 
-        {/* Quick Stats Bar */}
-        <div className="flex justify-center mb-8">
-          <div className="w-full max-w-2xl">
-            <div className="bg-synthwave-bg-card/60 border border-synthwave-neon-cyan/20 rounded-2xl shadow-xl shadow-synthwave-neon-cyan/20 p-4">
-              <div className="flex flex-wrap justify-center gap-4 md:gap-6">
-                {/* Total Reports - Pink */}
-                <div className="flex items-center gap-2 group cursor-pointer min-w-[120px]">
-                  <div className="p-2 bg-synthwave-neon-pink/10 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/20 hover:text-synthwave-neon-pink rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50">
-                    <StackIcon />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="text-lg font-russo font-bold text-white group-hover:scale-105 transition-transform duration-300">
-                      {reportAgentState.allReports.length || 0}
-                    </div>
-                    <div className="text-xs text-synthwave-text-muted font-rajdhani uppercase tracking-wide">Total</div>
-                  </div>
-                </div>
-
-                {/* This Month - Cyan */}
-                <div className="flex items-center gap-2 group cursor-pointer min-w-[120px]">
-                  <div className="p-2 bg-synthwave-neon-cyan/10 text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/20 hover:text-synthwave-neon-cyan rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50">
-                    <CalendarMonthIcon />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="text-lg font-russo font-bold text-white group-hover:scale-105 transition-transform duration-300">
-            {reportAgentState.allReports.filter((r) => {
-              const weekStart = new Date(r.weekStart);
-              const weekEnd = new Date(r.weekEnd);
-              const now = new Date();
-              const currentMonth = now.getMonth();
-              const currentYear = now.getFullYear();
-
-              // Check if the report spans into the current month
-              // Either starts in current month OR ends in current month
-              const startsInCurrentMonth = weekStart.getMonth() === currentMonth && weekStart.getFullYear() === currentYear;
-              const endsInCurrentMonth = weekEnd.getMonth() === currentMonth && weekEnd.getFullYear() === currentYear;
-
-              return startsInCurrentMonth || endsInCurrentMonth;
-            }).length || 0}
-                    </div>
-                    <div className="text-xs text-synthwave-text-muted font-rajdhani uppercase tracking-wide">This Month</div>
-                  </div>
-                </div>
-
-                {/* This Week - Purple */}
-                <div className="flex items-center gap-2 group cursor-pointer min-w-[120px]">
-                  <div className="p-2 bg-synthwave-neon-purple/10 text-synthwave-neon-purple hover:bg-synthwave-neon-purple/20 hover:text-synthwave-neon-purple rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-purple/50">
-                    <ClockIcon />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="text-lg font-russo font-bold text-white group-hover:scale-105 transition-transform duration-300">
-                      {reportAgentState.allReports.filter((r) => isCurrentWeekReport(r.weekId)).length || 0}
-                    </div>
-                    <div className="text-xs text-synthwave-text-muted font-rajdhani uppercase tracking-wide">This Week</div>
-                  </div>
-                </div>
-
-                {/* High Confidence - Pink */}
-                <div className="flex items-center gap-2 group cursor-pointer min-w-[120px]">
-                  <div className="p-2 bg-synthwave-neon-pink/10 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/20 hover:text-synthwave-neon-pink rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50">
-                    <TargetIcon />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="text-lg font-russo font-bold text-white group-hover:scale-105 transition-transform duration-300">
-                      {reportAgentState.allReports.filter((r) => r.metadata?.analysisConfidence === 'high').length || 0}
-                    </div>
-                    <div className="text-xs text-synthwave-text-muted font-rajdhani uppercase tracking-wide">High %</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+          {/* Quick Stats */}
+          <QuickStats
+            stats={[
+              {
+                icon: StackIcon,
+                value: reportAgentState.allReports.length || 0,
+                tooltip: {
+                  title: 'Total Reports',
+                  description: 'All weekly analytics reports generated from your training data'
+                },
+                color: 'pink',
+                isLoading: reportAgentState.isLoading,
+                ariaLabel: `${reportAgentState.allReports.length || 0} total reports`
+              },
+              {
+                icon: CalendarMonthIcon,
+                value: reportAgentState.allReports.filter((r) => {
+                  const weekStart = new Date(r.weekStart);
+                  const weekEnd = new Date(r.weekEnd);
+                  const now = new Date();
+                  const currentMonth = now.getMonth();
+                  const currentYear = now.getFullYear();
+                  const startsInCurrentMonth = weekStart.getMonth() === currentMonth && weekStart.getFullYear() === currentYear;
+                  const endsInCurrentMonth = weekEnd.getMonth() === currentMonth && weekEnd.getFullYear() === currentYear;
+                  return startsInCurrentMonth || endsInCurrentMonth;
+                }).length || 0,
+                tooltip: {
+                  title: 'This Month',
+                  description: 'Reports generated during the current calendar month'
+                },
+                color: 'cyan',
+                isLoading: reportAgentState.isLoading,
+                ariaLabel: `${reportAgentState.allReports.filter((r) => {
+                  const weekStart = new Date(r.weekStart);
+                  const weekEnd = new Date(r.weekEnd);
+                  const now = new Date();
+                  const currentMonth = now.getMonth();
+                  const currentYear = now.getFullYear();
+                  const startsInCurrentMonth = weekStart.getMonth() === currentMonth && weekStart.getFullYear() === currentYear;
+                  const endsInCurrentMonth = weekEnd.getMonth() === currentMonth && weekEnd.getFullYear() === currentYear;
+                  return startsInCurrentMonth || endsInCurrentMonth;
+                }).length || 0} reports this month`
+              },
+              {
+                icon: ClockIcon,
+                value: reportAgentState.allReports.filter((r) => isCurrentWeekReport(r.weekId)).length || 0,
+                tooltip: {
+                  title: 'This Week',
+                  description: "Reports for the current training week (Monday-Sunday)"
+                },
+                color: 'purple',
+                isLoading: reportAgentState.isLoading,
+                ariaLabel: `${reportAgentState.allReports.filter((r) => isCurrentWeekReport(r.weekId)).length || 0} reports this week`
+              },
+              {
+                icon: TargetIcon,
+                value: reportAgentState.allReports.filter((r) => r.metadata?.analysisConfidence === 'high').length || 0,
+                tooltip: {
+                  title: 'High Confidence',
+                  description: 'Reports with high-confidence AI analysis based on comprehensive training data'
+                },
+                color: 'pink',
+                isLoading: reportAgentState.isLoading,
+                ariaLabel: `${reportAgentState.allReports.filter((r) => r.metadata?.analysisConfidence === 'high').length || 0} high confidence reports`
+              }
+            ]}
+          />
 
         {/* Error state */}
         {reportAgentState.error && (

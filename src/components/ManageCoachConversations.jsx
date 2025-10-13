@@ -14,6 +14,7 @@ import { getCoachConversations } from "../utils/apis/coachConversationApi";
 import CoachHeader from "./shared/CoachHeader";
 import CompactCoachCard from './shared/CompactCoachCard';
 import CommandPaletteButton from './shared/CommandPaletteButton';
+import QuickStats from './shared/QuickStats';
 import { isRecentConversation } from "../utils/dateUtils";
 import { NeonBorder, NewBadge } from "./themes/SynthwaveComponents";
 import { useToast } from "../contexts/ToastContext";
@@ -29,6 +30,8 @@ import {
   WorkoutIcon,
   ReportIcon,
   LightningIcon,
+  MessagesIcon,
+  CalendarMonthIcon,
 } from "./themes/SynthwaveComponents";
 
 // Icons
@@ -647,24 +650,17 @@ function ManageCoachConversations() {
             <div className="h-10 w-16 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
           </header>
 
-          {/* Compact Quick Stats skeleton */}
-          <div className="flex justify-center mb-8">
-            <div className="bg-synthwave-bg-card/60 border border-synthwave-neon-cyan/20 rounded-2xl shadow-xl shadow-synthwave-neon-cyan/20 p-6">
-              <div className="flex flex-wrap justify-center gap-4 md:gap-6">
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="flex items-center gap-2 min-w-[120px]">
-                    <div className="p-2 bg-synthwave-text-muted/20 rounded-lg">
-                      <div className="w-4 h-4 bg-synthwave-text-muted/30 rounded"></div>
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-8 mb-1"></div>
-                      <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-12"></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+          {/* Quick Stats skeleton */}
+          <QuickStats
+            stats={[1, 2, 3, 4].map((i) => ({
+              icon: null,
+              value: 0,
+              tooltip: { title: '', description: '' },
+              color: 'cyan',
+              isLoading: true,
+              id: `skeleton-stat-${i}`
+            }))}
+          />
 
           {/* Conversation cards skeleton */}
           <div className="space-y-4">
@@ -757,93 +753,80 @@ function ManageCoachConversations() {
             </div>
           </header>
 
-          {/* Quick Stats Bar */}
-          <div className="flex justify-center mb-8">
-            <div className="w-full max-w-2xl">
-              <div className="bg-synthwave-bg-card/60 border border-synthwave-neon-cyan/20 rounded-2xl shadow-xl shadow-synthwave-neon-cyan/20 p-4">
-                <div className="flex flex-wrap justify-center gap-4 md:gap-6">
-                  {/* Total Conversations - PINK */}
-                  <div className="flex items-center gap-2 group cursor-pointer min-w-[120px]">
-                    <div className="p-2 bg-synthwave-neon-pink/10 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/20 hover:text-synthwave-neon-pink rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50">
-                      <ConversationIcon />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="text-lg font-russo font-bold text-white group-hover:scale-105 transition-transform duration-300">
-                        {conversationAgentState.totalCount || 0}
-                      </div>
-                      <div className="text-xs text-synthwave-text-muted font-rajdhani uppercase tracking-wide">
-                        Total
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Active Conversations - CYAN */}
-                  <div className="flex items-center gap-2 group cursor-pointer min-w-[120px]">
-                    <div className="p-2 bg-synthwave-neon-cyan/10 text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/20 hover:text-synthwave-neon-cyan rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50">
-                      <ConversationIcon />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="text-lg font-russo font-bold text-white group-hover:scale-105 transition-transform duration-300">
-                        {conversationAgentState.allConversations.filter(
-                          (c) => c.metadata?.isActive !== false
-                        ).length || 0}
-                      </div>
-                      <div className="text-xs text-synthwave-text-muted font-rajdhani uppercase tracking-wide">
-                        Active
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Total Messages - PURPLE */}
-                  <div className="flex items-center gap-2 group cursor-pointer min-w-[120px]">
-                    <div className="p-2 bg-synthwave-neon-purple/10 text-synthwave-neon-purple hover:bg-synthwave-neon-purple/20 hover:text-synthwave-neon-purple rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-purple/50">
-                      <WorkoutIcon />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="text-lg font-russo font-bold text-white group-hover:scale-105 transition-transform duration-300">
-                        {conversationAgentState.allConversations.reduce(
-                          (total, conv) =>
-                            total + (conv.metadata?.totalMessages || 0),
-                          0
-                        )}
-                      </div>
-                      <div className="text-xs text-synthwave-text-muted font-rajdhani uppercase tracking-wide">
-                        Messages
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* This Week - PINK */}
-                  <div className="flex items-center gap-2 group cursor-pointer min-w-[120px]">
-                    <div className="p-2 bg-synthwave-neon-pink/10 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/20 hover:text-synthwave-neon-pink rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50">
-                      <LightningIcon />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="text-lg font-russo font-bold text-white group-hover:scale-105 transition-transform duration-300">
-                        {(() => {
-                          const oneWeekAgo = new Date();
-                          oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-                          return conversationAgentState.allConversations.filter(
-                            (conv) => {
-                              const lastActivity = new Date(
-                                conv.metadata?.lastActivity ||
-                                  conv.createdAt ||
-                                  0
-                              );
-                              return lastActivity >= oneWeekAgo;
-                            }
-                          ).length;
-                        })()}
-                      </div>
-                      <div className="text-xs text-synthwave-text-muted font-rajdhani uppercase tracking-wide">
-                        This Week
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          {/* Quick Stats */}
+          <QuickStats
+            stats={[
+              {
+                icon: ConversationIcon,
+                value: conversationAgentState.totalCount || 0,
+                tooltip: {
+                  title: `${conversationAgentState.totalCount || 0} Total`,
+                  description: "Total conversations with this coach"
+                },
+                color: "pink",
+                isLoading: conversationAgentState.isLoadingAllItems,
+                ariaLabel: `${conversationAgentState.totalCount || 0} total conversations`,
+                id: "manage-convos-stat-total"
+              },
+              {
+                icon: LightningIcon,
+                value: conversationAgentState.allConversations.filter(c => c.metadata?.isActive !== false).length || 0,
+                tooltip: {
+                  title: `${conversationAgentState.allConversations.filter(c => c.metadata?.isActive !== false).length || 0} Active`,
+                  description: "Active conversations (not archived)"
+                },
+                color: "cyan",
+                isLoading: conversationAgentState.isLoadingAllItems,
+                ariaLabel: `${conversationAgentState.allConversations.filter(c => c.metadata?.isActive !== false).length || 0} active conversations`,
+                id: "manage-convos-stat-active"
+              },
+              {
+                icon: MessagesIcon,
+                value: conversationAgentState.allConversations.reduce((total, conv) => total + (conv.metadata?.totalMessages || 0), 0),
+                tooltip: {
+                  title: `${conversationAgentState.allConversations.reduce((total, conv) => total + (conv.metadata?.totalMessages || 0), 0)} Messages`,
+                  description: "Total messages across all conversations"
+                },
+                color: "purple",
+                isLoading: conversationAgentState.isLoadingAllItems,
+                ariaLabel: `${conversationAgentState.allConversations.reduce((total, conv) => total + (conv.metadata?.totalMessages || 0), 0)} total messages`,
+                id: "manage-convos-stat-messages"
+              },
+              {
+                icon: CalendarMonthIcon,
+                value: (() => {
+                  const oneWeekAgo = new Date();
+                  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+                  return conversationAgentState.allConversations.filter(conv => {
+                    const lastActivity = new Date(conv.metadata?.lastActivity || conv.createdAt || 0);
+                    return lastActivity >= oneWeekAgo;
+                  }).length;
+                })(),
+                tooltip: {
+                  title: `${(() => {
+                    const oneWeekAgo = new Date();
+                    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+                    return conversationAgentState.allConversations.filter(conv => {
+                      const lastActivity = new Date(conv.metadata?.lastActivity || conv.createdAt || 0);
+                      return lastActivity >= oneWeekAgo;
+                    }).length;
+                  })()} This Week`,
+                  description: "Conversations active this week"
+                },
+                color: "pink",
+                isLoading: conversationAgentState.isLoadingAllItems,
+                ariaLabel: `${(() => {
+                  const oneWeekAgo = new Date();
+                  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+                  return conversationAgentState.allConversations.filter(conv => {
+                    const lastActivity = new Date(conv.metadata?.lastActivity || conv.createdAt || 0);
+                    return lastActivity >= oneWeekAgo;
+                  }).length;
+                })()} conversations this week`,
+                id: "manage-convos-stat-this-week"
+              }
+            ]}
+          />
 
           {/* Conversation List */}
           <div className="mb-8">{renderConversationList()}</div>
