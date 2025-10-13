@@ -137,7 +137,7 @@ export const inputPatterns = {
 export const inlineEditPatterns = {
   // Container patterns
   displayContainer: "flex items-center space-x-2 group",
-  editContainer: "flex items-center space-x-2",
+  editContainer: "flex items-center space-x-2 w-full",
 
   // Edit button patterns (show on hover in display mode)
   editButton: {
@@ -176,9 +176,9 @@ export const inlineEditPatterns = {
 
   // Input field sizes (uses inputPatterns.inlineEdit as base)
   inputSize: {
-    small: "text-base px-2 py-1 min-w-48",
-    medium: "text-lg px-3 py-1.5 min-w-64",
-    large: "text-xl px-4 py-2 min-w-96"
+    small: "text-base px-2 py-1 min-w-48 max-w-full",
+    medium: "text-lg px-3 py-1.5 min-w-64 max-w-full",
+    large: "text-xl px-4 py-2 flex-1 max-w-full"
   },
 
   // Display text sizes
@@ -463,6 +463,39 @@ export const commandPalettePatterns = {
 
   // Keyboard shortcut badge
   triggerButtonKbd: "px-2 py-1 bg-synthwave-bg-primary/50 border border-synthwave-neon-cyan/10 rounded text-xs font-mono text-synthwave-text-muted font-medium"
+};
+
+// Quick Stats Patterns - Compact metrics display with icon + number
+// Linear/Figma-inspired pattern for displaying key statistics
+// Icon-only format with rich tooltips for context
+export const quickStatsPatterns = {
+  // Outer container - wraps and positions stats below header
+  // Negative margin pulls stats closer to header for tighter spacing
+  container: "flex flex-wrap items-center gap-3 md:gap-4 mb-3 -mt-4",
+
+  // Individual stat item - icon + number grouping
+  item: "flex items-center gap-2 group cursor-help",
+
+  // Icon containers with color variants (matches existing neon colors)
+  iconContainer: {
+    pink: "p-1.5 bg-synthwave-neon-pink/10 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/20 rounded-lg transition-all duration-200",
+    cyan: "p-1.5 bg-synthwave-neon-cyan/10 text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/20 rounded-lg transition-all duration-200",
+    purple: "p-1.5 bg-synthwave-neon-purple/10 text-synthwave-neon-purple hover:bg-synthwave-neon-purple/20 rounded-lg transition-all duration-200"
+  },
+
+  // Icon size (16x16px - balanced size for visibility and hierarchy)
+  icon: "w-4 h-4",
+
+  // Value display - large number
+  value: "text-xl font-russo font-bold text-white group-hover:scale-105 transition-transform duration-200",
+
+  // Skeleton loading states (matches optimized sizing: 16px icons, 6px padding, -16px margin)
+  skeleton: {
+    container: "flex flex-wrap items-center gap-3 md:gap-4 mb-3 -mt-4",
+    item: "flex items-center gap-2",
+    icon: "w-7 h-7 bg-synthwave-text-muted/20 rounded-lg animate-pulse", // 28px total (16px icon + 6px padding on each side)
+    value: "h-6 w-8 bg-synthwave-text-muted/20 rounded animate-pulse"
+  }
 };
 
 export const typographyPatterns = {

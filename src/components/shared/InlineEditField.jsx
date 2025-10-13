@@ -187,7 +187,7 @@ export function InlineEditField({
 
   // Edit mode
   return (
-    <div className="flex flex-col space-y-1">
+    <div className="flex flex-col space-y-1 w-full">
       <div className={inlineEditPatterns.editContainer}>
         <input
           type="text"

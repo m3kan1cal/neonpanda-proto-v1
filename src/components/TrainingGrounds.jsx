@@ -28,6 +28,7 @@ import CoachHeader from './shared/CoachHeader';
 import CompactCoachCard from './shared/CompactCoachCard';
 import CommandPaletteButton from './shared/CommandPaletteButton';
 import CommandPalette from './shared/CommandPalette';
+import QuickStats from './shared/QuickStats';
 import { FloatingMenuManager } from './shared/FloatingMenuManager';
 import CoachAgent from '../utils/agents/CoachAgent';
 import CoachConversationAgent from '../utils/agents/CoachConversationAgent';
@@ -416,24 +417,17 @@ function TrainingGrounds() {
             <div className="h-10 w-16 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
           </header>
 
-          {/* Compact Quick Stats skeleton */}
-          <div className="flex justify-center mb-8">
-            <div className="bg-synthwave-bg-card/60 border border-synthwave-neon-cyan/20 rounded-2xl shadow-xl shadow-synthwave-neon-cyan/20 p-6">
-                <div className="flex flex-wrap justify-center gap-4 md:gap-6">
-                  {[1, 2, 3, 4, 5, 6, 7].map((i) => (
-                    <div key={i} className="flex items-center gap-2 min-w-[120px]">
-                      <div className="p-2 bg-synthwave-text-muted/20 rounded-lg">
-                        <div className="w-4 h-4 bg-synthwave-text-muted/30 rounded"></div>
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-8 mb-1"></div>
-                        <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-12"></div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-            </div>
-          </div>
+          {/* Quick Stats skeleton */}
+          <QuickStats
+            stats={[1, 2, 3, 4, 5, 6, 7].map((i) => ({
+              icon: null,
+              value: 0,
+              tooltip: { title: '', description: '' },
+              color: 'cyan',
+              isLoading: true,
+              id: `skeleton-stat-${i}`
+            }))}
+          />
 
           {/* Main sections skeleton */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -518,147 +512,95 @@ function TrainingGrounds() {
           </div>
         </header>
 
-
-        {/* Compact Quick Stats */}
-        <div className="flex justify-center mb-8">
-          <div className="bg-synthwave-bg-card/60 border border-synthwave-neon-cyan/20 rounded-2xl shadow-xl shadow-synthwave-neon-cyan/20 p-4">
-            <div className="flex flex-wrap justify-center gap-4 md:gap-6">
-                {/* Total Conversations */}
-                <div className="flex items-center gap-2 group cursor-pointer min-w-[120px]">
-                  <div className="p-2 bg-synthwave-neon-pink/10 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/20 hover:text-synthwave-neon-pink rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 flex items-center justify-center">
-                    <ConversationIcon />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    {conversationAgentState.isLoadingConversationCount ? (
-                      <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-8 mb-1"></div>
-                    ) : (
-                      <div className="text-lg font-russo font-bold text-white group-hover:scale-105 transition-transform duration-300">
-                        {conversationAgentState.conversationCount || 0}
-                      </div>
-                    )}
-                    <div className="text-xs text-synthwave-text-muted font-rajdhani uppercase tracking-wide">
-                      Chats
-                    </div>
-                  </div>
-                </div>
-
-                {/* Total Messages */}
-                <div className="flex items-center gap-2 group cursor-pointer min-w-[120px]">
-                  <div className="p-2 bg-synthwave-neon-cyan/10 text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/20 hover:text-synthwave-neon-cyan rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 flex items-center justify-center">
-                    <MessagesIcon />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    {conversationAgentState.isLoadingConversationCount ? (
-                      <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-8 mb-1"></div>
-                    ) : (
-                      <div className="text-lg font-russo font-bold text-white group-hover:scale-105 transition-transform duration-300">
-                        {conversationAgentState.totalMessages || 0}
-                      </div>
-                    )}
-                    <div className="text-xs text-synthwave-text-muted font-rajdhani uppercase tracking-wide">
-                      Messages
-                    </div>
-                  </div>
-                </div>
-
-                {/* Total Workouts */}
-                <div className="flex items-center gap-2 group cursor-pointer min-w-[120px]">
-                  <div className="p-2 bg-synthwave-neon-purple/10 text-synthwave-neon-purple hover:bg-synthwave-neon-purple/20 hover:text-synthwave-neon-purple rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-purple/50 flex items-center justify-center">
-                    <WorkoutIcon />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    {workoutState.isLoadingCount ? (
-                      <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-8 mb-1"></div>
-                    ) : (
-                      <div className="text-lg font-russo font-bold text-white group-hover:scale-105 transition-transform duration-300">
-                        {workoutState.totalWorkoutCount || 0}
-                      </div>
-                    )}
-                    <div className="text-xs text-synthwave-text-muted font-rajdhani uppercase tracking-wide">
-                      Workouts
-                    </div>
-                  </div>
-                </div>
-
-                {/* This Week's Workouts */}
-                <div className="flex items-center gap-2 group cursor-pointer min-w-[120px]">
-                  <div className="p-2 bg-synthwave-neon-pink/10 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/20 hover:text-synthwave-neon-pink rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 flex items-center justify-center">
-                    <WorkoutIcon />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    {workoutState.isLoadingCount ? (
-                      <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-8 mb-1"></div>
-                    ) : (
-                      <div className="text-lg font-russo font-bold text-white group-hover:scale-105 transition-transform duration-300">
-                        {workoutState.thisWeekWorkoutCount || 0}
-                      </div>
-                    )}
-                    <div className="text-xs text-synthwave-text-muted font-rajdhani uppercase tracking-wide">
-                      This Week
-                    </div>
-                  </div>
-                </div>
-
-
-                {/* Active Programs */}
-                <div className="flex items-center gap-2 group cursor-pointer min-w-[120px]">
-                  <div className="p-2 bg-synthwave-neon-purple/10 text-synthwave-neon-purple hover:bg-synthwave-neon-purple/20 hover:text-synthwave-neon-purple rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-purple/50 flex items-center justify-center">
-                    <ProgramIcon />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    {isLoadingCoachData ? (
-                      <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-8 mb-1"></div>
-                    ) : (
-                      <div className="text-lg font-russo font-bold text-white group-hover:scale-105 transition-transform duration-300">
-                        {coachData?.activePrograms || 0}
-                      </div>
-                    )}
-                    <div className="text-xs text-synthwave-text-muted font-rajdhani uppercase tracking-wide">
-                      Programs
-                    </div>
-                  </div>
-                </div>
-
-                {/* Day Streak */}
-                <div className="flex items-center gap-2 group cursor-pointer min-w-[120px]">
-                  <div className="p-2 bg-synthwave-neon-pink/10 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/20 hover:text-synthwave-neon-pink rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 flex items-center justify-center">
-                    <LightningIcon />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    {workoutState.isLoadingTrainingDays ? (
-                      <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-8 mb-1"></div>
-                    ) : (
-                      <div className="text-lg font-russo font-bold text-white group-hover:scale-105 transition-transform duration-300">
-                        {workoutState.trainingDaysCount || 0}
-                      </div>
-                    )}
-                    <div className="text-xs text-synthwave-text-muted font-rajdhani uppercase tracking-wide">
-                      Days
-                    </div>
-                  </div>
-                </div>
-
-                {/* Total Reports */}
-                <div className="flex items-center gap-2 group cursor-pointer min-w-[120px]">
-                  <div className="p-2 bg-synthwave-neon-cyan/10 text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/20 hover:text-synthwave-neon-cyan rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 flex items-center justify-center">
-                    <ReportIcon />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    {reportsState.isLoadingRecentItems ? (
-                      <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-8 mb-1"></div>
-                    ) : (
-                      <div className="text-lg font-russo font-bold text-white group-hover:scale-105 transition-transform duration-300">
-                        {reportsState.recentReports.length || 0}
-                      </div>
-                    )}
-                    <div className="text-xs text-synthwave-text-muted font-rajdhani uppercase tracking-wide">
-                      Reports
-                    </div>
-                  </div>
-                </div>
-            </div>
-          </div>
-        </div>
+        {/* Quick Stats */}
+        <QuickStats
+          stats={[
+            {
+              icon: ConversationIcon,
+              value: conversationAgentState.conversationCount || 0,
+              tooltip: {
+                title: `${conversationAgentState.conversationCount || 0} Chats`,
+                description: "Total coach conversations you've started"
+              },
+              color: "pink",
+              isLoading: conversationAgentState.isLoadingConversationCount,
+              ariaLabel: `${conversationAgentState.conversationCount || 0} total chats`,
+              id: "training-stat-chats"
+            },
+            {
+              icon: MessagesIcon,
+              value: conversationAgentState.totalMessages || 0,
+              tooltip: {
+                title: `${conversationAgentState.totalMessages || 0} Messages`,
+                description: "Total messages exchanged with your coaches"
+              },
+              color: "cyan",
+              isLoading: conversationAgentState.isLoadingConversationCount,
+              ariaLabel: `${conversationAgentState.totalMessages || 0} total messages`,
+              id: "training-stat-messages"
+            },
+            {
+              icon: WorkoutIcon,
+              value: workoutState.totalWorkoutCount || 0,
+              tooltip: {
+                title: `${workoutState.totalWorkoutCount || 0} Workouts`,
+                description: "Total workouts logged with this coach"
+              },
+              color: "purple",
+              isLoading: workoutState.isLoadingCount,
+              ariaLabel: `${workoutState.totalWorkoutCount || 0} total workouts`,
+              id: "training-stat-workouts"
+            },
+            {
+              icon: WorkoutIcon,
+              value: workoutState.thisWeekWorkoutCount || 0,
+              tooltip: {
+                title: `${workoutState.thisWeekWorkoutCount || 0} This Week`,
+                description: "Workouts completed this week (Sunday-Saturday)"
+              },
+              color: "pink",
+              isLoading: workoutState.isLoadingCount,
+              ariaLabel: `${workoutState.thisWeekWorkoutCount || 0} workouts this week`,
+              id: "training-stat-this-week"
+            },
+            {
+              icon: ProgramIcon,
+              value: coachData?.activePrograms || 0,
+              tooltip: {
+                title: `${coachData?.activePrograms || 0} Programs`,
+                description: "Active training programs you're currently following"
+              },
+              color: "cyan",
+              isLoading: isLoadingCoachData,
+              ariaLabel: `${coachData?.activePrograms || 0} active programs`,
+              id: "training-stat-programs"
+            },
+            {
+              icon: LightningIcon,
+              value: workoutState.trainingDaysCount || 0,
+              tooltip: {
+                title: `${workoutState.trainingDaysCount || 0} Days`,
+                description: "Your current training streak"
+              },
+              color: "purple",
+              isLoading: workoutState.isLoadingTrainingDays,
+              ariaLabel: `${workoutState.trainingDaysCount || 0} training days`,
+              id: "training-stat-days"
+            },
+            {
+              icon: ReportIcon,
+              value: reportsState.recentReports.length || 0,
+              tooltip: {
+                title: `${reportsState.recentReports.length || 0} Reports`,
+                description: "Weekly performance reports generated"
+              },
+              color: "pink",
+              isLoading: reportsState.isLoadingRecentItems,
+              ariaLabel: `${reportsState.recentReports.length || 0} reports`,
+              id: "training-stat-reports"
+            }
+          ]}
+        />
 
         {/* Main Sections Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

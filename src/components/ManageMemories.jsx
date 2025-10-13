@@ -12,6 +12,7 @@ import { themeClasses } from "../utils/synthwaveThemeClasses";
 import CoachHeader from "./shared/CoachHeader";
 import CompactCoachCard from "./shared/CompactCoachCard";
 import CommandPaletteButton from "./shared/CommandPaletteButton";
+import QuickStats from "./shared/QuickStats";
 import { isNewWorkout } from "../utils/dateUtils";
 import { NeonBorder, NewBadge } from "./themes/SynthwaveComponents";
 import { AccessDenied, LoadingScreen } from "./shared/AccessDenied";
@@ -577,21 +578,14 @@ function ManageMemories() {
             <div className="h-10 w-16 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
           </header>
 
-          {/* Compact Quick Stats skeleton */}
-          <div className="flex justify-center mb-8">
-            <div className="bg-synthwave-bg-card/60 border border-synthwave-neon-cyan/20 rounded-2xl shadow-xl shadow-synthwave-neon-cyan/20 p-6">
-              <div className="flex flex-wrap justify-center gap-4 md:gap-6">
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="flex items-center gap-2 min-w-[120px]">
-                    <div className="w-2 h-2 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
-                    <div className="min-w-0 flex-1">
-                      <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-8 mb-1"></div>
-                      <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-12"></div>
-                    </div>
-                  </div>
-                ))}
+          {/* Quick Stats skeleton */}
+          <div className="flex flex-wrap items-center gap-3 md:gap-4 mb-3 -mt-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="flex items-center gap-2">
+                <div className="w-7 h-7 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
+                <div className="h-6 w-8 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
               </div>
-            </div>
+            ))}
           </div>
 
           {/* Memory cards skeleton */}
@@ -702,79 +696,55 @@ function ManageMemories() {
             </div>
           </header>
 
-          {/* Quick Stats Bar */}
-          <div className="flex justify-center mb-8">
-            <div className="w-full max-w-2xl">
-              <div className="bg-synthwave-bg-card/60 border border-synthwave-neon-cyan/20 rounded-2xl shadow-xl shadow-synthwave-neon-cyan/20 p-4">
-                <div className="flex flex-wrap justify-center gap-4 md:gap-6">
-                  {/* Total Memories - PINK */}
-                  <div className="flex items-center gap-2 group cursor-pointer min-w-[120px]">
-                    <div className="p-2 bg-synthwave-neon-pink/10 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/20 hover:text-synthwave-neon-pink rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50">
-                      <LightbulbIcon />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="text-lg font-russo font-bold text-white group-hover:scale-105 transition-transform duration-300">
-                        {memoryAgentState.totalCount || 0}
-                      </div>
-                      <div className="text-xs text-synthwave-text-muted font-rajdhani uppercase tracking-wide">
-                        Total
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* High Priority - CYAN */}
-                  <div className="flex items-center gap-2 group cursor-pointer min-w-[120px]">
-                    <div className="p-2 bg-synthwave-neon-cyan/10 text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/20 hover:text-synthwave-neon-cyan rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50">
-                      <LightningIcon />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="text-lg font-russo font-bold text-white group-hover:scale-105 transition-transform duration-300">
-                        {memoryAgentState.allMemories.filter(
-                          (m) => m.metadata?.importance === "high"
-                        ).length || 0}
-                      </div>
-                      <div className="text-xs text-synthwave-text-muted font-rajdhani uppercase tracking-wide">
-                        High
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Medium Priority - PURPLE */}
-                  <div className="flex items-center gap-2 group cursor-pointer min-w-[120px]">
-                    <div className="p-2 bg-synthwave-neon-purple/10 text-synthwave-neon-purple hover:bg-synthwave-neon-purple/20 hover:text-synthwave-neon-purple rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-purple/50">
-                      <ReportIcon />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="text-lg font-russo font-bold text-white group-hover:scale-105 transition-transform duration-300">
-                        {memoryAgentState.allMemories.filter(
-                          (m) => m.metadata?.importance === "medium"
-                        ).length || 0}
-                      </div>
-                      <div className="text-xs text-synthwave-text-muted font-rajdhani uppercase tracking-wide">
-                        Medium
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Global Memories - PINK */}
-                  <div className="flex items-center gap-2 group cursor-pointer min-w-[120px]">
-                    <div className="p-2 bg-synthwave-neon-pink/10 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/20 hover:text-synthwave-neon-pink rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50">
-                      <GlobeIcon />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="text-lg font-russo font-bold text-white group-hover:scale-105 transition-transform duration-300">
-                        {memoryAgentState.allMemories.filter((m) => !m.coachId)
-                          .length || 0}
-                      </div>
-                      <div className="text-xs text-synthwave-text-muted font-rajdhani uppercase tracking-wide">
-                        Global
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          {/* Quick Stats */}
+          <QuickStats
+            stats={[
+              {
+                icon: LightbulbIcon,
+                value: memoryAgentState.totalCount || 0,
+                tooltip: {
+                  title: 'Total Memories',
+                  description: 'All stored memories and preferences tracked by your coaches'
+                },
+                color: 'pink',
+                isLoading: memoryAgentState.isLoading,
+                ariaLabel: `${memoryAgentState.totalCount || 0} total memories`
+              },
+              {
+                icon: LightningIcon,
+                value: memoryAgentState.allMemories.filter((m) => m.metadata?.importance === "high").length || 0,
+                tooltip: {
+                  title: 'High Priority',
+                  description: 'Critical memories that are frequently referenced by your coaches'
+                },
+                color: 'cyan',
+                isLoading: memoryAgentState.isLoading,
+                ariaLabel: `${memoryAgentState.allMemories.filter((m) => m.metadata?.importance === "high").length || 0} high priority memories`
+              },
+              {
+                icon: ReportIcon,
+                value: memoryAgentState.allMemories.filter((m) => m.metadata?.importance === "medium").length || 0,
+                tooltip: {
+                  title: 'Medium Priority',
+                  description: 'Important memories that provide context for your coaching sessions'
+                },
+                color: 'purple',
+                isLoading: memoryAgentState.isLoading,
+                ariaLabel: `${memoryAgentState.allMemories.filter((m) => m.metadata?.importance === "medium").length || 0} medium priority memories`
+              },
+              {
+                icon: GlobeIcon,
+                value: memoryAgentState.allMemories.filter((m) => !m.coachId).length || 0,
+                tooltip: {
+                  title: 'Global Memories',
+                  description: 'Memories shared across all your coaches and training sessions'
+                },
+                color: 'pink',
+                isLoading: memoryAgentState.isLoading,
+                ariaLabel: `${memoryAgentState.allMemories.filter((m) => !m.coachId).length || 0} global memories`
+              }
+            ]}
+          />
 
           {/* Error state */}
           {memoryAgentState.error && (
