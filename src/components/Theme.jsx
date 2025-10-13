@@ -6,7 +6,7 @@ import { NeonBorder, WorkoutIcon, SendIcon, ConversationIcon, ReportIcon, Lightn
 // Import existing components for reference
 import AuthButton from '../auth/components/AuthButton';
 import IconButton from './shared/IconButton';
-import InlineEditField from './common/InlineEditField';
+import InlineEditField from './shared/InlineEditField';
 
 // Sample icons for demonstration
 const SampleIcon = () => (

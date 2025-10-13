@@ -6,14 +6,16 @@ import { useAuth } from '../auth/contexts/AuthContext';
 import { useAuthorizeUser } from '../auth/hooks/useAuthorizeUser';
 import { getUserDisplayName } from '../auth/utils/authHelpers';
 import { AccessDenied, LoadingScreen } from './shared/AccessDenied';
-import { containerPatterns, layoutPatterns, buttonPatterns, avatarPatterns, inputPatterns, iconButtonPatterns } from '../utils/uiPatterns';
+import { containerPatterns, layoutPatterns, buttonPatterns, avatarPatterns, inputPatterns, iconButtonPatterns, tooltipPatterns } from '../utils/uiPatterns';
 import { SendIcon, PlusIcon, CameraIcon, PaperclipIcon, SmileIcon, MicIcon, TrashIcon } from './themes/SynthwaveComponents';
 import ChatInput from './shared/ChatInput';
 import ProgressIndicator from './shared/ProgressIndicator';
 import UserAvatar from './shared/UserAvatar';
+import CompactCoachCard from './shared/CompactCoachCard';
+import CommandPaletteButton from './shared/CommandPaletteButton';
+import CommandPalette from './shared/CommandPalette';
 import { parseMarkdown } from '../utils/markdownParser.jsx';
 import CoachCreatorAgent from '../utils/agents/CoachCreatorAgent';
-import CoachCreatorHeader from './shared/CoachCreatorHeader';
 import { useToast } from '../contexts/ToastContext';
 import ImageWithPresignedUrl from './shared/ImageWithPresignedUrl';
 import {
@@ -25,6 +27,18 @@ import {
   handleStreamingError,
   supportsStreaming
 } from "../utils/ui/streamingUiHelper.jsx";
+
+// Vesper coach data - static coach for coach creator
+const vesperCoachData = {
+  coach_id: 'vesper-coach-creator',
+  coach_name: 'Vesper_the_Coach_Creator',
+  name: 'Vesper',
+  avatar: 'V',
+  metadata: {
+    title: 'Coach Creator Guide & Mentor',
+    description: 'Your guide through the coach creation process'
+  }
+};
 
 // Icons for human and AI messages
 const UserIcon = () => (
@@ -215,11 +229,32 @@ function CoachCreator() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Command palette state
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+  const [commandPaletteCommand, setCommandPaletteCommand] = useState('');
+
   // Session loading error state
   const [sessionLoadError, setSessionLoadError] = useState(null);
 
   // Add flag to prevent double execution from React StrictMode
   const isSendingMessage = useRef(false);
+
+  // Handle keyboard shortcuts
+  useEffect(() => {
+    const handleKeyboardShortcuts = (event) => {
+      // Cmd/Ctrl + K to open command palette
+      if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
+        event.preventDefault();
+        setCommandPaletteCommand('');
+        setIsCommandPaletteOpen(true);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyboardShortcuts);
+    return () => {
+      document.removeEventListener('keydown', handleKeyboardShortcuts);
+    };
+  }, [isCommandPaletteOpen]);
 
   // Agent state (managed by CoachCreatorAgent)
   const [agentState, setAgentState] = useState({
@@ -475,22 +510,28 @@ function CoachCreator() {
     return (
       <div className={`${layoutPatterns.pageContainer} min-h-screen pb-8`}>
         <div className={`${layoutPatterns.contentWrapper} min-h-[calc(100vh-5rem)] flex flex-col`}>
-          {/* Header skeleton */}
-          <div className="mb-8 text-center">
-            <div className="h-12 bg-synthwave-text-muted/20 rounded animate-pulse w-64 mx-auto mb-6"></div>
+          {/* Compact Horizontal Header Skeleton */}
+          <header className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-6">
+            {/* Left: Title + Coach Card */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5">
+              {/* Title skeleton - compact size */}
+              <div className="h-8 md:h-9 bg-synthwave-text-muted/20 rounded animate-pulse w-72"></div>
 
-            {/* Coach creator header skeleton */}
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <div className="w-12 h-12 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
-              <div className="text-center">
-                <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-24 mb-2"></div>
-                <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-16"></div>
+              {/* Compact coach card skeleton - horizontal pill */}
+              <div className="flex items-center gap-2.5 px-3 py-2 bg-synthwave-neon-cyan/5 border border-synthwave-neon-cyan/20 rounded-full">
+                <div className="w-6 h-6 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
+                <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
               </div>
             </div>
 
+            {/* Right: Command button skeleton */}
+            <div className="h-10 w-16 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
+          </header>
+
+          {/* Description skeleton */}
+          <div className="text-center mb-8">
             <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-96 mx-auto mb-4"></div>
-            <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-80 mx-auto mb-4"></div>
-            <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-48 mx-auto"></div>
+            <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-80 mx-auto"></div>
           </div>
 
           {/* Main Content Area skeleton */}
@@ -545,20 +586,36 @@ function CoachCreator() {
   return (
     <div className={`${layoutPatterns.pageContainer} min-h-screen pb-8`}>
       <div className={`${layoutPatterns.contentWrapper} min-h-[calc(100vh-5rem)] flex flex-col`}>
-        {/* Header */}
-        <div className="mb-8 text-center">
-          <h1 className="font-russo font-black text-4xl md:text-5xl text-white mb-6 uppercase">
-            Create Your Coach
-          </h1>
+        {/* Compact Horizontal Header */}
+        <header
+          className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-6"
+          aria-label="Coach Creator Header"
+        >
+          {/* Left section: Title + Vesper Coach Card */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
+            {/* Page Title with Hover Tooltip */}
+            <h1
+              className="font-russo font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
+              data-tooltip-id="coach-creator-info"
+              data-tooltip-content="Create your personalized AI coach through an interactive conversation. Vesper will guide you through the process."
+            >
+              Create Your Coach
+            </h1>
 
-          {/* Coach Creator Header */}
-          <CoachCreatorHeader isOnline={true} />
+            {/* Compact Vesper Coach Card */}
+            <CompactCoachCard
+              coachData={vesperCoachData}
+              isOnline={true}
+              onClick={() => navigate(`/coaches?userId=${userId}`)}
+              tooltipContent="Go to Your Coaches"
+            />
+          </div>
 
-          <p className="font-rajdhani text-lg text-synthwave-text-secondary max-w-3xl mx-auto mb-4">
-            Get a personalized coach with adaptive intelligence that learns from your interactions and evolves with your progress.
-            Takes about 15-20 minutes to set up your perfect training partner.
-          </p>
-        </div>
+          {/* Right section: Command Palette Button */}
+          <div className="flex items-center gap-3">
+            <CommandPaletteButton onClick={() => setIsCommandPaletteOpen(true)} />
+          </div>
+        </header>
 
         {/* Main Content Area */}
         <div className="flex-1 flex justify-center">
@@ -755,6 +812,41 @@ function CoachCreator() {
           </div>
         </div>
       )}
+
+      {/* Command Palette */}
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => {
+          setIsCommandPaletteOpen(false);
+          setCommandPaletteCommand('');
+        }}
+        prefilledCommand={commandPaletteCommand}
+        userId={userId}
+        coachId={vesperCoachData.coach_id}
+        onNavigation={(type, data) => {
+          if (type === 'conversation-created') {
+            // Could navigate to a new conversation if needed
+          }
+        }}
+      />
+
+      {/* Tooltips */}
+      <Tooltip
+        id="coach-creator-info"
+        {...tooltipPatterns.standard}
+        place="bottom"
+        className="max-w-xs"
+      />
+      <Tooltip
+        id="coach-card-tooltip"
+        {...tooltipPatterns.standard}
+        place="bottom"
+      />
+      <Tooltip
+        id="command-palette-button"
+        {...tooltipPatterns.standard}
+        place="bottom"
+      />
 
       <style>{`
         .custom-scrollbar::-webkit-scrollbar {

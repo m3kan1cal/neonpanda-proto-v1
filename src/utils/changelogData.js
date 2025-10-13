@@ -10,6 +10,50 @@
 
 export const changelogEntries = [
   {
+    version: "Release v1.0.20251012-beta",
+    date: "2025-10-12",
+    changes: {
+      added: [
+        "Compact horizontal header design system standardized across 10 pages (TrainingGrounds, ManageCoachConversations, CoachConversations, ViewReports, WeeklyReports, Workouts, ManageWorkouts, ManageMemories, Coaches, CoachCreator)",
+        "CompactCoachCard shared component for consistent coach display with 24px avatar and online status indicator",
+        "CommandPaletteButton shared component for consistent Cmd/Ctrl + K shortcut access across all pages",
+        "Vesper coach integration on Coaches.jsx and CoachCreator.jsx as static guide coach for coach creation workflow",
+        "Two-phase scroll restoration system (mount + post-loading) preventing unwanted scroll position retention on page refresh",
+        "Keyboard shortcut handler (Cmd/Ctrl + K) for command palette across all 10 pages",
+        "Standardized skeleton loading structures matching compact header design with w-72 width for title skeletons",
+        "Coach pill tooltip system with customizable tooltipContent prop supporting page-specific messaging",
+        "Unified coach pill navigation routing all main pages to training grounds and special pages to coaches dashboard",
+        "Page title tooltips with hover information explaining page purpose and functionality",
+        "Command palette button tooltips providing keyboard shortcut hints to users"
+      ],
+      changed: [
+        "Page headers refactored from centered/large layouts to compact horizontal design with title + coach card + command button",
+        "Skeleton header width standardized to w-72 (288px) across 9 pages for visual consistency",
+        "ManageMemories.jsx skeleton header width set to w-64 (256px) per user preference for slightly different visual weight",
+        "Coaches.jsx 'Your In-Progress Coaches' section header reduced from text-3xl md:text-4xl to text-xl md:text-2xl",
+        "Coaches.jsx 'Start Fast with Templates' section header reduced from text-3xl md:text-4xl to text-xl md:text-2xl",
+        "Coaches.jsx page description removed from header area for cleaner, more compact presentation",
+        "CoachCreator.jsx page description removed from header area aligning with coaches page design",
+        "Vesper coach card tooltip changed from 'Work with Vesper' to 'Go to Your Coaches' for clearer navigation intent",
+        "Vesper coach card navigation simplified to always route to /coaches page instead of smart session-based routing",
+        "CompactCoachCard component updated to accept tooltipContent prop with default value 'Go to the Training Grounds'",
+        "CoachCreatorHeader component deprecated and replaced with compact horizontal header matching other pages",
+        "Visual hierarchy improved with page titles (text-2xl md:text-3xl) larger than section headers (text-xl md:text-2xl)",
+        "Section headers on Coaches.jsx kept center-aligned for modern gallery-style presentation matching card grid layouts"
+      ],
+      fixed: [
+        "Scroll position retention issue where pages remembered scroll position after refresh instead of resetting to top",
+        "Skeleton loading structure vertical positioning misalignment on ManageCoachConversations.jsx page",
+        "Inconsistent skeleton header widths across pages causing visual layout shifts during loading",
+        "Coach pill navigation inconsistency where some pages navigated differently than others",
+        "Coach pill tooltips showing incorrect text ('Go to the Training Grounds') on Coaches and CoachCreator pages",
+        "Page header visual hierarchy issue where section headers (text-3xl md:text-4xl) were larger than main page title (text-2xl md:text-3xl)",
+        "CompactCoachCard hardcoded tooltip not respecting custom tooltipContent prop passed from parent components",
+        "Command palette delay perception on ManageWorkouts.jsx (investigation revealed 300ms CSS animation is standard, not a bug)"
+      ]
+    }
+  },
+  {
     version: "Release v1.0.20251011-beta",
     date: "2025-10-11",
     changes: {

@@ -1,6 +1,6 @@
 import React from 'react';
 import { avatarPatterns } from '../../utils/uiPatterns';
-import { InlineEditField } from '../common/InlineEditField';
+import { InlineEditField } from './InlineEditField';
 
 const CoachHeader = ({
   coachData,

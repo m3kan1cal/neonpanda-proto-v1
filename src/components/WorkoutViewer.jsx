@@ -10,7 +10,7 @@ import {
   TrashIcon
 } from './themes/SynthwaveComponents';
 import IconButton from './shared/IconButton';
-import InlineEditField from './common/InlineEditField';
+import InlineEditField from './shared/InlineEditField';
 
 const MetricsIcon = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

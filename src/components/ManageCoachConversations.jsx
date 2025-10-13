@@ -1,15 +1,19 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
+import { Tooltip } from 'react-tooltip';
 import { useAuthorizeUser } from "../auth/hooks/useAuthorizeUser";
 import { AccessDenied, LoadingScreen } from "./shared/AccessDenied";
 import {
   containerPatterns,
   buttonPatterns,
   layoutPatterns,
+  tooltipPatterns,
 } from "../utils/uiPatterns";
 import { themeClasses } from "../utils/synthwaveThemeClasses";
 import { getCoachConversations } from "../utils/apis/coachConversationApi";
 import CoachHeader from "./shared/CoachHeader";
+import CompactCoachCard from './shared/CompactCoachCard';
+import CommandPaletteButton from './shared/CommandPaletteButton';
 import { isRecentConversation } from "../utils/dateUtils";
 import { NeonBorder, NewBadge } from "./themes/SynthwaveComponents";
 import { useToast } from "../contexts/ToastContext";
@@ -298,10 +302,25 @@ function ManageCoachConversations() {
     loadCoachConversations();
   }, [userId, coachId]);
 
-  // Auto-scroll to top when page loads
+  // Auto-scroll to top when page loads (with scroll restoration disabled)
   useEffect(() => {
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
     window.scrollTo(0, 0);
+    return () => {
+      if ('scrollRestoration' in window.history) {
+        window.history.scrollRestoration = 'auto';
+      }
+    };
   }, []);
+
+  // Scroll to top after loading completes
+  useEffect(() => {
+    if (!isValidatingUserId && !conversationAgentState.isLoadingAllItems) {
+      window.scrollTo(0, 0);
+    }
+  }, [isValidatingUserId, conversationAgentState.isLoadingAllItems]);
 
   // Close delete modal when pressing escape
   useEffect(() => {
@@ -319,6 +338,11 @@ function ManageCoachConversations() {
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [showDeleteModal]);
+
+  // Handle coach card click - navigate to training grounds
+  const handleCoachCardClick = () => {
+    navigate(`/training-grounds?userId=${userId}&coachId=${coachId}`);
+  };
 
   // Create coach name handler using the agent's helper method
   const handleSaveCoachName = coachAgentRef.current?.createCoachNameHandler(
@@ -603,43 +627,41 @@ function ManageCoachConversations() {
   // Show skeleton loading while validating userId or loading conversations
   if (isValidatingUserId || conversationAgentState.isLoadingAllItems) {
     return (
-      <div className={`${themeClasses.container} min-h-screen pb-8`}>
-        <div className="max-w-7xl mx-auto px-8 py-12 min-h-[calc(100vh-5rem)] flex flex-col">
-          {/* Header skeleton */}
-          <div className="mb-8 text-center">
-            <div className="h-12 bg-synthwave-text-muted/20 rounded animate-pulse w-[28rem] mx-auto mb-6"></div>
+      <div className={layoutPatterns.pageContainer}>
+        <div className={layoutPatterns.contentWrapper}>
+          {/* Compact Horizontal Header Skeleton */}
+          <header className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-6">
+            {/* Left: Title + Coach Card */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5">
+              {/* Title skeleton - compact size */}
+              <div className="h-8 md:h-9 bg-synthwave-text-muted/20 rounded animate-pulse w-72"></div>
 
-            {/* Coach header skeleton */}
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <div className="w-12 h-12 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
-              <div className="text-left">
-                <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-48 mb-2"></div>
-                <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-32"></div>
+              {/* Compact coach card skeleton - horizontal pill */}
+              <div className="flex items-center gap-2.5 px-3 py-2 bg-synthwave-neon-cyan/5 border border-synthwave-neon-cyan/20 rounded-full">
+                <div className="w-6 h-6 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
+                <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
               </div>
             </div>
 
-            <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-96 mx-auto mb-4"></div>
-            <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-80 mx-auto mb-4"></div>
-            <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-48 mx-auto"></div>
-          </div>
+            {/* Right: Command button skeleton */}
+            <div className="h-10 w-16 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
+          </header>
 
-          {/* Quick Stats skeleton */}
+          {/* Compact Quick Stats skeleton */}
           <div className="flex justify-center mb-8">
-            <div className="w-full max-w-2xl">
-              <div className="bg-synthwave-bg-card/60 border border-synthwave-neon-cyan/20 rounded-2xl shadow-xl shadow-synthwave-neon-cyan/20 p-6">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {[1, 2, 3, 4].map((i) => (
-                    <div key={i} className="flex items-center gap-2">
-                      <div className="p-2 bg-synthwave-text-muted/20 rounded-lg">
-                        <div className="w-4 h-4 bg-synthwave-text-muted/30 rounded"></div>
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-8 mb-1"></div>
-                        <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-12"></div>
-                      </div>
+            <div className="bg-synthwave-bg-card/60 border border-synthwave-neon-cyan/20 rounded-2xl shadow-xl shadow-synthwave-neon-cyan/20 p-6">
+              <div className="flex flex-wrap justify-center gap-4 md:gap-6">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="flex items-center gap-2 min-w-[120px]">
+                    <div className="p-2 bg-synthwave-text-muted/20 rounded-lg">
+                      <div className="w-4 h-4 bg-synthwave-text-muted/30 rounded"></div>
                     </div>
-                  ))}
-                </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-8 mb-1"></div>
+                      <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-12"></div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -703,54 +725,37 @@ function ManageCoachConversations() {
     <>
       <div className={layoutPatterns.pageContainer}>
         <div className={layoutPatterns.contentWrapper}>
-          {/* Header */}
-          <div className="mb-8">
-            <div className="text-center">
-              <h1 className="font-russo font-black text-4xl md:text-5xl text-white mb-6 uppercase">
+          {/* Compact Horizontal Header */}
+          <header
+            className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-6"
+            aria-label="Conversations Header"
+          >
+            {/* Left section: Title + Coach Card */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
+              {/* Page Title with Hover Tooltip */}
+              <h1
+                className="font-russo font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
+                data-tooltip-id="conversations-info"
+                data-tooltip-content="Review, organize, and manage all your conversations with your coach. Access detailed conversation history and track your coaching progress."
+              >
                 Your Conversations
               </h1>
 
-              {/* Coach Status */}
+              {/* Compact Coach Card */}
               {conversationAgentState.coaches[0] && (
-                <CoachHeader
+                <CompactCoachCard
                   coachData={conversationAgentState.coaches[0]}
                   isOnline={true}
-                  isEditable={true}
-                  onSaveName={handleSaveCoachName}
+                  onClick={handleCoachCardClick}
                 />
               )}
-
-              <p className="font-rajdhani text-lg text-synthwave-text-secondary max-w-3xl mx-auto mb-4">
-                Review, organize, and manage all your conversations with your
-                coach. Access detailed conversation history, track message counts,
-                and monitor your coaching progress over time.
-              </p>
-              <div className="flex items-center justify-center space-x-2 text-synthwave-text-secondary font-rajdhani text-sm">
-                <div className="flex items-center space-x-1 bg-synthwave-bg-primary/30 px-2 py-1 rounded border border-synthwave-neon-pink/20">
-                  <span className="text-synthwave-neon-pink">⌘</span>
-                  <span>+ K</span>
-                </div>
-                <span>for Command Palette</span>
-                <div className="flex items-center space-x-1">
-                  <span>(</span>
-                  <svg
-                    className="w-4 h-4 text-synthwave-neon-cyan"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
-                    />
-                  </svg>
-                  <span>Works on any page )</span>
-                </div>
-              </div>
             </div>
-          </div>
+
+            {/* Right section: Command Palette Button */}
+            <div className="flex items-center gap-3">
+              <CommandPaletteButton onClick={() => setIsCommandPaletteOpen(true)} />
+            </div>
+          </header>
 
           {/* Quick Stats Bar */}
           <div className="flex justify-center mb-8">
@@ -920,6 +925,24 @@ function ManageCoachConversations() {
           </div>
         </div>
       )}
+
+      {/* Tooltips */}
+      <Tooltip
+        id="conversations-info"
+        {...tooltipPatterns.standard}
+        place="bottom"
+        className="max-w-xs"
+      />
+      <Tooltip
+        id="coach-card-tooltip"
+        {...tooltipPatterns.standard}
+        place="bottom"
+      />
+      <Tooltip
+        id="command-palette-button"
+        {...tooltipPatterns.standard}
+        place="bottom"
+      />
     </>
   );
 }

@@ -2,7 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuthorizeUser } from '../auth/hooks/useAuthorizeUser';
 import { AccessDenied, LoadingScreen } from './shared/AccessDenied';
-import { buttonPatterns, containerPatterns, layoutPatterns, typographyPatterns } from '../utils/uiPatterns';
+import { buttonPatterns, containerPatterns, layoutPatterns, typographyPatterns, tooltipPatterns } from '../utils/uiPatterns';
+import { Tooltip } from 'react-tooltip';
+import CompactCoachCard from './shared/CompactCoachCard';
+import CommandPaletteButton from './shared/CommandPaletteButton';
+import CommandPalette from './shared/CommandPalette';
 import {
   NeonBorder,
   NewBadge,
@@ -19,6 +23,18 @@ import {
 import CoachAgent from '../utils/agents/CoachAgent';
 import CoachCreatorAgent from '../utils/agents/CoachCreatorAgent';
 import { useToast } from '../contexts/ToastContext';
+
+// Vesper coach data - static coach for coach creator
+const vesperCoachData = {
+  coach_id: 'vesper-coach-creator',
+  coach_name: 'Vesper_the_Coach_Creator',
+  name: 'Vesper',
+  avatar: 'V',
+  metadata: {
+    title: 'Coach Creator Guide & Mentor',
+    description: 'Your guide through the coach creation process'
+  }
+};
 
 const PlusIcon = () => (
   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -76,10 +92,31 @@ function Coaches() {
   const [isCreatingCustomCoach, setIsCreatingCustomCoach] = useState(false);
   const [creatingTemplateId, setCreatingTemplateId] = useState(null);
 
+  // Command palette state
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+  const [commandPaletteCommand, setCommandPaletteCommand] = useState('');
+
   // Auto-scroll to top when component mounts
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+
+  // Handle keyboard shortcuts
+  useEffect(() => {
+    const handleKeyboardShortcuts = (event) => {
+      // Cmd/Ctrl + K to open command palette
+      if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
+        event.preventDefault();
+        setCommandPaletteCommand('');
+        setIsCommandPaletteOpen(true);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyboardShortcuts);
+    return () => {
+      document.removeEventListener('keydown', handleKeyboardShortcuts);
+    };
+  }, [isCommandPaletteOpen]);
 
   // Load in-progress sessions and check for building/failed coaches
   const loadInProgressSessions = async () => {
@@ -297,9 +334,26 @@ function Coaches() {
     return (
       <div className={layoutPatterns.pageContainer}>
         <div className={layoutPatterns.contentWrapper}>
-          {/* Header skeleton */}
+          {/* Compact Horizontal Header Skeleton */}
+          <header className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-6">
+            {/* Left: Title + Coach Card */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5">
+              {/* Title skeleton - compact size */}
+              <div className="h-8 md:h-9 bg-synthwave-text-muted/20 rounded animate-pulse w-72"></div>
+
+              {/* Compact coach card skeleton - horizontal pill */}
+              <div className="flex items-center gap-2.5 px-3 py-2 bg-synthwave-neon-cyan/5 border border-synthwave-neon-cyan/20 rounded-full">
+                <div className="w-6 h-6 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
+                <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
+              </div>
+            </div>
+
+            {/* Right: Command button skeleton */}
+            <div className="h-10 w-16 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
+          </header>
+
+          {/* Description skeleton */}
           <div className="text-center mb-16">
-            <div className="h-12 bg-synthwave-text-muted/20 rounded animate-pulse w-64 mx-auto mb-6"></div>
             <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-96 mx-auto mb-4"></div>
             <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-80 mx-auto"></div>
           </div>
@@ -444,15 +498,36 @@ function Coaches() {
   return (
     <div className={layoutPatterns.pageContainer}>
       <div className={layoutPatterns.contentWrapper}>
-        {/* Header */}
-        <div className="text-center mb-16">
-          <h1 className={typographyPatterns.pageTitle}>
-            Your Coaches
-          </h1>
-          <p className={`${typographyPatterns.description} max-w-3xl mx-auto mb-4`}>
-            Manage your personalized coaching team. Each coach learns from your interactions and becomes more effective the more you work together.
-          </p>
-        </div>
+        {/* Compact Horizontal Header */}
+        <header
+          className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-6"
+          aria-label="Coaches Header"
+        >
+          {/* Left section: Title + Vesper Coach Card */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
+            {/* Page Title with Hover Tooltip */}
+            <h1
+              className="font-russo font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
+              data-tooltip-id="coaches-info"
+              data-tooltip-content="Manage your personalized coaching team. Each coach learns from your interactions and becomes more effective over time."
+            >
+              Your Coaches
+            </h1>
+
+            {/* Compact Vesper Coach Card */}
+            <CompactCoachCard
+              coachData={vesperCoachData}
+              isOnline={true}
+              onClick={() => navigate(`/coaches?userId=${userId}`)}
+              tooltipContent="Go to Your Coaches"
+            />
+          </div>
+
+          {/* Right section: Command Palette Button */}
+          <div className="flex items-center gap-3">
+            <CommandPaletteButton onClick={() => setIsCommandPaletteOpen(true)} />
+          </div>
+        </header>
 
         {/* Error State */}
         {agentState.error && (
@@ -738,7 +813,7 @@ function Coaches() {
         {inProgressSessions && inProgressSessions.length > 0 && (
           <div className="mt-16">
             <div className="text-center mb-12">
-              <h2 className="font-russo font-black text-3xl md:text-4xl text-white mb-4 uppercase">
+              <h2 className="font-russo font-black text-xl md:text-2xl text-white mb-4 uppercase">
                 Your In-Progress Coaches
               </h2>
               <p className="font-rajdhani text-lg text-synthwave-text-secondary max-w-2xl mx-auto leading-relaxed">
@@ -927,7 +1002,7 @@ function Coaches() {
               <div className="flex-1 h-px bg-gradient-to-l from-transparent to-synthwave-neon-cyan/30"></div>
             </div>
 
-            <h2 className="font-russo font-black text-3xl md:text-4xl text-white mb-4 uppercase">
+            <h2 className="font-russo font-black text-xl md:text-2xl text-white mb-4 uppercase">
               Start Fast with Templates
             </h2>
             <p className="font-rajdhani text-lg text-synthwave-text-secondary max-w-2xl mx-auto leading-relaxed">
@@ -1087,6 +1162,41 @@ function Coaches() {
           </div>
         </div>
       )}
+
+      {/* Command Palette */}
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => {
+          setIsCommandPaletteOpen(false);
+          setCommandPaletteCommand('');
+        }}
+        prefilledCommand={commandPaletteCommand}
+        userId={userId}
+        coachId={vesperCoachData.coach_id}
+        onNavigation={(type, data) => {
+          if (type === 'conversation-created') {
+            // Could navigate to a new conversation if needed
+          }
+        }}
+      />
+
+      {/* Tooltips */}
+      <Tooltip
+        id="coaches-info"
+        {...tooltipPatterns.standard}
+        place="bottom"
+        className="max-w-xs"
+      />
+      <Tooltip
+        id="coach-card-tooltip"
+        {...tooltipPatterns.standard}
+        place="bottom"
+      />
+      <Tooltip
+        id="command-palette-button"
+        {...tooltipPatterns.standard}
+        place="bottom"
+      />
 
       {/* Custom animations */}
       <style>{`
