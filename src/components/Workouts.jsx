@@ -1,11 +1,14 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
+import { Tooltip } from 'react-tooltip';
 import { useAuthorizeUser } from "../auth/hooks/useAuthorizeUser";
 import { AccessDenied, LoadingScreen } from "./shared/AccessDenied";
 import { themeClasses } from "../utils/synthwaveThemeClasses";
-import { buttonPatterns, containerPatterns, layoutPatterns } from "../utils/uiPatterns";
+import { buttonPatterns, containerPatterns, layoutPatterns, tooltipPatterns } from "../utils/uiPatterns";
 import { NeonBorder } from "./themes/SynthwaveComponents";
 import CoachHeader from "./shared/CoachHeader";
+import CompactCoachCard from './shared/CompactCoachCard';
+import CommandPaletteButton from './shared/CommandPaletteButton';
 import WorkoutAgent from "../utils/agents/WorkoutAgent";
 import CoachAgent from "../utils/agents/CoachAgent";
 import { useToast } from "../contexts/ToastContext";
@@ -157,10 +160,25 @@ function Workouts() {
     };
   }, [userId, coachId]);
 
-  // Auto-scroll to top when workoutId changes
+  // Auto-scroll to top when page loads (with scroll restoration disabled)
   useEffect(() => {
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
     window.scrollTo(0, 0);
-  }, [workoutId]);
+    return () => {
+      if ('scrollRestoration' in window.history) {
+        window.history.scrollRestoration = 'auto';
+      }
+    };
+  }, []);
+
+  // Scroll to top after loading completes
+  useEffect(() => {
+    if (!isValidatingUserId && !workoutAgentState.isLoadingItem) {
+      window.scrollTo(0, 0);
+    }
+  }, [isValidatingUserId, workoutAgentState.isLoadingItem]);
 
   // Load specific workout
   useEffect(() => {
@@ -195,6 +213,11 @@ function Workouts() {
 
   const handleToggleView = () => {
     setViewMode(viewMode === "formatted" ? "raw" : "formatted");
+  };
+
+  // Handle coach card click - navigate to training grounds
+  const handleCoachCardClick = () => {
+    navigate(`/training-grounds?userId=${userId}&coachId=${coachId}`);
   };
 
   // Create coach name handler using the agent's helper method
@@ -443,25 +466,25 @@ function Workouts() {
         workoutAgentState.currentWorkout.workoutId !== workoutId))
   ) {
     return (
-      <div className={`${layoutPatterns.pageContainer} min-h-screen pb-8`}>
-        <div className={`${layoutPatterns.contentWrapper} min-h-[calc(100vh-5rem)] flex flex-col`}>
-          {/* Header skeleton */}
-          <div className="mb-8 text-center">
-            <div className="h-12 bg-synthwave-text-muted/20 rounded animate-pulse w-64 mx-auto mb-6"></div>
+      <div className={layoutPatterns.pageContainer}>
+        <div className={layoutPatterns.contentWrapper}>
+          {/* Compact Horizontal Header Skeleton */}
+          <header className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-6">
+            {/* Left: Title + Coach Card */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5">
+              {/* Title skeleton - compact size */}
+              <div className="h-8 md:h-9 bg-synthwave-text-muted/20 rounded animate-pulse w-72"></div>
 
-            {/* Coach header skeleton */}
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <div className="w-12 h-12 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
-              <div className="text-left">
-                <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-48 mb-2"></div>
-                <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-32"></div>
+              {/* Compact coach card skeleton - horizontal pill */}
+              <div className="flex items-center gap-2.5 px-3 py-2 bg-synthwave-neon-cyan/5 border border-synthwave-neon-cyan/20 rounded-full">
+                <div className="w-6 h-6 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
+                <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
               </div>
             </div>
 
-            <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-96 mx-auto mb-4"></div>
-            <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-80 mx-auto mb-4"></div>
-            <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-48 mx-auto"></div>
-          </div>
+            {/* Right: Command button skeleton */}
+            <div className="h-10 w-16 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
+          </header>
 
           {/* Main Content Area skeleton */}
           <div className="flex-1">
@@ -527,41 +550,37 @@ function Workouts() {
   return (
     <div className={`${layoutPatterns.pageContainer} min-h-screen pb-8`}>
       <div className={`${layoutPatterns.contentWrapper} min-h-[calc(100vh-5rem)] flex flex-col`}>
-        {/* Header */}
-        <div className="mb-8 text-center">
-          <h1 className="font-russo font-black text-4xl md:text-5xl text-white mb-6 uppercase">
-            Workout Details
-          </h1>
+        {/* Compact Horizontal Header */}
+        <header
+          className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-6"
+          aria-label="Workout Details Header"
+        >
+          {/* Left section: Title + Coach Card */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
+            {/* Page Title with Hover Tooltip */}
+            <h1
+              className="font-russo font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
+              data-tooltip-id="workout-details-info"
+              data-tooltip-content="View detailed breakdown of your completed workout including exercises, sets, reps, and performance metrics."
+            >
+              Workout Details
+            </h1>
 
-          {/* Coach Header */}
-          {coachData && (
-            <CoachHeader
-              coachData={coachData}
-              isOnline={true}
-              isEditable={true}
-              onSaveName={handleSaveCoachName}
-            />
-          )}
-
-          <p className="font-rajdhani text-lg text-synthwave-text-secondary max-w-3xl mx-auto mb-4">
-            View detailed breakdown of your completed workout including exercises, sets, reps, and performance metrics.
-            Use the tools above to manage or export your workout data.
-          </p>
-          <div className="flex items-center justify-center space-x-2 text-synthwave-text-secondary font-rajdhani text-sm">
-            <div className="flex items-center space-x-1 bg-synthwave-bg-primary/30 px-2 py-1 rounded border border-synthwave-neon-pink/20">
-              <span className="text-synthwave-neon-pink">⌘</span>
-              <span>+ K</span>
-            </div>
-            <span>for Command Palette</span>
-            <div className="flex items-center space-x-1">
-              <span>(</span>
-              <svg className="w-4 h-4 text-synthwave-neon-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-              </svg>
-              <span>Works on any page )</span>
-            </div>
+            {/* Compact Coach Card */}
+            {coachData && (
+              <CompactCoachCard
+                coachData={coachData}
+                isOnline={true}
+                onClick={handleCoachCardClick}
+              />
+            )}
           </div>
-        </div>
+
+          {/* Right section: Command Palette Button */}
+          <div className="flex items-center gap-3">
+            <CommandPaletteButton onClick={() => setIsCommandPaletteOpen(true)} />
+          </div>
+        </header>
 
         {/* Main Content Area */}
         <div className="flex-1 flex justify-center">
@@ -677,6 +696,24 @@ function Workouts() {
           </div>
         </div>
       )}
+
+      {/* Tooltips */}
+      <Tooltip
+        id="workout-details-info"
+        {...tooltipPatterns.standard}
+        place="bottom"
+        className="max-w-xs"
+      />
+      <Tooltip
+        id="coach-card-tooltip"
+        {...tooltipPatterns.standard}
+        place="bottom"
+      />
+      <Tooltip
+        id="command-palette-button"
+        {...tooltipPatterns.standard}
+        place="bottom"
+      />
     </div>
   );
 }

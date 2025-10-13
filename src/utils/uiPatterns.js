@@ -415,10 +415,54 @@ export const avatarPatterns = {
 
   coachLarge: "w-12 h-12 bg-gradient-to-br from-synthwave-neon-cyan to-synthwave-neon-pink rounded-full flex items-center justify-center text-white font-russo font-bold text-lg shadow-xl shadow-synthwave-neon-cyan/30 ring-2 ring-synthwave-neon-cyan/30",
 
+  // Compact avatar (24px) - for compact header displays
+  coachCompact: "w-6 h-6 bg-gradient-to-br from-synthwave-neon-cyan to-synthwave-neon-pink rounded-full flex items-center justify-center text-white font-russo font-bold text-xs shadow-lg shadow-synthwave-neon-cyan/20 ring-2 ring-synthwave-neon-cyan/30",
+
   // Skeleton loading states for avatars
   skeletonSmall: "w-8 h-8 bg-synthwave-text-muted/20 rounded-full animate-pulse",
 
   skeletonLarge: "w-12 h-12 bg-synthwave-text-muted/20 rounded-full animate-pulse"
+};
+
+// Compact Card Patterns - Specialized pill-shaped interactive elements
+// Used for compact displays in headers and navigation
+export const compactCardPatterns = {
+  // Coach pill - Horizontal compact coach display with online status
+  // Features: 24px avatar, first name only, inline status indicator
+  coachPill: "flex items-center gap-2.5 px-3 py-2 bg-synthwave-neon-cyan/5 border border-synthwave-neon-cyan/20 rounded-full cursor-pointer transition-all duration-300 hover:bg-synthwave-neon-cyan/10 hover:border-synthwave-neon-cyan/40 hover:shadow-lg hover:shadow-synthwave-neon-cyan/20 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary",
+
+  // Avatar container within pill (relative positioning for status badge)
+  coachPillAvatar: "relative flex-shrink-0",
+
+  // Online status badge (positioned on avatar)
+  coachPillStatusBadge: "absolute -bottom-1 -right-1 w-3 h-3 bg-green-400 border-2 border-synthwave-bg-primary rounded-full flex items-center justify-center",
+
+  // Status dot animation (inside badge)
+  coachPillStatusDot: "w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse",
+
+  // Coach info container (horizontal layout for name + status)
+  coachPillInfo: "flex items-center gap-2 min-w-0",
+
+  // Coach name text
+  coachPillName: "font-rajdhani font-semibold text-white text-base",
+
+  // Online status text container
+  coachPillStatus: "flex items-center gap-1.5 text-xs text-synthwave-neon-cyan font-rajdhani",
+
+  // Inline status indicator dot
+  coachPillStatusIndicator: "w-2 h-2 bg-green-400 rounded-full animate-pulse"
+};
+
+// Command Palette Patterns - Quick action buttons and command interfaces
+export const commandPalettePatterns = {
+  // Command palette trigger button - Minimal button showing just keyboard shortcut
+  triggerButton: "flex items-center justify-center px-3 py-2 bg-synthwave-bg-card/50 border border-synthwave-neon-cyan/10 rounded-lg text-synthwave-text-secondary hover:text-synthwave-neon-cyan hover:border-synthwave-neon-cyan/30 hover:bg-synthwave-bg-card/70 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary",
+
+  // Button text (hidden on mobile)
+  triggerButtonText: "font-rajdhani text-sm font-medium hidden sm:inline",
+
+  // Keyboard shortcut badge
+  triggerButtonKbd: "px-2 py-1 bg-synthwave-bg-primary/50 border border-synthwave-neon-cyan/10 rounded text-xs font-mono text-synthwave-text-muted font-medium"
 };
 
 export const typographyPatterns = {
@@ -601,7 +645,31 @@ export const injectAutofillStyles = () => {
 // <div className={avatarPatterns.userSmall}>U</div>
 // <div className={avatarPatterns.aiSmall}>A</div>
 // <div className={avatarPatterns.coachLarge}>C</div>
+// <div className={avatarPatterns.coachCompact}>C</div>
 // <div className={avatarPatterns.skeletonSmall}></div>
+//
+// Compact Cards:
+// <div className={compactCardPatterns.coachPill}>
+//   <div className={compactCardPatterns.coachPillAvatar}>
+//     <div className={avatarPatterns.coachCompact}>V</div>
+//     <div className={compactCardPatterns.coachPillStatusBadge}>
+//       <div className={compactCardPatterns.coachPillStatusDot}></div>
+//     </div>
+//   </div>
+//   <div className={compactCardPatterns.coachPillInfo}>
+//     <div className={compactCardPatterns.coachPillName}>Victoria</div>
+//     <div className={compactCardPatterns.coachPillStatus}>
+//       <div className={compactCardPatterns.coachPillStatusIndicator}></div>
+//       <span>online</span>
+//     </div>
+//   </div>
+// </div>
+//
+// Command Palette:
+// <button className={commandPalettePatterns.triggerButton}>
+//   <span className={commandPalettePatterns.triggerButtonText}>Quick Actions</span>
+//   <kbd className={commandPalettePatterns.triggerButtonKbd}>⌘ + K</kbd>
+// </button>
 //
 // Scrollbars:
 // <div className={`overflow-y-auto ${scrollbarPatterns.cyan}`}>Scrollable content</div>
