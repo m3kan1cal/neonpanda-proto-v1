@@ -8,6 +8,7 @@
 import { QuickWorkoutExtraction } from './types';
 import { callBedrockApi, MODEL_IDS } from '../api-helpers';
 import { JSON_FORMATTING_INSTRUCTIONS_STANDARD } from '../prompt-helpers';
+import { cleanResponse } from '../response-utils';
 
 /**
  * Supported workout slash commands
@@ -242,14 +243,20 @@ CRITICAL: When in doubt, DO NOT classify as workout logging. It's better to miss
       messagePreview: message.substring(0, 100)
     });
 
-    const response = await callBedrockApi(detectionPrompt, message, MODEL_IDS.CLAUDE_HAIKU_FULL);
+    const response = await callBedrockApi(
+      detectionPrompt,
+      message,
+      MODEL_IDS.CLAUDE_HAIKU_FULL,
+      { prefillResponse: "{" } // Force JSON output format
+    );
 
     console.info('🔍 Received response from AI workout detection:', {
       responseLength: response.length,
       responsePreview: response.substring(0, 200)
     });
 
-    const result = JSON.parse(response);
+    const cleanedResponse = cleanResponse(response);
+    const result = JSON.parse(cleanedResponse);
 
     console.info('🔍 AI workout detection result:', {
       message: message.substring(0, 100),
@@ -321,8 +328,14 @@ Examples:
 - "Crushed 5 rounds of that brutal hotel workout" → roundsDetected: "5", intensityDetected: "brutal", locationContext: "hotel"
 - "Deadlifted 315 for 3 reps, new PR!" → discipline: "powerlifting", weightDetected: "315", repCountDetected: "3", intensityDetected: "PR"`;
 
-    const response = await callBedrockApi(extractionPrompt, message, MODEL_IDS.CLAUDE_HAIKU_FULL);
-  const result = JSON.parse(response);
+    const response = await callBedrockApi(
+    extractionPrompt,
+    message,
+    MODEL_IDS.CLAUDE_HAIKU_FULL,
+    { prefillResponse: "{" } // Force JSON output format
+  );
+  const cleanedResponse = cleanResponse(response);
+  const result = JSON.parse(cleanedResponse);
 
   console.info('AI quick workout extraction:', {
     message: message.substring(0, 100),

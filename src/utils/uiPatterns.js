@@ -465,6 +465,37 @@ export const commandPalettePatterns = {
   triggerButtonKbd: "px-2 py-1 bg-synthwave-bg-primary/50 border border-synthwave-neon-cyan/10 rounded text-xs font-mono text-synthwave-text-muted font-medium"
 };
 
+// Navigation Patterns - Color schemes and states for navigation items
+export const navigationPatterns = {
+  // Navigation item color schemes by semantic color
+  colors: {
+    pink: {
+      active: "text-synthwave-neon-pink",
+      inactive: "text-synthwave-text-muted hover:text-synthwave-neon-pink",
+      border: "border-synthwave-neon-pink",
+      bg: "bg-synthwave-neon-pink/10",
+      glow: "drop-shadow-[0_0_8px_rgba(255,0,128,0.5)]",
+      shadow: "shadow-[0_0_8px_rgba(255,0,128,0.6)]"
+    },
+    cyan: {
+      active: "text-synthwave-neon-cyan",
+      inactive: "text-synthwave-text-muted hover:text-synthwave-neon-cyan",
+      border: "border-synthwave-neon-cyan",
+      bg: "bg-synthwave-neon-cyan/10",
+      glow: "drop-shadow-[0_0_8px_rgba(0,255,255,0.5)]",
+      shadow: "shadow-[0_0_8px_rgba(0,255,255,0.6)]"
+    },
+    purple: {
+      active: "text-synthwave-neon-purple",
+      inactive: "text-synthwave-text-muted hover:text-synthwave-neon-purple",
+      border: "border-synthwave-neon-purple",
+      bg: "bg-synthwave-neon-purple/10",
+      glow: "drop-shadow-[0_0_8px_rgba(139,92,246,0.5)]",
+      shadow: "shadow-[0_0_8px_rgba(139,92,246,0.6)]"
+    }
+  }
+};
+
 // Quick Stats Patterns - Compact metrics display with icon + number
 // Linear/Figma-inspired pattern for displaying key statistics
 // Icon-only format with rich tooltips for context

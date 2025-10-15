@@ -1032,10 +1032,12 @@ Examples:
     const response = await callBedrockApi(
       timeExtractionPrompt,
       userMessage,
-      MODEL_IDS.CLAUDE_HAIKU_FULL
+      MODEL_IDS.CLAUDE_HAIKU_FULL,
+      { prefillResponse: "{" } // Force JSON output format
     );
 
-    const result = JSON.parse(response.trim());
+    const cleanedResponse = cleanResponse(response.trim());
+    const result = JSON.parse(cleanedResponse);
 
     console.info("AI time extraction result:", {
       userMessage: userMessage.substring(0, 100),
