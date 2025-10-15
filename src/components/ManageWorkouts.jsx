@@ -639,7 +639,7 @@ function ManageWorkouts() {
             </div>
 
             {/* Right: Command button skeleton */}
-            <div className="h-10 w-16 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
+            <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
           </header>
 
           {/* Quick Stats skeleton */}
@@ -869,22 +869,12 @@ function ManageWorkouts() {
             !workoutAgentState.error &&
             workoutAgentState.allWorkouts.length === 0 && (
               <div className="text-center py-12">
-                <NeonBorder color="cyan" className="max-w-md mx-auto p-8">
-                  <h3 className="text-synthwave-neon-cyan mb-4">
-                    No Workouts Found
-                  </h3>
-                  <p className="text-synthwave-text-secondary mb-6">
-                    You haven't logged any workouts yet.
-                  </p>
-                  <button
-                    onClick={() =>
-                      navigate(`/training-grounds?userId=${userId}`)
-                    }
-                    className={buttonPatterns.secondary}
-                  >
-                    Start Training
-                  </button>
-                </NeonBorder>
+                <div className="font-rajdhani text-synthwave-neon-cyan text-base">
+                  No Workouts Found
+                </div>
+                <div className="font-rajdhani text-synthwave-text-muted text-sm mt-2">
+                  You haven't logged any workouts yet.
+                </div>
               </div>
             )}
 

@@ -36,6 +36,8 @@ export function createCoreApi(
   getCoachConversationsCountLambda: lambda.IFunction,
   getWeeklyReportsLambda: lambda.IFunction,
   getWeeklyReportLambda: lambda.IFunction,
+  getMonthlyReportsLambda: lambda.IFunction,
+  getMonthlyReportLambda: lambda.IFunction,
   getMemoriesLambda: lambda.IFunction,
   createMemoryLambda: lambda.IFunction,
   deleteMemoryLambda: lambda.IFunction,
@@ -263,6 +265,17 @@ export function createCoreApi(
     getWeeklyReportLambda
   );
 
+  // Create Lambda integrations for monthly report functions
+  const getMonthlyReportsIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
+    'GetMonthlyReportsIntegration',
+    getMonthlyReportsLambda
+  );
+
+  const getMonthlyReportIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
+    'GetMonthlyReportIntegration',
+    getMonthlyReportLambda
+  );
+
   // Create Lambda integrations for memory functions
   const getMemoriesIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
     'GetMemoriesIntegration',
@@ -340,6 +353,8 @@ export function createCoreApi(
     getCoachConversationsCount: getCoachConversationsCountIntegration,
     getWeeklyReports: getWeeklyReportsIntegration,
     getWeeklyReport: getWeeklyReportIntegration,
+    getMonthlyReports: getMonthlyReportsIntegration,
+    getMonthlyReport: getMonthlyReportIntegration,
     getMemories: getMemoriesIntegration,
     createMemory: createMemoryIntegration,
     deleteMemory: deleteMemoryIntegration,
@@ -566,6 +581,20 @@ export function createCoreApi(
     path: '/users/{userId}/reports/weekly/{weekId}',
     methods: [apigatewayv2.HttpMethod.GET],
     integration: integrations.getWeeklyReport,
+    authorizer: userPoolAuthorizer
+  });
+
+  httpApi.addRoutes({
+    path: '/users/{userId}/reports/monthly',
+    methods: [apigatewayv2.HttpMethod.GET],
+    integration: integrations.getMonthlyReports,
+    authorizer: userPoolAuthorizer
+  });
+
+  httpApi.addRoutes({
+    path: '/users/{userId}/reports/monthly/{monthId}',
+    methods: [apigatewayv2.HttpMethod.GET],
+    integration: integrations.getMonthlyReport,
     authorizer: userPoolAuthorizer
   });
 

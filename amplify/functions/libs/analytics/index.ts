@@ -5,12 +5,15 @@
  * batch operations, and user data aggregation.
  */
 
-export { processBatch, processAllUsersInBatches } from "./batch-processing";
+export { processBatch, processAllUsersInBatches, processMonthlyBatch, processAllUsersInBatchesMonthly } from "./batch-processing";
 
 export {
   WeeklyAnalyticsEvent,
+  MonthlyAnalyticsEvent,
   HistoricalWorkoutSummary,
+  WorkoutSummary,
   UserWeeklyData,
+  UserMonthlyData,
   NormalizationResult,
   NormalizationIssue,
 } from "./types";
@@ -19,10 +22,17 @@ export {
   getCurrentWeekRange,
   getLastNWeeksRange,
   getHistoricalWorkoutRange,
+  getCurrentMonthRange,
+  getLastNMonthsRange,
+  getHistoricalMonthRange,
+  generateMonthId,
+  getMonthDescription,
+  isDateInMonthRange,
   formatDateForQuery,
   isDateInWeekRange,
   getWeekDescription,
   type WeekRange,
+  type MonthRange,
 } from "./date-utils";
 
 export {
@@ -31,6 +41,9 @@ export {
   fetchCoachingContext,
   fetchUserContext,
   fetchUserWeeklyData,
+  fetchUserMonthlyData,
+  fetchWorkoutSummaries,
+  fetchCoachConversationSummaries,
   generateAnalytics,
 } from "./data-fetching";
 

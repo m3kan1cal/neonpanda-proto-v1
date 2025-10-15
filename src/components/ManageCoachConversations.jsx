@@ -587,26 +587,12 @@ function ManageCoachConversations() {
     if (conversationAgentState.allConversations.length === 0) {
       return (
         <div className="text-center py-12">
-          <NeonBorder color="cyan" className="max-w-md mx-auto p-8">
-            <h3 className="font-russo font-bold text-synthwave-neon-cyan text-xl uppercase mb-4">
-              No Conversations Found
-            </h3>
-            <p className="font-rajdhani text-synthwave-text-secondary text-base leading-relaxed mb-6">
-              You haven't started any conversations yet. Create a coach and
-              start your first conversation to see it here.
-            </p>
-            <button
-              onClick={() =>
-                navigate(
-                  `/training-grounds?userId=${userId}&coachId=${coachId}`
-                )
-              }
-              className={`${buttonPatterns.primarySmall} text-sm px-6 py-3 flex items-center justify-center space-x-2 mx-auto`}
-            >
-              <ChatIconSmall />
-              <span>Start Conversation</span>
-            </button>
-          </NeonBorder>
+          <div className="font-rajdhani text-synthwave-neon-cyan text-base">
+            No Conversations Found
+          </div>
+          <div className="font-rajdhani text-synthwave-text-muted text-sm mt-2">
+            You haven't started any conversations yet. Create a coach and start your first conversation to see it here.
+          </div>
         </div>
       );
     }
@@ -647,7 +633,7 @@ function ManageCoachConversations() {
             </div>
 
             {/* Right: Command button skeleton */}
-            <div className="h-10 w-16 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
+            <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
           </header>
 
           {/* Quick Stats skeleton */}

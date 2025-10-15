@@ -27,7 +27,7 @@ import {
 import { UserProfile } from "../functions/libs/user/types";
 import { UserMemory } from "../functions/libs/memory/types";
 import { Workout } from "../functions/libs/workout/types";
-import { WeeklyAnalytics } from "../functions/libs/analytics/types";
+import { WeeklyAnalytics, MonthlyAnalytics } from "../functions/libs/analytics/types";
 
 // DynamoDB client setup
 const dynamoDbClient = new DynamoDBClient({});
@@ -2160,6 +2160,137 @@ export async function getWeeklyAnalytics(
   return await loadFromDynamoDB<WeeklyAnalytics>(
     `user#${userId}`,
     `weeklyAnalytics#${weekId}`,
+    "analytics"
+  );
+}
+
+// ===========================
+// MONTHLY ANALYTICS OPERATIONS
+// ===========================
+
+// Function to save monthly analytics to DynamoDB
+export async function saveMonthlyAnalytics(
+  monthlyAnalytics: MonthlyAnalytics
+): Promise<void> {
+  const item = createDynamoDBItem<MonthlyAnalytics>(
+    "analytics",
+    `user#${monthlyAnalytics.userId}`,
+    `monthlyAnalytics#${monthlyAnalytics.monthId}`,
+    monthlyAnalytics,
+    new Date().toISOString()
+  );
+
+  await saveToDynamoDB(item);
+  console.info("Monthly analytics saved successfully:", {
+    userId: monthlyAnalytics.userId,
+    monthId: monthlyAnalytics.monthId,
+    monthRange: `${monthlyAnalytics.monthStart} to ${monthlyAnalytics.monthEnd}`,
+    workoutCount: monthlyAnalytics.metadata.workoutCount,
+    s3Location: monthlyAnalytics.s3Location,
+    analysisConfidence: monthlyAnalytics.metadata.analysisConfidence,
+  });
+}
+
+// Function to query all monthly analytics for a user
+export async function queryMonthlyAnalytics(
+  userId: string,
+  options?: {
+    // Date filtering
+    fromDate?: Date;
+    toDate?: Date;
+
+    // Pagination
+    limit?: number;
+    offset?: number;
+
+    // Sorting
+    sortBy?: "monthStart" | "monthEnd" | "workoutCount";
+    sortOrder?: "asc" | "desc";
+  }
+): Promise<DynamoDBItem<MonthlyAnalytics>[]> {
+  try {
+    // Get all monthly analytics for the user
+    const allAnalytics = await queryFromDynamoDB<MonthlyAnalytics>(
+      `user#${userId}`,
+      "monthlyAnalytics#",
+      "analytics"
+    );
+
+    // Apply filters
+    let filteredAnalytics = allAnalytics;
+
+    // Date filtering
+    if (options?.fromDate) {
+      filteredAnalytics = filteredAnalytics.filter((analytics) => {
+        const monthStart = new Date(analytics.attributes.monthStart);
+        return monthStart >= options.fromDate!;
+      });
+    }
+
+    if (options?.toDate) {
+      filteredAnalytics = filteredAnalytics.filter((analytics) => {
+        const monthEnd = new Date(analytics.attributes.monthEnd);
+        return monthEnd <= options.toDate!;
+      });
+    }
+
+    // Sorting
+    const sortBy = options?.sortBy || "monthStart";
+    const sortOrder = options?.sortOrder || "desc";
+
+    filteredAnalytics.sort((a, b) => {
+      let aValue: any, bValue: any;
+
+      switch (sortBy) {
+        case "monthStart":
+          aValue = new Date(a.attributes.monthStart);
+          bValue = new Date(b.attributes.monthStart);
+          break;
+        case "monthEnd":
+          aValue = new Date(a.attributes.monthEnd);
+          bValue = new Date(b.attributes.monthEnd);
+          break;
+        case "workoutCount":
+          aValue = a.attributes.metadata.workoutCount;
+          bValue = b.attributes.metadata.workoutCount;
+          break;
+        default:
+          aValue = new Date(a.attributes.monthStart);
+          bValue = new Date(b.attributes.monthStart);
+      }
+
+      if (sortOrder === "asc") {
+        return aValue > bValue ? 1 : -1;
+      } else {
+        return aValue < bValue ? 1 : -1;
+      }
+    });
+
+    // Pagination
+    if (options?.offset || options?.limit) {
+      const offset = options.offset || 0;
+      const limit = options.limit || 50;
+      filteredAnalytics = filteredAnalytics.slice(offset, offset + limit);
+    }
+
+    console.info(
+      `Found ${filteredAnalytics.length} monthly analytics records for user ${userId}`
+    );
+    return filteredAnalytics;
+  } catch (error) {
+    console.error("Error querying monthly analytics:", error);
+    throw error;
+  }
+}
+
+// Function to get a specific monthly analytics record
+export async function getMonthlyAnalytics(
+  userId: string,
+  monthId: string
+): Promise<DynamoDBItem<MonthlyAnalytics> | null> {
+  return await loadFromDynamoDB<MonthlyAnalytics>(
+    `user#${userId}`,
+    `monthlyAnalytics#${monthId}`,
     "analytics"
   );
 }

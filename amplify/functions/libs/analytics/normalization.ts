@@ -7,6 +7,7 @@
 
 import {
   UserWeeklyData,
+  UserMonthlyData,
   NormalizationResult,
   NormalizationIssue,
 } from "./types";
@@ -20,24 +21,29 @@ import { getAnalyticsSchemaWithContext } from "../schemas/universal-analytics-sc
  */
 export const buildNormalizationPrompt = (
   analyticsData: any,
-  weeklyData: UserWeeklyData
+  weeklyData: UserWeeklyData | UserMonthlyData
 ): string => {
-  const weekStart = weeklyData.weekRange.weekStart.toISOString().split("T")[0];
-  const weekEnd = weeklyData.weekRange.weekEnd.toISOString().split("T")[0];
+  // Handle both weekRange and monthRange
+  const rangeStart = 'weekRange' in weeklyData ? weeklyData.weekRange.weekStart : weeklyData.monthRange.monthStart;
+  const rangeEnd = 'weekRange' in weeklyData ? weeklyData.weekRange.weekEnd : weeklyData.monthRange.monthEnd;
+  const periodType = 'weekRange' in weeklyData ? 'Week' : 'Month';
+
+  const rangeStartStr = rangeStart.toISOString().split("T")[0];
+  const rangeEndStr = rangeEnd.toISOString().split("T")[0];
 
   return `
-You are a weekly analytics data normalizer. Your job is to:
+You are an analytics data normalizer. Your job is to:
 
 1. ANALYZE the analytics data against the Universal Analytics Schema v1.0
 2. NORMALIZE the structure to match the schema exactly
 3. FIX any structural, mathematical, or data consistency issues found
 4. RETURN properly formatted analytics data that conforms to the schema
 
-WEEK BOUNDARY ENFORCEMENT:
-- Week range: ${weekStart} to ${weekEnd}
+${periodType.toUpperCase()} BOUNDARY ENFORCEMENT:
+- ${periodType} range: ${rangeStartStr} to ${rangeEndStr}
 - ALL dates in raw_aggregations.daily_volume MUST be within this range
 - Remove or fix any dates outside this boundary
-- Ensure metadata.date_range matches the week boundary exactly
+- Ensure metadata.date_range matches the ${periodType.toLowerCase()} boundary exactly
 
 RESPONSE REQUIREMENTS:
 Return a JSON object with this exact structure:
@@ -67,9 +73,9 @@ ${JSON.stringify(analyticsData, null, 2)}
 
 WEEKLY DATA CONTEXT:
 - User ID: ${weeklyData.userId}
-- Week Range: ${weekStart} to ${weekEnd}
+- ${periodType} Range: ${rangeStartStr} to ${rangeEndStr}
 - Workouts Count: ${weeklyData.workouts.count}
-- Conversations Count: ${weeklyData.coaching.conversations.length}
+- Conversations Count: ${weeklyData.coaching.count}
 
 ${getAnalyticsSchemaWithContext("normalization")}
 
@@ -81,7 +87,7 @@ CRITICAL: Return ONLY valid JSON in the exact format above. No markdown, no expl
  */
 export const normalizeAnalytics = async (
   analyticsData: any,
-  weeklyData: UserWeeklyData,
+  weeklyData: UserWeeklyData | UserMonthlyData,
   userId: string,
   enableThinking: boolean = false
 ): Promise<NormalizationResult> => {
@@ -91,11 +97,15 @@ export const normalizeAnalytics = async (
       weeklyData
     );
 
+    // Handle both weekRange and monthRange
+    const rangeStart = 'weekRange' in weeklyData ? weeklyData.weekRange.weekStart : weeklyData.monthRange.monthStart;
+    const rangeEnd = 'weekRange' in weeklyData ? weeklyData.weekRange.weekEnd : weeklyData.monthRange.monthEnd;
+
     console.info("Analytics normalization call configuration:", {
       enableThinking,
       promptLength: normalizationPrompt.length,
       userId,
-      weekRange: `${weeklyData.weekRange.weekStart.toISOString().split("T")[0]} to ${weeklyData.weekRange.weekEnd.toISOString().split("T")[0]}`,
+      range: `${rangeStart.toISOString().split("T")[0]} to ${rangeEnd.toISOString().split("T")[0]}`,
     });
 
     const normalizationResponse = await callBedrockApi(
@@ -197,7 +207,7 @@ export const normalizeAnalytics = async (
  */
 export const shouldNormalizeAnalytics = (
   analyticsData: any,
-  weeklyData: UserWeeklyData
+  weeklyData: UserWeeklyData | UserMonthlyData
 ): boolean => {
   const issues: NormalizationIssue[] = [];
 
@@ -254,20 +264,21 @@ export const shouldNormalizeAnalytics = (
 
     // 3. Validate date consistency in raw_aggregations
     if (analyticsData.structured_analytics.raw_aggregations?.daily_volume) {
-      const weekStart = weeklyData.weekRange.weekStart;
-      const weekEnd = weeklyData.weekRange.weekEnd;
+      // Handle both weekRange and monthRange
+      const rangeStart = 'weekRange' in weeklyData ? weeklyData.weekRange.weekStart : weeklyData.monthRange.monthStart;
+      const rangeEnd = 'weekRange' in weeklyData ? weeklyData.weekRange.weekEnd : weeklyData.monthRange.monthEnd;
 
       analyticsData.structured_analytics.raw_aggregations.daily_volume.forEach(
         (entry: any, index: number) => {
           if (entry.date) {
             const entryDate = new Date(entry.date);
-            if (entryDate < weekStart || entryDate > weekEnd) {
+            if (entryDate < rangeStart || entryDate > rangeEnd) {
               issues.push({
                 type: "data_consistency",
                 severity: "error",
                 section: "raw_aggregations",
                 field: `daily_volume[${index}].date`,
-                description: `Date ${entry.date} is outside week range ${weekStart.toISOString().split("T")[0]} to ${weekEnd.toISOString().split("T")[0]}`,
+                description: `Date ${entry.date} is outside range ${rangeStart.toISOString().split("T")[0]} to ${rangeEnd.toISOString().split("T")[0]}`,
                 corrected: false,
               });
             }

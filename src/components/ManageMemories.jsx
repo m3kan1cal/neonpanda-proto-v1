@@ -524,19 +524,12 @@ function ManageMemories() {
     if (memoryAgentState.allMemories.length === 0) {
       return (
         <div className="text-center py-12">
-          <NeonBorder color="cyan" className="max-w-md mx-auto p-8">
-            <h3 className="text-synthwave-neon-cyan mb-4">No Memories Found</h3>
-            <p className="text-synthwave-text-secondary mb-6">
-              You haven't stored any memories yet. Memories will appear here
-              when you ask your coach to remember something.
-            </p>
-            <button
-              onClick={() => navigate(`/training-grounds?userId=${userId}`)}
-              className={buttonPatterns.secondarySmall}
-            >
-              Start Training
-            </button>
-          </NeonBorder>
+          <div className="font-rajdhani text-synthwave-neon-cyan text-base">
+            No Memories Found
+          </div>
+          <div className="font-rajdhani text-synthwave-text-muted text-sm mt-2">
+            You haven't stored any memories yet. Memories will appear here when you ask your coach to remember something.
+          </div>
         </div>
       );
     }
@@ -575,7 +568,7 @@ function ManageMemories() {
             </div>
 
             {/* Right section: Command Palette Button skeleton */}
-            <div className="h-10 w-16 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
+            <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
           </header>
 
           {/* Quick Stats skeleton */}

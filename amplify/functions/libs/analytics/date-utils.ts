@@ -109,3 +109,97 @@ export const getWeekDescription = (weekRange: WeekRange): string => {
   const end = weekRange.weekEnd.toLocaleDateString();
   return `${start} - ${end}`;
 };
+
+/**
+ * Month date range for analytics calculations
+ */
+export interface MonthRange {
+  monthStart: Date;
+  monthEnd: Date;
+}
+
+/**
+ * Get the current month's date range (1st to last day of month)
+ * For current month processing - includes incomplete months
+ */
+export const getCurrentMonthRange = (): MonthRange => {
+  const now = new Date();
+
+  // First day of current month at 00:00:00
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  monthStart.setHours(0, 0, 0, 0);
+
+  // Last day of current month at 23:59:59.999
+  const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  monthEnd.setHours(23, 59, 59, 999);
+
+  return { monthStart, monthEnd };
+};
+
+/**
+ * Get date range for the last N months
+ * Used for fetching historical context
+ */
+export const getLastNMonthsRange = (months: number): MonthRange => {
+  const now = new Date();
+
+  // Start from N months ago (1st of that month)
+  const monthStart = new Date(now.getFullYear(), now.getMonth() - months, 1);
+  monthStart.setHours(0, 0, 0, 0);
+
+  // End at last day of current month
+  const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  monthEnd.setHours(23, 59, 59, 999);
+
+  return { monthStart, monthEnd };
+};
+
+/**
+ * Get historical month range (N months before current month, excluding current month)
+ * Used for fetching historical workout summaries
+ */
+export const getHistoricalMonthRange = (months: number = 3): MonthRange => {
+  const currentMonth = getCurrentMonthRange();
+
+  // End of historical range is the day before current month starts
+  const historyEnd = new Date(currentMonth.monthStart);
+  historyEnd.setDate(historyEnd.getDate() - 1);
+  historyEnd.setHours(23, 59, 59, 999);
+
+  // Start of historical range is N months before that
+  const historyStart = new Date(historyEnd.getFullYear(), historyEnd.getMonth() - months + 1, 1);
+  historyStart.setHours(0, 0, 0, 0);
+
+  return {
+    monthStart: historyStart,
+    monthEnd: historyEnd,
+  };
+};
+
+/**
+ * Generate month ID in YYYY-MM format
+ */
+export const generateMonthId = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  return `${year}-${month}`;
+};
+
+/**
+ * Get a human-readable month description for logging
+ */
+export const getMonthDescription = (monthRange: MonthRange): string => {
+  const start = monthRange.monthStart.toLocaleDateString();
+  const end = monthRange.monthEnd.toLocaleDateString();
+  return `${start} - ${end}`;
+};
+
+/**
+ * Check if a date falls within a month range
+ */
+export const isDateInMonthRange = (
+  date: Date,
+  monthRange: MonthRange
+): boolean => {
+  return date >= monthRange.monthStart && date <= monthRange.monthEnd;
+};

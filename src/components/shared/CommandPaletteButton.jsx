@@ -30,9 +30,12 @@ const CommandPaletteButton = ({ onClick }) => {
       data-tooltip-id="command-palette-button"
       data-tooltip-content="Show command palette"
     >
-      <kbd className={commandPalettePatterns.triggerButtonKbd}>
-        {isMac ? "⌘K" : "Ctrl+K"}
-      </kbd>
+      <div className="flex items-center gap-1">
+        <kbd className={commandPalettePatterns.triggerButtonKbd}>
+          {isMac ? "⌘" : "Ctrl"}
+        </kbd>
+        <kbd className={commandPalettePatterns.triggerButtonKbd}>K</kbd>
+      </div>
     </button>
   );
 };

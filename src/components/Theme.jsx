@@ -755,6 +755,82 @@ function Theme() {
                     </div>
                   </section>
 
+                  {/* Tab Buttons */}
+                  <section className="space-y-6">
+                    <h3 className="font-russo text-xl text-white mb-4 uppercase border-b border-synthwave-neon-cyan/30 pb-2">
+                      Tab Buttons - Content Switching
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                      {/* Tab Switcher Example */}
+                      <div className="space-y-4">
+                        <h4 className="font-rajdhani text-lg text-synthwave-neon-cyan">Tab Switcher (ViewReports.jsx)</h4>
+                        <div className="flex items-center justify-center gap-2 p-4 bg-synthwave-bg-card/30 rounded-lg">
+                          <button className="px-4 py-2 rounded-lg font-rajdhani font-bold text-sm uppercase tracking-wide transition-all duration-200 bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan border-2 border-synthwave-neon-cyan/40">
+                            Active Tab
+                          </button>
+                          <button className="px-4 py-2 rounded-lg font-rajdhani font-bold text-sm uppercase tracking-wide transition-all duration-200 bg-synthwave-bg-primary/30 text-synthwave-neon-cyan border-2 border-transparent hover:border-synthwave-neon-cyan/20 hover:bg-synthwave-neon-cyan/10">
+                            Inactive Tab
+                          </button>
+                        </div>
+                        <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+                          Used for switching between weekly and monthly reports. Active state has cyan background and border,
+                          inactive has cyan text with subtle hover state.
+                        </p>
+                      </div>
+
+                      {/* Tab Switcher States */}
+                      <div className="space-y-4">
+                        <h4 className="font-rajdhani text-lg text-synthwave-neon-cyan">Tab States</h4>
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-synthwave-text-secondary font-rajdhani text-xs w-16">Active:</span>
+                            <button className="px-4 py-2 rounded-lg font-rajdhani font-bold text-sm uppercase tracking-wide bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan border-2 border-synthwave-neon-cyan/40">
+                              Tab
+                            </button>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-synthwave-text-secondary font-rajdhani text-xs w-16">Inactive:</span>
+                            <button className="px-4 py-2 rounded-lg font-rajdhani font-bold text-sm uppercase tracking-wide bg-synthwave-bg-primary/30 text-synthwave-neon-cyan border-2 border-transparent">
+                              Tab
+                            </button>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-synthwave-text-secondary font-rajdhani text-xs w-16">Hover:</span>
+                            <button className="px-4 py-2 rounded-lg font-rajdhani font-bold text-sm uppercase tracking-wide bg-synthwave-neon-cyan/10 text-synthwave-neon-cyan border-2 border-synthwave-neon-cyan/20">
+                              Tab
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Tab Button Guidelines */}
+                    <div className="bg-synthwave-bg-card/30 border border-synthwave-neon-cyan/30 rounded-lg p-6 mt-6">
+                      <h4 className="font-rajdhani text-lg text-synthwave-neon-cyan font-semibold mb-4">Tab Button Guidelines:</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm font-rajdhani">
+                        <div>
+                          <h5 className="text-synthwave-neon-pink font-semibold mb-2">When to Use:</h5>
+                          <ul className="space-y-1 text-synthwave-text-secondary">
+                            <li>• Switching between related content views</li>
+                            <li>• Filtering data by category</li>
+                            <li>• Navigation within a single page</li>
+                            <li>• Toggling between report types (weekly/monthly)</li>
+                          </ul>
+                        </div>
+                        <div>
+                          <h5 className="text-synthwave-neon-cyan font-semibold mb-2">Design Features:</h5>
+                          <ul className="space-y-1 text-synthwave-text-secondary">
+                            <li>• Active: bg-synthwave-neon-cyan/20 with border</li>
+                            <li>• Inactive: transparent bg with cyan text</li>
+                            <li>• Hover: subtle cyan background (bg-synthwave-neon-cyan/10)</li>
+                            <li>• Border: 2px with rounded-lg corners</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+
                   {/* Recommendations */}
                   <section className="space-y-6">
                     <h3 className="font-russo text-xl text-white mb-4 uppercase border-b border-synthwave-neon-cyan/30 pb-2">
