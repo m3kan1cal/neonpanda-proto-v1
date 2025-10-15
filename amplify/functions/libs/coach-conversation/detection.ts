@@ -8,6 +8,7 @@
 import { invokeAsyncLambda, callBedrockApi, MODEL_IDS } from "../api-helpers";
 import { JSON_FORMATTING_INSTRUCTIONS_STANDARD } from "../prompt-helpers";
 import { SmartRequestRouter } from "../streaming/business-types";
+import { cleanResponse } from "../response-utils";
 
 /**
  * @deprecated DEPRECATED: This function has been replaced by the Smart Request Router.
@@ -69,9 +70,11 @@ Analyze this message for complexity triggers that would warrant conversation sum
     const response = await callBedrockApi(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.CLAUDE_HAIKU_FULL
+      MODEL_IDS.CLAUDE_HAIKU_FULL,
+      { prefillResponse: "{" } // Force JSON output format
     );
-    const result = JSON.parse(response);
+    const cleanedResponse = cleanResponse(response);
+    const result = JSON.parse(cleanedResponse);
 
     return result.hasComplexity || false;
   } catch (error) {
@@ -500,10 +503,12 @@ Provide comprehensive analysis following the framework above.`;
     const response = await callBedrockApi(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.CLAUDE_HAIKU_FULL // More accurate for complex routing decisions
+      MODEL_IDS.CLAUDE_HAIKU_FULL, // More accurate for complex routing decisions
+      { prefillResponse: "{" } // Force JSON output format
     );
 
-    const result: SmartRequestRouter = JSON.parse(response);
+    const cleanedResponse = cleanResponse(response);
+    const result: SmartRequestRouter = JSON.parse(cleanedResponse);
 
     // Add processing time metadata
     result.routerMetadata.processingTime = Date.now() - startTime;

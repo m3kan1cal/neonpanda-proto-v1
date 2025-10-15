@@ -10,6 +10,7 @@ import {
 } from "./question-management";
 import { callBedrockApi, MODEL_IDS } from "../api-helpers";
 import { JSON_FORMATTING_INSTRUCTIONS_STANDARD } from "../prompt-helpers";
+import { cleanResponse } from "../response-utils";
 
 // Factory function to create a new coach creator session with default values
 // Generates unique session ID and initializes session state when user starts coach creator flow
@@ -222,11 +223,13 @@ Does this user want to finish the coach creator and create their custom AI coach
   const response = await callBedrockApi(
     systemPrompt,
     userPrompt,
-    MODEL_IDS.CLAUDE_HAIKU_FULL
+    MODEL_IDS.CLAUDE_HAIKU_FULL,
+    { prefillResponse: "{" } // Force JSON output format
     // No extended thinking needed for this classification (default is false)
   );
 
-  const result = JSON.parse(response.trim());
+  const cleanedResponse = cleanResponse(response.trim());
+  const result = JSON.parse(cleanedResponse);
 
   console.info("AI finish intent detection result:", {
     userResponse: userResponse.substring(0, 100),

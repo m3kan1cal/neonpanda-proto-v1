@@ -339,6 +339,12 @@ export interface BedrockApiOptions {
 
   /** Dynamic (non-cacheable) portion of the prompt - changes per request */
   dynamicPrompt?: string;
+
+  /**
+   * Prefill the assistant's response with this text to enforce output format
+   * For JSON responses, use "{" to force Claude to start with JSON
+   */
+  prefillResponse?: string;
 }
 
 /**
@@ -462,18 +468,34 @@ export const callBedrockApi = async (
       AWS_LAMBDA_FUNCTION_NAME: process.env.AWS_LAMBDA_FUNCTION_NAME,
     });
 
+    // Build messages array with optional response prefilling
+    const messages: any[] = [
+      {
+        role: "user",
+        content: [
+          {
+            text: userMessage,
+          },
+        ],
+      },
+    ];
+
+    // Add prefilled assistant response if specified (forces output format)
+    if (options?.prefillResponse) {
+      messages.push({
+        role: "assistant",
+        content: [
+          {
+            text: options.prefillResponse,
+          },
+        ],
+      });
+      console.info("🎯 Response prefilling enabled:", options.prefillResponse);
+    }
+
     const command = new ConverseCommand({
       modelId: modelId,
-      messages: [
-        {
-          role: "user",
-          content: [
-            {
-              text: userMessage,
-            },
-          ],
-        },
-      ],
+      messages: messages,
       system: systemParams,
       inferenceConfig: {
         maxTokens: getMaxTokensForModel(modelId),
@@ -538,6 +560,12 @@ export const callBedrockApi = async (
     }
 
     let responseText = response.output.message.content[0].text;
+
+    // If response was prefilled, prepend the prefill text back
+    if (options?.prefillResponse) {
+      responseText = options.prefillResponse + responseText;
+      console.info("🎯 Prepended prefill text to response:", options.prefillResponse);
+    }
 
     // If thinking was enabled, extract the final response (strip thinking tags)
     if (enableThinking) {

@@ -5,6 +5,7 @@
 import { callBedrockApi, MODEL_IDS, getPineconeClient } from './api-helpers';
 import { JSON_FORMATTING_INSTRUCTIONS_STANDARD } from './prompt-helpers';
 import { MethodologyIntent, EnhancedMethodologyOptions } from './coach-conversation/types';
+import { cleanResponse } from './response-utils';
 
 // Configuration
 const PINECONE_QUERY_ENABLED = true;
@@ -70,9 +71,11 @@ Analyze this message and determine if semantic search would enhance the coaching
     const response = await callBedrockApi(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.CLAUDE_HAIKU_FULL
+      MODEL_IDS.CLAUDE_HAIKU_FULL,
+      { prefillResponse: "{" } // Force JSON output format
     );
-    const result = JSON.parse(response);
+    const cleanedResponse = cleanResponse(response);
+    const result = JSON.parse(cleanedResponse);
 
     return result.shouldUseSemanticSearch || false;
   } catch (error) {
@@ -115,8 +118,14 @@ Examples:
 - "What's better, 5/3/1 or Starting Strength?" → {"isComparison": true, "isImplementationQuestion": false, "isPrincipleQuestion": false, "methodologies": ["5/3/1", "starting_strength"], "primaryMethodology": "5/3/1"}`;
 
   try {
-    const response = await callBedrockApi(analysisPrompt, userMessage, MODEL_IDS.CLAUDE_HAIKU_FULL);
-    return JSON.parse(response);
+    const response = await callBedrockApi(
+      analysisPrompt,
+      userMessage,
+      MODEL_IDS.CLAUDE_HAIKU_FULL,
+      { prefillResponse: "{" } // Force JSON output format
+    );
+    const cleanedResponse = cleanResponse(response);
+    return JSON.parse(cleanedResponse);
   } catch (error) {
     console.error('Failed to analyze methodology intent:', error);
     return {

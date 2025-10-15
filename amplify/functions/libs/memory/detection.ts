@@ -10,6 +10,7 @@ import {
   MemoryRetrievalNeedResult,
   MemoryCharacteristicsResult,
 } from "./types";
+import { cleanResponse } from "../response-utils";
 
 /**
  * @deprecated DEPRECATED: This function has been replaced by the Smart Request Router.
@@ -72,9 +73,11 @@ Analyze this message and determine if retrieving stored memories would enhance t
     const response = await callBedrockApi(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.CLAUDE_HAIKU_FULL
+      MODEL_IDS.CLAUDE_HAIKU_FULL,
+      { prefillResponse: "{" } // Force JSON output format
     );
-    const result = JSON.parse(response);
+    const cleanedResponse = cleanResponse(response);
+    const result = JSON.parse(cleanedResponse);
 
     return result;
   } catch (error) {
@@ -637,10 +640,12 @@ Provide comprehensive memory analysis following the framework above.`;
     const response = await callBedrockApi(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.CLAUDE_HAIKU_FULL // Reliable for critical memory analysis
+      MODEL_IDS.CLAUDE_HAIKU_FULL, // Reliable for critical memory analysis
+      { prefillResponse: "{" } // Force JSON output format
     );
 
-    const result = JSON.parse(response);
+    const cleanedResponse = cleanResponse(response);
+    const result = JSON.parse(cleanedResponse);
     const processingTime = Date.now() - startTime;
 
     // Transform result to match expected interface

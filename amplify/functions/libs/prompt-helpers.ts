@@ -44,12 +44,17 @@ export function getJsonFormattingInstructions(options: {
 
   const markdownSection = noMarkdown
     ? `- Do not wrap the JSON in \`\`\`json blocks or any markdown formatting
+- CRITICAL: If your response starts with a backtick (\`) character, you have FAILED
+- CRITICAL: If your response contains the text \`\`\`json anywhere, you have FAILED
 `
     : '';
 
   return `CRITICAL JSON FORMATTING RULES:
 - Return ONLY valid JSON. No markdown backticks, no explanations, no text outside JSON
-- Response must start with { and end with }
+- Your response MUST start with the { character (opening curly brace)
+- Your response MUST end with the } character (closing curly brace)
+- THE VERY FIRST CHARACTER of your response must be { - not a backtick, not a space, not a newline
+- THE VERY LAST CHARACTER of your response must be } - nothing after it
 ${markdownSection}- NEVER include trailing commas before closing braces } or brackets ]
 - Use double quotes for all strings, never single quotes
 - Ensure all arrays and objects are properly closed
@@ -64,7 +69,15 @@ CRITICAL JSON STRUCTURE VALIDATION:
 - Multiple consecutive closing characters (like }]}) are VALID when closing nested structures
 - Focus on total count balance, not consecutive characters
 
-RESPONSE FORMAT: Return ONLY raw JSON. Do not wrap in markdown code blocks or backticks. Start your response with { and end with }.`;
+RESPONSE FORMAT VERIFICATION:
+- Before you respond, verify your response starts with {
+- Before you respond, verify your response ends with }
+- Before you respond, verify your response does NOT contain \`\`\` or backticks
+- Return ONLY raw JSON. Do not wrap in markdown code blocks or backticks.
+- Example CORRECT response: {"key":"value","array":[1,2,3]}
+- Example WRONG response: \`\`\`json\n{"key":"value"}\n\`\`\`
+
+YOUR RESPONSE MUST START WITH { - BEGIN YOUR RESPONSE NOW WITH THE { CHARACTER.`;
 }
 
 /**
