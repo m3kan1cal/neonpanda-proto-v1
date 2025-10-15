@@ -973,7 +973,7 @@ function CoachConversations() {
             </div>
 
             {/* Right: Command button skeleton */}
-            <div className="h-10 w-16 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
+            <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
           </header>
 
           {/* Main Content Area skeleton */}

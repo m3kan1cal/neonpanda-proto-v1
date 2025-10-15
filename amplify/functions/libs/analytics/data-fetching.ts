@@ -4,6 +4,7 @@ import {
   queryCoachConversations,
   getCoachConversation,
   queryMemories,
+  queryCoachConversationSummaries,
 } from "../../../dynamodb/operations";
 import { callBedrockApi, MODEL_IDS } from "../api-helpers";
 import { JSON_FORMATTING_INSTRUCTIONS_STANDARD } from "../prompt-helpers";
@@ -18,17 +19,199 @@ import {
   getLastNWeeksRange,
   getHistoricalWorkoutRange,
   getWeekDescription,
+  getCurrentMonthRange,
+  getHistoricalMonthRange,
 } from "./date-utils";
 import { Workout } from "../workout/types";
-import { CoachConversation } from "../coach-conversation/types";
+import { CoachConversation, CoachConversationSummary } from "../coach-conversation/types";
 import { UserProfile } from "../user/types";
 import { UserMemory } from "../memory/types";
 import { DynamoDBItem } from "../coach-creator/types";
-import { HistoricalWorkoutSummary, UserWeeklyData } from "./types";
+import {
+  HistoricalWorkoutSummary,
+  UserWeeklyData,
+  UserMonthlyData,
+  WorkoutSummary,
+} from "./types";
 import { getAnalyticsSchemaWithContext } from "../schemas/universal-analytics-schema";
 
 /**
+ * Fetch workout summaries for a date range (for analytics)
+ * Returns only the summary field from each workout, not full UWS data
+ */
+export const fetchWorkoutSummaries = async (
+  userId: string,
+  startDate: Date,
+  endDate: Date,
+  periodLabel: string
+): Promise<WorkoutSummary[]> => {
+  console.info(
+    `Fetching workout summaries for user ${userId} for ${periodLabel}`
+  );
+
+  try {
+    // Query workouts (simplified list)
+    const workoutList = await queryWorkouts(userId, {
+      fromDate: startDate,
+      toDate: endDate,
+      sortBy: "completedAt",
+      sortOrder: "desc",
+    });
+
+    console.info(
+      `Found ${workoutList.length} workouts for user ${userId} in ${periodLabel}`
+    );
+
+    if (workoutList.length === 0) {
+      return [];
+    }
+
+    // Extract summaries from workouts
+    const workoutSummaries: WorkoutSummary[] = [];
+
+    for (let i = 0; i < workoutList.length; i++) {
+      const workout = workoutList[i];
+
+      // Only include workouts that have summaries
+      if (workout.attributes.summary && workout.attributes.summary.length > 50) {
+        workoutSummaries.push({
+          date: new Date(workout.attributes.completedAt),
+          workoutId: workout.attributes.workoutId,
+          workoutName: workout.attributes.workoutData?.workout_name,
+          discipline: workout.attributes.workoutData?.discipline,
+          summary: workout.attributes.summary,
+        });
+
+        console.info(
+          `Workout summary ${i + 1}/${workoutList.length}: ${workout.attributes.workoutData?.workout_name || workout.attributes.workoutId} (${workout.attributes.summary.length} chars)`
+        );
+      } else {
+        console.warn(
+          `Workout ${i + 1}/${workoutList.length}: ${workout.attributes.workoutId} - no summary available, skipping`
+        );
+      }
+    }
+
+    console.info(
+      `Successfully extracted ${workoutSummaries.length} workout summaries for user ${userId} in ${periodLabel}`
+    );
+    return workoutSummaries;
+  } catch (error) {
+    console.error(
+      `Error fetching workout summaries for user ${userId} in ${periodLabel}:`,
+      error
+    );
+    return [];
+  }
+};
+
+/**
+ * Extract unique coach IDs from workout summaries
+ */
+const extractCoachIdsFromSummaries = async (
+  userId: string,
+  startDate: Date,
+  endDate: Date
+): Promise<string[]> => {
+  // We need to query workouts to get coach IDs
+  const workoutList = await queryWorkouts(userId, {
+    fromDate: startDate,
+    toDate: endDate,
+    sortBy: "completedAt",
+    sortOrder: "desc",
+  });
+
+  const coachIds = new Set<string>();
+
+  workoutList.forEach((workout) => {
+    if (workout.attributes.coachIds && workout.attributes.coachIds.length > 0) {
+      workout.attributes.coachIds.forEach((id) => coachIds.add(id));
+    }
+  });
+
+  const uniqueCoachIds = Array.from(coachIds);
+  console.info(
+    `Extracted ${uniqueCoachIds.length} unique coach IDs: [${uniqueCoachIds.join(", ")}]`
+  );
+
+  return uniqueCoachIds;
+};
+
+/**
+ * Fetch coach conversation summaries for a date range (for analytics)
+ * Returns conversation summaries instead of full message history
+ */
+export const fetchCoachConversationSummaries = async (
+  userId: string,
+  coachIds: string[],
+  startDate: Date,
+  endDate: Date,
+  periodLabel: string
+): Promise<CoachConversationSummary[]> => {
+  console.info(
+    `Fetching conversation summaries for user ${userId}, coaches [${coachIds.join(", ")}] for ${periodLabel}`
+  );
+
+  try {
+    if (coachIds.length === 0) {
+      console.info(
+        `No coaches found for user ${userId}, skipping conversation summaries`
+      );
+      return [];
+    }
+
+    const allSummaries: CoachConversationSummary[] = [];
+
+    for (const coachId of coachIds) {
+      try {
+        // Query conversation summaries for this coach
+        const summaries = await queryCoachConversationSummaries(userId, coachId);
+        console.info(
+          `Found ${summaries.length} conversation summaries for user ${userId} and coach ${coachId}`
+        );
+
+        if (summaries.length === 0) {
+          continue;
+        }
+
+        // Filter summaries to the date range based on their createdAt timestamp
+        const filteredSummaries = summaries
+          .filter((summaryItem) => {
+            const summaryDate = new Date(summaryItem.attributes.metadata.createdAt);
+            return summaryDate >= startDate && summaryDate <= endDate;
+          })
+          .map((summaryItem) => summaryItem.attributes); // Extract attributes from DynamoDBItem
+
+        console.info(
+          `Filtered to ${filteredSummaries.length} conversation summaries in date range for coach ${coachId}`
+        );
+
+        allSummaries.push(...filteredSummaries);
+      } catch (error) {
+        console.error(
+          `Failed to fetch conversation summaries for user ${userId} and coach ${coachId}:`,
+          error
+        );
+        // Continue with other coaches
+      }
+    }
+
+    console.info(
+      `Successfully fetched ${allSummaries.length} conversation summaries for user ${userId} across ${coachIds.length} coaches in ${periodLabel}`
+    );
+    return allSummaries;
+  } catch (error) {
+    console.error(
+      `Error fetching conversation summaries for user ${userId} in ${periodLabel}:`,
+      error
+    );
+    return [];
+  }
+};
+
+/**
  * Extract unique coach IDs from a list of workouts
+ * @deprecated Use extractCoachIdsFromSummaries instead
  */
 const extractCoachIds = (workouts: DynamoDBItem<Workout>[]): string[] => {
   const coachIds = new Set<string>();
@@ -314,45 +497,54 @@ export const fetchUserContext = async (
 };
 
 /**
- * Aggregate all data for a single user
+ * Aggregate all data for a single user (weekly, using summaries)
  */
 export const fetchUserWeeklyData = async (
   user: DynamoDBItem<UserProfile>
 ): Promise<UserWeeklyData> => {
   const userId = user.attributes.userId;
   const weekRange = getCurrentWeekRange();
+  const historicalRange = getHistoricalWorkoutRange();
 
-  console.info(`📊 Fetching complete weekly data for user ${userId}`);
+  console.info(`📊 Fetching complete weekly data (summary-based) for user ${userId}`);
 
-  // Step 1: Fetch workouts first to extract coach IDs
-  const workouts = await fetchCurrentWeekWorkouts(userId);
-
-  // Step 2: Extract coach IDs from workouts
-  const coachIds = extractCoachIds(workouts);
-
-  // Step 3: Fetch historical context, coaching context, and memories in parallel
-  const [historicalSummaries, conversations, memories] = await Promise.all([
-    fetchHistoricalWorkoutSummaries(userId),
-    fetchCoachingContext(userId, coachIds),
-    fetchUserContext(userId),
-  ]);
-
-  // Calculate total message count across all conversations
-  const totalMessages = conversations.reduce(
-    (total, conv) => total + (conv.attributes.messages?.length || 0),
-    0
+  // Step 1: Extract coach IDs from current week workouts
+  const coachIds = await extractCoachIdsFromSummaries(
+    userId,
+    weekRange.weekStart,
+    weekRange.weekEnd
   );
+
+  // Step 2: Fetch all data in parallel
+  const [currentWeekSummaries, historicalSummaries, conversationSummaries, memories] =
+    await Promise.all([
+      fetchWorkoutSummaries(userId, weekRange.weekStart, weekRange.weekEnd, "current week"),
+      fetchWorkoutSummaries(
+        userId,
+        historicalRange.weekStart,
+        historicalRange.weekEnd,
+        "historical (4 weeks)"
+      ),
+      fetchCoachConversationSummaries(
+        userId,
+        coachIds,
+        getLastNWeeksRange(2).weekStart, // Last 2 weeks of conversations
+        weekRange.weekEnd,
+        "last 2 weeks"
+      ),
+      fetchUserContext(userId),
+    ]);
 
   const userData: UserWeeklyData = {
     userId,
     weekRange,
     workouts: {
-      completed: workouts,
-      count: workouts.length,
+      summaries: currentWeekSummaries,
+      count: currentWeekSummaries.length,
     },
     coaching: {
-      conversations,
-      totalMessages,
+      summaries: conversationSummaries,
+      count: conversationSummaries.length,
     },
     userContext: {
       memories,
@@ -364,11 +556,10 @@ export const fetchUserWeeklyData = async (
     },
   };
 
-  console.info(`✅ Completed data fetch for user ${userId}:`, {
+  console.info(`✅ Completed weekly data fetch for user ${userId}:`, {
     workoutCount: userData.workouts.count,
     historicalSummaryCount: userData.historical.summaryCount,
-    conversationCount: userData.coaching.conversations.length,
-    messageCount: userData.coaching.totalMessages,
+    conversationSummaryCount: userData.coaching.count,
     memoryCount: userData.userContext.memoryCount,
   });
 
@@ -379,7 +570,7 @@ export const fetchUserWeeklyData = async (
  * Build analytics prompt from user weekly data
  */
 const buildAnalyticsPrompt = (
-  weeklyData: UserWeeklyData,
+  weeklyData: UserWeeklyData | UserMonthlyData,
   userProfile?: any,
   criticalTrainingDirective?: { content: string; enabled: boolean }
 ): string => {
@@ -417,14 +608,20 @@ This directive takes precedence over all other instructions except safety constr
     athleteProfile = "No specific athlete profile available.";
   }
 
-  // Format current week workouts as JSON
-  const currentWeekWorkouts = JSON.stringify(
-    weeklyData.workouts.completed.map((w) => w.attributes.workoutData),
-    null,
-    2
-  );
+  // Determine period type for labels
+  const isPeriodWeekly = 'weekRange' in weeklyData;
+  const periodLabel = isPeriodWeekly ? "THIS WEEK'S" : "THIS MONTH'S";
+  const historicalLabel = isPeriodWeekly ? "PREVIOUS WEEKS" : "PREVIOUS MONTHS";
 
-  // Format historical summaries chronologically
+  // Format current period workout summaries
+  const currentPeriodWorkouts = weeklyData.workouts.summaries
+    .map(
+      (summary) =>
+        `${summary.date.toISOString().split("T")[0]} - ${summary.workoutName || "Workout"} (${summary.discipline || "Unknown"})\n${summary.summary}`
+    )
+    .join("\n\n");
+
+  // Format historical workout summaries chronologically
   const historicalSummaries = weeklyData.historical.workoutSummaries
     .map(
       (summary) =>
@@ -432,31 +629,27 @@ This directive takes precedence over all other instructions except safety constr
     )
     .join("\n\n");
 
-  // Format coaching conversations context
-  const coachingContext = weeklyData.coaching.conversations
-    .map((conv) => {
-      const recentMessages = conv.attributes.messages
-        .slice(-5) // Last 5 messages for context
-        .map((msg) => `${msg.role}: ${msg.content}`)
-        .join("\n");
-      return `Conversation ${conv.attributes.conversationId}:\n${recentMessages}`;
+  // Format coaching conversation summaries
+  const coachingContext = weeklyData.coaching.summaries
+    .map((summary) => {
+      return `Conversation Summary (${summary.metadata.createdAt.toISOString().split("T")[0]}):\n${summary.narrative}\n\nKey Insights: ${summary.structuredData.key_insights.join(", ")}`;
     })
     .join("\n\n");
 
-  return `${directiveSection}You are an elite strength and conditioning analyst examining weekly training data in Universal Workout Schema (UWS) format.
+  return `${directiveSection}You are an elite strength and conditioning analyst examining training data from workout and conversation summaries.
 
 ${JSON_FORMATTING_INSTRUCTIONS_STANDARD}
 
 ATHLETE CONTEXT:
 ${athleteProfile}
 
-COACHING CONVERSATIONS (Last 2 weeks):
-${coachingContext || "No recent coaching conversations available."}
+COACHING CONVERSATION SUMMARIES (Recent Period):
+${coachingContext || "No recent coaching conversation summaries available."}
 
-THIS WEEK'S UWS DATA:
-${currentWeekWorkouts}
+${periodLabel} WORKOUT SUMMARIES:
+${currentPeriodWorkouts}
 
-PREVIOUS WEEKS DATA (for trending):
+${historicalLabel} WORKOUT SUMMARIES (for trending):
 ${historicalSummaries || "No historical data available."}
 
 DUAL OUTPUT REQUIREMENTS:
@@ -597,7 +790,7 @@ CRITICAL: Return ONLY valid JSON in the exact format above. No markdown, no expl
  * Step 9-11: Generate analytics using LLM
  */
 export const generateAnalytics = async (
-  weeklyData: UserWeeklyData,
+  weeklyData: UserWeeklyData | UserMonthlyData,
   userProfile?: any
 ): Promise<any> => {
   const userId = weeklyData.userId;
@@ -723,4 +916,75 @@ export const generateAnalytics = async (
     console.error(`❌ Failed to generate analytics for user ${userId}:`, error);
     throw error;
   }
+};
+
+/**
+ * Aggregate all data for a single user (monthly version, using summaries)
+ */
+export const fetchUserMonthlyData = async (
+  user: DynamoDBItem<UserProfile>
+): Promise<UserMonthlyData> => {
+  const userId = user.attributes.userId;
+  const monthRange = getCurrentMonthRange();
+  const historicalRange = getHistoricalMonthRange(3);
+
+  console.info(`📊 Fetching complete monthly data (summary-based) for user ${userId}`);
+
+  // Step 1: Extract coach IDs from current month workouts
+  const coachIds = await extractCoachIdsFromSummaries(
+    userId,
+    monthRange.monthStart,
+    monthRange.monthEnd
+  );
+
+  // Step 2: Fetch all data in parallel
+  const [currentMonthSummaries, historicalSummaries, conversationSummaries, memories] =
+    await Promise.all([
+      fetchWorkoutSummaries(userId, monthRange.monthStart, monthRange.monthEnd, "current month"),
+      fetchWorkoutSummaries(
+        userId,
+        historicalRange.monthStart,
+        historicalRange.monthEnd,
+        "historical (3 months)"
+      ),
+      fetchCoachConversationSummaries(
+        userId,
+        coachIds,
+        monthRange.monthStart,
+        monthRange.monthEnd,
+        "current month"
+      ),
+      fetchUserContext(userId),
+    ]);
+
+  const userData: UserMonthlyData = {
+    userId,
+    monthRange,
+    workouts: {
+      summaries: currentMonthSummaries,
+      count: currentMonthSummaries.length,
+    },
+    coaching: {
+      summaries: conversationSummaries,
+      count: conversationSummaries.length,
+    },
+    userContext: {
+      memories,
+      memoryCount: memories.length,
+    },
+    historical: {
+      workoutSummaries: historicalSummaries,
+      summaryCount: historicalSummaries.length,
+    },
+  };
+
+  console.info(`✅ Completed monthly data fetch for user ${userId}:`, {
+    workoutCount: userData.workouts.count,
+    historicalSummaryCount: userData.historical.summaryCount,
+    conversationSummaryCount: userData.coaching.count,
+    memoryCount: userData.userContext.memoryCount,
+    monthRange: `${monthRange.monthStart.toISOString().split("T")[0]} to ${monthRange.monthEnd.toISOString().split("T")[0]}`,
+  });
+
+  return userData;
 };

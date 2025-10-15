@@ -10,6 +10,54 @@
 
 export const changelogEntries = [
   {
+    version: "Release v1.0.20251015-beta",
+    date: "2025-10-15",
+    changes: {
+      added: [
+        "Monthly Reports system with automatic generation for months with 4+ workouts",
+        "Monthly report cards with YYYY-MM format (e.g., '2025-10') for easy date parsing and sorting",
+        "Monthly report display page with comprehensive analytics, insights, and performance trends",
+        "Tab switcher on ViewReports page for toggling between Weekly and Monthly reports",
+        "QuickStats for monthly reports showing total reports, current month, qualified months (4+ workouts), and high-confidence analysis",
+        "Monthly report metadata including workoutCount, conversationCount, memoryCount, analysisConfidence, and dataCompleteness",
+        "Monthly report preview tooltips showing top priority insights on hover",
+        "NEW badge on current month reports to highlight the most recent analysis",
+        "Monthly report empty states with clear messaging about 4+ workout threshold",
+        "ReportAgent.loadAllMonthlyReports() method for fetching and managing monthly report data",
+        "Monthly report grid layout matching weekly reports design with purple theme accents",
+        "Separated keyboard shortcut display with individual containers for modifier key (⌘/Ctrl) and letter key (K) in CommandPaletteButton",
+        "Flexbox layout with gap spacing between keyboard shortcut containers for improved visual clarity",
+        "Platform-aware keyboard shortcut display showing ⌘ + K on macOS and Ctrl + K on Windows/Linux"
+      ],
+      changed: [
+        "ViewReports page refactored to support both weekly and monthly report types with tabbed interface",
+        "QuickStats dynamically switch between weekly and monthly metrics based on active tab",
+        "Monthly report cards styled with purple accent color (synthwave-neon-purple) to differentiate from weekly (pink)",
+        "Report cards updated with consistent 3-column performance stats grid (workouts, AI confidence, data completeness)",
+        "Empty states now specify workout thresholds: 2+ for weekly, 4+ for monthly reports",
+        "CommandPaletteButton component refactored from single kbd element to dual kbd elements wrapped in flex container",
+        "Command palette skeleton loading structure width increased from w-16 to w-20 across all 10 pages for better accommodation of dual-key display",
+        "Skeleton loading updated on: ViewReports, ManageCoachConversations, ManageMemories, ManageWorkouts, TrainingGrounds, CoachCreator, WeeklyReports, Workouts, CoachConversations, and Coaches pages",
+        "Tab buttons on ViewReports page changed from neon pink to neon cyan for consistent color scheme",
+        "Empty state patterns standardized across management pages (ViewReports, ManageWorkouts, ManageMemories, ManageCoachConversations) to minimal text-only design",
+        "Empty state titles changed to cyan color (text-synthwave-neon-cyan) with muted descriptions (text-synthwave-text-muted)",
+        "QuickStats tooltips shortened to 2-4 word phrases for reduced cognitive load on ViewReports page",
+        "Monthly report summaries now display formatted month names (e.g., 'October 2025') instead of raw YYYY-MM format"
+      ],
+      fixed: [
+        "Visual inconsistency where keyboard shortcut appeared as single container instead of separate key containers",
+        "Tab button styling inconsistency on ViewReports page with mixed color schemes",
+        "Empty state pattern inconsistency across management pages with some using borders/buttons and others using minimal text-only approach",
+        "Verbose QuickStats tooltips creating information overload for users",
+        "Missing monthly analytics causing users to only see weekly breakdowns of their training"
+      ],
+      removed: [
+        "NeonBorder wrappers and action buttons from empty states on management pages for cleaner, minimal design",
+        "Plus (+) separator between keyboard shortcut keys, replaced with flexbox gap for cleaner visual spacing"
+      ]
+    }
+  },
+  {
     version: "Release v1.0.20251012-beta",
     date: "2025-10-12",
     changes: {

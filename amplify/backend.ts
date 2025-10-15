@@ -42,6 +42,12 @@ import {
 } from "./functions/build-weekly-analytics/resource";
 import { getWeeklyReports } from "./functions/get-weekly-reports/resource";
 import { getWeeklyReport } from "./functions/get-weekly-report/resource";
+import {
+  buildMonthlyAnalytics,
+  createMonthlyAnalyticsSchedule,
+} from "./functions/build-monthly-analytics/resource";
+import { getMonthlyReports } from "./functions/get-monthly-reports/resource";
+import { getMonthlyReport } from "./functions/get-monthly-report/resource";
 import { getMemories } from "./functions/get-memories/resource";
 import { createMemory } from "./functions/create-memory/resource";
 import { deleteMemory } from "./functions/delete-memory/resource";
@@ -101,6 +107,9 @@ const backend = defineBackend({
   buildWeeklyAnalytics,
   getWeeklyReports,
   getWeeklyReport,
+  buildMonthlyAnalytics,
+  getMonthlyReports,
+  getMonthlyReport,
   getMemories,
   createMemory,
   deleteMemory,
@@ -154,6 +163,8 @@ const coreApi = apiGatewayv2.createCoreApi(
   backend.getCoachConversationsCount.resources.lambda,
   backend.getWeeklyReports.resources.lambda,
   backend.getWeeklyReport.resources.lambda,
+  backend.getMonthlyReports.resources.lambda,
+  backend.getMonthlyReport.resources.lambda,
   backend.getMemories.resources.lambda,
   backend.createMemory.resources.lambda,
   backend.deleteMemory.resources.lambda,
@@ -229,6 +240,7 @@ const sharedPolicies = new SharedPolicies(
   backend.updateWorkout,
   backend.deleteWorkout,
   backend.buildWeeklyAnalytics,
+  backend.buildMonthlyAnalytics,
   backend.createMemory,
   backend.deleteMemory,
   backend.updateUserProfile,
@@ -247,6 +259,8 @@ const sharedPolicies = new SharedPolicies(
   backend.getCoachConversationsCount,
   backend.getWeeklyReports,
   backend.getWeeklyReport,
+  backend.getMonthlyReports,
+  backend.getMonthlyReport,
   backend.getMemories,
   backend.getUserProfile,
   backend.checkUserAvailability,
@@ -266,6 +280,7 @@ const sharedPolicies = new SharedPolicies(
   backend.buildWorkout,
   backend.buildConversationSummary,
   backend.buildWeeklyAnalytics,
+  backend.buildMonthlyAnalytics,
   backend.createMemory,
 ].forEach(func => {
   sharedPolicies.attachBedrockAccess(func.resources.lambda);
@@ -283,8 +298,9 @@ const sharedPolicies = new SharedPolicies(
   sharedPolicies.attachS3DebugAccess(func.resources.lambda);
 });
 
-// Function needing S3 ANALYTICS bucket access
+// Functions needing S3 ANALYTICS bucket access
 sharedPolicies.attachS3AnalyticsAccess(backend.buildWeeklyAnalytics.resources.lambda);
+sharedPolicies.attachS3AnalyticsAccess(backend.buildMonthlyAnalytics.resources.lambda);
 
 // Functions needing S3 APPS bucket access (for image storage)
 [
@@ -477,8 +493,11 @@ const allFunctions = [
   backend.getWorkoutsCount,
   backend.getCoachConversationsCount,
   backend.buildWeeklyAnalytics,
+  backend.buildMonthlyAnalytics,
   backend.getWeeklyReports,
   backend.getWeeklyReport,
+  backend.getMonthlyReports,
+  backend.getMonthlyReport,
   backend.getMemories,
   backend.createMemory,
   backend.deleteMemory,
@@ -672,6 +691,14 @@ const weeklyAnalyticsSchedule = createWeeklyAnalyticsSchedule(
 );
 
 console.info('✅ Weekly analytics scheduled (Sundays at 9am UTC)');
+
+// Create EventBridge schedule for monthly analytics (1st of month at 9am UTC)
+const monthlyAnalyticsSchedule = createMonthlyAnalyticsSchedule(
+  backend.buildMonthlyAnalytics.stack,
+  backend.buildMonthlyAnalytics.resources.lambda
+);
+
+console.info('✅ Monthly analytics scheduled (1st of month at 9am UTC)');
 
 // ============================================================================
 // COGNITO USER POOL CONFIGURATION

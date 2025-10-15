@@ -6,7 +6,7 @@
 
 import { DynamoDBItem } from "../coach-creator/types";
 import { Workout } from "../workout/types";
-import { CoachConversation } from "../coach-conversation/types";
+import { CoachConversation, CoachConversationSummary } from "../coach-conversation/types";
 import { UserMemory } from "../memory/types";
 
 /**
@@ -18,7 +18,27 @@ export interface WeeklyAnalyticsEvent {
 }
 
 /**
+ * Event type for monthly analytics trigger from EventBridge
+ */
+export interface MonthlyAnalyticsEvent {
+  source: string;
+  detail: any;
+}
+
+/**
+ * Workout summary for analytics (lightweight extraction from workout.summary field)
+ */
+export interface WorkoutSummary {
+  date: Date;
+  workoutId: string;
+  workoutName?: string;
+  discipline?: string;
+  summary: string; // AI-generated summary from workout.summary field
+}
+
+/**
  * Historical workout summary for analytics context
+ * (deprecated - replaced by WorkoutSummary)
  */
 export interface HistoricalWorkoutSummary {
   date: Date;
@@ -38,19 +58,46 @@ export interface UserWeeklyData {
     weekEnd: Date;
   };
   workouts: {
-    completed: DynamoDBItem<Workout>[];
+    summaries: WorkoutSummary[]; // Lightweight workout summaries
     count: number;
   };
   coaching: {
-    conversations: DynamoDBItem<CoachConversation>[];
-    totalMessages: number;
+    summaries: CoachConversationSummary[]; // Full conversation summary objects
+    count: number;
   };
   userContext: {
     memories: UserMemory[];
     memoryCount: number;
   };
   historical: {
-    workoutSummaries: HistoricalWorkoutSummary[];
+    workoutSummaries: WorkoutSummary[]; // Historical workout summaries
+    summaryCount: number;
+  };
+}
+
+/**
+ * Aggregated data for a single user's monthly analytics
+ */
+export interface UserMonthlyData {
+  userId: string;
+  monthRange: {
+    monthStart: Date;
+    monthEnd: Date;
+  };
+  workouts: {
+    summaries: WorkoutSummary[]; // Lightweight workout summaries
+    count: number;
+  };
+  coaching: {
+    summaries: CoachConversationSummary[]; // Full conversation summary objects
+    count: number;
+  };
+  userContext: {
+    memories: UserMemory[];
+    memoryCount: number;
+  };
+  historical: {
+    workoutSummaries: WorkoutSummary[]; // Historical workout summaries
     summaryCount: number;
   };
 }
@@ -87,6 +134,31 @@ export interface WeeklyAnalytics {
   weekId: string; // Format: YYYY-WW (e.g., "2025-W32")
   weekStart: string; // ISO date string
   weekEnd: string; // ISO date string
+  analyticsData: any; // The complete analytics JSON (structured_analytics + human_summary)
+  s3Location: string; // Reference to the S3 file
+  metadata: {
+    workoutCount: number;
+    conversationCount: number;
+    memoryCount: number;
+    historicalSummaryCount: number;
+    analyticsLength: number;
+    hasAthleteProfile: boolean;
+    hasDualOutput: boolean;
+    humanSummaryLength: number;
+    normalizationApplied?: boolean;
+    analysisConfidence: string; // "high" | "medium" | "low"
+    dataCompleteness: number; // 0.0 - 1.0
+  };
+}
+
+/**
+ * Monthly analytics data for DynamoDB storage
+ */
+export interface MonthlyAnalytics {
+  userId: string;
+  monthId: string; // Format: YYYY-MM (e.g., "2025-10")
+  monthStart: string; // ISO date string
+  monthEnd: string; // ISO date string
   analyticsData: any; // The complete analytics JSON (structured_analytics + human_summary)
   s3Location: string; // Reference to the S3 file
   metadata: {
