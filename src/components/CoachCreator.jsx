@@ -1,23 +1,39 @@
-import React, { useState, useRef, useEffect, memo } from 'react';
+import React, { useState, useRef, useEffect, memo } from "react";
 import { flushSync } from "react-dom";
-import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Tooltip } from 'react-tooltip';
-import { useAuth } from '../auth/contexts/AuthContext';
-import { useAuthorizeUser } from '../auth/hooks/useAuthorizeUser';
-import { getUserDisplayName } from '../auth/utils/authHelpers';
-import { AccessDenied, LoadingScreen } from './shared/AccessDenied';
-import { containerPatterns, layoutPatterns, buttonPatterns, avatarPatterns, inputPatterns, iconButtonPatterns, tooltipPatterns } from '../utils/uiPatterns';
-import { SendIcon, PlusIcon, CameraIcon, PaperclipIcon, SmileIcon, MicIcon, TrashIcon } from './themes/SynthwaveComponents';
-import ChatInput from './shared/ChatInput';
-import ProgressIndicator from './shared/ProgressIndicator';
-import UserAvatar from './shared/UserAvatar';
-import CompactCoachCard from './shared/CompactCoachCard';
-import CommandPaletteButton from './shared/CommandPaletteButton';
-import CommandPalette from './shared/CommandPalette';
-import { parseMarkdown } from '../utils/markdownParser.jsx';
-import CoachCreatorAgent from '../utils/agents/CoachCreatorAgent';
-import { useToast } from '../contexts/ToastContext';
-import ImageWithPresignedUrl from './shared/ImageWithPresignedUrl';
+import { useSearchParams, useNavigate } from "react-router-dom";
+import { Tooltip } from "react-tooltip";
+import { useAuth } from "../auth/contexts/AuthContext";
+import { useAuthorizeUser } from "../auth/hooks/useAuthorizeUser";
+import { getUserDisplayName } from "../auth/utils/authHelpers";
+import { AccessDenied, LoadingScreen } from "./shared/AccessDenied";
+import {
+  containerPatterns,
+  layoutPatterns,
+  buttonPatterns,
+  avatarPatterns,
+  inputPatterns,
+  iconButtonPatterns,
+  tooltipPatterns,
+} from "../utils/uiPatterns";
+import {
+  SendIcon,
+  PlusIcon,
+  CameraIcon,
+  PaperclipIcon,
+  SmileIcon,
+  MicIcon,
+  TrashIcon,
+} from "./themes/SynthwaveComponents";
+import ChatInput from "./shared/ChatInput";
+import ProgressIndicator from "./shared/ProgressIndicator";
+import UserAvatar from "./shared/UserAvatar";
+import CompactCoachCard from "./shared/CompactCoachCard";
+import CommandPaletteButton from "./shared/CommandPaletteButton";
+import CommandPalette from "./shared/CommandPalette";
+import { parseMarkdown } from "../utils/markdownParser.jsx";
+import CoachCreatorAgent from "../utils/agents/CoachCreatorAgent";
+import { useToast } from "../contexts/ToastContext";
+import ImageWithPresignedUrl from "./shared/ImageWithPresignedUrl";
 import {
   sendMessageWithStreaming,
   isMessageStreaming,
@@ -25,48 +41,74 @@ import {
   getStreamingMessageClasses,
   getTypingState,
   handleStreamingError,
-  supportsStreaming
+  supportsStreaming,
 } from "../utils/ui/streamingUiHelper.jsx";
 
 // Vesper coach data - static coach for coach creator
 const vesperCoachData = {
-  coach_id: 'vesper-coach-creator',
-  coach_name: 'Vesper_the_Coach_Creator',
-  name: 'Vesper',
-  avatar: 'V',
+  coach_id: "vesper-coach-creator",
+  coach_name: "Vesper_the_Coach_Creator",
+  name: "Vesper",
+  avatar: "V",
   metadata: {
-    title: 'Coach Creator Guide & Mentor',
-    description: 'Your guide through the coach creation process'
-  }
+    title: "Coach Creator Guide & Mentor",
+    description: "Your guide through the coach creation process",
+  },
 };
 
 // Icons for human and AI messages
 const UserIcon = () => (
   <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-    <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+    <path
+      fillRule="evenodd"
+      d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+      clipRule="evenodd"
+    />
   </svg>
 );
 
 const AIIcon = () => (
-  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+  <svg
+    className="w-6 h-6"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+    />
     <circle cx="9" cy="9" r="1" fill="currentColor" />
     <circle cx="15" cy="9" r="1" fill="currentColor" />
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 13h6" />
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M9 13h6"
+    />
   </svg>
 );
 
 // SendIcon now imported from SynthwaveComponents
 
-
 // Feature icons removed - no longer needed
-
 
 const TypingIndicator = () => (
   <div className="flex space-x-1 px-4 py-3">
-    <div className="w-2 h-2 bg-synthwave-neon-cyan rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-    <div className="w-2 h-2 bg-synthwave-neon-cyan rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-    <div className="w-2 h-2 bg-synthwave-neon-cyan rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+    <div
+      className="w-2 h-2 bg-synthwave-neon-cyan rounded-full animate-bounce"
+      style={{ animationDelay: "0ms" }}
+    ></div>
+    <div
+      className="w-2 h-2 bg-synthwave-neon-cyan rounded-full animate-bounce"
+      style={{ animationDelay: "150ms" }}
+    ></div>
+    <div
+      className="w-2 h-2 bg-synthwave-neon-cyan rounded-full animate-bounce"
+      style={{ animationDelay: "300ms" }}
+    ></div>
   </div>
 );
 
@@ -74,9 +116,7 @@ const TypingIndicator = () => (
 const ContextualUpdateIndicator = ({ content, stage }) => {
   return (
     <div className="flex items-end gap-2 mb-1">
-      <div className={`flex-shrink-0 ${avatarPatterns.aiSmall}`}>
-        V
-      </div>
+      <div className={`flex-shrink-0 ${avatarPatterns.aiSmall}`}>V</div>
       <div className="px-4 py-2">
         <span className="font-rajdhani text-base italic animate-pulse text-synthwave-text-secondary/70">
           {content}
@@ -87,111 +127,116 @@ const ContextualUpdateIndicator = ({ content, stage }) => {
 };
 
 // Memoized MessageItem component to prevent unnecessary re-renders during streaming
-const MessageItem = memo(({
-  message,
-  agentState,
-  userEmail,
-  userDisplayName,
-  getUserInitial,
-  formatTime,
-  renderMessageContent
-}) => {
-  return (
-    <div
-      className={`flex items-end gap-2 mb-1 group ${
-        message.type === "user" ? "flex-row-reverse" : "flex-row"
-      }`}
-    >
-      {/* Avatar */}
-      <div className="flex-shrink-0">
-        {message.type === "user" ? (
-          <UserAvatar
-            email={userEmail}
-            username={userDisplayName}
-            size={32}
-          />
-        ) : (
-          <div className={avatarPatterns.aiSmall}>
-            V
-          </div>
-        )}
-      </div>
-
-      {/* Message Bubble */}
+const MessageItem = memo(
+  ({
+    message,
+    agentState,
+    userEmail,
+    userDisplayName,
+    getUserInitial,
+    formatTime,
+    renderMessageContent,
+  }) => {
+    return (
       <div
-        className={`max-w-[95%] sm:max-w-[70%] ${message.type === "user" ? "items-end" : "items-start"} flex flex-col`}
+        className={`flex items-end gap-2 mb-1 group ${
+          message.type === "user" ? "flex-row-reverse" : "flex-row"
+        }`}
       >
-        <div
-          className={getStreamingMessageClasses(
-            message,
-            agentState,
-            `px-4 py-3 rounded-2xl shadow-sm ${
-              message.type === "user"
-                ? "bg-gradient-to-br from-synthwave-neon-pink/80 to-synthwave-neon-pink/60 text-white border-0 rounded-br-md shadow-xl shadow-synthwave-neon-pink/30 backdrop-blur-sm"
-                : containerPatterns.aiChatBubble
-            }`
+        {/* Avatar */}
+        <div className="flex-shrink-0">
+          {message.type === "user" ? (
+            <UserAvatar
+              email={userEmail}
+              username={userDisplayName}
+              size={32}
+            />
+          ) : (
+            <div className={avatarPatterns.aiSmall}>V</div>
           )}
+        </div>
+
+        {/* Message Bubble */}
+        <div
+          className={`max-w-[95%] sm:max-w-[70%] ${message.type === "user" ? "items-end" : "items-start"} flex flex-col`}
         >
-          <div className="font-rajdhani text-base leading-relaxed">
-            {renderMessageContent(message)}
+          <div
+            className={getStreamingMessageClasses(
+              message,
+              agentState,
+              `px-4 py-3 rounded-2xl shadow-sm ${
+                message.type === "user"
+                  ? "bg-gradient-to-br from-synthwave-neon-pink/80 to-synthwave-neon-pink/60 text-white border-0 rounded-br-md shadow-xl shadow-synthwave-neon-pink/30 backdrop-blur-sm"
+                  : containerPatterns.aiChatBubble
+              }`
+            )}
+          >
+            <div className="font-rajdhani text-base leading-relaxed">
+              {renderMessageContent(message)}
+            </div>
+          </div>
+
+          <div
+            className={`flex items-center gap-1 px-2 mt-1 ${message.type === "user" ? "justify-end" : "justify-start"}`}
+          >
+            <span className="text-xs text-synthwave-text-secondary font-rajdhani">
+              {formatTime(message.timestamp)}
+            </span>
+            {message.type === "user" && (
+              <div className="flex gap-1">
+                <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink opacity-60"></div>
+                <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink"></div>
+              </div>
+            )}
+            {message.type === "ai" && (
+              <div className="flex gap-1">
+                <div className="w-3 h-3 rounded-full bg-synthwave-neon-cyan opacity-60"></div>
+                <div className="w-3 h-3 rounded-full bg-synthwave-neon-cyan"></div>
+              </div>
+            )}
           </div>
         </div>
-
-        <div
-          className={`flex items-center gap-1 px-2 mt-1 ${message.type === "user" ? "justify-end" : "justify-start"}`}
-        >
-          <span className="text-xs text-synthwave-text-secondary font-rajdhani">
-            {formatTime(message.timestamp)}
-          </span>
-          {message.type === "user" && (
-            <div className="flex gap-1">
-              <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink opacity-60"></div>
-              <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink"></div>
-            </div>
-          )}
-          {message.type === "ai" && (
-            <div className="flex gap-1">
-              <div className="w-3 h-3 rounded-full bg-synthwave-neon-cyan opacity-60"></div>
-              <div className="w-3 h-3 rounded-full bg-synthwave-neon-cyan"></div>
-            </div>
-          )}
-        </div>
       </div>
-    </div>
-  );
-}, (prevProps, nextProps) => {
-  // Custom comparison function for React.memo
-  // Re-render if:
-  // 1. Message content changed (for streaming updates)
-  // 2. Message ID changed (different message)
-  // 3. Agent streaming state changed (affects this message's rendering)
+    );
+  },
+  (prevProps, nextProps) => {
+    // Custom comparison function for React.memo
+    // Re-render if:
+    // 1. Message content changed (for streaming updates)
+    // 2. Message ID changed (different message)
+    // 3. Agent streaming state changed (affects this message's rendering)
 
-  const messageChanged =
-    prevProps.message.id !== nextProps.message.id ||
-    prevProps.message.content !== nextProps.message.content;
+    const messageChanged =
+      prevProps.message.id !== nextProps.message.id ||
+      prevProps.message.content !== nextProps.message.content;
 
-  const streamingStateChanged =
-    prevProps.agentState.isStreaming !== nextProps.agentState.isStreaming ||
-    prevProps.agentState.streamingMessageId !== nextProps.agentState.streamingMessageId ||
-    prevProps.agentState.streamingMessage !== nextProps.agentState.streamingMessage;
+    const streamingStateChanged =
+      prevProps.agentState.isStreaming !== nextProps.agentState.isStreaming ||
+      prevProps.agentState.streamingMessageId !==
+        nextProps.agentState.streamingMessageId ||
+      prevProps.agentState.streamingMessage !==
+        nextProps.agentState.streamingMessage;
 
-  const userChanged = prevProps.userEmail !== nextProps.userEmail ||
-    prevProps.userDisplayName !== nextProps.userDisplayName;
+    const userChanged =
+      prevProps.userEmail !== nextProps.userEmail ||
+      prevProps.userDisplayName !== nextProps.userDisplayName;
 
-  const shouldRerender = messageChanged || streamingStateChanged || userChanged;
+    const shouldRerender =
+      messageChanged || streamingStateChanged || userChanged;
 
-  // Return true if props are equal (no re-render needed)
-  // Return false if props changed (re-render needed)
-  return !shouldRerender;
-});
+    // Return true if props are equal (no re-render needed)
+    // Return false if props changed (re-render needed)
+    return !shouldRerender;
+  }
+);
 
 // Add display name for debugging
-MessageItem.displayName = 'MessageItem';
+MessageItem.displayName = "MessageItem";
 
 function CoachCreator() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const userId = searchParams.get('userId');
+  const userId = searchParams.get("userId");
   const { success: showSuccess, error: showError } = useToast();
 
   // Authorize that URL userId matches authenticated user
@@ -199,13 +244,13 @@ function CoachCreator() {
     isValidating: isValidatingUserId,
     isValid: isValidUserId,
     userAttributes,
-    error: userIdError
+    error: userIdError,
   } = useAuthorizeUser(userId);
-  const coachCreatorSessionId = searchParams.get('coachCreatorSessionId');
+  const coachCreatorSessionId = searchParams.get("coachCreatorSessionId");
 
   // Get user's first letter for avatar
   const getUserInitial = () => {
-    if (!userAttributes) return 'U';
+    if (!userAttributes) return "U";
 
     // Create a user object compatible with getUserDisplayName
     const userForDisplayName = { attributes: userAttributes };
@@ -216,10 +261,14 @@ function CoachCreator() {
   // Get user email and display name from profile (preferred) or Cognito (fallback)
   const { userProfile } = useAuth();
   const userEmail = userAttributes?.email;
-  const userDisplayName = userProfile?.displayName || (userAttributes ? getUserDisplayName({ attributes: userAttributes }) : 'User');
+  const userDisplayName =
+    userProfile?.displayName ||
+    (userAttributes
+      ? getUserDisplayName({ attributes: userAttributes })
+      : "User");
 
   // UI-specific state
-  const [inputMessage, setInputMessage] = useState('');
+  const [inputMessage, setInputMessage] = useState("");
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
@@ -231,7 +280,7 @@ function CoachCreator() {
 
   // Command palette state
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
-  const [commandPaletteCommand, setCommandPaletteCommand] = useState('');
+  const [commandPaletteCommand, setCommandPaletteCommand] = useState("");
 
   // Session loading error state
   const [sessionLoadError, setSessionLoadError] = useState(null);
@@ -243,16 +292,16 @@ function CoachCreator() {
   useEffect(() => {
     const handleKeyboardShortcuts = (event) => {
       // Cmd/Ctrl + K to open command palette
-      if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
+      if ((event.metaKey || event.ctrlKey) && event.key === "k") {
         event.preventDefault();
-        setCommandPaletteCommand('');
+        setCommandPaletteCommand("");
         setIsCommandPaletteOpen(true);
       }
     };
 
-    document.addEventListener('keydown', handleKeyboardShortcuts);
+    document.addEventListener("keydown", handleKeyboardShortcuts);
     return () => {
-      document.removeEventListener('keydown', handleKeyboardShortcuts);
+      document.removeEventListener("keydown", handleKeyboardShortcuts);
     };
   }, [isCommandPaletteOpen]);
 
@@ -266,7 +315,7 @@ function CoachCreator() {
     error: null,
     // Streaming-specific state (aligned with CoachConversations)
     isStreaming: false,
-    streamingMessage: '',
+    streamingMessage: "",
     streamingMessageId: null,
   });
 
@@ -288,15 +337,17 @@ function CoachCreator() {
           }
         },
         onNavigation: (type, data) => {
-          if (type === 'session-created') {
+          if (type === "session-created") {
             const newSearchParams = new URLSearchParams();
-            newSearchParams.set('userId', data.userId);
-            newSearchParams.set('coachCreatorSessionId', data.sessionId);
-            navigate(`/coach-creator?${newSearchParams.toString()}`, { replace: true });
-          } else if (type === 'session-expired') {
+            newSearchParams.set("userId", data.userId);
+            newSearchParams.set("coachCreatorSessionId", data.sessionId);
+            navigate(`/coach-creator?${newSearchParams.toString()}`, {
+              replace: true,
+            });
+          } else if (type === "session-expired") {
             // Don't navigate - let the error handling show the AccessDenied message
             // The sessionLoadError state will be set by the catch block
-          } else if (type === 'session-complete') {
+          } else if (type === "session-complete") {
             // Delay showing completion modal to give user time to read final AI message
             setTimeout(() => {
               setShowCompletionModal(true);
@@ -304,21 +355,26 @@ function CoachCreator() {
           }
         },
         onError: (error) => {
-          console.error('Agent error:', error);
+          console.error("Agent error:", error);
           // Could show toast notification here
-        }
+        },
       });
 
       // Load existing session if we have both userId and sessionId
       if (userId && coachCreatorSessionId) {
         setTimeout(async () => {
           try {
-            await agentRef.current.loadExistingSession(userId, coachCreatorSessionId);
+            await agentRef.current.loadExistingSession(
+              userId,
+              coachCreatorSessionId
+            );
           } catch (error) {
-            console.error('Error loading existing session:', error);
+            console.error("Error loading existing session:", error);
             // Set session load error for display
             if (error.message === "Session not found or expired") {
-              setSessionLoadError("Coach creator session not found or has expired.");
+              setSessionLoadError(
+                "Coach creator session not found or has expired."
+              );
             } else {
               setSessionLoadError("Failed to load coach creator session.");
             }
@@ -336,16 +392,30 @@ function CoachCreator() {
   }, [userId, coachCreatorSessionId, navigate]);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   // Quick suggestions for coach creator
   const quickSuggestions = [
-    { label: "Strength Training", message: "I want to build muscle and gain strength" },
-    { label: "Weight Loss", message: "I want to lose weight and improve cardio" },
+    {
+      label: "Strength Training",
+      message: "I want to build muscle and gain strength",
+    },
+    {
+      label: "Weight Loss",
+      message: "I want to lose weight and improve cardio",
+    },
     { label: "Beginner", message: "I'm a beginner looking to get started" },
-    { label: "Intermediate", message: "I have intermediate experience with CrossFit and Olympic lifting" },
-    { label: "Advanced", message: "My main goals are to improve my olympic lifting through block periodization" }
+    {
+      label: "Intermediate",
+      message:
+        "I have intermediate experience with CrossFit and Olympic lifting",
+    },
+    {
+      label: "Advanced",
+      message:
+        "My main goals are to improve my olympic lifting through block periodization",
+    },
   ];
 
   // Coach creation tips content
@@ -353,22 +423,25 @@ function CoachCreator() {
     items: [
       {
         title: "Be Specific",
-        description: "The more details you share about your goals, experience, and preferences, the more personalized your coach becomes."
+        description:
+          "The more details you share about your goals, experience, and preferences, the more personalized your coach becomes.",
       },
       {
         title: "Share Your Story",
-        description: "Tell me about your fitness journey, challenges, and what motivates you."
+        description:
+          "Tell me about your fitness journey, challenges, and what motivates you.",
       },
       {
         title: "Be Honest",
-        description: "Authentic information helps create a coach that truly understands and supports you."
-      }
-    ]
+        description:
+          "Authentic information helps create a coach that truly understands and supports you.",
+      },
+    ],
   };
 
   useEffect(() => {
     scrollToBottom();
-  }, [agentState.messages, agentState.isTyping]);
+  }, [agentState.messages, agentState.isTyping, agentState.contextualUpdate]);
 
   // Auto-scroll to bottom on page load when messages are first loaded
   useEffect(() => {
@@ -387,15 +460,20 @@ function CoachCreator() {
     if (!agentRef.current) return;
 
     try {
-      await sendMessageWithStreaming(agentRef.current, messageContent, imageS3Keys, {
-        enableStreaming: supportsStreaming(),
-        onStreamingStart: () => {
-          // Streaming started
-        },
-        onStreamingError: (error) => {
-          handleStreamingError(error, { error: showError });
+      await sendMessageWithStreaming(
+        agentRef.current,
+        messageContent,
+        imageS3Keys,
+        {
+          enableStreaming: supportsStreaming(),
+          onStreamingStart: () => {
+            // Streaming started
+          },
+          onStreamingError: (error) => {
+            handleStreamingError(error, { error: showError });
+          },
         }
-      });
+      );
     } catch (error) {
       console.error("Error sending message:", error);
       handleStreamingError(error, { error: showError });
@@ -423,26 +501,28 @@ function CoachCreator() {
         {message.imageS3Keys && message.imageS3Keys.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-2">
             {message.imageS3Keys.map((s3Key, index) => (
-              <ImageWithPresignedUrl key={index} s3Key={s3Key} userId={userId} index={index} />
+              <ImageWithPresignedUrl
+                key={index}
+                s3Key={s3Key}
+                userId={userId}
+                index={index}
+              />
             ))}
           </div>
         )}
 
         {/* Render text content */}
-        {displayContent && (
-          message.type === "ai" ? (
-            // AI messages use full markdown parsing
-            parseMarkdown(displayContent)
-          ) : (
-            // User messages: simple line break rendering
-            displayContent.split("\n").map((line, index, array) => (
-              <span key={index}>
-                {line}
-                {index < array.length - 1 && <br />}
-              </span>
-            ))
-          )
-        )}
+        {displayContent &&
+          (message.type === "ai"
+            ? // AI messages use full markdown parsing
+              parseMarkdown(displayContent)
+            : // User messages: simple line break rendering
+              displayContent.split("\n").map((line, index, array) => (
+                <span key={index}>
+                  {line}
+                  {index < array.length - 1 && <br />}
+                </span>
+              )))}
       </>
     );
   };
@@ -457,11 +537,14 @@ function CoachCreator() {
 
     setIsDeleting(true);
     try {
-      await CoachCreatorAgent.deleteCoachCreatorSession(userId, coachCreatorSessionId);
+      await CoachCreatorAgent.deleteCoachCreatorSession(
+        userId,
+        coachCreatorSessionId
+      );
       // Redirect to coaches page after successful deletion
       navigate(`/coaches?userId=${userId}`);
     } catch (error) {
-      console.error('Error deleting coach creator session:', error);
+      console.error("Error deleting coach creator session:", error);
       // Close modal even on error
       setShowDeleteModal(false);
     } finally {
@@ -476,25 +559,24 @@ function CoachCreator() {
   // Handle missing required parameters
   useEffect(() => {
     if (!userId || !coachCreatorSessionId) {
-      navigate(`/coaches${userId ? `?userId=${userId}` : ''}`, { replace: true });
+      navigate(`/coaches${userId ? `?userId=${userId}` : ""}`, {
+        replace: true,
+      });
     }
   }, [userId, coachCreatorSessionId, navigate]);
 
   // Handle session loading errors first
   if (sessionLoadError) {
-    return (
-      <AccessDenied
-        message={sessionLoadError}
-        userId={userId}
-      />
-    );
+    return <AccessDenied message={sessionLoadError} userId={userId} />;
   }
 
   // Handle userId validation errors - only show AccessDenied if validation is complete and failed
   if (!isValidatingUserId && (userIdError || !isValidUserId)) {
     return (
       <AccessDenied
-        message={userIdError || "You can only access your own coach creation sessions."}
+        message={
+          userIdError || "You can only access your own coach creation sessions."
+        }
         userId={userId}
       />
     );
@@ -506,10 +588,15 @@ function CoachCreator() {
   }
 
   // Show skeleton loading while validating userId or loading agent state
-  if (isValidatingUserId || (agentState.isLoadingItem && agentState.messages.length === 0)) {
+  if (
+    isValidatingUserId ||
+    (agentState.isLoadingItem && agentState.messages.length === 0)
+  ) {
     return (
       <div className={`${layoutPatterns.pageContainer} min-h-screen pb-8`}>
-        <div className={`${layoutPatterns.contentWrapper} min-h-[calc(100vh-5rem)] flex flex-col`}>
+        <div
+          className={`${layoutPatterns.contentWrapper} min-h-[calc(100vh-5rem)] flex flex-col`}
+        >
           {/* Compact Horizontal Header Skeleton */}
           <header className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-6">
             {/* Left: Title + Coach Card */}
@@ -537,18 +624,27 @@ function CoachCreator() {
           {/* Main Content Area skeleton */}
           <div className="flex-1 flex justify-center">
             <div className="w-full max-w-7xl">
-              <div className={`${containerPatterns.mainContent} h-[500px] flex flex-col`}>
+              <div
+                className={`${containerPatterns.mainContent} h-[500px] flex flex-col`}
+              >
                 {/* Messages Area skeleton */}
                 <div className="flex-1 overflow-y-auto overflow-hidden p-6 space-y-3">
                   {/* Chat message skeletons */}
                   {[1, 2].map((i) => (
-                    <div key={i} className={`flex items-end gap-2 ${i % 2 === 0 ? 'flex-row-reverse' : 'flex-row'}`}>
+                    <div
+                      key={i}
+                      className={`flex items-end gap-2 ${i % 2 === 0 ? "flex-row-reverse" : "flex-row"}`}
+                    >
                       {/* Avatar skeleton */}
                       <div className="flex-shrink-0 w-8 h-8 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
 
                       {/* Message bubble skeleton */}
-                      <div className={`max-w-[70%] ${i % 2 === 0 ? 'items-end' : 'items-start'} flex flex-col`}>
-                        <div className={`px-4 py-3 rounded-2xl ${i % 2 === 0 ? 'rounded-br-md' : 'rounded-bl-md'} bg-synthwave-text-muted/20 animate-pulse min-w-[600px] min-h-[130px]`}>
+                      <div
+                        className={`max-w-[70%] ${i % 2 === 0 ? "items-end" : "items-start"} flex flex-col`}
+                      >
+                        <div
+                          className={`px-4 py-3 rounded-2xl ${i % 2 === 0 ? "rounded-br-md" : "rounded-bl-md"} bg-synthwave-text-muted/20 animate-pulse min-w-[600px] min-h-[130px]`}
+                        >
                           <div className="space-y-1">
                             <div className="h-4 bg-synthwave-text-muted/30 rounded animate-pulse w-full"></div>
                             <div className="h-4 bg-synthwave-text-muted/30 rounded animate-pulse w-full"></div>
@@ -557,14 +653,16 @@ function CoachCreator() {
                           </div>
                         </div>
 
-                      {/* Timestamp and status skeleton */}
-                      <div className={`flex items-center gap-1 px-2 mt-1 ${i % 2 === 0 ? 'justify-end' : 'justify-start'}`}>
-                        <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-12"></div>
-                        <div className="flex gap-1">
-                          <div className="w-3 h-3 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
-                          <div className="w-3 h-3 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
+                        {/* Timestamp and status skeleton */}
+                        <div
+                          className={`flex items-center gap-1 px-2 mt-1 ${i % 2 === 0 ? "justify-end" : "justify-start"}`}
+                        >
+                          <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-12"></div>
+                          <div className="flex gap-1">
+                            <div className="w-3 h-3 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
+                            <div className="w-3 h-3 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
+                          </div>
                         </div>
-                      </div>
                       </div>
                     </div>
                   ))}
@@ -585,7 +683,9 @@ function CoachCreator() {
   // Chat interface when userId and sessionId are present
   return (
     <div className={`${layoutPatterns.pageContainer} min-h-screen pb-8`}>
-      <div className={`${layoutPatterns.contentWrapper} min-h-[calc(100vh-5rem)] flex flex-col`}>
+      <div
+        className={`${layoutPatterns.contentWrapper} min-h-[calc(100vh-5rem)] flex flex-col`}
+      >
         {/* Compact Horizontal Header */}
         <header
           className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-6"
@@ -613,38 +713,45 @@ function CoachCreator() {
 
           {/* Right section: Command Palette Button */}
           <div className="flex items-center gap-3">
-            <CommandPaletteButton onClick={() => setIsCommandPaletteOpen(true)} />
+            <CommandPaletteButton
+              onClick={() => setIsCommandPaletteOpen(true)}
+            />
           </div>
         </header>
 
         {/* Main Content Area */}
         <div className="flex-1 flex justify-center">
           <div className="w-full max-w-7xl">
-            <div className={`sm:${containerPatterns.mainContent} h-full flex flex-col`}>
+            <div
+              className={`sm:${containerPatterns.mainContent} h-full flex flex-col`}
+            >
               {/* Messages Area - with bottom padding for floating input + progress indicator */}
               <div className="flex-1 overflow-y-auto overflow-hidden p-3 sm:p-6 pb-32 sm:pb-48 space-y-4 custom-scrollbar">
                 {agentState.messages
                   .filter((message) => {
                     // Filter out empty streaming placeholder messages
                     const streaming = isMessageStreaming(message, agentState);
-                    const hasContent = message.content && message.content.trim().length > 0;
-                    const hasStreamingContent = agentState.streamingMessage && agentState.streamingMessage.trim().length > 0;
+                    const hasContent =
+                      message.content && message.content.trim().length > 0;
+                    const hasStreamingContent =
+                      agentState.streamingMessage &&
+                      agentState.streamingMessage.trim().length > 0;
 
                     // Show message if: (1) it has content, OR (2) it's streaming and has streaming content
                     return hasContent || (streaming && hasStreamingContent);
                   })
                   .map((message) => (
-                  <MessageItem
-                    key={message.id}
-                    message={message}
-                    agentState={agentState}
-                    userEmail={userEmail}
-                    userDisplayName={userDisplayName}
-                    getUserInitial={getUserInitial}
-                    formatTime={formatTime}
-                    renderMessageContent={renderMessageContent}
-                  />
-                ))}
+                    <MessageItem
+                      key={message.id}
+                      message={message}
+                      agentState={agentState}
+                      userEmail={userEmail}
+                      userDisplayName={userDisplayName}
+                      getUserInitial={getUserInitial}
+                      formatTime={formatTime}
+                      renderMessageContent={renderMessageContent}
+                    />
+                  ))}
 
                 {/* Contextual Update Indicator - Shows AI processing stages (ephemeral) */}
                 {agentState.contextualUpdate && (
@@ -657,15 +764,20 @@ function CoachCreator() {
                 {/* Typing Indicator - Show only when typing but not actively streaming content */}
                 {(() => {
                   const typingState = getTypingState(agentState);
-                  return typingState.showTypingIndicator && !agentState.contextualUpdate && (
-                    <div className="flex items-end gap-2 mb-1">
-                      <div className={`flex-shrink-0 ${avatarPatterns.aiSmall}`}>
-                        V
+                  return (
+                    typingState.showTypingIndicator &&
+                    !agentState.contextualUpdate && (
+                      <div className="flex items-end gap-2 mb-1">
+                        <div
+                          className={`flex-shrink-0 ${avatarPatterns.aiSmall}`}
+                        >
+                          V
+                        </div>
+                        <div className={`${containerPatterns.aiChatBubble}`}>
+                          <TypingIndicator />
+                        </div>
                       </div>
-                      <div className={`${containerPatterns.aiChatBubble}`}>
-                        <TypingIndicator />
-                      </div>
-                    </div>
+                    )
                   );
                 })()}
 
@@ -675,7 +787,6 @@ function CoachCreator() {
           </div>
         </div>
       </div>
-
 
       {/* Chat Input Section - always show, but disable when session is complete */}
       <ChatInput
@@ -698,17 +809,19 @@ function CoachCreator() {
         progressData={agentState.progress}
       />
 
-
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[10000]">
-          <div className={`${containerPatterns.deleteModal} p-6 max-w-md w-full mx-4`}>
+          <div
+            className={`${containerPatterns.deleteModal} p-6 max-w-md w-full mx-4`}
+          >
             <div className="text-center">
               <h3 className="text-synthwave-neon-pink font-rajdhani text-xl font-bold mb-2">
                 Delete Coach Creator Session
               </h3>
               <p className="font-rajdhani text-base text-synthwave-text-secondary mb-6">
-                Are you sure you want to delete this coach creator session? This action cannot be undone.
+                Are you sure you want to delete this coach creator session? This
+                action cannot be undone.
               </p>
 
               <div className="flex space-x-4">
@@ -745,13 +858,25 @@ function CoachCreator() {
       {/* Completion Modal */}
       {showCompletionModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[10000]">
-          <div className={`${containerPatterns.successModal} p-6 max-w-md w-full mx-4`}>
+          <div
+            className={`${containerPatterns.successModal} p-6 max-w-md w-full mx-4`}
+          >
             <div className="text-center">
               {/* Header with inline icon */}
               <div className="flex items-center justify-center space-x-3 mb-2">
                 <div className="w-8 h-8 rounded-full bg-synthwave-neon-cyan/10 border-2 border-synthwave-neon-cyan flex items-center justify-center flex-shrink-0">
-                  <svg className="w-4 h-4 text-synthwave-neon-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  <svg
+                    className="w-4 h-4 text-synthwave-neon-cyan"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
+                    />
                   </svg>
                 </div>
                 <h3 className="text-synthwave-neon-cyan font-rajdhani text-xl font-bold">
@@ -760,31 +885,64 @@ function CoachCreator() {
               </div>
 
               <p className="font-rajdhani text-base text-synthwave-text-secondary mb-6">
-                Great work! W're now crafting a personalized coach tailored specifically to your journey.
+                Great work! W're now crafting a personalized coach tailored
+                specifically to your journey.
               </p>
 
               {/* Status Information - Enhanced Glassmorphism (matches Theme.jsx Option 2) */}
-              <div className={`${containerPatterns.subcontainerEnhanced} mb-6 text-left`}>
+              <div
+                className={`${containerPatterns.subcontainerEnhanced} mb-6 text-left`}
+              >
                 <div className="space-y-2">
                   <div className="flex items-start space-x-2">
-                    <svg className="w-5 h-5 text-synthwave-neon-cyan flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <svg
+                      className="w-5 h-5 text-synthwave-neon-cyan flex-shrink-0 mt-0.5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
                     </svg>
                     <p className="font-rajdhani text-sm text-synthwave-text-secondary">
                       We're now building your custom AI coach configuration
                     </p>
                   </div>
                   <div className="flex items-start space-x-2">
-                    <svg className="w-5 h-5 text-synthwave-neon-pink flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <svg
+                      className="w-5 h-5 text-synthwave-neon-pink flex-shrink-0 mt-0.5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
                     </svg>
                     <p className="font-rajdhani text-sm text-synthwave-text-secondary">
                       This usually takes 2-5 minutes to complete
                     </p>
                   </div>
                   <div className="flex items-start space-x-2">
-                    <svg className="w-5 h-5 text-synthwave-neon-purple flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <svg
+                      className="w-5 h-5 text-synthwave-neon-purple flex-shrink-0 mt-0.5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
                     </svg>
                     <p className="font-rajdhani text-sm text-synthwave-text-secondary">
                       You can monitor the build progress on your Coaches page
@@ -818,13 +976,13 @@ function CoachCreator() {
         isOpen={isCommandPaletteOpen}
         onClose={() => {
           setIsCommandPaletteOpen(false);
-          setCommandPaletteCommand('');
+          setCommandPaletteCommand("");
         }}
         prefilledCommand={commandPaletteCommand}
         userId={userId}
         coachId={vesperCoachData.coach_id}
         onNavigation={(type, data) => {
-          if (type === 'conversation-created') {
+          if (type === "conversation-created") {
             // Could navigate to a new conversation if needed
           }
         }}

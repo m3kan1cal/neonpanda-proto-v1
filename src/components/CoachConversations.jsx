@@ -13,11 +13,19 @@ import { useAuthorizeUser } from "../auth/hooks/useAuthorizeUser";
 import { getUserDisplayName } from "../auth/utils/authHelpers";
 import { useAuth } from "../auth/contexts/AuthContext";
 import { AccessDenied, LoadingScreen } from "./shared/AccessDenied";
-import { containerPatterns, layoutPatterns, inputPatterns, avatarPatterns, iconButtonPatterns, buttonPatterns, tooltipPatterns } from "../utils/uiPatterns";
+import {
+  containerPatterns,
+  layoutPatterns,
+  inputPatterns,
+  avatarPatterns,
+  iconButtonPatterns,
+  buttonPatterns,
+  tooltipPatterns,
+} from "../utils/uiPatterns";
 import { FullPageLoader, CenteredErrorState } from "./shared/ErrorStates";
 import CoachHeader from "./shared/CoachHeader";
-import CompactCoachCard from './shared/CompactCoachCard';
-import CommandPaletteButton from './shared/CommandPaletteButton';
+import CompactCoachCard from "./shared/CompactCoachCard";
+import CommandPaletteButton from "./shared/CommandPaletteButton";
 import { InlineEditField } from "./shared/InlineEditField.jsx";
 import ChatInput from "./shared/ChatInput";
 import UserAvatar from "./shared/UserAvatar";
@@ -35,7 +43,7 @@ import {
   getStreamingMessageClasses,
   getTypingState,
   handleStreamingError,
-  supportsStreaming
+  supportsStreaming,
 } from "../utils/ui/streamingUiHelper.jsx";
 import { FloatingMenuManager } from "./shared/FloatingMenuManager";
 import CommandPalette from "./shared/CommandPalette";
@@ -123,109 +131,119 @@ const ContextualUpdateIndicator = ({ content, stage, coachName }) => {
 };
 
 // Memoized MessageItem component to prevent unnecessary re-renders
-const MessageItem = memo(({
-  message,
-  agentState,
-  coachName,
-  userEmail,
-  userDisplayName,
-  getUserInitial,
-  formatTime,
-  renderMessageContent
-}) => {
-  return (
-    <div
-      className={`flex items-end gap-2 mb-1 group ${
-        message.type === "user" ? "flex-row-reverse" : "flex-row"
-      }`}
-    >
-      {/* Avatar */}
-      <div className="flex-shrink-0">
-        {message.type === "user" ? (
-          <UserAvatar
-            email={userEmail}
-            username={userDisplayName}
-            size={32}
-          />
-        ) : (
-          <div className={avatarPatterns.aiSmall}>
-            {coachName?.charAt(0) || "C"}
-          </div>
-        )}
-      </div>
-
-      {/* Message Bubble */}
+const MessageItem = memo(
+  ({
+    message,
+    agentState,
+    coachName,
+    userEmail,
+    userDisplayName,
+    getUserInitial,
+    formatTime,
+    renderMessageContent,
+  }) => {
+    return (
       <div
-        className={`max-w-[95%] sm:max-w-[70%] ${message.type === "user" ? "items-end" : "items-start"} flex flex-col`}
+        className={`flex items-end gap-2 mb-1 group ${
+          message.type === "user" ? "flex-row-reverse" : "flex-row"
+        }`}
       >
-        <div
-          className={getStreamingMessageClasses(
-            message,
-            agentState,
-            `px-4 py-3 rounded-2xl shadow-sm ${
-              message.type === "user"
-                ? "bg-gradient-to-br from-synthwave-neon-pink/80 to-synthwave-neon-pink/60 text-white border-0 rounded-br-md shadow-xl shadow-synthwave-neon-pink/30 backdrop-blur-sm"
-                : containerPatterns.aiChatBubble
-            }`
+        {/* Avatar */}
+        <div className="flex-shrink-0">
+          {message.type === "user" ? (
+            <UserAvatar
+              email={userEmail}
+              username={userDisplayName}
+              size={32}
+            />
+          ) : (
+            <div className={avatarPatterns.aiSmall}>
+              {coachName?.charAt(0) || "C"}
+            </div>
           )}
+        </div>
+
+        {/* Message Bubble */}
+        <div
+          className={`max-w-[95%] sm:max-w-[70%] ${message.type === "user" ? "items-end" : "items-start"} flex flex-col`}
         >
-          <div className="font-rajdhani text-base leading-relaxed">
-            {renderMessageContent(message)}
+          <div
+            className={getStreamingMessageClasses(
+              message,
+              agentState,
+              `px-4 py-3 rounded-2xl shadow-sm ${
+                message.type === "user"
+                  ? "bg-gradient-to-br from-synthwave-neon-pink/80 to-synthwave-neon-pink/60 text-white border-0 rounded-br-md shadow-xl shadow-synthwave-neon-pink/30 backdrop-blur-sm"
+                  : containerPatterns.aiChatBubble
+              }`
+            )}
+          >
+            <div className="font-rajdhani text-base leading-relaxed">
+              {renderMessageContent(message)}
+            </div>
+          </div>
+
+          <div
+            className={`flex items-center gap-1 px-2 mt-1 ${message.type === "user" ? "justify-end" : "justify-start"}`}
+          >
+            <span className="text-xs text-synthwave-text-secondary font-rajdhani">
+              {formatTime(message.timestamp)}
+            </span>
+            {message.type === "user" && (
+              <div className="flex gap-1">
+                <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink opacity-60"></div>
+                <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink"></div>
+              </div>
+            )}
+            {message.type === "ai" && (
+              <div className="flex gap-1">
+                <div className="w-3 h-3 rounded-full bg-synthwave-neon-cyan opacity-60"></div>
+                <div className="w-3 h-3 rounded-full bg-synthwave-neon-cyan"></div>
+              </div>
+            )}
           </div>
         </div>
-
-        <div
-          className={`flex items-center gap-1 px-2 mt-1 ${message.type === "user" ? "justify-end" : "justify-start"}`}
-        >
-          <span className="text-xs text-synthwave-text-secondary font-rajdhani">
-            {formatTime(message.timestamp)}
-          </span>
-          {message.type === "user" && (
-            <div className="flex gap-1">
-              <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink opacity-60"></div>
-              <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink"></div>
-            </div>
-          )}
-          {message.type === "ai" && (
-            <div className="flex gap-1">
-              <div className="w-3 h-3 rounded-full bg-synthwave-neon-cyan opacity-60"></div>
-              <div className="w-3 h-3 rounded-full bg-synthwave-neon-cyan"></div>
-            </div>
-          )}
-        </div>
       </div>
-    </div>
-  );
-}, (prevProps, nextProps) => {
-  // Custom comparison function for React.memo
-  // Re-render if:
-  // 1. Message content changed (for streaming updates)
-  // 2. Message ID changed (different message)
-  // 3. Agent streaming state changed (affects this message's rendering)
-  // 4. Coach name changed (affects avatar)
+    );
+  },
+  (prevProps, nextProps) => {
+    // Custom comparison function for React.memo
+    // Re-render if:
+    // 1. Message content changed (for streaming updates)
+    // 2. Message ID changed (different message)
+    // 3. Agent streaming state changed (affects this message's rendering)
+    // 4. Coach name changed (affects avatar)
 
-  const messageChanged =
-    prevProps.message.id !== nextProps.message.id ||
-    prevProps.message.content !== nextProps.message.content;
+    const messageChanged =
+      prevProps.message.id !== nextProps.message.id ||
+      prevProps.message.content !== nextProps.message.content;
 
-  const streamingStateChanged =
-    prevProps.agentState.isStreaming !== nextProps.agentState.isStreaming ||
-    prevProps.agentState.streamingMessageId !== nextProps.agentState.streamingMessageId ||
-    prevProps.agentState.streamingMessage !== nextProps.agentState.streamingMessage;
+    const streamingStateChanged =
+      prevProps.agentState.isStreaming !== nextProps.agentState.isStreaming ||
+      prevProps.agentState.streamingMessageId !==
+        nextProps.agentState.streamingMessageId ||
+      prevProps.agentState.streamingMessage !==
+        nextProps.agentState.streamingMessage;
 
-  const coachNameChanged = prevProps.coachName !== nextProps.coachName;
-  const userChanged = prevProps.userEmail !== nextProps.userEmail ||
-    prevProps.userDisplayName !== nextProps.userDisplayName;
+    const coachNameChanged = prevProps.coachName !== nextProps.coachName;
+    const userChanged =
+      prevProps.userEmail !== nextProps.userEmail ||
+      prevProps.userDisplayName !== nextProps.userDisplayName;
 
-  const shouldRerender = messageChanged || streamingStateChanged || coachNameChanged || userChanged;
+    const shouldRerender =
+      messageChanged ||
+      streamingStateChanged ||
+      coachNameChanged ||
+      userChanged;
 
-  // Return true if props are equal (no re-render needed)
-  // Return false if props changed (re-render needed)
-  return !shouldRerender;
-});
+    // Return true if props are equal (no re-render needed)
+    // Return false if props changed (re-render needed)
+    return !shouldRerender;
+  }
+);
 
 // Add display name for debugging
-MessageItem.displayName = 'MessageItem';
+MessageItem.displayName = "MessageItem";
 
 function CoachConversations() {
   const [searchParams] = useSearchParams();
@@ -244,7 +262,7 @@ function CoachConversations() {
 
   // Get user's first letter for avatar and email for Gravatar
   const getUserInitial = useCallback(() => {
-    if (!userAttributes) return 'U';
+    if (!userAttributes) return "U";
 
     // Create a user object compatible with getUserDisplayName
     const userForDisplayName = { attributes: userAttributes };
@@ -255,7 +273,11 @@ function CoachConversations() {
   // Get user email and display name from profile (preferred) or Cognito (fallback)
   const { userProfile } = useAuth();
   const userEmail = userAttributes?.email;
-  const userDisplayName = userProfile?.displayName || (userAttributes ? getUserDisplayName({ attributes: userAttributes }) : 'User');
+  const userDisplayName =
+    userProfile?.displayName ||
+    (userAttributes
+      ? getUserDisplayName({ attributes: userAttributes })
+      : "User");
 
   // UI-specific state
   const [inputMessage, setInputMessage] = useState("");
@@ -303,10 +325,22 @@ function CoachConversations() {
   // Quick suggestions configuration
   const quickSuggestions = [
     { label: "Log Workout", message: "/log-workout " },
-    { label: "Daily Check-in", message: "I'm checking in for the day. What do I need to be aware of?" },
-    { label: "Progression", message: "I want to progress/increase the difficulty of my workouts." },
-    { label: "Motivation", message: "I'm feeling unmotivated. Can you help me get back on track?" },
-    { label: "WOD Creation", message: "Create a WOD for me today based on my goals and training plan." }
+    {
+      label: "Daily Check-in",
+      message: "I'm checking in for the day. What do I need to be aware of?",
+    },
+    {
+      label: "Progression",
+      message: "I want to progress/increase the difficulty of my workouts.",
+    },
+    {
+      label: "Motivation",
+      message: "I'm feeling unmotivated. Can you help me get back on track?",
+    },
+    {
+      label: "WOD Creation",
+      message: "Create a WOD for me today based on my goals and training plan.",
+    },
   ];
 
   // Chat tips content
@@ -314,21 +348,25 @@ function CoachConversations() {
     items: [
       {
         title: "Slash Commands",
-        description: "Type '/' to see available commands like /log-workout or /save-memory for quick actions."
+        description:
+          "Type '/' to see available commands like /log-workout or /save-memory for quick actions.",
       },
       {
         title: "Be Specific",
-        description: "The more details you provide about your workouts, goals, and challenges, the better your coach can help."
+        description:
+          "The more details you provide about your workouts, goals, and challenges, the better your coach can help.",
       },
       {
         title: "Track Progress",
-        description: "Regularly log your workouts and share how you're feeling to help your coach adapt your training."
+        description:
+          "Regularly log your workouts and share how you're feeling to help your coach adapt your training.",
       },
       {
         title: "Ask Questions",
-        description: "Don't hesitate to ask about form, modifications, nutrition, or anything fitness-related."
-      }
-    ]
+        description:
+          "Don't hesitate to ask about form, modifications, nutrition, or anything fitness-related.",
+      },
+    ],
   };
 
   // Handle keyboard shortcuts
@@ -361,7 +399,7 @@ function CoachConversations() {
       isLoadingRecentItems: false,
       // Initialize streaming state
       isStreaming: false,
-      streamingMessage: '',
+      streamingMessage: "",
       streamingMessageId: null,
     });
 
@@ -373,7 +411,6 @@ function CoachConversations() {
   const hasAttemptedPollingRef = useRef(null); // Track if we've tried to start polling for this conversation
 
   // Debug: Track component re-renders during streaming
-
 
   // Redirect if missing required parameters
   useEffect(() => {
@@ -523,7 +560,9 @@ function CoachConversations() {
     hasAttemptedPollingRef.current = conversationId;
 
     const startTime = Date.now();
-    console.info(`🔄 [${new Date().toLocaleTimeString()}.${Date.now() % 1000}] Starting polling for initial messages in conversation: ${conversationId}`);
+    console.info(
+      `🔄 [${new Date().toLocaleTimeString()}.${Date.now() % 1000}] Starting polling for initial messages in conversation: ${conversationId}`
+    );
 
     // Capture values in closure
     const currentConversationId = conversationId;
@@ -539,16 +578,24 @@ function CoachConversations() {
     // Poll every 3 seconds
     const intervalId = setInterval(() => {
       const elapsedSeconds = ((Date.now() - startTime) / 1000).toFixed(1);
-      console.info(`🔄 [${new Date().toLocaleTimeString()}.${Date.now() % 1000}] Polling for messages... (${elapsedSeconds}s elapsed)`);
+      console.info(
+        `🔄 [${new Date().toLocaleTimeString()}.${Date.now() % 1000}] Polling for messages... (${elapsedSeconds}s elapsed)`
+      );
       if (agentRef.current) {
-        agentRef.current.loadExistingConversation(currentUserId, currentCoachId, currentConversationId);
+        agentRef.current.loadExistingConversation(
+          currentUserId,
+          currentCoachId,
+          currentConversationId
+        );
       }
     }, 3000);
     pollingIntervalRef.current = intervalId;
 
     // Stop polling after 90 seconds
     const timeoutId = setTimeout(() => {
-      console.info(`⏱️ [${new Date().toLocaleTimeString()}.${Date.now() % 1000}] Polling timeout reached (90s), stopping polling`);
+      console.info(
+        `⏱️ [${new Date().toLocaleTimeString()}.${Date.now() % 1000}] Polling timeout reached (90s), stopping polling`
+      );
       setIsPollingForMessages(false);
       if (pollingIntervalRef.current) {
         clearInterval(pollingIntervalRef.current);
@@ -557,12 +604,22 @@ function CoachConversations() {
       }
     }, 90000);
     pollingTimeoutRef.current = timeoutId;
-  }, [conversationId, userId, coachId, coachConversationAgentState.conversation]); // React to conversation loading
+  }, [
+    conversationId,
+    userId,
+    coachId,
+    coachConversationAgentState.conversation,
+  ]); // React to conversation loading
 
   // Effect 3: Stop polling when messages arrive
   useEffect(() => {
-    if (coachConversationAgentState.messages.length > 0 && pollingIntervalRef.current) {
-      console.info(`✅ [${new Date().toLocaleTimeString()}.${Date.now() % 1000}] Messages loaded (${coachConversationAgentState.messages.length} messages), stopping polling`);
+    if (
+      coachConversationAgentState.messages.length > 0 &&
+      pollingIntervalRef.current
+    ) {
+      console.info(
+        `✅ [${new Date().toLocaleTimeString()}.${Date.now() % 1000}] Messages loaded (${coachConversationAgentState.messages.length} messages), stopping polling`
+      );
       setIsPollingForMessages(false);
       clearInterval(pollingIntervalRef.current);
       pollingIntervalRef.current = null;
@@ -580,7 +637,8 @@ function CoachConversations() {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
 
       // Fallback: Also try to scroll the messages container directly
-      const messagesContainer = messagesEndRef.current.closest('.overflow-y-auto');
+      const messagesContainer =
+        messagesEndRef.current.closest(".overflow-y-auto");
       if (messagesContainer) {
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
       }
@@ -642,23 +700,31 @@ function CoachConversations() {
 
   // Auto-scroll page to top when component loads (with scroll restoration disabled)
   useEffect(() => {
-    if ('scrollRestoration' in window.history) {
-      window.history.scrollRestoration = 'manual';
+    if ("scrollRestoration" in window.history) {
+      window.history.scrollRestoration = "manual";
     }
     window.scrollTo(0, 0);
     return () => {
-      if ('scrollRestoration' in window.history) {
-        window.history.scrollRestoration = 'auto';
+      if ("scrollRestoration" in window.history) {
+        window.history.scrollRestoration = "auto";
       }
     };
   }, []);
 
   // Scroll page to top after loading completes
   useEffect(() => {
-    if (!isValidatingUserId && !coachConversationAgentState.isLoadingItem && !isPollingForMessages) {
+    if (
+      !isValidatingUserId &&
+      !coachConversationAgentState.isLoadingItem &&
+      !isPollingForMessages
+    ) {
       window.scrollTo(0, 0);
     }
-  }, [isValidatingUserId, coachConversationAgentState.isLoadingItem, isPollingForMessages]);
+  }, [
+    isValidatingUserId,
+    coachConversationAgentState.isLoadingItem,
+    isPollingForMessages,
+  ]);
 
   useEffect(() => {
     // Use a small delay to ensure DOM is fully updated before scrolling
@@ -670,6 +736,7 @@ function CoachConversations() {
   }, [
     coachConversationAgentState.messages,
     coachConversationAgentState.isTyping,
+    coachConversationAgentState.contextualUpdate,
   ]);
 
   // Scroll to bottom when conversation is first loaded
@@ -751,13 +818,14 @@ function CoachConversations() {
   const handleSaveCoachName = coachAgentRef.current?.createCoachNameHandler(
     userId,
     coachId,
-    (newName) => setCoachConversationAgentState((prevState) => ({
-      ...prevState,
-      coach: {
-        ...prevState.coach,
-        name: newName,
-      },
-    })),
+    (newName) =>
+      setCoachConversationAgentState((prevState) => ({
+        ...prevState,
+        coach: {
+          ...prevState.coach,
+          name: newName,
+        },
+      })),
     { success: showSuccess, error: showError }
   );
 
@@ -792,7 +860,7 @@ function CoachConversations() {
         },
         onStreamingError: (error) => {
           handleStreamingError(error, { error: showError });
-        }
+        },
       });
     } catch (error) {
       console.error("Error sending message:", error);
@@ -816,16 +884,21 @@ function CoachConversations() {
     isSendingMessage.current = true;
 
     try {
-      await sendMessageWithStreaming(agentRef.current, messageContent, imageS3Keys, {
-        enableStreaming: supportsStreaming(),
-        onStreamingStart: () => {
-          // Streaming started - scroll to show new message
-          setTimeout(() => scrollToBottom(), 100);
-        },
-        onStreamingError: (error) => {
-          handleStreamingError(error, { error: showError });
+      await sendMessageWithStreaming(
+        agentRef.current,
+        messageContent,
+        imageS3Keys,
+        {
+          enableStreaming: supportsStreaming(),
+          onStreamingStart: () => {
+            // Streaming started - scroll to show new message
+            setTimeout(() => scrollToBottom(), 100);
+          },
+          onStreamingError: (error) => {
+            handleStreamingError(error, { error: showError });
+          },
         }
-      });
+      );
 
       // Scroll after message is sent to ensure we're at the bottom
       setTimeout(() => scrollToBottom(), 150);
@@ -851,7 +924,7 @@ function CoachConversations() {
 
   const handleSaveConversationTitle = async (newTitle) => {
     if (!agentRef.current) {
-      throw new Error('Conversation agent not initialized');
+      throw new Error("Conversation agent not initialized");
     }
 
     try {
@@ -861,10 +934,10 @@ function CoachConversations() {
         conversationId,
         { title: newTitle.trim() }
       );
-      showSuccess('Conversation title updated successfully');
+      showSuccess("Conversation title updated successfully");
     } catch (error) {
       console.error("Error updating conversation title:", error);
-      showError('Failed to update conversation title');
+      showError("Failed to update conversation title");
       throw error;
     }
   };
@@ -910,7 +983,10 @@ function CoachConversations() {
   // Removed useCallback to prevent memoization issues during streaming
   const renderMessageContent = (message) => {
     // Get the appropriate content (streaming or final)
-    const displayContent = getMessageDisplayContent(message, coachConversationAgentState);
+    const displayContent = getMessageDisplayContent(
+      message,
+      coachConversationAgentState
+    );
 
     return (
       <>
@@ -918,26 +994,28 @@ function CoachConversations() {
         {message.imageS3Keys && message.imageS3Keys.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-2">
             {message.imageS3Keys.map((s3Key, index) => (
-              <ImageWithPresignedUrl key={index} s3Key={s3Key} userId={userId} index={index} />
+              <ImageWithPresignedUrl
+                key={index}
+                s3Key={s3Key}
+                userId={userId}
+                index={index}
+              />
             ))}
           </div>
         )}
 
         {/* Render text content */}
-        {displayContent && (
-          message.type === "ai" ? (
-            // AI messages use full markdown parsing
-            parseMarkdown(displayContent)
-          ) : (
-            // User messages: simple line break rendering
-            displayContent.split("\n").map((line, index, array) => (
-              <span key={index}>
-                {line}
-                {index < array.length - 1 && <br />}
-              </span>
-            ))
-          )
-        )}
+        {displayContent &&
+          (message.type === "ai"
+            ? // AI messages use full markdown parsing
+              parseMarkdown(displayContent)
+            : // User messages: simple line break rendering
+              displayContent.split("\n").map((line, index, array) => (
+                <span key={index}>
+                  {line}
+                  {index < array.length - 1 && <br />}
+                </span>
+              )))}
       </>
     );
   };
@@ -983,18 +1061,27 @@ function CoachConversations() {
           {/* Main Content Area skeleton */}
           <div className="flex-1 flex justify-center">
             <div className="w-full max-w-7xl">
-              <div className={`${containerPatterns.mainContent} h-[500px] flex flex-col`}>
+              <div
+                className={`${containerPatterns.mainContent} h-[500px] flex flex-col`}
+              >
                 {/* Messages Area skeleton */}
                 <div className="flex-1 overflow-y-auto overflow-hidden p-6 space-y-3">
                   {/* Chat message skeletons */}
                   {[1, 2].map((i) => (
-                    <div key={i} className={`flex items-end gap-2 ${i % 2 === 1 ? 'flex-row-reverse' : 'flex-row'}`}>
+                    <div
+                      key={i}
+                      className={`flex items-end gap-2 ${i % 2 === 1 ? "flex-row-reverse" : "flex-row"}`}
+                    >
                       {/* Avatar skeleton */}
                       <div className="flex-shrink-0 w-8 h-8 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
 
                       {/* Message bubble skeleton */}
-                      <div className={`max-w-[70%] ${i % 2 === 1 ? 'items-end' : 'items-start'} flex flex-col`}>
-                        <div className={`px-4 py-3 rounded-2xl ${i % 2 === 1 ? 'rounded-br-md' : 'rounded-bl-md'} bg-synthwave-text-muted/20 animate-pulse min-w-[600px] min-h-[130px]`}>
+                      <div
+                        className={`max-w-[70%] ${i % 2 === 1 ? "items-end" : "items-start"} flex flex-col`}
+                      >
+                        <div
+                          className={`px-4 py-3 rounded-2xl ${i % 2 === 1 ? "rounded-br-md" : "rounded-bl-md"} bg-synthwave-text-muted/20 animate-pulse min-w-[600px] min-h-[130px]`}
+                        >
                           <div className="space-y-1">
                             <div className="h-4 bg-synthwave-text-muted/30 rounded animate-pulse w-full"></div>
                             <div className="h-4 bg-synthwave-text-muted/30 rounded animate-pulse w-full"></div>
@@ -1004,7 +1091,9 @@ function CoachConversations() {
                         </div>
 
                         {/* Timestamp and status skeleton */}
-                        <div className={`flex items-center gap-1 px-2 mt-1 ${i % 2 === 1 ? 'justify-end' : 'justify-start'}`}>
+                        <div
+                          className={`flex items-center gap-1 px-2 mt-1 ${i % 2 === 1 ? "justify-end" : "justify-start"}`}
+                        >
                           <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-12"></div>
                           <div className="flex gap-1">
                             <div className="w-3 h-3 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
@@ -1081,7 +1170,9 @@ function CoachConversations() {
 
           {/* Right section: Command Palette Button */}
           <div className="flex items-center gap-3">
-            <CommandPaletteButton onClick={() => setIsCommandPaletteOpen(true)} />
+            <CommandPaletteButton
+              onClick={() => setIsCommandPaletteOpen(true)}
+            />
           </div>
         </header>
 
@@ -1106,50 +1197,67 @@ function CoachConversations() {
         {/* Main Content Area */}
         <div className="flex-1 flex justify-center">
           <div className="w-full max-w-7xl">
-            <div className={`sm:${containerPatterns.mainContent} h-full flex flex-col`}>
+            <div
+              className={`sm:${containerPatterns.mainContent} h-full flex flex-col`}
+            >
               {/* Messages Area - with bottom padding for floating input */}
               <div className="flex-1 overflow-y-auto overflow-hidden p-3 sm:p-6 pb-32 sm:pb-48 space-y-4">
                 {coachConversationAgentState.messages
                   .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp)) // Ensure chronological order
                   .filter((message) => {
                     // Filter out empty streaming placeholder messages
-                    const streaming = isMessageStreaming(message, coachConversationAgentState);
-                    const hasContent = message.content && message.content.trim().length > 0;
-                    const hasStreamingContent = coachConversationAgentState.streamingMessage && coachConversationAgentState.streamingMessage.trim().length > 0;
+                    const streaming = isMessageStreaming(
+                      message,
+                      coachConversationAgentState
+                    );
+                    const hasContent =
+                      message.content && message.content.trim().length > 0;
+                    const hasStreamingContent =
+                      coachConversationAgentState.streamingMessage &&
+                      coachConversationAgentState.streamingMessage.trim()
+                        .length > 0;
 
                     // Show message if: (1) it has content, OR (2) it's streaming and has streaming content
                     return hasContent || (streaming && hasStreamingContent);
                   })
                   .map((message, index) => (
-                  <MessageItem
-                    key={message.id}
-                    message={message}
-                    agentState={coachConversationAgentState}
-                    coachName={coachConversationAgentState.coach?.name}
-                    userEmail={userEmail}
-                    userDisplayName={userDisplayName}
-                    getUserInitial={getUserInitial}
-                    formatTime={formatTime}
-                    renderMessageContent={renderMessageContent}
-                  />
-                ))}
+                    <MessageItem
+                      key={message.id}
+                      message={message}
+                      agentState={coachConversationAgentState}
+                      coachName={coachConversationAgentState.coach?.name}
+                      userEmail={userEmail}
+                      userDisplayName={userDisplayName}
+                      getUserInitial={getUserInitial}
+                      formatTime={formatTime}
+                      renderMessageContent={renderMessageContent}
+                    />
+                  ))}
 
                 {/* Contextual Update Indicator - Shows AI processing stages (ephemeral) */}
                 {coachConversationAgentState.contextualUpdate && (
                   <ContextualUpdateIndicator
-                    content={coachConversationAgentState.contextualUpdate.content}
+                    content={
+                      coachConversationAgentState.contextualUpdate.content
+                    }
                     stage={coachConversationAgentState.contextualUpdate.stage}
                     coachName={coachConversationAgentState.coach?.name}
                   />
                 )}
 
                 {/* Typing Indicator - Show only when typing but not actively streaming content */}
-                {typingState.showTypingIndicator && !coachConversationAgentState.contextualUpdate && (
+                {typingState.showTypingIndicator &&
+                  !coachConversationAgentState.contextualUpdate && (
                     <div className="flex items-end gap-2 mb-1">
-                      <div className={`flex-shrink-0 ${avatarPatterns.aiSmall}`}>
-                        {coachConversationAgentState.coach?.name?.charAt(0) || "C"}
+                      <div
+                        className={`flex-shrink-0 ${avatarPatterns.aiSmall}`}
+                      >
+                        {coachConversationAgentState.coach?.name?.charAt(0) ||
+                          "C"}
                       </div>
-                      <div className={`${containerPatterns.aiChatBubble} px-4 py-3`}>
+                      <div
+                        className={`${containerPatterns.aiChatBubble} px-4 py-3`}
+                      >
                         <div className="flex space-x-1">
                           <div className="w-2 h-2 bg-synthwave-neon-cyan rounded-full animate-bounce"></div>
                           <div
@@ -1163,7 +1271,7 @@ function CoachConversations() {
                         </div>
                       </div>
                     </div>
-                )}
+                  )}
 
                 <div ref={messagesEndRef} />
               </div>
@@ -1230,7 +1338,9 @@ function CoachConversations() {
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[10000]">
-          <div className={`${containerPatterns.deleteModal} p-6 max-w-md w-full mx-4`}>
+          <div
+            className={`${containerPatterns.deleteModal} p-6 max-w-md w-full mx-4`}
+          >
             <div className="text-center">
               <h3 className="text-synthwave-neon-pink font-rajdhani text-xl font-bold mb-2">
                 Delete Conversation

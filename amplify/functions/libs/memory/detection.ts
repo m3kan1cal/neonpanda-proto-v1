@@ -73,7 +73,7 @@ Analyze this message and determine if retrieving stored memories would enhance t
     const response = await callBedrockApi(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.CLAUDE_HAIKU_FULL,
+      MODEL_IDS.CLAUDE_HAIKU_4FULL,
       { prefillResponse: "{" } // Force JSON output format
     );
     const result = parseJsonWithFallbacks(response);
@@ -174,7 +174,7 @@ Analyze this message and respond with the JSON format specified.`;
     const response = await callBedrockApi(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.CLAUDE_HAIKU_FULL
+      MODEL_IDS.CLAUDE_HAIKU_4FULL
     );
     // Clean the response to handle potential markdown wrapping
     let cleanedResponse = response.trim();
@@ -400,7 +400,7 @@ Analyze this memory and respond with the JSON format specified.`;
     const response = await callBedrockApi(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.CLAUDE_HAIKU_FULL
+      MODEL_IDS.CLAUDE_HAIKU_4FULL
     );
     // Clean the response to handle potential markdown wrapping
     let cleanedResponse = response.trim();
@@ -639,7 +639,7 @@ Provide comprehensive memory analysis following the framework above.`;
     const response = await callBedrockApi(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.CLAUDE_HAIKU_FULL, // Reliable for critical memory analysis
+      MODEL_IDS.CLAUDE_HAIKU_4FULL, // Reliable for critical memory analysis
       { prefillResponse: "{" } // Force JSON output format
     );
 

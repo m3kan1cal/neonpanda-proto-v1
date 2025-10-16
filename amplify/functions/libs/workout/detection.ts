@@ -246,7 +246,7 @@ CRITICAL: When in doubt, DO NOT classify as workout logging. It's better to miss
     const response = await callBedrockApi(
       detectionPrompt,
       message,
-      MODEL_IDS.CLAUDE_HAIKU_FULL,
+      MODEL_IDS.CLAUDE_HAIKU_4FULL,
       { prefillResponse: "{" } // Force JSON output format
     );
 
@@ -330,7 +330,7 @@ Examples:
     const response = await callBedrockApi(
     extractionPrompt,
     message,
-    MODEL_IDS.CLAUDE_HAIKU_FULL,
+    MODEL_IDS.CLAUDE_HAIKU_4FULL,
     { prefillResponse: "{" } // Force JSON output format
   );
   const result = parseJsonWithFallbacks(response);

@@ -70,7 +70,7 @@ Analyze this message for complexity triggers that would warrant conversation sum
     const response = await callBedrockApi(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.CLAUDE_HAIKU_FULL,
+      MODEL_IDS.CLAUDE_HAIKU_4FULL,
       { prefillResponse: "{" } // Force JSON output format
     );
     const result = parseJsonWithFallbacks(response);
@@ -422,6 +422,32 @@ Complexity Indicators:
 
 Complexity Types: emotional, goal, achievement, setback, relationship, lifestyle, learning, health, program, motivation, social, competition, nutrition
 
+=== DEEP REASONING REQUIREMENTS ===
+requiresDeepReasoning: true ONLY for conversations requiring sophisticated analysis, nuanced understanding, or complex synthesis:
+- Multi-faceted program design questions combining multiple training variables
+- Complex injury/limitation scenarios requiring careful exercise substitutions and progressions
+- Deep methodology debates or philosophical training discussions (e.g., "Why periodization vs linear?")
+- Sophisticated performance analysis with multiple confounding factors
+- Nuanced coaching relationship issues requiring emotional intelligence
+- Complex goal hierarchies with competing priorities and tradeoffs
+- Advanced technique breakdowns requiring detailed biomechanical understanding
+- Strategic periodization planning with multiple overlapping training cycles
+- Mental performance coaching for competition/high-stakes events
+- Complex life-training integration with major life changes
+
+requiresDeepReasoning: false for standard coaching interactions (90-95% of messages):
+- Simple workout logging (e.g., "Did 5x5 squats at 225")
+- Basic questions with straightforward answers (e.g., "What's a good warmup?")
+- Encouragement and motivation (e.g., "Great work!", "Keep it up!")
+- Progress check-ins without complex analysis needed
+- Memory requests (e.g., "Remember I prefer evening workouts")
+- Standard form checks that don't require deep biomechanical analysis
+- Routine programming questions with clear methodology context available
+- Simple acknowledgments and conversational exchanges
+- Workout modifications with obvious alternatives
+
+GUIDELINE: Be conservative - default to false unless the message truly requires sophisticated reasoning that goes beyond conversational coaching responses.
+
 === PROCESSING PRIORITIES ===
 Determine optimal processing order:
 - workoutFirst: true if workout logging is primary intent
@@ -460,6 +486,7 @@ REQUIRED JSON STRUCTURE:
     "hasComplexity": boolean,
     "complexityTypes": ["emotional", "goal", "achievement", "setback", "relationship", "lifestyle", "learning", "health", "program", "motivation", "social", "competition", "nutrition"],
     "needsSummary": boolean,
+    "requiresDeepReasoning": boolean,
     "confidence": number (0.0 to 1.0),
     "reasoning": "brief explanation of complexity assessment"
   },
@@ -502,7 +529,7 @@ Provide comprehensive analysis following the framework above.`;
     const response = await callBedrockApi(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.CLAUDE_HAIKU_FULL, // More accurate for complex routing decisions
+      MODEL_IDS.CLAUDE_HAIKU_4FULL, // More accurate for complex routing decisions
       { prefillResponse: "{" } // Force JSON output format
     );
 
@@ -518,6 +545,7 @@ Provide comprehensive analysis following the framework above.`;
       needsMemoryRetrieval: result.memoryProcessing.needsRetrieval,
       needsPineconeSearch: result.contextNeeds.needsPineconeSearch,
       hasComplexity: result.conversationComplexity.hasComplexity,
+      requiresDeepReasoning: result.conversationComplexity.requiresDeepReasoning,
       processingTime: result.routerMetadata.processingTime,
       confidence: result.routerMetadata.confidence,
     });

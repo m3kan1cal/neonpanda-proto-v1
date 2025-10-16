@@ -223,7 +223,7 @@ Does this user want to finish the coach creator and create their custom AI coach
   const response = await callBedrockApi(
     systemPrompt,
     userPrompt,
-    MODEL_IDS.CLAUDE_HAIKU_FULL,
+    MODEL_IDS.CLAUDE_HAIKU_4FULL,
     { prefillResponse: "{" } // Force JSON output format
     // No extended thinking needed for this classification (default is false)
   );
