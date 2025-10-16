@@ -502,7 +502,7 @@ export const navigationPatterns = {
 export const quickStatsPatterns = {
   // Outer container - wraps and positions stats below header
   // Negative margin pulls stats closer to header for tighter spacing
-  container: "flex flex-wrap items-center gap-3 md:gap-4 mb-3 -mt-4",
+  container: "flex flex-wrap items-center gap-3 md:gap-4 mb-6 -mt-4",
 
   // Individual stat item - icon + number grouping
   item: "flex items-center gap-2 group cursor-help",
@@ -522,7 +522,7 @@ export const quickStatsPatterns = {
 
   // Skeleton loading states (matches optimized sizing: 16px icons, 6px padding, -16px margin)
   skeleton: {
-    container: "flex flex-wrap items-center gap-3 md:gap-4 mb-3 -mt-4",
+    container: "flex flex-wrap items-center gap-3 md:gap-4 mb-6 -mt-4",
     item: "flex items-center gap-2",
     icon: "w-7 h-7 bg-synthwave-text-muted/20 rounded-lg animate-pulse", // 28px total (16px icon + 6px padding on each side)
     value: "h-6 w-8 bg-synthwave-text-muted/20 rounded animate-pulse"

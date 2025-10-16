@@ -819,12 +819,16 @@ function CoachConversations() {
       await sendMessageWithStreaming(agentRef.current, messageContent, imageS3Keys, {
         enableStreaming: supportsStreaming(),
         onStreamingStart: () => {
-          // Streaming started
+          // Streaming started - scroll to show new message
+          setTimeout(() => scrollToBottom(), 100);
         },
         onStreamingError: (error) => {
           handleStreamingError(error, { error: showError });
         }
       });
+
+      // Scroll after message is sent to ensure we're at the bottom
+      setTimeout(() => scrollToBottom(), 150);
     } catch (error) {
       console.error("Error sending message:", error);
       handleStreamingError(error, { error: showError });
