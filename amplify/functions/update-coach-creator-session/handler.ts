@@ -247,10 +247,11 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       ];
 
       const converseMessages = await buildMultimodalContent(messages);
+      // Coach creator uses Haiku for speed and cost efficiency (structured Q&A doesn't need deep reasoning)
       rawAiResponse = await callBedrockApiMultimodal(
         questionPrompt,
         converseMessages,
-        MODEL_IDS.CLAUDE_SONNET_4_FULL
+        MODEL_IDS.CLAUDE_HAIKU_4FULL
       );
     } else {
       rawAiResponse = await callBedrockApi(questionPrompt, userResponse);
@@ -409,10 +410,11 @@ async function handleCoachCreatorStreamingResponse(
       ];
 
       const converseMessages = await buildMultimodalContent(messages);
+      // Coach creator uses Haiku for speed and cost efficiency (structured Q&A doesn't need deep reasoning)
       responseStream = await callBedrockApiMultimodalStream(
         questionPrompt,
         converseMessages,
-        MODEL_IDS.CLAUDE_SONNET_4_FULL
+        MODEL_IDS.CLAUDE_HAIKU_4FULL
       );
     } else {
       responseStream = await callBedrockApiStream(questionPrompt, userResponse);

@@ -577,10 +577,11 @@ async function* createCoachCreatorEventStream(
         });
 
         // Use multimodal stream API (supports text-only with caching)
+        // Coach creator uses Haiku for speed and cost efficiency (structured Q&A doesn't need deep reasoning)
         responseStream = await callBedrockApiMultimodalStream(
           staticPrompt + dynamicPrompt, // System prompt with cache points
           messagesWithCaching,
-          MODEL_IDS.CLAUDE_SONNET_4_FULL,
+          MODEL_IDS.CLAUDE_HAIKU_4FULL, // Haiku for structured Q&A (faster + cheaper)
           { staticPrompt, dynamicPrompt } // Enable prompt caching
         );
       } else {
@@ -697,7 +698,7 @@ const authenticatedStreamingHandler = async (
     // Check if this is a health check or OPTIONS request (these don't have proper paths/auth)
     const method = event.requestContext?.http?.method;
     const path = event.rawPath || '';
-    
+
     if (!path || path === '/' || method === 'OPTIONS') {
       console.info("⚠️ Ignoring health check or OPTIONS request:", { method, path });
       // Just close the stream for these requests

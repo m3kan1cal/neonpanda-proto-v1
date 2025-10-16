@@ -19,6 +19,24 @@ const CACHE_STEP_SIZE = 10; // Move cache boundary in 10-message increments
 const MIN_CACHE_THRESHOLD = 12; // Start caching when conversation has > 12 messages (so we cache at least 10)
 
 /**
+ * Smart model selection based on router analysis
+ * Uses Haiku 4.5 for standard conversations (faster + cheaper)
+ * Uses Sonnet 4.5 for complex reasoning (better quality)
+ *
+ * @param requiresDeepReasoning - From smart router analysis
+ * @returns Model ID to use for this conversation
+ */
+export function selectModelForConversation(requiresDeepReasoning: boolean): string {
+  const modelToUse = requiresDeepReasoning
+    ? MODEL_IDS.CLAUDE_SONNET_4_FULL
+    : MODEL_IDS.CLAUDE_HAIKU_4FULL;
+
+  console.info(`🤖 Model selection: ${requiresDeepReasoning ? 'SONNET 4.5' : 'HAIKU 4.5'} (requiresDeepReasoning=${requiresDeepReasoning})`);
+
+  return modelToUse;
+}
+
+/**
  * Helper function to build messages array with STEPPED conversation history caching
  *
  * Uses a "stepped boundary" approach where the cache boundary moves in 10-message increments:
@@ -116,7 +134,8 @@ export async function generateAIResponse(
   coachId: string,
   conversationId: string,
   userProfile?: any,
-  imageS3Keys?: string[] // NEW: Add imageS3Keys parameter
+  imageS3Keys?: string[], // Image attachments
+  requiresDeepReasoning?: boolean // NEW: Smart model selection flag
 ): Promise<ResponseGenerationResult> {
   let aiResponseContent: string;
   let promptMetadata: any = null;
@@ -251,6 +270,9 @@ export async function generateAIResponse(
     }
 
     try {
+      // Smart model selection based on router analysis
+      const selectedModel = selectModelForConversation(requiresDeepReasoning || false);
+
       // Check if this is a multimodal request (has images)
       const hasImages = imageS3Keys && imageS3Keys.length > 0;
 
@@ -271,6 +293,7 @@ export async function generateAIResponse(
         console.info('🖼️ Using multimodal Converse API with images', {
           messageCount: converseMessages.length,
           imagesCount: imageS3Keys.length,
+          model: selectedModel,
         });
 
         // Use centralized multimodal helper from api-helpers
@@ -278,7 +301,7 @@ export async function generateAIResponse(
         aiResponseContent = await callBedrockApiMultimodal(
           systemPromptWithHistory,
           converseMessages,
-          MODEL_IDS.CLAUDE_SONNET_4_FULL,
+          selectedModel,
           staticPrompt && dynamicPrompt ? { staticPrompt, dynamicPrompt } : undefined
         );
       } else {
@@ -295,13 +318,14 @@ export async function generateAIResponse(
         console.info('💬 Using text-only Converse API with history caching', {
           totalMessages: messagesWithHistory.length,
           existingMessages: existingMessages.length,
+          model: selectedModel,
         });
 
         // Use multimodal API (works for text-only too) with messages array
         aiResponseContent = await callBedrockApiMultimodal(
           systemPromptWithHistory,
           messagesWithHistory,
-          MODEL_IDS.CLAUDE_SONNET_4_FULL,
+          selectedModel,
           staticPrompt && dynamicPrompt ? { staticPrompt, dynamicPrompt } : undefined
         );
       }
@@ -341,7 +365,8 @@ export async function generateAIResponseStream(
   coachId: string,
   conversationId: string,
   userProfile?: any,
-  imageS3Keys?: string[] // NEW: Add imageS3Keys parameter
+  imageS3Keys?: string[], // Image attachments
+  requiresDeepReasoning?: boolean // NEW: Smart model selection flag
 ): Promise<ResponseGenerationStreamResult> {
   let promptMetadata: any = null;
 
@@ -475,6 +500,9 @@ export async function generateAIResponseStream(
     }
 
     try {
+      // Smart model selection based on router analysis
+      const selectedModel = selectModelForConversation(requiresDeepReasoning || false);
+
       // Check if this is a multimodal request (has images)
       const hasImages = imageS3Keys && imageS3Keys.length > 0;
 
@@ -495,6 +523,7 @@ export async function generateAIResponseStream(
         console.info('🖼️ Using multimodal Converse Stream API with images', {
           messageCount: converseMessages.length,
           imagesCount: imageS3Keys.length,
+          model: selectedModel,
         });
 
         // Use centralized multimodal streaming helper from api-helpers
@@ -502,7 +531,7 @@ export async function generateAIResponseStream(
         const responseStream = await callBedrockApiMultimodalStream(
           systemPromptWithHistory,
           converseMessages,
-          MODEL_IDS.CLAUDE_SONNET_4_FULL,
+          selectedModel,
           staticPrompt && dynamicPrompt ? { staticPrompt, dynamicPrompt } : undefined
         );
 
@@ -524,13 +553,14 @@ export async function generateAIResponseStream(
         console.info('💬 Using text-only Converse Stream API with history caching', {
           totalMessages: messagesWithHistory.length,
           existingMessages: existingMessages.length,
+          model: selectedModel,
         });
 
         // Use multimodal streaming API (works for text-only too) with messages array
         const responseStream = await callBedrockApiMultimodalStream(
           systemPromptWithHistory,
           messagesWithHistory,
-          MODEL_IDS.CLAUDE_SONNET_4_FULL,
+          selectedModel,
           staticPrompt && dynamicPrompt ? { staticPrompt, dynamicPrompt } : undefined
         );
 

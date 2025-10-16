@@ -760,7 +760,8 @@ async function* processCoachConversationAsync(
       params.coachId,
       params.conversationId,
       conversationData.userProfile,
-      params.imageS3Keys // NEW: Pass imageS3Keys
+      params.imageS3Keys, // Pass imageS3Keys
+      routerAnalysis.conversationComplexity.requiresDeepReasoning // NEW: Smart model selection
     );
 
     // Yield AI response chunks using optimized buffering strategy
@@ -932,7 +933,7 @@ const authenticatedStreamingHandler = async (
     // Check if this is a health check or OPTIONS request (these don't have proper paths/auth)
     const method = event.requestContext?.http?.method;
     const path = event.rawPath || '';
-    
+
     if (!path || path === '/' || method === 'OPTIONS') {
       console.info("⚠️ Ignoring health check or OPTIONS request:", { method, path });
       // Just close the stream for these requests

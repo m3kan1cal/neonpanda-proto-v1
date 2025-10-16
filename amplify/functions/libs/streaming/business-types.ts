@@ -118,6 +118,7 @@ export interface SmartRequestRouter {
     hasComplexity: boolean;
     complexityTypes: string[];
     needsSummary: boolean;
+    requiresDeepReasoning: boolean; // NEW: More selective than hasComplexity - for Sonnet vs Haiku decision
     confidence: number;
     reasoning: string;
   };

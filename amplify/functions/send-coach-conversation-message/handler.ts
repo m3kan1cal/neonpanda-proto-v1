@@ -233,6 +233,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     }
 
     // Non-streaming path (existing logic)
+    // Use Haiku for faster responses in legacy non-streaming path
     let responseResult;
     try {
       responseResult = await generateAIResponse(
@@ -247,7 +248,8 @@ const baseHandler: AuthenticatedHandler = async (event) => {
         coachId,
         conversationId,
         userProfile,
-        imageS3Keys // NEW: Pass imageS3Keys
+        imageS3Keys, // Pass imageS3Keys
+        false // Use Haiku for speed (no router analysis in legacy path)
       );
     } catch (error) {
       console.error('❌ Error in AI response generation, using fallback:', error);
@@ -448,7 +450,9 @@ async function handleStreamingResponse(
         userId,
         coachId,
         conversationId,
-        userProfile
+        userProfile,
+        undefined, // No imageS3Keys in fallback
+        false // Use Haiku for speed in fallback
       );
 
       return {
