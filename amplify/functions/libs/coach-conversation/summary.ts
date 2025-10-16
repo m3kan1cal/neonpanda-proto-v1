@@ -150,7 +150,7 @@ export function parseCoachConversationSummary(
 
     if (!jsonMatch) {
       // Try to find raw JSON object starting with "narrative" or "current_goals"
-      jsonMatch = aiResponse.match(/{\s*"(narrative|current_goals)"[\s\S]*}/);
+      jsonMatch = aiResponse.match(/{\s*"(?:narrative|current_goals)"[\s\S]*}/);
     }
 
     if (!jsonMatch) {

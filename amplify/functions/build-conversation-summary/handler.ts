@@ -117,6 +117,7 @@ export const handler = async (event: BuildCoachConversationSummaryEvent) => {
       await storeDebugDataInS3(
         summaryPrompt,
         {
+          type: "prompt",
           userId: event.userId,
           coachId: event.coachId,
           conversationId: event.conversationId,
@@ -137,7 +138,12 @@ export const handler = async (event: BuildCoachConversationSummaryEvent) => {
       .map((msg) => `${msg.role}: ${msg.content}`)
       .join("\n\n");
 
-    const aiResponse = await callBedrockApi(summaryPrompt, conversationContent);
+    const aiResponse = await callBedrockApi(
+      summaryPrompt,
+      conversationContent,
+      undefined, // Use default model
+      { prefillResponse: "{" } // Force JSON output format
+    );
 
     console.info("Claude summarization completed. Raw response:", {
       responseLength: aiResponse.length,
@@ -150,6 +156,7 @@ export const handler = async (event: BuildCoachConversationSummaryEvent) => {
       await storeDebugDataInS3(
         aiResponse,
         {
+          type: "ai-response",
           userId: event.userId,
           coachId: event.coachId,
           conversationId: event.conversationId,
