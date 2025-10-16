@@ -12,9 +12,8 @@ import {
   DisciplineClassification,
 } from "./types";
 import { storeDebugDataInS3, callBedrockApi, MODEL_IDS } from "../api-helpers";
-import { parseResponseWithFallbacks } from "../response-utils";
+import { parseJsonWithFallbacks } from "../response-utils";
 import { JSON_FORMATTING_INSTRUCTIONS_MINIFIED, JSON_FORMATTING_INSTRUCTIONS_STANDARD } from '../prompt-helpers';
-import { cleanResponse, fixMalformedJson } from "../response-utils";
 import { getSchemaWithContext } from "../schemas/universal-workout-schema";
 
 /**
@@ -799,26 +798,8 @@ export const parseAndValidateWorkoutData = async (
       throw new Error("Response does not end with valid JSON closing brace");
     }
 
-    // Parse the JSON response with fallback cleaning and fixing
-    let workoutData;
-    try {
-      workoutData = JSON.parse(extractedData);
-    } catch (parseError) {
-      console.warn("JSON parsing failed, attempting to clean and fix response...");
-      try {
-        const cleanedResponse = cleanResponse(extractedData);
-        const fixedResponse = fixMalformedJson(cleanedResponse);
-        workoutData = JSON.parse(fixedResponse);
-        console.info("Successfully parsed response after cleaning and fixing");
-      } catch (fallbackError) {
-        console.error("Failed to parse workout extraction response after all attempts:", {
-          originalResponse: extractedData.substring(0, 500),
-          parseError: parseError instanceof Error ? parseError.message : 'Unknown error',
-          fallbackError: fallbackError instanceof Error ? fallbackError.message : 'Unknown error'
-        });
-        throw new Error(`Invalid JSON response: ${parseError instanceof Error ? parseError.message : 'Parse failed'}`);
-      }
-    }
+    // Parse the JSON response with cleaning and fixing (handles markdown-wrapped JSON and common issues)
+    const workoutData = parseJsonWithFallbacks(extractedData);
 
     // Validate time fields are in seconds
     validateWorkoutTimes(workoutData);
@@ -1036,8 +1017,7 @@ Examples:
       { prefillResponse: "{" } // Force JSON output format
     );
 
-    const cleanedResponse = cleanResponse(response.trim());
-    const result = JSON.parse(cleanedResponse);
+    const result = parseJsonWithFallbacks(response.trim());
 
     console.info("AI time extraction result:", {
       userMessage: userMessage.substring(0, 100),
@@ -1257,7 +1237,7 @@ Return confidence 0.8+ for clear classifications, 0.5-0.7 for moderate cases, <0
     }
 
     // Use existing response parsing utility
-    const result = parseResponseWithFallbacks(response);
+    const result = parseJsonWithFallbacks(response);
 
     console.info("AI discipline classification result:", {
       discipline,

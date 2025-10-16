@@ -8,7 +8,7 @@ import {
 } from "../../../dynamodb/operations";
 import { callBedrockApi, MODEL_IDS } from "../api-helpers";
 import { JSON_FORMATTING_INSTRUCTIONS_STANDARD } from "../prompt-helpers";
-import { cleanResponse, fixMalformedJson } from "../response-utils";
+import { parseJsonWithFallbacks } from "../response-utils";
 import {
   shouldNormalizeAnalytics,
   normalizeAnalytics,
@@ -823,48 +823,8 @@ export const generateAnalytics = async (
       `🔍 Raw analytics response received: ${analyticsResponse.length} characters`
     );
 
-    // Parse JSON response with fallback cleaning
-    let analyticsData;
-    try {
-      analyticsData = JSON.parse(analyticsResponse);
-      console.info(`✅ Analytics JSON parsed successfully for user ${userId}`);
-    } catch (parseError) {
-      console.warn(
-        `⚠️  Initial JSON parse failed for user ${userId}, trying fallback cleaning...`
-      );
-      try {
-        // Try cleanResponse first (removes markdown code blocks)
-        const cleanedResponse = cleanResponse(analyticsResponse);
-        analyticsData = JSON.parse(cleanedResponse);
-        console.info(
-          `✅ Analytics JSON parsed successfully after cleaning for user ${userId}`
-        );
-      } catch (cleanError) {
-        console.warn(
-          `⚠️  Clean response failed for user ${userId}, trying malformed JSON fix...`
-        );
-        try {
-          // Last resort: try fixMalformedJson
-          const fixedResponse = fixMalformedJson(analyticsResponse);
-          analyticsData = JSON.parse(fixedResponse);
-          console.info(
-            `✅ Analytics JSON parsed successfully after fixing malformed JSON for user ${userId}`
-          );
-        } catch (finalError) {
-          console.error(
-            `❌ Failed to parse analytics JSON for user ${userId} after all attempts:`,
-            finalError
-          );
-          console.error(
-            `Raw response: ${analyticsResponse.substring(0, 500)}...`
-          );
-          throw new Error(
-            `Invalid JSON response after all cleaning attempts: ${finalError instanceof Error ? finalError.message : String(finalError)}`
-          );
-        }
-      }
-    }
-
+    // Parse JSON response with cleaning and fixing (handles markdown-wrapped JSON and common issues)
+    const analyticsData = parseJsonWithFallbacks(analyticsResponse);
     console.info(`✅ Analytics JSON parsed successfully for user ${userId}`);
 
     // NORMALIZATION STEP - Normalize analytics data for schema compliance

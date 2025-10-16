@@ -1,6 +1,7 @@
 import { CoachCreatorSession, PersonalityCoherenceCheck, CoachPersonalityTemplate, MethodologyTemplate, SafetyRule, CoachModificationCapabilities, CoachConfig } from './types';
 import { callBedrockApi, storeDebugDataInS3 } from '../api-helpers';
 import { JSON_FORMATTING_INSTRUCTIONS_STANDARD } from '../prompt-helpers';
+import { parseJsonWithFallbacks } from '../response-utils';
 import { extractSafetyProfile, extractMethodologyPreferences, extractTrainingFrequency, extractSpecializations, extractGoalTimeline, extractIntensityPreference, extractGenderPreference } from './data-extraction';
 import { generateCoachCreatorSessionSummary } from './session-management';
 import { COACH_CREATOR_QUESTIONS } from './question-management';
@@ -776,27 +777,8 @@ who completed ${session.questionHistory.length} questions. Create a coach that p
     console.warn('⚠️ Failed to store coach config response in S3 (non-critical):', err);
   }
 
-  // Parse JSON with fallback cleaning and fixing (handles markdown-wrapped JSON)
-  let coachConfig: CoachConfig;
-  try {
-    coachConfig = JSON.parse(coachConfigResponse);
-  } catch (parseError) {
-    console.warn('JSON parsing failed, attempting to clean and fix response...');
-    try {
-      const { cleanResponse, fixMalformedJson } = await import('../response-utils');
-      const cleanedResponse = cleanResponse(coachConfigResponse);
-      const fixedResponse = fixMalformedJson(cleanedResponse);
-      coachConfig = JSON.parse(fixedResponse);
-      console.info('Successfully parsed response after cleaning and fixing');
-    } catch (fallbackError) {
-      console.error('Failed to parse coach config response after all attempts:', {
-        originalResponse: coachConfigResponse.substring(0, 500),
-        parseError: parseError instanceof Error ? parseError.message : 'Unknown error',
-        fallbackError: fallbackError instanceof Error ? fallbackError.message : 'Unknown error'
-      });
-      throw new Error(`Invalid JSON response: ${parseError instanceof Error ? parseError.message : 'Parse failed'}`);
-    }
-  }
+  // Parse JSON with cleaning and fixing (handles markdown-wrapped JSON and common issues)
+  const coachConfig: CoachConfig = parseJsonWithFallbacks(coachConfigResponse);
 
   // Set created_date programmatically (not from AI response)
   if (!coachConfig.metadata) {
