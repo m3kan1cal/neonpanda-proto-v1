@@ -8,7 +8,7 @@
 import { QuickWorkoutExtraction } from './types';
 import { callBedrockApi, MODEL_IDS } from '../api-helpers';
 import { JSON_FORMATTING_INSTRUCTIONS_STANDARD } from '../prompt-helpers';
-import { cleanResponse } from '../response-utils';
+import { parseJsonWithFallbacks } from '../response-utils';
 
 /**
  * Supported workout slash commands
@@ -255,8 +255,7 @@ CRITICAL: When in doubt, DO NOT classify as workout logging. It's better to miss
       responsePreview: response.substring(0, 200)
     });
 
-    const cleanedResponse = cleanResponse(response);
-    const result = JSON.parse(cleanedResponse);
+    const result = parseJsonWithFallbacks(response);
 
     console.info('🔍 AI workout detection result:', {
       message: message.substring(0, 100),
@@ -334,8 +333,7 @@ Examples:
     MODEL_IDS.CLAUDE_HAIKU_FULL,
     { prefillResponse: "{" } // Force JSON output format
   );
-  const cleanedResponse = cleanResponse(response);
-  const result = JSON.parse(cleanedResponse);
+  const result = parseJsonWithFallbacks(response);
 
   console.info('AI quick workout extraction:', {
     message: message.substring(0, 100),

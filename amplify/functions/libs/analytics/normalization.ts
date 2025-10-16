@@ -12,7 +12,7 @@ import {
   NormalizationIssue,
 } from "./types";
 import { callBedrockApi } from "../api-helpers";
-import { cleanResponse, fixMalformedJson } from "../response-utils";
+import { parseJsonWithFallbacks } from "../response-utils";
 import { getAnalyticsSchemaWithContext } from "../schemas/universal-analytics-schema";
 
 /**
@@ -115,39 +115,8 @@ export const normalizeAnalytics = async (
       { enableThinking }
     );
 
-    // Parse JSON with fallback cleaning and fixing
-    let normalizationResult;
-    try {
-      normalizationResult = JSON.parse(normalizationResponse);
-    } catch (parseError) {
-      console.warn(
-        "JSON parsing failed, attempting to clean and fix response..."
-      );
-      try {
-        const cleanedResponse = cleanResponse(normalizationResponse);
-        const fixedResponse = fixMalformedJson(cleanedResponse);
-        normalizationResult = JSON.parse(fixedResponse);
-        console.info("Successfully parsed response after cleaning and fixing");
-      } catch (fallbackError) {
-        console.error(
-          "Failed to parse normalization response after all attempts:",
-          {
-            originalResponse: normalizationResponse.substring(0, 500),
-            parseError:
-              parseError instanceof Error
-                ? parseError.message
-                : "Unknown error",
-            fallbackError:
-              fallbackError instanceof Error
-                ? fallbackError.message
-                : "Unknown error",
-          }
-        );
-        throw new Error(
-          `Invalid JSON response: ${parseError instanceof Error ? parseError.message : "Parse failed"}`
-        );
-      }
-    }
+    // Parse JSON with cleaning and fixing (handles markdown-wrapped JSON and common issues)
+    const normalizationResult = parseJsonWithFallbacks(normalizationResponse);
 
     // Validate the response structure
     if (!normalizationResult || typeof normalizationResult !== "object") {

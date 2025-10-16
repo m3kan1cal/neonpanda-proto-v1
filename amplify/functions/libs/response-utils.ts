@@ -151,23 +151,8 @@ export function fixMalformedJson(jsonString: string): string {
  * Convenience function that applies both cleaning and fixing in sequence
  * Useful for processing AI responses that might have both markdown formatting and JSON issues
  */
-export const parseResponseWithFallbacks = (response: string): any => {
-  try {
-    // Try parsing raw response first
-    return JSON.parse(response);
-  } catch (parseError) {
-    console.warn('JSON parsing failed, attempting to clean and fix response...');
-    try {
-      const cleanedResponse = cleanResponse(response);
-      const fixedResponse = fixMalformedJson(cleanedResponse);
-      return JSON.parse(fixedResponse);
-    } catch (fallbackError) {
-      console.error('Failed to parse response after all attempts:', {
-        originalResponse: response.substring(0, 500),
-        parseError: parseError instanceof Error ? parseError.message : 'Unknown error',
-        fallbackError: fallbackError instanceof Error ? fallbackError.message : 'Unknown error'
-      });
-      throw new Error(`Invalid JSON response: ${parseError instanceof Error ? parseError.message : 'Parse failed'}`);
-    }
-  }
+export const parseJsonWithFallbacks = (response: string): any => {
+  const cleanedResponse = cleanResponse(response);
+  const fixedResponse = fixMalformedJson(cleanedResponse);
+  return JSON.parse(fixedResponse);
 };

@@ -10,7 +10,7 @@ import {
   MemoryRetrievalNeedResult,
   MemoryCharacteristicsResult,
 } from "./types";
-import { cleanResponse } from "../response-utils";
+import { parseJsonWithFallbacks } from "../response-utils";
 
 /**
  * @deprecated DEPRECATED: This function has been replaced by the Smart Request Router.
@@ -76,8 +76,7 @@ Analyze this message and determine if retrieving stored memories would enhance t
       MODEL_IDS.CLAUDE_HAIKU_FULL,
       { prefillResponse: "{" } // Force JSON output format
     );
-    const cleanedResponse = cleanResponse(response);
-    const result = JSON.parse(cleanedResponse);
+    const result = parseJsonWithFallbacks(response);
 
     return result;
   } catch (error) {
@@ -644,8 +643,7 @@ Provide comprehensive memory analysis following the framework above.`;
       { prefillResponse: "{" } // Force JSON output format
     );
 
-    const cleanedResponse = cleanResponse(response);
-    const result = JSON.parse(cleanedResponse);
+    const result = parseJsonWithFallbacks(response);
     const processingTime = Date.now() - startTime;
 
     // Transform result to match expected interface

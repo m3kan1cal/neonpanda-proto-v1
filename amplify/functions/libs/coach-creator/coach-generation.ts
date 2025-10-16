@@ -1,6 +1,7 @@
 import { CoachCreatorSession, PersonalityCoherenceCheck, CoachPersonalityTemplate, MethodologyTemplate, SafetyRule, CoachModificationCapabilities, CoachConfig } from './types';
 import { callBedrockApi, storeDebugDataInS3 } from '../api-helpers';
 import { JSON_FORMATTING_INSTRUCTIONS_STANDARD } from '../prompt-helpers';
+import { parseJsonWithFallbacks } from '../response-utils';
 import { extractSafetyProfile, extractMethodologyPreferences, extractTrainingFrequency, extractSpecializations, extractGoalTimeline, extractIntensityPreference, extractGenderPreference } from './data-extraction';
 import { generateCoachCreatorSessionSummary } from './session-management';
 import { COACH_CREATOR_QUESTIONS } from './question-management';
@@ -548,20 +549,20 @@ USER SOPHISTICATION: ${session.userContext.sophisticationLevel}
 SESSION DURATION: ${session.questionHistory.length} questions completed
 
 COACH GENDER PREFERENCE: ${genderPreference}
-${genderPreference === 'male' ? 
+${genderPreference === 'male' ?
   `CRITICAL: Create a MALE coach persona. The coach should:
   - Identify as male and use male pronouns (he/him)
   - Embody masculine coaching characteristics: confident, direct, assertive, straight-talking
   - Use masculine language patterns and energy in all communications
   - Display typical male coach traits: competitiveness, challenge-driven, results-focused
-  - Think and communicate like a male fitness coach would` : 
-  genderPreference === 'female' ? 
+  - Think and communicate like a male fitness coach would` :
+  genderPreference === 'female' ?
   `CRITICAL: Create a FEMALE coach persona. The coach should:
   - Identify as female and use female pronouns (she/her)
   - Embody feminine coaching characteristics: warm, empathetic, nurturing, supportive
   - Use feminine language patterns and energy in all communications
   - Display typical female coach traits: relationship-building, holistic approach, encouragement-focused
-  - Think and communicate like a female fitness coach would` : 
+  - Think and communicate like a female fitness coach would` :
   `NEUTRAL: Create a gender-neutral coach persona with balanced professional characteristics`}
 
 SAFETY PROFILE:
@@ -675,10 +676,10 @@ Generate a JSON configuration following this EXACT structure:
     "methodology_prompt": "Programming approach integrating selected methodology with safety constraints...",
     "communication_style": "Response format and interaction style based on user's learning preferences...",
     "learning_adaptation_prompt": "Teaching approach based on user's learning style and experience level...",
-    "gender_tone_prompt": "${genderPreference === 'male' ? 
-      'You are a MALE fitness coach. Identify as male, use he/him pronouns, and embody masculine coaching characteristics throughout all interactions. Adopt a confident, direct, assertive communication style with straight-talk language patterns. Display competitiveness, challenge-driven motivation, and results-focused energy. Think, speak, and coach like a male fitness professional - be bold, direct, and commanding in your approach while maintaining professionalism.' : 
-      genderPreference === 'female' ? 
-      'You are a FEMALE fitness coach. Identify as female, use she/her pronouns, and embody feminine coaching characteristics throughout all interactions. Adopt a warm, empathetic, nurturing communication style with supportive language patterns. Display relationship-building skills, holistic thinking, and encouragement-focused energy. Think, speak, and coach like a female fitness professional - be compassionate, detailed, and emotionally intelligent in your approach while maintaining high standards.' : 
+    "gender_tone_prompt": "${genderPreference === 'male' ?
+      'You are a MALE fitness coach. Identify as male, use he/him pronouns, and embody masculine coaching characteristics throughout all interactions. Adopt a confident, direct, assertive communication style with straight-talk language patterns. Display competitiveness, challenge-driven motivation, and results-focused energy. Think, speak, and coach like a male fitness professional - be bold, direct, and commanding in your approach while maintaining professionalism.' :
+      genderPreference === 'female' ?
+      'You are a FEMALE fitness coach. Identify as female, use she/her pronouns, and embody feminine coaching characteristics throughout all interactions. Adopt a warm, empathetic, nurturing communication style with supportive language patterns. Display relationship-building skills, holistic thinking, and encouragement-focused energy. Think, speak, and coach like a female fitness professional - be compassionate, detailed, and emotionally intelligent in your approach while maintaining high standards.' :
       'Maintain a gender-neutral coaching persona with balanced professional characteristics. Blend confidence with empathy in your communication style.'}"
   },
   "modification_capabilities": {
@@ -711,7 +712,7 @@ Generate a creative, playful coach name that:
 - Make it unique and personalized to THIS user's specific goals and personality match
 
 CRITICAL GENDER REQUIREMENTS:
-${genderPreference === 'male' ? 
+${genderPreference === 'male' ?
   `- The coach MUST BE MALE - use masculine names, male pronouns, and male persona
   - Personality prompt must establish coach as male and embody masculine coaching traits
   - All generated prompts should reinforce male coach identity and characteristics` :
@@ -738,6 +739,7 @@ ${JSON_FORMATTING_INSTRUCTIONS_STANDARD}`;
     await storeDebugDataInS3(
       promptContent,
       {
+        type: 'coach-config-prompt',
         userId: session.userId,
         sessionId: session.sessionId,
         sophisticationLevel: session.userContext.sophisticationLevel,
@@ -762,6 +764,7 @@ who completed ${session.questionHistory.length} questions. Create a coach that p
     await storeDebugDataInS3(
       coachConfigResponse,
       {
+        type: 'coach-config-response',
         userId: session.userId,
         sessionId: session.sessionId,
         sophisticationLevel: session.userContext.sophisticationLevel,
@@ -774,27 +777,8 @@ who completed ${session.questionHistory.length} questions. Create a coach that p
     console.warn('⚠️ Failed to store coach config response in S3 (non-critical):', err);
   }
 
-  // Parse JSON with fallback cleaning and fixing (handles markdown-wrapped JSON)
-  let coachConfig: CoachConfig;
-  try {
-    coachConfig = JSON.parse(coachConfigResponse);
-  } catch (parseError) {
-    console.warn('JSON parsing failed, attempting to clean and fix response...');
-    try {
-      const { cleanResponse, fixMalformedJson } = await import('../response-utils');
-      const cleanedResponse = cleanResponse(coachConfigResponse);
-      const fixedResponse = fixMalformedJson(cleanedResponse);
-      coachConfig = JSON.parse(fixedResponse);
-      console.info('Successfully parsed response after cleaning and fixing');
-    } catch (fallbackError) {
-      console.error('Failed to parse coach config response after all attempts:', {
-        originalResponse: coachConfigResponse.substring(0, 500),
-        parseError: parseError instanceof Error ? parseError.message : 'Unknown error',
-        fallbackError: fallbackError instanceof Error ? fallbackError.message : 'Unknown error'
-      });
-      throw new Error(`Invalid JSON response: ${parseError instanceof Error ? parseError.message : 'Parse failed'}`);
-    }
-  }
+  // Parse JSON with cleaning and fixing (handles markdown-wrapped JSON and common issues)
+  const coachConfig: CoachConfig = parseJsonWithFallbacks(coachConfigResponse);
 
   // Set created_date programmatically (not from AI response)
   if (!coachConfig.metadata) {

@@ -8,7 +8,7 @@
 import { invokeAsyncLambda, callBedrockApi, MODEL_IDS } from "../api-helpers";
 import { JSON_FORMATTING_INSTRUCTIONS_STANDARD } from "../prompt-helpers";
 import { SmartRequestRouter } from "../streaming/business-types";
-import { cleanResponse } from "../response-utils";
+import { parseJsonWithFallbacks } from "../response-utils";
 
 /**
  * @deprecated DEPRECATED: This function has been replaced by the Smart Request Router.
@@ -73,8 +73,7 @@ Analyze this message for complexity triggers that would warrant conversation sum
       MODEL_IDS.CLAUDE_HAIKU_FULL,
       { prefillResponse: "{" } // Force JSON output format
     );
-    const cleanedResponse = cleanResponse(response);
-    const result = JSON.parse(cleanedResponse);
+    const result = parseJsonWithFallbacks(response);
 
     return result.hasComplexity || false;
   } catch (error) {
@@ -507,8 +506,7 @@ Provide comprehensive analysis following the framework above.`;
       { prefillResponse: "{" } // Force JSON output format
     );
 
-    const cleanedResponse = cleanResponse(response);
-    const result: SmartRequestRouter = JSON.parse(cleanedResponse);
+    const result: SmartRequestRouter = parseJsonWithFallbacks(response);
 
     // Add processing time metadata
     result.routerMetadata.processingTime = Date.now() - startTime;
