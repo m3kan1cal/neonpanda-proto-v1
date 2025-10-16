@@ -502,7 +502,7 @@ export const navigationPatterns = {
 export const quickStatsPatterns = {
   // Outer container - wraps and positions stats below header
   // Negative margin pulls stats closer to header for tighter spacing
-  container: "flex flex-wrap items-center gap-3 md:gap-4 mb-3 -mt-4",
+  container: "flex flex-wrap items-center gap-3 md:gap-4 mb-6 -mt-4",
 
   // Individual stat item - icon + number grouping
   item: "flex items-center gap-2 group cursor-help",
