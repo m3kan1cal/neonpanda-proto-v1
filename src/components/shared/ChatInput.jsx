@@ -1288,11 +1288,6 @@ function ChatInput({
                 type="submit"
                 disabled={isTyping}
                 className="p-4 bg-gradient-to-r from-synthwave-neon-purple to-synthwave-neon-pink text-white rounded-2xl shadow-lg shadow-synthwave-neon-purple/30 hover:shadow-xl hover:shadow-synthwave-neon-purple/40 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-                data-tooltip-id="send-message-tooltip"
-                data-tooltip-content={
-                  isTyping ? "Sending..." : "Send message (Enter)"
-                }
-                data-tooltip-place="top"
               >
                 {isTyping ? (
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -1313,27 +1308,10 @@ function ChatInput({
                     ? "bg-red-500 text-white animate-pulse"
                     : "bg-synthwave-bg-primary/50 text-synthwave-text-secondary hover:bg-synthwave-neon-cyan/20 hover:text-synthwave-neon-cyan"
                 }`}
-                data-tooltip-id="voice-record-tooltip"
-                data-tooltip-content={
-                  isRecording
-                    ? `Recording ${formatRecordingTime(recordingTime)}`
-                    : "Hold to record voice message"
-                }
-                data-tooltip-place="top"
               >
                 <MicIcon />
               </button>
             ) : null}
-
-            {/* React Tooltips for Voice/Send buttons */}
-            <Tooltip
-              id="send-message-tooltip"
-              {...tooltipPatterns.standard}
-            />
-            <Tooltip
-              id="voice-record-tooltip"
-              {...tooltipPatterns.standard}
-            />
           </div>
         </form>
 

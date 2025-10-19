@@ -62,7 +62,9 @@ export const changelogEntries = [
         "Workout ID generation updated from workout_summary_ prefix to workout_ prefix (e.g., workout_userId_timestamp_shortId) for clearer data model consistency",
         "Analytics data fetching refactored to use queryWorkoutSummaries for ~70-90% reduction in data transfer by fetching only necessary fields (completedAt, workoutId, summary, workoutName, discipline, coachIds)",
         "AI prompt guidance in workout extraction simplified to include concise date field instruction in temporal context section for more natural AI interpretation",
-        "Non-streaming coach conversation handler now passes only new messages (user + assistant) to sendCoachConversationMessage instead of all messages"
+        "Non-streaming coach conversation handler now passes only new messages (user + assistant) to sendCoachConversationMessage instead of all messages",
+        "Coach creator conversation history instructions enhanced to check ALL previous responses for already-provided information before asking questions, preventing redundant questions",
+        "Mobile navigation components (BottomNav, MoreMenu, QuickActionsFAB) now hidden on authentication pages by adding /auth to publicRoutes array with prefix matching logic in App.jsx"
       ],
       fixed: [
         "AWS EventBridge cron schedule for build-weekly-analytics corrected from Saturday (weekDay: 7) to Sunday (weekDay: 1)",
@@ -80,12 +82,14 @@ export const changelogEntries = [
         "Workout date field in DynamoDB having incorrect year (e.g., 2024 instead of 2025) due to AI extraction errors, now validated and corrected to match completedAt year",
         "Critical message duplication bug in coach conversations where messages exponentially doubled each turn (2→4→10→22) due to non-streaming handler passing all messages instead of only new ones to DynamoDB save operation",
         "Analytics flows pulling entire workout objects from DynamoDB instead of just summary properties, causing unnecessary data transfer and processing overhead",
-        "Confusing workout ID naming convention (workout#workout_summary_...) inconsistent with actual data structure (workouts contain summaries, not summaries of workouts)"
+        "Confusing workout ID naming convention (workout#workout_summary_...) inconsistent with actual data structure (workouts contain summaries, not summaries of workouts)",
+        "Coach creator asking redundant questions about information users already volunteered in previous responses (e.g., re-asking about equipment after user mentioned it 2 questions earlier)"
       ],
       removed: [
         "NavigationTest.jsx component and related test navigation configuration files",
         "uiPatterns.js from root src/utils directory (consolidated to src/utils/ui/uiPatterns.js)",
-        "Seven duplicate logo image files (logo-light-sm-1.png through logo-light-sm-6.png, logo-light-sm-cf.png)"
+        "Seven duplicate logo image files (logo-light-sm-1.png through logo-light-sm-6.png, logo-light-sm-cf.png)",
+        "Send message and voice record button tooltips from ChatInput component (self-explanatory buttons don't need hints, especially on mobile)"
       ]
     }
   },

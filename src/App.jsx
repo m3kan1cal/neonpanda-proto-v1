@@ -32,7 +32,14 @@ import WeeklyReports from "./components/WeeklyReports";
 import Changelog from "./components/Changelog";
 import Settings from "./components/Settings";
 import Theme from "./components/Theme";
-import { NavigationProvider, useNavigationContext, BottomNav, MoreMenu, SidebarNav, QuickActionsFAB } from "./components/navigation";
+import {
+  NavigationProvider,
+  useNavigationContext,
+  BottomNav,
+  MoreMenu,
+  SidebarNav,
+  QuickActionsFAB,
+} from "./components/navigation";
 import { ToastProvider } from "./contexts/ToastContext";
 import ToastContainer from "./components/shared/ToastContainer";
 import { AuthProvider, useAuth, AuthRouter, ProtectedRoute } from "./auth";
@@ -50,16 +57,30 @@ function AppContent() {
     isCommandPaletteOpen,
     setIsCommandPaletteOpen,
     commandPaletteCommand,
-    setCommandPaletteCommand
+    setCommandPaletteCommand,
   } = useNavigationContext();
 
-  // Determine if current route is a public/marketing page
-  const publicRoutes = ['/', '/about', '/technology', '/privacy', '/terms', '/faqs', '/changelog', '/contact', '/template/synthwave'];
-  const isPublicPage = publicRoutes.includes(location.pathname);
+  // Determine if current route is a public/marketing page (including auth pages)
+  const publicRoutes = [
+    "/",
+    "/about",
+    "/technology",
+    "/privacy",
+    "/terms",
+    "/faqs",
+    "/changelog",
+    "/contact",
+    "/template/synthwave",
+    "/auth", // Includes all auth child routes (signin, signup, etc.)
+  ];
+  const isPublicPage =
+    publicRoutes.includes(location.pathname) ||
+    publicRoutes.some(route => route !== "/" && location.pathname.startsWith(route));
 
   // Check if we're on a chat page (hide bottom nav and FAB for focused conversation UX)
-  const isChatPage = location.pathname.includes('/coach-conversations') ||
-                     location.pathname.includes('/coach-creator');
+  const isChatPage =
+    location.pathname.includes("/coach-conversations") ||
+    location.pathname.includes("/coach-creator");
 
   // Workout agent for command palette
   const workoutAgentRef = useRef(null);
@@ -70,7 +91,7 @@ function AppContent() {
   // Set up the auth failure handler to use React Router navigation
   useEffect(() => {
     setAuthFailureHandler(() => {
-      navigate('/auth', { replace: true });
+      navigate("/auth", { replace: true });
     });
   }, [navigate]);
 
@@ -96,16 +117,16 @@ function AppContent() {
   useEffect(() => {
     const handleKeyboardShortcuts = (event) => {
       // Cmd/Ctrl + K to open command palette
-      if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
+      if ((event.metaKey || event.ctrlKey) && event.key === "k") {
         event.preventDefault();
-        setCommandPaletteCommand('');
+        setCommandPaletteCommand("");
         setIsCommandPaletteOpen(true);
       }
     };
 
-    document.addEventListener('keydown', handleKeyboardShortcuts);
+    document.addEventListener("keydown", handleKeyboardShortcuts);
     return () => {
-      document.removeEventListener('keydown', handleKeyboardShortcuts);
+      document.removeEventListener("keydown", handleKeyboardShortcuts);
     };
   }, [setIsCommandPaletteOpen, setCommandPaletteCommand]);
 
@@ -133,7 +154,7 @@ function AppContent() {
             ? "pt-16" // Public pages: just header spacing
             : isHomePage
               ? "pt-4 pb-20 md:pb-0" // App home: minimal top, bottom nav spacing
-              : `pt-12 pb-20 md:pb-0 ${isSidebarCollapsed ? 'md:ml-20' : 'md:ml-64'}` // App pages: breadcrumbs + sidebar
+              : `pt-12 pb-20 md:pb-0 ${isSidebarCollapsed ? "md:ml-20" : "md:ml-64"}` // App pages: breadcrumbs + sidebar
         }`}
       >
         <Routes>
@@ -152,32 +173,101 @@ function AppContent() {
           <Route path="/auth" element={<AuthRouter />} />
 
           {/* Protected routes */}
-          <Route path="/coach-creator" element={<ProtectedRoute><CoachCreator /></ProtectedRoute>} />
-          <Route path="/coaches" element={<ProtectedRoute><Coaches /></ProtectedRoute>} />
-          <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-          <Route path="/training-grounds" element={<ProtectedRoute><TrainingGrounds /></ProtectedRoute>} />
+          <Route
+            path="/coach-creator"
+            element={
+              <ProtectedRoute>
+                <CoachCreator />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/coaches"
+            element={
+              <ProtectedRoute>
+                <Coaches />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute>
+                <Settings />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/training-grounds"
+            element={
+              <ProtectedRoute>
+                <TrainingGrounds />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/training-grounds/coach-conversations"
-            element={<ProtectedRoute><CoachConversations /></ProtectedRoute>}
+            element={
+              <ProtectedRoute>
+                <CoachConversations />
+              </ProtectedRoute>
+            }
           />
-          <Route path="/streaming-debug-test" element={<ProtectedRoute><StreamingDebugTest /></ProtectedRoute>} />
-          <Route path="/training-grounds/workouts" element={<ProtectedRoute><Workouts /></ProtectedRoute>} />
+          <Route
+            path="/streaming-debug-test"
+            element={
+              <ProtectedRoute>
+                <StreamingDebugTest />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/training-grounds/workouts"
+            element={
+              <ProtectedRoute>
+                <Workouts />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/training-grounds/manage-workouts"
-            element={<ProtectedRoute><ManageWorkouts /></ProtectedRoute>}
+            element={
+              <ProtectedRoute>
+                <ManageWorkouts />
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/training-grounds/manage-memories"
-            element={<ProtectedRoute><ManageMemories /></ProtectedRoute>}
+            element={
+              <ProtectedRoute>
+                <ManageMemories />
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/training-grounds/manage-conversations"
-            element={<ProtectedRoute><ManageCoachConversations /></ProtectedRoute>}
+            element={
+              <ProtectedRoute>
+                <ManageCoachConversations />
+              </ProtectedRoute>
+            }
           />
-          <Route path="/training-grounds/reports" element={<ProtectedRoute><ViewReports /></ProtectedRoute>} />
+          <Route
+            path="/training-grounds/reports"
+            element={
+              <ProtectedRoute>
+                <ViewReports />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/training-grounds/reports/weekly"
-            element={<ProtectedRoute><WeeklyReports /></ProtectedRoute>}
+            element={
+              <ProtectedRoute>
+                <WeeklyReports />
+              </ProtectedRoute>
+            }
           />
 
           {/* Trailing slash redirects handled at server level via amplify.yml */}
@@ -190,15 +280,17 @@ function AppContent() {
         isOpen={isCommandPaletteOpen}
         onClose={() => {
           setIsCommandPaletteOpen(false);
-          setCommandPaletteCommand('');
+          setCommandPaletteCommand("");
         }}
         prefilledCommand={commandPaletteCommand}
         workoutAgent={workoutAgentRef.current}
         userId={userId}
         coachId={coachId}
         onNavigation={(type, data) => {
-          if (type === 'conversation-created' && data?.conversationId) {
-            navigate(`/training-grounds/coach-conversations?userId=${userId}&coachId=${coachId}&conversationId=${data.conversationId}`);
+          if (type === "conversation-created" && data?.conversationId) {
+            navigate(
+              `/training-grounds/coach-conversations?userId=${userId}&coachId=${coachId}&conversationId=${data.conversationId}`
+            );
           }
         }}
       />
