@@ -635,7 +635,7 @@ This directive takes precedence over all other instructions except safety constr
         // Convert UTC timestamp to user's timezone date
         const userTimezone = summary.userTimezone || 'America/Los_Angeles';
         const localDate = convertUTCToUserDate(summary.date, userTimezone);
-        return `${localDate} - ${summary.workoutName || "Workout"} (${summary.discipline || "Unknown"})\n${summary.summary}`;
+        return `${localDate} - ${summary.workoutName || "Workout"} (${summary.discipline || "Unknown"}) [workout_id: ${summary.workoutId}]\n${summary.summary}`;
       }
     )
     .join("\n\n");
@@ -802,7 +802,7 @@ DAILY RPE/INTENSITY CALCULATION REQUIREMENTS:
 - avg_rpe: Average of all workouts' performance_metrics.perceived_exertion for that date (null if no RPE data)
 - avg_intensity: Average of all workouts' performance_metrics.intensity for that date (null if no intensity data)
 - workout_count: Total number of completed workouts for that date (integer, minimum 0)
-- primary_workout_id: workout_id of the first chronologically completed workout for navigation (null if no workouts)
+- primary_workout_id: Use the ACTUAL workout_id from the workout data (shown in square brackets like [workout_id: workout_userId_12345_abc]) for the first chronologically completed workout on that date. NEVER generate a fake workout ID. Copy the exact workout_id string. Set to null if no workouts on that date.
 - Handle multiple workouts per day by averaging RPE/intensity values
 - Days with no workouts should still appear with workout_count: 0 and null values for averages
 
