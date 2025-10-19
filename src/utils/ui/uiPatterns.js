@@ -700,7 +700,7 @@ export const typographyPatterns = {
   sectionTitle: "font-russo font-bold text-2xl md:text-3xl text-white mb-4 uppercase",
   cardTitle: "font-russo font-bold text-xl text-white uppercase",
 
-  // Inter font headings (for About Us and content-heavy pages)
+  // Inter font headings (for About and content-heavy pages)
   pageTitleInter: "font-inter font-black text-4xl md:text-5xl text-white mb-6",
   sectionTitleInter: "font-inter font-bold text-2xl md:text-3xl text-white mb-4",
   cardTitleInter: "font-inter font-bold text-xl text-white",

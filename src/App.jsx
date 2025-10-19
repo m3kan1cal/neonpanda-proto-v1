@@ -8,6 +8,7 @@ import {
 } from "react-router-dom";
 
 import Breadcrumbs from "./components/shared/Breadcrumbs";
+import PublicHeader from "./components/shared/PublicHeader";
 import CommandPalette from "./components/shared/CommandPalette";
 import WorkoutAgent from "./utils/agents/WorkoutAgent";
 import LandingPage from "./components/LandingPage";
@@ -51,6 +52,10 @@ function AppContent() {
     commandPaletteCommand,
     setCommandPaletteCommand
   } = useNavigationContext();
+
+  // Determine if current route is a public/marketing page
+  const publicRoutes = ['/', '/about', '/technology', '/privacy', '/terms', '/faqs', '/changelog', '/contact', '/template/synthwave'];
+  const isPublicPage = publicRoutes.includes(location.pathname);
 
   // Check if we're on a chat page (hide bottom nav and FAB for focused conversation UX)
   const isChatPage = location.pathname.includes('/coach-conversations') ||
@@ -106,15 +111,30 @@ function AppContent() {
 
   return (
     <div className="min-h-screen">
-      {/* Desktop Sidebar Navigation (≥ 768px) */}
-      <SidebarNav />
+      {/* Conditional Navigation: Public Header vs Full App Navigation */}
+      {isPublicPage ? (
+        // Public pages: Simple header only
+        <PublicHeader />
+      ) : (
+        // App pages: Full navigation system
+        <>
+          {/* Desktop Sidebar Navigation (≥ 768px) */}
+          <SidebarNav />
 
-      {/* Breadcrumbs - handles its own positioning */}
-      <Breadcrumbs />
+          {/* Breadcrumbs - handles its own positioning */}
+          <Breadcrumbs />
+        </>
+      )}
 
-      {/* Main Content - with left margin on desktop for sidebar */}
+      {/* Main Content - conditional margin based on navigation type */}
       <div
-        className={`border-none outline-none bg-synthwave-bg-tertiary ${isHomePage ? "pt-4" : "pt-12"} pb-20 md:pb-0 ${isSidebarCollapsed ? 'md:ml-20' : 'md:ml-64'}`}
+        className={`border-none outline-none bg-synthwave-bg-tertiary ${
+          isPublicPage
+            ? "pt-16" // Public pages: just header spacing
+            : isHomePage
+              ? "pt-4 pb-20 md:pb-0" // App home: minimal top, bottom nav spacing
+              : `pt-12 pb-20 md:pb-0 ${isSidebarCollapsed ? 'md:ml-20' : 'md:ml-64'}` // App pages: breadcrumbs + sidebar
+        }`}
       >
         <Routes>
           {/* Public routes */}
@@ -183,12 +203,17 @@ function AppContent() {
         }}
       />
 
-      {/* Mobile Navigation (Phase 2) - Only visible on < 768px, hidden on chat pages */}
-      {!isChatPage && <BottomNav />}
-      <MoreMenu />
+      {/* App Navigation Components - Only for app pages, not public pages */}
+      {!isPublicPage && (
+        <>
+          {/* Mobile Navigation (Phase 2) - Only visible on < 768px, hidden on chat pages */}
+          {!isChatPage && <BottomNav />}
+          <MoreMenu />
 
-      {/* Quick Actions FAB (Phase 4) - Only visible on mobile with coach context, hidden on chat pages */}
-      {!isChatPage && <QuickActionsFAB />}
+          {/* Quick Actions FAB (Phase 4) - Only visible on mobile with coach context, hidden on chat pages */}
+          {!isChatPage && <QuickActionsFAB />}
+        </>
+      )}
     </div>
   );
 }

@@ -1,0 +1,908 @@
+{
+  "pk": "user#8aRtnBukPk0nY4VjKM-K5",
+  "sk": "workout#workout_summary_8aRtnBukPk0nY4VjKM-K5_1760570198061_f8of39ija",
+  "attributes": {
+    "coachIds": ["user_8aRtnBukPk0nY4VjKM-K5_coach_main"],
+    "coachNames": ["Marcus_The_Strength_Builder"],
+    "completedAt": "2025-10-15T00:00:00.000Z",
+    "conversationId": "conv_1759708959962_qr5rtss4y",
+    "extractionMetadata": {
+      "confidence": 0.95,
+      "extractedAt": "2025-10-15T23:18:41.803Z",
+      "normalizationSummary": "Normalization PASSED (confidence: 0.95)\nWarnings (3): discipline_specific.crossfit.rounds, discipline_specific.crossfit.performance_data.rounds_completed, discipline",
+      "reviewedAt": "2025-10-15T23:18:41.803Z",
+      "reviewedBy": "system"
+    },
+    "summary": "Completed \"Fortis Fundamentum\" - a comprehensive lower body strength session with back squats building to 3x3 @ 235# (88% 1RM), followed by Bulgarian split squats (35# DBs) and hack squats (185#). Finished with \"Lower Body Grind\" 12-minute AMRAP completing 5 rounds of goblet squats, walking lunges, and KB swings. Legs were shaking by the end with high RPE/intensity throughout, resulting in significant soreness but great satisfaction with the performance.",
+    "userId": "8aRtnBukPk0nY4VjKM-K5",
+    "workoutData": {
+      "coach_id": "Marcus_The_Strength_Builder",
+      "coach_notes": {
+        "adaptation_recommendations": [
+          "Monitor soreness levels",
+          "Ensure adequate protein intake for recovery",
+          "Consider foam rolling and stretching"
+        ],
+        "areas_for_improvement": null,
+        "coaching_cues_given": null,
+        "motivation_strategy": "Capitalize on post-workout confidence and positive feelings",
+        "next_session_focus": "Active recovery and mobility work for lower body",
+        "positive_observations": [
+          "Strong performance on heavy back squat sets at 88% 1RM",
+          "Good volume tolerance across all phases",
+          "Excellent mental toughness through AMRAP finisher"
+        ],
+        "programming_intent": "Lower body strength and conditioning focus with progressive overload on back squats followed by accessory work and metabolic finisher",
+        "safety_flags": []
+      },
+      "conversation_id": "conv_20251015_161500",
+      "date": "2024-10-14",
+      "discipline": "hybrid",
+      "discipline_specific": {
+        "crossfit": {
+          "performance_data": {
+            "rounds_completed": 18,
+            "round_times": null,
+            "score": {
+              "type": "rounds",
+              "unit": null,
+              "value": 5
+            },
+            "total_reps": null,
+            "total_time": 3600
+          },
+          "rounds": [
+            {
+              "exercises": [
+                {
+                  "assistance": null,
+                  "calories": null,
+                  "distance": null,
+                  "exercise_name": "back_squat",
+                  "form_notes": "Warmup set 1 at 65% 1RM",
+                  "movement_type": "barbell",
+                  "reps": {
+                    "broken_sets": null,
+                    "completed": 5,
+                    "prescribed": 5,
+                    "rest_between_sets": null
+                  },
+                  "time": null,
+                  "variation": "high_bar",
+                  "weight": {
+                    "percentage_1rm": 65,
+                    "rx_weight": null,
+                    "scaled_weight": null,
+                    "unit": "lbs",
+                    "value": 175
+                  }
+                }
+              ],
+              "rep_scheme": "2x5",
+              "round_number": 1
+            },
+            {
+              "exercises": [
+                {
+                  "assistance": null,
+                  "calories": null,
+                  "distance": null,
+                  "exercise_name": "back_squat",
+                  "form_notes": "Warmup set 2 at 65% 1RM",
+                  "movement_type": "barbell",
+                  "reps": {
+                    "broken_sets": null,
+                    "completed": 5,
+                    "prescribed": 5,
+                    "rest_between_sets": null
+                  },
+                  "time": null,
+                  "variation": "high_bar",
+                  "weight": {
+                    "percentage_1rm": 65,
+                    "rx_weight": null,
+                    "scaled_weight": null,
+                    "unit": "lbs",
+                    "value": 175
+                  }
+                }
+              ],
+              "rep_scheme": "2x5",
+              "round_number": 2
+            },
+            {
+              "exercises": [
+                {
+                  "assistance": null,
+                  "calories": null,
+                  "distance": null,
+                  "exercise_name": "back_squat",
+                  "form_notes": "Working set 1 at 75% 1RM",
+                  "movement_type": "barbell",
+                  "reps": {
+                    "broken_sets": null,
+                    "completed": 5,
+                    "prescribed": 5,
+                    "rest_between_sets": null
+                  },
+                  "time": null,
+                  "variation": "high_bar",
+                  "weight": {
+                    "percentage_1rm": 75,
+                    "rx_weight": null,
+                    "scaled_weight": null,
+                    "unit": "lbs",
+                    "value": 200
+                  }
+                }
+              ],
+              "rep_scheme": "2x5",
+              "round_number": 3
+            },
+            {
+              "exercises": [
+                {
+                  "assistance": null,
+                  "calories": null,
+                  "distance": null,
+                  "exercise_name": "back_squat",
+                  "form_notes": "Working set 2 at 75% 1RM",
+                  "movement_type": "barbell",
+                  "reps": {
+                    "broken_sets": null,
+                    "completed": 5,
+                    "prescribed": 5,
+                    "rest_between_sets": null
+                  },
+                  "time": null,
+                  "variation": "high_bar",
+                  "weight": {
+                    "percentage_1rm": 75,
+                    "rx_weight": null,
+                    "scaled_weight": null,
+                    "unit": "lbs",
+                    "value": 200
+                  }
+                }
+              ],
+              "rep_scheme": "2x5",
+              "round_number": 4
+            },
+            {
+              "exercises": [
+                {
+                  "assistance": null,
+                  "calories": null,
+                  "distance": null,
+                  "exercise_name": "back_squat",
+                  "form_notes": "Heavy working set 1 at 88% 1RM",
+                  "movement_type": "barbell",
+                  "reps": {
+                    "broken_sets": null,
+                    "completed": 3,
+                    "prescribed": 3,
+                    "rest_between_sets": null
+                  },
+                  "time": null,
+                  "variation": "high_bar",
+                  "weight": {
+                    "percentage_1rm": 88,
+                    "rx_weight": null,
+                    "scaled_weight": null,
+                    "unit": "lbs",
+                    "value": 235
+                  }
+                }
+              ],
+              "rep_scheme": "3x3",
+              "round_number": 5
+            },
+            {
+              "exercises": [
+                {
+                  "assistance": null,
+                  "calories": null,
+                  "distance": null,
+                  "exercise_name": "back_squat",
+                  "form_notes": "Heavy working set 2 at 88% 1RM",
+                  "movement_type": "barbell",
+                  "reps": {
+                    "broken_sets": null,
+                    "completed": 3,
+                    "prescribed": 3,
+                    "rest_between_sets": null
+                  },
+                  "time": null,
+                  "variation": "high_bar",
+                  "weight": {
+                    "percentage_1rm": 88,
+                    "rx_weight": null,
+                    "scaled_weight": null,
+                    "unit": "lbs",
+                    "value": 235
+                  }
+                }
+              ],
+              "rep_scheme": "3x3",
+              "round_number": 6
+            },
+            {
+              "exercises": [
+                {
+                  "assistance": null,
+                  "calories": null,
+                  "distance": null,
+                  "exercise_name": "back_squat",
+                  "form_notes": "Heavy working set 3 at 88% 1RM",
+                  "movement_type": "barbell",
+                  "reps": {
+                    "broken_sets": null,
+                    "completed": 3,
+                    "prescribed": 3,
+                    "rest_between_sets": null
+                  },
+                  "time": null,
+                  "variation": "high_bar",
+                  "weight": {
+                    "percentage_1rm": 88,
+                    "rx_weight": null,
+                    "scaled_weight": null,
+                    "unit": "lbs",
+                    "value": 235
+                  }
+                }
+              ],
+              "rep_scheme": "3x3",
+              "round_number": 7
+            },
+            {
+              "exercises": [
+                {
+                  "assistance": null,
+                  "calories": null,
+                  "distance": null,
+                  "exercise_name": "bulgarian_split_squat",
+                  "form_notes": "8 reps each leg, 35# per hand",
+                  "movement_type": "dumbbell",
+                  "reps": {
+                    "broken_sets": null,
+                    "completed": 16,
+                    "prescribed": 16,
+                    "rest_between_sets": null
+                  },
+                  "time": null,
+                  "variation": "rear_foot_elevated",
+                  "weight": {
+                    "percentage_1rm": null,
+                    "rx_weight": null,
+                    "scaled_weight": null,
+                    "unit": "lbs",
+                    "value": 70
+                  }
+                }
+              ],
+              "rep_scheme": null,
+              "round_number": 8
+            },
+            {
+              "exercises": [
+                {
+                  "assistance": null,
+                  "calories": null,
+                  "distance": null,
+                  "exercise_name": "bulgarian_split_squat",
+                  "form_notes": null,
+                  "movement_type": "dumbbell",
+                  "reps": {
+                    "broken_sets": null,
+                    "completed": 16,
+                    "prescribed": 16,
+                    "rest_between_sets": null
+                  },
+                  "time": null,
+                  "variation": "rear_foot_elevated",
+                  "weight": {
+                    "percentage_1rm": null,
+                    "rx_weight": null,
+                    "scaled_weight": null,
+                    "unit": "lbs",
+                    "value": 70
+                  }
+                }
+              ],
+              "rep_scheme": null,
+              "round_number": 9
+            },
+            {
+              "exercises": [
+                {
+                  "assistance": null,
+                  "calories": null,
+                  "distance": null,
+                  "exercise_name": "bulgarian_split_squat",
+                  "form_notes": null,
+                  "movement_type": "dumbbell",
+                  "reps": {
+                    "broken_sets": null,
+                    "completed": 16,
+                    "prescribed": 16,
+                    "rest_between_sets": null
+                  },
+                  "time": null,
+                  "variation": "rear_foot_elevated",
+                  "weight": {
+                    "percentage_1rm": null,
+                    "rx_weight": null,
+                    "scaled_weight": null,
+                    "unit": "lbs",
+                    "value": 70
+                  }
+                }
+              ],
+              "rep_scheme": null,
+              "round_number": 10
+            },
+            {
+              "exercises": [
+                {
+                  "assistance": null,
+                  "calories": null,
+                  "distance": null,
+                  "exercise_name": "hack_squat",
+                  "form_notes": "Machine hack squat",
+                  "movement_type": "other",
+                  "reps": {
+                    "broken_sets": null,
+                    "completed": 12,
+                    "prescribed": 12,
+                    "rest_between_sets": null
+                  },
+                  "time": null,
+                  "variation": "machine",
+                  "weight": {
+                    "percentage_1rm": null,
+                    "rx_weight": null,
+                    "scaled_weight": null,
+                    "unit": "lbs",
+                    "value": 185
+                  }
+                }
+              ],
+              "rep_scheme": null,
+              "round_number": 11
+            },
+            {
+              "exercises": [
+                {
+                  "assistance": null,
+                  "calories": null,
+                  "distance": null,
+                  "exercise_name": "hack_squat",
+                  "form_notes": null,
+                  "movement_type": "other",
+                  "reps": {
+                    "broken_sets": null,
+                    "completed": 12,
+                    "prescribed": 12,
+                    "rest_between_sets": null
+                  },
+                  "time": null,
+                  "variation": "machine",
+                  "weight": {
+                    "percentage_1rm": null,
+                    "rx_weight": null,
+                    "scaled_weight": null,
+                    "unit": "lbs",
+                    "value": 185
+                  }
+                }
+              ],
+              "rep_scheme": null,
+              "round_number": 12
+            },
+            {
+              "exercises": [
+                {
+                  "assistance": null,
+                  "calories": null,
+                  "distance": null,
+                  "exercise_name": "hack_squat",
+                  "form_notes": null,
+                  "movement_type": "other",
+                  "reps": {
+                    "broken_sets": null,
+                    "completed": 12,
+                    "prescribed": 12,
+                    "rest_between_sets": null
+                  },
+                  "time": null,
+                  "variation": "machine",
+                  "weight": {
+                    "percentage_1rm": null,
+                    "rx_weight": null,
+                    "scaled_weight": null,
+                    "unit": "lbs",
+                    "value": 185
+                  }
+                }
+              ],
+              "rep_scheme": null,
+              "round_number": 13
+            },
+            {
+              "exercises": [
+                {
+                  "assistance": null,
+                  "calories": null,
+                  "distance": null,
+                  "exercise_name": "kettlebell_goblet_squat",
+                  "form_notes": "AMRAP round 1",
+                  "movement_type": "kettlebell",
+                  "reps": {
+                    "broken_sets": null,
+                    "completed": 15,
+                    "prescribed": 15,
+                    "rest_between_sets": null
+                  },
+                  "time": null,
+                  "variation": "goblet",
+                  "weight": {
+                    "percentage_1rm": null,
+                    "rx_weight": null,
+                    "scaled_weight": null,
+                    "unit": "lbs",
+                    "value": 53
+                  }
+                },
+                {
+                  "assistance": null,
+                  "calories": null,
+                  "distance": null,
+                  "exercise_name": "dumbbell_walking_lunge",
+                  "form_notes": "40# each hand",
+                  "movement_type": "dumbbell",
+                  "reps": {
+                    "broken_sets": null,
+                    "completed": 12,
+                    "prescribed": 12,
+                    "rest_between_sets": null
+                  },
+                  "time": null,
+                  "variation": "walking",
+                  "weight": {
+                    "percentage_1rm": null,
+                    "rx_weight": null,
+                    "scaled_weight": null,
+                    "unit": "lbs",
+                    "value": 80
+                  }
+                },
+                {
+                  "assistance": null,
+                  "calories": null,
+                  "distance": null,
+                  "exercise_name": "kettlebell_swing",
+                  "form_notes": null,
+                  "movement_type": "kettlebell",
+                  "reps": {
+                    "broken_sets": null,
+                    "completed": 15,
+                    "prescribed": 15,
+                    "rest_between_sets": null
+                  },
+                  "time": null,
+                  "variation": "american",
+                  "weight": {
+                    "percentage_1rm": null,
+                    "rx_weight": null,
+                    "scaled_weight": null,
+                    "unit": "lbs",
+                    "value": 53
+                  }
+                }
+              ],
+              "rep_scheme": "12min_AMRAP",
+              "round_number": 14
+            },
+            {
+              "exercises": [
+                {
+                  "assistance": null,
+                  "calories": null,
+                  "distance": null,
+                  "exercise_name": "kettlebell_goblet_squat",
+                  "form_notes": null,
+                  "movement_type": "kettlebell",
+                  "reps": {
+                    "broken_sets": null,
+                    "completed": 15,
+                    "prescribed": 15,
+                    "rest_between_sets": null
+                  },
+                  "time": null,
+                  "variation": "goblet",
+                  "weight": {
+                    "percentage_1rm": null,
+                    "rx_weight": null,
+                    "scaled_weight": null,
+                    "unit": "lbs",
+                    "value": 53
+                  }
+                },
+                {
+                  "assistance": null,
+                  "calories": null,
+                  "distance": null,
+                  "exercise_name": "dumbbell_walking_lunge",
+                  "form_notes": null,
+                  "movement_type": "dumbbell",
+                  "reps": {
+                    "broken_sets": null,
+                    "completed": 12,
+                    "prescribed": 12,
+                    "rest_between_sets": null
+                  },
+                  "time": null,
+                  "variation": "walking",
+                  "weight": {
+                    "percentage_1rm": null,
+                    "rx_weight": null,
+                    "scaled_weight": null,
+                    "unit": "lbs",
+                    "value": 80
+                  }
+                },
+                {
+                  "assistance": null,
+                  "calories": null,
+                  "distance": null,
+                  "exercise_name": "kettlebell_swing",
+                  "form_notes": null,
+                  "movement_type": "kettlebell",
+                  "reps": {
+                    "broken_sets": null,
+                    "completed": 15,
+                    "prescribed": 15,
+                    "rest_between_sets": null
+                  },
+                  "time": null,
+                  "variation": "american",
+                  "weight": {
+                    "percentage_1rm": null,
+                    "rx_weight": null,
+                    "scaled_weight": null,
+                    "unit": "lbs",
+                    "value": 53
+                  }
+                }
+              ],
+              "rep_scheme": "12min_AMRAP",
+              "round_number": 15
+            },
+            {
+              "exercises": [
+                {
+                  "assistance": null,
+                  "calories": null,
+                  "distance": null,
+                  "exercise_name": "kettlebell_goblet_squat",
+                  "form_notes": null,
+                  "movement_type": "kettlebell",
+                  "reps": {
+                    "broken_sets": null,
+                    "completed": 15,
+                    "prescribed": 15,
+                    "rest_between_sets": null
+                  },
+                  "time": null,
+                  "variation": "goblet",
+                  "weight": {
+                    "percentage_1rm": null,
+                    "rx_weight": null,
+                    "scaled_weight": null,
+                    "unit": "lbs",
+                    "value": 53
+                  }
+                },
+                {
+                  "assistance": null,
+                  "calories": null,
+                  "distance": null,
+                  "exercise_name": "dumbbell_walking_lunge",
+                  "form_notes": null,
+                  "movement_type": "dumbbell",
+                  "reps": {
+                    "broken_sets": null,
+                    "completed": 12,
+                    "prescribed": 12,
+                    "rest_between_sets": null
+                  },
+                  "time": null,
+                  "variation": "walking",
+                  "weight": {
+                    "percentage_1rm": null,
+                    "rx_weight": null,
+                    "scaled_weight": null,
+                    "unit": "lbs",
+                    "value": 80
+                  }
+                },
+                {
+                  "assistance": null,
+                  "calories": null,
+                  "distance": null,
+                  "exercise_name": "kettlebell_swing",
+                  "form_notes": null,
+                  "movement_type": "kettlebell",
+                  "reps": {
+                    "broken_sets": null,
+                    "completed": 15,
+                    "prescribed": 15,
+                    "rest_between_sets": null
+                  },
+                  "time": null,
+                  "variation": "american",
+                  "weight": {
+                    "percentage_1rm": null,
+                    "rx_weight": null,
+                    "scaled_weight": null,
+                    "unit": "lbs",
+                    "value": 53
+                  }
+                }
+              ],
+              "rep_scheme": "12min_AMRAP",
+              "round_number": 16
+            },
+            {
+              "exercises": [
+                {
+                  "assistance": null,
+                  "calories": null,
+                  "distance": null,
+                  "exercise_name": "kettlebell_goblet_squat",
+                  "form_notes": null,
+                  "movement_type": "kettlebell",
+                  "reps": {
+                    "broken_sets": null,
+                    "completed": 15,
+                    "prescribed": 15,
+                    "rest_between_sets": null
+                  },
+                  "time": null,
+                  "variation": "goblet",
+                  "weight": {
+                    "percentage_1rm": null,
+                    "rx_weight": null,
+                    "scaled_weight": null,
+                    "unit": "lbs",
+                    "value": 53
+                  }
+                },
+                {
+                  "assistance": null,
+                  "calories": null,
+                  "distance": null,
+                  "exercise_name": "dumbbell_walking_lunge",
+                  "form_notes": null,
+                  "movement_type": "dumbbell",
+                  "reps": {
+                    "broken_sets": null,
+                    "completed": 12,
+                    "prescribed": 12,
+                    "rest_between_sets": null
+                  },
+                  "time": null,
+                  "variation": "walking",
+                  "weight": {
+                    "percentage_1rm": null,
+                    "rx_weight": null,
+                    "scaled_weight": null,
+                    "unit": "lbs",
+                    "value": 80
+                  }
+                },
+                {
+                  "assistance": null,
+                  "calories": null,
+                  "distance": null,
+                  "exercise_name": "kettlebell_swing",
+                  "form_notes": null,
+                  "movement_type": "kettlebell",
+                  "reps": {
+                    "broken_sets": null,
+                    "completed": 15,
+                    "prescribed": 15,
+                    "rest_between_sets": null
+                  },
+                  "time": null,
+                  "variation": "american",
+                  "weight": {
+                    "percentage_1rm": null,
+                    "rx_weight": null,
+                    "scaled_weight": null,
+                    "unit": "lbs",
+                    "value": 53
+                  }
+                }
+              ],
+              "rep_scheme": "12min_AMRAP",
+              "round_number": 17
+            },
+            {
+              "exercises": [
+                {
+                  "assistance": null,
+                  "calories": null,
+                  "distance": null,
+                  "exercise_name": "kettlebell_goblet_squat",
+                  "form_notes": null,
+                  "movement_type": "kettlebell",
+                  "reps": {
+                    "broken_sets": null,
+                    "completed": 15,
+                    "prescribed": 15,
+                    "rest_between_sets": null
+                  },
+                  "time": null,
+                  "variation": "goblet",
+                  "weight": {
+                    "percentage_1rm": null,
+                    "rx_weight": null,
+                    "scaled_weight": null,
+                    "unit": "lbs",
+                    "value": 53
+                  }
+                },
+                {
+                  "assistance": null,
+                  "calories": null,
+                  "distance": null,
+                  "exercise_name": "dumbbell_walking_lunge",
+                  "form_notes": null,
+                  "movement_type": "dumbbell",
+                  "reps": {
+                    "broken_sets": null,
+                    "completed": 12,
+                    "prescribed": 12,
+                    "rest_between_sets": null
+                  },
+                  "time": null,
+                  "variation": "walking",
+                  "weight": {
+                    "percentage_1rm": null,
+                    "rx_weight": null,
+                    "scaled_weight": null,
+                    "unit": "lbs",
+                    "value": 80
+                  }
+                },
+                {
+                  "assistance": null,
+                  "calories": null,
+                  "distance": null,
+                  "exercise_name": "kettlebell_swing",
+                  "form_notes": null,
+                  "movement_type": "kettlebell",
+                  "reps": {
+                    "broken_sets": null,
+                    "completed": 15,
+                    "prescribed": 15,
+                    "rest_between_sets": null
+                  },
+                  "time": null,
+                  "variation": "american",
+                  "weight": {
+                    "percentage_1rm": null,
+                    "rx_weight": null,
+                    "scaled_weight": null,
+                    "unit": "lbs",
+                    "value": 53
+                  }
+                }
+              ],
+              "rep_scheme": "12min_AMRAP",
+              "round_number": 18
+            }
+          ],
+          "rx_status": "rx",
+          "time_cap": 3600,
+          "workout_format": "strength_then_metcon"
+        }
+      },
+      "duration": 3600,
+      "environmental_factors": {
+        "altitude": null,
+        "equipment_condition": "good",
+        "gym_crowding": null,
+        "humidity": null,
+        "temperature": null
+      },
+      "location": "gym",
+      "metadata": {
+        "ai_extracted": true,
+        "data_completeness": 0.8,
+        "data_confidence": 0.95,
+        "extraction_method": "claude_conversation_analysis",
+        "extraction_notes": "User provided detailed strength work with explicit weights and percentages. Back squat 1RM calculated at ~269# based on 235# @ 88%. Bulgarian split squats: 35# per hand × 2 = 70# total load. DB walking lunges: 40# per hand × 2 = 80# total load. AMRAP rounds estimated at 5 complete rounds based on 12-minute time cap and movement volume (approximately 2.4 minutes per round). User reported high RPE/intensity with significant leg fatigue and soreness, indicating strong effort throughout. Workout completed on 10/14/2025 from 6-7pm MT (1 hour duration).",
+        "logged_via": "conversation",
+        "logging_time": null,
+        "schema_version": "2.0",
+        "user_verified": false,
+        "validation_flags": [
+          "estimated_amrap_rounds",
+          "missing_exact_round_count",
+          "inferred_metcon_performance",
+          "normalized",
+          "discipline_specific.crossfit.rounds",
+          "discipline_specific.crossfit.performance_data.rounds_completed",
+          "discipline"
+        ],
+        "version": "1.0"
+      },
+      "methodology": "COMPTRAIN_STRENGTH",
+      "performance_metrics": {
+        "calories_burned": null,
+        "energy_level_post": 6,
+        "energy_level_pre": 7,
+        "heart_rate": {
+          "avg": null,
+          "max": null,
+          "zones": {
+            "zone_1": null,
+            "zone_2": null,
+            "zone_3": null,
+            "zone_4": null,
+            "zone_5": null
+          }
+        },
+        "intensity": 8,
+        "mood_post": 9,
+        "mood_pre": 7,
+        "perceived_exertion": 8
+      },
+      "pr_achievements": [],
+      "recovery_metrics": {
+        "hrv_morning": null,
+        "readiness_score": null,
+        "resting_heart_rate": null,
+        "sleep_hours": null,
+        "stress_level": null
+      },
+      "subjective_feedback": {
+        "confidence": 8,
+        "difficulty": 8,
+        "enjoyment": 9,
+        "form_quality": 8,
+        "hydration_level": "good",
+        "mental_state": "focused",
+        "motivation": 8,
+        "notes": "Legs were literally shaking after the end. Pretty sore today but feel awesome. Great workout.",
+        "nutrition_pre_workout": null,
+        "pacing_strategy": "conservative",
+        "sleep_quality_previous": null,
+        "soreness_post": {
+          "arms": null,
+          "back": null,
+          "legs": 9,
+          "overall": 7
+        },
+        "soreness_pre": {
+          "arms": null,
+          "back": null,
+          "legs": null,
+          "overall": null
+        },
+        "stress_level": null
+      },
+      "user_id": "8aRtnBukPk0nY4VjKM-K5",
+      "workout_id": "workout_summary_8aRtnBukPk0nY4VjKM-K5_1760570198061_f8of39ija",
+      "workout_name": "Fortis Fundamentum",
+      "workout_type": "hybrid"
+    },
+    "workoutId": "workout_summary_8aRtnBukPk0nY4VjKM-K5_1760570198061_f8of39ija"
+  },
+  "createdAt": "2025-10-15T23:18:41.804Z",
+  "entityType": "workout",
+  "updatedAt": "2025-10-15T23:18:41.804Z"
+}

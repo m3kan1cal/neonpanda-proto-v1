@@ -33,7 +33,9 @@ const HeatMapSquare = ({ dayData, userId, coachId, date }) => {
   };
 
   const formatDate = (dateString) => {
-    const date = new Date(dateString);
+    // Parse date string in a timezone-safe way (YYYY-MM-DD format)
+    const [year, month, day] = dateString.split('-').map(Number);
+    const date = new Date(year, month - 1, day); // month is 0-indexed in Date constructor
     return date.toLocaleDateString(undefined, {
       weekday: 'short',
       month: 'short',
@@ -114,11 +116,17 @@ const WeeklyHeatMap = ({ dailyVolumeData, weekStart, weekEnd, userId, coachId })
   // Generate all 7 days of the week
   const generateWeekDays = () => {
     const days = [];
-    const start = new Date(weekStart);
+
+    // Parse date string in a timezone-safe way (YYYY-MM-DD format)
+    // Create date at local midnight to avoid timezone shifts
+    const [year, month, day] = weekStart.split('-').map(Number);
+    const start = new Date(year, month - 1, day); // month is 0-indexed in Date constructor
 
     for (let i = 0; i < 7; i++) {
       const currentDate = new Date(start);
       currentDate.setDate(start.getDate() + i);
+
+      // Format as YYYY-MM-DD
       const dateString = currentDate.toISOString().split('T')[0];
 
       // Find matching data for this date

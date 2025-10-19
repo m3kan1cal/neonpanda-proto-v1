@@ -10,6 +10,86 @@
 
 export const changelogEntries = [
   {
+    version: "Release v1.0.20251019-beta",
+    date: "2025-10-19",
+    changes: {
+      added: [
+        "PublicHeader component providing minimal navigation for marketing/public pages with logo, sign in/user avatar, and hamburger menu",
+        "Clear separation between public marketing pages and authenticated app pages with distinct navigation systems",
+        "Mobile-optimized bottom navigation bar (BottomNav) with Training, Progress, and Coaches quick access",
+        "Floating Action Button (QuickActionsFAB) with speed dial menu for Log Workout, Start Conversation, and Save Memory actions integrated with CommandPalette",
+        "Mobile logo display in breadcrumbs (panda head icon) for consistent branding on small screens with tooltip",
+        "Coach count badges in navigation menus showing total number of custom coaches created",
+        "New get-coach-configs-count Lambda function and API endpoint for fetching total coach counts per user",
+        "NavigationContext for centralized navigation state management including coach counts and menu visibility",
+        "Two-tier responsive system: 640px (sm) for progressive refinements, 768px (md) for mobile/desktop paradigm shifts",
+        "Skeleton loading states for avatar and username in PublicHeader during authentication",
+        "Escape key handler for closing QuickActionsFAB speed dial menu",
+        "Platform-aware keyboard shortcut display in PublicHeader links",
+        "Timezone-aware date conversion utilities (convertUTCToUserDate, getUserTimezoneOrDefault) in analytics/date-utils.ts for accurate date aggregation across timezones",
+        "userTimezone field to WorkoutSummary interface for proper timezone context during analytics processing",
+        "Workout date validation in build-workout handler to detect and correct dates with incorrect years (more than 1 year off from completedAt)",
+        "queryWorkoutSummaries DynamoDB function for efficient workout data retrieval using ProjectionExpression (fetches only summary fields instead of full workout objects)"
+      ],
+      changed: [
+        "Navigation system completely redesigned with SidebarNav for desktop, BottomNav/MoreMenu/QuickActionsFAB for mobile",
+        "Navigation configuration centralized in navigationConfig.js with sections: primary, contextual, quickAccess, account, and utility",
+        "Settings and Sign Out menu items moved to dedicated 'Account & Settings' section with neon pink styling",
+        "Technology menu item icon updated to modern 3D cube SVG design",
+        "Section dividers in SidebarNav positioned below their respective sections with increased vertical spacing",
+        "QuickStats now use Rajdhani font instead of Russo for numeric values across all total counts",
+        "BottomNav active state background changed to darker contrast color (bg-synthwave-bg-primary/30) for better visibility",
+        "BottomNav height increased from 56px to 64px for improved touch targets",
+        "QuickActionsFAB main button styled with hero gradient (pink to purple) matching Theme.jsx patterns",
+        "QuickActionsFAB menu items use neon pink color and right-aligned layout with full clickable areas",
+        "QuickActionsFAB backdrop opacity reduced to 25% for less intrusive overlay",
+        "ChatInput breakpoint for consolidating action buttons changed from 640px (sm) to 768px (md) for consistency",
+        "ChatInput delete button label now dynamically displays 'Delete Session' or 'Delete Conversation' based on context",
+        "Quick Prompts popup in ChatInput repositioned for mobile: fixed positioning, 90% width, horizontally centered, click-to-toggle",
+        "Quick Prompts popup height increased and text size bumped to base for better readability",
+        "Skeleton loading chat bubbles in CoachConversations and CoachCreator resized for proper mobile display (65vw min-width)",
+        "Footer links updated to include all navigation items from PublicHeader for consistency",
+        "All instances of 'About Us' standardized to 'About' across site (Footer, routeUtils, uiPatterns comments)",
+        "LandingPage hero header line-height standardized to leading-tight across all breakpoints",
+        "LandingPage hero content layout adjusted: full-width header with narrower subtitle and CTA buttons",
+        "PublicHeader avatar skeleton size increased from 32px to 36px for better visibility",
+        "PublicHeader 'Go to App' and 'Settings' menu items now use consistent py-2.5 padding",
+        "BottomNav and QuickActionsFAB conditionally hidden on chat pages (CoachConversations, CoachCreator) for mobile only",
+        "QuickActionsFAB now hidden when MoreMenu is open to prevent overlap",
+        "Breadcrumbs pointer events fixed: nav container set to pointer-events-none, inner content to pointer-events-auto",
+        "Weekly and monthly analytics now convert UTC completedAt timestamps to user's local timezone before date aggregation (defaults to America/Los_Angeles if no timezone preference set)",
+        "WeeklyHeatMap date parsing updated to use timezone-safe method (parsing YYYY-MM-DD at local midnight) preventing off-by-one day display errors",
+        "Workout ID generation updated from workout_summary_ prefix to workout_ prefix (e.g., workout_userId_timestamp_shortId) for clearer data model consistency",
+        "Analytics data fetching refactored to use queryWorkoutSummaries for ~70-90% reduction in data transfer by fetching only necessary fields (completedAt, workoutId, summary, workoutName, discipline, coachIds)",
+        "AI prompt guidance in workout extraction simplified to include concise date field instruction in temporal context section for more natural AI interpretation",
+        "Non-streaming coach conversation handler now passes only new messages (user + assistant) to sendCoachConversationMessage instead of all messages"
+      ],
+      fixed: [
+        "AWS EventBridge cron schedule for build-weekly-analytics corrected from Saturday (weekDay: 7) to Sunday (weekDay: 1)",
+        "Horizontal scrollbar on LandingPage at intermediate widths fixed with overflow-x-hidden and adjusted negative margins",
+        "Skeleton loading chat bubbles bleeding beyond container on mobile in CoachConversations and CoachCreator pages",
+        "Quick Prompts popup in ChatInput disappearing too quickly on mobile, now uses click-to-toggle instead of hover",
+        "Quick Prompts popup not horizontally centered on mobile, now uses fixed positioning with left-1/2 -translate-x-1/2",
+        "Coach avatar and keyboard shortcut buttons in breadcrumbs not reacting to hover/click on mobile due to pointer event blocking",
+        "React Hooks order error in QuickActionsFAB (useEffect called after conditional return), moved hooks to component top",
+        "Coaches badge not showing total count due to missing coachesCount in navigationUtils badge calculation",
+        "Console warnings and unnecessary console.info logs removed from main.jsx, MoreMenu.jsx, and ReportAgent.js",
+        "React warning for <style jsx> tag in MoreMenu.jsx, changed to <style>",
+        "Weekly heat map displaying workouts on incorrect days (off by one) due to timezone-naive date parsing in WeeklyHeatMap.jsx when hovering over workout squares",
+        "Analytics aggregating workouts on wrong calendar days by using UTC dates instead of user's local timezone for date grouping (e.g., Tuesday ET workout showing as Wednesday in reports)",
+        "Workout date field in DynamoDB having incorrect year (e.g., 2024 instead of 2025) due to AI extraction errors, now validated and corrected to match completedAt year",
+        "Critical message duplication bug in coach conversations where messages exponentially doubled each turn (2→4→10→22) due to non-streaming handler passing all messages instead of only new ones to DynamoDB save operation",
+        "Analytics flows pulling entire workout objects from DynamoDB instead of just summary properties, causing unnecessary data transfer and processing overhead",
+        "Confusing workout ID naming convention (workout#workout_summary_...) inconsistent with actual data structure (workouts contain summaries, not summaries of workouts)"
+      ],
+      removed: [
+        "NavigationTest.jsx component and related test navigation configuration files",
+        "uiPatterns.js from root src/utils directory (consolidated to src/utils/ui/uiPatterns.js)",
+        "Seven duplicate logo image files (logo-light-sm-1.png through logo-light-sm-6.png, logo-light-sm-cf.png)"
+      ]
+    }
+  },
+  {
     version: "Release v1.0.20251016-beta",
     date: "2025-10-16",
     changes: {

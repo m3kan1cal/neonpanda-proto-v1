@@ -187,7 +187,7 @@ export const UNIVERSAL_ANALYTICS_SCHEMA_V1 = `{
           "avg_rpe": 7.5,
           "avg_intensity": 8.2,
           "workout_count": 1,
-          "primary_workout_id": "workout_summary_userId_1234567890"
+          "primary_workout_id": "workout_userId_1234567890_abc123"
         }
       ],
       "movement_matrix": [

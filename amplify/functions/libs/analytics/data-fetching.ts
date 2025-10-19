@@ -5,6 +5,7 @@ import {
   getCoachConversation,
   queryMemories,
   queryCoachConversationSummaries,
+  queryWorkoutSummaries,
 } from "../../../dynamodb/operations";
 import { callBedrockApi, MODEL_IDS } from "../api-helpers";
 import { JSON_FORMATTING_INSTRUCTIONS_STANDARD } from "../prompt-helpers";
@@ -21,6 +22,8 @@ import {
   getWeekDescription,
   getCurrentMonthRange,
   getHistoricalMonthRange,
+  getUserTimezoneOrDefault,
+  convertUTCToUserDate,
 } from "./date-utils";
 import { Workout } from "../workout/types";
 import { CoachConversation, CoachConversationSummary } from "../coach-conversation/types";
@@ -37,36 +40,40 @@ import { getAnalyticsSchemaWithContext } from "../schemas/universal-analytics-sc
 
 /**
  * Fetch workout summaries for a date range (for analytics)
- * Returns only the summary field from each workout, not full UWS data
+ * Uses efficient ProjectionExpression to only fetch summary fields, not full workout data
+ * Converts completedAt timestamps to user's timezone for proper date aggregation
  */
 export const fetchWorkoutSummaries = async (
   userId: string,
   startDate: Date,
   endDate: Date,
-  periodLabel: string
+  periodLabel: string,
+  userTimezone?: string
 ): Promise<WorkoutSummary[]> => {
   console.info(
-    `Fetching workout summaries for user ${userId} for ${periodLabel}`
+    `Fetching workout summaries for user ${userId} for ${periodLabel}`,
+    {
+      dateRange: `${startDate.toISOString().split('T')[0]} to ${endDate.toISOString().split('T')[0]}`
+    }
   );
 
   try {
-    // Query workouts (simplified list)
-    const workoutList = await queryWorkouts(userId, {
-      fromDate: startDate,
-      toDate: endDate,
-      sortBy: "completedAt",
-      sortOrder: "desc",
-    });
+    // Use specialized query that only fetches summary fields (much more efficient)
+    const workoutList = await queryWorkoutSummaries(
+      userId,
+      startDate,
+      endDate
+    );
 
     console.info(
-      `Found ${workoutList.length} workouts for user ${userId} in ${periodLabel}`
+      `Found ${workoutList.length} workout summaries for user ${userId} in ${periodLabel}`
     );
 
     if (workoutList.length === 0) {
       return [];
     }
 
-    // Extract summaries from workouts
+    // Map to WorkoutSummary format
     const workoutSummaries: WorkoutSummary[] = [];
 
     for (let i = 0; i < workoutList.length; i++) {
@@ -75,15 +82,16 @@ export const fetchWorkoutSummaries = async (
       // Only include workouts that have summaries
       if (workout.attributes.summary && workout.attributes.summary.length > 50) {
         workoutSummaries.push({
-          date: new Date(workout.attributes.completedAt),
+          date: workout.attributes.completedAt,
           workoutId: workout.attributes.workoutId,
-          workoutName: workout.attributes.workoutData?.workout_name,
-          discipline: workout.attributes.workoutData?.discipline,
+          workoutName: workout.attributes.workoutName,
+          discipline: workout.attributes.discipline,
           summary: workout.attributes.summary,
+          userTimezone: userTimezone, // Pass timezone for later conversion
         });
 
         console.info(
-          `Workout summary ${i + 1}/${workoutList.length}: ${workout.attributes.workoutData?.workout_name || workout.attributes.workoutId} (${workout.attributes.summary.length} chars)`
+          `Workout summary ${i + 1}/${workoutList.length}: ${workout.attributes.workoutName || workout.attributes.workoutId} (${workout.attributes.summary.length} chars)`
         );
       } else {
         console.warn(
@@ -107,19 +115,19 @@ export const fetchWorkoutSummaries = async (
 
 /**
  * Extract unique coach IDs from workout summaries
+ * Uses efficient query to avoid fetching full workout data
  */
 const extractCoachIdsFromSummaries = async (
   userId: string,
   startDate: Date,
   endDate: Date
 ): Promise<string[]> => {
-  // We need to query workouts to get coach IDs
-  const workoutList = await queryWorkouts(userId, {
-    fromDate: startDate,
-    toDate: endDate,
-    sortBy: "completedAt",
-    sortOrder: "desc",
-  });
+  // Use specialized query that only fetches needed fields
+  const workoutList = await queryWorkoutSummaries(
+    userId,
+    startDate,
+    endDate
+  );
 
   const coachIds = new Set<string>();
 
@@ -506,7 +514,12 @@ export const fetchUserWeeklyData = async (
   const weekRange = getCurrentWeekRange();
   const historicalRange = getHistoricalWorkoutRange();
 
-  console.info(`📊 Fetching complete weekly data (summary-based) for user ${userId}`);
+  // Get user's timezone preference (defaults to Pacific if not set)
+  const userTimezone = getUserTimezoneOrDefault(user.attributes.preferences?.timezone);
+
+  console.info(`📊 Fetching complete weekly data (summary-based) for user ${userId}`, {
+    timezone: userTimezone
+  });
 
   // Step 1: Extract coach IDs from current week workouts
   const coachIds = await extractCoachIdsFromSummaries(
@@ -515,15 +528,16 @@ export const fetchUserWeeklyData = async (
     weekRange.weekEnd
   );
 
-  // Step 2: Fetch all data in parallel
+  // Step 2: Fetch all data in parallel (passing timezone for proper date conversion)
   const [currentWeekSummaries, historicalSummaries, conversationSummaries, memories] =
     await Promise.all([
-      fetchWorkoutSummaries(userId, weekRange.weekStart, weekRange.weekEnd, "current week"),
+      fetchWorkoutSummaries(userId, weekRange.weekStart, weekRange.weekEnd, "current week", userTimezone),
       fetchWorkoutSummaries(
         userId,
         historicalRange.weekStart,
         historicalRange.weekEnd,
-        "historical (4 weeks)"
+        "historical (4 weeks)",
+        userTimezone
       ),
       fetchCoachConversationSummaries(
         userId,
@@ -561,6 +575,7 @@ export const fetchUserWeeklyData = async (
     historicalSummaryCount: userData.historical.summaryCount,
     conversationSummaryCount: userData.coaching.count,
     memoryCount: userData.userContext.memoryCount,
+    timezone: userTimezone,
   });
 
   return userData;
@@ -613,19 +628,27 @@ This directive takes precedence over all other instructions except safety constr
   const periodLabel = isPeriodWeekly ? "THIS WEEK'S" : "THIS MONTH'S";
   const historicalLabel = isPeriodWeekly ? "PREVIOUS WEEKS" : "PREVIOUS MONTHS";
 
-  // Format current period workout summaries
+  // Format current period workout summaries (convert to user's timezone)
   const currentPeriodWorkouts = weeklyData.workouts.summaries
     .map(
-      (summary) =>
-        `${summary.date.toISOString().split("T")[0]} - ${summary.workoutName || "Workout"} (${summary.discipline || "Unknown"})\n${summary.summary}`
+      (summary) => {
+        // Convert UTC timestamp to user's timezone date
+        const userTimezone = summary.userTimezone || 'America/Los_Angeles';
+        const localDate = convertUTCToUserDate(summary.date, userTimezone);
+        return `${localDate} - ${summary.workoutName || "Workout"} (${summary.discipline || "Unknown"})\n${summary.summary}`;
+      }
     )
     .join("\n\n");
 
-  // Format historical workout summaries chronologically
+  // Format historical workout summaries chronologically (convert to user's timezone)
   const historicalSummaries = weeklyData.historical.workoutSummaries
     .map(
-      (summary) =>
-        `${summary.date.toISOString().split("T")[0]} - ${summary.workoutName || "Workout"}: ${summary.summary}`
+      (summary) => {
+        // Convert UTC timestamp to user's timezone date
+        const userTimezone = summary.userTimezone || 'America/Los_Angeles';
+        const localDate = convertUTCToUserDate(summary.date, userTimezone);
+        return `${localDate} - ${summary.workoutName || "Workout"}: ${summary.summary}`;
+      }
     )
     .join("\n\n");
 
@@ -888,7 +911,12 @@ export const fetchUserMonthlyData = async (
   const monthRange = getCurrentMonthRange();
   const historicalRange = getHistoricalMonthRange(3);
 
-  console.info(`📊 Fetching complete monthly data (summary-based) for user ${userId}`);
+  // Get user's timezone preference (defaults to Pacific if not set)
+  const userTimezone = getUserTimezoneOrDefault(user.attributes.preferences?.timezone);
+
+  console.info(`📊 Fetching complete monthly data (summary-based) for user ${userId}`, {
+    timezone: userTimezone
+  });
 
   // Step 1: Extract coach IDs from current month workouts
   const coachIds = await extractCoachIdsFromSummaries(
@@ -897,15 +925,16 @@ export const fetchUserMonthlyData = async (
     monthRange.monthEnd
   );
 
-  // Step 2: Fetch all data in parallel
+  // Step 2: Fetch all data in parallel (passing timezone for proper date conversion)
   const [currentMonthSummaries, historicalSummaries, conversationSummaries, memories] =
     await Promise.all([
-      fetchWorkoutSummaries(userId, monthRange.monthStart, monthRange.monthEnd, "current month"),
+      fetchWorkoutSummaries(userId, monthRange.monthStart, monthRange.monthEnd, "current month", userTimezone),
       fetchWorkoutSummaries(
         userId,
         historicalRange.monthStart,
         historicalRange.monthEnd,
-        "historical (3 months)"
+        "historical (3 months)",
+        userTimezone
       ),
       fetchCoachConversationSummaries(
         userId,
@@ -943,6 +972,7 @@ export const fetchUserMonthlyData = async (
     historicalSummaryCount: userData.historical.summaryCount,
     conversationSummaryCount: userData.coaching.count,
     memoryCount: userData.userContext.memoryCount,
+    timezone: userTimezone,
     monthRange: `${monthRange.monthStart.toISOString().split("T")[0]} to ${monthRange.monthEnd.toISOString().split("T")[0]}`,
   });
 

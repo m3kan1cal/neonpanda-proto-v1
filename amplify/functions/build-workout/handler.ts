@@ -360,11 +360,42 @@ export const handler = async (event: BuildWorkoutEvent) => {
       ? new Date(event.completedAt)
       : extractedTime || new Date();
 
+    // Validate workout date field to prevent wrong year errors
+    if (finalWorkoutData.date) {
+      const workoutDate = new Date(finalWorkoutData.date);
+      const currentYear = new Date().getFullYear();
+      const workoutYear = workoutDate.getFullYear();
+      const completedAtYear = completedAt.getFullYear();
+
+      // Check if workout date is in wrong year (more than 1 year old or in future, or doesn't match completedAt year)
+      if (workoutYear < currentYear - 1 || workoutYear > currentYear + 1 ||
+          Math.abs(workoutYear - completedAtYear) > 1) {
+        console.warn("⚠️ Detected workout date in wrong year - correcting:", {
+          originalDate: finalWorkoutData.date,
+          workoutYear,
+          completedAtYear,
+          currentYear,
+        });
+
+        // Correct the date to match completedAt's date
+        const correctedDate = completedAt.toISOString().split('T')[0];
+        finalWorkoutData.date = correctedDate;
+
+        // Add to validation flags
+        if (!finalWorkoutData.metadata.validation_flags?.includes('date')) {
+          finalWorkoutData.metadata.validation_flags?.push('date');
+        }
+
+        console.info("✅ Corrected workout date to:", correctedDate);
+      }
+    }
+
     console.info("Workout timing analysis:", {
       userMessage: workoutContent.substring(0, 100),
       userTimezone,
       extractedTime: extractedTime ? extractedTime.toISOString() : null,
       finalCompletedAt: completedAt.toISOString(),
+      workoutDate: finalWorkoutData.date,
       currentTime: new Date().toISOString(),
       isToday: completedAt.toDateString() === new Date().toDateString(),
       daysDifference: Math.floor(

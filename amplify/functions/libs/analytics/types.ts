@@ -34,6 +34,7 @@ export interface WorkoutSummary {
   workoutName?: string;
   discipline?: string;
   summary: string; // AI-generated summary from workout.summary field
+  userTimezone?: string; // User's IANA timezone for date conversion
 }
 
 /**

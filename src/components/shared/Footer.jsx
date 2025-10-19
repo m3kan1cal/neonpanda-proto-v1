@@ -42,6 +42,7 @@ function Footer() {
           <div className="lg:col-span-1">
             <h3 className="font-inter text-xl md:text-2xl text-synthwave-neon-cyan mb-6 font-semibold">Platform</h3>
             <ul className="space-y-4 font-rajdhani">
+              <li><Link to="/" className="text-synthwave-text-secondary hover:text-synthwave-neon-pink transition-colors">Home</Link></li>
               <li><Link to="/contact?type=waitlist" className="text-synthwave-text-secondary hover:text-synthwave-neon-pink transition-colors">Get Early Access</Link></li>
               <li><Link to="/contact?type=collaborate" className="text-synthwave-text-secondary hover:text-synthwave-neon-pink transition-colors">Collaborate</Link></li>
               <li><a href="#features" className="text-synthwave-text-secondary hover:text-synthwave-neon-pink transition-colors">Features</a></li>
@@ -53,10 +54,11 @@ function Footer() {
           <div className="lg:col-span-1">
             <h3 className="font-inter text-xl md:text-2xl text-synthwave-neon-pink mb-6 font-semibold">Resources</h3>
             <ul className="space-y-4 font-rajdhani">
-              <li><Link to="/about" className="text-synthwave-text-secondary hover:text-synthwave-neon-pink transition-colors">About Us</Link></li>
+              <li><Link to="/about" className="text-synthwave-text-secondary hover:text-synthwave-neon-pink transition-colors">About</Link></li>
               <li><Link to="/technology" className="text-synthwave-text-secondary hover:text-synthwave-neon-pink transition-colors">Technology</Link></li>
               <li><Link to="/faqs" className="text-synthwave-text-secondary hover:text-synthwave-neon-pink transition-colors">FAQs</Link></li>
               <li><Link to="/changelog" className="text-synthwave-text-secondary hover:text-synthwave-neon-pink transition-colors">Changelog</Link></li>
+              <li><Link to="/contact?type=support" className="text-synthwave-text-secondary hover:text-synthwave-neon-pink transition-colors">Support</Link></li>
             </ul>
           </div>
 

@@ -955,8 +955,8 @@ export const storePineconeContext = async (
       // User memory records
       recordId = metadata.memoryId; // e.g., "user_memory_userId_1759850315502_5cqgsat0i"
     } else if (metadata.workoutId) {
-      // Workout summary records
-      recordId = metadata.workoutId; // e.g., "workout_summary_userId_1759837953791_shortId"
+      // Workout records
+      recordId = metadata.workoutId; // e.g., "workout_userId_1759837953791_shortId"
     } else if (metadata.summaryId) {
       // Conversation summary or coach creator summary records
       recordId = metadata.summaryId; // e.g., "conversation_summary_..." or "coach_creator_summary_..."

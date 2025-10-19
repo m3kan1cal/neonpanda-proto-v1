@@ -102,7 +102,7 @@ function LandingPage() {
   ];
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen overflow-x-hidden">
       {/* Full-page background */}
       <div className={`fixed inset-0 ${layoutPatterns.authBackground}`}></div>
 
@@ -122,20 +122,20 @@ function LandingPage() {
         <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/60 backdrop-blur-sm"></div>
 
         <div className="relative z-10 max-w-7xl mx-auto w-full">
-          <div className="w-full lg:w-2/3">
+          <div className="w-full">
             {/* Main Headline */}
-            <h1 className="font-inter font-bold text-5xl md:text-6xl lg:text-7xl xl:text-8xl text-white mb-8 drop-shadow-lg leading-tight text-left">
+            <h1 className="font-inter font-bold text-7xl md:text-7xl lg:text-8xl xl:text-8xl text-white mb-8 drop-shadow-lg leading-tight text-left">
               Your perfect coach,{" "}
               <span className="text-synthwave-neon-pink">electrified</span>
             </h1>
 
             {/* Subtitle */}
-            <p className={`${typographyPatterns.heroSubtitle} mb-8 text-left`}>
+            <p className={`${typographyPatterns.heroSubtitle} mb-8 text-left w-full lg:w-2/3`}>
               Building the future of personalized AI coaching where your sweat meets electric intelligence to unlock your next fitness frontier.
             </p>
 
             {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-6 items-start">
+            <div className="flex flex-col sm:flex-row gap-6 items-start w-full lg:w-2/3">
               <Link
                 to="/contact?type=waitlist"
                 className={buttonPatterns.heroCTA}
@@ -299,25 +299,25 @@ function LandingPage() {
               </div>
             </div>
 
-            {/* Pair 3: Limited Support Hours vs 24/7 Availability */}
+            {/* Pair 3: Scattered Data vs Training Grounds Hub */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
               {/* Challenge Side */}
               <div className="relative">
                 <div className="bg-gradient-to-br from-synthwave-bg-card/60 to-synthwave-bg-secondary/60 backdrop-blur-sm border-l-4 border-synthwave-neon-cyan/60 rounded-xl p-8 h-full shadow-xl shadow-synthwave-neon-cyan/10">
                   <div className="flex items-start gap-4 mb-4">
                     <div className="w-12 h-12 bg-synthwave-neon-cyan/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <svg className="w-6 h-6 text-synthwave-neon-cyan" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z" />
+                      <svg className="w-6 h-6 text-synthwave-neon-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
                       </svg>
                     </div>
                     <div>
                       <p className="text-synthwave-neon-cyan text-sm font-rajdhani font-semibold uppercase tracking-wider mb-1">Your Reality</p>
-                      <h3 className="text-white text-xl font-inter font-bold mb-3">When Motivation Strikes</h3>
+                      <h3 className="text-white text-xl font-inter font-bold mb-3">Data Scattered Everywhere</h3>
                     </div>
                   </div>
                   <div className="bg-synthwave-bg-primary/20 rounded-lg p-4 border border-synthwave-neon-cyan/10">
                     <p className="text-white/90 italic text-lg font-rajdhani leading-relaxed">
-                      "It's 6 AM and I'm feeling motivated to crush today's workout, but my coach isn't available until 9 AM. By then, I've lost the momentum and skipped another session..."
+                      "My workouts are in one app, nutrition notes in another, progress pics scattered across my photo roll, and coach conversations buried in email threads. I can't see the full picture of my fitness journey..."
                     </p>
                   </div>
                 </div>
@@ -329,35 +329,35 @@ function LandingPage() {
                   <div className="flex items-start gap-4 mb-4">
                     <div className="w-12 h-12 bg-synthwave-neon-pink/20 rounded-lg flex items-center justify-center flex-shrink-0">
                       <svg className="w-6 h-6 text-synthwave-neon-pink" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                       </svg>
                     </div>
                     <div>
                       <p className="text-synthwave-neon-pink text-sm font-rajdhani font-semibold uppercase tracking-wider mb-1">Your AI Coach</p>
-                      <h3 className="text-white text-xl font-inter font-bold mb-3">Always-On Coaching</h3>
+                      <h3 className="text-white text-xl font-inter font-bold mb-3">Your Training Grounds Hub</h3>
                     </div>
                   </div>
                   <p className="text-white/90 text-lg font-rajdhani leading-relaxed mb-4">
-                    Your AI coach is ready whenever motivation strikes. 6 AM, midnight, or 2 PM - get instant coaching support when you need it most.
+                    Everything in one beautifully organized place. Conversations, workouts, reports, analytics, memories, and preferences - all accessible from your personal Training Grounds headquarters.
                   </p>
                   <ul className="space-y-2">
                     <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-rajdhani">
                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
-                      24/7 availability, no scheduling needed
+                      Complete journey view in one place
                     </li>
                     <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-rajdhani">
                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
-                      Instant workout adjustments on the fly
+                      Weekly & monthly analytics reports
                     </li>
                     <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-rajdhani">
                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
-                      Catches you in your motivated moments
+                      No more data scattered across apps
                     </li>
                   </ul>
                 </div>
@@ -628,7 +628,7 @@ function LandingPage() {
               <div className="flex-1 relative">
                 {/* Ethereal background glow */}
                 <div
-                  className={`absolute inset-0 -m-16 ${
+                  className={`absolute inset-0 -m-8 md:-m-16 ${
                     index % 2 === 0
                       ? "bg-synthwave-neon-pink/15"
                       : "bg-synthwave-neon-cyan/15"
