@@ -189,14 +189,6 @@ export class WorkoutAgent {
       // Calculate days since last workout
       const lastWorkoutDaysAgo = this._calculateLastWorkoutDaysAgo(workouts);
 
-      console.info('WorkoutAgent.loadWorkoutStats: Calculated metrics:', {
-        totalCount,
-        recentWorkoutsCount: recentWorkouts.length,
-        thisWeekCount: thisWeekWorkouts.length,
-        trainingDaysCount: uniqueDates.size,
-        lastWorkoutDaysAgo
-      });
-
       // Update all state at once
       this._updateState({
         recentWorkouts,

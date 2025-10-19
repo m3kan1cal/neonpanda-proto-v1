@@ -116,81 +116,103 @@ export const WorkoutIconSmall = () => (
   </svg>
 );
 
-export const WorkoutIconTiny = () => (
-  <svg className="w-4 h-4" fill="currentColor" viewBox="32 32 448 448">
+export const WorkoutIconTiny = ({ className = "w-4 h-4" }) => (
+  <svg className={className} fill="currentColor" viewBox="32 32 448 448">
     <path d="m151.34 436.82c13.66 15.52 33.418 24.281 54.078 23.98h101.12c20.578 0.32031 40.301-8.3594 53.938-23.781 54.199-53.5 63.684-115.48 28.16-184.22-2.9414-5.6016-3.2188-12.238-0.76172-18.078 7.9219-20.52 12.801-42.102 14.5-64.039 1.4609-13.059 0.5-26.281-2.8008-39-14.539-50.66-61.441-76.98-143.82-80.48-81.961 3.5-128.88 29.82-143.36 80.48-3.3008 12.719-4.2617 25.941-2.8008 39 1.6797 21.941 6.5586 43.5 14.5 64 2.4414 5.8594 2.1602 12.5-0.76172 18.141-35.5 68.719-26 130.7 28 184zm37.918-313.8c14.441-9.0391 35.719-13.18 66.738-12.98h0.058594c31.059-0.19922 52.219 3.9414 66.68 12.98h-0.019531c13.199 8.8008 20.781 23.941 19.879 39.801-0.80078 19.039-5.8984 33.762-15.078 43.699-1.5586 1.7188-4 2.3008-6.1602 1.4609-20.781-8.3594-42.84-13.039-65.219-13.82-0.058594 0-0.10156 0.058594-0.16016 0.058594-0.058594 0-0.039063-0.058594-0.10156-0.058594-22.379 0.78125-44.461 5.4609-65.238 13.82-2.1406 0.83984-4.6016 0.26172-6.1406-1.4609-9.1992-9.9414-14.281-24.68-15.078-43.699-0.89844-15.84 6.6406-30.98 19.82-39.801z"/>
   </svg>
 );
 
 // Navigation Menu Icons - Tiny versions for consistent 16px sizing
-export const HomeIconTiny = () => (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+export const HomeIconTiny = ({ className = "w-4 h-4" }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
   </svg>
 );
 
-export const FAQIconTiny = () => (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+// Sparkle Icon - Rounded star/sparkle shape for Coaches
+export const SparkleIconTiny = ({ className = "w-4 h-4" }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+    <path d="M12 2c-.5 0-.9.4-1 .9l-.8 4.4c-.1.5-.4.9-.8 1.2L5 11.1c-.5.3-.7.8-.7 1.3 0 .5.2 1 .7 1.3l4.4 2.6c.4.3.7.7.8 1.2l.8 4.4c.1.5.5.9 1 .9s.9-.4 1-.9l.8-4.4c.1-.5.4-.9.8-1.2l4.4-2.6c.5-.3.7-.8.7-1.3 0-.5-.2-1-.7-1.3l-4.4-2.6c-.4-.3-.7-.7-.8-1.2l-.8-4.4c-.1-.5-.5-.9-1-.9z"/>
+  </svg>
+);
+
+// AI Coach Icon - Sparkle/star design representing AI
+export const CoachIconTiny = ({ className = "w-4 h-4" }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 512 512">
+    <path d="m508.68 163.92c-4.4805-81.32-40.621-134.68-101.22-150.18l-1.3398-0.37891h-0.058594c-24.961-7.3008-51.441-9.6602-74.156-11.059-50.621-2.4414-117.34-4.2812-184.52 2.8789-94.34 9.2812-140.34 63.34-144.82 170.2-3.0781 67.18-5.2383 138.52 5.3203 207.56 19.141 126.36 136.02 127.78 229.96 128.92h18.68c127.72-0.37891 248.38-0.76172 253.18-178.26 3.2617-60.781 2.9414-116.32-1.0781-169.62zm-24.52 168.6c-4.1602 153.04-97.961 153.3-227.72 153.68h-18.297c-92.957-1.1602-189.08-2.3008-205-107.18-10.238-66.738-8.1211-136.6-5.0586-202.58 3.9609-94.238 40.379-137.88 121.82-145.88 34.559-3.6406 69.039-4.9219 101.16-4.9219 28.918 0 55.922 1.0195 79.34 2.1211 21.121 1.2812 45.82 3.4609 68.34 10.102l1.7188 0.51953c66.602 17.078 80.301 86.82 82.539 127.2 3.9609 52.398 4.2812 106.92 1.0781 166.88z"/>
+    <path d="m366.12 244.68c-51.316-21.762-75.621-45.039-97.383-95.277-8.2617-20.422-15.219-27.262-25.141-2.8789-21.699 51.957-47.602 76.719-98.602 98.16-5.1211 2.3594-14.34 6.4609-14.398 11.32 0.058594 4.8594 9.2188 8.9609 14.398 11.32 50.941 21.379 76.902 46.199 98.602 98.16 10.039 24.82 17.02 17.02 25.141-2.8789 21.762-50.219 46.059-73.52 97.383-95.277 5.3789-2.5586 14.262-5.9609 15.16-11.059v-0.57812c-0.89844-5.0586-9.7188-8.5-15.16-11.059z"/>
+  </svg>
+);
+
+export const FAQIconTiny = ({ className = "w-4 h-4" }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
   </svg>
 );
 
-export const ChangelogIconTiny = () => (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+export const ChangelogIconTiny = ({ className = "w-4 h-4" }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
   </svg>
 );
 
-export const CoachesIconTiny = () => (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+export const CoachesIconTiny = ({ className = "w-4 h-4" }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    {/* Shield outline - using standard heroicons shield-check path */}
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 12.049 12.049 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
   </svg>
 );
 
-export const MemoryIconTiny = () => (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+export const MemoryIconTiny = ({ className = "w-4 h-4" }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
   </svg>
 );
 
-export const ReportsIconTiny = () => (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+export const ReportsIconTiny = ({ className = "w-4 h-4" }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
   </svg>
 );
 
-export const WaitlistIconTiny = () => (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+export const WaitlistIconTiny = ({ className = "w-4 h-4" }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
   </svg>
 );
 
-export const CollaborateIconTiny = () => (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+export const CollaborateIconTiny = ({ className = "w-4 h-4" }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
   </svg>
 );
 
-export const SignOutIconTiny = () => (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+export const SignOutIconTiny = ({ className = "w-4 h-4" }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
   </svg>
 );
 
-export const AboutIconTiny = () => (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+export const AboutIconTiny = ({ className = "w-4 h-4" }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
   </svg>
 );
 
-export const TechnologyIconTiny = () => (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+export const TechnologyIconTiny = ({ className = "w-4 h-4" }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 512 512">
+    <path d="m221.42 23.898c22.398-11.602 49.199-11.219 71.32 1.1602l150.44 84.262c22.738 12.719 36.82 36.762 36.82 62.824v167.72c0 25.238-13.219 48.582-34.719 61.598l-2.1016 1.2188-150.44 84.238c-22.121 12.398-48.922 12.781-71.32 1.1797l-2.1602-1.1797-150.44-84.238c-22.02-12.34-35.941-35.262-36.781-60.379l-0.039062-2.4414v-167.72c0-26.059 14.078-50.102 36.82-62.824l150.44-84.262zm-141.42 315.96 0.058594 1.6211c0.53906 8.0586 5.1016 15.34 12.219 19.32l139.72 78.238v-170.46c-4.3594-1.4805-8.6406-3.3594-12.738-5.6602l-139.26-77.977zm212.74-76.938c-4.1016 2.3008-8.3789 4.1797-12.738 5.6602v170.46l139.72-78.238 1.3984-0.83984c6.7617-4.3984 10.879-11.961 10.879-20.102v-154.92zm-23.461-195.96c-7.7188-4.3398-17.059-4.6211-25-0.82031l-1.5586 0.82031-137.6 77.039 137.6 77.039c8.2383 4.6211 18.32 4.6211 26.559 0l137.6-77.039z"/>
   </svg>
 );
 
-export const SupportIconTiny = () => (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+export const TechnologyIcon = ({ className = "w-5 h-5" }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 512 512">
+    <path d="m221.42 23.898c22.398-11.602 49.199-11.219 71.32 1.1602l150.44 84.262c22.738 12.719 36.82 36.762 36.82 62.824v167.72c0 25.238-13.219 48.582-34.719 61.598l-2.1016 1.2188-150.44 84.238c-22.121 12.398-48.922 12.781-71.32 1.1797l-2.1602-1.1797-150.44-84.238c-22.02-12.34-35.941-35.262-36.781-60.379l-0.039062-2.4414v-167.72c0-26.059 14.078-50.102 36.82-62.824l150.44-84.262zm-141.42 315.96 0.058594 1.6211c0.53906 8.0586 5.1016 15.34 12.219 19.32l139.72 78.238v-170.46c-4.3594-1.4805-8.6406-3.3594-12.738-5.6602l-139.26-77.977zm212.74-76.938c-4.1016 2.3008-8.3789 4.1797-12.738 5.6602v170.46l139.72-78.238 1.3984-0.83984c6.7617-4.3984 10.879-11.961 10.879-20.102v-154.92zm-23.461-195.96c-7.7188-4.3398-17.059-4.6211-25-0.82031l-1.5586 0.82031-137.6 77.039 137.6 77.039c8.2383 4.6211 18.32 4.6211 26.559 0l137.6-77.039z"/>
+  </svg>
+);
+
+export const SupportIconTiny = ({ className = "w-4 h-4" }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192L5.636 18.364M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
   </svg>
 );
@@ -221,8 +243,8 @@ export const SettingsIcon = () => (
   </svg>
 );
 
-export const SettingsIconTiny = () => (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+export const SettingsIconTiny = ({ className = "w-4 h-4" }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
   </svg>
@@ -423,6 +445,17 @@ export const TargetIcon = () => (
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 1.657-2.657 1.657-2.657A8 8 0 0117.657 18.657z" />
     <circle cx="12" cy="12" r="3" />
     <circle cx="12" cy="12" r="8" />
+  </svg>
+);
+
+// Network/Share icon for Training Grounds
+export const NetworkIconTiny = ({ className = "w-4 h-4" }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <circle cx="8" cy="12" r="2.5" strokeWidth={2.5} />
+    <circle cx="16" cy="8" r="2.5" strokeWidth={2.5} />
+    <circle cx="16" cy="16" r="2.5" strokeWidth={2.5} />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10.5 12h3M16 8l-1.5 1.5M16 16l-1.5-1.5" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5.5 12c0-1.2 0.8-2 2-2s2 0.8 2 2" />
   </svg>
 );
 

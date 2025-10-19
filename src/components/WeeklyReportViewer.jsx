@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Tooltip } from 'react-tooltip';
-import { containerPatterns } from '../utils/uiPatterns';
+import { containerPatterns } from '../utils/ui/uiPatterns';
 import { ChevronDownIcon, WorkoutIconSmall } from './themes/SynthwaveComponents';
 import IconButton from './shared/IconButton';
 

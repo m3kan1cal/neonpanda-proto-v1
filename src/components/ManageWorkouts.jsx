@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Tooltip } from 'react-tooltip';
 import { useAuthorizeUser } from '../auth/hooks/useAuthorizeUser';
-import { containerPatterns, buttonPatterns, layoutPatterns, tooltipPatterns } from "../utils/uiPatterns";
+import { containerPatterns, buttonPatterns, layoutPatterns, tooltipPatterns } from "../utils/ui/uiPatterns";
 import { AccessDenied } from './shared/AccessDenied';
 import { isNewWorkout } from "../utils/dateUtils";
 import { NeonBorder, NewBadge } from "./themes/SynthwaveComponents";
@@ -654,7 +654,7 @@ function ManageWorkouts() {
 
           {/* Workout cards skeleton */}
           <div className="mb-8">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-6xl mx-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {[1, 2, 3, 4, 5, 6].map((i) => (
                 <div key={i} className={`${containerPatterns.cardMedium} p-5 flex flex-col h-80`}>
                   <div className="flex items-start space-x-2 mb-3">
@@ -883,7 +883,7 @@ function ManageWorkouts() {
             !workoutAgentState.error &&
             workoutAgentState.allWorkouts.length > 0 && (
               <div className="mb-8">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-6xl mx-auto">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {workoutAgentState.allWorkouts.map(renderWorkoutCard)}
                 </div>
               </div>

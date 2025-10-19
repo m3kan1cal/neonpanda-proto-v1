@@ -9,7 +9,7 @@ import {
 
 /**
  * Weekly Analytics Lambda Handler
- * Triggered by EventBridge cron every Sunday at 6:00 AM UTC
+ * Triggered by EventBridge cron every Sunday at 9:00 AM UTC
  */
 export const handler = async (event: WeeklyAnalyticsEvent) => {
   try {

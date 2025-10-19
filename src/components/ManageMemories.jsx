@@ -7,7 +7,7 @@ import {
   buttonPatterns,
   layoutPatterns,
   tooltipPatterns,
-} from "../utils/uiPatterns";
+} from "../utils/ui/uiPatterns";
 import { themeClasses } from "../utils/synthwaveThemeClasses";
 import CoachHeader from "./shared/CoachHeader";
 import CompactCoachCard from "./shared/CompactCoachCard";
@@ -542,7 +542,7 @@ function ManageMemories() {
     });
 
     return (
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-6xl mx-auto">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {sortedMemories.map(renderMemoryCard)}
       </div>
     );
@@ -582,7 +582,7 @@ function ManageMemories() {
           </div>
 
           {/* Memory cards skeleton */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <div key={i} className={`${containerPatterns.contentCard} group relative`}>
                 {/* Delete button skeleton */}

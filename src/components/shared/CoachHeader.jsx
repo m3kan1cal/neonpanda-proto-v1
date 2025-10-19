@@ -1,5 +1,5 @@
 import React from 'react';
-import { avatarPatterns } from '../../utils/uiPatterns';
+import { avatarPatterns } from '../../utils/ui/uiPatterns';
 import { InlineEditField } from './InlineEditField';
 
 const CoachHeader = ({

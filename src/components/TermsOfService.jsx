@@ -5,7 +5,7 @@ import {
   layoutPatterns,
   typographyPatterns,
   buttonPatterns
-} from '../utils/uiPatterns';
+} from '../utils/ui/uiPatterns';
 import Footer from './shared/Footer';
 
 function TermsOfService() {

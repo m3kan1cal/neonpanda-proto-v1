@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "../../contexts/ToastContext";
-import { buttonPatterns, iconButtonPatterns, containerPatterns } from "../../utils/uiPatterns";
+import { useNavigationContext } from "../../contexts/NavigationContext";
+import { buttonPatterns, iconButtonPatterns, containerPatterns } from "../../utils/ui/uiPatterns";
 import {
   isCurrentWeekReport,
   isNewWorkout,
@@ -47,6 +48,7 @@ export const FloatingMenuManager = ({
 }) => {
   const navigate = useNavigate();
   const { success, error } = useToast();
+  const { isSidebarCollapsed } = useNavigationContext();
 
   // Modern popover state
   const [activePopover, setActivePopover] = useState(null);
@@ -1676,10 +1678,20 @@ export const FloatingMenuManager = ({
   // Don't render if missing required props
   if (!userId) return null;
 
+  // Position based on sidebar state (4px from sidebar edge)
+  const iconBarPosition = isSidebarCollapsed
+    ? 'left-[68px]' // 68px = 64px (collapsed sidebar w-16) + 4px margin
+    : 'left-[260px]'; // 260px = 256px (expanded sidebar w-64) + 4px margin
+
+  // Popover position (icons + icon width + margin)
+  const popoverPosition = isSidebarCollapsed
+    ? 'lg:left-[132px]' // 132px = 68px + 64px (icon width + margin)
+    : 'lg:left-[324px]'; // 324px = 260px + 64px (icon width + margin)
+
   return (
     <>
-      {/* Modern Floating Icon Bar */}
-      <FloatingIconBar className={className}>
+      {/* Modern Floating Icon Bar - HIDDEN: Now integrated into SidebarNav Quick Access section */}
+      <FloatingIconBar className={`hidden ${iconBarPosition} ${className}`}>
         <FloatingIconButton
           ref={menuIconRef}
           icon={<MenuIcon />}
@@ -1725,6 +1737,7 @@ export const FloatingMenuManager = ({
         onClose={handleClosePopover}
         anchorRef={menuIconRef}
         title="Quick Actions"
+        positionClass={popoverPosition}
       >
         {activePopover === "menu" && renderMainActionsMenu()}
       </ModernPopover>
@@ -1734,6 +1747,7 @@ export const FloatingMenuManager = ({
         onClose={handleClosePopover}
         anchorRef={conversationsIconRef}
         title="Recent Conversations"
+        positionClass={popoverPosition}
       >
         {activePopover === "conversations" && renderConversationList()}
       </ModernPopover>
@@ -1743,6 +1757,7 @@ export const FloatingMenuManager = ({
         onClose={handleClosePopover}
         anchorRef={workoutsIconRef}
         title="Recent Workouts"
+        positionClass={popoverPosition}
       >
         {activePopover === "workouts" && renderWorkoutList()}
       </ModernPopover>
@@ -1752,6 +1767,7 @@ export const FloatingMenuManager = ({
         onClose={handleClosePopover}
         anchorRef={reportsIconRef}
         title="Recent Reports"
+        positionClass={popoverPosition}
       >
         {activePopover === "reports" && renderReportList()}
       </ModernPopover>
@@ -1762,6 +1778,7 @@ export const FloatingMenuManager = ({
           onClose={handleClosePopover}
           anchorRef={coachIconRef}
           title="Coach Details"
+          positionClass={popoverPosition}
         >
           {activePopover === "coach" && renderCoachDetails()}
         </ModernPopover>

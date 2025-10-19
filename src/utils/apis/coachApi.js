@@ -39,6 +39,40 @@ export const getCoaches = async (userId) => {
 };
 
 /**
+ * Gets the total count of coaches for a user
+ * @param {string} userId - The user ID
+ * @returns {Promise<Object>} - The API response with totalCount
+ */
+export const getCoachesCount = async (userId) => {
+  const url = `${getApiUrl('')}/users/${userId}/coaches/count`;
+
+  try {
+    const response = await authenticatedFetch(url, {
+      method: 'GET',
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('getCoachesCount: Error response:', errorText);
+      let errorMessage;
+      try {
+        const errorData = JSON.parse(errorText);
+        errorMessage = errorData.error || errorData.message || `API Error: ${response.status}`;
+      } catch (parseError) {
+        errorMessage = `API Error: ${response.status}`;
+      }
+      throw new Error(errorMessage);
+    }
+
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error('getCoachesCount: API Error:', error);
+    throw error;
+  }
+};
+
+/**
  * Gets a specific coach (full details)
  * @param {string} userId - The user ID
  * @param {string} coachId - The coach ID
@@ -100,7 +134,7 @@ export const updateCoachConfig = async (userId, coachId, metadata) => {
       } catch (parseError) {
         errorMessage = `API Error: ${response.status}`;
       }
-      
+
       if (response.status === 404) {
         throw new Error('Coach not found');
       }

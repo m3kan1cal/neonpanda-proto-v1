@@ -27,7 +27,7 @@ export function createWeeklyAnalyticsSchedule(
     schedule: events.Schedule.cron({
       minute: "0",
       hour: "9",
-      weekDay: "7", // Sunday (7 = Sunday, 1 = Monday in AWS EventBridge)
+      weekDay: "1", // Sunday (1 = Sunday, 7 = Saturday in AWS EventBridge)
     }),
   });
 

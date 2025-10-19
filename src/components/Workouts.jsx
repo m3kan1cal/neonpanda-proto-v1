@@ -4,7 +4,7 @@ import { Tooltip } from 'react-tooltip';
 import { useAuthorizeUser } from "../auth/hooks/useAuthorizeUser";
 import { AccessDenied, LoadingScreen } from "./shared/AccessDenied";
 import { themeClasses } from "../utils/synthwaveThemeClasses";
-import { buttonPatterns, containerPatterns, layoutPatterns, tooltipPatterns } from "../utils/uiPatterns";
+import { buttonPatterns, containerPatterns, layoutPatterns, tooltipPatterns } from "../utils/ui/uiPatterns";
 import { NeonBorder } from "./themes/SynthwaveComponents";
 import CoachHeader from "./shared/CoachHeader";
 import CompactCoachCard from './shared/CompactCoachCard';

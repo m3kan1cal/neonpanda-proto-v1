@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { themeClasses } from '../../utils/synthwaveThemeClasses';
-import { containerPatterns, buttonPatterns } from '../../utils/uiPatterns';
+import { containerPatterns, buttonPatterns } from '../../utils/ui/uiPatterns';
 
 /**
  * Standardized Access Denied component for consistent styling across the app

@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Tooltip } from 'react-tooltip';
 import { useAuthorizeUser } from '../auth/hooks/useAuthorizeUser';
 import { AccessDenied } from './shared/AccessDenied';
-import { containerPatterns, buttonPatterns, layoutPatterns, tooltipPatterns } from '../utils/uiPatterns';
+import { containerPatterns, buttonPatterns, layoutPatterns, tooltipPatterns } from '../utils/ui/uiPatterns';
 import { NeonBorder, NewBadge } from './themes/SynthwaveComponents';
 import { isCurrentWeekReport, getWeekDateRange, formatWorkoutCount } from '../utils/dateUtils';
 import { useToast } from '../contexts/ToastContext';
@@ -720,7 +720,7 @@ function ViewReports() {
 
           {/* Report cards skeleton */}
           <div className="mb-8">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-6xl mx-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {[1, 2, 3, 4, 5, 6].map((i) => (
                 <div key={i} className={`${containerPatterns.cardMedium} p-5 flex flex-col h-72`}>
                   {/* Action button skeleton */}
@@ -1045,7 +1045,7 @@ function ViewReports() {
         {!reportAgentState.isLoadingAllItems && !reportAgentState.error &&
          activeTab === 'weekly' && reportAgentState.allReports.length > 0 && (
           <div className="mb-8">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-6xl mx-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {reportAgentState.allReports.map(renderReportCard)}
             </div>
           </div>
@@ -1055,7 +1055,7 @@ function ViewReports() {
         {!reportAgentState.isLoadingAllMonthlyItems && !reportAgentState.error &&
          activeTab === 'monthly' && reportAgentState.allMonthlyReports.length > 0 && (
           <div className="mb-8">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-6xl mx-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {reportAgentState.allMonthlyReports.map(renderMonthlyReportCard)}
             </div>
           </div>

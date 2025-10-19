@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { containerPatterns, layoutPatterns, typographyPatterns, formPatterns } from '../utils/uiPatterns';
+import { containerPatterns, layoutPatterns, typographyPatterns, formPatterns } from '../utils/ui/uiPatterns';
 import { changelogEntries, generateVersionAnchor } from '../utils/changelogData';
 import { ChevronDownIcon } from './themes/SynthwaveComponents';
 import Footer from './shared/Footer';

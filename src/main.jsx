@@ -10,7 +10,6 @@ try {
   outputs = await import('../amplify_outputs.json')
   if (outputs?.default && Object.keys(outputs.default).length > 0) {
     Amplify.configure(outputs.default)
-    console.info('Amplify configured with outputs')
   } else {
     console.warn('Amplify outputs empty - running without auth')
   }

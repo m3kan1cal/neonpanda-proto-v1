@@ -5,7 +5,7 @@ import {
   buttonPatterns,
   layoutPatterns,
   typographyPatterns,
-} from "../utils/uiPatterns";
+} from "../utils/ui/uiPatterns";
 import Footer from "./shared/Footer";
 
 function LandingPage() {

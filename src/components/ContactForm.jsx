@@ -5,7 +5,7 @@ import {
   containerPatterns,
   layoutPatterns,
   typographyPatterns
-} from '../utils/uiPatterns';
+} from '../utils/ui/uiPatterns';
 import { useToast } from '../contexts/ToastContext';
 import ContactFormAgent from '../utils/agents/ContactFormAgent';
 import FormInput from './shared/FormInput';

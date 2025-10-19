@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Tooltip } from 'react-tooltip';
-import { tooltipPatterns } from '../utils/uiPatterns';
+import { tooltipPatterns } from '../utils/ui/uiPatterns';
 
 // RPE Color Scale Configuration
 const RPE_COLOR_SCALE = {

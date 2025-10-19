@@ -4,7 +4,7 @@ import { Tooltip } from 'react-tooltip';
 import { useAuthorizeUser } from '../auth/hooks/useAuthorizeUser';
 import { useToast } from '../contexts/ToastContext';
 import { themeClasses } from '../utils/synthwaveThemeClasses';
-import { containerPatterns, layoutPatterns, changelogListPatterns, tooltipPatterns } from '../utils/uiPatterns';
+import { containerPatterns, layoutPatterns, changelogListPatterns, tooltipPatterns } from '../utils/ui/uiPatterns';
 import { isCurrentWeekReport, isNewWorkout, isRecentConversation, getWeekDateRange, formatWorkoutCount } from '../utils/dateUtils';
 import { getLatestVersions, getTotalChanges, generateVersionAnchor } from '../utils/changelogData';
 import {

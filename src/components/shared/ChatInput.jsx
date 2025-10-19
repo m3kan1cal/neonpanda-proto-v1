@@ -9,7 +9,8 @@ import {
   imagePreviewPatterns,
   injectScrollbarStyles,
   tooltipPatterns,
-} from "../../utils/uiPatterns";
+  navigationPatterns,
+} from "../../utils/ui/uiPatterns";
 import {
   SendIcon,
   PlusIcon,
@@ -228,9 +229,9 @@ function ChatInput({
             {/* Action buttons skeleton - 1 button on mobile, 3 on desktop */}
             <div className="flex items-center gap-2">
               {/* Mobile: 1 button */}
-              <div className="sm:hidden w-11 h-11 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
+              <div className="md:hidden w-11 h-11 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
               {/* Desktop: 3 buttons */}
-              <div className="hidden sm:flex items-center gap-2">
+              <div className="hidden md:flex items-center gap-2">
                 {[1, 2, 3].map((i) => (
                   <div key={i} className="w-11 h-11 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
                 ))}
@@ -256,7 +257,7 @@ function ChatInput({
           </div>
 
           {/* Progress/Size Indicator skeleton - hide on mobile */}
-          <div className="mt-4 justify-end hidden sm:flex">
+          <div className="mt-4 justify-end hidden md:flex">
             <div className="max-w-xs w-full">
               <div className="flex items-center justify-between mb-1">
                 <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-32"></div>
@@ -801,7 +802,7 @@ function ChatInput({
               <button
                 type="button"
                 onClick={() => setShowTipsModal(true)}
-                className={`${iconButtonPatterns.actionSmallCyan} hidden sm:flex`}
+                className={`${iconButtonPatterns.actionSmallCyan} hidden md:flex`}
                 data-tooltip-id="tips-tooltip"
                 data-tooltip-content={tipsTitle}
                 data-tooltip-place="top"
@@ -835,8 +836,9 @@ function ChatInput({
                       <div className="relative">
                         <button
                           type="button"
-                          onMouseEnter={() => setShowQuickPromptsSubmenu(true)}
-                          onMouseLeave={() => setShowQuickPromptsSubmenu(false)}
+                          onClick={() => setShowQuickPromptsSubmenu(!showQuickPromptsSubmenu)}
+                          onMouseEnter={() => window.innerWidth >= 768 && setShowQuickPromptsSubmenu(true)}
+                          onMouseLeave={() => window.innerWidth >= 768 && setShowQuickPromptsSubmenu(false)}
                           className="flex items-center justify-between space-x-3 px-4 py-2 font-rajdhani font-medium text-synthwave-text-primary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-300 w-full text-left"
                         >
                           <div className="flex items-center space-x-3">
@@ -873,14 +875,10 @@ function ChatInput({
                         {/* Quick Prompts Submenu */}
                         {showQuickPromptsSubmenu && (
                           <div
-                            className={`absolute left-full bottom-0 -ml-1 w-[32rem] z-60 ${containerPatterns.cardMediumOpaque} max-h-96 overflow-y-auto synthwave-scrollbar-cyan`}
+                            className={`${navigationPatterns.quickPrompts.container} ${containerPatterns.cardMediumOpaque} synthwave-scrollbar-cyan`}
                             data-quick-prompts-submenu
-                            onMouseEnter={() =>
-                              setShowQuickPromptsSubmenu(true)
-                            }
-                            onMouseLeave={() =>
-                              setShowQuickPromptsSubmenu(false)
-                            }
+                            onMouseEnter={() => window.innerWidth >= 768 && setShowQuickPromptsSubmenu(true)}
+                            onMouseLeave={() => window.innerWidth >= 768 && setShowQuickPromptsSubmenu(false)}
                           >
                             <div className="py-2">
                               {currentPrompts.map((category, categoryIndex) => (
@@ -889,7 +887,7 @@ function ChatInput({
                                   className="mb-3 last:mb-0"
                                 >
                                   {/* Category Header */}
-                                  <div className="px-4 py-1 text-synthwave-neon-cyan font-rajdhani font-semibold text-sm uppercase tracking-wide">
+                                  <div className={navigationPatterns.quickPrompts.categoryHeader}>
                                     <span>{category.category}</span>
                                   </div>
 
@@ -903,7 +901,7 @@ function ChatInput({
                                           onClick={() =>
                                             handleQuickPromptSelect(prompt)
                                           }
-                                          className="block w-full text-left px-4 py-1.5 font-rajdhani text-sm text-synthwave-text-primary hover:text-white hover:bg-synthwave-bg-primary/30 transition-all duration-200 leading-relaxed"
+                                          className={navigationPatterns.quickPrompts.promptButton}
                                         >
                                           {prompt}
                                         </button>
@@ -970,7 +968,7 @@ function ChatInput({
                             setShowQuickActionsPopup(false);
                             setShowTipsModal(true);
                           }}
-                          className="sm:hidden flex items-center space-x-3 px-4 py-2 font-rajdhani font-medium text-synthwave-text-primary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-300 w-full text-left"
+                          className="md:hidden flex items-center space-x-3 px-4 py-2 font-rajdhani font-medium text-synthwave-text-primary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-300 w-full text-left"
                         >
                           <QuestionIcon />
                           <span>Tips & Help</span>
@@ -985,10 +983,10 @@ function ChatInput({
                             setShowQuickActionsPopup(false);
                             onDeleteClick && onDeleteClick();
                           }}
-                          className="sm:hidden flex items-center space-x-3 px-4 py-2 font-rajdhani font-medium text-synthwave-text-primary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-300 w-full text-left"
+                          className="md:hidden flex items-center space-x-3 px-4 py-2 font-rajdhani font-medium text-synthwave-text-primary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-300 w-full text-left"
                         >
                           <TrashIcon />
-                          <span>Delete Session</span>
+                          <span>{context === 'creation' ? 'Delete Session' : 'Delete Conversation'}</span>
                         </button>
                       )}
                     </div>
@@ -1003,9 +1001,9 @@ function ChatInput({
                 type="button"
                 onClick={onDeleteClick}
                 disabled={isTyping}
-                className={`${iconButtonPatterns.actionSmallPink} hidden sm:flex`}
+                className={`${iconButtonPatterns.actionSmallPink} hidden md:flex`}
                 data-tooltip-id="delete-conversation-tooltip"
-                data-tooltip-content="Delete conversation"
+                data-tooltip-content={context === 'creation' ? 'Delete session' : 'Delete conversation'}
                 data-tooltip-place="top"
               >
                 <TrashIcon />
@@ -1043,7 +1041,7 @@ function ChatInput({
                 autoResizeTextarea(e.target);
               }}
               onKeyDown={handleKeyPress}
-              placeholder={window.innerWidth < 640 ? "Talk to me..." : placeholder}
+              placeholder={window.innerWidth < 768 ? "Talk to me..." : placeholder}
               rows={1}
               className={`${inputPatterns.chatInput} ${scrollbarPatterns.pink} !text-synthwave-text-secondary`}
               style={{
@@ -1342,7 +1340,7 @@ function ChatInput({
         {/* Status */}
         <div className="flex items-center justify-between gap-2 mt-2 text-xs text-synthwave-text-muted font-rajdhani">
           {/* Desktop: Full status message */}
-          <span className="hidden sm:block">
+          <span className="hidden md:block">
             {coachName} is
             {isOnline ? (
               <span className="text-green-400 ml-1">
@@ -1353,7 +1351,7 @@ function ChatInput({
             )}
           </span>
           {/* Mobile: Compact status */}
-          <span className="sm:hidden flex items-center gap-1.5">
+          <span className="md:hidden flex items-center gap-1.5">
             <span>{coachName}</span>
             <span className="text-synthwave-text-secondary">•</span>
             <div className="flex items-center gap-1">
@@ -1365,11 +1363,11 @@ function ChatInput({
           </span>
           <div className="flex items-center gap-4">
             {/* Desktop: Show keyboard shortcuts */}
-            <span className="hidden sm:inline">
+            <span className="hidden md:inline">
               Press Enter to send • Shift+Enter for new line
             </span>
             {/* Desktop: Status indicator */}
-            <div className="hidden sm:flex items-center gap-1">
+            <div className="hidden md:flex items-center gap-1">
               <div
                 className={`w-2 h-2 rounded-full ${isOnline ? "bg-green-500 animate-pulse" : "bg-gray-500"}`}
               ></div>
@@ -1380,7 +1378,7 @@ function ChatInput({
 
         {/* Coach Creation Progress Indicator - hide on mobile */}
         {progressData && (
-          <div className="mt-4 justify-end hidden sm:flex">
+          <div className="mt-4 justify-end hidden md:flex">
             <div className="max-w-xs w-full">
               <div className="flex items-center justify-between">
                 <span className="font-rajdhani text-xs">
@@ -1425,7 +1423,7 @@ function ChatInput({
 
         {/* Conversation Size Indicator - hide on mobile */}
         {conversationSize && (
-          <div className="mt-4 justify-end hidden sm:flex">
+          <div className="mt-4 justify-end hidden md:flex">
             <div className="max-w-xs w-full">
               <div className="flex items-center justify-between">
                 <span className="font-rajdhani text-xs text-synthwave-text-muted">

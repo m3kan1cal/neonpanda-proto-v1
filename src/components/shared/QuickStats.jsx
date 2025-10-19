@@ -1,6 +1,6 @@
 import React from 'react';
 import { Tooltip } from 'react-tooltip';
-import { quickStatsPatterns, tooltipPatterns } from '../../utils/uiPatterns';
+import { quickStatsPatterns, tooltipPatterns } from '../../utils/ui/uiPatterns';
 
 /**
  * QuickStats Component

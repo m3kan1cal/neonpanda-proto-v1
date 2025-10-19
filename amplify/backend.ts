@@ -36,6 +36,7 @@ import { updateWorkout } from "./functions/update-workout/resource";
 import { deleteWorkout } from "./functions/delete-workout/resource";
 import { getWorkoutsCount } from "./functions/get-workouts-count/resource";
 import { getCoachConversationsCount } from "./functions/get-coach-conversations-count/resource";
+import { getCoachConfigsCount } from "./functions/get-coach-configs-count/resource";
 import {
   buildWeeklyAnalytics,
   createWeeklyAnalyticsSchedule,
@@ -104,6 +105,7 @@ const backend = defineBackend({
   deleteWorkout,
   getWorkoutsCount,
   getCoachConversationsCount,
+  getCoachConfigsCount,
   buildWeeklyAnalytics,
   getWeeklyReports,
   getWeeklyReport,
@@ -161,6 +163,7 @@ const coreApi = apiGatewayv2.createCoreApi(
   backend.deleteWorkout.resources.lambda,
   backend.getWorkoutsCount.resources.lambda,
   backend.getCoachConversationsCount.resources.lambda,
+  backend.getCoachConfigsCount.resources.lambda,
   backend.getWeeklyReports.resources.lambda,
   backend.getWeeklyReport.resources.lambda,
   backend.getMonthlyReports.resources.lambda,
@@ -257,6 +260,7 @@ const sharedPolicies = new SharedPolicies(
   backend.createWorkout,
   backend.getWorkoutsCount,
   backend.getCoachConversationsCount,
+  backend.getCoachConfigsCount,
   backend.getWeeklyReports,
   backend.getWeeklyReport,
   backend.getMonthlyReports,
@@ -492,6 +496,7 @@ const allFunctions = [
   backend.deleteWorkout,
   backend.getWorkoutsCount,
   backend.getCoachConversationsCount,
+  backend.getCoachConfigsCount,
   backend.buildWeeklyAnalytics,
   backend.buildMonthlyAnalytics,
   backend.getWeeklyReports,

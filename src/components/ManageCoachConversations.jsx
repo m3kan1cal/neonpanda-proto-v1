@@ -8,7 +8,7 @@ import {
   buttonPatterns,
   layoutPatterns,
   tooltipPatterns,
-} from "../utils/uiPatterns";
+} from "../utils/ui/uiPatterns";
 import { themeClasses } from "../utils/synthwaveThemeClasses";
 import { getCoachConversations } from "../utils/apis/coachConversationApi";
 import CoachHeader from "./shared/CoachHeader";

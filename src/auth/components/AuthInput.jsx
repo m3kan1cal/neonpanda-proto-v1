@@ -1,6 +1,6 @@
 import React, { forwardRef, useState } from 'react';
 import AuthErrorMessage from './AuthErrorMessage';
-import { inputPatterns, formPatterns } from '../../utils/uiPatterns';
+import { inputPatterns, formPatterns } from '../../utils/ui/uiPatterns';
 
 const AuthInput = forwardRef(({
   label,

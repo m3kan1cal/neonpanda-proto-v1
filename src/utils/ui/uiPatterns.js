@@ -493,6 +493,170 @@ export const navigationPatterns = {
       glow: "drop-shadow-[0_0_8px_rgba(139,92,246,0.5)]",
       shadow: "shadow-[0_0_8px_rgba(139,92,246,0.6)]"
     }
+  },
+
+  // Mobile Bottom Navigation - Thumb-friendly navigation bar (< 768px)
+  mobile: {
+    // Bottom nav container - fixed at bottom with glassmorphism
+    container: "fixed bottom-0 left-0 right-0 z-50 md:hidden bg-synthwave-bg-card/95 backdrop-blur-xl border-t border-synthwave-neon-cyan/20 shadow-[0_-4px_24px_rgba(0,255,255,0.1)]",
+
+    // Nav item container - flex wrapper for items
+    itemsContainer: "flex items-center justify-around",
+
+    // Nav item button - base styles for navigation items (64px for comfortable thumb reach)
+    item: "flex flex-col items-center justify-center gap-1 flex-1 py-3 px-1 relative min-h-[64px] focus:outline-none active:outline-none border-0 transition-[background-color,color,transform] duration-300",
+
+    // Active item background - subtle darker tint for contrast against card background
+    // Uses primary background color (darker) to create visible differentiation
+    // Combine with activeBar and icon glow for complete active state
+    // Usage: bg-synthwave-bg-primary/40
+    itemActiveBg: "bg-synthwave-bg-primary/30",
+
+    // Nav item label - uppercase tracking for modern look
+    label: "text-xs uppercase tracking-wide font-rajdhani",
+
+    // Badge indicator - notification count
+    badge: "absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full text-xs font-bold flex items-center justify-center bg-synthwave-neon-pink text-white",
+
+    // Active indicator bar - top border showing active state (primary visual indicator)
+    activeBar: "absolute top-0 left-0 right-0 h-1 rounded-b-full bg-gradient-to-r",
+
+    // Safe area padding for iPhone notch
+    safeArea: "h-[env(safe-area-inset-bottom)]"
+  },
+
+  // More Menu (Bottom Sheet) - Slide-up menu for overflow items
+  moreMenu: {
+    // Backdrop overlay - darkens background
+    backdrop: "fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden animate-fade-in",
+
+    // Menu container - slide-up bottom sheet
+    container: "fixed bottom-0 left-0 right-0 z-50 max-h-[85vh] overflow-y-auto md:hidden bg-synthwave-bg-card/95 backdrop-blur-xl border-t-2 border-synthwave-neon-cyan/30 rounded-t-3xl shadow-[0_-8px_32px_rgba(0,255,255,0.2)] animate-slide-up synthwave-scrollbar-cyan",
+
+    // Handle bar - visual affordance for dragging
+    handleBar: "w-12 h-1.5 bg-synthwave-text-muted/30 rounded-full",
+
+    // Menu header
+    header: "px-6 py-4 border-b border-synthwave-neon-cyan/10",
+    headerTitle: "font-russo font-bold text-2xl text-white uppercase",
+    headerCloseButton: "p-2 rounded-lg text-synthwave-text-muted hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50",
+
+    // Section headers
+    sectionContainer: "py-2",
+    sectionHeader: "px-6 py-3",
+    sectionTitle: "font-rajdhani font-semibold text-sm text-synthwave-text-muted uppercase tracking-wider",
+
+    // Menu items
+    item: "w-full flex items-center gap-4 px-6 py-4 focus:outline-none active:outline-none border-0 transition-[background-color,color,transform] duration-300",
+    itemLabel: "text-lg font-rajdhani uppercase tracking-wide flex-1 text-left",
+    itemBadge: "absolute -top-2 -right-2 min-w-[20px] h-[20px] px-1.5 rounded-full text-xs font-bold flex items-center justify-center bg-synthwave-neon-pink text-white",
+    itemActiveIndicator: "w-1 h-8 rounded-full",
+    itemChevron: "w-5 h-5 opacity-50",
+
+    // Safe area padding (includes bottom nav height)
+    safeArea: "h-[calc(env(safe-area-inset-bottom)+64px)]"
+  },
+
+      // Desktop Sidebar Navigation - Persistent left sidebar (≥ 768px)
+      desktop: {
+        // Sidebar container - fixed left, full height with glassmorphism
+        container: "hidden md:flex md:flex-col fixed left-0 top-0 h-screen bg-synthwave-bg-card/95 backdrop-blur-xl border-r border-synthwave-neon-cyan/20 shadow-[4px_0_24px_rgba(0,255,255,0.1)] z-40 transition-all duration-300 ease-in-out",
+        containerExpanded: "w-64",
+        containerCollapsed: "w-16",
+
+    // Sidebar sections wrapper
+    innerContainer: "flex flex-col h-full overflow-hidden",
+
+    // Logo/Brand section at top
+    brandSection: "flex items-center justify-center gap-3 px-3 py-3 border-b border-synthwave-neon-cyan/10",
+    brandLogo: "w-10 h-10 flex-shrink-0",
+    brandText: "flex flex-col",
+    brandTitle: "font-russo font-bold text-xl text-white uppercase leading-tight",
+    brandSubtitle: "font-rajdhani text-xs text-synthwave-text-muted uppercase tracking-wider",
+
+    // Navigation section - scrollable middle area
+    navSection: "flex-1 overflow-y-auto px-2 py-4 synthwave-scrollbar-cyan",
+
+    // Section headers (e.g., "Primary", "Your Training", "Account")
+    sectionHeader: "px-3 py-2 mb-1",
+    sectionTitle: "font-rajdhani font-semibold text-xs text-synthwave-text-secondary uppercase tracking-wider",
+
+    // Navigation items
+    navItemsContainer: "space-y-1 mb-6",
+    navItem: "w-full flex items-center gap-3 px-4 py-2 rounded-lg focus:outline-none active:outline-none relative border border-transparent transition-all duration-150",
+    navItemIcon: "w-5 h-5 flex-shrink-0",
+    navItemLabel: "font-rajdhani font-medium text-base",
+    navItemBadge: "ml-auto min-w-[20px] h-5 px-2 rounded-full text-xs font-bold flex items-center justify-center bg-synthwave-neon-pink text-white",
+    navItemChevron: "ml-auto w-4 h-4 opacity-50",
+
+    // Active indicator - left border on active items
+    activeIndicator: "absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 rounded-r-full",
+
+    // User profile section at bottom
+    profileSection: "px-4 py-2 border-t border-synthwave-neon-cyan/10 bg-synthwave-bg-card/50",
+    profileButton: "w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-150 hover:bg-synthwave-bg-card/60 focus:outline-none",
+    profileAvatar: "w-10 h-10 rounded-full bg-gradient-to-br from-synthwave-neon-cyan to-synthwave-neon-pink flex items-center justify-center text-white font-russo font-bold text-sm shadow-lg ring-2 ring-synthwave-neon-cyan/30",
+    profileInfo: "flex-1 min-w-0",
+    profileName: "font-rajdhani font-semibold text-base text-white truncate",
+    profileEmail: "font-rajdhani text-xs text-synthwave-text-muted truncate",
+    profileChevron: "w-5 h-5 text-synthwave-text-muted",
+
+        // Collapse/expand toggle button
+        collapseButton: "absolute top-[44px] -right-3 w-6 h-6 bg-synthwave-bg-card border border-synthwave-neon-cyan/30 rounded-full flex items-center justify-center text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 hover:border-synthwave-neon-cyan/60 hover:shadow-[0_0_8px_rgba(0,255,255,0.4)] transition-all duration-300 shadow-lg cursor-pointer focus:outline-none z-50",
+        collapseIcon: "w-4 h-4 transition-transform duration-300",
+        collapseIconRotated: "rotate-180",
+
+        // Collapsed state overrides
+        brandSectionCollapsed: "justify-center px-1 py-2",
+        brandLogoCollapsed: "w-8 h-8",
+        brandTextCollapsed: "hidden",
+        navItemCollapsed: "justify-center px-2 py-2.5",
+        navItemIconCollapsed: "w-6 h-6",
+        navItemLabelCollapsed: "hidden",
+        navItemBadgeCollapsed: "absolute -top-1 -right-1",
+        profileButtonCollapsed: "justify-center px-2",
+        profileAvatarCollapsed: "w-8 h-8",
+        profileInfoCollapsed: "hidden",
+        profileChevronCollapsed: "hidden",
+        sectionHeaderCollapsed: "hidden"
+  },
+
+  // Quick Actions FAB - Floating Action Button for mobile quick actions
+  fab: {
+    // Main FAB button - bottom-right floating button (Hero gradient + FAB structure from Theme.jsx)
+    // Position: 64px bottom nav + 16px gap = 80px (bottom-20)
+    container: "fixed bottom-20 right-6 z-50 md:hidden",
+    button: "w-14 h-14 bg-gradient-to-r from-synthwave-neon-pink to-synthwave-neon-purple text-white rounded-full shadow-lg shadow-synthwave-neon-pink/30 hover:shadow-xl hover:shadow-synthwave-neon-pink/40 hover:-translate-y-1 active:translate-y-0 transition-all duration-300 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary",
+    icon: "w-6 h-6",
+
+    // Speed dial menu - expands above FAB (right-aligned, shifted left with padding)
+    // pr-3 adds right padding to shift items left while maintaining right alignment
+    speedDial: "absolute bottom-16 right-0 flex flex-col-reverse gap-2 mb-2 pr-1",
+
+    // Speed dial item - wrapper button (minimal styling, hover on children)
+    speedDialItem: "flex items-center gap-3 justify-end transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary rounded-full",
+
+    // Speed dial icon button (receives hover effects) - PINK themed
+    speedDialButton: "w-12 h-12 bg-synthwave-bg-card/95 backdrop-blur-xl border border-synthwave-neon-pink/30 text-synthwave-neon-pink rounded-full shadow-lg hover:shadow-xl hover:shadow-synthwave-neon-pink/40 hover:scale-110 hover:border-synthwave-neon-pink/50 active:scale-95 active:shadow-md transition-all duration-200 flex items-center justify-center",
+    speedDialIcon: "w-5 h-5",
+
+    // Speed dial label (receives hover effects) - PINK themed
+    speedDialLabel: "bg-synthwave-bg-card/95 backdrop-blur-xl border border-synthwave-neon-pink/20 px-3 py-2 rounded-lg text-synthwave-text-primary font-rajdhani font-medium text-sm shadow-lg hover:bg-synthwave-bg-card hover:border-synthwave-neon-pink/30 hover:shadow-xl hover:shadow-synthwave-neon-pink/20 transition-all duration-200 whitespace-nowrap",
+
+    // Backdrop when speed dial is open
+    backdrop: "fixed inset-0 z-40 bg-black/25 backdrop-blur-sm md:hidden animate-fade-in"
+  },
+
+  // Quick Prompts Submenu - Context-aware prompt suggestions
+  quickPrompts: {
+    // Submenu container - mobile: fixed centered, desktop: absolute to right
+    container: "fixed left-1/2 -translate-x-1/2 bottom-[calc(env(safe-area-inset-bottom)+360px)] w-[90vw] md:absolute md:left-full md:translate-x-0 md:bottom-0 md:w-[32rem] md:-ml-1 z-60 max-h-[32rem] overflow-y-auto",
+
+    // Category header
+    categoryHeader: "px-4 py-1 text-synthwave-neon-cyan font-rajdhani font-semibold text-sm uppercase tracking-wide",
+
+    // Prompt button
+    promptButton: "block w-full text-left px-4 py-1.5 font-rajdhani text-base text-synthwave-text-primary hover:text-white hover:bg-synthwave-bg-primary/30 transition-all duration-200 leading-relaxed"
   }
 };
 
@@ -518,7 +682,7 @@ export const quickStatsPatterns = {
   icon: "w-4 h-4",
 
   // Value display - large number
-  value: "text-xl font-russo font-bold text-white group-hover:scale-105 transition-transform duration-200",
+  value: "text-xl font-rajdhani font-bold text-white group-hover:scale-105 transition-transform duration-200",
 
   // Skeleton loading states (matches optimized sizing: 16px icons, 6px padding, -16px margin)
   skeleton: {

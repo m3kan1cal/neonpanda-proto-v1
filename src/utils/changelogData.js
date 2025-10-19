@@ -10,6 +10,33 @@
 
 export const changelogEntries = [
   {
+    version: "Release v1.0.20251016-beta",
+    date: "2025-10-16",
+    changes: {
+      added: [
+        "requiresDeepReasoning flag to SmartRequestRouter interface for intelligent model selection based on conversation complexity",
+        "selectModelBasedOnReasoning() helper function for dynamic Sonnet 4.5 vs Haiku 4.5 routing based on deep reasoning requirements",
+        "Comprehensive deep reasoning detection guidelines in smart router prompt distinguishing complex multi-variable scenarios from straightforward questions",
+        "Smart model selection logging showing selected model (Sonnet/Haiku) and reasoning flag in CloudWatch for monitoring and optimization"
+      ],
+      changed: [
+        "Coach conversation streaming now uses Haiku 4.5 by default (90-95% of traffic) with Sonnet 4.5 reserved for complex reasoning (5-10% of traffic)",
+        "generateAIResponseStream() updated to accept routerAnalysis parameter and dynamically select model based on requiresDeepReasoning flag",
+        "generateAIResponse() updated to accept routerAnalysis parameter for consistent model selection across streaming and non-streaming paths",
+        "Coach creator sessions now use Haiku 4.5 for all Q&A interactions (structured questionnaire doesn't require deep reasoning capabilities)",
+        "Smart router now distinguishes between complexity (hasComplexity) and deep reasoning requirements (requiresDeepReasoning) for more selective model routing",
+        "Model selection criteria optimized: Haiku for standard chat, acknowledgments, simple questions, clarifications; Sonnet for multi-variable program design, complex injury scenarios, methodology debates, performance analysis",
+        "Cost optimization achieving ~5-10x reduction for standard conversations while maintaining quality for complex scenarios requiring sophisticated reasoning",
+        "Contextual updates in CoachConversations.jsx and CoachCreator.jsx now trigger automatic scroll-to-bottom for better real-time UX during AI processing stages"
+      ],
+      fixed: [
+        "Contextual update indicators not triggering scrollToBottom behavior in chat windows, causing updates to appear off-screen during AI processing",
+        "Missing contextualUpdate dependency in useEffect scroll hooks preventing automatic scrolling when processing stages display",
+        "Cost inefficiency where all conversations used expensive Sonnet 4.5 regardless of complexity level or reasoning requirements"
+      ]
+    }
+  },
+  {
     version: "Release v1.0.20251015-beta",
     date: "2025-10-15",
     changes: {

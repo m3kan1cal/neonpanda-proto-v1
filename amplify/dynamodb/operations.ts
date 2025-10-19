@@ -262,7 +262,7 @@ export async function deleteFromDynamoDB(
       });
 
       await docClient.send(command);
-      
+
       if (entityType) {
         console.info(`${entityType} deleted from DynamoDB successfully`);
       }
@@ -417,11 +417,11 @@ export async function saveCoachCreatorSession(
 /**
  * Deep merge utility function for safely merging partial updates into existing objects.
  * This prevents accidental data loss when updating nested properties.
- * 
+ *
  * @param target - The existing object to merge into
  * @param source - The partial update object to merge from
  * @returns A new object with deep-merged properties
- * 
+ *
  * Behavior:
  * - Nested objects are recursively merged
  * - Arrays are replaced (not merged)
@@ -716,6 +716,35 @@ export async function queryCoachConfigs(
       });
   } catch (error) {
     console.error(`Error loading coach configs for user ${userId}:`, error);
+    throw error;
+  }
+}
+
+// Function to count coach configs for a user
+export async function queryCoachConfigsCount(
+  userId: string
+): Promise<{ totalCount: number }> {
+  try {
+    // Get all coach configs for the user
+    const allCoaches = await queryFromDynamoDB<CoachConfigSummary>(
+      `user#${userId}`,
+      "coach#",
+      "coachConfig"
+    );
+
+    const totalCount = allCoaches.length;
+
+    console.info("Coach configs counted successfully:", {
+      userId,
+      totalFound: totalCount,
+    });
+
+    return { totalCount };
+  } catch (error) {
+    console.error(
+      `Error counting coach configs for user ${userId}:`,
+      error
+    );
     throw error;
   }
 }

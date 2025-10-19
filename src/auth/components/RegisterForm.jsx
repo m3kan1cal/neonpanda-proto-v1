@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useAuthForm } from '../hooks/useAuthForm';
 import { getErrorMessage, validateEmail, validatePassword, validateUsername, validateName } from '../utils/authHelpers';
-import { formPatterns } from '../../utils/uiPatterns';
+import { formPatterns } from '../../utils/ui/uiPatterns';
 import { checkUserAvailability } from '../../utils/apis/userApi';
 import AuthLayout from './AuthLayout';
 import AuthInput from './AuthInput';

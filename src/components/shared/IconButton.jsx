@@ -1,6 +1,6 @@
 import React from 'react';
 import { Tooltip } from 'react-tooltip';
-import { iconButtonPatterns, tooltipPatterns } from '../../utils/uiPatterns';
+import { iconButtonPatterns, tooltipPatterns } from '../../utils/ui/uiPatterns';
 
 const IconButton = ({
   children,

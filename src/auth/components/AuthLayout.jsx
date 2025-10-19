@@ -1,5 +1,5 @@
 import React from 'react';
-import { containerPatterns, layoutPatterns } from '../../utils/uiPatterns';
+import { containerPatterns, layoutPatterns } from '../../utils/ui/uiPatterns';
 
 const AuthLayout = ({ children, title, subtitle }) => {
   return (

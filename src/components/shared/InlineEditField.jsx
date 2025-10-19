@@ -1,7 +1,7 @@
 import React from "react";
 import { Tooltip } from "react-tooltip";
 import { useInlineEdit } from "../../hooks/useInlineEdit";
-import { inputPatterns, inlineEditPatterns } from "../../utils/uiPatterns";
+import { inputPatterns, inlineEditPatterns } from "../../utils/ui/uiPatterns";
 
 // Icon components (inline to keep component self-contained)
 const EditIcon = ({ className = "w-5 h-5" }) => (
