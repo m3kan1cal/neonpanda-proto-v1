@@ -33,17 +33,9 @@ export const getMemories = async (userId, options = {}) => {
   const queryString = params.toString();
   const url = `${getApiUrl('')}/users/${userId}/memories${queryString ? '?' + queryString : ''}`;
 
-  console.info('getMemories: Making API call to:', url);
-  console.info('getMemories: userId:', userId);
-  console.info('getMemories: options:', options);
-  console.info('getMemories: queryString:', queryString);
-
   const response = await authenticatedFetch(url, {
     method: 'GET',
   });
-
-  console.info('getMemories: Response status:', response.status);
-  console.info('getMemories: Response ok:', response.ok);
 
   if (!response.ok) {
     console.error('getMemories: API Error - Status:', response.status);
@@ -64,9 +56,6 @@ export const getMemories = async (userId, options = {}) => {
   }
 
   const result = await response.json();
-  console.info('getMemories: API Response:', result);
-  console.info('getMemories: Memories loaded:', result);
-
   return result;
 };
 
@@ -82,10 +71,6 @@ export const getMemories = async (userId, options = {}) => {
 export const createMemory = async (userId, memoryData) => {
   const url = `${getApiUrl('')}/users/${userId}/memories`;
 
-  console.info('createMemory: Making API call to:', url);
-  console.info('createMemory: userId:', userId);
-  console.info('createMemory: memoryData:', memoryData);
-
   const requestBody = {
     content: memoryData.content,
     coachId: memoryData.coachId || null,
@@ -96,9 +81,6 @@ export const createMemory = async (userId, memoryData) => {
     method: 'POST',
     body: JSON.stringify(requestBody),
   });
-
-  console.info('createMemory: Response status:', response.status);
-  console.info('createMemory: Response ok:', response.ok);
 
   if (!response.ok) {
     console.error('createMemory: API Error - Status:', response.status);
@@ -119,8 +101,6 @@ export const createMemory = async (userId, memoryData) => {
   }
 
   const result = await response.json();
-  console.info('createMemory: API Response:', result);
-
   return result;
 };
 
@@ -133,16 +113,9 @@ export const createMemory = async (userId, memoryData) => {
 export const deleteMemory = async (userId, memoryId) => {
   const url = `${getApiUrl('')}/users/${userId}/memories/${memoryId}`;
 
-  console.info('deleteMemory: Making API call to:', url);
-  console.info('deleteMemory: userId:', userId);
-  console.info('deleteMemory: memoryId:', memoryId);
-
   const response = await authenticatedFetch(url, {
     method: 'DELETE',
   });
-
-  console.info('deleteMemory: Response status:', response.status);
-  console.info('deleteMemory: Response ok:', response.ok);
 
   if (!response.ok) {
     console.error('deleteMemory: API Error - Status:', response.status);
@@ -163,7 +136,5 @@ export const deleteMemory = async (userId, memoryId) => {
   }
 
   const result = await response.json();
-  console.info('deleteMemory: API Response:', result);
-
   return result;
 };

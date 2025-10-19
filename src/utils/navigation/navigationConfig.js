@@ -4,6 +4,8 @@
 import {
   HomeIcon,
   HomeIconTiny,
+  SparkleIconTiny,
+  CoachIconTiny,
   WorkoutIcon,
   WorkoutIconTiny,
   ReportIcon,
@@ -12,15 +14,20 @@ import {
   MemoryIcon,
   MemoryIconTiny,
   SettingsIconTiny,
+  CoachesIconTiny,
   FAQIconTiny,
   AboutIconTiny,
   TechnologyIconTiny,
   ChangelogIconTiny,
   SupportIconTiny,
+  NetworkIconTiny,
   CollaborateIconTiny,
   SignOutIconTiny,
   WaitlistIconTiny,
-} from '../themes/SynthwaveComponents';
+  MenuIcon,
+  LightningIconSmall,
+  CoachIconSmall,
+} from '../../components/themes/SynthwaveComponents';
 
 /**
  * Navigation items configuration
@@ -46,39 +53,17 @@ export const navigationItems = {
   // ==========================================
   primary: [
     {
-      id: 'home',
-      label: 'Home',
-      icon: HomeIconTiny,
+      id: 'coaches',
+      label: 'Coaches',
+      icon: CoachIconTiny,
       getRoute: (ctx) => {
         if (!ctx.isAuthenticated) return '/';
-        if (!ctx.coachId) return `/coaches?userId=${ctx.userId}`;
-        return `/training-grounds?userId=${ctx.userId}&coachId=${ctx.coachId}`;
+        // Always go to coaches page for authenticated users (their coach hub)
+        return `/coaches?userId=${ctx.userId}`;
       },
       alwaysVisible: true,
-      color: 'cyan',
-    },
-    {
-      id: 'training',
-      label: 'Training',
-      icon: WorkoutIcon,
-      getRoute: (ctx) => `/training-grounds?userId=${ctx.userId}&coachId=${ctx.coachId}`,
-      requiresAuth: true,
-      requiresCoach: true,
-      badge: (ctx) => {
-        const total = (ctx.newItemCounts.workouts || 0) + (ctx.newItemCounts.conversations || 0);
-        return total > 0 ? total : null;
-      },
-      color: 'cyan',
-    },
-    {
-      id: 'progress',
-      label: 'Progress',
-      icon: ReportIcon,
-      getRoute: (ctx) => `/training-grounds/reports?userId=${ctx.userId}&coachId=${ctx.coachId}`,
-      requiresAuth: true,
-      requiresCoach: true,
-      badge: (ctx) => (ctx.newItemCounts.reports || 0) > 0 ? '•' : null,
-      color: 'purple',
+      badge: (ctx) => ctx.coachesCount || 0, // Total coaches count
+      color: 'pink',
     },
   ],
 
@@ -89,14 +74,33 @@ export const navigationItems = {
   // ==========================================
   contextual: [
     {
+      id: 'training-grounds',
+      label: 'Training Grounds',
+      icon: NetworkIconTiny,
+      getRoute: (ctx) => `/training-grounds?userId=${ctx.userId}&coachId=${ctx.coachId}`,
+      requiresAuth: true,
+      requiresCoach: true,
+      color: 'pink',
+    },
+    {
+      id: 'progress',
+      label: 'Progress',
+      icon: ReportsIconTiny,
+      getRoute: (ctx) => `/training-grounds/reports?userId=${ctx.userId}&coachId=${ctx.coachId}`,
+      requiresAuth: true,
+      requiresCoach: true,
+      badge: (ctx) => ctx.newItemCounts.reports || 0, // Always show count
+      color: 'pink',
+    },
+    {
       id: 'workouts',
       label: 'Workouts',
       icon: WorkoutIconTiny,
       getRoute: (ctx) => `/training-grounds/manage-workouts?userId=${ctx.userId}&coachId=${ctx.coachId}`,
       requiresAuth: true,
       requiresCoach: true,
-      badge: (ctx) => (ctx.newItemCounts.workouts || 0) > 0 ? ctx.newItemCounts.workouts : null,
-      color: 'cyan',
+      badge: (ctx) => ctx.newItemCounts.workouts || 0, // Always show count
+      color: 'pink',
     },
     {
       id: 'conversations',
@@ -105,7 +109,7 @@ export const navigationItems = {
       getRoute: (ctx) => `/training-grounds/manage-conversations?userId=${ctx.userId}&coachId=${ctx.coachId}`,
       requiresAuth: true,
       requiresCoach: true,
-      badge: (ctx) => (ctx.newItemCounts.conversations || 0) > 0 ? ctx.newItemCounts.conversations : null,
+      badge: (ctx) => ctx.newItemCounts.conversations || 0, // Always show count
       color: 'pink',
     },
     {
@@ -115,24 +119,86 @@ export const navigationItems = {
       getRoute: (ctx) => `/training-grounds/manage-memories?userId=${ctx.userId}&coachId=${ctx.coachId}`,
       requiresAuth: true,
       requiresCoach: true,
-      color: 'cyan',
+      badge: (ctx) => ctx.newItemCounts.memories || 0, // Always show count
+      color: 'pink',
     },
   ],
 
   // ==========================================
-  // UTILITY NAVIGATION
-  // Settings, help, public pages
-  // Available to all users
+  // QUICK ACTIONS
+  // Quick creation actions and coach details
+  // Only show when coach context exists
+  // Pink buttons for creation, coach details for info
   // ==========================================
-  utility: [
+  quickAccess: [
+    {
+      id: 'quick-access-log-workout',
+      label: 'Log Workout',
+      icon: WorkoutIconTiny,
+      requiresAuth: true,
+      requiresCoach: true,
+      color: 'pink',
+      action: 'log-workout', // Special flag for command palette action
+    },
+    {
+      id: 'quick-access-start-conversation',
+      label: 'Start Conversation',
+      icon: ChatIconSmall,
+      requiresAuth: true,
+      requiresCoach: true,
+      color: 'pink',
+      action: 'start-conversation', // Special flag for command palette action
+    },
+    {
+      id: 'quick-access-save-memory',
+      label: 'Save Memory',
+      icon: MemoryIconTiny,
+      requiresAuth: true,
+      requiresCoach: true,
+      color: 'pink',
+      action: 'save-memory', // Special flag for command palette action
+    },
+    {
+      id: 'quick-access-coach',
+      label: 'Coach Details',
+      icon: CoachIconSmall,
+      requiresAuth: true,
+      requiresCoach: true,
+      color: 'pink',
+      popoverType: 'coach', // Opens coach details popover
+    },
+  ],
+
+  // ==========================================
+  // ACCOUNT NAVIGATION
+  // Settings and sign out
+  // Only visible to authenticated users
+  // ==========================================
+  account: [
     {
       id: 'settings',
       label: 'Settings',
       icon: SettingsIconTiny,
       getRoute: (ctx) => `/settings?userId=${ctx.userId}`,
       requiresAuth: true,
-      color: 'cyan',
+      color: 'pink',
     },
+    {
+      id: 'signout',
+      label: 'Sign Out',
+      icon: SignOutIconTiny,
+      onClick: (ctx) => ctx.signOut(),
+      requiresAuth: true,
+      color: 'pink',
+    },
+  ],
+
+  // ==========================================
+  // UTILITY NAVIGATION
+  // Help, public pages, support
+  // Available to all users
+  // ==========================================
+  utility: [
     {
       id: 'faqs',
       label: 'FAQs',
@@ -188,14 +254,6 @@ export const navigationItems = {
       route: '/contact?type=collaborate',
       alwaysVisible: true,
       color: 'cyan',
-    },
-    {
-      id: 'signout',
-      label: 'Sign Out',
-      icon: SignOutIconTiny,
-      onClick: (ctx) => ctx.signOut(),
-      requiresAuth: true,
-      color: 'purple',
     },
   ],
 };

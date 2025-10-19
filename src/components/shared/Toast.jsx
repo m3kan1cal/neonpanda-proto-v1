@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { toastPatterns } from '../../utils/uiPatterns';
+import { toastPatterns } from '../../utils/ui/uiPatterns';
 
 const Toast = ({ toast, onRemove }) => {
   const [isVisible, setIsVisible] = useState(false);

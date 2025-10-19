@@ -1,5 +1,5 @@
 import React from 'react';
-import { buttonPatterns } from '../../utils/uiPatterns';
+import { buttonPatterns } from '../../utils/ui/uiPatterns';
 
 const AuthButton = ({
   children,

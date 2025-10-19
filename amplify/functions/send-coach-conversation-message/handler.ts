@@ -282,19 +282,12 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       },
     };
 
-    // Update conversation with both messages
-    const updatedMessages = [
-      ...existingConversation.attributes.messages,
-      newUserMessage,
-      newAiMessage,
-    ];
-
-    // Capture the save result for size tracking
+    // Save only the new messages (the function will append them to existing messages)
     const conversationSaveResult = await sendCoachConversationMessage(
       userId,
       coachId,
       conversationId,
-      updatedMessages
+      [newUserMessage, newAiMessage]
     );
 
     // Extract size information from the save result

@@ -262,7 +262,7 @@ export async function deleteFromDynamoDB(
       });
 
       await docClient.send(command);
-      
+
       if (entityType) {
         console.info(`${entityType} deleted from DynamoDB successfully`);
       }
@@ -417,11 +417,11 @@ export async function saveCoachCreatorSession(
 /**
  * Deep merge utility function for safely merging partial updates into existing objects.
  * This prevents accidental data loss when updating nested properties.
- * 
+ *
  * @param target - The existing object to merge into
  * @param source - The partial update object to merge from
  * @returns A new object with deep-merged properties
- * 
+ *
  * Behavior:
  * - Nested objects are recursively merged
  * - Arrays are replaced (not merged)
@@ -716,6 +716,35 @@ export async function queryCoachConfigs(
       });
   } catch (error) {
     console.error(`Error loading coach configs for user ${userId}:`, error);
+    throw error;
+  }
+}
+
+// Function to count coach configs for a user
+export async function queryCoachConfigsCount(
+  userId: string
+): Promise<{ totalCount: number }> {
+  try {
+    // Get all coach configs for the user
+    const allCoaches = await queryFromDynamoDB<CoachConfigSummary>(
+      `user#${userId}`,
+      "coach#",
+      "coachConfig"
+    );
+
+    const totalCount = allCoaches.length;
+
+    console.info("Coach configs counted successfully:", {
+      userId,
+      totalFound: totalCount,
+    });
+
+    return { totalCount };
+  } catch (error) {
+    console.error(
+      `Error counting coach configs for user ${userId}:`,
+      error
+    );
     throw error;
   }
 }
@@ -1177,6 +1206,77 @@ export async function queryWorkoutsCount(
     console.error(`Error counting workout sessions for user ${userId}:`, error);
     throw error;
   }
+}
+
+// Lightweight function to query only workout summary fields
+// Uses ProjectionExpression to avoid fetching full workout data (30KB+ per workout)
+export async function queryWorkoutSummaries(
+  userId: string,
+  fromDate: Date,
+  toDate: Date
+): Promise<Array<{
+  pk: string;
+  sk: string;
+  entityType: string;
+  attributes: {
+    workoutId: string;
+    completedAt: Date;
+    summary?: string;
+    workoutName?: string;
+    discipline?: string;
+    coachIds: string[];
+  };
+}>> {
+  const tableName = getTableName();
+  const operationName = `Query workout summaries`;
+
+  return withThroughputScaling(async () => {
+    const command = new QueryCommand({
+      TableName: tableName,
+      KeyConditionExpression: "#pk = :pk AND begins_with(#sk, :sk_prefix)",
+      FilterExpression: "#entityType = :entityType AND #completedAt BETWEEN :fromDate AND :toDate",
+      // Only fetch the fields needed for analytics (significantly reduces data transfer)
+      ProjectionExpression: "pk, sk, entityType, #attributes.workoutId, #attributes.completedAt, #attributes.summary, #attributes.workoutData.workout_name, #attributes.workoutData.discipline, #attributes.coachIds",
+      ExpressionAttributeNames: {
+        "#pk": "pk",
+        "#sk": "sk",
+        "#entityType": "entityType",
+        "#attributes": "attributes",
+        "#completedAt": "attributes.completedAt",
+      },
+      ExpressionAttributeValues: {
+        ":pk": `user#${userId}`,
+        ":sk_prefix": "workout#",
+        ":entityType": "workout",
+        ":fromDate": fromDate.toISOString(),
+        ":toDate": toDate.toISOString(),
+      },
+    });
+
+    const result = await docClient.send(command);
+    const items = (result.Items || []) as any[];
+
+    console.info(`Workout summaries queried successfully:`, {
+      userId,
+      itemCount: items.length,
+      dateRange: `${fromDate.toISOString().split('T')[0]} to ${toDate.toISOString().split('T')[0]}`,
+    });
+
+    // Deserialize and format the items
+    return items.map((item) => ({
+      pk: item.pk,
+      sk: item.sk,
+      entityType: item.entityType,
+      attributes: {
+        workoutId: item.attributes?.workoutId,
+        completedAt: new Date(item.attributes?.completedAt),
+        summary: item.attributes?.summary,
+        workoutName: item.attributes?.workoutData?.workout_name,
+        discipline: item.attributes?.workoutData?.discipline,
+        coachIds: item.attributes?.coachIds || [],
+      },
+    }));
+  }, operationName);
 }
 
 // Function to query all workout sessions for a user with optional filtering

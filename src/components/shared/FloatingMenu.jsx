@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { CloseIcon } from '../themes/SynthwaveComponents';
-import { iconButtonPatterns, containerPatterns } from '../../utils/uiPatterns';
+import { iconButtonPatterns, containerPatterns } from '../../utils/ui/uiPatterns';
 
 // Modern Floating Icon Button Component
 export const FloatingIconButton = React.forwardRef(({ icon, isActive, onClick, title, className = "" }, ref) => (
@@ -22,7 +22,7 @@ export const FloatingIconButton = React.forwardRef(({ icon, isActive, onClick, t
 ));
 
 // Modern Popover Component
-export const ModernPopover = ({ isOpen, onClose, anchorRef, children, title, className = "" }) => {
+export const ModernPopover = ({ isOpen, onClose, anchorRef, children, title, className = "", positionClass = "" }) => {
   const popoverRef = useRef(null);
 
   // Click outside to close
@@ -72,10 +72,11 @@ export const ModernPopover = ({ isOpen, onClose, anchorRef, children, title, cla
           /* Mobile positioning - bottom sheet style */
           inset-x-4 bottom-4 top-20
 
-          /* Desktop positioning - to the right of the floating icons */
-          lg:left-20 lg:top-1/2 lg:-translate-y-1/2
+          /* Desktop positioning - to the right of the floating icons (dynamic based on sidebar state) */
+          ${positionClass || 'lg:left-[324px]'} lg:top-1/2 lg:-translate-y-1/2
           lg:w-96 lg:h-[32rem]
           lg:inset-auto
+          transition-all duration-300
         `}
       >
         {/* Header */}
@@ -103,8 +104,8 @@ export const ModernPopover = ({ isOpen, onClose, anchorRef, children, title, cla
 };
 
 // Floating Icon Bar Container Component
-export const FloatingIconBar = ({ children }) => (
-  <div className="fixed left-4 top-1/2 -translate-y-1/2 z-50">
+export const FloatingIconBar = ({ children, className = "" }) => (
+  <div className={`fixed top-1/2 -translate-y-1/2 z-50 transition-all duration-300 ${className}`}>
     <div className="flex flex-col space-y-3">
       {children}
     </div>

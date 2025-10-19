@@ -69,7 +69,6 @@ export class CommandPaletteAgent {
    * Sets the user ID
    */
   setUserId(userId) {
-    console.info("CommandPaletteAgent.setUserId called with:", userId);
     this.userId = userId;
 
     // Reinitialize memory agent with new userId
@@ -84,7 +83,6 @@ export class CommandPaletteAgent {
    * Sets the workout agent reference
    */
   setWorkoutAgent(workoutAgent) {
-    console.info("CommandPaletteAgent.setWorkoutAgent called");
     this.workoutAgent = workoutAgent;
   }
 
@@ -98,13 +96,6 @@ export class CommandPaletteAgent {
       );
       return;
     }
-
-    console.info("CommandPaletteAgent.executeCommand:", {
-      commandId: command.id,
-      commandTrigger: command.trigger,
-      contentLength: content.length,
-      options,
-    });
 
     this._updateState({
       isExecuting: true,
@@ -146,7 +137,6 @@ export class CommandPaletteAgent {
         error: null,
       });
 
-      console.info("CommandPaletteAgent.executeCommand: Success:", result);
       return result;
     } catch (error) {
       console.error("CommandPaletteAgent.executeCommand: Error:", error);

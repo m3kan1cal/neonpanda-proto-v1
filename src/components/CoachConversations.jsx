@@ -21,7 +21,7 @@ import {
   iconButtonPatterns,
   buttonPatterns,
   tooltipPatterns,
-} from "../utils/uiPatterns";
+} from "../utils/ui/uiPatterns";
 import { FullPageLoader, CenteredErrorState } from "./shared/ErrorStates";
 import CoachHeader from "./shared/CoachHeader";
 import CompactCoachCard from "./shared/CompactCoachCard";
@@ -165,7 +165,7 @@ const MessageItem = memo(
 
         {/* Message Bubble */}
         <div
-          className={`max-w-[95%] sm:max-w-[70%] ${message.type === "user" ? "items-end" : "items-start"} flex flex-col`}
+          className={`max-w-[95%] md:max-w-[70%] ${message.type === "user" ? "items-end" : "items-start"} flex flex-col`}
         >
           <div
             className={getStreamingMessageClasses(
@@ -1077,10 +1077,10 @@ function CoachConversations() {
 
                       {/* Message bubble skeleton */}
                       <div
-                        className={`max-w-[70%] ${i % 2 === 1 ? "items-end" : "items-start"} flex flex-col`}
+                        className={`max-w-[95%] md:max-w-[70%] ${i % 2 === 1 ? "items-end" : "items-start"} flex flex-col`}
                       >
                         <div
-                          className={`px-4 py-3 rounded-2xl ${i % 2 === 1 ? "rounded-br-md" : "rounded-bl-md"} bg-synthwave-text-muted/20 animate-pulse min-w-[600px] min-h-[130px]`}
+                          className={`px-4 py-3 rounded-2xl ${i % 2 === 1 ? "rounded-br-md" : "rounded-bl-md"} bg-synthwave-text-muted/20 animate-pulse min-w-[min(65vw,600px)] min-h-[130px]`}
                         >
                           <div className="space-y-1">
                             <div className="h-4 bg-synthwave-text-muted/30 rounded animate-pulse w-full"></div>

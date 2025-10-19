@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { avatarPatterns, iconButtonPatterns, containerPatterns } from '../../utils/uiPatterns';
+import { avatarPatterns, iconButtonPatterns, containerPatterns } from '../../utils/ui/uiPatterns';
 import { useAuth } from '../../auth/contexts/AuthContext';
 import UserAvatar from './UserAvatar';
 import {

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { themeClasses } from '../utils/synthwaveThemeClasses';
-import { containerPatterns, iconButtonPatterns, toastPatterns, inputPatterns, buttonPatterns, inlineEditPatterns } from '../utils/uiPatterns';
+import { containerPatterns, iconButtonPatterns, toastPatterns, inputPatterns, buttonPatterns, inlineEditPatterns } from '../utils/ui/uiPatterns';
 import { NeonBorder, WorkoutIcon, SendIcon, ConversationIcon, ReportIcon, LightningIcon } from './themes/SynthwaveComponents';
 
 // Import existing components for reference

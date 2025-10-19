@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { commandPalettePatterns } from "../../utils/uiPatterns";
+import { commandPalettePatterns } from "../../utils/ui/uiPatterns";
 
 /**
  * CommandPaletteButton - Compact button to trigger command palette

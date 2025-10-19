@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import { Tooltip } from 'react-tooltip';
 import { useAuthorizeUser } from '../auth/hooks/useAuthorizeUser';
 import { AccessDenied, LoadingScreen } from './shared/AccessDenied';
-import { containerPatterns, layoutPatterns, tooltipPatterns } from '../utils/uiPatterns';
+import { containerPatterns, layoutPatterns, tooltipPatterns } from '../utils/ui/uiPatterns';
 import { FullPageLoader, CenteredErrorState } from './shared/ErrorStates';
 import CoachHeader from './shared/CoachHeader';
 import CompactCoachCard from './shared/CompactCoachCard';

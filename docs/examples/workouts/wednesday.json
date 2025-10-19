@@ -1,0 +1,1003 @@
+{
+  "pk": "user#8aRtnBukPk0nY4VjKM-K5",
+  "sk": "workout#workout_summary_8aRtnBukPk0nY4VjKM-K5_1760586706244_7cjpu0pb7",
+  "attributes": {
+    "coachIds": ["user_8aRtnBukPk0nY4VjKM-K5_coach_main"],
+    "coachNames": ["Marcus_The_Strength_Builder"],
+    "completedAt": "2025-10-15T22:00:00.000Z",
+    "conversationId": "conv_1759708959962_qr5rtss4y",
+    "extractionMetadata": {
+      "confidence": 0.95,
+      "extractedAt": "2025-10-16T03:53:55.712Z",
+      "normalizationSummary": "Normalization PASSED (confidence: 0.98)\nWarnings (3): discipline_specific.crossfit.rounds[12-25].exercises[0].reps.rest_between_sets, performance_metrics.heart_rate, metadata.data_confidence\nNormalized (2): discipline_specific.crossfit.rounds[12-25].exercises[0].reps.rest_between_sets, metadata.data_confidence",
+      "reviewedAt": "2025-10-16T03:53:55.712Z",
+      "reviewedBy": "system"
+    },
+    "summary": "Completed \"Fortis Pressus\" - a hybrid strength and conditioning session with percentage-based bench press work (2x5 at 185#, 2x5 at 205#, 3x3 at 245#), followed by 4 superset rounds of barbell rows (progressing from 135# to 175#) and incline bench press (155#). Finished with 15 minutes of rowing intervals (100m every minute), swapping from prescribed conditioning due to equipment availability, hitting target weights with solid 7/10 intensity throughout.",
+    "userId": "8aRtnBukPk0nY4VjKM-K5",
+    "workoutData": {
+      "coach_id": "Marcus_The_Strength_Builder",
+      "coach_notes": {
+        "adaptation_recommendations": [
+          "Monitor recovery from pressing volume",
+          "Consider varying conditioning modalities based on equipment availability"
+        ],
+        "areas_for_improvement": [
+          "Continue building bench press strength toward higher percentages",
+          "Maintain consistency with superset pacing"
+        ],
+        "coaching_cues_given": null,
+        "motivation_strategy": "Acknowledge consistent effort and completion of prescribed work",
+        "next_session_focus": "Continue progressive overload on main lifts",
+        "positive_observations": [
+          "Good adaptation swapping to rowing for conditioning",
+          "Completed all prescribed volume at target weights",
+          "Maintained 7/10 intensity throughout hybrid session"
+        ],
+        "programming_intent": "Strength-focused session with percentage-based bench press progression followed by secondary pressing and pulling work, finished with aerobic conditioning.",
+        "safety_flags": []
+      },
+      "conversation_id": null,
+      "date": "2025-10-15",
+      "discipline": "hybrid",
+      "discipline_specific": {
+        "crossfit": {
+          "performance_data": {
+            "rounds_completed": 26,
+            "round_times": null,
+            "score": {
+              "type": "time",
+              "unit": "seconds",
+              "value": 3600
+            },
+            "total_reps": 150,
+            "total_time": 3600
+          },
+          "rounds": [
+            {
+              "exercises": [
+                {
+                  "assistance": null,
+                  "calories": null,
+                  "distance": null,
+                  "exercise_name": "bench_press",
+                  "form_notes": "Warmup set 1 of 2 at 65%",
+                  "movement_type": "barbell",
+                  "reps": {
+                    "broken_sets": null,
+                    "completed": 5,
+                    "prescribed": 5,
+                    "rest_between_sets": null
+                  },
+                  "time": null,
+                  "variation": null,
+                  "weight": {
+                    "percentage_1rm": 65,
+                    "rx_weight": null,
+                    "scaled_weight": null,
+                    "unit": "lbs",
+                    "value": 185
+                  }
+                }
+              ],
+              "rep_scheme": null,
+              "round_number": 1
+            },
+            {
+              "exercises": [
+                {
+                  "assistance": null,
+                  "calories": null,
+                  "distance": null,
+                  "exercise_name": "bench_press",
+                  "form_notes": "Warmup set 2 of 2 at 65%",
+                  "movement_type": "barbell",
+                  "reps": {
+                    "broken_sets": null,
+                    "completed": 5,
+                    "prescribed": 5,
+                    "rest_between_sets": null
+                  },
+                  "time": null,
+                  "variation": null,
+                  "weight": {
+                    "percentage_1rm": 65,
+                    "rx_weight": null,
+                    "scaled_weight": null,
+                    "unit": "lbs",
+                    "value": 185
+                  }
+                }
+              ],
+              "rep_scheme": null,
+              "round_number": 2
+            },
+            {
+              "exercises": [
+                {
+                  "assistance": null,
+                  "calories": null,
+                  "distance": null,
+                  "exercise_name": "bench_press",
+                  "form_notes": "Working set 1 of 2 at 75%",
+                  "movement_type": "barbell",
+                  "reps": {
+                    "broken_sets": null,
+                    "completed": 5,
+                    "prescribed": 5,
+                    "rest_between_sets": null
+                  },
+                  "time": null,
+                  "variation": null,
+                  "weight": {
+                    "percentage_1rm": 75,
+                    "rx_weight": null,
+                    "scaled_weight": null,
+                    "unit": "lbs",
+                    "value": 205
+                  }
+                }
+              ],
+              "rep_scheme": null,
+              "round_number": 3
+            },
+            {
+              "exercises": [
+                {
+                  "assistance": null,
+                  "calories": null,
+                  "distance": null,
+                  "exercise_name": "bench_press",
+                  "form_notes": "Working set 2 of 2 at 75%",
+                  "movement_type": "barbell",
+                  "reps": {
+                    "broken_sets": null,
+                    "completed": 5,
+                    "prescribed": 5,
+                    "rest_between_sets": null
+                  },
+                  "time": null,
+                  "variation": null,
+                  "weight": {
+                    "percentage_1rm": 75,
+                    "rx_weight": null,
+                    "scaled_weight": null,
+                    "unit": "lbs",
+                    "value": 205
+                  }
+                }
+              ],
+              "rep_scheme": null,
+              "round_number": 4
+            },
+            {
+              "exercises": [
+                {
+                  "assistance": null,
+                  "calories": null,
+                  "distance": null,
+                  "exercise_name": "bench_press",
+                  "form_notes": "Heavy set 1 of 3 at 88%",
+                  "movement_type": "barbell",
+                  "reps": {
+                    "broken_sets": null,
+                    "completed": 3,
+                    "prescribed": 3,
+                    "rest_between_sets": null
+                  },
+                  "time": null,
+                  "variation": null,
+                  "weight": {
+                    "percentage_1rm": 88,
+                    "rx_weight": null,
+                    "scaled_weight": null,
+                    "unit": "lbs",
+                    "value": 245
+                  }
+                }
+              ],
+              "rep_scheme": null,
+              "round_number": 5
+            },
+            {
+              "exercises": [
+                {
+                  "assistance": null,
+                  "calories": null,
+                  "distance": null,
+                  "exercise_name": "bench_press",
+                  "form_notes": "Heavy set 2 of 3 at 88%",
+                  "movement_type": "barbell",
+                  "reps": {
+                    "broken_sets": null,
+                    "completed": 3,
+                    "prescribed": 3,
+                    "rest_between_sets": null
+                  },
+                  "time": null,
+                  "variation": null,
+                  "weight": {
+                    "percentage_1rm": 88,
+                    "rx_weight": null,
+                    "scaled_weight": null,
+                    "unit": "lbs",
+                    "value": 245
+                  }
+                }
+              ],
+              "rep_scheme": null,
+              "round_number": 6
+            },
+            {
+              "exercises": [
+                {
+                  "assistance": null,
+                  "calories": null,
+                  "distance": null,
+                  "exercise_name": "bench_press",
+                  "form_notes": "Heavy set 3 of 3 at 88%",
+                  "movement_type": "barbell",
+                  "reps": {
+                    "broken_sets": null,
+                    "completed": 3,
+                    "prescribed": 3,
+                    "rest_between_sets": null
+                  },
+                  "time": null,
+                  "variation": null,
+                  "weight": {
+                    "percentage_1rm": 88,
+                    "rx_weight": null,
+                    "scaled_weight": null,
+                    "unit": "lbs",
+                    "value": 245
+                  }
+                }
+              ],
+              "rep_scheme": null,
+              "round_number": 7
+            },
+            {
+              "exercises": [
+                {
+                  "assistance": null,
+                  "calories": null,
+                  "distance": null,
+                  "exercise_name": "barbell_row",
+                  "form_notes": "Superset round 1",
+                  "movement_type": "barbell",
+                  "reps": {
+                    "broken_sets": null,
+                    "completed": 8,
+                    "prescribed": 8,
+                    "rest_between_sets": null
+                  },
+                  "time": null,
+                  "variation": null,
+                  "weight": {
+                    "percentage_1rm": null,
+                    "rx_weight": null,
+                    "scaled_weight": null,
+                    "unit": "lbs",
+                    "value": 135
+                  }
+                },
+                {
+                  "assistance": null,
+                  "calories": null,
+                  "distance": null,
+                  "exercise_name": "incline_bench_press",
+                  "form_notes": "Superset round 1",
+                  "movement_type": "barbell",
+                  "reps": {
+                    "broken_sets": null,
+                    "completed": 8,
+                    "prescribed": 8,
+                    "rest_between_sets": null
+                  },
+                  "time": null,
+                  "variation": "incline",
+                  "weight": {
+                    "percentage_1rm": null,
+                    "rx_weight": null,
+                    "scaled_weight": null,
+                    "unit": "lbs",
+                    "value": 155
+                  }
+                }
+              ],
+              "rep_scheme": null,
+              "round_number": 8
+            },
+            {
+              "exercises": [
+                {
+                  "assistance": null,
+                  "calories": null,
+                  "distance": null,
+                  "exercise_name": "barbell_row",
+                  "form_notes": "Superset round 2",
+                  "movement_type": "barbell",
+                  "reps": {
+                    "broken_sets": null,
+                    "completed": 8,
+                    "prescribed": 8,
+                    "rest_between_sets": null
+                  },
+                  "time": null,
+                  "variation": null,
+                  "weight": {
+                    "percentage_1rm": null,
+                    "rx_weight": null,
+                    "scaled_weight": null,
+                    "unit": "lbs",
+                    "value": 155
+                  }
+                },
+                {
+                  "assistance": null,
+                  "calories": null,
+                  "distance": null,
+                  "exercise_name": "incline_bench_press",
+                  "form_notes": "Superset round 2",
+                  "movement_type": "barbell",
+                  "reps": {
+                    "broken_sets": null,
+                    "completed": 8,
+                    "prescribed": 8,
+                    "rest_between_sets": null
+                  },
+                  "time": null,
+                  "variation": "incline",
+                  "weight": {
+                    "percentage_1rm": null,
+                    "rx_weight": null,
+                    "scaled_weight": null,
+                    "unit": "lbs",
+                    "value": 155
+                  }
+                }
+              ],
+              "rep_scheme": null,
+              "round_number": 9
+            },
+            {
+              "exercises": [
+                {
+                  "assistance": null,
+                  "calories": null,
+                  "distance": null,
+                  "exercise_name": "barbell_row",
+                  "form_notes": "Superset round 3",
+                  "movement_type": "barbell",
+                  "reps": {
+                    "broken_sets": null,
+                    "completed": 8,
+                    "prescribed": 8,
+                    "rest_between_sets": null
+                  },
+                  "time": null,
+                  "variation": null,
+                  "weight": {
+                    "percentage_1rm": null,
+                    "rx_weight": null,
+                    "scaled_weight": null,
+                    "unit": "lbs",
+                    "value": 175
+                  }
+                },
+                {
+                  "assistance": null,
+                  "calories": null,
+                  "distance": null,
+                  "exercise_name": "incline_bench_press",
+                  "form_notes": "Superset round 3",
+                  "movement_type": "barbell",
+                  "reps": {
+                    "broken_sets": null,
+                    "completed": 8,
+                    "prescribed": 8,
+                    "rest_between_sets": null
+                  },
+                  "time": null,
+                  "variation": "incline",
+                  "weight": {
+                    "percentage_1rm": null,
+                    "rx_weight": null,
+                    "scaled_weight": null,
+                    "unit": "lbs",
+                    "value": 155
+                  }
+                }
+              ],
+              "rep_scheme": null,
+              "round_number": 10
+            },
+            {
+              "exercises": [
+                {
+                  "assistance": null,
+                  "calories": null,
+                  "distance": null,
+                  "exercise_name": "barbell_row",
+                  "form_notes": "Superset round 4",
+                  "movement_type": "barbell",
+                  "reps": {
+                    "broken_sets": null,
+                    "completed": 8,
+                    "prescribed": 8,
+                    "rest_between_sets": null
+                  },
+                  "time": null,
+                  "variation": null,
+                  "weight": {
+                    "percentage_1rm": null,
+                    "rx_weight": null,
+                    "scaled_weight": null,
+                    "unit": "lbs",
+                    "value": 175
+                  }
+                },
+                {
+                  "assistance": null,
+                  "calories": null,
+                  "distance": null,
+                  "exercise_name": "incline_bench_press",
+                  "form_notes": "Superset round 4",
+                  "movement_type": "barbell",
+                  "reps": {
+                    "broken_sets": null,
+                    "completed": 8,
+                    "prescribed": 8,
+                    "rest_between_sets": null
+                  },
+                  "time": null,
+                  "variation": "incline",
+                  "weight": {
+                    "percentage_1rm": null,
+                    "rx_weight": null,
+                    "scaled_weight": null,
+                    "unit": "lbs",
+                    "value": 155
+                  }
+                }
+              ],
+              "rep_scheme": null,
+              "round_number": 11
+            },
+            {
+              "exercises": [
+                {
+                  "assistance": null,
+                  "calories": null,
+                  "distance": 100,
+                  "exercise_name": "row",
+                  "form_notes": "Conditioning interval 1",
+                  "movement_type": "cardio",
+                  "reps": {
+                    "broken_sets": null,
+                    "completed": null,
+                    "prescribed": null,
+                    "rest_between_sets": [30]
+                  },
+                  "time": 30,
+                  "variation": "rowing_machine",
+                  "weight": {
+                    "percentage_1rm": null,
+                    "rx_weight": null,
+                    "scaled_weight": null,
+                    "unit": "lbs",
+                    "value": null
+                  }
+                }
+              ],
+              "rep_scheme": null,
+              "round_number": 12
+            },
+            {
+              "exercises": [
+                {
+                  "assistance": null,
+                  "calories": null,
+                  "distance": 100,
+                  "exercise_name": "row",
+                  "form_notes": null,
+                  "movement_type": "cardio",
+                  "reps": {
+                    "broken_sets": null,
+                    "completed": null,
+                    "prescribed": null,
+                    "rest_between_sets": [30]
+                  },
+                  "time": 30,
+                  "variation": "rowing_machine",
+                  "weight": {
+                    "percentage_1rm": null,
+                    "rx_weight": null,
+                    "scaled_weight": null,
+                    "unit": "lbs",
+                    "value": null
+                  }
+                }
+              ],
+              "rep_scheme": null,
+              "round_number": 13
+            },
+            {
+              "exercises": [
+                {
+                  "assistance": null,
+                  "calories": null,
+                  "distance": 100,
+                  "exercise_name": "row",
+                  "form_notes": null,
+                  "movement_type": "cardio",
+                  "reps": {
+                    "broken_sets": null,
+                    "completed": null,
+                    "prescribed": null,
+                    "rest_between_sets": [30]
+                  },
+                  "time": 30,
+                  "variation": "rowing_machine",
+                  "weight": {
+                    "percentage_1rm": null,
+                    "rx_weight": null,
+                    "scaled_weight": null,
+                    "unit": "lbs",
+                    "value": null
+                  }
+                }
+              ],
+              "rep_scheme": null,
+              "round_number": 14
+            },
+            {
+              "exercises": [
+                {
+                  "assistance": null,
+                  "calories": null,
+                  "distance": 100,
+                  "exercise_name": "row",
+                  "form_notes": null,
+                  "movement_type": "cardio",
+                  "reps": {
+                    "broken_sets": null,
+                    "completed": null,
+                    "prescribed": null,
+                    "rest_between_sets": [30]
+                  },
+                  "time": 30,
+                  "variation": "rowing_machine",
+                  "weight": {
+                    "percentage_1rm": null,
+                    "rx_weight": null,
+                    "scaled_weight": null,
+                    "unit": "lbs",
+                    "value": null
+                  }
+                }
+              ],
+              "rep_scheme": null,
+              "round_number": 15
+            },
+            {
+              "exercises": [
+                {
+                  "assistance": null,
+                  "calories": null,
+                  "distance": 100,
+                  "exercise_name": "row",
+                  "form_notes": null,
+                  "movement_type": "cardio",
+                  "reps": {
+                    "broken_sets": null,
+                    "completed": null,
+                    "prescribed": null,
+                    "rest_between_sets": [30]
+                  },
+                  "time": 30,
+                  "variation": "rowing_machine",
+                  "weight": {
+                    "percentage_1rm": null,
+                    "rx_weight": null,
+                    "scaled_weight": null,
+                    "unit": "lbs",
+                    "value": null
+                  }
+                }
+              ],
+              "rep_scheme": null,
+              "round_number": 16
+            },
+            {
+              "exercises": [
+                {
+                  "assistance": null,
+                  "calories": null,
+                  "distance": 100,
+                  "exercise_name": "row",
+                  "form_notes": null,
+                  "movement_type": "cardio",
+                  "reps": {
+                    "broken_sets": null,
+                    "completed": null,
+                    "prescribed": null,
+                    "rest_between_sets": [30]
+                  },
+                  "time": 30,
+                  "variation": "rowing_machine",
+                  "weight": {
+                    "percentage_1rm": null,
+                    "rx_weight": null,
+                    "scaled_weight": null,
+                    "unit": "lbs",
+                    "value": null
+                  }
+                }
+              ],
+              "rep_scheme": null,
+              "round_number": 17
+            },
+            {
+              "exercises": [
+                {
+                  "assistance": null,
+                  "calories": null,
+                  "distance": 100,
+                  "exercise_name": "row",
+                  "form_notes": null,
+                  "movement_type": "cardio",
+                  "reps": {
+                    "broken_sets": null,
+                    "completed": null,
+                    "prescribed": null,
+                    "rest_between_sets": [30]
+                  },
+                  "time": 30,
+                  "variation": "rowing_machine",
+                  "weight": {
+                    "percentage_1rm": null,
+                    "rx_weight": null,
+                    "scaled_weight": null,
+                    "unit": "lbs",
+                    "value": null
+                  }
+                }
+              ],
+              "rep_scheme": null,
+              "round_number": 18
+            },
+            {
+              "exercises": [
+                {
+                  "assistance": null,
+                  "calories": null,
+                  "distance": 100,
+                  "exercise_name": "row",
+                  "form_notes": null,
+                  "movement_type": "cardio",
+                  "reps": {
+                    "broken_sets": null,
+                    "completed": null,
+                    "prescribed": null,
+                    "rest_between_sets": [30]
+                  },
+                  "time": 30,
+                  "variation": "rowing_machine",
+                  "weight": {
+                    "percentage_1rm": null,
+                    "rx_weight": null,
+                    "scaled_weight": null,
+                    "unit": "lbs",
+                    "value": null
+                  }
+                }
+              ],
+              "rep_scheme": null,
+              "round_number": 19
+            },
+            {
+              "exercises": [
+                {
+                  "assistance": null,
+                  "calories": null,
+                  "distance": 100,
+                  "exercise_name": "row",
+                  "form_notes": null,
+                  "movement_type": "cardio",
+                  "reps": {
+                    "broken_sets": null,
+                    "completed": null,
+                    "prescribed": null,
+                    "rest_between_sets": [30]
+                  },
+                  "time": 30,
+                  "variation": "rowing_machine",
+                  "weight": {
+                    "percentage_1rm": null,
+                    "rx_weight": null,
+                    "scaled_weight": null,
+                    "unit": "lbs",
+                    "value": null
+                  }
+                }
+              ],
+              "rep_scheme": null,
+              "round_number": 20
+            },
+            {
+              "exercises": [
+                {
+                  "assistance": null,
+                  "calories": null,
+                  "distance": 100,
+                  "exercise_name": "row",
+                  "form_notes": null,
+                  "movement_type": "cardio",
+                  "reps": {
+                    "broken_sets": null,
+                    "completed": null,
+                    "prescribed": null,
+                    "rest_between_sets": [30]
+                  },
+                  "time": 30,
+                  "variation": "rowing_machine",
+                  "weight": {
+                    "percentage_1rm": null,
+                    "rx_weight": null,
+                    "scaled_weight": null,
+                    "unit": "lbs",
+                    "value": null
+                  }
+                }
+              ],
+              "rep_scheme": null,
+              "round_number": 21
+            },
+            {
+              "exercises": [
+                {
+                  "assistance": null,
+                  "calories": null,
+                  "distance": 100,
+                  "exercise_name": "row",
+                  "form_notes": null,
+                  "movement_type": "cardio",
+                  "reps": {
+                    "broken_sets": null,
+                    "completed": null,
+                    "prescribed": null,
+                    "rest_between_sets": [30]
+                  },
+                  "time": 30,
+                  "variation": "rowing_machine",
+                  "weight": {
+                    "percentage_1rm": null,
+                    "rx_weight": null,
+                    "scaled_weight": null,
+                    "unit": "lbs",
+                    "value": null
+                  }
+                }
+              ],
+              "rep_scheme": null,
+              "round_number": 22
+            },
+            {
+              "exercises": [
+                {
+                  "assistance": null,
+                  "calories": null,
+                  "distance": 100,
+                  "exercise_name": "row",
+                  "form_notes": null,
+                  "movement_type": "cardio",
+                  "reps": {
+                    "broken_sets": null,
+                    "completed": null,
+                    "prescribed": null,
+                    "rest_between_sets": [30]
+                  },
+                  "time": 30,
+                  "variation": "rowing_machine",
+                  "weight": {
+                    "percentage_1rm": null,
+                    "rx_weight": null,
+                    "scaled_weight": null,
+                    "unit": "lbs",
+                    "value": null
+                  }
+                }
+              ],
+              "rep_scheme": null,
+              "round_number": 23
+            },
+            {
+              "exercises": [
+                {
+                  "assistance": null,
+                  "calories": null,
+                  "distance": 100,
+                  "exercise_name": "row",
+                  "form_notes": null,
+                  "movement_type": "cardio",
+                  "reps": {
+                    "broken_sets": null,
+                    "completed": null,
+                    "prescribed": null,
+                    "rest_between_sets": [30]
+                  },
+                  "time": 30,
+                  "variation": "rowing_machine",
+                  "weight": {
+                    "percentage_1rm": null,
+                    "rx_weight": null,
+                    "scaled_weight": null,
+                    "unit": "lbs",
+                    "value": null
+                  }
+                }
+              ],
+              "rep_scheme": null,
+              "round_number": 24
+            },
+            {
+              "exercises": [
+                {
+                  "assistance": null,
+                  "calories": null,
+                  "distance": 100,
+                  "exercise_name": "row",
+                  "form_notes": null,
+                  "movement_type": "cardio",
+                  "reps": {
+                    "broken_sets": null,
+                    "completed": null,
+                    "prescribed": null,
+                    "rest_between_sets": [30]
+                  },
+                  "time": 30,
+                  "variation": "rowing_machine",
+                  "weight": {
+                    "percentage_1rm": null,
+                    "rx_weight": null,
+                    "scaled_weight": null,
+                    "unit": "lbs",
+                    "value": null
+                  }
+                }
+              ],
+              "rep_scheme": null,
+              "round_number": 25
+            },
+            {
+              "exercises": [
+                {
+                  "assistance": null,
+                  "calories": null,
+                  "distance": 100,
+                  "exercise_name": "row",
+                  "form_notes": "Final conditioning interval",
+                  "movement_type": "cardio",
+                  "reps": {
+                    "broken_sets": null,
+                    "completed": null,
+                    "prescribed": null,
+                    "rest_between_sets": null
+                  },
+                  "time": 30,
+                  "variation": "rowing_machine",
+                  "weight": {
+                    "percentage_1rm": null,
+                    "rx_weight": null,
+                    "scaled_weight": null,
+                    "unit": "lbs",
+                    "value": null
+                  }
+                }
+              ],
+              "rep_scheme": null,
+              "round_number": 26
+            }
+          ],
+          "rx_status": "rx",
+          "time_cap": null,
+          "workout_format": "strength_then_metcon"
+        }
+      },
+      "duration": 3600,
+      "environmental_factors": {
+        "altitude": null,
+        "equipment_condition": "good",
+        "gym_crowding": "moderate",
+        "humidity": null,
+        "temperature": null
+      },
+      "location": "gym",
+      "metadata": {
+        "ai_extracted": true,
+        "data_completeness": 0.85,
+        "data_confidence": 0.95,
+        "extraction_method": "claude_conversation_analysis",
+        "extraction_notes": "User provided explicit workout name 'Fortis Pressus'. Clear three-phase structure: percentage-based bench press (7 sets), superset work (4 rounds), rowing intervals (15 rounds). User swapped prescribed conditioning for rowing due to equipment availability. All weights, reps, and sets explicitly stated. High confidence extraction with complete performance data. Total of 26 rounds across all phases.",
+        "logged_via": "conversation",
+        "logging_time": null,
+        "schema_version": "2.0",
+        "user_verified": false,
+        "validation_flags": [
+          "missing_heart_rate",
+          "estimated_calories",
+          "normalized",
+          "discipline_specific.crossfit.rounds[12-25].exercises[0].reps.rest_between_sets",
+          "performance_metrics.heart_rate",
+          "metadata.data_confidence"
+        ],
+        "version": "1.0"
+      },
+      "methodology": "COMPTRAIN_STRENGTH",
+      "performance_metrics": {
+        "calories_burned": null,
+        "energy_level_post": 6,
+        "energy_level_pre": null,
+        "heart_rate": {
+          "avg": null,
+          "max": null,
+          "zones": {
+            "zone_1": null,
+            "zone_2": null,
+            "zone_3": null,
+            "zone_4": null,
+            "zone_5": null
+          }
+        },
+        "intensity": 7,
+        "mood_post": 6,
+        "mood_pre": null,
+        "perceived_exertion": 7
+      },
+      "pr_achievements": [],
+      "recovery_metrics": {
+        "hrv_morning": null,
+        "readiness_score": null,
+        "resting_heart_rate": null,
+        "sleep_hours": null,
+        "stress_level": null
+      },
+      "subjective_feedback": {
+        "confidence": 7,
+        "difficulty": 7,
+        "enjoyment": 6,
+        "form_quality": 7,
+        "hydration_level": null,
+        "mental_state": "focused",
+        "motivation": 6,
+        "notes": "User swapped conditioning from prescribed to rowing due to equipment availability. Described workout as not glorious but got the job done and hit close to target weights.",
+        "nutrition_pre_workout": null,
+        "pacing_strategy": "conservative",
+        "sleep_quality_previous": null,
+        "soreness_post": {
+          "arms": null,
+          "back": null,
+          "legs": null,
+          "overall": null
+        },
+        "soreness_pre": {
+          "arms": null,
+          "back": null,
+          "legs": null,
+          "overall": null
+        },
+        "stress_level": null
+      },
+      "user_id": "8aRtnBukPk0nY4VjKM-K5",
+      "workout_id": "workout_summary_8aRtnBukPk0nY4VjKM-K5_1760586706244_7cjpu0pb7",
+      "workout_name": "Fortis Pressus",
+      "workout_type": "hybrid"
+    },
+    "workoutId": "workout_summary_8aRtnBukPk0nY4VjKM-K5_1760586706244_7cjpu0pb7"
+  },
+  "createdAt": "2025-10-16T03:53:55.713Z",
+  "entityType": "workout",
+  "updatedAt": "2025-10-16T03:53:55.713Z"
+}

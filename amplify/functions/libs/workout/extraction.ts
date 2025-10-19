@@ -318,6 +318,7 @@ CRITICAL TEMPORAL AWARENESS FOR WORKOUT LOGGING:
 - Consider the current time (${formattedTime}) when interpreting time references
 - If user says "this morning" and it's now afternoon/evening, the workout was earlier TODAY
 - Only mark a workout as "yesterday" if it was truly completed on the previous calendar day
+- For date fields (YYYY-MM-DD format), use the current date as reference and calculate accordingly (user is likely not talking about last year)
 
 ---
 
@@ -806,7 +807,7 @@ export const parseAndValidateWorkoutData = async (
 
     // Set system-generated fields
     const shortId = Math.random().toString(36).substring(2, 11);
-    workoutData.workout_id = `workout_summary_${userId}_${Date.now()}_${shortId}`;
+    workoutData.workout_id = `workout_${userId}_${Date.now()}_${shortId}`;
     workoutData.user_id = userId;
 
     // Ensure required fields have defaults

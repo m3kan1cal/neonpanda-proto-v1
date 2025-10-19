@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuthorizeUser } from '../auth/hooks/useAuthorizeUser';
 import { AccessDenied, LoadingScreen } from './shared/AccessDenied';
-import { buttonPatterns, containerPatterns, layoutPatterns, typographyPatterns, tooltipPatterns } from '../utils/uiPatterns';
+import { buttonPatterns, containerPatterns, layoutPatterns, typographyPatterns, tooltipPatterns } from '../utils/ui/uiPatterns';
 import { Tooltip } from 'react-tooltip';
 import CompactCoachCard from './shared/CompactCoachCard';
 import CommandPaletteButton from './shared/CommandPaletteButton';

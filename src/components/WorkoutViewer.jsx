@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Tooltip } from 'react-tooltip';
 import { themeClasses } from '../utils/synthwaveThemeClasses';
-import { containerPatterns, iconButtonPatterns, inputPatterns } from '../utils/uiPatterns';
+import { containerPatterns, iconButtonPatterns, inputPatterns } from '../utils/ui/uiPatterns';
 import {
   ChevronDownIcon,
   ChevronRightIcon,

@@ -203,3 +203,44 @@ export const isDateInMonthRange = (
 ): boolean => {
   return date >= monthRange.monthStart && date <= monthRange.monthEnd;
 };
+
+/**
+ * Convert a UTC timestamp to a date string in the user's timezone
+ * Returns YYYY-MM-DD format in the user's local timezone
+ *
+ * @param utcTimestamp - UTC timestamp (Date object or ISO string)
+ * @param timezone - IANA timezone string (e.g., "America/New_York")
+ * @returns Date string in YYYY-MM-DD format
+ */
+export const convertUTCToUserDate = (
+  utcTimestamp: Date | string,
+  timezone: string
+): string => {
+  const date = typeof utcTimestamp === 'string' ? new Date(utcTimestamp) : utcTimestamp;
+
+  // Use Intl.DateTimeFormat to convert to user's timezone
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: timezone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+
+  const parts = formatter.formatToParts(date);
+  const year = parts.find(p => p.type === 'year')?.value;
+  const month = parts.find(p => p.type === 'month')?.value;
+  const day = parts.find(p => p.type === 'day')?.value;
+
+  return `${year}-${month}-${day}`;
+};
+
+/**
+ * Get user's timezone with fallback to Pacific time
+ * @param userTimezone - User's preferred timezone from profile
+ * @returns IANA timezone string
+ */
+export const getUserTimezoneOrDefault = (userTimezone?: string | null): string => {
+  // Default to Pacific time if no timezone is set
+  // UTC should only be used for storage, never for display
+  return userTimezone || 'America/Los_Angeles';
+};

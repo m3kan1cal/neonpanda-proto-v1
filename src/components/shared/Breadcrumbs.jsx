@@ -1,6 +1,9 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { getRouteDisplayName, buildRouteWithParams } from '../../utils/routeUtils';
+import { useNavigationContext } from '../../contexts/NavigationContext';
+import { Tooltip } from 'react-tooltip';
+import { tooltipPatterns } from '../../utils/ui/uiPatterns';
 
 const ChevronRightIcon = () => (
   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -18,6 +21,7 @@ function Breadcrumbs() {
   const location = useLocation();
   const pathnames = location.pathname.split('/').filter(x => x);
   const searchParams = new URLSearchParams(location.search);
+  const { isSidebarCollapsed } = useNavigationContext();
 
   // Route mappings now handled by shared utility
 
@@ -32,9 +36,24 @@ function Breadcrumbs() {
   };
 
   return (
-    <nav className="fixed top-[72px] left-0 right-0 z-40">
-      <div className="px-4 py-1">
-        <div className="flex items-center space-x-2 text-sm font-rajdhani overflow-x-auto synthwave-scrollbar-cyan pb-2 -mb-2 scrollbar-hide-on-mobile">
+    <nav className={`fixed top-0 left-0 right-0 z-40 pt-2 pointer-events-none ${isSidebarCollapsed ? 'md:ml-20' : 'md:ml-[272px]'}`}>
+      <div className="px-4 py-1 pb-2">
+        <div className="flex items-center space-x-2 text-sm font-rajdhani overflow-x-auto synthwave-scrollbar-cyan pb-2 -mb-2 scrollbar-hide-on-mobile pointer-events-auto">
+          {/* Logo - Mobile only */}
+          <Link
+            to="/"
+            className="md:hidden flex-shrink-0 mr-1"
+            aria-label="Go to home"
+            data-tooltip-id="breadcrumb-logo-tooltip"
+            data-tooltip-content="Go to Home"
+          >
+            <img
+              src="/images/logo-light-sm-head.png"
+              alt="NeonPanda"
+              className="w-8 h-8 object-contain hover:opacity-80 transition-opacity duration-200"
+            />
+          </Link>
+
           {/* Home link */}
           <Link
             to="/"
@@ -192,6 +211,15 @@ function Breadcrumbs() {
             });
           })()}
         </div>
+      </div>
+
+      {/* Tooltip for logo */}
+      <div className="pointer-events-auto">
+        <Tooltip
+          id="breadcrumb-logo-tooltip"
+          place="bottom"
+          {...tooltipPatterns.standard}
+        />
       </div>
     </nav>
   );

@@ -71,7 +71,6 @@ export class ReportAgent {
     this._updateState({ isLoadingAllItems: true, error: null });
 
     try {
-      console.info('Loading all reports for userId:', this.userId, 'with options:', options);
       const result = await getWeeklyReports(this.userId, {
         limit: options.limit || 50,
         sortBy: options.sortBy || 'weekStart',
@@ -147,7 +146,6 @@ export class ReportAgent {
     this._updateState({ isLoadingAllMonthlyItems: true, error: null });
 
     try {
-      console.info('Loading all monthly reports for userId:', this.userId, 'with options:', options);
       const result = await getMonthlyReports(this.userId, {
         limit: options.limit || 50,
         sortBy: options.sortBy || 'monthStart',

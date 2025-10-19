@@ -1,5 +1,5 @@
 import React, { forwardRef } from 'react';
-import { inputPatterns, formPatterns } from '../../utils/uiPatterns';
+import { inputPatterns, formPatterns } from '../../utils/ui/uiPatterns';
 
 const FormInput = forwardRef(({
   label,

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { themeClasses } from "../../utils/synthwaveThemeClasses";
-import { inputPatterns, scrollbarPatterns, injectScrollbarStyles } from "../../utils/uiPatterns";
+import { inputPatterns, scrollbarPatterns, injectScrollbarStyles } from "../../utils/ui/uiPatterns";
 import CommandPaletteAgent from "../../utils/agents/CommandPaletteAgent";
 
 const CommandPalette = ({
@@ -456,7 +456,7 @@ const CommandPalette = ({
         </div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         @keyframes slideDown {
           from {
             opacity: 0;

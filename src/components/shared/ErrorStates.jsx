@@ -1,6 +1,6 @@
 import React from 'react';
 import { themeClasses } from '../../utils/synthwaveThemeClasses';
-import { containerPatterns } from '../../utils/uiPatterns';
+import { containerPatterns } from '../../utils/ui/uiPatterns';
 
 // Standardized loading spinner component
 export const LoadingSpinner = ({ size = 'large', text = 'Loading...' }) => {

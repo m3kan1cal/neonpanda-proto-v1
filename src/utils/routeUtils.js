@@ -1,6 +1,6 @@
 // Centralized route mapping for consistent naming across breadcrumbs and page titles
 export const routeMap = {
-  'about': 'About Us',
+  'about': 'About',
   'technology': 'Technology',
   'privacy': 'Privacy Policy',
   'terms': 'Terms of Service',

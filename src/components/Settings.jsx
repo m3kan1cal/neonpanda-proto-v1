@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { updatePassword } from 'aws-amplify/auth';
-import { containerPatterns, layoutPatterns, typographyPatterns, buttonPatterns, inputPatterns, formPatterns, scrollbarPatterns } from '../utils/uiPatterns';
+import { containerPatterns, layoutPatterns, typographyPatterns, buttonPatterns, inputPatterns, formPatterns, scrollbarPatterns } from '../utils/ui/uiPatterns';
 import { useAuthorizeUser } from '../auth/hooks/useAuthorizeUser';
 import { getUserDisplayName } from '../auth/utils/authHelpers';
 import { useAuth } from '../auth/contexts/AuthContext';

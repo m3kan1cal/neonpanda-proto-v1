@@ -73,20 +73,15 @@ export class MemoryAgent {
    * Sets the user ID and loads initial data
    */
   async setUserId(userId) {
-    console.info("MemoryAgent.setUserId called with:", userId);
-
     if (!userId) {
       console.error("MemoryAgent.setUserId: userId is required");
       return;
     }
 
     this.userId = userId;
-    console.info("MemoryAgent.setUserId: userId set to:", this.userId);
 
     // Load initial data
     await this.loadAllMemories();
-
-    console.info("MemoryAgent.setUserId: Initial data loaded");
   }
 
   /**
@@ -98,11 +93,6 @@ export class MemoryAgent {
       return;
     }
 
-    console.info(
-      "MemoryAgent.loadAllMemories: Loading all memories for user:",
-      this.userId
-    );
-
     this._updateState({
       isLoadingAllItems: true,
       error: null,
@@ -110,11 +100,6 @@ export class MemoryAgent {
 
     try {
       const response = await getMemories(this.userId, options);
-
-      console.info(
-        "MemoryAgent.loadAllMemories: Loaded memories:",
-        response.memories?.length || 0
-      );
 
       this._updateState({
         allMemories: response.memories || [],
@@ -342,7 +327,6 @@ export class MemoryAgent {
    * Cleanup method
    */
   destroy() {
-    console.info("MemoryAgent.destroy: Cleaning up");
     this.onStateChange = null;
     this.onError = null;
     this.userId = null;

@@ -34,6 +34,7 @@ export function createCoreApi(
   deleteWorkoutLambda: lambda.IFunction,
   getWorkoutsCountLambda: lambda.IFunction,
   getCoachConversationsCountLambda: lambda.IFunction,
+  getCoachConfigsCountLambda: lambda.IFunction,
   getWeeklyReportsLambda: lambda.IFunction,
   getWeeklyReportLambda: lambda.IFunction,
   getMonthlyReportsLambda: lambda.IFunction,
@@ -254,6 +255,11 @@ export function createCoreApi(
     getCoachConversationsCountLambda
   );
 
+  const getCoachConfigsCountIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
+    'GetCoachConfigsCountIntegration',
+    getCoachConfigsCountLambda
+  );
+
   // Create Lambda integrations for weekly report functions
   const getWeeklyReportsIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
     'GetWeeklyReportsIntegration',
@@ -351,6 +357,7 @@ export function createCoreApi(
     deleteWorkout: deleteWorkoutIntegration,
     getWorkoutsCount: getWorkoutsCountIntegration,
     getCoachConversationsCount: getCoachConversationsCountIntegration,
+    getCoachConfigsCount: getCoachConfigsCountIntegration,
     getWeeklyReports: getWeeklyReportsIntegration,
     getWeeklyReport: getWeeklyReportIntegration,
     getMonthlyReports: getMonthlyReportsIntegration,
@@ -516,6 +523,13 @@ export function createCoreApi(
     path: '/users/{userId}/coaches/from-session/{sessionId}',
     methods: [apigatewayv2.HttpMethod.POST],
     integration: integrations.createCoachConfig,
+    authorizer: userPoolAuthorizer
+  });
+
+  httpApi.addRoutes({
+    path: '/users/{userId}/coaches/count',
+    methods: [apigatewayv2.HttpMethod.GET],
+    integration: integrations.getCoachConfigsCount,
     authorizer: userPoolAuthorizer
   });
 

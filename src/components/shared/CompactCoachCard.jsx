@@ -1,5 +1,5 @@
 import React from 'react';
-import { compactCardPatterns, avatarPatterns } from '../../utils/uiPatterns';
+import { compactCardPatterns, avatarPatterns } from '../../utils/ui/uiPatterns';
 
 /**
  * CompactCoachCard - Horizontal compact coach display for Training Grounds header
