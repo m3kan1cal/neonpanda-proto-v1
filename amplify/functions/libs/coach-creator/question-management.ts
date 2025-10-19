@@ -500,7 +500,7 @@ User responded: ${entry.userResponse}
   })
   .join("\n")}
 
-CRITICAL: Use this history naturally. Don't repeat questions or ask for info already shared. Reference previous answers when relevant to build momentum.
+CRITICAL: Before asking your next question, review ALL previous responses to check if the user already provided relevant information (whether directly answered or volunteered). If so, acknowledge and CONFIRM instead of re-asking: "Earlier you mentioned [X] - is that still your setup?" Then build naturally from there. Never make them repeat themselves.
 `
       : "";
 

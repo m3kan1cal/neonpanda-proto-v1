@@ -1,0 +1,134 @@
+{
+  "pk": "user#pPimYZqNQ1G3RR-TFUDg5",
+  "sk": "coachCreatorSession#coach_creator_pPimYZqNQ1G3RR-TFUDg5_1760909990841",
+  "attributes": {
+    "completedAt": "2025-10-19T21:54:09.173Z",
+    "configGeneration": {
+      "coachConfigId": "user_pPimYZqNQ1G3RR-TFUDg5_coach_1760910850112",
+      "completedAt": "2025-10-19T21:56:09.412Z",
+      "status": "COMPLETE"
+    },
+    "isComplete": true,
+    "isDeleted": true,
+    "lastActivity": "2025-10-19T21:56:09.412Z",
+    "questionHistory": [
+      {
+        "aiResponse": "Hi! I'm here to help you create your perfect AI fitness coach. This will take about 15-20 minutes, and I'll adapt the questions based on your experience level.\n\nBefore we dive in, do you have a gender preference for your coach? Some people connect better with a male or female coaching style. You can say 'male', 'female', or 'no preference' - totally up to you!",
+        "detectedSophistication": "UNKNOWN",
+        "questionId": 0,
+        "timestamp": "2025-10-19T21:39:50.841Z",
+        "userResponse": ""
+      },
+      {
+        "aiResponse": "Ha! Love that - Taylor Swift makes everything better, even burpees.\n\nSo you're open to whatever, which is awesome. But help me dial this in - when you picture yourself crushing a workout with T-Swift in your ears, what does that look like? Are we talking quick daily sessions to feel good, building strength and muscle, training for something specific, or just showing up consistently and seeing what happens?\n\nWhat's the vibe you're after?",
+        "detectedSophistication": "BEGINNER",
+        "questionId": 1,
+        "timestamp": "2025-10-19T21:40:33.695Z",
+        "userResponse": "No preference. Just someone who will let me listen to Taylor Swift while we work out."
+      },
+      {
+        "aiResponse": "Got it – 48, juggling work stress and homework duty. That's real life right there.\n\nHere's the thing: we're not building a coach that adds more exhaustion to your plate. We're building one that actually gives you energy back and fits into the chaos.\n\nQuick question: when you say you hate exercise, is that all movement, or more like \"I hate the gym grind and feeling wiped after\"? Because there's a huge difference between moving your body in ways that feel good versus punishing yourself with workouts you dread.\n\nAnd those rare moments when you DO have time – are we talking 15 minutes at home, or could you carve out 30-45 if it actually helped you handle stress better?",
+        "detectedSophistication": "BEGINNER",
+        "questionId": 2,
+        "timestamp": "2025-10-19T21:42:31.421Z",
+        "userResponse": "I’m 48. I hate exercise. After a long day at work I’m usually worn out and still have to do homework."
+      },
+      {
+        "aiResponse": "Love that you're showing up with those walks - consistency is where the magic happens.\n\nSounds like you're keeping things light and manageable, which is smart. When you think about working out beyond walks, what makes you curious? Maybe something that doesn't leave you drenched but still challenges you a bit?",
+        "detectedSophistication": "BEGINNER",
+        "questionId": 3,
+        "timestamp": "2025-10-19T21:43:29.810Z",
+        "userResponse": "I dislike having to shower after. I go for 15 minute walks and those are great."
+      },
+      {
+        "aiResponse": "Love it – home training is where so many people crush their best work. Dumbbells, bands, and a treadmill give us plenty to work with.\n\nQuick check: what weight dumbbells are we talking? Just want to make sure we can build workouts that challenge you properly as you progress.\n\nAnd back to schedule – how many days per week feels realistic for you to show up and train, and what's your sweet spot for session length?",
+        "detectedSophistication": "BEGINNER",
+        "questionId": 4,
+        "timestamp": "2025-10-19T21:44:52.610Z",
+        "userResponse": "I’d prefer never leaving my house. I don’t really have access to gym facilities where I live. I have some dumbbells, resistance bands, and a treadmill."
+      },
+      {
+        "aiResponse": "Got it - light dumbbells and solid consistency. That's a great starting point for building movement quality and work capacity.\n\nQuick clarification: Do you have any injuries or areas that bother you? Old injuries, current aches, anything to be aware of? Want to make sure we're building you up, not breaking you down.",
+        "detectedSophistication": "BEGINNER",
+        "questionId": 5,
+        "timestamp": "2025-10-19T21:47:05.253Z",
+        "userResponse": "I have 3, 5, 8 and 25 pound dumbbells. I could do 15-30 minutes at a time 3 days per week."
+      },
+      {
+        "aiResponse": "You're absolutely right - my bad! We covered your training space already. Let me keep this moving.\n\nSo here's what matters for building your coach: what's lighting you up about training right now? What are you chasing - strength gains, skills you want to nail, or something else that's got you fired up?",
+        "detectedSophistication": "BEGINNER",
+        "questionId": 6,
+        "timestamp": "2025-10-19T21:49:09.326Z",
+        "userResponse": "Do you not remember what I said earlier"
+      },
+      {
+        "aiResponse": "Got it - core strength and balance work. Those are huge for building a solid foundation.\n\nWhen you picture yourself training, what does that look like? Are you thinking planks and stability exercises, or do you lean more toward dynamic movements like carries and rotational work? And is this something you're already doing, or are you looking to start fresh?",
+        "detectedSophistication": "BEGINNER",
+        "questionId": 7,
+        "timestamp": "2025-10-19T21:49:48.431Z",
+        "userResponse": "I need core stabilization and strength, and balance."
+      },
+      {
+        "aiResponse": "Perfect - that's honest and exactly what we need to know. Patient, idea-driven, judgment-free. Your coach gets it.\n\nOne more thing before we lock this in: any injuries, joint issues, or movement limitations we should build around? Bad knee, tight hips, anything like that?",
+        "detectedSophistication": "BEGINNER",
+        "questionId": 8,
+        "timestamp": "2025-10-19T21:50:47.528Z",
+        "userResponse": "Need to start fresh. I need a coach that is patient and gives me ideas to meet my goals but doesn’t judge me when I don’t."
+      },
+      {
+        "aiResponse": "Got it - ankle/knee impingement, Morton's neuroma, and sciatica. That's important info and actually shapes what's going to feel best for you.\n\nQuick clarification: are these things currently flaring up, or are they manageable most days? And do you have any movements that make them worse - like high impact, certain angles, or specific exercises?",
+        "detectedSophistication": "BEGINNER",
+        "questionId": 9,
+        "timestamp": "2025-10-19T21:51:38.791Z",
+        "userResponse": "I have ankle and knee impingement. Morton’s neuroma in both feet and sciatica."
+      },
+      {
+        "aiResponse": "Thanks for that - flare-ups mean we're building smart modifications, not pushing through pain. Your coach will know to work around stairs and high-impact stuff.\n\nLast thing: when you think about your core and balance work over the next few months, what would make you feel like this is actually working? What changes are you hoping to see - like moving easier, less pain, feeling stronger, more stable?",
+        "detectedSophistication": "BEGINNER",
+        "questionId": 9,
+        "timestamp": "2025-10-19T21:53:04.150Z",
+        "userResponse": "Currently flaring up. Walking up and down stairs is where the impingement is painful."
+      },
+      {
+        "aiResponse": "Perfect - stability and pain relief are real, measurable wins you'll actually feel.\n\nI've got everything I need to build your custom coach on NeonPanda. Here's what happens next: I'll create your coach config over the next 2-5 minutes. You'll see the build progress on your Coaches page, then you can start working together right away.\n\nYour coach will live on the NeonPanda platform to guide your training, track your workouts, and help you chase that stability and pain relief with patience and zero judgment.\n\nReady to create your coach?",
+        "detectedSophistication": "UNKNOWN",
+        "questionId": 9,
+        "timestamp": "2025-10-19T21:53:48.487Z",
+        "userResponse": "Feeling more stable and having less sciatica pain would make me feel like it’s beneficial."
+      },
+      {
+        "aiResponse": "Awesome – let's fire this up.\n\nI'm building your custom coach config now with everything we talked about: home training, 15-30 min sessions 3x/week, core stability and balance focus, ankle/knee/foot considerations, and that patient, judgment-free vibe you need.\n\nHead to your Coaches page on NeonPanda – you'll see the build in progress. Once it's complete, your coach will be ready to guide your training.\n\nLet's show up and train. 🎯",
+        "detectedSophistication": "UNKNOWN",
+        "questionId": 9,
+        "timestamp": "2025-10-19T21:54:07.867Z",
+        "userResponse": "Yep"
+      }
+    ],
+    "sessionId": "coach_creator_pPimYZqNQ1G3RR-TFUDg5_1760909990841",
+    "startedAt": "2025-10-19T21:39:50.841Z",
+    "userContext": {
+      "currentQuestion": 9,
+      "detectedSignals": ["PR", "patient"],
+      "lastActivity": "2025-10-19T21:54:09.173Z",
+      "responses": {
+        "1": "No preference. Just someone who will let me listen to Taylor Swift while we work out.",
+        "2": "I’m 48. I hate exercise. After a long day at work I’m usually worn out and still have to do homework.",
+        "3": "I dislike having to shower after. I go for 15 minute walks and those are great.",
+        "4": "I’d prefer never leaving my house. I don’t really have access to gym facilities where I live. I have some dumbbells, resistance bands, and a treadmill.",
+        "5": "I have 3, 5, 8 and 25 pound dumbbells. I could do 15-30 minutes at a time 3 days per week.",
+        "6": "Do you not remember what I said earlier",
+        "7": "I need core stabilization and strength, and balance.",
+        "8": "Need to start fresh. I need a coach that is patient and gives me ideas to meet my goals but doesn’t judge me when I don’t.",
+        "9": "I have ankle and knee impingement. Morton’s neuroma in both feet and sciatica.\n\n[Follow-up]: Currently flaring up. Walking up and down stairs is where the impingement is painful.\n\n[Follow-up]: Feeling more stable and having less sciatica pain would make me feel like it’s beneficial.\n\n[Follow-up]: Yep"
+      },
+      "sessionId": "coach_creator_pPimYZqNQ1G3RR-TFUDg5_1760909990841",
+      "sophisticationLevel": "BEGINNER",
+      "startedAt": "2025-10-19T21:39:50.841Z",
+      "userId": "pPimYZqNQ1G3RR-TFUDg5"
+    },
+    "userId": "pPimYZqNQ1G3RR-TFUDg5"
+  },
+  "createdAt": "2025-10-19T21:56:09.412Z",
+  "entityType": "coachCreatorSession",
+  "updatedAt": "2025-10-19T21:56:09.412Z"
+}

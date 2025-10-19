@@ -125,13 +125,13 @@ function LandingPage() {
           <div className="w-full">
             {/* Main Headline */}
             <h1 className="font-inter font-bold text-7xl md:text-7xl lg:text-8xl xl:text-8xl text-white mb-8 drop-shadow-lg leading-tight text-left">
-              Your perfect coach,{" "}
+              Your fitness coach,{" "}
               <span className="text-synthwave-neon-pink">electrified</span>
             </h1>
 
             {/* Subtitle */}
-            <p className={`${typographyPatterns.heroSubtitle} mb-8 text-left w-full lg:w-2/3`}>
-              Building the future of personalized AI coaching where your sweat meets electric intelligence to unlock your next fitness frontier.
+            <p className={`${typographyPatterns.heroSubtitle} mb-8 text-left w-full lg:w-3/4`}>
+              Building the future of personalized AI coaching where your sweat meets electric intelligence to unlock your next fitness frontier. From your first workout to crushing PRs and competitions—get stronger, faster, and more consistent with a coach that's always in your corner.
             </p>
 
             {/* CTA Buttons */}
@@ -208,26 +208,26 @@ function LandingPage() {
                     </div>
                   </div>
                   <p className="text-white/90 text-lg font-rajdhani leading-relaxed mb-4">
-                    Your AI coach remembers every detail about your goals, injuries, and preferences. Never cancels, always available, and costs a fraction of traditional coaching.
+                    Your AI coach remembers every detail about your fitness goals, injury history, and training preferences. Never cancels, always available for workout questions, form checks, and program adjustments—at a fraction of the cost of personal training.
                   </p>
                   <ul className="space-y-2">
                     <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-rajdhani">
                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
-                      Remembers your injury history & limitations
+                      Personalized workout programming & periodization
                     </li>
                     <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-rajdhani">
                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
-                      Available 24/7, never cancels
+                      24/7 availability for form checks & training questions
                     </li>
                     <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-rajdhani">
                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
-                      Fraction of the cost of personal training
+                      Remembers your injury history & training adaptations
                     </li>
                   </ul>
                 </div>
@@ -273,26 +273,26 @@ function LandingPage() {
                     </div>
                   </div>
                   <p className="text-white/90 text-lg font-rajdhani leading-relaxed mb-4">
-                    Just tell your coach what you did in your own words. No forms, no dropdowns, no searching for exercises.
+                    Log workouts by just telling your coach what you did—your way. No forms, no dropdowns, no searching for exercises. Whether it's "Did Fran in 8:45" or "Hit 315x5 on squats, felt solid"—your coach understands and tracks everything.
                   </p>
                   <ul className="space-y-2">
                     <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-rajdhani">
                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
-                      "Did Fran in 8:45" - done!
+                      Automatic workout analysis & progress tracking
                     </li>
                     <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-rajdhani">
                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
-                      "Ran 5K, felt great" - logged automatically
+                      Works for CrossFit WODs, strength training, cardio, & more
                     </li>
                     <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-rajdhani">
                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
-                      Learns your unique workout language
+                      Learns how you describe exercises & movements
                     </li>
                   </ul>
                 </div>
@@ -338,26 +338,26 @@ function LandingPage() {
                     </div>
                   </div>
                   <p className="text-white/90 text-lg font-rajdhani leading-relaxed mb-4">
-                    Everything in one beautifully organized place. Conversations, workouts, reports, analytics, memories, and preferences - all accessible from your personal Training Grounds headquarters.
+                    Your complete fitness dashboard. Workout history, training analytics, performance trends, coach conversations, and progress reports—all organized in one place. See your complete training journey from your first workout to your latest achievements.
                   </p>
                   <ul className="space-y-2">
                     <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-rajdhani">
                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
-                      Complete journey view in one place
+                      Complete workout history & performance analytics
                     </li>
                     <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-rajdhani">
                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
-                      Weekly & monthly analytics reports
+                      Weekly & monthly training insights reports
                     </li>
                     <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-rajdhani">
                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
-                      No more data scattered across apps
+                      Track strength gains, skill improvements, & consistency
                     </li>
                   </ul>
                 </div>
@@ -382,7 +382,7 @@ function LandingPage() {
                   </div>
                   <div className="bg-synthwave-bg-primary/20 rounded-lg p-4 border border-synthwave-neon-cyan/10">
                     <p className="text-white/90 italic text-lg font-rajdhani leading-relaxed">
-                      "I'm training for a CrossFit competition but this app keeps giving me bodybuilding splits. I told it my goals but it's suggesting bicep curls when I need Olympic lifting technique work..."
+                      "Whether I'm learning basic movements or training for competitions, this app gives me the same generic workouts as everyone else. I need programming that meets me where I am—beginner fundamentals or competition prep—not one-size-fits-nobody routines..."
                     </p>
                   </div>
                 </div>
@@ -403,26 +403,26 @@ function LandingPage() {
                     </div>
                   </div>
                   <p className="text-white/90 text-lg font-rajdhani leading-relaxed mb-4">
-                    Create AI coaches built specifically for CrossFit, powerlifting, HYROX, running, or your unique training style. Every program is designed around your exact goals.
+                    Create AI coaches built specifically for CrossFit, powerlifting, HYROX, running, or general fitness. Whether you're learning fundamental movements or preparing for elite-level competition, your coach programs for YOUR current level and goals.
                   </p>
                   <ul className="space-y-2">
                     <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-rajdhani">
                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
-                      Sport-specific programming & periodization
+                      Programming for beginners to elite-level athletes
                     </li>
                     <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-rajdhani">
                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
-                      Understands your discipline's methodology
+                      Sport-specific methodology & periodization
                     </li>
                     <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-rajdhani">
                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
-                      Adapts to your competition schedule
+                      Adapts from foundation-building to competition prep
                     </li>
                   </ul>
                 </div>
@@ -468,26 +468,26 @@ function LandingPage() {
                     </div>
                   </div>
                   <p className="text-white/90 text-lg font-rajdhani leading-relaxed mb-4">
-                    Get workouts designed around your goals, available equipment, and current fitness level. Every session builds logically toward your objectives with proper periodization.
+                    Get intelligent workout programming designed around your specific fitness goals, available equipment, training schedule, and current abilities. Every session builds logically toward your objectives—from building a base to peaking for competitions.
                   </p>
                   <ul className="space-y-2">
                     <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-rajdhani">
                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
-                      Logical progression & periodization
+                      Structured periodization with progressive overload
                     </li>
                     <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-rajdhani">
                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
-                      Adapts to your equipment & schedule
+                      Adapts to your equipment, schedule, & recovery needs
                     </li>
                     <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-rajdhani">
                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
-                      Every workout has a purpose
+                      Every workout builds toward your fitness goals
                     </li>
                   </ul>
                 </div>
@@ -533,26 +533,26 @@ function LandingPage() {
                     </div>
                   </div>
                   <p className="text-white/90 text-lg font-rajdhani leading-relaxed mb-4">
-                    Your coach learns from every workout, tracks your wins and struggles, and adapts programming automatically. The more you train, the smarter your coach becomes.
+                    Your coach analyzes every workout, tracks your performance trends, and adapts your training automatically. Hitting strength milestones? Your programming progresses. Showing signs of fatigue? Your coach scales back intelligently. Real coaching that evolves with your fitness journey.
                   </p>
                   <ul className="space-y-2">
                     <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-rajdhani">
                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
-                      Automatically adjusts to your progress
+                      Tracks performance trends & strength progressions
                     </li>
                     <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-rajdhani">
                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
-                      Learns from your energy levels & feedback
+                      Adjusts training based on recovery & fatigue signals
                     </li>
                     <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-rajdhani">
                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
-                      Gets smarter with every conversation
+                      Learns your optimal training intensity & volume
                     </li>
                   </ul>
                 </div>
@@ -590,7 +590,7 @@ function LandingPage() {
         <div className="max-w-6xl mx-auto relative z-10">
           <div className="text-center mb-32">
             <h2 className="font-inter font-bold text-5xl md:text-6xl lg:text-7xl text-white mb-6">
-              Building <span className="text-synthwave-neon-pink">real coaching</span> relationships that drive results
+              Real <span className="text-synthwave-neon-pink">fitness coaching</span> that drives real results
             </h2>
             <p className="font-rajdhani text-2xl text-white/90 max-w-4xl mx-auto leading-relaxed">
               We're not just building AI coaches – we're creating relationships
@@ -790,17 +790,11 @@ function LandingPage() {
             Ready to meet your <span className="text-synthwave-neon-pink">perfect coach</span>?
           </h2>
           <p className={`${typographyPatterns.description} text-xl mb-8`}>
-            NeonPanda is reshaping digital coaching forever. Be among the first
-            to experience next-generation AI coaching, help shape the platform,
-            and gain exclusive access to features before they're available to
-            the public.
+            NeonPanda is reshaping digital fitness coaching forever. Be among the first to experience next-generation AI fitness coaching, help shape the platform,and gain exclusive access to features before they're available to the public.
           </p>
 
           <p className={`${typographyPatterns.description} text-xl mb-8`}>
-            Join the OG community that's building the future of personalized
-            fitness coaching. Your feedback will directly influence how millions
-            of people train in the years to come. Ready to be part of the
-            coaching revolution?
+            Join the OG community that's building the future of personalized fitness coaching. Your feedback will directly influence how millions of people train in the years to come. Ready to be part of the fitness coaching revolution?
           </p>
 
           <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
