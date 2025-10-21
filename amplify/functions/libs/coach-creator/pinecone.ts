@@ -6,6 +6,7 @@
  */
 
 import { storePineconeContext } from '../api-helpers';
+import { filterNullish } from '../object-utils';
 import { CoachCreatorSession, CoachConfig } from './types';
 
 /**
@@ -30,60 +31,47 @@ export const storeCoachCreatorSummaryInPinecone = async (
     const summary_id = `coach_creator_summary_${userId}_${timestamp}_${shortId}`;
 
     // Prepare coach creator specific metadata for Pinecone
-    const coachCreatorMetadata = {
+    const baseMetadata = {
       recordType: 'coach_creator_summary',
       summaryId: summary_id,
-
-      // Coach creator specific metadata
       sophisticationLevel: session.userContext.sophisticationLevel,
       selectedPersonality: coachConfig.selected_personality.primary_template,
       selectedMethodology: coachConfig.selected_methodology.primary_methodology,
       safetyConsiderations: coachConfig.metadata.safety_profile?.injuries?.length || 0,
       creationDate: coachConfig.metadata.created_date,
-
-      // Coach identification
       coachId: coachConfig.coach_id,
       coachName: coachConfig.coach_name,
-
-      // Session metadata
       sessionId: session.sessionId,
       questionsCompleted: session.questionHistory.length,
-      sessionDurationMinutes: session.completedAt && session.startedAt
-        ? Math.round((session.completedAt.getTime() - session.startedAt.getTime()) / (1000 * 60))
-        : null,
-
-      // Technical configuration highlights
       programmingFocus: coachConfig.technical_config.programming_focus,
       experienceLevel: coachConfig.technical_config.experience_level,
       trainingFrequency: coachConfig.technical_config.training_frequency,
       specializations: coachConfig.technical_config.specializations,
-
-      // Methodology details
       methodologyReasoning: coachConfig.selected_methodology.methodology_reasoning,
       programmingEmphasis: coachConfig.selected_methodology.programming_emphasis,
       periodizationApproach: coachConfig.selected_methodology.periodization_approach,
-
-      // Personality details
       personalityReasoning: coachConfig.selected_personality.selection_reasoning,
       personalityBlending: JSON.stringify(coachConfig.selected_personality.blending_weights),
-
-      // Safety and constraints
       injuryConsiderations: coachConfig.technical_config.injury_considerations,
       equipmentAvailable: coachConfig.technical_config.equipment_available,
       goalTimeline: coachConfig.technical_config.goal_timeline,
       preferredIntensity: coachConfig.technical_config.preferred_intensity,
-
-      // Semantic search categories
       topics: ['coach_creator', 'user_onboarding', 'personality_selection', 'methodology_selection'],
-
-      // Additional context for retrieval
       outcome: 'coach_created',
       loggedAt: new Date().toISOString(),
+    };
 
-      // Only include userSatisfaction if it has a value (Pinecone doesn't accept null)
-      ...(coachConfig.metadata.user_satisfaction !== null && coachConfig.metadata.user_satisfaction !== undefined
-        ? { userSatisfaction: coachConfig.metadata.user_satisfaction }
-        : {})
+    // Optional fields that may be null/undefined
+    const optionalFields = filterNullish({
+      sessionDurationMinutes: session.completedAt && session.startedAt
+        ? Math.round((session.completedAt.getTime() - session.startedAt.getTime()) / (1000 * 60))
+        : null,
+      userSatisfaction: coachConfig.metadata.user_satisfaction,
+    });
+
+    const coachCreatorMetadata = {
+      ...baseMetadata,
+      ...optionalFields
     };
 
     // Use centralized storage function

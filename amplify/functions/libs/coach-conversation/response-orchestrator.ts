@@ -1,17 +1,19 @@
 import {
-  callBedrockApi,
-  callBedrockApiStream,
   callBedrockApiMultimodal,
   callBedrockApiMultimodalStream,
   MODEL_IDS,
-  storeDebugDataInS3
+  storeDebugDataInS3,
 } from "../api-helpers";
-import { generateSystemPrompt, validateCoachConfig, generateSystemPromptPreview } from "./prompt-generation";
+import {
+  generateSystemPrompt,
+  validateCoachConfig,
+  generateSystemPromptPreview,
+} from "./prompt-generation";
 import { ConversationContextResult } from "./context";
 import { WorkoutDetectionResult } from "./workout-detection";
 import { MemoryRetrievalResult } from "./memory-processing";
 import { buildMultimodalContent } from "../streaming";
-import { CoachMessage } from "./types";
+import { CoachMessage, ConversationMode, CONVERSATION_MODES } from "./types";
 
 // Configuration constants
 const ENABLE_S3_DEBUG_LOGGING = true; // Always log system prompts to S3 for debugging and monitoring
@@ -26,12 +28,16 @@ const MIN_CACHE_THRESHOLD = 12; // Start caching when conversation has > 12 mess
  * @param requiresDeepReasoning - From smart router analysis
  * @returns Model ID to use for this conversation
  */
-export function selectModelForConversation(requiresDeepReasoning: boolean): string {
+export function selectModelForConversation(
+  requiresDeepReasoning: boolean
+): string {
   const modelToUse = requiresDeepReasoning
     ? MODEL_IDS.CLAUDE_SONNET_4_FULL
     : MODEL_IDS.CLAUDE_HAIKU_4FULL;
 
-  console.info(`🤖 Model selection: ${requiresDeepReasoning ? 'SONNET 4.5' : 'HAIKU 4.5'} (requiresDeepReasoning=${requiresDeepReasoning})`);
+  console.info(
+    `🤖 Model selection: ${requiresDeepReasoning ? "SONNET 4.5" : "HAIKU 4.5"} (requiresDeepReasoning=${requiresDeepReasoning})`
+  );
 
   return modelToUse;
 }
@@ -57,36 +63,42 @@ function buildMessagesWithHistoryCaching(existingMessages: any[]): any[] {
 
   // Don't cache short conversations
   if (messageCount < MIN_CACHE_THRESHOLD) {
-    console.info(`📝 Short conversation (${messageCount} messages) - no history caching`);
-    return existingMessages.map(msg => ({
+    console.info(
+      `📝 Short conversation (${messageCount} messages) - no history caching`
+    );
+    return existingMessages.map((msg) => ({
       role: msg.role,
-      content: [{ text: msg.content }]
+      content: [{ text: msg.content }],
     }));
   }
 
   // Calculate stepped cache boundary: floor to nearest CACHE_STEP_SIZE
   // Examples: 12-19 msgs → cache 10, 20-29 msgs → cache 20, 30-39 msgs → cache 30
-  const cachedCount = Math.floor((messageCount - 2) / CACHE_STEP_SIZE) * CACHE_STEP_SIZE;
+  const cachedCount =
+    Math.floor((messageCount - 2) / CACHE_STEP_SIZE) * CACHE_STEP_SIZE;
   const cachedMessages = existingMessages.slice(0, cachedCount);
   const dynamicMessages = existingMessages.slice(cachedCount);
 
-  console.info(`💰 STEPPED HISTORY CACHING: Boundary at ${cachedCount} messages`, {
-    totalMessages: messageCount,
-    cached: cachedCount,
-    dynamic: dynamicMessages.length,
-    stepSize: CACHE_STEP_SIZE,
-    nextBoundary: cachedCount + CACHE_STEP_SIZE,
-    minThreshold: MIN_CACHE_THRESHOLD
-  });
+  console.info(
+    `💰 STEPPED HISTORY CACHING: Boundary at ${cachedCount} messages`,
+    {
+      totalMessages: messageCount,
+      cached: cachedCount,
+      dynamic: dynamicMessages.length,
+      stepSize: CACHE_STEP_SIZE,
+      nextBoundary: cachedCount + CACHE_STEP_SIZE,
+      minThreshold: MIN_CACHE_THRESHOLD,
+    }
+  );
 
   // Build messages array with cache point
   const messagesArray: any[] = [];
 
   // Add cached messages (will be reused across requests)
-  cachedMessages.forEach(msg => {
+  cachedMessages.forEach((msg) => {
     messagesArray.push({
       role: msg.role,
-      content: [{ text: msg.content }]
+      content: [{ text: msg.content }],
     });
   });
 
@@ -95,19 +107,19 @@ function buildMessagesWithHistoryCaching(existingMessages: any[]): any[] {
     role: "user",
     content: [
       {
-        text: `---stepped-cache-boundary-${cachedCount}---`
+        text: `---stepped-cache-boundary-${cachedCount}---`,
       },
       {
-        cachePoint: { type: "default" }
-      }
-    ]
+        cachePoint: { type: "default" },
+      },
+    ],
   });
 
   // Add dynamic messages (everything after cache boundary)
-  dynamicMessages.forEach(msg => {
+  dynamicMessages.forEach((msg) => {
     messagesArray.push({
       role: msg.role,
-      content: [{ text: msg.content }]
+      content: [{ text: msg.content }],
     });
   });
 
@@ -135,7 +147,8 @@ export async function generateAIResponse(
   conversationId: string,
   userProfile?: any,
   imageS3Keys?: string[], // Image attachments
-  requiresDeepReasoning?: boolean // NEW: Smart model selection flag
+  requiresDeepReasoning?: boolean, // NEW: Smart model selection flag
+  conversationMode?: ConversationMode // NEW: Conversation mode for specialized prompts
 ): Promise<ResponseGenerationResult> {
   let aiResponseContent: string;
   let promptMetadata: any = null;
@@ -173,17 +186,17 @@ export async function generateAIResponse(
       additionalConstraints: workoutResult.workoutDetectionContext, // Add workout context if detected
       workoutContext: context.recentWorkouts, // Add recent workout summaries for context
       userMemories: memoryResult.memories, // Add memories for personalization
-      criticalTrainingDirective: userProfile?.attributes?.criticalTrainingDirective, // Add critical training directive if set
+      criticalTrainingDirective:
+        userProfile?.attributes?.criticalTrainingDirective, // Add critical training directive if set
       userTimezone, // Pass user's timezone for temporal context
       existingMessages, // NEW: Pass messages for conversation history (now in prompt-generation)
       pineconeContext: context.pineconeContext, // NEW: Pass Pinecone context (now in prompt-generation)
       includeCacheControl: true, // NEW: Enable caching optimization
+      mode: conversationMode || CONVERSATION_MODES.CHAT, // NEW: Conversation mode for specialized prompts
     };
 
-    const { systemPrompt, metadata, staticPrompt, dynamicPrompt } = generateSystemPrompt(
-      coachConfig,
-      promptOptions
-    );
+    const { systemPrompt, metadata, staticPrompt, dynamicPrompt } =
+      generateSystemPrompt(coachConfig, promptOptions);
     promptMetadata = metadata;
 
     // Log prompt preview for debugging (in development)
@@ -209,7 +222,10 @@ export async function generateAIResponse(
         const baseSizeKB = (systemPrompt.length / 1024).toFixed(2);
         const pineconeContextSize = context.pineconeContext?.length || 0;
         const pineconeContextKB = (pineconeContextSize / 1024).toFixed(2);
-        const historySize = systemPromptWithHistory.length - systemPrompt.length - pineconeContextSize;
+        const historySize =
+          systemPromptWithHistory.length -
+          systemPrompt.length -
+          pineconeContextSize;
         const historySizeKB = (historySize / 1024).toFixed(2);
 
         const s3Location = await storeDebugDataInS3(
@@ -219,7 +235,8 @@ export async function generateAIResponse(
             coachId,
             conversationId,
             coachName: coachConfig.attributes.coach_name,
-            userMessage: userMessage?.substring(0, 200) || '(no text, images only)',
+            userMessage:
+              userMessage?.substring(0, 200) || "(no text, images only)",
             sessionNumber: conversationContext.sessionNumber,
             // Size breakdown
             totalPromptLength: systemPromptWithHistory.length,
@@ -241,8 +258,11 @@ export async function generateAIResponse(
             hasMemories: memoryResult.memories?.length > 0,
             memoriesCount: memoryResult.memories?.length || 0,
             messageCount: existingMessages.length,
-            hasCriticalDirective: !!userProfile?.attributes?.criticalTrainingDirective?.enabled,
-            userTimezone: userProfile?.attributes?.preferences?.timezone || 'America/Los_Angeles',
+            hasCriticalDirective:
+              !!userProfile?.attributes?.criticalTrainingDirective?.enabled,
+            userTimezone:
+              userProfile?.attributes?.preferences?.timezone ||
+              "America/Los_Angeles",
             type: "coach-conversation-prompt-non-stream",
           },
           "coach-conversation"
@@ -258,8 +278,8 @@ export async function generateAIResponse(
             base: `${baseSizeKB}KB`,
             history: `${historySizeKB}KB`,
             pinecone: `${pineconeContextKB}KB`,
-            total: `${promptSizeKB}KB`
-          }
+            total: `${promptSizeKB}KB`,
+          },
         });
       } catch (s3Error) {
         console.warn(
@@ -271,7 +291,9 @@ export async function generateAIResponse(
 
     try {
       // Smart model selection based on router analysis
-      const selectedModel = selectModelForConversation(requiresDeepReasoning || false);
+      const selectedModel = selectModelForConversation(
+        requiresDeepReasoning || false
+      );
 
       // Check if this is a multimodal request (has images)
       const hasImages = imageS3Keys && imageS3Keys.length > 0;
@@ -280,17 +302,20 @@ export async function generateAIResponse(
         // Build conversation with images using Converse API format
         const currentUserMessage: CoachMessage = {
           id: `msg_${Date.now()}_user`,
-          role: 'user',
-          content: userMessage || '',
+          role: "user",
+          content: userMessage || "",
           timestamp: new Date(),
-          messageType: 'text_with_images',
+          messageType: "text_with_images",
           imageS3Keys: imageS3Keys,
         };
 
-        const allMessages: CoachMessage[] = [...existingMessages, currentUserMessage];
+        const allMessages: CoachMessage[] = [
+          ...existingMessages,
+          currentUserMessage,
+        ];
         const converseMessages = await buildMultimodalContent(allMessages);
 
-        console.info('🖼️ Using multimodal Converse API with images', {
+        console.info("🖼️ Using multimodal Converse API with images", {
           messageCount: converseMessages.length,
           imagesCount: imageS3Keys.length,
           model: selectedModel,
@@ -302,20 +327,23 @@ export async function generateAIResponse(
           systemPromptWithHistory,
           converseMessages,
           selectedModel,
-          staticPrompt && dynamicPrompt ? { staticPrompt, dynamicPrompt } : undefined
+          staticPrompt && dynamicPrompt
+            ? { staticPrompt, dynamicPrompt }
+            : undefined
         );
       } else {
         // Text-only response with conversation history caching
         // Build messages array with history caching (if conversation is long enough)
-        const messagesWithHistory = buildMessagesWithHistoryCaching(existingMessages);
+        const messagesWithHistory =
+          buildMessagesWithHistoryCaching(existingMessages);
 
         // Add new user message
         messagesWithHistory.push({
-          role: 'user',
-          content: [{ text: userMessage }]
+          role: "user",
+          content: [{ text: userMessage }],
         });
 
-        console.info('💬 Using text-only Converse API with history caching', {
+        console.info("💬 Using text-only Converse API with history caching", {
           totalMessages: messagesWithHistory.length,
           existingMessages: existingMessages.length,
           model: selectedModel,
@@ -326,7 +354,9 @@ export async function generateAIResponse(
           systemPromptWithHistory,
           messagesWithHistory,
           selectedModel,
-          staticPrompt && dynamicPrompt ? { staticPrompt, dynamicPrompt } : undefined
+          staticPrompt && dynamicPrompt
+            ? { staticPrompt, dynamicPrompt }
+            : undefined
         );
       }
     } catch (error) {
@@ -340,7 +370,7 @@ export async function generateAIResponse(
 
   return {
     aiResponseContent,
-    promptMetadata
+    promptMetadata,
   };
 }
 
@@ -366,7 +396,8 @@ export async function generateAIResponseStream(
   conversationId: string,
   userProfile?: any,
   imageS3Keys?: string[], // Image attachments
-  requiresDeepReasoning?: boolean // NEW: Smart model selection flag
+  requiresDeepReasoning?: boolean, // NEW: Smart model selection flag
+  conversationMode?: ConversationMode // NEW: Conversation mode for specialized prompts
 ): Promise<ResponseGenerationStreamResult> {
   let promptMetadata: any = null;
 
@@ -403,17 +434,17 @@ export async function generateAIResponseStream(
       additionalConstraints: workoutResult.workoutDetectionContext, // Add workout context if detected
       workoutContext: context.recentWorkouts, // Add recent workout summaries for context
       userMemories: memoryResult.memories, // Add memories for personalization
-      criticalTrainingDirective: userProfile?.attributes?.criticalTrainingDirective, // Add critical training directive if set
+      criticalTrainingDirective:
+        userProfile?.attributes?.criticalTrainingDirective, // Add critical training directive if set
       userTimezone, // Pass user's timezone for temporal context
       existingMessages, // NEW: Pass messages for conversation history (now in prompt-generation)
       pineconeContext: context.pineconeContext, // NEW: Pass Pinecone context (now in prompt-generation)
       includeCacheControl: true, // NEW: Enable caching optimization
+      mode: conversationMode || CONVERSATION_MODES.CHAT, // NEW: Conversation mode for specialized prompts
     };
 
-    const { systemPrompt, metadata, staticPrompt, dynamicPrompt } = generateSystemPrompt(
-      coachConfig,
-      promptOptions
-    );
+    const { systemPrompt, metadata, staticPrompt, dynamicPrompt } =
+      generateSystemPrompt(coachConfig, promptOptions);
     promptMetadata = metadata;
 
     // Log prompt preview for debugging (in development)
@@ -439,7 +470,10 @@ export async function generateAIResponseStream(
         const baseSizeKB = (systemPrompt.length / 1024).toFixed(2);
         const pineconeContextSize = context.pineconeContext?.length || 0;
         const pineconeContextKB = (pineconeContextSize / 1024).toFixed(2);
-        const historySize = systemPromptWithHistory.length - systemPrompt.length - pineconeContextSize;
+        const historySize =
+          systemPromptWithHistory.length -
+          systemPrompt.length -
+          pineconeContextSize;
         const historySizeKB = (historySize / 1024).toFixed(2);
 
         const s3Location = await storeDebugDataInS3(
@@ -449,7 +483,8 @@ export async function generateAIResponseStream(
             coachId,
             conversationId,
             coachName: coachConfig.attributes.coach_name,
-            userMessage: userMessage?.substring(0, 200) || '(no text, images only)',
+            userMessage:
+              userMessage?.substring(0, 200) || "(no text, images only)",
             sessionNumber: conversationContext.sessionNumber,
             // Size breakdown
             totalPromptLength: systemPromptWithHistory.length,
@@ -471,8 +506,9 @@ export async function generateAIResponseStream(
             hasMemories: memoryResult.memories?.length > 0,
             memoriesCount: memoryResult.memories?.length || 0,
             messageCount: existingMessages.length,
-            hasCriticalDirective: !!userProfile?.attributes?.criticalTrainingDirective?.enabled,
-            userTimezone: userTimezone || 'America/Los_Angeles',
+            hasCriticalDirective:
+              !!userProfile?.attributes?.criticalTrainingDirective?.enabled,
+            userTimezone: userTimezone || "America/Los_Angeles",
             type: "coach-conversation-prompt-stream",
           },
           "coach-conversation"
@@ -488,8 +524,8 @@ export async function generateAIResponseStream(
             base: `${baseSizeKB}KB`,
             history: `${historySizeKB}KB`,
             pinecone: `${pineconeContextKB}KB`,
-            total: `${promptSizeKB}KB`
-          }
+            total: `${promptSizeKB}KB`,
+          },
         });
       } catch (s3Error) {
         console.warn(
@@ -501,7 +537,9 @@ export async function generateAIResponseStream(
 
     try {
       // Smart model selection based on router analysis
-      const selectedModel = selectModelForConversation(requiresDeepReasoning || false);
+      const selectedModel = selectModelForConversation(
+        requiresDeepReasoning || false
+      );
 
       // Check if this is a multimodal request (has images)
       const hasImages = imageS3Keys && imageS3Keys.length > 0;
@@ -510,17 +548,20 @@ export async function generateAIResponseStream(
         // Build conversation with images using Converse API format
         const currentUserMessage: CoachMessage = {
           id: `msg_${Date.now()}_user`,
-          role: 'user',
-          content: userMessage || '',
+          role: "user",
+          content: userMessage || "",
           timestamp: new Date(),
-          messageType: 'text_with_images',
+          messageType: "text_with_images",
           imageS3Keys: imageS3Keys,
         };
 
-        const allMessages: CoachMessage[] = [...existingMessages, currentUserMessage];
+        const allMessages: CoachMessage[] = [
+          ...existingMessages,
+          currentUserMessage,
+        ];
         const converseMessages = await buildMultimodalContent(allMessages);
 
-        console.info('🖼️ Using multimodal Converse Stream API with images', {
+        console.info("🖼️ Using multimodal Converse Stream API with images", {
           messageCount: converseMessages.length,
           imagesCount: imageS3Keys.length,
           model: selectedModel,
@@ -532,41 +573,49 @@ export async function generateAIResponseStream(
           systemPromptWithHistory,
           converseMessages,
           selectedModel,
-          staticPrompt && dynamicPrompt ? { staticPrompt, dynamicPrompt } : undefined
+          staticPrompt && dynamicPrompt
+            ? { staticPrompt, dynamicPrompt }
+            : undefined
         );
 
         return {
           responseStream,
-          promptMetadata
+          promptMetadata,
         };
       } else {
         // Text-only streaming response with conversation history caching
         // Build messages array with history caching (if conversation is long enough)
-        const messagesWithHistory = buildMessagesWithHistoryCaching(existingMessages);
+        const messagesWithHistory =
+          buildMessagesWithHistoryCaching(existingMessages);
 
         // Add new user message
         messagesWithHistory.push({
-          role: 'user',
-          content: [{ text: userMessage }]
+          role: "user",
+          content: [{ text: userMessage }],
         });
 
-        console.info('💬 Using text-only Converse Stream API with history caching', {
-          totalMessages: messagesWithHistory.length,
-          existingMessages: existingMessages.length,
-          model: selectedModel,
-        });
+        console.info(
+          "💬 Using text-only Converse Stream API with history caching",
+          {
+            totalMessages: messagesWithHistory.length,
+            existingMessages: existingMessages.length,
+            model: selectedModel,
+          }
+        );
 
         // Use multimodal streaming API (works for text-only too) with messages array
         const responseStream = await callBedrockApiMultimodalStream(
           systemPromptWithHistory,
           messagesWithHistory,
           selectedModel,
-          staticPrompt && dynamicPrompt ? { staticPrompt, dynamicPrompt } : undefined
+          staticPrompt && dynamicPrompt
+            ? { staticPrompt, dynamicPrompt }
+            : undefined
         );
 
         return {
           responseStream,
-          promptMetadata
+          promptMetadata,
         };
       }
     } catch (error) {

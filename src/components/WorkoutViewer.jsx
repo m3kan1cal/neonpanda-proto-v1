@@ -289,6 +289,7 @@ const PerformanceMetrics = ({ metrics }) => {
 // Workout summary display
 const WorkoutSummary = ({ workoutData }) => {
   const crossfitData = workoutData.discipline_specific?.crossfit;
+  const runningData = workoutData.discipline_specific?.running;
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -361,6 +362,57 @@ const WorkoutSummary = ({ workoutData }) => {
                 return score.unit ? `${score.value} ${score.unit}` : score.value;
               })()}
               dataPath="workoutData.discipline_specific.crossfit.performance_data.score"
+            />
+          )}
+        </>
+      )}
+
+      {runningData && (
+        <>
+          <ValueDisplay
+            label="Run Type"
+            value={runningData.run_type}
+            dataPath="workoutData.discipline_specific.running.run_type"
+          />
+          <ValueDisplay
+            label="Distance"
+            value={`${runningData.total_distance} ${runningData.distance_unit}`}
+            dataPath="workoutData.discipline_specific.running.total_distance"
+          />
+          <ValueDisplay
+            label="Total Time"
+            value={runningData.total_time ? `${Math.floor(runningData.total_time / 60)}:${String(runningData.total_time % 60).padStart(2, '0')}` : null}
+            dataPath="workoutData.discipline_specific.running.total_time"
+          />
+          <ValueDisplay
+            label="Avg Pace"
+            value={runningData.average_pace}
+            dataPath="workoutData.discipline_specific.running.average_pace"
+          />
+          <ValueDisplay
+            label="Surface"
+            value={runningData.surface}
+            dataPath="workoutData.discipline_specific.running.surface"
+          />
+          {runningData.elevation_gain && (
+            <ValueDisplay
+              label="Elevation Gain"
+              value={`${runningData.elevation_gain}ft`}
+              dataPath="workoutData.discipline_specific.running.elevation_gain"
+            />
+          )}
+          {runningData.elevation_loss && (
+            <ValueDisplay
+              label="Elevation Loss"
+              value={`${runningData.elevation_loss}ft`}
+              dataPath="workoutData.discipline_specific.running.elevation_loss"
+            />
+          )}
+          {runningData.route?.name && (
+            <ValueDisplay
+              label="Route"
+              value={runningData.route.name}
+              dataPath="workoutData.discipline_specific.running.route.name"
             />
           )}
         </>
@@ -503,6 +555,267 @@ const CoachNotes = ({ notes }) => {
   );
 };
 
+// Running segment display component
+const RunningSegmentDisplay = ({ segment, segmentIndex }) => {
+  const dataPath = `workoutData.discipline_specific.running.segments[${segmentIndex}]`;
+
+  return (
+    <div className="bg-synthwave-bg-primary/20 border border-synthwave-neon-cyan/20 rounded-lg p-3 space-y-2">
+      <div className="flex items-center justify-between">
+        <h4 className="font-rajdhani font-bold text-synthwave-neon-cyan text-lg capitalize">
+          Segment {segment.segment_number} - {segment.segment_type}
+        </h4>
+        <span className={`text-sm font-rajdhani uppercase px-2 py-1 rounded ${
+          segment.effort_level === 'max' ? 'bg-synthwave-neon-pink/20 text-synthwave-neon-pink' :
+          segment.effort_level === 'hard' ? 'bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan' :
+          segment.effort_level === 'moderate' ? 'bg-synthwave-text-secondary/20 text-synthwave-text-secondary' :
+          'bg-synthwave-neon-cyan/10 text-synthwave-neon-cyan'
+        }`}>
+          {segment.effort_level}
+        </span>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+        <ValueDisplay
+          label="Distance"
+          value={segment.distance}
+          dataPath={`${dataPath}.distance`}
+        />
+        <ValueDisplay
+          label="Time"
+          value={segment.time ? `${Math.floor(segment.time / 60)}:${String(segment.time % 60).padStart(2, '0')}` : null}
+          dataPath={`${dataPath}.time`}
+        />
+        <ValueDisplay
+          label="Pace"
+          value={segment.pace}
+          dataPath={`${dataPath}.pace`}
+        />
+        {segment.heart_rate_avg && (
+          <ValueDisplay
+            label="Avg HR"
+            value={`${segment.heart_rate_avg} bpm`}
+            dataPath={`${dataPath}.heart_rate_avg`}
+          />
+        )}
+        {segment.heart_rate_max && (
+          <ValueDisplay
+            label="Max HR"
+            value={`${segment.heart_rate_max} bpm`}
+            dataPath={`${dataPath}.heart_rate_max`}
+          />
+        )}
+        {segment.cadence && (
+          <ValueDisplay
+            label="Cadence"
+            value={`${segment.cadence} spm`}
+            dataPath={`${dataPath}.cadence`}
+          />
+        )}
+        <ValueDisplay
+          label="Terrain"
+          value={segment.terrain}
+          dataPath={`${dataPath}.terrain`}
+        />
+        {segment.elevation_change && (
+          <ValueDisplay
+            label="Elevation"
+            value={`${segment.elevation_change > 0 ? '+' : ''}${segment.elevation_change}ft`}
+            dataPath={`${dataPath}.elevation_change`}
+          />
+        )}
+      </div>
+
+      {segment.notes && (
+        <div className="mt-2 p-2 bg-synthwave-bg-primary/30 rounded border border-synthwave-neon-pink/20">
+          <span className="text-synthwave-neon-pink font-rajdhani text-sm font-medium">Notes: </span>
+          <span className="text-synthwave-text-secondary font-rajdhani text-sm" data-json-path={`${dataPath}.notes`} data-json-value={JSON.stringify(segment.notes)}>
+            {segment.notes}
+          </span>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Running details display
+const RunningDetails = ({ runningData }) => {
+  if (!runningData) return null;
+
+  return (
+    <div className="space-y-4">
+      {/* Weather Information */}
+      {runningData.weather && (
+        <div>
+          <h4 className="text-synthwave-neon-cyan font-rajdhani font-bold text-base mb-2">Weather Conditions</h4>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+            {runningData.weather.temperature && (
+              <ValueDisplay
+                label="Temperature"
+                value={`${runningData.weather.temperature}°${runningData.weather.temperature_unit || 'F'}`}
+                dataPath="workoutData.discipline_specific.running.weather.temperature"
+              />
+            )}
+            {runningData.weather.conditions && (
+              <ValueDisplay
+                label="Conditions"
+                value={runningData.weather.conditions}
+                dataPath="workoutData.discipline_specific.running.weather.conditions"
+              />
+            )}
+            {runningData.weather.wind_speed && (
+              <ValueDisplay
+                label="Wind Speed"
+                value={`${runningData.weather.wind_speed} mph`}
+                dataPath="workoutData.discipline_specific.running.weather.wind_speed"
+              />
+            )}
+            {runningData.weather.humidity && (
+              <ValueDisplay
+                label="Humidity"
+                value={`${runningData.weather.humidity}%`}
+                dataPath="workoutData.discipline_specific.running.weather.humidity"
+              />
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Equipment */}
+      {runningData.equipment && (
+        <div>
+          <h4 className="text-synthwave-neon-cyan font-rajdhani font-bold text-base mb-2">Equipment</h4>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+            {runningData.equipment.shoes && (
+              <ValueDisplay
+                label="Shoes"
+                value={runningData.equipment.shoes}
+                dataPath="workoutData.discipline_specific.running.equipment.shoes"
+              />
+            )}
+            {runningData.equipment.wearable && (
+              <ValueDisplay
+                label="Wearable"
+                value={runningData.equipment.wearable}
+                dataPath="workoutData.discipline_specific.running.equipment.wearable"
+              />
+            )}
+            {runningData.equipment.other_gear && runningData.equipment.other_gear.length > 0 && (
+              <div className="col-span-2">
+                <span className="text-synthwave-neon-pink font-rajdhani text-base font-medium">Other Gear: </span>
+                <span className="text-synthwave-text-primary font-rajdhani text-base">
+                  {runningData.equipment.other_gear.join(', ')}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Route Information */}
+      {runningData.route && (runningData.route.name || runningData.route.description) && (
+        <div className="p-3 bg-synthwave-bg-primary/30 rounded border border-synthwave-neon-cyan/20">
+          {runningData.route.name && (
+            <>
+              <span className="text-synthwave-neon-cyan font-rajdhani text-base font-medium">Route: </span>
+              <span className="text-synthwave-text-primary font-rajdhani text-base" data-json-path="workoutData.discipline_specific.running.route.name" data-json-value={JSON.stringify(runningData.route.name)}>
+                {runningData.route.name}
+              </span>
+              {runningData.route.type && (
+                <span className="text-synthwave-text-secondary font-rajdhani text-sm ml-2">
+                  ({runningData.route.type.replace(/_/g, ' ')})
+                </span>
+              )}
+            </>
+          )}
+          {runningData.route.description && (
+            <div className="mt-1">
+              <span className="text-synthwave-text-secondary font-rajdhani text-base" data-json-path="workoutData.discipline_specific.running.route.description" data-json-value={JSON.stringify(runningData.route.description)}>
+                {runningData.route.description}
+              </span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Warmup and Cooldown */}
+      {(runningData.warmup || runningData.cooldown) && (
+        <div className="grid grid-cols-2 gap-4">
+          {runningData.warmup && (
+            <div>
+              <h4 className="text-synthwave-neon-cyan font-rajdhani font-bold text-base mb-2">Warmup</h4>
+              <div className="space-y-1">
+                {runningData.warmup.distance && (
+                  <ValueDisplay label="Distance" value={`${runningData.warmup.distance} ${runningData.distance_unit}`} dataPath="workoutData.discipline_specific.running.warmup.distance" />
+                )}
+                {runningData.warmup.time && (
+                  <ValueDisplay label="Time" value={`${Math.floor(runningData.warmup.time / 60)}:${String(runningData.warmup.time % 60).padStart(2, '0')}`} dataPath="workoutData.discipline_specific.running.warmup.time" />
+                )}
+                {runningData.warmup.description && (
+                  <div className="text-synthwave-text-secondary font-rajdhani text-sm" data-json-path="workoutData.discipline_specific.running.warmup.description" data-json-value={JSON.stringify(runningData.warmup.description)}>
+                    {runningData.warmup.description}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {runningData.cooldown && (
+            <div>
+              <h4 className="text-synthwave-neon-cyan font-rajdhani font-bold text-base mb-2">Cooldown</h4>
+              <div className="space-y-1">
+                {runningData.cooldown.distance && (
+                  <ValueDisplay label="Distance" value={`${runningData.cooldown.distance} ${runningData.distance_unit}`} dataPath="workoutData.discipline_specific.running.cooldown.distance" />
+                )}
+                {runningData.cooldown.time && (
+                  <ValueDisplay label="Time" value={`${Math.floor(runningData.cooldown.time / 60)}:${String(runningData.cooldown.time % 60).padStart(2, '0')}`} dataPath="workoutData.discipline_specific.running.cooldown.time" />
+                )}
+                {runningData.cooldown.description && (
+                  <div className="text-synthwave-text-secondary font-rajdhani text-sm" data-json-path="workoutData.discipline_specific.running.cooldown.description" data-json-value={JSON.stringify(runningData.cooldown.description)}>
+                    {runningData.cooldown.description}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Fueling */}
+      {runningData.fueling && (runningData.fueling.pre_run || runningData.fueling.during_run || runningData.fueling.hydration_oz) && (
+        <div>
+          <h4 className="text-synthwave-neon-cyan font-rajdhani font-bold text-base mb-2">Nutrition & Hydration</h4>
+          <div className="space-y-2">
+            {runningData.fueling.pre_run && (
+              <div className="p-2 bg-synthwave-bg-primary/30 rounded border border-synthwave-neon-cyan/20">
+                <span className="text-synthwave-neon-cyan font-rajdhani text-sm font-medium">Pre-Run: </span>
+                <span className="text-synthwave-text-secondary font-rajdhani text-sm" data-json-path="workoutData.discipline_specific.running.fueling.pre_run" data-json-value={JSON.stringify(runningData.fueling.pre_run)}>
+                  {runningData.fueling.pre_run}
+                </span>
+              </div>
+            )}
+            {runningData.fueling.during_run && runningData.fueling.during_run.length > 0 && (
+              <div className="p-2 bg-synthwave-bg-primary/30 rounded border border-synthwave-neon-cyan/20">
+                <span className="text-synthwave-neon-cyan font-rajdhani text-sm font-medium">During Run: </span>
+                <span className="text-synthwave-text-secondary font-rajdhani text-sm">
+                  {runningData.fueling.during_run.join(', ')}
+                </span>
+              </div>
+            )}
+            {runningData.fueling.hydration_oz && (
+              <ValueDisplay
+                label="Total Hydration"
+                value={`${runningData.fueling.hydration_oz} oz`}
+                dataPath="workoutData.discipline_specific.running.fueling.hydration_oz"
+              />
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // Main WorkoutViewer component
 const WorkoutViewer = ({
   workout,
@@ -524,6 +837,7 @@ const WorkoutViewer = ({
 
   const { workoutData } = workout;
   const crossfitData = workoutData.discipline_specific?.crossfit;
+  const runningData = workoutData.discipline_specific?.running;
 
   // Function to reconstruct JSON from the rendered HTML
   const reconstructJSON = () => {
@@ -773,7 +1087,7 @@ const WorkoutViewer = ({
         </CollapsibleSection>
       )}
 
-      {/* Workout Rounds */}
+      {/* Workout Rounds (CrossFit) */}
       {crossfitData && crossfitData.rounds && (
         <CollapsibleSection
           title={`Workout Rounds (${crossfitData.rounds.length})`}
@@ -783,6 +1097,32 @@ const WorkoutViewer = ({
           <div className="space-y-6">
             {crossfitData.rounds.map((round, index) => (
               <RoundDisplay key={index} round={round} roundIndex={index} />
+            ))}
+          </div>
+        </CollapsibleSection>
+      )}
+
+      {/* Running Details */}
+      {runningData && (
+        <CollapsibleSection
+          title="Running Details"
+          icon={<NotesIcon />}
+          defaultOpen={true}
+        >
+          <RunningDetails runningData={runningData} />
+        </CollapsibleSection>
+      )}
+
+      {/* Running Segments */}
+      {runningData && runningData.segments && runningData.segments.length > 0 && (
+        <CollapsibleSection
+          title={`Run Segments (${runningData.segments.length})`}
+          icon={<CyclesIcon />}
+          defaultOpen={true}
+        >
+          <div className="space-y-4">
+            {runningData.segments.map((segment, index) => (
+              <RunningSegmentDisplay key={index} segment={segment} segmentIndex={index} />
             ))}
           </div>
         </CollapsibleSection>

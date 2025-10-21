@@ -212,7 +212,7 @@ export const isDateInMonthRange = (
  * @param timezone - IANA timezone string (e.g., "America/New_York")
  * @returns Date string in YYYY-MM-DD format
  */
-export const convertUTCToUserDate = (
+export const convertUtcToUserDate = (
   utcTimestamp: Date | string,
   timezone: string
 ): string => {

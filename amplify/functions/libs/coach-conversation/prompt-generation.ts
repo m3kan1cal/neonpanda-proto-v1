@@ -1,12 +1,15 @@
 import { CoachConfig, DynamoDBItem } from "../coach-creator/types";
 import { UserMemory } from "../memory/types";
+import { UserProfile } from "../user/types";
 import {
   CoachConfigInput,
   PromptGenerationOptions,
   SystemPrompt,
   CoachConfigValidationResult,
   SystemPromptPreview,
+  CONVERSATION_MODES,
 } from "./types";
+import { buildCoachPersonalityPrompt } from "../coach-config/personality-utils";
 
 /**
  * Generates a complete system prompt from a coach configuration
@@ -38,6 +41,7 @@ export const generateSystemPrompt = (
     existingMessages = [],
     pineconeContext,
     includeCacheControl = false,
+    mode = CONVERSATION_MODES.CHAT, // NEW: Conversation mode (chat or build)
   } = options;
 
   // Extract config data - handle both DynamoDB item and direct config
@@ -45,17 +49,6 @@ export const generateSystemPrompt = (
     "attributes" in coachConfigInput
       ? coachConfigInput.attributes
       : coachConfigInput;
-
-  // Extract core prompts from config
-  const {
-    personality_prompt,
-    safety_integrated_prompt,
-    motivation_prompt,
-    methodology_prompt,
-    communication_style,
-    learning_adaptation_prompt,
-    gender_tone_prompt = 'Maintain a balanced, professional coaching approach that blends confidence with empathy. Use inclusive language and focus on the individual athlete regardless of gender identity.', // Fallback for legacy coaches
-  } = configData.generated_prompts;
 
   // Build STATIC prompt sections (cacheable) - coach config, guidelines, constraints
   const staticPromptSections = [];
@@ -67,20 +60,124 @@ export const generateSystemPrompt = (
   // STATIC CONTENT (CACHEABLE - Coach Configuration & Guidelines)
   // ============================================================================
 
-  // 1. CRITICAL TRAINING DIRECTIVE (if enabled)
-  if (criticalTrainingDirective?.enabled && criticalTrainingDirective?.content) {
-    staticPromptSections.push(`🚨 CRITICAL TRAINING DIRECTIVE - ABSOLUTE PRIORITY:
+  // 0. MODE-SPECIFIC DIRECTIVE (Build mode for program creation)
+  if (mode === CONVERSATION_MODES.BUILD) {
+    staticPromptSections.push(`🏗️ BUILD MODE - TRAINING PROGRAM CREATION:
 
-${criticalTrainingDirective.content}
+You are in PROGRAM CREATION mode. Your role is to guide the user through creating a structured, multi-week training program through natural, conversational design.
 
-This directive takes precedence over all other instructions except safety constraints. Follow it consistently across all interactions.
+## PRIMARY OBJECTIVE
+Work conversationally with the user to:
+1. Understand their training goals, timeline, and constraints
+2. Design a program structure (duration, phases, frequency)
+3. Define phase-specific focuses and progressions
+4. Set success metrics and adaptation strategies
+
+---
+
+## REQUIRED INFORMATION CHECKLIST
+Before triggering program generation, ensure you've gathered:
+
+✅ **Training Goals** (Required)
+   - What is the user training for? (event, skill, general fitness, competition)
+   - What specific outcomes do they want?
+   - Any milestones or benchmarks they're targeting?
+
+✅ **Timeline** (Required)
+   - Program duration (how many weeks or days?)
+   - Any deadlines or event dates?
+   - Start date preference?
+
+✅ **Equipment & Constraints** (Required)
+   - What equipment do they have access to? (be specific)
+   - Any equipment limitations? (e.g., "dumbbells up to 50lbs", "no barbell")
+   - Training location? (home gym, commercial gym, garage, etc.)
+
+✅ **Training Frequency** (Required)
+   - How many days per week can they train?
+   - Which days work best? (or flexible schedule?)
+   - Typical session duration? (30min, 60min, 90min?)
+
+⚠️ **Important Context** (Recommended, may already be known)
+   - Experience level (check coach config / user memories first)
+   - Injury history (check memories first - don't re-ask if you know)
+   - Previous programming experience (what's worked/failed before)
+   - Intensity preferences (conservative, moderate, aggressive)
+
+---
+
+## CONVERSATION FLOW GUIDANCE
+
+**Phase 1: Discovery (Goals & Context)**
+- Start with their "why" - what excites them about this program?
+- Understand their timeline and any pressing deadlines
+- Surface their experience level if not already known from context
+- Be conversational and build excitement - this is the fun part!
+
+**Phase 2: Practical Constraints**
+- Equipment inventory (be specific: "dumbbells to what weight?", "pull-up bar?")
+- Schedule reality check (days per week, time per session)
+- Any hard constraints? (no overhead pressing, can't train Wednesdays, etc.)
+- Check memories first - don't make them repeat known information
+
+**Phase 3: Program Structure Design**
+- Propose a program structure based on their goals and timeline
+- Discuss phases: how many, what focus for each (base building, intensification, peak, taper)
+- Explain the progression logic and why it fits their goals
+- Get feedback and iterate until they're satisfied
+- Be collaborative - this is THEIR program, you're the architect
+
+**Phase 4: Confirmation & Generation**
+- Summarize the complete agreed-upon program structure
+- Confirm all critical details (duration, frequency, equipment, phases)
+- Ask explicitly: "Ready for me to generate this program?"
+- Only proceed if they confirm readiness
+- If confirmed, trigger with: **[GENERATE_PROGRAM]**
+
+---
+
+## VALIDATION BEFORE GENERATION
+
+Before ending your response with **[GENERATE_PROGRAM]**, verify you have:
+- ✅ Clear training goals (what they want to achieve)
+- ✅ Program duration (total weeks or days)
+- ✅ Training frequency (days per week)
+- ✅ Equipment constraints (specific list with details)
+- ✅ User explicitly confirmed they're ready to generate
+
+If any critical information is missing, ask for it naturally. DON'T generate without the essentials.
+
+---
+
+## PROGRAM GENERATION TRIGGER
+
+Once the user confirms they're ready to generate the program:
+1. Summarize the complete program structure one final time
+2. Build excitement: "Let's build this program for you!"
+3. End your response with: **[GENERATE_PROGRAM]**
+
+The system will then:
+- Extract the program structure from our conversation
+- Generate detailed daily workout templates for each phase
+- Save the complete program to the user's account
+- Provide the user with access to their new training program
+
+---
+
+## IMPORTANT NOTES
+- Stay focused on program design; don't get sidetracked by general training discussion
+- Be collaborative and adaptive to the user's feedback - iterate until they're happy
+- Ensure safety constraints are respected in all recommendations
+- Check memories and coach config BEFORE asking questions - don't make them repeat themselves
+- Only trigger generation when the user explicitly confirms they're ready
+- Natural conversation > rigid checklist - let the information emerge organically
 
 ---
 
 `);
   }
 
-  // 2. CRITICAL SYSTEM RULES
+  // 1. CRITICAL SYSTEM RULES (Memory handling - conversation-specific)
   staticPromptSections.push(`⚠️ CRITICAL SYSTEM RULES - READ FIRST:
 1. NEVER generate memory confirmations (messages starting with "✅")
 2. NEVER say "I've remembered", "I've saved", or "I've noted" in response to memory commands
@@ -89,118 +186,39 @@ This directive takes precedence over all other instructions except safety constr
 
 `);
 
-  // 3. Core Identity & Personality
-  staticPromptSections.push(`# COACH IDENTITY & PERSONALITY
-${personality_prompt}
+  // 2. CORE COACH PERSONALITY (using reusable utility for consistency)
+  // Build minimal user profile object for critical directive (if available)
+  const userProfileForPersonality: DynamoDBItem<UserProfile> | null = criticalTrainingDirective
+    ? {
+        pk: 'user#temp',
+        sk: 'profile',
+        entityType: 'UserProfile' as const,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        attributes: {
+          criticalTrainingDirective,
+        } as UserProfile, // Minimal profile with just critical directive
+      }
+    : null;
 
-## Personality Integration & Blending
-You are primarily a ${configData.selected_personality.primary_template.toUpperCase()} coach${
-    configData.selected_personality.secondary_influences?.length
-      ? ` with ${configData.selected_personality.secondary_influences.join(" and ").toUpperCase()} influences`
-      : ""
-  }.
+  const corePersonalityPrompt = buildCoachPersonalityPrompt(
+    coachConfigInput,
+    userProfileForPersonality,
+    {
+      includeDetailedPersonality: true,
+      includeMethodologyDetails: true,
+      includeMotivation: true,
+      includeSafety: true,
+      includeCriticalDirective: true,
+      context: mode === CONVERSATION_MODES.BUILD
+        ? 'CONVERSATIONAL PROGRAM CREATION MODE'
+        : 'CONVERSATIONAL COACHING MODE',
+    }
+  );
 
-### Personality Blending Weights
-- Primary personality (${configData.selected_personality.primary_template}): ${configData.selected_personality.blending_weights?.primary * 100 || 75}%
-${
-  configData.selected_personality.secondary_influences
-    ?.map(
-      (influence, index) =>
-        `- Secondary influence (${influence}): ${configData.selected_personality.blending_weights?.secondary * 100 || 25}%`
-    )
-    .join("\n") || ""
-}
+  staticPromptSections.push(corePersonalityPrompt);
 
-### Selection Reasoning
-${configData.selected_personality.selection_reasoning || "Selected personality aligns with user needs and coaching requirements."}
-
-# COMMUNICATION STYLE & APPROACH
-${communication_style}
-
-# GENDER TONE & COMMUNICATION STYLE
-${gender_tone_prompt}
-
-# LEARNING & ADAPTATION APPROACH
-${learning_adaptation_prompt}`);
-
-  // 4. Methodology & Programming Expertise
-  staticPromptSections.push(`# TRAINING METHODOLOGY & PROGRAMMING
-${methodology_prompt}
-
-## Methodology Selection Rationale
-${configData.selected_methodology.methodology_reasoning || "Selected methodology aligns with user goals and experience level."}
-
-## Programming Framework Details
-- **Primary Methodology**: ${configData.selected_methodology.primary_methodology}
-- **Programming Emphasis**: ${configData.selected_methodology.programming_emphasis || "balanced"}
-- **Periodization Approach**: ${configData.selected_methodology.periodization_approach || "systematic"}
-
-## Methodology Profile Integration
-${
-  configData.metadata?.methodology_profile
-    ? `
-Based on the user's methodology profile:
-- **Experience Base**: ${configData.metadata.methodology_profile.experience?.join(", ") || "General fitness background"}
-- **Training Focus**: ${configData.metadata.methodology_profile.focus?.join(" and ") || "Comprehensive fitness"}
-- **Programming Preferences**: ${configData.metadata.methodology_profile.preferences?.join(", ") || "Standard progression"}
-- **Primary System**: ${configData.metadata.methodology_profile.primary || configData.selected_methodology.primary_methodology}
-`
-    : "Apply methodology principles systematically and progressively."
-}
-
-## Technical Specializations
-Your expertise includes: ${configData.technical_config.specializations.join(", ")}
-
-## Programming Focus Areas
-Your primary focus is on: ${configData.technical_config.programming_focus.join(", ")}
-
-## Experience Level Adaptation
-You are coaching a ${configData.technical_config.experience_level} level athlete. Adjust your explanations, expectations, and progressions accordingly.`);
-
-  // 5. Motivation & Encouragement
-  staticPromptSections.push(`# MOTIVATION & ENCOURAGEMENT STRATEGY
-${motivation_prompt}`);
-
-  // 6. Safety & Constraints (Critical Section)
-  staticPromptSections.push(`# SAFETY PROTOCOLS & CONSTRAINTS
-${safety_integrated_prompt}
-
-## Critical Safety Rules
-- NEVER recommend exercises in the contraindicated list: ${configData.technical_config.safety_constraints.contraindicated_exercises.join(", ")}
-- ALWAYS consider required modifications: ${configData.technical_config.safety_constraints.required_modifications.join(", ")}
-- Volume progression must not exceed: ${configData.technical_config.safety_constraints.volume_progression_limit}
-- Monitor these areas closely: ${configData.technical_config.safety_constraints.safety_monitoring.join(", ")}
-
-## Specific Injury Considerations
-${
-  configData.technical_config.injury_considerations?.length
-    ? `Pay special attention to: ${configData.technical_config.injury_considerations.join(", ")}`
-    : "No specific injury history to monitor."
-}
-
-## Enhanced Safety Profile Integration
-${
-  configData.metadata?.safety_profile
-    ? `
-### Environmental Factors
-Consider these environmental factors: ${configData.metadata.safety_profile.environmentalFactors?.join(", ") || "Standard training environment"}
-
-### Learning Considerations
-This athlete learns best through: ${configData.metadata.safety_profile.learningConsiderations?.join(", ") || "Traditional coaching methods"}
-
-### Risk Factors to Monitor
-Pay attention to: ${configData.metadata.safety_profile.riskFactors?.join(", ") || "Standard risk monitoring"}
-
-### Equipment Access
-Available equipment: ${configData.metadata.safety_profile.equipment?.join(", ") || "Basic equipment setup"}
-`
-    : ""
-}
-
-## Recovery Requirements
-${configData.technical_config.safety_constraints.recovery_requirements.join(", ")}`);
-
-  // 7. Detailed User Background (if enabled and available)
+  // 3. Detailed User Background (if enabled and available)
   if (
     includeDetailedBackground &&
     configData.metadata?.coach_creator_session_summary
@@ -225,18 +243,18 @@ ${configData.technical_config.goal_timeline}
 ${configData.technical_config.preferred_intensity}`);
   }
 
-  // 8. Conversation Guidelines (CONDENSED VERSION - if enabled)
+  // 4. Conversation Guidelines (CONDENSED VERSION - if enabled)
   if (includeConversationGuidelines) {
     staticPromptSections.push(generateCondensedConversationGuidelines(configData));
   }
 
-  // 9. Additional Constraints (if any)
+  // 5. Additional Constraints (if any)
   if (additionalConstraints.length > 0) {
     staticPromptSections.push(`# ADDITIONAL CONSTRAINTS
 ${additionalConstraints.map((constraint) => `- ${constraint}`).join("\n")}`);
   }
 
-  // 10. Coach Adaptation Capabilities
+  // 6. Coach Adaptation Capabilities
   if (configData.modification_capabilities) {
     staticPromptSections.push(`# COACH ADAPTATION CAPABILITIES
 Your ability to adapt and modify approaches:
@@ -250,7 +268,7 @@ You can adjust: ${configData.modification_capabilities.enabled_modifications?.jo
 Use these capabilities to better serve the athlete while maintaining your core coaching identity.`);
   }
 
-  // 11. Final Instructions
+  // 7. Final Instructions
   staticPromptSections.push(`# FINAL INSTRUCTIONS
 You are now ready to coach this athlete. Remember:
 - Stay true to your personality: ${configData.selected_personality.primary_template}

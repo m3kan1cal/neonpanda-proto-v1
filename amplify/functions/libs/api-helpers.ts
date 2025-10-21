@@ -12,9 +12,9 @@ import {
   InvokeCommand,
   InvocationType,
 } from "@aws-sdk/client-lambda";
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { Pinecone } from "@pinecone-database/pinecone";
 import { getEnhancedMethodologyContext } from "./pinecone-utils";
+import { putObject } from "./s3-utils";
 
 // Amazon Bedrock Converse API configuration
 const CLAUDE_SONNET_4_MODEL_ID = "us.anthropic.claude-sonnet-4-5-20250929-v1:0";
@@ -49,10 +49,7 @@ const lambdaClient = new LambdaClient({
   region: process.env.AWS_REGION || "us-west-2",
 });
 
-// Create S3 client for debugging logs
-const s3Client = new S3Client({
-  region: process.env.AWS_REGION || "us-west-2",
-});
+// S3 client for debugging logs is now provided by shared s3-utils module
 
 // Pinecone configuration
 const PINECONE_INDEX_NAME = "coach-creator-proto-v1-dev";
@@ -1034,15 +1031,11 @@ export const storeDebugDataInS3 = async (
       content,
     };
 
-    const command = new PutObjectCommand({
-      Bucket: bucketName,
-      Key: key,
-      Body: JSON.stringify(debugData, null, 2),
-      ContentType: "application/json",
-      ServerSideEncryption: "AES256",
+    await putObject(key, JSON.stringify(debugData, null, 2), {
+      bucketName,
+      contentType: "application/json",
+      serverSideEncryption: "AES256",
     });
-
-    await s3Client.send(command);
 
     console.info(`Successfully stored debug data in S3:`, {
       bucket: bucketName,

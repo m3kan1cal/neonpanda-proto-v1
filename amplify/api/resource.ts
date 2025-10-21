@@ -48,6 +48,12 @@ export function createCoreApi(
   checkUserAvailabilityLambda: lambda.IFunction,
   generateUploadUrlsLambda: lambda.IFunction,
   generateDownloadUrlsLambda: lambda.IFunction,
+  createTrainingProgramLambda: lambda.IFunction,
+  getTrainingProgramLambda: lambda.IFunction,
+  getTrainingProgramsLambda: lambda.IFunction,
+  updateTrainingProgramLambda: lambda.IFunction,
+  logWorkoutTemplateLambda: lambda.IFunction,
+  getWorkoutTemplateLambda: lambda.IFunction,
   userPoolAuthorizer: HttpUserPoolAuthorizer
 ) {
   // Create branch-aware API name using utility
@@ -329,6 +335,37 @@ export function createCoreApi(
     checkUserAvailabilityLambda
   );
 
+  // Create Lambda integrations for training program functions
+  const createTrainingProgramIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
+    'CreateTrainingProgramIntegration',
+    createTrainingProgramLambda
+  );
+
+  const getTrainingProgramIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
+    'GetTrainingProgramIntegration',
+    getTrainingProgramLambda
+  );
+
+  const getTrainingProgramsIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
+    'GetTrainingProgramsIntegration',
+    getTrainingProgramsLambda
+  );
+
+  const updateTrainingProgramIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
+    'UpdateTrainingProgramIntegration',
+    updateTrainingProgramLambda
+  );
+
+  const logWorkoutTemplateIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
+    'LogWorkoutTemplateIntegration',
+    logWorkoutTemplateLambda
+  );
+
+  const getWorkoutTemplateIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
+    'GetWorkoutTemplateIntegration',
+    getWorkoutTemplateLambda
+  );
+
   // Create integrations object for route configuration
   const integrations = {
     contactForm: contactFormIntegration,
@@ -370,7 +407,13 @@ export function createCoreApi(
     updateUserProfile: updateUserProfileIntegration,
     checkUserAvailability: checkUserAvailabilityIntegration,
     generateUploadUrls: generateUploadUrlsIntegration,
-    generateDownloadUrls: generateDownloadUrlsIntegration
+    generateDownloadUrls: generateDownloadUrlsIntegration,
+    createTrainingProgram: createTrainingProgramIntegration,
+    getTrainingProgram: getTrainingProgramIntegration,
+    getTrainingPrograms: getTrainingProgramsIntegration,
+    updateTrainingProgram: updateTrainingProgramIntegration,
+    logWorkoutTemplate: logWorkoutTemplateIntegration,
+    getWorkoutTemplate: getWorkoutTemplateIntegration
   };
 
   // *******************************************************
@@ -444,6 +487,59 @@ export function createCoreApi(
     path: '/users/{userId}/workouts/count',
     methods: [apigatewayv2.HttpMethod.GET],
     integration: integrations.getWorkoutsCount,
+    authorizer: userPoolAuthorizer
+  });
+
+  // Training Program Routes (PROTECTED)
+  httpApi.addRoutes({
+    path: '/users/{userId}/coaches/{coachId}/programs',
+    methods: [apigatewayv2.HttpMethod.POST],
+    integration: integrations.createTrainingProgram,
+    authorizer: userPoolAuthorizer
+  });
+
+  httpApi.addRoutes({
+    path: '/users/{userId}/coaches/{coachId}/programs',
+    methods: [apigatewayv2.HttpMethod.GET],
+    integration: integrations.getTrainingPrograms,
+    authorizer: userPoolAuthorizer
+  });
+
+  httpApi.addRoutes({
+    path: '/users/{userId}/coaches/{coachId}/programs/{programId}',
+    methods: [apigatewayv2.HttpMethod.GET],
+    integration: integrations.getTrainingProgram,
+    authorizer: userPoolAuthorizer
+  });
+
+  httpApi.addRoutes({
+    path: '/users/{userId}/coaches/{coachId}/programs/{programId}',
+    methods: [apigatewayv2.HttpMethod.PUT],
+    integration: integrations.updateTrainingProgram,
+    authorizer: userPoolAuthorizer
+  });
+
+  // Log workout template (convert template to logged workout)
+  httpApi.addRoutes({
+    path: '/users/{userId}/coaches/{coachId}/programs/{programId}/templates/{templateId}/log',
+    methods: [apigatewayv2.HttpMethod.POST],
+    integration: integrations.logWorkoutTemplate,
+    authorizer: userPoolAuthorizer
+  });
+
+  // Get workout template(s) - supports query params: ?today=true, ?day=N
+  httpApi.addRoutes({
+    path: '/users/{userId}/coaches/{coachId}/programs/{programId}/templates',
+    methods: [apigatewayv2.HttpMethod.GET],
+    integration: integrations.getWorkoutTemplate,
+    authorizer: userPoolAuthorizer
+  });
+
+  // Get specific workout template by ID
+  httpApi.addRoutes({
+    path: '/users/{userId}/coaches/{coachId}/programs/{programId}/templates/{templateId}',
+    methods: [apigatewayv2.HttpMethod.GET],
+    integration: integrations.getWorkoutTemplate,
     authorizer: userPoolAuthorizer
   });
 

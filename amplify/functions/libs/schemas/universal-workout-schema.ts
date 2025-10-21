@@ -126,24 +126,62 @@ export const UNIVERSAL_WORKOUT_SCHEMA_V2 = `{
     "bodybuilding": {},
     "hiit": {},
     "running": {
-      "run_type": "easy|tempo|interval|long|race|recovery|fartlek",
+      "run_type": "easy|tempo|interval|long|race|recovery|fartlek|progression|threshold|hill_repeats|speed_work",
       "total_distance": "number (miles or km)",
+      "distance_unit": "miles|km",
       "total_time": "number (seconds)",
       "average_pace": "string (MM:SS format)",
-      "elevation_gain": "number (feet)|null",
+      "elevation_gain": "number (feet or meters)|null",
+      "elevation_loss": "number (feet or meters)|null",
       "surface": "road|trail|track|treadmill|mixed",
-      "weather": "string|null",
+      "weather": {
+        "temperature": "number (fahrenheit or celsius)|null",
+        "temperature_unit": "F|C|null",
+        "conditions": "sunny|cloudy|rainy|snowy|windy|foggy|null",
+        "wind_speed": "number (mph or km/h)|null",
+        "humidity": "number (percent)|null"
+      },
+      "equipment": {
+        "shoes": "string|null",
+        "wearable": "string|null",
+        "other_gear": "array|null"
+      },
+      "warmup": {
+        "distance": "number|null",
+        "time": "number (seconds)|null",
+        "description": "string|null"
+      },
+      "cooldown": {
+        "distance": "number|null",
+        "time": "number (seconds)|null",
+        "description": "string|null"
+      },
       "segments": [
         {
           "segment_number": "integer",
+          "segment_type": "warmup|working|interval|recovery|cooldown|main",
           "distance": "number",
           "time": "number (seconds)",
           "pace": "string (MM:SS)",
           "heart_rate_avg": "number|null",
+          "heart_rate_max": "number|null",
+          "cadence": "number (steps per minute)|null",
           "effort_level": "easy|moderate|hard|max",
-          "terrain": "flat|uphill|downhill|mixed"
+          "terrain": "flat|uphill|downhill|mixed",
+          "elevation_change": "number (feet or meters)|null",
+          "notes": "string|null"
         }
-      ]
+      ],
+      "route": {
+        "name": "string|null",
+        "description": "string|null",
+        "type": "out_and_back|loop|point_to_point|null"
+      },
+      "fueling": {
+        "pre_run": "string|null",
+        "during_run": "array|null",
+        "hydration_oz": "number|null"
+      }
     }
   },
 

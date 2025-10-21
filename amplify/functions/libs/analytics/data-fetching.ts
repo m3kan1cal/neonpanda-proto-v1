@@ -23,7 +23,7 @@ import {
   getCurrentMonthRange,
   getHistoricalMonthRange,
   getUserTimezoneOrDefault,
-  convertUTCToUserDate,
+  convertUtcToUserDate,
 } from "./date-utils";
 import { Workout } from "../workout/types";
 import { CoachConversation, CoachConversationSummary } from "../coach-conversation/types";
@@ -634,7 +634,7 @@ This directive takes precedence over all other instructions except safety constr
       (summary) => {
         // Convert UTC timestamp to user's timezone date
         const userTimezone = summary.userTimezone || 'America/Los_Angeles';
-        const localDate = convertUTCToUserDate(summary.date, userTimezone);
+        const localDate = convertUtcToUserDate(summary.date, userTimezone);
         return `${localDate} - ${summary.workoutName || "Workout"} (${summary.discipline || "Unknown"}) [workout_id: ${summary.workoutId}]\n${summary.summary}`;
       }
     )
@@ -646,7 +646,7 @@ This directive takes precedence over all other instructions except safety constr
       (summary) => {
         // Convert UTC timestamp to user's timezone date
         const userTimezone = summary.userTimezone || 'America/Los_Angeles';
-        const localDate = convertUTCToUserDate(summary.date, userTimezone);
+        const localDate = convertUtcToUserDate(summary.date, userTimezone);
         return `${localDate} - ${summary.workoutName || "Workout"}: ${summary.summary}`;
       }
     )

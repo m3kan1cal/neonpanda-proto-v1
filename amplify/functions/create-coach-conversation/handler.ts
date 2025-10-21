@@ -8,7 +8,7 @@ import {
   getCoachConfig,
   saveCoachConfig,
 } from "../../dynamodb/operations";
-import { CoachConversation } from "../libs/coach-conversation/types";
+import { CoachConversation, CONVERSATION_MODES } from "../libs/coach-conversation/types";
 import { withAuth, AuthenticatedHandler } from "../libs/auth/middleware";
 
 const baseHandler: AuthenticatedHandler = async (event) => {
@@ -25,7 +25,10 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     }
 
     const body = JSON.parse(event.body);
-    const { title, initialMessage } = body;
+    const { title, initialMessage, mode } = body;
+
+    // Validate mode if provided
+    const conversationMode = mode === CONVERSATION_MODES.BUILD ? CONVERSATION_MODES.BUILD : CONVERSATION_MODES.CHAT;
 
     // Generate unique conversation ID
     const conversationId = `conv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -35,14 +38,15 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       conversationId,
       coachId,
       userId,
-      title: title || "New Conversation",
+      title: title || (conversationMode === CONVERSATION_MODES.BUILD ? "New Training Program" : "New Conversation"),
+      mode: conversationMode,
       messages: [],
       metadata: {
         startedAt: new Date(),
         lastActivity: new Date(),
         totalMessages: 0,
         isActive: true,
-        tags: [],
+        tags: conversationMode === CONVERSATION_MODES.BUILD ? ['program_creation'] : [],
       },
     };
 
