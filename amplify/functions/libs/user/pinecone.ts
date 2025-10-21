@@ -4,6 +4,7 @@
  */
 
 import { storePineconeContext, deletePineconeContext } from "../api-helpers";
+import { filterNullish } from "../object-utils";
 import { UserMemory } from "../memory/types";
 
 /**
@@ -23,27 +24,31 @@ export const storeMemoryInPinecone = async (
       contentLength: memory.content.length,
     });
 
-    const metadata = {
+    const baseMetadata = {
       recordType: "user_memory",
       memoryId: memory.memoryId,
       memoryType: memory.memoryType,
       importance: memory.metadata.importance,
-      // Only include coachId if it has a value (Pinecone rejects null/undefined)
-      ...(memory.coachId && { coachId: memory.coachId }),
       createdAt: memory.metadata.createdAt.toISOString(),
       usageCount: memory.metadata.usageCount,
       tags: memory.metadata.tags || [],
-
-      // Additional semantic search categories for better matching
       topics: [
         `memory_${memory.memoryType}`,
         "user_context",
         "personalization",
       ],
-
-      // Add context for retrieval
-      isGlobal: !memory.coachId || memory.coachId === null, // True if memory applies to all coaches
+      isGlobal: !memory.coachId || memory.coachId === null,
       loggedAt: new Date().toISOString(),
+    };
+
+    // Optional fields that may be null/undefined
+    const optionalFields = filterNullish({
+      coachId: memory.coachId,
+    });
+
+    const metadata = {
+      ...baseMetadata,
+      ...optionalFields
     };
 
     // Enhance searchable content by including tags for better semantic matching

@@ -29,6 +29,22 @@ export interface CoachMessage {
 }
 
 /**
+ * Conversation mode types
+ * - 'chat': Standard coaching conversation (default)
+ * - 'build': Training program creation mode with structured generation
+ */
+export type ConversationMode = 'chat' | 'build';
+
+/**
+ * Conversation mode constants
+ * Use these instead of string literals to ensure type safety and consistency
+ */
+export const CONVERSATION_MODES = {
+  CHAT: 'chat' as const,
+  BUILD: 'build' as const,
+} satisfies Record<string, ConversationMode>;
+
+/**
  * Complete coach conversation with full message history
  */
 export interface CoachConversation {
@@ -36,6 +52,7 @@ export interface CoachConversation {
   coachId: string;
   userId: string;
   title?: string;
+  mode?: ConversationMode; // NEW: Determines conversation behavior and prompts (defaults to 'chat' for backwards compatibility)
   messages: CoachMessage[];
   metadata: {
     startedAt: Date;
@@ -54,6 +71,7 @@ export interface CoachConversationListItem {
   coachId: string;
   userId: string;
   title?: string;
+  mode?: ConversationMode; // Optional for backwards compatibility
   metadata: {
     startedAt: Date;
     lastActivity: Date;
@@ -176,6 +194,7 @@ export interface PromptGenerationOptions {
     enabled: boolean;
   };
   userTimezone?: string; // User's timezone for temporal context (e.g., 'America/Los_Angeles')
+  mode?: ConversationMode; // NEW: Conversation mode for specialized prompts
 }
 
 /**

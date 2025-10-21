@@ -1,17 +1,10 @@
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { nanoid } from 'nanoid';
 import {
   createOkResponse,
   createErrorResponse,
 } from '../libs/api-helpers';
 import { withAuth, AuthenticatedHandler } from '../libs/auth/middleware';
-
-const s3Client = new S3Client({
-  region: process.env.AWS_REGION || 'us-west-2',
-});
-
-const BUCKET_NAME = process.env.APPS_BUCKET_NAME;
+import { generatePresignedPutUrl, getBucketName } from '../libs/s3-utils';
 
 const baseHandler: AuthenticatedHandler = async (event) => {
   console.info('🖼️ Starting presigned URL generation', {
@@ -44,7 +37,10 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     return createErrorResponse(400, 'File types array must match file count');
   }
 
-  if (!BUCKET_NAME) {
+  try {
+    // Validate bucket is configured
+    getBucketName();
+  } catch (error) {
     console.error('❌ APPS_BUCKET_NAME environment variable not set');
     return createErrorResponse(500, 'Server configuration error');
   }
@@ -66,13 +62,8 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     const s3Key = `user-uploads/${userId}/${nanoid()}.${extension}`;
 
     // Create presigned URL (expires in 5 minutes)
-    const command = new PutObjectCommand({
-      Bucket: BUCKET_NAME,
-      Key: s3Key,
-      ContentType: `image/${extension === 'jpg' ? 'jpeg' : extension}`,
-    });
-
-    const uploadUrl = await getSignedUrl(s3Client, command, {
+    const uploadUrl = await generatePresignedPutUrl(s3Key, {
+      contentType: `image/${extension === 'jpg' ? 'jpeg' : extension}`,
       expiresIn: 300,
     });
 

@@ -28,6 +28,11 @@ import { detectAndProcessConversationSummary, analyzeRequestCapabilities } from 
 import { generateAIResponseStream } from "../libs/coach-conversation/response-orchestrator";
 import { generateContextualUpdate, categorizeUserMessage } from "../libs/coach-conversation/contextual-updates";
 import { analyzeMemoryNeeds } from "../libs/memory/detection";
+import {
+  detectAndPrepareForTrainingProgramGeneration,
+  generateTrainingProgramFromConversation
+} from "../libs/training-program/program-generator";
+import { CONVERSATION_MODES } from "../libs/coach-conversation/types";
 
 // Import auth middleware (consolidated)
 import {
@@ -761,7 +766,8 @@ async function* processCoachConversationAsync(
       params.conversationId,
       conversationData.userProfile,
       params.imageS3Keys, // Pass imageS3Keys
-      routerAnalysis.conversationComplexity.requiresDeepReasoning // NEW: Smart model selection
+      routerAnalysis.conversationComplexity.requiresDeepReasoning, // NEW: Smart model selection
+      conversationData.existingConversation.attributes.mode || CONVERSATION_MODES.CHAT // NEW: Conversation mode (defaults to chat for backwards compatibility)
     );
 
     // Yield AI response chunks using optimized buffering strategy
@@ -798,6 +804,65 @@ async function* processCoachConversationAsync(
     fullAiResponse = `I'll remember this.\n\n${fullAiResponse}`;
   }
 
+  // NEW: Check if this is a Build mode conversation with training program generation trigger
+  let generatedTrainingProgram: { programId: string; program: any } | null = null;
+  const conversationMode = conversationData.existingConversation.attributes.mode || CONVERSATION_MODES.CHAT; // Default to chat for backwards compatibility
+
+  if (conversationMode === CONVERSATION_MODES.BUILD) {
+    const generationDetection = detectAndPrepareForTrainingProgramGeneration(fullAiResponse);
+
+    if (generationDetection.shouldGenerate) {
+      console.info('🏗️ Training program generation trigger detected in Build mode conversation');
+
+      // Remove trigger from the response
+      fullAiResponse = generationDetection.cleanedResponse;
+
+      // Yield contextual event about training program generation starting
+      yield formatContextualEvent(
+        '\n\n---\n\n🎯 **Generating your training program...**\n\nCreating detailed workout templates for each day...',
+        'training_program_generation_start'
+      );
+
+      try {
+        // Generate the training program (this may take 10-30 seconds)
+        generatedTrainingProgram = await generateTrainingProgramFromConversation(
+          conversationData.existingConversation.attributes.messages,
+          params.userId,
+          params.coachId,
+          params.conversationId
+        );
+
+        console.info('✅ Training program generated successfully:', {
+          programId: generatedTrainingProgram.programId,
+          name: generatedTrainingProgram.program.name,
+        });
+
+        // Yield success event with training program details
+        const successMessage = `\n\n✅ **Training Program Created!**\n\n` +
+          `**${generatedTrainingProgram.program.name}**\n` +
+          `Duration: ${generatedTrainingProgram.program.totalDays} days\n` +
+          `Phases: ${generatedTrainingProgram.program.phases.length}\n` +
+          `Workouts: ${generatedTrainingProgram.program.totalWorkouts}\n\n` +
+          `Your training program is ready! You can start Day 1 anytime.`;
+
+        yield formatContextualEvent(successMessage, 'training_program_generation_complete');
+
+        // Add training program info to AI response
+        fullAiResponse += successMessage;
+
+      } catch (error) {
+        console.error('❌ Training program generation failed:', error);
+
+        const errorMessage = `\n\n⚠️ **Training Program Generation Error**\n\n` +
+          `I apologize, but I encountered an error while creating your training program. ` +
+          `Let's refine the details and try again.`;
+
+        yield formatContextualEvent(errorMessage, 'training_program_generation_error');
+        fullAiResponse += errorMessage;
+      }
+    }
+  }
+
   // Create final AI message with complete response
   const newAiMessage: CoachMessage = {
     id: `msg_${Date.now()}_assistant`,
@@ -806,6 +871,7 @@ async function* processCoachConversationAsync(
     timestamp: new Date(),
     metadata: {
       model: MODEL_IDS.CLAUDE_SONNET_4_DISPLAY,
+      ...(generatedTrainingProgram && { generatedProgramId: generatedTrainingProgram.programId }),
     },
   };
 

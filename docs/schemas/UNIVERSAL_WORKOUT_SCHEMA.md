@@ -493,7 +493,14 @@ HIIT requires interval-specific tracking with fatigue and recovery analysis.
 
 ### Running Schema
 
-Running requires segment-based tracking for pace analysis and training type classification.
+Running requires segment-based tracking for pace analysis and training type classification, with enhanced support for environmental conditions, equipment tracking, and detailed route information.
+
+#### Design Philosophy
+- **Run Type Classification**: Automatically categorize run types (tempo, interval, long run, etc.)
+- **Pace & Performance Tracking**: Segment-based pace analysis with heart rate zones
+- **Environmental Context**: Weather conditions, temperature, and terrain tracking
+- **Equipment & Fueling**: Track shoes, wearables, and nutrition/hydration
+- **Route Information**: Named routes with elevation profiles
 
 ```json
 {
@@ -501,25 +508,140 @@ Running requires segment-based tracking for pace analysis and training type clas
     "running": {
       "run_type": "tempo",
       "total_distance": 5.2,
+      "distance_unit": "miles",
       "total_time": 2280,
       "average_pace": "7:18",
       "elevation_gain": 245,
+      "elevation_loss": 180,
       "surface": "road",
-      "weather": "clear_65f",
+      "weather": {
+        "temperature": 65,
+        "temperature_unit": "F",
+        "conditions": "sunny",
+        "wind_speed": 8,
+        "humidity": 45
+      },
+      "equipment": {
+        "shoes": "Nike Pegasus 40",
+        "wearable": "Garmin Forerunner 255",
+        "other_gear": ["running belt", "sunglasses"]
+      },
+      "warmup": {
+        "distance": 0.5,
+        "time": 300,
+        "description": "Easy jog to loosen up"
+      },
+      "cooldown": {
+        "distance": 0.3,
+        "time": 180,
+        "description": "Walking recovery"
+      },
       "segments": [
         {
           "segment_number": 1,
+          "segment_type": "warmup",
           "distance": 1.0,
           "time": 480,
           "pace": "8:00",
           "heart_rate_avg": 145,
+          "heart_rate_max": 155,
+          "cadence": 172,
           "effort_level": "easy",
-          "terrain": "flat"
+          "terrain": "flat",
+          "elevation_change": 20,
+          "notes": "Felt good starting out"
+        },
+        {
+          "segment_number": 2,
+          "segment_type": "working",
+          "distance": 3.0,
+          "time": 1320,
+          "pace": "7:20",
+          "heart_rate_avg": 165,
+          "heart_rate_max": 172,
+          "cadence": 180,
+          "effort_level": "hard",
+          "terrain": "mixed",
+          "elevation_change": 150,
+          "notes": "Tempo effort, maintained threshold pace"
+        },
+        {
+          "segment_number": 3,
+          "segment_type": "cooldown",
+          "distance": 1.2,
+          "time": 480,
+          "pace": "8:00",
+          "heart_rate_avg": 140,
+          "heart_rate_max": 150,
+          "cadence": 168,
+          "effort_level": "easy",
+          "terrain": "flat",
+          "elevation_change": -40,
+          "notes": "Gradual recovery"
         }
-      ]
+      ],
+      "route": {
+        "name": "River Trail Loop",
+        "description": "Scenic riverside path with rolling hills",
+        "type": "loop"
+      },
+      "fueling": {
+        "pre_run": "Banana and coffee 45min before",
+        "during_run": ["water", "energy gel at mile 3"],
+        "hydration_oz": 16
+      }
     }
   }
 }
+```
+
+#### AI Extraction Patterns for Running
+
+**Run Type Identification**
+```
+Input: "did a tempo run this morning"
+Processing: Recognize training intensity type
+Output: run_type: "tempo", effort_level: "hard"
+
+Input: "easy recovery run, 3 miles"
+Processing: Identify recovery session
+Output: run_type: "recovery", effort_level: "easy"
+```
+
+**Pace and Distance Extraction**
+```
+Input: "ran 5 miles in 40 minutes, averaged 8 minute pace"
+Processing: Extract distance, time, calculate pace
+Output: total_distance: 5, total_time: 2400, average_pace: "8:00"
+
+Input: "10K in 52 minutes"
+Processing: Convert distance units and extract time
+Output: total_distance: 10, distance_unit: "km", total_time: 3120
+```
+
+**Weather and Environmental Conditions**
+```
+Input: "beautiful 65 degree morning, sunny and calm"
+Processing: Extract weather details
+Output: weather: {temperature: 65, temperature_unit: "F", conditions: "sunny"}
+
+Input: "tough run in the heat, 85 degrees with high humidity"
+Processing: Identify challenging conditions
+Output: weather: {temperature: 85, temperature_unit: "F", humidity: 75}
+```
+
+**Segment-Based Analysis**
+```
+Input: "warmed up for a mile, then did 3 miles at tempo pace, cooled down for half mile"
+Processing: Break into segments with different effort levels
+Output: segments: [warmup segment, tempo segment, cooldown segment]
+```
+
+**Equipment and Route Recognition**
+```
+Input: "tested out my new Pegasus shoes on the River Trail"
+Processing: Extract gear and route info
+Output: equipment: {shoes: "Pegasus"}, route: {name: "River Trail"}
 ```
 
 ---

@@ -50,6 +50,15 @@ export interface Workout {
   summary?: string;
   // Root-level workout name for easier access
   workoutName?: string;
+  // NEW: Training program context when workout is logged from a program template
+  trainingProgramContext?: {
+    programId: string;
+    coachId: string;
+    templateId: string;
+    dayNumber: number;
+    phaseId: string;
+    phaseName: string;
+  };
 }
 
 /**
@@ -186,7 +195,62 @@ export interface PowerliftingWorkout {
 }
 
 export interface RunningWorkout {
-  [key: string]: any; // Placeholder
+  run_type: "easy" | "tempo" | "interval" | "long" | "race" | "recovery" | "fartlek" | "progression" | "threshold" | "hill_repeats" | "speed_work";
+  total_distance: number;
+  distance_unit: "miles" | "km";
+  total_time: number;
+  average_pace: string;
+  elevation_gain?: number;
+  elevation_loss?: number;
+  surface: "road" | "trail" | "track" | "treadmill" | "mixed";
+  weather?: {
+    temperature?: number;
+    temperature_unit?: "F" | "C";
+    conditions?: "sunny" | "cloudy" | "rainy" | "snowy" | "windy" | "foggy";
+    wind_speed?: number;
+    humidity?: number;
+  };
+  equipment?: {
+    shoes?: string;
+    wearable?: string;
+    other_gear?: string[];
+  };
+  warmup?: {
+    distance?: number;
+    time?: number;
+    description?: string;
+  };
+  cooldown?: {
+    distance?: number;
+    time?: number;
+    description?: string;
+  };
+  segments?: RunningSegment[];
+  route?: {
+    name?: string;
+    description?: string;
+    type?: "out_and_back" | "loop" | "point_to_point";
+  };
+  fueling?: {
+    pre_run?: string;
+    during_run?: string[];
+    hydration_oz?: number;
+  };
+}
+
+export interface RunningSegment {
+  segment_number: number;
+  segment_type: "warmup" | "working" | "interval" | "recovery" | "cooldown" | "main";
+  distance: number;
+  time: number;
+  pace: string;
+  heart_rate_avg?: number;
+  heart_rate_max?: number;
+  cadence?: number;
+  effort_level: "easy" | "moderate" | "hard" | "max";
+  terrain: "flat" | "uphill" | "downhill" | "mixed";
+  elevation_change?: number;
+  notes?: string;
 }
 
 export interface BodybuildingWorkout {

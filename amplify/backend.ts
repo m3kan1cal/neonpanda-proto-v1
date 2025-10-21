@@ -59,6 +59,12 @@ import { updateUserProfile } from "./functions/update-user-profile/resource";
 import { checkUserAvailability } from "./functions/check-user-availability/resource";
 import { generateUploadUrls } from "./functions/generate-upload-urls/resource";
 import { generateDownloadUrls } from "./functions/generate-download-urls/resource";
+import { createTrainingProgram } from "./functions/create-training-program/resource";
+import { getTrainingProgram } from "./functions/get-training-program/resource";
+import { getTrainingPrograms } from "./functions/get-training-programs/resource";
+import { updateTrainingProgram } from "./functions/update-training-program/resource";
+import { logWorkoutTemplate } from "./functions/log-workout-template/resource";
+import { getWorkoutTemplate } from "./functions/get-workout-template/resource";
 import { apiGatewayv2 } from "./api/resource";
 import { dynamodbTable } from "./dynamodb/resource";
 import { createAppsBucket } from "./storage/resource";
@@ -123,6 +129,12 @@ const backend = defineBackend({
   generateUploadUrls,
   generateDownloadUrls,
   syncLogSubscriptions,
+  createTrainingProgram,
+  getTrainingProgram,
+  getTrainingPrograms,
+  updateTrainingProgram,
+  logWorkoutTemplate,
+  getWorkoutTemplate,
 });
 
 // Create User Pool authorizer
@@ -177,6 +189,12 @@ const coreApi = apiGatewayv2.createCoreApi(
   backend.checkUserAvailability.resources.lambda,
   backend.generateUploadUrls.resources.lambda,
   backend.generateDownloadUrls.resources.lambda,
+  backend.createTrainingProgram.resources.lambda,
+  backend.getTrainingProgram.resources.lambda,
+  backend.getTrainingPrograms.resources.lambda,
+  backend.updateTrainingProgram.resources.lambda,
+  backend.logWorkoutTemplate.resources.lambda,
+  backend.getWorkoutTemplate.resources.lambda,
   userPoolAuthorizer
 );
 
@@ -247,6 +265,9 @@ const sharedPolicies = new SharedPolicies(
   backend.createMemory,
   backend.deleteMemory,
   backend.updateUserProfile,
+  backend.createTrainingProgram,
+  backend.updateTrainingProgram,
+  backend.logWorkoutTemplate,
   // NOTE: postConfirmation excluded to avoid circular dependency with auth stack
 ].forEach(func => {
   sharedPolicies.attachDynamoDbReadWrite(func.resources.lambda);
@@ -270,6 +291,9 @@ const sharedPolicies = new SharedPolicies(
   backend.checkUserAvailability,
   backend.generateUploadUrls,
   backend.generateDownloadUrls,
+  backend.getTrainingProgram,
+  backend.getTrainingPrograms,
+  backend.getWorkoutTemplate,
 ].forEach(func => {
   sharedPolicies.attachDynamoDbReadOnly(func.resources.lambda);
 });
@@ -306,7 +330,7 @@ const sharedPolicies = new SharedPolicies(
 sharedPolicies.attachS3AnalyticsAccess(backend.buildWeeklyAnalytics.resources.lambda);
 sharedPolicies.attachS3AnalyticsAccess(backend.buildMonthlyAnalytics.resources.lambda);
 
-// Functions needing S3 APPS bucket access (for image storage)
+// Functions needing S3 APPS bucket access (for image storage and training programs)
 [
   backend.generateUploadUrls,
   backend.generateDownloadUrls,
@@ -314,6 +338,10 @@ sharedPolicies.attachS3AnalyticsAccess(backend.buildMonthlyAnalytics.resources.l
   backend.streamCoachConversation,
   backend.streamCoachCreatorSession,
   backend.updateCoachCreatorSession,
+  backend.createTrainingProgram,
+  backend.getTrainingProgram,
+  backend.logWorkoutTemplate,
+  backend.getWorkoutTemplate,
 ].forEach(func => {
   sharedPolicies.attachS3AppsAccess(func.resources.lambda);
 });

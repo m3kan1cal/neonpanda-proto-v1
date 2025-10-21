@@ -8,19 +8,13 @@
  * - Stream selection (text-only vs multimodal)
  */
 
-import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
+import { getObjectAsUint8Array } from '../s3-utils';
 import {
   callBedrockApiStream,
   callBedrockApiMultimodalStream,
   MODEL_IDS,
   BedrockApiOptions,
 } from "../api-helpers";
-
-const s3Client = new S3Client({
-  region: process.env.AWS_REGION || 'us-west-2',
-});
-
-const BUCKET_NAME = process.env.APPS_BUCKET_NAME;
 
 /**
  * Message object structure for multimodal content
@@ -47,20 +41,7 @@ export interface MultimodalMessage {
  */
 export async function fetchImageFromS3(s3Key: string): Promise<Uint8Array | null> {
   try {
-    const command = new GetObjectCommand({
-      Bucket: BUCKET_NAME,
-      Key: s3Key,
-    });
-
-    const response = await s3Client.send(command);
-    const chunks: Uint8Array[] = [];
-
-    for await (const chunk of response.Body as any) {
-      chunks.push(chunk);
-    }
-
-    const buffer = Buffer.concat(chunks);
-    return new Uint8Array(buffer);
+    return await getObjectAsUint8Array(s3Key);
   } catch (error) {
     console.error(`❌ Failed to fetch image ${s3Key}:`, error);
     return null;

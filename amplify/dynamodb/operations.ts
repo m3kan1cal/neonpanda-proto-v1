@@ -10,6 +10,7 @@ import {
   withThroughputScaling
 } from "./throughput-scaling";
 import { getTableName } from "../functions/libs/branch-naming";
+import { deepMerge } from "../functions/libs/object-utils";
 import {
   CoachCreatorSession,
   DynamoDBItem,
@@ -28,6 +29,7 @@ import { UserProfile } from "../functions/libs/user/types";
 import { UserMemory } from "../functions/libs/memory/types";
 import { Workout } from "../functions/libs/workout/types";
 import { WeeklyAnalytics, MonthlyAnalytics } from "../functions/libs/analytics/types";
+import { TrainingProgram, TrainingProgramSummary } from "../functions/libs/training-program/types";
 
 // DynamoDB client setup
 const dynamoDbClient = new DynamoDBClient({});
@@ -74,7 +76,10 @@ export interface DynamoDBSaveResult {
 }
 
 // Generic function to save any item to DynamoDB
-export async function saveToDynamoDB<T>(item: DynamoDBItem<T>): Promise<DynamoDBSaveResult> {
+export async function saveToDynamoDB<T>(
+  item: DynamoDBItem<T>,
+  requireExists: boolean = false
+): Promise<DynamoDBSaveResult> {
   const tableName = getTableName();
   const operationName = `Save ${item.entityType} to DynamoDB`;
 
@@ -102,6 +107,9 @@ export async function saveToDynamoDB<T>(item: DynamoDBItem<T>): Promise<DynamoDB
       const command = new PutCommand({
         TableName: tableName,
         Item: serializedItem,
+        // For updates: ensure item exists before updating (prevents race conditions and accidental recreation)
+        // For creates: no condition needed (default behavior)
+        ...(requireExists && { ConditionExpression: "attribute_exists(pk)" }),
       });
 
       const putResult = await docClient.send(command);
@@ -142,9 +150,12 @@ export async function saveToDynamoDB<T>(item: DynamoDBItem<T>): Promise<DynamoDB
 }
 
 // Enhanced save function that explicitly checks the result and provides detailed error info
-export async function saveToDynamoDBWithResult<T>(item: DynamoDBItem<T>): Promise<DynamoDBSaveResult> {
+export async function saveToDynamoDBWithResult<T>(
+  item: DynamoDBItem<T>,
+  requireExists: boolean = false
+): Promise<DynamoDBSaveResult> {
   try {
-    const result = await saveToDynamoDB(item);
+    const result = await saveToDynamoDB(item, requireExists);
 
     // Explicit success verification
     if (!result.success) {
@@ -378,7 +389,7 @@ export async function updateCoachConfig(
     updatedAt: new Date().toISOString(),
   };
 
-  await saveToDynamoDB(updatedItem);
+  await saveToDynamoDB(updatedItem, true /* requireExists */);
 
   console.info("Coach config updated successfully:", {
     coachId,
@@ -414,39 +425,8 @@ export async function saveCoachCreatorSession(
 // HELPER FUNCTIONS
 // ===========================
 
-/**
- * Deep merge utility function for safely merging partial updates into existing objects.
- * This prevents accidental data loss when updating nested properties.
- *
- * @param target - The existing object to merge into
- * @param source - The partial update object to merge from
- * @returns A new object with deep-merged properties
- *
- * Behavior:
- * - Nested objects are recursively merged
- * - Arrays are replaced (not merged)
- * - Date objects are replaced (not merged)
- * - Primitives are replaced
- * - Missing target properties are initialized as empty objects
- */
-function deepMerge(target: any, source: any): any {
-  const result = { ...target };
-  for (const key in source) {
-    if (
-      source[key] &&
-      typeof source[key] === "object" &&
-      !Array.isArray(source[key]) &&
-      !(source[key] instanceof Date)
-    ) {
-      // Recursively merge nested objects
-      result[key] = deepMerge(target[key] || {}, source[key]);
-    } else {
-      // Direct assignment for primitives, arrays, and dates
-      result[key] = source[key];
-    }
-  }
-  return result;
-}
+// Note: deepMerge is now imported from shared object-utils.ts
+// It's used throughout this file for safe nested object merging
 
 // Generic helper function to recursively convert all Date objects to ISO strings and remove undefined values for DynamoDB storage
 function serializeForDynamoDB(obj: any): any {
@@ -1033,7 +1013,7 @@ export async function updateCoachConversation(
     updatedAt: new Date().toISOString(),
   };
 
-  await saveToDynamoDB(updatedItem);
+  await saveToDynamoDB(updatedItem, true /* requireExists */);
 
   return updatedConversation;
 }
@@ -1472,7 +1452,7 @@ export async function updateWorkout(
     newConfidence: updatedSession.extractionMetadata.confidence,
   });
 
-  await saveToDynamoDB(updatedItem);
+  await saveToDynamoDB(updatedItem, true /* requireExists */);
 
   console.info("Successfully updated workout in DynamoDB");
 
@@ -1625,7 +1605,7 @@ export async function saveUserProfile(userProfile: UserProfile): Promise<void> {
   );
 
   // Add GSI keys for email and username lookups
-  const itemWithGSI = {
+  const itemWithGsi = {
     ...item,
     gsi1pk: `email#${userProfile.email}`,
     gsi1sk: "profile",
@@ -1633,7 +1613,7 @@ export async function saveUserProfile(userProfile: UserProfile): Promise<void> {
     gsi2sk: "profile",
   };
 
-  await saveToDynamoDB(itemWithGSI);
+  await saveToDynamoDB(itemWithGsi);
   console.info("User profile saved successfully:", {
     userId: userProfile.userId,
     email: userProfile.email,
@@ -1776,7 +1756,7 @@ export async function updateUserProfile(
     gsi2pk: `username#${updatedProfile.username}`,
   };
 
-  await saveToDynamoDB(updatedItem);
+  await saveToDynamoDB(updatedItem, true /* requireExists */);
 
   console.info("User profile updated successfully:", {
     userId,
@@ -1999,7 +1979,7 @@ export async function updateMemory(
   memory.updatedAt = new Date().toISOString();
 
   // Update DynamoDB
-  await saveToDynamoDB(memory);
+  await saveToDynamoDB(memory, true /* requireExists */);
 
   // Update Pinecone with new tags if usage context provided
   if (usageContext) {
@@ -2525,6 +2505,352 @@ export async function createCoachConfigFromTemplate(
     return newCoachConfig;
   } catch (error) {
     console.error("Error creating coach config from template:", error);
+    throw error;
+  }
+}
+
+// ===========================
+// TRAINING PROGRAM OPERATIONS
+// ===========================
+
+/**
+ * Save a training program to DynamoDB
+ */
+export async function saveTrainingProgram(
+  program: TrainingProgram
+): Promise<void> {
+  const item = createDynamoDBItem<TrainingProgram>(
+    "trainingProgram",
+    `user#${program.userId}#coach#${program.coachId}`,
+    `program#${program.programId}`,
+    program,
+    new Date().toISOString()
+  );
+
+  // Add GSI-1 for querying all programs for a user across coaches
+  const itemWithGsi = {
+    ...item,
+    gsi1pk: `user#${program.userId}`,
+    gsi1sk: `program#${program.programId}`,
+  };
+
+  await saveToDynamoDB(itemWithGsi);
+
+  console.info("Training program saved successfully:", {
+    programId: program.programId,
+    userId: program.userId,
+    coachId: program.coachId,
+    name: program.name,
+    status: program.status,
+    totalDays: program.totalDays,
+    currentDay: program.currentDay,
+  });
+}
+
+/**
+ * Get a specific training program
+ */
+export async function getTrainingProgram(
+  userId: string,
+  coachId: string,
+  programId: string
+): Promise<DynamoDBItem<TrainingProgram> | null> {
+  return await loadFromDynamoDB<TrainingProgram>(
+    `user#${userId}#coach#${coachId}`,
+    `program#${programId}`,
+    "trainingProgram"
+  );
+}
+
+/**
+ * Query all training programs for a user and specific coach
+ */
+export async function queryTrainingProgramsByCoach(
+  userId: string,
+  coachId: string,
+  options?: {
+    status?: TrainingProgram["status"];
+    limit?: number;
+    sortOrder?: "asc" | "desc";
+  }
+): Promise<DynamoDBItem<TrainingProgram>[]> {
+  try {
+    // Query all programs for this user + coach combination
+    const allPrograms = await queryFromDynamoDB<TrainingProgram>(
+      `user#${userId}#coach#${coachId}`,
+      "program#",
+      "trainingProgram"
+    );
+
+    let filteredPrograms = allPrograms;
+
+    // Filter by status if specified
+    if (options?.status) {
+      filteredPrograms = filteredPrograms.filter(
+        (program) => program.attributes.status === options.status
+      );
+    }
+
+    // Sort by startDate
+    filteredPrograms.sort((a, b) => {
+      const dateA = new Date(a.attributes.startDate).getTime();
+      const dateB = new Date(b.attributes.startDate).getTime();
+      return options?.sortOrder === "asc" ? dateA - dateB : dateB - dateA;
+    });
+
+    // Apply limit if specified
+    if (options?.limit) {
+      filteredPrograms = filteredPrograms.slice(0, options.limit);
+    }
+
+    console.info("Training programs queried successfully:", {
+      userId,
+      coachId,
+      totalFound: allPrograms.length,
+      afterFiltering: filteredPrograms.length,
+      filters: options,
+    });
+
+    return filteredPrograms;
+  } catch (error) {
+    console.error(
+      `Error querying training programs for user ${userId} and coach ${coachId}:`,
+      error
+    );
+    throw error;
+  }
+}
+
+/**
+ * Query training programs for a user across all coaches using GSI-1
+ */
+export async function queryTrainingPrograms(
+  userId: string,
+  options?: {
+    status?: TrainingProgram["status"];
+    limit?: number;
+    sortOrder?: "asc" | "desc";
+  }
+): Promise<DynamoDBItem<TrainingProgram>[]> {
+  const tableName = getTableName();
+  const operationName = `Query all programs for user ${userId}`;
+
+  return withThroughputScaling(async () => {
+    const command = new QueryCommand({
+      TableName: tableName,
+      IndexName: "gsi1",
+      KeyConditionExpression: "gsi1pk = :gsi1pk AND begins_with(gsi1sk, :gsi1sk_prefix)",
+      FilterExpression: options?.status
+        ? "#entityType = :entityType AND #status = :status"
+        : "#entityType = :entityType",
+      ExpressionAttributeNames: {
+        "#entityType": "entityType",
+        ...(options?.status && { "#status": "attributes.status" }),
+      },
+      ExpressionAttributeValues: {
+        ":gsi1pk": `user#${userId}`,
+        ":gsi1sk_prefix": "program#",
+        ":entityType": "trainingProgram",
+        ...(options?.status && { ":status": options.status }),
+      },
+    });
+
+    const result = await docClient.send(command);
+    let programs = (result.Items || []) as DynamoDBItem<TrainingProgram>[];
+
+    // Deserialize dates
+    programs = programs.map((item) => deserializeFromDynamoDB(item));
+
+    // Sort by startDate
+    programs.sort((a, b) => {
+      const dateA = new Date(a.attributes.startDate).getTime();
+      const dateB = new Date(b.attributes.startDate).getTime();
+      return options?.sortOrder === "asc" ? dateA - dateB : dateB - dateA;
+    });
+
+    // Apply limit if specified
+    if (options?.limit) {
+      programs = programs.slice(0, options.limit);
+    }
+
+    console.info("All training programs queried successfully:", {
+      userId,
+      totalFound: programs.length,
+      filters: options,
+    });
+
+    return programs;
+  }, operationName);
+}
+
+/**
+ * Update a training program
+ */
+export async function updateTrainingProgram(
+  userId: string,
+  coachId: string,
+  programId: string,
+  updates: Partial<TrainingProgram>
+): Promise<TrainingProgram> {
+  // First load the existing program
+  const existingProgram = await getTrainingProgram(userId, coachId, programId);
+
+  if (!existingProgram) {
+    throw new Error(`Training program not found: ${programId}`);
+  }
+
+  // Deep merge updates into existing program
+  const updatedProgram: TrainingProgram = deepMerge(
+    existingProgram.attributes,
+    updates
+  );
+
+  // Recalculate adherence rate if workout counts changed
+  if (updates.completedWorkouts !== undefined || updates.totalWorkouts !== undefined) {
+    updatedProgram.adherenceRate =
+      updatedProgram.totalWorkouts > 0
+        ? updatedProgram.completedWorkouts / updatedProgram.totalWorkouts
+        : 0;
+  }
+
+  // Create updated item
+  const updatedItem = {
+    ...existingProgram,
+    attributes: updatedProgram,
+    updatedAt: new Date().toISOString(),
+  };
+
+  await saveToDynamoDB(updatedItem, true /* requireExists */);
+
+  console.info("Training program updated successfully:", {
+    programId,
+    userId,
+    coachId,
+    updatedFields: Object.keys(updates),
+    currentDay: updatedProgram.currentDay,
+    status: updatedProgram.status,
+  });
+
+  return updatedProgram;
+}
+
+/**
+ * Delete a training program
+ */
+export async function deleteTrainingProgram(
+  userId: string,
+  coachId: string,
+  programId: string
+): Promise<void> {
+  try {
+    await deleteFromDynamoDB(
+      `user#${userId}#coach#${coachId}`,
+      `program#${programId}`,
+      "trainingProgram"
+    );
+    console.info("Training program deleted successfully:", {
+      programId,
+      userId,
+      coachId,
+    });
+  } catch (error: any) {
+    if (error instanceof Error && error.message.includes('not found')) {
+      throw new Error(`Training program ${programId} not found for user ${userId} and coach ${coachId}`);
+    }
+    throw error;
+  }
+}
+
+/**
+ * Get training program summaries for a user (lightweight, for list views)
+ */
+export async function queryTrainingProgramSummaries(
+  userId: string,
+  coachId?: string
+): Promise<TrainingProgramSummary[]> {
+  try {
+    let programs: DynamoDBItem<TrainingProgram>[];
+
+    if (coachId) {
+      // Query programs for specific coach
+      programs = await queryTrainingProgramsByCoach(userId, coachId);
+    } else {
+      // Query all programs across all coaches
+      programs = await queryTrainingPrograms(userId);
+    }
+
+    // Map to lightweight summaries
+    const summaries: TrainingProgramSummary[] = programs.map((program) => ({
+      programId: program.attributes.programId,
+      name: program.attributes.name,
+      status: program.attributes.status,
+      currentDay: program.attributes.currentDay,
+      totalDays: program.attributes.totalDays,
+      adherenceRate: program.attributes.adherenceRate,
+      startDate: program.attributes.startDate,
+      lastActivityDate: program.attributes.lastActivityDate,
+      coachId: program.attributes.coachId,
+      coachName: "", // Will be populated by caller if needed
+    }));
+
+    console.info("Training program summaries created:", {
+      userId,
+      coachId: coachId || "all",
+      summaryCount: summaries.length,
+    });
+
+    return summaries;
+  } catch (error) {
+    console.error(
+      `Error creating training program summaries for user ${userId}:`,
+      error
+    );
+    throw error;
+  }
+}
+
+/**
+ * Count training programs for a user
+ */
+export async function queryTrainingProgramsCount(
+  userId: string,
+  options?: {
+    coachId?: string;
+    status?: TrainingProgram["status"];
+  }
+): Promise<{ totalCount: number }> {
+  try {
+    let allPrograms: DynamoDBItem<TrainingProgram>[];
+
+    if (options?.coachId) {
+      allPrograms = await queryTrainingProgramsByCoach(userId, options.coachId);
+    } else {
+      allPrograms = await queryTrainingPrograms(userId);
+    }
+
+    // Filter by status if specified
+    let filteredPrograms = allPrograms;
+    if (options?.status) {
+      filteredPrograms = allPrograms.filter(
+        (program) => program.attributes.status === options.status
+      );
+    }
+
+    const totalCount = filteredPrograms.length;
+
+    console.info("Training programs counted successfully:", {
+      userId,
+      coachId: options?.coachId || "all",
+      status: options?.status || "all",
+      totalFound: totalCount,
+    });
+
+    return { totalCount };
+  } catch (error) {
+    console.error(
+      `Error counting training programs for user ${userId}:`,
+      error
+    );
     throw error;
   }
 }

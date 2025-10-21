@@ -1,10 +1,6 @@
-import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { withAuth, AuthenticatedHandler } from '../libs/auth/middleware';
 import { createOkResponse, createErrorResponse } from '../libs/api-helpers';
-
-const s3Client = new S3Client({ region: process.env.AWS_REGION || 'us-west-2' });
-const APPS_BUCKET_NAME = process.env.APPS_BUCKET_NAME!;
+import { generatePresignedGetUrl, validateUserS3Key } from '../libs/s3-utils';
 
 const baseHandler: AuthenticatedHandler = async (event) => {
   console.info('🖼️ Starting presigned download URL generation', {
@@ -40,7 +36,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
 
   // Verify all S3 keys belong to this user
   for (const s3Key of s3Keys) {
-    if (!s3Key.startsWith(`user-uploads/${authenticatedUserId}/`)) {
+    if (!validateUserS3Key(s3Key, authenticatedUserId)) {
       console.error('❌ Security violation: S3 key does not belong to user', { authenticatedUserId, s3Key });
       return createErrorResponse(403, 'Invalid S3 key: access denied');
     }
@@ -50,12 +46,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     // Generate presigned GET URLs for all requested images
     const downloadUrls = await Promise.all(
       s3Keys.map(async (s3Key) => {
-        const command = new GetObjectCommand({
-          Bucket: APPS_BUCKET_NAME,
-          Key: s3Key,
-        });
-
-        const downloadUrl = await getSignedUrl(s3Client, command, {
+        const downloadUrl = await generatePresignedGetUrl(s3Key, {
           expiresIn: 900, // 15 minutes
         });
 
