@@ -9,14 +9,14 @@ const pipeline = util.promisify(stream.pipeline);
 // No import or declaration is required - it's automatically available
 
 // Import business logic utilities
-import { MODEL_IDS, AI_ERROR_FALLBACK_MESSAGE } from "../libs/api-helpers";
+import { MODEL_IDS, AI_ERROR_FALLBACK_MESSAGE, invokeAsyncLambda } from "../libs/api-helpers";
 import {
   getCoachConversation,
   sendCoachConversationMessage,
   getCoachConfig,
   getUserProfile,
 } from "../../dynamodb/operations";
-import { CoachMessage } from "../libs/coach-conversation/types";
+import { CoachMessage, MESSAGE_TYPES } from "../libs/coach-conversation/types";
 import { gatherConversationContext } from "../libs/coach-conversation/context";
 import { detectAndProcessWorkout, WorkoutDetectionResult } from "../libs/coach-conversation/workout-detection";
 import {
@@ -29,9 +29,9 @@ import { generateAIResponseStream } from "../libs/coach-conversation/response-or
 import { generateContextualUpdate, categorizeUserMessage } from "../libs/coach-conversation/contextual-updates";
 import { analyzeMemoryNeeds } from "../libs/memory/detection";
 import {
-  detectAndPrepareForTrainingProgramGeneration,
-  generateTrainingProgramFromConversation
+  detectAndPrepareForTrainingProgramGeneration
 } from "../libs/training-program/program-generator";
+import { BuildTrainingProgramEvent } from "../libs/training-program/types";
 import { CONVERSATION_MODES } from "../libs/coach-conversation/types";
 
 // Import auth middleware (consolidated)
@@ -113,6 +113,23 @@ async function executeWithContextualUpdate<T>(
   }
 
   return { update, workResult };
+}
+
+// Helper function to generate and format a contextual update
+// Returns formatted SSE event ready to yield, or null if update fails
+async function generateAndFormatUpdate(
+  coachConfig: any,
+  userResponse: string,
+  updateType: string,
+  context: Record<string, any>
+): Promise<string | null> {
+  try {
+    const update = await generateContextualUpdate(coachConfig, userResponse, updateType, context);
+    return formatContextualEvent(update, updateType);
+  } catch (err) {
+    console.warn(`Contextual update ${updateType} failed (non-critical):`, err);
+    return null;
+  }
 }
 
 // Separate workout detection processing for concurrent execution
@@ -418,22 +435,17 @@ async function* processCoachConversationAsync(
   let contextualUpdates: string[] = [];
 
   if (shouldShowUpdates) {
-    try {
-      console.info("🚀 Generating initial acknowledgment (router-approved)...");
-      const initialAcknowledgment = await generateContextualUpdate(
-        conversationData.coachConfig,
-        params.userResponse,
-        "initial_greeting",
-        { stage: "starting" }
-      );
-      console.info(
-        `📡 Initial acknowledgment ready: "${initialAcknowledgment.substring(0, 50)}..."`
-      );
-      contextualUpdates.push(initialAcknowledgment);
-      const acknowledgmentEvent = formatContextualEvent(initialAcknowledgment, 'initial_greeting');
-      yield acknowledgmentEvent;
-    } catch (error) {
-      console.error("⚠️ Initial acknowledgment failed:", error);
+    console.info("🚀 Generating initial acknowledgment (router-approved)...");
+    const formattedUpdate = await generateAndFormatUpdate(
+      conversationData.coachConfig,
+      params.userResponse,
+      "initial_greeting",
+      { stage: "starting" }
+    );
+    if (formattedUpdate) {
+      console.info("📡 Initial acknowledgment ready");
+      yield formattedUpdate;
+      contextualUpdates.push(formattedUpdate);
     }
   }
 
@@ -442,7 +454,7 @@ async function* processCoachConversationAsync(
   let workoutResult: any = null;
   let memoryResult: any = null;
   let memoryRetrieval: any = null;
-  let memorySavingPromise: Promise<any> | null = null; // Track for fire-and-forget optimization
+  let didInitiateMemorySave = false; // Track if we initiated a memory save (for "I'll remember this" acknowledgment)
 
   // Determine what processing is needed
   const needsWorkout = routerAnalysis.workoutDetection.isWorkoutLog;
@@ -481,7 +493,8 @@ async function* processCoachConversationAsync(
 
         // Process saving (fire-and-forget - NOT needed for AI response)
         if (consolidatedMemoryAnalysis.isMemoryRequest) {
-          memorySavingPromise = detectAndProcessMemory(
+          didInitiateMemorySave = true;
+          detectAndProcessMemory(
             params.userResponse,
             params.userId,
             params.coachId,
@@ -490,11 +503,10 @@ async function* processCoachConversationAsync(
             conversationData.coachConfig.attributes.coach_name
           ).catch(err => {
             console.error("⚠️ Memory saving failed (non-blocking):", err);
-            return { memoryFeedback: null };
           });
         }
 
-        return { retrieval, memorySavingPromise };
+        return { retrieval };
       })()
     ];
 
@@ -531,7 +543,6 @@ async function* processCoachConversationAsync(
     // Extract memory result
     if (results[1].status === 'fulfilled') {
       memoryRetrieval = results[1].value.retrieval;
-      memorySavingPromise = results[1].value.memorySavingPromise;
     } else {
       console.error("⚠️ Memory processing failed:", results[1].reason);
       memoryRetrieval = getFallbackMemory();
@@ -620,14 +631,17 @@ async function* processCoachConversationAsync(
 
     // Start memory saving if needed (fire-and-forget - don't block Phase 4!)
     if (consolidatedMemoryAnalysis.isMemoryRequest) {
-      memorySavingPromise = detectAndProcessMemory(
+      didInitiateMemorySave = true;
+      detectAndProcessMemory(
         params.userResponse,
         params.userId,
         params.coachId,
         params.conversationId,
         conversationData.existingConversation.attributes.messages,
         conversationData.coachConfig.attributes.coach_name
-      );
+      ).catch(err => {
+        console.error("⚠️ Memory saving failed (non-blocking):", err);
+      });
       console.info("🔥 Memory saving started (fire-and-forget)");
     }
 
@@ -671,58 +685,8 @@ async function* processCoachConversationAsync(
     memoryResult = { memoryFeedback: null };
   }
 
-  // OPTIMIZATION: Phase 4 now starts immediately after Phase 2 core work completes
-  // Memory saving happens in background, so Phase 4 doesn't block on it
-  // Yield pattern analysis and insights updates in parallel ONLY if appropriate
-  if (shouldShowUpdates) {
-    console.info("🎨 Generating pattern + insights updates in parallel (overlapped with memory saving)");
-    const updateStartTime = Date.now();
-
-    // Generate both updates in parallel
-    const [patternSettled, insightsSettled] = await Promise.allSettled([
-      generateContextualUpdate(
-        conversationData.coachConfig,
-        params.userResponse,
-        "pattern_analysis",
-        {
-          stage: "analyzing_patterns",
-          memoriesFound: memoryRetrieval.memories?.length || 0,
-          conversationLength:
-            conversationData.existingConversation.attributes.messages.length,
-        }
-      ),
-      generateContextualUpdate(
-        conversationData.coachConfig,
-        params.userResponse,
-        "insights_brewing",
-        {
-          stage: "preparing_insights",
-          hasWorkoutData: workoutResult.isWorkoutLogging,
-          hasMemories: memoryRetrieval.memories?.length > 0,
-          userMessageType: categorizeUserMessage(params.userResponse),
-        }
-      )
-    ]);
-
-    const updateTime = Date.now() - updateStartTime;
-    console.info(`✅ Pattern + insights updates completed in ${updateTime}ms`);
-
-    // Yield pattern update if successful
-    if (patternSettled.status === 'fulfilled') {
-      contextualUpdates.push(patternSettled.value);
-      yield formatContextualEvent(patternSettled.value, 'pattern_analysis');
-    } else {
-      console.warn('⚠️ Pattern update failed:', patternSettled.reason);
-    }
-
-    // Yield insights update if successful
-    if (insightsSettled.status === 'fulfilled') {
-      contextualUpdates.push(insightsSettled.value);
-      yield formatContextualEvent(insightsSettled.value, 'insights_brewing');
-    } else {
-      console.warn('⚠️ Insights update failed:', insightsSettled.reason);
-    }
-  }
+  // OPTIMIZATION: Removed pattern/insights updates (Phase 4) to focus on 2-3 key updates
+  // Keeping only: Initial acknowledgment + Workout/Memory analysis (most critical for UX)
 
   // Create user message and conversation context
   const newUserMessage: CoachMessage = {
@@ -730,7 +694,7 @@ async function* processCoachConversationAsync(
     role: "user",
     content: params.userResponse || '',
     timestamp: new Date(params.messageTimestamp),
-    messageType: params.imageS3Keys && params.imageS3Keys.length > 0 ? 'text_with_images' : 'text',
+    messageType: params.imageS3Keys && params.imageS3Keys.length > 0 ? MESSAGE_TYPES.TEXT_WITH_IMAGES : MESSAGE_TYPES.TEXT,
     ...(params.imageS3Keys && params.imageS3Keys.length > 0 ? { imageS3Keys: params.imageS3Keys } : {}),
   };
 
@@ -790,22 +754,13 @@ async function* processCoachConversationAsync(
     fullAiResponse += AI_ERROR_FALLBACK_MESSAGE;
   }
 
-  // OPTIMIZATION: Memory saving is fire-and-forget (don't wait for completion)
-  // We initiated the save during Phase 2/3, now just let it run in background
-  if (memorySavingPromise) {
-    memorySavingPromise.catch(err => {
-      console.error("⚠️ Memory saving failed (non-critical):", err);
-    });
-    console.info("🔥 Memory saving running in background");
-  }
-
   // Add generic memory acknowledgment if a save was initiated
-  if (FEATURE_FLAGS.ENABLE_MEMORY_PROCESSING && memorySavingPromise) {
+  // Note: Memory saving happens fire-and-forget in background (Phase 2/3)
+  if (FEATURE_FLAGS.ENABLE_MEMORY_PROCESSING && didInitiateMemorySave) {
     fullAiResponse = `I'll remember this.\n\n${fullAiResponse}`;
   }
 
   // NEW: Check if this is a Build mode conversation with training program generation trigger
-  let generatedTrainingProgram: { programId: string; program: any } | null = null;
   const conversationMode = conversationData.existingConversation.attributes.mode || CONVERSATION_MODES.CHAT; // Default to chat for backwards compatibility
 
   if (conversationMode === CONVERSATION_MODES.BUILD) {
@@ -817,48 +772,67 @@ async function* processCoachConversationAsync(
       // Remove trigger from the response
       fullAiResponse = generationDetection.cleanedResponse;
 
-      // Yield contextual event about training program generation starting
-      yield formatContextualEvent(
-        '\n\n---\n\n🎯 **Generating your training program...**\n\nCreating detailed workout templates for each day...',
-        'training_program_generation_start'
+      // Generate and yield AI-powered contextual update about training program generation starting
+      const startUpdateEvent = await generateAndFormatUpdate(
+        conversationData.coachConfig,
+        params.userResponse,
+        'training_program_generation_start',
+        {}
       );
+      if (startUpdateEvent) yield startUpdateEvent;
 
       try {
-        // Generate the training program (this may take 10-30 seconds)
-        generatedTrainingProgram = await generateTrainingProgramFromConversation(
-          conversationData.existingConversation.attributes.messages,
-          params.userId,
-          params.coachId,
-          params.conversationId
+        // Prepare the payload for the build-training-program lambda
+        const buildTrainingProgramPayload: BuildTrainingProgramEvent = {
+          userId: params.userId,
+          coachId: params.coachId,
+          conversationId: params.conversationId,
+          conversationMessages: conversationData.existingConversation.attributes.messages,
+          coachConfig: conversationData.coachConfig.attributes,
+          userProfile: conversationData.userProfile?.attributes,
+        };
+
+        // Invoke the build-training-program lambda asynchronously
+        const buildTrainingProgramFunctionName = process.env.BUILD_TRAINING_PROGRAM_FUNCTION_NAME;
+        if (!buildTrainingProgramFunctionName) {
+          console.error("❌ BUILD_TRAINING_PROGRAM_FUNCTION_NAME environment variable not set");
+          throw new Error("Configuration error. Unable to generate training program.");
+        }
+
+        await invokeAsyncLambda(
+          buildTrainingProgramFunctionName,
+          buildTrainingProgramPayload,
+          `training program generation for user ${params.userId}`
         );
 
-        console.info('✅ Training program generated successfully:', {
-          programId: generatedTrainingProgram.programId,
-          name: generatedTrainingProgram.program.name,
-        });
+        console.info('✅ Build-training-program lambda invoked successfully');
 
-        // Yield success event with training program details
-        const successMessage = `\n\n✅ **Training Program Created!**\n\n` +
-          `**${generatedTrainingProgram.program.name}**\n` +
-          `Duration: ${generatedTrainingProgram.program.totalDays} days\n` +
-          `Phases: ${generatedTrainingProgram.program.phases.length}\n` +
-          `Workouts: ${generatedTrainingProgram.program.totalWorkouts}\n\n` +
-          `Your training program is ready! You can start Day 1 anytime.`;
+        // Generate and yield AI-powered contextual update (brief, coach-like)
+        const completeUpdateEvent = await generateAndFormatUpdate(
+          conversationData.coachConfig,
+          params.userResponse,
+          'training_program_generation_complete',
+          {}
+        );
+        if (completeUpdateEvent) yield completeUpdateEvent;
 
-        yield formatContextualEvent(successMessage, 'training_program_generation_complete');
-
-        // Add training program info to AI response
-        fullAiResponse += successMessage;
+        // Note: AI will naturally acknowledge program generation in its response
+        // No need to append structured messages - keep it conversational like memory/workout handling
 
       } catch (error) {
         console.error('❌ Training program generation failed:', error);
 
-        const errorMessage = `\n\n⚠️ **Training Program Generation Error**\n\n` +
-          `I apologize, but I encountered an error while creating your training program. ` +
-          `Let's refine the details and try again.`;
+        // Generate and yield AI-powered contextual update (brief, supportive)
+        const errorUpdateEvent = await generateAndFormatUpdate(
+          conversationData.coachConfig,
+          params.userResponse,
+          'training_program_generation_error',
+          {}
+        );
+        if (errorUpdateEvent) yield errorUpdateEvent;
 
-        yield formatContextualEvent(errorMessage, 'training_program_generation_error');
-        fullAiResponse += errorMessage;
+        // Note: AI will naturally address the error in its response
+        // No need to append structured error messages - keep it conversational
       }
     }
   }
@@ -871,7 +845,8 @@ async function* processCoachConversationAsync(
     timestamp: new Date(),
     metadata: {
       model: MODEL_IDS.CLAUDE_SONNET_4_DISPLAY,
-      ...(generatedTrainingProgram && { generatedProgramId: generatedTrainingProgram.programId }),
+      mode: conversationMode, // Track which mode this message was created in
+      // Note: Training program generation is now async, so programId not available here
     },
   };
 

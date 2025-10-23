@@ -782,24 +782,8 @@ export const parseAndValidateWorkoutData = async (
       console.warn("Failed to store large response in S3:", error);
     });
 
-    // Check if response starts and ends with proper JSON structure
-    const trimmedData = extractedData.trim();
-    if (!trimmedData.startsWith("{")) {
-      console.error(
-        "Response does not start with {. First 100 chars:",
-        trimmedData.substring(0, 100)
-      );
-      throw new Error("Response does not start with valid JSON opening brace");
-    }
-    if (!trimmedData.endsWith("}")) {
-      console.error(
-        "Response does not end with }. Last 100 chars:",
-        trimmedData.substring(Math.max(0, trimmedData.length - 100))
-      );
-      throw new Error("Response does not end with valid JSON closing brace");
-    }
-
     // Parse the JSON response with cleaning and fixing (handles markdown-wrapped JSON and common issues)
+    // Note: parseJsonWithFallbacks will strip markdown code fences and clean the response
     const workoutData = parseJsonWithFallbacks(extractedData);
 
     // Validate time fields are in seconds

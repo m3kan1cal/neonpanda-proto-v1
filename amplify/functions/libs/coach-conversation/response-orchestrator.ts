@@ -13,7 +13,7 @@ import { ConversationContextResult } from "./context";
 import { WorkoutDetectionResult } from "./workout-detection";
 import { MemoryRetrievalResult } from "./memory-processing";
 import { buildMultimodalContent } from "../streaming";
-import { CoachMessage, ConversationMode, CONVERSATION_MODES } from "./types";
+import { CoachMessage, ConversationMode, CONVERSATION_MODES, MESSAGE_TYPES } from "./types";
 
 // Configuration constants
 const ENABLE_S3_DEBUG_LOGGING = true; // Always log system prompts to S3 for debugging and monitoring
@@ -305,7 +305,7 @@ export async function generateAIResponse(
           role: "user",
           content: userMessage || "",
           timestamp: new Date(),
-          messageType: "text_with_images",
+          messageType: MESSAGE_TYPES.TEXT_WITH_IMAGES,
           imageS3Keys: imageS3Keys,
         };
 
@@ -551,7 +551,7 @@ export async function generateAIResponseStream(
           role: "user",
           content: userMessage || "",
           timestamp: new Date(),
-          messageType: "text_with_images",
+          messageType: MESSAGE_TYPES.TEXT_WITH_IMAGES,
           imageS3Keys: imageS3Keys,
         };
 

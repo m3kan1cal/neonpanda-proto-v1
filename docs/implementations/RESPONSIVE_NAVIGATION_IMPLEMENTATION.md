@@ -1651,13 +1651,13 @@ function AppContent() {
         {/* Quick Actions - Mobile FAB / Desktop Floating Icons */}
         <QuickActionsFAB onCommandPaletteToggle={(cmd) => {
           // TODO: Trigger command palette with prefilled command
-          console.log('Command palette:', cmd);
+          console.info('Command palette:', cmd);
         }} />
 
         <FloatingMenuDesktop
           onCommandPaletteToggle={(cmd) => {
             // TODO: Trigger command palette with prefilled command
-            console.log('Command palette:', cmd);
+            console.info('Command palette:', cmd);
           }}
         />
 

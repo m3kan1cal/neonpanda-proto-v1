@@ -119,9 +119,9 @@ export const CoachConversationModeToggle = ({ mode, onModeChange, disabled }) =>
 
 ---
 
-### 2. ProgramAgent (State Management)
+### 2. TrainingProgramAgent (State Management)
 
-**Location:** `src/agents/ProgramAgent.js`
+**Location:** `src/utils/agents/TrainingProgramAgent.js`
 
 **Purpose:** Manage program state and API calls
 
@@ -131,7 +131,7 @@ export const CoachConversationModeToggle = ({ mode, onModeChange, disabled }) =>
 import { useState, useCallback } from 'react';
 import { programApi } from '../utils/api/programApi';
 
-export const useProgramAgent = (userId, coachId) => {
+export const useTrainingProgramAgent = (userId, coachId) => {
   const [programs, setPrograms] = useState([]);
   const [activeProgram, setActiveProgram] = useState(null);
   const [todaysWorkout, setTodaysWorkout] = useState(null);
@@ -250,7 +250,7 @@ export const useProgramAgent = (userId, coachId) => {
 
 ```jsx
 export const ProgramList = ({ userId, coachId, onSelectProgram }) => {
-  const { programs, loading, error, loadPrograms } = useProgramAgent(userId, coachId);
+  const { programs, loading, error, loadPrograms } = useTrainingProgramAgent(userId, coachId);
   const [filter, setFilter] = useState('active'); // active, completed, archived, all
 
   useEffect(() => {
@@ -300,7 +300,7 @@ export const ProgramList = ({ userId, coachId, onSelectProgram }) => {
 
 ```jsx
 export const ProgramDetail = ({ userId, coachId, programId }) => {
-  const { activeProgram, loading, error, loadProgram } = useProgramAgent(userId, coachId);
+  const { activeProgram, loading, error, loadProgram } = useTrainingProgramAgent(userId, coachId);
 
   useEffect(() => {
     loadProgram(programId);
@@ -351,7 +351,7 @@ export const ProgramDetail = ({ userId, coachId, programId }) => {
 
 ```jsx
 export const TodaysWorkout = ({ userId, coachId, programId }) => {
-  const { todaysWorkout, loading, error, loadTodaysWorkout, logWorkout } = useProgramAgent(userId, coachId);
+  const { todaysWorkout, loading, error, loadTodaysWorkout, logWorkout } = useTrainingProgramAgent(userId, coachId);
   const [showLogModal, setShowLogModal] = useState(false);
 
   useEffect(() => {
@@ -421,12 +421,12 @@ export const TodaysWorkout = ({ userId, coachId, programId }) => {
 
 ## API Utility Functions
 
-**Location:** `src/utils/api/programApi.js`
+**Location:** `src/utils/apis/trainingProgramApi.js`
 
 ```javascript
-import { API_BASE_URL, getAuthHeaders } from './apiHelpers';
+import { getApiUrl, authenticatedFetch } from './apiConfig.js';
 
-export const programApi = {
+export const trainingProgramApi = {
   // List programs
   async listPrograms(userId, coachId, options = {}) {
     const params = new URLSearchParams();
@@ -620,8 +620,8 @@ Add programs tab/section showing active program and today's workout prominently.
 
 ### Phase 3A (Days 1-5)
 - [ ] `CoachConversationModeToggle.jsx` component
-- [ ] `useProgramAgent.js` hook
-- [ ] `programApi.js` utility
+- [ ] `useTrainingProgramAgent.js` hook
+- [ ] `trainingProgramApi.js` utility
 - [ ] `ProgramList.jsx` component
 - [ ] `ProgramDetail.jsx` component
 - [ ] `TodaysWorkout.jsx` component

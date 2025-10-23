@@ -1,6 +1,7 @@
 import { getApiUrl, authenticatedFetch, isStreamingEnabled } from "./apiConfig";
 import { handleStreamingApiRequest } from "./streamingApiHelper";
 import { streamCoachConversationLambda } from "./streamingLambdaApi";
+import { CONVERSATION_MODES } from "../../constants/conversationModes";
 
 /**
  * API service for Coach Conversation operations
@@ -12,16 +13,21 @@ import { streamCoachConversationLambda } from "./streamingLambdaApi";
  * @param {string} coachId - The coach ID
  * @param {string} title - The conversation title
  * @param {string} [initialMessage] - Optional initial message to start the conversation
+ * @param {string} [mode] - Conversation mode ('chat' or 'build'), defaults to 'chat'
  * @returns {Promise<Object>} - The API response with conversation details
  */
 export const createCoachConversation = async (
   userId,
   coachId,
   title,
-  initialMessage = null
+  initialMessage = null,
+  mode = CONVERSATION_MODES.CHAT
 ) => {
   const url = `${getApiUrl("")}/users/${userId}/coaches/${coachId}/conversations`;
-  const requestBody = { title };
+  const requestBody = {
+    title,
+    mode // Always include mode (defaults to 'chat')
+  };
 
   // Add initial message if provided
   if (initialMessage && initialMessage.trim()) {

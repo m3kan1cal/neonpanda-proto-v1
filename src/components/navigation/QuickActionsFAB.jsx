@@ -92,7 +92,10 @@ const QuickActionsFAB = () => {
       )}
 
       {/* FAB Container */}
-      <div className={navigationPatterns.fab.container}>
+      <div
+        className={navigationPatterns.fab.container}
+        style={navigationPatterns.fab.containerStyle}
+      >
         {/* Speed Dial Menu */}
         {isOpen && (
           <div className={navigationPatterns.fab.speedDial}>

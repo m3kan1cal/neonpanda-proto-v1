@@ -50,6 +50,52 @@ export const handler = async (event: BuildWorkoutEvent) => {
         content: workoutContent,
         isExplicitLogging: true,
       });
+
+      // Pre-validate slash command content to catch incomplete/accidental submissions
+      const contentTrimmed = workoutContent.trim();
+      const wordCount = contentTrimmed.split(/\s+/).length;
+      const charCount = contentTrimmed.length;
+
+      // Check for obviously incomplete submissions
+      if (charCount < 10 || wordCount < 3) {
+        console.warn("⚠️ Suspiciously short workout content detected:", {
+          content: contentTrimmed,
+          charCount,
+          wordCount,
+          isLikelyIncomplete: true,
+        });
+
+        // Return early with helpful error message
+        return createOkResponse({
+          success: false,
+          skipped: true,
+          reason: "Workout description too short - please provide more details about your workout (exercises, sets, reps, weights, etc.)",
+          validation: {
+            contentLength: charCount,
+            wordCount,
+            minimumRequired: "At least 10 characters and 3 words describing your workout",
+          },
+        });
+      }
+
+      // Check if it's just a single word or partial word (like "WARM" or "warm up" without context)
+      const singleWordPattern = /^(warm|workout|exercise|training|gym|lift)\s*(up)?$/i;
+      if (singleWordPattern.test(contentTrimmed)) {
+        console.warn("⚠️ Single keyword detected without workout details:", {
+          content: contentTrimmed,
+          isKeywordOnly: true,
+        });
+
+        return createOkResponse({
+          success: false,
+          skipped: true,
+          reason: "Please provide complete workout details - what exercises did you do? Sets, reps, weights?",
+          validation: {
+            detectedKeyword: contentTrimmed,
+            suggestion: "Example: '3 sets of squats at 185lbs for 5 reps, then 20 minute AMRAP of burpees and pull-ups'",
+          },
+        });
+      }
     }
 
     // Build extraction prompt using Universal Workout Schema

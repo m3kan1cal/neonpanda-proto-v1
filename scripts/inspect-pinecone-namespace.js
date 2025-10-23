@@ -35,7 +35,7 @@ function parseArgs() {
   const args = process.argv.slice(2);
 
   if (args.length === 0 || args[0] === '--help' || args[0] === '-h') {
-    console.log(`
+    console.info(`
 Pinecone Namespace Inspector
 
 Usage:
@@ -106,13 +106,13 @@ async function getPineconeClient() {
  */
 async function fetchRecordsFromNamespace(index, namespace, options) {
   try {
-    console.log(`\n📊 Fetching records from namespace: ${namespace}`);
-    console.log(`   Index: ${PINECONE_INDEX_NAME}`);
-    console.log(`   Limit: ${options.limit}`);
+    console.info(`\n📊 Fetching records from namespace: ${namespace}`);
+    console.info(`   Index: ${PINECONE_INDEX_NAME}`);
+    console.info(`   Limit: ${options.limit}`);
     if (options.filter) {
-      console.log(`   Filter: recordType = ${options.filter}`);
+      console.info(`   Filter: recordType = ${options.filter}`);
     }
-    console.log('');
+    console.info('');
 
     // Build filter if specified
     let filter = {};
@@ -137,11 +137,11 @@ async function fetchRecordsFromNamespace(index, namespace, options) {
     const response = await index.namespace(namespace).searchRecords(searchQuery);
 
     if (!response.result || !response.result.hits) {
-      console.log('⚠️  No results returned from Pinecone');
+      console.info('⚠️  No results returned from Pinecone');
       return [];
     }
 
-    console.log(`✅ Found ${response.result.hits.length} records\n`);
+    console.info(`✅ Found ${response.result.hits.length} records\n`);
 
     return response.result.hits;
   } catch (error) {
@@ -169,29 +169,29 @@ function formatRecord(hit, index) {
  */
 function displayRecords(records, options) {
   if (options.idsOnly) {
-    console.log('═══════════════════════════════════════════════════════════');
-    console.log('RECORD IDs');
-    console.log('═══════════════════════════════════════════════════════════\n');
+    console.info('═══════════════════════════════════════════════════════════');
+    console.info('RECORD IDs');
+    console.info('═══════════════════════════════════════════════════════════\n');
 
     records.forEach((hit, i) => {
-      console.log(`${i + 1}. ${hit._id}`);
+      console.info(`${i + 1}. ${hit._id}`);
     });
 
-    console.log(`\nTotal: ${records.length} records`);
+    console.info(`\nTotal: ${records.length} records`);
     return;
   }
 
-  console.log('═══════════════════════════════════════════════════════════');
-  console.log('RAW PINECONE RECORDS');
-  console.log('═══════════════════════════════════════════════════════════\n');
+  console.info('═══════════════════════════════════════════════════════════');
+  console.info('RAW PINECONE RECORDS');
+  console.info('═══════════════════════════════════════════════════════════\n');
 
   records.forEach((hit, i) => {
     const record = formatRecord(hit, i);
 
-    console.log(`\n━━━ RECORD ${record.index} ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
-    console.log(`ID: ${record.id}`);
-    console.log(`Score: ${record.score}`);
-    console.log('\nFIELDS:');
+    console.info(`\n━━━ RECORD ${record.index} ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
+    console.info(`ID: ${record.id}`);
+    console.info(`Score: ${record.score}`);
+    console.info('\nFIELDS:');
 
     // Display metadata/fields
     const fields = record.fields;
@@ -207,18 +207,18 @@ function displayRecords(records, options) {
 
       // Format arrays and objects nicely
       if (Array.isArray(value)) {
-        console.log(`  ${key}: [${value.length} items] ${JSON.stringify(value)}`);
+        console.info(`  ${key}: [${value.length} items] ${JSON.stringify(value)}`);
       } else if (typeof value === 'object' && value !== null) {
-        console.log(`  ${key}: ${JSON.stringify(value, null, 2).split('\n').join('\n    ')}`);
+        console.info(`  ${key}: ${JSON.stringify(value, null, 2).split('\n').join('\n    ')}`);
       } else {
-        console.log(`  ${key}: ${value}`);
+        console.info(`  ${key}: ${value}`);
       }
     }
   });
 
-  console.log('\n═══════════════════════════════════════════════════════════');
-  console.log(`Total: ${records.length} records`);
-  console.log('═══════════════════════════════════════════════════════════\n');
+  console.info('\n═══════════════════════════════════════════════════════════');
+  console.info(`Total: ${records.length} records`);
+  console.info('═══════════════════════════════════════════════════════════\n');
 }
 
 /**
@@ -233,7 +233,7 @@ async function saveToFile(records, filename) {
     };
 
     await fs.writeFile(filename, JSON.stringify(data, null, 2));
-    console.log(`\n✅ Saved ${records.length} records to ${filename}`);
+    console.info(`\n✅ Saved ${records.length} records to ${filename}`);
   } catch (error) {
     console.error(`❌ Error saving to file:`, error.message);
     throw error;
@@ -244,9 +244,9 @@ async function saveToFile(records, filename) {
  * Analyze record structure
  */
 function analyzeRecordStructure(records) {
-  console.log('\n═══════════════════════════════════════════════════════════');
-  console.log('RECORD STRUCTURE ANALYSIS');
-  console.log('═══════════════════════════════════════════════════════════\n');
+  console.info('\n═══════════════════════════════════════════════════════════');
+  console.info('RECORD STRUCTURE ANALYSIS');
+  console.info('═══════════════════════════════════════════════════════════\n');
 
   // Collect all unique field keys
   const allFieldKeys = new Set();
@@ -272,41 +272,41 @@ function analyzeRecordStructure(records) {
     }
   });
 
-  console.log('Field Coverage:');
-  console.log('───────────────────────────────────────────────────────────');
+  console.info('Field Coverage:');
+  console.info('───────────────────────────────────────────────────────────');
   const sortedKeys = Array.from(allFieldKeys).sort();
   sortedKeys.forEach(key => {
     const frequency = fieldFrequency[key];
     const percentage = ((frequency / records.length) * 100).toFixed(1);
-    console.log(`  ${key}: ${frequency}/${records.length} records (${percentage}%)`);
+    console.info(`  ${key}: ${frequency}/${records.length} records (${percentage}%)`);
   });
 
-  console.log('\nRecord Type Distribution:');
-  console.log('───────────────────────────────────────────────────────────');
+  console.info('\nRecord Type Distribution:');
+  console.info('───────────────────────────────────────────────────────────');
   Object.entries(recordTypeCounts).forEach(([type, count]) => {
     const percentage = ((count / records.length) * 100).toFixed(1);
-    console.log(`  ${type}: ${count} (${percentage}%)`);
+    console.info(`  ${type}: ${count} (${percentage}%)`);
   });
 
   if (missingMemoryIds.length > 0) {
-    console.log('\n⚠️  Records Missing Both recordType AND memoryId:');
-    console.log('───────────────────────────────────────────────────────────');
+    console.info('\n⚠️  Records Missing Both recordType AND memoryId:');
+    console.info('───────────────────────────────────────────────────────────');
     missingMemoryIds.slice(0, 10).forEach(id => {
-      console.log(`  - ${id}`);
+      console.info(`  - ${id}`);
     });
     if (missingMemoryIds.length > 10) {
-      console.log(`  ... and ${missingMemoryIds.length - 10} more`);
+      console.info(`  ... and ${missingMemoryIds.length - 10} more`);
     }
   }
 
-  console.log('═══════════════════════════════════════════════════════════\n');
+  console.info('═══════════════════════════════════════════════════════════\n');
 }
 
 /**
  * Main function
  */
 async function main() {
-  console.log('🔍 Pinecone Namespace Inspector\n');
+  console.info('🔍 Pinecone Namespace Inspector\n');
 
   const { namespace, options } = parseArgs();
 
@@ -325,14 +325,14 @@ async function main() {
     const records = await fetchRecordsFromNamespace(index, namespace, options);
 
     if (records.length === 0) {
-      console.log('No records found in namespace');
+      console.info('No records found in namespace');
       return;
     }
 
     // Display or save results
     if (options.output) {
       await saveToFile(records, options.output);
-      console.log(`\nTo view the file:\n  cat ${options.output} | jq .`);
+      console.info(`\nTo view the file:\n  cat ${options.output} | jq .`);
     } else {
       displayRecords(records, options);
     }
@@ -342,7 +342,7 @@ async function main() {
       analyzeRecordStructure(records);
     }
 
-    console.log('✅ Done!\n');
+    console.info('✅ Done!\n');
   } catch (error) {
     console.error('\n❌ Fatal error:', error);
     process.exit(1);

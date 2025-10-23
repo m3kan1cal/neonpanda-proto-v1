@@ -176,38 +176,16 @@ Analyze this message and respond with the JSON format specified.`;
       userPrompt,
       MODEL_IDS.CLAUDE_HAIKU_4FULL
     );
-    // Clean the response to handle potential markdown wrapping
-    let cleanedResponse = response.trim();
-
-    // Remove markdown code blocks if present
-    if (cleanedResponse.startsWith("```json")) {
-      cleanedResponse = cleanedResponse
-        .replace(/^```json\s*/, "")
-        .replace(/\s*```$/, "");
-    } else if (cleanedResponse.startsWith("```")) {
-      cleanedResponse = cleanedResponse
-        .replace(/^```\s*/, "")
-        .replace(/\s*```$/, "");
-    }
-
-    // Remove any leading/trailing whitespace again
-    cleanedResponse = cleanedResponse.trim();
-
+    // Use centralized parsing utility (handles markdown cleanup and JSON fixing)
     let result;
     try {
-      result = JSON.parse(cleanedResponse);
+      result = parseJsonWithFallbacks(response);
     } catch (parseError) {
       const errorMessage = parseError instanceof Error ? parseError.message : String(parseError);
       console.error("❌ JSON parsing failed for memory characteristics:", {
-        originalResponse: response,
-        cleanedResponse: cleanedResponse,
+        originalResponse: response.substring(0, 200) + (response.length > 200 ? "..." : ""),
         originalLength: response.length,
-        cleanedLength: cleanedResponse.length,
         parseError: errorMessage,
-        startsWithJson: cleanedResponse.startsWith('```json'),
-        startsWithBackticks: cleanedResponse.startsWith('```'),
-        firstChar: cleanedResponse.charAt(0),
-        lastChar: cleanedResponse.charAt(cleanedResponse.length - 1),
       });
       throw new Error(
         `Invalid response format from memory characteristics detection: ${errorMessage}`
@@ -402,38 +380,16 @@ Analyze this memory and respond with the JSON format specified.`;
       userPrompt,
       MODEL_IDS.CLAUDE_HAIKU_4FULL
     );
-    // Clean the response to handle potential markdown wrapping
-    let cleanedResponse = response.trim();
-
-    // Remove markdown code blocks if present
-    if (cleanedResponse.startsWith("```json")) {
-      cleanedResponse = cleanedResponse
-        .replace(/^```json\s*/, "")
-        .replace(/\s*```$/, "");
-    } else if (cleanedResponse.startsWith("```")) {
-      cleanedResponse = cleanedResponse
-        .replace(/^```\s*/, "")
-        .replace(/\s*```$/, "");
-    }
-
-    // Remove any leading/trailing whitespace again
-    cleanedResponse = cleanedResponse.trim();
-
+    // Use centralized parsing utility (handles markdown cleanup and JSON fixing)
     let result;
     try {
-      result = JSON.parse(cleanedResponse);
+      result = parseJsonWithFallbacks(response);
     } catch (parseError) {
       const errorMessage = parseError instanceof Error ? parseError.message : String(parseError);
       console.error("❌ JSON parsing failed for memory characteristics:", {
         originalResponse: response.substring(0, 500) + (response.length > 500 ? "..." : ""),
-        cleanedResponse: cleanedResponse.substring(0, 500) + (cleanedResponse.length > 500 ? "..." : ""),
         originalLength: response.length,
-        cleanedLength: cleanedResponse.length,
         parseError: errorMessage,
-        startsWithJson: cleanedResponse.startsWith('```json'),
-        startsWithBackticks: cleanedResponse.startsWith('```'),
-        firstChar: cleanedResponse.charAt(0),
-        lastChar: cleanedResponse.charAt(cleanedResponse.length - 1),
         memoryContent: memoryContent.substring(0, 100) + (memoryContent.length > 100 ? "..." : ""),
         coachName: coachName || "unknown"
       });

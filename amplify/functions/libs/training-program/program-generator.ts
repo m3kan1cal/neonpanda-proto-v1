@@ -24,6 +24,11 @@ import {
   getWorkoutTemplateSchemaWithContext
 } from '../schemas/training-program-schema';
 import { buildCoachPersonalityPrompt } from '../coach-config/personality-utils';
+import {
+  normalizeTrainingProgram,
+  shouldNormalizeTrainingProgram,
+  generateNormalizationSummary,
+} from './normalization';
 
 /**
  * Detects if the AI response contains a training program generation trigger
@@ -224,7 +229,7 @@ ${getJsonFormattingInstructions()}`;
  * Generate a complete training program from a Build mode conversation
  * This is the main orchestrator function with full personalization
  */
-export async function generateTrainingProgramFromConversation(
+export async function generateTrainingProgram(
   conversationMessages: any[],
   userId: string,
   coachId: string,
@@ -283,7 +288,7 @@ export async function generateTrainingProgramFromConversation(
   });
 
   // Step 1: Extract training program structure from conversation with full context
-  const trainingProgramData = await extractTrainingProgramStructure(
+  const rawTrainingProgramData = await extractTrainingProgramStructure(
     conversationMessages,
     userId,
     coachId,
@@ -291,6 +296,62 @@ export async function generateTrainingProgramFromConversation(
     userProfile,
     pineconeContext
   );
+
+  // NORMALIZATION STEP - Normalize training program data for schema compliance
+  let finalTrainingProgramData = rawTrainingProgramData;
+  let normalizationSummary = "Normalization skipped";
+
+  // Calculate initial confidence (we don't have confidence from extraction yet, so estimate)
+  const initialConfidence = 0.85; // Default assumption for AI-generated data
+
+  if (shouldNormalizeTrainingProgram(rawTrainingProgramData, initialConfidence)) {
+    console.info('🔧 Running normalization on training program data...', {
+      reason: initialConfidence < 0.7 ? "low_confidence" : "structural_check",
+      confidence: initialConfidence,
+      phases: rawTrainingProgramData.phases?.length || 0,
+      totalDays: rawTrainingProgramData.totalDays,
+    });
+
+    const normalizationResult = await normalizeTrainingProgram(
+      rawTrainingProgramData,
+      userId,
+      true // Enable thinking for complex program validation
+    );
+    normalizationSummary = generateNormalizationSummary(normalizationResult);
+
+    console.info('Normalization completed:', {
+      isValid: normalizationResult.isValid,
+      issuesFound: normalizationResult.issues.length,
+      correctionsMade: normalizationResult.issues.filter((i) => i.corrected).length,
+      normalizationConfidence: normalizationResult.confidence,
+      summary: normalizationSummary,
+    });
+
+    // Use normalized data if normalization was successful
+    if (
+      normalizationResult.isValid ||
+      normalizationResult.issues.some((i) => i.corrected)
+    ) {
+      finalTrainingProgramData = normalizationResult.normalizedData;
+
+      console.info('✅ Using normalized training program data', {
+        phaseCount: finalTrainingProgramData.phases.length,
+        totalDays: finalTrainingProgramData.totalDays,
+        issuesCorrected: normalizationResult.issues.filter((i) => i.corrected).length,
+      });
+    } else {
+      console.warn('⚠️ Normalization did not improve data, using original', {
+        issues: normalizationResult.issues.map(i => i.description),
+      });
+    }
+  } else {
+    console.info('⏩ Skipping normalization:', {
+      reason: initialConfidence > 0.9 ? "high_confidence" : "no_structural_issues",
+      confidence: initialConfidence,
+    });
+  }
+
+  const trainingProgramData = finalTrainingProgramData;
 
   // Step 2: Generate training program ID
   const shortId = Math.random().toString(36).substring(2, 11);

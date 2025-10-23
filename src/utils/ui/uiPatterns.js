@@ -36,7 +36,30 @@ export const buttonPatterns = {
   primaryMediumDisabled: "bg-gray-600/20 border border-gray-600/50 text-gray-500 cursor-not-allowed px-4 py-2 rounded-lg font-rajdhani font-semibold text-base uppercase tracking-wide min-h-[40px] flex items-center justify-center",
 
   // Challenge Icon Container - Square gradient container for challenge/agitation icons
-  challengeIcon: "w-16 h-16 bg-gradient-to-br from-synthwave-neon-pink to-synthwave-neon-purple text-white rounded-xl transition-all duration-300 hover:shadow-xl hover:shadow-synthwave-neon-pink/40 hover:-translate-y-1 active:translate-y-0 flex items-center justify-center flex-shrink-0"
+  challengeIcon: "w-16 h-16 bg-gradient-to-br from-synthwave-neon-pink to-synthwave-neon-purple text-white rounded-xl transition-all duration-300 hover:shadow-xl hover:shadow-synthwave-neon-pink/40 hover:-translate-y-1 active:translate-y-0 flex items-center justify-center flex-shrink-0",
+
+  // Mode Toggle Buttons - For conversation mode switching (Chat vs Build)
+  // Base classes for all mode toggle buttons
+  modeToggleBase: "px-2.5 py-0.5 rounded-lg font-rajdhani font-semibold text-xs uppercase tracking-wide transition-all duration-200 flex items-center justify-center gap-1.5",
+
+  // Chat mode active state (Cyan themed)
+  modeToggleChatActive: "bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan border-2 border-synthwave-neon-cyan/40",
+
+  // Chat mode inactive state
+  modeToggleChatInactive: "bg-synthwave-bg-primary/30 text-synthwave-neon-cyan border-2 border-transparent hover:border-synthwave-neon-cyan/20 hover:bg-synthwave-neon-cyan/10",
+
+  // Build mode active state (Purple themed)
+  modeToggleBuildActive: "bg-synthwave-neon-purple/20 text-synthwave-neon-purple border-2 border-synthwave-neon-purple/40",
+
+  // Build mode inactive state
+  modeToggleBuildInactive: "bg-synthwave-bg-primary/30 text-synthwave-neon-purple border-2 border-transparent hover:border-synthwave-neon-purple/20 hover:bg-synthwave-neon-purple/10",
+
+  // Mode toggle container
+  modeToggleContainer: "flex items-center gap-2 bg-synthwave-bg-card/50 backdrop-blur-sm border border-synthwave-neon-cyan/10 rounded-lg p-1 shadow-lg",
+
+  // Mode indicator badges - For displaying which mode a message was created in (not interactive)
+  // Build mode indicator badge (purple themed) - shows on AI messages created in Build mode
+  modeBadgeBuild: "flex items-center gap-1.5 px-2.5 py-0.5 bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 rounded-lg w-fit text-xs font-rajdhani font-semibold uppercase tracking-wide text-synthwave-neon-purple"
 };
 
 export const iconButtonPatterns = {
@@ -279,8 +302,15 @@ export const containerPatterns = {
   // Content-focused card without headers (for memories, notes, messages)
   contentCard: "bg-synthwave-bg-card/60 border border-synthwave-neon-cyan/20 rounded-2xl p-6 shadow-xl shadow-synthwave-neon-cyan/20 hover:border-synthwave-neon-cyan/40 hover:bg-synthwave-bg-card/40 transition-all duration-300 hover:-translate-y-1",
 
-  // AI Chat Bubble - Modern glassmorphism with cyan background tint
+  // Chat Message Bubbles - Themed containers for conversation messages
+  // User message bubble - Pink gradient with rounded corner
+  userMessageBubble: "px-4 py-3 rounded-2xl rounded-br-md shadow-xl bg-gradient-to-br from-synthwave-neon-pink/80 to-synthwave-neon-pink/60 text-white border-0 shadow-synthwave-neon-pink/30 backdrop-blur-sm",
+
+  // AI Chat Bubble - Modern glassmorphism with cyan background tint (default Chat mode)
   aiChatBubble: "bg-synthwave-neon-cyan/10 backdrop-blur-xl border border-synthwave-neon-cyan/20 text-synthwave-text-primary rounded-2xl rounded-bl-md shadow-xl shadow-synthwave-neon-cyan/20",
+
+  // AI Build Mode Bubble - Purple gradient for Build mode AI responses
+  aiBuildModeBubble: "px-4 py-3 rounded-2xl rounded-bl-md shadow-lg bg-gradient-to-br from-synthwave-neon-purple/5 to-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 text-synthwave-text-primary shadow-synthwave-neon-purple/10 backdrop-blur-sm",
 
   // Info Card - Static information display without hover effects
   infoCard: "bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg p-3",
@@ -401,6 +431,19 @@ export const layoutPatterns = {
   authBackground: "bg-gradient-to-br from-synthwave-bg-primary via-synthwave-bg-tertiary to-synthwave-bg-purple"
 };
 
+export const messagePatterns = {
+  // Message status indicator dots - show message state/mode
+  // Primary dot (full opacity)
+  statusDotPrimary: "w-3 h-3 rounded-full",
+  // Secondary dot (reduced opacity for visual hierarchy)
+  statusDotSecondary: "w-3 h-3 rounded-full opacity-60",
+
+  // Color variants for status dots
+  statusDotCyan: "bg-synthwave-neon-cyan",
+  statusDotPink: "bg-synthwave-neon-pink",
+  statusDotPurple: "bg-synthwave-neon-purple",
+};
+
 export const avatarPatterns = {
   // Small avatars (text-sm) - for navigation and chat bubbles
   small: "font-russo font-bold text-sm",
@@ -455,13 +498,13 @@ export const compactCardPatterns = {
 
 // Command Palette Patterns - Quick action buttons and command interfaces
 export const commandPalettePatterns = {
-  // Command palette trigger button - Minimal button showing just keyboard shortcut
+  // Command palette trigger button - Minimal button showing just keyboard shortcut (hidden on mobile via component)
   triggerButton: "flex items-center justify-center px-3 py-2 bg-synthwave-bg-card/50 border border-synthwave-neon-cyan/10 rounded-lg text-synthwave-text-secondary hover:text-synthwave-neon-cyan hover:border-synthwave-neon-cyan/30 hover:bg-synthwave-bg-card/70 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary",
 
   // Button text (hidden on mobile)
   triggerButtonText: "font-rajdhani text-sm font-medium hidden sm:inline",
 
-  // Keyboard shortcut badge
+  // Keyboard shortcut badge (button itself is hidden on mobile via CommandPaletteButton component)
   triggerButtonKbd: "px-2 py-1 bg-synthwave-bg-primary/50 border border-synthwave-neon-cyan/10 rounded text-xs font-mono text-synthwave-text-muted font-medium"
 };
 
@@ -624,8 +667,10 @@ export const navigationPatterns = {
   // Quick Actions FAB - Floating Action Button for mobile quick actions
   fab: {
     // Main FAB button - bottom-right floating button (Hero gradient + FAB structure from Theme.jsx)
-    // Position: 64px bottom nav + 16px gap = 80px (bottom-20)
-    container: "fixed bottom-20 right-6 z-50 md:hidden",
+    // Position: 64px bottom nav + 16px gap + safe area = calc(80px + env(safe-area-inset-bottom))
+    // Using calc() with safe-area-inset-bottom keeps FAB stable when mobile browser chrome hides/shows
+    container: "fixed right-6 z-50 md:hidden",
+    containerStyle: { bottom: 'calc(80px + env(safe-area-inset-bottom))' }, // Inline style for calc() support
     button: "w-14 h-14 bg-gradient-to-r from-synthwave-neon-pink to-synthwave-neon-purple text-white rounded-full shadow-lg shadow-synthwave-neon-pink/30 hover:shadow-xl hover:shadow-synthwave-neon-pink/40 hover:-translate-y-1 active:translate-y-0 transition-all duration-300 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary",
     icon: "w-6 h-6",
 

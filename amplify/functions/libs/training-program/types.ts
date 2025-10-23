@@ -254,6 +254,19 @@ export interface UpdateTrainingProgramStatusEvent {
 }
 
 /**
+ * Event structure for the build-training-program Lambda function
+ * Triggered asynchronously from Build mode conversations
+ */
+export interface BuildTrainingProgramEvent {
+  userId: string;
+  coachId: string;
+  conversationId: string;
+  conversationMessages: any[]; // Full conversation history for context
+  coachConfig: any; // CoachConfig from DynamoDB
+  userProfile?: any; // UserProfile from DynamoDB (optional)
+}
+
+/**
  * Event structure for logging a workout template (converting template to logged workout)
  */
 export interface LogWorkoutTemplateEvent {

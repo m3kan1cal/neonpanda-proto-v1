@@ -21,6 +21,7 @@ import {
   iconButtonPatterns,
   buttonPatterns,
   tooltipPatterns,
+  messagePatterns,
 } from "../utils/ui/uiPatterns";
 import { FullPageLoader, CenteredErrorState } from "./shared/ErrorStates";
 import CoachHeader from "./shared/CoachHeader";
@@ -35,6 +36,7 @@ import CoachConversationAgent from "../utils/agents/CoachConversationAgent";
 import CoachAgent from "../utils/agents/CoachAgent";
 import { WorkoutAgent } from "../utils/agents/WorkoutAgent";
 import { useToast } from "../contexts/ToastContext";
+import { CONVERSATION_MODES } from "../constants/conversationModes";
 import ImageWithPresignedUrl from "./shared/ImageWithPresignedUrl";
 import {
   sendMessageWithStreaming,
@@ -59,6 +61,7 @@ import {
   XIcon,
   SendIcon,
   PlusIcon,
+  BuildModeIconTiny,
 } from "./themes/SynthwaveComponents";
 // Icons now imported from SynthwaveComponents for reusability
 
@@ -141,6 +144,7 @@ const MessageItem = memo(
     getUserInitial,
     formatTime,
     renderMessageContent,
+    conversationMode,
   }) => {
     return (
       <div
@@ -167,15 +171,23 @@ const MessageItem = memo(
         <div
           className={`max-w-[95%] md:max-w-[70%] ${message.type === "user" ? "items-end" : "items-start"} flex flex-col`}
         >
+          {/* Build Mode Indicator Badge (only for AI messages created in Build mode) */}
+          {message.type === "ai" && message.metadata?.mode === CONVERSATION_MODES.BUILD && (
+            <div className={`${buttonPatterns.modeBadgeBuild} mb-1`}>
+              <BuildModeIconTiny />
+              <span>Build Mode</span>
+            </div>
+          )}
+
           <div
             className={getStreamingMessageClasses(
               message,
               agentState,
-              `px-4 py-3 rounded-2xl shadow-sm ${
-                message.type === "user"
-                  ? "bg-gradient-to-br from-synthwave-neon-pink/80 to-synthwave-neon-pink/60 text-white border-0 rounded-br-md shadow-xl shadow-synthwave-neon-pink/30 backdrop-blur-sm"
-                  : containerPatterns.aiChatBubble
-              }`
+              message.type === "user"
+                ? containerPatterns.userMessageBubble
+                : message.type === "ai" && message.metadata?.mode === CONVERSATION_MODES.BUILD
+                  ? containerPatterns.aiBuildModeBubble
+                  : `${containerPatterns.aiChatBubble} px-4 py-3`
             )}
           >
             <div className="font-rajdhani text-base leading-relaxed">
@@ -191,14 +203,22 @@ const MessageItem = memo(
             </span>
             {message.type === "user" && (
               <div className="flex gap-1">
-                <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink opacity-60"></div>
-                <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink"></div>
+                <div className={`${messagePatterns.statusDotSecondary} ${messagePatterns.statusDotPink}`}></div>
+                <div className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotPink}`}></div>
               </div>
             )}
             {message.type === "ai" && (
               <div className="flex gap-1">
-                <div className="w-3 h-3 rounded-full bg-synthwave-neon-cyan opacity-60"></div>
-                <div className="w-3 h-3 rounded-full bg-synthwave-neon-cyan"></div>
+                <div className={`${messagePatterns.statusDotSecondary} ${
+                  message.metadata?.mode === CONVERSATION_MODES.BUILD
+                    ? messagePatterns.statusDotPurple
+                    : messagePatterns.statusDotCyan
+                }`}></div>
+                <div className={`${messagePatterns.statusDotPrimary} ${
+                  message.metadata?.mode === CONVERSATION_MODES.BUILD
+                    ? messagePatterns.statusDotPurple
+                    : messagePatterns.statusDotCyan
+                }`}></div>
               </div>
             )}
           </div>
@@ -409,6 +429,18 @@ function CoachConversations() {
   const pollingTimeoutRef = useRef(null);
   const pollingConversationIdRef = useRef(null); // Track which conversation is being polled
   const hasAttemptedPollingRef = useRef(null); // Track if we've tried to start polling for this conversation
+
+  // Conversation mode state (chat vs. build)
+  const [conversationMode, setConversationMode] = useState(
+    coachConversationAgentState.conversation?.mode || CONVERSATION_MODES.CHAT
+  );
+
+  // Sync conversation mode when conversation loads
+  useEffect(() => {
+    if (coachConversationAgentState.conversation?.mode) {
+      setConversationMode(coachConversationAgentState.conversation.mode);
+    }
+  }, [coachConversationAgentState.conversation?.mode]);
 
   // Debug: Track component re-renders during streaming
 
@@ -942,6 +974,32 @@ function CoachConversations() {
     }
   };
 
+  const handleConversationModeChange = async (newMode) => {
+    if (!agentRef.current) {
+      console.error("Conversation agent not initialized");
+      return;
+    }
+
+    // Update local state immediately for responsive UI
+    setConversationMode(newMode);
+
+    try {
+      // Persist mode change to DynamoDB
+      await agentRef.current.updateCoachConversation(
+        userId,
+        coachId,
+        conversationId,
+        { mode: newMode }
+      );
+      console.log(`Conversation mode updated to: ${newMode}`);
+    } catch (error) {
+      console.error("Error updating conversation mode:", error);
+      showError("Failed to update conversation mode");
+      // Revert local state on error
+      setConversationMode(coachConversationAgentState.conversation?.mode || CONVERSATION_MODES.CHAT);
+    }
+  };
+
   const handleDeleteClick = () => {
     setShowDeleteModal(true);
   };
@@ -1110,7 +1168,10 @@ function CoachConversations() {
         </div>
 
         {/* Chat Input Skeleton */}
-        <ChatInput showSkeleton={true} />
+        <ChatInput
+          showSkeleton={true}
+          conversationMode={CONVERSATION_MODES.CHAT}
+        />
       </div>
     );
   }
@@ -1231,6 +1292,7 @@ function CoachConversations() {
                       getUserInitial={getUserInitial}
                       formatTime={formatTime}
                       renderMessageContent={renderMessageContent}
+                      conversationMode={conversationMode}
                     />
                   ))}
 
@@ -1256,16 +1318,31 @@ function CoachConversations() {
                           "C"}
                       </div>
                       <div
-                        className={`${containerPatterns.aiChatBubble} px-4 py-3`}
+                        className={conversationMode === CONVERSATION_MODES.BUILD
+                          ? containerPatterns.aiBuildModeBubble
+                          : `${containerPatterns.aiChatBubble} px-4 py-3`
+                        }
                       >
                         <div className="flex space-x-1">
-                          <div className="w-2 h-2 bg-synthwave-neon-cyan rounded-full animate-bounce"></div>
+                          <div className={`w-2 h-2 rounded-full animate-bounce ${
+                            conversationMode === CONVERSATION_MODES.BUILD
+                              ? "bg-synthwave-neon-purple"
+                              : "bg-synthwave-neon-cyan"
+                          }`}></div>
                           <div
-                            className="w-2 h-2 bg-synthwave-neon-cyan rounded-full animate-bounce"
+                            className={`w-2 h-2 rounded-full animate-bounce ${
+                              conversationMode === CONVERSATION_MODES.BUILD
+                                ? "bg-synthwave-neon-purple"
+                                : "bg-synthwave-neon-cyan"
+                            }`}
                             style={{ animationDelay: "0.1s" }}
                           ></div>
                           <div
-                            className="w-2 h-2 bg-synthwave-neon-cyan rounded-full animate-bounce"
+                            className={`w-2 h-2 rounded-full animate-bounce ${
+                              conversationMode === CONVERSATION_MODES.BUILD
+                                ? "bg-synthwave-neon-purple"
+                                : "bg-synthwave-neon-cyan"
+                            }`}
                             style={{ animationDelay: "0.2s" }}
                           ></div>
                         </div>
@@ -1301,6 +1378,8 @@ function CoachConversations() {
         tipsTitle="Chat tips & help"
         textareaRef={textareaRef}
         conversationSize={coachConversationAgentState.conversationSize}
+        conversationMode={conversationMode}
+        onConversationModeChange={handleConversationModeChange}
       />
 
       {/* Command Palette */}

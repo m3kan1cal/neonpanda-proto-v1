@@ -60,6 +60,7 @@ import { checkUserAvailability } from "./functions/check-user-availability/resou
 import { generateUploadUrls } from "./functions/generate-upload-urls/resource";
 import { generateDownloadUrls } from "./functions/generate-download-urls/resource";
 import { createTrainingProgram } from "./functions/create-training-program/resource";
+import { buildTrainingProgram } from "./functions/build-training-program/resource";
 import { getTrainingProgram } from "./functions/get-training-program/resource";
 import { getTrainingPrograms } from "./functions/get-training-programs/resource";
 import { updateTrainingProgram } from "./functions/update-training-program/resource";
@@ -130,6 +131,7 @@ const backend = defineBackend({
   generateDownloadUrls,
   syncLogSubscriptions,
   createTrainingProgram,
+  buildTrainingProgram,
   getTrainingProgram,
   getTrainingPrograms,
   updateTrainingProgram,
@@ -266,6 +268,7 @@ const sharedPolicies = new SharedPolicies(
   backend.deleteMemory,
   backend.updateUserProfile,
   backend.createTrainingProgram,
+  backend.buildTrainingProgram,
   backend.updateTrainingProgram,
   backend.logWorkoutTemplate,
   // NOTE: postConfirmation excluded to avoid circular dependency with auth stack
@@ -339,6 +342,7 @@ sharedPolicies.attachS3AnalyticsAccess(backend.buildMonthlyAnalytics.resources.l
   backend.streamCoachCreatorSession,
   backend.updateCoachCreatorSession,
   backend.createTrainingProgram,
+  backend.buildTrainingProgram,
   backend.getTrainingProgram,
   backend.logWorkoutTemplate,
   backend.getWorkoutTemplate,
@@ -439,11 +443,12 @@ grantLambdaInvokePermissions(
   ]
 );
 
-// Grant permission to streamCoachConversation to invoke buildWorkout and buildConversationSummary
+// Grant permission to streamCoachConversation to invoke buildWorkout, buildTrainingProgram, and buildConversationSummary
 grantLambdaInvokePermissions(
   backend.streamCoachConversation.resources.lambda,
   [
     backend.buildWorkout.resources.lambda.functionArn,
+    backend.buildTrainingProgram.resources.lambda.functionArn,
     backend.buildConversationSummary.resources.lambda.functionArn,
   ]
 );
@@ -649,6 +654,10 @@ backend.sendCoachConversationMessage.addEnvironment(
 backend.streamCoachConversation.addEnvironment(
   "BUILD_WORKOUT_FUNCTION_NAME",
   backend.buildWorkout.resources.lambda.functionName
+);
+backend.streamCoachConversation.addEnvironment(
+  "BUILD_TRAINING_PROGRAM_FUNCTION_NAME",
+  backend.buildTrainingProgram.resources.lambda.functionName
 );
 backend.streamCoachConversation.addEnvironment(
   "BUILD_CONVERSATION_SUMMARY_FUNCTION_NAME",

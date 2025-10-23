@@ -10,6 +10,96 @@
 
 export const changelogEntries = [
   {
+    version: "Release v1.0.20251023-beta",
+    date: "2025-10-23",
+    changes: {
+      added: [
+        "Pre-validation for workout slash commands (/log-workout) to reject obviously incomplete inputs before AI extraction (minimum 15 characters required)",
+        "Comprehensive mobile-responsive positioning system for QuickActionsFAB using calc() with env(safe-area-inset-bottom) for immunity to mobile browser chrome changes",
+        "Conversation mode toggle skeleton loading structure in ChatInput matching real UI layout with mode toggle pill shape",
+        "Platform-aware mobile keyboard shortcut hiding (⌘ K / Ctrl K badges hidden on touch devices below 768px)",
+        "MESSAGE_TYPES constant enum (TEXT, TEXT_WITH_IMAGES, VOICE) for type-safe message content classification across backend and frontend",
+        "BuildModeIconTiny SVG component in SynthwaveComponents.jsx for consistent Build mode indicator icon usage",
+        "generateAndFormatUpdate() helper function for DRY contextual update generation with consistent error handling",
+        "AGENTS.md documentation file with concise best practices for AI prompts, architecture patterns, and stack-specific guidance",
+        "AI-generated contextual updates for training program generation using Nova Micro (start, complete, error states)",
+        "Message bubble UI patterns in uiPatterns.js (userMessageBubble, aiChatBubble, aiBuildModeBubble) for consistent chat styling",
+        "Message status dot patterns in uiPatterns.js (statusDotPrimary, statusDotSecondary, color variants) for visual message state indicators",
+        "Build mode badge pattern (modeBadgeBuild) in uiPatterns.js for purple-themed mode indicators on AI messages"
+      ],
+      changed: [
+        "Workout extraction parsing flow refactored to call parseJsonWithFallbacks() before validation checks, allowing proper markdown cleanup of AI responses",
+        "cleanResponse() utility enhanced with comprehensive markdown pattern removal supporting all code fence variations (```json, ```, ~~~json, ~~~)",
+        "JSON formatting instructions in workout extraction prompt strengthened with explicit 'CRITICAL' emphasis and repetition to prevent markdown wrapping",
+        "memory/detection.ts consolidated to use parseJsonWithFallbacks() consistently (replaced 34 lines of manual markdown cleanup in 2 locations)",
+        "coach-conversation/summary.ts converted from custom regex-based JSON extraction to parseJsonWithFallbacks() (replaced 22 lines with single utility call)",
+        "QuickActionsFAB positioning changed from fixed bottom-20 to calc(80px + env(safe-area-inset-bottom)) preventing overlap with BottomNav during mobile browser chrome transitions",
+        "CommandPaletteButton completely hidden on mobile (<768px) and visible on desktop (≥768px) since QuickActionsFAB provides mobile access",
+        "ChatInput skeleton loading structure now conditionally renders mode toggle skeleton when conversationMode prop is provided",
+        "Conversation mode toggle alignment refined with precise padding calculations (pl-[50px] mobile, pl-[150px] desktop) to align with text input left edge",
+        "CoachMessage.messageType now uses MessageType type instead of plain string for improved type safety",
+        "Streaming conversation handler optimized with fire-and-forget memory saves using didInitiateMemorySave boolean flag (simplified from promise tracking)",
+        "Contextual updates reduced from 5-6 to 2-3 key updates (removed pattern_analysis and insights_brewing for faster AI streaming start)",
+        "Training program generation contextual updates converted from hardcoded structured messages to AI-generated ephemeral feedback using Nova Micro",
+        "CoachConversations.jsx message bubble styling extracted to uiPatterns.js (userMessageBubble, aiChatBubble, aiBuildModeBubble patterns)",
+        "CoachConversations.jsx message status dots refactored to use messagePatterns from uiPatterns.js with dynamic color variants",
+        "Build mode AI messages now styled with purple gradient bubble (aiBuildModeBubble) and purple status dots distinct from cyan Chat mode",
+        "Build mode indicator badge now uses centralized modeBadgeBuild pattern and BuildModeIconTiny component for consistency",
+        "Initial acknowledgment contextual update now uses generateAndFormatUpdate() helper for cleaner code",
+        "Training program contextual updates (start, complete, error) now use generateAndFormatUpdate() helper reducing duplication"
+      ],
+      fixed: [
+        "Critical workout extraction failure when Claude returns markdown-wrapped JSON (```json {...} ```) despite explicit instructions not to wrap",
+        "Premature validation blocking cleanup where extraction code checked for opening brace BEFORE running parseJsonWithFallbacks() cleanup function",
+        "Expensive AI extraction calls triggered by accidental/incomplete slash command inputs (e.g., 'WARM up' 7 characters triggering 34KB prompt)",
+        "QuickActionsFAB sliding down and overlapping BottomNav when mobile browser UI chrome hides/shows during scrolling (viewport height changes)",
+        "Keyboard shortcut badges (⌘ K / Ctrl K) displaying on mobile touch devices where keyboard shortcuts are unavailable",
+        "Empty kbd container taking up space on mobile even when kbd elements were hidden due to visible flex container wrapper",
+        "Inconsistent JSON parsing across codebase with some functions using raw JSON.parse() instead of parseJsonWithFallbacks() utility",
+        "ChatInput skeleton loading not reflecting conversation mode toggle UI, showing generic status text instead of mode toggle skeleton structure",
+        "Hardcoded messageType strings replaced with MESSAGE_TYPES constants preventing typos and improving maintainability",
+        "Performance bottleneck where pattern/insights contextual updates blocked AI streaming start by ~300-500ms (now removed)",
+        "Code duplication in contextual update generation with repetitive generateContextualUpdate + formatContextualEvent pattern across 4 locations",
+        "Inconsistent styling between Build mode messages and Chat mode messages using inline classes instead of centralized patterns",
+        "Hardcoded SVG icon for Build mode duplicated in multiple locations instead of using shared component",
+        "Messy contextual update implementation with hardcoded structured messages for training programs instead of AI-generated ephemeral feedback"
+      ],
+      removed: [
+        "libs/training-program/messages.ts file (replaced with AI-generated contextual updates for consistency with memory/workout handling)"
+      ]
+    }
+  },
+  {
+    version: "Release v1.0.20251021-beta",
+    date: "2025-10-21",
+    changes: {
+      added: [
+        "Enhanced running workout schema with comprehensive tracking for distance units, elevation loss, structured weather data, equipment, warmup/cooldown, route details, and fueling/hydration",
+        "RunningSegment TypeScript interface for detailed segment-based tracking with pace, heart rate, cadence, terrain, and elevation change data",
+        "RunningSegmentDisplay component in WorkoutViewer showing individual run segments with color-coded effort levels and performance metrics",
+        "RunningDetails component displaying weather conditions, equipment tracking, route information, warmup/cooldown sections, and nutrition/hydration details",
+        "Running-specific summary fields in WorkoutViewer (run type, distance with unit, total time, average pace, surface, elevation gain/loss, route name)",
+        "Weather tracking with temperature, temperature_unit (F/C), conditions (sunny/cloudy/rainy/etc), wind speed, and humidity percentage",
+        "Equipment tracking for running shoes, wearables (GPS watches), and other gear (running belt, sunglasses, etc.)",
+        "Route information with name, description, and type classification (out_and_back, loop, point_to_point)",
+        "Fueling details tracking pre-run nutrition, during-run fueling items, and total hydration in ounces",
+        "Warmup and cooldown sections with distance, time, and text descriptions for each phase",
+        "Run type classification supporting 11 types: easy, tempo, interval, long, race, recovery, fartlek, progression, threshold, hill_repeats, speed_work",
+        "Segment type classification: warmup, working, interval, recovery, cooldown, main",
+        "AI extraction pattern documentation for run type identification, pace/distance extraction, weather conditions, segment analysis, and equipment/route recognition"
+      ],
+      changed: [
+        "RunningWorkout TypeScript interface upgraded from placeholder to fully-typed interface with comprehensive field definitions",
+        "UNIVERSAL_WORKOUT_SCHEMA.md running section expanded with design philosophy, detailed examples, and AI extraction patterns",
+        "WorkoutViewer component enhanced to display running workouts with collapsible sections for details and segments",
+        "Running segments now display with color-coded effort level badges (max: pink, hard: cyan, moderate: secondary, easy: cyan/10)",
+        "Universal workout schema running section now includes elevation_loss field alongside elevation_gain for complete elevation profile"
+      ],
+      fixed: [],
+      removed: []
+    }
+  },
+  {
     version: "Release v1.0.20251019-beta",
     date: "2025-10-19",
     changes: {

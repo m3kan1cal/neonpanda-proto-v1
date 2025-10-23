@@ -9,24 +9,22 @@ import { CoachConfig, DynamoDBItem } from "../coach-creator/types";
 import { UserMemory } from "../memory";
 
 /**
- * Individual message in a coach conversation
+ * Message type definitions
+ * - 'text': Standard text-only message
+ * - 'text_with_images': Text message with image attachments
+ * - 'voice': Voice message (future feature)
  */
-export interface CoachMessage {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-  timestamp: Date;
+export type MessageType = 'text' | 'text_with_images' | 'voice';
 
-  // NEW: Image support
-  messageType?: 'text' | 'text_with_images' | 'voice';
-  imageS3Keys?: string[]; // S3 keys like "user-uploads/user-123/abc.jpg"
-
-  metadata?: {
-    tokens?: number;
-    model?: string;
-    processingTime?: number;
-  };
-}
+/**
+ * Message type constants
+ * Use these instead of string literals to ensure type safety and consistency
+ */
+export const MESSAGE_TYPES = {
+  TEXT: 'text' as const,
+  TEXT_WITH_IMAGES: 'text_with_images' as const,
+  VOICE: 'voice' as const,
+} satisfies Record<string, MessageType>;
 
 /**
  * Conversation mode types
@@ -43,6 +41,26 @@ export const CONVERSATION_MODES = {
   CHAT: 'chat' as const,
   BUILD: 'build' as const,
 } satisfies Record<string, ConversationMode>;
+
+/**
+ * Individual message in a coach conversation
+ */
+export interface CoachMessage {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  timestamp: Date;
+
+  messageType?: MessageType;
+  imageS3Keys?: string[]; // S3 keys like "user-uploads/user-123/abc.jpg"
+
+  metadata?: {
+    tokens?: number;
+    model?: string;
+    processingTime?: number;
+    mode?: ConversationMode; // Track which mode this message was created in
+  };
+}
 
 /**
  * Complete coach conversation with full message history
