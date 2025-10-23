@@ -139,6 +139,27 @@ Generate a brief, creative update about preparing insights. Be energetic and coa
 Examples: Brewing up something good... or Crafting the perfect response... or Flexing my coach muscles...`;
         break;
 
+      case "training_program_generation_start":
+        userPrompt = `User message: "${userResponse}"
+
+Generate a brief, creative update about starting to build their training program. Be energetic and coach-like!
+Examples: Firing up the program generator... or Building your training blueprint... or Crafting your program architecture...`;
+        break;
+
+      case "training_program_generation_complete":
+        userPrompt = `User message: "${userResponse}"
+
+Generate a brief, creative update about successfully kicking off their program generation. Be energetic and celebratory!
+Examples: Program generation rolling... or Blueprint in progress... or Your training plan is cooking...`;
+        break;
+
+      case "training_program_generation_error":
+        userPrompt = `User message: "${userResponse}"
+
+Generate a brief, supportive update about hitting a snag with program generation. Stay positive and encouraging!
+Examples: Hit a bump, let's refine this... or Let's dial in those details... or We'll get this dialed in...`;
+        break;
+
       default:
         userPrompt = `User message: "${userResponse}"
 
@@ -173,6 +194,9 @@ Generate a brief processing update. One sentence, calm tone.`;
       memory_analysis: `Zeroing in on your goals...`,
       pattern_analysis: `Connecting the dots...`,
       insights_brewing: `Brewing up something good...`,
+      training_program_generation_start: `Firing up the program generator...`,
+      training_program_generation_complete: `Program generation rolling...`,
+      training_program_generation_error: `Let's dial in those details...`,
     };
 
     return fallbacks[updateType] || `Flexing my coach muscles...`;

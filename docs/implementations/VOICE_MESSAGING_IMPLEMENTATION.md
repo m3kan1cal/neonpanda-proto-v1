@@ -1,7 +1,7 @@
 # Voice Messaging - Simple & Future-Proof Implementation
-**Project**: NeonPanda AI Fitness Coaches  
-**Feature**: Voice-to-Coach Communication  
-**Timeline**: 5-7 days  
+**Project**: NeonPanda AI Fitness Coaches
+**Feature**: Voice-to-Coach Communication
+**Timeline**: 5-7 days
 **Status**: Planning Phase
 
 ---
@@ -97,7 +97,7 @@ Display: Simple audio player + transcription text
 ---
 
 ## Implementation
-**Timeline**: 5-7 days total  
+**Timeline**: 5-7 days total
 **Goal**: Production-ready voice messaging with minimal complexity
 
 ### Backend Infrastructure
@@ -151,8 +151,8 @@ export async function handler(event: any) {
 
     // 1. Upload audio to S3
     const audioKey = `voice-messages/${userId}/${nanoid()}.webm`;
-    console.log(`Uploading audio to S3: ${audioKey}`);
-    
+    console.info(`Uploading audio to S3: ${audioKey}`);
+
     await s3.send(new PutObjectCommand({
       Bucket: process.env.VOICE_MESSAGES_BUCKET!,
       Key: audioKey,
@@ -167,9 +167,9 @@ export async function handler(event: any) {
     }));
 
     // 2. Transcribe audio
-    console.log('Starting transcription...');
+    console.info('Starting transcription...');
     const transcription = await transcribeAudio(audioKey);
-    console.log(`Transcription: "${transcription}"`);
+    console.info(`Transcription: "${transcription}"`);
 
     // 3. Store user voice message
     await storeConversationMessage(conversationId, {
@@ -191,7 +191,7 @@ export async function handler(event: any) {
     });
 
     // 6. Generate coach response (existing Bedrock flow)
-    console.log('Generating coach response...');
+    console.info('Generating coach response...');
     const response = await bedrock.send(new ConverseCommand({
       modelId: 'anthropic.claude-3-sonnet-20240229-v1:0',
       messages: conversationHistory.map(msg => ({
@@ -244,7 +244,7 @@ export async function handler(event: any) {
 // Transcribe audio from S3
 async function transcribeAudio(s3Key: string): Promise<string> {
   const jobName = `transcribe-${nanoid()}`;
-  
+
   await transcribe.send(new StartTranscriptionJobCommand({
     TranscriptionJobName: jobName,
     Media: { MediaFileUri: `s3://${process.env.VOICE_MESSAGES_BUCKET}/${s3Key}` },
@@ -259,25 +259,25 @@ async function transcribeAudio(s3Key: string): Promise<string> {
   // Poll for completion (max 30 seconds)
   for (let i = 0; i < 15; i++) {
     await new Promise(resolve => setTimeout(resolve, 2000));
-    
+
     const result = await transcribe.send(new GetTranscriptionJobCommand({
       TranscriptionJobName: jobName
     }));
-    
+
     const status = result.TranscriptionJob!.TranscriptionJobStatus;
-    
+
     if (status === 'COMPLETED') {
       const transcriptUri = result.TranscriptionJob!.Transcript!.TranscriptFileUri!;
       const transcriptResponse = await fetch(transcriptUri);
       const transcript = await transcriptResponse.json();
       return transcript.results.transcripts[0].transcript;
     }
-    
+
     if (status === 'FAILED') {
       throw new Error('Transcription failed');
     }
   }
-  
+
   throw new Error('Transcription timeout');
 }
 
@@ -285,7 +285,7 @@ async function transcribeAudio(s3Key: string): Promise<string> {
 function extractAudioFromMultipart(body: string): Buffer {
   const boundary = body.split('\r\n')[0];
   const parts = body.split(boundary);
-  
+
   for (const part of parts) {
     if (part.includes('Content-Type: audio/webm')) {
       const audioStart = part.indexOf('\r\n\r\n') + 4;
@@ -293,7 +293,7 @@ function extractAudioFromMultipart(body: string): Buffer {
       return Buffer.from(part.substring(audioStart, audioEnd), 'binary');
     }
   }
-  
+
   throw new Error('No audio data found');
 }
 ```
@@ -316,36 +316,36 @@ const FITNESS_TERMS = [
   'WOD', 'AMRAP', 'EMOM', 'METCON', 'Tabata', 'Fran', 'Murph', 'Grace',
   'box-jumps', 'wall-balls', 'thruster', 'burpees', 'double-unders',
   'kipping', 'butterfly', 'muscle-ups',
-  
+
   // Lifts
   'deadlift', 'squat', 'bench-press', 'overhead-press', 'snatch',
   'clean-and-jerk', 'front-squat', 'back-squat', 'sumo-deadlift',
-  
+
   // Equipment
   'kettlebell', 'dumbbell', 'barbell', 'bumper-plates', 'weight-plates',
   'pull-up-bar', 'assault-bike', 'rowing-machine', 'ski-erg',
-  
+
   // Measurements
   'reps', 'sets', 'one-rep-max', 'PR', 'personal-record',
   'RX', 'scaled', 'kilos', 'pounds',
-  
+
   // Body parts
   'hamstrings', 'quads', 'glutes', 'lats', 'delts', 'traps',
-  
+
   // Common phrases
   'no-rep', 'good-rep', 'time-cap', 'buy-in', 'cash-out'
 ];
 
 export async function createFitnessVocabulary() {
   const transcribe = new TranscribeClient({});
-  
+
   await transcribe.send(new CreateVocabularyCommand({
     VocabularyName: 'FitnessTerms',
     LanguageCode: 'en-US',
     Phrases: FITNESS_TERMS
   }));
-  
-  console.log('Fitness vocabulary created successfully');
+
+  console.info('Fitness vocabulary created successfully');
 }
 ```
 
@@ -366,7 +366,7 @@ export interface ConversationMessage {
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
-  
+
   // Voice message fields (optional)
   messageType?: 'text' | 'voice';
   audioS3Key?: string;  // Only field needed - can add more later
@@ -396,7 +396,7 @@ export const useVoiceRecording = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [audioBlob, setAudioBlob] = useState(null);
-  
+
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const timerRef = useRef(null);
@@ -413,7 +413,7 @@ export const useVoiceRecording = () => {
       });
 
       streamRef.current = stream;
-      
+
       const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
         ? 'audio/webm;codecs=opus'
         : 'audio/webm';
@@ -522,7 +522,7 @@ export default function ChatInput({
   // NEW: Handle voice message send
   const handleSendVoiceMessage = async () => {
     if (!audioBlob) return;
-    
+
     try {
       await onSendVoiceMessage(audioBlob);
       resetRecording();
@@ -542,7 +542,7 @@ export default function ChatInput({
 
   // NEW: Add voice message preview after recording
   // Insert this BEFORE the existing form, inside the main container:
-  
+
   {/* Voice message preview (after recording) */}
   {audioBlob && !isRecording && (
     <div className="mb-3 flex items-center justify-between p-3 bg-synthwave-neon-cyan/10 rounded-lg border border-synthwave-neon-cyan/30">
@@ -713,21 +713,21 @@ const generateFakeWaveform = (messageId, barCount = 50) => {
   let random = seed;
   const waveform = [];
   let prevHeight = 0.5;
-  
+
   for (let i = 0; i < barCount; i++) {
     random = (random * 9301 + 49297) % 233280;
     const normalized = random / 233280;
-    
+
     // Smooth transitions for speech-like pattern
     const change = (normalized - 0.5) * 0.3;
     prevHeight = Math.max(0.15, Math.min(0.95, prevHeight + change));
-    
+
     // Occasional peaks for emphasis
     if (normalized > 0.9) prevHeight = Math.min(0.95, prevHeight + 0.2);
-    
+
     waveform.push(prevHeight);
   }
-  
+
   return waveform;
 };
 
@@ -839,7 +839,7 @@ The bars are centered vertically and extend equally in both directions, creating
 
 ### Critical Test Cases
 - [ ] Record 5-second message on iPhone Safari
-- [ ] Record 30-second message on Android Chrome  
+- [ ] Record 30-second message on Android Chrome
 - [ ] Record message on desktop Chrome
 - [ ] Test microphone permission denied
 - [ ] Test network failure during upload
@@ -919,7 +919,7 @@ The bars are centered vertically and extend equally in both directions, creating
 - [ ] <2% error rate
 - [ ] Positive qualitative feedback
 
-### Month 1 Goals  
+### Month 1 Goals
 - [ ] 40% of active users use voice regularly (3+ times/week)
 - [ ] Voice users have 20% higher retention than text-only
 - [ ] >95% transcription accuracy with fitness vocabulary
@@ -993,6 +993,6 @@ VITE_AUDIO_CDN_URL=https://d1234567890.cloudfront.net
 
 ---
 
-**Last Updated**: January 2025  
-**Status**: Ready to implement  
+**Last Updated**: January 2025
+**Status**: Ready to implement
 **Next Step**: Create S3 bucket and start backend infrastructure

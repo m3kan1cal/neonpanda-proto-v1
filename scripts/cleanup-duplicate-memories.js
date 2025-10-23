@@ -34,7 +34,7 @@ function parseArgs() {
   const args = process.argv.slice(2);
 
   if (args.length === 0 || args[0] === '--help' || args[0] === '-h') {
-    console.log(`
+    console.info(`
 Cleanup Duplicate Pinecone Memory Records
 
 Usage:
@@ -80,7 +80,7 @@ async function getPineconeClient() {
  */
 async function fetchMemoryRecords(index, namespace) {
   try {
-    console.log(`\n📊 Fetching memory records from namespace: ${namespace}\n`);
+    console.info(`\n📊 Fetching memory records from namespace: ${namespace}\n`);
 
     const searchQuery = {
       query: {
@@ -98,7 +98,7 @@ async function fetchMemoryRecords(index, namespace) {
       return [];
     }
 
-    console.log(`✅ Found ${response.result.hits.length} memory records\n`);
+    console.info(`✅ Found ${response.result.hits.length} memory records\n`);
     return response.result.hits;
   } catch (error) {
     console.error('❌ Error fetching records:', error.message);
@@ -161,40 +161,40 @@ function findDuplicates(records) {
  * Display duplicate analysis
  */
 function displayDuplicates(duplicates) {
-  console.log('═══════════════════════════════════════════════════════════');
-  console.log('DUPLICATE MEMORY ANALYSIS');
-  console.log('═══════════════════════════════════════════════════════════\n');
+  console.info('═══════════════════════════════════════════════════════════');
+  console.info('DUPLICATE MEMORY ANALYSIS');
+  console.info('═══════════════════════════════════════════════════════════\n');
 
   if (duplicates.length === 0) {
-    console.log('✅ No duplicates found! All memories have unique IDs.\n');
+    console.info('✅ No duplicates found! All memories have unique IDs.\n');
     return;
   }
 
   let totalDuplicates = 0;
 
   duplicates.forEach((dup, i) => {
-    console.log(`\n━━━ DUPLICATE GROUP ${i + 1} ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
-    console.log(`Memory ID: ${dup.memoryId}`);
-    console.log(`Total Records: ${dup.totalRecords}`);
-    console.log(`Duplicates to Delete: ${dup.delete.length}`);
+    console.info(`\n━━━ DUPLICATE GROUP ${i + 1} ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
+    console.info(`Memory ID: ${dup.memoryId}`);
+    console.info(`Total Records: ${dup.totalRecords}`);
+    console.info(`Duplicates to Delete: ${dup.delete.length}`);
 
-    console.log('\n✅ KEEP:');
-    console.log(`  Pinecone ID: ${dup.keep.pineconeId}`);
-    console.log(`  Usage Count: ${dup.keep.usageCount}`);
-    console.log(`  Logged At: ${dup.keep.loggedAt}`);
-    console.log(`  Content: ${dup.keep.contentPreview}...`);
+    console.info('\n✅ KEEP:');
+    console.info(`  Pinecone ID: ${dup.keep.pineconeId}`);
+    console.info(`  Usage Count: ${dup.keep.usageCount}`);
+    console.info(`  Logged At: ${dup.keep.loggedAt}`);
+    console.info(`  Content: ${dup.keep.contentPreview}...`);
 
-    console.log('\n❌ DELETE:');
+    console.info('\n❌ DELETE:');
     dup.delete.forEach((rec, j) => {
-      console.log(`  ${j + 1}. ${rec.pineconeId} (usage: ${rec.usageCount})`);
+      console.info(`  ${j + 1}. ${rec.pineconeId} (usage: ${rec.usageCount})`);
       totalDuplicates++;
     });
   });
 
-  console.log('\n═══════════════════════════════════════════════════════════');
-  console.log(`Summary: ${duplicates.length} memory groups with duplicates`);
-  console.log(`Total duplicate records to delete: ${totalDuplicates}`);
-  console.log('═══════════════════════════════════════════════════════════\n');
+  console.info('\n═══════════════════════════════════════════════════════════');
+  console.info(`Summary: ${duplicates.length} memory groups with duplicates`);
+  console.info(`Total duplicate records to delete: ${totalDuplicates}`);
+  console.info('═══════════════════════════════════════════════════════════\n');
 
   return totalDuplicates;
 }
@@ -220,7 +220,7 @@ async function confirm(message) {
  * Delete duplicate records
  */
 async function deleteDuplicates(index, namespace, duplicates) {
-  console.log('\n🗑️  Deleting duplicate records...\n');
+  console.info('\n🗑️  Deleting duplicate records...\n');
 
   let deletedCount = 0;
   let errorCount = 0;
@@ -243,7 +243,7 @@ async function deleteDuplicates(index, namespace, duplicates) {
       await index.namespace(namespace).deleteMany(batch);
 
       batch.forEach(id => {
-        console.log(`✅ Deleted: ${id}`);
+        console.info(`✅ Deleted: ${id}`);
       });
 
       deletedCount += batch.length;
@@ -253,19 +253,19 @@ async function deleteDuplicates(index, namespace, duplicates) {
     }
   }
 
-  console.log('\n═══════════════════════════════════════════════════════════');
-  console.log(`✅ Successfully deleted: ${deletedCount} records`);
+  console.info('\n═══════════════════════════════════════════════════════════');
+  console.info(`✅ Successfully deleted: ${deletedCount} records`);
   if (errorCount > 0) {
-    console.log(`❌ Failed to delete: ${errorCount} records`);
+    console.info(`❌ Failed to delete: ${errorCount} records`);
   }
-  console.log('═══════════════════════════════════════════════════════════\n');
+  console.info('═══════════════════════════════════════════════════════════\n');
 }
 
 /**
  * Main function
  */
 async function main() {
-  console.log('🧹 Pinecone Duplicate Memory Cleanup\n');
+  console.info('🧹 Pinecone Duplicate Memory Cleanup\n');
 
   const { namespace, options } = parseArgs();
 
@@ -284,7 +284,7 @@ async function main() {
     const records = await fetchMemoryRecords(index, namespace);
 
     if (records.length === 0) {
-      console.log('No memory records found in namespace');
+      console.info('No memory records found in namespace');
       return;
     }
 
@@ -300,8 +300,8 @@ async function main() {
 
     // Dry run - just show what would be deleted
     if (options.dryRun) {
-      console.log('🔍 DRY RUN: No records were deleted');
-      console.log('   Remove --dry-run flag to actually delete duplicates\n');
+      console.info('🔍 DRY RUN: No records were deleted');
+      console.info('   Remove --dry-run flag to actually delete duplicates\n');
       return;
     }
 
@@ -312,7 +312,7 @@ async function main() {
       );
 
       if (!confirmed) {
-        console.log('\n❌ Deletion cancelled by user\n');
+        console.info('\n❌ Deletion cancelled by user\n');
         return;
       }
     }
@@ -320,7 +320,7 @@ async function main() {
     // Delete duplicates
     await deleteDuplicates(index, namespace, duplicates);
 
-    console.log('✅ Cleanup complete!\n');
+    console.info('✅ Cleanup complete!\n');
   } catch (error) {
     console.error('\n❌ Fatal error:', error);
     process.exit(1);

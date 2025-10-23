@@ -5,6 +5,7 @@ import {
 } from "./types";
 import { CoachConfig } from "../coach-creator/types";
 import { JSON_FORMATTING_INSTRUCTIONS_STANDARD } from "../prompt-helpers";
+import { parseJsonWithFallbacks } from "../response-utils";
 
 /**
  * Build the prompt for coach conversation summarization
@@ -140,34 +141,13 @@ export function parseCoachConversationSummary(
   conversation: CoachConversation
 ): CoachConversationSummary {
   try {
-    console.log("Parsing AI response...", {
+    console.info("Parsing AI response...", {
       responseLength: aiResponse.length,
       responsePreview: aiResponse.substring(0, 200)
     });
 
-    // Extract JSON from markdown code blocks or raw JSON
-    let jsonMatch = aiResponse.match(/```json\s*([\s\S]*?)\s*```/);
-
-    if (!jsonMatch) {
-      // Try to find raw JSON object starting with "narrative" or "current_goals"
-      jsonMatch = aiResponse.match(/{\s*"(?:narrative|current_goals)"[\s\S]*}/);
-    }
-
-    if (!jsonMatch) {
-      console.error("Error parsing conversation summary:", {
-        aiResponsePreview: aiResponse.substring(0, 500)
-      });
-      console.error("AI Response:", aiResponse);
-      throw new Error("Could not find structured data JSON in AI response");
-    }
-
-    const jsonString = jsonMatch[1] || jsonMatch[0];
-    console.log("Extracted JSON string:", {
-      length: jsonString.length,
-      preview: jsonString.substring(0, 200)
-    });
-
-    const parsedData = JSON.parse(jsonString);
+    // Use centralized parsing utility (handles markdown cleanup and JSON fixing)
+    const parsedData = parseJsonWithFallbacks(aiResponse);
 
     // Extract narrative from the parsed data (can be at top level or nested)
     const narrative = parsedData.narrative || parsedData.narrative_summary || "";
@@ -177,7 +157,7 @@ export function parseCoachConversationSummary(
     if (structuredData.narrative) delete structuredData.narrative;
     if (structuredData.narrative_summary) delete structuredData.narrative_summary;
 
-    console.log("Parsed conversation data:", {
+    console.info("Parsed conversation data:", {
       narrativeLength: narrative.length,
       hasGoals: !!structuredData.current_goals,
       hasProgress: !!structuredData.recent_progress

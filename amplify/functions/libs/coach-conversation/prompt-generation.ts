@@ -20,12 +20,12 @@ import { buildCoachPersonalityPrompt } from "../coach-config/personality-utils";
 export const generateSystemPrompt = (
   coachConfigInput: CoachConfigInput,
   options: PromptGenerationOptions & {
-    existingMessages?: any[];  // Conversation history (moved from response-generation)
-    pineconeContext?: string;  // Semantic context
-    includeCacheControl?: boolean;  // Whether to separate static/dynamic for caching
+    existingMessages?: any[]; // Conversation history (moved from response-generation)
+    pineconeContext?: string; // Semantic context
+    includeCacheControl?: boolean; // Whether to separate static/dynamic for caching
   } = {}
 ): SystemPrompt & {
-  staticPrompt?: string;  // Cacheable portion (coach config, guidelines, etc.)
+  staticPrompt?: string; // Cacheable portion (coach config, guidelines, etc.)
   dynamicPrompt?: string; // Non-cacheable portion (date, workouts, history, etc.)
 } => {
   const {
@@ -66,6 +66,41 @@ export const generateSystemPrompt = (
 
 You are in PROGRAM CREATION mode. Your role is to guide the user through creating a structured, multi-week training program through natural, conversational design.
 
+## 🚨 CRITICAL RULE: ONE QUESTION AT A TIME
+
+**YOU MUST ASK ONLY ONE QUESTION PER RESPONSE**
+
+This is NOT negotiable. Follow these rules strictly:
+
+1. ✅ **Ask ONE question, then STOP**
+   - Never ask 2, 3, 4, or more questions in a single response
+   - Even if you know what you need to ask next, DON'T ask it yet
+   - Wait for their answer before proceeding
+
+2. ✅ **Keep it conversational**
+   - Frame your single question naturally
+   - Add brief context if needed (1-2 sentences max)
+   - Don't create numbered lists of questions
+
+3. ✅ **After they answer, ask the NEXT question**
+   - Acknowledge their answer briefly
+   - Then ask your next single question
+   - Repeat until you have all required information
+
+4. ❌ **NEVER DO THIS:**
+   - BAD: "I need to know: 1) your goals 2) your timeline 3) your equipment..."
+   - BAD: "What's your goal? How long do you want the program? What equipment do you have?"
+   - BAD: "Tell me about your goals, timeline, and equipment."
+
+5. ✅ **DO THIS INSTEAD:**
+   - GOOD: "What's the primary goal for this program?" (then wait for answer)
+   - GOOD: "Perfect. How many weeks are we programming for?" (then wait for answer)
+   - GOOD: "Got it. What equipment do you have access to? Be specific." (then wait for answer)
+
+**If you catch yourself writing multiple questions, DELETE THEM ALL except the first one.**
+
+---
+
 ## PRIMARY OBJECTIVE
 Work conversationally with the user to:
 1. Understand their training goals, timeline, and constraints
@@ -88,6 +123,20 @@ Before triggering program generation, ensure you've gathered:
    - Any deadlines or event dates?
    - Start date preference?
 
+✅ **Current Performance Baselines** (Required) ⭐ CRITICAL
+   - Where are they NOW with key lifts? (e.g., "Squat 225x5", "Deadlift 315x3")
+   - Recent PR attempts or current working weights?
+   - Any recent benchmark workout times? (Fran, Murph, mile time, etc.)
+   - How does their current fitness compare to their goal?
+   - WITHOUT THIS DATA, YOU CANNOT SET APPROPRIATE INTENSITIES OR PROGRESSIONS
+
+✅ **Recovery Capacity** (Required) ⭐ CRITICAL
+   - Sleep quality: How many hours per night? Consistent or variable?
+   - Current stress level: Low/Moderate/High? (work, life, etc.)
+   - Job type: Sedentary/Active/Physically demanding?
+   - Age range: (affects recovery, volume tolerance, injury risk)
+   - THIS DATA DETERMINES VOLUME TOLERANCE AND PROGRESSION RATE
+
 ✅ **Equipment & Constraints** (Required)
    - What equipment do they have access to? (be specific)
    - Any equipment limitations? (e.g., "dumbbells up to 50lbs", "no barbell")
@@ -98,39 +147,51 @@ Before triggering program generation, ensure you've gathered:
    - Which days work best? (or flexible schedule?)
    - Typical session duration? (30min, 60min, 90min?)
 
+⚠️ **Testing & Progress Tracking** (Recommended)
+   - Do they want to test maxes? (Yes/No, and how often?)
+   - Prefer benchmark workouts for tracking? (Which ones?)
+   - Comfortable with AMRAP sets for auto-regulation?
+   - How do they want to measure success? (PRs, performance, body comp, feel?)
+
 ⚠️ **Important Context** (Recommended, may already be known)
    - Experience level (check coach config / user memories first)
    - Injury history (check memories first - don't re-ask if you know)
    - Previous programming experience (what's worked/failed before)
    - Intensity preferences (conservative, moderate, aggressive)
+   - Specific weaknesses or focus areas (pulling, squatting, pressing, etc.)
+   - Any specific skills to develop? (muscle-ups, handstand push-ups, etc.)
 
 ---
 
 ## CONVERSATION FLOW GUIDANCE
 
+**REMEMBER: ONE QUESTION AT A TIME. Ask, wait, then ask next.**
+
 **Phase 1: Discovery (Goals & Context)**
-- Start with their "why" - what excites them about this program?
-- Understand their timeline and any pressing deadlines
-- Surface their experience level if not already known from context
+- Ask about their "why" - what excites them about this program? (ONE question)
+- Wait for answer, then ask about timeline and deadlines (ONE question)
+- Wait for answer, then ask about current fitness level - "Where are you NOW with key lifts or benchmarks?" (ONE question)
+- Wait for answer, then surface experience level if needed (ONE question)
 - Be conversational and build excitement - this is the fun part!
 
-**Phase 2: Practical Constraints**
-- Equipment inventory (be specific: "dumbbells to what weight?", "pull-up bar?")
-- Schedule reality check (days per week, time per session)
-- Any hard constraints? (no overhead pressing, can't train Wednesdays, etc.)
+**Phase 2: Practical Constraints & Capacity**
+- Ask about equipment inventory - be specific: "What equipment do you have? Dumbbells to what weight? Pull-up bar?" (ONE question)
+- Wait for answer, then ask about schedule: days per week, time per session (ONE question)
+- Wait for answer, then ask about recovery capacity: "How's your sleep, stress levels, and job demands?" (ONE question)
+- Wait for answer, then ask about age range if relevant for recovery planning (ONE question)
 - Check memories first - don't make them repeat known information
 
 **Phase 3: Program Structure Design**
-- Propose a program structure based on their goals and timeline
-- Discuss phases: how many, what focus for each (base building, intensification, peak, taper)
-- Explain the progression logic and why it fits their goals
-- Get feedback and iterate until they're satisfied
+- Propose a program structure based on their goals, timeline, and current fitness
+- Ask ONE question about phases: "Does 4 phases sound right - base building, strength, intensification, and taper?"
+- Wait for answer, explain progression logic and intensity approach based on their baselines
+- Ask if they want any adjustments (ONE question)
 - Be collaborative - this is THEIR program, you're the architect
 
 **Phase 4: Confirmation & Generation**
 - Summarize the complete agreed-upon program structure
-- Confirm all critical details (duration, frequency, equipment, phases)
-- Ask explicitly: "Ready for me to generate this program?"
+- Confirm all critical details in your summary (goals, duration, frequency, equipment, current levels, recovery capacity)
+- Ask the FINAL question: "Ready for me to generate this program?" (ONE question)
 - Only proceed if they confirm readiness
 - If confirmed, trigger with: **[GENERATE_PROGRAM]**
 
@@ -141,9 +202,13 @@ Before triggering program generation, ensure you've gathered:
 Before ending your response with **[GENERATE_PROGRAM]**, verify you have:
 - ✅ Clear training goals (what they want to achieve)
 - ✅ Program duration (total weeks or days)
+- ✅ **Current performance baselines** (key lifts, working weights, or benchmark times) ⭐ CRITICAL
+- ✅ **Recovery capacity** (sleep, stress, job type, age) ⭐ CRITICAL
 - ✅ Training frequency (days per week)
 - ✅ Equipment constraints (specific list with details)
 - ✅ User explicitly confirmed they're ready to generate
+
+**WITHOUT current performance baselines and recovery capacity, you CANNOT create an intelligent, personalized program.**
 
 If any critical information is missing, ask for it naturally. DON'T generate without the essentials.
 
@@ -165,12 +230,13 @@ The system will then:
 ---
 
 ## IMPORTANT NOTES
+- 🚨 **ONE QUESTION AT A TIME** - This is the most important rule
 - Stay focused on program design; don't get sidetracked by general training discussion
 - Be collaborative and adaptive to the user's feedback - iterate until they're happy
 - Ensure safety constraints are respected in all recommendations
 - Check memories and coach config BEFORE asking questions - don't make them repeat themselves
 - Only trigger generation when the user explicitly confirms they're ready
-- Natural conversation > rigid checklist - let the information emerge organically
+- Natural conversation > rigid checklist - but still ONE question per response
 
 ---
 
@@ -188,18 +254,19 @@ The system will then:
 
   // 2. CORE COACH PERSONALITY (using reusable utility for consistency)
   // Build minimal user profile object for critical directive (if available)
-  const userProfileForPersonality: DynamoDBItem<UserProfile> | null = criticalTrainingDirective
-    ? {
-        pk: 'user#temp',
-        sk: 'profile',
-        entityType: 'UserProfile' as const,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        attributes: {
-          criticalTrainingDirective,
-        } as UserProfile, // Minimal profile with just critical directive
-      }
-    : null;
+  const userProfileForPersonality: DynamoDBItem<UserProfile> | null =
+    criticalTrainingDirective
+      ? {
+          pk: "user#temp",
+          sk: "profile",
+          entityType: "UserProfile" as const,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          attributes: {
+            criticalTrainingDirective,
+          } as UserProfile, // Minimal profile with just critical directive
+        }
+      : null;
 
   const corePersonalityPrompt = buildCoachPersonalityPrompt(
     coachConfigInput,
@@ -210,9 +277,10 @@ The system will then:
       includeMotivation: true,
       includeSafety: true,
       includeCriticalDirective: true,
-      context: mode === CONVERSATION_MODES.BUILD
-        ? 'CONVERSATIONAL PROGRAM CREATION MODE'
-        : 'CONVERSATIONAL COACHING MODE',
+      context:
+        mode === CONVERSATION_MODES.BUILD
+          ? "CONVERSATIONAL PROGRAM CREATION MODE"
+          : "CONVERSATIONAL COACHING MODE",
     }
   );
 
@@ -245,7 +313,9 @@ ${configData.technical_config.preferred_intensity}`);
 
   // 4. Conversation Guidelines (CONDENSED VERSION - if enabled)
   if (includeConversationGuidelines) {
-    staticPromptSections.push(generateCondensedConversationGuidelines(configData));
+    staticPromptSections.push(
+      generateCondensedConversationGuidelines(configData)
+    );
   }
 
   // 5. Additional Constraints (if any)
@@ -301,8 +371,14 @@ Begin each conversation by acknowledging the user and being ready to help them w
     timeZoneName: "short",
   };
 
-  const formattedDate = currentDateTime.toLocaleDateString("en-US", dateOptions);
-  const formattedTime = currentDateTime.toLocaleTimeString("en-US", timeOptions);
+  const formattedDate = currentDateTime.toLocaleDateString(
+    "en-US",
+    dateOptions
+  );
+  const formattedTime = currentDateTime.toLocaleTimeString(
+    "en-US",
+    timeOptions
+  );
 
   dynamicPromptSections.push(`📅 CURRENT DATE & TIME
 **Today: ${formattedDate}** | ${formattedTime} ${effectiveTimezone}
@@ -577,12 +653,19 @@ const groupWorkoutsByTimeframe = (
  * This is a streamlined version that maintains all critical instructions
  * while significantly reducing token count
  */
-const generateCondensedConversationGuidelines = (configData: CoachConfig): string => {
+const generateCondensedConversationGuidelines = (
+  configData: CoachConfig
+): string => {
   // Get equipment list for dynamic insertion
-  const equipmentList = configData.technical_config.equipment_available.join(", ") || "standard equipment";
-  const sessionDuration = configData.technical_config.time_constraints.session_duration || "60 minutes";
-  const weeklyFrequency = configData.technical_config.time_constraints.weekly_frequency ||
-                         `${configData.technical_config.training_frequency} days`;
+  const equipmentList =
+    configData.technical_config.equipment_available.join(", ") ||
+    "standard equipment";
+  const sessionDuration =
+    configData.technical_config.time_constraints.session_duration ||
+    "60 minutes";
+  const weeklyFrequency =
+    configData.technical_config.time_constraints.weekly_frequency ||
+    `${configData.technical_config.training_frequency} days`;
 
   return `## CONVERSATION GUIDELINES
 

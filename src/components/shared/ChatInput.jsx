@@ -22,6 +22,7 @@ import {
   TrashIcon,
 } from "../themes/SynthwaveComponents";
 import { useImageUpload } from "../../hooks/useImageUpload";
+import { CoachConversationModeToggle } from "./CoachConversationModeToggle";
 
 // Question mark icon for tips (standardized size)
 const QuestionIcon = () => (
@@ -216,7 +217,14 @@ function ChatInput({
 
   // Conversation size indicator (inline with status)
   conversationSize = null,
+
+  // Conversation mode toggle (for CoachConversations)
+  conversationMode = null,
+  onConversationModeChange = null,
 }) {
+  // Determine if mode toggle should be shown in skeleton
+  const showModeToggleSkeleton = conversationMode !== null;
+
   // Early return for skeleton loading state
   if (showSkeleton) {
     return (
@@ -247,13 +255,35 @@ function ChatInput({
             <div className="w-12 h-12 bg-synthwave-text-muted/20 rounded-2xl animate-pulse"></div>
           </div>
 
-          {/* Status skeleton - compact on mobile */}
+          {/* Status or Mode Toggle skeleton - compact on mobile */}
           <div className="flex items-center justify-between gap-2 mt-2">
-            <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-32 sm:w-48"></div>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
-              <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-12"></div>
-            </div>
+            {showModeToggleSkeleton ? (
+              <>
+                {/* Left: Mode Toggle skeleton - aligned with text input left edge */}
+                <div className="flex items-center pl-12 md:pl-40">
+                  <div className="h-8 w-32 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
+                </div>
+                {/* Right: Keyboard shortcuts + status */}
+                <div className="flex items-center gap-4">
+                  {/* Desktop: Show keyboard shortcuts */}
+                  <div className="hidden md:block h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
+                  {/* Desktop: Status indicator */}
+                  <div className="hidden md:flex items-center gap-2">
+                    <div className="w-2 h-2 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
+                    <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-12"></div>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                {/* Default: Status skeleton */}
+                <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-32 sm:w-48"></div>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
+                  <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-12"></div>
+                </div>
+              </>
+            )}
           </div>
 
           {/* Progress/Size Indicator skeleton - hide on mobile */}
@@ -1315,43 +1345,74 @@ function ChatInput({
           </div>
         </form>
 
-        {/* Status */}
-        <div className="flex items-center justify-between gap-2 mt-2 text-xs text-synthwave-text-muted font-rajdhani">
-          {/* Desktop: Full status message */}
-          <span className="hidden md:block">
-            {coachName} is
-            {isOnline ? (
-              <span className="text-green-400 ml-1">
-                online and ready to help with your training
+        {/* Status or Mode Toggle */}
+        <div className="flex items-center justify-between gap-2 -mt-0.5 text-xs text-synthwave-text-muted font-rajdhani">
+          {/* If conversation mode is provided, show mode toggle instead of status message */}
+          {conversationMode && onConversationModeChange ? (
+            <>
+              {/* Left: Mode Toggle - aligned with text input left edge */}
+              <div className="flex items-center pl-[50px] md:pl-[150px]">
+                <CoachConversationModeToggle
+                  mode={conversationMode}
+                  onModeChange={onConversationModeChange}
+                  disabled={isTyping}
+                />
+              </div>
+              {/* Right: Keyboard shortcuts + status */}
+              <div className="flex items-center gap-4">
+                {/* Desktop: Show keyboard shortcuts */}
+                <span className="hidden md:inline">
+                  Press Enter to send • Shift+Enter for new line
+                </span>
+                {/* Desktop: Status indicator */}
+                <div className="hidden md:flex items-center gap-1">
+                  <div
+                    className={`w-2 h-2 rounded-full ${isOnline ? "bg-green-500 animate-pulse" : "bg-gray-500"}`}
+                  ></div>
+                  <span>{isOnline ? "Online" : "Away"}</span>
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Default: Full status message */}
+              {/* Desktop: Full status message */}
+              <span className="hidden md:block">
+                {coachName} is
+                {isOnline ? (
+                  <span className="text-green-400 ml-1">
+                    online and ready to help with your training
+                  </span>
+                ) : (
+                  <span className="text-synthwave-text-secondary ml-1">away</span>
+                )}
               </span>
-            ) : (
-              <span className="text-synthwave-text-secondary ml-1">away</span>
-            )}
-          </span>
-          {/* Mobile: Compact status */}
-          <span className="md:hidden flex items-center gap-1.5">
-            <span>{coachName}</span>
-            <span className="text-synthwave-text-secondary">•</span>
-            <div className="flex items-center gap-1">
-              <div
-                className={`w-2 h-2 rounded-full ${isOnline ? "bg-green-500 animate-pulse" : "bg-gray-500"}`}
-              ></div>
-              <span>{isOnline ? "Online" : "Away"}</span>
-            </div>
-          </span>
-          <div className="flex items-center gap-4">
-            {/* Desktop: Show keyboard shortcuts */}
-            <span className="hidden md:inline">
-              Press Enter to send • Shift+Enter for new line
-            </span>
-            {/* Desktop: Status indicator */}
-            <div className="hidden md:flex items-center gap-1">
-              <div
-                className={`w-2 h-2 rounded-full ${isOnline ? "bg-green-500 animate-pulse" : "bg-gray-500"}`}
-              ></div>
-              <span>{isOnline ? "Online" : "Away"}</span>
-            </div>
-          </div>
+              {/* Mobile: Compact status */}
+              <span className="md:hidden flex items-center gap-1.5">
+                <span>{coachName}</span>
+                <span className="text-synthwave-text-secondary">•</span>
+                <div className="flex items-center gap-1">
+                  <div
+                    className={`w-2 h-2 rounded-full ${isOnline ? "bg-green-500 animate-pulse" : "bg-gray-500"}`}
+                  ></div>
+                  <span>{isOnline ? "Online" : "Away"}</span>
+                </div>
+              </span>
+              <div className="flex items-center gap-4">
+                {/* Desktop: Show keyboard shortcuts */}
+                <span className="hidden md:inline">
+                  Press Enter to send • Shift+Enter for new line
+                </span>
+                {/* Desktop: Status indicator */}
+                <div className="hidden md:flex items-center gap-1">
+                  <div
+                    className={`w-2 h-2 rounded-full ${isOnline ? "bg-green-500 animate-pulse" : "bg-gray-500"}`}
+                  ></div>
+                  <span>{isOnline ? "Online" : "Away"}</span>
+                </div>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Coach Creation Progress Indicator - hide on mobile */}

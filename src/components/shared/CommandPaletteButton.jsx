@@ -26,7 +26,7 @@ const CommandPaletteButton = ({ onClick }) => {
       onClick={onClick}
       aria-label="Open command palette"
       aria-keyshortcuts={isMac ? "Meta+K" : "Control+K"}
-      className={commandPalettePatterns.triggerButton}
+      className={`${commandPalettePatterns.triggerButton} hidden md:flex`}
       data-tooltip-id="command-palette-button"
       data-tooltip-content="Show command palette"
     >

@@ -319,7 +319,7 @@ export class CoachAgent {
       return;
     }
 
-    console.log(`Starting polling for coach build from session ${sessionId}`);
+    console.info(`Starting polling for coach build from session ${sessionId}`);
 
     this.pollInterval = setInterval(async () => {
       try {

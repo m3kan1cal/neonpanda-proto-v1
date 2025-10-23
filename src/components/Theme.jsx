@@ -2309,7 +2309,7 @@ function Theme() {
                             <span className="text-synthwave-text-secondary font-rajdhani text-sm">Example:</span>
                             <InlineEditField
                               value="Small Text Example"
-                              onSave={async (newValue) => { console.log('Saved:', newValue); return true; }}
+                              onSave={async (newValue) => { console.info('Saved:', newValue); return true; }}
                               placeholder="Enter small text..."
                               size="small"
                             />
@@ -2330,7 +2330,7 @@ function Theme() {
                             <span className="text-synthwave-text-secondary font-rajdhani">Example:</span>
                             <InlineEditField
                               value="Medium Text Example"
-                              onSave={async (newValue) => { console.log('Saved:', newValue); return true; }}
+                              onSave={async (newValue) => { console.info('Saved:', newValue); return true; }}
                               placeholder="Enter medium text..."
                               size="medium"
                             />
@@ -2351,7 +2351,7 @@ function Theme() {
                             <span className="text-synthwave-text-secondary font-rajdhani text-lg">Example:</span>
                             <InlineEditField
                               value="Large Text Example"
-                              onSave={async (newValue) => { console.log('Saved:', newValue); return true; }}
+                              onSave={async (newValue) => { console.info('Saved:', newValue); return true; }}
                               placeholder="Enter large text..."
                               size="large"
                             />

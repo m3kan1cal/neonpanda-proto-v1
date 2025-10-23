@@ -9,7 +9,7 @@ import {
   getCoachConfig,
   getUserProfile,
 } from "../../dynamodb/operations";
-import { CoachMessage } from "../libs/coach-conversation/types";
+import { CoachMessage, MESSAGE_TYPES } from "../libs/coach-conversation/types";
 import { detectAndProcessConversationSummary } from "../libs/coach-conversation/detection";
 import { gatherConversationContext } from "../libs/coach-conversation/context";
 import { detectAndProcessWorkout } from "../libs/coach-conversation/workout-detection";
@@ -103,6 +103,9 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       return createErrorResponse(404, "Conversation not found");
     }
 
+    // Extract conversation mode (default to chat for backwards compatibility)
+    const conversationMode = existingConversation.attributes.mode || 'chat';
+
     // Load coach config for system prompt
     const coachConfig = await getCoachConfig(userId, coachId);
     if (!coachConfig) {
@@ -126,7 +129,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       role: "user",
       content: userResponse || '',
       timestamp: new Date(),
-      messageType: imageS3Keys && imageS3Keys.length > 0 ? 'text_with_images' : 'text',
+      messageType: imageS3Keys && imageS3Keys.length > 0 ? MESSAGE_TYPES.TEXT_WITH_IMAGES : MESSAGE_TYPES.TEXT,
       ...(imageS3Keys && imageS3Keys.length > 0 ? { imageS3Keys: imageS3Keys } : {}),
     };
 
@@ -276,6 +279,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       timestamp: new Date(),
       metadata: {
         model: MODEL_IDS.CLAUDE_SONNET_4_DISPLAY,
+        mode: conversationMode, // Track which mode this message was created in
         // Note: Additional context like session number, prompt metadata, and Pinecone context
         // are logged above for debugging but not stored in message metadata
         // due to interface constraints
@@ -385,7 +389,7 @@ async function handleStreamingResponse(
       role: "user",
       content: userResponse || '',
       timestamp: new Date(messageTimestamp),
-      messageType: imageS3Keys && imageS3Keys.length > 0 ? 'text_with_images' : 'text',
+      messageType: imageS3Keys && imageS3Keys.length > 0 ? MESSAGE_TYPES.TEXT_WITH_IMAGES : MESSAGE_TYPES.TEXT,
       ...(imageS3Keys && imageS3Keys.length > 0 ? { imageS3Keys: imageS3Keys } : {}),
     };
 
@@ -503,11 +507,15 @@ async function generateSSEStream(
     }
 
     // Create final AI message
+    const conversationMode = existingConversation.attributes.mode || 'chat'; // Default to chat for backwards compatibility
     const newAiMessage: CoachMessage = {
       id: `msg_${Date.now()}_assistant`,
       role: "assistant",
       content: fullAiResponse,
       timestamp: new Date(),
+      metadata: {
+        mode: conversationMode, // Track which mode this message was created in
+      },
     };
 
     // Save messages to conversation after streaming completes - capture result for size tracking

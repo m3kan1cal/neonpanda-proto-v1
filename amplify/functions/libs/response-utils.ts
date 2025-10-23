@@ -10,11 +10,27 @@
  * Removes code block markers and extracts content between first { and last }
  */
 export const cleanResponse = (response: string): string => {
-  // Remove any markdown code block markers
-  let cleaned = response.replace(/```json\s*/g, '').replace(/```\s*/g, '');
+  // More aggressive markdown removal - handle all variations
+  let cleaned = response
+    .replace(/^```json\s*/gm, '')  // Remove ```json at start of lines
+    .replace(/^```\s*/gm, '')       // Remove ``` at start of lines
+    .replace(/\s*```$/gm, '')       // Remove ``` at end of lines
+    .replace(/```json/g, '')        // Remove any remaining ```json
+    .replace(/```/g, '');           // Remove any remaining ```
 
   // Trim whitespace
   cleaned = cleaned.trim();
+
+  // Log if we detected and cleaned markdown (for monitoring)
+  if (cleaned !== response.trim()) {
+    console.info("✅ Stripped markdown code fences from AI response", {
+      originalLength: response.length,
+      cleanedLength: cleaned.length,
+      hadMarkdown: true,
+      originalStart: response.substring(0, 50),
+      cleanedStart: cleaned.substring(0, 50),
+    });
+  }
 
   // Find the first { and last } to extract just the JSON object
   const firstBrace = cleaned.indexOf('{');

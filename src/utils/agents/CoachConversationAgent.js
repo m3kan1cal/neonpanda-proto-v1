@@ -18,6 +18,7 @@ import {
   resetStreamingState,
   validateStreamingInput,
 } from "./streamingAgentHelper";
+import { CONVERSATION_MODES } from "../../constants/conversationModes";
 
 /**
  * CoachConversationAgent - Handles the business logic for coach conversations
@@ -234,7 +235,8 @@ export class CoachConversationAgent {
     userId,
     coachId,
     title = null,
-    initialMessage = null
+    initialMessage = null,
+    mode = CONVERSATION_MODES.CHAT
   ) {
     try {
       this._updateState({ isLoadingItem: true, error: null });
@@ -242,12 +244,13 @@ export class CoachConversationAgent {
       // Generate title if not provided
       const conversationTitle = title || this.generateConversationTitle();
 
-      // Create conversation via API (with optional initial message)
+      // Create conversation via API (defaults to CHAT mode)
       const result = await createCoachConversation(
         userId,
         coachId,
         conversationTitle,
-        initialMessage
+        initialMessage,
+        mode
       );
       const conversation = result.conversation;
       const conversationId = conversation.conversationId;
@@ -348,6 +351,7 @@ export class CoachConversationAgent {
             timestamp: message.timestamp || new Date().toISOString(),
             imageS3Keys: message.imageS3Keys || undefined,
             messageType: message.messageType || undefined,
+            metadata: message.metadata || undefined, // Preserve metadata (includes mode for Build mode styling)
           });
         });
       }

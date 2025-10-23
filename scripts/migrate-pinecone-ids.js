@@ -52,22 +52,22 @@ async function getPineconeClient() {
  * List all namespaces in the index
  */
 async function listAllNamespaces(index) {
-  console.log(`\n🔍 Discovering namespaces in index: ${PINECONE_INDEX_NAME}`);
+  console.info(`\n🔍 Discovering namespaces in index: ${PINECONE_INDEX_NAME}`);
 
   try {
     const stats = await index.describeIndexStats();
 
     if (!stats.namespaces || Object.keys(stats.namespaces).length === 0) {
-      console.log('⚠️  No namespaces found in index');
+      console.info('⚠️  No namespaces found in index');
       return [];
     }
 
     const namespaces = Object.keys(stats.namespaces);
-    console.log(`✅ Found ${namespaces.length} namespace(s):\n`);
+    console.info(`✅ Found ${namespaces.length} namespace(s):\n`);
 
     namespaces.forEach((ns, i) => {
       const recordCount = stats.namespaces[ns].recordCount || 0;
-      console.log(`   ${i + 1}. ${ns} (${recordCount} records)`);
+      console.info(`   ${i + 1}. ${ns} (${recordCount} records)`);
     });
 
     return namespaces;
@@ -82,7 +82,7 @@ async function listAllNamespaces(index) {
  * (Same approach as inspect-pinecone-namespace.js)
  */
 async function fetchAllRecords(index, namespace) {
-  console.log(`\n📥 Fetching all records from namespace: ${namespace}`);
+  console.info(`\n📥 Fetching all records from namespace: ${namespace}`);
 
   try {
     // Use searchRecords API with a broad text query
@@ -96,12 +96,12 @@ async function fetchAllRecords(index, namespace) {
     const response = await index.namespace(namespace).searchRecords(searchQuery);
 
     if (!response.result || !response.result.hits) {
-      console.log('⚠️  No results returned from Pinecone');
+      console.info('⚠️  No results returned from Pinecone');
       return [];
     }
 
     const records = response.result.hits;
-    console.log(`✅ Total records fetched: ${records.length}`);
+    console.info(`✅ Total records fetched: ${records.length}`);
 
     return records;
   } catch (error) {
@@ -382,7 +382,7 @@ function convertMetadataToCamelCase(metadata) {
  * Migrate records in a namespace
  */
 async function migrateNamespace(namespace, dryRun = false) {
-  console.log(`   Mode: ${dryRun ? 'DRY RUN (no changes will be made)' : 'LIVE'}\n`);
+  console.info(`   Mode: ${dryRun ? 'DRY RUN (no changes will be made)' : 'LIVE'}\n`);
 
   try {
     const { index } = await getPineconeClient();
@@ -391,12 +391,12 @@ async function migrateNamespace(namespace, dryRun = false) {
     const records = await fetchAllRecords(index, namespace);
 
     if (records.length === 0) {
-      console.log('⚠️  No records found in namespace');
+      console.info('⚠️  No records found in namespace');
       return { success: true, migrated: 0, skipped: 0, errors: 0 };
     }
 
     // Analyze what needs to be migrated
-    console.log(`\n📊 Analyzing records...`);
+    console.info(`\n📊 Analyzing records...`);
     const analysis = {
       needsMigration: [],
       alreadyCorrect: [],
@@ -422,13 +422,13 @@ async function migrateNamespace(namespace, dryRun = false) {
     // Count UUID regenerations
     const uuidRegenerations = analysis.needsMigration.filter(({ idInfo }) => idInfo.needsRegeneration).length;
 
-    console.log(`\n📈 Migration Analysis:`);
-    console.log(`   ✅ Already correct: ${analysis.alreadyCorrect.length}`);
-    console.log(`   🔄 Need migration: ${analysis.needsMigration.length}`);
-    console.log(`   ⚠️  No metadata ID: ${analysis.noMetadataId.length}`);
-    console.log(`   📝 Have old summaryId field: ${analysis.hasOldSummaryIdField.length}`);
+    console.info(`\n📈 Migration Analysis:`);
+    console.info(`   ✅ Already correct: ${analysis.alreadyCorrect.length}`);
+    console.info(`   🔄 Need migration: ${analysis.needsMigration.length}`);
+    console.info(`   ⚠️  No metadata ID: ${analysis.noMetadataId.length}`);
+    console.info(`   📝 Have old summaryId field: ${analysis.hasOldSummaryIdField.length}`);
     if (uuidRegenerations > 0) {
-      console.log(`   🔄 UUID → structured format: ${uuidRegenerations}`);
+      console.info(`   🔄 UUID → structured format: ${uuidRegenerations}`);
     }
 
     // Show breakdown by type
@@ -438,19 +438,19 @@ async function migrateNamespace(namespace, dryRun = false) {
     }, {});
 
     if (Object.keys(byType).length > 0) {
-      console.log(`\n   Records to migrate by type:`);
+      console.info(`\n   Records to migrate by type:`);
       for (const [type, count] of Object.entries(byType)) {
-        console.log(`      - ${type}: ${count}`);
+        console.info(`      - ${type}: ${count}`);
       }
     }
 
     if (analysis.needsMigration.length === 0) {
-      console.log(`\n🎉 All records are already using correct IDs!`);
+      console.info(`\n🎉 All records are already using correct IDs!`);
       return { success: true, migrated: 0, skipped: records.length, errors: 0 };
     }
 
     if (dryRun) {
-      console.log(`\n🔍 DRY RUN - Showing first 5 migrations that would occur:\n`);
+      console.info(`\n🔍 DRY RUN - Showing first 5 migrations that would occur:\n`);
       analysis.needsMigration.slice(0, 5).forEach(({ record, idInfo }, i) => {
         const metadata = record.fields || {};
         const regenerationLabel = idInfo.needsRegeneration
@@ -463,9 +463,9 @@ async function migrateNamespace(namespace, dryRun = false) {
             : ' (UUID → structured format)'
           : '';
         const caseLabel = idInfo.hasSnakeCaseFields ? ' + snake_case → camelCase' : '';
-        console.log(`${i + 1}. ${idInfo.type}${regenerationLabel}${caseLabel}`);
-        console.log(`   Old ID: ${record._id}`);
-        console.log(`   New ID: ${idInfo.newId}`);
+        console.info(`${i + 1}. ${idInfo.type}${regenerationLabel}${caseLabel}`);
+        console.info(`   Old ID: ${record._id}`);
+        console.info(`   New ID: ${idInfo.newId}`);
         if (idInfo.needsRegeneration) {
           const message = idInfo.type === 'user_memory'
             ? '   ⚠️  Missing userId will be added'
@@ -474,10 +474,10 @@ async function migrateNamespace(namespace, dryRun = false) {
             : idInfo.type === 'coach_creator_summary'
             ? '   ⚠️  Missing summaryId field will be added'
             : '   ⚠️  UUID will be regenerated to structured format';
-          console.log(message);
+          console.info(message);
         }
         if (idInfo.hasSnakeCaseFields) {
-          console.log('   🔄  Metadata will be converted to camelCase');
+          console.info('   🔄  Metadata will be converted to camelCase');
         }
 
         // Show only fields that will be migrated (snake_case fields)
@@ -488,21 +488,21 @@ async function migrateNamespace(namespace, dryRun = false) {
               snakeCaseFields[key] = metadata[key];
             }
           });
-          console.log(`   Fields to migrate: ${JSON.stringify(snakeCaseFields, null, 2)}`);
+          console.info(`   Fields to migrate: ${JSON.stringify(snakeCaseFields, null, 2)}`);
         }
-        console.log();
+        console.info();
       });
 
       if (analysis.needsMigration.length > 5) {
-        console.log(`   ... and ${analysis.needsMigration.length - 5} more\n`);
+        console.info(`   ... and ${analysis.needsMigration.length - 5} more\n`);
       }
 
-      console.log(`ℹ️  Run without --dry-run to perform the migration`);
+      console.info(`ℹ️  Run without --dry-run to perform the migration`);
       return { success: true, migrated: 0, skipped: records.length, errors: 0 };
     }
 
     // Perform migration
-    console.log(`\n🚀 Starting migration...`);
+    console.info(`\n🚀 Starting migration...`);
     let migrated = 0;
     let errors = 0;
     const batchSize = 96; // Pinecone max batch size
@@ -562,18 +562,18 @@ async function migrateNamespace(namespace, dryRun = false) {
         }
 
         migrated += batch.length;
-        console.log(`   ✅ Migrated batch ${Math.floor(i / batchSize) + 1}: ${batch.length} records (${migrated}/${analysis.needsMigration.length})`);
+        console.info(`   ✅ Migrated batch ${Math.floor(i / batchSize) + 1}: ${batch.length} records (${migrated}/${analysis.needsMigration.length})`);
       } catch (error) {
         console.error(`   ❌ Error migrating batch ${Math.floor(i / batchSize) + 1}:`, error.message);
         errors += batch.length;
       }
     }
 
-    console.log(`\n✅ Namespace migration complete:`);
-    console.log(`   Migrated: ${migrated}`);
-    console.log(`   Errors: ${errors}`);
-    console.log(`   Already correct: ${analysis.alreadyCorrect.length}`);
-    console.log(`   Total: ${records.length}`);
+    console.info(`\n✅ Namespace migration complete:`);
+    console.info(`   Migrated: ${migrated}`);
+    console.info(`   Errors: ${errors}`);
+    console.info(`   Already correct: ${analysis.alreadyCorrect.length}`);
+    console.info(`   Total: ${records.length}`);
 
     return {
       success: true,
@@ -601,7 +601,7 @@ async function main() {
   const args = process.argv.slice(2);
 
   if (args.includes('--help') || args.includes('-h')) {
-    console.log(`
+    console.info(`
 📋 Pinecone ID Migration Script
 
 Usage:
@@ -645,29 +645,29 @@ Environment:
   const migrateAll = args.includes('--all');
   const namespace = args.find(arg => !arg.startsWith('--'));
 
-  console.log(`\n🔍 Pinecone ID Migration`);
-  console.log(`   Index: ${PINECONE_INDEX_NAME}`);
-  console.log(`   API Key set: ${process.env.PINECONE_API_KEY ? 'Yes' : 'No'}`);
-  console.log(`   Mode: ${dryRun ? 'DRY RUN' : 'LIVE'}`);
+  console.info(`\n🔍 Pinecone ID Migration`);
+  console.info(`   Index: ${PINECONE_INDEX_NAME}`);
+  console.info(`   API Key set: ${process.env.PINECONE_API_KEY ? 'Yes' : 'No'}`);
+  console.info(`   Mode: ${dryRun ? 'DRY RUN' : 'LIVE'}`);
 
   try {
     const { index } = await getPineconeClient();
     let namespacesToMigrate = [];
 
     if (migrateAll) {
-      console.log(`   Target: ALL NAMESPACES (auto-discovery)`);
+      console.info(`   Target: ALL NAMESPACES (auto-discovery)`);
       namespacesToMigrate = await listAllNamespaces(index);
 
       if (namespacesToMigrate.length === 0) {
-        console.log('\n⚠️  No namespaces found. Nothing to migrate.');
+        console.info('\n⚠️  No namespaces found. Nothing to migrate.');
         process.exit(0);
       }
     } else if (namespace) {
-      console.log(`   Target: ${namespace}`);
+      console.info(`   Target: ${namespace}`);
       namespacesToMigrate = [namespace];
     } else {
       console.error('\n❌ Error: Either provide a namespace or use --all flag');
-      console.log('   Run with --help for usage information');
+      console.info('   Run with --help for usage information');
       process.exit(1);
     }
 
@@ -683,9 +683,9 @@ Environment:
     for (let i = 0; i < namespacesToMigrate.length; i++) {
       const ns = namespacesToMigrate[i];
 
-      console.log(`\n${'═'.repeat(70)}`);
-      console.log(`📦 Namespace ${i + 1}/${namespacesToMigrate.length}: ${ns}`);
-      console.log(`${'═'.repeat(70)}`);
+      console.info(`\n${'═'.repeat(70)}`);
+      console.info(`📦 Namespace ${i + 1}/${namespacesToMigrate.length}: ${ns}`);
+      console.info(`${'═'.repeat(70)}`);
 
       try {
         const result = await migrateNamespace(ns, dryRun);
@@ -705,15 +705,15 @@ Environment:
     }
 
     // Print final summary
-    console.log(`\n${'═'.repeat(70)}`);
-    console.log(`📊 FINAL SUMMARY`);
-    console.log(`${'═'.repeat(70)}`);
-    console.log(`   Namespaces processed: ${results.total}`);
-    console.log(`   ✅ Successful: ${results.successful}`);
-    console.log(`   ❌ Failed: ${results.failed}`);
-    console.log(`   Total records migrated: ${results.totalMigrated}`);
-    console.log(`   Total errors: ${results.totalErrors}`);
-    console.log(`${'═'.repeat(70)}\n`);
+    console.info(`\n${'═'.repeat(70)}`);
+    console.info(`📊 FINAL SUMMARY`);
+    console.info(`${'═'.repeat(70)}`);
+    console.info(`   Namespaces processed: ${results.total}`);
+    console.info(`   ✅ Successful: ${results.successful}`);
+    console.info(`   ❌ Failed: ${results.failed}`);
+    console.info(`   Total records migrated: ${results.totalMigrated}`);
+    console.info(`   Total errors: ${results.totalErrors}`);
+    console.info(`${'═'.repeat(70)}\n`);
 
     process.exit(results.failed > 0 ? 1 : 0);
 

@@ -21,11 +21,11 @@ const baseHandler: AuthenticatedHandler = async (event) => {
   }
 
   const body = JSON.parse(event.body);
-  const { title, tags, isActive } = body;
+  const { title, tags, isActive, mode } = body;
 
   // Validate at least one field is provided
-  if (title === undefined && tags === undefined && isActive === undefined) {
-    return createErrorResponse(400, 'At least one field (title, tags, or isActive) must be provided');
+  if (title === undefined && tags === undefined && isActive === undefined && mode === undefined) {
+    return createErrorResponse(400, 'At least one field (title, tags, isActive, or mode) must be provided');
   }
 
   // Validate field types if provided
@@ -41,8 +41,16 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     return createErrorResponse(400, 'isActive must be a boolean');
   }
 
+  if (mode !== undefined && typeof mode !== 'string') {
+    return createErrorResponse(400, 'mode must be a string');
+  }
+
+  if (mode !== undefined && mode !== 'chat' && mode !== 'build') {
+    return createErrorResponse(400, 'mode must be either "chat" or "build"');
+  }
+
   // Prepare update data
-  const updateData: { title?: string; tags?: string[]; isActive?: boolean } = {};
+  const updateData: { title?: string; tags?: string[]; isActive?: boolean; mode?: string } = {};
   if (title !== undefined) {
     updateData.title = title.trim();
   }
@@ -51,6 +59,9 @@ const baseHandler: AuthenticatedHandler = async (event) => {
   }
   if (isActive !== undefined) {
     updateData.isActive = isActive;
+  }
+  if (mode !== undefined) {
+    updateData.mode = mode;
   }
 
   // Update conversation using the safe deep-merge function from operations
