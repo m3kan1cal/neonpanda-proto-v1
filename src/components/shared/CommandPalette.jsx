@@ -81,7 +81,8 @@ const CommandPalette = ({
     }
 
     // If typing a complete command with content, show execution preview
-    const commandMatch = trimmedInput.match(/^(\/[\w-]+)\s+(.+)$/);
+    // Use [\s\S]+ instead of .+ to match multi-line content (including newlines)
+    const commandMatch = trimmedInput.match(/^(\/[\w-]+)\s+([\s\S]+)$/);
     if (commandMatch) {
       const [, command, content] = commandMatch;
       const matchedCommand = mockCommands.find(
@@ -177,18 +178,37 @@ const CommandPalette = ({
   // Focus input when opened and reset agent state when closed
   useEffect(() => {
     if (isOpen && inputRef.current) {
-      inputRef.current.focus();
-      // Move cursor to end of input if there's prefilled content
-      setTimeout(() => {
-        if (inputRef.current && input) {
-          inputRef.current.setSelectionRange(input.length, input.length);
+      // Multiple focus attempts to ensure it works reliably
+      const focusInput = () => {
+        if (inputRef.current) {
+          inputRef.current.focus();
+          // Move cursor to end of input if there's content
+          const length = inputRef.current.value.length;
+          if (length > 0) {
+            inputRef.current.setSelectionRange(length, length);
+          }
         }
-      }, 0);
+      };
+
+      // Immediate focus
+      focusInput();
+
+      // Backup focus attempt after animation frame
+      requestAnimationFrame(() => {
+        focusInput();
+      });
+
+      // Final backup after a short delay
+      const timeoutId = setTimeout(() => {
+        focusInput();
+      }, 100);
+
+      return () => clearTimeout(timeoutId);
     }
     if (!isOpen && agentRef.current) {
       agentRef.current.clearExecutionResult();
     }
-  }, [isOpen, input]);
+  }, [isOpen]);
 
   // Handle escape key globally when command palette is open
   useEffect(() => {
@@ -294,6 +314,8 @@ const CommandPalette = ({
             onKeyDown={handleKeyDown}
             placeholder="Type a command or search..."
             className={inputPatterns.commandInput}
+            autoFocus
+            autoComplete="off"
             style={{
               outline: "none !important",
               boxShadow: "none !important",

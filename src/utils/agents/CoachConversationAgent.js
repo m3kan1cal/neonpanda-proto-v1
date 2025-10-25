@@ -511,8 +511,9 @@ export class CoachConversationAgent {
       };
       this._addMessage(userMessage);
 
-      // Create streaming message placeholder first
-      const streamingMsg = createStreamingMessage(this);
+      // Create streaming message placeholder with conversation mode metadata
+      const conversationMode = this.state.conversation?.mode || CONVERSATION_MODES.CHAT;
+      const streamingMsg = createStreamingMessage(this, { mode: conversationMode });
 
       // Initialize streaming state atomically with message ID
       this._updateState({

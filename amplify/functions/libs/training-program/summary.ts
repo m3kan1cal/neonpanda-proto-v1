@@ -26,10 +26,25 @@ export const generateTrainingProgramSummary = async (
     .map(m => `${m.role}: ${m.content}`)
     .join('\n');
 
-  const summaryPrompt = `
+  // STATIC PROMPT (cacheable - instructions and examples don't change)
+  const staticPrompt = `
 You are a fitness coach creating a concise summary of a newly created training program for coaching context and display.
 
-PROGRAM DATA:
+Create a 3-4 sentence summary that captures:
+1. Program name and primary training goals
+2. Structure overview (duration, phases, training frequency)
+3. Key focus areas and progression strategy
+4. Any important context from the conversation (user's needs, constraints, preferences)
+
+Keep it concise, engaging, and useful for coaching reference. Focus on what makes this program unique for this user.
+
+EXAMPLE GOOD SUMMARIES:
+- "12-Week Strength Builder: 4x/week program targeting squat, deadlift, and bench press improvements. Structured in 3 phases: Foundation (4 weeks), Intensification (6 weeks), Peak (2 weeks). User focused on hitting a 405lb squat by competition in March."
+- "8-Week CrossFit Competition Prep: 5x/week program preparing for local throwdown. Emphasis on Olympic lifting technique, high-intensity metcons, and gymnastics skills. User needs to improve muscle-ups and barbell cycling under fatigue."
+- "6-Week Home Gym Hypertrophy: 3x/week bodybuilding program with dumbbells up to 50lbs and pull-up bar. Progressive overload focused on upper body development. User recovering from knee injury, lower body work limited to bodyweight."`;
+
+  // DYNAMIC PROMPT (not cacheable - program data and conversation vary)
+  const dynamicPrompt = `PROGRAM DATA:
 ${JSON.stringify({
   name: program.name,
   description: program.description,
@@ -51,23 +66,18 @@ ${JSON.stringify({
 CONVERSATION CONTEXT:
 ${conversationContext}
 
-Create a 3-4 sentence summary that captures:
-1. Program name and primary training goals
-2. Structure overview (duration, phases, training frequency)
-3. Key focus areas and progression strategy
-4. Any important context from the conversation (user's needs, constraints, preferences)
-
-Keep it concise, engaging, and useful for coaching reference. Focus on what makes this program unique for this user.
-
-EXAMPLE GOOD SUMMARIES:
-- "12-Week Strength Builder: 4x/week program targeting squat, deadlift, and bench press improvements. Structured in 3 phases: Foundation (4 weeks), Intensification (6 weeks), Peak (2 weeks). User focused on hitting a 405lb squat by competition in March."
-- "8-Week CrossFit Competition Prep: 5x/week program preparing for local throwdown. Emphasis on Olympic lifting technique, high-intensity metcons, and gymnastics skills. User needs to improve muscle-ups and barbell cycling under fatigue."
-- "6-Week Home Gym Hypertrophy: 3x/week bodybuilding program with dumbbells up to 50lbs and pull-up bar. Progressive overload focused on upper body development. User recovering from knee injury, lower body work limited to bodyweight."
-
-SUMMARY:`;
+Write the summary now:`;
 
   try {
-    const response = await callBedrockApi(summaryPrompt, conversationContext);
+    const response = await callBedrockApi(
+      staticPrompt,
+      dynamicPrompt,
+      undefined, // Use default model
+      {
+        staticPrompt,
+        dynamicPrompt,
+      }
+    );
 
     // Clean up the response - remove any prefix like "SUMMARY:" and trim
     const cleanSummary = response.trim();

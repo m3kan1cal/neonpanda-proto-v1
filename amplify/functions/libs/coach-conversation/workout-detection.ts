@@ -153,3 +153,20 @@ export async function detectAndProcessWorkout(
     isNaturalLanguageWorkout,
   };
 }
+
+/**
+ * Create fallback workout detection result
+ * Used when workout detection is disabled or fails
+ *
+ * @returns Empty workout detection result indicating no workout was detected
+ */
+export function getFallbackWorkout(): WorkoutDetectionResult {
+  return {
+    isWorkoutLogging: false,
+    workoutContent: '',
+    workoutDetectionContext: [],
+    slashCommand: { isSlashCommand: false },
+    isSlashCommandWorkout: false,
+    isNaturalLanguageWorkout: false,
+  };
+}

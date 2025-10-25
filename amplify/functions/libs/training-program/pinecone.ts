@@ -52,18 +52,14 @@ export const storeTrainingProgramSummaryInPinecone = async (
 
     // Optional fields (filtered for null/undefined)
     const optionalFields = filterNullish({
-      lastActivityDate: program.lastActivityDate?.toISOString(),
+      lastActivityAt: program.lastActivityAt?.toISOString(),
       pausedAt: program.pausedAt?.toISOString(),
       pausedDuration: program.pausedDuration > 0 ? program.pausedDuration : undefined,
     });
 
     // Phase metadata (summarize phases for searchability)
+    // Note: Only include arrays of strings, not complex objects (Pinecone limitation)
     const phasesMetadata = {
-      phases: program.phases.map(phase => ({
-        name: phase.name,
-        durationDays: phase.durationDays,
-        focusAreas: phase.focusAreas,
-      })),
       phaseNames: program.phases.map(p => p.name),
       allFocusAreas: [...new Set(program.phases.flatMap(p => p.focusAreas))],
     };

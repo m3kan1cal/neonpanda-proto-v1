@@ -954,6 +954,9 @@ export const storePineconeContext = async (
     } else if (metadata.workoutId) {
       // Workout records
       recordId = metadata.workoutId; // e.g., "workout_userId_1759837953791_shortId"
+    } else if (metadata.programId) {
+      // Training program records
+      recordId = metadata.programId; // e.g., "program_userId_1761313084956_1f7lhmftx"
     } else if (metadata.summaryId) {
       // Conversation summary or coach creator summary records
       recordId = metadata.summaryId; // e.g., "conversation_summary_..." or "coach_creator_summary_..."
@@ -964,7 +967,7 @@ export const storePineconeContext = async (
         metadata,
         availableFields: Object.keys(metadata)
       });
-      throw new Error(`Cannot store Pinecone record without ID field (memoryId, workoutId, or summaryId)`);
+      throw new Error(`Cannot store Pinecone record without ID field (memoryId, workoutId, programId, or summaryId)`);
     }
 
     // Prepare metadata for Pinecone storage (additional fields beyond the embedded text)

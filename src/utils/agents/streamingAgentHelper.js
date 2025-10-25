@@ -45,15 +45,17 @@ export async function processStreamingChunks(messageStream, { onChunk, onContext
 /**
  * Creates and manages a streaming message placeholder
  * @param {Object} agent - The agent instance
+ * @param {Object} metadata - Optional metadata for the message (e.g., {mode: 'build'})
  * @returns {Object} - Object with messageId and update function
  */
-export function createStreamingMessage(agent) {
+export function createStreamingMessage(agent, metadata = {}) {
   const messageId = agent._generateMessageId();
   const placeholderMessage = {
     id: messageId,
     type: "ai",
     content: "",
     timestamp: new Date().toISOString(),
+    ...(Object.keys(metadata).length > 0 ? { metadata } : {}), // Include metadata if provided
   };
 
   agent._addMessage(placeholderMessage);

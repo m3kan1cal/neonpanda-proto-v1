@@ -105,7 +105,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       skippedWorkouts: 0,
       adherenceRate: 0,
       dayCompletionStatus: {},
-      lastActivityDate: new Date(),
+      lastActivityAt: new Date(),
       s3DetailKey, // S3 key for program details
       adaptationLog: [],
       // createdAt/updatedAt provided by DynamoDBItem wrapper

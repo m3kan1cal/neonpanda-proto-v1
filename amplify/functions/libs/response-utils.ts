@@ -7,7 +7,9 @@
 
 /**
  * Cleans response to remove markdown formatting and extract JSON
- * Removes code block markers and extracts content between first { and last }
+ * Removes code block markers and extracts content between:
+ * - first { and last } for objects
+ * - first [ and last ] for arrays
  */
 export const cleanResponse = (response: string): string => {
   // More aggressive markdown removal - handle all variations
@@ -32,12 +34,47 @@ export const cleanResponse = (response: string): string => {
     });
   }
 
-  // Find the first { and last } to extract just the JSON object
-  const firstBrace = cleaned.indexOf('{');
-  const lastBrace = cleaned.lastIndexOf('}');
+  // Detect if this is an array or object based on the first non-whitespace character
+  const firstNonWhitespace = cleaned.replace(/^\s+/, '')[0];
 
-  if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
-    cleaned = cleaned.substring(firstBrace, lastBrace + 1);
+  if (firstNonWhitespace === '[') {
+    // Handle JSON arrays - extract from first [ to last ]
+    const firstBracket = cleaned.indexOf('[');
+    const lastBracket = cleaned.lastIndexOf(']');
+
+    if (firstBracket !== -1 && lastBracket !== -1 && lastBracket > firstBracket) {
+      const extracted = cleaned.substring(firstBracket, lastBracket + 1);
+
+      if (extracted !== cleaned) {
+        console.info("✅ Extracted JSON array, removed surrounding text", {
+          originalLength: cleaned.length,
+          extractedLength: extracted.length,
+          removedPrefix: firstBracket > 0,
+          removedSuffix: lastBracket < cleaned.length - 1,
+        });
+      }
+
+      cleaned = extracted;
+    }
+  } else if (firstNonWhitespace === '{') {
+    // Handle JSON objects - extract from first { to last }
+    const firstBrace = cleaned.indexOf('{');
+    const lastBrace = cleaned.lastIndexOf('}');
+
+    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+      const extracted = cleaned.substring(firstBrace, lastBrace + 1);
+
+      if (extracted !== cleaned) {
+        console.info("✅ Extracted JSON object, removed surrounding text", {
+          originalLength: cleaned.length,
+          extractedLength: extracted.length,
+          removedPrefix: firstBrace > 0,
+          removedSuffix: lastBrace < cleaned.length - 1,
+        });
+      }
+
+      cleaned = extracted;
+    }
   }
 
   return cleaned;
@@ -74,16 +111,28 @@ export function fixMalformedJson(jsonString: string): string {
     // Fix unescaped quotes in string values (basic attempt)
     fixed = fixed.replace(/([^\\])"([^",:}\]]*)"([^,:}\]]*")/g, '$1\\"$2\\"$3');
 
-    // More aggressive brace balancing with position-aware fixing
+    // More aggressive brace/bracket balancing with position-aware fixing
     const openBraces = (fixed.match(/{/g) || []).length;
     const closeBraces = (fixed.match(/}/g) || []).length;
+    const openBrackets = (fixed.match(/\[/g) || []).length;
+    const closeBrackets = (fixed.match(/\]/g) || []).length;
 
-    console.info("Brace count analysis:", {
+    console.info("Brace/Bracket count analysis:", {
       openBraces,
       closeBraces,
-      difference: closeBraces - openBraces,
+      braceDifference: closeBraces - openBraces,
+      openBrackets,
+      closeBrackets,
+      bracketDifference: closeBrackets - openBrackets,
     });
 
+    // Fix bracket imbalance (for arrays)
+    if (openBrackets > closeBrackets) {
+      fixed += "]".repeat(openBrackets - closeBrackets);
+      console.info(`Added ${openBrackets - closeBrackets} missing closing brackets`);
+    }
+
+    // Fix brace imbalance (for objects)
     if (openBraces > closeBraces) {
       // Add missing closing braces
       fixed += "}".repeat(openBraces - closeBraces);

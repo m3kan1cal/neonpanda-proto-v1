@@ -465,3 +465,13 @@ export async function detectAndProcessMemory(
     memoryFeedback,
   };
 }
+
+/**
+ * Create fallback memory retrieval result
+ * Used when memory processing is disabled or fails
+ *
+ * @returns Empty memory retrieval result with no memories
+ */
+export function getFallbackMemory(): MemoryRetrievalResult {
+  return { memories: [] };
+}

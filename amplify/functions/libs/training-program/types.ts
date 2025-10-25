@@ -40,7 +40,7 @@ export interface TrainingProgram {
   completedWorkouts: number;
   skippedWorkouts: number;
   adherenceRate: number; // completedWorkouts / totalWorkouts
-  lastActivityDate: Date | null;
+  lastActivityAt: Date | null;
 
   // S3 storage reference for detailed daily workouts
   s3DetailKey: string; // Path to full program JSON in S3
@@ -307,7 +307,7 @@ export interface TrainingProgramSummary {
   totalDays: number;
   adherenceRate: number;
   startDate: string;
-  lastActivityDate: Date | null;
+  lastActivityAt: Date | null;
   coachId: string;
   coachName: string;
 }

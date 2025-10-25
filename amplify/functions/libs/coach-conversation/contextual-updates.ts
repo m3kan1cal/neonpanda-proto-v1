@@ -18,6 +18,7 @@
  */
 
 import { callBedrockApi, MODEL_IDS } from "../api-helpers";
+import { formatContextualEvent } from "../streaming";
 
 // Generate contextual updates using Amazon Nova Micro for fast, cost-effective progressive user feedback
 export async function generateContextualUpdate(
@@ -961,4 +962,32 @@ Does this need detailed coach analysis (COMPLEX) or is it a simple response (SIM
   );
 
   return response.trim().toUpperCase() === "COMPLEX";
+}
+
+/**
+ * Generate and format a contextual update
+ * Returns formatted SSE event ready to yield, or null if update fails
+ *
+ * This is a convenience wrapper that combines generateContextualUpdate() with
+ * formatContextualEvent() for use in streaming handlers.
+ *
+ * @param coachConfig - Coach configuration with personality data
+ * @param userResponse - User's message
+ * @param updateType - Type of update (e.g., 'initial_greeting', 'workout_analysis')
+ * @param context - Additional context for the update
+ * @returns Formatted SSE event string, or null if generation fails
+ */
+export async function generateAndFormatUpdate(
+  coachConfig: any,
+  userResponse: string,
+  updateType: string,
+  context: Record<string, any>
+): Promise<string | null> {
+  try {
+    const update = await generateContextualUpdate(coachConfig, userResponse, updateType, context);
+    return formatContextualEvent(update, updateType);
+  } catch (err) {
+    console.warn(`Contextual update ${updateType} failed (non-critical):`, err);
+    return null;
+  }
 }
