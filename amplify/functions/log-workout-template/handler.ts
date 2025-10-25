@@ -1,8 +1,20 @@
-import { createOkResponse, createErrorResponse } from '../libs/api-helpers';
-import { getTrainingProgram, updateTrainingProgram, saveWorkout, getUserProfile } from '../../dynamodb/operations';
+import {
+  createOkResponse,
+  createErrorResponse,
+  callBedrockApi,
+  MODEL_IDS,
+} from '../libs/api-helpers';
+import {
+  getTrainingProgram,
+  updateTrainingProgram,
+  saveWorkout,
+  getUserProfile,
+  getCoachConfig,
+} from '../../dynamodb/operations';
 import { getTrainingProgramDetailsFromS3, saveTrainingProgramDetailsToS3 } from '../libs/training-program/s3-utils';
-import { convertTemplateToUniversalSchema } from '../libs/training-program/template-utils';
+import { buildTemplateLoggingPrompt } from '../libs/training-program/logging-utils';
 import { getUserTimezoneOrDefault } from '../libs/analytics/date-utils';
+import { parseJsonWithFallbacks } from '../libs/response-utils';
 import { Workout } from '../libs/workout/types';
 import { withAuth, AuthenticatedHandler } from '../libs/auth/middleware';
 
@@ -29,12 +41,16 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     }
 
     const body = JSON.parse(event.body);
-    const { workoutData, feedback, completedAt } = body;
+    const { userPerformance, feedback, completedAt } = body;
 
-    // Fetch user profile for timezone (parallel with program fetch)
+    if (!userPerformance || typeof userPerformance !== 'string') {
+      return createErrorResponse(400, 'userPerformance is required (string describing what you did)');
+    }
+
+    // Fetch user profile, program, and coach config in parallel
     const [programData, userProfile] = await Promise.all([
       getTrainingProgram(userId, coachId, programId),
-      getUserProfile(userId)
+      getUserProfile(userId),
     ]);
 
     // Get user timezone with LA fallback
@@ -78,7 +94,78 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       (p) => p.phaseId === template.phaseId
     );
 
-    // Create a Workout entity (Universal Schema) from the template
+    // Get coach config for personality context (needed for AI extraction)
+    const coachConfigData = await getCoachConfig(userId, coachId);
+
+    if (!coachConfigData) {
+      return createErrorResponse(500, 'Coach configuration not found');
+    }
+
+    const coachConfig = coachConfigData.attributes;
+
+    console.info('🏋️ Logging workout from template:', {
+      userId,
+      programId,
+      templateId,
+      dayNumber: template.dayNumber,
+      templateName: template.name,
+      userPerformanceLength: userPerformance.length,
+    });
+
+    // Build AI extraction prompt (template + user performance → Universal Schema)
+    const { staticPrompt, dynamicPrompt } = buildTemplateLoggingPrompt(
+      template.workoutContent,
+      {
+        name: template.name,
+        description: template.description,
+        coachingNotes: template.coachingNotes,
+        estimatedDuration: template.estimatedDuration,
+        requiredEquipment: template.requiredEquipment,
+      },
+      userPerformance,
+      userProfile?.attributes || null,
+      coachConfig,
+      {
+        programId: program.programId,
+        programName: program.name,
+        dayNumber: template.dayNumber,
+        phaseId: template.phaseId,
+        phaseName: phase?.name || 'Unknown Phase',
+      }
+    );
+
+    console.info('Calling AI for workout extraction from template...', {
+      staticPromptLength: staticPrompt.length,
+      dynamicPromptLength: dynamicPrompt.length,
+    });
+
+    // Call AI to convert template + user performance to Universal Schema
+    // Uses prompt caching for 90% cost reduction on repeated extractions
+    const extractedData = await callBedrockApi(
+      staticPrompt,
+      dynamicPrompt,
+      MODEL_IDS.CLAUDE_SONNET_4_FULL,
+      {
+        staticPrompt,
+        dynamicPrompt,
+        prefillResponse: '{', // Force JSON response format
+        enableThinking: false, // Templates are usually straightforward
+      }
+    );
+
+    console.info('AI extraction completed:', {
+      responseLength: extractedData.length,
+    });
+
+    // Parse and validate workout data
+    const workoutData = parseJsonWithFallbacks(extractedData);
+
+    if (!workoutData || typeof workoutData !== 'object') {
+      console.error('Failed to parse workout data from AI response');
+      return createErrorResponse(500, 'Failed to extract workout data');
+    }
+
+    // Create a Workout entity (Universal Schema)
     // Generate workout ID (consistent with workout/conversation pattern)
     const shortId = Math.random().toString(36).substring(2, 11);
     const workoutId = `workout_${userId}_${Date.now()}_${shortId}`;
@@ -89,9 +176,9 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       coachNames: [], // TODO: Fetch coach name if needed
       conversationId: program.creationConversationId,
       completedAt: completedAt ? new Date(completedAt) : new Date(),
-      workoutData: workoutData || convertTemplateToUniversalSchema(template, userId, workoutId),
+      workoutData,
       extractionMetadata: {
-        confidence: 1.0, // High confidence since it's from a template
+        confidence: 0.95, // High confidence from template-guided extraction
         extractedAt: new Date(),
       },
       summary: `${template.name} - Day ${template.dayNumber} of ${program.name}`,

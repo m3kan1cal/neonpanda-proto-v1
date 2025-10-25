@@ -81,14 +81,17 @@ const CommandPalette = ({
     }
 
     // If typing a complete command with content, show execution preview
-    // Use [\s\S]+ instead of .+ to match multi-line content (including newlines)
-    const commandMatch = trimmedInput.match(/^(\/[\w-]+)\s+([\s\S]+)$/);
-    if (commandMatch) {
-      const [, command, content] = commandMatch;
+    // Match: /command + space + anything (including emojis, UTF-8, newlines, special chars)
+    // Using .match() with a simple split approach for maximum compatibility
+    const spaceIndex = trimmedInput.indexOf(' ');
+    if (spaceIndex > 0) {
+      const command = trimmedInput.substring(0, spaceIndex);
+      const content = trimmedInput.substring(spaceIndex + 1); // Everything after first space
+
       const matchedCommand = mockCommands.find(
         (cmd) => cmd.trigger === command
       );
-      if (matchedCommand) {
+      if (matchedCommand && content) {
         return {
           type: "execution-preview",
           command: matchedCommand,

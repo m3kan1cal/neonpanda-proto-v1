@@ -30,8 +30,11 @@ export const TRAINING_PROGRAM_STRUCTURE_SCHEMA = `{
 }`;
 
 /**
- * Complete Workout Template Structure Schema
+ * Complete Workout Template Structure Schema (Natural Language Approach)
  * Used for AI-powered daily workout generation for each phase
+ *
+ * Templates are written in natural language (like a human coach writes them)
+ * with structured metadata for app functionality
  */
 export const WORKOUT_TEMPLATE_STRUCTURE_SCHEMA = `[
   {
@@ -41,38 +44,22 @@ export const WORKOUT_TEMPLATE_STRUCTURE_SCHEMA = `[
     "templatePriority": "number (1 = highest priority for the day)",
     "scheduledDate": "string (YYYY-MM-DD, will be calculated from program start date)",
     "phaseId": "string (which phase this belongs to, e.g., 'phase_1')",
-    "name": "string (workout name, e.g., 'Heavy Squat Day', 'Conditioning Focus')",
-    "description": "string (what this workout accomplishes)",
+
+    "name": "string (workout name, e.g., 'Lower Body Strength - Squat Focus')",
+    "description": "string (1 sentence overview of what this workout accomplishes)",
     "estimatedDuration": "number (estimated minutes to complete)",
     "requiredEquipment": ["string array (equipment needed, subset of program equipment)"],
-    "coachingNotes": "string (cues, focus points, scaling suggestions)",
+
+    "workoutContent": "string (NATURAL LANGUAGE - write the workout as a human coach would)",
+    "coachingNotes": "string (additional cues, focus points, scaling suggestions, motivation)",
+
     "prescribedExercises": [
       {
-        "exerciseName": "string (exercise name, e.g., 'Back Squat', 'Assault Bike')",
-        "movementType": "'barbell' | 'dumbbell' | 'kettlebell' | 'bodyweight' | 'gymnastics' | 'cardio' | 'other'",
-        "variation": "string | null (e.g., 'touch and go', 'dead stop', 'strict', 'kipping')",
-        "assistance": "string | null (e.g., 'red band', 'blue band', 'belt', 'wraps')",
-        "sets": "number | null (number of sets prescribed)",
-        "reps": "number | string | null (prescribed reps: number or 'AMRAP', 'max', 'UB')",
-        "weight": {
-          "value": "number | null (prescribed weight value)",
-          "unit": "'lbs' | 'kg'",
-          "percentage1RM": "number | null (percentage of 1 rep max, e.g., 75 for 75%)",
-          "rxWeight": "number | null (RX standard weight for this movement)",
-          "scaledWeight": "number | null (scaled option weight)"
-        },
-        "distance": {
-          "value": "number",
-          "unit": "'meters' | 'miles' | 'km' | 'feet' | 'yards'"
-        },
-        "calories": "number | null (for bike/row/ski erg movements)",
-        "time": {
-          "value": "number",
-          "unit": "'seconds' | 'minutes' | 'hours'"
-        },
-        "formNotes": "string | null (coaching cues, form focus, progression notes)"
+        "exerciseName": "string (main movement name, e.g., 'Back Squat', 'Assault Bike')",
+        "movementType": "'barbell' | 'dumbbell' | 'kettlebell' | 'bodyweight' | 'gymnastics' | 'cardio' | 'other'"
       }
     ],
+
     "status": "'pending' (always set to pending for new templates)",
     "completedAt": "null (set when workout is logged)",
     "linkedWorkoutId": "null (set when workout is logged)",
@@ -111,6 +98,7 @@ ${TRAINING_PROGRAM_STRUCTURE_SCHEMA}`;
 
 /**
  * Helper function to get the workout template schema with context
+ * Generates natural language workout templates with structured metadata
  */
 export const getWorkoutTemplateSchemaWithContext = (phaseContext: {
   phaseName: string;
@@ -123,10 +111,12 @@ export const getWorkoutTemplateSchemaWithContext = (phaseContext: {
   goals: string[];
 }): string => {
   return `
-WORKOUT TEMPLATE GENERATION CONTEXT:
-Generate detailed daily workout templates for the phase: "${phaseContext.phaseName}"
+WORKOUT TEMPLATE GENERATION - NATURAL LANGUAGE APPROACH:
 
-PHASE DETAILS:
+Write each workout as a human coach would write it - clear, detailed, motivational, and specific.
+Think of how a great coach writes workouts: natural prose, not structured data or JSON.
+
+PHASE CONTEXT:
 - Phase: ${phaseContext.phaseName}
 - Description: ${phaseContext.phaseDescription}
 - Duration: ${phaseContext.phaseDurationDays} days
@@ -136,24 +126,78 @@ PHASE DETAILS:
 - Available Equipment: ${phaseContext.equipment.join(', ')}
 - Program Goals: ${phaseContext.goals.join(', ')}
 
-IMPORTANT GENERATION RULES:
-1. Generate exactly ${phaseContext.phaseDurationDays} daily templates (one for each day in the phase)
-2. Day numbers must start at ${phaseContext.phaseStartDay} and be sequential
-3. Training happens ${phaseContext.trainingFrequency} days per week - include rest/recovery days
-4. Rest days should have templateType: "optional" and minimal exercises (mobility, stretching)
-5. Progressive overload: difficulty should increase throughout the phase
-6. Respect equipment constraints - only use available equipment from: ${phaseContext.equipment.join(', ')}
-7. Each templateId should follow format: "template_day{dayNumber}_primary"
-8. scheduledDate will be calculated by the system (use placeholder or empty string)
-9. phaseId will be assigned by the system (use "phase_1", "phase_2", etc. based on phase number)
-10. Primary workouts should be the main training focus for the day
-11. Prescribed exercises should include specific weights, sets, reps, and coaching cues
-12. estimatedDuration should be realistic (typically 45-90 minutes for training days, 15-30 for rest days)
-13. coachingNotes should provide scaling options, intensity guidance, and key focus points
-14. requiredEquipment should list only the equipment needed for THIS specific workout
-15. Always set status to "pending", completedAt to null, linkedWorkoutId to null, userFeedback to null, and adaptationHistory to []
+CRITICAL INSTRUCTIONS FOR workoutContent FIELD:
 
-WORKOUT TEMPLATE SCHEMA (return an array of ${phaseContext.phaseDurationDays} templates):
+1. WRITE AS A COACH WRITES:
+   - Use natural language, not JSON or structured formats
+   - Be specific with all exercise details (sets, reps, weights, rest periods)
+   - Include coaching cues, form focus, and intensity guidance
+   - Structure clearly with sections (Warmup, Strength, Conditioning, etc.)
+   - Add motivational language and context
+
+2. EXAMPLE workoutContent (THIS IS THE STYLE TO EMULATE):
+   "
+   Warmup (10 minutes):
+   Hip circles, leg swings, deep squat holds, PVC pass-throughs. Get the hips and
+   shoulders mobile before we load them.
+
+   Strength Block:
+   Back Squat 5x5 @ 205lbs (75% of your estimated 1RM ~275lbs)
+   Focus on hitting depth consistently every rep. Feel your weight shift to mid-foot
+   at the bottom. Keep chest up throughout the movement. Rest 3 minutes between sets.
+   Film your heavy set if possible - I want to see depth consistency.
+
+   Scale: If form breaks, reduce weight 10% immediately.
+
+   Bulgarian Split Squat 3x10 each leg @ 40lb dumbbells
+   10 reps per leg. Focus on front leg doing the work. Keep torso upright.
+   Rest 90 seconds between sets.
+
+   Conditioning Finisher:
+   EMOM 10: 10 calories assault bike
+   Moderate pace—should finish with 20-30 seconds rest. This is conditioning work,
+   not a sprint. Keep breathing controlled.
+   "
+
+3. STRUCTURE & CLARITY:
+   - Use clear sections (Warmup, Main Work, Accessory, Finisher, etc.)
+   - Break complex workouts into digestible chunks
+   - Include rest periods and timing guidance
+   - Specify weights with context (% of 1RM, scaling options)
+
+4. COACHING ELEMENTS:
+   - Form cues for key movements
+   - Intensity guidance (RPE, "should feel like X")
+   - Scaling/modification options
+   - What to focus on mentally
+   - When to stop or reduce weight
+
+5. prescribedExercises FIELD (LIGHTWEIGHT):
+   - This is OPTIONAL and minimal
+   - Include only main exercises for filtering/reference
+   - Just exerciseName and movementType
+   - Example: [{"exerciseName": "Back Squat", "movementType": "barbell"}]
+
+6. coachingNotes FIELD:
+   - Additional context not in workoutContent
+   - Scaling options, intensity reminders
+   - Connection to program goals
+   - What to watch for today
+
+GENERATION REQUIREMENTS:
+- Generate exactly ${phaseContext.phaseDurationDays} daily templates
+- Day numbers: ${phaseContext.phaseStartDay} to ${phaseContext.phaseStartDay + phaseContext.phaseDurationDays - 1} (sequential)
+- Training ${phaseContext.trainingFrequency}x per week - include rest/recovery days
+- Rest days: templateType "optional", brief mobility/stretching in workoutContent
+- Progressive overload: difficulty increases throughout phase
+- Equipment: ONLY use from [${phaseContext.equipment.join(', ')}]
+- templateId format: "template_day{dayNumber}_primary"
+- scheduledDate: use empty string "" (calculated by system)
+- phaseId: use "phase_1", "phase_2", etc.
+- estimatedDuration: realistic (45-90 min training, 15-30 min rest days)
+- Always set: status="pending", completedAt=null, linkedWorkoutId=null, userFeedback=null, adaptationHistory=[]
+
+SCHEMA (return an array of ${phaseContext.phaseDurationDays} templates):
 ${WORKOUT_TEMPLATE_STRUCTURE_SCHEMA}`;
 };
 

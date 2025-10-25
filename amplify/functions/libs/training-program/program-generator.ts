@@ -28,8 +28,6 @@ import {
   normalizeTrainingProgram,
   shouldNormalizeTrainingProgram,
   generateNormalizationSummary,
-  normalizeWorkoutTemplates,
-  cleanupWorkoutTemplates,
 } from './normalization';
 
 /**
@@ -38,7 +36,8 @@ import {
  * @returns True if training program should be generated
  */
 export function detectTrainingProgramGenerationTrigger(aiResponse: string): boolean {
-  return aiResponse.includes('**[GENERATE_PROGRAM]**') || aiResponse.includes('[GENERATE_PROGRAM]');
+  // Check for any variation of [GENERATE_PROGRAM] trigger (case-insensitive, with/without markdown)
+  return /\[GENERATE_PROGRAM\]/i.test(aiResponse);
 }
 
 /**
@@ -428,40 +427,11 @@ export async function generateTrainingProgram(
       pineconeContext
     );
 
-    // NORMALIZATION & CLEANUP STEP: Normalize workout templates and remove redundant null fields
-    console.info(`🔧 Normalizing and cleaning workout templates for phase ${i + 1}...`);
+    // Natural language templates don't require normalization or cleanup
+    // AI writes coherent prose by default, and workoutContent is just a string
+    console.info(`✅ Generated ${phaseWorkouts.length} natural language workout templates for phase ${i + 1}`);
 
-    // Step 1: AI normalization (fixes structural issues, validates exercise data)
-    const normalizationResult = await normalizeWorkoutTemplates(phaseWorkouts, {
-      programName: trainingProgramData.name,
-      phase: phase.name,
-      equipment: trainingProgramData.equipmentConstraints || [],
-      goals: trainingProgramData.trainingGoals || [],
-    });
-
-    console.info(`Workout template normalization completed for phase ${i + 1}:`, {
-      isValid: normalizationResult.isValid,
-      issuesFound: normalizationResult.issues.length,
-      correctionsMade: normalizationResult.issues.filter((issue) => issue.corrected).length,
-      confidence: normalizationResult.confidence,
-    });
-
-    // Use normalized templates if valid or if corrections were made
-    let finalPhaseWorkouts = phaseWorkouts;
-    if (
-      normalizationResult.isValid ||
-      normalizationResult.issues.some((issue) => issue.corrected)
-    ) {
-      finalPhaseWorkouts = normalizationResult.normalizedTemplates;
-      console.info(`✅ Using AI-normalized workout templates for phase ${i + 1}`);
-    } else {
-      console.warn(`⚠️ AI normalization did not improve templates for phase ${i + 1}, using originals`);
-    }
-
-    // Step 2: Mechanical cleanup (removes redundant null fields)
-    const cleanedPhaseWorkouts = cleanupWorkoutTemplates(finalPhaseWorkouts);
-
-    allWorkoutTemplates.push(...cleanedPhaseWorkouts);
+    allWorkoutTemplates.push(...phaseWorkouts);
     dayCounter += durationDays;
   }
 
@@ -563,9 +533,11 @@ export function detectAndPrepareForTrainingProgramGeneration(aiResponse: string)
   }
 
   // Remove the trigger from the response (so it's not shown to the user)
+  // Use robust regex to catch any variation (with/without markdown, spaces, case variations)
   const cleanedResponse = aiResponse
-    .replace(/\*\*\[GENERATE_PROGRAM\]\*\*/g, '')
-    .replace(/\[GENERATE_PROGRAM\]/g, '')
+    .replace(/\*\*\s*\[GENERATE_PROGRAM\]\s*\*\*/gi, '') // Markdown bold with optional spaces
+    .replace(/\[GENERATE_PROGRAM\]/gi, '') // Plain trigger
+    .replace(/\[\s*GENERATE_PROGRAM\s*\]/gi, '') // With spaces inside brackets
     .trim();
 
   return {
