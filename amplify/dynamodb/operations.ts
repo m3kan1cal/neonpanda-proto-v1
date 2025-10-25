@@ -2788,7 +2788,7 @@ export async function queryTrainingProgramSummaries(
       totalDays: program.attributes.totalDays,
       adherenceRate: program.attributes.adherenceRate,
       startDate: program.attributes.startDate,
-      lastActivityDate: program.attributes.lastActivityDate,
+      lastActivityAt: program.attributes.lastActivityAt,
       coachId: program.attributes.coachId,
       coachName: "", // Will be populated by caller if needed
     }));

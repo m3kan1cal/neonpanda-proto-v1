@@ -175,7 +175,7 @@ const MessageItem = memo(
           {message.type === "ai" && message.metadata?.mode === CONVERSATION_MODES.BUILD && (
             <div className={`${buttonPatterns.modeBadgeBuild} mb-1`}>
               <BuildModeIconTiny />
-              <span>Build Mode</span>
+              <span className="translate-y-px">Build Mode</span>
             </div>
           )}
 

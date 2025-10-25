@@ -28,6 +28,8 @@ import {
   normalizeTrainingProgram,
   shouldNormalizeTrainingProgram,
   generateNormalizationSummary,
+  normalizeWorkoutTemplates,
+  cleanupWorkoutTemplates,
 } from './normalization';
 
 /**
@@ -74,7 +76,9 @@ export async function extractTrainingProgramStructure(
   // Use Pinecone context for user memories and relevant information
   const memoryContext = pineconeContext || 'No specific context found.';
 
-  const systemPrompt = `${coachPersonalityPrompt}
+  // STATIC PROMPT (cacheable - 90% cost reduction on cache hits)
+  // Contains coach personality, schemas, and instructions that don't change per request
+  const staticPrompt = `${coachPersonalityPrompt}
 
 ---
 
@@ -90,7 +94,9 @@ ${getJsonFormattingInstructions()}
 
 ${getTrainingProgramStructureSchemaWithContext()}`;
 
-  const userPrompt = `Analyze this conversation and extract the training program structure:
+  // DYNAMIC PROMPT (not cacheable - changes per request)
+  // Contains the actual conversation that varies each time
+  const dynamicPrompt = `Analyze this conversation and extract the training program structure:
 
 ${conversationText}
 
@@ -100,12 +106,19 @@ ${getJsonFormattingInstructions()}`;
     messageCount: conversationMessages.length,
     userId,
     coachId,
+    staticPromptLength: staticPrompt.length,
+    dynamicPromptLength: dynamicPrompt.length,
   });
 
   const response = await callBedrockApi(
-    systemPrompt,
-    userPrompt,
-    MODEL_IDS.CLAUDE_SONNET_4_FULL
+    staticPrompt,
+    dynamicPrompt,
+    MODEL_IDS.CLAUDE_SONNET_4_FULL,
+    {
+      staticPrompt,
+      dynamicPrompt,
+      prefillResponse: '{', // Force JSON response format
+    }
   );
 
   // Parse the JSON response with fallback handling for malformed AI responses
@@ -167,7 +180,9 @@ export async function generatePhaseWorkouts(
   // Use Pinecone context for user memories and relevant information
   const memoryContext = pineconeContext || 'No specific context found.';
 
-  const systemPrompt = `${coachPersonalityPrompt}
+  // STATIC PROMPT (cacheable - 90% cost reduction on cache hits)
+  // Contains coach personality, schemas, and instructions that don't change per phase
+  const staticPrompt = `${coachPersonalityPrompt}
 
 ---
 
@@ -183,7 +198,9 @@ ${getJsonFormattingInstructions()}
 
 ${getWorkoutTemplateSchemaWithContext(phaseContext)}`;
 
-  const userPrompt = `Generate ${phase.durationDays} daily workout templates for Phase ${phaseIndex + 1}: "${phase.name}"
+  // DYNAMIC PROMPT (not cacheable - changes per phase)
+  // Contains the specific phase details that vary
+  const dynamicPrompt = `Generate ${phase.durationDays} daily workout templates for Phase ${phaseIndex + 1}: "${phase.name}"
 
 Focus Areas: ${phase.focusAreas.join(', ')}
 
@@ -193,12 +210,19 @@ ${getJsonFormattingInstructions()}`;
     phase: phase.name,
     durationDays: phase.durationDays,
     startDay: daysBeforePhase + 1,
+    staticPromptLength: staticPrompt.length,
+    dynamicPromptLength: dynamicPrompt.length,
   });
 
   const response = await callBedrockApi(
-    systemPrompt,
-    userPrompt,
-    MODEL_IDS.CLAUDE_SONNET_4_FULL
+    staticPrompt,
+    dynamicPrompt,
+    MODEL_IDS.CLAUDE_SONNET_4_FULL,
+    {
+      staticPrompt,
+      dynamicPrompt,
+      prefillResponse: '[', // Force JSON array response format
+    }
   );
 
   // Parse the JSON response with fallback handling for malformed AI responses
@@ -219,8 +243,26 @@ ${getJsonFormattingInstructions()}`;
     console.error('❌ Failed to parse workout templates JSON:', {
       error,
       phase: phase.name,
-      response: response.substring(0, 500),
+      responseLength: response.length,
+      responsePreview: response.substring(0, 500), // First 500 chars
+      responseTail: response.substring(Math.max(0, response.length - 500)), // Last 500 chars
     });
+
+    // Log the problematic section if we can identify the error position
+    if (error instanceof Error && error.message.includes('position')) {
+      const posMatch = error.message.match(/position (\d+)/);
+      if (posMatch) {
+        const errorPos = parseInt(posMatch[1], 10);
+        const contextStart = Math.max(0, errorPos - 200);
+        const contextEnd = Math.min(response.length, errorPos + 200);
+        console.error('❌ Context around JSON error position:', {
+          errorPosition: errorPos,
+          totalLength: response.length,
+          context: response.substring(contextStart, contextEnd),
+        });
+      }
+    }
+
     throw new Error(`Failed to generate valid workout templates for phase: ${phase.name}`);
   }
 }
@@ -385,7 +427,41 @@ export async function generateTrainingProgram(
       userProfile,
       pineconeContext
     );
-    allWorkoutTemplates.push(...phaseWorkouts);
+
+    // NORMALIZATION & CLEANUP STEP: Normalize workout templates and remove redundant null fields
+    console.info(`🔧 Normalizing and cleaning workout templates for phase ${i + 1}...`);
+
+    // Step 1: AI normalization (fixes structural issues, validates exercise data)
+    const normalizationResult = await normalizeWorkoutTemplates(phaseWorkouts, {
+      programName: trainingProgramData.name,
+      phase: phase.name,
+      equipment: trainingProgramData.equipmentConstraints || [],
+      goals: trainingProgramData.trainingGoals || [],
+    });
+
+    console.info(`Workout template normalization completed for phase ${i + 1}:`, {
+      isValid: normalizationResult.isValid,
+      issuesFound: normalizationResult.issues.length,
+      correctionsMade: normalizationResult.issues.filter((issue) => issue.corrected).length,
+      confidence: normalizationResult.confidence,
+    });
+
+    // Use normalized templates if valid or if corrections were made
+    let finalPhaseWorkouts = phaseWorkouts;
+    if (
+      normalizationResult.isValid ||
+      normalizationResult.issues.some((issue) => issue.corrected)
+    ) {
+      finalPhaseWorkouts = normalizationResult.normalizedTemplates;
+      console.info(`✅ Using AI-normalized workout templates for phase ${i + 1}`);
+    } else {
+      console.warn(`⚠️ AI normalization did not improve templates for phase ${i + 1}, using originals`);
+    }
+
+    // Step 2: Mechanical cleanup (removes redundant null fields)
+    const cleanedPhaseWorkouts = cleanupWorkoutTemplates(finalPhaseWorkouts);
+
+    allWorkoutTemplates.push(...cleanedPhaseWorkouts);
     dayCounter += durationDays;
   }
 
@@ -453,7 +529,7 @@ export async function generateTrainingProgram(
     completedWorkouts: 0,
     skippedWorkouts: 0,
     adherenceRate: 0,
-    lastActivityDate: today,
+    lastActivityAt: today,
     s3DetailKey,
     adaptationLog: [],
     dayCompletionStatus: {},

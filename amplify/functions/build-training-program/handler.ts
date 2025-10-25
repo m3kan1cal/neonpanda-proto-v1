@@ -24,6 +24,8 @@ import { BuildTrainingProgramEvent } from "../libs/training-program/types";
  * Similar to build-workout, but for multi-week training programs
  */
 export const handler = async (event: BuildTrainingProgramEvent) => {
+  let debugData: any = null; // Track debug data for error scenarios
+
   try {
     console.info("🏋️ Starting training program generation:", {
       userId: event.userId,
@@ -48,6 +50,21 @@ export const handler = async (event: BuildTrainingProgramEvent) => {
       console.error("❌ No conversation messages provided");
       return createErrorResponse(400, "Conversation messages are required");
     }
+
+    // Prepare debug data for potential error scenarios
+    debugData = {
+      conversationSummary: event.conversationMessages
+        .slice(-5)
+        .map(m => `${m.role}: ${m.content?.substring(0, 100)}...`)
+        .join('\n\n'),
+      timestamp: new Date().toISOString(),
+      eventMetadata: {
+        userId: event.userId,
+        coachId: event.coachId,
+        conversationId: event.conversationId,
+        messageCount: event.conversationMessages.length,
+      },
+    };
 
     console.info("Calling AI to generate training program from conversation...");
 
@@ -149,6 +166,34 @@ export const handler = async (event: BuildTrainingProgramEvent) => {
       conversationId: event.conversationId,
       messageCount: event.conversationMessages?.length || 0,
     });
+
+    // Store debug data on error for troubleshooting
+    if (debugData) {
+      try {
+        const errorDebugContent = JSON.stringify({
+          ...debugData,
+          error: {
+            message: error instanceof Error ? error.message : String(error),
+            stack: error instanceof Error ? error.stack : undefined,
+            timestamp: new Date().toISOString(),
+          },
+        }, null, 2);
+
+        await storeDebugDataInS3(
+          errorDebugContent,
+          {
+            userId: event.userId,
+            conversationId: event.conversationId,
+            type: 'training-program-generation-error',
+          },
+          'training-program-error'
+        );
+
+        console.info("✅ Error debug data saved to S3");
+      } catch (debugError) {
+        console.warn("Failed to store error debug data (non-critical):", debugError);
+      }
+    }
 
     const errorMessage =
       error instanceof Error ? error.message : "Unknown generation error";

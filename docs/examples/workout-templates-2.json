@@ -1,0 +1,2522 @@
+{
+  "programId": "program_63gocaz-j-AYRsb0094ik_1761396095440_yve4li07e",
+  "programContext": {
+    "goals": [
+      "Test current max on deadlift (baseline: 285x3)",
+      "Test current max on back squat (baseline: 255x3)",
+      "Test current max on bench press (baseline: 255x3)",
+      "Test current max on push press (baseline: 165x3)",
+      "Establish new training baselines for future programming",
+      "Improve shoulder and upper back mobility through consistent warm-up work",
+      "Maintain conditioning capacity with finishers and one longer session weekly"
+    ],
+    "purpose": "Conservative 4-week block focusing on the four main powerlifts (deadlift, squat, bench press, push press) with max testing in week 4 to establish new baselines. Program respects limited recovery capacity (6-hour sleep, high work stress) with 2.5-5lb weekly progression.",
+    "successMetrics": [],
+    "equipmentConstraints": [
+      "barbell",
+      "squat rack",
+      "bench",
+      "deadlift platform",
+      "pull-up bar",
+      "dumbbells",
+      "kettlebells",
+      "rowing machine",
+      "assault bike",
+      "concept2 rower",
+      "ski erg"
+    ]
+  },
+  "dailyWorkoutTemplates": [
+    {
+      "templateId": "template_day1_primary",
+      "dayNumber": 1,
+      "templateType": "primary",
+      "templatePriority": 1,
+      "scheduledDate": "",
+      "phaseId": "phase_1",
+      "name": "Lower Body Strength - Squat Focus",
+      "description": "Establish baseline squat volume with moderate intensity. Focus on depth consistency and movement quality.",
+      "estimatedDuration": 60,
+      "requiredEquipment": [
+        "barbell",
+        "squat rack",
+        "assault bike"
+      ],
+      "coachingNotes": "Start conservative - this is week 1 of accumulation phase. Focus on hitting depth consistently on every rep. Film your heavy set if possible. RPE should be 7-8, not maximal. Scale weight down 10% if form breaks.",
+      "prescribedExercises": [
+        {
+          "exerciseName": "Back Squat",
+          "movementType": "barbell",
+          "sets": 5,
+          "reps": 5,
+          "weight": {
+            "value": 205,
+            "unit": "lbs",
+            "percentage1RM": 75,
+            "scaledWeight": 185
+          },
+          "formNotes": "Focus: Consistent depth every rep. Feel your weight mid-foot. Keep chest up throughout the movement. Rest 3 minutes between sets."
+        },
+        {
+          "exerciseName": "Bulgarian Split Squat",
+          "movementType": "dumbbell",
+          "variation": "rear foot elevated",
+          "sets": 3,
+          "reps": 10,
+          "weight": {
+            "value": 40,
+            "unit": "lbs",
+            "scaledWeight": 30
+          },
+          "formNotes": "10 reps per leg. Focus on front leg doing the work. Keep torso upright. Rest 90 seconds between sets."
+        },
+        {
+          "exerciseName": "Assault Bike",
+          "movementType": "cardio",
+          "sets": 10,
+          "calories": 10,
+          "time": {
+            "value": 60,
+            "unit": "seconds"
+          },
+          "formNotes": "EMOM 10: 10 calories each minute. Moderate pace - should finish with 20-30 seconds rest. This is conditioning work, not a sprint."
+        }
+      ],
+      "status": "pending",
+      "completedAt": null,
+      "linkedWorkoutId": null,
+      "userFeedback": null,
+      "adaptationHistory": []
+    },
+    {
+      "templateId": "template_day2_primary",
+      "dayNumber": 2,
+      "templateType": "primary",
+      "templatePriority": 1,
+      "scheduledDate": "",
+      "phaseId": "phase_1",
+      "name": "Upper Body Strength - Bench Press Focus",
+      "description": "Volume work on bench press with accessory pulling to maintain balance. Establish baseline pressing capacity.",
+      "estimatedDuration": 55,
+      "requiredEquipment": [
+        "barbell",
+        "bench",
+        "pull-up bar",
+        "concept2 rower"
+      ],
+      "coachingNotes": "Bench press should feel like RPE 7. Focus on bar path and leg drive. Pull-ups are a strength - leverage that. Keep rest periods strict on conditioning finisher.",
+      "prescribedExercises": [
+        {
+          "exerciseName": "Bench Press",
+          "movementType": "barbell",
+          "variation": "touch and go",
+          "sets": 5,
+          "reps": 5,
+          "weight": {
+            "value": 215,
+            "unit": "lbs",
+            "percentage1RM": 78,
+            "scaledWeight": 195
+          },
+          "formNotes": "Bar path should be slight J-curve. Drive feet into ground. Control descent, explosive press. Rest 3 minutes between sets."
+        },
+        {
+          "exerciseName": "Pull-ups",
+          "movementType": "bodyweight",
+          "variation": "strict",
+          "sets": 4,
+          "reps": 8,
+          "formNotes": "Strict pull-ups, full range of motion. Control the descent. If you can't hit 8 strict, scale to 6 reps or use light band assistance. Rest 2 minutes."
+        },
+        {
+          "exerciseName": "Dumbbell Row",
+          "movementType": "dumbbell",
+          "variation": "single arm",
+          "sets": 3,
+          "reps": 12,
+          "weight": {
+            "value": 60,
+            "unit": "lbs",
+            "scaledWeight": 50
+          },
+          "formNotes": "12 reps per arm. Pull elbow back, squeeze shoulder blade. Control the weight. Rest 90 seconds."
+        },
+        {
+          "exerciseName": "Concept2 Rower",
+          "movementType": "cardio",
+          "sets": 3,
+          "distance": {
+            "value": 500,
+            "unit": "meters"
+          },
+          "formNotes": "3 rounds: 500m row, rest 2 minutes. Moderate pace - around 1:50-2:00/500m split. Focus on leg drive."
+        }
+      ],
+      "status": "pending",
+      "completedAt": null,
+      "linkedWorkoutId": null,
+      "userFeedback": null,
+      "adaptationHistory": []
+    },
+    {
+      "templateId": "template_day3_primary",
+      "dayNumber": 3,
+      "templateType": "primary",
+      "templatePriority": 1,
+      "scheduledDate": "",
+      "phaseId": "phase_1",
+      "name": "Posterior Chain - Deadlift Focus",
+      "description": "Volume deadlift work to establish baseline pulling capacity. This is a weak point - focus on technical execution.",
+      "estimatedDuration": 60,
+      "requiredEquipment": [
+        "barbell",
+        "deadlift platform",
+        "pull-up bar",
+        "kettlebells"
+      ],
+      "coachingNotes": "Deadlift is your weak point - film your heavy set. Focus on keeping chest up longer before you pull. RPE 7-8. If form breaks, reduce weight immediately. This is about quality reps.",
+      "prescribedExercises": [
+        {
+          "exerciseName": "Deadlift",
+          "movementType": "barbell",
+          "variation": "conventional",
+          "sets": 5,
+          "reps": 5,
+          "weight": {
+            "value": 225,
+            "unit": "lbs",
+            "percentage1RM": 75,
+            "scaledWeight": 205
+          },
+          "formNotes": "CRITICAL: Film your heavy set. Focus on chest up, lats engaged before you pull. Feel tension in hamstrings. Hips and chest rise together. Rest 3-4 minutes between sets."
+        },
+        {
+          "exerciseName": "Romanian Deadlift",
+          "movementType": "barbell",
+          "sets": 3,
+          "reps": 10,
+          "weight": {
+            "value": 155,
+            "unit": "lbs",
+            "scaledWeight": 135
+          },
+          "formNotes": "Focus on hamstring stretch. Push hips back, keep bar close to legs. Control the eccentric. Rest 2 minutes."
+        },
+        {
+          "exerciseName": "Pull-ups",
+          "movementType": "bodyweight",
+          "variation": "strict",
+          "sets": 3,
+          "reps": 10,
+          "formNotes": "Strict pull-ups. This is a strength for you - push the reps. Rest 90 seconds."
+        },
+        {
+          "exerciseName": "Kettlebell Swing",
+          "movementType": "kettlebell",
+          "variation": "Russian",
+          "sets": 15,
+          "reps": 15,
+          "weight": {
+            "value": 53,
+            "unit": "lbs",
+            "scaledWeight": 44
+          },
+          "formNotes": "EMOM 15: 15 KB swings each minute. Hip drive, not arms. Eye level at top. Should have 20-30 seconds rest."
+        }
+      ],
+      "status": "pending",
+      "completedAt": null,
+      "linkedWorkoutId": null,
+      "userFeedback": null,
+      "adaptationHistory": []
+    },
+    {
+      "templateId": "template_day4_primary",
+      "dayNumber": 4,
+      "templateType": "primary",
+      "templatePriority": 1,
+      "scheduledDate": "",
+      "phaseId": "phase_1",
+      "name": "Upper Body Pressing - Push Press Focus",
+      "description": "Establish push press baseline with shoulder-friendly volume. Respect mobility limitations.",
+      "estimatedDuration": 55,
+      "requiredEquipment": [
+        "barbell",
+        "squat rack",
+        "dumbbells",
+        "assault bike"
+      ],
+      "coachingNotes": "Push press uses leg drive - this respects your shoulder mobility limitations. Don't force overhead position. Focus on timing of dip and drive. Keep intensity moderate this week.",
+      "prescribedExercises": [
+        {
+          "exerciseName": "Push Press",
+          "movementType": "barbell",
+          "sets": 5,
+          "reps": 5,
+          "weight": {
+            "value": 135,
+            "unit": "lbs",
+            "percentage1RM": 75,
+            "scaledWeight": 115
+          },
+          "formNotes": "Focus on dip depth and timing. Explosive drive from legs. Lock out overhead where comfortable - don't force ROM. Rest 3 minutes."
+        },
+        {
+          "exerciseName": "Dumbbell Bench Press",
+          "movementType": "dumbbell",
+          "sets": 4,
+          "reps": 10,
+          "weight": {
+            "value": 70,
+            "unit": "lbs",
+            "scaledWeight": 60
+          },
+          "formNotes": "70lbs per hand. Full range of motion. Control descent, press explosively. Rest 2 minutes."
+        },
+        {
+          "exerciseName": "Dumbbell Lateral Raise",
+          "movementType": "dumbbell",
+          "sets": 3,
+          "reps": 15,
+          "weight": {
+            "value": 20,
+            "unit": "lbs",
+            "scaledWeight": 15
+          },
+          "formNotes": "Shoulder health work. Light weight, control the movement. Raise to shoulder height only. Rest 90 seconds."
+        },
+        {
+          "exerciseName": "Assault Bike",
+          "movementType": "cardio",
+          "sets": 5,
+          "calories": 15,
+          "time": {
+            "value": 90,
+            "unit": "seconds"
+          },
+          "formNotes": "5 rounds: 15 calories, rest 90 seconds. Moderate pace. Should finish calories with 30-40 seconds left."
+        }
+      ],
+      "status": "pending",
+      "completedAt": null,
+      "linkedWorkoutId": null,
+      "userFeedback": null,
+      "adaptationHistory": []
+    },
+    {
+      "templateId": "template_day5_primary",
+      "dayNumber": 5,
+      "templateType": "primary",
+      "templatePriority": 1,
+      "scheduledDate": "",
+      "phaseId": "phase_1",
+      "name": "Full Body Strength - Squat Variation",
+      "description": "Front squat variation to build quad strength and address squat weakness from different angle.",
+      "estimatedDuration": 60,
+      "requiredEquipment": [
+        "barbell",
+        "squat rack",
+        "pull-up bar",
+        "concept2 rower"
+      ],
+      "coachingNotes": "Front squats will help your back squat by building quad strength and forcing upright torso. Keep weight moderate - this is new stimulus. Focus on keeping elbows high.",
+      "prescribedExercises": [
+        {
+          "exerciseName": "Front Squat",
+          "movementType": "barbell",
+          "sets": 4,
+          "reps": 6,
+          "weight": {
+            "value": 155,
+            "unit": "lbs",
+            "scaledWeight": 135
+          },
+          "formNotes": "Keep elbows high throughout. Upright torso. This will feel different than back squat - that's the point. Rest 3 minutes."
+        },
+        {
+          "exerciseName": "Deadlift",
+          "movementType": "barbell",
+          "variation": "deficit",
+          "sets": 4,
+          "reps": 5,
+          "weight": {
+            "value": 205,
+            "unit": "lbs",
+            "scaledWeight": 185
+          },
+          "formNotes": "Stand on 2-inch plate or platform. Increases range of motion. Forces better starting position. Focus on chest up. Rest 3 minutes."
+        },
+        {
+          "exerciseName": "Pull-ups",
+          "movementType": "bodyweight",
+          "variation": "weighted",
+          "sets": 4,
+          "reps": 6,
+          "weight": {
+            "value": 25,
+            "unit": "lbs",
+            "scaledWeight": 0
+          },
+          "formNotes": "Add weight if 6 reps feels easy. If not, do bodyweight strict. Rest 2 minutes."
+        },
+        {
+          "exerciseName": "Concept2 Rower",
+          "movementType": "cardio",
+          "sets": 1,
+          "distance": {
+            "value": 2000,
+            "unit": "meters"
+          },
+          "formNotes": "Single 2000m row for time. Moderate pace - around 2:00/500m split. This is conditioning work, not a max effort sprint."
+        }
+      ],
+      "status": "pending",
+      "completedAt": null,
+      "linkedWorkoutId": null,
+      "userFeedback": null,
+      "adaptationHistory": []
+    },
+    {
+      "templateId": "template_day6_primary",
+      "dayNumber": 6,
+      "templateType": "primary",
+      "templatePriority": 1,
+      "scheduledDate": "",
+      "phaseId": "phase_1",
+      "name": "Conditioning Focus - CrossFit Style",
+      "description": "Longer conditioning session to maintain work capacity. Mix of pulling, pressing, and monostructural work. AMRAP 30 minutes.",
+      "estimatedDuration": 30,
+      "requiredEquipment": [
+        "pull-up bar",
+        "dumbbells",
+        "assault bike"
+      ],
+      "coachingNotes": "This is your longer conditioning day. Pace yourself - 30 minutes of work. Break up movements as needed. Goal is consistent movement, not sprinting. Should be breathing hard but sustainable.",
+      "prescribedExercises": [
+        {
+          "exerciseName": "Pull-ups",
+          "movementType": "bodyweight",
+          "variation": "kipping",
+          "reps": 5,
+          "formNotes": "Part of AMRAP. Kipping is fine here - this is conditioning. Break into singles if needed."
+        },
+        {
+          "exerciseName": "Dumbbell Push Press",
+          "movementType": "dumbbell",
+          "reps": 10,
+          "weight": {
+            "value": 35,
+            "unit": "lbs",
+            "scaledWeight": 25
+          },
+          "formNotes": "Part of AMRAP. 35lbs per hand. Should be unbroken or quick break."
+        },
+        {
+          "exerciseName": "Assault Bike",
+          "movementType": "cardio",
+          "calories": 12,
+          "formNotes": "Part of AMRAP. 12 calories. Moderate pace - don't blow up here."
+        }
+      ],
+      "status": "pending",
+      "completedAt": null,
+      "linkedWorkoutId": null,
+      "userFeedback": null,
+      "adaptationHistory": []
+    },
+    {
+      "templateId": "template_day7_primary",
+      "dayNumber": 7,
+      "templateType": "optional",
+      "templatePriority": 1,
+      "scheduledDate": "",
+      "phaseId": "phase_1",
+      "name": "Rest Day - Mobility Work",
+      "description": "Complete rest with optional mobility work for shoulders and upper back. This is non-negotiable recovery.",
+      "estimatedDuration": 20,
+      "requiredEquipment": [],
+      "coachingNotes": "Sunday rest is mandatory. Do the mobility work - your shoulders and upper back need it. Foam roll if you have one. Walk if you want. No training today.",
+      "prescribedExercises": [
+        {
+          "exerciseName": "Shoulder Mobility Circuit",
+          "movementType": "other",
+          "sets": 3,
+          "reps": 10,
+          "formNotes": "Band pull-aparts, wall slides, doorway stretches. 10 reps each movement, 3 rounds. Take your time."
+        },
+        {
+          "exerciseName": "Thoracic Extensions",
+          "movementType": "other",
+          "variation": "foam roller",
+          "sets": 1,
+          "time": {
+            "value": 5,
+            "unit": "minutes"
+          },
+          "formNotes": "Lie on foam roller across upper back. 5 minutes of gentle extensions. This addresses your upper back mobility limitation."
+        }
+      ],
+      "status": "pending",
+      "completedAt": null,
+      "linkedWorkoutId": null,
+      "userFeedback": null,
+      "adaptationHistory": []
+    },
+    {
+      "templateId": "template_day8_primary",
+      "dayNumber": 8,
+      "templateType": "primary",
+      "templatePriority": 1,
+      "scheduledDate": "",
+      "phaseId": "phase_1",
+      "name": "Lower Body Strength - Squat Progression",
+      "description": "Week 2 squat volume - slight increase from week 1. Continue building work capacity.",
+      "estimatedDuration": 60,
+      "requiredEquipment": [
+        "barbell",
+        "squat rack",
+        "dumbbells",
+        "ski erg"
+      ],
+      "coachingNotes": "Adding 5lbs to squat from last week. Should still feel like RPE 7-8. Focus on depth consistency. If form breaks, stay at last week's weight.",
+      "prescribedExercises": [
+        {
+          "exerciseName": "Back Squat",
+          "movementType": "barbell",
+          "sets": 5,
+          "reps": 5,
+          "weight": {
+            "value": 210,
+            "unit": "lbs",
+            "percentage1RM": 77,
+            "scaledWeight": 205
+          },
+          "formNotes": "5lbs more than last week. Same focus: depth consistency, chest up, weight mid-foot. Rest 3 minutes."
+        },
+        {
+          "exerciseName": "Pause Squat",
+          "movementType": "barbell",
+          "variation": "2 second pause",
+          "sets": 3,
+          "reps": 5,
+          "weight": {
+            "value": 175,
+            "unit": "lbs",
+            "scaledWeight": 155
+          },
+          "formNotes": "2 second pause at bottom. Builds strength in the hole. This addresses your squat weakness. Rest 3 minutes."
+        },
+        {
+          "exerciseName": "Walking Lunge",
+          "movementType": "dumbbell",
+          "sets": 3,
+          "reps": 20,
+          "weight": {
+            "value": 40,
+            "unit": "lbs",
+            "scaledWeight": 30
+          },
+          "formNotes": "20 steps total (10 per leg). 40lbs per hand. This is a strength for you - push it. Rest 2 minutes."
+        },
+        {
+          "exerciseName": "Ski Erg",
+          "movementType": "cardio",
+          "sets": 12,
+          "calories": 10,
+          "time": {
+            "value": 60,
+            "unit": "seconds"
+          },
+          "formNotes": "EMOM 12: 10 calories each minute. Moderate pace. Should have 25-30 seconds rest."
+        }
+      ],
+      "status": "pending",
+      "completedAt": null,
+      "linkedWorkoutId": null,
+      "userFeedback": null,
+      "adaptationHistory": []
+    },
+    {
+      "templateId": "template_day9_primary",
+      "dayNumber": 9,
+      "templateType": "primary",
+      "templatePriority": 1,
+      "scheduledDate": "",
+      "phaseId": "phase_1",
+      "name": "Upper Body Strength - Bench Press Progression",
+      "description": "Week 2 bench volume with progression. Continue building pressing capacity.",
+      "estimatedDuration": 55,
+      "requiredEquipment": [
+        "barbell",
+        "bench",
+        "dumbbells",
+        "pull-up bar",
+        "assault bike"
+      ],
+      "coachingNotes": "Adding 5lbs to bench. This is your strength - you should handle this well. Keep bar path tight and leg drive strong.",
+      "prescribedExercises": [
+        {
+          "exerciseName": "Bench Press",
+          "movementType": "barbell",
+          "variation": "touch and go",
+          "sets": 5,
+          "reps": 5,
+          "weight": {
+            "value": 220,
+            "unit": "lbs",
+            "percentage1RM": 80,
+            "scaledWeight": 215
+          },
+          "formNotes": "5lbs more than last week. Bar path, leg drive, explosive press. Rest 3 minutes."
+        },
+        {
+          "exerciseName": "Close Grip Bench Press",
+          "movementType": "barbell",
+          "variation": "close grip",
+          "sets": 3,
+          "reps": 8,
+          "weight": {
+            "value": 175,
+            "unit": "lbs",
+            "scaledWeight": 155
+          },
+          "formNotes": "Hands inside shoulder width. Builds tricep strength for lockout. Rest 2 minutes."
+        },
+        {
+          "exerciseName": "Pull-ups",
+          "movementType": "bodyweight",
+          "variation": "weighted",
+          "sets": 4,
+          "reps": 8,
+          "weight": {
+            "value": 10,
+            "unit": "lbs",
+            "scaledWeight": 0
+          },
+          "formNotes": "Add 10lbs if bodyweight felt easy last week. If not, stay bodyweight. Rest 2 minutes."
+        },
+        {
+          "exerciseName": "Dumbbell Row",
+          "movementType": "dumbbell",
+          "variation": "single arm",
+          "sets": 3,
+          "reps": 12,
+          "weight": {
+            "value": 65,
+            "unit": "lbs",
+            "scaledWeight": 60
+          },
+          "formNotes": "5lbs more per arm than last week. 12 reps each side. Rest 90 seconds."
+        },
+        {
+          "exerciseName": "Assault Bike",
+          "movementType": "cardio",
+          "sets": 4,
+          "calories": 20,
+          "time": {
+            "value": 120,
+            "unit": "seconds"
+          },
+          "formNotes": "4 rounds: 20 calories, rest 2 minutes. Moderate-high pace. Should finish with 30-45 seconds left."
+        }
+      ],
+      "status": "pending",
+      "completedAt": null,
+      "linkedWorkoutId": null,
+      "userFeedback": null,
+      "adaptationHistory": []
+    },
+    {
+      "templateId": "template_day10_primary",
+      "dayNumber": 10,
+      "templateType": "primary",
+      "templatePriority": 1,
+      "scheduledDate": "",
+      "phaseId": "phase_1",
+      "name": "Posterior Chain - Deadlift Progression",
+      "description": "Week 2 deadlift volume. This is your weak point - continue technical focus with slight load increase.",
+      "estimatedDuration": 60,
+      "requiredEquipment": [
+        "barbell",
+        "deadlift platform",
+        "pull-up bar",
+        "concept2 rower"
+      ],
+      "coachingNotes": "Adding 5lbs to deadlift. Film your heavy set again. Focus on same cues: chest up, lats engaged, hips and chest rise together. Don't rush the progression.",
+      "prescribedExercises": [
+        {
+          "exerciseName": "Deadlift",
+          "movementType": "barbell",
+          "variation": "conventional",
+          "sets": 5,
+          "reps": 5,
+          "weight": {
+            "value": 230,
+            "unit": "lbs",
+            "percentage1RM": 77,
+            "scaledWeight": 225
+          },
+          "formNotes": "Film this. 5lbs more than last week. Chest up longer before you pull. Feel your hamstrings load. Rest 3-4 minutes."
+        },
+        {
+          "exerciseName": "Rack Pull",
+          "movementType": "barbell",
+          "variation": "below knee",
+          "sets": 3,
+          "reps": 6,
+          "weight": {
+            "value": 245,
+            "unit": "lbs",
+            "scaledWeight": 225
+          },
+          "formNotes": "Set pins just below knee. Builds lockout strength. Heavier than full deadlift. Rest 3 minutes."
+        },
+        {
+          "exerciseName": "Romanian Deadlift",
+          "movementType": "barbell",
+          "sets": 3,
+          "reps": 10,
+          "weight": {
+            "value": 165,
+            "unit": "lbs",
+            "scaledWeight": 155
+          },
+          "formNotes": "10lbs more than last week. Hamstring focus. Rest 2 minutes."
+        },
+        {
+          "exerciseName": "Pull-ups",
+          "movementType": "bodyweight",
+          "variation": "strict",
+          "sets": 3,
+          "reps": 10,
+          "formNotes": "Strict pull-ups. Push for 10 if you got them easily last week. Rest 90 seconds."
+        },
+        {
+          "exerciseName": "Concept2 Rower",
+          "movementType": "cardio",
+          "sets": 1,
+          "distance": {
+            "value": 3000,
+            "unit": "meters"
+          },
+          "formNotes": "Single 3000m row. Steady pace around 2:05/500m. Longer than last week. Leg drive focus."
+        }
+      ],
+      "status": "pending",
+      "completedAt": null,
+      "linkedWorkoutId": null,
+      "userFeedback": null,
+      "adaptationHistory": []
+    },
+    {
+      "templateId": "template_day11_primary",
+      "dayNumber": 11,
+      "templateType": "primary",
+      "templatePriority": 1,
+      "scheduledDate": "",
+      "phaseId": "phase_1",
+      "name": "Upper Body Pressing - Push Press Progression",
+      "description": "Week 2 push press volume with load increase. Continue respecting shoulder mobility limitations.",
+      "estimatedDuration": 55,
+      "requiredEquipment": [
+        "barbell",
+        "squat rack",
+        "dumbbells",
+        "kettlebells"
+      ],
+      "coachingNotes": "Adding 5lbs to push press. Focus on leg drive timing. Don't force overhead position. Keep elbows forward at lockout.",
+      "prescribedExercises": [
+        {
+          "exerciseName": "Push Press",
+          "movementType": "barbell",
+          "sets": 5,
+          "reps": 5,
+          "weight": {
+            "value": 140,
+            "unit": "lbs",
+            "percentage1RM": 77,
+            "scaledWeight": 135
+          },
+          "formNotes": "5lbs more. Explosive leg drive. Lock out where comfortable. Rest 3 minutes."
+        },
+        {
+          "exerciseName": "Dumbbell Incline Press",
+          "movementType": "dumbbell",
+          "variation": "incline",
+          "sets": 4,
+          "reps": 10,
+          "weight": {
+            "value": 65,
+            "unit": "lbs",
+            "scaledWeight": 55
+          },
+          "formNotes": "65lbs per hand. Bench at 30-45 degrees. Full range of motion. Rest 2 minutes."
+        },
+        {
+          "exerciseName": "Dumbbell Lateral Raise",
+          "movementType": "dumbbell",
+          "sets": 3,
+          "reps": 15,
+          "weight": {
+            "value": 20,
+            "unit": "lbs",
+            "scaledWeight": 15
+          },
+          "formNotes": "Shoulder health. Control the movement. Raise to shoulder height. Rest 90 seconds."
+        },
+        {
+          "exerciseName": "Kettlebell Swing",
+          "movementType": "kettlebell",
+          "variation": "American",
+          "sets": 10,
+          "reps": 20,
+          "weight": {
+            "value": 53,
+            "unit": "lbs",
+            "scaledWeight": 44
+          },
+          "formNotes": "EMOM 10: 20 American swings (overhead). Hip drive. Should have 20-25 seconds rest."
+        }
+      ],
+      "status": "pending",
+      "completedAt": null,
+      "linkedWorkoutId": null,
+      "userFeedback": null,
+      "adaptationHistory": []
+    },
+    {
+      "templateId": "template_day12_primary",
+      "dayNumber": 12,
+      "templateType": "primary",
+      "templatePriority": 1,
+      "scheduledDate": "",
+      "phaseId": "phase_1",
+      "name": "Full Body Strength - Deadlift Variation",
+      "description": "Week 2 full body with deadlift variation focus. Building pulling strength from different angle.",
+      "estimatedDuration": 60,
+      "requiredEquipment": [
+        "barbell",
+        "squat rack",
+        "deadlift platform",
+        "pull-up bar",
+        "assault bike"
+      ],
+      "coachingNotes": "Sumo deadlift variation adds variety and hits different muscle emphasis. Keep weight moderate - this may feel awkward at first. Focus on pushing knees out.",
+      "prescribedExercises": [
+        {
+          "exerciseName": "Deadlift",
+          "movementType": "barbell",
+          "variation": "sumo",
+          "sets": 4,
+          "reps": 6,
+          "weight": {
+            "value": 205,
+            "unit": "lbs",
+            "scaledWeight": 185
+          },
+          "formNotes": "Sumo stance - wide feet, toes out. Push knees out. More upright torso. This will feel different. Rest 3 minutes."
+        },
+        {
+          "exerciseName": "Front Squat",
+          "movementType": "barbell",
+          "sets": 4,
+          "reps": 6,
+          "weight": {
+            "value": 165,
+            "unit": "lbs",
+            "scaledWeight": 155
+          },
+          "formNotes": "10lbs more than last week. Elbows high. Rest 3 minutes."
+        },
+        {
+          "exerciseName": "Pull-ups",
+          "movementType": "bodyweight",
+          "variation": "weighted",
+          "sets": 4,
+          "reps": 6,
+          "weight": {
+            "value": 35,
+            "unit": "lbs",
+            "scaledWeight": 25
+          },
+          "formNotes": "10lbs more than last week if you handled it well. If not, stay at 25lbs. Rest 2 minutes."
+        },
+        {
+          "exerciseName": "Assault Bike",
+          "movementType": "cardio",
+          "sets": 5,
+          "calories": 18,
+          "time": {
+            "value": 90,
+            "unit": "seconds"
+          },
+          "formNotes": "5 rounds: 18 calories, rest 90 seconds. Moderate-high pace. Harder than last week."
+        }
+      ],
+      "status": "pending",
+      "completedAt": null,
+      "linkedWorkoutId": null,
+      "userFeedback": null,
+      "adaptationHistory": []
+    },
+    {
+      "templateId": "template_day13_primary",
+      "dayNumber": 13,
+      "templateType": "primary",
+      "templatePriority": 1,
+      "scheduledDate": "",
+      "phaseId": "phase_1",
+      "name": "Conditioning Focus - Mixed Modal",
+      "description": "Week 2 longer conditioning. Increased volume from last week with varied movements. AMRAP 35 minutes.",
+      "estimatedDuration": 35,
+      "requiredEquipment": [
+        "barbell",
+        "pull-up bar",
+        "concept2 rower"
+      ],
+      "coachingNotes": "Longer than last week - 35 minutes. Mix of barbell cycling, pulling, and rowing. Pace yourself. Break movements early to maintain steady pace. This builds work capacity.",
+      "prescribedExercises": [
+        {
+          "exerciseName": "Concept2 Rower",
+          "movementType": "cardio",
+          "distance": {
+            "value": 250,
+            "unit": "meters"
+          },
+          "formNotes": "Part of AMRAP. 250m row each round. Moderate pace."
+        },
+        {
+          "exerciseName": "Barbell Thruster",
+          "movementType": "barbell",
+          "reps": 10,
+          "weight": {
+            "value": 75,
+            "unit": "lbs",
+            "rxWeight": 95,
+            "scaledWeight": 65
+          },
+          "formNotes": "Part of AMRAP. 75lbs. Break into 5-5 or smaller sets. Keep moving."
+        },
+        {
+          "exerciseName": "Pull-ups",
+          "movementType": "bodyweight",
+          "variation": "kipping",
+          "reps": 8,
+          "formNotes": "Part of AMRAP. Kipping fine. Break early - singles or doubles."
+        }
+      ],
+      "status": "pending",
+      "completedAt": null,
+      "linkedWorkoutId": null,
+      "userFeedback": null,
+      "adaptationHistory": []
+    },
+    {
+      "templateId": "template_day14_primary",
+      "dayNumber": 14,
+      "templateType": "optional",
+      "templatePriority": 1,
+      "scheduledDate": "",
+      "phaseId": "phase_1",
+      "name": "Rest Day - Active Recovery",
+      "description": "Week 2 rest day. Mandatory recovery with mobility emphasis on shoulders and upper back.",
+      "estimatedDuration": 25,
+      "requiredEquipment": [],
+      "coachingNotes": "End of week 2. You've done good work. Take today off. Do the mobility work - it matters. Stretch, foam roll, walk. No training. Next week we continue building.",
+      "prescribedExercises": [
+        {
+          "exerciseName": "Shoulder Mobility Circuit",
+          "movementType": "other",
+          "sets": 3,
+          "reps": 10,
+          "formNotes": "Band pull-aparts, wall slides, doorway stretches, arm circles. 10 reps each, 3 rounds."
+        },
+        {
+          "exerciseName": "Thoracic Extensions",
+          "movementType": "other",
+          "variation": "foam roller",
+          "sets": 1,
+          "time": {
+            "value": 5,
+            "unit": "minutes"
+          },
+          "formNotes": "Foam roller across upper back. 5 minutes. This improves your overhead position over time."
+        },
+        {
+          "exerciseName": "Hip Mobility",
+          "movementType": "other",
+          "sets": 2,
+          "reps": 10,
+          "formNotes": "90-90 hip stretches, pigeon pose, hip flexor stretches. 10 breaths each position, 2 rounds."
+        }
+      ],
+      "status": "pending",
+      "completedAt": null,
+      "linkedWorkoutId": null,
+      "userFeedback": null,
+      "adaptationHistory": []
+    },
+    {
+      "templateId": "template_day15_primary",
+      "dayNumber": 15,
+      "templateType": "primary",
+      "templatePriority": 1,
+      "scheduledDate": "",
+      "phaseId": "phase_2",
+      "name": "Heavy Back Squat + Conditioning",
+      "description": "Transition to heavier squats with reduced volume. Build toward testing week with 85% work.",
+      "estimatedDuration": 55,
+      "requiredEquipment": [
+        "barbell",
+        "squat rack",
+        "assault bike",
+        "pull-up bar"
+      ],
+      "coachingNotes": "Focus on bar speed and technique at higher loads. This is 85% work - should feel challenging but controlled. If form breaks, reduce load 5-10lbs. Rest 3-4 minutes between squat sets. Conditioning finisher should be moderate intensity - don't crush yourself.",
+      "prescribedExercises": [
+        {
+          "exerciseName": "Back Squat",
+          "movementType": "barbell",
+          "variation": "high bar",
+          "assistance": null,
+          "sets": 5,
+          "reps": 3,
+          "weight": {
+            "value": 215,
+            "unit": "lbs",
+            "percentage1RM": 85,
+            "rxWeight": null,
+            "scaledWeight": 205
+          },
+          "formNotes": "Focus on maintaining chest up throughout the lift. Feel your weight shift to mid-foot at the bottom. Drive through heels on the ascent. Film a set if possible - I want to see depth consistency."
+        },
+        {
+          "exerciseName": "Bulgarian Split Squat",
+          "movementType": "dumbbell",
+          "variation": "rear foot elevated",
+          "assistance": null,
+          "sets": 3,
+          "reps": 8,
+          "weight": {
+            "value": 50,
+            "unit": "lbs",
+            "percentage1RM": null,
+            "rxWeight": null,
+            "scaledWeight": 40
+          },
+          "formNotes": "Each leg. Control the descent, drive through front heel. This addresses your squat weakness through unilateral work."
+        },
+        {
+          "exerciseName": "Assault Bike",
+          "movementType": "cardio",
+          "variation": null,
+          "assistance": null,
+          "sets": 5,
+          "calories": 12,
+          "formNotes": "EMOM 5: 12 cals each minute. Moderate pace - should finish with 20-25 seconds rest. This is conditioning maintenance, not a crusher."
+        },
+        {
+          "exerciseName": "Pull-ups",
+          "movementType": "bodyweight",
+          "variation": "strict",
+          "assistance": null,
+          "sets": 5,
+          "reps": 8,
+          "formNotes": "Between bike intervals if you want, or after. Focus on full range of motion. Scale to 6 reps if needed to maintain quality."
+        }
+      ],
+      "status": "pending",
+      "completedAt": null,
+      "linkedWorkoutId": null,
+      "userFeedback": null,
+      "adaptationHistory": []
+    },
+    {
+      "templateId": "template_day16_primary",
+      "dayNumber": 16,
+      "templateType": "primary",
+      "templatePriority": 1,
+      "scheduledDate": "",
+      "phaseId": "phase_2",
+      "name": "Heavy Bench Press + Upper Accessory",
+      "description": "Push bench press to 85% for triples. Leverage your pressing strength while building toward test week.",
+      "estimatedDuration": 50,
+      "requiredEquipment": [
+        "barbell",
+        "bench",
+        "dumbbells",
+        "concept2 rower"
+      ],
+      "coachingNotes": "Bench is a strength for you - own this session. 85% triples should feel solid. Focus on leg drive and tight upper back. Rest 3 minutes between bench sets. Finisher is moderate intensity rowing intervals.",
+      "prescribedExercises": [
+        {
+          "exerciseName": "Bench Press",
+          "movementType": "barbell",
+          "variation": "competition grip",
+          "assistance": null,
+          "sets": 5,
+          "reps": 3,
+          "weight": {
+            "value": 215,
+            "unit": "lbs",
+            "percentage1RM": 85,
+            "rxWeight": null,
+            "scaledWeight": 205
+          },
+          "formNotes": "Set your arch, drive legs into floor, maintain tight upper back. Bar path should be slight arc to lower chest. Explode up but stay controlled."
+        },
+        {
+          "exerciseName": "Incline Dumbbell Press",
+          "movementType": "dumbbell",
+          "variation": "45 degree incline",
+          "assistance": null,
+          "sets": 3,
+          "reps": 10,
+          "weight": {
+            "value": 60,
+            "unit": "lbs",
+            "percentage1RM": null,
+            "rxWeight": null,
+            "scaledWeight": 50
+          },
+          "formNotes": "Each hand. Control the eccentric, pause at bottom, drive up. Build upper chest strength to support bench press."
+        },
+        {
+          "exerciseName": "Barbell Row",
+          "movementType": "barbell",
+          "variation": "pendlay row",
+          "assistance": null,
+          "sets": 4,
+          "reps": 8,
+          "weight": {
+            "value": 135,
+            "unit": "lbs",
+            "percentage1RM": null,
+            "rxWeight": null,
+            "scaledWeight": 115
+          },
+          "formNotes": "Dead stop each rep from floor. Pull to lower chest, squeeze shoulder blades. Maintain horizontal torso."
+        },
+        {
+          "exerciseName": "Rowing Machine",
+          "movementType": "cardio",
+          "variation": null,
+          "assistance": null,
+          "sets": 6,
+          "distance": {
+            "value": 250,
+            "unit": "meters"
+          },
+          "time": {
+            "value": 90,
+            "unit": "seconds"
+          },
+          "formNotes": "Every 90 seconds for 6 rounds: 250m row. Moderate intensity - 1:55-2:05 pace. Rest the remainder of 90 seconds."
+        }
+      ],
+      "status": "pending",
+      "completedAt": null,
+      "linkedWorkoutId": null,
+      "userFeedback": null,
+      "adaptationHistory": []
+    },
+    {
+      "templateId": "template_day17_primary",
+      "dayNumber": 17,
+      "templateType": "primary",
+      "templatePriority": 1,
+      "scheduledDate": "",
+      "phaseId": "phase_2",
+      "name": "Heavy Deadlift + Posterior Chain",
+      "description": "Transition to 87% deadlift work. This is where we start preparing the nervous system for maximal loads.",
+      "estimatedDuration": 60,
+      "requiredEquipment": [
+        "barbell",
+        "deadlift platform",
+        "dumbbells",
+        "kettlebells"
+      ],
+      "coachingNotes": "Deadlift at 87% for doubles - this should feel heavy but controlled. Film your sets - I want to see hip timing and chest position. Rest 4 minutes between deadlift sets. This is a key weak point we're addressing.",
+      "prescribedExercises": [
+        {
+          "exerciseName": "Deadlift",
+          "movementType": "barbell",
+          "variation": "conventional",
+          "assistance": null,
+          "sets": 6,
+          "reps": 2,
+          "weight": {
+            "value": 250,
+            "unit": "lbs",
+            "percentage1RM": 87,
+            "rxWeight": null,
+            "scaledWeight": 235
+          },
+          "formNotes": "Critical: Keep chest up for 2 seconds longer before initiating pull. Feel tension in hamstrings before you pull. Hips and chest should rise together - no hip shooting up early. This is your PR goal lift - execute with precision."
+        },
+        {
+          "exerciseName": "Romanian Deadlift",
+          "movementType": "barbell",
+          "variation": null,
+          "assistance": null,
+          "sets": 3,
+          "reps": 8,
+          "weight": {
+            "value": 185,
+            "unit": "lbs",
+            "percentage1RM": null,
+            "rxWeight": null,
+            "scaledWeight": 165
+          },
+          "formNotes": "Focus on hamstring stretch at bottom. Maintain neutral spine, push hips back. This builds your posterior chain for deadlift strength."
+        },
+        {
+          "exerciseName": "Single Leg RDL",
+          "movementType": "dumbbell",
+          "variation": null,
+          "assistance": null,
+          "sets": 3,
+          "reps": 10,
+          "weight": {
+            "value": 40,
+            "unit": "lbs",
+            "percentage1RM": null,
+            "rxWeight": null,
+            "scaledWeight": 30
+          },
+          "formNotes": "Each leg. Balance and posterior chain unilateral work. Keep hips square, feel stretch in hamstring of working leg."
+        },
+        {
+          "exerciseName": "Kettlebell Swing",
+          "movementType": "kettlebell",
+          "variation": "russian",
+          "assistance": null,
+          "sets": 4,
+          "reps": 20,
+          "weight": {
+            "value": 53,
+            "unit": "lbs",
+            "percentage1RM": null,
+            "rxWeight": 53,
+            "scaledWeight": 44
+          },
+          "formNotes": "EMOM 4: 20 swings each minute. Explosive hip drive, tight core. This is conditioning finisher - moderate intensity."
+        }
+      ],
+      "status": "pending",
+      "completedAt": null,
+      "linkedWorkoutId": null,
+      "userFeedback": null,
+      "adaptationHistory": []
+    },
+    {
+      "templateId": "template_day18_primary",
+      "dayNumber": 18,
+      "templateType": "primary",
+      "templatePriority": 1,
+      "scheduledDate": "",
+      "phaseId": "phase_2",
+      "name": "Push Press + Upper Power",
+      "description": "Heavy push press work at 85%. Build explosive pressing power while respecting shoulder mobility.",
+      "estimatedDuration": 50,
+      "requiredEquipment": [
+        "barbell",
+        "squat rack",
+        "dumbbells",
+        "assault bike"
+      ],
+      "coachingNotes": "Push press at 85% - focus on leg drive timing. Don't force overhead position beyond your mobility. If shoulder feels restricted, stop at comfortable range. This movement respects your limitations while building toward 185lb goal.",
+      "prescribedExercises": [
+        {
+          "exerciseName": "Push Press",
+          "movementType": "barbell",
+          "variation": null,
+          "assistance": null,
+          "sets": 5,
+          "reps": 3,
+          "weight": {
+            "value": 140,
+            "unit": "lbs",
+            "percentage1RM": 85,
+            "rxWeight": null,
+            "scaledWeight": 130
+          },
+          "formNotes": "Dip depth 4-6 inches, explosive drive through heels. Let leg drive carry the bar overhead - don't muscle it with shoulders. Stop at your comfortable overhead position, don't force full lockout if mobility restricts."
+        },
+        {
+          "exerciseName": "Dumbbell Push Press",
+          "movementType": "dumbbell",
+          "variation": null,
+          "assistance": null,
+          "sets": 3,
+          "reps": 8,
+          "weight": {
+            "value": 50,
+            "unit": "lbs",
+            "percentage1RM": null,
+            "rxWeight": null,
+            "scaledWeight": 40
+          },
+          "formNotes": "Each hand. Allows more natural shoulder path. Focus on explosive leg drive."
+        },
+        {
+          "exerciseName": "Dumbbell Lateral Raise",
+          "movementType": "dumbbell",
+          "variation": null,
+          "assistance": null,
+          "sets": 3,
+          "reps": 12,
+          "weight": {
+            "value": 20,
+            "unit": "lbs",
+            "percentage1RM": null,
+            "rxWeight": null,
+            "scaledWeight": 15
+          },
+          "formNotes": "Build shoulder stability and health. Control the movement, slight bend in elbow."
+        },
+        {
+          "exerciseName": "Tricep Dips",
+          "movementType": "bodyweight",
+          "variation": "parallel bars",
+          "assistance": null,
+          "sets": 3,
+          "reps": 12,
+          "formNotes": "Support bench press and push press strength. Full range of motion, control the descent."
+        },
+        {
+          "exerciseName": "Assault Bike",
+          "movementType": "cardio",
+          "variation": null,
+          "assistance": null,
+          "sets": 1,
+          "calories": 50,
+          "formNotes": "For time. Moderate-hard intensity finisher. Should take 3-4 minutes. This is conditioning work - push the pace but don't redline."
+        }
+      ],
+      "status": "pending",
+      "completedAt": null,
+      "linkedWorkoutId": null,
+      "userFeedback": null,
+      "adaptationHistory": []
+    },
+    {
+      "templateId": "template_day19_primary",
+      "dayNumber": 19,
+      "templateType": "primary",
+      "templatePriority": 1,
+      "scheduledDate": "",
+      "phaseId": "phase_2",
+      "name": "Squat Variation + Full Body Power",
+      "description": "Front squat variation work plus explosive movements. Build full body power while giving back squat a break.",
+      "estimatedDuration": 55,
+      "requiredEquipment": [
+        "barbell",
+        "squat rack",
+        "dumbbells",
+        "concept2 rower",
+        "pull-up bar"
+      ],
+      "coachingNotes": "Front squats challenge your core and upper back position. Keep elbows high, chest up. This variation helps your back squat weakness. Conditioning finisher is a couplet - moderate intensity, keep moving.",
+      "prescribedExercises": [
+        {
+          "exerciseName": "Front Squat",
+          "movementType": "barbell",
+          "variation": "clean grip",
+          "assistance": null,
+          "sets": 4,
+          "reps": 5,
+          "weight": {
+            "value": 165,
+            "unit": "lbs",
+            "percentage1RM": null,
+            "rxWeight": null,
+            "scaledWeight": 155
+          },
+          "formNotes": "Elbows high, chest up throughout. If elbows drop, you lose the bar. This builds your squat through different loading pattern. Rest 3 minutes between sets."
+        },
+        {
+          "exerciseName": "Box Jump",
+          "movementType": "bodyweight",
+          "variation": "step down",
+          "assistance": null,
+          "sets": 4,
+          "reps": 5,
+          "formNotes": "24 inch box. Explosive hip extension, soft landing. Step down to preserve knees. This builds power for squats and deadlifts."
+        },
+        {
+          "exerciseName": "Walking Lunge",
+          "movementType": "dumbbell",
+          "variation": null,
+          "assistance": null,
+          "sets": 3,
+          "reps": 20,
+          "weight": {
+            "value": 50,
+            "unit": "lbs",
+            "percentage1RM": null,
+            "rxWeight": null,
+            "scaledWeight": 40
+          },
+          "formNotes": "Each hand, 20 steps total. This is a strength for you - own it. Keep torso upright, drive through front heel."
+        },
+        {
+          "exerciseName": "Rowing Machine",
+          "movementType": "cardio",
+          "variation": null,
+          "assistance": null,
+          "sets": 5,
+          "distance": {
+            "value": 15,
+            "unit": "calories"
+          },
+          "calories": 15,
+          "formNotes": "5 rounds for time: 15 cal row + 10 pull-ups. Moderate intensity - should take 8-12 minutes. Keep moving, this is conditioning work."
+        },
+        {
+          "exerciseName": "Pull-ups",
+          "movementType": "bodyweight",
+          "variation": "strict",
+          "assistance": null,
+          "sets": 5,
+          "reps": 10,
+          "formNotes": "Part of conditioning couplet above. Scale to 7-8 reps if needed to maintain quality and keep moving."
+        }
+      ],
+      "status": "pending",
+      "completedAt": null,
+      "linkedWorkoutId": null,
+      "userFeedback": null,
+      "adaptationHistory": []
+    },
+    {
+      "templateId": "template_day20_primary",
+      "dayNumber": 20,
+      "templateType": "primary",
+      "templatePriority": 1,
+      "scheduledDate": "",
+      "phaseId": "phase_2",
+      "name": "Longer Conditioning Session",
+      "description": "Extended conditioning work. Build aerobic capacity and work capacity without compromising strength recovery.",
+      "estimatedDuration": 30,
+      "requiredEquipment": [
+        "concept2 rower",
+        "dumbbells",
+        "pull-up bar"
+      ],
+      "coachingNotes": "This is your longer conditioning day. Moderate intensity - conversational to moderate breathlessness. Focus on consistent pacing, not sprinting. This maintains your conditioning capacity while we prioritize strength.",
+      "prescribedExercises": [
+        {
+          "exerciseName": "Rowing Machine",
+          "movementType": "cardio",
+          "variation": null,
+          "assistance": null,
+          "sets": 1,
+          "distance": {
+            "value": 500,
+            "unit": "meters"
+          },
+          "formNotes": "5 rounds for time: 500m row, 21 dumbbell thrusters (35/25lb), 12 pull-ups. This is 'DT' style chipper. Pace yourself - should take 20-25 minutes. Break up thrusters and pull-ups as needed."
+        },
+        {
+          "exerciseName": "Dumbbell Thruster",
+          "movementType": "dumbbell",
+          "variation": null,
+          "assistance": null,
+          "sets": 5,
+          "reps": 21,
+          "weight": {
+            "value": 35,
+            "unit": "lbs",
+            "percentage1RM": null,
+            "rxWeight": 35,
+            "scaledWeight": 25
+          },
+          "formNotes": "Each hand. Full squat to overhead press. Break into manageable sets - maybe 10-7-4 or 8-7-6. Keep moving but don't redline."
+        },
+        {
+          "exerciseName": "Pull-ups",
+          "movementType": "bodyweight",
+          "variation": "strict or kipping",
+          "assistance": null,
+          "sets": 5,
+          "reps": 12,
+          "formNotes": "Break these up intelligently. Maybe 6-6 or 4-4-4. Kipping is fine here if it helps you keep moving. This is conditioning, not max strength pull-ups."
+        }
+      ],
+      "status": "pending",
+      "completedAt": null,
+      "linkedWorkoutId": null,
+      "userFeedback": null,
+      "adaptationHistory": []
+    },
+    {
+      "templateId": "template_day21_optional",
+      "dayNumber": 21,
+      "templateType": "optional",
+      "templatePriority": 2,
+      "scheduledDate": "",
+      "phaseId": "phase_2",
+      "name": "Active Recovery & Mobility",
+      "description": "Complete rest and recovery. Focus on mobility work for shoulders and upper back. This is non-negotiable recovery time.",
+      "estimatedDuration": 20,
+      "requiredEquipment": [],
+      "coachingNotes": "This is your rest day - take it seriously. Do the mobility work to address your shoulder and upper back restrictions. Light stretching, foam rolling if you have it. Sleep 7-8 hours. Recover so you can attack next week's heavier loads.",
+      "prescribedExercises": [
+        {
+          "exerciseName": "Shoulder Mobility Flow",
+          "movementType": "bodyweight",
+          "variation": null,
+          "assistance": null,
+          "sets": 3,
+          "reps": 10,
+          "formNotes": "Arm circles, wall slides, band pull-aparts if available. Spend 5-10 minutes working shoulder range of motion. This addresses your overhead limitations."
+        },
+        {
+          "exerciseName": "Thoracic Extensions",
+          "movementType": "bodyweight",
+          "variation": "foam roller or floor",
+          "assistance": null,
+          "sets": 3,
+          "reps": 10,
+          "formNotes": "Upper back mobility work. Lie on foam roller or floor, arms overhead, extend through upper back. This helps your overhead position and squat position."
+        },
+        {
+          "exerciseName": "Hip Flexor Stretch",
+          "movementType": "bodyweight",
+          "variation": "couch stretch",
+          "assistance": null,
+          "sets": 2,
+          "time": {
+            "value": 90,
+            "unit": "seconds"
+          },
+          "formNotes": "Each side, 90 seconds. Opens up hips for better squat and deadlift positioning."
+        },
+        {
+          "exerciseName": "Light Walk",
+          "movementType": "other",
+          "variation": null,
+          "assistance": null,
+          "sets": 1,
+          "distance": {
+            "value": 1,
+            "unit": "miles"
+          },
+          "time": {
+            "value": 15,
+            "unit": "minutes"
+          },
+          "formNotes": "Optional 15-20 minute easy walk. Active recovery, get blood flowing. Nothing intense."
+        }
+      ],
+      "status": "pending",
+      "completedAt": null,
+      "linkedWorkoutId": null,
+      "userFeedback": null,
+      "adaptationHistory": []
+    },
+    {
+      "templateId": "template_day22_primary",
+      "dayNumber": 22,
+      "templateType": "primary",
+      "templatePriority": 1,
+      "scheduledDate": "",
+      "phaseId": "phase_3",
+      "name": "Deload - Light Lower Body",
+      "description": "Reduced volume lower body work to facilitate recovery before max testing. Focus on movement quality and mobility.",
+      "estimatedDuration": 45,
+      "requiredEquipment": [
+        "barbell",
+        "squat rack",
+        "dumbbells",
+        "assault bike"
+      ],
+      "coachingNotes": "This is a deload week - weights should feel light and easy. Focus on perfect technique and mobility. No grinding reps. RPE should be 5-6 max. Save your energy for testing later this week.",
+      "prescribedExercises": [
+        {
+          "exerciseName": "Mobility Warm-up",
+          "movementType": "bodyweight",
+          "variation": null,
+          "assistance": null,
+          "sets": 1,
+          "reps": "10 each",
+          "weight": null,
+          "distance": null,
+          "time": {
+            "value": 10,
+            "unit": "minutes"
+          },
+          "formNotes": "Hip circles, leg swings, thoracic rotations, shoulder pass-throughs with PVC, deep squat holds, cat-cow stretches. Spend extra time on shoulders and upper back."
+        },
+        {
+          "exerciseName": "Back Squat",
+          "movementType": "barbell",
+          "variation": "paused",
+          "assistance": null,
+          "sets": 3,
+          "reps": 5,
+          "weight": {
+            "value": 185,
+            "unit": "lbs",
+            "percentage1RM": 60,
+            "rxWeight": null,
+            "scaledWeight": null
+          },
+          "distance": null,
+          "time": null,
+          "formNotes": "2-second pause at bottom. Focus on depth consistency and staying upright. Should feel light and controlled. Rest 2-3 minutes between sets."
+        },
+        {
+          "exerciseName": "Romanian Deadlift",
+          "movementType": "barbell",
+          "variation": null,
+          "assistance": null,
+          "sets": 3,
+          "reps": 8,
+          "weight": {
+            "value": 135,
+            "unit": "lbs",
+            "percentage1RM": null,
+            "rxWeight": null,
+            "scaledWeight": null
+          },
+          "distance": null,
+          "time": null,
+          "formNotes": "Hamstring stretch focus. Feel the tension build in hamstrings as you lower. Keep back flat, chest up. Rest 90 seconds between sets."
+        },
+        {
+          "exerciseName": "Bulgarian Split Squat",
+          "movementType": "dumbbell",
+          "variation": null,
+          "assistance": null,
+          "sets": 2,
+          "reps": "10 each leg",
+          "weight": {
+            "value": 25,
+            "unit": "lbs",
+            "percentage1RM": null,
+            "rxWeight": null,
+            "scaledWeight": 20
+          },
+          "distance": null,
+          "time": null,
+          "formNotes": "10 reps each leg. Light weight, focus on balance and control. Keep torso upright."
+        },
+        {
+          "exerciseName": "Assault Bike",
+          "movementType": "cardio",
+          "variation": null,
+          "assistance": null,
+          "sets": 5,
+          "weight": null,
+          "distance": null,
+          "calories": 10,
+          "time": {
+            "value": 10,
+            "unit": "minutes"
+          },
+          "formNotes": "EMOM 10: Minute 1: 10 cal assault bike, Minute 2: Rest. Easy pace, conversational breathing. This is active recovery."
+        }
+      ],
+      "status": "pending",
+      "completedAt": null,
+      "linkedWorkoutId": null,
+      "userFeedback": null,
+      "adaptationHistory": []
+    },
+    {
+      "templateId": "template_day23_primary",
+      "dayNumber": 23,
+      "templateType": "primary",
+      "templatePriority": 1,
+      "scheduledDate": "",
+      "phaseId": "phase_3",
+      "name": "Deload - Light Upper Body",
+      "description": "Reduced volume upper body work to facilitate recovery before max testing. Movement prep for upcoming bench and push press tests.",
+      "estimatedDuration": 45,
+      "requiredEquipment": [
+        "barbell",
+        "bench",
+        "dumbbells",
+        "pull-up bar",
+        "concept2 rower"
+      ],
+      "coachingNotes": "Light weights, perfect form. This is about movement prep, not training stress. RPE 5-6 max. Focus on bar path and positioning for bench press.",
+      "prescribedExercises": [
+        {
+          "exerciseName": "Upper Body Mobility",
+          "movementType": "bodyweight",
+          "variation": null,
+          "assistance": null,
+          "sets": 1,
+          "reps": "10 each",
+          "weight": null,
+          "distance": null,
+          "time": {
+            "value": 10,
+            "unit": "minutes"
+          },
+          "formNotes": "Shoulder pass-throughs, band pull-aparts, thoracic extensions over foam roller, scapular wall slides, arm circles. Extra focus on shoulder and upper back mobility."
+        },
+        {
+          "exerciseName": "Bench Press",
+          "movementType": "barbell",
+          "variation": "paused",
+          "assistance": null,
+          "sets": 3,
+          "reps": 5,
+          "weight": {
+            "value": 185,
+            "unit": "lbs",
+            "percentage1RM": 60,
+            "rxWeight": null,
+            "scaledWeight": null
+          },
+          "distance": null,
+          "time": null,
+          "formNotes": "1-second pause on chest. Dial in bar path and leg drive. Should feel easy. Rest 2-3 minutes between sets."
+        },
+        {
+          "exerciseName": "Push Press",
+          "movementType": "barbell",
+          "variation": null,
+          "assistance": null,
+          "sets": 3,
+          "reps": 5,
+          "weight": {
+            "value": 115,
+            "unit": "lbs",
+            "percentage1RM": 60,
+            "rxWeight": null,
+            "scaledWeight": null
+          },
+          "distance": null,
+          "time": null,
+          "formNotes": "Focus on dip timing and aggressive leg drive. Bar should feel light. Respect shoulder ROM - press to comfortable position. Rest 2 minutes between sets."
+        },
+        {
+          "exerciseName": "Pull-ups",
+          "movementType": "bodyweight",
+          "variation": "strict",
+          "assistance": null,
+          "sets": 3,
+          "reps": 5,
+          "weight": null,
+          "distance": null,
+          "time": null,
+          "formNotes": "Controlled tempo. Stop well short of failure. Rest 90 seconds between sets."
+        },
+        {
+          "exerciseName": "Conditioning Circuit",
+          "movementType": "cardio",
+          "variation": null,
+          "assistance": null,
+          "sets": 3,
+          "weight": null,
+          "distance": {
+            "value": 400,
+            "unit": "meters"
+          },
+          "time": {
+            "value": 12,
+            "unit": "minutes"
+          },
+          "formNotes": "3 rounds easy pace: 400m row, 10 push-ups, 15 air squats. Conversational breathing throughout. Active recovery."
+        }
+      ],
+      "status": "pending",
+      "completedAt": null,
+      "linkedWorkoutId": null,
+      "userFeedback": null,
+      "adaptationHistory": []
+    },
+    {
+      "templateId": "template_day24_primary",
+      "dayNumber": 24,
+      "templateType": "primary",
+      "templatePriority": 1,
+      "scheduledDate": "",
+      "phaseId": "phase_3",
+      "name": "Max Test - Deadlift",
+      "description": "Establish new 1RM on deadlift. Current baseline: 285x3. Goal: 315x1. Systematic progression to max attempt.",
+      "estimatedDuration": 60,
+      "requiredEquipment": [
+        "barbell",
+        "deadlift platform"
+      ],
+      "coachingNotes": "This is it - time to see what you've built. Warm up thoroughly, take conservative jumps, and trust your strength. Film your heavy attempts for review. Stop if form breaks down. You've put in the work - now execute.",
+      "prescribedExercises": [
+        {
+          "exerciseName": "Deadlift Warm-up",
+          "movementType": "bodyweight",
+          "variation": null,
+          "assistance": null,
+          "sets": 1,
+          "reps": "varies",
+          "weight": null,
+          "distance": null,
+          "time": {
+            "value": 15,
+            "unit": "minutes"
+          },
+          "formNotes": "Thorough warm-up: hip circles, leg swings, inchworms, glute bridges, bird dogs, light kettlebell swings. Get warm and loose."
+        },
+        {
+          "exerciseName": "Deadlift",
+          "movementType": "barbell",
+          "variation": "conventional",
+          "assistance": "belt",
+          "sets": 1,
+          "reps": 5,
+          "weight": {
+            "value": 135,
+            "unit": "lbs",
+            "percentage1RM": null,
+            "rxWeight": null,
+            "scaledWeight": null
+          },
+          "distance": null,
+          "time": null,
+          "formNotes": "Bar only warm-up. Focus on setup: feet mid-foot under bar, chest up, lats engaged."
+        },
+        {
+          "exerciseName": "Deadlift",
+          "movementType": "barbell",
+          "variation": "conventional",
+          "assistance": "belt",
+          "sets": 1,
+          "reps": 5,
+          "weight": {
+            "value": 185,
+            "unit": "lbs",
+            "percentage1RM": 50,
+            "rxWeight": null,
+            "scaledWeight": null
+          },
+          "distance": null,
+          "time": null,
+          "formNotes": "Should feel light. Dial in positioning. Rest 2 minutes."
+        },
+        {
+          "exerciseName": "Deadlift",
+          "movementType": "barbell",
+          "variation": "conventional",
+          "assistance": "belt",
+          "sets": 1,
+          "reps": 3,
+          "weight": {
+            "value": 225,
+            "unit": "lbs",
+            "percentage1RM": 65,
+            "rxWeight": null,
+            "scaledWeight": null
+          },
+          "distance": null,
+          "time": null,
+          "formNotes": "Still warm-up weight. Focus on keeping chest up through entire pull. Rest 3 minutes."
+        },
+        {
+          "exerciseName": "Deadlift",
+          "movementType": "barbell",
+          "variation": "conventional",
+          "assistance": "belt",
+          "sets": 1,
+          "reps": 2,
+          "weight": {
+            "value": 255,
+            "unit": "lbs",
+            "percentage1RM": 75,
+            "rxWeight": null,
+            "scaledWeight": null
+          },
+          "distance": null,
+          "time": null,
+          "formNotes": "Getting heavier. Maintain setup discipline. Feel your lats engage before you pull. Rest 3-4 minutes."
+        },
+        {
+          "exerciseName": "Deadlift",
+          "movementType": "barbell",
+          "variation": "conventional",
+          "assistance": "belt",
+          "sets": 1,
+          "reps": 1,
+          "weight": {
+            "value": 275,
+            "unit": "lbs",
+            "percentage1RM": 85,
+            "rxWeight": null,
+            "scaledWeight": null
+          },
+          "distance": null,
+          "time": null,
+          "formNotes": "Last warm-up single. Should move well. Film this and all remaining attempts. Rest 4 minutes."
+        },
+        {
+          "exerciseName": "Deadlift",
+          "movementType": "barbell",
+          "variation": "conventional",
+          "assistance": "belt",
+          "sets": 1,
+          "reps": 1,
+          "weight": {
+            "value": 295,
+            "unit": "lbs",
+            "percentage1RM": 90,
+            "rxWeight": null,
+            "scaledWeight": null
+          },
+          "distance": null,
+          "time": null,
+          "formNotes": "First working attempt. This should move with good speed. Focus on chest staying up through lockout. Rest 4-5 minutes."
+        },
+        {
+          "exerciseName": "Deadlift",
+          "movementType": "barbell",
+          "variation": "conventional",
+          "assistance": "belt",
+          "sets": 1,
+          "reps": 1,
+          "weight": {
+            "value": 305,
+            "unit": "lbs",
+            "percentage1RM": 95,
+            "rxWeight": null,
+            "scaledWeight": null
+          },
+          "distance": null,
+          "time": null,
+          "formNotes": "Second attempt. Will be a grind but you've got it. Stay patient off the floor. Rest 5 minutes."
+        },
+        {
+          "exerciseName": "Deadlift",
+          "movementType": "barbell",
+          "variation": "conventional",
+          "assistance": "belt",
+          "sets": 1,
+          "reps": 1,
+          "weight": {
+            "value": 315,
+            "unit": "lbs",
+            "percentage1RM": null,
+            "rxWeight": null,
+            "scaledWeight": null
+          },
+          "distance": null,
+          "time": null,
+          "formNotes": "Goal weight. Trust your setup. Feel your weight mid-foot. Engage lats hard. Pull the slack out. Drive through the floor. You're ready for this."
+        }
+      ],
+      "status": "pending",
+      "completedAt": null,
+      "linkedWorkoutId": null,
+      "userFeedback": null,
+      "adaptationHistory": []
+    },
+    {
+      "templateId": "template_day25_primary",
+      "dayNumber": 25,
+      "templateType": "primary",
+      "templatePriority": 1,
+      "scheduledDate": "",
+      "phaseId": "phase_3",
+      "name": "Max Test - Back Squat",
+      "description": "Establish new 1RM on back squat. Current baseline: 255x3. Goal: 275x1. Focus on depth consistency and staying upright.",
+      "estimatedDuration": 60,
+      "requiredEquipment": [
+        "barbell",
+        "squat rack"
+      ],
+      "coachingNotes": "Squat has been a weak point - time to prove the work you've done. Film all heavy attempts. Focus on hitting depth consistently. Stop if form breaks down. You've built the strength, now show it.",
+      "prescribedExercises": [
+        {
+          "exerciseName": "Squat Warm-up",
+          "movementType": "bodyweight",
+          "variation": null,
+          "assistance": null,
+          "sets": 1,
+          "reps": "varies",
+          "weight": null,
+          "distance": null,
+          "time": {
+            "value": 15,
+            "unit": "minutes"
+          },
+          "formNotes": "Thorough lower body warm-up: hip circles, leg swings, deep squat holds, cossack squats, glute bridges, goblet squats. Get hips and ankles mobile."
+        },
+        {
+          "exerciseName": "Back Squat",
+          "movementType": "barbell",
+          "variation": null,
+          "assistance": "belt",
+          "sets": 1,
+          "reps": 5,
+          "weight": {
+            "value": 135,
+            "unit": "lbs",
+            "percentage1RM": null,
+            "rxWeight": null,
+            "scaledWeight": null
+          },
+          "distance": null,
+          "time": null,
+          "formNotes": "Bar only. Focus on bracing and staying upright through the movement. Hit depth on every rep."
+        },
+        {
+          "exerciseName": "Back Squat",
+          "movementType": "barbell",
+          "variation": null,
+          "assistance": "belt",
+          "sets": 1,
+          "reps": 5,
+          "weight": {
+            "value": 165,
+            "unit": "lbs",
+            "percentage1RM": 50,
+            "rxWeight": null,
+            "scaledWeight": null
+          },
+          "distance": null,
+          "time": null,
+          "formNotes": "Light weight. Dial in your walkout and stance. Rest 2 minutes."
+        },
+        {
+          "exerciseName": "Back Squat",
+          "movementType": "barbell",
+          "variation": null,
+          "assistance": "belt",
+          "sets": 1,
+          "reps": 3,
+          "weight": {
+            "value": 195,
+            "unit": "lbs",
+            "percentage1RM": 65,
+            "rxWeight": null,
+            "scaledWeight": null
+          },
+          "distance": null,
+          "time": null,
+          "formNotes": "Still warm-up. Focus on chest staying up throughout descent. Rest 3 minutes."
+        },
+        {
+          "exerciseName": "Back Squat",
+          "movementType": "barbell",
+          "variation": null,
+          "assistance": "belt",
+          "sets": 1,
+          "reps": 2,
+          "weight": {
+            "value": 225,
+            "unit": "lbs",
+            "percentage1RM": 75,
+            "rxWeight": null,
+            "scaledWeight": null
+          },
+          "distance": null,
+          "time": null,
+          "formNotes": "Getting heavier. Brace hard before descending. Drive through mid-foot coming up. Rest 3-4 minutes."
+        },
+        {
+          "exerciseName": "Back Squat",
+          "movementType": "barbell",
+          "variation": null,
+          "assistance": "belt",
+          "sets": 1,
+          "reps": 1,
+          "weight": {
+            "value": 245,
+            "unit": "lbs",
+            "percentage1RM": 85,
+            "rxWeight": null,
+            "scaledWeight": null
+          },
+          "distance": null,
+          "time": null,
+          "formNotes": "Last warm-up single. Should move well. Film this and all remaining attempts. Check depth. Rest 4 minutes."
+        },
+        {
+          "exerciseName": "Back Squat",
+          "movementType": "barbell",
+          "variation": null,
+          "assistance": "belt",
+          "sets": 1,
+          "reps": 1,
+          "weight": {
+            "value": 260,
+            "unit": "lbs",
+            "percentage1RM": 90,
+            "rxWeight": null,
+            "scaledWeight": null
+          },
+          "distance": null,
+          "time": null,
+          "formNotes": "First working attempt. This should move with good speed. Stay tight in the hole. Rest 4-5 minutes."
+        },
+        {
+          "exerciseName": "Back Squat",
+          "movementType": "barbell",
+          "variation": null,
+          "assistance": "belt",
+          "sets": 1,
+          "reps": 1,
+          "weight": {
+            "value": 270,
+            "unit": "lbs",
+            "percentage1RM": 95,
+            "rxWeight": null,
+            "scaledWeight": null
+          },
+          "distance": null,
+          "time": null,
+          "formNotes": "Second attempt. Will be heavy but you've got it. Don't rush the descent. Drive hard out of the hole. Rest 5 minutes."
+        },
+        {
+          "exerciseName": "Back Squat",
+          "movementType": "barbell",
+          "variation": null,
+          "assistance": "belt",
+          "sets": 1,
+          "reps": 1,
+          "weight": {
+            "value": 275,
+            "unit": "lbs",
+            "percentage1RM": null,
+            "rxWeight": null,
+            "scaledWeight": null
+          },
+          "distance": null,
+          "time": null,
+          "formNotes": "Goal weight. Big breath and brace. Control the descent. Stay upright. Explode out of the bottom. You've built this strength - now claim it."
+        }
+      ],
+      "status": "pending",
+      "completedAt": null,
+      "linkedWorkoutId": null,
+      "userFeedback": null,
+      "adaptationHistory": []
+    },
+    {
+      "templateId": "template_day26_primary",
+      "dayNumber": 26,
+      "templateType": "primary",
+      "templatePriority": 1,
+      "scheduledDate": "",
+      "phaseId": "phase_3",
+      "name": "Max Test - Bench Press",
+      "description": "Establish new 1RM on bench press. Current baseline: 255x3. Goal: 315x1. Leverage your pressing strength.",
+      "estimatedDuration": 60,
+      "requiredEquipment": [
+        "barbell",
+        "bench"
+      ],
+      "coachingNotes": "Bench is a strength for you - time to show what you can do. Film heavy attempts. Focus on leg drive and bar path. This is your lift - go get it.",
+      "prescribedExercises": [
+        {
+          "exerciseName": "Bench Press Warm-up",
+          "movementType": "bodyweight",
+          "variation": null,
+          "assistance": null,
+          "sets": 1,
+          "reps": "varies",
+          "weight": null,
+          "distance": null,
+          "time": {
+            "value": 15,
+            "unit": "minutes"
+          },
+          "formNotes": "Upper body warm-up: shoulder pass-throughs, band pull-aparts, push-ups, light dumbbell press, thoracic mobility. Get shoulders warm and mobile."
+        },
+        {
+          "exerciseName": "Bench Press",
+          "movementType": "barbell",
+          "variation": null,
+          "assistance": null,
+          "sets": 1,
+          "reps": 10,
+          "weight": {
+            "value": 135,
+            "unit": "lbs",
+            "percentage1RM": null,
+            "rxWeight": null,
+            "scaledWeight": null
+          },
+          "distance": null,
+          "time": null,
+          "formNotes": "Bar only. Focus on setup: feet planted, arch set, shoulders back. Dial in bar path."
+        },
+        {
+          "exerciseName": "Bench Press",
+          "movementType": "barbell",
+          "variation": null,
+          "assistance": null,
+          "sets": 1,
+          "reps": 5,
+          "weight": {
+            "value": 185,
+            "unit": "lbs",
+            "percentage1RM": 50,
+            "rxWeight": null,
+            "scaledWeight": null
+          },
+          "distance": null,
+          "time": null,
+          "formNotes": "Light weight. Focus on leg drive initiation. Rest 2 minutes."
+        },
+        {
+          "exerciseName": "Bench Press",
+          "movementType": "barbell",
+          "variation": null,
+          "assistance": null,
+          "sets": 1,
+          "reps": 3,
+          "weight": {
+            "value": 225,
+            "unit": "lbs",
+            "percentage1RM": 65,
+            "rxWeight": null,
+            "scaledWeight": null
+          },
+          "distance": null,
+          "time": null,
+          "formNotes": "Still warm-up. Bar path should be dialed in. Rest 3 minutes."
+        },
+        {
+          "exerciseName": "Bench Press",
+          "movementType": "barbell",
+          "variation": null,
+          "assistance": null,
+          "sets": 1,
+          "reps": 2,
+          "weight": {
+            "value": 255,
+            "unit": "lbs",
+            "percentage1RM": 75,
+            "rxWeight": null,
+            "scaledWeight": null
+          },
+          "distance": null,
+          "time": null,
+          "formNotes": "Getting heavier. Maintain setup tension. Drive legs hard. Rest 3-4 minutes."
+        },
+        {
+          "exerciseName": "Bench Press",
+          "movementType": "barbell",
+          "variation": null,
+          "assistance": null,
+          "sets": 1,
+          "reps": 1,
+          "weight": {
+            "value": 275,
+            "unit": "lbs",
+            "percentage1RM": 85,
+            "rxWeight": null,
+            "scaledWeight": null
+          },
+          "distance": null,
+          "time": null,
+          "formNotes": "Last warm-up single. Should move well. Film this and all remaining attempts. Rest 4 minutes."
+        },
+        {
+          "exerciseName": "Bench Press",
+          "movementType": "barbell",
+          "variation": null,
+          "assistance": null,
+          "sets": 1,
+          "reps": 1,
+          "weight": {
+            "value": 290,
+            "unit": "lbs",
+            "percentage1RM": 90,
+            "rxWeight": null,
+            "scaledWeight": null
+          },
+          "distance": null,
+          "time": null,
+          "formNotes": "First working attempt. This should move with good speed. Aggressive leg drive. Rest 4-5 minutes."
+        },
+        {
+          "exerciseName": "Bench Press",
+          "movementType": "barbell",
+          "variation": null,
+          "assistance": null,
+          "sets": 1,
+          "reps": 1,
+          "weight": {
+            "value": 305,
+            "unit": "lbs",
+            "percentage1RM": 95,
+            "rxWeight": null,
+            "scaledWeight": null
+          },
+          "distance": null,
+          "time": null,
+          "formNotes": "Second attempt. Will be heavy but you've pressed this weight before. Stay tight. Drive hard. Rest 5 minutes."
+        },
+        {
+          "exerciseName": "Bench Press",
+          "movementType": "barbell",
+          "variation": null,
+          "assistance": null,
+          "sets": 1,
+          "reps": 1,
+          "weight": {
+            "value": 315,
+            "unit": "lbs",
+            "percentage1RM": null,
+            "rxWeight": null,
+            "scaledWeight": null
+          },
+          "distance": null,
+          "time": null,
+          "formNotes": "Goal weight. Three plates. Set up perfectly. Big breath. Tight setup. Aggressive leg drive. Bar path straight. You've got this."
+        }
+      ],
+      "status": "pending",
+      "completedAt": null,
+      "linkedWorkoutId": null,
+      "userFeedback": null,
+      "adaptationHistory": []
+    },
+    {
+      "templateId": "template_day27_primary",
+      "dayNumber": 27,
+      "templateType": "primary",
+      "templatePriority": 1,
+      "scheduledDate": "",
+      "phaseId": "phase_3",
+      "name": "Max Test - Push Press",
+      "description": "Establish new 1RM on push press. Current baseline: ~165x3. Goal: 185x1. Respect shoulder mobility, focus on leg drive.",
+      "estimatedDuration": 60,
+      "requiredEquipment": [
+        "barbell",
+        "squat rack"
+      ],
+      "coachingNotes": "Last test of the week. Push press relies on explosive leg drive - use it. Respect your shoulder ROM - press to comfortable position. Film heavy attempts. Finish strong.",
+      "prescribedExercises": [
+        {
+          "exerciseName": "Push Press Warm-up",
+          "movementType": "bodyweight",
+          "variation": null,
+          "assistance": null,
+          "sets": 1,
+          "reps": "varies",
+          "weight": null,
+          "distance": null,
+          "time": {
+            "value": 15,
+            "unit": "minutes"
+          },
+          "formNotes": "Full body warm-up: shoulder mobility, thoracic extensions, PVC pass-throughs, leg swings, jump squats, light dumbbell press. Extra shoulder and upper back work."
+        },
+        {
+          "exerciseName": "Push Press",
+          "movementType": "barbell",
+          "variation": null,
+          "assistance": null,
+          "sets": 1,
+          "reps": 10,
+          "weight": {
+            "value": 75,
+            "unit": "lbs",
+            "percentage1RM": null,
+            "rxWeight": null,
+            "scaledWeight": null
+          },
+          "distance": null,
+          "time": null,
+          "formNotes": "Light bar. Focus on dip timing and aggressive drive. Find your comfortable overhead position."
+        },
+        {
+          "exerciseName": "Push Press",
+          "movementType": "barbell",
+          "variation": null,
+          "assistance": null,
+          "sets": 1,
+          "reps": 5,
+          "weight": {
+            "value": 95,
+            "unit": "lbs",
+            "percentage1RM": 50,
+            "rxWeight": null,
+            "scaledWeight": null
+          },
+          "distance": null,
+          "time": null,
+          "formNotes": "Light weight. Dial in dip depth and timing. Rest 2 minutes."
+        },
+        {
+          "exerciseName": "Push Press",
+          "movementType": "barbell",
+          "variation": null,
+          "assistance": null,
+          "sets": 1,
+          "reps": 3,
+          "weight": {
+            "value": 115,
+            "unit": "lbs",
+            "percentage1RM": 65,
+            "rxWeight": null,
+            "scaledWeight": null
+          },
+          "distance": null,
+          "time": null,
+          "formNotes": "Still warm-up. Focus on explosive drive out of dip. Rest 3 minutes."
+        },
+        {
+          "exerciseName": "Push Press",
+          "movementType": "barbell",
+          "variation": null,
+          "assistance": null,
+          "sets": 1,
+          "reps": 2,
+          "weight": {
+            "value": 135,
+            "unit": "lbs",
+            "percentage1RM": 75,
+            "rxWeight": null,
+            "scaledWeight": null
+          },
+          "distance": null,
+          "time": null,
+          "formNotes": "Getting heavier. Aggressive leg drive is key. Rest 3-4 minutes."
+        },
+        {
+          "exerciseName": "Push Press",
+          "movementType": "barbell",
+          "variation": null,
+          "assistance": null,
+          "sets": 1,
+          "reps": 1,
+          "weight": {
+            "value": 155,
+            "unit": "lbs",
+            "percentage1RM": 85,
+            "rxWeight": null,
+            "scaledWeight": null
+          },
+          "distance": null,
+          "time": null,
+          "formNotes": "Last warm-up single. Should move well. Film this and all remaining attempts. Rest 4 minutes."
+        },
+        {
+          "exerciseName": "Push Press",
+          "movementType": "barbell",
+          "variation": null,
+          "assistance": null,
+          "sets": 1,
+          "reps": 1,
+          "weight": {
+            "value": 165,
+            "unit": "lbs",
+            "percentage1RM": 90,
+            "rxWeight": null,
+            "scaledWeight": null
+          },
+          "distance": null,
+          "time": null,
+          "formNotes": "First working attempt. Explosive drive. Fast elbows. Rest 4-5 minutes."
+        },
+        {
+          "exerciseName": "Push Press",
+          "movementType": "barbell",
+          "variation": null,
+          "assistance": null,
+          "sets": 1,
+          "reps": 1,
+          "weight": {
+            "value": 175,
+            "unit": "lbs",
+            "percentage1RM": 95,
+            "rxWeight": null,
+            "scaledWeight": null
+          },
+          "distance": null,
+          "time": null,
+          "formNotes": "Second attempt. Max leg drive. Fast and aggressive. Rest 5 minutes."
+        },
+        {
+          "exerciseName": "Push Press",
+          "movementType": "barbell",
+          "variation": null,
+          "assistance": null,
+          "sets": 1,
+          "reps": 1,
+          "weight": {
+            "value": 185,
+            "unit": "lbs",
+            "percentage1RM": null,
+            "rxWeight": null,
+            "scaledWeight": null
+          },
+          "distance": null,
+          "time": null,
+          "formNotes": "Goal weight. Violent leg drive. Fast elbows. Aggressive finish. You've built this - now take it."
+        }
+      ],
+      "status": "pending",
+      "completedAt": null,
+      "linkedWorkoutId": null,
+      "userFeedback": null,
+      "adaptationHistory": []
+    },
+    {
+      "templateId": "template_day28_primary",
+      "dayNumber": 28,
+      "templateType": "optional",
+      "templatePriority": 1,
+      "scheduledDate": "",
+      "phaseId": "phase_3",
+      "name": "Active Recovery & Reflection",
+      "description": "Light movement and mobility work. Reflect on testing week results. Optional longer conditioning if feeling recovered.",
+      "estimatedDuration": 30,
+      "requiredEquipment": [
+        "concept2 rower",
+        "assault bike"
+      ],
+      "coachingNotes": "Testing week is done. Take today light regardless of how you feel. If you want to move, keep it easy and conversational. This is active recovery. Tomorrow is complete rest. Use today to process what you accomplished this week.",
+      "prescribedExercises": [
+        {
+          "exerciseName": "Mobility Flow",
+          "movementType": "bodyweight",
+          "variation": null,
+          "assistance": null,
+          "sets": 1,
+          "reps": "10 each",
+          "weight": null,
+          "distance": null,
+          "time": {
+            "value": 15,
+            "unit": "minutes"
+          },
+          "formNotes": "Full body mobility: hip circles, leg swings, shoulder pass-throughs, thoracic rotations, deep squat holds, cat-cow, pigeon stretch, hamstring stretches. Spend extra time on areas that feel tight."
+        },
+        {
+          "exerciseName": "Easy Cardio",
+          "movementType": "cardio",
+          "variation": null,
+          "assistance": null,
+          "sets": 1,
+          "weight": null,
+          "distance": null,
+          "time": {
+            "value": 20,
+            "unit": "minutes"
+          },
+          "formNotes": "OPTIONAL: 20 minutes easy pace on rower or bike. Conversational breathing. This is active recovery only. Skip if fatigued from testing week."
+        }
+      ],
+      "status": "pending",
+      "completedAt": null,
+      "linkedWorkoutId": null,
+      "userFeedback": null,
+      "adaptationHistory": []
+    }
+  ],
+  "generationMetadata": {
+    "generatedAt": "2025-10-25T12:54:09.003Z",
+    "generatedBy": "ai-conversation",
+    "aiModel": "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
+    "confidence": 0.95,
+    "generationPrompt": "Generated from Build mode conversation conv_1760623582146_5u6z1kags"
+  }
+}

@@ -1,10 +1,17 @@
 import { defineBackend } from "@aws-amplify/backend";
 import { auth } from "./auth/resource";
 import { postConfirmation } from "./functions/post-confirmation/resource";
-import { HttpUserPoolAuthorizer } from 'aws-cdk-lib/aws-apigatewayv2-authorizers';
-import { FunctionUrlAuthType, InvokeMode, HttpMethod } from 'aws-cdk-lib/aws-lambda';
-import { Duration, RemovalPolicy } from 'aws-cdk-lib';
-import { getBranchInfo, createBranchAwareResourceName } from "./functions/libs/branch-naming";
+import { HttpUserPoolAuthorizer } from "aws-cdk-lib/aws-apigatewayv2-authorizers";
+import {
+  FunctionUrlAuthType,
+  InvokeMode,
+  HttpMethod,
+} from "aws-cdk-lib/aws-lambda";
+import { Duration, RemovalPolicy } from "aws-cdk-lib";
+import {
+  getBranchInfo,
+  createBranchAwareResourceName,
+} from "./functions/libs/branch-naming";
 import { contactForm } from "./functions/contact-form/resource";
 import { createCoachCreatorSession } from "./functions/create-coach-creator-session/resource";
 import { updateCoachCreatorSession } from "./functions/update-coach-creator-session/resource";
@@ -69,11 +76,21 @@ import { getWorkoutTemplate } from "./functions/get-workout-template/resource";
 import { apiGatewayv2 } from "./api/resource";
 import { dynamodbTable } from "./dynamodb/resource";
 import { createAppsBucket } from "./storage/resource";
-import { createContactFormNotificationTopic, createErrorMonitoringTopic, createUserRegistrationTopic } from "./sns/resource";
+import {
+  createContactFormNotificationTopic,
+  createErrorMonitoringTopic,
+  createUserRegistrationTopic,
+} from "./sns/resource";
 import { config } from "./functions/libs/configs";
 import { Effect, PolicyStatement, ServicePrincipal } from "aws-cdk-lib/aws-iam";
-import { syncLogSubscriptions, createSyncLogSubscriptionsSchedule } from "./functions/sync-log-subscriptions/resource";
-import { SharedPolicies, grantLambdaInvokePermissions } from './shared-policies';
+import {
+  syncLogSubscriptions,
+  createSyncLogSubscriptionsSchedule,
+} from "./functions/sync-log-subscriptions/resource";
+import {
+  SharedPolicies,
+  grantLambdaInvokePermissions,
+} from "./shared-policies";
 
 /**
  * @see https://docs.amplify.aws/react/build-a-backend/ to add storage, functions, and more
@@ -141,7 +158,7 @@ const backend = defineBackend({
 
 // Create User Pool authorizer
 const userPoolAuthorizer = new HttpUserPoolAuthorizer(
-  'UserPoolAuthorizer',
+  "UserPoolAuthorizer",
   backend.auth.resources.userPool,
   {
     userPoolClients: [backend.auth.resources.userPoolClient],
@@ -207,9 +224,15 @@ const coreTable = dynamodbTable.createCoreTable(backend.contactForm.stack);
 const appsBucket = createAppsBucket(backend.contactForm.stack);
 
 // Create SNS topics for notifications
-const contactFormNotifications = createContactFormNotificationTopic(backend.contactForm.stack);
-const errorMonitoringTopic = createErrorMonitoringTopic(backend.contactForm.stack);
-const userRegistrationTopic = createUserRegistrationTopic(backend.postConfirmation.stack);
+const contactFormNotifications = createContactFormNotificationTopic(
+  backend.contactForm.stack
+);
+const errorMonitoringTopic = createErrorMonitoringTopic(
+  backend.contactForm.stack
+);
+const userRegistrationTopic = createUserRegistrationTopic(
+  backend.postConfirmation.stack
+);
 
 // Get branch information for S3 policies
 const branchInfo = getBranchInfo(backend.contactForm.stack);
@@ -272,7 +295,7 @@ const sharedPolicies = new SharedPolicies(
   backend.updateTrainingProgram,
   backend.logWorkoutTemplate,
   // NOTE: postConfirmation excluded to avoid circular dependency with auth stack
-].forEach(func => {
+].forEach((func) => {
   sharedPolicies.attachDynamoDbReadWrite(func.resources.lambda);
 });
 
@@ -297,7 +320,7 @@ const sharedPolicies = new SharedPolicies(
   backend.getTrainingProgram,
   backend.getTrainingPrograms,
   backend.getWorkoutTemplate,
-].forEach(func => {
+].forEach((func) => {
   sharedPolicies.attachDynamoDbReadOnly(func.resources.lambda);
 });
 
@@ -309,11 +332,12 @@ const sharedPolicies = new SharedPolicies(
   backend.sendCoachConversationMessage,
   backend.streamCoachConversation,
   backend.buildWorkout,
+  backend.buildTrainingProgram, // Added: Needs Bedrock for AI program generation
   backend.buildConversationSummary,
   backend.buildWeeklyAnalytics,
   backend.buildMonthlyAnalytics,
   backend.createMemory,
-].forEach(func => {
+].forEach((func) => {
   sharedPolicies.attachBedrockAccess(func.resources.lambda);
 });
 
@@ -322,16 +346,21 @@ const sharedPolicies = new SharedPolicies(
   backend.buildWorkout,
   backend.buildCoachConfig,
   backend.buildConversationSummary,
+  backend.buildTrainingProgram,
   backend.sendCoachConversationMessage,
   backend.streamCoachConversation,
   backend.streamCoachCreatorSession,
-].forEach(func => {
+].forEach((func) => {
   sharedPolicies.attachS3DebugAccess(func.resources.lambda);
 });
 
 // Functions needing S3 ANALYTICS bucket access
-sharedPolicies.attachS3AnalyticsAccess(backend.buildWeeklyAnalytics.resources.lambda);
-sharedPolicies.attachS3AnalyticsAccess(backend.buildMonthlyAnalytics.resources.lambda);
+sharedPolicies.attachS3AnalyticsAccess(
+  backend.buildWeeklyAnalytics.resources.lambda
+);
+sharedPolicies.attachS3AnalyticsAccess(
+  backend.buildMonthlyAnalytics.resources.lambda
+);
 
 // Functions needing S3 APPS bucket access (for image storage and training programs)
 [
@@ -346,7 +375,7 @@ sharedPolicies.attachS3AnalyticsAccess(backend.buildMonthlyAnalytics.resources.l
   backend.getTrainingProgram,
   backend.logWorkoutTemplate,
   backend.getWorkoutTemplate,
-].forEach(func => {
+].forEach((func) => {
   sharedPolicies.attachS3AppsAccess(func.resources.lambda);
 });
 
@@ -355,7 +384,7 @@ sharedPolicies.attachS3AnalyticsAccess(backend.buildMonthlyAnalytics.resources.l
   // NOTE: postConfirmation excluded to avoid circular dependency with auth stack
   backend.updateUserProfile,
   backend.checkUserAvailability,
-].forEach(func => {
+].forEach((func) => {
   sharedPolicies.attachCognitoAdmin(func.resources.lambda);
 });
 
@@ -368,16 +397,16 @@ backend.postConfirmation.resources.lambda.addToRolePolicy(
   new PolicyStatement({
     effect: Effect.ALLOW,
     actions: [
-      'dynamodb:GetItem',
-      'dynamodb:PutItem',
-      'dynamodb:UpdateItem',
-      'dynamodb:DeleteItem',
-      'dynamodb:Query',
-      'dynamodb:Scan',
-      'dynamodb:DescribeTable',
-      'dynamodb:UpdateTable',
+      "dynamodb:GetItem",
+      "dynamodb:PutItem",
+      "dynamodb:UpdateItem",
+      "dynamodb:DeleteItem",
+      "dynamodb:Query",
+      "dynamodb:Scan",
+      "dynamodb:DescribeTable",
+      "dynamodb:UpdateTable",
     ],
-    resources: ['*'], // Must use wildcard - table ARN would create circular dependency
+    resources: ["*"], // Must use wildcard - table ARN would create circular dependency
   })
 );
 
@@ -386,13 +415,13 @@ backend.postConfirmation.resources.lambda.addToRolePolicy(
   new PolicyStatement({
     effect: Effect.ALLOW,
     actions: [
-      'cognito-idp:AdminGetUser',
-      'cognito-idp:AdminUpdateUserAttributes',
-      'cognito-idp:AdminDeleteUser',
-      'cognito-idp:AdminSetUserPassword',
-      'cognito-idp:ListUsers',
+      "cognito-idp:AdminGetUser",
+      "cognito-idp:AdminUpdateUserAttributes",
+      "cognito-idp:AdminDeleteUser",
+      "cognito-idp:AdminSetUserPassword",
+      "cognito-idp:ListUsers",
     ],
-    resources: ['*'],
+    resources: ["*"],
   })
 );
 
@@ -401,13 +430,19 @@ backend.postConfirmation.resources.lambda.addToRolePolicy(
 // ============================================================================
 
 // Grant SNS permissions to contact form function
-contactFormNotifications.topic.grantPublish(backend.contactForm.resources.lambda);
+contactFormNotifications.topic.grantPublish(
+  backend.contactForm.resources.lambda
+);
 
 // Grant SNS publish permissions to post-confirmation function
-userRegistrationTopic.topic.grantPublish(backend.postConfirmation.resources.lambda);
+userRegistrationTopic.topic.grantPublish(
+  backend.postConfirmation.resources.lambda
+);
 
 // Grant SNS publish permissions to forwardLogsToSns
-errorMonitoringTopic.topic.grantPublish(backend.forwardLogsToSns.resources.lambda);
+errorMonitoringTopic.topic.grantPublish(
+  backend.forwardLogsToSns.resources.lambda
+);
 
 // CRITICAL: Explicitly ensure forwardLogsToSns has NO managed policies
 // (in case CloudFormation hasn't cleaned up old ones from previous deployments)
@@ -415,7 +450,9 @@ const forwardLogsRole = backend.forwardLogsToSns.resources.lambda.role;
 if (forwardLogsRole) {
   // The role should only have inline policies from SNS grant and CloudWatch permission
   // No managed policies should be attached
-  console.info('🧹 forwardLogsToSns role configured with minimal inline policies only');
+  console.info(
+    "🧹 forwardLogsToSns role configured with minimal inline policies only"
+  );
 }
 
 // ============================================================================
@@ -429,10 +466,9 @@ grantLambdaInvokePermissions(
 );
 
 // Grant permission to createWorkout to invoke buildWorkout
-grantLambdaInvokePermissions(
-  backend.createWorkout.resources.lambda,
-  [backend.buildWorkout.resources.lambda.functionArn]
-);
+grantLambdaInvokePermissions(backend.createWorkout.resources.lambda, [
+  backend.buildWorkout.resources.lambda.functionArn,
+]);
 
 // Grant permission to sendCoachConversationMessage to invoke buildWorkout and buildConversationSummary
 grantLambdaInvokePermissions(
@@ -444,14 +480,11 @@ grantLambdaInvokePermissions(
 );
 
 // Grant permission to streamCoachConversation to invoke buildWorkout, buildTrainingProgram, and buildConversationSummary
-grantLambdaInvokePermissions(
-  backend.streamCoachConversation.resources.lambda,
-  [
-    backend.buildWorkout.resources.lambda.functionArn,
-    backend.buildTrainingProgram.resources.lambda.functionArn,
-    backend.buildConversationSummary.resources.lambda.functionArn,
-  ]
-);
+grantLambdaInvokePermissions(backend.streamCoachConversation.resources.lambda, [
+  backend.buildWorkout.resources.lambda.functionArn,
+  backend.buildTrainingProgram.resources.lambda.functionArn,
+  backend.buildConversationSummary.resources.lambda.functionArn,
+]);
 
 // Grant permission to streamCoachCreatorSession to invoke buildCoachConfig
 grantLambdaInvokePermissions(
@@ -460,16 +493,14 @@ grantLambdaInvokePermissions(
 );
 
 // Grant permission to createCoachConfig to invoke buildCoachConfig
-grantLambdaInvokePermissions(
-  backend.createCoachConfig.resources.lambda,
-  [backend.buildCoachConfig.resources.lambda.functionArn]
-);
+grantLambdaInvokePermissions(backend.createCoachConfig.resources.lambda, [
+  backend.buildCoachConfig.resources.lambda.functionArn,
+]);
 
 // Grant permission to createCoachConversation to invoke sendCoachConversationMessage
-grantLambdaInvokePermissions(
-  backend.createCoachConversation.resources.lambda,
-  [backend.sendCoachConversationMessage.resources.lambda.functionArn]
-);
+grantLambdaInvokePermissions(backend.createCoachConversation.resources.lambda, [
+  backend.sendCoachConversationMessage.resources.lambda.functionArn,
+]);
 
 // ============================================================================
 // CLOUDWATCH LOGS PERMISSIONS
@@ -483,15 +514,25 @@ backend.forwardLogsToSns.resources.lambda.addPermission("AllowCloudWatchLogs", {
 });
 
 // Configure forwarder
-backend.forwardLogsToSns.addEnvironment("SNS_TOPIC_ARN", errorMonitoringTopic.topicArn);
-backend.forwardLogsToSns.addEnvironment("GOOGLE_CHAT_ERRORS_WEBHOOK_URL", config.GOOGLE_CHAT_ERRORS_WEBHOOK_URL);
+backend.forwardLogsToSns.addEnvironment(
+  "SNS_TOPIC_ARN",
+  errorMonitoringTopic.topicArn
+);
+backend.forwardLogsToSns.addEnvironment(
+  "GOOGLE_CHAT_ERRORS_WEBHOOK_URL",
+  config.GOOGLE_CHAT_ERRORS_WEBHOOK_URL
+);
 
 // Grant permissions to sync Lambda
 backend.syncLogSubscriptions.resources.lambda.addToRolePolicy(
   new PolicyStatement({
     effect: Effect.ALLOW,
-    actions: ['logs:DescribeLogGroups', 'logs:PutSubscriptionFilter', 'logs:DescribeSubscriptionFilters'],
-    resources: ['*'],
+    actions: [
+      "logs:DescribeLogGroups",
+      "logs:PutSubscriptionFilter",
+      "logs:DescribeSubscriptionFilters",
+    ],
+    resources: ["*"],
   })
 );
 
@@ -548,6 +589,13 @@ const allFunctions = [
   backend.updateUserProfile,
   backend.checkUserAvailability,
   backend.generateUploadUrls,
+  backend.createTrainingProgram,
+  backend.buildTrainingProgram,
+  backend.getTrainingProgram,
+  backend.getTrainingPrograms,
+  backend.updateTrainingProgram,
+  backend.logWorkoutTemplate,
+  backend.getWorkoutTemplate,
   // NOTE: forwardLogsToSns and syncLogSubscriptions excluded - they're utility functions that don't need app resources
 ];
 
@@ -575,8 +623,9 @@ allFunctions.forEach((func) => {
   backend.streamCoachConversation,
   backend.streamCoachCreatorSession,
   backend.updateCoachCreatorSession,
+  backend.buildTrainingProgram,
 ].forEach((func) => {
-  func.addEnvironment('APPS_BUCKET_NAME', appsBucket.bucketName);
+  func.addEnvironment("APPS_BUCKET_NAME", appsBucket.bucketName);
 });
 
 // Add environment variables to sync Lambda
@@ -586,50 +635,65 @@ allFunctions.forEach((func) => {
 // - Branch:  /aws/lambda/amplify-{appId}-{functionName}-{randomSuffix}
 //   Stack:   amplify-{appId}-{branch}-{hash}-...
 let logGroupPrefix: string;
-const stackParts = backend.contactForm.stack.stackName.split('-');
+const stackParts = backend.contactForm.stack.stackName.split("-");
 
 if (branchInfo.isSandbox) {
   // Sandbox: Extract app name from stack (2nd segment)
   // Example: amplify-neonpandaprotov1-mlfowler-sandbox-...
-  if (stackParts.length >= 2 && stackParts[0] === 'amplify') {
+  if (stackParts.length >= 2 && stackParts[0] === "amplify") {
     const appName = stackParts[1];
     logGroupPrefix = `/aws/lambda/amplify-${appName}`;
   } else {
     // Fallback
-    logGroupPrefix = '/aws/lambda/amplify-neonpandaprotov1';
+    logGroupPrefix = "/aws/lambda/amplify-neonpandaprotov1";
   }
 } else {
   // Branch: Extract app ID (2nd segment)
   // Example: amplify-d2y0pmelq37lyh-develop-...
-  if (stackParts.length >= 2 && stackParts[0] === 'amplify') {
+  if (stackParts.length >= 2 && stackParts[0] === "amplify") {
     const appId = stackParts[1];
     logGroupPrefix = `/aws/lambda/amplify-${appId}`;
   } else {
     // Fallback
-    logGroupPrefix = '/aws/lambda/amplify';
+    logGroupPrefix = "/aws/lambda/amplify";
   }
 }
 
-console.info('📋 Log group configuration:', {
+console.info("📋 Log group configuration:", {
   isSandbox: branchInfo.isSandbox,
   branchName: branchInfo.branchName,
   stackName: backend.contactForm.stack.stackName,
-  logGroupPrefix
+  logGroupPrefix,
 });
 
-backend.syncLogSubscriptions.addEnvironment('LOG_GROUP_PREFIX', logGroupPrefix);
-backend.syncLogSubscriptions.addEnvironment('DESTINATION_ARN', backend.forwardLogsToSns.resources.lambda.functionArn);
-backend.syncLogSubscriptions.addEnvironment('FILTER_PATTERN', '[timestamp, request_id, level=ERROR || level=WARN || level=WARNING || level=FATAL || level=CRITICAL, ...]');
-backend.syncLogSubscriptions.addEnvironment('IMMEDIATE_RUN', 'true');
+backend.syncLogSubscriptions.addEnvironment("LOG_GROUP_PREFIX", logGroupPrefix);
+backend.syncLogSubscriptions.addEnvironment(
+  "DESTINATION_ARN",
+  backend.forwardLogsToSns.resources.lambda.functionArn
+);
+backend.syncLogSubscriptions.addEnvironment(
+  "FILTER_PATTERN",
+  "[timestamp, request_id, level=ERROR || level=WARN || level=WARNING || level=FATAL || level=CRITICAL, ...]"
+);
+backend.syncLogSubscriptions.addEnvironment("IMMEDIATE_RUN", "true");
 
 // Add SNS topic ARN to contact form function
-backend.contactForm.addEnvironment("CONTACT_FORM_TOPIC_ARN", contactFormNotifications.topic.topicArn);
+backend.contactForm.addEnvironment(
+  "CONTACT_FORM_TOPIC_ARN",
+  contactFormNotifications.topic.topicArn
+);
 
 // Add SNS topic ARN to post-confirmation function
-backend.postConfirmation.addEnvironment("USER_REGISTRATION_TOPIC_ARN", userRegistrationTopic.topicArn);
+backend.postConfirmation.addEnvironment(
+  "USER_REGISTRATION_TOPIC_ARN",
+  userRegistrationTopic.topicArn
+);
 
 // Add USER_POOL_ID to checkUserAvailability function
-backend.checkUserAvailability.addEnvironment("USER_POOL_ID", backend.auth.resources.userPool.userPoolId);
+backend.checkUserAvailability.addEnvironment(
+  "USER_POOL_ID",
+  backend.auth.resources.userPool.userPoolId
+);
 
 // Add function name environment variables
 backend.updateCoachCreatorSession.addEnvironment(
@@ -690,28 +754,40 @@ backend.updateUserProfile.addEnvironment(
 // ============================================================================
 
 // Configure Lambda Function URL for streaming chat (not API Gateway)
-const streamingFunctionUrl = backend.streamCoachConversation.resources.lambda.addFunctionUrl({
-  authType: FunctionUrlAuthType.NONE, // We'll handle JWT auth in the function itself
-  cors: {
-    allowedOrigins: ['*'], // Configure appropriately for production
-    allowedMethods: [HttpMethod.POST], // OPTIONS is handled automatically by Lambda Function URLs
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Cache-Control'],
-    maxAge: Duration.days(1),
-  },
-  invokeMode: InvokeMode.RESPONSE_STREAM, // Enable streaming responses
-});
+const streamingFunctionUrl =
+  backend.streamCoachConversation.resources.lambda.addFunctionUrl({
+    authType: FunctionUrlAuthType.NONE, // We'll handle JWT auth in the function itself
+    cors: {
+      allowedOrigins: ["*"], // Configure appropriately for production
+      allowedMethods: [HttpMethod.POST], // OPTIONS is handled automatically by Lambda Function URLs
+      allowedHeaders: [
+        "Content-Type",
+        "Authorization",
+        "Accept",
+        "Cache-Control",
+      ],
+      maxAge: Duration.days(1),
+    },
+    invokeMode: InvokeMode.RESPONSE_STREAM, // Enable streaming responses
+  });
 
 // Configure Lambda Function URL for streaming coach creator sessions
-const streamingCoachCreatorFunctionUrl = backend.streamCoachCreatorSession.resources.lambda.addFunctionUrl({
-  authType: FunctionUrlAuthType.NONE, // We'll handle JWT auth in the function itself
-  cors: {
-    allowedOrigins: ['*'], // Configure appropriately for production
-    allowedMethods: [HttpMethod.PUT], // Coach creator uses PUT (update semantics)
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Cache-Control'],
-    maxAge: Duration.days(1),
-  },
-  invokeMode: InvokeMode.RESPONSE_STREAM, // Enable streaming responses
-});
+const streamingCoachCreatorFunctionUrl =
+  backend.streamCoachCreatorSession.resources.lambda.addFunctionUrl({
+    authType: FunctionUrlAuthType.NONE, // We'll handle JWT auth in the function itself
+    cors: {
+      allowedOrigins: ["*"], // Configure appropriately for production
+      allowedMethods: [HttpMethod.PUT], // Coach creator uses PUT (update semantics)
+      allowedHeaders: [
+        "Content-Type",
+        "Authorization",
+        "Accept",
+        "Cache-Control",
+      ],
+      maxAge: Duration.days(1),
+    },
+    invokeMode: InvokeMode.RESPONSE_STREAM, // Enable streaming responses
+  });
 
 // ============================================================================
 // SCHEDULED TASKS
@@ -723,8 +799,8 @@ const syncLogSubscriptionsSchedule = createSyncLogSubscriptionsSchedule(
   backend.syncLogSubscriptions.resources.lambda
 );
 
-console.info('✅ Log subscription sync scheduled (daily at 2am UTC)');
-console.info('✅ New functions automatically monitored within 24 hours');
+console.info("✅ Log subscription sync scheduled (daily at 2am UTC)");
+console.info("✅ New functions automatically monitored within 24 hours");
 
 // Create EventBridge schedule for weekly analytics (Sundays at 9am UTC)
 const weeklyAnalyticsSchedule = createWeeklyAnalyticsSchedule(
@@ -732,7 +808,7 @@ const weeklyAnalyticsSchedule = createWeeklyAnalyticsSchedule(
   backend.buildWeeklyAnalytics.resources.lambda
 );
 
-console.info('✅ Weekly analytics scheduled (Sundays at 9am UTC)');
+console.info("✅ Weekly analytics scheduled (Sundays at 9am UTC)");
 
 // Create EventBridge schedule for monthly analytics (1st of month at 9am UTC)
 const monthlyAnalyticsSchedule = createMonthlyAnalyticsSchedule(
@@ -740,7 +816,7 @@ const monthlyAnalyticsSchedule = createMonthlyAnalyticsSchedule(
   backend.buildMonthlyAnalytics.resources.lambda
 );
 
-console.info('✅ Monthly analytics scheduled (1st of month at 9am UTC)');
+console.info("✅ Monthly analytics scheduled (1st of month at 9am UTC)");
 
 // ============================================================================
 // COGNITO USER POOL CONFIGURATION
@@ -752,8 +828,8 @@ const { cfnUserPool } = backend.auth.resources.cfnResources;
 // Apply branch-aware naming to User Pool
 const { resourceName: userPoolName } = createBranchAwareResourceName(
   backend.contactForm.stack,
-  'NeonPanda-UserPool',
-  'Cognito User Pool'
+  "NeonPanda-UserPool",
+  "Cognito User Pool"
 );
 cfnUserPool.userPoolName = userPoolName;
 
@@ -761,36 +837,37 @@ cfnUserPool.userPoolName = userPoolName;
 const { cfnUserPoolClient } = backend.auth.resources.cfnResources;
 const { resourceName: userPoolClientName } = createBranchAwareResourceName(
   backend.contactForm.stack,
-  'NeonPanda-UserPoolClient',
-  'Cognito User Pool Client'
+  "NeonPanda-UserPoolClient",
+  "Cognito User Pool Client"
 );
 cfnUserPoolClient.clientName = userPoolClientName;
 
 // Configure User Pool Client with additional auth flows for API testing
 const baseAuthFlows = [
-  "ALLOW_USER_SRP_AUTH",      // Current default (what your React app uses)
-  "ALLOW_CUSTOM_AUTH",        // For custom auth flows
-  "ALLOW_REFRESH_TOKEN_AUTH"  // For token refresh
+  "ALLOW_USER_SRP_AUTH", // Current default (what your React app uses)
+  "ALLOW_CUSTOM_AUTH", // For custom auth flows
+  "ALLOW_REFRESH_TOKEN_AUTH", // For token refresh
 ];
 
 // Add API testing flows only for non-production environments
 const apiTestingFlows = [
-  "ALLOW_USER_PASSWORD_AUTH",      // For simple Postman automation
-  "ALLOW_ADMIN_USER_PASSWORD_AUTH" // For AWS CLI (bonus)
+  "ALLOW_USER_PASSWORD_AUTH", // For simple Postman automation
+  "ALLOW_ADMIN_USER_PASSWORD_AUTH", // For AWS CLI (bonus)
 ];
 
 // Only enable API testing flows for sandbox and develop branches
-const shouldEnableApiTesting = branchInfo.isSandbox || branchInfo.branchName === 'develop';
+const shouldEnableApiTesting =
+  branchInfo.isSandbox || branchInfo.branchName === "develop";
 
 cfnUserPoolClient.explicitAuthFlows = shouldEnableApiTesting
   ? [...baseAuthFlows, ...apiTestingFlows]
   : baseAuthFlows;
 
-console.info('🔐 Auth Flows Configuration:', {
+console.info("🔐 Auth Flows Configuration:", {
   branch: branchInfo.branchName,
   isSandbox: branchInfo.isSandbox,
   apiTestingEnabled: shouldEnableApiTesting,
-  authFlows: cfnUserPoolClient.explicitAuthFlows
+  authFlows: cfnUserPoolClient.explicitAuthFlows,
 });
 
 cfnUserPool.policies = {
@@ -799,13 +876,13 @@ cfnUserPool.policies = {
     requireLowercase: true,
     requireUppercase: true,
     requireNumbers: true,
-    requireSymbols: false,  // Keep user-friendly for fitness enthusiasts
+    requireSymbols: false, // Keep user-friendly for fitness enthusiasts
   },
 };
 
 // Enable Cognito Advanced Security Features (Plus tier)
 cfnUserPool.userPoolAddOns = {
-  advancedSecurityMode: 'ENFORCED'  // Options: 'OFF', 'AUDIT', 'ENFORCED'
+  advancedSecurityMode: "ENFORCED", // Options: 'OFF', 'AUDIT', 'ENFORCED'
 };
 
 // ============================================================================
@@ -822,8 +899,8 @@ backend.addOutput({
     coachCreatorSessionStreamingApi: {
       functionUrl: streamingCoachCreatorFunctionUrl.url,
       region: backend.streamCoachCreatorSession.stack.region,
-    }
-  }
+    },
+  },
 });
 
 // Output the API URL, DynamoDB table info, and S3 bucket info

@@ -151,7 +151,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     }
 
     const updates: any = {
-      lastActivityDate: new Date(),
+      lastActivityAt: new Date(),
       completedWorkouts: program.completedWorkouts + 1,
       dayCompletionStatus: program.dayCompletionStatus,
     };

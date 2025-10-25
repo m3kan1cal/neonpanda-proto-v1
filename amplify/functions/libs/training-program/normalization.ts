@@ -33,9 +33,12 @@ export interface NormalizationIssue {
 /**
  * Builds AI normalization prompt that instructs the model to normalize
  * training program data against the expected schema structure
+ *
+ * Returns both static (cacheable) and dynamic (program-specific) portions
  */
-export const buildNormalizationPrompt = (programData: any): string => {
-  return `
+export const buildNormalizationPrompt = (programData: any): { staticPrompt: string, dynamicPrompt: string } => {
+  // STATIC PORTION (cacheable - instructions, schemas, expected format)
+  const staticPrompt = `
 You are a training program data normalizer. Your job is to:
 
 1. ANALYZE the training program data against the expected schema structure
@@ -136,12 +139,15 @@ You must return a JSON object with this exact structure:
   "summary": "Brief summary of normalization results and any corrections made"
 }
 
-The "normalizedData" field MUST contain the training program data normalized to match the schema structure exactly.
+The "normalizedData" field MUST contain the training program data normalized to match the schema structure exactly.`;
 
-TRAINING PROGRAM DATA TO NORMALIZE:
+  // DYNAMIC PORTION (not cacheable - changes per program)
+  const dynamicPrompt = `TRAINING PROGRAM DATA TO NORMALIZE:
 ${JSON.stringify(programData, null, 2)}
 
 Transform this training program data to conform to the expected schema structure and return the normalization response in the exact JSON format specified above. Do not include any markdown formatting.`;
+
+  return { staticPrompt, dynamicPrompt };
 };
 
 /**
@@ -193,19 +199,25 @@ const performNormalization = async (
   enableThinking: boolean = false
 ): Promise<NormalizationResult> => {
   try {
-    const normalizationPrompt = buildNormalizationPrompt(programData);
+    const { staticPrompt, dynamicPrompt } = buildNormalizationPrompt(programData);
 
     console.info("Program normalization call configuration:", {
       enableThinking,
-      promptLength: normalizationPrompt.length,
+      staticPromptLength: staticPrompt.length,
+      dynamicPromptLength: dynamicPrompt.length,
       phases: programData.phases?.length || 0,
     });
 
     const normalizationResponse = await callBedrockApi(
-      normalizationPrompt,
-      "training_program_normalization",
+      staticPrompt,
+      dynamicPrompt,
       undefined, // Use default model
-      { enableThinking }
+      {
+        enableThinking,
+        staticPrompt,
+        dynamicPrompt,
+        prefillResponse: '{', // Force JSON response format
+      }
     );
 
     // Parse JSON with cleaning and fixing (handles markdown-wrapped JSON and common issues)
@@ -443,3 +455,314 @@ export const generateNormalizationSummary = (
   return parts.join(" | ");
 };
 
+/**
+ * ========================================
+ * WORKOUT TEMPLATE NORMALIZATION
+ * ========================================
+ */
+
+export interface WorkoutTemplateNormalizationResult {
+  isValid: boolean;
+  normalizedTemplates: any[];
+  issues: NormalizationIssue[];
+  confidence: number;
+  summary: string;
+}
+
+/**
+ * Builds AI normalization prompt for workout templates
+ * Focuses on exercise structure, rep schemes, and data completeness
+ */
+const buildWorkoutTemplateNormalizationPrompt = (
+  templates: any[],
+  programContext: {
+    programName: string;
+    phase: string;
+    equipment: string[];
+    goals: string[];
+  }
+): { staticPrompt: string; dynamicPrompt: string } => {
+  const staticPrompt = `
+You are a workout template normalizer. Your job is to:
+
+1. ANALYZE workout template data for structural and logical issues
+2. FIX exercise structures to ensure completeness and validity
+3. NORMALIZE rep schemes, weight prescriptions, and movement details
+4. REMOVE redundant null fields that should be omitted
+5. ENSURE all required fields are present and valid
+
+CRITICAL INSTRUCTIONS:
+- Ensure each exercise has required fields: exerciseName, movementType, sets, reps
+- Normalize rep schemes to valid formats (numbers, "AMRAP", "max", etc.)
+- Remove distance/time/weight objects if all nested fields are null
+- Ensure movementType is valid: "barbell", "dumbbell", "kettlebell", "bodyweight", "gymnastics", "cardio", "other"
+- Validate that prescribed weights, distances, times are reasonable
+- Fix any malformed exercise structures
+- Preserve all meaningful data - only remove truly redundant fields
+
+WORKOUT TEMPLATE VALIDATION FOCUS:
+
+1. EXERCISE STRUCTURE:
+   - exerciseName must be present and descriptive
+   - movementType must be a valid enum value
+   - sets and reps must be present (can be null for AMRAP/timed work)
+   - variation and assistance are optional (e.g., "touch and go", "red band")
+
+2. PRESCRIPTION FIELDS:
+   - weight: Only include if exercise uses weight. Remove if all nested values are null.
+   - distance: Only include if exercise involves distance. Remove if value is null.
+   - time: Only include if exercise is time-based. Remove if value is null.
+   - calories: Only include for erg work (row/bike/ski)
+
+3. REP SCHEME VALIDATION:
+   - Reps should be: number, "AMRAP", "max", "UB" (unbroken), or null for time-based
+   - Weight percentages should be 0-100 if specified
+   - Sets should be positive integers
+
+4. DATA COMPLETENESS:
+   - formNotes/coachingNotes should provide execution guidance
+   - Required equipment should be listed in workout requiredEquipment array
+   - estimatedDuration should be realistic (typically 45-90 min for training, 15-30 for recovery)
+
+CRITICAL FIXES TO PRIORITIZE:
+- Remove "distance": { "value": null, "unit": "meters" } (omit field entirely)
+- Remove "time": { "value": null, "unit": "seconds" } (omit field entirely)
+- Remove "weight": { all null values } objects (omit field entirely or set to null)
+- Fix missing exerciseName or movementType
+- Validate rep schemes are reasonable
+- Ensure templateType is valid: "primary", "optional", "accessory"
+
+${getWorkoutTemplateSchemaWithContext({
+  phaseName: programContext.phase,
+  phaseDescription: "Phase description",
+  phaseDurationDays: 7,
+  phaseStartDay: 1,
+  programName: programContext.programName,
+  trainingFrequency: 4,
+  equipment: programContext.equipment,
+  goals: programContext.goals,
+})}
+
+EXPECTED OUTPUT FORMAT:
+You must return a JSON object with this exact structure:
+
+{
+  "isValid": boolean,
+  "normalizedTemplates": [array of normalized workout templates],
+  "issues": [
+    {
+      "type": "structure|data_quality|cross_reference|date_logic|phase_logic",
+      "severity": "error|warning",
+      "field": "field.path",
+      "description": "Clear description of issue",
+      "corrected": boolean
+    }
+  ],
+  "confidence": number (0-1),
+  "summary": "Brief summary of normalization results"
+}
+
+The "normalizedTemplates" field MUST contain the cleaned workout templates with redundant null objects removed.`;
+
+  const dynamicPrompt = `PROGRAM CONTEXT:
+- Program: ${programContext.programName}
+- Phase: ${programContext.phase}
+- Available Equipment: ${programContext.equipment.join(", ")}
+- Goals: ${programContext.goals.join(", ")}
+
+WORKOUT TEMPLATES TO NORMALIZE (${templates.length} templates):
+${JSON.stringify(templates, null, 2)}
+
+Normalize these workout templates, fix any structural issues, and remove redundant null fields. Return the normalization response in the exact JSON format specified above. Do not include any markdown formatting.`;
+
+  return { staticPrompt, dynamicPrompt };
+};
+
+/**
+ * Normalizes workout templates using AI
+ * Fixes structural issues and validates exercise data
+ */
+export const normalizeWorkoutTemplates = async (
+  templates: any[],
+  programContext: {
+    programName: string;
+    phase: string;
+    equipment: string[];
+    goals: string[];
+  }
+): Promise<WorkoutTemplateNormalizationResult> => {
+  try {
+    console.info("🔧 Starting workout template normalization:", {
+      templateCount: templates.length,
+      phase: programContext.phase,
+    });
+
+    const { staticPrompt, dynamicPrompt } = buildWorkoutTemplateNormalizationPrompt(
+      templates,
+      programContext
+    );
+
+    console.info("Workout template normalization call configuration:", {
+      staticPromptLength: staticPrompt.length,
+      dynamicPromptLength: dynamicPrompt.length,
+      templateCount: templates.length,
+    });
+
+    const normalizationResponse = await callBedrockApi(
+      staticPrompt,
+      dynamicPrompt,
+      undefined, // Use default model
+      {
+        staticPrompt,
+        dynamicPrompt,
+        prefillResponse: "{", // Force JSON response format
+      }
+    );
+
+    // Parse JSON with cleaning and fixing
+    const normalizationResult = parseJsonWithFallbacks(normalizationResponse);
+
+    // Validate the response structure
+    if (!normalizationResult || typeof normalizationResult !== "object") {
+      throw new Error("Response is not a valid object");
+    }
+
+    if (
+      !normalizationResult.hasOwnProperty("isValid") ||
+      !normalizationResult.hasOwnProperty("normalizedTemplates")
+    ) {
+      throw new Error(
+        "Response missing required fields (isValid, normalizedTemplates)"
+      );
+    }
+
+    const result = {
+      isValid: normalizationResult.isValid || false,
+      normalizedTemplates: normalizationResult.normalizedTemplates || templates,
+      issues: normalizationResult.issues || [],
+      confidence: normalizationResult.confidence || 0.8,
+      summary: normalizationResult.summary || "Workout template normalization completed",
+    };
+
+    console.info("✅ Workout template normalization completed:", {
+      isValid: result.isValid,
+      issuesFound: result.issues.length,
+      correctionsMade: result.issues.filter((i: NormalizationIssue) => i.corrected).length,
+      confidence: result.confidence,
+    });
+
+    return result;
+  } catch (error) {
+    console.error("Workout template normalization failed:", error);
+    return {
+      isValid: false,
+      normalizedTemplates: templates,
+      issues: [
+        {
+          type: "structure",
+          severity: "error",
+          field: "normalization",
+          description: `Normalization failed: ${
+            error instanceof Error ? error.message : "Unknown error"
+          }`,
+          corrected: false,
+        },
+      ],
+      confidence: 0.3,
+      summary: "Workout template normalization failed, using original data",
+    };
+  }
+};
+
+/**
+ * Cleanup utility to remove redundant null fields from workout templates
+ * This is a mechanical TypeScript-based cleanup (no AI needed)
+ * Runs after AI normalization to ensure clean data
+ */
+export const cleanupWorkoutTemplates = (templates: any[]): any[] => {
+  console.info("🧹 Running mechanical cleanup on workout templates:", {
+    templateCount: templates.length,
+  });
+
+  let cleanedFieldCount = 0;
+
+  const cleanedTemplates = templates.map((template) => {
+    const cleanedTemplate = { ...template };
+
+    // Cleanup prescribedExercises
+    if (Array.isArray(cleanedTemplate.prescribedExercises)) {
+      cleanedTemplate.prescribedExercises = cleanedTemplate.prescribedExercises.map(
+        (exercise: any) => {
+          const cleanedExercise: any = { ...exercise };
+
+          // Remove distance if value is null
+          if (
+            cleanedExercise.distance &&
+            typeof cleanedExercise.distance === "object" &&
+            cleanedExercise.distance.value === null
+          ) {
+            delete cleanedExercise.distance;
+            cleanedFieldCount++;
+          }
+
+          // Remove time if value is null
+          if (
+            cleanedExercise.time &&
+            typeof cleanedExercise.time === "object" &&
+            cleanedExercise.time.value === null
+          ) {
+            delete cleanedExercise.time;
+            cleanedFieldCount++;
+          }
+
+          // Remove weight if all nested fields are null (except unit)
+          if (
+            cleanedExercise.weight &&
+            typeof cleanedExercise.weight === "object"
+          ) {
+            const weightFields = Object.keys(cleanedExercise.weight).filter(
+              (key) => key !== "unit"
+            );
+            const allWeightFieldsNull = weightFields.every(
+              (key) => cleanedExercise.weight[key] === null
+            );
+
+            if (allWeightFieldsNull) {
+              delete cleanedExercise.weight;
+              cleanedFieldCount++;
+            }
+          }
+
+          // Remove calories if null
+          if (cleanedExercise.calories === null) {
+            delete cleanedExercise.calories;
+            cleanedFieldCount++;
+          }
+
+          // Remove sets if null (rare, but possible for some time-based work)
+          if (cleanedExercise.sets === null) {
+            delete cleanedExercise.sets;
+            cleanedFieldCount++;
+          }
+
+          // Remove reps if null (for time-based work like EMOM, etc.)
+          if (cleanedExercise.reps === null) {
+            delete cleanedExercise.reps;
+            cleanedFieldCount++;
+          }
+
+          return cleanedExercise;
+        }
+      );
+    }
+
+    return cleanedTemplate;
+  });
+
+  console.info("✅ Mechanical cleanup completed:", {
+    templateCount: cleanedTemplates.length,
+    fieldsRemoved: cleanedFieldCount,
+  });
+
+  return cleanedTemplates;
+};

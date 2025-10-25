@@ -74,7 +74,7 @@ export const CoachConversationModeToggle = ({
         type="button"
       >
         <BuildModeIconTiny />
-        <span>Build</span>
+        <span className="translate-y-px">Build</span>
       </button>
     </div>
   );
