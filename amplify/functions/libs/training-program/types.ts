@@ -80,6 +80,7 @@ export interface TrainingProgramPhase {
  * Once completed, it gets converted to a Workout (Universal Schema) with performance data.
  */
 export interface WorkoutTemplate {
+  // === Structured Metadata (for app functionality) ===
   templateId: string; // Keep ID prefix for clarity
   dayNumber: number; // 1-indexed position in program
   templateType: "primary" | "optional" | "accessory"; // For handling multiple templates per day
@@ -87,16 +88,20 @@ export interface WorkoutTemplate {
   scheduledDate: string; // YYYY-MM-DD calculated from startDate + dayNumber - pausedDuration
   phaseId: string; // Which phase this workout belongs to
 
-  name: string; // Simplified from templateName
-  description: string; // Simplified from templateDescription
+  // === Display Fields ===
+  name: string; // "Lower Body Strength - Squat Focus"
+  description: string; // Brief 1-sentence overview
   estimatedDuration: number; // Minutes
   requiredEquipment: string[]; // Subset of program equipment
-  coachingNotes: string; // Cues, focus points, scaling suggestions
 
-  // Workout structure - prescribed exercises
-  prescribedExercises: Exercise[];
+  // === Natural Language Workout Content ===
+  workoutContent: string; // The actual workout written naturally (like a human coach)
+  coachingNotes: string; // Additional context, cues, scaling options, focus points
 
-  // Status tracking
+  // === Optional: Lightweight Exercise References ===
+  prescribedExercises?: Exercise[]; // Optional - for filtering/quick reference only
+
+  // === Status Tracking ===
   status: "pending" | "completed" | "skipped" | "regenerated";
   completedAt: Date | null;
 

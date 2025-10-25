@@ -757,10 +757,11 @@ async function* processCoachConversationAsync(
       fullAiResponse += optimizedChunk;
 
       // Clean the chunk before yielding to prevent trigger from appearing in UI
-      // This removes **[GENERATE_PROGRAM]** or [GENERATE_PROGRAM] markers
+      // This removes any variation of [GENERATE_PROGRAM] markers (with/without markdown, spaces, etc.)
       const cleanedChunk = optimizedChunk
-        .replace(/\*\*\[GENERATE_PROGRAM\]\*\*/g, '')
-        .replace(/\[GENERATE_PROGRAM\]/g, '');
+        .replace(/\*\*\s*\[GENERATE_PROGRAM\]\s*\*\*/gi, '') // Markdown bold with optional spaces
+        .replace(/\[GENERATE_PROGRAM\]/gi, '') // Plain trigger
+        .replace(/\[\s*GENERATE_PROGRAM\s*\]/gi, ''); // With spaces inside brackets
 
       // Only yield non-empty chunks after cleaning
       if (cleanedChunk.trim()) {
