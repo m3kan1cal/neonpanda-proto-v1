@@ -7,7 +7,7 @@
 
 import { callBedrockApi, MODEL_IDS, queryPineconeContext } from '../api-helpers';
 import { getJsonFormattingInstructions } from '../prompt-helpers';
-import { parseJsonWithFallbacks } from '../response-utils';
+import { parseJsonWithFallbacks, removeTriggerFromStream } from '../response-utils';
 import {
   TrainingProgram,
   TrainingProgramPhase,
@@ -532,17 +532,11 @@ export function detectAndPrepareForTrainingProgramGeneration(aiResponse: string)
     };
   }
 
-  // Remove the trigger from the response (so it's not shown to the user)
-  // Use robust regex to catch any variation (with/without markdown, spaces, case variations)
-  const cleanedResponse = aiResponse
-    .replace(/\*\*\s*\[GENERATE_PROGRAM\]\s*\*\*/gi, '') // Markdown bold with optional spaces
-    .replace(/\[GENERATE_PROGRAM\]/gi, '') // Plain trigger
-    .replace(/\[\s*GENERATE_PROGRAM\s*\]/gi, '') // With spaces inside brackets
-    .trim();
+  // Remove the trigger from the response using centralized utility
+  const { cleanedContent } = removeTriggerFromStream(aiResponse);
 
   return {
     shouldGenerate: true,
-    cleanedResponse,
+    cleanedResponse: cleanedContent.trim(),
   };
 }
-

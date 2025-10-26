@@ -618,7 +618,7 @@ export const navigationPatterns = {
     brandSubtitle: "font-rajdhani text-xs text-synthwave-text-muted uppercase tracking-wider",
 
     // Navigation section - scrollable middle area
-    navSection: "flex-1 overflow-y-auto px-2 py-4 synthwave-scrollbar-cyan",
+    navSection: "flex-1 overflow-y-auto py-4 synthwave-scrollbar-cyan",
 
     // Section headers (e.g., "Primary", "Your Training", "Account")
     sectionHeader: "px-3 py-2 mb-1",
@@ -626,7 +626,7 @@ export const navigationPatterns = {
 
     // Navigation items
     navItemsContainer: "space-y-1 mb-6",
-    navItem: "w-full flex items-center gap-3 px-4 py-2 rounded-lg focus:outline-none active:outline-none relative border border-transparent transition-all duration-150",
+    navItem: "w-full flex items-center gap-3 px-4 py-2 focus:outline-none active:outline-none relative border-t border-b border-transparent transition-all duration-150",
     navItemIcon: "w-5 h-5 flex-shrink-0",
     navItemLabel: "font-rajdhani font-medium text-base",
     navItemBadge: "ml-auto min-w-[20px] h-5 px-2 rounded-full text-xs font-bold flex items-center justify-center bg-synthwave-neon-pink text-white",
@@ -702,6 +702,38 @@ export const navigationPatterns = {
 
     // Prompt button
     promptButton: "block w-full text-left px-4 py-1.5 font-rajdhani text-base text-synthwave-text-primary hover:text-white hover:bg-synthwave-bg-primary/30 transition-all duration-200 leading-relaxed"
+  },
+
+  // Utility Flyout Menu - Hover-based slide-out menu for utility navigation items
+  utilityFlyout: {
+    // Flyout container - matches sidebar styling with cyan theme
+    container: "w-64 bg-synthwave-bg-card border border-synthwave-neon-cyan/20 shadow-[4px_0_24px_rgba(0,255,255,0.1)]",
+
+    // Flyout header section
+    header: "px-4 py-3 border-b border-synthwave-neon-cyan/10",
+    headerTitle: "font-russo font-bold text-base text-white uppercase tracking-wider",
+
+    // Menu items container
+    itemsContainer: "py-2"
+  },
+
+  // Dividers - Reusable separator patterns
+  dividers: {
+    // Gradient fade divider (cyan themed)
+    gradientCyan: "h-px bg-gradient-to-r from-transparent via-synthwave-neon-cyan/30 to-transparent",
+
+    // Gradient fade divider (pink themed)
+    gradientPink: "h-px bg-gradient-to-r from-transparent via-synthwave-neon-pink/30 to-transparent",
+
+    // Gradient fade divider (purple themed)
+    gradientPurple: "h-px bg-gradient-to-r from-transparent via-synthwave-neon-purple/30 to-transparent"
+  },
+
+  // Section spacing - Consistent spacing for navigation sections
+  sectionSpacing: {
+    top: "mt-3",
+    bottom: "mb-3",
+    both: "mt-3 mb-3"
   }
 };
 

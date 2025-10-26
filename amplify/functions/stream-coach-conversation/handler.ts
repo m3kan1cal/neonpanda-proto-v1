@@ -48,6 +48,7 @@ import { analyzeMemoryNeeds } from "../libs/memory/detection";
 import { detectAndPrepareForTrainingProgramGeneration } from "../libs/training-program/program-generator";
 import { BuildTrainingProgramEvent } from "../libs/training-program/types";
 import { CONVERSATION_MODES } from "../libs/coach-conversation/types";
+import { removeTriggerFromStream } from "../libs/response-utils";
 
 // Import auth middleware (consolidated)
 import {
@@ -757,17 +758,13 @@ async function* processCoachConversationAsync(
       fullAiResponse += optimizedChunk;
 
       // Clean the chunk before yielding to prevent trigger from appearing in UI
-      // This removes any variation of [GENERATE_PROGRAM] markers (with/without markdown, spaces, etc.)
-      const cleanedChunk = optimizedChunk
-        .replace(/\*\*\s*\[GENERATE_PROGRAM\]\s*\*\*/gi, '') // Markdown bold with optional spaces
-        .replace(/\[GENERATE_PROGRAM\]/gi, '') // Plain trigger
-        .replace(/\[\s*GENERATE_PROGRAM\s*\]/gi, ''); // With spaces inside brackets
+      const { cleanedContent } = removeTriggerFromStream(optimizedChunk);
 
       // Only yield non-empty chunks after cleaning
-      if (cleanedChunk.trim()) {
-        yield formatChunkEvent(cleanedChunk);
+      if (cleanedContent.trim()) {
+        yield formatChunkEvent(cleanedContent);
         console.info(
-          `📡 [${chunkTime}ms] Optimized AI chunk yielded: "${cleanedChunk.substring(0, 30)}..." (${cleanedChunk.length} chars)`
+          `📡 [${chunkTime}ms] Optimized AI chunk yielded: "${cleanedContent.substring(0, 30)}..." (${cleanedContent.length} chars)`
         );
       }
     }

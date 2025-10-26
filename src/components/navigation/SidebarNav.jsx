@@ -124,14 +124,14 @@ const SidebarNav = () => {
       popoverRefs.current[item.id] = React.createRef();
     }
 
-    // Get color-specific classes for active state (conversation card style)
+    // Get color-specific classes for active state (only top/bottom borders)
     const getActiveClasses = () => {
       if (item.color === 'pink') {
-        return 'bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/30';
+        return 'bg-synthwave-bg-primary/30 border-t-synthwave-neon-pink/30 border-b-synthwave-neon-pink/30';
       } else if (item.color === 'cyan') {
-        return 'bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/30';
+        return 'bg-synthwave-bg-primary/30 border-t-synthwave-neon-cyan/30 border-b-synthwave-neon-cyan/30';
       } else if (item.color === 'purple') {
-        return 'bg-synthwave-bg-primary/30 border border-synthwave-neon-purple/30';
+        return 'bg-synthwave-bg-primary/30 border-t-synthwave-neon-purple/30 border-b-synthwave-neon-purple/30';
       }
       return '';
     };
@@ -175,7 +175,7 @@ const SidebarNav = () => {
         <div className={`
           ${isSidebarCollapsed ? navigationPatterns.desktop.navItemIconCollapsed : navigationPatterns.desktop.navItemIcon}
           ${active ? colorClasses.glow : ''}
-          ${item.icon.name === 'WorkoutIconTiny' || item.icon.name === 'NetworkIconTiny' || item.icon.name === 'ChatIconSmall' || item.icon.name === 'MenuIcon' ? 'flex items-center justify-center' : ''} // Center icons that need alignment
+          ${item.icon.name === 'WorkoutIconTiny' || item.icon.name === 'NetworkIconTiny' || item.icon.name === 'ChatIconSmall' || item.icon.name === 'CoachIconSmall' || item.icon.name === 'MemoryIconTiny' || item.icon.name === 'MenuIcon' ? 'flex items-center justify-center' : ''} // Center icons that need alignment
         `}>
           <Icon className={
             isSidebarCollapsed
@@ -217,12 +217,12 @@ const SidebarNav = () => {
       <div>
         {/* Add top margin for titled sections in collapsed mode (except Quick Access which has divider) */}
         {title && isSidebarCollapsed && !isQuickAccess && (
-          <div className="mt-3" />
+          <div className={navigationPatterns.sectionSpacing.top} />
         )}
 
         {/* Show divider above Quick Actions - gradient fade effect */}
         {isQuickAccess && (
-          <div className="mb-3 h-px bg-gradient-to-r from-transparent via-synthwave-neon-cyan/30 to-transparent" />
+          <div className={`${navigationPatterns.sectionSpacing.bottom} ${navigationPatterns.dividers.gradientCyan}`} />
         )}
 
         {title && !isSidebarCollapsed && (
@@ -232,13 +232,13 @@ const SidebarNav = () => {
             </h3>
           </div>
         )}
-        <div className="mb-3">
+        <div className={navigationPatterns.sectionSpacing.bottom}>
           {items.map((item) => renderNavItem(item))}
         </div>
 
         {/* Show divider below Quick Actions - gradient fade effect */}
         {isQuickAccess && (
-          <div className="mt-3 h-px bg-gradient-to-r from-transparent via-synthwave-neon-cyan/30 to-transparent" />
+          <div className={`${navigationPatterns.sectionSpacing.top} ${navigationPatterns.dividers.gradientCyan}`} />
         )}
       </div>
     );
@@ -320,22 +320,88 @@ const SidebarNav = () => {
 
           {/* Account Navigation (Settings, Sign Out) */}
           {accountItems.length > 0 && (
-            <div className="mt-3">
+            <div className={navigationPatterns.sectionSpacing.top}>
               {renderSection(accountItems, 'Account & Settings')}
             </div>
           )}
 
-          {/* Divider before public Help & Info section */}
+          {/* Divider before More Resources */}
           {utilityItems.length > 0 && (
-            <div className="mt-3 h-px bg-gradient-to-r from-transparent via-synthwave-neon-cyan/30 to-transparent" />
+            <div className={`${navigationPatterns.sectionSpacing.top} ${navigationPatterns.dividers.gradientCyan}`} />
           )}
 
-          {/* Utility Navigation (Public Pages) */}
-          {utilityItems.length > 0 && (
-            <div className="mt-3">
-              {renderSection(utilityItems, 'Help & Info')}
-            </div>
-          )}
+          {/* Help & Info - Single button that opens popover */}
+          {utilityItems.length > 0 && (() => {
+            // Use same styling pattern as other nav items (defaults to cyan)
+            const colorClasses = getItemColorClasses('default', false);
+            const isUtilityActive = activePopover === 'utility';
+            const getHoverClasses = () => {
+              return 'hover:border-synthwave-neon-cyan/50 hover:bg-synthwave-bg-primary/20 focus:ring-2 focus:ring-synthwave-neon-cyan/50';
+            };
+
+            return (
+              <div
+                className={navigationPatterns.sectionSpacing.both}
+                onMouseEnter={() => setActivePopover('utility')}
+                onMouseLeave={() => setActivePopover(null)}
+              >
+                {!isSidebarCollapsed && (
+                  <div className={navigationPatterns.desktop.sectionHeader}>
+                    <h3 className={navigationPatterns.desktop.sectionTitle}>
+                      More Resources
+                    </h3>
+                  </div>
+                )}
+                <button
+                  ref={popoverRefs.current['utility-popover'] || (popoverRefs.current['utility-popover'] = React.createRef())}
+                  className={`
+                    ${navigationPatterns.desktop.navItem}
+                    ${isSidebarCollapsed ? navigationPatterns.desktop.navItemCollapsed : ''}
+                    ${isUtilityActive ? 'text-synthwave-neon-cyan' : colorClasses.inactive}
+                    ${isUtilityActive
+                      ? 'border-t-synthwave-neon-cyan/50 border-b-synthwave-neon-cyan/50 bg-synthwave-bg-primary/20'
+                      : getHoverClasses()
+                    }
+                    focus:outline-none
+                    active:outline-none
+                  `}
+                  style={{ WebKitTapHighlightColor: 'transparent' }}
+                  aria-label="More resources"
+                  title={isSidebarCollapsed ? 'More Resources' : undefined}
+                  data-tooltip-id={isSidebarCollapsed ? 'sidebar-nav-tooltip' : undefined}
+                  data-tooltip-content={isSidebarCollapsed ? 'More Resources' : undefined}
+                >
+                  {/* Icon */}
+                  <div className={`
+                    ${isSidebarCollapsed ? navigationPatterns.desktop.navItemIconCollapsed : navigationPatterns.desktop.navItemIcon}
+                    flex items-center justify-center
+                  `}>
+                    <svg
+                      className={isSidebarCollapsed ? "w-6 h-6" : "w-5 h-5"}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                  </div>
+
+                  {/* Label */}
+                  <span className={`
+                    ${navigationPatterns.desktop.navItemLabel}
+                    ${isSidebarCollapsed ? navigationPatterns.desktop.navItemLabelCollapsed : ''}
+                  `}>
+                    More Resources
+                  </span>
+                </button>
+              </div>
+            );
+          })()}
         </nav>
 
         {/* User Profile Section */}
@@ -419,6 +485,72 @@ const SidebarNav = () => {
           coachData={context.coachData}
         />
       ))}
+
+      {/* Utility Flyout - Fixed positioned outside scrollable area */}
+      {activePopover === 'utility' && popoverRefs.current['utility-popover']?.current && (
+        <div
+          className="fixed z-[60]"
+          style={{
+            top: `${popoverRefs.current['utility-popover'].current.getBoundingClientRect().top}px`,
+            left: isSidebarCollapsed ? '64px' : '256px', // Align directly with sidebar right edge (no gap)
+          }}
+          onMouseEnter={() => setActivePopover('utility')}
+          onMouseLeave={() => setActivePopover(null)}
+        >
+          <div className={navigationPatterns.utilityFlyout.container}>
+            {/* Header Section */}
+            <div className={navigationPatterns.utilityFlyout.header}>
+              <h3 className={navigationPatterns.utilityFlyout.headerTitle}>
+                More Resources
+              </h3>
+            </div>
+
+            {/* Menu Items */}
+            <div className={navigationPatterns.utilityFlyout.itemsContainer}>
+              {utilityItems.map((item) => {
+                const Icon = item.icon;
+                const colorClasses = getItemColorClasses(item.color || 'default', false);
+
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => {
+                      const route = getItemRoute(item, context);
+                      if (route && route !== '#') {
+                        navigate(route);
+                        setActivePopover(null);
+                      }
+                    }}
+                    className={`
+                      ${navigationPatterns.desktop.navItem}
+                      ${colorClasses.inactive}
+                      hover:border-synthwave-neon-cyan/50
+                      hover:bg-synthwave-bg-primary/20
+                      focus:ring-2 focus:ring-synthwave-neon-cyan/50
+                      focus:outline-none
+                      active:outline-none
+                      w-full
+                    `}
+                    style={{ WebKitTapHighlightColor: 'transparent' }}
+                  >
+                    {/* Icon */}
+                    {Icon && (
+                      <div className={navigationPatterns.desktop.navItemIcon}>
+                        <Icon className="w-5 h-5" />
+                      </div>
+                    )}
+
+                    {/* Label */}
+                    <span className={navigationPatterns.desktop.navItemLabel}>
+                      {item.label}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </aside>
   );
 };
