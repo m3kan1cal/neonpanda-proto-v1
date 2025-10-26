@@ -213,6 +213,39 @@ export function fixMalformedJson(jsonString: string): string {
 }
 
 /**
+ * Removes [GENERATE_PROGRAM] trigger from streaming content
+ * Used to prevent the trigger from appearing in the UI during streaming
+ *
+ * @param chunk - The streaming chunk to clean
+ * @returns Object with cleanedContent and wasTriggerRemoved flag
+ */
+export function removeTriggerFromStream(chunk: string): { cleanedContent: string; wasTriggerRemoved: boolean } {
+  const trigger = "[GENERATE_PROGRAM]";
+
+  // Check for any variation of the trigger (with/without markdown, spaces, case variations)
+  const hasTrigger = /\[GENERATE_PROGRAM\]/i.test(chunk);
+
+  if (hasTrigger) {
+    const cleanedContent = chunk
+      .replace(/\*\*\s*\[GENERATE_PROGRAM\]\s*\*\*/gi, '') // Markdown bold with optional spaces
+      .replace(/\[GENERATE_PROGRAM\]/gi, '') // Plain trigger
+      .replace(/\[\s*GENERATE_PROGRAM\s*\]/gi, ''); // With spaces inside brackets
+
+    console.info("✂️ Removed [GENERATE_PROGRAM] trigger from streaming chunk");
+
+    return {
+      cleanedContent,
+      wasTriggerRemoved: true,
+    };
+  }
+
+  return {
+    cleanedContent: chunk,
+    wasTriggerRemoved: false,
+  };
+}
+
+/**
  * Convenience function that applies both cleaning and fixing in sequence
  * Useful for processing AI responses that might have both markdown formatting and JSON issues
  */
