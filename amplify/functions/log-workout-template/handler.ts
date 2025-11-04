@@ -3,20 +3,25 @@ import {
   createErrorResponse,
   callBedrockApi,
   MODEL_IDS,
+  invokeAsyncLambda,
 } from '../libs/api-helpers';
 import {
   getTrainingProgram,
   updateTrainingProgram,
-  saveWorkout,
   getUserProfile,
   getCoachConfig,
 } from '../../dynamodb/operations';
 import { getTrainingProgramDetailsFromS3, saveTrainingProgramDetailsToS3 } from '../libs/training-program/s3-utils';
-import { buildTemplateLoggingPrompt } from '../libs/training-program/logging-utils';
+import { WorkoutTemplate, WorkoutFeedback } from '../libs/training-program/types';
 import { getUserTimezoneOrDefault } from '../libs/analytics/date-utils';
 import { parseJsonWithFallbacks } from '../libs/response-utils';
-import { Workout } from '../libs/workout/types';
+import { BuildWorkoutEvent, TemplateContext } from '../libs/workout/types';
 import { withAuth, AuthenticatedHandler } from '../libs/auth/middleware';
+import {
+  buildScalingAnalysisPrompt,
+  getDefaultScalingAnalysis,
+  normalizeScalingAnalysis
+} from '../libs/training-program/scaling-analysis';
 
 const baseHandler: AuthenticatedHandler = async (event) => {
   try {
@@ -48,9 +53,10 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     }
 
     // Fetch user profile, program, and coach config in parallel
-    const [programData, userProfile] = await Promise.all([
+    const [programData, userProfile, coachConfigData] = await Promise.all([
       getTrainingProgram(userId, coachId, programId),
       getUserProfile(userId),
+      getCoachConfig(userId, coachId),
     ]);
 
     // Get user timezone with LA fallback
@@ -60,7 +66,12 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       return createErrorResponse(404, 'Training program not found');
     }
 
+    if (!coachConfigData) {
+      return createErrorResponse(500, 'Coach configuration not found');
+    }
+
     const program = programData.attributes;
+    const coachConfig = coachConfigData.attributes;
 
     // Get program details from S3
     if (!program.s3DetailKey) {
@@ -74,34 +85,25 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     }
 
     // Find the workout template
-    const templateIndex = programDetails.dailyWorkoutTemplates.findIndex(
-      (t) => t.templateId === templateId
+    const templateIndex = programDetails.workoutTemplates.findIndex(
+      (t: WorkoutTemplate) => t.templateId === templateId
     );
 
     if (templateIndex === -1) {
       return createErrorResponse(404, 'Workout template not found');
     }
 
-    const template = programDetails.dailyWorkoutTemplates[templateIndex];
+    const template = programDetails.workoutTemplates[templateIndex];
 
     // Check if already completed
     if (template.status === 'completed') {
       return createErrorResponse(400, 'Workout template already completed');
     }
 
-    // Get the phase for this template
+    // Get the phase for this template (by day range)
     const phase = program.phases.find(
-      (p) => p.phaseId === template.phaseId
+      (p) => template.dayNumber >= p.startDay && template.dayNumber <= p.endDay
     );
-
-    // Get coach config for personality context (needed for AI extraction)
-    const coachConfigData = await getCoachConfig(userId, coachId);
-
-    if (!coachConfigData) {
-      return createErrorResponse(500, 'Coach configuration not found');
-    }
-
-    const coachConfig = coachConfigData.attributes;
 
     console.info('🏋️ Logging workout from template:', {
       userId,
@@ -112,102 +114,144 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       userPerformanceLength: userPerformance.length,
     });
 
-    // Build AI extraction prompt (template + user performance → Universal Schema)
-    const { staticPrompt, dynamicPrompt } = buildTemplateLoggingPrompt(
-      template.workoutContent,
+    // ==================================================================
+    // STEP 1: Quick AI call (Haiku 4.5) to analyze scaling/modifications
+    // ==================================================================
+    console.info('🤖 Analyzing workout scaling with Haiku 4.5...');
+    const scalingPrompt = buildScalingAnalysisPrompt(
+      template.description,
+      userPerformance,
       {
         name: template.name,
-        description: template.description,
-        coachingNotes: template.coachingNotes,
-        estimatedDuration: template.estimatedDuration,
-        requiredEquipment: template.requiredEquipment,
-      },
-      userPerformance,
-      userProfile?.attributes || null,
-      coachConfig,
-      {
-        programId: program.programId,
-        programName: program.name,
-        dayNumber: template.dayNumber,
-        phaseId: template.phaseId,
-        phaseName: phase?.name || 'Unknown Phase',
+        equipment: template.equipment,
+        scoringType: template.scoringType,
       }
     );
 
-    console.info('Calling AI for workout extraction from template...', {
-      staticPromptLength: staticPrompt.length,
-      dynamicPromptLength: dynamicPrompt.length,
-    });
+    let scalingAnalysis = getDefaultScalingAnalysis();
 
-    // Call AI to convert template + user performance to Universal Schema
-    // Uses prompt caching for 90% cost reduction on repeated extractions
-    const extractedData = await callBedrockApi(
-      staticPrompt,
-      dynamicPrompt,
-      MODEL_IDS.CLAUDE_SONNET_4_FULL,
-      {
-        staticPrompt,
-        dynamicPrompt,
-        prefillResponse: '{', // Force JSON response format
-        enableThinking: false, // Templates are usually straightforward
-      }
-    );
+    try {
+      const scalingResponse = await callBedrockApi(
+        scalingPrompt, // System prompt contains all instructions and context
+        'Analyze the scaling and modifications for this workout.', // Simple user request
+        MODEL_IDS.CLAUDE_HAIKU_4FULL, // Claude Haiku 4.5 - fast, cheap model for scaling analysis
+        {
+          prefillResponse: '{',
+          enableThinking: false,
+        }
+      );
 
-    console.info('AI extraction completed:', {
-      responseLength: extractedData.length,
-    });
+      const parsed = parseJsonWithFallbacks(scalingResponse);
+      scalingAnalysis = normalizeScalingAnalysis(parsed);
 
-    // Parse and validate workout data
-    const workoutData = parseJsonWithFallbacks(extractedData);
-
-    if (!workoutData || typeof workoutData !== 'object') {
-      console.error('Failed to parse workout data from AI response');
-      return createErrorResponse(500, 'Failed to extract workout data');
+      console.info('✅ Scaling analysis completed:', {
+        wasScaled: scalingAnalysis.wasScaled,
+        modificationsCount: scalingAnalysis.modifications.length,
+        adherenceScore: scalingAnalysis.adherenceScore,
+        reasoning: parsed?.reasoning || 'N/A',
+      });
+    } catch (error: any) {
+      console.error('⚠️ Scaling analysis failed, continuing with defaults:', error);
+      console.error('⚠️ Error details:', {
+        name: error.name,
+        message: error.message,
+        $metadata: error.$metadata,
+        $fault: error.$fault,
+      });
+      // Continue with default values (no scaling detected)
     }
 
-    // Create a Workout entity (Universal Schema)
-    // Generate workout ID (consistent with workout/conversation pattern)
-    const shortId = Math.random().toString(36).substring(2, 11);
-    const workoutId = `workout_${userId}_${Date.now()}_${shortId}`;
-    const workout: Workout = {
-      workoutId,
-      userId,
-      coachIds: [coachId],
-      coachNames: [], // TODO: Fetch coach name if needed
-      conversationId: program.creationConversationId,
-      completedAt: completedAt ? new Date(completedAt) : new Date(),
-      workoutData,
-      extractionMetadata: {
-        confidence: 0.95, // High confidence from template-guided extraction
-        extractedAt: new Date(),
-      },
-      summary: `${template.name} - Day ${template.dayNumber} of ${program.name}`,
-      workoutName: template.name,
-      trainingProgramContext: {
-        programId: program.programId,
-        coachId,
-        templateId: template.templateId,
-        dayNumber: template.dayNumber,
-        phaseId: template.phaseId,
-        phaseName: phase?.name || 'Unknown Phase',
-      },
-    };
-
-    // Save the workout to DynamoDB
-    await saveWorkout(workout);
-
-    // Update the template in S3
+    // ==================================================================
+    // STEP 2: Update template status immediately (for instant UX feedback)
+    // ==================================================================
     template.status = 'completed';
-    template.completedAt = workout.completedAt;
-    template.linkedWorkoutId = workoutId;
-    template.userFeedback = feedback || null;
+    template.completedAt = completedAt ? new Date(completedAt) : new Date();
+    template.linkedWorkoutId = null; // Will be updated by build-workout later
 
-    programDetails.dailyWorkoutTemplates[templateIndex] = template;
+    // Store feedback with scaling analysis
+    const workoutFeedback: WorkoutFeedback = {
+      rating: feedback?.rating || 0,
+      difficulty: feedback?.difficulty || null,
+      comments: feedback?.comments || null,
+      timestamp: new Date(),
+      scalingAnalysis,
+    };
+    template.userFeedback = workoutFeedback;
+
+    programDetails.workoutTemplates[templateIndex] = template;
     await saveTrainingProgramDetailsToS3(program.s3DetailKey, programDetails);
 
-    // Update program stats in DynamoDB
+    console.info('✅ Template status updated in S3:', {
+      templateId,
+      status: 'completed',
+      wasScaled: scalingAnalysis.wasScaled,
+    });
+
+    // ==================================================================
+    // STEP 3: Build enriched message for build-workout
+    // ==================================================================
+    const enrichedMessage = `PRESCRIBED WORKOUT (Template: ${template.name}):
+${template.description}
+
+${template.notes ? `COACH NOTES:\n${template.notes}\n\n` : ''}ACTUAL PERFORMANCE:
+${userPerformance}`;
+
+    // ==================================================================
+    // STEP 4: Build templateContext for build-workout
+    // ==================================================================
+    const templateContext: TemplateContext = {
+      programId: program.programId,
+      templateId: template.templateId,
+      groupId: template.groupId,
+      dayNumber: template.dayNumber,
+      phaseId: phase?.phaseId,
+      phaseName: phase?.name || 'Unknown Phase',
+      scoringType: template.scoringType,
+      prescribedExercises: template.prescribedExercises,
+      estimatedDuration: template.estimatedDuration,
+      prescribedDescription: template.description,
+      scalingAnalysis,
+    };
+
+    // ==================================================================
+    // STEP 5: Invoke build-workout async (like create-workout does)
+    // ==================================================================
+    const buildWorkoutPayload: BuildWorkoutEvent = {
+      userId,
+      coachId,
+      conversationId: program.creationConversationId,
+      userMessage: enrichedMessage,
+      coachConfig,
+      completedAt: template.completedAt.toISOString(),
+      messageTimestamp: new Date().toISOString(),
+      userTimezone,
+      isSlashCommand: false,
+      templateContext, // NEW: Pass template context
+    };
+
+    const buildWorkoutFunctionName = process.env.BUILD_WORKOUT_FUNCTION_NAME;
+    if (!buildWorkoutFunctionName) {
+      console.error('❌ BUILD_WORKOUT_FUNCTION_NAME environment variable not set');
+      return createErrorResponse(500, 'Configuration error');
+    }
+
+    try {
+      await invokeAsyncLambda(
+        buildWorkoutFunctionName,
+        buildWorkoutPayload,
+        `log workout from template ${templateId}`
+      );
+      console.info('✅ build-workout lambda invoked successfully');
+    } catch (error) {
+      console.error('❌ Failed to invoke build-workout lambda:', error);
+      // Don't return error - we've already updated template status
+      // Just log the error and continue
+    }
+
+    // ==================================================================
+    // STEP 6: Update program stats in DynamoDB
+    // ==================================================================
     const dayNumber = template.dayNumber;
-    const templateType = template.templateType;
 
     // Initialize dayCompletionStatus if it doesn't exist
     if (!program.dayCompletionStatus) {
@@ -216,12 +260,16 @@ const baseHandler: AuthenticatedHandler = async (event) => {
 
     if (!program.dayCompletionStatus[dayNumber]) {
       // Count total templates for this day
-      const dayTemplates = programDetails.dailyWorkoutTemplates.filter(
-        (t) => t.dayNumber === dayNumber
+      const dayTemplates = programDetails.workoutTemplates.filter(
+        (t: WorkoutTemplate) => t.dayNumber === dayNumber
       );
-      const totalOptional = dayTemplates.filter(
-        (t) => t.templateType === 'optional' || t.templateType === 'accessory'
-      ).length;
+
+      // First template of the day is considered primary (for day advancement logic)
+      const sortedTemplates = [...dayTemplates].sort((a, b) =>
+        a.templateId.localeCompare(b.templateId)
+      );
+
+      const totalOptional = dayTemplates.length - 1; // All templates except first
 
       program.dayCompletionStatus[dayNumber] = {
         primaryComplete: false,
@@ -230,10 +278,19 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       };
     }
 
+    // Get all templates for this day to determine if this is the primary template
+    const dayTemplates = programDetails.workoutTemplates.filter(
+      (t: WorkoutTemplate) => t.dayNumber === dayNumber
+    );
+    const sortedTemplates = [...dayTemplates].sort((a, b) =>
+      a.templateId.localeCompare(b.templateId)
+    );
+    const isPrimary = sortedTemplates[0]?.templateId === template.templateId;
+
     // Update completion status
-    if (templateType === 'primary') {
+    if (isPrimary) {
       program.dayCompletionStatus[dayNumber].primaryComplete = true;
-    } else if (templateType === 'optional' || templateType === 'accessory') {
+    } else {
       program.dayCompletionStatus[dayNumber].optionalCompleted += 1;
     }
 
@@ -243,15 +300,23 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       dayCompletionStatus: program.dayCompletionStatus,
     };
 
-    // Only advance currentDay if primary template is completed
-    if (templateType === 'primary') {
+    // Only advance currentDay if ALL workouts for the day are completed/skipped
+    const allDayTemplatesComplete = dayTemplates.every(
+      (t: WorkoutTemplate) => t.status === 'completed' || t.status === 'skipped'
+    );
+
+    if (allDayTemplatesComplete && program.currentDay === dayNumber) {
       updates.currentDay = program.currentDay + 1;
+      console.info('🎯 All workouts for day completed/skipped, advancing to next day:', {
+        completedDay: dayNumber,
+        newCurrentDay: updates.currentDay,
+      });
     }
 
-    // Recalculate adherence rate
+    // Recalculate adherence rate (as percentage 0-100)
     updates.adherenceRate =
       program.totalWorkouts > 0
-        ? updates.completedWorkouts / program.totalWorkouts
+        ? (updates.completedWorkouts / program.totalWorkouts) * 100
         : 0;
 
     // Check if program is complete
@@ -266,15 +331,37 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       updates
     );
 
+    console.info('✅ Workout logging initiated successfully:', {
+      userId,
+      programId,
+      templateId,
+      isPrimary,
+      dayAdvanced: isPrimary,
+      newCurrentDay: updates.currentDay,
+      adherenceRate: updates.adherenceRate,
+      wasScaled: scalingAnalysis.wasScaled,
+    });
+
     return createOkResponse({
       success: true,
-      workout,
-      template,
-      program: updatedProgram,
-      message: `Workout logged successfully`,
+      message: 'Workout logging in progress. Your workout is being processed in the background.',
+      status: 'processing',
+      template: {
+        templateId: template.templateId,
+        name: template.name,
+        status: template.status,
+        completedAt: template.completedAt,
+        scalingAnalysis,
+      },
+      program: {
+        programId: updatedProgram.programId,
+        currentDay: updates.currentDay,
+        completedWorkouts: updates.completedWorkouts,
+        adherenceRate: updates.adherenceRate,
+      },
     });
   } catch (error) {
-    console.error('Error logging workout template:', error);
+    console.error('❌ Error logging workout template:', error);
     return createErrorResponse(500, 'Failed to log workout template', error);
   }
 };

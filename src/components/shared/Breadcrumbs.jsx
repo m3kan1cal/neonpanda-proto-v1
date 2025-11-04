@@ -68,11 +68,14 @@ function Breadcrumbs() {
             // Special handling for coach-creator page - show it as a child of Coaches
             const isCoachCreatorPage = pathnames.includes('coach-creator');
 
-            // Special handling for workouts page - show it as a child of Manage Workouts
-            const isWorkoutsPage = pathnames.includes('workouts') && pathnames.includes('training-grounds');
+            // Special handling for workout details page - show it as a child of Manage Workouts
+            const isWorkoutDetailsPage = pathnames.includes('workouts') && pathnames.includes('training-grounds') && pathnames.length > 2;
 
             // Special handling for coach-conversations page - show it as a child of Manage Coach Conversations
             const isCoachConversationsPage = pathnames.includes('coach-conversations') && pathnames.includes('training-grounds');
+
+            // Special handling for view workouts page (today or specific day) - show it as a child of Training Grounds
+            const isViewWorkoutsPage = (pathnames.includes('today') || pathnames.includes('day')) && pathnames.includes('training-programs');
 
             if (isCoachCreatorPage) {
               // Build custom breadcrumb path: Coaches > Coach Creator
@@ -99,8 +102,8 @@ function Breadcrumbs() {
               ];
             }
 
-            if (isWorkoutsPage) {
-              // Build custom breadcrumb path: Training Grounds > Manage Workouts > Workouts
+            if (isWorkoutDetailsPage) {
+              // Build custom breadcrumb path: Training Grounds > Workouts > Workout Details
               const trainingGroundsSegment = pathnames.slice(0, pathnames.indexOf('training-grounds') + 1);
               const manageWorkoutsPath = [...trainingGroundsSegment, 'manage-workouts'];
 
@@ -123,27 +126,27 @@ function Breadcrumbs() {
                   );
                 }),
 
-                // Manage Workouts breadcrumb (virtual parent)
+                // Workouts breadcrumb (virtual parent)
                 <React.Fragment key="manage-workouts">
                   <Link
                     to={buildRoute(manageWorkoutsPath, 'manage-workouts')}
                     className="bg-synthwave-neon-cyan/10 text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/20 transition-all duration-200 px-3 py-1.5 rounded-full whitespace-nowrap flex-shrink-0"
                   >
-                    Manage Workouts
+                    Workouts
                   </Link>
                 </React.Fragment>,
 
-                // Workouts breadcrumb (current page)
-                <React.Fragment key="workouts-current">
+                // Workout Details breadcrumb (current page)
+                <React.Fragment key="workout-details-current">
                   <span className="bg-synthwave-neon-pink text-synthwave-bg-primary px-3 py-1.5 rounded-full font-medium whitespace-nowrap flex-shrink-0">
-                    Workouts
+                    Workout Details
                   </span>
                 </React.Fragment>
               ];
             }
 
             if (isCoachConversationsPage) {
-              // Build custom breadcrumb path: Training Grounds > Manage Coach Conversations > Coach Conversation
+              // Build custom breadcrumb path: Training Grounds > Coach Conversations > Coach Conversation
               const trainingGroundsSegment = pathnames.slice(0, pathnames.indexOf('training-grounds') + 1);
               const manageConversationsPath = [...trainingGroundsSegment, 'manage-conversations'];
 
@@ -166,13 +169,13 @@ function Breadcrumbs() {
                   );
                 }),
 
-                // Manage Coach Conversations breadcrumb (virtual parent)
+                // Coach Conversations breadcrumb (virtual parent)
                 <React.Fragment key="manage-conversations">
                   <Link
                     to={buildRoute(manageConversationsPath, 'manage-conversations')}
                     className="bg-synthwave-neon-cyan/10 text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/20 transition-all duration-200 px-3 py-1.5 rounded-full whitespace-nowrap flex-shrink-0"
                   >
-                    Manage Coach Conversations
+                    Coach Conversations
                   </Link>
                 </React.Fragment>,
 
@@ -180,6 +183,32 @@ function Breadcrumbs() {
                 <React.Fragment key="coach-conversations-current">
                   <span className="bg-synthwave-neon-pink text-synthwave-bg-primary px-3 py-1.5 rounded-full font-medium whitespace-nowrap flex-shrink-0">
                     Coach Conversation
+                  </span>
+                </React.Fragment>
+              ];
+            }
+
+            if (isViewWorkoutsPage) {
+              // Build custom breadcrumb path: Training Grounds > (Today's Workouts or View Workouts)
+              const trainingGroundsSegment = pathnames.slice(0, pathnames.indexOf('training-grounds') + 1);
+              const isToday = pathnames.includes('today');
+              const breadcrumbText = isToday ? "Today's Workouts" : "View Workouts";
+
+              return [
+                // Training Grounds breadcrumb
+                <React.Fragment key="training-grounds">
+                  <Link
+                    to={buildRoute(trainingGroundsSegment, 'training-grounds')}
+                    className="bg-synthwave-neon-cyan/10 text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/20 transition-all duration-200 px-3 py-1.5 rounded-full whitespace-nowrap flex-shrink-0"
+                  >
+                    Training Grounds
+                  </Link>
+                </React.Fragment>,
+
+                // View Workouts breadcrumb (current page - dynamic text)
+                <React.Fragment key="view-workouts-current">
+                  <span className="bg-synthwave-neon-pink text-synthwave-bg-primary px-3 py-1.5 rounded-full font-medium whitespace-nowrap flex-shrink-0">
+                    {breadcrumbText}
                   </span>
                 </React.Fragment>
               ];

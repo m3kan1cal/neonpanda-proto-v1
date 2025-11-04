@@ -1,0 +1,82 @@
+{
+  "pk": "user#63gocaz-j-AYRsb0094ik#coach#user_63gocaz-j-AYRsb0094ik_coach_main",
+  "sk": "program#program_63gocaz-j-AYRsb0094ik_1761785538499_44tovj0ad",
+  "attributes": {
+    "adaptationLog": [],
+    "adherenceRate": 0,
+    "coachIds": ["user_63gocaz-j-AYRsb0094ik_coach_main"],
+    "coachNames": ["Marcus_the_Strength_Architect"],
+    "completedWorkouts": 0,
+    "creationConversationId": "conv_1760623582146_5u6z1kags",
+    "currentDay": 1,
+    "dayCompletionStatus": {},
+    "description": "Conservative progression block focusing on the four main powerlifts (deadlift, squat, bench press, push press) with max testing in week 4 to establish new baselines. Designed for masters athlete with limited recovery capacity.",
+    "endDate": "2025-11-26",
+    "equipmentConstraints": [
+      "barbell",
+      "squat rack",
+      "bench press",
+      "pull-up bar",
+      "dumbbells",
+      "kettlebells",
+      "rowing machine",
+      "assault bike",
+      "boxes"
+    ],
+    "lastActivityAt": "2025-10-30T00:58:39.934Z",
+    "name": "4-Week Strength Testing Block",
+    "pausedAt": null,
+    "pausedDuration": 0,
+    "phases": [
+      {
+        "description": "Build work capacity with moderate volume and intensity. Focus on technical proficiency and establishing movement patterns for the testing block.",
+        "durationDays": 14,
+        "endDay": 14,
+        "focusAreas": ["strength", "technique", "conditioning"],
+        "name": "Volume Accumulation",
+        "phaseId": "phase_1",
+        "startDay": 1
+      },
+      {
+        "description": "Increase intensity while managing volume. Conservative progression with focus on quality reps as fatigue accumulates.",
+        "durationDays": 7,
+        "endDay": 21,
+        "focusAreas": ["strength", "power"],
+        "name": "Intensity Build",
+        "phaseId": "phase_2",
+        "startDay": 15
+      },
+      {
+        "description": "Reduce volume significantly to dissipate fatigue. Test current maxes on all four main lifts to establish new baselines.",
+        "durationDays": 7,
+        "endDay": 28,
+        "focusAreas": ["strength", "testing"],
+        "name": "Deload and Max Testing",
+        "phaseId": "phase_3",
+        "startDay": 22
+      }
+    ],
+    "programId": "program_63gocaz-j-AYRsb0094ik_1761785538499_44tovj0ad",
+    "s3DetailKey": "training-programs/63gocaz-j-AYRsb0094ik/program_63gocaz-j-AYRsb0094ik_1761785538499_44tovj0ad_2025-10-30T00-58-39-813Z.json",
+    "skippedWorkouts": 0,
+    "startDate": "2025-10-30",
+    "status": "active",
+    "totalDays": 28,
+    "totalWorkouts": 62,
+    "trainingFrequency": 6,
+    "trainingGoals": [
+      "Test current max on deadlift (baseline: 285x3)",
+      "Test current max on back squat (baseline: 255x3)",
+      "Test current max on bench press (baseline: 255x3)",
+      "Test current max on push press (baseline: 165x3)",
+      "Establish new training baselines for future programming",
+      "Maintain conditioning capacity with finishers and one longer session weekly"
+    ],
+    "userId": "63gocaz-j-AYRsb0094ik"
+  },
+  "createdAt": "2025-10-30T00:58:39.934Z",
+  "entityType": "trainingProgram",
+  "gsi1pk": "user#63gocaz-j-AYRsb0094ik",
+  "gsi1sk": "program#program_63gocaz-j-AYRsb0094ik_1761785538499_44tovj0ad",
+  "updatedAt": "2025-10-30T00:58:39.934Z"
+}

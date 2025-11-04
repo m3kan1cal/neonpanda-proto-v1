@@ -15,7 +15,7 @@ import { getApiUrl, authenticatedFetch } from "./apiConfig.js";
  * @param {string} [options.sortOrder] - Sort order: 'asc' or 'desc' (default: 'desc')
  * @returns {Promise<Object>} - The API response with programs array
  */
-export const listTrainingPrograms = async (userId, coachId, options = {}) => {
+export const getTrainingPrograms = async (userId, coachId, options = {}) => {
   // Build query parameters
   const params = new URLSearchParams();
 
@@ -34,7 +34,7 @@ export const listTrainingPrograms = async (userId, coachId, options = {}) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("listTrainingPrograms: Error response:", errorText);
+      console.error("getTrainingPrograms: Error response:", errorText);
 
       let errorMessage;
       try {
@@ -53,7 +53,7 @@ export const listTrainingPrograms = async (userId, coachId, options = {}) => {
     const result = await response.json();
     return result;
   } catch (error) {
-    console.error("listTrainingPrograms: Exception:", error);
+    console.error("getTrainingPrograms: Exception:", error);
     throw error;
   }
 };
@@ -100,14 +100,24 @@ export const getTrainingProgram = async (userId, coachId, programId) => {
 };
 
 /**
- * Gets today's workout template(s) for a training program
+ * Gets workout templates for a training program
  * @param {string} userId - The user ID
  * @param {string} coachId - The coach ID
  * @param {string} programId - The program ID
- * @returns {Promise<Object>} - The API response with today's workout templates
+ * @param {Object} [options] - Optional query parameters
+ * @param {boolean} [options.today] - Get today's workout templates
+ * @param {number} [options.day] - Get templates for specific day number
+ * @returns {Promise<Object>} - The API response with workout templates
  */
-export const getTodaysWorkout = async (userId, coachId, programId) => {
-  const url = `${getApiUrl("")}/users/${userId}/coaches/${coachId}/programs/${programId}/templates?today=true`;
+export const getWorkoutTemplates = async (userId, coachId, programId, options = {}) => {
+  // Build query parameters
+  const params = new URLSearchParams();
+
+  if (options.today) params.append('today', 'true');
+  if (options.day !== undefined) params.append('day', options.day.toString());
+
+  const queryString = params.toString();
+  const url = `${getApiUrl("")}/users/${userId}/coaches/${coachId}/programs/${programId}/templates${queryString ? "?" + queryString : ""}`;
 
   try {
     const response = await authenticatedFetch(url, {
@@ -116,7 +126,7 @@ export const getTodaysWorkout = async (userId, coachId, programId) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("getTodaysWorkout: Error response:", errorText);
+      console.error("getWorkoutTemplates: Error response:", errorText);
 
       let errorMessage;
       try {
@@ -135,49 +145,7 @@ export const getTodaysWorkout = async (userId, coachId, programId) => {
     const result = await response.json();
     return result;
   } catch (error) {
-    console.error("getTodaysWorkout: Exception:", error);
-    throw error;
-  }
-};
-
-/**
- * Gets workout templates for a specific day in a training program
- * @param {string} userId - The user ID
- * @param {string} coachId - The coach ID
- * @param {string} programId - The program ID
- * @param {number} day - The day number
- * @returns {Promise<Object>} - The API response with workout templates for the day
- */
-export const getWorkoutTemplatesForDay = async (userId, coachId, programId, day) => {
-  const url = `${getApiUrl("")}/users/${userId}/coaches/${coachId}/programs/${programId}/templates?day=${day}`;
-
-  try {
-    const response = await authenticatedFetch(url, {
-      method: "GET",
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("getWorkoutTemplatesForDay: Error response:", errorText);
-
-      let errorMessage;
-      try {
-        const errorData = JSON.parse(errorText);
-        errorMessage =
-          errorData.error ||
-          errorData.message ||
-          `API Error: ${response.status}`;
-      } catch (parseError) {
-        errorMessage = `API Error: ${response.status}`;
-      }
-
-      throw new Error(errorMessage);
-    }
-
-    const result = await response.json();
-    return result;
-  } catch (error) {
-    console.error("getWorkoutTemplatesForDay: Exception:", error);
+    console.error("getWorkoutTemplates: Exception:", error);
     throw error;
   }
 };
@@ -275,6 +243,54 @@ export const logWorkout = async (userId, coachId, programId, templateId, workout
     return result;
   } catch (error) {
     console.error("logWorkout: Exception:", error);
+    throw error;
+  }
+};
+
+/**
+ * Skips a workout template (marks it as skipped with optional reason)
+ * @param {string} userId - The user ID
+ * @param {string} coachId - The coach ID
+ * @param {string} programId - The program ID
+ * @param {string} templateId - The workout template ID
+ * @param {Object} [data] - Optional data
+ * @param {string} [data.skipReason] - Reason for skipping the workout
+ * @returns {Promise<Object>} - The API response with skipped template
+ */
+export const skipWorkout = async (userId, coachId, programId, templateId, data = {}) => {
+  const url = `${getApiUrl("")}/users/${userId}/coaches/${coachId}/programs/${programId}/templates/${templateId}/skip`;
+
+  try {
+    const response = await authenticatedFetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("skipWorkout: Error response:", errorText);
+
+      let errorMessage;
+      try {
+        const errorData = JSON.parse(errorText);
+        errorMessage =
+          errorData.error ||
+          errorData.message ||
+          `API Error: ${response.status}`;
+      } catch (parseError) {
+        errorMessage = `API Error: ${response.status}`;
+      }
+
+      throw new Error(errorMessage);
+    }
+
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error("skipWorkout: Exception:", error);
     throw error;
   }
 };

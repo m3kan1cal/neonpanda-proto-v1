@@ -208,8 +208,14 @@ const CommandPalette = ({
 
       return () => clearTimeout(timeoutId);
     }
-    if (!isOpen && agentRef.current) {
-      agentRef.current.clearExecutionResult();
+
+    // Clear state when modal closes
+    if (!isOpen) {
+      if (agentRef.current) {
+        agentRef.current.clearExecutionResult();
+      }
+      // Clear input field to ensure clean state on next open
+      setInput("");
     }
   }, [isOpen]);
 

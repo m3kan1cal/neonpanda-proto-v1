@@ -26,45 +26,38 @@ export const TRAINING_PROGRAM_STRUCTURE_SCHEMA = `{
   ],
   "trainingGoals": ["string array (user's goals, e.g., 'increase squat 1RM', 'improve conditioning')"],
   "equipmentConstraints": ["string array (available equipment, e.g., 'barbell', 'pullup bar', 'dumbbells')"],
-  "dailyWorkoutTemplates": []
+  "workoutTemplates": []
 }`;
 
 /**
- * Complete Workout Template Structure Schema (Natural Language Approach)
+ * Complete Workout Template Array Schema (Segmented Approach with Implicit Grouping)
  * Used for AI-powered daily workout generation for each phase
  *
- * Templates are written in natural language (like a human coach writes them)
- * with structured metadata for app functionality
+ * Templates for the same day are linked via groupId (implicit grouping)
+ * Each template represents a distinct, independently trackable workout.
+ *
+ * Simple days: 1 template with same groupId
+ * Complex days: 2-5 templates with same groupId (e.g., "Strength Block", "Accessory Work", "Conditioning")
  */
-export const WORKOUT_TEMPLATE_STRUCTURE_SCHEMA = `[
+export const WORKOUT_TEMPLATE_ARRAY_SCHEMA = `[
   {
-    "templateId": "string (unique template ID, format: 'template_day{dayNumber}_primary')",
+    "templateId": "string (format: 'template_userId_timestamp_shortId' - system will generate)",
+    "groupId": "string (format: 'group_userId_timestamp_shortId' - links templates for same day)",
     "dayNumber": "number (1-indexed day within program)",
-    "templateType": "'primary' | 'optional' | 'accessory' (workout classification)",
-    "templatePriority": "number (1 = highest priority for the day)",
-    "scheduledDate": "string (YYYY-MM-DD, will be calculated from program start date)",
-    "phaseId": "string (which phase this belongs to, e.g., 'phase_1')",
-
-    "name": "string (workout name, e.g., 'Lower Body Strength - Squat Focus')",
-    "description": "string (1 sentence overview of what this workout accomplishes)",
-    "estimatedDuration": "number (estimated minutes to complete)",
-    "requiredEquipment": ["string array (equipment needed, subset of program equipment)"],
-
-    "workoutContent": "string (NATURAL LANGUAGE - write the workout as a human coach would)",
-    "coachingNotes": "string (additional cues, focus points, scaling suggestions, motivation)",
-
-    "prescribedExercises": [
-      {
-        "exerciseName": "string (main movement name, e.g., 'Back Squat', 'Assault Bike')",
-        "movementType": "'barbell' | 'dumbbell' | 'kettlebell' | 'bodyweight' | 'gymnastics' | 'cardio' | 'other'"
-      }
-    ],
-
-    "status": "'pending' (always set to pending for new templates)",
-    "completedAt": "null (set when workout is logged)",
-    "linkedWorkoutId": "null (set when workout is logged)",
-    "userFeedback": "null (set when user provides feedback)",
-    "adaptationHistory": "[] (empty array, populated if template is regenerated)"
+    "name": "string (clear, user-facing name: 'Strength Block', 'Lower Body Burn', 'Metcon Chipper')",
+    "type": "'strength' | 'accessory' | 'conditioning' | 'skill' | 'mobility' | 'warmup' | 'cooldown' | 'recovery' | 'power' | 'olympic' | 'endurance' | 'flexibility' | 'balance' | 'core' | 'stability' | 'mixed'",
+    "description": "string (NATURAL LANGUAGE - write the workout as a human coach would)",
+    "prescribedExercises": ["string array (e.g., 'Back Squat', 'KB Swings')"],
+    "scoringType": "'load' | 'time' | 'amrap' | 'rounds_plus_reps' | 'emom' | 'reps' | 'distance' | 'calories' | 'pace' | 'rpe' | 'completion' | 'none'",
+    "timeCap": "number | null (for timed workouts, in minutes)",
+    "estimatedDuration": "number (expected duration in minutes)",
+    "restAfter": "number (rest after this workout in minutes, 0 if last of day)",
+    "equipment": ["string array (optional, e.g., 'Barbell', 'Kettlebell')"],
+    "notes": "string (REQUIRED for strength/power/max testing, OPTIONAL for simple accessory/mobility - see guidelines below)",
+    "metadata": {
+      "difficulty": "string (optional: 'beginner', 'intermediate', 'advanced')",
+      "focusAreas": ["string array (optional: ['Lower Body', 'Strength'])"]
+    }
   }
 ]`;
 
@@ -90,17 +83,17 @@ IMPORTANT RULES:
 - Equipment constraints should only include equipment that was explicitly mentioned
 - Focus areas should be specific and actionable (e.g., "strength", "power", "conditioning", "technique")
 - startDate should typically be today's date (will be set by system if not provided)
-- dailyWorkoutTemplates should be an empty array (workouts generated separately per phase)
+- workoutTemplates should be an empty array (workouts generated separately per phase)
 
 PROGRAM STRUCTURE SCHEMA:
 ${TRAINING_PROGRAM_STRUCTURE_SCHEMA}`;
 };
 
 /**
- * Helper function to get the workout template schema with context
- * Generates natural language workout templates with structured metadata
+ * Helper function to get the workout template array schema with context
+ * Generates flat array of segmented workout templates with implicit grouping
  */
-export const getWorkoutTemplateSchemaWithContext = (phaseContext: {
+export const getWorkoutTemplateArraySchemaWithContext = (phaseContext: {
   phaseName: string;
   phaseDescription: string;
   phaseDurationDays: number;
@@ -109,12 +102,17 @@ export const getWorkoutTemplateSchemaWithContext = (phaseContext: {
   trainingFrequency: number;
   equipment: string[];
   goals: string[];
+  userId: string;
 }): string => {
   return `
-WORKOUT TEMPLATE GENERATION - NATURAL LANGUAGE APPROACH:
+WORKOUT TEMPLATE GENERATION - SEGMENTED APPROACH WITH IMPLICIT GROUPING:
 
-Write each workout as a human coach would write it - clear, detailed, motivational, and specific.
-Think of how a great coach writes workouts: natural prose, not structured data or JSON.
+Generate a flat array of WorkoutTemplates for this phase.
+Templates for the same day are linked via matching groupId and dayNumber.
+Each template represents a distinct workout that the athlete will log separately.
+
+Think like SugarWOD or TrainHeroic: complex training days are broken into logical,
+independently trackable workouts (e.g., "Strength Block", "Accessory Work", "Conditioning").
 
 PHASE CONTEXT:
 - Phase: ${phaseContext.phaseName}
@@ -126,78 +124,138 @@ PHASE CONTEXT:
 - Available Equipment: ${phaseContext.equipment.join(', ')}
 - Program Goals: ${phaseContext.goals.join(', ')}
 
-CRITICAL INSTRUCTIONS FOR workoutContent FIELD:
+CRITICAL TEMPLATE STRUCTURE GUIDELINES:
 
-1. WRITE AS A COACH WRITES:
-   - Use natural language, not JSON or structured formats
-   - Be specific with all exercise details (sets, reps, weights, rest periods)
-   - Include coaching cues, form focus, and intensity guidance
-   - Structure clearly with sections (Warmup, Strength, Conditioning, etc.)
+1. GROUPING TEMPLATES BY DAY:
+   - Simple days: 1 template with unique groupId
+   - Complex days: 2-5 templates sharing the same groupId
+   - All templates for a day have the same dayNumber and groupId
+   - Each template = distinct workout user tracks separately
+
+2. TEMPLATE NAMING (USER-FACING) - STRICT LATIN CONVENTION:
+   - Give each template a clear, descriptive name
+   - Users will see this in UI displayed prominently
+   - Make names motivating and specific
+   - Avoid generic names like "Workout 1" or "Template A"
+
+   LATIN NAMING RULES (MANDATORY):
+   - Use ONLY Latin words - NO English, NO Greek mythology
+   - Structure: [Latin Adjective/Noun] [Latin Noun] or [Latin Noun] [Latin Noun]
+   - GOOD EXAMPLES:
+     * "Fortis Vigor" (Strong Energy)
+     * "Mortis Trahens" (Death Pull/Deadlift)
+     * "Catena Posterior" (Posterior Chain)
+     * "Pressa Maximus" (Maximum Press)
+     * "Impetus Potentia" (Power Impulse)
+     * "Infernus Maximus" (Maximum Hell/Fire)
+     * "Tempestus Ferrum" (Iron Storm)
+   - BAD EXAMPLES (DO NOT USE):
+     * "Gladiator Complex" (mixing Latin + English)
+     * "Tempestus Power" (mixing Latin + English)
+     * "Titan Shoulders" (Greek mythology)
+     * "Hercules Arms" (Greek hero)
+     * "Cyclone Chaos" (plain English)
+     * "Olympus Endurance" (Greek mythology)
+   - Common Latin words: Fortis (strong), Magnus (great), Velocitas (speed), Potentia (power),
+     Ferrum (iron), Tempestus (storm), Mortis (death), Vigor (energy), Infernus (hell/fire)
+   - This is a SIGNATURE FEATURE - maintain strict consistency across all templates
+
+3. TEMPLATE TYPES:
+   - strength: Heavy barbell lifts, max effort work
+   - accessory: Secondary strength, hypertrophy
+   - conditioning: MetCons, cardio, AMRAPs, EMOMs
+   - skill: Technique practice, skill development
+   - mobility: Stretching, mobility work
+   - warmup: Warm-up specific movements
+   - cooldown: Cool-down specific movements
+   - recovery: Recovery-focused work
+   - power: Powerlifting work, max effort singles/doubles
+   - olympic: Olympic lifting work (snatch, clean & jerk)
+   - endurance: Endurance cardio, long distance work
+   - flexibility: Flexibility and stretching work
+   - balance: Balance training
+   - core: Core-focused work
+   - stability: Stability training
+   - mixed: Combination of multiple types
+
+4. SCORING TYPES:
+   - load: Track weight lifted (e.g., Back Squat 5RM)
+   - time: For time workouts (e.g., "21-15-9 For Time")
+   - amrap: As many rounds as possible
+   - rounds_plus_reps: Track rounds + partial reps (e.g., "3 rounds + 15 reps")
+   - emom: Every minute on the minute
+   - reps: Total reps completed
+   - distance: Distance covered
+   - calories: Track calories on cardio equipment (rower, bike, ski erg)
+   - pace: Speed tracking (min/mile, min/km, min/500m)
+   - rpe: Rate of Perceived Exertion (1-10 scale for auto-regulated training)
+   - completion: Just mark as done
+   - none: No scoring needed
+
+5. NATURAL LANGUAGE DESCRIPTIONS:
+   - Write each template description as a human coach would
+   - Be specific: sets, reps, weights, rest periods
+   - Include coaching cues, form focus, intensity guidance
    - Add motivational language and context
 
-2. EXAMPLE workoutContent (THIS IS THE STYLE TO EMULATE):
-   "
-   Warmup (10 minutes):
-   Hip circles, leg swings, deep squat holds, PVC pass-throughs. Get the hips and
-   shoulders mobile before we load them.
+   EXAMPLE (Strength Template):
+   "Back Squat\n5x5 @ 205lbs (75% of your 1RM ~275lbs)\nFocus on hitting depth
+   consistently every rep. Keep chest up throughout. Rest 3 minutes between sets.\n\n
+   Scale: If form breaks, reduce weight 10% immediately."
 
-   Strength Block:
-   Back Squat 5x5 @ 205lbs (75% of your estimated 1RM ~275lbs)
-   Focus on hitting depth consistently every rep. Feel your weight shift to mid-foot
-   at the bottom. Keep chest up throughout the movement. Rest 3 minutes between sets.
-   Film your heavy set if possible - I want to see depth consistency.
+   EXAMPLE (Conditioning Template):
+   "12 minute AMRAP:\n15 KB Swings (53#)\n12 Box Step-Ups (24\", alternating legs)
+   \n10 Burpees\n\nPace yourself - this is about consistency. Aim for 4-5 rounds.
+   Keep breathing controlled."
 
-   Scale: If form breaks, reduce weight 10% immediately.
+6. COACH NOTES - WHEN REQUIRED VS OPTIONAL:
 
-   Bulgarian Split Squat 3x10 each leg @ 40lb dumbbells
-   10 reps per leg. Focus on front leg doing the work. Keep torso upright.
-   Rest 90 seconds between sets.
+   REQUIRED (must include detailed notes):
+   - strength templates: Form cues, scaling options, RPE guidance, video recommendations
+   - power templates: Max effort strategy, technique reminders, safety notes
+   - Max testing templates: Warm-up protocol, attempt strategy, form checkpoints
 
-   Conditioning Finisher:
-   EMOM 10: 10 calories assault bike
-   Moderate pace—should finish with 20-30 seconds rest. This is conditioning work,
-   not a sprint. Keep breathing controlled.
-   "
+   STRONGLY RECOMMENDED (should include notes):
+   - Complex conditioning: Pacing strategy, movement standards, break strategies
+   - Longer endurance sessions (>20 min): Pacing guidance, intensity targets
+   - Technical skill work: Specific cues, progression/regression options
 
-3. STRUCTURE & CLARITY:
-   - Use clear sections (Warmup, Main Work, Accessory, Finisher, etc.)
-   - Break complex workouts into digestible chunks
-   - Include rest periods and timing guidance
-   - Specify weights with context (% of 1RM, scaling options)
+   OPTIONAL (may omit if description is self-explanatory):
+   - Simple accessory circuits: Basic movements with clear rep schemes
+   - Mobility/recovery work: Straightforward stretching or foam rolling
+   - Short conditioning finishers: Simple AMRAPs with common movements
 
-4. COACHING ELEMENTS:
-   - Form cues for key movements
-   - Intensity guidance (RPE, "should feel like X")
-   - Scaling/modification options
-   - What to focus on mentally
-   - When to stop or reduce weight
+   NOTES EXAMPLES:
+   - Strength: "Film your third set - I want to see depth consistency. Scale to 195lbs if form breaks."
+   - Max Testing: "Rest 4-5 min between heavy singles. Stop if bar speed slows or form breaks."
+   - Endurance: "Keep intensity at RPE 6-7, conversational pace throughout. This builds aerobic base."
 
-5. prescribedExercises FIELD (LIGHTWEIGHT):
-   - This is OPTIONAL and minimal
-   - Include only main exercises for filtering/reference
-   - Just exerciseName and movementType
-   - Example: [{"exerciseName": "Back Squat", "movementType": "barbell"}]
+7. PRESCRIBED EXERCISES:
+   - Array of exercise names: ["Back Squat", "KB Swings", "Burpees"]
+   - For AI context and filtering only
+   - List key movements from the template
 
-6. coachingNotes FIELD:
-   - Additional context not in workoutContent
-   - Scaling options, intensity reminders
-   - Connection to program goals
-   - What to watch for today
+8. DURATION & REST:
+   - estimatedDuration: realistic (10-30 minutes per template)
+   - restAfter: 2-5 minutes between templates, 0 if last template of day
+
+9. GROUP IDS & TEMPLATE IDS:
+   - Generate unique IDs using pattern:
+   - groupId: "group_${phaseContext.userId}_" + timestamp + "_" + random 9-char string
+   - templateId: "template_${phaseContext.userId}_" + timestamp + "_" + random 9-char string
+   - Templates for same day share the same groupId
+   - Use different timestamps/randoms for each templateId to ensure uniqueness
 
 GENERATION REQUIREMENTS:
-- Generate exactly ${phaseContext.phaseDurationDays} daily templates
-- Day numbers: ${phaseContext.phaseStartDay} to ${phaseContext.phaseStartDay + phaseContext.phaseDurationDays - 1} (sequential)
+- Generate templates for ${phaseContext.phaseDurationDays} days
+- Day numbers: ${phaseContext.phaseStartDay} to ${phaseContext.phaseStartDay + phaseContext.phaseDurationDays - 1}
 - Training ${phaseContext.trainingFrequency}x per week - include rest/recovery days
-- Rest days: templateType "optional", brief mobility/stretching in workoutContent
+- Rest days: 1 template (type: "mobility", brief stretching/recovery work)
 - Progressive overload: difficulty increases throughout phase
 - Equipment: ONLY use from [${phaseContext.equipment.join(', ')}]
-- templateId format: "template_day{dayNumber}_primary"
-- scheduledDate: use empty string "" (calculated by system)
-- phaseId: use "phase_1", "phase_2", etc.
-- estimatedDuration: realistic (45-90 min training, 15-30 min rest days)
-- Always set: status="pending", completedAt=null, linkedWorkoutId=null, userFeedback=null, adaptationHistory=[]
+- Each day has 1-5 templates sharing the same groupId
+- Return a flat array of ALL templates for the phase
 
-SCHEMA (return an array of ${phaseContext.phaseDurationDays} templates):
-${WORKOUT_TEMPLATE_STRUCTURE_SCHEMA}`;
+SCHEMA (return a flat array of all templates for ${phaseContext.phaseDurationDays} days):
+${WORKOUT_TEMPLATE_ARRAY_SCHEMA}`;
 };
-

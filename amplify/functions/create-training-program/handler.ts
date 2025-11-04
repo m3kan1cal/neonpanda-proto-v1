@@ -1,5 +1,5 @@
 import { createOkResponse, createErrorResponse } from '../libs/api-helpers';
-import { saveTrainingProgram } from '../../dynamodb/operations';
+import { saveTrainingProgram, getCoachConfig } from '../../dynamodb/operations';
 import { storeTrainingProgramDetailsInS3 } from '../libs/training-program/s3-utils';
 import { calculateEndDate } from '../libs/training-program/calendar-utils';
 import { TrainingProgram, CreateTrainingProgramEvent } from '../libs/training-program/types';
@@ -29,6 +29,13 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     if (!body.phases || body.phases.length === 0) {
       return createErrorResponse(400, 'At least one phase is required');
     }
+
+    // Fetch coach config to get coach name
+    const coachConfig = await getCoachConfig(userId, coachId);
+    if (!coachConfig) {
+      return createErrorResponse(404, `Coach not found: ${coachId}`);
+    }
+    const coachName = coachConfig.attributes.coach_name || 'Unknown Coach';
 
     // Generate program ID (consistent with workout/conversation pattern)
     const shortId = Math.random().toString(36).substring(2, 11);
@@ -85,7 +92,8 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     const trainingProgram: TrainingProgram = {
       programId,
       userId,
-      coachId,
+      coachIds: [coachId], // Array of all coaches (initially just the creating coach)
+      coachNames: [coachName], // Array of all coach names
       creationConversationId: body.conversationId || '',
       name: body.name,
       description: body.description,
@@ -117,7 +125,8 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     console.info('Training program created successfully:', {
       programId,
       userId,
-      coachId,
+      coachIds: [coachId],
+      coachNames: [coachName],
       name: body.name,
       totalDays: body.totalDays,
       phaseCount: phases.length,

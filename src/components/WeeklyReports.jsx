@@ -8,12 +8,12 @@ import { FullPageLoader, CenteredErrorState } from './shared/ErrorStates';
 import CoachHeader from './shared/CoachHeader';
 import CompactCoachCard from './shared/CompactCoachCard';
 import CommandPaletteButton from './shared/CommandPaletteButton';
+import { useNavigationContext } from '../contexts/NavigationContext';
 import WeeklyReportViewer from "./WeeklyReportViewer";
 import ReportAgent from "../utils/agents/ReportAgent";
 import CoachAgent from "../utils/agents/CoachAgent";
 import { WorkoutAgent } from "../utils/agents/WorkoutAgent";
 import { FloatingMenuManager } from './shared/FloatingMenuManager';
-import CommandPalette from './shared/CommandPalette';
 import WeeklyHeatMap from './WeeklyHeatMap';
 import { ChevronDownIcon } from './themes/SynthwaveComponents';
 
@@ -76,28 +76,12 @@ function Reports() {
   const [viewMode, setViewMode] = useState("formatted");
 
   // Command palette state
-  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
-  const [commandPaletteCommand, setCommandPaletteCommand] = useState('');
+  // Global Command Palette state
+  const { setIsCommandPaletteOpen } = useNavigationContext();
 
   // Coach data state (for FloatingMenuManager)
   const [coachData, setCoachData] = useState(null);
 
-  // Handle keyboard shortcuts
-  useEffect(() => {
-    const handleKeyboardShortcuts = (event) => {
-      // Cmd/Ctrl + K to open command palette
-      if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
-        event.preventDefault();
-        setCommandPaletteCommand('');
-        setIsCommandPaletteOpen(true);
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyboardShortcuts);
-    return () => {
-      document.removeEventListener('keydown', handleKeyboardShortcuts);
-    };
-  }, [isCommandPaletteOpen]);
 
   // Initialize workout agent
   useEffect(() => {
@@ -368,24 +352,6 @@ function Reports() {
           </div>
         </div>
       </div>
-
-      {/* Command Palette */}
-      <CommandPalette
-        isOpen={isCommandPaletteOpen}
-        onClose={() => {
-          setIsCommandPaletteOpen(false);
-          setCommandPaletteCommand('');
-        }}
-        prefilledCommand={commandPaletteCommand}
-        workoutAgent={workoutAgentRef.current}
-        userId={userId}
-        coachId={coachId}
-        onNavigation={(type, data) => {
-          if (type === 'conversation-created') {
-            navigate(`/training-grounds/coach-conversations?userId=${data.userId}&coachId=${data.coachId}&conversationId=${data.conversationId}`);
-          }
-        }}
-      />
 
       {/* Floating Menu Manager */}
       <FloatingMenuManager

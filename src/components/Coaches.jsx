@@ -6,7 +6,7 @@ import { buttonPatterns, containerPatterns, layoutPatterns, typographyPatterns, 
 import { Tooltip } from 'react-tooltip';
 import CompactCoachCard from './shared/CompactCoachCard';
 import CommandPaletteButton from './shared/CommandPaletteButton';
-import CommandPalette from './shared/CommandPalette';
+import { useNavigationContext } from '../contexts/NavigationContext';
 import { InlineEditField } from './shared/InlineEditField';
 import {
   NeonBorder,
@@ -94,30 +94,13 @@ function Coaches() {
   const [creatingTemplateId, setCreatingTemplateId] = useState(null);
 
   // Command palette state
-  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
-  const [commandPaletteCommand, setCommandPaletteCommand] = useState('');
+  // Global Command Palette state
+  const { setIsCommandPaletteOpen } = useNavigationContext();
 
   // Auto-scroll to top when component mounts
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
-
-  // Handle keyboard shortcuts
-  useEffect(() => {
-    const handleKeyboardShortcuts = (event) => {
-      // Cmd/Ctrl + K to open command palette
-      if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
-        event.preventDefault();
-        setCommandPaletteCommand('');
-        setIsCommandPaletteOpen(true);
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyboardShortcuts);
-    return () => {
-      document.removeEventListener('keydown', handleKeyboardShortcuts);
-    };
-  }, [isCommandPaletteOpen]);
 
   // Load in-progress sessions and check for building/failed coaches
   const loadInProgressSessions = async () => {
@@ -354,7 +337,7 @@ function Coaches() {
           </header>
 
           {/* Coaches grid skeleton */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {/* Add New Coach Card skeleton */}
             <div className={`${containerPatterns.dashedCard} opacity-60`}>
               <div className="text-center h-full flex flex-col justify-between min-h-[350px]">
@@ -411,7 +394,7 @@ function Coaches() {
               <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-96 mx-auto"></div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {[1, 2].map((i) => (
                 <div key={i} className={`${containerPatterns.dashedCardCyan} p-6 opacity-60`}>
                   <div className="flex items-start space-x-3 mb-4">
@@ -447,7 +430,7 @@ function Coaches() {
             </div>
 
             {/* Template cards skeleton */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[1, 2, 3].map((i) => (
                 <div key={i} className={`${containerPatterns.templateCard} p-6 flex flex-col justify-between h-full min-h-[350px]`}>
                   <div className="flex-1">
@@ -538,7 +521,7 @@ function Coaches() {
         )}
 
         {/* Coaches Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto auto-rows-fr animate-fadeIn">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 auto-rows-fr animate-fadeIn">
             {/* Add New Coach Card */}
             <div
               onClick={isCreatingCustomCoach ? undefined : handleCreateCoach}
@@ -548,7 +531,7 @@ function Coaches() {
                   : 'cursor-pointer'
               }`}
             >
-              <div className="text-center h-full flex flex-col justify-between min-h-[350px]">
+              <div className="text-center h-full flex flex-col justify-between min-h-[400px]">
                 {/* Top Section */}
                 <div className="flex-1 flex flex-col justify-center items-center">
                   {/* Plus Icon or Spinner */}
@@ -568,7 +551,7 @@ function Coaches() {
                   </h3>
 
                   {/* Description */}
-                  <p className="font-rajdhani text-synthwave-text-secondary/60 group-hover:text-synthwave-text-secondary text-sm transition-colors duration-300 text-center mb-4">
+                  <p className="font-rajdhani text-synthwave-text-secondary/60 group-hover:text-synthwave-text-secondary text-sm transition-colors duration-300 text-center mb-4 max-w-xs mx-auto">
                     {isCreatingCustomCoach
                       ? 'Setting up your personalized coach'
                       : 'Design your perfect coach through our guided process'
@@ -840,7 +823,7 @@ function Coaches() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto auto-rows-fr">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 auto-rows-fr">
               {inProgressSessions.map((session) => {
                 // Determine session status and styling
                 const isBuilding = session.configGeneration?.status === 'IN_PROGRESS';
@@ -1048,7 +1031,7 @@ function Coaches() {
 
           {/* Templates Grid */}
           {!agentState.templatesLoading && agentState.templates && agentState.templates.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto auto-rows-fr">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-fr">
               {agentState.templates.map((template) => (
                 <div
                   key={template.template_id}
@@ -1181,23 +1164,6 @@ function Coaches() {
           </div>
         </div>
       )}
-
-      {/* Command Palette */}
-      <CommandPalette
-        isOpen={isCommandPaletteOpen}
-        onClose={() => {
-          setIsCommandPaletteOpen(false);
-          setCommandPaletteCommand('');
-        }}
-        prefilledCommand={commandPaletteCommand}
-        userId={userId}
-        coachId={vesperCoachData.coach_id}
-        onNavigation={(type, data) => {
-          if (type === 'conversation-created') {
-            // Could navigate to a new conversation if needed
-          }
-        }}
-      />
 
       {/* Tooltips */}
       <Tooltip

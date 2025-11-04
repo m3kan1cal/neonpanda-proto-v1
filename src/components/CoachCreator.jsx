@@ -29,7 +29,7 @@ import ProgressIndicator from "./shared/ProgressIndicator";
 import UserAvatar from "./shared/UserAvatar";
 import CompactCoachCard from "./shared/CompactCoachCard";
 import CommandPaletteButton from "./shared/CommandPaletteButton";
-import CommandPalette from "./shared/CommandPalette";
+import { useNavigationContext } from '../contexts/NavigationContext';
 import { parseMarkdown } from "../utils/markdownParser.jsx";
 import CoachCreatorAgent from "../utils/agents/CoachCreatorAgent";
 import { useToast } from "../contexts/ToastContext";
@@ -279,8 +279,8 @@ function CoachCreator() {
   const [isDeleting, setIsDeleting] = useState(false);
 
   // Command palette state
-  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
-  const [commandPaletteCommand, setCommandPaletteCommand] = useState("");
+  // Global Command Palette state
+  const { setIsCommandPaletteOpen } = useNavigationContext();
 
   // Session loading error state
   const [sessionLoadError, setSessionLoadError] = useState(null);
@@ -288,22 +288,6 @@ function CoachCreator() {
   // Add flag to prevent double execution from React StrictMode
   const isSendingMessage = useRef(false);
 
-  // Handle keyboard shortcuts
-  useEffect(() => {
-    const handleKeyboardShortcuts = (event) => {
-      // Cmd/Ctrl + K to open command palette
-      if ((event.metaKey || event.ctrlKey) && event.key === "k") {
-        event.preventDefault();
-        setCommandPaletteCommand("");
-        setIsCommandPaletteOpen(true);
-      }
-    };
-
-    document.addEventListener("keydown", handleKeyboardShortcuts);
-    return () => {
-      document.removeEventListener("keydown", handleKeyboardShortcuts);
-    };
-  }, [isCommandPaletteOpen]);
 
   // Agent state (managed by CoachCreatorAgent)
   const [agentState, setAgentState] = useState({
@@ -970,23 +954,6 @@ function CoachCreator() {
           </div>
         </div>
       )}
-
-      {/* Command Palette */}
-      <CommandPalette
-        isOpen={isCommandPaletteOpen}
-        onClose={() => {
-          setIsCommandPaletteOpen(false);
-          setCommandPaletteCommand("");
-        }}
-        prefilledCommand={commandPaletteCommand}
-        userId={userId}
-        coachId={vesperCoachData.coach_id}
-        onNavigation={(type, data) => {
-          if (type === "conversation-created") {
-            // Could navigate to a new conversation if needed
-          }
-        }}
-      />
 
       {/* Tooltips */}
       <Tooltip

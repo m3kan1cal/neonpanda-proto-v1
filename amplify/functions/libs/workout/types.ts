@@ -45,12 +45,25 @@ export interface Workout {
     extractedAt: Date;
     reviewedBy?: string;
     reviewedAt?: Date;
+    // Template comparison for template-based workouts
+    templateComparison?: {
+      wasScaled: boolean;
+      modifications: string[];
+      adherenceScore: number; // 0-1
+      analysisConfidence: number; // 0-1
+    };
+    normalizationSummary?: string; // Summary of normalization changes
   };
   // NEW: AI-generated summary for coach context and UI display
   summary?: string;
   // Root-level workout name for easier access
   workoutName?: string;
-  // NEW: Training program context when workout is logged from a program template
+
+  // NEW: Training program template relationship (for implicit grouping)
+  templateId?: string; // Links to the WorkoutTemplate this was logged from
+  groupId?: string; // Links workouts from same training day/session
+
+  // Legacy training program context (kept for backward compatibility)
   trainingProgramContext?: {
     programId: string;
     coachId: string;
@@ -357,6 +370,29 @@ export interface WorkoutMetadata {
 }
 
 /**
+ * Template context for workout logging from training programs
+ */
+export interface TemplateContext {
+  programId: string;
+  templateId: string;
+  groupId: string;
+  dayNumber: number;
+  phaseId?: string;
+  phaseName?: string;
+  scoringType: string;
+  prescribedExercises: string[];
+  estimatedDuration: number;
+  prescribedDescription: string;
+  // Scaling analysis from log-workout-template
+  scalingAnalysis?: {
+    wasScaled: boolean;
+    modifications: string[];
+    adherenceScore: number; // 0-1
+    analysisConfidence: number; // 0-1
+  };
+}
+
+/**
  * Event structure for the build-workout Lambda function
  */
 export interface BuildWorkoutEvent {
@@ -371,6 +407,7 @@ export interface BuildWorkoutEvent {
   messageTimestamp?: string; // When the user typed the message (for better completion time accuracy)
   userTimezone?: string; // User's timezone preference (e.g., 'America/Los_Angeles')
   criticalTrainingDirective?: { content: string; enabled: boolean }; // User's critical training directive
+  templateContext?: TemplateContext; // Optional: Context from training program template
 }
 
 /**

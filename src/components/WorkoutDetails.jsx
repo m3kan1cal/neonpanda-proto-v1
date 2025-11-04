@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useSearchParams, useNavigate, useParams } from "react-router-dom";
 import { Tooltip } from 'react-tooltip';
 import { useAuthorizeUser } from "../auth/hooks/useAuthorizeUser";
 import { AccessDenied, LoadingScreen } from "./shared/AccessDenied";
@@ -14,8 +14,8 @@ import CoachAgent from "../utils/agents/CoachAgent";
 import { useToast } from "../contexts/ToastContext";
 import WorkoutViewer from "./WorkoutViewer";
 import { FloatingMenuManager } from "./shared/FloatingMenuManager";
-import CommandPalette from './shared/CommandPalette';
 import IconButton from './shared/IconButton';
+import { useNavigationContext } from '../contexts/NavigationContext';
 import {
   FullPageLoader,
   CenteredErrorState,
@@ -29,11 +29,11 @@ const JsonIcon = () => (
   </svg>
 );
 
-function Workouts() {
+function WorkoutDetails() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { workoutId } = useParams(); // Get workoutId from path params
   const userId = searchParams.get("userId");
-  const workoutId = searchParams.get("workoutId");
   const coachId = searchParams.get("coachId");
 
   // Authorize that URL userId matches authenticated user
@@ -47,31 +47,13 @@ function Workouts() {
   const [workoutToDelete, setWorkoutToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Command palette state
-  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
-  const [commandPaletteCommand, setCommandPaletteCommand] = useState('');
+  // Global Command Palette state
+  const { setIsCommandPaletteOpen } = useNavigationContext();
 
   const workoutAgentRef = useRef(null);
   const coachAgentRef = useRef(null);
 
   const { addToast, success, error, info } = useToast();
-
-  // Handle keyboard shortcuts
-  useEffect(() => {
-    const handleKeyboardShortcuts = (event) => {
-      // Cmd/Ctrl + K to open command palette
-      if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
-        event.preventDefault();
-        setCommandPaletteCommand('');
-        setIsCommandPaletteOpen(true);
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyboardShortcuts);
-    return () => {
-      document.removeEventListener('keydown', handleKeyboardShortcuts);
-    };
-  }, [isCommandPaletteOpen]);
 
   // Workout state
   const [workoutAgentState, setWorkoutAgentState] = useState({
@@ -331,133 +313,6 @@ function Workouts() {
     };
   }, [showDeleteModal]);
 
-  // Render workout list
-  const renderWorkoutList = () => (
-    <div className="space-y-2">
-      {workoutAgentState.isLoadingRecentItems ? (
-        <div className="text-center py-8">
-          <div className="inline-flex items-center space-x-2 text-synthwave-text-secondary font-rajdhani">
-            <div className="w-4 h-4 border-2 border-synthwave-neon-pink border-t-transparent rounded-full animate-spin"></div>
-            <span>Loading workouts...</span>
-          </div>
-        </div>
-      ) : workoutAgentState.recentWorkouts.length === 0 ? (
-        <EmptyState title="No workouts found" size="medium" />
-      ) : (
-        <>
-          <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
-            Recent Workouts
-          </div>
-          {workoutAgentState.recentWorkouts.map((workout) => (
-            <div
-              key={workout.workoutId}
-              onClick={() => {
-                if (workout.workoutId !== workoutId) {
-                  navigate(
-                    `/training-grounds/workouts?userId=${userId}&workoutId=${workout.workoutId}&coachId=${coachId}`
-                  );
-                }
-                // Close the popover after clicking
-                handleClosePopover();
-              }}
-              className={`border rounded-lg p-3 cursor-pointer transition-all duration-200 ${
-                workout.workoutId === workoutId
-                  ? "bg-synthwave-bg-primary/50 border-synthwave-neon-pink"
-                  : "bg-synthwave-bg-primary/30 border-synthwave-neon-pink/20 hover:border-synthwave-neon-pink/40 hover:bg-synthwave-bg-primary/50"
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex-1 min-w-0">
-                  <div className="font-rajdhani text-sm text-white font-medium truncate">
-                    {workoutAgentRef.current?.formatWorkoutSummary(
-                      workout,
-                      true
-                    ) || "Workout"}
-                  </div>
-                  <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
-                    {workoutAgentRef.current?.formatWorkoutTime(
-                      workout.completedAt
-                    ) || "Unknown time"}
-                    {workout.duration ? ` • ` : ""}
-                    <span className="text-synthwave-neon-cyan">
-                      {workout.duration
-                        ? `${Math.round(workout.duration / 60)}min`
-                        : ""}
-                    </span>
-                    {workout.extractionMetadata?.confidence ? ` • ` : ""}
-                    {workout.extractionMetadata?.confidence ? (
-                      <span
-                        className={`${workoutAgentRef.current?.getConfidenceColorClass(workout.extractionMetadata.confidence) || "text-synthwave-text-secondary"}`}
-                      >
-                        {workoutAgentRef.current?.getConfidenceDisplay(
-                          workout.extractionMetadata.confidence
-                        ) || "Unknown"}
-                      </span>
-                    ) : (
-                      ""
-                    )}
-                  </div>
-                </div>
-                <div className="text-synthwave-neon-pink ml-2">
-                  <LightningIcon />
-                </div>
-              </div>
-            </div>
-          ))}
-        </>
-      )}
-    </div>
-  );
-
-  // Render conversation list
-  const renderConversationList = () => (
-    <div className="space-y-2">
-      {coachConversationAgentState.isLoadingRecentItems ? (
-        <div className="text-center py-8">
-          <div className="inline-flex items-center space-x-2 text-synthwave-text-secondary font-rajdhani">
-            <div className="w-4 h-4 border-2 border-synthwave-neon-pink border-t-transparent rounded-full animate-spin"></div>
-            <span>Loading conversations...</span>
-          </div>
-        </div>
-      ) : coachConversationAgentState.recentConversations.length === 0 ? (
-        <EmptyState title="No conversations found" size="medium" />
-      ) : (
-        <>
-          <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
-            Recent Conversations
-          </div>
-          {coachConversationAgentState.recentConversations.map((conv) => (
-            <div
-              key={conv.conversationId}
-              onClick={() => handleConversationClick(conv.conversationId)}
-              className="bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/20 hover:border-synthwave-neon-pink/40 hover:bg-synthwave-bg-primary/50 rounded-lg p-3 cursor-pointer transition-all duration-200"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex-1 min-w-0">
-                  <div className="font-rajdhani text-sm text-white font-medium truncate">
-                    {truncateTitle(conv.title)}
-                  </div>
-                  <div className="font-rajdhani text-xs text-synthwave-text-secondary mt-1">
-                    {formatConversationDate(
-                      conv.metadata?.lastActivity || conv.createdAt
-                    )}{" "}
-                    •{" "}
-                    <span className="text-synthwave-neon-cyan">
-                      {conv.metadata?.totalMessages || 0} messages
-                    </span>
-                  </div>
-                </div>
-                <div className="text-synthwave-neon-pink ml-2">
-                  <ChevronRightIcon />
-                </div>
-              </div>
-            </div>
-          ))}
-        </>
-      )}
-    </div>
-  );
-
   // Show skeleton loading while validating userId or loading workout
   if (
     isValidatingUserId ||
@@ -607,24 +462,6 @@ function Workouts() {
         </div>
       </div>
 
-      {/* Command Palette */}
-      <CommandPalette
-        isOpen={isCommandPaletteOpen}
-        onClose={() => {
-          setIsCommandPaletteOpen(false);
-          setCommandPaletteCommand('');
-        }}
-        prefilledCommand={commandPaletteCommand}
-        workoutAgent={workoutAgentRef.current}
-        userId={userId}
-        coachId={coachId}
-        onNavigation={(type, data) => {
-          if (type === 'conversation-created') {
-            navigate(`/training-grounds/coach-conversations?userId=${data.userId}&coachId=${data.coachId}&conversationId=${data.conversationId}`);
-          }
-        }}
-      />
-
       {/* Floating Menu Manager */}
       <FloatingMenuManager
         userId={userId}
@@ -718,4 +555,5 @@ function Workouts() {
   );
 }
 
-export default Workouts;
+export default WorkoutDetails;
+

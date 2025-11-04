@@ -4,6 +4,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import celebration animations */
+@import './animations/celebrations.css';
+
 /* Set default page background to synthwave theme */
 html {
   height: 100%;
@@ -196,3 +199,4 @@ input:-webkit-autofill,
 input:autofill {
   transition: background-color 5000s ease-in-out 0s !important;
 }
+

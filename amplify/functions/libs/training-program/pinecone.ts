@@ -30,7 +30,8 @@ export const storeTrainingProgramSummaryInPinecone = async (
       programId: program.programId,
       programName: program.name,
       status: program.status,
-      coachId: program.coachId,
+      primaryCoachId: program.coachIds[0], // Primary coach (first in array)
+      coachNames: program.coachNames, // All coach names
       conversationId: program.creationConversationId,
       startDate: program.startDate,
       endDate: program.endDate,

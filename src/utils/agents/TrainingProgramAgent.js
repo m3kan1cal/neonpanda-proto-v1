@@ -1,9 +1,10 @@
 import {
-  listTrainingPrograms,
+  getTrainingPrograms,
   getTrainingProgram,
-  getTodaysWorkout,
+  getWorkoutTemplates,
   updateTrainingProgram,
-  logWorkout
+  logWorkout,
+  skipWorkout
 } from '../apis/trainingProgramApi.js';
 import { PROGRAM_STATUS } from '../../constants/conversationModes.js';
 
@@ -28,6 +29,9 @@ export class TrainingProgramAgent {
     this.onError = () => {};
     this.onProgramCreated = () => {};
     this.onProgramCompleted = () => {};
+
+    // Polling intervals for workout linking
+    this.pollingIntervals = new Map();
 
     // Initialize state
     this.programState = {
@@ -115,7 +119,7 @@ export class TrainingProgramAgent {
     });
 
     try {
-      const response = await listTrainingPrograms(this.userId, this.coachId, options);
+      const response = await getTrainingPrograms(this.userId, this.coachId, options);
 
       const programs = response.programs || [];
       const activePrograms = programs.filter(p => p.status === PROGRAM_STATUS.ACTIVE);
@@ -199,12 +203,16 @@ export class TrainingProgramAgent {
   }
 
   /**
-   * Load today's workout for a program
-   * @param {string} programId - The program ID (defaults to active program)
+   * Load workout templates for a program
+   * @param {string} programId - The program ID (defaults to active program if not provided)
+   * @param {Object} [options] - Optional query parameters
+   * @param {boolean} [options.today] - Get today's workout templates
+   * @param {number} [options.day] - Get templates for specific day number
+   * @returns {Promise<Object>} - The API response with workout templates
    */
-  async loadTodaysWorkout(programId = null) {
+  async loadWorkoutTemplates(programId = null, options = {}) {
     if (!this.userId || !this.coachId) {
-      console.error('TrainingProgramAgent.loadTodaysWorkout: userId and coachId are required');
+      console.error('TrainingProgramAgent.loadWorkoutTemplates: userId and coachId are required');
       return;
     }
 
@@ -212,7 +220,7 @@ export class TrainingProgramAgent {
     const targetProgramId = programId || this.programState.activeProgram?.programId;
 
     if (!targetProgramId) {
-      console.error('TrainingProgramAgent.loadTodaysWorkout: No programId provided and no active program found');
+      console.error('TrainingProgramAgent.loadWorkoutTemplates: No programId provided and no active program found');
       return;
     }
 
@@ -222,16 +230,23 @@ export class TrainingProgramAgent {
     });
 
     try {
-      const response = await getTodaysWorkout(this.userId, this.coachId, targetProgramId);
+      const response = await getWorkoutTemplates(this.userId, this.coachId, targetProgramId, options);
 
-      this._updateState({
-        todaysWorkout: response.todaysWorkoutTemplates || null,
-        isLoadingTodaysWorkout: false
-      });
+      // If loading today's workout, update the todaysWorkout state
+      if (options.today) {
+        this._updateState({
+          todaysWorkout: response.todaysWorkoutTemplates || response.workoutTemplates || null,
+          isLoadingTodaysWorkout: false
+        });
+      } else {
+        this._updateState({
+          isLoadingTodaysWorkout: false
+        });
+      }
 
       return response;
     } catch (error) {
-      console.error('TrainingProgramAgent.loadTodaysWorkout: Error:', error);
+      console.error('TrainingProgramAgent.loadWorkoutTemplates: Error:', error);
       this._updateState({
         error: error.message,
         isLoadingTodaysWorkout: false
@@ -319,12 +334,16 @@ export class TrainingProgramAgent {
   }
 
   /**
-   * Log a workout from a template
+   * Log a workout from a template with automatic polling for linkedWorkoutId
    * @param {string} programId - The program ID
    * @param {string} templateId - The workout template ID
    * @param {Object} workoutData - The workout data to log
+   * @param {Object} options - Optional configuration
+   * @param {boolean} options.today - Whether this is today's workout
+   * @param {number} options.day - Specific day number if not today
+   * @returns {Promise<Object>} - The API response
    */
-  async logWorkoutFromTemplate(programId, templateId, workoutData) {
+  async logWorkoutFromTemplate(programId, templateId, workoutData, options = {}) {
     if (!this.userId || !this.coachId) {
       console.error('TrainingProgramAgent.logWorkoutFromTemplate: userId and coachId are required');
       return;
@@ -347,11 +366,10 @@ export class TrainingProgramAgent {
         isLoggingWorkout: false
       });
 
-      // Reload today's workout and program details to reflect the completion
-      await Promise.all([
-        this.loadTodaysWorkout(programId),
-        this.loadTrainingProgram(programId)
-      ]);
+      // Start polling for linkedWorkoutId after a short delay
+      setTimeout(() => {
+        this._startPollingForLinkedWorkout(programId, templateId, options);
+      }, 3000);
 
       return response;
     } catch (error) {
@@ -359,6 +377,180 @@ export class TrainingProgramAgent {
       this._updateState({
         error: error.message,
         isLoggingWorkout: false
+      });
+
+      if (this.onError) {
+        this.onError(error);
+      }
+
+      throw error;
+    }
+  }
+
+  /**
+   * Internal method to poll for linkedWorkoutId after logging
+   * @private
+   */
+  async _startPollingForLinkedWorkout(programId, templateId, options = {}) {
+    let pollCount = 0;
+    const maxPolls = 60; // Max 3 minutes (60 * 3 seconds)
+
+    const pollInterval = setInterval(async () => {
+      pollCount++;
+
+      try {
+        // Reload workout templates silently
+        const freshData = await this.loadWorkoutTemplates(programId, options);
+
+        if (freshData && freshData.templates) {
+          const updatedTemplate = freshData.templates.find(t => t.templateId === templateId);
+
+          // If linkedWorkoutId is now available, stop polling
+          if (updatedTemplate && updatedTemplate.linkedWorkoutId) {
+            console.log('✅ linkedWorkoutId found:', updatedTemplate.linkedWorkoutId);
+            clearInterval(pollInterval);
+            this.pollingIntervals.delete(templateId);
+          }
+        } else if (freshData && freshData.todaysWorkoutTemplates && freshData.todaysWorkoutTemplates.templates) {
+          const updatedTemplate = freshData.todaysWorkoutTemplates.templates.find(t => t.templateId === templateId);
+
+          if (updatedTemplate && updatedTemplate.linkedWorkoutId) {
+            console.log('✅ linkedWorkoutId found:', updatedTemplate.linkedWorkoutId);
+            clearInterval(pollInterval);
+            this.pollingIntervals.delete(templateId);
+          }
+        }
+
+        // Stop polling after max attempts
+        if (pollCount >= maxPolls) {
+          console.warn('⏱️ Max polling attempts reached for template:', templateId);
+          clearInterval(pollInterval);
+          this.pollingIntervals.delete(templateId);
+        }
+      } catch (err) {
+        console.error('Error polling for linkedWorkoutId:', err);
+        // Continue polling even if there's an error
+      }
+    }, 3000); // Poll every 3 seconds
+
+    // Store interval ID for cleanup
+    this.pollingIntervals.set(templateId, pollInterval);
+  }
+
+  /**
+   * Skip a workout template
+   * @param {string} programId - The program ID
+   * @param {string} templateId - The workout template ID
+   * @param {Object} options - Optional configuration
+   * @param {string} options.skipReason - Reason for skipping
+   * @param {string} options.skipNotes - Additional notes
+   * @param {boolean} options.today - Whether this is today's workout
+   * @param {number} options.day - Specific day number if not today
+   * @returns {Promise<Object>} - The API response
+   */
+  async skipWorkoutTemplate(programId, templateId, options = {}) {
+    if (!this.userId || !this.coachId) {
+      console.error('TrainingProgramAgent.skipWorkoutTemplate: userId and coachId are required');
+      return;
+    }
+
+    if (!programId || !templateId) {
+      console.error('TrainingProgramAgent.skipWorkoutTemplate: programId and templateId are required');
+      return;
+    }
+
+    this._updateState({
+      isUpdating: true,
+      error: null
+    });
+
+    try {
+      const response = await skipWorkout(this.userId, this.coachId, programId, templateId, {
+        skipReason: options.skipReason || 'Skipped by user',
+        skipNotes: options.skipNotes,
+        action: 'skip'
+      });
+
+      this._updateState({
+        isUpdating: false
+      });
+
+      // Reload workout templates to reflect the skip
+      const reloadOptions = {};
+      if (options.today) {
+        reloadOptions.today = true;
+      } else if (options.day) {
+        reloadOptions.day = options.day;
+      }
+
+      await this.loadWorkoutTemplates(programId, reloadOptions);
+
+      return response;
+    } catch (error) {
+      console.error('TrainingProgramAgent.skipWorkoutTemplate: Error:', error);
+      this._updateState({
+        error: error.message,
+        isUpdating: false
+      });
+
+      if (this.onError) {
+        this.onError(error);
+      }
+
+      throw error;
+    }
+  }
+
+  /**
+   * Unskip a workout template (revert to pending status)
+   * @param {string} programId - The program ID
+   * @param {string} templateId - The workout template ID
+   * @param {Object} options - Optional configuration
+   * @param {boolean} options.today - Whether this is today's workout
+   * @param {number} options.day - Specific day number if not today
+   * @returns {Promise<Object>} - The API response
+   */
+  async unskipWorkoutTemplate(programId, templateId, options = {}) {
+    if (!this.userId || !this.coachId) {
+      console.error('TrainingProgramAgent.unskipWorkoutTemplate: userId and coachId are required');
+      return;
+    }
+
+    if (!programId || !templateId) {
+      console.error('TrainingProgramAgent.unskipWorkoutTemplate: programId and templateId are required');
+      return;
+    }
+
+    this._updateState({
+      isUpdating: true,
+      error: null
+    });
+
+    try {
+      const response = await skipWorkout(this.userId, this.coachId, programId, templateId, {
+        action: 'unskip'
+      });
+
+      this._updateState({
+        isUpdating: false
+      });
+
+      // Reload workout templates to reflect the unskip
+      const reloadOptions = {};
+      if (options.today) {
+        reloadOptions.today = true;
+      } else if (options.day) {
+        reloadOptions.day = options.day;
+      }
+
+      await this.loadWorkoutTemplates(programId, reloadOptions);
+
+      return response;
+    } catch (error) {
+      console.error('TrainingProgramAgent.unskipWorkoutTemplate: Error:', error);
+      this._updateState({
+        error: error.message,
+        isUpdating: false
       });
 
       if (this.onError) {
@@ -440,6 +632,12 @@ export class TrainingProgramAgent {
    * Clean up resources
    */
   destroy() {
+    // Clean up polling intervals
+    this.pollingIntervals.forEach((intervalId) => {
+      clearInterval(intervalId);
+    });
+    this.pollingIntervals.clear();
+
     // Clean up any resources
     this.onStateChange = null;
     this.onError = null;

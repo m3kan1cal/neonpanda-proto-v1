@@ -53,6 +53,7 @@ export function createCoreApi(
   getTrainingProgramsLambda: lambda.IFunction,
   updateTrainingProgramLambda: lambda.IFunction,
   logWorkoutTemplateLambda: lambda.IFunction,
+  skipWorkoutTemplateLambda: lambda.IFunction,
   getWorkoutTemplateLambda: lambda.IFunction,
   userPoolAuthorizer: HttpUserPoolAuthorizer
 ) {
@@ -361,6 +362,11 @@ export function createCoreApi(
     logWorkoutTemplateLambda
   );
 
+  const skipWorkoutTemplateIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
+    'SkipWorkoutTemplateIntegration',
+    skipWorkoutTemplateLambda
+  );
+
   const getWorkoutTemplateIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
     'GetWorkoutTemplateIntegration',
     getWorkoutTemplateLambda
@@ -413,6 +419,7 @@ export function createCoreApi(
     getTrainingPrograms: getTrainingProgramsIntegration,
     updateTrainingProgram: updateTrainingProgramIntegration,
     logWorkoutTemplate: logWorkoutTemplateIntegration,
+    skipWorkoutTemplate: skipWorkoutTemplateIntegration,
     getWorkoutTemplate: getWorkoutTemplateIntegration
   };
 
@@ -524,6 +531,14 @@ export function createCoreApi(
     path: '/users/{userId}/coaches/{coachId}/programs/{programId}/templates/{templateId}/log',
     methods: [apigatewayv2.HttpMethod.POST],
     integration: integrations.logWorkoutTemplate,
+    authorizer: userPoolAuthorizer
+  });
+
+  // Skip workout template (mark template as skipped, advance program)
+  httpApi.addRoutes({
+    path: '/users/{userId}/coaches/{coachId}/programs/{programId}/templates/{templateId}/skip',
+    methods: [apigatewayv2.HttpMethod.POST],
+    integration: integrations.skipWorkoutTemplate,
     authorizer: userPoolAuthorizer
   });
 

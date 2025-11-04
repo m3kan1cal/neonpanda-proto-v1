@@ -14,7 +14,7 @@ export async function storeTrainingProgramDetailsInS3(
   programId: string,
   userId: string,
   coachId: string,
-  dailyWorkoutTemplates: WorkoutTemplate[],
+  workoutTemplates: WorkoutTemplate[],
   programContext: TrainingProgramDetails['programContext'],
   metadata: {
     generatedBy: string;
@@ -32,7 +32,7 @@ export async function storeTrainingProgramDetailsInS3(
     const programDetails: TrainingProgramDetails = {
       programId,
       programContext,
-      dailyWorkoutTemplates,
+      workoutTemplates,
       generationMetadata: {
         generatedAt: new Date(),
         generatedBy: metadata.generatedBy,
@@ -48,7 +48,7 @@ export async function storeTrainingProgramDetailsInS3(
         programId,
         userId,
         coachId,
-        templateCount: String(dailyWorkoutTemplates.length),
+        templateCount: String(workoutTemplates.length),
         generatedAt: new Date().toISOString(),
       },
     });
@@ -58,7 +58,7 @@ export async function storeTrainingProgramDetailsInS3(
       programId,
       userId,
       coachId,
-      templateCount: dailyWorkoutTemplates.length,
+      templateCount: workoutTemplates.length,
     });
 
     return key;
@@ -81,7 +81,7 @@ export async function getTrainingProgramDetailsFromS3(
     programDetails.generationMetadata.generatedAt = new Date(
       programDetails.generationMetadata.generatedAt
     );
-    programDetails.dailyWorkoutTemplates = programDetails.dailyWorkoutTemplates.map((template) => ({
+    programDetails.workoutTemplates = programDetails.workoutTemplates.map((template) => ({
       ...template,
       completedAt: template.completedAt ? new Date(template.completedAt) : null,
       userFeedback: template.userFeedback
@@ -90,16 +90,12 @@ export async function getTrainingProgramDetailsFromS3(
             timestamp: new Date(template.userFeedback.timestamp),
           }
         : null,
-      adaptationHistory: template.adaptationHistory.map((adaptation) => ({
-        ...adaptation,
-        timestamp: new Date(adaptation.timestamp),
-      })),
     }));
 
     console.info('Successfully retrieved program details from S3:', {
       key: s3Key,
       programId: programDetails.programId,
-      templateCount: programDetails.dailyWorkoutTemplates.length,
+      templateCount: programDetails.workoutTemplates.length,
     });
 
     return programDetails;
@@ -127,7 +123,7 @@ export async function saveTrainingProgramDetailsToS3(
     console.info('Successfully saved program details to S3:', {
       key: s3Key,
       programId: programDetails.programId,
-      templateCount: programDetails.dailyWorkoutTemplates.length,
+      templateCount: programDetails.workoutTemplates.length,
     });
 
     return s3Key;
@@ -154,7 +150,7 @@ export async function updateWorkoutInS3(
     }
 
     // Find and update the specific workout template
-    const templateIndex = programDetails.dailyWorkoutTemplates.findIndex(
+    const templateIndex = programDetails.workoutTemplates.findIndex(
       (w: WorkoutTemplate) => w.dayNumber === dayNumber
     );
 
@@ -165,8 +161,8 @@ export async function updateWorkoutInS3(
     }
 
     // Merge updates
-    programDetails.dailyWorkoutTemplates[templateIndex] = {
-      ...programDetails.dailyWorkoutTemplates[templateIndex],
+    programDetails.workoutTemplates[templateIndex] = {
+      ...programDetails.workoutTemplates[templateIndex],
       ...updates,
     };
 
@@ -213,7 +209,7 @@ export async function getWorkoutFromS3(
       return null;
     }
 
-    const template = programDetails.dailyWorkoutTemplates.find(
+    const template = programDetails.workoutTemplates.find(
       (w: WorkoutTemplate) => w.dayNumber === dayNumber
     );
 
@@ -238,7 +234,7 @@ export async function getMultipleWorkoutsFromS3(
       return [];
     }
 
-    const templates = programDetails.dailyWorkoutTemplates.filter((w: WorkoutTemplate) =>
+    const templates = programDetails.workoutTemplates.filter((w: WorkoutTemplate) =>
       dayNumbers.includes(w.dayNumber)
     );
 
@@ -250,11 +246,12 @@ export async function getMultipleWorkoutsFromS3(
 }
 
 /**
- * Get workout templates for a specific phase
+ * Get workout templates for a specific phase (by day range)
  */
 export async function getWorkoutsForPhase(
   s3Key: string,
-  phaseId: string
+  phaseStartDay: number,
+  phaseEndDay: number
 ): Promise<WorkoutTemplate[]> {
   try {
     const programDetails = await getTrainingProgramDetailsFromS3(s3Key);
@@ -263,8 +260,8 @@ export async function getWorkoutsForPhase(
       return [];
     }
 
-    const templates = programDetails.dailyWorkoutTemplates.filter(
-      (w: WorkoutTemplate) => w.phaseId === phaseId
+    const templates = programDetails.workoutTemplates.filter(
+      (w: WorkoutTemplate) => w.dayNumber >= phaseStartDay && w.dayNumber <= phaseEndDay
     );
 
     return templates;
