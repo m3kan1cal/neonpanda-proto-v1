@@ -13,10 +13,14 @@ export const routeMap = {
   'training-grounds': 'Training Grounds',
   'coach-conversations': 'Coach Conversations',
   'workouts': 'Workouts',
-  'manage-workouts': 'Manage Workouts',
-  'manage-memories': 'Manage Memories',
-  'manage-conversations': 'Manage Coach Conversations',
-  'reports': 'View Reports',
+  'manage-workouts': 'Workouts',
+  // Workout details - shown when workoutId param is present
+  ':workoutId': 'Workout Details',
+  'manage-memories': 'Memories',
+  'manage-conversations': 'Coach Conversations',
+  'training-programs': 'Training Programs',
+  'today': 'View Workouts',
+  'reports': 'Reports',
   'weekly': 'Weekly Reports',
   'template/synthwave': 'Synthwave Theme'
 };
@@ -37,7 +41,7 @@ export const getRouteDisplayName = (segment) => {
 
 /**
  * Process a pathname into an array of display names
- * @param {string} pathname - The full pathname (e.g., '/training-grounds/workouts')
+ * @param {string} pathname - The full pathname (e.g., '/training-grounds/workouts/:workoutId')
  * @returns {string[]} - Array of display names (e.g., ['Training Grounds', 'Workouts'])
  */
 export const getRouteDisplayNames = (pathname) => {
@@ -101,7 +105,9 @@ export const buildRouteWithParams = (pathSegments, routeName, searchParams) => {
     'training-grounds',
     'manage-workouts',
     'manage-memories',
-    'manage-conversations'
+    'manage-conversations',
+    'training-programs',
+    'today'
   ];
 
   if (preserveUserCoachRoutes.includes(routeName) &&

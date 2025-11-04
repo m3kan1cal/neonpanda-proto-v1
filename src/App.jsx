@@ -23,12 +23,14 @@ import Coaches from "./components/Coaches";
 import TrainingGrounds from "./components/TrainingGrounds";
 import CoachConversations from "./components/CoachConversations";
 import StreamingDebugTest from "./components/StreamingDebugTest";
-import Workouts from "./components/Workouts";
+import WorkoutDetails from "./components/WorkoutDetails";
 import ManageWorkouts from "./components/ManageWorkouts";
 import ManageMemories from "./components/ManageMemories";
 import ManageCoachConversations from "./components/ManageCoachConversations";
 import ViewReports from "./components/ViewReports";
 import WeeklyReports from "./components/WeeklyReports";
+import ManageTrainingPrograms from "./components/training-programs/ManageTrainingPrograms";
+import ViewWorkouts from "./components/training-programs/ViewWorkouts";
 import Changelog from "./components/Changelog";
 import Settings from "./components/Settings";
 import Theme from "./components/Theme";
@@ -222,10 +224,10 @@ function AppContent() {
             }
           />
           <Route
-            path="/training-grounds/workouts"
+            path="/training-grounds/workouts/:workoutId"
             element={
               <ProtectedRoute>
-                <Workouts />
+                <WorkoutDetails />
               </ProtectedRoute>
             }
           />
@@ -266,6 +268,30 @@ function AppContent() {
             element={
               <ProtectedRoute>
                 <WeeklyReports />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/training-grounds/training-programs"
+            element={
+              <ProtectedRoute>
+                <ManageTrainingPrograms />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/training-grounds/training-programs/:programId/today"
+            element={
+              <ProtectedRoute>
+                <ViewWorkouts />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/training-grounds/training-programs/:programId/day/:dayNumber"
+            element={
+              <ProtectedRoute>
+                <ViewWorkouts />
               </ProtectedRoute>
             }
           />

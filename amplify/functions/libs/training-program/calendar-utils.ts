@@ -127,14 +127,16 @@ export function isWorkoutOverdue(
  */
 export function getWorkoutsForWeek(
   workouts: WorkoutTemplate[],
-  weekStartDate: string
+  programStartDate: string,
+  weekStartDate: string,
+  pausedDuration: number = 0
 ): WorkoutTemplate[] {
   const weekStart = new Date(weekStartDate);
   const weekEnd = new Date(weekStart);
   weekEnd.setDate(weekEnd.getDate() + 6);
 
   return workouts.filter((workout) => {
-    const workoutDate = new Date(workout.scheduledDate);
+    const workoutDate = new Date(calculateScheduledDate(programStartDate, workout.dayNumber, pausedDuration));
     return workoutDate >= weekStart && workoutDate <= weekEnd;
   });
 }

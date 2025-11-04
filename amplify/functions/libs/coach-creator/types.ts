@@ -8,6 +8,13 @@ export interface DynamoDBItem<T = any> {
   entityType: string;
   createdAt: string;
   updatedAt: string;
+  // Optional GSI keys for indexed queries
+  gsi1pk?: string;
+  gsi1sk?: string;
+  gsi2pk?: string;
+  gsi2sk?: string;
+  gsi3pk?: string;
+  gsi3sk?: string;
 }
 
 // Contact form specific attributes interface

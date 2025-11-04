@@ -10,6 +10,88 @@
 
 export const changelogEntries = [
   {
+    version: "Release v1.0.20251104-beta",
+    date: "2025-11-04",
+    changes: {
+      added: [
+        "Day completion celebration animations with 4 visual styles (Neon Burst, Laser Grid, Lightning Bolts, Starfield Warp) triggering when all workouts for a day are completed",
+        "Laser Grid animation as default celebration with animated grid lines, glowing intersections, and flash effects",
+        "Separate celebrations.css file for organized animation keyframes (neonBurst, scanLines, laserBeamH, laserBeamV, gridFlash, lightning, electricGlow, warpStar, warpTunnel)",
+        "Comprehensive workout template status system with visual indicators: '✓ Logged' badge (cyan), 'Skipped ✕' badge (cyan), and 'Day Complete 🎉' badge (pink)",
+        "Continuous polling system for linkedWorkoutId after workout logging with 3-second intervals, 60-poll maximum, and automatic cleanup",
+        "Skip workout functionality with full API integration, visual feedback (spinner, badge, dimmed card), and optional skip reason/notes",
+        "Unskip workout functionality allowing users to revert skipped workouts back to pending status with single button click",
+        "Skipped workouts tracking in training programs with skippedWorkouts field incremented/decremented on skip/unskip actions",
+        "Combined workout statistics display on ManageTrainingPrograms cards showing completed, skipped, and total workouts on single line with icons (✓ X / ✕ Y of Z workouts)",
+        "SkipAction const enum (SKIP, UNSKIP) in skip-workout-template handler for type-safe action handling",
+        "View Workout button for completed templates linking directly to logged workout details page with all captured user edits",
+        "Processing Workout spinner state with animated loading indicator on Log Workout button during backend processing",
+        "Empty state messaging for rest days on specific day view (No workouts scheduled for day X)",
+        "Toast notification system for workout actions (success: logging initiated, template skipped, template unskipped; errors: API failures)",
+        "Specific day view functionality allowing navigation to any program day via /training-grounds/training-programs/{programId}/day/{dayNumber} route",
+        "Backend Lambda support for ?day=X query parameter in get-workout-templates handler (lines 81-111)",
+        "API Gateway route for specific day template retrieval at /users/{userId}/coaches/{coachId}/programs/{programId}/templates?day={dayNumber}",
+        "TrainingProgramAgent.loadWorkoutTemplates() { day } option for loading specific day's workout templates",
+        "Dynamic breadcrumb text based on route ('Today's Workouts' for /today vs 'View Workouts' for /day/X)",
+        "Map-based polling interval management in TrainingProgramAgent with automatic cleanup on component unmount",
+        "Exponential backoff retry logic in sync-log-subscriptions handler to prevent CloudWatch API throttling",
+        "250ms delays between CloudWatch API calls to stay below 5 requests/second rate limit",
+        "Celebration animation state management (showCelebration, celebrationType) in ViewWorkouts component"
+      ],
+      changed: [
+        "ViewWorkouts page refactored to centralize workout actions (log, skip, unskip) in TrainingProgramAgent instead of component-level logic",
+        "Workout template cards now display comprehensive status-based UI: pending shows Log/Skip buttons, completed shows View Workout button, skipped shows Unskip Workout button",
+        "Workout description textarea now disabled (read-only) for completed and skipped templates preventing accidental edits",
+        "Helper text below workout description dynamically updates based on template status: '✓ Workout logged - This is the workout as it was logged...' for completed templates",
+        "Workout title text color changes to muted gray (text-synthwave-text-muted) for completed and skipped templates for visual hierarchy",
+        "Difficulty badges hidden on completed and skipped workout cards to reduce visual clutter",
+        "Day Complete badge repositioned from workout stats line to right of training program name for better visibility",
+        "Program context section spacing tightened on ViewWorkouts (mb-8 → mb-4, program name mb-2 → mb-1, metadata py-1 → pb-1)",
+        "Program context section displays phase name, current day, and total workouts scheduled for better user orientation",
+        "Workout template logging moved to TrainingProgramAgent.logWorkoutFromTemplate() method for cleaner separation of concerns",
+        "Skip workout button text changed from 'Skip Workout' to 'Skipped Workout' when in skipped state",
+        "Skipped badge styling updated to match logged badge with neon cyan color and ✕ icon (previously purple)",
+        "Completed/logged workout cards now show 75% opacity for visual distinction from pending workouts",
+        "Training program day advancement logic fixed to only advance when ALL workouts for that day are completed/skipped (not just primary template)",
+        "Adherence rate calculation corrected to store as percentage (multiply by 100) instead of decimal in backend",
+        "ManageTrainingPrograms workout stats redesigned with color-coded metrics (completed: neon pink, skipped: neon cyan, total: secondary text)",
+        "Last activity timestamp on program cards now displays in neon cyan for consistency",
+        "Progress percentage on program cards now displays in neon cyan matching other key metrics",
+        "Command Palette implementation standardized across 10 management pages to use global instance from App.jsx instead of local duplicates",
+        "Keyboard shortcut handlers (Cmd/Ctrl+K) consolidated to single global handler in App.jsx, removing 10 duplicate local handlers",
+        "NavigationContext integrated across all management pages for centralized Command Palette state management",
+        "Tooltip system standardized across ViewWorkouts, ManageTrainingPrograms, and TrainingGrounds with 'Go to the Training Grounds' message",
+        "Textarea refs in ViewWorkouts changed from array to Map keyed by templateId for reliable user edit capture",
+        "Skip workout API endpoint enhanced to support both skip and unskip actions via action parameter ('skip' | 'unskip')",
+        "Program stats updated to show skipped count even when zero for transparency",
+        "Training program creation now initializes skippedWorkouts: 0 for proper stat tracking"
+      ],
+      fixed: [
+        "Critical bug where program day advanced too early when only first workout of day was completed instead of waiting for all workouts",
+        "User workout edits not being captured due to textarea ref array indices mismatching template map order (switched to Map keyed by templateId)",
+        "Template status showing 'scheduled' on unskip causing TypeScript error (changed to 'pending' to match WorkoutTemplate type)",
+        "Adherence rate displaying 0% when should show 14% due to backend storing decimal (0.14) instead of percentage (14)",
+        "Skipped workouts not being tracked or displayed in program statistics due to missing increment/decrement logic",
+        "CloudWatch ThrottlingException errors in sync-log-subscriptions Lambda due to exceeding 5 requests/second API rate limit",
+        "CORS policy error when attempting to unskip workouts due to missing /unskip API endpoint (consolidated to /skip with action param)",
+        "Duplicate CommandPalette modals opening simultaneously (local + global) when pressing Cmd/K on 10 management pages",
+        "linkedWorkoutId not updating in UI after workout logging due to single-shot polling instead of continuous polling",
+        "Skip workout button not showing visual feedback (spinner) or updating card state after API call",
+        "Celebration animations not triggering on day completion due to missing status check logic",
+        "Polling intervals not being cleared properly, causing memory leaks on component unmount",
+        "Template status not reverting correctly on unskip (was set to 'scheduled' instead of 'pending')",
+        "Program stats showing '0' for adherence rate even with completed workouts due to backend calculation error"
+      ],
+      removed: [
+        "Local CommandPalette components and state from 10 management pages (TrainingGrounds, ManageWorkouts, WorkoutDetails, Coaches, CoachConversations, CoachCreator, ManageMemories, ViewReports, ManageCoachConversations, WeeklyReports)",
+        "Local keyboard shortcut handlers (Cmd/Ctrl+K useEffect hooks) from 10 management pages now using global handler",
+        "Temporary celebration test buttons from ViewWorkouts page after implementing automatic trigger",
+        "Unskip workout API endpoint (/unskip) consolidated into skip endpoint with action parameter",
+        "Verbose debugging artifacts from Phase 3B testing document (244 lines removed)"
+      ]
+    }
+  },
+  {
     version: "Release v1.0.20251026-beta",
     date: "2025-10-26",
     changes: {

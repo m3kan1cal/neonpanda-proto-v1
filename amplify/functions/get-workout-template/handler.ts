@@ -59,7 +59,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
 
     // Case 1: Specific template by ID
     if (templateId) {
-      const template = programDetails.dailyWorkoutTemplates.find(
+      const template = programDetails.workoutTemplates.find(
         (t) => t.templateId === templateId
       );
 
@@ -67,9 +67,8 @@ const baseHandler: AuthenticatedHandler = async (event) => {
         return createErrorResponse(404, 'Workout template not found');
       }
 
-      const phase = program.phases.find(
-        (p) => p.phaseId === template.phaseId
-      );
+      // Get phase from day number
+      const phase = getPhaseForDay(program, template.dayNumber);
 
       return createOkResponse({
         template,
@@ -90,20 +89,22 @@ const baseHandler: AuthenticatedHandler = async (event) => {
         return createErrorResponse(400, `Invalid day number. Must be between 1 and ${program.totalDays}`);
       }
 
-      const templates = programDetails.dailyWorkoutTemplates
-        .filter((t) => t.dayNumber === dayNumber)
-        .sort((a, b) => a.templatePriority - b.templatePriority);
+      const templates = programDetails.workoutTemplates
+        .filter((t) => t.dayNumber === dayNumber);
 
       if (templates.length === 0) {
         return createErrorResponse(404, 'No templates found for this day');
       }
 
       const phase = getPhaseForDay(program, dayNumber);
+      const phaseIndex = phase ? program.phases.findIndex(p => p.phaseId === phase.phaseId) : -1;
+      const phaseNumber = phaseIndex >= 0 ? phaseIndex + 1 : null;
 
       return createOkResponse({
         templates,
         dayNumber: dayNumber,
         phaseName: phase?.name || 'Unknown Phase',
+        phaseNumber: phaseNumber,
         programName: program.name,
         totalDays: program.totalDays,
       });
@@ -117,9 +118,8 @@ const baseHandler: AuthenticatedHandler = async (event) => {
         return createErrorResponse(400, 'Program is complete. No more workouts scheduled.');
       }
 
-      const templates = programDetails.dailyWorkoutTemplates
-        .filter((t) => t.dayNumber === currentDay)
-        .sort((a, b) => a.templatePriority - b.templatePriority);
+      const templates = programDetails.workoutTemplates
+        .filter((t) => t.dayNumber === currentDay);
 
       if (templates.length === 0) {
         return createErrorResponse(404, 'No templates found for today');
@@ -127,14 +127,14 @@ const baseHandler: AuthenticatedHandler = async (event) => {
 
       // Get phase info
       const currentPhase = getPhaseForDay(program, currentDay);
+      const phaseIndex = currentPhase ? program.phases.findIndex(p => p.phaseId === currentPhase.phaseId) : -1;
+      const phaseNumber = phaseIndex >= 0 ? phaseIndex + 1 : null;
 
       // Get next workout preview (first template of next day)
-      const nextDayTemplates = programDetails.dailyWorkoutTemplates.filter(
+      const nextDayTemplates = programDetails.workoutTemplates.filter(
         (t) => t.dayNumber === currentDay + 1
       );
-      const nextDayPrimaryTemplate = nextDayTemplates.find(
-        (t) => t.templateType === 'primary'
-      );
+      const nextDayFirstTemplate = nextDayTemplates[0];
 
       const todaysWorkoutTemplates: TodaysWorkoutTemplates = {
         programId: program.programId,
@@ -142,12 +142,14 @@ const baseHandler: AuthenticatedHandler = async (event) => {
         dayNumber: currentDay,
         totalDays: program.totalDays,
         phaseName: currentPhase?.name || 'Unknown Phase',
+        phaseNumber: phaseNumber,
+        groupId: templates[0]?.groupId || '',
         templates,
-        nextWorkout: nextDayPrimaryTemplate
+        nextWorkout: nextDayFirstTemplate
           ? {
               dayNumber: currentDay + 1,
-              name: nextDayPrimaryTemplate.name,
-              scheduledDate: nextDayPrimaryTemplate.scheduledDate,
+              templateName: nextDayFirstTemplate.name,
+              scheduledDate: '', // No longer stored, calculated on demand
             }
           : undefined,
       };
@@ -159,7 +161,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
         completionStatus: program.dayCompletionStatus?.[currentDay] || {
           primaryComplete: false,
           optionalCompleted: 0,
-          totalOptional: templates.filter((t) => t.templateType !== 'primary').length,
+          totalOptional: templates.length - 1, // All but first template
         },
       });
     }
@@ -168,8 +170,8 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     return createOkResponse({
       programId: program.programId,
       programName: program.name,
-      templates: programDetails.dailyWorkoutTemplates.sort(
-        (a, b) => a.dayNumber - b.dayNumber || a.templatePriority - b.templatePriority
+      templates: programDetails.workoutTemplates.sort(
+        (a, b) => a.dayNumber - b.dayNumber
       ),
       programContext: programDetails.programContext,
       phases: program.phases,

@@ -1,0 +1,205 @@
+{
+  "pk": "user#63gocaz-j-AYRsb0094ik",
+  "sk": "workout#workout_63gocaz-j-AYRsb0094ik_1762099812925_if7wjqx8s",
+  "attributes": {
+    "coachIds": ["user_63gocaz-j-AYRsb0094ik_coach_main"],
+    "coachNames": ["Marcus_the_Strength_Architect"],
+    "completedAt": "2025-11-02T16:09:45.161Z",
+    "conversationId": "conv_1760623582146_5u6z1kags",
+    "extractionMetadata": {
+      "confidence": 0.8999999999999999,
+      "extractedAt": "2025-11-02T16:10:20.455Z",
+      "normalizationSummary": "Normalization skipped",
+      "reviewedAt": "2025-11-02T16:10:20.455Z",
+      "reviewedBy": "system",
+      "templateComparison": {
+        "adherenceScore": 1,
+        "analysisConfidence": 0.95,
+        "modifications": [],
+        "wasScaled": false
+      }
+    },
+    "groupId": "group_63gocaz-j-AYRsb0094ik_1735000007_z7w6v5u4t",
+    "summary": "Completed \"Mortis Posterior\" powerlifting session featuring deficit deadlifts (2\" deficit) at 4x6 @ 185lbs (65% estimated 1RM). All sets completed as prescribed with 3-minute rest periods, targeting strength off the floor with increased range of motion. Session focused on building weak point strength through enhanced hamstring and low back engagement while maintaining strict spinal positioning throughout all reps.",
+    "templateId": "template_63gocaz-j-AYRsb0094ik_1735000007_g7h8i9j0k",
+    "userId": "63gocaz-j-AYRsb0094ik",
+    "workoutData": {
+      "coach_id": "Marcus_the_Strength_Architect",
+      "coach_notes": {
+        "adaptation_recommendations": [
+          "Scale to 1-inch deficit if neutral spine cannot be maintained",
+          "Use regular deadlift at same weight if deficit causes form breakdown"
+        ],
+        "areas_for_improvement": [
+          "Monitor spinal position - stop immediately if back rounds"
+        ],
+        "coaching_cues_given": [
+          "Keep back flat",
+          "Feel extra stretch in hamstrings at bottom",
+          "Maintain neutral spine throughout"
+        ],
+        "motivation_strategy": "Targeting specific weakness to build complete deadlift strength",
+        "next_session_focus": null,
+        "positive_observations": [],
+        "programming_intent": "Build strength off the floor using deficit deadlift variation. Target weak point with increased range of motion demanding more from hamstrings and low back.",
+        "safety_flags": ["spinal_position_critical", "stop_if_back_rounds"]
+      },
+      "conversation_id": "conv_placeholder",
+      "date": "2025-11-02",
+      "discipline": "powerlifting",
+      "discipline_specific": {
+        "powerlifting": {
+          "competition_prep": false,
+          "exercises": [
+            {
+              "attempts": {
+                "missed_attempts": [],
+                "miss_reasons": [],
+                "opener": null,
+                "second_attempt": null,
+                "successful_attempts": [],
+                "third_attempt": null
+              },
+              "competition_commands": false,
+              "equipment": ["deficit_platform"],
+              "exercise_name": "Deficit Deadlift",
+              "movement_category": "main_lift",
+              "sets": [
+                {
+                  "bar_speed": null,
+                  "competition_commands": false,
+                  "percentage_1rm": 65,
+                  "reps": 6,
+                  "rest_time": 180,
+                  "rpe": null,
+                  "set_type": "working",
+                  "weight": 185
+                },
+                {
+                  "bar_speed": null,
+                  "competition_commands": false,
+                  "percentage_1rm": 65,
+                  "reps": 6,
+                  "rest_time": 180,
+                  "rpe": null,
+                  "set_type": "working",
+                  "weight": 185
+                },
+                {
+                  "bar_speed": null,
+                  "competition_commands": false,
+                  "percentage_1rm": 65,
+                  "reps": 6,
+                  "rest_time": 180,
+                  "rpe": null,
+                  "set_type": "working",
+                  "weight": 185
+                },
+                {
+                  "bar_speed": null,
+                  "competition_commands": false,
+                  "percentage_1rm": 65,
+                  "reps": 6,
+                  "rest_time": null,
+                  "rpe": null,
+                  "set_type": "working",
+                  "weight": 185
+                }
+              ]
+            }
+          ],
+          "session_type": "repetition_method"
+        }
+      },
+      "duration": null,
+      "environmental_factors": {
+        "altitude": null,
+        "equipment_condition": null,
+        "gym_crowding": null,
+        "humidity": null,
+        "temperature": null
+      },
+      "location": "gym",
+      "metadata": {
+        "ai_extracted": true,
+        "data_completeness": 0.85,
+        "data_confidence": 0.8999999999999999,
+        "extraction_method": "claude_conversation_analysis",
+        "extraction_notes": "Powerlifting repetition method session with deficit deadlift variation. User completed all 4 working sets as prescribed at 185lbs (65% estimated 1RM). Template name 'Mortis Posterior' used. 3-minute rest periods between sets. Focus on building strength off the floor with increased ROM from 2-inch deficit. Coach provided detailed safety cues regarding spinal position and scaling options.",
+        "logged_via": "conversation",
+        "logging_time": null,
+        "schema_version": "2.0",
+        "user_verified": false,
+        "validation_flags": [],
+        "version": "1.0"
+      },
+      "methodology": "COMPTRAIN_STRENGTH",
+      "performance_metrics": {
+        "calories_burned": null,
+        "energy_level_post": null,
+        "energy_level_pre": null,
+        "heart_rate": {
+          "avg": null,
+          "max": null,
+          "zones": {
+            "zone_1": null,
+            "zone_2": null,
+            "zone_3": null,
+            "zone_4": null,
+            "zone_5": null
+          }
+        },
+        "intensity": 7,
+        "mood_post": null,
+        "mood_pre": null,
+        "perceived_exertion": 7
+      },
+      "pr_achievements": [],
+      "recovery_metrics": {
+        "hrv_morning": null,
+        "readiness_score": null,
+        "resting_heart_rate": null,
+        "sleep_hours": null,
+        "stress_level": null
+      },
+      "subjective_feedback": {
+        "confidence": null,
+        "difficulty": null,
+        "enjoyment": null,
+        "form_quality": null,
+        "hydration_level": null,
+        "mental_state": null,
+        "motivation": null,
+        "notes": "Prescribed focus: Increased range of motion, keep back flat, feel extra stretch in hamstrings at bottom. 2-inch deficit for strength off the floor.",
+        "nutrition_pre_workout": null,
+        "pacing_strategy": null,
+        "sleep_quality_previous": null,
+        "soreness_post": {
+          "arms": null,
+          "back": null,
+          "legs": null,
+          "overall": null
+        },
+        "soreness_pre": {
+          "arms": null,
+          "back": null,
+          "legs": null,
+          "overall": null
+        },
+        "stress_level": null
+      },
+      "user_id": "63gocaz-j-AYRsb0094ik",
+      "workout_id": "workout_63gocaz-j-AYRsb0094ik_1762099812925_if7wjqx8s",
+      "workout_name": "Mortis Posterior",
+      "workout_type": "strength"
+    },
+    "workoutId": "workout_63gocaz-j-AYRsb0094ik_1762099812925_if7wjqx8s"
+  },
+  "createdAt": "2025-11-02T16:10:20.456Z",
+  "entityType": "workout",
+  "gsi1pk": "group#group_63gocaz-j-AYRsb0094ik_1735000007_z7w6v5u4t",
+  "gsi1sk": "workout#workout_63gocaz-j-AYRsb0094ik_1762099812925_if7wjqx8s",
+  "gsi2pk": "template#template_63gocaz-j-AYRsb0094ik_1735000007_g7h8i9j0k",
+  "gsi2sk": "workout#workout_63gocaz-j-AYRsb0094ik_1762099812925_if7wjqx8s",
+  "updatedAt": "2025-11-02T16:10:20.456Z"
+}

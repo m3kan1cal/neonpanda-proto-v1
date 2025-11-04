@@ -6,6 +6,29 @@
  */
 
 /**
+ * Converts a string to Title Case (first letter of each word capitalized)
+ * Handles multi-word strings with spaces
+ *
+ * @example
+ * toTitleCase("barbell") => "Barbell"
+ * toTitleCase("squat rack") => "Squat Rack"
+ * toTitleCase("pull-up bar") => "Pull-Up Bar"
+ */
+export function toTitleCase(str: string): string {
+  if (!str) return str;
+
+  return str
+    .split(' ')
+    .map(word =>
+      word
+        .split('-')
+        .map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+        .join('-')
+    )
+    .join(' ');
+}
+
+/**
  * Cleans response to remove markdown formatting and extract JSON
  * Removes code block markers and extracts content between:
  * - first { and last } for objects
@@ -213,35 +236,78 @@ export function fixMalformedJson(jsonString: string): string {
 }
 
 /**
- * Removes [GENERATE_PROGRAM] trigger from streaming content
- * Used to prevent the trigger from appearing in the UI during streaming
+ * Generates all possible prefixes of a string (for partial trigger matching)
+ * @example generatePrefixes("[HELLO]") => ["[HELLO", "[HELL", "[HEL", "[HE", "[H", "["]
+ */
+function generatePrefixes(str: string): string[] {
+  const prefixes: string[] = [];
+  // Generate from longest to shortest (excluding the complete string itself)
+  for (let i = str.length - 1; i > 0; i--) {
+    prefixes.push(str.substring(0, i));
+  }
+  return prefixes;
+}
+
+/**
+ * Removes [GENERATE_PROGRAM] and other tool invocation triggers from streaming content
+ * Handles triggers that may be split across chunk boundaries
  *
  * @param chunk - The streaming chunk to clean
- * @returns Object with cleanedContent and wasTriggerRemoved flag
+ * @param buffer - Accumulated partial trigger from previous chunks (for stateful use)
+ * @returns Object with cleanedContent, wasTriggerRemoved flag, and updated buffer
  */
-export function removeTriggerFromStream(chunk: string): { cleanedContent: string; wasTriggerRemoved: boolean } {
-  const trigger = "[GENERATE_PROGRAM]";
+export function removeTriggerFromStream(
+  chunk: string,
+  buffer: string = ''
+): { cleanedContent: string; wasTriggerRemoved: boolean; buffer: string } {
+  // Combine buffer with new chunk
+  const combined = buffer + chunk;
 
-  // Check for any variation of the trigger (with/without markdown, spaces, case variations)
-  const hasTrigger = /\[GENERATE_PROGRAM\]/i.test(chunk);
+  // List of trigger strings to remove (tools, markers, etc.)
+  const triggerStrings = [
+    '[GENERATE_PROGRAM]',
+    '[GENERATE]',
+    '[BUILD_TRAINING_PROGRAM]',
+    '[BUILD_WORKOUT]',
+    '[SAVE_MEMORY]',
+  ];
 
-  if (hasTrigger) {
-    const cleanedContent = chunk
-      .replace(/\*\*\s*\[GENERATE_PROGRAM\]\s*\*\*/gi, '') // Markdown bold with optional spaces
-      .replace(/\[GENERATE_PROGRAM\]/gi, '') // Plain trigger
-      .replace(/\[\s*GENERATE_PROGRAM\s*\]/gi, ''); // With spaces inside brackets
+  // Check if we have a complete trigger in the combined text
+  let cleanedContent = combined;
+  let wasTriggerRemoved = false;
 
-    console.info("✂️ Removed [GENERATE_PROGRAM] trigger from streaming chunk");
+  for (const trigger of triggerStrings) {
+    if (cleanedContent.includes(trigger)) {
+      cleanedContent = cleanedContent.replace(new RegExp(trigger.replace(/[[\]]/g, '\\$&'), 'gi'), '');
+      wasTriggerRemoved = true;
+    }
+  }
 
-    return {
-      cleanedContent,
-      wasTriggerRemoved: true,
-    };
+  // Generate all possible partial triggers from our trigger strings
+  const possiblePartials = triggerStrings.flatMap(trigger => generatePrefixes(trigger));
+  // Sort by length (longest first) to match the most specific partial first
+  possiblePartials.sort((a, b) => b.length - a.length);
+
+  // Check if the end of cleanedContent matches a partial trigger
+  let newBuffer = '';
+  for (const partial of possiblePartials) {
+    if (cleanedContent.endsWith(partial)) {
+      // Hold this partial in the buffer for the next chunk
+      newBuffer = partial;
+      cleanedContent = cleanedContent.slice(0, -partial.length);
+      console.info(`🔄 Buffering partial trigger: "${partial}"`);
+      break;
+    }
+  }
+
+  if (wasTriggerRemoved) {
+    console.info("✂️ Removed tool invocation trigger from streaming chunk");
   }
 
   return {
-    cleanedContent: chunk,
-    wasTriggerRemoved: false,
+    cleanedContent,
+    wasTriggerRemoved,
+    buffer: newBuffer,
   };
 }
 

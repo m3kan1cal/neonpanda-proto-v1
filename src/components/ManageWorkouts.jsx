@@ -10,10 +10,10 @@ import { useToast } from "../contexts/ToastContext";
 import { WorkoutAgent } from "../utils/agents/WorkoutAgent";
 import CoachAgent from "../utils/agents/CoachAgent";
 import { FloatingMenuManager } from "./shared/FloatingMenuManager";
-import CommandPalette from './shared/CommandPalette';
 import CoachHeader from './shared/CoachHeader';
 import CompactCoachCard from './shared/CompactCoachCard';
 import CommandPaletteButton from './shared/CommandPaletteButton';
+import { useNavigationContext } from '../contexts/NavigationContext';
 import QuickStats from './shared/QuickStats';
 import {
   WorkoutIcon,
@@ -114,9 +114,8 @@ function ManageWorkouts() {
   const [workoutToDelete, setWorkoutToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Command palette state
-  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
-  const [commandPaletteCommand, setCommandPaletteCommand] = useState('');
+  // Global Command Palette state
+  const { setIsCommandPaletteOpen } = useNavigationContext();
 
   // Coach data state (for FloatingMenuManager)
   const [coachData, setCoachData] = useState(null);
@@ -125,23 +124,6 @@ function ManageWorkouts() {
   const coachAgentRef = useRef(null);
 
   const { addToast, success, error, info } = useToast();
-
-  // Handle keyboard shortcuts
-  useEffect(() => {
-    const handleKeyboardShortcuts = (event) => {
-      // Cmd/Ctrl + K to open command palette
-      if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
-        event.preventDefault();
-        setCommandPaletteCommand('');
-        setIsCommandPaletteOpen(true);
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyboardShortcuts);
-    return () => {
-      document.removeEventListener('keydown', handleKeyboardShortcuts);
-    };
-  }, [isCommandPaletteOpen]);
 
   // Unified workout state (like Workouts.jsx)
   const [workoutAgentState, setWorkoutAgentState] = useState({
@@ -370,7 +352,7 @@ function ManageWorkouts() {
         className={`${containerPatterns.cardMedium} p-5 group transition-all duration-300 hover:border-synthwave-neon-cyan/40 hover:bg-synthwave-bg-card/40 relative cursor-pointer flex flex-col h-full`}
         onClick={() =>
           navigate(
-            `/training-grounds/workouts?userId=${userId}&workoutId=${workout.workoutId}&coachId=${workout.coachIds?.[0] || "default"}`
+            `/training-grounds/workouts/${workout.workoutId}?userId=${userId}&coachId=${workout.coachIds?.[0] || "default"}`
           )
         }
       >
@@ -890,24 +872,6 @@ function ManageWorkouts() {
             )}
         </div>
       </div>
-
-      {/* Command Palette */}
-      <CommandPalette
-        isOpen={isCommandPaletteOpen}
-        onClose={() => {
-          setIsCommandPaletteOpen(false);
-          setCommandPaletteCommand('');
-        }}
-        prefilledCommand={commandPaletteCommand}
-        workoutAgent={workoutAgentRef.current}
-        userId={userId}
-        coachId={coachId}
-        onNavigation={(type, data) => {
-          if (type === 'conversation-created') {
-            navigate(`/training-grounds/coach-conversations?userId=${data.userId}&coachId=${data.coachId}&conversationId=${data.conversationId}`);
-          }
-        }}
-      />
 
       {/* Floating Menu Manager */}
       <FloatingMenuManager

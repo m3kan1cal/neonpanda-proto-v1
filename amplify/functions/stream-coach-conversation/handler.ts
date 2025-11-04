@@ -753,12 +753,17 @@ async function* processCoachConversationAsync(
       streamResult.responseStream
     );
 
+    // Buffer to handle partial triggers across chunk boundaries
+    let triggerBuffer = '';
+
     for await (const optimizedChunk of optimizedChunkStream) {
       const chunkTime = Date.now() - aiStartTime;
       fullAiResponse += optimizedChunk;
 
       // Clean the chunk before yielding to prevent trigger from appearing in UI
-      const { cleanedContent } = removeTriggerFromStream(optimizedChunk);
+      // Pass the buffer to handle partial triggers from previous chunks
+      const { cleanedContent, buffer } = removeTriggerFromStream(optimizedChunk, triggerBuffer);
+      triggerBuffer = buffer; // Update buffer for next iteration
 
       // Only yield non-empty chunks after cleaning
       if (cleanedContent.trim()) {
@@ -767,6 +772,12 @@ async function* processCoachConversationAsync(
           `📡 [${chunkTime}ms] Optimized AI chunk yielded: "${cleanedContent.substring(0, 30)}..." (${cleanedContent.length} chars)`
         );
       }
+    }
+
+    // After loop completes, yield any remaining buffered content (if it wasn't a complete trigger)
+    if (triggerBuffer.trim()) {
+      console.info(`📤 Flushing remaining buffer: "${triggerBuffer}"`);
+      yield formatChunkEvent(triggerBuffer);
     }
 
     console.info("✅ Real-time AI streaming completed successfully");
@@ -805,14 +816,8 @@ async function* processCoachConversationAsync(
       // Stream the persistent message so it appears smoothly in the UI
       yield formatChunkEvent(persistentMessage);
 
-      // Generate and yield AI-powered contextual update about training program generation starting
-      const startUpdateEvent = await generateAndFormatUpdate(
-        conversationData.coachConfig,
-        params.userResponse,
-        "training_program_generation_start",
-        {}
-      );
-      if (startUpdateEvent) yield startUpdateEvent;
+      // Note: No contextual updates after AI response is complete
+      // The AI's conversational response already informs the user what's happening
 
       try {
         // Extract the latest continuous Build mode section
@@ -852,31 +857,12 @@ async function* processCoachConversationAsync(
 
         console.info("✅ Build-training-program lambda invoked successfully");
 
-        // Generate and yield AI-powered contextual update (brief, coach-like)
-        const completeUpdateEvent = await generateAndFormatUpdate(
-          conversationData.coachConfig,
-          params.userResponse,
-          "training_program_generation_complete",
-          {}
-        );
-        if (completeUpdateEvent) yield completeUpdateEvent;
-
-        // Note: AI will naturally acknowledge program generation in its response
-        // No need to append structured messages - keep it conversational like memory/workout handling
+        // Note: No contextual updates after AI response is complete
+        // The AI's conversational response already informs the user what's happening
       } catch (error) {
         console.error("❌ Training program generation failed:", error);
 
-        // Generate and yield AI-powered contextual update (brief, supportive)
-        const errorUpdateEvent = await generateAndFormatUpdate(
-          conversationData.coachConfig,
-          params.userResponse,
-          "training_program_generation_error",
-          {}
-        );
-        if (errorUpdateEvent) yield errorUpdateEvent;
-
-        // Note: AI will naturally address the error in its response
-        // No need to append structured error messages - keep it conversational
+        // Note: No contextual updates even on error - AI response is sufficient
       }
     }
   }

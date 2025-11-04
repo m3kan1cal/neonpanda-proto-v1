@@ -5,7 +5,7 @@ import {
   MODEL_IDS,
   storeDebugDataInS3,
 } from "../libs/api-helpers";
-import { saveWorkout } from "../../dynamodb/operations";
+import { saveWorkout, getTrainingProgram } from "../../dynamodb/operations";
 import {
   buildWorkoutExtractionPrompt,
   parseAndValidateWorkoutData,
@@ -24,6 +24,10 @@ import {
   shouldNormalizeWorkout,
   generateNormalizationSummary,
 } from "../libs/workout/normalization";
+import {
+  getTrainingProgramDetailsFromS3,
+  saveTrainingProgramDetailsToS3,
+} from "../libs/training-program/s3-utils";
 
 export const handler = async (event: BuildWorkoutEvent) => {
   try {
@@ -467,12 +471,21 @@ export const handler = async (event: BuildWorkoutEvent) => {
       completedAt,
       workoutData: finalWorkoutData,
       summary, // NEW: AI-generated summary
+      // Add template relationship if from training program
+      ...(event.templateContext && {
+        templateId: event.templateContext.templateId,
+        groupId: event.templateContext.groupId,
+      }),
       extractionMetadata: {
         confidence: finalWorkoutData.metadata.data_confidence, // Use final confidence after normalization
         extractedAt: new Date(),
         reviewedBy: "system",
         reviewedAt: new Date(),
         normalizationSummary, // Include normalization summary in metadata
+        // Add template comparison if from training program
+        ...(event.templateContext?.scalingAnalysis && {
+          templateComparison: event.templateContext.scalingAnalysis,
+        }),
       },
     };
 
@@ -526,6 +539,40 @@ export const handler = async (event: BuildWorkoutEvent) => {
       workout
     );
 
+    // If this workout is from a template, update the template's linkedWorkoutId
+    if (event.templateContext) {
+      console.info("🔗 Updating template linkedWorkoutId in S3...");
+      try {
+        const programData = await getTrainingProgram(
+          event.userId,
+          event.coachId,
+          event.templateContext.programId
+        );
+
+        if (programData?.attributes?.s3DetailKey) {
+          const programDetails = await getTrainingProgramDetailsFromS3(programData.attributes.s3DetailKey);
+
+          if (programDetails) {
+            const templateIndex = programDetails.workoutTemplates.findIndex(
+              (t: any) => t.templateId === event.templateContext?.templateId
+            );
+
+            if (templateIndex !== -1) {
+              programDetails.workoutTemplates[templateIndex].linkedWorkoutId = workout.workoutId;
+              await saveTrainingProgramDetailsToS3(programData.attributes.s3DetailKey, programDetails);
+              console.info("✅ Template linkedWorkoutId updated:", {
+                templateId: event.templateContext.templateId,
+                workoutId: workout.workoutId,
+              });
+            }
+          }
+        }
+      } catch (error) {
+        console.error("⚠️ Failed to update template linkedWorkoutId (non-critical):", error);
+        // Continue - this is not critical for workout logging
+      }
+    }
+
     console.info("✅ Workout extraction completed successfully:", {
       workoutId: workout.workoutId,
       discipline: finalWorkoutData.discipline,
@@ -538,6 +585,7 @@ export const handler = async (event: BuildWorkoutEvent) => {
         pineconeResult.success && "recordId" in pineconeResult
           ? pineconeResult.recordId
           : null,
+      templateLinked: !!event.templateContext,
     });
 
     return createOkResponse({

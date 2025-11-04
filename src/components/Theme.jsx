@@ -514,6 +514,80 @@ function Theme() {
                     </div>
                   </section>
 
+                  {/* Badge Patterns - Tag-like Button Components */}
+                  <section className="space-y-6">
+                    <h3 className="font-russo text-xl text-white mb-4 uppercase border-b border-synthwave-neon-pink/30 pb-2">
+                      Badge Patterns - Tag/Label Components
+                    </h3>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+
+                      {/* Pink Badge */}
+                      <div className="space-y-4">
+                        <h4 className="font-rajdhani text-sm text-synthwave-neon-pink">Pink</h4>
+                        <span className="bg-synthwave-neon-pink/20 text-synthwave-neon-pink px-2 py-1 rounded text-xs font-rajdhani font-medium inline-block">
+                          High Priority
+                        </span>
+                      </div>
+
+                      {/* Pink Bordered */}
+                      <div className="space-y-4">
+                        <h4 className="font-rajdhani text-sm text-synthwave-neon-pink">Pink Border</h4>
+                        <span className="bg-synthwave-neon-pink/20 text-synthwave-neon-pink px-2 py-1 rounded text-xs font-rajdhani font-medium border border-synthwave-neon-pink/40 inline-block">
+                          Strength
+                        </span>
+                      </div>
+
+                      {/* Cyan Badge */}
+                      <div className="space-y-4">
+                        <h4 className="font-rajdhani text-sm text-synthwave-neon-cyan">Cyan</h4>
+                        <span className="bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan px-2 py-1 rounded text-xs font-rajdhani font-medium inline-block">
+                          Info Tag
+                        </span>
+                      </div>
+
+                      {/* Cyan Bordered */}
+                      <div className="space-y-4">
+                        <h4 className="font-rajdhani text-sm text-synthwave-neon-cyan">Cyan Border</h4>
+                        <span className="bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan px-2 py-1 rounded text-xs font-rajdhani font-medium border border-synthwave-neon-cyan/40 inline-block">
+                          Conditioning
+                        </span>
+                      </div>
+
+                      {/* Purple Badge */}
+                      <div className="space-y-4">
+                        <h4 className="font-rajdhani text-sm text-synthwave-neon-purple">Purple</h4>
+                        <span className="bg-synthwave-neon-purple/20 text-synthwave-neon-purple px-2 py-1 rounded text-xs font-rajdhani font-medium inline-block">
+                          Special
+                        </span>
+                      </div>
+
+                      {/* Purple Bordered */}
+                      <div className="space-y-4">
+                        <h4 className="font-rajdhani text-sm text-synthwave-neon-purple">Purple Border</h4>
+                        <span className="bg-synthwave-neon-purple/20 text-synthwave-neon-purple px-2 py-1 rounded text-xs font-rajdhani font-medium border border-synthwave-neon-purple/40 inline-block">
+                          Accessory
+                        </span>
+                      </div>
+
+                      {/* Workout Detail Badge - for equipment, exercises, focus areas */}
+                      <div className="space-y-4">
+                        <h4 className="font-rajdhani text-sm text-synthwave-neon-cyan">Workout Detail</h4>
+                        <span className="px-2 py-1 bg-synthwave-bg-primary/50 border border-synthwave-neon-cyan/30 rounded text-sm font-rajdhani text-synthwave-text-secondary inline-block">
+                          Barbell
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="bg-synthwave-bg-card/20 border border-synthwave-neon-pink/20 rounded-lg p-4">
+                      <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+                        <strong className="text-synthwave-neon-pink">Badge Patterns:</strong> Small tag-like components for categorization and labeling.
+                        Used in workout types, memory tags, and other metadata displays. Available in pink (high priority), cyan (info), purple (special),
+                        and muted variants. Both solid background and bordered versions are available from <strong className="text-synthwave-neon-cyan">badgePatterns</strong> in uiPatterns.js.
+                        The <strong className="text-synthwave-neon-cyan">workoutDetail</strong> pattern is used for equipment, exercises, and focus areas in workout templates.
+                      </p>
+                    </div>
+                  </section>
+
                   {/* Size Variants */}
                   <section className="space-y-6">
                     <h3 className="font-russo text-xl text-white mb-4 uppercase border-b border-synthwave-neon-cyan/30 pb-2">
@@ -1213,8 +1287,8 @@ function Theme() {
                               <div className="bg-synthwave-bg-primary/25 backdrop-blur-sm p-3 rounded-xl">
                                 <p className="text-synthwave-text-secondary text-sm font-rajdhani">Sample content area</p>
                               </div>
-                              <div className="bg-synthwave-bg-primary/25 backdrop-blur-sm p-3 rounded-xl">
-                                <p className="text-synthwave-text-secondary text-sm font-rajdhani">More sample content</p>
+                              <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-lg px-4 py-4">
+                                <p className="text-synthwave-text-secondary text-sm font-rajdhani">Workout subcontainer (used in TodaysWorkoutCard phase display, workout description, coach notes)</p>
                               </div>
                             </div>
                           </div>

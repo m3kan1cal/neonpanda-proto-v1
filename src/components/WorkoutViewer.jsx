@@ -143,7 +143,7 @@ const ExerciseDisplay = ({ exercise, roundNumber, exerciseIndex }) => {
   const dataPath = `workoutData.discipline_specific.crossfit.rounds[${roundNumber - 1}].exercises[${exerciseIndex}]`;
 
   return (
-    <div className="bg-synthwave-bg-primary/20 border border-synthwave-neon-cyan/20 rounded-lg p-3 space-y-2">
+    <div className={`${containerPatterns.infoCardCyan} space-y-2`}>
       <div className="flex items-center justify-between">
         <h4 className="font-rajdhani font-bold text-synthwave-neon-cyan text-lg capitalize">
           {exercise.exercise_name}
@@ -201,7 +201,7 @@ const ExerciseDisplay = ({ exercise, roundNumber, exerciseIndex }) => {
       </div>
 
       {exercise.form_notes && (
-        <div className="mt-2 p-2 bg-synthwave-bg-primary/30 rounded border border-synthwave-neon-pink/20">
+        <div className={`mt-2 p-2 ${containerPatterns.infoCard}`}>
           <span className="text-synthwave-neon-pink font-rajdhani text-sm font-medium">Notes: </span>
           <span className="text-synthwave-text-secondary font-rajdhani text-sm" data-json-path={`${dataPath}.form_notes`} data-json-value={JSON.stringify(exercise.form_notes)}>
             {exercise.form_notes}
@@ -286,10 +286,175 @@ const PerformanceMetrics = ({ metrics }) => {
   );
 };
 
+// Powerlifting set display component
+const PowerliftingSetDisplay = ({ set, setIndex, dataPath }) => {
+  return (
+    <div className="space-y-2">
+      {/* Set header with numbered badge - matches CrossFit round styling */}
+      <div className="flex items-center space-x-2">
+        <div className="w-8 h-8 bg-synthwave-neon-cyan/20 border border-synthwave-neon-cyan rounded-full flex items-center justify-center">
+          <span className="text-synthwave-neon-cyan font-rajdhani font-bold text-sm">
+            {setIndex + 1}
+          </span>
+        </div>
+        <h3 className="font-rajdhani font-bold text-white text-lg">
+          Set {setIndex + 1}
+        </h3>
+        <span className={`text-xs font-rajdhani uppercase px-2 py-1 rounded ml-auto ${
+          set.set_type === 'working' ? 'bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan' :
+          set.set_type === 'warmup' ? 'bg-synthwave-neon-purple/20 text-synthwave-neon-purple' :
+          'bg-synthwave-text-secondary/20 text-synthwave-text-secondary'
+        }`}>
+          {set.set_type || 'working'}
+        </span>
+      </div>
+
+      {/* Set details - indented like CrossFit exercises */}
+      <div className={`ml-4 ${containerPatterns.infoCardCyan}`}>
+        <div className="grid grid-cols-2 gap-2">
+        <ValueDisplay
+          label="Weight"
+          value={set.weight ? `${set.weight}lbs` : null}
+          dataPath={`${dataPath}.weight`}
+        />
+        <ValueDisplay
+          label="Reps"
+          value={set.reps}
+          dataPath={`${dataPath}.reps`}
+        />
+        {set.rpe && (
+          <ValueDisplay
+            label="RPE"
+            value={set.rpe}
+            dataPath={`${dataPath}.rpe`}
+          />
+        )}
+        {set.percentage_1rm && (
+          <ValueDisplay
+            label="% 1RM"
+            value={`${set.percentage_1rm}%`}
+            dataPath={`${dataPath}.percentage_1rm`}
+          />
+        )}
+        {set.rest_time && (
+          <ValueDisplay
+            label="Rest"
+            value={`${Math.floor(set.rest_time / 60)}:${String(set.rest_time % 60).padStart(2, '0')}`}
+            dataPath={`${dataPath}.rest_time`}
+          />
+        )}
+        {set.bar_speed && (
+          <ValueDisplay
+            label="Bar Speed"
+            value={set.bar_speed}
+            dataPath={`${dataPath}.bar_speed`}
+          />
+        )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Powerlifting exercise display component
+const PowerliftingExerciseDisplay = ({ exercise, exerciseIndex }) => {
+  const dataPath = `workoutData.discipline_specific.powerlifting.exercises[${exerciseIndex}]`;
+
+  return (
+    <div className="space-y-4">
+      {/* Exercise header - no numbered badge, just like a section header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="font-rajdhani font-bold text-synthwave-neon-cyan text-xl capitalize">
+            {exercise.exercise_name?.replace(/_/g, ' ')}
+          </h3>
+          <div className="flex items-center gap-2 mt-1">
+            <span className={`text-xs font-rajdhani uppercase px-2 py-1 rounded ${
+              exercise.movement_category === 'main_lift' ? 'bg-synthwave-neon-pink/20 text-synthwave-neon-pink' :
+              exercise.movement_category === 'accessory' ? 'bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan' :
+              'bg-synthwave-text-secondary/20 text-synthwave-text-secondary'
+            }`}>
+              {exercise.movement_category?.replace(/_/g, ' ') || 'main lift'}
+            </span>
+            {exercise.equipment && exercise.equipment.length > 0 && (
+              <span className="text-synthwave-text-muted font-rajdhani text-sm">
+                {exercise.equipment.join(', ')}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Sets - each set has its own numbered badge */}
+      {exercise.sets && exercise.sets.length > 0 && (
+        <div className="space-y-6">
+          {exercise.sets.map((set, setIndex) => (
+            <PowerliftingSetDisplay
+              key={setIndex}
+              set={set}
+              setIndex={setIndex}
+              dataPath={`${dataPath}.sets[${setIndex}]`}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Attempts (for competition) */}
+      {exercise.attempts && (
+        <div className={containerPatterns.infoCardCyan}>
+          <h5 className="font-rajdhani font-bold text-synthwave-neon-cyan text-base uppercase mb-2">
+            Attempts
+          </h5>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+            {exercise.attempts.opener && (
+              <ValueDisplay
+                label="Opener"
+                value={`${exercise.attempts.opener}lbs`}
+                dataPath={`${dataPath}.attempts.opener`}
+              />
+            )}
+            {exercise.attempts.second_attempt && (
+              <ValueDisplay
+                label="2nd Attempt"
+                value={`${exercise.attempts.second_attempt}lbs`}
+                dataPath={`${dataPath}.attempts.second_attempt`}
+              />
+            )}
+            {exercise.attempts.third_attempt && (
+              <ValueDisplay
+                label="3rd Attempt"
+                value={`${exercise.attempts.third_attempt}lbs`}
+                dataPath={`${dataPath}.attempts.third_attempt`}
+              />
+            )}
+          </div>
+          {exercise.attempts.successful_attempts && exercise.attempts.successful_attempts.length > 0 && (
+            <div className="mt-2">
+              <span className="text-synthwave-neon-cyan font-rajdhani text-sm font-medium">Successful: </span>
+              <span className="text-synthwave-text-primary font-rajdhani text-sm">
+                {exercise.attempts.successful_attempts.join('lbs, ')}lbs
+              </span>
+            </div>
+          )}
+          {exercise.attempts.missed_attempts && exercise.attempts.missed_attempts.length > 0 && (
+            <div className="mt-1">
+              <span className="text-synthwave-neon-pink font-rajdhani text-sm font-medium">Missed: </span>
+              <span className="text-synthwave-text-primary font-rajdhani text-sm">
+                {exercise.attempts.missed_attempts.join('lbs, ')}lbs
+              </span>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
 // Workout summary display
 const WorkoutSummary = ({ workoutData }) => {
   const crossfitData = workoutData.discipline_specific?.crossfit;
   const runningData = workoutData.discipline_specific?.running;
+  const powerliftingData = workoutData.discipline_specific?.powerlifting;
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -417,6 +582,33 @@ const WorkoutSummary = ({ workoutData }) => {
           )}
         </>
       )}
+
+      {powerliftingData && (
+        <>
+          <ValueDisplay
+            label="Session Type"
+            value={powerliftingData.session_type}
+            dataPath="workoutData.discipline_specific.powerlifting.session_type"
+          />
+          <ValueDisplay
+            label="Exercises"
+            value={powerliftingData.exercises?.length}
+            dataPath="workoutData.discipline_specific.powerlifting.exercises"
+          />
+          <ValueDisplay
+            label="Competition Prep"
+            value={powerliftingData.competition_prep ? 'Yes' : 'No'}
+            dataPath="workoutData.discipline_specific.powerlifting.competition_prep"
+          />
+          {powerliftingData.exercises && powerliftingData.exercises.length > 0 && (
+            <ValueDisplay
+              label="Total Sets"
+              value={powerliftingData.exercises.reduce((sum, ex) => sum + (ex.sets?.length || 0), 0)}
+              dataPath="workoutData.discipline_specific.powerlifting.exercises"
+            />
+          )}
+        </>
+      )}
     </div>
   );
 };
@@ -461,7 +653,7 @@ const SubjectiveFeedback = ({ feedback }) => {
       </div>
 
       {feedback.notes && (
-        <div className="p-3 bg-synthwave-bg-primary/30 rounded border border-synthwave-neon-pink/20">
+        <div className={containerPatterns.infoCard}>
           <span className="text-synthwave-neon-pink font-rajdhani text-base font-medium">Notes: </span>
           <span className="text-synthwave-text-secondary font-rajdhani text-base" data-json-path="workoutData.subjective_feedback.notes" data-json-value={JSON.stringify(feedback.notes)}>
             {feedback.notes}
@@ -507,7 +699,7 @@ const CoachNotes = ({ notes }) => {
   return (
     <div className="space-y-4">
       {notes.programming_intent && (
-        <div className="p-3 bg-synthwave-bg-primary/30 rounded border border-synthwave-neon-cyan/20">
+        <div className={containerPatterns.infoCardCyan}>
           <span className="text-synthwave-neon-cyan font-rajdhani text-base font-medium">Programming Intent: </span>
           <span className="text-synthwave-text-secondary font-rajdhani text-base" data-json-path="workoutData.coach_notes.programming_intent" data-json-value={JSON.stringify(notes.programming_intent)}>
             {notes.programming_intent}
@@ -544,7 +736,7 @@ const CoachNotes = ({ notes }) => {
       )}
 
       {notes.next_session_focus && (
-        <div className="p-3 bg-synthwave-bg-primary/30 rounded border border-synthwave-neon-pink/20">
+        <div className={containerPatterns.infoCard}>
           <span className="text-synthwave-neon-pink font-rajdhani text-base font-medium">Next Session Focus: </span>
           <span className="text-synthwave-text-secondary font-rajdhani text-base" data-json-path="workoutData.coach_notes.next_session_focus" data-json-value={JSON.stringify(notes.next_session_focus)}>
             {notes.next_session_focus}
@@ -560,80 +752,93 @@ const RunningSegmentDisplay = ({ segment, segmentIndex }) => {
   const dataPath = `workoutData.discipline_specific.running.segments[${segmentIndex}]`;
 
   return (
-    <div className="bg-synthwave-bg-primary/20 border border-synthwave-neon-cyan/20 rounded-lg p-3 space-y-2">
-      <div className="flex items-center justify-between">
-        <h4 className="font-rajdhani font-bold text-synthwave-neon-cyan text-lg capitalize">
-          Segment {segment.segment_number} - {segment.segment_type}
-        </h4>
-        <span className={`text-sm font-rajdhani uppercase px-2 py-1 rounded ${
-          segment.effort_level === 'max' ? 'bg-synthwave-neon-pink/20 text-synthwave-neon-pink' :
-          segment.effort_level === 'hard' ? 'bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan' :
-          segment.effort_level === 'moderate' ? 'bg-synthwave-text-secondary/20 text-synthwave-text-secondary' :
-          'bg-synthwave-neon-cyan/10 text-synthwave-neon-cyan'
-        }`}>
-          {segment.effort_level}
-        </span>
-      </div>
-
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-        <ValueDisplay
-          label="Distance"
-          value={segment.distance}
-          dataPath={`${dataPath}.distance`}
-        />
-        <ValueDisplay
-          label="Time"
-          value={segment.time ? `${Math.floor(segment.time / 60)}:${String(segment.time % 60).padStart(2, '0')}` : null}
-          dataPath={`${dataPath}.time`}
-        />
-        <ValueDisplay
-          label="Pace"
-          value={segment.pace}
-          dataPath={`${dataPath}.pace`}
-        />
-        {segment.heart_rate_avg && (
-          <ValueDisplay
-            label="Avg HR"
-            value={`${segment.heart_rate_avg} bpm`}
-            dataPath={`${dataPath}.heart_rate_avg`}
-          />
-        )}
-        {segment.heart_rate_max && (
-          <ValueDisplay
-            label="Max HR"
-            value={`${segment.heart_rate_max} bpm`}
-            dataPath={`${dataPath}.heart_rate_max`}
-          />
-        )}
-        {segment.cadence && (
-          <ValueDisplay
-            label="Cadence"
-            value={`${segment.cadence} spm`}
-            dataPath={`${dataPath}.cadence`}
-          />
-        )}
-        <ValueDisplay
-          label="Terrain"
-          value={segment.terrain}
-          dataPath={`${dataPath}.terrain`}
-        />
-        {segment.elevation_change && (
-          <ValueDisplay
-            label="Elevation"
-            value={`${segment.elevation_change > 0 ? '+' : ''}${segment.elevation_change}ft`}
-            dataPath={`${dataPath}.elevation_change`}
-          />
-        )}
-      </div>
-
-      {segment.notes && (
-        <div className="mt-2 p-2 bg-synthwave-bg-primary/30 rounded border border-synthwave-neon-pink/20">
-          <span className="text-synthwave-neon-pink font-rajdhani text-sm font-medium">Notes: </span>
-          <span className="text-synthwave-text-secondary font-rajdhani text-sm" data-json-path={`${dataPath}.notes`} data-json-value={JSON.stringify(segment.notes)}>
-            {segment.notes}
+    <div className="space-y-3">
+      {/* Segment header with numbered badge - matches other workout types */}
+      <div className="flex items-center space-x-2">
+        <div className="w-8 h-8 bg-synthwave-neon-cyan/20 border border-synthwave-neon-cyan rounded-full flex items-center justify-center">
+          <span className="text-synthwave-neon-cyan font-rajdhani font-bold text-sm">
+            {segment.segment_number}
           </span>
         </div>
-      )}
+        <div className="flex-1">
+          <h3 className="font-rajdhani font-bold text-white text-lg capitalize">
+            {segment.segment_type}
+          </h3>
+          <span className={`text-xs font-rajdhani uppercase px-2 py-1 rounded mt-1 inline-block ${
+            segment.effort_level === 'max' ? 'bg-synthwave-neon-pink/20 text-synthwave-neon-pink' :
+            segment.effort_level === 'hard' ? 'bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan' :
+            segment.effort_level === 'moderate' ? 'bg-synthwave-text-secondary/20 text-synthwave-text-secondary' :
+            'bg-synthwave-neon-cyan/10 text-synthwave-neon-cyan'
+          }`}>
+            {segment.effort_level}
+          </span>
+        </div>
+      </div>
+
+      {/* Segment details - indented to match structure */}
+      <div className="ml-4 space-y-2">
+        <div className={`${containerPatterns.infoCardCyan}`}>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+            <ValueDisplay
+              label="Distance"
+              value={segment.distance}
+              dataPath={`${dataPath}.distance`}
+            />
+            <ValueDisplay
+              label="Time"
+              value={segment.time ? `${Math.floor(segment.time / 60)}:${String(segment.time % 60).padStart(2, '0')}` : null}
+              dataPath={`${dataPath}.time`}
+            />
+            <ValueDisplay
+              label="Pace"
+              value={segment.pace}
+              dataPath={`${dataPath}.pace`}
+            />
+            {segment.heart_rate_avg && (
+              <ValueDisplay
+                label="Avg HR"
+                value={`${segment.heart_rate_avg} bpm`}
+                dataPath={`${dataPath}.heart_rate_avg`}
+              />
+            )}
+            {segment.heart_rate_max && (
+              <ValueDisplay
+                label="Max HR"
+                value={`${segment.heart_rate_max} bpm`}
+                dataPath={`${dataPath}.heart_rate_max`}
+              />
+            )}
+            {segment.cadence && (
+              <ValueDisplay
+                label="Cadence"
+                value={`${segment.cadence} spm`}
+                dataPath={`${dataPath}.cadence`}
+              />
+            )}
+            <ValueDisplay
+              label="Terrain"
+              value={segment.terrain}
+              dataPath={`${dataPath}.terrain`}
+            />
+            {segment.elevation_change && (
+              <ValueDisplay
+                label="Elevation"
+                value={`${segment.elevation_change > 0 ? '+' : ''}${segment.elevation_change}ft`}
+                dataPath={`${dataPath}.elevation_change`}
+              />
+            )}
+          </div>
+        </div>
+
+        {segment.notes && (
+          <div className={`p-2 ${containerPatterns.infoCard}`}>
+            <span className="text-synthwave-neon-pink font-rajdhani text-sm font-medium">Notes: </span>
+            <span className="text-synthwave-text-secondary font-rajdhani text-sm" data-json-path={`${dataPath}.notes`} data-json-value={JSON.stringify(segment.notes)}>
+              {segment.notes}
+            </span>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
@@ -714,7 +919,7 @@ const RunningDetails = ({ runningData }) => {
 
       {/* Route Information */}
       {runningData.route && (runningData.route.name || runningData.route.description) && (
-        <div className="p-3 bg-synthwave-bg-primary/30 rounded border border-synthwave-neon-cyan/20">
+        <div className={containerPatterns.infoCardCyan}>
           {runningData.route.name && (
             <>
               <span className="text-synthwave-neon-cyan font-rajdhani text-base font-medium">Route: </span>
@@ -787,7 +992,7 @@ const RunningDetails = ({ runningData }) => {
           <h4 className="text-synthwave-neon-cyan font-rajdhani font-bold text-base mb-2">Nutrition & Hydration</h4>
           <div className="space-y-2">
             {runningData.fueling.pre_run && (
-              <div className="p-2 bg-synthwave-bg-primary/30 rounded border border-synthwave-neon-cyan/20">
+              <div className={`p-2 ${containerPatterns.infoCardCyan}`}>
                 <span className="text-synthwave-neon-cyan font-rajdhani text-sm font-medium">Pre-Run: </span>
                 <span className="text-synthwave-text-secondary font-rajdhani text-sm" data-json-path="workoutData.discipline_specific.running.fueling.pre_run" data-json-value={JSON.stringify(runningData.fueling.pre_run)}>
                   {runningData.fueling.pre_run}
@@ -795,7 +1000,7 @@ const RunningDetails = ({ runningData }) => {
               </div>
             )}
             {runningData.fueling.during_run && runningData.fueling.during_run.length > 0 && (
-              <div className="p-2 bg-synthwave-bg-primary/30 rounded border border-synthwave-neon-cyan/20">
+              <div className={`p-2 ${containerPatterns.infoCardCyan}`}>
                 <span className="text-synthwave-neon-cyan font-rajdhani text-sm font-medium">During Run: </span>
                 <span className="text-synthwave-text-secondary font-rajdhani text-sm">
                   {runningData.fueling.during_run.join(', ')}
@@ -838,6 +1043,7 @@ const WorkoutViewer = ({
   const { workoutData } = workout;
   const crossfitData = workoutData.discipline_specific?.crossfit;
   const runningData = workoutData.discipline_specific?.running;
+  const powerliftingData = workoutData.discipline_specific?.powerlifting;
 
   // Function to reconstruct JSON from the rendered HTML
   const reconstructJSON = () => {
@@ -1007,7 +1213,7 @@ const WorkoutViewer = ({
         >
           <div className="space-y-3">
             {workoutData.pr_achievements.map((pr, index) => (
-              <div key={index} className="bg-synthwave-bg-primary/20 border border-synthwave-neon-pink/20 rounded-lg p-4">
+              <div key={index} className={`${containerPatterns.infoCard} p-4`}>
                 <div className="flex items-center justify-between mb-3">
                   <h4 className="font-rajdhani font-bold text-synthwave-neon-pink text-lg capitalize">
                     {pr.exercise} {pr.pr_type && `(${pr.pr_type.replace(/_/g, ' ')})`}
@@ -1055,7 +1261,7 @@ const WorkoutViewer = ({
                 )}
 
                 {pr.context && (
-                  <div className="mt-3 p-3 bg-synthwave-bg-primary/30 rounded border border-synthwave-neon-cyan/20">
+                  <div className={`mt-3 ${containerPatterns.infoCardCyan}`}>
                     <span className="text-synthwave-neon-cyan font-rajdhani text-base font-medium">Context: </span>
                     <span className="text-synthwave-text-secondary font-rajdhani text-base" data-json-path={`workoutData.pr_achievements[${index}].context`} data-json-value={JSON.stringify(pr.context)}>
                       {pr.context}
@@ -1097,6 +1303,21 @@ const WorkoutViewer = ({
           <div className="space-y-6">
             {crossfitData.rounds.map((round, index) => (
               <RoundDisplay key={index} round={round} roundIndex={index} />
+            ))}
+          </div>
+        </CollapsibleSection>
+      )}
+
+      {/* Powerlifting Exercises */}
+      {powerliftingData && powerliftingData.exercises && powerliftingData.exercises.length > 0 && (
+        <CollapsibleSection
+          title={`Powerlifting Exercises (${powerliftingData.exercises.length})`}
+          icon={<WorkoutIconSmall />}
+          defaultOpen={true}
+        >
+          <div className="space-y-6">
+            {powerliftingData.exercises.map((exercise, index) => (
+              <PowerliftingExerciseDisplay key={index} exercise={exercise} exerciseIndex={index} />
             ))}
           </div>
         </CollapsibleSection>
@@ -1157,7 +1378,7 @@ const WorkoutViewer = ({
           icon={<ProcessingIcon />}
           defaultOpen={false}
         >
-          <div className="p-3 bg-synthwave-bg-primary/30 rounded border border-synthwave-neon-cyan/20">
+          <div className={containerPatterns.infoCardCyan}>
             <span className="text-synthwave-neon-cyan font-rajdhani text-base font-medium">AI Extraction Notes: </span>
             <span className="text-synthwave-text-secondary font-rajdhani text-base" data-json-path="workoutData.metadata.extraction_notes" data-json-value={JSON.stringify(workoutData.metadata.extraction_notes)}>
               {workoutData.metadata.extraction_notes}
@@ -1217,7 +1438,7 @@ const WorkoutViewer = ({
 
       {/* Debug: JSON Reconstruction */}
       {process.env.NODE_ENV === 'development' && (
-        <div className="mt-8 p-4 bg-synthwave-bg-primary/20 rounded border border-synthwave-neon-cyan/20">
+        <div className={`mt-8 p-4 ${containerPatterns.infoCardCyan}`}>
           <button
             onClick={() => {
               const reconstructed = reconstructJSON();

@@ -72,6 +72,7 @@ import { getTrainingProgram } from "./functions/get-training-program/resource";
 import { getTrainingPrograms } from "./functions/get-training-programs/resource";
 import { updateTrainingProgram } from "./functions/update-training-program/resource";
 import { logWorkoutTemplate } from "./functions/log-workout-template/resource";
+import { skipWorkoutTemplate } from "./functions/skip-workout-template/resource";
 import { getWorkoutTemplate } from "./functions/get-workout-template/resource";
 import { apiGatewayv2 } from "./api/resource";
 import { dynamodbTable } from "./dynamodb/resource";
@@ -153,6 +154,7 @@ const backend = defineBackend({
   getTrainingPrograms,
   updateTrainingProgram,
   logWorkoutTemplate,
+  skipWorkoutTemplate,
   getWorkoutTemplate,
 });
 
@@ -213,6 +215,7 @@ const coreApi = apiGatewayv2.createCoreApi(
   backend.getTrainingPrograms.resources.lambda,
   backend.updateTrainingProgram.resources.lambda,
   backend.logWorkoutTemplate.resources.lambda,
+  backend.skipWorkoutTemplate.resources.lambda,
   backend.getWorkoutTemplate.resources.lambda,
   userPoolAuthorizer
 );
@@ -294,6 +297,7 @@ const sharedPolicies = new SharedPolicies(
   backend.buildTrainingProgram,
   backend.updateTrainingProgram,
   backend.logWorkoutTemplate,
+  backend.skipWorkoutTemplate,
   // NOTE: postConfirmation excluded to avoid circular dependency with auth stack
 ].forEach((func) => {
   sharedPolicies.attachDynamoDbReadWrite(func.resources.lambda);
@@ -337,6 +341,7 @@ const sharedPolicies = new SharedPolicies(
   backend.buildWeeklyAnalytics,
   backend.buildMonthlyAnalytics,
   backend.createMemory,
+  backend.logWorkoutTemplate, // Added: Needs Bedrock for scaling analysis (Haiku 4.5)
 ].forEach((func) => {
   sharedPolicies.attachBedrockAccess(func.resources.lambda);
 });
@@ -350,6 +355,7 @@ const sharedPolicies = new SharedPolicies(
   backend.sendCoachConversationMessage,
   backend.streamCoachConversation,
   backend.streamCoachCreatorSession,
+  backend.logWorkoutTemplate, // Added: Stores scaling analysis debug info
 ].forEach((func) => {
   sharedPolicies.attachS3DebugAccess(func.resources.lambda);
 });
@@ -372,8 +378,10 @@ sharedPolicies.attachS3AnalyticsAccess(
   backend.updateCoachCreatorSession,
   backend.createTrainingProgram,
   backend.buildTrainingProgram,
+  backend.buildWorkout, // Added: needs to update template.linkedWorkoutId in S3
   backend.getTrainingProgram,
   backend.logWorkoutTemplate,
+  backend.skipWorkoutTemplate,
   backend.getWorkoutTemplate,
 ].forEach((func) => {
   sharedPolicies.attachS3AppsAccess(func.resources.lambda);
@@ -492,6 +500,11 @@ grantLambdaInvokePermissions(
   [backend.buildCoachConfig.resources.lambda.functionArn]
 );
 
+// Grant permission to logWorkoutTemplate to invoke buildWorkout
+grantLambdaInvokePermissions(backend.logWorkoutTemplate.resources.lambda, [
+  backend.buildWorkout.resources.lambda.functionArn,
+]);
+
 // Grant permission to createCoachConfig to invoke buildCoachConfig
 grantLambdaInvokePermissions(backend.createCoachConfig.resources.lambda, [
   backend.buildCoachConfig.resources.lambda.functionArn,
@@ -595,6 +608,7 @@ const allFunctions = [
   backend.getTrainingPrograms,
   backend.updateTrainingProgram,
   backend.logWorkoutTemplate,
+  backend.skipWorkoutTemplate,
   backend.getWorkoutTemplate,
   // NOTE: forwardLogsToSns and syncLogSubscriptions excluded - they're utility functions that don't need app resources
 ];
@@ -623,7 +637,12 @@ allFunctions.forEach((func) => {
   backend.streamCoachConversation,
   backend.streamCoachCreatorSession,
   backend.updateCoachCreatorSession,
+  backend.createTrainingProgram,
   backend.buildTrainingProgram,
+  backend.buildWorkout, // Added: needs access to S3 for updating template.linkedWorkoutId
+  backend.getWorkoutTemplate,
+  backend.logWorkoutTemplate,
+  backend.skipWorkoutTemplate,
 ].forEach((func) => {
   func.addEnvironment("APPS_BUCKET_NAME", appsBucket.bucketName);
 });
@@ -741,6 +760,11 @@ backend.createCoachConfig.addEnvironment(
 backend.createCoachConversation.addEnvironment(
   "SEND_COACH_CONVERSATION_MESSAGE_FUNCTION_NAME",
   backend.sendCoachConversationMessage.resources.lambda.functionName
+);
+
+backend.logWorkoutTemplate.addEnvironment(
+  "BUILD_WORKOUT_FUNCTION_NAME",
+  backend.buildWorkout.resources.lambda.functionName
 );
 
 // Add USER_POOL_ID environment variable to update-user-profile

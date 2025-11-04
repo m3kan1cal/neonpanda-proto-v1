@@ -10,6 +10,7 @@ import { getWorkoutsCount } from '../utils/apis/workoutApi';
 import { getCoachConversationsCount } from '../utils/apis/coachConversationApi';
 import { getMemories } from '../utils/apis/memoryApi';
 import { getWeeklyReports } from '../utils/apis/reportApi';
+import { getTrainingPrograms } from '../utils/apis/trainingProgramApi';
 import CoachAgent from '../utils/agents/CoachAgent';
 
 const NavigationContext = createContext(null);
@@ -32,6 +33,7 @@ export const NavigationProvider = ({ children }) => {
     conversations: 0,
     memories: 0,
     reports: 0,
+    programs: 0,
   });
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
@@ -103,6 +105,7 @@ export const NavigationProvider = ({ children }) => {
         conversations: 0,
         memories: 0,
         reports: 0,
+        programs: 0,
       });
       return;
     }
@@ -110,7 +113,7 @@ export const NavigationProvider = ({ children }) => {
     const fetchNewItemCounts = async () => {
       try {
         // Fetch counts using existing APIs
-        const [workoutsData, conversationsData, memoriesData, reportsData] = await Promise.all([
+        const [workoutsData, conversationsData, memoriesData, reportsData, programsData] = await Promise.all([
           getWorkoutsCount(userId, { coachId }).catch(() => ({ totalCount: 0 })),
           getCoachConversationsCount(userId, coachId).catch(() => ({ totalCount: 0, totalMessages: 0 })),
           getMemories(userId, { coachId }).catch((err) => {
@@ -120,6 +123,10 @@ export const NavigationProvider = ({ children }) => {
           getWeeklyReports(userId, { coachId }).catch((err) => {
             console.warn('NavigationContext: Failed to fetch reports:', err);
             return { items: [] };
+          }),
+          getTrainingPrograms(userId, coachId).catch((err) => {
+            console.warn('NavigationContext: Failed to fetch training programs:', err);
+            return { programs: [] };
           }),
         ]);
 
@@ -147,11 +154,22 @@ export const NavigationProvider = ({ children }) => {
           reportsCount = reportsData.totalCount;
         }
 
+        // Handle different response formats for programs
+        let programsCount = 0;
+        if (Array.isArray(programsData)) {
+          programsCount = programsData.length;
+        } else if (programsData.programs) {
+          programsCount = programsData.programs.length;
+        } else if (programsData.totalCount !== undefined) {
+          programsCount = programsData.totalCount;
+        }
+
         setNewItemCounts({
           workouts: workoutsData.totalCount || 0,
           conversations: conversationsData.totalCount || 0,
           memories: memoriesCount,
           reports: reportsCount,
+          programs: programsCount,
         });
       } catch (error) {
         console.error('NavigationContext: Error fetching item counts:', error);

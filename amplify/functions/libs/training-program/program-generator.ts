@@ -7,7 +7,7 @@
 
 import { callBedrockApi, MODEL_IDS, queryPineconeContext } from '../api-helpers';
 import { getJsonFormattingInstructions } from '../prompt-helpers';
-import { parseJsonWithFallbacks, removeTriggerFromStream } from '../response-utils';
+import { parseJsonWithFallbacks, removeTriggerFromStream, toTitleCase } from '../response-utils';
 import {
   TrainingProgram,
   TrainingProgramPhase,
@@ -21,7 +21,7 @@ import type { CoachConfig, DynamoDBItem } from '../coach-creator/types';
 import type { UserProfile } from '../user/types';
 import {
   getTrainingProgramStructureSchemaWithContext,
-  getWorkoutTemplateSchemaWithContext
+  getWorkoutTemplateArraySchemaWithContext
 } from '../schemas/training-program-schema';
 import { buildCoachPersonalityPrompt } from '../coach-config/personality-utils';
 import {
@@ -123,10 +123,19 @@ ${getJsonFormattingInstructions()}`;
   // Parse the JSON response with fallback handling for malformed AI responses
   try {
     const trainingProgramData = parseJsonWithFallbacks(response);
+
+    // Normalize equipment constraints to Title Case for consistency
+    if (trainingProgramData.equipmentConstraints) {
+      trainingProgramData.equipmentConstraints = trainingProgramData.equipmentConstraints.map(
+        (item: string) => toTitleCase(item)
+      );
+    }
+
     console.info('✅ Successfully extracted training program structure:', {
       name: trainingProgramData.name,
       totalDays: trainingProgramData.totalDays,
       phaseCount: trainingProgramData.phases?.length || 0,
+      equipmentConstraints: trainingProgramData.equipmentConstraints,
     });
     return trainingProgramData as TrainingProgramGenerationData;
   } catch (error) {
@@ -140,13 +149,14 @@ ${getJsonFormattingInstructions()}`;
 
 /**
  * Generate daily workout templates for a phase using Claude
- * This creates the detailed workout prescriptions with coach personality
+ * This creates segmented workout templates grouped by day
  */
 export async function generatePhaseWorkouts(
   phase: TrainingProgramPhase,
   phaseIndex: number,
   trainingProgramData: TrainingProgramGenerationData,
   daysBeforePhase: number,
+  userId: string,
   coachConfig: DynamoDBItem<CoachConfig>,
   userProfile: DynamoDBItem<UserProfile> | null,
   pineconeContext: string
@@ -160,6 +170,7 @@ export async function generatePhaseWorkouts(
     trainingFrequency: trainingProgramData.trainingFrequency,
     equipment: trainingProgramData.equipmentConstraints || [],
     goals: trainingProgramData.trainingGoals || [],
+    userId: userId,
   };
 
   // Build comprehensive coach personality prompt using shared utility
@@ -186,7 +197,8 @@ export async function generatePhaseWorkouts(
 ---
 
 # YOUR TASK
-Generate detailed daily workout templates for this training phase in JSON format.
+Generate a flat array of workout templates for this training phase in JSON format.
+Templates for the same day share the same groupId and dayNumber.
 
 RELEVANT USER CONTEXT:
 ${memoryContext}
@@ -195,13 +207,15 @@ Consider injuries, preferences, and past experiences when prescribing exercises.
 
 ${getJsonFormattingInstructions()}
 
-${getWorkoutTemplateSchemaWithContext(phaseContext)}`;
+${getWorkoutTemplateArraySchemaWithContext(phaseContext)}`;
 
   // DYNAMIC PROMPT (not cacheable - changes per phase)
   // Contains the specific phase details that vary
-  const dynamicPrompt = `Generate ${phase.durationDays} daily workout templates for Phase ${phaseIndex + 1}: "${phase.name}"
+  const dynamicPrompt = `Generate workout templates for ${phase.durationDays} days for Phase ${phaseIndex + 1}: "${phase.name}"
 
 Focus Areas: ${phase.focusAreas.join(', ')}
+
+Return a flat array of all templates for these ${phase.durationDays} days.
 
 ${getJsonFormattingInstructions()}`;
 
@@ -232,12 +246,26 @@ ${getJsonFormattingInstructions()}`;
       throw new Error('Response is not an array');
     }
 
-    console.info('✅ Successfully generated workout templates:', {
-      phase: phase.name,
-      templateCount: workoutTemplates.length,
+    // Normalize equipment and add phaseId to each template
+    const normalizedTemplates = workoutTemplates.map((template: WorkoutTemplate) => {
+      // Normalize equipment to Title Case for consistency with program constraints
+      if (template.equipment) {
+        template.equipment = template.equipment.map((item: string) => toTitleCase(item));
+      }
+
+      // Add phaseId reference for easier querying (Phase 3 enhancement)
+      template.phaseId = phase.phaseId;
+
+      return template;
     });
 
-    return workoutTemplates as WorkoutTemplate[];
+    console.info('✅ Successfully generated workout templates:', {
+      phase: phase.name,
+      phaseId: phase.phaseId,
+      templateCount: normalizedTemplates.length,
+    });
+
+    return normalizedTemplates as WorkoutTemplate[];
   } catch (error) {
     console.error('❌ Failed to parse workout templates JSON:', {
       error,
@@ -422,6 +450,7 @@ export async function generateTrainingProgram(
       i,
       trainingProgramData,
       dayCounter,
+      userId,
       coachConfig,
       userProfile,
       pineconeContext
@@ -469,10 +498,14 @@ export async function generateTrainingProgram(
   endDate.setDate(endDate.getDate() + trainingProgramData.totalDays - 1);
   const endDateString = endDate.toISOString().split('T')[0];
 
+  // Extract coach name for multi-coach support
+  const coachName = coachConfig.attributes.coach_name || 'Unknown Coach';
+
   const trainingProgram: TrainingProgram = {
     programId,
     userId,
-    coachId,
+    coachIds: [coachId], // Array of all coaches (initially just the creating coach)
+    coachNames: [coachName], // Array of all coach names
     creationConversationId: conversationId,
     name: trainingProgramData.name,
     description: trainingProgramData.description,
@@ -495,7 +528,7 @@ export async function generateTrainingProgram(
     equipmentConstraints: trainingProgramData.equipmentConstraints || [],
     trainingGoals: trainingProgramData.trainingGoals || [],
     trainingFrequency: trainingProgramData.trainingFrequency,
-    totalWorkouts: allWorkoutTemplates.filter(t => t.templateType === 'primary').length,
+    totalWorkouts: allWorkoutTemplates.length, // All templates are workouts in the new structure
     completedWorkouts: 0,
     skippedWorkouts: 0,
     adherenceRate: 0,

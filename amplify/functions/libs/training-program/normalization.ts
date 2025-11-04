@@ -10,7 +10,7 @@ import { callBedrockApi } from "../api-helpers";
 import { parseJsonWithFallbacks } from "../response-utils";
 import {
   getTrainingProgramStructureSchemaWithContext,
-  getWorkoutTemplateSchemaWithContext,
+  getWorkoutTemplateArraySchemaWithContext,
 } from "../schemas/training-program-schema";
 
 export interface NormalizationResult {
@@ -110,7 +110,7 @@ CRITICAL FIXES TO PRIORITIZE:
 ${getTrainingProgramStructureSchemaWithContext()}
 
 WORKOUT TEMPLATE SCHEMA (for nested templates):
-${getWorkoutTemplateSchemaWithContext({
+${getWorkoutTemplateArraySchemaWithContext({
   phaseName: "Example Phase",
   phaseDescription: "Example phase description",
   phaseDurationDays: 28,
@@ -119,6 +119,7 @@ ${getWorkoutTemplateSchemaWithContext({
   trainingFrequency: 4,
   equipment: ["barbell", "dumbbells", "pullup bar"],
   goals: ["strength", "conditioning"],
+  userId: "example_user_id",
 })}
 
 EXPECTED OUTPUT FORMAT:

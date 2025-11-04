@@ -28,7 +28,7 @@ const HeatMapSquare = ({ dayData, userId, coachId, date }) => {
 
   const handleClick = () => {
     if (dayData?.primary_workout_id) {
-      navigate(`/training-grounds/workouts?userId=${userId}&workoutId=${dayData.primary_workout_id}&coachId=${coachId}`);
+      navigate(`/training-grounds/workouts/${dayData.primary_workout_id}?userId=${userId}&coachId=${coachId}`);
     }
   };
 

@@ -27,6 +27,7 @@ import {
   MenuIcon,
   LightningIconSmall,
   CoachIconSmall,
+  ProgramIconTiny,
 } from '../../components/themes/SynthwaveComponents';
 
 /**
@@ -80,6 +81,16 @@ export const navigationItems = {
       getRoute: (ctx) => `/training-grounds?userId=${ctx.userId}&coachId=${ctx.coachId}`,
       requiresAuth: true,
       requiresCoach: true,
+      color: 'pink',
+    },
+    {
+      id: 'programs',
+      label: 'Training Programs',
+      icon: ProgramIconTiny,
+      getRoute: (ctx) => `/training-grounds/training-programs?userId=${ctx.userId}&coachId=${ctx.coachId}`,
+      requiresAuth: true,
+      requiresCoach: true, // Requires coachId to show contextual nav items
+      badge: (ctx) => ctx.newItemCounts.programs || 0, // Always show count
       color: 'pink',
     },
     {

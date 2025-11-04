@@ -62,6 +62,28 @@ export const buttonPatterns = {
   modeBadgeBuild: "flex items-center gap-1.5 px-2.5 py-0.5 bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 rounded-lg w-fit text-xs font-rajdhani font-semibold uppercase tracking-wide text-synthwave-neon-purple"
 };
 
+// Badge Patterns - Reusable badge/tag components (matches ManageMemories.jsx styling)
+export const badgePatterns = {
+  // Pink badges - For high priority, primary categorization
+  pink: "bg-synthwave-neon-pink/20 text-synthwave-neon-pink px-2 py-1 rounded text-xs font-rajdhani",
+  pinkBorder: "bg-synthwave-neon-pink/20 text-synthwave-neon-pink px-2 py-1 rounded text-xs font-rajdhani border border-synthwave-neon-pink/40",
+
+  // Cyan badges - For secondary categorization, info tags
+  cyan: "bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan px-2 py-1 rounded text-xs font-rajdhani",
+  cyanBorder: "bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan px-2 py-1 rounded text-xs font-rajdhani border border-synthwave-neon-cyan/40",
+
+  // Purple badges - For special categorization
+  purple: "bg-synthwave-neon-purple/20 text-synthwave-neon-purple px-2 py-1 rounded text-xs font-rajdhani",
+  purpleBorder: "bg-synthwave-neon-purple/20 text-synthwave-neon-purple px-2 py-1 rounded text-xs font-rajdhani border border-synthwave-neon-purple/40",
+
+  // Muted badges - For low priority or secondary information
+  muted: "bg-synthwave-text-secondary/20 text-synthwave-text-secondary px-2 py-1 rounded text-xs font-rajdhani",
+  mutedBorder: "bg-synthwave-text-secondary/20 text-synthwave-text-secondary px-2 py-1 rounded text-xs font-rajdhani border border-synthwave-text-muted/40",
+
+  // Workout detail badges - For equipment and exercise lists (cyan themed)
+  workoutDetail: "px-2 py-1 bg-synthwave-bg-primary/50 border border-synthwave-neon-cyan/30 rounded text-sm font-rajdhani text-synthwave-text-secondary"
+};
+
 export const iconButtonPatterns = {
   // Minimal Clean - Just color change on hover (Pink)
   minimal: "p-3 text-synthwave-neon-pink hover:text-synthwave-neon-pink/80 hover:bg-synthwave-neon-pink/10 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary",
@@ -300,7 +322,7 @@ export const containerPatterns = {
   dashedCardPurple: "bg-synthwave-bg-card/20 backdrop-blur-sm border-2 border-dashed border-synthwave-neon-purple/30 rounded-2xl shadow-lg shadow-synthwave-neon-purple/10 transition-all duration-300 hover:bg-synthwave-bg-card/40 hover:border-synthwave-neon-purple/50 hover:shadow-xl hover:shadow-synthwave-neon-purple/20 hover:-translate-y-1",
 
   // Content-focused card without headers (for memories, notes, messages)
-  contentCard: "bg-synthwave-bg-card/60 border border-synthwave-neon-cyan/20 rounded-2xl p-6 shadow-xl shadow-synthwave-neon-cyan/20 hover:border-synthwave-neon-cyan/40 hover:bg-synthwave-bg-card/40 transition-all duration-300 hover:-translate-y-1",
+  contentCard: "bg-synthwave-bg-card/60 border border-synthwave-neon-cyan/20 rounded-2xl p-6 shadow-xl shadow-synthwave-neon-cyan/20 hover:border-synthwave-neon-cyan/40 hover:bg-synthwave-bg-card/40 transition-all duration-300 hover:-translate-y-2",
 
   // Chat Message Bubbles - Themed containers for conversation messages
   // User message bubble - Pink gradient with rounded corner
@@ -339,6 +361,12 @@ export const containerPatterns = {
   // Static minimal card - matches Theme.jsx minimal card without hover effects (for tips, static content)
   // Note: Default padding is p-6, but can be overridden (e.g., ChatInput uses px-3 py-1)
   minimalCardStatic: "bg-synthwave-bg-card/20 border-0 rounded-2xl p-6",
+
+  // Editable workout description container - Enhanced glassmorphism with larger font
+  workoutDescriptionEditable: "w-full px-4 py-4 bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-lg text-synthwave-text-secondary font-rajdhani text-base leading-relaxed whitespace-pre-line resize-none min-h-[120px] transition-all duration-300 outline-none focus:outline-none focus:border-synthwave-neon-cyan focus:bg-synthwave-bg-primary/40 focus:ring-2 focus:ring-synthwave-neon-cyan/20 hover:border-synthwave-neon-cyan/40 hover:bg-synthwave-bg-primary/40",
+
+  // Coach notes section - Styled exactly like workout description container (matches TodaysWorkoutCard phase subcontainer)
+  coachNotesSection: "bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-lg px-4 py-4",
 
   // Modern delete modal container - 2025 glassmorphism with red destructive theming
   deleteModal: "bg-gradient-to-br from-red-500/10 via-synthwave-bg-card/40 to-red-400/10 backdrop-blur-xl border border-red-500/30 rounded-2xl shadow-2xl shadow-red-500/20 transition-all duration-300",

@@ -14,6 +14,7 @@ import { getCoachConversations } from "../utils/apis/coachConversationApi";
 import CoachHeader from "./shared/CoachHeader";
 import CompactCoachCard from './shared/CompactCoachCard';
 import CommandPaletteButton from './shared/CommandPaletteButton';
+import { useNavigationContext } from '../contexts/NavigationContext';
 import QuickStats from './shared/QuickStats';
 import { isRecentConversation } from "../utils/dateUtils";
 import { NeonBorder, NewBadge } from "./themes/SynthwaveComponents";
@@ -22,7 +23,6 @@ import { CoachConversationAgent } from "../utils/agents/CoachConversationAgent";
 import CoachAgent from "../utils/agents/CoachAgent";
 import { WorkoutAgent } from "../utils/agents/WorkoutAgent";
 import { FloatingMenuManager } from "./shared/FloatingMenuManager";
-import CommandPalette from "./shared/CommandPalette";
 import {
   CloseIcon,
   ChatIconSmall,
@@ -157,8 +157,8 @@ function ManageCoachConversations() {
   const [isDeleting, setIsDeleting] = useState(false);
 
   // Command palette state
-  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
-  const [commandPaletteCommand, setCommandPaletteCommand] = useState("");
+  // Global Command Palette state
+  const { setIsCommandPaletteOpen } = useNavigationContext();
 
   // Coach data state (for FloatingMenuManager)
   const [coachData, setCoachData] = useState(null);
@@ -168,22 +168,6 @@ function ManageCoachConversations() {
   const workoutAgentRef = useRef(null);
   const { addToast, success, error, info } = useToast();
 
-  // Handle keyboard shortcuts
-  useEffect(() => {
-    const handleKeyboardShortcuts = (event) => {
-      // Cmd/Ctrl + K to open command palette
-      if ((event.metaKey || event.ctrlKey) && event.key === "k") {
-        event.preventDefault();
-        setCommandPaletteCommand("");
-        setIsCommandPaletteOpen(true);
-      }
-    };
-
-    document.addEventListener("keydown", handleKeyboardShortcuts);
-    return () => {
-      document.removeEventListener("keydown", handleKeyboardShortcuts);
-    };
-  }, [isCommandPaletteOpen]);
 
   // Initialize workout agent
   useEffect(() => {
@@ -818,26 +802,6 @@ function ManageCoachConversations() {
           <div className="mb-8">{renderConversationList()}</div>
         </div>
       </div>
-
-      {/* Command Palette */}
-      <CommandPalette
-        isOpen={isCommandPaletteOpen}
-        onClose={() => {
-          setIsCommandPaletteOpen(false);
-          setCommandPaletteCommand("");
-        }}
-        prefilledCommand={commandPaletteCommand}
-        workoutAgent={workoutAgentRef.current}
-        userId={userId}
-        coachId={coachId}
-        onNavigation={(type, data) => {
-          if (type === "conversation-created") {
-            navigate(
-              `/training-grounds/coach-conversations?userId=${data.userId}&coachId=${data.coachId}&conversationId=${data.conversationId}`
-            );
-          }
-        }}
-      />
 
       {/* Floating Menu Manager */}
       <FloatingMenuManager

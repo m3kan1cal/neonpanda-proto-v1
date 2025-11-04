@@ -358,6 +358,15 @@ function buildSystemParams(
 ): { systemParams: any[]; enableThinking: boolean } {
   const enableThinking = options?.enableThinking || false;
 
+  // Handle empty system prompt (Bedrock requires non-empty text)
+  if (!systemPrompt || systemPrompt.trim() === '') {
+    console.info("ℹ️ No system prompt provided, skipping system parameter");
+    return {
+      systemParams: [],
+      enableThinking: false // No thinking without system context
+    };
+  }
+
   // Build system parameter with cache control if static/dynamic prompts are provided
   if (options?.staticPrompt && options?.dynamicPrompt) {
     console.info("🔥 CACHE OPTIMIZATION: Using static/dynamic prompt structure");
@@ -493,7 +502,7 @@ export const callBedrockApi = async (
     const command = new ConverseCommand({
       modelId: modelId,
       messages: messages,
-      system: systemParams,
+      ...(systemParams.length > 0 && { system: systemParams }), // Only include if not empty
       inferenceConfig: {
         maxTokens: getMaxTokensForModel(modelId),
         temperature: TEMPERATURE,

@@ -27,13 +27,16 @@ import { FullPageLoader, CenteredErrorState, InlineError, EmptyState } from './s
 import CoachHeader from './shared/CoachHeader';
 import CompactCoachCard from './shared/CompactCoachCard';
 import CommandPaletteButton from './shared/CommandPaletteButton';
-import CommandPalette from './shared/CommandPalette';
 import QuickStats from './shared/QuickStats';
+import { useNavigationContext } from '../contexts/NavigationContext';
 import { FloatingMenuManager } from './shared/FloatingMenuManager';
 import CoachAgent from '../utils/agents/CoachAgent';
 import CoachConversationAgent from '../utils/agents/CoachConversationAgent';
 import WorkoutAgent from '../utils/agents/WorkoutAgent';
 import ReportAgent from '../utils/agents/ReportAgent';
+import { TrainingProgramAgent } from '../utils/agents/TrainingProgramAgent';
+import TodaysWorkoutCard from './training-programs/TodaysWorkoutCard';
+import ActiveProgramSummary from './training-programs/ActiveProgramSummary';
 
 function TrainingGrounds() {
   const [searchParams] = useSearchParams();
@@ -45,12 +48,14 @@ function TrainingGrounds() {
   const { isValidating: isValidatingUserId, isValid: isValidUserId, error: userIdError } = useAuthorizeUser(userId);
   const { success: showSuccess, error: showError } = useToast();
 
-  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
-  const [commandPaletteCommand, setCommandPaletteCommand] = useState('');
+  // Global Command Palette state
+  const { setIsCommandPaletteOpen } = useNavigationContext();
+
   const coachAgentRef = useRef(null);
   const conversationAgentRef = useRef(null);
   const workoutAgentRef = useRef(null);
   const reportsAgentRef = useRef(null);
+  const programAgentRef = useRef(null);
 
   // Coach data state (managed by CoachAgent)
   const [coachData, setCoachData] = useState(null);
@@ -87,6 +92,17 @@ function TrainingGrounds() {
     error: null,
   });
 
+  // Training Program state (managed by TrainingProgramAgent)
+  const [programState, setProgramState] = useState({
+    programs: [],
+    activePrograms: [],
+    activeProgram: null,
+    todaysWorkout: null,
+    isLoadingPrograms: false,
+    isLoadingTodaysWorkout: false,
+    error: null,
+  });
+
   // Create stable callback reference with useCallback
   const handleWorkoutStateChange = useCallback((newState) => {
     // Map specific loading states to general isLoading for backward compatibility
@@ -117,30 +133,6 @@ function TrainingGrounds() {
       window.scrollTo(0, 0);
     }
   }, [isValidatingUserId]);
-
-  // Handle keyboard shortcuts
-  useEffect(() => {
-    const handleKeyboardShortcuts = (event) => {
-      // Escape key to close command palette
-      if (event.key === 'Escape') {
-        if (isCommandPaletteOpen) {
-          setIsCommandPaletteOpen(false);
-        }
-      }
-
-      // Cmd/Ctrl + K to open command palette
-      if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
-        event.preventDefault();
-        setCommandPaletteCommand('');
-        setIsCommandPaletteOpen(true);
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyboardShortcuts);
-    return () => {
-      document.removeEventListener('keydown', handleKeyboardShortcuts);
-    };
-  }, [isCommandPaletteOpen]);
 
   // Load coach data for FloatingMenuManager and stats
   useEffect(() => {
@@ -237,6 +229,21 @@ function TrainingGrounds() {
     };
   }, []);
 
+  // Initialize training program agent
+  useEffect(() => {
+    if (!programAgentRef.current && userId && coachId) {
+      programAgentRef.current = new TrainingProgramAgent(userId, coachId, (newState) => {
+        setProgramState(newState);
+      });
+    }
+    return () => {
+      if (programAgentRef.current) {
+        programAgentRef.current.destroy();
+        programAgentRef.current = null;
+      }
+    };
+  }, [userId, coachId]);
+
   // Initialize data when userId or coachId changes
   useEffect(() => {
     if (conversationAgentRef.current && userId && coachId) {
@@ -254,6 +261,19 @@ function TrainingGrounds() {
     if (reportsAgentRef.current && userId) {
       reportsAgentRef.current.setUserId(userId);
       reportsAgentRef.current.loadRecentReports(5);
+    }
+    if (programAgentRef.current && userId && coachId) {
+      // Load active programs and today's workout
+      programAgentRef.current.loadTrainingPrograms({ status: 'active', limit: 5 })
+        .then(() => {
+          // After loading programs, load today's workout if there's an active program
+          if (programAgentRef.current.hasActiveProgram()) {
+            return programAgentRef.current.loadWorkoutTemplates(null, { today: true });
+          }
+        })
+        .catch(error => {
+          console.error('TrainingGrounds: Error loading program data:', error);
+        });
     }
   }, [userId, coachId]);
 
@@ -346,6 +366,7 @@ function TrainingGrounds() {
       ) : workoutState.recentWorkouts.length === 0 ? (
         <EmptyState
           title="No workouts found"
+          message="Log your first workout using the command palette to start tracking progress"
           size="medium"
         />
       ) : (
@@ -359,7 +380,7 @@ function TrainingGrounds() {
               <div
                 key={workout.workoutId}
                 onClick={() => {
-                  navigate(`/training-grounds/workouts?userId=${userId}&workoutId=${workout.workoutId}&coachId=${coachId}`);
+                  navigate(`/training-grounds/workouts/${workout.workoutId}?userId=${userId}&coachId=${coachId}`);
                 }}
                 className="relative bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/20 hover:border-synthwave-neon-pink/40 hover:bg-synthwave-bg-primary/50 rounded-lg p-3 cursor-pointer transition-all duration-200"
               >
@@ -604,6 +625,48 @@ function TrainingGrounds() {
 
         {/* Main Sections Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {/* Training Programs Section - Dynamic based on program state */}
+          {programState.activeProgram ? (
+            // User has active program
+            <>
+              {/* Today's Workout Card - shows workout or rest day */}
+              <TodaysWorkoutCard
+                todaysWorkout={programState.todaysWorkout}
+                program={programState.activeProgram}
+                isLoading={programState.isLoadingTodaysWorkout}
+                error={programState.error}
+                userId={userId}
+                coachId={coachId}
+              />
+              {/* Active Program Summary */}
+              <ActiveProgramSummary
+                program={programState.activeProgram}
+                todaysWorkout={programState.todaysWorkout}
+                isLoading={programState.isLoadingPrograms}
+                userId={userId}
+                coachId={coachId}
+              />
+            </>
+          ) : (
+            // User has no active program - show empty state like other sections
+            <div className={`${containerPatterns.cardMedium} p-6`}>
+              <div className="flex items-start space-x-3 mb-4">
+                <div className="w-3 h-3 bg-synthwave-neon-pink rounded-full flex-shrink-0 mt-2"></div>
+                <h3 className="font-russo font-bold text-white text-lg uppercase">
+                  Training Programs
+                </h3>
+              </div>
+              <p className="font-rajdhani text-synthwave-text-secondary text-sm mb-6">
+                Structured training programs and workout plans designed by you and your coach.
+              </p>
+              <EmptyState
+                title="No active programs"
+                message="Start a conversation with your coach to create your first training program"
+                size="medium"
+              />
+            </div>
+          )}
+
           {/* Conversations Section */}
           <div className={`${containerPatterns.cardMedium} p-6`}>
             <div className="flex items-start space-x-3 mb-4">
@@ -657,11 +720,11 @@ function TrainingGrounds() {
                   })}
                 </>
               ) : (
-                <div className="text-center py-4">
-                  <div className="font-rajdhani text-sm text-synthwave-text-secondary">
-                    No conversations yet
-                  </div>
-                </div>
+                <EmptyState
+                  title="No conversations yet"
+                  message="Click the command button above to start your first conversation"
+                  size="medium"
+                />
               )}
             </div>
           </div>
@@ -706,12 +769,13 @@ function TrainingGrounds() {
                   title="Reports API Error"
                   message={reportsState.error}
                   variant="error"
-                  size="small"
+                  size="medium"
                 />
               ) : reportsState.recentReports.length === 0 ? (
                 <EmptyState
                   title="No reports found"
-                  size="small"
+                  message="Reports generate automatically after you log workouts"
+                  size="medium"
                 />
               ) : (
                 <>
@@ -745,42 +809,6 @@ function TrainingGrounds() {
                   })}
                 </>
               )}
-            </div>
-          </div>
-
-          {/* Training Programs Section */}
-          <div className={`${containerPatterns.cardMedium} p-6`}>
-            <div className="flex items-start space-x-3 mb-4">
-              <div className="w-3 h-3 bg-synthwave-neon-pink rounded-full flex-shrink-0 mt-2"></div>
-              <h3 className="font-russo font-bold text-white text-lg uppercase">
-                Training Programs
-              </h3>
-            </div>
-            <p className="font-rajdhani text-synthwave-text-secondary text-sm mb-6">
-              Structured training programs and workout plans designed by you and your coach.
-            </p>
-            <div className="text-center py-8">
-              <div className="font-rajdhani text-synthwave-text-muted text-sm">
-                This feature is in active development and is coming soon
-              </div>
-            </div>
-          </div>
-
-          {/* Resources & Tools Section */}
-          <div className={`${containerPatterns.cardMedium} p-6`}>
-            <div className="flex items-start space-x-3 mb-4">
-              <div className="w-3 h-3 bg-synthwave-neon-cyan rounded-full flex-shrink-0 mt-2"></div>
-              <h3 className="font-russo font-bold text-white text-lg uppercase">
-                Resources & Tools
-              </h3>
-            </div>
-            <p className="font-rajdhani text-synthwave-text-secondary text-sm mb-6">
-              Exercise library, training tools, and educational resources to enhance your training.
-            </p>
-            <div className="text-center py-8">
-              <div className="font-rajdhani text-synthwave-text-muted text-sm">
-                This feature is in active development and is coming soon
-              </div>
             </div>
           </div>
 
@@ -837,35 +865,12 @@ function TrainingGrounds() {
         </div>
       </div>
 
-      {/* Command Palette */}
-      <CommandPalette
-        isOpen={isCommandPaletteOpen}
-        onClose={() => {
-          setIsCommandPaletteOpen(false);
-          setCommandPaletteCommand('');
-        }}
-        prefilledCommand={commandPaletteCommand}
-        workoutAgent={workoutAgentRef.current}
-        userId={userId}
-        coachId={coachId}
-        onNavigation={(type, data) => {
-          if (type === 'conversation-created') {
-            // Navigate to the new conversation
-            navigate(`/training-grounds/coach-conversations?userId=${data.userId}&coachId=${data.coachId}&conversationId=${data.conversationId}`);
-          }
-        }}
-      />
-
       {/* Floating Menu Manager */}
       <FloatingMenuManager
         userId={userId}
         coachId={coachId}
         currentPage="training-grounds"
         coachData={coachData}
-        onCommandPaletteToggle={(command) => {
-          setCommandPaletteCommand(command);
-          setIsCommandPaletteOpen(true);
-        }}
       />
 
       {/* Tooltips */}

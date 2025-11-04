@@ -11,7 +11,8 @@
 export interface TrainingProgram {
   programId: string; // Keep ID prefix for clarity in queries/references
   userId: string;
-  coachId: string;
+  coachIds: string[]; // All coaches involved (supports multi-coach programs)
+  coachNames: string[]; // Names of all coaches (for display without additional queries)
   creationConversationId: string; // Link to the conversation that created it
 
   // Program definition
@@ -75,42 +76,84 @@ export interface TrainingProgramPhase {
 }
 
 /**
- * Workout Template structure - a planned workout stored in S3 as part of program details
+ * Workout Template structure - a named, actionable workout
  * This represents a PRESCRIBED workout that hasn't been performed yet.
  * Once completed, it gets converted to a Workout (Universal Schema) with performance data.
+ * Each template = one logged workout (1:1 relationship)
+ *
+ * Templates for the same training day are linked via groupId (implicit grouping)
  */
 export interface WorkoutTemplate {
-  // === Structured Metadata (for app functionality) ===
-  templateId: string; // Keep ID prefix for clarity
-  dayNumber: number; // 1-indexed position in program
-  templateType: "primary" | "optional" | "accessory"; // For handling multiple templates per day
-  templatePriority: number; // For sorting templates within a day
-  scheduledDate: string; // YYYY-MM-DD calculated from startDate + dayNumber - pausedDuration
-  phaseId: string; // Which phase this workout belongs to
+  // === Core Identity & Grouping ===
+  templateId: string; // "template_userId_timestamp_shortId"
+  groupId: string; // "group_userId_timestamp_shortId" - links templates for same day
+  dayNumber: number; // Day 1, 2, 3... of program (for querying/display)
+  phaseId?: string; // Optional reference to phase (for easier querying)
+  name: string; // "Strength Block", "Lower Body Burn" (user-facing name)
+  type: TemplateType; // Type of workout
 
-  // === Display Fields ===
-  name: string; // "Lower Body Strength - Squat Focus"
-  description: string; // Brief 1-sentence overview
-  estimatedDuration: number; // Minutes
-  requiredEquipment: string[]; // Subset of program equipment
+  // === Natural Language Content ===
+  description: string; // Natural language workout (coach-like, prescriptive)
+  prescribedExercises: string[]; // ["Back Squat", "KB Swings"] - for AI context & filtering
 
-  // === Natural Language Workout Content ===
-  workoutContent: string; // The actual workout written naturally (like a human coach)
-  coachingNotes: string; // Additional context, cues, scaling options, focus points
+  // === Scoring & Duration ===
+  scoringType: ScoringType; // How this workout is scored/tracked
+  timeCap?: number; // For timed workouts (minutes)
+  estimatedDuration: number; // Expected duration (minutes)
+  restAfter: number; // Rest after this workout (minutes)
 
-  // === Optional: Lightweight Exercise References ===
-  prescribedExercises?: Exercise[]; // Optional - for filtering/quick reference only
+  // === Optional Metadata ===
+  equipment?: string[]; // ["Barbell", "Kettlebell", "Box"]
+  notes?: string; // Coach notes for this specific workout
+  metadata?: {
+    difficulty?: string; // "beginner", "intermediate", "advanced"
+    focusAreas?: string[]; // ["Lower Body", "Strength"]
+  };
 
-  // === Status Tracking ===
-  status: "pending" | "completed" | "skipped" | "regenerated";
-  completedAt: Date | null;
-
-  // Link to the logged workout (Universal Schema) when completed
-  linkedWorkoutId: string | null; // References Workout.workoutId
-
-  userFeedback: WorkoutFeedback | null;
-  adaptationHistory: WorkoutAdaptation[]; // If regenerated, track changes
+  // === Status Tracking (populated after logging) ===
+  status?: "pending" | "completed" | "skipped" | "regenerated";
+  completedAt?: Date | null;
+  linkedWorkoutId?: string | null; // References logged Workout.workoutId
+  userFeedback?: WorkoutFeedback | null;
 }
+
+/**
+ * Template types - categorizes the workout
+ */
+export type TemplateType =
+  | "strength" // Heavy barbell work, max effort lifts
+  | "accessory" // Secondary strength work, hypertrophy
+  | "conditioning" // MetCons, cardio, high-intensity intervals
+  | "skill" // Technique work, skill practice
+  | "mobility" // Stretching, mobility, recovery
+  | "warmup" // Warm-up specific
+  | "cooldown" // Cool-down specific
+  | "recovery" // Recovery work
+  | "power" // Powerlifting work
+  | "olympic" // Olympic lifting work
+  | "endurance" // Endurance work
+  | "flexibility" // Flexibility work
+  | "balance" // Balance work
+  | "core" // Core work
+  | "stability" // Stability work
+  | "mixed"; // Combination of types
+
+/**
+ * Scoring types - how workout performance is tracked
+ */
+export type ScoringType =
+  | "load" // Track weight lifted
+  | "time" // For time workouts
+  | "amrap" // As many rounds as possible
+  | "rounds_plus_reps" // Track rounds + partial reps (e.g., "3 rounds + 15 reps")
+  | "emom" // Every minute on the minute
+  | "reps" // Total reps completed
+  | "distance" // Distance covered
+  | "calories" // Track calories on cardio equipment
+  | "pace" // Speed tracking (min/mile, min/km, min/500m)
+  | "rpe" // Rate of Perceived Exertion (1-10 scale)
+  | "completion" // Just mark as done
+  | "none"; // No scoring needed
 
 /**
  * Exercise structure - individual exercises within a workout template
@@ -119,7 +162,26 @@ export interface WorkoutTemplate {
  */
 export interface Exercise {
   exerciseName: string;
-  movementType: "barbell" | "dumbbell" | "kettlebell" | "bodyweight" | "gymnastics" | "cardio" | "other";
+  movementType:
+    | "barbell"
+    | "dumbbell"
+    | "kettlebell"
+    | "bodyweight"
+    | "gymnastics"
+    | "machine" // Cable machines, leg press, smith machine, etc.
+    | "band" // Resistance bands
+    | "medicine_ball" // Med ball slams, throws, etc.
+    | "sled" // Sled pushes/pulls
+    | "plyometric" // Box jumps, broad jumps, explosive movements
+    | "rowing" // Rowing machine/erg
+    | "cycling" // Bike erg, assault bike, spin bike
+    | "ski" // Ski erg
+    | "running" // Treadmill or outdoor running
+    | "rope" // Battle ropes, jump rope
+    | "plate" // Weight plates used directly
+    | "sandbag" // Sandbag carries, cleans, etc.
+    | "cardio" // Generic cardio (when specific type not needed)
+    | "other"; // Other equipment or mixed
   variation?: string; // Movement variation: "touch and go", "dead stop", "strict", "kipping", "butterfly", etc.
   assistance?: string; // Equipment assistance: "red band", "blue band", "belt", "wraps", "sleeves", etc.
 
@@ -157,6 +219,13 @@ export interface WorkoutFeedback {
   difficulty: "too_easy" | "just_right" | "too_hard" | null;
   comments: string | null;
   timestamp: Date;
+  // Scaling analysis (populated automatically when logging from template)
+  scalingAnalysis?: {
+    wasScaled: boolean;
+    modifications: string[]; // ["weight reduced from 135lb to 115lb", "substituted pull-ups for ring rows"]
+    adherenceScore: number; // 0-1, how closely they followed the template
+    analysisConfidence: number; // 0-1, confidence in the analysis
+  };
 }
 
 /**
@@ -189,7 +258,7 @@ export interface TrainingProgramAdaptation {
 export interface TrainingProgramDetails {
   programId: string;
 
-  // NEW: Program context for better AI understanding
+  // Program context for better AI understanding
   programContext: {
     goals: string[];
     purpose: string;
@@ -202,7 +271,8 @@ export interface TrainingProgramDetails {
     };
   };
 
-  dailyWorkoutTemplates: WorkoutTemplate[]; // Renamed from dailyWorkouts
+  // Flat array of workout templates (implicit grouping via groupId and dayNumber)
+  workoutTemplates: WorkoutTemplate[];
 
   generationMetadata: {
     generatedAt: Date;
@@ -279,6 +349,7 @@ export interface LogWorkoutTemplateEvent {
   coachId: string;
   programId: string;
   templateId: string; // Specific template to log
+  groupId: string; // Links to other workouts from same training day
   workoutData?: any; // Optional: user can provide their own workout data, otherwise template is converted
   completedAt?: Date;
   feedback?: WorkoutFeedback;
@@ -313,24 +384,26 @@ export interface TrainingProgramSummary {
   adherenceRate: number;
   startDate: string;
   lastActivityAt: Date | null;
-  coachId: string;
-  coachName: string;
+  coachIds: string[]; // All coaches
+  coachNames: string[]; // All coach names
 }
 
 /**
  * Today's workout template view - what user sees in UI
- * Can include multiple templates (primary + optional)
+ * Can include multiple templates if day has multiple workouts
  */
 export interface TodaysWorkoutTemplates {
-  programId: string; // Keep ID prefix for clarity
-  programName: string; // Keep for display purposes (external reference)
+  programId: string;
+  programName: string;
   dayNumber: number;
   totalDays: number;
-  phaseName: string; // Keep for display purposes (external reference)
-  templates: WorkoutTemplate[]; // Array of templates for the day (primary + optional)
+  phaseName: string;
+  phaseNumber: number | null; // Phase number (1-indexed) or null if phase not found
+  groupId: string; // Links all templates for this day
+  templates: WorkoutTemplate[]; // Array of templates for the day
   nextWorkout?: {
     dayNumber: number;
-    name: string; // Simplified from workoutName
+    templateName: string;
     scheduledDate: string;
   };
 }
@@ -354,21 +427,21 @@ export type ConversationMode = "chat" | "build";
  * Training Program generation data from Build mode conversation
  */
 export interface TrainingProgramGenerationData {
-  name: string; // Simplified from programName
-  description: string; // Simplified from programDescription
+  name: string;
+  description: string;
   totalDays: number;
   trainingFrequency: number;
   startDate: string;
   equipmentConstraints: string[];
   trainingGoals: string[];
   phases: Array<{
-    name: string; // Simplified from phaseName
-    description: string; // Simplified from phaseDescription
+    name: string;
+    description: string;
     startDay: number;
     endDay: number;
     focusAreas: string[];
   }>;
-  dailyWorkoutTemplates: WorkoutTemplate[];
+  workoutTemplates: WorkoutTemplate[]; // Flat array of templates with groupId/dayNumber
 }
 
 /**

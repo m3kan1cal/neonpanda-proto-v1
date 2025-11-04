@@ -1066,6 +1066,18 @@ export async function saveWorkout(workout: Workout): Promise<void> {
     new Date().toISOString()
   );
 
+  // Add GSI-1 keys if workout has a groupId (for querying workouts by training session/group)
+  if (workout.groupId) {
+    item.gsi1pk = `group#${workout.groupId}`;
+    item.gsi1sk = `workout#${workout.workoutId}`;
+  }
+
+  // Add GSI-2 keys if workout has a templateId (for querying all logged instances of a template)
+  if (workout.templateId) {
+    item.gsi2pk = `template#${workout.templateId}`;
+    item.gsi2sk = `workout#${workout.workoutId}`;
+  }
+
   await saveToDynamoDB(item);
 
   console.info("Workout saved successfully:", {
@@ -1073,6 +1085,8 @@ export async function saveWorkout(workout: Workout): Promise<void> {
     userId: workout.userId,
     discipline: workout.workoutData.discipline,
     completedAt: workout.completedAt,
+    groupId: workout.groupId || 'none',
+    templateId: workout.templateId || 'none',
   });
 }
 
@@ -1478,6 +1492,74 @@ export async function deleteWorkout(
     if (error instanceof Error && error.message.includes('not found')) {
       throw new Error(`Workout ${workoutId} not found for user ${userId}`);
     }
+    throw error;
+  }
+}
+
+/**
+ * Query all workouts in a group/session using GSI-1
+ * Groups workouts from the same training day/session together
+ */
+export async function queryWorkoutsByGroup(
+  groupId: string
+): Promise<DynamoDBItem<Workout>[]> {
+  const tableName = getTableName();
+
+  try {
+    const result = await withThroughputScaling(async () => {
+      return await docClient.send(
+        new QueryCommand({
+          TableName: tableName,
+          IndexName: "gsi1",
+          KeyConditionExpression: "gsi1pk = :gsi1pk",
+          ExpressionAttributeValues: {
+            ":gsi1pk": `group#${groupId}`,
+          },
+        })
+      );
+    }, `Query workouts by groupId: ${groupId}`);
+
+    if (!result.Items || result.Items.length === 0) {
+      return [];
+    }
+
+    return result.Items as DynamoDBItem<Workout>[];
+  } catch (error: any) {
+    console.error(`Error querying workouts by groupId ${groupId}:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Query all logged instances of a workout template using GSI-2
+ * Finds all workouts that were logged from a specific template
+ */
+export async function queryWorkoutsByTemplate(
+  templateId: string
+): Promise<DynamoDBItem<Workout>[]> {
+  const tableName = getTableName();
+
+  try {
+    const result = await withThroughputScaling(async () => {
+      return await docClient.send(
+        new QueryCommand({
+          TableName: tableName,
+          IndexName: "gsi2",
+          KeyConditionExpression: "gsi2pk = :gsi2pk",
+          ExpressionAttributeValues: {
+            ":gsi2pk": `template#${templateId}`,
+          },
+        })
+      );
+    }, `Query workouts by templateId: ${templateId}`);
+
+    if (!result.Items || result.Items.length === 0) {
+      return [];
+    }
+
+    return result.Items as DynamoDBItem<Workout>[];
+  } catch (error: any) {
+    console.error(`Error querying workouts by templateId ${templateId}:`, error);
     throw error;
   }
 }
@@ -2519,9 +2601,16 @@ export async function createCoachConfigFromTemplate(
 export async function saveTrainingProgram(
   program: TrainingProgram
 ): Promise<void> {
+  // Use primary coach (first coach in coachIds array) for partition key
+  const primaryCoachId = program.coachIds[0];
+
+  if (!primaryCoachId) {
+    throw new Error('Training program must have at least one coach');
+  }
+
   const item = createDynamoDBItem<TrainingProgram>(
     "trainingProgram",
-    `user#${program.userId}#coach#${program.coachId}`,
+    `user#${program.userId}#coach#${primaryCoachId}`,
     `program#${program.programId}`,
     program,
     new Date().toISOString()
@@ -2539,7 +2628,8 @@ export async function saveTrainingProgram(
   console.info("Training program saved successfully:", {
     programId: program.programId,
     userId: program.userId,
-    coachId: program.coachId,
+    coachIds: program.coachIds,
+    coachNames: program.coachNames,
     name: program.name,
     status: program.status,
     totalDays: program.totalDays,
@@ -2789,8 +2879,8 @@ export async function queryTrainingProgramSummaries(
       adherenceRate: program.attributes.adherenceRate,
       startDate: program.attributes.startDate,
       lastActivityAt: program.attributes.lastActivityAt,
-      coachId: program.attributes.coachId,
-      coachName: "", // Will be populated by caller if needed
+      coachIds: program.attributes.coachIds,
+      coachNames: program.attributes.coachNames,
     }));
 
     console.info("Training program summaries created:", {

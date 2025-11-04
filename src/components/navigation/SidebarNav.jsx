@@ -175,7 +175,7 @@ const SidebarNav = () => {
         <div className={`
           ${isSidebarCollapsed ? navigationPatterns.desktop.navItemIconCollapsed : navigationPatterns.desktop.navItemIcon}
           ${active ? colorClasses.glow : ''}
-          ${item.icon.name === 'WorkoutIconTiny' || item.icon.name === 'NetworkIconTiny' || item.icon.name === 'ChatIconSmall' || item.icon.name === 'CoachIconSmall' || item.icon.name === 'MemoryIconTiny' || item.icon.name === 'MenuIcon' ? 'flex items-center justify-center' : ''} // Center icons that need alignment
+          ${item.icon.name === 'WorkoutIconTiny' || item.icon.name === 'NetworkIconTiny' || item.icon.name === 'ChatIconSmall' || item.icon.name === 'CoachIconSmall' || item.icon.name === 'MemoryIconTiny' || item.icon.name === 'ProgramIconTiny' || item.icon.name === 'MenuIcon' ? 'flex items-center justify-center' : ''} // Center icons that need alignment
         `}>
           <Icon className={
             isSidebarCollapsed
@@ -311,6 +311,11 @@ const SidebarNav = () => {
         <nav className={navigationPatterns.desktop.navSection}>
           {/* Primary Navigation */}
           {renderSection(primaryItems, null)}
+
+          {/* Divider before Your Training */}
+          {contextualItems.length > 0 && (
+            <div className={`${navigationPatterns.sectionSpacing.both} ${navigationPatterns.dividers.gradientCyan}`} />
+          )}
 
           {/* Coach-Specific Navigation */}
           {renderSection(contextualItems, 'Your Training')}

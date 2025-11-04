@@ -27,6 +27,7 @@ import { FullPageLoader, CenteredErrorState } from "./shared/ErrorStates";
 import CoachHeader from "./shared/CoachHeader";
 import CompactCoachCard from "./shared/CompactCoachCard";
 import CommandPaletteButton from "./shared/CommandPaletteButton";
+import { useNavigationContext } from '../contexts/NavigationContext';
 import { InlineEditField } from "./shared/InlineEditField.jsx";
 import ChatInput from "./shared/ChatInput";
 import UserAvatar from "./shared/UserAvatar";
@@ -48,7 +49,6 @@ import {
   supportsStreaming,
 } from "../utils/ui/streamingUiHelper.jsx";
 import { FloatingMenuManager } from "./shared/FloatingMenuManager";
-import CommandPalette from "./shared/CommandPalette";
 import IconButton from "./shared/IconButton";
 import {
   WorkoutIconSmall,
@@ -307,8 +307,8 @@ function CoachConversations() {
   // Slash command states moved to ChatInput component
 
   // Command palette state
-  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
-  const [commandPaletteCommand, setCommandPaletteCommand] = useState("");
+  // Global Command Palette state
+  const { setIsCommandPaletteOpen } = useNavigationContext();
 
   // Delete modal state
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -388,23 +388,6 @@ function CoachConversations() {
       },
     ],
   };
-
-  // Handle keyboard shortcuts
-  useEffect(() => {
-    const handleKeyboardShortcuts = (event) => {
-      // Cmd/Ctrl + K to open command palette
-      if ((event.metaKey || event.ctrlKey) && event.key === "k") {
-        event.preventDefault();
-        setCommandPaletteCommand("");
-        setIsCommandPaletteOpen(true);
-      }
-    };
-
-    document.addEventListener("keydown", handleKeyboardShortcuts);
-    return () => {
-      document.removeEventListener("keydown", handleKeyboardShortcuts);
-    };
-  }, [isCommandPaletteOpen]);
 
   // Agent state (managed by CoachConversationAgent)
   const [coachConversationAgentState, setCoachConversationAgentState] =
@@ -1382,36 +1365,12 @@ function CoachConversations() {
         onConversationModeChange={handleConversationModeChange}
       />
 
-      {/* Command Palette */}
-      <CommandPalette
-        isOpen={isCommandPaletteOpen}
-        onClose={() => {
-          setIsCommandPaletteOpen(false);
-          setCommandPaletteCommand("");
-        }}
-        prefilledCommand={commandPaletteCommand}
-        workoutAgent={workoutAgentRef.current}
-        userId={userId}
-        coachId={coachId}
-        onNavigation={(type, data) => {
-          if (type === "conversation-created") {
-            navigate(
-              `/training-grounds/coach-conversations?userId=${data.userId}&coachId=${data.coachId}&conversationId=${data.conversationId}`
-            );
-          }
-        }}
-      />
-
       {/* Floating Menu Manager */}
       <FloatingMenuManager
         userId={userId}
         coachId={coachId}
         currentPage="coach-conversations"
         coachData={coachConversationAgentState.coach}
-        onCommandPaletteToggle={(command) => {
-          setCommandPaletteCommand(command);
-          setIsCommandPaletteOpen(true);
-        }}
       />
 
       {/* Delete Confirmation Modal */}
