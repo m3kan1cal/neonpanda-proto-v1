@@ -175,7 +175,7 @@ function TodaysWorkoutCard({
       onViewWorkout(primaryTemplate);
     } else {
       // Navigate to today's workouts page
-      navigate(`/training-grounds/training-programs/${program.programId}/today?userId=${userId}&coachId=${coachId}`);
+        navigate(`/training-grounds/training-programs/workouts?userId=${userId}&coachId=${coachId}&programId=${program.programId}`);
     }
   };
 
@@ -208,9 +208,9 @@ function TodaysWorkoutCard({
       <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-lg p-4 mb-4">
         <div className="flex items-start justify-between mb-2">
           <div className="flex-1">
-            <div className="font-rajdhani text-base text-white font-medium mb-1">
+            <h3 className="font-rajdhani font-semibold text-base text-white mb-1">
               {primaryTemplate.name}
-            </div>
+            </h3>
             {primaryTemplate.estimatedDuration && (
               <div className="font-rajdhani text-xs text-synthwave-text-secondary">
                 Estimated Duration: <span className="text-synthwave-neon-cyan">{primaryTemplate.estimatedDuration} minutes</span>

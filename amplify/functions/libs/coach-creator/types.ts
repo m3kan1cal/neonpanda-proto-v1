@@ -157,6 +157,7 @@ export interface SafetyRule {
 export interface CoachConfigSummary {
   coach_id: string;
   coach_name: string;
+  status?: string; // For filtering archived coaches
   selected_personality: {
     primary_template: string;
     selection_reasoning?: string;
@@ -178,6 +179,7 @@ export interface CoachConfig {
   coach_id: string;
   coach_name: string;
   coach_description?: string;
+  status?: 'active' | 'archived'; // Optional for backwards compatibility, defaults to active
   gender_preference?: 'male' | 'female' | 'neutral'; // Optional for backwards compatibility
   selected_personality: {
     primary_template: string;

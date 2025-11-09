@@ -575,3 +575,416 @@ Phase 3B testing completed successfully with all test cases passing. Key achieve
 - No console errors or warnings
 
 The ViewWorkouts component is production-ready and handles all expected use cases.
+
+---
+
+## 12. Program Dashboard (New Feature)
+
+**Priority**: HIGH
+**Status**: ⏳ READY FOR TESTING - All Components Built
+**Route**: `/training-grounds/training-programs/:programId`
+
+### 12.1 Dashboard Navigation
+
+#### Test Steps:
+- [ ] Navigate to Manage Training Programs page
+- [ ] Click "View Dashboard" button on any program card
+- [ ] **Verify**: Navigates to `/training-grounds/training-programs/{programId}?userId={userId}&coachId={coachId}`
+- [ ] **Verify breadcrumbs**: `Home > Training Grounds > Training Programs > Program Dashboard`
+- [ ] Click coach avatar → should navigate to Training Grounds
+- [ ] Click "Training Programs" in breadcrumbs → should go back to list
+
+#### Expected Results:
+- ✅ Dashboard loads with correct program data
+- ✅ Breadcrumbs display proper hierarchy
+- ✅ All navigation links work correctly
+
+---
+
+### 12.2 Dashboard Header
+
+#### Test Steps:
+- [ ] **Verify header displays**:
+  - Coach avatar (with tooltip "Go to the Training Grounds")
+  - Program name (large, prominent)
+  - Status badge (Active, Paused, or Completed)
+  - Current day info (Day X of Y)
+  - Training frequency (Nx per week)
+- [ ] **Verify status badge colors**:
+  - Active: Cyan logged badge style
+  - Paused: Cyan skipped badge style
+  - Completed: Success badge style
+- [ ] **Verify Actions menu** (⋮):
+  - Shows "Actions ⋮" button
+  - Click opens dropdown
+  - Click outside closes dropdown
+
+#### Expected Results:
+- ✅ All header information displays correctly
+- ✅ Status badge matches program status
+- ✅ Actions menu opens/closes properly
+
+---
+
+### 12.3 Today's Workout Summary
+
+#### Test Steps:
+- [ ] **Active program with workout today**:
+  - Verify workout name, duration, type, difficulty
+  - Verify equipment tags display
+  - Verify status badge if logged/skipped
+  - Verify "Day Complete 🎉" badge if all workouts done
+  - Click "View Full Workout" → navigates to /today route
+  - Verify "Log Workout" button appears if pending
+- [ ] **Active program with multiple workouts**:
+  - Verify all workouts shown with dividers
+  - Verify count text: "X workouts scheduled today"
+- [ ] **Rest day** (no workouts):
+  - Verify shows 🏖️ emoji
+  - Verify text: "Rest day - no workouts scheduled"
+  - Verify motivational message: "Recovery is just as important as training"
+- [ ] **Already completed day**:
+  - Verify "Day Complete 🎉" badge shows
+  - Verify all workouts show status badges
+
+#### Expected Results:
+- ✅ Today's workout displays correctly
+- ✅ Rest days show appropriate message
+- ✅ Action buttons work properly
+- ✅ Multi-workout days display all workouts
+
+---
+
+### 12.4 Program Calendar
+
+#### Test Steps:
+- [ ] **Calendar grid display**:
+  - Verify weeks are grouped (Week 1, Week 2, etc.)
+  - Verify day cells show day number
+  - Verify status icons: ✓ (completed), ✕ (skipped), ○ (pending), — (rest)
+  - Verify current day has pink ring indicator
+  - Verify current week has pink border/background
+- [ ] **Day cell interaction**:
+  - Click any day cell → navigates to /day/{dayNumber}
+  - Hover over cell → shows tooltip with workout count
+  - Verify pending days show workout count
+- [ ] **Show All / Show Current toggle**:
+  - Initial state shows current week + 1 before + 1 after
+  - Click "Show All Weeks" → expands to all weeks
+  - Click "Show Current Week" → collapses back
+  - Verify button text changes appropriately
+- [ ] **Jump to Today button**:
+  - Shows when not viewing current week
+  - Click → scrolls to current week
+  - Hides when already at current week
+- [ ] **Phase color coding**:
+  - Day cells have colored borders based on phase
+  - Phase 1 = pink, Phase 2 = cyan, Phase 3 = purple
+  - Colors rotate for 4+ phases
+- [ ] **Legend**:
+  - Verify legend shows all 4 status types with icons
+
+#### Expected Results:
+- ✅ Calendar displays all program days
+- ✅ Status icons accurate for each day
+- ✅ Current day properly highlighted
+- ✅ Navigation from calendar works
+- ✅ Toggle button expands/collapses weeks
+- ✅ Phase colors apply correctly
+
+---
+
+### 12.5 Phase Timeline
+
+#### Test Steps:
+- [ ] **Visual progress bar**:
+  - Verify segmented bar with one segment per phase
+  - Verify each phase segment width proportional to day count
+  - Verify phase colors (pink, cyan, purple, rotating)
+  - Verify current phase shows partial fill
+  - Verify completed phases show full fill
+  - Verify current day indicator (pink line with pulsing dots)
+- [ ] **Day markers**:
+  - Shows "Day 1" on left
+  - Shows "Day {currentDay}" in center (pink)
+  - Shows "Day {duration}" on right
+- [ ] **Phase cards**:
+  - Each phase shows name, day range, day count
+  - Current phase has colored border and "Current" badge
+  - Completed phases have "✓ Complete" badge
+  - Phase description displays if available
+  - Focus areas show as tags
+- [ ] **Multi-phase programs**:
+  - All phases render in timeline
+  - Progress accurately reflects current position
+
+#### Expected Results:
+- ✅ Timeline visualizes phase progression
+- ✅ Current phase highlighted
+- ✅ Phase cards show all details
+- ✅ Colors rotate for 4+ phases
+
+---
+
+### 12.6 Progress Overview (Sidebar)
+
+#### Test Steps:
+- [ ] **Circular progress indicator**:
+  - Shows percentage complete (0-100%)
+  - Shows "Day X of Y" below
+  - Circle fill animates/updates
+- [ ] **Stats grid**:
+  - Completed Workouts: "X / Y" in pink
+  - Skipped Workouts: number in cyan
+  - Adherence Rate: "X%" in cyan (only if > 0)
+  - Current Phase: phase name in purple
+  - Current Streak: "X days" with 🔥 icon (if > 0)
+- [ ] **Stat accuracy**:
+  - Numbers match program data
+  - Adherence = (completed / total) * 100
+  - Colors match design system
+
+#### Expected Results:
+- ✅ Circular progress shows percentage
+- ✅ All stats display accurately
+- ✅ Colors match specification
+- ✅ Conditional stats hide when zero
+
+---
+
+### 12.7 Phase Breakdown (Sidebar)
+
+#### Test Steps:
+- [ ] **Current phase details**:
+  - Phase name in purple
+  - "Day X of Y" shows progress within phase
+  - "X days remaining" in cyan
+  - Progress bar for current phase
+  - Phase description displays
+  - Focus areas show as tags
+  - Phase goals display as bullet list (if available)
+- [ ] **Phase transitions**:
+  - When day advances to next phase, breakdown updates
+  - Progress bar resets for new phase
+- [ ] **No phases scenario**:
+  - Component doesn't render if no phases
+
+#### Expected Results:
+- ✅ Current phase info displays
+- ✅ Progress bar accurate
+- ✅ Focus areas and goals show
+- ✅ Updates when phase changes
+
+---
+
+### 12.8 Program Actions Menu
+
+#### Test Steps:
+
+**Active Program Actions**:
+- [ ] Click "Actions ⋮" button → dropdown opens
+- [ ] **Verify options** for active program:
+  - "Pause Program"
+  - "Complete Early"
+- [ ] Click "Pause Program":
+  - Modal opens with title "Pause Program"
+  - Optional reason textarea
+  - "Cancel" and "Pause Program" buttons
+  - Enter reason (optional)
+  - Click "Pause Program"
+  - Verify spinner shows "Pausing..."
+  - Verify success toast: "Program paused successfully"
+  - Verify modal closes
+  - Verify status badge changes to "Paused"
+  - Verify page reloads with updated data
+- [ ] Click "Complete Early":
+  - Modal opens with title "Complete Program Early?"
+  - Shows current day progress
+  - Shows note about preserved history
+  - "Cancel" and "Complete Program" buttons
+  - Click "Complete Program"
+  - Verify spinner shows "Completing..."
+  - Verify success toast: "Program completed"
+  - Verify modal closes
+  - Verify status badge changes to "Completed"
+
+**Paused Program Actions**:
+- [ ] Navigate to paused program dashboard
+- [ ] Click "Actions ⋮" → verify shows "Resume Program" option
+- [ ] Click "Resume Program":
+  - Verify spinner shows "Resuming..."
+  - Verify success toast: "Program resumed successfully"
+  - Verify status badge changes to "Active"
+  - Verify dashboard updates
+
+**Error Handling**:
+- [ ] Test with network disconnected
+- [ ] Verify error toast shows on API failure
+- [ ] Verify modal stays open on error
+- [ ] Verify can retry after error
+
+#### Expected Results:
+- ✅ Actions menu shows correct options per status
+- ✅ Pause modal works with optional reason
+- ✅ Complete modal works with confirmation
+- ✅ Resume action works for paused programs
+- ✅ All API calls succeed and update UI
+- ✅ Error handling shows appropriate messages
+- ✅ Spinners show during processing
+
+---
+
+### 12.9 Mobile Responsive Design
+
+#### Test Steps:
+
+**Desktop (≥1024px)**:
+- [ ] Two-column layout: 60/40 split (3 cols + 2 cols)
+- [ ] All sections visible simultaneously
+- [ ] Calendar shows full weeks
+- [ ] Sidebar fixed on right
+
+**Tablet (768-1023px)**:
+- [ ] Two-column layout maintained
+- [ ] Content may stack more compactly
+- [ ] Touch targets appropriately sized
+
+**Mobile (<768px)**:
+- [ ] Single column layout (all sections stack)
+- [ ] Header elements remain horizontal if space allows
+- [ ] Calendar weeks stack vertically
+- [ ] Calendar days grid remains 7 columns but smaller
+- [ ] Action buttons full width
+- [ ] Modals take full viewport width
+- [ ] Sidebar sections stack below main content
+
+#### Expected Results:
+- ✅ Layout adapts to screen size
+- ✅ No horizontal scroll
+- ✅ Touch targets ≥44px
+- ✅ Text readable at all sizes
+- ✅ Modals usable on mobile
+
+---
+
+### 12.10 Data Loading & Error States
+
+#### Test Steps:
+- [ ] **Initial load**:
+  - Skeleton loading shows immediately
+  - Matches dashboard layout structure
+  - Transitions smoothly to real data
+- [ ] **Missing parameters** (no userId/coachId/programId):
+  - Shows error message
+  - Shows "Back to Programs" button
+- [ ] **Program not found**:
+  - Shows "Program not found" message
+  - Provides navigation back
+- [ ] **Network errors**:
+  - Toast shows error message
+  - Dashboard stays functional
+  - Can retry manually
+- [ ] **Slow loading** (throttle network in DevTools):
+  - Skeleton stays visible
+  - No flash of empty state
+  - Data populates smoothly when ready
+
+#### Expected Results:
+- ✅ Skeleton loading matches layout
+- ✅ Error states handled gracefully
+- ✅ Helpful error messages
+- ✅ Recovery paths provided
+
+---
+
+### 12.11 Integration with Existing Features
+
+#### Test Steps:
+- [ ] **From Training Grounds**:
+  - Click "View Dashboard" on ActiveProgramSummary
+  - Navigates correctly
+- [ ] **From ManageTrainingPrograms**:
+  - Click "View Dashboard" on any card
+  - Navigates correctly
+- [ ] **To ViewWorkouts**:
+  - Click "View Full Workout" → goes to /today
+  - Click calendar day → goes to /day/X
+  - Both load correct workout data
+- [ ] **Breadcrumb navigation**:
+  - All breadcrumb links work
+  - Program name in breadcrumb becomes dashboard link
+- [ ] **Command Palette**:
+  - Cmd/Ctrl+K opens palette
+  - Works on dashboard
+- [ ] **Coach avatar**:
+  - Click → navigates to Training Grounds
+  - Tooltip shows correctly
+
+#### Expected Results:
+- ✅ All navigation paths work
+- ✅ Data consistency across pages
+- ✅ No navigation loops
+- ✅ Breadcrumbs accurate
+
+---
+
+### 12.12 Performance
+
+#### Test Steps:
+- [ ] **Load time**:
+  - Dashboard loads in < 2 seconds (normal network)
+  - Skeleton appears immediately
+- [ ] **Calendar rendering**:
+  - 28-day program: renders in < 500ms
+  - 56-day program: renders in < 1 second
+  - No lag when toggling show all
+- [ ] **Smooth animations**:
+  - Progress bars animate smoothly
+  - Modal transitions smooth
+  - No jank or stutter
+- [ ] **Memory leaks**:
+  - Navigate to/from dashboard multiple times
+  - No console errors about cleanup
+  - No growing memory usage
+
+#### Expected Results:
+- ✅ Fast initial load
+- ✅ Calendar renders quickly
+- ✅ Smooth UI interactions
+- ✅ No memory leaks
+
+---
+
+## 📊 Updated Test Summary
+
+| Test Section | Status | Pass/Fail | Issues |
+|-------------|--------|-----------|--------|
+| 1. Breadcrumbs Navigation | ✅ Passed | ✅ Pass | None |
+| 2. Command Palette Integration | ✅ Passed | ✅ Pass | None |
+| 3. Skeleton Loading | ✅ Passed | ✅ Pass | None |
+| 4. Page Structure & Styling | ✅ Passed | ✅ Pass | None |
+| 5. Create Card Badge | ✅ Passed | ✅ Pass | None |
+| 6. Backend API Integration | ✅ Passed | ✅ Pass | None |
+| 7. Log Workout Flow | ✅ Completed | ✅ Pass | None |
+| 8. Skip Workout Flow | ✅ Completed | ✅ Pass | None |
+| 9. Specific Day View | ✅ Completed | ✅ Pass | None |
+| 10. Responsive Design | ✅ Completed | ✅ Pass | None |
+| 11. Error Handling | ✅ Completed | ✅ Pass | None |
+| **12. Program Dashboard** | **⏳ Ready for Testing** | **-** | **All components built** |
+
+**Legend**: ⏳ Not Started | 🔄 In Progress | ✅ Passed | ❌ Failed
+
+---
+
+## ✅ Updated Sign-Off
+
+- [x] All critical tests passed (Sections 1-11)
+- [x] All high-priority tests passed
+- [x] All medium-priority tests passed
+- [x] Program Dashboard built and ready for testing
+- [ ] Program Dashboard tested and verified
+- [ ] Ready for production
+
+**Built By**: Development Team
+**Date**: November 4, 2025
+**Status**: ✅ Phase 3B Complete + Dashboard Ready for Testing

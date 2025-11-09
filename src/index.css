@@ -1,11 +1,11 @@
 @import url('https://fonts.googleapis.com/css2?family=Bangers&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Russo+One&display=swap');
 
+/* Import celebration animations */
+@import './animations/celebrations.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Import celebration animations */
-@import './animations/celebrations.css';
 
 /* Set default page background to synthwave theme */
 html {

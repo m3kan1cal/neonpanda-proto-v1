@@ -16,43 +16,50 @@ const baseHandler: AuthenticatedHandler = async (event) => {
   }
 
   const body = JSON.parse(event.body);
-  const { coach_name } = body;
 
-  // Validate coach_name is provided
-  if (coach_name === undefined) {
-    return createErrorResponse(400, 'coach_name field is required');
+  // Prepare updates object - only safe fields allowed
+  const allowedFields = ['coach_name', 'coach_description'];
+  const updates: any = {};
+
+  for (const field of allowedFields) {
+    if (field in body) {
+      updates[field] = body[field];
+    }
   }
 
-  // Validate coach_name type and content
-  if (typeof coach_name !== 'string') {
-    return createErrorResponse(400, 'coach_name must be a string');
+  // Validate at least one field is being updated
+  if (Object.keys(updates).length === 0) {
+    return createErrorResponse(400, 'At least one valid field must be provided for update');
   }
 
-  if (!coach_name.trim()) {
-    return createErrorResponse(400, 'coach_name cannot be empty');
-  }
-
-  // Length validation
-  if (coach_name.trim().length > 50) {
-    return createErrorResponse(400, 'coach_name cannot exceed 50 characters');
+  // Validate coach_name if provided
+  if (updates.coach_name !== undefined) {
+    if (typeof updates.coach_name !== 'string') {
+      return createErrorResponse(400, 'coach_name must be a string');
+    }
+    if (!updates.coach_name.trim()) {
+      return createErrorResponse(400, 'coach_name cannot be empty');
+    }
+    if (updates.coach_name.trim().length > 50) {
+      return createErrorResponse(400, 'coach_name cannot exceed 50 characters');
+    }
+    updates.coach_name = updates.coach_name.trim();
   }
 
   // Update coach config
-  const updatedCoachConfig = await updateCoachConfig(userId, coachId, {
-    coach_name: coach_name.trim(),
-  });
+  const updatedCoachConfig = await updateCoachConfig(userId, coachId, updates);
 
-  console.info('Coach name updated successfully:', {
+  console.info('Coach config updated successfully:', {
     coachId,
     userId,
-    newName: updatedCoachConfig.coach_name,
+    updates,
   });
 
   return createOkResponse(
     {
       coachConfig: updatedCoachConfig,
     },
-    'Coach name updated successfully'
+    'Coach config updated successfully'
   );
 };
 

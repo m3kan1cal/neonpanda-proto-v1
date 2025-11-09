@@ -41,7 +41,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     // Prepare sanitized update object
     const updates: any = {};
 
-    // Handle action-based updates (pause/resume/complete/archive)
+    // Handle action-based updates (pause/resume/complete/archive/update)
     if (body.action === 'pause') {
       updates.status = 'paused';
       updates.pausedAt = new Date();
@@ -67,10 +67,9 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       updates.status = 'active';
     } else if (body.action === 'complete') {
       updates.status = 'completed';
-    } else if (body.action === 'archive') {
-      updates.status = 'archived';
-    } else {
+    } else if (body.action === 'update' || !body.action) {
       // Allow explicit field updates (only safe fields)
+      // This handles both explicit 'update' action and legacy direct field updates
       const allowedFields = [
         'name', 'description', 'startDate', 'endDate', 'phases',
         'equipmentConstraints', 'trainingGoals', 'trainingFrequency',
@@ -87,6 +86,8 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       if (Object.keys(updates).length === 0) {
         return createErrorResponse(400, 'At least one valid field must be provided for update');
       }
+    } else {
+      return createErrorResponse(400, `Invalid action: ${body.action}`);
     }
 
     // Update the program

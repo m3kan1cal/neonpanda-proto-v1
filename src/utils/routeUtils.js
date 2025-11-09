@@ -19,6 +19,7 @@ export const routeMap = {
   'manage-memories': 'Memories',
   'manage-conversations': 'Coach Conversations',
   'training-programs': 'Training Programs',
+  ':programId': 'Program Dashboard',
   'today': 'View Workouts',
   'reports': 'Reports',
   'weekly': 'Weekly Reports',

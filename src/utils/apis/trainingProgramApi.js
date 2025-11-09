@@ -296,6 +296,50 @@ export const skipWorkout = async (userId, coachId, programId, templateId, data =
 };
 
 /**
+ * Deletes a training program (soft delete - sets status to archived)
+ * @param {string} userId - The user ID
+ * @param {string} coachId - The coach ID
+ * @param {string} programId - The program ID
+ * @returns {Promise<Object>} - The API response with deleted program confirmation
+ */
+export const deleteTrainingProgram = async (userId, coachId, programId) => {
+  const url = `${getApiUrl("")}/users/${userId}/coaches/${coachId}/programs/${programId}`;
+
+  try {
+    const response = await authenticatedFetch(url, {
+      method: "DELETE",
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("deleteTrainingProgram: Error response:", errorText);
+
+      let errorMessage;
+      try {
+        const errorData = JSON.parse(errorText);
+        errorMessage =
+          errorData.error ||
+          errorData.message ||
+          `API Error: ${response.status}`;
+      } catch (parseError) {
+        errorMessage = `API Error: ${response.status}`;
+      }
+
+      if (response.status === 404) {
+        throw new Error("Training program not found");
+      }
+      throw new Error(errorMessage);
+    }
+
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error("deleteTrainingProgram: Exception:", error);
+    throw error;
+  }
+};
+
+/**
  * Creates a new training program (manual creation, not via conversation)
  * @param {string} userId - The user ID
  * @param {string} coachId - The coach ID
@@ -339,4 +383,3 @@ export const createTrainingProgram = async (userId, coachId, programData) => {
     throw error;
   }
 };
-

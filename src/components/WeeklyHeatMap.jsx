@@ -1,16 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Tooltip } from 'react-tooltip';
-import { tooltipPatterns } from '../utils/ui/uiPatterns';
-
-// RPE Color Scale Configuration
-const RPE_COLOR_SCALE = {
-  missing: 'bg-yellow-500/30 border-yellow-500/50 hover:bg-yellow-500/40',      // Missing/Rest days
-  low: 'bg-yellow-400/60 border-yellow-400/70 hover:bg-yellow-400/80',          // RPE 1-3
-  medium: 'bg-orange-500/60 border-orange-500/70 hover:bg-orange-500/80',       // RPE 4-6
-  high: 'bg-synthwave-neon-pink/60 border-synthwave-neon-pink/70 hover:bg-synthwave-neon-pink/80',  // RPE 7-8
-  highest: 'bg-purple-600/60 border-purple-600/70 hover:bg-purple-600/80'       // RPE 9-10
-};
+import { tooltipPatterns, heatMapPatterns } from '../utils/ui/uiPatterns';
 
 const DAYS_OF_WEEK = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
@@ -19,11 +10,11 @@ const HeatMapSquare = ({ dayData, userId, coachId, date }) => {
   const navigate = useNavigate();
 
   const getRPEColorClass = (rpe) => {
-    if (!rpe || rpe === 0) return RPE_COLOR_SCALE.missing;
-    if (rpe <= 3) return RPE_COLOR_SCALE.low;
-    if (rpe <= 6) return RPE_COLOR_SCALE.medium;
-    if (rpe <= 8) return RPE_COLOR_SCALE.high;
-    return RPE_COLOR_SCALE.highest;
+    if (!rpe || rpe === 0) return heatMapPatterns.status.rpe.missing;
+    if (rpe <= 3) return heatMapPatterns.status.rpe.low;
+    if (rpe <= 6) return heatMapPatterns.status.rpe.medium;
+    if (rpe <= 8) return heatMapPatterns.status.rpe.high;
+    return heatMapPatterns.status.rpe.highest;
   };
 
   const handleClick = () => {
@@ -60,10 +51,10 @@ const HeatMapSquare = ({ dayData, userId, coachId, date }) => {
     <div
       onClick={handleClick}
       className={`
-        w-12 h-12 rounded-lg border-2 transition-all duration-300
+        ${heatMapPatterns.dayCell}
         ${getRPEColorClass(dayData?.avg_rpe)}
-        ${hasWorkout ? 'cursor-pointer hover:scale-110 hover:shadow-lg hover:shadow-synthwave-neon-cyan/30' : 'cursor-default'}
-        flex items-center justify-center relative group
+        ${hasWorkout ? heatMapPatterns.dayCellInteractive : heatMapPatterns.dayCellStatic}
+        ${hasWorkout ? 'hover:shadow-synthwave-neon-cyan/30' : ''}
       `}
       data-tooltip-id="heat-map-tooltip"
       data-tooltip-content={getTooltipContent()}
@@ -71,14 +62,14 @@ const HeatMapSquare = ({ dayData, userId, coachId, date }) => {
     >
       {/* Workout count indicator */}
       {hasWorkout && (
-        <span className="text-xs font-bold text-white drop-shadow-lg">
+        <span className={heatMapPatterns.workoutCount}>
           {dayData.workout_count}
         </span>
       )}
 
-      {/* Subtle glow effect for workout days */}
+      {/* Glow effect for workout days */}
       {hasWorkout && (
-        <div className="absolute inset-0 rounded-lg bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        <div className={heatMapPatterns.glowOverlay}></div>
       )}
     </div>
   );
@@ -87,11 +78,11 @@ const HeatMapSquare = ({ dayData, userId, coachId, date }) => {
 // Legend Component
 const HeatMapLegend = () => {
   const legendItems = [
-    { label: 'Rest', color: RPE_COLOR_SCALE.missing, range: '' },
-    { label: 'Low', color: RPE_COLOR_SCALE.low, range: '(1-3)' },
-    { label: 'Medium', color: RPE_COLOR_SCALE.medium, range: '(4-6)' },
-    { label: 'High', color: RPE_COLOR_SCALE.high, range: '(7-8)' },
-    { label: 'Highest', color: RPE_COLOR_SCALE.highest, range: '(9-10)' }
+    { label: 'Rest', color: heatMapPatterns.status.rpe.missing, range: '' },
+    { label: 'Low', color: heatMapPatterns.status.rpe.low, range: '(1-3)' },
+    { label: 'Medium', color: heatMapPatterns.status.rpe.medium, range: '(4-6)' },
+    { label: 'High', color: heatMapPatterns.status.rpe.high, range: '(7-8)' },
+    { label: 'Highest', color: heatMapPatterns.status.rpe.highest, range: '(9-10)' }
   ];
 
   return (

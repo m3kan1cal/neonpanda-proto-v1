@@ -969,21 +969,13 @@ function ViewReports() {
           <div className="flex items-center justify-center gap-2 mb-6 -mt-2">
             <button
               onClick={() => setActiveTab('weekly')}
-              className={`px-4 py-2 rounded-lg font-rajdhani font-bold text-sm uppercase tracking-wide transition-all duration-200 ${
-                activeTab === 'weekly'
-                  ? 'bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan border-2 border-synthwave-neon-cyan/40'
-                  : 'bg-synthwave-bg-primary/30 text-synthwave-neon-cyan border-2 border-transparent hover:border-synthwave-neon-cyan/20 hover:bg-synthwave-neon-cyan/10'
-              }`}
+              className={activeTab === 'weekly' ? buttonPatterns.tabToggleActive : buttonPatterns.tabToggleInactive}
             >
               Weekly Reports
             </button>
             <button
               onClick={() => setActiveTab('monthly')}
-              className={`px-4 py-2 rounded-lg font-rajdhani font-bold text-sm uppercase tracking-wide transition-all duration-200 ${
-                activeTab === 'monthly'
-                  ? 'bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan border-2 border-synthwave-neon-cyan/40'
-                  : 'bg-synthwave-bg-primary/30 text-synthwave-neon-cyan border-2 border-transparent hover:border-synthwave-neon-cyan/20 hover:bg-synthwave-neon-cyan/10'
-              }`}
+              className={activeTab === 'monthly' ? buttonPatterns.tabToggleActive : buttonPatterns.tabToggleInactive}
             >
               Monthly Reports
             </button>

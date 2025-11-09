@@ -663,8 +663,13 @@ export async function queryCoachConfigs(
       console.info(`📊 queryCoachConfigs: Found ${items.length} coach configs for user ${userId}`);
       console.info(`📊 Coach IDs:`, items.map(item => item.attributes?.coach_id));
 
+      // Filter out archived coaches
+      const activeCoaches = items.filter((item) => item.attributes?.status !== "archived");
+
+      console.info(`📊 queryCoachConfigs: ${activeCoaches.length} active coaches after filtering archived`);
+
       // Filter to include only the properties we need, leveraging the original structure
-      return items.map((item) => {
+      return activeCoaches.map((item) => {
         const {
           coach_id,
           coach_name,
@@ -712,7 +717,10 @@ export async function queryCoachConfigsCount(
       "coachConfig"
     );
 
-    const totalCount = allCoaches.length;
+    // Filter out archived coaches
+    const activeCoaches = allCoaches.filter((coach) => coach.attributes?.status !== "archived");
+
+    const totalCount = activeCoaches.length;
 
     console.info("Coach configs counted successfully:", {
       userId,
@@ -2672,7 +2680,10 @@ export async function queryTrainingProgramsByCoach(
       "trainingProgram"
     );
 
-    let filteredPrograms = allPrograms;
+    // Filter out archived programs by default
+    let filteredPrograms = allPrograms.filter(
+      (program) => program.attributes.status !== "archived"
+    );
 
     // Filter by status if specified
     if (options?.status) {
@@ -2731,16 +2742,17 @@ export async function queryTrainingPrograms(
       IndexName: "gsi1",
       KeyConditionExpression: "gsi1pk = :gsi1pk AND begins_with(gsi1sk, :gsi1sk_prefix)",
       FilterExpression: options?.status
-        ? "#entityType = :entityType AND #status = :status"
-        : "#entityType = :entityType",
+        ? "#entityType = :entityType AND #status = :status AND #status <> :archivedStatus"
+        : "#entityType = :entityType AND #status <> :archivedStatus",
       ExpressionAttributeNames: {
         "#entityType": "entityType",
-        ...(options?.status && { "#status": "attributes.status" }),
+        "#status": "attributes.status",
       },
       ExpressionAttributeValues: {
         ":gsi1pk": `user#${userId}`,
         ":gsi1sk_prefix": "program#",
         ":entityType": "trainingProgram",
+        ":archivedStatus": "archived",
         ...(options?.status && { ":status": options.status }),
       },
     });

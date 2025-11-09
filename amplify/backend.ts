@@ -19,6 +19,7 @@ import { buildCoachConfig } from "./functions/build-coach-config/resource";
 import { getCoachConfigs } from "./functions/get-coach-configs/resource";
 import { getCoachConfig } from "./functions/get-coach-config/resource";
 import { updateCoachConfig } from "./functions/update-coach-config/resource";
+import { deleteCoachConfig } from "./functions/delete-coach-config/resource";
 import { getCoachConfigStatus } from "./functions/get-coach-config-status/resource";
 import { getCoachCreatorSession } from "./functions/get-coach-creator-session/resource";
 import { getCoachCreatorSessions } from "./functions/get-coach-creator-sessions/resource";
@@ -71,6 +72,7 @@ import { buildTrainingProgram } from "./functions/build-training-program/resourc
 import { getTrainingProgram } from "./functions/get-training-program/resource";
 import { getTrainingPrograms } from "./functions/get-training-programs/resource";
 import { updateTrainingProgram } from "./functions/update-training-program/resource";
+import { deleteTrainingProgram } from "./functions/delete-training-program/resource";
 import { logWorkoutTemplate } from "./functions/log-workout-template/resource";
 import { skipWorkoutTemplate } from "./functions/skip-workout-template/resource";
 import { getWorkoutTemplate } from "./functions/get-workout-template/resource";
@@ -106,6 +108,7 @@ const backend = defineBackend({
   getCoachConfigs,
   getCoachConfig,
   updateCoachConfig,
+  deleteCoachConfig,
   getCoachConfigStatus,
   getCoachCreatorSession,
   getCoachCreatorSessions,
@@ -153,6 +156,7 @@ const backend = defineBackend({
   getTrainingProgram,
   getTrainingPrograms,
   updateTrainingProgram,
+  deleteTrainingProgram,
   logWorkoutTemplate,
   skipWorkoutTemplate,
   getWorkoutTemplate,
@@ -176,6 +180,7 @@ const coreApi = apiGatewayv2.createCoreApi(
   backend.getCoachConfigs.resources.lambda,
   backend.getCoachConfig.resources.lambda,
   backend.updateCoachConfig.resources.lambda,
+  backend.deleteCoachConfig.resources.lambda,
   backend.getCoachConfigStatus.resources.lambda,
   backend.getCoachCreatorSession.resources.lambda,
   backend.getCoachCreatorSessions.resources.lambda,
@@ -214,6 +219,7 @@ const coreApi = apiGatewayv2.createCoreApi(
   backend.getTrainingProgram.resources.lambda,
   backend.getTrainingPrograms.resources.lambda,
   backend.updateTrainingProgram.resources.lambda,
+  backend.deleteTrainingProgram.resources.lambda,
   backend.logWorkoutTemplate.resources.lambda,
   backend.skipWorkoutTemplate.resources.lambda,
   backend.getWorkoutTemplate.resources.lambda,
@@ -269,6 +275,7 @@ const sharedPolicies = new SharedPolicies(
   backend.getCoachConfigs,
   backend.getCoachConfig,
   backend.updateCoachConfig,
+  backend.deleteCoachConfig,
   backend.getCoachConfigStatus,
   backend.getCoachCreatorSession,
   backend.deleteCoachCreatorSession,
@@ -296,6 +303,7 @@ const sharedPolicies = new SharedPolicies(
   backend.createTrainingProgram,
   backend.buildTrainingProgram,
   backend.updateTrainingProgram,
+  backend.deleteTrainingProgram,
   backend.logWorkoutTemplate,
   backend.skipWorkoutTemplate,
   // NOTE: postConfirmation excluded to avoid circular dependency with auth stack
@@ -563,6 +571,7 @@ const allFunctions = [
   backend.getCoachConfigs,
   backend.getCoachConfig,
   backend.updateCoachConfig,
+  backend.deleteCoachConfig,
   backend.getCoachConfigStatus,
   backend.getCoachCreatorSession,
   backend.getCoachCreatorSessions,
@@ -607,6 +616,7 @@ const allFunctions = [
   backend.getTrainingProgram,
   backend.getTrainingPrograms,
   backend.updateTrainingProgram,
+  backend.deleteTrainingProgram,
   backend.logWorkoutTemplate,
   backend.skipWorkoutTemplate,
   backend.getWorkoutTemplate,

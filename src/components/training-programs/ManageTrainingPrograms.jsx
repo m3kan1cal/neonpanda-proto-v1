@@ -2,10 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuthorizeUser } from '../../auth/hooks/useAuthorizeUser';
 import { AccessDenied, LoadingScreen } from '../shared/AccessDenied';
-import { buttonPatterns, containerPatterns, layoutPatterns, tooltipPatterns, typographyPatterns, messagePatterns } from '../../utils/ui/uiPatterns';
+import { buttonPatterns, containerPatterns, layoutPatterns, tooltipPatterns, typographyPatterns, messagePatterns, iconButtonPatterns } from '../../utils/ui/uiPatterns';
 import { Tooltip } from 'react-tooltip';
 import CompactCoachCard from '../shared/CompactCoachCard';
 import CommandPaletteButton from '../shared/CommandPaletteButton';
+import { InlineEditField } from '../shared/InlineEditField';
 import { useNavigationContext } from '../../contexts/NavigationContext';
 import {
   NeonBorder,
@@ -23,6 +24,19 @@ import {
   HomeIcon,
   ChevronRightIcon
 } from '../themes/SynthwaveComponents';
+
+// Three-dot vertical menu icon
+const EllipsisVerticalIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+  </svg>
+);
+
+const EditIcon = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+  </svg>
+);
 import { TrainingProgramAgent } from '../../utils/agents/TrainingProgramAgent';
 import CoachAgent from '../../utils/agents/CoachAgent';
 import { useToast } from '../../contexts/ToastContext';
@@ -165,10 +179,65 @@ function ManageTrainingPrograms() {
   // Local loading states - track both programId and action type
   const [updatingProgram, setUpdatingProgram] = useState({ programId: null, action: null });
 
+  // Delete confirmation modal state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [programToDelete, setProgramToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Actions menu state
+  const [openMenuId, setOpenMenuId] = useState(null);
+  const [editingProgramId, setEditingProgramId] = useState(null);
+
   // Auto-scroll to top when component mounts
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+
+  // Close menu when clicking outside or pressing Escape
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (openMenuId && !event.target.closest('.actions-menu-container')) {
+        setOpenMenuId(null);
+      }
+    };
+
+    const handleEscapeKey = (event) => {
+      if (event.key === 'Escape' && openMenuId) {
+        setOpenMenuId(null);
+      }
+    };
+
+    if (openMenuId) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleEscapeKey);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+        document.removeEventListener('keydown', handleEscapeKey);
+      };
+    }
+  }, [openMenuId]);
+
+  // Close delete modal on Escape key and cancel inline edit
+  useEffect(() => {
+    const handleEscapeKey = (event) => {
+      if (event.key === 'Escape') {
+        // Cancel inline edit if active
+        if (editingProgramId) {
+          setEditingProgramId(null);
+          return;
+        }
+        // Close delete modal if open
+        if (showDeleteModal && !isDeleting) {
+          handleCancelDelete();
+        }
+      }
+    };
+
+    if (showDeleteModal || editingProgramId) {
+      document.addEventListener('keydown', handleEscapeKey);
+      return () => document.removeEventListener('keydown', handleEscapeKey);
+    }
+  }, [showDeleteModal, isDeleting, editingProgramId]);
 
   // Load coach data if coachId is provided
   useEffect(() => {
@@ -387,11 +456,58 @@ function ManageTrainingPrograms() {
     }
   };
 
+  // Handle delete click - show modal
+  const handleDeleteClick = (program) => {
+    setProgramToDelete(program);
+    setShowDeleteModal(true);
+  };
+
+  // Handle delete confirmation
+  const handleConfirmDelete = async () => {
+    if (!programToDelete || !userId) return;
+
+    const primaryCoachId = programToDelete.coachIds?.[0];
+    const agent = programAgentsRef.current[primaryCoachId];
+    if (!agent) return;
+
+    setIsDeleting(true);
+    try {
+      await agent.deleteProgram(programToDelete.programId);
+
+      // Remove the deleted program from local state
+      setProgramState(prev => {
+        const programs = prev.programs.filter(p => p.programId !== programToDelete.programId);
+        return {
+          ...prev,
+          programs,
+          activePrograms: programs.filter(p => p.status === PROGRAM_STATUS.ACTIVE),
+          pausedPrograms: programs.filter(p => p.status === PROGRAM_STATUS.PAUSED),
+          completedPrograms: programs.filter(p => p.status === PROGRAM_STATUS.COMPLETED),
+        };
+      });
+
+      toast.success('Training program deleted successfully');
+      setShowDeleteModal(false);
+      setProgramToDelete(null);
+    } catch (error) {
+      console.error('Error deleting program:', error);
+      toast.error('Failed to delete training program');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  // Handle delete cancellation
+  const handleCancelDelete = () => {
+    setShowDeleteModal(false);
+    setProgramToDelete(null);
+  };
+
   // Handle view program
   const handleViewProgram = (program) => {
     const primaryCoachId = program.coachIds?.[0];
     if (!userId || !program?.programId || !primaryCoachId) return;
-    navigate(`/training-grounds/training-programs/${program.programId}?userId=${userId}&coachId=${primaryCoachId}`);
+    navigate(`/training-grounds/training-programs/dashboard?userId=${userId}&coachId=${primaryCoachId}&programId=${program.programId}`);
   };
 
   // Handle create new program - navigate to training grounds with appropriate coach
@@ -423,13 +539,124 @@ function ManageTrainingPrograms() {
         {/* New Badge */}
         {isNew && <NewBadge />}
 
+        {/* Actions Menu - Hide when editing */}
+        {editingProgramId !== program.programId && (
+          <div className="absolute top-3 right-3 z-10 actions-menu-container">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setOpenMenuId(openMenuId === program.programId ? null : program.programId);
+              }}
+              className={`p-2 rounded-lg transition-all duration-200 focus:outline-none active:outline-none ${
+                openMenuId === program.programId
+                  ? 'text-synthwave-neon-cyan bg-synthwave-bg-primary/50'
+                  : 'text-synthwave-text-muted hover:text-synthwave-neon-cyan hover:bg-synthwave-bg-primary/50'
+              }`}
+              style={{ WebKitTapHighlightColor: 'transparent' }}
+              aria-label="More actions"
+              data-tooltip-id={`program-actions-${program.programId}`}
+              data-tooltip-content="More actions"
+            >
+              <EllipsisVerticalIcon />
+            </button>
+
+            {/* Dropdown Menu */}
+            {openMenuId === program.programId && (
+              <div className="absolute right-0 mt-2 w-44 bg-synthwave-bg-card border border-synthwave-neon-cyan/20 rounded-lg shadow-[4px_4px_16px_rgba(0,255,255,0.06)] overflow-hidden z-20">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setEditingProgramId(program.programId);
+                    setOpenMenuId(null);
+                  }}
+                  className="w-full pl-4 pr-3 py-2 text-left flex items-center space-x-2 text-synthwave-text-secondary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-200"
+                >
+                  <EditIcon />
+                  <span className="font-rajdhani font-medium text-sm">Rename Program</span>
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteClick(program);
+                    setOpenMenuId(null);
+                  }}
+                  className="w-full pl-4 pr-3 py-2 text-left flex items-center space-x-2 text-synthwave-text-secondary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-200"
+                >
+                  <div className="w-4 h-4 flex items-center justify-center">
+                    <TrashIcon />
+                  </div>
+                  <span className="font-rajdhani font-medium text-sm">Delete Program</span>
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="flex-1">
-          {/* Program Name */}
+          {/* Program Name - Either editable or static */}
           <div className="flex items-start space-x-3 mb-4">
             <div className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotCyan} flex-shrink-0 mt-2`}></div>
-            <h3 className={typographyPatterns.cardTitle}>
-              {program.name}
-            </h3>
+            {editingProgramId === program.programId ? (
+              <InlineEditField
+                value={program.name}
+                onSave={async (newName) => {
+                  if (!newName || !newName.trim()) {
+                    throw new Error('Program name cannot be empty');
+                  }
+                  const primaryCoachId = program.coachIds?.[0];
+                  const agent = programAgentsRef.current[primaryCoachId];
+                  if (!agent) {
+                    throw new Error('Failed to update program name');
+                  }
+
+                  await agent.updateProgramStatus(program.programId, 'update', { name: newName.trim() });
+
+                  // Update local state
+                  setProgramState(prevState => ({
+                    ...prevState,
+                    programs: prevState.programs.map(p =>
+                      p.programId === program.programId
+                        ? { ...p, name: newName.trim() }
+                        : p
+                    ),
+                    activePrograms: prevState.activePrograms.map(p =>
+                      p.programId === program.programId
+                        ? { ...p, name: newName.trim() }
+                        : p
+                    ),
+                    pausedPrograms: prevState.pausedPrograms.map(p =>
+                      p.programId === program.programId
+                        ? { ...p, name: newName.trim() }
+                        : p
+                    ),
+                    completedPrograms: prevState.completedPrograms.map(p =>
+                      p.programId === program.programId
+                        ? { ...p, name: newName.trim() }
+                        : p
+                    )
+                  }));
+                  setEditingProgramId(null);
+                  toast.success('Program name updated successfully');
+                }}
+                onCancel={() => {
+                  setEditingProgramId(null);
+                }}
+                placeholder="Program name..."
+                maxLength={100}
+                size="large"
+                displayClassName="font-russo font-bold text-white text-xl uppercase"
+                tooltipPrefix={`program-${program.programId}`}
+                onError={(error) => {
+                  setEditingProgramId(null);
+                  toast.error(error.message || 'Failed to update program name');
+                }}
+                startInEditMode={true}
+              />
+            ) : (
+              <h3 className="font-russo font-bold text-white text-xl uppercase">
+                {program.name}
+              </h3>
+            )}
           </div>
 
           {/* Program Description */}
@@ -534,14 +761,14 @@ function ManageTrainingPrograms() {
         {/* Action Buttons */}
         {showActions && (
           <div className="mt-6 space-y-2">
-            {/* View Program Button */}
+            {/* View Dashboard Button */}
             <button
               onClick={() => handleViewProgram(program)}
               disabled={isAnyActionInProgress}
               className={`${buttonPatterns.secondaryMedium} w-full space-x-2`}
             >
               <HomeIcon />
-              <span>View Program</span>
+              <span>View Dashboard</span>
             </button>
 
             {/* Status-specific actions */}
@@ -881,10 +1108,10 @@ function ManageTrainingPrograms() {
         {programState.pausedPrograms.length > 0 && (
           <div className="mt-16">
             <div className="text-center mb-12">
-              <h2 className={`${typographyPatterns.sectionTitle} text-xl md:text-2xl mb-4`}>
+              <h2 className="font-russo font-black text-xl md:text-2xl text-white mb-4 uppercase">
                 Paused Training Programs
               </h2>
-              <p className={`${typographyPatterns.description} max-w-2xl mx-auto`}>
+              <p className="font-rajdhani text-lg text-synthwave-text-secondary max-w-2xl mx-auto leading-relaxed">
                 Training programs you've paused. Resume anytime to continue your training journey to achieve something great and personalized to your goals.
               </p>
             </div>
@@ -899,10 +1126,10 @@ function ManageTrainingPrograms() {
         {programState.completedPrograms.length > 0 && (
           <div className="mt-16">
             <div className="text-center mb-12">
-              <h2 className={`${typographyPatterns.sectionTitle} text-xl md:text-2xl mb-4`}>
+              <h2 className="font-russo font-black text-xl md:text-2xl text-white mb-4 uppercase">
                 Completed Programs
               </h2>
-              <p className={`${typographyPatterns.description} max-w-2xl mx-auto`}>
+              <p className="font-rajdhani text-lg text-synthwave-text-secondary max-w-2xl mx-auto leading-relaxed">
                 Programs you've successfully completed. Celebrate your achievements!
               </p>
             </div>
@@ -914,6 +1141,57 @@ function ManageTrainingPrograms() {
         )}
 
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && programToDelete && (
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[10000]"
+          onClick={(e) => {
+            // Close modal if clicking on backdrop (not the modal content)
+            if (e.target === e.currentTarget && !isDeleting) {
+              handleCancelDelete();
+            }
+          }}
+        >
+          <div className={`${containerPatterns.deleteModal} p-6 max-w-md w-full mx-4`}>
+            <div className="text-center">
+              <h3 className="text-synthwave-neon-pink font-rajdhani text-xl font-bold mb-2">
+                Delete Training Program
+              </h3>
+              <p className="font-rajdhani text-base text-synthwave-text-secondary mb-6">
+                Are you sure you want to delete "<strong className="text-white">{programToDelete.name}</strong>"? This will remove it from your programs list.
+              </p>
+
+              <div className="flex space-x-4">
+                <button
+                  onClick={handleCancelDelete}
+                  disabled={isDeleting}
+                  className={`flex-1 ${buttonPatterns.secondarySmall} text-base disabled:opacity-50 disabled:cursor-not-allowed`}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmDelete}
+                  disabled={isDeleting}
+                  className={`flex-1 ${buttonPatterns.primarySmall} text-base disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2`}
+                >
+                  {isDeleting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                      <span>Deleting...</span>
+                    </>
+                  ) : (
+                    <>
+                      <TrashIcon />
+                      <span>Delete</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Tooltips */}
       <Tooltip

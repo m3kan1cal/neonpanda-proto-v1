@@ -1,6 +1,6 @@
 import React from 'react';
 import { themeClasses } from '../../utils/synthwaveThemeClasses';
-import { containerPatterns } from '../../utils/ui/uiPatterns';
+import { containerPatterns, buttonPatterns } from '../../utils/ui/uiPatterns';
 
 // Standardized loading spinner component
 export const LoadingSpinner = ({ size = 'large', text = 'Loading...' }) => {
@@ -60,7 +60,7 @@ export const ErrorState = ({
           {onButtonClick && (
             <button
               onClick={onButtonClick}
-              className={`${themeClasses.neonButton} text-lg px-8 py-3`}
+              className={buttonPatterns.primary}
             >
               {buttonText}
             </button>
@@ -106,7 +106,7 @@ export const CenteredErrorState = ({
         {onButtonClick && (
           <button
             onClick={onButtonClick}
-            className={`${themeClasses.neonButton} px-6 py-3`}
+            className={buttonPatterns.primary}
           >
             {buttonText}
           </button>

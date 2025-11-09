@@ -31,6 +31,7 @@ import ViewReports from "./components/ViewReports";
 import WeeklyReports from "./components/WeeklyReports";
 import ManageTrainingPrograms from "./components/training-programs/ManageTrainingPrograms";
 import ViewWorkouts from "./components/training-programs/ViewWorkouts";
+import TrainingProgramDashboard from "./components/training-programs/TrainingProgramDashboard";
 import Changelog from "./components/Changelog";
 import Settings from "./components/Settings";
 import Theme from "./components/Theme";
@@ -279,14 +280,22 @@ function AppContent() {
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/training-grounds/training-programs/:programId/today"
-            element={
-              <ProtectedRoute>
-                <ViewWorkouts />
-              </ProtectedRoute>
-            }
-          />
+        <Route
+          path="/training-grounds/training-programs/dashboard"
+          element={
+            <ProtectedRoute>
+              <TrainingProgramDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/training-grounds/training-programs/workouts"
+          element={
+            <ProtectedRoute>
+              <ViewWorkouts />
+            </ProtectedRoute>
+          }
+        />
           <Route
             path="/training-grounds/training-programs/:programId/day/:dayNumber"
             element={
