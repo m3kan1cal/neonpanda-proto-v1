@@ -5,7 +5,7 @@ import React, { useState, useRef } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../../auth';
 import { useNavigationContext } from '../../contexts/NavigationContext';
-import { navigationPatterns, tooltipPatterns } from '../../utils/ui/uiPatterns';
+import { navigationPatterns, tooltipPatterns, badgePatterns } from '../../utils/ui/uiPatterns';
 import UserAvatar from '../shared/UserAvatar';
 import {
   navigationItems,
@@ -195,12 +195,10 @@ const SidebarNav = () => {
         {/* Badge indicator - QuickStats style with Rajdhani font - Only show when expanded */}
         {badge !== null && badge !== undefined && !isSidebarCollapsed && (
           <div className={`
-            ml-auto min-w-[24px] h-[24px] px-1 rounded-lg flex items-center justify-center
-            font-rajdhani font-bold text-sm
-            transition-all duration-150
-            ${item.color === 'pink' ? 'bg-synthwave-neon-pink/10 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/20' : ''}
-            ${item.color === 'cyan' ? 'bg-synthwave-neon-cyan/10 text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/20' : ''}
-            ${item.color === 'purple' ? 'bg-synthwave-neon-purple/10 text-synthwave-neon-purple hover:bg-synthwave-neon-purple/20' : ''}
+            ml-auto ${badgePatterns.countBase}
+            ${item.color === 'pink' ? badgePatterns.countPink : ''}
+            ${item.color === 'cyan' ? badgePatterns.countCyan : ''}
+            ${item.color === 'purple' ? badgePatterns.countPurple : ''}
           `}>
             {badge > 99 ? '99+' : badge}
           </div>

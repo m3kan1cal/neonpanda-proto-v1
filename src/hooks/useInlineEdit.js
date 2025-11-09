@@ -14,6 +14,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
  * @param {Function} options.onEditStart - Callback when edit mode starts (optional)
  * @param {Function} options.onSuccess - Callback after successful save (optional)
  * @param {Function} options.onError - Callback on save error (optional)
+ * @param {boolean} options.startInEditMode - Whether to start in edit mode immediately (optional)
  *
  * @returns {Object} - State and handlers for inline editing
  */
@@ -26,10 +27,11 @@ export function useInlineEdit(initialValue, onSave, options = {}) {
     onEditStart,
     onSuccess,
     onError,
+    startInEditMode = false,
   } = options;
 
   // State
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(startInEditMode);
   const [editValue, setEditValue] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState(null);
@@ -41,6 +43,16 @@ export function useInlineEdit(initialValue, onSave, options = {}) {
   useEffect(() => {
     previousValueRef.current = initialValue;
   }, [initialValue]);
+
+  // Initialize edit value if starting in edit mode
+  useEffect(() => {
+    if (startInEditMode) {
+      setEditValue(initialValue || '');
+      if (onEditStart) {
+        onEditStart();
+      }
+    }
+  }, [startInEditMode, initialValue, onEditStart]);
 
   /**
    * Start editing mode

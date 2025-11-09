@@ -69,13 +69,17 @@ function Breadcrumbs() {
             const isCoachCreatorPage = pathnames.includes('coach-creator');
 
             // Special handling for workout details page - show it as a child of Manage Workouts
-            const isWorkoutDetailsPage = pathnames.includes('workouts') && pathnames.includes('training-grounds') && pathnames.length > 2;
+            // Exclude training-programs workouts from this handler
+            const isWorkoutDetailsPage = pathnames.includes('workouts') && pathnames.includes('training-grounds') && pathnames.length > 2 && !pathnames.includes('training-programs');
 
             // Special handling for coach-conversations page - show it as a child of Manage Coach Conversations
             const isCoachConversationsPage = pathnames.includes('coach-conversations') && pathnames.includes('training-grounds');
 
             // Special handling for view workouts page (today or specific day) - show it as a child of Training Grounds
             const isViewWorkoutsPage = (pathnames.includes('today') || pathnames.includes('day')) && pathnames.includes('training-programs');
+
+            // Special handling for new training program workouts page - skip "workouts" breadcrumb
+            const isTrainingProgramWorkoutsPage = pathnames.includes('training-programs') && pathnames.includes('workouts') && !pathnames.includes('manage-workouts');
 
             if (isCoachCreatorPage) {
               // Build custom breadcrumb path: Coaches > Coach Creator
@@ -207,6 +211,40 @@ function Breadcrumbs() {
 
                 // View Workouts breadcrumb (current page - dynamic text)
                 <React.Fragment key="view-workouts-current">
+                  <span className="bg-synthwave-neon-pink text-synthwave-bg-primary px-3 py-1.5 rounded-full font-medium whitespace-nowrap flex-shrink-0">
+                    {breadcrumbText}
+                  </span>
+                </React.Fragment>
+              ];
+            }
+
+            if (isTrainingProgramWorkoutsPage) {
+              // Build custom breadcrumb path: Training Grounds > Training Programs > (Today's Workouts or Day X Workouts)
+              // Skip the "workouts" segment but show all parent segments as links
+              const filteredPathnames = pathnames.filter(name => name !== 'workouts');
+              const dayParam = searchParams.get('day');
+              const breadcrumbText = dayParam ? `Day ${dayParam} Workouts` : "Today's Workouts";
+
+              return [
+                // Show all parent segments as links
+                ...filteredPathnames.map((name) => {
+                  const pathSegments = pathnames.slice(0, pathnames.indexOf(name) + 1);
+                  const routeTo = buildRoute(pathSegments, name);
+                  const displayName = getRouteDisplayName(name);
+
+                  return (
+                    <React.Fragment key={name}>
+                      <Link
+                        to={routeTo}
+                        className="bg-synthwave-neon-cyan/10 text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/20 transition-all duration-200 px-3 py-1.5 rounded-full whitespace-nowrap flex-shrink-0"
+                      >
+                        {displayName}
+                      </Link>
+                    </React.Fragment>
+                  );
+                }),
+                // Add dynamic workout breadcrumb as the current page
+                <React.Fragment key="workout-details">
                   <span className="bg-synthwave-neon-pink text-synthwave-bg-primary px-3 py-1.5 rounded-full font-medium whitespace-nowrap flex-shrink-0">
                     {breadcrumbText}
                   </span>

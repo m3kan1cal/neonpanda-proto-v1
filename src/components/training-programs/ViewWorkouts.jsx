@@ -2,8 +2,6 @@ import React, { useState, useEffect, useRef } from "react";
 import {
   useSearchParams,
   useNavigate,
-  useParams,
-  useLocation,
 } from "react-router-dom";
 import { useAuthorizeUser } from "../../auth/hooks/useAuthorizeUser";
 import { AccessDenied } from "../shared/AccessDenied";
@@ -37,19 +35,19 @@ import { CenteredErrorState } from "../shared/ErrorStates";
  * Allows user to log or skip individual workouts
  *
  * Routes:
- * - /training-grounds/training-programs/:programId/today - Shows today's workouts
- * - /training-grounds/training-programs/:programId/day/:dayNumber - Shows specific day's workouts
+ * - /training-grounds/training-programs/workouts?userId=X&coachId=Y&programId=Z - Shows today's workouts
+ * - /training-grounds/training-programs/workouts?userId=X&coachId=Y&programId=Z&day=N - Shows specific day's workouts
  */
 function ViewWorkouts() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const location = useLocation();
-  const { programId, dayNumber } = useParams();
+  const programId = searchParams.get("programId");
   const userId = searchParams.get("userId");
   const coachId = searchParams.get("coachId");
+  const dayParam = searchParams.get("day");
 
   // Determine if we're viewing today or a specific day
-  const isViewingToday = location.pathname.includes("/today");
+  const isViewingToday = !dayParam;
   const pageTitle = isViewingToday ? "Today's Workouts" : "View Workouts";
   const tooltipContent = isViewingToday
     ? "All workouts scheduled for today from your training program"
@@ -130,7 +128,7 @@ function ViewWorkouts() {
 
       setProgram(programData.program);
 
-      // Load workouts based on path
+      // Load workouts based on query params
       if (isViewingToday) {
         // Load today's workout
         const todayData = await programAgentRef.current.loadWorkoutTemplates(programId, {
@@ -139,10 +137,10 @@ function ViewWorkouts() {
         if (todayData) {
           setWorkoutData(todayData.todaysWorkoutTemplates || todayData);
         }
-      } else if (dayNumber) {
+      } else if (dayParam) {
         // Load specific day's workout
         const dayData = await programAgentRef.current.loadWorkoutTemplates(programId, {
-          day: parseInt(dayNumber),
+          day: parseInt(dayParam),
         });
         if (dayData) {
           setWorkoutData(dayData);
@@ -158,7 +156,7 @@ function ViewWorkouts() {
 
   useEffect(() => {
     loadData();
-  }, [userId, coachId, programId, dayNumber, isViewingToday]);
+  }, [userId, coachId, programId, dayParam]);
 
   // Cleanup agents on unmount
   useEffect(() => {
@@ -237,8 +235,8 @@ Calories: `;
       const options = {};
       if (isViewingToday) {
         options.today = true;
-      } else if (dayNumber) {
-        options.day = parseInt(dayNumber);
+      } else if (dayParam) {
+        options.day = parseInt(dayParam);
       }
 
       // Call agent method - it handles API call, state updates, and polling
@@ -304,8 +302,8 @@ Calories: `;
       };
       if (isViewingToday) {
         options.today = true;
-      } else if (dayNumber) {
-        options.day = parseInt(dayNumber);
+      } else if (dayParam) {
+        options.day = parseInt(dayParam);
       }
 
       // Call agent method - it handles API call and state updates
@@ -364,8 +362,8 @@ Calories: `;
       const options = {};
       if (isViewingToday) {
         options.today = true;
-      } else if (dayNumber) {
-        options.day = parseInt(dayNumber);
+      } else if (dayParam) {
+        options.day = parseInt(dayParam);
       }
 
       // Call agent method - it handles API call and state updates
@@ -576,7 +574,7 @@ Calories: `;
     phaseNumber,
     templates,
   } = workoutData || {
-    dayNumber: dayNumber,
+    dayNumber: dayParam ? parseInt(dayParam) : null,
     phaseName: "Rest Day",
     phaseNumber: null,
     templates: [],
@@ -725,7 +723,7 @@ Calories: `;
               >
                 <p className="font-rajdhani text-base text-synthwave-text-secondary">
                   No workouts scheduled for{" "}
-                  {isViewingToday ? "today" : `day ${dayNumber}`}. Take this
+                  {isViewingToday ? "today" : `day ${dayParam}`}. Take this
                   time to focus on recovery, mobility work, light stretching, or
                   active rest. Your body needs rest days to adapt and grow
                   stronger.

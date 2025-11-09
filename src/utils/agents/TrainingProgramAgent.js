@@ -3,6 +3,7 @@ import {
   getTrainingProgram,
   getWorkoutTemplates,
   updateTrainingProgram,
+  deleteTrainingProgram,
   logWorkout,
   skipWorkout
 } from '../apis/trainingProgramApi.js';
@@ -261,11 +262,12 @@ export class TrainingProgramAgent {
   }
 
   /**
-   * Update a program (pause, resume, complete, archive)
+   * Update a program (pause, resume, complete, archive, update)
    * @param {string} programId - The program ID
-   * @param {string} action - The action to perform (pause, resume, complete, archive)
+   * @param {string} action - The action to perform (pause, resume, complete, archive, update)
+   * @param {Object} data - Additional data for updates (e.g., { name: 'New Name' })
    */
-  async updateProgramStatus(programId, action) {
+  async updateProgramStatus(programId, action, data = {}) {
     if (!this.userId || !this.coachId) {
       console.error('TrainingProgramAgent.updateProgramStatus: userId and coachId are required');
       return;
@@ -287,7 +289,8 @@ export class TrainingProgramAgent {
     });
 
     try {
-      const response = await updateTrainingProgram(this.userId, this.coachId, programId, { action });
+      const body = { action, ...data };
+      const response = await updateTrainingProgram(this.userId, this.coachId, programId, body);
 
       const updatedProgram = response.program;
 
@@ -586,11 +589,35 @@ export class TrainingProgramAgent {
   }
 
   /**
-   * Archive a program
+   * Delete a program (soft delete - sets status to archived)
    * @param {string} programId - The program ID
    */
-  async archiveProgram(programId) {
-    return this.updateProgramStatus(programId, 'archive');
+  async deleteProgram(programId) {
+    if (!this.userId || !this.coachId) {
+      console.error('TrainingProgramAgent.deleteProgram: userId and coachId are required');
+      throw new Error('userId and coachId are required');
+    }
+
+    if (!programId) {
+      console.error('TrainingProgramAgent.deleteProgram: programId is required');
+      throw new Error('programId is required');
+    }
+
+    try {
+      // Call the DELETE API via the trainingProgramApi helper
+      const result = await deleteTrainingProgram(this.userId, this.coachId, programId);
+
+      console.info('Training program deleted successfully:', {
+        programId,
+        userId: this.userId,
+        coachId: this.coachId
+      });
+
+      return result;
+    } catch (error) {
+      console.error('Error deleting training program:', error);
+      throw error;
+    }
   }
 
   /**

@@ -59,7 +59,11 @@ export const buttonPatterns = {
 
   // Mode indicator badges - For displaying which mode a message was created in (not interactive)
   // Build mode indicator badge (purple themed) - shows on AI messages created in Build mode
-  modeBadgeBuild: "flex items-center gap-1.5 px-2.5 py-0.5 bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 rounded-lg w-fit text-xs font-rajdhani font-semibold uppercase tracking-wide text-synthwave-neon-purple"
+  modeBadgeBuild: "flex items-center gap-1.5 px-2.5 py-0.5 bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 rounded-lg w-fit text-xs font-rajdhani font-semibold uppercase tracking-wide text-synthwave-neon-purple",
+
+  // Tab Toggle Buttons - For switching between views (Weekly/Monthly, Current/All Weeks, etc.)
+  tabToggleActive: "px-4 py-2 rounded-lg font-rajdhani font-bold text-sm uppercase tracking-wide transition-all duration-200 bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan border-2 border-synthwave-neon-cyan/40",
+  tabToggleInactive: "px-4 py-2 rounded-lg font-rajdhani font-bold text-sm uppercase tracking-wide transition-all duration-200 bg-synthwave-bg-primary/30 text-synthwave-neon-cyan border-2 border-transparent hover:border-synthwave-neon-cyan/20 hover:bg-synthwave-neon-cyan/10"
 };
 
 // Badge Patterns - Reusable badge/tag components (matches ManageMemories.jsx styling)
@@ -81,7 +85,14 @@ export const badgePatterns = {
   mutedBorder: "bg-synthwave-text-secondary/20 text-synthwave-text-secondary px-2 py-1 rounded text-xs font-rajdhani border border-synthwave-text-muted/40",
 
   // Workout detail badges - For equipment and exercise lists (cyan themed)
-  workoutDetail: "px-2 py-1 bg-synthwave-bg-primary/50 border border-synthwave-neon-cyan/30 rounded text-sm font-rajdhani text-synthwave-text-secondary"
+  workoutDetail: "px-2 py-1 bg-synthwave-bg-primary/50 border border-synthwave-neon-cyan/30 rounded text-sm font-rajdhani text-synthwave-text-secondary",
+
+  // Count badges - For numerical indicators (sidebar, calendar, etc.) - matches SidebarNav styling
+  countBase: "min-w-[24px] h-[24px] px-1 rounded-lg flex items-center justify-center font-rajdhani font-bold text-sm transition-all duration-150",
+  countPink: "bg-synthwave-neon-pink/10 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/20",
+  countCyan: "bg-synthwave-neon-cyan/10 text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/20",
+  countPurple: "bg-synthwave-neon-purple/10 text-synthwave-neon-purple hover:bg-synthwave-neon-purple/20",
+  countMuted: "bg-synthwave-text-muted/10 text-synthwave-text-muted hover:bg-synthwave-text-muted/20"
 };
 
 export const iconButtonPatterns = {
@@ -116,7 +127,10 @@ export const iconButtonPatterns = {
 
   actionSmallPink: "p-2 sm:p-2.5 bg-synthwave-bg-primary/50 text-synthwave-text-secondary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/20 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 disabled:opacity-50 disabled:cursor-not-allowed min-h-[40px] min-w-[40px] flex items-center justify-center",
 
-  actionSmallCyan: "p-2 sm:p-2.5 bg-synthwave-bg-primary/50 text-synthwave-text-secondary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/20 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 min-h-[40px] min-w-[40px] flex items-center justify-center"
+  actionSmallCyan: "p-2 sm:p-2.5 bg-synthwave-bg-primary/50 text-synthwave-text-secondary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/20 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 min-h-[40px] min-w-[40px] flex items-center justify-center",
+
+  // Compact delete button - For card corner delete actions (smaller than minimal, starts muted)
+  deleteCompact: "p-1.5 text-synthwave-text-muted hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary"
 };
 
 export const formPatterns = {
@@ -942,6 +956,54 @@ export const injectAutofillStyles = () => {
   style.id = 'autofill-override-styles';
   style.textContent = autofillOverrideStyles;
   document.head.appendChild(style);
+};
+
+// Heat Map Patterns - Unified day cell styling for training program calendars and weekly heat maps
+export const heatMapPatterns = {
+  // Day cell container - base styles for all day squares
+  dayCell: "w-12 h-12 rounded-lg border-2 transition-all duration-300 flex items-center justify-center relative group cursor-pointer",
+
+  // Day cell with hover effects (for workout days)
+  dayCellInteractive: "hover:scale-110 hover:shadow-lg transition-all duration-300",
+
+  // Day cell without hover effects (for rest days)
+  dayCellStatic: "cursor-default",
+
+  // Status-based background colors
+  status: {
+    // Completed workouts - pink/green
+    completed: "bg-synthwave-neon-pink/60 border-synthwave-neon-pink/70 hover:bg-synthwave-neon-pink/80",
+
+    // Skipped workouts - cyan
+    skipped: "bg-synthwave-neon-cyan/60 border-synthwave-neon-cyan/70 hover:bg-synthwave-neon-cyan/80",
+
+    // Partial completion - purple
+    partial: "bg-synthwave-neon-purple/60 border-synthwave-neon-purple/70 hover:bg-synthwave-neon-purple/80",
+
+    // Pending/scheduled - subtle secondary
+    pending: "bg-synthwave-bg-secondary/50 border-synthwave-neon-cyan/30 hover:bg-synthwave-bg-secondary/70 hover:border-synthwave-neon-cyan/50",
+
+    // Rest day - muted
+    rest: "bg-yellow-500/30 border-yellow-500/50 hover:bg-yellow-500/40",
+
+    // RPE-based color scale for completed workouts
+    rpe: {
+      missing: "bg-yellow-500/30 border-yellow-500/50 hover:bg-yellow-500/40",
+      low: "bg-yellow-400/60 border-yellow-400/70 hover:bg-yellow-400/80",
+      medium: "bg-orange-500/60 border-orange-500/70 hover:bg-orange-500/80",
+      high: "bg-synthwave-neon-pink/60 border-synthwave-neon-pink/70 hover:bg-synthwave-neon-pink/80",
+      highest: "bg-purple-600/60 border-purple-600/70 hover:bg-purple-600/80"
+    }
+  },
+
+  // Workout count indicator (number displayed in cell)
+  workoutCount: "text-xs font-bold text-white drop-shadow-lg",
+
+  // Glow effect overlay
+  glowOverlay: "absolute inset-0 rounded-lg bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300",
+
+  // Current day indicator (pulsing dot)
+  currentDayIndicator: "absolute -top-1 -right-1 w-3 h-3 bg-synthwave-neon-pink rounded-full animate-pulse"
 };
 
 // Usage Examples:

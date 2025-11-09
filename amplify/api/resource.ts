@@ -14,6 +14,7 @@ export function createCoreApi(
   getCoachConfigsLambda: lambda.IFunction,
   getCoachConfigLambda: lambda.IFunction,
   updateCoachConfigLambda: lambda.IFunction,
+  deleteCoachConfigLambda: lambda.IFunction,
   getCoachConfigStatusLambda: lambda.IFunction,
   getCoachCreatorSessionLambda: lambda.IFunction,
   getCoachCreatorSessionsLambda: lambda.IFunction,
@@ -52,6 +53,7 @@ export function createCoreApi(
   getTrainingProgramLambda: lambda.IFunction,
   getTrainingProgramsLambda: lambda.IFunction,
   updateTrainingProgramLambda: lambda.IFunction,
+  deleteTrainingProgramLambda: lambda.IFunction,
   logWorkoutTemplateLambda: lambda.IFunction,
   skipWorkoutTemplateLambda: lambda.IFunction,
   getWorkoutTemplateLambda: lambda.IFunction,
@@ -172,6 +174,11 @@ export function createCoreApi(
   const updateCoachConfigIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
     'UpdateCoachConfigIntegration',
     updateCoachConfigLambda
+  );
+
+  const deleteCoachConfigIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
+    'DeleteCoachConfigIntegration',
+    deleteCoachConfigLambda
   );
 
   const getCoachConfigStatusIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
@@ -357,6 +364,11 @@ export function createCoreApi(
     updateTrainingProgramLambda
   );
 
+  const deleteTrainingProgramIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
+    'DeleteTrainingProgramIntegration',
+    deleteTrainingProgramLambda
+  );
+
   const logWorkoutTemplateIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
     'LogWorkoutTemplateIntegration',
     logWorkoutTemplateLambda
@@ -383,6 +395,7 @@ export function createCoreApi(
     getCoachConfigs: getCoachConfigsIntegration,
     getCoachConfig: getCoachConfigIntegration,
     updateCoachConfig: updateCoachConfigIntegration,
+    deleteCoachConfig: deleteCoachConfigIntegration,
     getCoachConfigStatus: getCoachConfigStatusIntegration,
     getCoachTemplates: getCoachTemplatesIntegration,
     getCoachTemplate: getCoachTemplateIntegration,
@@ -418,6 +431,7 @@ export function createCoreApi(
     getTrainingProgram: getTrainingProgramIntegration,
     getTrainingPrograms: getTrainingProgramsIntegration,
     updateTrainingProgram: updateTrainingProgramIntegration,
+    deleteTrainingProgram: deleteTrainingProgramIntegration,
     logWorkoutTemplate: logWorkoutTemplateIntegration,
     skipWorkoutTemplate: skipWorkoutTemplateIntegration,
     getWorkoutTemplate: getWorkoutTemplateIntegration
@@ -526,6 +540,13 @@ export function createCoreApi(
     authorizer: userPoolAuthorizer
   });
 
+  httpApi.addRoutes({
+    path: '/users/{userId}/coaches/{coachId}/programs/{programId}',
+    methods: [apigatewayv2.HttpMethod.DELETE],
+    integration: integrations.deleteTrainingProgram,
+    authorizer: userPoolAuthorizer
+  });
+
   // Log workout template (convert template to logged workout)
   httpApi.addRoutes({
     path: '/users/{userId}/coaches/{coachId}/programs/{programId}/templates/{templateId}/log',
@@ -620,6 +641,13 @@ export function createCoreApi(
     path: '/users/{userId}/coaches/{coachId}',
     methods: [apigatewayv2.HttpMethod.PUT],
     integration: integrations.updateCoachConfig,
+    authorizer: userPoolAuthorizer
+  });
+
+  httpApi.addRoutes({
+    path: '/users/{userId}/coaches/{coachId}',
+    methods: [apigatewayv2.HttpMethod.DELETE],
+    integration: integrations.deleteCoachConfig,
     authorizer: userPoolAuthorizer
   });
 

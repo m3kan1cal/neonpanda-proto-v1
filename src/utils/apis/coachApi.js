@@ -150,6 +150,45 @@ export const updateCoachConfig = async (userId, coachId, metadata) => {
 };
 
 /**
+ * Deletes a coach config (soft delete - sets status to archived)
+ * @param {string} userId - The user ID
+ * @param {string} coachId - The coach ID
+ * @returns {Promise<Object>} - The API response with deleted coach confirmation
+ */
+export const deleteCoachConfig = async (userId, coachId) => {
+  const url = `${getApiUrl('')}/users/${userId}/coaches/${coachId}`;
+
+  try {
+    const response = await authenticatedFetch(url, {
+      method: 'DELETE',
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('deleteCoachConfig: Error response:', errorText);
+      let errorMessage;
+      try {
+        const errorData = JSON.parse(errorText);
+        errorMessage = errorData.error || errorData.message || `API Error: ${response.status}`;
+      } catch (parseError) {
+        errorMessage = `API Error: ${response.status}`;
+      }
+
+      if (response.status === 404) {
+        throw new Error('Coach not found');
+      }
+      throw new Error(errorMessage);
+    }
+
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error('deleteCoachConfig: API Error:', error);
+    throw error;
+  }
+};
+
+/**
  * Gets all available coach templates
  * @returns {Promise<Object>} - The API response with templates array
  */

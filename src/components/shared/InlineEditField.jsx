@@ -73,6 +73,8 @@ const CancelIcon = ({ className = "w-4 h-4" }) => (
  * @param {Function} options.renderDisplay - Custom render function for display mode
  * @param {Function} options.onSuccess - Callback after successful save
  * @param {Function} options.onError - Callback on save error
+ * @param {boolean} options.startInEditMode - Whether to start in edit mode immediately
+ * @param {Function} options.onCancel - Callback when cancel is clicked
  */
 export function InlineEditField({
   value,
@@ -89,6 +91,8 @@ export function InlineEditField({
   renderDisplay,
   onSuccess,
   onError,
+  startInEditMode = false,
+  onCancel,
 }) {
   const {
     isEditing,
@@ -107,6 +111,8 @@ export function InlineEditField({
     validate,
     onSuccess,
     onError,
+    startInEditMode,
+    onCancel,
   });
 
   // Size-based styling from uiPatterns

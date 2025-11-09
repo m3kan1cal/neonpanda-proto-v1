@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuthorizeUser } from '../auth/hooks/useAuthorizeUser';
 import { AccessDenied, LoadingScreen } from './shared/AccessDenied';
-import { buttonPatterns, containerPatterns, layoutPatterns, typographyPatterns, tooltipPatterns } from '../utils/ui/uiPatterns';
+import { buttonPatterns, containerPatterns, layoutPatterns, typographyPatterns, tooltipPatterns, iconButtonPatterns } from '../utils/ui/uiPatterns';
 import { Tooltip } from 'react-tooltip';
 import CompactCoachCard from './shared/CompactCoachCard';
 import CommandPaletteButton from './shared/CommandPaletteButton';
@@ -21,6 +21,19 @@ import {
   ArrowRightIcon,
   HomeIcon
 } from './themes/SynthwaveComponents';
+
+// Three-dot vertical menu icon
+const EllipsisVerticalIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+  </svg>
+);
+
+const EditIcon = () => (
+  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+  </svg>
+);
 import CoachAgent from '../utils/agents/CoachAgent';
 import CoachCreatorAgent from '../utils/agents/CoachCreatorAgent';
 import { useToast } from '../contexts/ToastContext';
@@ -81,10 +94,15 @@ function Coaches() {
   const [sessionsLoading, setSessionsLoading] = useState(false);
   const [deletingSessionId, setDeletingSessionId] = useState(null);
 
-  // Delete confirmation modal state
+  // Delete confirmation modal state for sessions
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [sessionToDelete, setSessionToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Delete confirmation modal state for coaches
+  const [showDeleteCoachModal, setShowDeleteCoachModal] = useState(false);
+  const [coachToDelete, setCoachToDelete] = useState(null);
+  const [isDeletingCoach, setIsDeletingCoach] = useState(false);
 
   // Retry build state
   const [retryingSessionId, setRetryingSessionId] = useState(null);
@@ -92,6 +110,10 @@ function Coaches() {
   // Local loading states for button feedback
   const [isCreatingCustomCoach, setIsCreatingCustomCoach] = useState(false);
   const [creatingTemplateId, setCreatingTemplateId] = useState(null);
+
+  // Actions menu state
+  const [openMenuId, setOpenMenuId] = useState(null);
+  const [editingCoachId, setEditingCoachId] = useState(null);
 
   // Command palette state
   // Global Command Palette state
@@ -101,6 +123,55 @@ function Coaches() {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+
+  // Close menu when clicking outside or pressing Escape
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (openMenuId && !event.target.closest('.actions-menu-container')) {
+        setOpenMenuId(null);
+      }
+    };
+
+    const handleEscapeKey = (event) => {
+      if (event.key === 'Escape' && openMenuId) {
+        setOpenMenuId(null);
+      }
+    };
+
+    if (openMenuId) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleEscapeKey);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+        document.removeEventListener('keydown', handleEscapeKey);
+      };
+    }
+  }, [openMenuId]);
+
+  // Close delete modal on Escape key and cancel inline edit
+  useEffect(() => {
+    const handleEscapeKey = (event) => {
+      if (event.key === 'Escape') {
+        // Cancel inline edit if active
+        if (editingCoachId) {
+          setEditingCoachId(null);
+          return;
+        }
+        // Close delete modals if open
+        if (showDeleteModal && !isDeleting) {
+          handleCancelDelete();
+        }
+        if (showDeleteCoachModal && !isDeletingCoach) {
+          handleCancelDeleteCoach();
+        }
+      }
+    };
+
+    if (showDeleteModal || showDeleteCoachModal || editingCoachId) {
+      document.addEventListener('keydown', handleEscapeKey);
+      return () => document.removeEventListener('keydown', handleEscapeKey);
+    }
+  }, [showDeleteModal, showDeleteCoachModal, isDeleting, isDeletingCoach, editingCoachId]);
 
   // Load in-progress sessions and check for building/failed coaches
   const loadInProgressSessions = async () => {
@@ -311,6 +382,43 @@ function Coaches() {
     } finally {
       setCreatingTemplateId(null);
     }
+  };
+
+  // Handle coach delete click - show modal
+  const handleDeleteCoachClick = (coach) => {
+    setCoachToDelete(coach);
+    setShowDeleteCoachModal(true);
+  };
+
+  // Handle coach delete confirmation
+  const handleConfirmDeleteCoach = async () => {
+    if (!coachToDelete || !userId) return;
+
+    setIsDeletingCoach(true);
+    try {
+      await agentRef.current.deleteCoach(userId, coachToDelete.coach_id);
+
+      // Remove the deleted coach from local state
+      setAgentState(prev => ({
+        ...prev,
+        coaches: prev.coaches.filter(c => c.coach_id !== coachToDelete.coach_id)
+      }));
+
+      toast.success('Coach deleted successfully');
+      setShowDeleteCoachModal(false);
+      setCoachToDelete(null);
+    } catch (error) {
+      console.error('Error deleting coach:', error);
+      toast.error('Failed to delete coach');
+    } finally {
+      setIsDeletingCoach(false);
+    }
+  };
+
+  // Handle coach delete cancellation
+  const handleCancelDeleteCoach = () => {
+    setShowDeleteCoachModal(false);
+    setCoachToDelete(null);
   };
 
   // Show skeleton loading while validating userId or loading coaches
@@ -705,41 +813,106 @@ function Coaches() {
             {agentState.coaches && agentState.coaches.map((coach) => (
               <div
                 key={coach.coach_id}
-                className={`${containerPatterns.cardMedium} p-6 flex flex-col justify-between h-full`}
+                className={`${containerPatterns.cardMedium} p-6 flex flex-col justify-between h-full relative`}
               >
+                {/* Actions Menu - Hide when editing */}
+                {editingCoachId !== coach.coach_id && (
+                  <div className="absolute top-3 right-3 z-10 actions-menu-container">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenMenuId(openMenuId === coach.coach_id ? null : coach.coach_id);
+                      }}
+                      className={`p-2 rounded-lg transition-all duration-200 focus:outline-none active:outline-none ${
+                        openMenuId === coach.coach_id
+                          ? 'text-synthwave-neon-cyan bg-synthwave-bg-primary/50'
+                          : 'text-synthwave-text-muted hover:text-synthwave-neon-cyan hover:bg-synthwave-bg-primary/50'
+                      }`}
+                      style={{ WebKitTapHighlightColor: 'transparent' }}
+                      aria-label="More actions"
+                      data-tooltip-id={`coach-actions-${coach.coach_id}`}
+                      data-tooltip-content="More actions"
+                    >
+                      <EllipsisVerticalIcon />
+                    </button>
+
+                    {/* Dropdown Menu */}
+                    {openMenuId === coach.coach_id && (
+                      <div className="absolute right-0 mt-2 w-44 bg-synthwave-bg-card border border-synthwave-neon-cyan/20 rounded-lg shadow-[4px_4px_16px_rgba(0,255,255,0.06)] overflow-hidden z-20">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingCoachId(coach.coach_id);
+                            setOpenMenuId(null);
+                          }}
+                          className="w-full pl-4 pr-3 py-2 text-left flex items-center space-x-2 text-synthwave-text-secondary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-200"
+                        >
+                          <EditIcon />
+                          <span className="font-rajdhani font-medium text-sm">Rename Coach</span>
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteCoachClick(coach);
+                            setOpenMenuId(null);
+                          }}
+                          className="w-full pl-4 pr-3 py-2 text-left flex items-center space-x-2 text-synthwave-text-secondary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-200"
+                        >
+                          <div className="w-4 h-4 flex items-center justify-center">
+                            <TrashIcon />
+                          </div>
+                          <span className="font-rajdhani font-medium text-sm">Delete Coach</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <div className="flex-1">
-                  {/* Coach Name with Inline Edit */}
+                  {/* Coach Name - Either editable or static */}
                   <div className="flex items-start space-x-3 mb-4">
                     <div className="w-3 h-3 bg-synthwave-neon-cyan rounded-full flex-shrink-0 mt-2"></div>
-                    <InlineEditField
-                      value={agentRef.current?.formatCoachName(coach.coach_name)}
-                      onSave={async (newName) => {
-                        if (!newName || !newName.trim()) {
-                          throw new Error('Coach name cannot be empty');
-                        }
-                        await agentRef.current?.updateCoachConfig(userId, coach.coach_id, {
-                          coach_name: newName.trim()
-                        });
-                        // Update local state directly instead of full refresh
-                        setAgentState(prevState => ({
-                          ...prevState,
-                          coaches: prevState.coaches.map(c =>
-                            c.coach_id === coach.coach_id
-                              ? { ...c, coach_name: newName.trim() }
-                              : c
-                          )
-                        }));
-                        toast.success('Coach name updated successfully');
-                      }}
-                      placeholder="Coach name..."
-                      maxLength={50}
-                      size="large"
-                      displayClassName="font-russo font-bold text-white text-xl uppercase"
-                      tooltipPrefix={`coach-${coach.coach_id}`}
-                      onError={(error) => {
-                        toast.error(error.message || 'Failed to update coach name');
-                      }}
-                    />
+                    {editingCoachId === coach.coach_id ? (
+                      <InlineEditField
+                        value={agentRef.current?.formatCoachName(coach.coach_name)}
+                        onSave={async (newName) => {
+                          if (!newName || !newName.trim()) {
+                            throw new Error('Coach name cannot be empty');
+                          }
+                          await agentRef.current?.updateCoachConfig(userId, coach.coach_id, {
+                            coach_name: newName.trim()
+                          });
+                          // Update local state directly instead of full refresh
+                          setAgentState(prevState => ({
+                            ...prevState,
+                            coaches: prevState.coaches.map(c =>
+                              c.coach_id === coach.coach_id
+                                ? { ...c, coach_name: newName.trim() }
+                                : c
+                            )
+                          }));
+                          setEditingCoachId(null);
+                          toast.success('Coach name updated successfully');
+                        }}
+                        onCancel={() => {
+                          setEditingCoachId(null);
+                        }}
+                        placeholder="Coach name..."
+                        maxLength={50}
+                        size="large"
+                        displayClassName="font-russo font-bold text-white text-xl uppercase"
+                        tooltipPrefix={`coach-${coach.coach_id}`}
+                        onError={(error) => {
+                          setEditingCoachId(null);
+                          toast.error(error.message || 'Failed to update coach name');
+                        }}
+                        startInEditMode={true}
+                      />
+                    ) : (
+                      <h3 className="font-russo font-bold text-white text-xl uppercase">
+                        {agentRef.current?.formatCoachName(coach.coach_name)}
+                      </h3>
+                    )}
                   </div>
 
                   {/* Coach Details */}
@@ -1122,9 +1295,17 @@ function Coaches() {
         </div>
       </div>
 
-      {/* Delete Confirmation Modal */}
+      {/* Delete Confirmation Modal for Sessions */}
       {showDeleteModal && sessionToDelete && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[10000]">
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[10000]"
+          onClick={(e) => {
+            // Close modal if clicking on backdrop (not the modal content)
+            if (e.target === e.currentTarget && !isDeleting) {
+              handleCancelDelete();
+            }
+          }}
+        >
           <div className={`${containerPatterns.deleteModal} p-6 max-w-md w-full mx-4`}>
             <div className="text-center">
               <h3 className="text-synthwave-neon-pink font-rajdhani text-xl font-bold mb-2">
@@ -1148,6 +1329,57 @@ function Coaches() {
                   className={`flex-1 ${buttonPatterns.primarySmall} text-base disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2`}
                 >
                   {isDeleting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                      <span>Deleting...</span>
+                    </>
+                  ) : (
+                    <>
+                      <TrashIcon />
+                      <span>Delete</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal for Coaches */}
+      {showDeleteCoachModal && coachToDelete && (
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[10000]"
+          onClick={(e) => {
+            // Close modal if clicking on backdrop (not the modal content)
+            if (e.target === e.currentTarget && !isDeletingCoach) {
+              handleCancelDeleteCoach();
+            }
+          }}
+        >
+          <div className={`${containerPatterns.deleteModal} p-6 max-w-md w-full mx-4`}>
+            <div className="text-center">
+              <h3 className="text-synthwave-neon-pink font-rajdhani text-xl font-bold mb-2">
+                Delete Coach
+              </h3>
+              <p className="font-rajdhani text-base text-synthwave-text-secondary mb-6">
+                Are you sure you want to delete "<strong className="text-white">{agentRef.current?.formatCoachName(coachToDelete.coach_name)}</strong>"? This will remove the coach from your list.
+              </p>
+
+              <div className="flex space-x-4">
+                <button
+                  onClick={handleCancelDeleteCoach}
+                  disabled={isDeletingCoach}
+                  className={`flex-1 ${buttonPatterns.secondarySmall} text-base disabled:opacity-50 disabled:cursor-not-allowed`}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmDeleteCoach}
+                  disabled={isDeletingCoach}
+                  className={`flex-1 ${buttonPatterns.primarySmall} text-base disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2`}
+                >
+                  {isDeletingCoach ? (
                     <>
                       <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
                       <span>Deleting...</span>
