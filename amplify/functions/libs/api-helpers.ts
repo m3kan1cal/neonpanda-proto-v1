@@ -556,22 +556,57 @@ export const callBedrockApi = async (
       contentLength: response.output?.message?.content?.length || 0,
       hasText: !!response.output?.message?.content?.[0]?.text,
       textType: typeof response.output?.message?.content?.[0]?.text,
+      contentFirstItem: response.output?.message?.content?.[0], // Log full first item
     });
 
-    if (!response.output?.message?.content?.[0]?.text) {
+    if (!response.output?.message?.content?.[0]) {
       console.error(
-        "Invalid response structure:",
+        "Invalid response structure - no content[0]:",
         JSON.stringify(response, null, 2)
       );
-      throw new Error("Invalid response format from Bedrock");
+      throw new Error("Invalid response format from Bedrock - no content");
     }
 
-    // Extract the raw response text
-    const rawResponseText = response.output.message.content[0].text;
+    // Extract the raw response text - handle both direct text and nested structures
+    const contentItem = response.output.message.content[0];
+    let rawResponseText: any;
 
-    // Type check: ensure we got a string, not an object
+    // Check if text is nested or direct
+    if (typeof contentItem === 'string') {
+      rawResponseText = contentItem;
+    } else if (contentItem.text !== undefined) {
+      rawResponseText = contentItem.text;
+
+      // Verify contentItem.text is actually a string
+      if (typeof rawResponseText !== 'string') {
+        console.error("❌ contentItem.text exists but is not a string:", {
+          textType: typeof rawResponseText,
+          textValue: rawResponseText,
+          textKeys: typeof rawResponseText === 'object' ? Object.keys(rawResponseText) : 'N/A',
+          fullContentItem: contentItem,
+          stringified: JSON.stringify(contentItem, null, 2),
+        });
+        throw new Error(`Invalid response format from Bedrock - contentItem.text is ${typeof rawResponseText}, not string`);
+      }
+    } else if (typeof contentItem === 'object') {
+      // If it's an object but no .text property, log the structure
+      console.error("❌ Content item is an object without .text property:", {
+        contentItem,
+        keys: Object.keys(contentItem),
+        stringified: JSON.stringify(contentItem, null, 2),
+      });
+      throw new Error("Invalid response format from Bedrock - content item has no text property");
+    } else {
+      console.error("❌ Unexpected content item type:", {
+        type: typeof contentItem,
+        value: contentItem,
+      });
+      throw new Error("Invalid response format from Bedrock - unexpected content type");
+    }
+
+    // Final type check: ensure we have a string at this point
     if (typeof rawResponseText !== 'string') {
-      console.error("❌ Response text is not a string:", {
+      console.error("❌ rawResponseText is not a string after extraction:", {
         type: typeof rawResponseText,
         value: rawResponseText,
         stringified: JSON.stringify(rawResponseText, null, 2),

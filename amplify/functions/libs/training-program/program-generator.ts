@@ -109,16 +109,101 @@ ${getJsonFormattingInstructions()}`;
     dynamicPromptLength: dynamicPrompt.length,
   });
 
-  const response = await callBedrockApi(
-    staticPrompt,
-    dynamicPrompt,
-    MODEL_IDS.CLAUDE_SONNET_4_FULL,
-    {
+  let response: string;
+  try {
+    response = await callBedrockApi(
       staticPrompt,
       dynamicPrompt,
-      prefillResponse: '{', // Force JSON response format
+      MODEL_IDS.CLAUDE_SONNET_4_FULL,
+      {
+        staticPrompt,
+        dynamicPrompt,
+        prefillResponse: '{', // Force JSON response format
+      }
+    );
+
+    // Store debug data in S3 for troubleshooting
+    try {
+      const { storeDebugDataInS3 } = await import('../api-helpers');
+      const debugContent = JSON.stringify({
+        step: 'extract_training_program_structure',
+        userId,
+        coachId,
+        promptLengths: {
+          static: staticPrompt.length,
+          dynamic: dynamicPrompt.length,
+        },
+        response: {
+          length: response.length,
+          preview: response.substring(0, 500),
+        },
+        staticPrompt,
+        dynamicPrompt,
+        fullResponse: response,
+      }, null, 2);
+
+      await storeDebugDataInS3(
+        debugContent,
+        {
+          userId,
+          step: 'extract_structure',
+          type: 'program-structure-extraction-success',
+        },
+        'training-program'
+      );
+    } catch (debugError) {
+      console.warn('Failed to store structure extraction debug data (non-critical):', debugError);
     }
-  );
+  } catch (error) {
+    console.error('❌ Failed to extract training program structure:', error);
+
+    // Store error debug data
+    try {
+      const { storeDebugDataInS3 } = await import('../api-helpers');
+      const errorDebugContent = JSON.stringify({
+        step: 'extract_training_program_structure',
+        userId,
+        coachId,
+        promptLengths: {
+          static: staticPrompt.length,
+          dynamic: dynamicPrompt.length,
+        },
+        staticPrompt,
+        dynamicPrompt,
+        error: {
+          message: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined,
+        },
+      }, null, 2);
+
+      await storeDebugDataInS3(
+        errorDebugContent,
+        {
+          userId,
+          step: 'extract_structure',
+          type: 'program-structure-extraction-error',
+        },
+        'training-program'
+      );
+    } catch (debugError) {
+      console.warn('Failed to store structure extraction error debug data (non-critical):', debugError);
+    }
+
+    throw error;
+  }
+
+  // Validate response before parsing
+  if (!response || response.trim().length === 0) {
+    throw new Error('Bedrock returned empty response for training program structure extraction');
+  }
+
+  if (response.includes('[object Object]') || response === '[object Object]' || response === '{object Object}') {
+    console.error('❌ Bedrock returned invalid object string for structure extraction:', {
+      response,
+      responseLength: response.length,
+    });
+    throw new Error('Bedrock returned "[object Object]" instead of valid JSON. This suggests a prompt construction issue or API error.');
+  }
 
   // Parse the JSON response with fallback handling for malformed AI responses
   try {
@@ -268,7 +353,7 @@ ${getJsonFormattingInstructions()}`;
           phaseName: phase.name.replace(/[^a-zA-Z0-9]/g, '_'),
           type: 'phase-generation-success',
         },
-        'training-program-phase'
+        'training-program'
       );
     } catch (debugError) {
       console.warn('Failed to store phase generation debug data (non-critical):', debugError);
@@ -303,13 +388,27 @@ ${getJsonFormattingInstructions()}`;
           phaseName: phase.name.replace(/[^a-zA-Z0-9]/g, '_'),
           type: 'phase-generation-error',
         },
-        'training-program-phase-error'
+        'training-program'
       );
     } catch (debugError) {
       console.warn('Failed to store phase error debug data (non-critical):', debugError);
     }
 
     throw error;
+  }
+
+  // Validate response before parsing
+  if (!response || response.trim().length === 0) {
+    throw new Error('Bedrock returned empty response');
+  }
+
+  if (response.includes('[object Object]') || response === '[object Object]') {
+    console.error('❌ Bedrock returned invalid object string:', {
+      response,
+      responseLength: response.length,
+      phase: phase.name,
+    });
+    throw new Error('Bedrock returned "[object Object]" instead of valid JSON. This suggests a prompt construction issue or API error.');
   }
 
   // Parse the JSON response with fallback handling for malformed AI responses

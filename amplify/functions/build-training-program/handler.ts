@@ -186,7 +186,7 @@ export const handler = async (event: BuildTrainingProgramEvent) => {
             conversationId: event.conversationId,
             type: 'training-program-generation-error',
           },
-          'training-program-error'
+          'training-program'
         );
 
         console.info("✅ Error debug data saved to S3");
