@@ -7,7 +7,11 @@
 
 import { callBedrockApi, MODEL_IDS, queryPineconeContext } from '../api-helpers';
 import { getJsonFormattingInstructions } from '../prompt-helpers';
-import { parseJsonWithFallbacks, removeTriggerFromStream, toTitleCase } from '../response-utils';
+import {
+  parseJsonWithFallbacks,
+  removeTriggerFromStream,
+  toTitleCase,
+} from '../response-utils';
 import {
   TrainingProgram,
   TrainingProgramPhase,
@@ -119,6 +123,7 @@ ${getJsonFormattingInstructions()}`;
         staticPrompt,
         dynamicPrompt,
         prefillResponse: '{', // Force JSON response format
+        enableThinking: true, // Enable thinking for complex extraction
       }
     );
 
@@ -202,7 +207,9 @@ ${getJsonFormattingInstructions()}`;
       response,
       responseLength: response.length,
     });
-    throw new Error('Bedrock returned "[object Object]" instead of valid JSON. This suggests a prompt construction issue or API error.');
+    throw new Error(
+      'Bedrock returned "[object Object]" instead of valid JSON. This suggests a prompt construction issue or API error.'
+    );
   }
 
   // Parse the JSON response with fallback handling for malformed AI responses
@@ -322,6 +329,7 @@ ${getJsonFormattingInstructions()}`;
         staticPrompt,
         dynamicPrompt,
         prefillResponse: '[', // Force JSON array response format
+        enableThinking: true, // Enable thinking for complex generation
       }
     );
 
@@ -408,7 +416,9 @@ ${getJsonFormattingInstructions()}`;
       responseLength: response.length,
       phase: phase.name,
     });
-    throw new Error('Bedrock returned "[object Object]" instead of valid JSON. This suggests a prompt construction issue or API error.');
+    throw new Error(
+      'Bedrock returned "[object Object]" instead of valid JSON. This suggests a prompt construction issue or API error.'
+    );
   }
 
   // Parse the JSON response with fallback handling for malformed AI responses

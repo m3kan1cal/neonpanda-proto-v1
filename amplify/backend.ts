@@ -6,6 +6,7 @@ import {
   FunctionUrlAuthType,
   InvokeMode,
   HttpMethod,
+  CfnPermission,
 } from "aws-cdk-lib/aws-lambda";
 import { Duration, RemovalPolicy } from "aws-cdk-lib";
 import {
@@ -160,6 +161,21 @@ const backend = defineBackend({
   logWorkoutTemplate,
   skipWorkoutTemplate,
   getWorkoutTemplate,
+});
+
+// Disable retries for stateful async generation functions
+// This prevents confusing double-runs on timeouts or errors.
+backend.buildTrainingProgram.resources.lambda.configureAsyncInvoke({
+  retryAttempts: 0,
+});
+backend.buildWorkout.resources.lambda.configureAsyncInvoke({
+  retryAttempts: 0,
+});
+backend.buildCoachConfig.resources.lambda.configureAsyncInvoke({
+  retryAttempts: 0,
+});
+backend.buildConversationSummary.resources.lambda.configureAsyncInvoke({
+  retryAttempts: 0,
 });
 
 // Create User Pool authorizer
@@ -805,6 +821,18 @@ const streamingFunctionUrl =
     invokeMode: InvokeMode.RESPONSE_STREAM, // Enable streaming responses
   });
 
+// Add the required lambda:InvokeFunction permission for the function URL
+new CfnPermission(
+  backend.streamCoachConversation.stack,
+  "StreamingConversationInvokePermission",
+  {
+    action: "lambda:InvokeFunction",
+    functionName: backend.streamCoachConversation.resources.lambda.functionName,
+    principal: "*",
+    functionUrlAuthType: FunctionUrlAuthType.NONE,
+  }
+);
+
 // Configure Lambda Function URL for streaming coach creator sessions
 const streamingCoachCreatorFunctionUrl =
   backend.streamCoachCreatorSession.resources.lambda.addFunctionUrl({
@@ -822,6 +850,18 @@ const streamingCoachCreatorFunctionUrl =
     },
     invokeMode: InvokeMode.RESPONSE_STREAM, // Enable streaming responses
   });
+
+// Add the required lambda:InvokeFunction permission for the function URL
+new CfnPermission(
+  backend.streamCoachCreatorSession.stack,
+  "StreamingCoachCreatorInvokePermission",
+  {
+    action: "lambda:InvokeFunction",
+    functionName: backend.streamCoachCreatorSession.resources.lambda.functionName,
+    principal: "*",
+    functionUrlAuthType: FunctionUrlAuthType.NONE,
+  }
+);
 
 // ============================================================================
 // SCHEDULED TASKS

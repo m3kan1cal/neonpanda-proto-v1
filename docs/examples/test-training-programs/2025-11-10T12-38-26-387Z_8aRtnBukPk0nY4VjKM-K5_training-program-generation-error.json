@@ -1,0 +1,9 @@
+{
+  "timestamp": "2025-11-10T12:38:26.387Z",
+  "metadata": {
+    "userId": "8aRtnBukPk0nY4VjKM-K5",
+    "conversationId": "conv_1762731136414_7daqido2i",
+    "type": "training-program-generation-error"
+  },
+  "content": "{\n  \"conversationSummary\": \"assistant: I'll remember this.\\n\\nI'll remember this.\\n\\n**Perfect.** Those are solid baselines—especially that 265...\\n\\nuser: I am honestly getting six or seven hours a night of bedtime and probably six hours of sleep. Stress ...\\n\\nassistant: I'll remember this.\\n\\nI'll remember this.\\n\\nI'll remember this.\\n\\n**That's solid.** Six hours of actual...\\n\\nuser: I'm 52 years old and male and going strong!...\\n\\nassistant: I'll remember this.\\n\\nI'll remember this.\\n\\n**52 and crushing it—that's what I'm talking about.** You'...\",\n  \"timestamp\": \"2025-11-10T12:26:21.667Z\",\n  \"eventMetadata\": {\n    \"userId\": \"8aRtnBukPk0nY4VjKM-K5\",\n    \"coachId\": \"user_8aRtnBukPk0nY4VjKM-K5_coach_1756078034317\",\n    \"conversationId\": \"conv_1762731136414_7daqido2i\",\n    \"messageCount\": 16\n  },\n  \"error\": {\n    \"message\": \"Failed to generate valid workout templates for phase: Block 3: Race Prep + Strength Maintenance + Taper\",\n    \"stack\": \"Error: Failed to generate valid workout templates for phase: Block 3: Race Prep + Strength Maintenance + Taper\\n    at mUn (file:///var/task/index.mjs:793:2670)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\\n    at async c5t (file:///var/task/index.mjs:794:1657)\\n    at async Runtime.ogo [as handler] (file:///var/task/index.mjs:817:269)\",\n    \"timestamp\": \"2025-11-10T12:38:26.387Z\"\n  }\n}"
+}
