@@ -227,16 +227,90 @@ ${getJsonFormattingInstructions()}`;
     dynamicPromptLength: dynamicPrompt.length,
   });
 
-  const response = await callBedrockApi(
-    staticPrompt,
-    dynamicPrompt,
-    MODEL_IDS.CLAUDE_SONNET_4_FULL,
-    {
+  let response: string;
+  try {
+    response = await callBedrockApi(
       staticPrompt,
       dynamicPrompt,
-      prefillResponse: '[', // Force JSON array response format
+      MODEL_IDS.CLAUDE_SONNET_4_FULL,
+      {
+        staticPrompt,
+        dynamicPrompt,
+        prefillResponse: '[', // Force JSON array response format
+      }
+    );
+
+    // Store debug data in S3 for troubleshooting
+    try {
+      const { storeDebugDataInS3 } = await import('../api-helpers');
+      const debugContent = JSON.stringify({
+        phaseIndex: phaseIndex + 1,
+        phaseName: phase.name,
+        phaseDuration: phase.durationDays,
+        promptLengths: {
+          static: staticPrompt.length,
+          dynamic: dynamicPrompt.length,
+        },
+        response: {
+          length: response.length,
+          preview: response.substring(0, 500),
+        },
+        staticPrompt,
+        dynamicPrompt,
+        fullResponse: response,
+      }, null, 2);
+
+      await storeDebugDataInS3(
+        debugContent,
+        {
+          userId,
+          phaseIndex: phaseIndex + 1,
+          phaseName: phase.name.replace(/[^a-zA-Z0-9]/g, '_'),
+          type: 'phase-generation-success',
+        },
+        'training-program-phase'
+      );
+    } catch (debugError) {
+      console.warn('Failed to store phase generation debug data (non-critical):', debugError);
     }
-  );
+  } catch (error) {
+    console.error('❌ Failed to generate workout templates for phase:', error);
+
+    // Store error debug data
+    try {
+      const { storeDebugDataInS3 } = await import('../api-helpers');
+      const errorDebugContent = JSON.stringify({
+        phaseIndex: phaseIndex + 1,
+        phaseName: phase.name,
+        phaseDuration: phase.durationDays,
+        promptLengths: {
+          static: staticPrompt.length,
+          dynamic: dynamicPrompt.length,
+        },
+        staticPrompt,
+        dynamicPrompt,
+        error: {
+          message: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined,
+        },
+      }, null, 2);
+
+      await storeDebugDataInS3(
+        errorDebugContent,
+        {
+          userId,
+          phaseIndex: phaseIndex + 1,
+          phaseName: phase.name.replace(/[^a-zA-Z0-9]/g, '_'),
+          type: 'phase-generation-error',
+        },
+        'training-program-phase-error'
+      );
+    } catch (debugError) {
+      console.warn('Failed to store phase error debug data (non-critical):', debugError);
+    }
+
+    throw error;
+  }
 
   // Parse the JSON response with fallback handling for malformed AI responses
   try {

@@ -555,6 +555,7 @@ export const callBedrockApi = async (
       hasContent: !!response.output?.message?.content,
       contentLength: response.output?.message?.content?.length || 0,
       hasText: !!response.output?.message?.content?.[0]?.text,
+      textType: typeof response.output?.message?.content?.[0]?.text,
     });
 
     if (!response.output?.message?.content?.[0]?.text) {
@@ -565,12 +566,29 @@ export const callBedrockApi = async (
       throw new Error("Invalid response format from Bedrock");
     }
 
-    let responseText = response.output.message.content[0].text;
+    // Extract the raw response text
+    const rawResponseText = response.output.message.content[0].text;
+
+    // Type check: ensure we got a string, not an object
+    if (typeof rawResponseText !== 'string') {
+      console.error("❌ Response text is not a string:", {
+        type: typeof rawResponseText,
+        value: rawResponseText,
+        stringified: JSON.stringify(rawResponseText, null, 2),
+      });
+      throw new Error(`Invalid response type from Bedrock: expected string, got ${typeof rawResponseText}`);
+    }
+
+    let responseText = rawResponseText;
 
     // If response was prefilled, prepend the prefill text back
     if (options?.prefillResponse) {
       responseText = options.prefillResponse + responseText;
-      console.info("🎯 Prepended prefill text to response:", options.prefillResponse);
+      console.info("🎯 Prepended prefill text to response:", {
+        prefillText: options.prefillResponse,
+        originalLength: rawResponseText.length,
+        newLength: responseText.length,
+      });
     }
 
     // If thinking was enabled, extract the final response (strip thinking tags)
