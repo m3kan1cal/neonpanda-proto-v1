@@ -829,7 +829,6 @@ new CfnPermission(
     action: "lambda:InvokeFunction",
     functionName: backend.streamCoachConversation.resources.lambda.functionName,
     principal: "*",
-    functionUrlAuthType: FunctionUrlAuthType.NONE,
   }
 );
 
@@ -859,7 +858,6 @@ new CfnPermission(
     action: "lambda:InvokeFunction",
     functionName: backend.streamCoachCreatorSession.resources.lambda.functionName,
     principal: "*",
-    functionUrlAuthType: FunctionUrlAuthType.NONE,
   }
 );
 

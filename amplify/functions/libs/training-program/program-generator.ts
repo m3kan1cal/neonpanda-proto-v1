@@ -116,16 +116,16 @@ ${getJsonFormattingInstructions()}`;
   let response: string;
   try {
     response = await callBedrockApi(
+    staticPrompt,
+    dynamicPrompt,
+    MODEL_IDS.CLAUDE_SONNET_4_FULL,
+    {
       staticPrompt,
       dynamicPrompt,
-      MODEL_IDS.CLAUDE_SONNET_4_FULL,
-      {
-        staticPrompt,
-        dynamicPrompt,
-        prefillResponse: '{', // Force JSON response format
+      prefillResponse: '{', // Force JSON response format
         enableThinking: true, // Enable thinking for complex extraction
-      }
-    );
+    }
+  );
 
     // Store debug data in S3 for troubleshooting
     try {
@@ -322,16 +322,16 @@ ${getJsonFormattingInstructions()}`;
   let response: string;
   try {
     response = await callBedrockApi(
+    staticPrompt,
+    dynamicPrompt,
+    MODEL_IDS.CLAUDE_SONNET_4_FULL,
+    {
       staticPrompt,
       dynamicPrompt,
-      MODEL_IDS.CLAUDE_SONNET_4_FULL,
-      {
-        staticPrompt,
-        dynamicPrompt,
-        prefillResponse: '[', // Force JSON array response format
+      prefillResponse: '[', // Force JSON array response format
         enableThinking: true, // Enable thinking for complex generation
-      }
-    );
+    }
+  );
 
     // Store debug data in S3 for troubleshooting
     try {
