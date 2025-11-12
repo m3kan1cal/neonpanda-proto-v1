@@ -104,6 +104,57 @@ export const cleanResponse = (response: string): string => {
 };
 
 /**
+ * Strips any non-JSON text from the start and end of a string,
+ * leaving only the core JSON object or array. More aggressive than cleanResponse.
+ * @param response - The raw string response from the AI
+ * @returns The extracted JSON string, or the original string if no JSON is found
+ */
+export const stripNonJson = (response: string): string => {
+  const cleaned = response.trim();
+
+  // Find the first character of a JSON object or array
+  const firstBracket = cleaned.indexOf('[');
+  const firstBrace = cleaned.indexOf('{');
+  let startIndex = -1;
+
+  if (firstBracket !== -1 && firstBrace !== -1) {
+    startIndex = Math.min(firstBracket, firstBrace);
+  } else if (firstBracket !== -1) {
+    startIndex = firstBracket;
+  } else {
+    startIndex = firstBrace;
+  }
+
+  if (startIndex === -1) {
+    // No JSON found, return the original (likely an error message)
+    return cleaned;
+  }
+
+  // Find the last character of a JSON object or array
+  const lastBracket = cleaned.lastIndexOf(']');
+  const lastBrace = cleaned.lastIndexOf('}');
+  const endIndex = Math.max(lastBracket, lastBrace);
+
+  if (endIndex === -1 || endIndex < startIndex) {
+    // Unmatched start or invalid range, return original
+    return cleaned;
+  }
+
+  const extracted = cleaned.substring(startIndex, endIndex + 1);
+
+  if (extracted !== cleaned) {
+    console.info("✅ Stripped non-JSON text from response", {
+      originalLength: cleaned.length,
+      extractedLength: extracted.length,
+      removedPrefix: startIndex > 0,
+      removedSuffix: endIndex < cleaned.length - 1,
+    });
+  }
+
+  return extracted;
+};
+
+/**
  * Attempts to fix common JSON parsing issues from AI-generated content
  * @param jsonString - The potentially malformed JSON string
  * @returns Fixed JSON string or throws if unfixable
@@ -316,7 +367,8 @@ export function removeTriggerFromStream(
  * Useful for processing AI responses that might have both markdown formatting and JSON issues
  */
 export const parseJsonWithFallbacks = (response: string): any => {
-  const cleanedResponse = cleanResponse(response);
+  const strippedResponse = stripNonJson(response);
+  const cleanedResponse = cleanResponse(strippedResponse);
   const fixedResponse = fixMalformedJson(cleanedResponse);
   return JSON.parse(fixedResponse);
 };

@@ -218,7 +218,7 @@ const performNormalization = async (
         enableThinking,
         staticPrompt,
         dynamicPrompt,
-        prefillResponse: '{', // Force JSON response format
+        prefillResponse: "{", // Force JSON response format
       }
     );
 

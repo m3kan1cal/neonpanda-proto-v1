@@ -339,14 +339,14 @@ export const containerPatterns = {
   contentCard: "bg-synthwave-bg-card/60 border border-synthwave-neon-cyan/20 rounded-2xl p-6 shadow-xl shadow-synthwave-neon-cyan/20 hover:border-synthwave-neon-cyan/40 hover:bg-synthwave-bg-card/40 transition-all duration-300 hover:-translate-y-2",
 
   // Chat Message Bubbles - Themed containers for conversation messages
-  // User message bubble - Pink gradient with rounded corner
-  userMessageBubble: "px-4 py-3 rounded-2xl rounded-br-md shadow-xl bg-gradient-to-br from-synthwave-neon-pink/80 to-synthwave-neon-pink/60 text-white border-0 shadow-synthwave-neon-pink/30 backdrop-blur-sm",
+  // User message bubble - Pink gradient with rounded corner (removed backdrop-blur to prevent scroll artifacts)
+  userMessageBubble: "px-4 py-3 rounded-2xl rounded-br-md shadow-xl bg-gradient-to-br from-synthwave-neon-pink/80 to-synthwave-neon-pink/60 text-white border-0 shadow-synthwave-neon-pink/30",
 
-  // AI Chat Bubble - Modern glassmorphism with cyan background tint (default Chat mode)
-  aiChatBubble: "bg-synthwave-neon-cyan/10 backdrop-blur-xl border border-synthwave-neon-cyan/20 text-synthwave-text-primary rounded-2xl rounded-bl-md shadow-xl shadow-synthwave-neon-cyan/20",
+  // AI Chat Bubble - Modern glassmorphism with cyan background tint (default Chat mode) (removed backdrop-blur to prevent scroll artifacts)
+  aiChatBubble: "bg-synthwave-neon-cyan/10 border border-synthwave-neon-cyan/20 text-synthwave-text-primary rounded-2xl rounded-bl-md shadow-xl shadow-synthwave-neon-cyan/20",
 
-  // AI Build Mode Bubble - Purple gradient for Build mode AI responses
-  aiBuildModeBubble: "px-4 py-3 rounded-2xl rounded-bl-md shadow-lg bg-gradient-to-br from-synthwave-neon-purple/5 to-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 text-synthwave-text-primary shadow-synthwave-neon-purple/10 backdrop-blur-sm",
+  // AI Build Mode Bubble - Purple gradient for Build mode AI responses (removed backdrop-blur to prevent scroll artifacts)
+  aiBuildModeBubble: "px-4 py-3 rounded-2xl rounded-bl-md shadow-lg bg-gradient-to-br from-synthwave-neon-purple/5 to-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 text-synthwave-text-primary shadow-synthwave-neon-purple/10",
 
   // Info Card - Static information display without hover effects
   infoCard: "bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg p-3",
@@ -395,7 +395,10 @@ export const containerPatterns = {
   authForm: "bg-gradient-to-br from-synthwave-bg-card/90 to-synthwave-bg-card/80 backdrop-blur-xl border border-synthwave-neon-cyan/15 rounded-2xl shadow-2xl shadow-synthwave-neon-cyan/10 hover:from-synthwave-bg-card/95 hover:to-synthwave-bg-card/85 hover:border-synthwave-neon-cyan/20 hover:shadow-2xl hover:shadow-synthwave-neon-cyan/15 transition-all duration-300",
 
   // Subcontainer Enhanced - Matches Theme.jsx "Option 2: Enhanced Glassmorphism" subcontainer (no border)
-  subcontainerEnhanced: "bg-synthwave-bg-primary/25 backdrop-blur-sm rounded-xl p-3"
+  subcontainerEnhanced: "bg-synthwave-bg-primary/25 backdrop-blur-sm rounded-xl p-3",
+
+  // Empty State Tip Card - For tutorial/help cards in empty states (cyan themed, no hover)
+  emptyStateTipCard: "bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-lg px-4 py-4 font-rajdhani"
 };
 
 export const toastPatterns = {
@@ -829,7 +832,19 @@ export const typographyPatterns = {
   heroSubtitle: "font-rajdhani text-3xl text-synthwave-text-secondary mb-6",
   description: "font-rajdhani text-lg text-synthwave-text-secondary leading-relaxed",
   cardText: "font-rajdhani text-synthwave-text-secondary leading-relaxed",
-  caption: "font-rajdhani text-sm text-synthwave-text-muted"
+  caption: "font-rajdhani text-sm text-synthwave-text-muted",
+
+  // Empty state and tip card typography
+  emptyStateHeader: "font-russo text-2xl text-white uppercase tracking-wider",
+  emptyStateDescription: "font-rajdhani text-base text-synthwave-text-secondary max-w-md",
+  emptyStateSectionHeader: "font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-3",
+  emptyStateCardTitle: "font-semibold text-base text-white mb-1",
+  emptyStateCardText: "text-sm text-synthwave-text-secondary",
+  emptyStateCardTextWithMargin: "text-sm text-synthwave-text-secondary mb-3",
+  emptyStateProTip: "font-rajdhani text-sm text-synthwave-text-muted italic",
+
+  // Code/inline code styling
+  inlineCode: "font-mono text-xs text-synthwave-neon-cyan bg-synthwave-bg-primary/50 border border-synthwave-neon-cyan/30 px-2 py-1 rounded inline-block"
 };
 
 export const scrollbarPatterns = {
@@ -1029,10 +1044,17 @@ export const heatMapPatterns = {
 // <div className={containerPatterns.dashedCardPinkBold}>Failed state card</div>
 // <div className={containerPatterns.dashedCardCyan}>Building state card</div>
 // <div className={containerPatterns.dashedCardPurple}>Incomplete state card</div>
+// <div className={containerPatterns.emptyStateTipCard}>Empty state tip card</div>
 // <div className={toastPatterns.success}>Success message</div>
 //
 // Typography:
 // <h1 className={typographyPatterns.pageTitle}>Page Title</h1>
+// <h2 className={typographyPatterns.emptyStateHeader}>Ready to Train?</h2>
+// <p className={typographyPatterns.emptyStateDescription}>Description text</p>
+// <h4 className={typographyPatterns.emptyStateSectionHeader}>Section Header</h4>
+// <h3 className={typographyPatterns.emptyStateCardTitle}>Card Title</h3>
+// <p className={typographyPatterns.emptyStateCardText}>Card description</p>
+// <code className={typographyPatterns.inlineCode}>/log-workout</code>
 //
 // Avatars:
 // <span className={avatarPatterns.small}>U</span>

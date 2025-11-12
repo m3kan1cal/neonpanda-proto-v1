@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { themeClasses } from "../../utils/synthwaveThemeClasses";
 import { inputPatterns, scrollbarPatterns, injectScrollbarStyles } from "../../utils/ui/uiPatterns";
 import CommandPaletteAgent from "../../utils/agents/CommandPaletteAgent";
+import { useToast } from "../../contexts/ToastContext";
 
 const CommandPalette = ({
   isOpen,
@@ -12,6 +13,7 @@ const CommandPalette = ({
   coachId,
   onNavigation,
 }) => {
+  const { success: showSuccess, error: showError } = useToast();
   const [input, setInput] = useState(prefilledCommand);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef(null);
@@ -34,6 +36,7 @@ const CommandPalette = ({
       example: "/log-workout I did Fran in 8:57",
       category: "workout",
       icon: "🏋️",
+      requiresInput: true,
     },
     {
       id: "save-memory",
@@ -42,14 +45,16 @@ const CommandPalette = ({
       example: "/save-memory I prefer morning workouts",
       category: "memory",
       icon: "💭",
+      requiresInput: true,
     },
     {
       id: "start-conversation",
       trigger: "/start-conversation",
       description: "Start a new conversation with a coach",
-      example: "/start-conversation I want to plan out my training week",
+      example: "/start-conversation",
       category: "conversation",
       icon: "💬",
+      requiresInput: false,
     },
   ];
 
@@ -71,32 +76,40 @@ const CommandPalette = ({
     }
 
     // Check for exact command match without content (like "/start-conversation")
-    const exactCommandMatch = mockCommands.find(cmd => cmd.trigger === trimmedInput);
+    const exactCommandMatch = mockCommands.find((cmd) => cmd.trigger === trimmedInput);
     if (exactCommandMatch) {
       return {
-        type: "execution-preview",
+        type: exactCommandMatch.requiresInput ? "execution-preview" : "instant-command",
         command: exactCommandMatch,
-        content: "", // No content - execute with empty string
+        content: "",
       };
     }
 
     // If typing a complete command with content, show execution preview
     // Match: /command + space + anything (including emojis, UTF-8, newlines, special chars)
     // Using .match() with a simple split approach for maximum compatibility
-    const spaceIndex = trimmedInput.indexOf(' ');
+    const spaceIndex = trimmedInput.indexOf(" ");
     if (spaceIndex > 0) {
       const command = trimmedInput.substring(0, spaceIndex);
       const content = trimmedInput.substring(spaceIndex + 1); // Everything after first space
 
-      const matchedCommand = mockCommands.find(
-        (cmd) => cmd.trigger === command
-      );
-      if (matchedCommand && content) {
-        return {
-          type: "execution-preview",
-          command: matchedCommand,
-          content: content.trim(),
-        };
+      const matchedCommand = mockCommands.find((cmd) => cmd.trigger === command);
+      if (matchedCommand) {
+        if (matchedCommand.requiresInput && content) {
+          return {
+            type: "execution-preview",
+            command: matchedCommand,
+            content: content.trim(),
+          };
+        }
+
+        if (!matchedCommand.requiresInput) {
+          return {
+            type: "instant-command",
+            command: matchedCommand,
+            content: "",
+          };
+        }
       }
     }
 
@@ -141,7 +154,7 @@ const CommandPalette = ({
         agentRef.current = null;
       }
     };
-  }, [userId, workoutAgent]);
+  }, [userId, workoutAgent, onNavigation]);
 
   // Execute command function (now just delegates to agent)
   const executeCommand = async (command, content) => {
@@ -150,7 +163,9 @@ const CommandPalette = ({
     try {
       await agentRef.current.executeCommand(command, content, { coachId });
     } catch (error) {
-      // Error is already handled by the agent
+      // Show error toast
+      const errorMessage = error?.message || "Command execution failed";
+      showError(errorMessage);
       console.error("Command execution failed:", error);
     }
   };
@@ -158,20 +173,33 @@ const CommandPalette = ({
   // Auto-close on successful execution
   useEffect(() => {
     if (agentState.executionResult?.success) {
-      // If the command triggered navigation, close immediately
-      if (agentState.executionResult?.navigated) {
-        onClose();
-        agentRef.current?.clearExecutionResult();
-      } else {
-        // Otherwise, wait 2.5 seconds before closing
-        const timer = setTimeout(() => {
-          onClose();
-          agentRef.current?.clearExecutionResult();
-        }, 2500);
-        return () => clearTimeout(timer);
+      // Show success toast (single source of truth for all commands)
+      if (agentState.executionResult?.message) {
+        showSuccess(agentState.executionResult.message);
       }
+
+      // Check if there's navigation data to trigger after closing
+      const navigationData = agentState.executionResult?.details?.navigationData;
+
+      // Close modal after showing success message
+      const timer = setTimeout(() => {
+        // Clear execution result BEFORE closing to prevent double toast
+        agentRef.current?.clearExecutionResult();
+
+        // Close the modal
+        onClose();
+
+        // Trigger navigation after modal is closed (if needed)
+        if (navigationData && onNavigation) {
+          setTimeout(() => {
+            onNavigation("conversation-created", navigationData);
+          }, 150); // Brief delay to ensure modal close animation completes
+        }
+      }, 1000); // 1 second - enough time to read success message
+
+      return () => clearTimeout(timer);
     }
-  }, [agentState.executionResult?.success, agentState.executionResult?.navigated, onClose]);
+  }, [agentState.executionResult?.success, agentState.executionResult?.message, agentState.executionResult?.details?.navigationData, onClose, onNavigation, showSuccess]);
 
   // Update input when prefilledCommand changes
   useEffect(() => {
@@ -251,13 +279,12 @@ const CommandPalette = ({
         );
       } else if (e.key === "Enter") {
         e.preventDefault();
-        if (displayState.commands[selectedIndex]) {
-          const command = displayState.commands[selectedIndex];
+        const selectedCommand = displayState.commands[selectedIndex];
+        if (!selectedCommand) return;
 
-          // All commands now support optional content - just add space and let user type
-          setInput(command.trigger + " ");
+        if (selectedCommand.requiresInput) {
+          setInput(selectedCommand.trigger + " ");
           setSelectedIndex(0);
-          // Move cursor to end after setting input
           setTimeout(() => {
             if (inputRef.current) {
               inputRef.current.focus();
@@ -267,12 +294,26 @@ const CommandPalette = ({
               );
             }
           }, 0);
+        } else {
+          // Don't clear input - let it stay so execution status shows
+          executeCommand(selectedCommand, "");
         }
       }
     } else if (displayState.type === "execution-preview") {
       if (e.key === "Enter") {
         e.preventDefault();
-        executeCommand(displayState.command, displayState.content);
+        if (!displayState.command.requiresInput || displayState.content) {
+          executeCommand(
+            displayState.command,
+            displayState.command.requiresInput ? displayState.content : ""
+          );
+        }
+      }
+    } else if (displayState.type === "instant-command") {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        // Don't clear input - let it stay so execution status shows in the modal
+        executeCommand(displayState.command, "");
       }
     }
   };
@@ -337,10 +378,13 @@ const CommandPalette = ({
         {displayState.type === "command-list" &&
           displayState.commands.length > 0 && (
             <div className="px-6 pb-6">
+              {/* Command list header */}
               <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-3">
                 Available Commands
               </div>
-              <div className="space-y-2 max-h-80 overflow-y-auto custom-scrollbar">
+
+              {/* Command list - dimmed during execution */}
+              <div className={`space-y-2 max-h-80 overflow-y-auto custom-scrollbar ${agentState.isExecuting || agentState.executionResult ? 'opacity-50 pointer-events-none mb-3' : ''}`}>
                 {displayState.commands.map((command, index) => (
                   <div
                     key={command.id}
@@ -350,17 +394,22 @@ const CommandPalette = ({
                         : "hover:bg-synthwave-bg-primary/30 border-transparent"
                     }`}
                     onClick={() => {
-                      setInput(command.trigger + " ");
-                      // Move cursor to end after setting input
-                      setTimeout(() => {
-                        if (inputRef.current) {
-                          inputRef.current.focus();
-                          inputRef.current.setSelectionRange(
-                            inputRef.current.value.length,
-                            inputRef.current.value.length
-                          );
-                        }
-                      }, 0);
+                      if (command.requiresInput) {
+                        setInput(command.trigger + " ");
+                        setTimeout(() => {
+                          if (inputRef.current) {
+                            inputRef.current.focus();
+                            inputRef.current.setSelectionRange(
+                              inputRef.current.value.length,
+                              inputRef.current.value.length
+                            );
+                          }
+                        }, 0);
+                      } else {
+                        // Set input to the command trigger so execution status shows properly
+                        setInput(command.trigger);
+                        executeCommand(command, "");
+                      }
                     }}
                   >
                     <div
@@ -425,36 +474,66 @@ const CommandPalette = ({
                 </div>
               </div>
 
-              {/* Execution Status */}
-              {agentState.isExecuting && (
-                <div className="flex items-center space-x-3 py-3 px-3 rounded bg-synthwave-bg-primary/20 border border-synthwave-neon-cyan/30">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-synthwave-neon-cyan"></div>
-                  <span className="text-synthwave-text-secondary font-rajdhani text-sm">
-                    Executing command...
-                  </span>
-                </div>
-              )}
-
-              {agentState.executionResult && (
-                <div
-                  className={`py-3 px-3 rounded border ${
-                    agentState.executionResult.success
-                      ? "bg-synthwave-neon-cyan/10 border-synthwave-neon-cyan/30 text-synthwave-neon-cyan"
-                      : "bg-red-900/20 border-red-500/30 text-red-400"
-                  }`}
-                >
-                  <div className="font-rajdhani text-sm">
-                    {agentState.executionResult.message}
-                  </div>
-                </div>
-              )}
-
               {!agentState.isExecuting && !agentState.executionResult && (
                 <div className="text-synthwave-text-muted font-rajdhani text-sm px-3">
                   Press Enter to execute
                 </div>
               )}
             </div>
+          </div>
+        )}
+
+        {displayState.type === "instant-command" && (
+          <div className="px-6 pb-6">
+            <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-3">
+              Ready to Start
+            </div>
+            <div className="space-y-3">
+              <div className="flex items-start space-x-3 py-2 px-3 rounded bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/20">
+                <div className="font-rajdhani text-base text-synthwave-neon-pink">
+                  {displayState.command.trigger}
+                </div>
+                <div className="flex-1">
+                  <div className="font-rajdhani text-base text-white">
+                    {displayState.command.description}
+                  </div>
+                </div>
+              </div>
+
+              {!agentState.isExecuting && !agentState.executionResult && (
+                <div className="text-synthwave-text-muted font-rajdhani text-sm px-3">
+                  Press Enter to start a fresh conversation
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Shared Execution Status - shown for ALL command types */}
+        {(agentState.isExecuting || agentState.executionResult) && (
+          <div className="px-6 pb-6">
+            {agentState.isExecuting && (
+              <div className="flex items-center space-x-3 py-3 px-3 rounded bg-synthwave-bg-primary/20 border border-synthwave-neon-cyan/30">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-synthwave-neon-cyan"></div>
+                <span className="text-synthwave-text-secondary font-rajdhani text-sm">
+                  Executing command...
+                </span>
+              </div>
+            )}
+
+            {agentState.executionResult && (
+              <div
+                className={`py-3 px-3 rounded border ${
+                  agentState.executionResult.success
+                    ? "bg-synthwave-neon-cyan/10 border-synthwave-neon-cyan/30 text-synthwave-neon-cyan"
+                    : "bg-red-900/20 border-red-500/30 text-red-400"
+                }`}
+              >
+                <div className="font-rajdhani text-sm">
+                  {agentState.executionResult.message}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
