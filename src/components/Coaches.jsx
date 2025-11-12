@@ -429,9 +429,9 @@ function Coaches() {
           {/* Compact Horizontal Header Skeleton */}
           <header className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-6">
             {/* Left: Title + Coach Card */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5">
-              {/* Title skeleton - compact size */}
-              <div className="h-8 md:h-9 bg-synthwave-text-muted/20 rounded animate-pulse w-72"></div>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
+              {/* Title skeleton */}
+              <div className="h-8 md:h-9 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
 
               {/* Compact coach card skeleton - horizontal pill */}
               <div className="flex items-center gap-2.5 px-3 py-2 bg-synthwave-neon-cyan/5 border border-synthwave-neon-cyan/20 rounded-full">
@@ -498,8 +498,9 @@ function Coaches() {
           {/* In-Progress Sessions skeleton */}
           <div className="mt-16">
             <div className="text-center mb-12">
-              <div className="h-10 bg-synthwave-text-muted/20 rounded animate-pulse w-80 mx-auto mb-4"></div>
-              <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-96 mx-auto"></div>
+              <div className="h-7 bg-synthwave-text-muted/20 rounded animate-pulse w-80 mx-auto mb-4"></div>
+              <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-full max-w-2xl mx-auto mb-2"></div>
+              <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-full max-w-xl mx-auto"></div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -532,9 +533,9 @@ function Coaches() {
           {/* Templates section skeleton */}
           <div className="mt-20">
             <div className="text-center mb-12">
-              <div className="h-8 bg-synthwave-text-muted/20 rounded animate-pulse w-80 mx-auto mb-4"></div>
-              <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-96 mx-auto mb-2"></div>
-              <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-80 mx-auto"></div>
+              <div className="h-7 bg-synthwave-text-muted/20 rounded animate-pulse w-80 mx-auto mb-4"></div>
+              <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-full max-w-2xl mx-auto mb-2"></div>
+              <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-full max-w-xl mx-auto"></div>
             </div>
 
             {/* Template cards skeleton */}

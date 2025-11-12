@@ -90,12 +90,19 @@ export class CommandPaletteAgent {
    * Execute a command with the given content
    */
   async executeCommand(command, content, options = {}) {
-    if (!command || !content || this.state.isExecuting) {
+    const allowsEmptyContent = command && command.requiresInput === false;
+    const hasContent = content && content.trim().length > 0;
+
+    if (!command || (!allowsEmptyContent && !hasContent) || this.state.isExecuting) {
       console.warn(
         "CommandPaletteAgent.executeCommand: Invalid parameters or already executing"
       );
       return;
     }
+
+    const normalizedContent = allowsEmptyContent ? "" : content.trim();
+
+    const executionStartTime = Date.now();
 
     this._updateState({
       isExecuting: true,
@@ -104,20 +111,24 @@ export class CommandPaletteAgent {
       lastExecutedCommand: command,
     });
 
+    // Force a small delay to ensure React renders the spinner before we start the API call
+    // This prevents React from batching the isExecuting: true and isExecuting: false updates
+    await new Promise(resolve => setTimeout(resolve, 50));
+
     try {
       let result;
 
       switch (command.id) {
         case "log-workout":
-          result = await this._executeLogWorkout(content, options);
+          result = await this._executeLogWorkout(normalizedContent, options);
           break;
 
         case "save-memory":
-          result = await this._executeSaveMemory(content, options);
+          result = await this._executeSaveMemory(normalizedContent, options);
           break;
 
         case "start-conversation":
-          result = await this._executeStartConversation(content, options);
+          result = await this._executeStartConversation(normalizedContent, options);
           break;
 
         default:
@@ -126,20 +137,44 @@ export class CommandPaletteAgent {
           );
       }
 
+      const executionResult = {
+        success: true,
+        message: result.message,
+        details: {
+          ...(result.details || {}),
+          navigationData: result.navigationData || null,
+        },
+      };
+
+      console.log("CommandPaletteAgent: Command executed successfully:", executionResult);
+
+      // Ensure minimum total display time for spinner (500ms) so users see feedback
+      const executionTime = Date.now() - executionStartTime;
+      const minimumDisplayTime = 500;
+      const remainingTime = Math.max(0, minimumDisplayTime - executionTime);
+
+      if (remainingTime > 0) {
+        await new Promise(resolve => setTimeout(resolve, remainingTime));
+      }
+
       this._updateState({
         isExecuting: false,
-        executionResult: {
-          success: true,
-          message: result.message,
-          details: result.details || null,
-          navigated: result.navigated || false,
-        },
+        executionResult,
         error: null,
       });
 
       return result;
     } catch (error) {
       console.error("CommandPaletteAgent.executeCommand: Error:", error);
+
+      // Even for errors, ensure minimum display time
+      const executionTime = Date.now() - executionStartTime;
+      const minimumDisplayTime = 500;
+      const remainingTime = Math.max(0, minimumDisplayTime - executionTime);
+
+      if (remainingTime > 0) {
+        await new Promise(resolve => setTimeout(resolve, remainingTime));
+      }
 
       this._updateState({
         isExecuting: false,
@@ -284,23 +319,21 @@ export class CommandPaletteAgent {
       initialMessage
     );
 
-    // Trigger navigation if callback is available
-    if (this.onNavigation && result.conversation) {
-      this.onNavigation("conversation-created", {
-        userId: this.userId,
-        coachId: coachId,
-        conversationId: result.conversation.conversationId,
-      });
-    }
-
     const message = initialMessage
-      ? "Conversation started with your message! Redirecting..."
-      : "Conversation started successfully! Redirecting...";
+      ? "Conversation started with your message!"
+      : "Conversation created successfully!";
 
+    // Return WITHOUT navigated flag so it behaves like save-memory
+    // (shows spinner, success message, toast, then auto-closes)
     return {
       message,
       details: result,
-      navigated: true, // Mark this command as triggering navigation
+      // Pass navigation data so CommandPalette can trigger it after closing
+      navigationData: result.conversation ? {
+        userId: this.userId,
+        coachId: coachId,
+        conversationId: result.conversation.conversationId,
+      } : null,
     };
   }
 

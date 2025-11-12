@@ -10,6 +10,28 @@
 
 export const changelogEntries = [
   {
+    version: "Release v1.0.20251112-beta",
+    date: "2025-11-12",
+    changes: {
+      added: [],
+      changed: [
+        "Coaches.jsx skeleton loading header title width increased from w-40 to w-48 for better visual balance matching 'Your Coaches' title",
+        "Coaches.jsx skeleton loading in-progress coaches header height reduced from h-10 to h-7 for title and h-6 to h-5 for description to match actual header sizes",
+        "Coaches.jsx skeleton loading templates section header height reduced from h-8 to h-7 for title and h-6/h-4 to h-5/h-5 for description lines to match actual header sizes",
+        "Coaches.jsx skeleton loading in-progress coaches description changed from single row (w-96) to two rows (w-full max-w-2xl, w-full max-w-xl) matching multi-line actual description",
+        "Coaches.jsx skeleton loading templates section description rows widened from w-96/w-80 to w-full max-w-2xl/w-full max-w-xl matching actual max-w-2xl constraint",
+        "CoachCreator.jsx skeleton loading header refactored to remove extra centered description bones (two horizontal skeleton lines below header)",
+        "CoachConversations.jsx conversation title moved vertically closer to page header using -mt-4 negative margin for tighter, more compact layout"
+      ],
+      fixed: [
+        "Coaches.jsx skeleton loading structure showing oversized headers for in-progress coaches and templates sections (h-10/h-8 vs actual text-xl md:text-2xl)",
+        "Coaches.jsx skeleton loading showing single-line descriptions when actual descriptions span multiple lines with max-w-2xl constraint",
+        "CoachCreator.jsx skeleton loading showing extra horizontal centered description bones below header that don't exist in actual page layout"
+      ],
+      removed: []
+    }
+  },
+  {
     version: "Release v1.0.20251109-beta",
     date: "2025-11-09",
     changes: {

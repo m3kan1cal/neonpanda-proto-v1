@@ -183,10 +183,10 @@ function Breadcrumbs() {
                   </Link>
                 </React.Fragment>,
 
-                // Coach Conversation breadcrumb (current page)
+                // Conversation Details breadcrumb (current page)
                 <React.Fragment key="coach-conversations-current">
                   <span className="bg-synthwave-neon-pink text-synthwave-bg-primary px-3 py-1.5 rounded-full font-medium whitespace-nowrap flex-shrink-0">
-                    Coach Conversation
+                    Conversation Details
                   </span>
                 </React.Fragment>
               ];

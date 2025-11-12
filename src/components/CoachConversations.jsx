@@ -22,6 +22,7 @@ import {
   buttonPatterns,
   tooltipPatterns,
   messagePatterns,
+  typographyPatterns,
 } from "../utils/ui/uiPatterns";
 import { FullPageLoader, CenteredErrorState } from "./shared/ErrorStates";
 import CoachHeader from "./shared/CoachHeader";
@@ -328,6 +329,23 @@ function CoachConversations() {
   const workoutAgentRef = useRef(null);
   const { success: showSuccess, error: showError } = useToast();
 
+  // Agent state (managed by CoachConversationAgent)
+  const [coachConversationAgentState, setCoachConversationAgentState] =
+    useState({
+      messages: [],
+      isLoadingItem: true,
+      isTyping: false,
+      error: null,
+      coach: null,
+      conversation: null,
+      recentConversations: [],
+      isLoadingRecentItems: false,
+      // Initialize streaming state
+      isStreaming: false,
+      streamingMessage: "",
+      streamingMessageId: null,
+    });
+
   // Slash commands configuration
   const availableSlashCommands = [
     {
@@ -359,7 +377,8 @@ function CoachConversations() {
     },
     {
       label: "WOD Creation",
-      message: "Create a WOD for me today based on my goals and training plan.",
+      message:
+        "Create a WOD for me today based on my goals and training plan.",
     },
   ];
 
@@ -388,23 +407,6 @@ function CoachConversations() {
       },
     ],
   };
-
-  // Agent state (managed by CoachConversationAgent)
-  const [coachConversationAgentState, setCoachConversationAgentState] =
-    useState({
-      messages: [],
-      isLoadingItem: true,
-      isTyping: false,
-      error: null,
-      coach: null,
-      conversation: null,
-      recentConversations: [],
-      isLoadingRecentItems: false,
-      // Initialize streaming state
-      isStreaming: false,
-      streamingMessage: "",
-      streamingMessageId: null,
-    });
 
   // Polling state for newly created conversations
   const [isPollingForMessages, setIsPollingForMessages] = useState(false);
@@ -569,7 +571,22 @@ function CoachConversations() {
     // Skip if we don't have the basic requirements
     if (!userId || !coachId || !conversationId) return;
     if (!coachConversationAgentState.conversation) return;
-    if (coachConversationAgentState.messages.length > 0) return;
+
+    // NEVER poll if there are no messages - polling is ONLY for conversations with pending AI responses
+    // Empty conversations show the canned greeting instead
+    if (coachConversationAgentState.messages.length === 0) {
+      console.info(
+        `⏭️ Skipping polling for empty conversation (no messages to wait for)`
+      );
+      hasAttemptedPollingRef.current = conversationId;
+      return;
+    }
+
+    // If there ARE messages, don't poll (messages already loaded)
+    if (coachConversationAgentState.messages.length > 0) {
+      hasAttemptedPollingRef.current = conversationId;
+      return;
+    }
 
     // Mark that we've attempted polling for this conversation
     hasAttemptedPollingRef.current = conversationId;
@@ -1102,11 +1119,9 @@ function CoachConversations() {
           {/* Main Content Area skeleton */}
           <div className="flex-1 flex justify-center">
             <div className="w-full max-w-7xl">
-              <div
-                className={`${containerPatterns.mainContent} h-[500px] flex flex-col`}
-              >
+              <div className="h-[500px] flex flex-col">
                 {/* Messages Area skeleton */}
-                <div className="flex-1 overflow-y-auto overflow-hidden p-6 space-y-3">
+                <div className="flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-6 space-y-3">
                   {/* Chat message skeletons */}
                   {[1, 2].map((i) => (
                     <div
@@ -1199,7 +1214,7 @@ function CoachConversations() {
               data-tooltip-id="coach-conversation-info"
               data-tooltip-content="Get personalized coaching, workout advice, and motivation from your AI coach. The more you share, the more your coach learns."
             >
-              Coach Conversation
+              Conversation Details
             </h1>
 
             {/* Compact Coach Card */}
@@ -1223,7 +1238,7 @@ function CoachConversations() {
         {/* Conversation Title - moved below header */}
         {coachConversationAgentState.conversation &&
           coachConversationAgentState.conversation.title && (
-            <div className="font-rajdhani text-base text-synthwave-text-secondary mb-6 flex items-center">
+            <div className="font-rajdhani text-base text-synthwave-text-secondary -mt-4 mb-4 flex items-center">
               <span className="text-synthwave-neon-pink mr-2">Topic:</span>
               <InlineEditField
                 value={coachConversationAgentState.conversation.title}
@@ -1241,11 +1256,128 @@ function CoachConversations() {
         {/* Main Content Area */}
         <div className="flex-1 flex justify-center">
           <div className="w-full max-w-7xl">
-            <div
-              className={`sm:${containerPatterns.mainContent} h-full flex flex-col`}
-            >
+            {/* Removed mainContent container for immersive chat UX - messages flow edge-to-edge */}
+            <div className="h-full flex flex-col">
               {/* Messages Area - with bottom padding for floating input */}
-              <div className="flex-1 overflow-y-auto overflow-hidden p-3 sm:p-6 pb-32 sm:pb-48 space-y-4">
+              {/* Removed backdrop-blur and semi-transparent backgrounds to prevent scroll artifacts */}
+              <div className="flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-6 pb-32 sm:pb-48 space-y-4">
+                {/* Empty State - Show tips when no messages */}
+                {coachConversationAgentState.messages.length === 0 &&
+                 !coachConversationAgentState.isTyping &&
+                 !coachConversationAgentState.isStreaming && (
+                  <div className="flex flex-col items-center justify-center min-h-[400px] space-y-6 px-4">
+                    {/* Welcome Header */}
+                    <div className="text-center space-y-2">
+                      <h2 className={typographyPatterns.emptyStateHeader}>
+                        Ready to Train?
+                      </h2>
+                      <p className={typographyPatterns.emptyStateDescription}>
+                        I'm here to help you reach your goals. Ask me anything or use these quick commands to get started.
+                      </p>
+                    </div>
+
+                    {/* Command Tips Grid */}
+                    <div className="flex flex-col gap-6 w-full max-w-2xl">
+                      {/* Slash Commands */}
+                      <div>
+                        <h4 className={typographyPatterns.emptyStateSectionHeader}>
+                          Use Slash Commands
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {/* Log Workout Command */}
+                          <div className={containerPatterns.emptyStateTipCard}>
+                            <h3 className={typographyPatterns.emptyStateCardTitle}>
+                              Log a Workout
+                            </h3>
+                            <p className={typographyPatterns.emptyStateCardTextWithMargin}>
+                              Track your training sessions and keep your coach in the loop
+                            </p>
+                            <code className={typographyPatterns.inlineCode}>
+                              /log-workout Fran 8:57
+                            </code>
+                          </div>
+
+                          {/* Save Memory Command */}
+                          <div className={containerPatterns.emptyStateTipCard}>
+                            <h3 className={typographyPatterns.emptyStateCardTitle}>
+                              Save a Memory
+                            </h3>
+                            <p className={typographyPatterns.emptyStateCardTextWithMargin}>
+                              Store important notes, preferences, or insights for future reference
+                            </p>
+                            <code className={typographyPatterns.inlineCode}>
+                              /save-memory prefer morning workouts
+                            </code>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Chat & Build Features */}
+                      <div>
+                        <h4 className={typographyPatterns.emptyStateSectionHeader}>
+                          Chat & Build
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {/* Ask Anything */}
+                          <div className={containerPatterns.emptyStateTipCard}>
+                            <h3 className={typographyPatterns.emptyStateCardTitle}>
+                              Ask Questions
+                            </h3>
+                            <p className={typographyPatterns.emptyStateCardText}>
+                              Get coaching advice, form tips, programming guidance, or motivation
+                            </p>
+                          </div>
+
+                          {/* Build Mode */}
+                          <div className={containerPatterns.emptyStateTipCard}>
+                            <h3 className={typographyPatterns.emptyStateCardTitle}>
+                              Build Mode
+                            </h3>
+                            <p className={typographyPatterns.emptyStateCardText}>
+                              Toggle <span className={`${buttonPatterns.modeBadgeBuild} inline-flex pointer-events-none scale-90`}><BuildModeIconTiny /><span className="translate-y-px">Build</span></span> at the bottom to create programs, workouts, and plans
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Media & Quick Actions */}
+                      <div>
+                        <h4 className={typographyPatterns.emptyStateSectionHeader}>
+                          Media & Quick Actions
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {/* Attach Photos */}
+                          <div className={containerPatterns.emptyStateTipCard}>
+                            <h3 className={typographyPatterns.emptyStateCardTitle}>
+                              Attach Photos
+                            </h3>
+                            <p className={typographyPatterns.emptyStateCardText}>
+                              Click the <span className="inline-flex items-center scale-90 text-synthwave-neon-pink translate-y-1"><CameraIcon /></span> icon at the bottom to share form checks, progress pics, or workout logs
+                            </p>
+                          </div>
+
+                          {/* Quick Prompts */}
+                          <div className={containerPatterns.emptyStateTipCard}>
+                            <h3 className={typographyPatterns.emptyStateCardTitle}>
+                              Quick Prompts
+                            </h3>
+                            <p className={typographyPatterns.emptyStateCardText}>
+                              Use the Quick Prompts menu for pre-built prompts like daily check-ins and workout creation
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Pro Tip */}
+                    <div className="text-center">
+                      <p className={typographyPatterns.emptyStateProTip}>
+                        Type <span className="text-synthwave-neon-cyan font-mono">/</span> to see all available commands
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 {coachConversationAgentState.messages
                   .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp)) // Ensure chronological order
                   .filter((message) => {

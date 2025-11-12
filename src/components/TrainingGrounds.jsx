@@ -282,6 +282,7 @@ function TrainingGrounds() {
 
     try {
       await conversationAgentRef.current.createConversation(userId, coachId);
+      showSuccess('Conversation created!');
     } catch (error) {
       // Error handling is managed by the agent via onError callback
     }

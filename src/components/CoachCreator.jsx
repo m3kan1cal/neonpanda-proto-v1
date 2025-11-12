@@ -166,7 +166,7 @@ const MessageItem = memo(
               agentState,
               `px-4 py-3 rounded-2xl shadow-sm ${
                 message.type === "user"
-                  ? "bg-gradient-to-br from-synthwave-neon-pink/80 to-synthwave-neon-pink/60 text-white border-0 rounded-br-md shadow-xl shadow-synthwave-neon-pink/30 backdrop-blur-sm"
+                  ? "bg-gradient-to-br from-synthwave-neon-pink/80 to-synthwave-neon-pink/60 text-white border-0 rounded-br-md shadow-xl shadow-synthwave-neon-pink/30"
                   : containerPatterns.aiChatBubble
               }`
             )}
@@ -584,9 +584,9 @@ function CoachCreator() {
           {/* Compact Horizontal Header Skeleton */}
           <header className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-6">
             {/* Left: Title + Coach Card */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5">
-              {/* Title skeleton - compact size */}
-              <div className="h-8 md:h-9 bg-synthwave-text-muted/20 rounded animate-pulse w-72"></div>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
+              {/* Title skeleton */}
+              <div className="h-8 md:h-9 bg-synthwave-text-muted/20 rounded animate-pulse w-56"></div>
 
               {/* Compact coach card skeleton - horizontal pill */}
               <div className="flex items-center gap-2.5 px-3 py-2 bg-synthwave-neon-cyan/5 border border-synthwave-neon-cyan/20 rounded-full">
@@ -599,20 +599,12 @@ function CoachCreator() {
             <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
           </header>
 
-          {/* Description skeleton */}
-          <div className="text-center mb-8">
-            <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-96 mx-auto mb-4"></div>
-            <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-80 mx-auto"></div>
-          </div>
-
           {/* Main Content Area skeleton */}
           <div className="flex-1 flex justify-center">
             <div className="w-full max-w-7xl">
-              <div
-                className={`${containerPatterns.mainContent} h-[500px] flex flex-col`}
-              >
+              <div className="h-[500px] flex flex-col">
                 {/* Messages Area skeleton */}
-                <div className="flex-1 overflow-y-auto overflow-hidden p-6 space-y-3">
+                <div className="flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-6 space-y-3">
                   {/* Chat message skeletons */}
                   {[1, 2].map((i) => (
                     <div
@@ -706,11 +698,11 @@ function CoachCreator() {
         {/* Main Content Area */}
         <div className="flex-1 flex justify-center">
           <div className="w-full max-w-7xl">
-            <div
-              className={`sm:${containerPatterns.mainContent} h-full flex flex-col`}
-            >
+            {/* Removed mainContent container for immersive chat UX - messages flow edge-to-edge */}
+            <div className="h-full flex flex-col">
               {/* Messages Area - with bottom padding for floating input + progress indicator */}
-              <div className="flex-1 overflow-y-auto overflow-hidden p-3 sm:p-6 pb-32 sm:pb-48 space-y-4 custom-scrollbar">
+              {/* Removed backdrop-blur and semi-transparent backgrounds to prevent scroll artifacts */}
+              <div className="flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-6 pb-32 sm:pb-48 space-y-4 custom-scrollbar">
                 {agentState.messages
                   .filter((message) => {
                     // Filter out empty streaming placeholder messages
