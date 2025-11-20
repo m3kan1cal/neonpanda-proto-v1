@@ -93,7 +93,8 @@ const FEATURE_FLAGS: StreamingFeatureFlags = {
 
 // Separate workout detection processing for concurrent execution
 async function processWorkoutDetection(
-  params: BusinessLogicParams
+  params: BusinessLogicParams,
+  routerAnalysis?: SmartRequestRouter
 ): Promise<any> {
   const {
     userId,
@@ -103,11 +104,12 @@ async function processWorkoutDetection(
     messageTimestamp,
     existingConversation,
     coachConfig,
+    userProfile,
   } = params;
 
   const conversationContext = {
     sessionNumber:
-      existingConversation.attributes.messages.filter(
+      existingConversation.messages.filter(
         (msg: any) => msg.role === "user"
       ).length + 1,
   };
@@ -122,7 +124,9 @@ async function processWorkoutDetection(
         conversationId,
         coachConfig,
         conversationContext,
-        messageTimestamp
+        messageTimestamp,
+        userProfile,
+        routerAnalysis // ✅ Pass Smart Router result to avoid duplicate AI call
       );
     } catch (error) {
       console.error("❌ Error in workout detection, using fallback:", error);
@@ -230,7 +234,7 @@ async function loadConversationData(
     "✅ Conversation, coach config, and user profile loaded successfully",
     {
       hasUserProfile: !!profile,
-      userTimezone: profile?.attributes?.preferences?.timezone,
+      userTimezone: profile?.preferences?.timezone,
       profileWasReused: !!userProfile,
     }
   );
@@ -326,9 +330,9 @@ async function* processCoachConversationAsync(
 
   // Step 2: Load user profile FIRST (needed for smart router temporal context)
   const userProfile = await getUserProfile(params.userId);
-  const userTimezone = userProfile?.attributes?.preferences?.timezone;
+  const userTimezone = userProfile?.preferences?.timezone;
   const criticalTrainingDirective =
-    userProfile?.attributes?.criticalTrainingDirective;
+    userProfile?.criticalTrainingDirective;
 
   console.info("✅ User profile loaded for smart router:", {
     hasProfile: !!userProfile,
@@ -463,12 +467,12 @@ async function* processCoachConversationAsync(
     // Parallel execution: contextual updates + workout + memory processing
     const parallelOperations = [
       // Workout processing
-      processWorkoutDetection(businessLogicParams),
+      processWorkoutDetection(businessLogicParams, routerAnalysis),
       // Memory processing
       (async () => {
         // Build message context
         const messageContext = buildMessageContextFromMessages(
-          conversationData.existingConversation.attributes.messages,
+          conversationData.existingConversation.messages,
           5
         );
 
@@ -476,7 +480,7 @@ async function* processCoachConversationAsync(
         const consolidatedMemoryAnalysis = await analyzeMemoryNeeds(
           params.userResponse,
           messageContext,
-          conversationData.coachConfig.attributes.coach_name
+          conversationData.coachConfig.coach_name
         );
 
         // Process retrieval (MUST await - needed for AI response)
@@ -497,8 +501,8 @@ async function* processCoachConversationAsync(
             params.userId,
             params.coachId,
             params.conversationId,
-            conversationData.existingConversation.attributes.messages,
-            conversationData.coachConfig.attributes.coach_name
+            conversationData.existingConversation.messages,
+            conversationData.coachConfig.coach_name
           ).catch((err) => {
             console.error("⚠️ Memory saving failed (non-blocking):", err);
           });
@@ -585,7 +589,7 @@ async function* processCoachConversationAsync(
           "workout_analysis",
           { stage: "analyzing_workouts" }
         ),
-        processWorkoutDetection(businessLogicParams),
+        processWorkoutDetection(businessLogicParams, routerAnalysis),
         "workout_analysis"
       );
 
@@ -598,7 +602,7 @@ async function* processCoachConversationAsync(
       }
     } else {
       // No contextual update needed, just process workout
-      workoutResult = await processWorkoutDetection(businessLogicParams);
+      workoutResult = await processWorkoutDetection(businessLogicParams, routerAnalysis);
     }
 
     memoryRetrieval = getFallbackMemory();
@@ -610,7 +614,7 @@ async function* processCoachConversationAsync(
 
     // Build message context
     const messageContext = buildMessageContextFromMessages(
-      conversationData.existingConversation.attributes.messages,
+      conversationData.existingConversation.messages,
       5
     );
 
@@ -618,7 +622,7 @@ async function* processCoachConversationAsync(
     const consolidatedMemoryAnalysis = await analyzeMemoryNeeds(
       params.userResponse,
       messageContext,
-      conversationData.coachConfig.attributes.coach_name
+      conversationData.coachConfig.coach_name
     );
 
     // Create retrieval work (this we need immediately)
@@ -641,8 +645,8 @@ async function* processCoachConversationAsync(
         params.userId,
         params.coachId,
         params.conversationId,
-        conversationData.existingConversation.attributes.messages,
-        conversationData.coachConfig.attributes.coach_name
+        conversationData.existingConversation.messages,
+        conversationData.coachConfig.coach_name
       ).catch((err) => {
         console.error("⚠️ Memory saving failed (non-blocking):", err);
       });
@@ -710,7 +714,7 @@ async function* processCoachConversationAsync(
 
   const conversationContext = {
     sessionNumber:
-      conversationData.existingConversation.attributes.messages.filter(
+      conversationData.existingConversation.messages.filter(
         (msg: any) => msg.role === "user"
       ).length + 1,
   };
@@ -727,7 +731,7 @@ async function* processCoachConversationAsync(
   );
 
   try {
-    console.info("🚀 Starting REAL-TIME AI streaming...");
+    console.info("🚀 Starting REAL-TIME AI streaming..");
 
     const streamResult = await generateAIResponseStream(
       conversationData.coachConfig,
@@ -735,7 +739,7 @@ async function* processCoachConversationAsync(
       workoutResult,
       memoryRetrieval,
       params.userResponse,
-      conversationData.existingConversation.attributes.messages,
+      conversationData.existingConversation.messages,
       conversationContext,
       params.userId,
       params.coachId,
@@ -743,7 +747,7 @@ async function* processCoachConversationAsync(
       conversationData.userProfile,
       params.imageS3Keys, // Pass imageS3Keys
       routerAnalysis.conversationComplexity.requiresDeepReasoning, // NEW: Smart model selection
-      conversationData.existingConversation.attributes.mode ||
+      conversationData.existingConversation.mode ||
         CONVERSATION_MODES.CHAT // NEW: Conversation mode (defaults to chat for backwards compatibility)
     );
 
@@ -794,7 +798,7 @@ async function* processCoachConversationAsync(
 
   // NEW: Check if this is a Build mode conversation with training program generation trigger
   const conversationMode =
-    conversationData.existingConversation.attributes.mode ||
+    conversationData.existingConversation.mode ||
     CONVERSATION_MODES.CHAT; // Default to chat for backwards compatibility
 
   if (conversationMode === CONVERSATION_MODES.BUILD) {
@@ -824,7 +828,7 @@ async function* processCoachConversationAsync(
         // This prevents confusion from multiple Build sessions in the same conversation
         // while allowing multi-day Build sessions (e.g., started last night, continued this morning)
         const buildModeMessages = extractLatestBuildModeSection(
-          conversationData.existingConversation.attributes.messages
+          conversationData.existingConversation.messages
         );
 
         // Prepare the payload for the build-training-program lambda
@@ -833,8 +837,8 @@ async function* processCoachConversationAsync(
           coachId: params.coachId,
           conversationId: params.conversationId,
           conversationMessages: buildModeMessages, // Only recent Build mode section!
-          coachConfig: conversationData.coachConfig.attributes,
-          userProfile: conversationData.userProfile?.attributes,
+          coachConfig: conversationData.coachConfig,
+          userProfile: conversationData.userProfile,
         };
 
         // Invoke the build-training-program lambda asynchronously
@@ -940,8 +944,8 @@ async function saveConversationAndYieldComplete(
     // We already have the message count from saveResult
     const currentMessageCount =
       newUserMessage && newAiMessage
-        ? conversationData.existingConversation.attributes.messages.length + 2
-        : conversationData.existingConversation.attributes.messages.length;
+        ? conversationData.existingConversation.messages.length + 2
+        : conversationData.existingConversation.messages.length;
 
     // Truly fire-and-forget - no await, no promise chaining (prevents event loop hang)
     detectAndProcessConversationSummary(

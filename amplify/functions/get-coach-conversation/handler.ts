@@ -37,7 +37,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     });
 
     return createOkResponse({
-      conversation: conversation.attributes,
+      conversation: conversation,
       conversationSize: {
         sizeKB: parseFloat(itemSizeKB.toFixed(2)),
         percentage: sizePercentage,

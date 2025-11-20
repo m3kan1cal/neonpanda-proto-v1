@@ -26,10 +26,8 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     // Return the complete analytics object
     return createOkResponse({
       report: {
-        ...analytics.attributes,
+        ...analytics,
         // Include DynamoDB metadata
-        createdAt: analytics.createdAt,
-        updatedAt: analytics.updatedAt
       }
     });
 

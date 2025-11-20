@@ -77,7 +77,7 @@ Write the summary now:`;
         staticPrompt,
         dynamicPrompt,
       }
-    );
+    ) as string; // No tools used, always returns string
 
     // Clean up the response - remove any prefix like "SUMMARY:" and trim
     const cleanSummary = response.trim();

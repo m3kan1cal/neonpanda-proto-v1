@@ -174,7 +174,7 @@ export async function generateAIResponse(
     }
 
     // Extract user timezone from profile (fallback to Pacific Time if not set)
-    const userTimezone = userProfile?.attributes?.preferences?.timezone;
+    const userTimezone = userProfile?.preferences?.timezone;
 
     // Generate comprehensive system prompt using coach conversation utilities
     // NEW: Enable caching by passing existingMessages and pineconeContext directly
@@ -187,7 +187,7 @@ export async function generateAIResponse(
       workoutContext: context.recentWorkouts, // Add recent workout summaries for context
       userMemories: memoryResult.memories, // Add memories for personalization
       criticalTrainingDirective:
-        userProfile?.attributes?.criticalTrainingDirective, // Add critical training directive if set
+        userProfile?.criticalTrainingDirective, // Add critical training directive if set
       userTimezone, // Pass user's timezone for temporal context
       existingMessages, // NEW: Pass messages for conversation history (now in prompt-generation)
       pineconeContext: context.pineconeContext, // NEW: Pass Pinecone context (now in prompt-generation)
@@ -234,7 +234,7 @@ export async function generateAIResponse(
             userId,
             coachId,
             conversationId,
-            coachName: coachConfig.attributes.coach_name,
+            coachName: coachConfig.coach_name,
             userMessage:
               userMessage?.substring(0, 200) || "(no text, images only)",
             sessionNumber: conversationContext.sessionNumber,
@@ -259,9 +259,9 @@ export async function generateAIResponse(
             memoriesCount: memoryResult.memories?.length || 0,
             messageCount: existingMessages.length,
             hasCriticalDirective:
-              !!userProfile?.attributes?.criticalTrainingDirective?.enabled,
+              !!userProfile?.criticalTrainingDirective?.enabled,
             userTimezone:
-              userProfile?.attributes?.preferences?.timezone ||
+              userProfile?.preferences?.timezone ||
               "America/Los_Angeles",
             type: "coach-conversation-prompt-non-stream",
           },
@@ -330,7 +330,7 @@ export async function generateAIResponse(
           staticPrompt && dynamicPrompt
             ? { staticPrompt, dynamicPrompt }
             : undefined
-        );
+        ) as string; // No tools used, always returns string
       } else {
         // Text-only response with conversation history caching
         // Build messages array with history caching (if conversation is long enough)
@@ -357,7 +357,7 @@ export async function generateAIResponse(
           staticPrompt && dynamicPrompt
             ? { staticPrompt, dynamicPrompt }
             : undefined
-        );
+        ) as string; // No tools used, always returns string
       }
     } catch (error) {
       console.error("Claude API error:", error);
@@ -422,7 +422,7 @@ export async function generateAIResponseStream(
     }
 
     // Extract user timezone from profile (fallback to Pacific Time if not set)
-    const userTimezone = userProfile?.attributes?.preferences?.timezone;
+    const userTimezone = userProfile?.preferences?.timezone;
 
     // Generate comprehensive system prompt using coach conversation utilities
     // NEW: Enable caching by passing existingMessages and pineconeContext directly
@@ -435,7 +435,7 @@ export async function generateAIResponseStream(
       workoutContext: context.recentWorkouts, // Add recent workout summaries for context
       userMemories: memoryResult.memories, // Add memories for personalization
       criticalTrainingDirective:
-        userProfile?.attributes?.criticalTrainingDirective, // Add critical training directive if set
+        userProfile?.criticalTrainingDirective, // Add critical training directive if set
       userTimezone, // Pass user's timezone for temporal context
       existingMessages, // NEW: Pass messages for conversation history (now in prompt-generation)
       pineconeContext: context.pineconeContext, // NEW: Pass Pinecone context (now in prompt-generation)
@@ -482,7 +482,7 @@ export async function generateAIResponseStream(
             userId,
             coachId,
             conversationId,
-            coachName: coachConfig.attributes.coach_name,
+            coachName: coachConfig.coach_name,
             userMessage:
               userMessage?.substring(0, 200) || "(no text, images only)",
             sessionNumber: conversationContext.sessionNumber,
@@ -507,7 +507,7 @@ export async function generateAIResponseStream(
             memoriesCount: memoryResult.memories?.length || 0,
             messageCount: existingMessages.length,
             hasCriticalDirective:
-              !!userProfile?.attributes?.criticalTrainingDirective?.enabled,
+              !!userProfile?.criticalTrainingDirective?.enabled,
             userTimezone: userTimezone || "America/Los_Angeles",
             type: "coach-conversation-prompt-stream",
           },

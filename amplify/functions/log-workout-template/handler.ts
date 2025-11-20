@@ -60,7 +60,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     ]);
 
     // Get user timezone with LA fallback
-    const userTimezone = getUserTimezoneOrDefault(userProfile?.attributes?.preferences?.timezone);
+    const userTimezone = getUserTimezoneOrDefault(userProfile?.preferences?.timezone);
 
     if (!programData) {
       return createErrorResponse(404, 'Training program not found');
@@ -70,8 +70,8 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       return createErrorResponse(500, 'Coach configuration not found');
     }
 
-    const program = programData.attributes;
-    const coachConfig = coachConfigData.attributes;
+    const program = programData;
+    const coachConfig = coachConfigData;
 
     // Get program details from S3
     if (!program.s3DetailKey) {
@@ -139,7 +139,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
           prefillResponse: '{',
           enableThinking: false,
         }
-      );
+      ) as string; // No tools used, always returns string
 
       const parsed = parseJsonWithFallbacks(scalingResponse);
       scalingAnalysis = normalizeScalingAnalysis(parsed);

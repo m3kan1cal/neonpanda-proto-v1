@@ -1,49 +1,73 @@
 import { createCreatedResponse, createErrorResponse } from '../libs/api-helpers';
 import {
-  COACH_CREATOR_QUESTIONS,
-} from '../libs/coach-creator/question-management';
-import {
-  createCoachCreatorSession,
-} from '../libs/coach-creator/session-management';
-import {
   saveCoachCreatorSession,
 } from '../../dynamodb/operations';
 import { withAuth, AuthenticatedHandler } from '../libs/auth/middleware';
+import { createEmptyTodoList } from '../libs/coach-creator/todo-list-utils';
+import { generateNextQuestion } from '../libs/coach-creator/question-generator';
+import { CoachCreatorSession } from '../libs/coach-creator/types';
+import { nanoid } from 'nanoid';
 
 const baseHandler: AuthenticatedHandler = async (event) => {
   // Auth handled by middleware - userId is already validated
   const userId = event.user.userId;
 
-    // Create new session
-    const session = createCoachCreatorSession(userId);
-    const firstQuestion = COACH_CREATOR_QUESTIONS[0];
+  // Create session ID following pattern: coach_creator_${userId}_${timestamp}
+  const sessionId = `coach_creator_${userId}_${Date.now()}`;
 
-    if (!firstQuestion) {
-      throw new Error('No questions configured');
-    }
+  // Generate the initial AI message dynamically
+  // This ensures consistency with the AI-driven approach and allows
+  // the AI to determine the best first question
+  console.info('🎬 Generating initial AI message for new coach creator session');
 
-    // Build the initial message
-    const initialMessage = `Hi! I'm here to help you create your perfect AI fitness coach. This will take about 15-20 minutes, and I'll adapt the questions based on your experience level.\n\n${firstQuestion.versions.UNKNOWN}`;
+  let initialMessage;
+  try {
+    initialMessage = await generateNextQuestion(
+      [],  // Empty conversation history
+      createEmptyTodoList(),
+      'UNKNOWN'  // Sophistication level unknown at start
+    );
+    console.info('✅ AI generated initial message successfully');
+  } catch (error) {
+    console.error('❌ Error generating initial message:', error);
+    initialMessage = null;
+  }
 
-    // Store the initial message in questionHistory
-    session.questionHistory.push({
-      questionId: 0, // special ID 0 (pre-questions intro)
-      userResponse: "", // Empty until user responds
-      aiResponse: initialMessage,
-      detectedSophistication: "UNKNOWN",
-      timestamp: new Date()
-    });
+  // Fallback if AI generation fails - aligned with NeonPanda brand voice
+  const finalInitialMessage = initialMessage ||
+    `Hey! Ready to create your AI coach? We're building a coach that actually gets YOU - your personality, your goals, your vibe. In about 15-20 minutes, we'll craft an AI coach as unique as your fingerprint, but way better at programming workouts, tracking progress, and guiding you to your goals.
 
-    // Save session to DynamoDB
-    await saveCoachCreatorSession(session);
+I'll adapt based on your experience level, so just be real with me. What are your main fitness goals right now?`;
 
-    return createCreatedResponse({
-      sessionId: session.sessionId,
-      progress: 0,
-      estimatedDuration: '15-20 minutes',
-      totalQuestions: COACH_CREATOR_QUESTIONS.filter(q => q.required).length,
-      initialMessage: initialMessage
-    });
+  if (!initialMessage) {
+    console.warn('⚠️ Using fallback initial message - AI generation may have failed');
+  }
+
+  const session: CoachCreatorSession = {
+    userId,
+    sessionId,
+    todoList: createEmptyTodoList(),
+    conversationHistory: [{
+      role: 'ai',
+      content: finalInitialMessage,
+      timestamp: new Date().toISOString()
+    }],
+    sophisticationLevel: 'UNKNOWN',
+    isComplete: false,
+    startedAt: new Date(),
+    lastActivity: new Date(),
+  };
+
+  // Save session to DynamoDB
+  await saveCoachCreatorSession(session);
+
+  return createCreatedResponse({
+    sessionId: session.sessionId,
+    progress: 0,
+    estimatedDuration: '15-20 minutes',
+    totalQuestions: 22, // Number of to-do list items (required fields)
+    initialMessage: finalInitialMessage
+  });
 
 };
 

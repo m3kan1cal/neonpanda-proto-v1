@@ -656,7 +656,7 @@ export const navigationPatterns = {
     innerContainer: "flex flex-col h-full overflow-hidden",
 
     // Logo/Brand section at top
-    brandSection: "flex items-center justify-center gap-3 px-3 py-3 border-b border-synthwave-neon-cyan/10",
+    brandSection: "flex items-center justify-center gap-3 px-3 py-3",
     brandLogo: "w-10 h-10 flex-shrink-0",
     brandText: "flex flex-col",
     brandTitle: "font-russo font-bold text-xl text-white uppercase leading-tight",
@@ -690,7 +690,7 @@ export const navigationPatterns = {
     profileChevron: "w-5 h-5 text-synthwave-text-muted",
 
         // Collapse/expand toggle button
-        collapseButton: "absolute top-[44px] -right-3 w-6 h-6 bg-synthwave-bg-card border border-synthwave-neon-cyan/30 rounded-full flex items-center justify-center text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 hover:border-synthwave-neon-cyan/60 hover:shadow-[0_0_8px_rgba(0,255,255,0.4)] transition-all duration-300 shadow-lg cursor-pointer focus:outline-none z-50",
+        collapseButton: "absolute top-[36px] -right-3 w-6 h-6 bg-synthwave-bg-card border border-synthwave-neon-cyan/30 rounded-full flex items-center justify-center text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 hover:border-synthwave-neon-cyan/60 hover:shadow-[0_0_8px_rgba(0,255,255,0.4)] transition-all duration-300 shadow-lg cursor-pointer focus:outline-none z-50",
         collapseIcon: "w-4 h-4 transition-transform duration-300",
         collapseIconRotated: "rotate-180",
 

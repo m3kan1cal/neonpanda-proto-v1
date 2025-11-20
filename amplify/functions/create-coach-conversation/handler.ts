@@ -97,11 +97,11 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       const coachConfig = await getCoachConfig(userId, coachId);
       if (coachConfig) {
         const updated = {
-          ...coachConfig.attributes,
+          ...coachConfig,
           metadata: {
-            ...coachConfig.attributes.metadata,
+            ...coachConfig.metadata,
             total_conversations:
-              (coachConfig.attributes.metadata.total_conversations || 0) + 1,
+              (coachConfig.metadata.total_conversations || 0) + 1,
           },
         };
         await saveCoachConfig(userId, updated);

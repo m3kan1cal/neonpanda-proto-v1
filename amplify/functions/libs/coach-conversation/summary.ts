@@ -141,7 +141,7 @@ export function parseCoachConversationSummary(
   conversation: CoachConversation
 ): CoachConversationSummary {
   try {
-    console.info("Parsing AI response...", {
+    console.info("Parsing AI response..", {
       responseLength: aiResponse.length,
       responsePreview: aiResponse.substring(0, 200)
     });

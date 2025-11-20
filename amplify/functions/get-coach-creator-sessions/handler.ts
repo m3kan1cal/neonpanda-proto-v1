@@ -47,13 +47,13 @@ const baseHandler: AuthenticatedHandler = async (event) => {
 
     // Create summary data (excluding detailed conversation history)
     const sessionSummaries = sessions.map(item => {
-      const { questionHistory, ...summaryAttributes } = item.attributes;
+      const { conversationHistory, ...summaryAttributes } = item;
       return {
         ...summaryAttributes,
-        // Include basic question stats without full history
-        questionStats: {
-          totalQuestions: questionHistory?.length || 0,
-          hasQuestions: (questionHistory?.length || 0) > 0
+        // Include basic conversation stats without full history
+        conversationStats: {
+          totalMessages: conversationHistory?.length || 0,
+          hasConversation: (conversationHistory?.length || 0) > 0
         }
       };
     });

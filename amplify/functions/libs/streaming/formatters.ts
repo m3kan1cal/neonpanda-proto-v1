@@ -57,9 +57,9 @@ export function formatContextualEvent(content: string, stage?: string): string {
  */
 export function formatProgressEvent(progressType: ProgressEventType, message?: string): string {
   const progressMessages = {
-    start: "Initializing...",
-    processing_message: "Processing your message...",
-    generating_response: "Generating response...",
+    start: "Initializing..",
+    processing_message: "Processing your message..",
+    generating_response: "Generating response..",
     ai_chunk: "", // AI chunks use their actual content
     complete: "Complete"
   };

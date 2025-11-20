@@ -1,7 +1,7 @@
 import { createOkResponse, createErrorResponse } from "../libs/api-helpers";
 import { getCoachCreatorSession } from "../../dynamodb/operations";
 import { CoachCreatorSession } from "../libs/coach-creator/types";
-import { getProgress } from "../libs/coach-creator/session-management";
+import { getTodoProgress } from "../libs/coach-creator/todo-list-utils";
 import { withAuth, AuthenticatedHandler } from "../libs/auth/middleware";
 
 const baseHandler: AuthenticatedHandler = async (event) => {
@@ -23,18 +23,21 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     );
   }
 
-  // Get detailed progress information
-  const progressDetails = getProgress(session.attributes.userContext);
+  // Get detailed progress information from to-do list
+  // Note: All sessions should have todoList, but provide safe fallback just in case
+  const todoProgress = session.todoList
+    ? getTodoProgress(session.todoList)
+    : { requiredCompleted: 0, requiredTotal: 0, requiredPercentage: 0 };
 
   // Return the session data with progress details
   const sessionData: CoachCreatorSession = {
-    ...session.attributes,
+    ...session,
     progressDetails: {
-      questionsCompleted: progressDetails.questionsCompleted,
-      totalQuestions: progressDetails.totalQuestions,
-      percentage: progressDetails.percentage,
-      sophisticationLevel: session.attributes.userContext.sophisticationLevel,
-      currentQuestion: session.attributes.userContext.currentQuestion,
+      questionsCompleted: todoProgress.requiredCompleted,
+      totalQuestions: todoProgress.requiredTotal,
+      percentage: todoProgress.requiredPercentage,
+      sophisticationLevel: session.sophisticationLevel,
+      currentQuestion: todoProgress.requiredCompleted + 1,
     },
   };
 

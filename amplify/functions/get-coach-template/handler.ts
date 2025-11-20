@@ -25,7 +25,7 @@ export const handler = async (
       );
     }
 
-    if (!template.attributes.metadata.is_active) {
+    if (!template.metadata.is_active) {
       return createErrorResponse(
         404,
         `Coach template is not active: ${templateId}`
@@ -34,12 +34,12 @@ export const handler = async (
 
     console.info("Successfully retrieved coach template:", {
       templateId,
-      templateName: template.attributes.template_name,
-      personaCategory: template.attributes.persona_category,
+      templateName: template.template_name,
+      personaCategory: template.persona_category,
     });
 
     return createOkResponse({
-      template: template.attributes,
+      template: template,
     });
   } catch (error) {
     console.error("Error getting coach template:", error);

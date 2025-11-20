@@ -83,17 +83,11 @@ async function ensureMemoryInPinecone(
   try {
     // Only re-index if the memory has valid memoryId and content
     if (!memory.memoryId) {
-      console.warn("⚠️ Skipping Pinecone upsert: memory has no memoryId", {
+      console.info("ℹ️ Skipping Pinecone upsert for non-memory record (expected behavior):", {
         hasContent: !!memory.content,
         contentPreview: memory.content?.substring(0, 100),
         pineconeId: (memory as any).pineconeId,
-        pineconeScore: (memory as any).pineconeScore,
-        memoryType: memory.memoryType,
-        userId: memory.userId,
-        coachId: memory.coachId,
-        hasPineconeMetadata: !!(memory as any).pineconeId,
-        metadataKeys: memory.metadata ? Object.keys(memory.metadata) : [],
-        fullMemoryObject: JSON.stringify(memory, null, 2),
+        recordType: memory.memoryType,
       });
       return;
     }
@@ -204,20 +198,12 @@ export async function queryMemories(
     if (memories.length > 0) {
       // Don't await these - update in background
       memories.forEach((memory) => {
-        // Skip memories without a valid memoryId
+        // Skip non-memory records without a valid memoryId
         if (!memory.memoryId) {
-          console.warn("⚠️ Skipping memory usage update: memory has no memoryId", {
-            hasContent: !!memory.content,
-            hasMetadata: !!memory.metadata,
-            contentPreview: memory.content?.substring(0, 100),
+          console.info("ℹ️ Skipping usage update for non-memory record (expected behavior):", {
             pineconeId: (memory as any).pineconeId,
-            pineconeScore: (memory as any).pineconeScore,
-            memoryType: memory.memoryType,
-            userId: memory.userId,
-            coachId: memory.coachId,
-            hasPineconeMetadata: !!(memory as any).pineconeId,
-            metadataKeys: memory.metadata ? Object.keys(memory.metadata) : [],
-            fullMemoryObject: JSON.stringify(memory, null, 2),
+            recordType: memory.memoryType,
+            contentPreview: memory.content?.substring(0, 100),
           });
           return;
         }

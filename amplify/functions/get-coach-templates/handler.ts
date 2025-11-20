@@ -14,17 +14,17 @@ export const handler = async (
 
     console.info("Successfully retrieved coach templates:", {
       templateCount: templates.length,
-      templateNames: templates.map((t) => t.attributes.template_name),
+      templateNames: templates.map((t) => t.template_name),
     });
 
     return createOkResponse({
       templates: templates.map((template) => ({
-        template_id: template.attributes.template_id,
-        template_name: template.attributes.template_name,
-        persona_category: template.attributes.persona_category,
-        description: template.attributes.description,
-        target_audience: template.attributes.target_audience,
-        metadata: template.attributes.metadata,
+        template_id: template.template_id,
+        template_name: template.template_name,
+        persona_category: template.persona_category,
+        description: template.description,
+        target_audience: template.target_audience,
+        metadata: template.metadata,
       })),
       count: templates.length,
     });

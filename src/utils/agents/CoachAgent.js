@@ -346,6 +346,7 @@ export class CoachAgent {
 
           if (newCoach) {
             // Coach has been created, update state and stop polling
+            console.info(`✅ Coach found for session ${sessionId}, stopping polling`);
             this._updateState({
               coaches: result.coaches,
               inProgressCoach: null,
@@ -364,6 +365,7 @@ export class CoachAgent {
 
           if (statusResponse.status === "FAILED") {
             // Build failed - update state and stop polling
+            console.info(`❌ Coach build failed for session ${sessionId}, stopping polling`);
             this._updateState({
               inProgressCoach: {
                 sessionId,
@@ -378,12 +380,21 @@ export class CoachAgent {
           }
 
           if (statusResponse.status === "COMPLETE") {
-            // Complete but coach not showing yet - refresh coaches
+            // Complete - refresh coaches and stop polling
+            console.info(`✅ Coach build complete for session ${sessionId}, refreshing and stopping polling`);
             await this.loadCoaches();
+
+            // Clear in-progress state and stop polling
+            this._updateState({ inProgressCoach: null });
+            this.stopPolling();
+            return;
           }
+
+          // Status is IN_PROGRESS - continue polling
+          console.info(`⏳ Coach build still in progress for session ${sessionId} (status: ${statusResponse.status})`);
         } catch (statusError) {
           console.error("Error checking coach config status:", statusError);
-          // Continue polling even if status check fails
+          // Continue polling even if status check fails - it might be a transient error
         }
       } catch (error) {
         console.error("Error polling for coaches:", error);
@@ -639,6 +650,54 @@ export class CoachAgent {
    */
   getExperienceLevelDisplay(level) {
     return level ? level.charAt(0).toUpperCase() + level.slice(1) : "General";
+  }
+
+  /**
+   * Formats coach description for display
+   */
+  getCoachDescription(coach) {
+    return coach?.coach_description || coach?.metadata?.coach_description || null;
+  }
+
+  /**
+   * Formats methodology focus areas for display
+   */
+  getMethodologyFocusDisplay(coach, maxItems = 3) {
+    const focus = coach?.metadata?.methodology_profile?.focus;
+    if (!focus || focus.length === 0) return "General Fitness";
+
+    const formatted = focus
+      .map((item) =>
+        item.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())
+      )
+      .slice(0, maxItems);
+
+    return focus.length > maxItems ? `${formatted.join(", ")}...` : formatted.join(", ");
+  }
+
+  /**
+   * Formats methodology preferences for display
+   */
+  getMethodologyPreferencesDisplay(coach, maxItems = 3) {
+    const preferences = coach?.metadata?.methodology_profile?.preferences;
+    if (!preferences || preferences.length === 0) return null;
+
+    const formatted = preferences
+      .map((item) =>
+        item.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())
+      )
+      .slice(0, maxItems);
+
+    return preferences.length > maxItems ? `${formatted.join(", ")}...` : formatted.join(", ");
+  }
+
+  /**
+   * Gets training frequency display text
+   */
+  getTrainingFrequencyDisplay(coach) {
+    const frequency = coach?.technical_config?.training_frequency;
+    if (!frequency) return null;
+    return `${frequency}x/week`;
   }
 
   /**

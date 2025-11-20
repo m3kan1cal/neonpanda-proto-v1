@@ -113,9 +113,9 @@ const parseInlineFormatting = (line) => {
 
     // Check if it's bold (**text**) or italic (*text*)
     if (match[1]) {
-      // Bold formatting
+      // Bold formatting (regular case, not uppercase)
       parts.push(
-        <strong key={partKey++} className="font-bold text-synthwave-neon-cyan uppercase">
+        <strong key={partKey++} className="font-bold text-synthwave-neon-cyan">
           {match[2]}
         </strong>
       );

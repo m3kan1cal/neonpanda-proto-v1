@@ -34,7 +34,7 @@ export const storeCoachCreatorSummaryInPinecone = async (
     const baseMetadata = {
       recordType: 'coach_creator_summary',
       summaryId: summary_id,
-      sophisticationLevel: session.userContext.sophisticationLevel,
+      sophisticationLevel: session.sophisticationLevel,
       selectedPersonality: coachConfig.selected_personality.primary_template,
       selectedMethodology: coachConfig.selected_methodology.primary_methodology,
       safetyConsiderations: coachConfig.metadata.safety_profile?.injuries?.length || 0,
@@ -42,7 +42,7 @@ export const storeCoachCreatorSummaryInPinecone = async (
       coachId: coachConfig.coach_id,
       coachName: coachConfig.coach_name,
       sessionId: session.sessionId,
-      questionsCompleted: session.questionHistory.length,
+      conversationTurns: session.conversationHistory?.filter(m => m.role === 'user').length || 0,
       programmingFocus: coachConfig.technical_config.programming_focus,
       experienceLevel: coachConfig.technical_config.experience_level,
       trainingFrequency: coachConfig.technical_config.training_frequency,
@@ -83,7 +83,7 @@ export const storeCoachCreatorSummaryInPinecone = async (
       pineconeId: summary_id, // summary_id is used as the Pinecone record ID
       namespace: result.namespace,
       sessionId: session.sessionId,
-      sophisticationLevel: session.userContext.sophisticationLevel,
+      sophisticationLevel: session.sophisticationLevel,
       summaryLength: conversationSummary.length
     });
 

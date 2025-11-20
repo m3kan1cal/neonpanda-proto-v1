@@ -165,7 +165,7 @@ export function fixMalformedJson(jsonString: string): string {
     JSON.parse(jsonString);
     return jsonString;
   } catch (error) {
-    console.warn("JSON parsing failed, attempting to fix common issues...");
+    console.warn("JSON parsing failed, attempting to fix common issues..");
 
     let fixed = jsonString.trim();
 

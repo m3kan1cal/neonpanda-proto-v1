@@ -33,10 +33,10 @@ export async function gatherConversationContext(
       sortOrder: "desc",
     });
     recentWorkouts = workoutResults.map((workout) => ({
-      completedAt: workout.attributes.completedAt,
-      summary: workout.attributes.summary,
-      discipline: workout.attributes.workoutData.discipline,
-      workoutName: workout.attributes.workoutData.workout_name,
+      completedAt: workout.completedAt,
+      summary: workout.summary,
+      discipline: workout.workoutData.discipline,
+      workoutName: workout.workoutData.workout_name,
     }));
     console.info("Loaded recent workouts for context:", {
       userId,

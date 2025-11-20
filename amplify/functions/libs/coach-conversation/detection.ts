@@ -72,7 +72,7 @@ Analyze this message for complexity triggers that would warrant conversation sum
       userPrompt,
       MODEL_IDS.CLAUDE_HAIKU_4FULL,
       { prefillResponse: "{" } // Force JSON output format
-    );
+    ) as string; // No tools used, always returns string
     const result = parseJsonWithFallbacks(response);
 
     return result.hasComplexity || false;
@@ -340,10 +340,10 @@ Memory Retrieval Needed:
 - Mentions of specific preferences, limitations, or approaches
 
 Memory Request Detection:
-- Explicit requests: "Remember that I...", "I want you to know...", "For future reference..."
-- Sharing preferences, constraints, or goals: "I prefer...", "I don't like...", "I work best with..."
-- Goal setting: "My goal is...", "I can't do...", "I have limited time..."
-- Coaching instructions: "When I do X, remind me to...", "Always check my form on..."
+- Explicit requests: "Remember that I..", "I want you to know..", "For future reference.."
+- Sharing preferences, constraints, or goals: "I prefer..", "I don't like..", "I work best with.."
+- Goal setting: "My goal is..", "I can't do..", "I have limited time.."
+- Coaching instructions: "When I do X, remind me to..", "Always check my form on.."
 - /save-memory slash commands
 
 CRITICAL: DO NOT DETECT WORKOUT LOGS AS MEMORY REQUESTS
@@ -531,7 +531,7 @@ Provide comprehensive analysis following the framework above.`;
       userPrompt,
       MODEL_IDS.CLAUDE_HAIKU_4FULL, // More accurate for complex routing decisions
       { prefillResponse: "{" } // Force JSON output format
-    );
+    ) as string; // No tools used, always returns string
 
     const result: SmartRequestRouter = parseJsonWithFallbacks(response);
 

@@ -33,13 +33,13 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     ]);
 
     // Get user timezone with LA fallback
-    const userTimezone = getUserTimezoneOrDefault(userProfile?.attributes?.preferences?.timezone);
+    const userTimezone = getUserTimezoneOrDefault(userProfile?.preferences?.timezone);
 
     if (!programData) {
       return createErrorResponse(404, 'Training program not found');
     }
 
-    const program = programData.attributes;
+    const program = programData;
 
     // Check if program is active
     if (program.status !== 'active' && program.status !== 'paused') {

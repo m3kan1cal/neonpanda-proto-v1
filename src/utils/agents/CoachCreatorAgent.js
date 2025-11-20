@@ -15,9 +15,10 @@ import {
   validateStreamingInput,
 } from "./streamingAgentHelper";
 
-// Initial message constant
+// Initial message constant (deprecated - backend now generates dynamic initial messages)
+// Kept for backwards compatibility only
 const INITIAL_MESSAGE =
-  "Hi! I'm here to help you create your perfect AI fitness coach. This will take about 15-20 minutes, and I'll adapt the questions based on your experience level.\n\nWhat brings you here? Tell me about your main fitness goals.";
+  "Hey! Ready to create your AI coach? Let's build a coach that actually gets YOU. What are your main fitness goals right now?";
 
 /**
  * CoachCreatorAgent - Handles the business logic for coach creation sessions
@@ -29,6 +30,7 @@ export class CoachCreatorAgent {
     // Configuration
     this.userId = options.userId || null;
     this.sessionId = options.sessionId || null;
+    this.isNewlyCreated = false; // Track if session was just created to avoid reloading
     this.onStateChange = options.onStateChange || (() => {});
     this.onNavigation = options.onNavigation || (() => {});
     this.onError = options.onError || (() => {});
@@ -113,6 +115,7 @@ export class CoachCreatorAgent {
       // Update agent state
       this.userId = userId;
       this.sessionId = sessionId;
+      this.isNewlyCreated = true; // Mark as newly created to prevent immediate reload
 
       // Set initial message from API
       const initialMsg = {
@@ -150,6 +153,13 @@ export class CoachCreatorAgent {
       throw new Error("User ID and Session ID are required");
     }
 
+    // Skip loading if this session was just created (prevents overwriting initial message)
+    if (this.isNewlyCreated && this.sessionId === sessionId) {
+      console.info('⏭️ Skipping loadExistingSession - session was just created');
+      this.isNewlyCreated = false; // Reset flag for future loads
+      return;
+    }
+
     try {
       this._updateState({ isLoadingItem: true, error: null, messages: [] });
 
@@ -167,47 +177,45 @@ export class CoachCreatorAgent {
       };
 
       if (sessionData.progressDetails) {
-        // Use exact values from backend
+        // Use exact values from backend, but force 100% if session is complete
         progressData = {
           questionsCompleted: sessionData.progressDetails.questionsCompleted,
           estimatedTotal: sessionData.progressDetails.totalQuestions,
-          percentage: sessionData.progressDetails.percentage,
+          percentage: sessionData.isComplete ? 100 : sessionData.progressDetails.percentage,
           sophisticationLevel: sessionData.progressDetails.sophisticationLevel,
           currentQuestion: sessionData.progressDetails.currentQuestion,
         };
       }
 
-      // Reconstruct conversation from questionHistory
+      // Reconstruct conversation from conversationHistory (new to-do list approach)
       const conversationMessages = [];
       let messageId = 1;
 
       if (
-        sessionData.questionHistory &&
-        sessionData.questionHistory.length > 0
+        sessionData.conversationHistory &&
+        sessionData.conversationHistory.length > 0
       ) {
-        sessionData.questionHistory.forEach((historyItem) => {
-          // Add user response first if it exists
-          if (
-            historyItem.userResponse &&
-            historyItem.userResponse.trim() !== ""
-          ) {
-            conversationMessages.push({
-              id: messageId++,
-              type: "user",
-              content: historyItem.userResponse,
-              timestamp: historyItem.timestamp || new Date().toISOString(),
-              imageS3Keys: historyItem.imageS3Keys || undefined,
-              messageType: historyItem.messageType || undefined,
-            });
-          }
-
-          // Add AI response
+        sessionData.conversationHistory.forEach((message) => {
           conversationMessages.push({
             id: messageId++,
-            type: "ai",
-            content: historyItem.aiResponse,
-            timestamp: historyItem.timestamp || new Date().toISOString(),
+            type: message.role === 'user' ? 'user' : 'ai',
+            content: message.content,
+            timestamp: message.timestamp || new Date().toISOString(),
+            imageS3Keys: message.imageS3Keys || undefined,
           });
+        });
+      } else {
+        // Fallback: If no conversation history yet (should not happen in practice)
+        // The backend always stores the initial AI message in conversationHistory
+        console.warn('⚠️ No conversation history found in session, using fallback message');
+
+        const fallbackMessage = `Hey! Ready to create your AI coach? Let's build a coach that actually gets YOU. What are your main fitness goals right now?`;
+
+        conversationMessages.push({
+          id: messageId++,
+          type: "ai",
+          content: fallbackMessage,
+          timestamp: new Date().toISOString(),
         });
       }
 
@@ -215,12 +223,9 @@ export class CoachCreatorAgent {
       const isSessionComplete = sessionData.isComplete ||
                                 sessionData.configGeneration?.status === 'COMPLETE';
 
-      // Update state with loaded messages or keep initial message
+      // Update state with loaded messages
       this._updateState({
-        messages:
-          conversationMessages.length > 0
-            ? conversationMessages
-            : this.state.messages,
+        messages: conversationMessages,
         isLoadingItem: false,
         sessionData,
         progress: progressData,
@@ -316,15 +321,15 @@ export class CoachCreatorAgent {
           result.sessionData.userContext.sophisticationLevel || "UNKNOWN";
 
         // Estimate total questions based on sophistication level
-        let estimatedTotal = 11; // Default (updated to match new 11-question flow: 0-10)
+        let estimatedTotal = 11; // Default (updated to match new 11-question flow: 1-11)
         if (sophisticationLevel === "BEGINNER") {
-          estimatedTotal = 10; // Question 10 skipped for beginners (questions 0-9)
+          estimatedTotal = 10; // Question 11 skipped for beginners (questions 1-10)
         } else if (sophisticationLevel === "INTERMEDIATE") {
-          estimatedTotal = 11; // All questions including competition goals (questions 0-10)
+          estimatedTotal = 11; // All questions including competition goals (questions 1-11)
         } else if (sophisticationLevel === "ADVANCED") {
           estimatedTotal = 11;
         } else if (sophisticationLevel === "UNKNOWN") {
-          estimatedTotal = Math.max(9, currentQuestion + 4); // Adjust estimate as we progress
+          estimatedTotal = Math.max(10, currentQuestion + 4); // Adjust estimate as we progress
         }
 
         updatedProgress.questionsCompleted = questionsCompleted;

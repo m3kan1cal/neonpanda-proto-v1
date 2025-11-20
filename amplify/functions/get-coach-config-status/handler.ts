@@ -17,7 +17,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       return createErrorResponse(404, 'Session not found or expired');
     }
 
-    const sessionData = session.attributes;
+    const sessionData = session;
 
     // Check if session is complete
     if (!sessionData.isComplete) {
@@ -40,7 +40,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     if (configGeneration.status === 'IN_PROGRESS') {
       return createOkResponse({
         status: 'IN_PROGRESS',
-        message: 'Coach config is being generated...',
+        message: 'Coach config is being generated..',
         startedAt: configGeneration.startedAt
       });
     }
@@ -65,9 +65,9 @@ const baseHandler: AuthenticatedHandler = async (event) => {
             status: 'COMPLETE',
             message: 'Coach config generated successfully',
             coachConfigId,
-            coachName: coachConfig?.attributes?.coach_name,
+            coachName: coachConfig?.coach_name,
             completedAt: configGeneration.completedAt,
-            coachConfig: coachConfig?.attributes
+            coachConfig: coachConfig
           });
         } catch (error) {
           console.error('Error loading coach config:', error);

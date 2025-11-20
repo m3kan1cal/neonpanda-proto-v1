@@ -2,24 +2,47 @@
  * Coach Creator Library
  *
  * This library provides functionality for creating personalized AI coaches
- * through guided conversation and configuration generation.
+ * through AI-driven conversation using a dynamic to-do list approach.
  */
 
 // Core session management
 export {
-  createCoachCreatorSession,
   generateCoachCreatorSessionSummary,
-  storeUserResponse,
-  updateSessionContext
+  markSessionComplete,
+  loadSessionData,
+  saveSessionAndTriggerCoachConfig,
+  checkCoachConfigIdempotency,
+  createCoachConfigGenerationLock,
+  createCoachConfigGenerationFailure,
+  IDEMPOTENCY_REASONS,
+  type SessionData,
+  type IdempotencyCheckResult,
 } from './session-management';
 
-// Question management and prompts
+// Conversation handler (AI-driven flow)
 export {
-  COACH_CREATOR_QUESTIONS,
-  BASE_COACH_CREATOR_PROMPT,
-  buildQuestionPrompt,
-  getNextQuestion
-} from './question-management';
+  handleTodoListConversation,
+} from './conversation-handler';
+
+// To-do list utilities
+export {
+  createEmptyTodoList,
+  getTodoProgress,
+  getPendingItems,
+  getRequiredPendingItems,
+  isSessionComplete,
+  getTodoSummary,
+} from './todo-list-utils';
+
+// AI-powered extraction and generation
+export {
+  extractAndUpdateTodoList,
+} from './todo-extraction';
+
+export {
+  generateNextQuestion,
+  generateNextQuestionStream,
+} from './question-generator';
 
 // Coach generation and configuration
 export {
@@ -32,15 +55,16 @@ export {
   COACH_MODIFICATION_OPTIONS
 } from './coach-generation';
 
-// Data extraction utilities
+// Data extraction utilities (session-based, AI-powered)
 export {
-  extractSafetyProfile,
-  extractMethodologyPreferences,
-  extractTrainingFrequency,
-  extractSpecializations,
-  extractGoalTimeline,
-  extractIntensityPreference,
-  extractGenderPreference
+  extractSophisticationLevel,
+  extractSafetyProfileFromSession,
+  extractMethodologyPreferencesFromSession,
+  extractTrainingFrequencyFromSession,
+  extractSpecializationsFromSession,
+  extractGoalTimelineFromSession,
+  extractIntensityPreferenceFromSession,
+  extractGenderPreferenceFromSession,
 } from './data-extraction';
 
 // Pinecone integration
@@ -59,7 +83,6 @@ export {
 // Type definitions
 export {
   SophisticationLevel,
-  UserContext,
   CoachCreatorSession,
   CoachConfig,
   CoachConfigSummary,
@@ -69,13 +92,9 @@ export {
   CoachModificationCapabilities,
   PersonalityCoherenceCheck,
   CoachCreatorPineconeIntegration,
-  StartSessionResponse,
-  ProcessResponseResult,
   DynamoDBItem,
   PersonalityBlendingConfig,
-  Question
+  CoachCreatorTodoList,
+  TodoItem,
+  ConversationMessage,
 } from './types';
-
-// Future exports can be added here as the library grows:
-// export { validateCoachPerformance } from './validation';
-// export { CoachAnalytics } from './analytics';

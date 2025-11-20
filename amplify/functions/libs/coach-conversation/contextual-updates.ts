@@ -28,17 +28,17 @@ export async function generateContextualUpdate(
   context: any
 ): Promise<string> {
   try {
-    const coachName = coachConfig.attributes.coach_name || "Coach";
-    const personalityTraits = coachConfig.attributes.personality_traits || [];
-    const coachingStyle = coachConfig.attributes.coaching_style || "supportive";
-    const specialties = coachConfig.attributes.specialties || [];
+    const coachName = coachConfig.coach_name || "Coach";
+    const personalityTraits = coachConfig.personality_traits || [];
+    const coachingStyle = coachConfig.coaching_style || "supportive";
+    const specialties = coachConfig.specialties || [];
     const communicationStyle =
-      coachConfig.attributes.communication_style || "friendly";
+      coachConfig.communication_style || "friendly";
     const motivationalApproach =
-      coachConfig.attributes.motivational_approach || "encouraging";
-    const catchphrases = coachConfig.attributes.catchphrases || [];
-    const background = coachConfig.attributes.background || "";
-    const expertise = coachConfig.attributes.expertise || [];
+      coachConfig.motivational_approach || "encouraging";
+    const catchphrases = coachConfig.catchphrases || [];
+    const background = coachConfig.background || "";
+    const expertise = coachConfig.expertise || [];
 
     const systemPrompt = `You are ${coachName}, a fitness coach. Generate a BRIEF, natural progress update (1 sentence max) that shows what you're working on right now.
 
@@ -65,18 +65,18 @@ REQUIREMENTS:
 - CRITICAL: Do NOT put quotes around your response - return plain text only
 
 Examples of GOOD updates (creative, energetic, coach-like):
-- Scouting your recent squat sessions...
-- Hunting down your recovery patterns...
-- Rifling through your training history...
-- Zeroing in on what we've been working on...
-- Crunching your numbers...
-- Digging through the archives...
-- Firing up the brain cells...
-- Connecting the dots...
-- Flexing my coach muscles...
-- Going beast mode on your data...
-- Getting scientific with this...
-- Brewing up something good...
+- Scouting your recent squat sessions..
+- Hunting down your recovery patterns..
+- Rifling through your training history..
+- Zeroing in on what we've been working on..
+- Crunching your numbers..
+- Digging through the archives..
+- Firing up the brain cells..
+- Connecting the dots..
+- Flexing my coach muscles..
+- Going beast mode on your data..
+- Getting scientific with this..
+- Brewing up something good..
 
 Be creative, energetic, and fun - avoid boring corporate speak like "checking", "looking", "reviewing".`;
 
@@ -87,14 +87,14 @@ Be creative, energetic, and fun - avoid boring corporate speak like "checking", 
         userPrompt = `User message: "${userResponse}"
 
 Generate a brief, creative update that you're getting started. Be energetic and fun!
-Examples: Scouting your training data... or Firing up the brain cells... or Warming up the engines...`;
+Examples: Scouting your training data.. or Firing up the brain cells.. or Warming up the engines..`;
         break;
 
       case "workout_analysis":
         userPrompt = `User message: "${userResponse}"
 
 Generate a brief, creative update about analyzing their workouts. Be energetic and coach-like!
-Examples: Hunting down your recent sessions... or Rifling through your workout history... or Going beast mode on your data...`;
+Examples: Hunting down your recent sessions.. or Rifling through your workout history.. or Going beast mode on your data..`;
         break;
 
       case "memory_analysis":
@@ -109,7 +109,7 @@ Examples: Hunting down your recent sessions... or Rifling through your workout h
 Context: ${workoutContext}${recentWorkoutsText}
 
 Generate a brief, creative update about analyzing their goals and memories. Be energetic!
-Examples: Zeroing in on your goals... or Digging through the archives... or Crunching your numbers...`;
+Examples: Zeroing in on your goals.. or Digging through the archives.. or Crunching your numbers..`;
         break;
 
       case "pattern_analysis":
@@ -122,7 +122,7 @@ Examples: Zeroing in on your goals... or Digging through the archives... or Crun
 Context: ${memoriesText}${conversationText}
 
 Generate a brief, creative update about connecting patterns. Be fun and energetic!
-Examples: Connecting the dots... or Putting on my detective hat... or Cross-referencing the details...`;
+Examples: Connecting the dots.. or Putting on my detective hat.. or Cross-referencing the details..`;
         break;
 
       case "insights_brewing":
@@ -137,28 +137,28 @@ Examples: Connecting the dots... or Putting on my detective hat... or Cross-refe
 Context: ${dataText}
 
 Generate a brief, creative update about preparing insights. Be energetic and coach-like!
-Examples: Brewing up something good... or Crafting the perfect response... or Flexing my coach muscles...`;
+Examples: Brewing up something good.. or Crafting the perfect response.. or Flexing my coach muscles..`;
         break;
 
       case "training_program_generation_start":
         userPrompt = `User message: "${userResponse}"
 
 Generate a brief, creative update about starting to build their training program. Be energetic and coach-like!
-Examples: Firing up the program generator... or Building your training blueprint... or Crafting your program architecture...`;
+Examples: Firing up the program generator.. or Building your training blueprint.. or Crafting your program architecture..`;
         break;
 
       case "training_program_generation_complete":
         userPrompt = `User message: "${userResponse}"
 
 Generate a brief, creative update about successfully kicking off their program generation. Be energetic and celebratory!
-Examples: Program generation rolling... or Blueprint in progress... or Your training plan is cooking...`;
+Examples: Program generation rolling.. or Blueprint in progress.. or Your training plan is cooking..`;
         break;
 
       case "training_program_generation_error":
         userPrompt = `User message: "${userResponse}"
 
 Generate a brief, supportive update about hitting a snag with program generation. Stay positive and encouraging!
-Examples: Hit a bump, let's refine this... or Let's dial in those details... or We'll get this dialed in...`;
+Examples: Hit a bump, let's refine this.. or Let's dial in those details.. or We'll get this dialed in..`;
         break;
 
       default:
@@ -173,7 +173,7 @@ Generate a brief processing update. One sentence, calm tone.`;
       userPrompt,
       MODEL_IDS.NOVA_MICRO
       // No thinking needed for quick responses (default is false)
-    );
+    ) as string; // No tools used, always returns string
 
     // Clean up the response - remove any quotes that might have been added
     let cleanedUpdate = update.trim();
@@ -190,17 +190,17 @@ Generate a brief processing update. One sentence, calm tone.`;
 
     // Fallback messages based on update type (creative, energetic)
     const fallbacks: Record<string, string> = {
-      initial_greeting: `Firing up the brain cells...`,
-      workout_analysis: `Hunting down your recent sessions...`,
-      memory_analysis: `Zeroing in on your goals...`,
-      pattern_analysis: `Connecting the dots...`,
-      insights_brewing: `Brewing up something good...`,
-      training_program_generation_start: `Firing up the program generator...`,
-      training_program_generation_complete: `Program generation rolling...`,
-      training_program_generation_error: `Let's dial in those details...`,
+      initial_greeting: `Firing up the brain cells..`,
+      workout_analysis: `Hunting down your recent sessions..`,
+      memory_analysis: `Zeroing in on your goals..`,
+      pattern_analysis: `Connecting the dots..`,
+      insights_brewing: `Brewing up something good..`,
+      training_program_generation_start: `Firing up the program generator..`,
+      training_program_generation_complete: `Program generation rolling..`,
+      training_program_generation_error: `Let's dial in those details..`,
     };
 
-    return fallbacks[updateType] || `Flexing my coach muscles...`;
+    return fallbacks[updateType] || `Flexing my coach muscles..`;
   }
 }
 
@@ -234,18 +234,18 @@ Communication style:
 - ABSOLUTELY NO EMOJIS OR SYMBOLS - text only, no exceptions
 
 VARIETY EXAMPLES (use different structures and verbs):
-- "Hunting down the perfect training style..."
-- "Zeroing in on your goals..."
-- "Crunching your preferences..."
-- "Digging into what you've shared..."
-- "Pulling together the key details..."
-- "Scouting your training needs..."
-- "Grabbing the highlights from our chat..."
-- "Scanning through training knowledge..."
-- "Getting the lay of the land..."
-- "Piecing this together..."
-- "Mapping out your approach..."
-- "Analyzing your movement patterns..."
+- "Hunting down the perfect training style.."
+- "Zeroing in on your goals.."
+- "Crunching your preferences.."
+- "Digging into what you've shared.."
+- "Pulling together the key details.."
+- "Scouting your training needs.."
+- "Grabbing the highlights from our chat.."
+- "Scanning through training knowledge.."
+- "Getting the lay of the land.."
+- "Piecing this together.."
+- "Mapping out your approach.."
+- "Analyzing your movement patterns.."
 
 Generate a brief, energetic progress update in Vesper's voice. Keep it under 10 words if possible, ONE sentence max. Use a COMPLETELY DIFFERENT verb and structure than previous updates - never repeat verbs.`;
 
@@ -256,14 +256,14 @@ Generate a brief, energetic progress update in Vesper's voice. Keep it under 10 
         userPrompt = `User just responded: "${userResponse}"
 
 Generate a brief update that EXPLICITLY mentions reviewing conversation history. Be energetic and fun! Use varied language.
-Examples: Reviewing what we've discussed so far... OR Pulling together our conversation highlights... OR Scanning through your previous answers... OR Checking what you've shared... OR Looking back at our chat...`;
+Examples: Reviewing what we've discussed so far.. OR Pulling together our conversation highlights.. OR Scanning through your previous answers.. OR Checking what you've shared.. OR Looking back at our chat..`;
         break;
 
       case "methodology_search":
         userPrompt = `User just responded: "${userResponse}"
 
 Generate a brief update that EXPLICITLY mentions searching training methodologies or knowledge. Be vibrant! Mix it up.
-Examples: Searching the training methodology database... OR Looking up relevant training approaches... OR Hunting for the right training philosophies... OR Scanning methodology knowledge... OR Checking training frameworks...`;
+Examples: Searching the training methodology database.. OR Looking up relevant training approaches.. OR Hunting for the right training philosophies.. OR Scanning methodology knowledge.. OR Checking training frameworks..`;
         break;
 
       case "memory_check":
@@ -273,7 +273,7 @@ Examples: Searching the training methodology database... OR Looking up relevant 
 Context: ${memoryContext}
 
 Generate a brief update that EXPLICITLY mentions checking memories, goals, or preferences. Be energetic! Vary your structure.
-Examples: Checking your saved goals and preferences... OR Looking up what matters most to you... OR Reviewing your priorities... OR Scanning your fitness memories... OR Checking what you've told me before...`;
+Examples: Checking your saved goals and preferences.. OR Looking up what matters most to you.. OR Reviewing your priorities.. OR Scanning your fitness memories.. OR Checking what you've told me before..`;
         break;
 
       case "question_preparation":
@@ -282,35 +282,35 @@ Examples: Checking your saved goals and preferences... OR Looking up what matter
 Context: Preparing question ${questionNumber}
 
 Generate a brief update that EXPLICITLY mentions preparing the next question. Be action-packed! Use different verbs.
-Examples: Getting the next question ready... OR Preparing question ${questionNumber}... OR Loading up what to ask next... OR Setting up the next question... OR Queuing up question ${questionNumber}...`;
+Examples: Getting the next question ready.. OR Preparing question ${questionNumber}... OR Loading up what to ask next.. OR Setting up the next question.. OR Queuing up question ${questionNumber}...`;
         break;
 
       case "response_crafting":
         userPrompt = `User just responded: "${userResponse}"
 
 Generate a brief update that EXPLICITLY mentions crafting or preparing a response. Be energetic! Mix up your approach.
-Examples: Crafting your personalized response... OR Putting together my answer... OR Building your custom reply... OR Preparing what to say next... OR Working on your response...`;
+Examples: Crafting your personalized response.. OR Putting together my answer.. OR Building your custom reply.. OR Preparing what to say next.. OR Working on your response..`;
         break;
 
       case "initial_greeting":
         userPrompt = `User just responded: "${userResponse}"
 
 Generate a brief, energetic greeting that mentions getting started. Be fun! Use variety.
-Examples: Getting started on this... OR Diving into your response... OR Beginning to process this... OR Starting to work on this... OR Jumping into your message...`;
+Examples: Getting started on this.. OR Diving into your response.. OR Beginning to process this.. OR Starting to work on this.. OR Jumping into your message..`;
         break;
 
       default:
         userPrompt = `User just responded: "${userResponse}"
 
 Generate a brief, energetic progress update. Be vibrant! Don't repeat patterns.
-Examples: Processing your message... OR Working through this... OR Analyzing what you shared... OR Getting this ready... OR Handling your request...`;
+Examples: Processing your message.. OR Working through this.. OR Analyzing what you shared.. OR Getting this ready.. OR Handling your request..`;
     }
 
     const bedrockResponse = await callBedrockApi(
       systemPrompt,
       userPrompt,
       MODEL_IDS.NOVA_MICRO // Ultra-fast, very cost-effective for contextual updates
-    );
+    ) as string; // No tools used, always returns string
 
     // Extract and clean the response (callBedrockApi already returns the text string)
     let update = bedrockResponse.trim();
@@ -341,39 +341,39 @@ Examples: Processing your message... OR Working through this... OR Analyzing wha
     // Fallback messages in Vesper's energetic voice - with variety and specificity
     const fallbacks: Record<string, string[]> = {
       session_review: [
-        `Reviewing what we've discussed...`,
-        `Checking our conversation history...`,
-        `Looking back at what you've shared...`
+        `Reviewing what we've discussed..`,
+        `Checking our conversation history..`,
+        `Looking back at what you've shared..`
       ],
       methodology_search: [
-        `Searching training methodologies...`,
-        `Looking up training approaches...`,
-        `Checking the methodology database...`
+        `Searching training methodologies..`,
+        `Looking up training approaches..`,
+        `Checking the methodology database..`
       ],
       memory_check: [
-        `Checking your saved goals...`,
-        `Looking up your preferences...`,
-        `Reviewing what matters to you...`
+        `Checking your saved goals..`,
+        `Looking up your preferences..`,
+        `Reviewing what matters to you..`
       ],
       question_preparation: [
-        `Getting the next question ready...`,
-        `Preparing what to ask next...`,
-        `Loading up the next question...`
+        `Getting the next question ready..`,
+        `Preparing what to ask next..`,
+        `Loading up the next question..`
       ],
       response_crafting: [
-        `Crafting your response...`,
-        `Preparing my answer...`,
-        `Building your reply...`
+        `Crafting your response..`,
+        `Preparing my answer..`,
+        `Building your reply..`
       ],
       initial_greeting: [
-        `Getting started on this...`,
-        `Beginning to process...`,
-        `Starting to work on this...`
+        `Getting started on this..`,
+        `Beginning to process..`,
+        `Starting to work on this..`
       ],
     };
 
     // Pick a random fallback from the array for variety
-    const fallbackArray = fallbacks[updateType] || [`Processing your message...`, `Working on this...`, `Handling your request...`];
+    const fallbackArray = fallbacks[updateType] || [`Processing your message..`, `Working on this..`, `Handling your request..`];
     const randomIndex = Math.floor(Math.random() * fallbackArray.length);
     return fallbackArray[randomIndex];
   }
@@ -959,7 +959,7 @@ Does this need detailed coach analysis (COMPLEX) or is it a simple response (SIM
     userPrompt,
     MODEL_IDS.NOVA_MICRO // Fastest, cheapest model for intent classification
     // No thinking needed for simple classification (default is false)
-  );
+  ) as string; // No tools used, always returns string
 
   return response.trim().toUpperCase() === "COMPLEX";
 }

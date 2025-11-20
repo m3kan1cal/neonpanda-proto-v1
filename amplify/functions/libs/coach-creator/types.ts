@@ -1,5 +1,84 @@
 export type SophisticationLevel = 'UNKNOWN' | 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
 
+// ============================================================================
+// TO-DO LIST BASED CONVERSATIONAL FLOW (New Approach)
+// ============================================================================
+
+/**
+ * A single item in the coach creator to-do list
+ * Tracks whether a piece of information has been collected
+ */
+export interface TodoItem {
+  status: 'pending' | 'in_progress' | 'complete';
+  value: any | null;
+  confidence?: 'high' | 'medium' | 'low';
+  notes?: string;
+  extractedFrom?: string; // Which message index this was extracted from
+}
+
+/**
+ * Complete to-do list for coach creator intake
+ * Maps to all information needed from the current 11 questions
+ */
+export interface CoachCreatorTodoList {
+  // Question 1: Coach Gender Preference
+  coachGenderPreference: TodoItem;
+
+  // Question 2: Goals and Timeline
+  primaryGoals: TodoItem;
+  goalTimeline: TodoItem;
+
+  // Question 3: Age and Life Stage
+  age: TodoItem;
+  lifeStageContext: TodoItem;
+
+  // Question 4: Experience Level
+  experienceLevel: TodoItem;
+  trainingHistory: TodoItem;
+
+  // Question 5: Training Frequency and Time
+  trainingFrequency: TodoItem;
+  sessionDuration: TodoItem;
+  timeOfDayPreference: TodoItem;
+
+  // Question 6: Injuries and Limitations
+  injuryConsiderations: TodoItem;
+  movementLimitations: TodoItem;
+
+  // Question 7: Equipment and Environment
+  equipmentAccess: TodoItem;
+  trainingEnvironment: TodoItem;
+
+  // Question 8: Movement Focus and Preferences
+  movementPreferences: TodoItem;
+  movementDislikes: TodoItem;
+
+  // Question 9: Coaching Style and Motivation
+  coachingStylePreference: TodoItem;
+  motivationStyle: TodoItem;
+
+  // Question 10: Success Metrics
+  successMetrics: TodoItem;
+  progressTrackingPreferences: TodoItem;
+
+  // Question 11: Competition Goals (Optional)
+  competitionGoals: TodoItem;
+  competitionTimeline: TodoItem;
+}
+
+/**
+ * Message in the conversation history
+ */
+export interface ConversationMessage {
+  role: 'ai' | 'user';
+  content: string;
+  timestamp: string;
+}
+
+// ============================================================================
+// UTILITY TYPES (Non-coach creator specific)
+// ============================================================================
+
 // Generic DynamoDB item interface
 export interface DynamoDBItem<T = any> {
   pk: string;
@@ -27,33 +106,16 @@ export interface ContactFormAttributes {
   contactType: string;
 }
 
-export interface UserContext {
-  sophisticationLevel: SophisticationLevel;
-  responses: Record<string, string>;
-  currentQuestion: number;
-  detectedSignals: string[];
-  sessionId: string;
-  userId: string;
-  startedAt: Date;
-  lastActivity: Date;
-}
-
-export interface Question {
-  id: number;
-  topic: string;
-  versions: Record<SophisticationLevel, string>;
-  sophisticationSignals: Record<SophisticationLevel, string[]>;
-  followUpLogic: Record<SophisticationLevel, string>;
-  skipConditions?: (userContext: UserContext) => boolean;
-  required: boolean;
-  advancedOnly?: boolean;
-}
-
 export interface CoachCreatorSession {
   userId: string;
   sessionId: string;
-  userContext: UserContext;
-  questionHistory: any[];
+
+  // To-do list based conversational flow
+  todoList: CoachCreatorTodoList;
+  conversationHistory: ConversationMessage[];
+  sophisticationLevel: SophisticationLevel;
+
+  // Session status
   isComplete: boolean;
   isDeleted?: boolean; // Soft delete flag - set to true when coach build succeeds
   generatedCoachConfig?: any;
@@ -157,6 +219,7 @@ export interface SafetyRule {
 export interface CoachConfigSummary {
   coach_id: string;
   coach_name: string;
+  coach_description?: string; // NEW: Concise specialty description
   status?: string; // For filtering archived coaches
   selected_personality: {
     primary_template: string;
@@ -167,11 +230,21 @@ export interface CoachConfigSummary {
     specializations: string[];
     methodology: string;
     experience_level: string;
+    training_frequency?: number; // NEW: Training days per week
   };
   metadata: {
     created_date: string;
     total_conversations: number;
+    methodology_profile?: { // NEW: Rich methodology metadata
+      primary?: string;
+      focus?: string[];
+      preferences?: string[];
+      experience?: string[];
+    };
   };
+  // DynamoDB timestamps (populated from database metadata)
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 // Interface for coach config
@@ -244,9 +317,20 @@ export interface CoachConfig {
     user_satisfaction?: number | null;
     total_conversations: number;
     safety_profile: any;
-    methodology_profile: any;
+    methodology_profile: {
+      primary?: string;
+      focus?: string[];
+      preferences?: string[];
+      experience?: string[];
+    };
     coach_creator_session_summary: string;
+    // Generation method tracking (for hybrid tool/fallback approach)
+    generation_method?: 'tool' | 'fallback';
+    generation_timestamp?: string;
   };
+  // DynamoDB timestamps (populated from database metadata)
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 // Coach Template interface for pre-built coach configurations

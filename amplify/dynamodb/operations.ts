@@ -27,7 +27,7 @@ import {
 } from "../functions/libs/coach-conversation/types";
 import { UserProfile } from "../functions/libs/user/types";
 import { UserMemory } from "../functions/libs/memory/types";
-import { Workout } from "../functions/libs/workout/types";
+import { Workout, WorkoutSummary } from "../functions/libs/workout/types";
 import { WeeklyAnalytics, MonthlyAnalytics } from "../functions/libs/analytics/types";
 import { TrainingProgram, TrainingProgramSummary } from "../functions/libs/training-program/types";
 
@@ -46,7 +46,7 @@ const docClient = DynamoDBDocumentClient.from(dynamoDbClient);
  * Query result for all users operation
  */
 export interface QueryAllUsersResult {
-  users: DynamoDBItem<UserProfile>[];
+  users: UserProfile[];
   lastEvaluatedKey?: any;
   count: number;
 }
@@ -338,14 +338,16 @@ export async function saveContactForm(formData: {
 // Simplified function to save coach config directly
 export async function saveCoachConfig(
   userId: string,
-  coachConfig: CoachConfig
+  coachConfig: CoachConfig,
+  creationTimestamp?: string
 ): Promise<void> {
+  const timestamp = creationTimestamp || new Date().toISOString();
   const item = createDynamoDBItem<CoachConfig>(
     "coachConfig",
     `user#${userId}`,
     `coach#${coachConfig.coach_id}`,
     coachConfig,
-    new Date().toISOString()
+    timestamp
   );
 
   await saveToDynamoDB(item);
@@ -355,12 +357,19 @@ export async function saveCoachConfig(
 export async function getCoachConfig(
   userId: string,
   coachId: string
-): Promise<DynamoDBItem<CoachConfig> | null> {
-  return await loadFromDynamoDB<CoachConfig>(
+): Promise<CoachConfig | null> {
+  const item = await loadFromDynamoDB<CoachConfig>(
     `user#${userId}`,
     `coach#${coachId}`,
     "coachConfig"
   );
+  if (!item) return null;
+
+  return {
+    ...item.attributes,
+    createdAt: new Date(item.createdAt),
+    updatedAt: new Date(item.updatedAt)
+  };
 }
 
 // Function to update coach config metadata (coach name, description, etc.)
@@ -369,22 +378,26 @@ export async function updateCoachConfig(
   coachId: string,
   updates: Partial<CoachConfig>
 ): Promise<CoachConfig> {
-  // First load the existing coach config
-  const existingConfig = await getCoachConfig(userId, coachId);
+  // Load the full DynamoDB item (needed for pk/sk/timestamps)
+  const existingItem = await loadFromDynamoDB<CoachConfig>(
+    `user#${userId}`,
+    `coach#${coachId}`,
+    "coachConfig"
+  );
 
-  if (!existingConfig) {
+  if (!existingItem) {
     throw new Error(`Coach config not found: ${coachId}`);
   }
 
   // Deep merge updates into existing config to preserve nested properties
   const updatedCoachConfig: CoachConfig = deepMerge(
-    existingConfig.attributes,
+    existingItem.attributes,
     updates
   );
 
   // Create updated item maintaining original timestamps but updating the updatedAt field
   const updatedItem = {
-    ...existingConfig,
+    ...existingItem,
     attributes: updatedCoachConfig,
     updatedAt: new Date().toISOString(),
   };
@@ -508,12 +521,13 @@ function deserializeFromDynamoDB(obj: any): any {
 export async function getCoachCreatorSession(
   userId: string,
   sessionId: string
-): Promise<DynamoDBItem<CoachCreatorSession> | null> {
-  return await loadFromDynamoDB<CoachCreatorSession>(
+): Promise<CoachCreatorSession | null> {
+  const item = await loadFromDynamoDB<CoachCreatorSession>(
     `user#${userId}`,
     `coachCreatorSession#${sessionId}`,
     "coachCreatorSession"
   );
+  return item?.attributes ?? null;
 }
 
 // Function to delete a coach creator session
@@ -556,34 +570,37 @@ export async function queryCoachCreatorSessions(
     sortBy?: "startedAt" | "lastActivity" | "sessionId";
     sortOrder?: "asc" | "desc";
   }
-): Promise<DynamoDBItem<CoachCreatorSession>[]> {
+): Promise<CoachCreatorSession[]> {
   try {
     // Get all coach creator sessions for the user
-    const allSessions = await queryFromDynamoDB<CoachCreatorSession>(
+    const allSessionItems = await queryFromDynamoDB<CoachCreatorSession>(
       `user#${userId}`,
       "coachCreatorSession#",
       "coachCreatorSession"
     );
+
+      // Extract attributes from DynamoDB items
+      let allSessions = allSessionItems.map(item => item.attributes);
 
       // Apply filters
       let filteredSessions = allSessions;
 
       // Filter out soft-deleted sessions by default (unless explicitly requested)
       filteredSessions = filteredSessions.filter(
-        (session) => !session.attributes.isDeleted
+        (session) => !session.isDeleted
       );
 
       // Filter by completion status
       if (options?.isComplete !== undefined) {
         filteredSessions = filteredSessions.filter(
-          (session) => session.attributes.isComplete === options.isComplete
+          (session) => session.isComplete === options.isComplete
         );
       }
 
       // Date filtering
       if (options?.fromDate || options?.toDate) {
         filteredSessions = filteredSessions.filter((session) => {
-          const startedAt = new Date(session.attributes.startedAt);
+          const startedAt = new Date(session.startedAt);
 
           if (options.fromDate && startedAt < options.fromDate) return false;
           if (options.toDate && startedAt > options.toDate) return false;
@@ -599,20 +616,20 @@ export async function queryCoachCreatorSessions(
 
           switch (options.sortBy) {
             case "startedAt":
-              aValue = new Date(a.attributes.startedAt);
-              bValue = new Date(b.attributes.startedAt);
+              aValue = new Date(a.startedAt);
+              bValue = new Date(b.startedAt);
               break;
             case "lastActivity":
-              aValue = new Date(a.attributes.lastActivity);
-              bValue = new Date(b.attributes.lastActivity);
+              aValue = new Date(a.lastActivity);
+              bValue = new Date(b.lastActivity);
               break;
             case "sessionId":
-              aValue = a.attributes.sessionId;
-              bValue = b.attributes.sessionId;
+              aValue = a.sessionId;
+              bValue = b.sessionId;
               break;
             default:
-              aValue = new Date(a.attributes.lastActivity);
-              bValue = new Date(b.attributes.lastActivity);
+              aValue = new Date(a.lastActivity);
+              bValue = new Date(b.lastActivity);
           }
 
           const comparison = aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
@@ -622,8 +639,8 @@ export async function queryCoachCreatorSessions(
         // Default sort by lastActivity descending (most recent first)
         filteredSessions.sort(
           (a, b) =>
-            new Date(b.attributes.lastActivity).getTime() -
-            new Date(a.attributes.lastActivity).getTime()
+            new Date(b.lastActivity).getTime() -
+            new Date(a.lastActivity).getTime()
         );
       }
 
@@ -651,7 +668,7 @@ export async function queryCoachCreatorSessions(
 // Function to load coach configs for a specific user (with limited properties)
 export async function queryCoachConfigs(
   userId: string
-): Promise<DynamoDBItem<CoachConfigSummary>[]> {
+): Promise<CoachConfigSummary[]> {
   try {
     // Use the generic query function to get all coach configs for the user
     const items = await queryFromDynamoDB<any>(
@@ -668,35 +685,42 @@ export async function queryCoachConfigs(
 
       console.info(`📊 queryCoachConfigs: ${activeCoaches.length} active coaches after filtering archived`);
 
-      // Filter to include only the properties we need, leveraging the original structure
+      // Extract and return only the summary properties we need
       return activeCoaches.map((item) => {
         const {
           coach_id,
           coach_name,
+          coach_description,
           selected_personality: { primary_template, selection_reasoning } = {},
           technical_config: {
             programming_focus,
             specializations,
             methodology,
             experience_level,
+            training_frequency,
           } = {},
-          metadata: { created_date, total_conversations } = {},
+          metadata: { created_date, total_conversations, methodology_profile } = {},
         } = item.attributes;
 
         return {
-          ...item,
-          attributes: {
-            coach_id,
-            coach_name,
-            selected_personality: { primary_template, selection_reasoning },
-            technical_config: {
-              programming_focus,
-              specializations,
-              methodology,
-              experience_level,
-            },
-            metadata: { created_date, total_conversations },
+          coach_id,
+          coach_name,
+          coach_description,
+          selected_personality: { primary_template, selection_reasoning },
+          technical_config: {
+            programming_focus,
+            specializations,
+            methodology,
+            experience_level,
+            training_frequency,
           },
+          metadata: {
+            created_date,
+            total_conversations,
+            methodology_profile,
+          },
+          createdAt: new Date(item.createdAt),
+          updatedAt: new Date(item.updatedAt)
         };
       });
   } catch (error) {
@@ -757,19 +781,26 @@ export async function getCoachConversation(
   userId: string,
   coachId: string,
   conversationId: string
-): Promise<DynamoDBItem<CoachConversation> | null> {
-  return await loadFromDynamoDB<CoachConversation>(
+): Promise<CoachConversation | null> {
+  const item = await loadFromDynamoDB<CoachConversation>(
     `user#${userId}`,
     `coachConversation#${coachId}#${conversationId}`,
     "coachConversation"
   );
+  if (!item) return null;
+
+  return {
+    ...item.attributes,
+    createdAt: new Date(item.createdAt),
+    updatedAt: new Date(item.updatedAt)
+  };
 }
 
 // Function to load conversation summaries for a user and specific coach (optimized - excludes messages)
 export async function queryCoachConversations(
   userId: string,
   coachId: string
-): Promise<DynamoDBItem<CoachConversationListItem>[]> {
+): Promise<CoachConversationListItem[]> {
   try {
     // Use the generic query function to get all coach conversations for the user + coach
     const items = await queryFromDynamoDB<any>(
@@ -778,13 +809,13 @@ export async function queryCoachConversations(
       "coachConversation"
     );
 
-      // Filter to exclude messages array, keeping only summary properties
+      // Extract attributes and exclude messages array, keeping only summary properties
       return items.map((item) => {
         const { messages, ...summaryAttributes } = item.attributes;
-
         return {
-          ...item,
-          attributes: summaryAttributes,
+          ...summaryAttributes,
+          createdAt: new Date(item.createdAt),
+          updatedAt: new Date(item.updatedAt)
         };
       });
   } catch (error) {
@@ -800,12 +831,17 @@ export async function queryCoachConversations(
 export async function queryCoachConversationsWithMessages(
   userId: string,
   coachId: string
-): Promise<DynamoDBItem<CoachConversation>[]> {
-  return await queryFromDynamoDB<CoachConversation>(
+): Promise<CoachConversation[]> {
+  const items = await queryFromDynamoDB<CoachConversation>(
     `user#${userId}`,
     `coachConversation#${coachId}#`,
     "coachConversation"
   );
+  return items.map(item => ({
+    ...item.attributes,
+    createdAt: new Date(item.createdAt),
+    updatedAt: new Date(item.updatedAt)
+  }));
 }
 
 // Interface for conversation message save result
@@ -830,17 +866,17 @@ export async function sendCoachConversationMessage(
   conversationId: string,
   messages: CoachMessage[]
 ): Promise<ConversationSaveResult> {
-  let existingConversation;
+  let existingItem;
 
   try {
-    // First load the existing conversation
-    existingConversation = await getCoachConversation(
-      userId,
-      coachId,
-      conversationId
+    // Load the full DynamoDB item (needed for pk/sk/timestamps)
+    existingItem = await loadFromDynamoDB<CoachConversation>(
+      `user#${userId}`,
+      `coachConversation#${coachId}#${conversationId}`,
+      "coachConversation"
     );
 
-    if (!existingConversation) {
+    if (!existingItem) {
       const errorResult: ConversationSaveResult = {
         success: false,
         conversationId,
@@ -896,12 +932,12 @@ export async function sendCoachConversationMessage(
   }
 
   // Update the conversation with new messages and metadata
-  const existingMessages = existingConversation.attributes.messages || [];
+  const existingMessages = existingItem.attributes.messages || [];
   const updatedConversation: CoachConversation = {
-    ...existingConversation.attributes,
+    ...existingItem.attributes,
     messages: [...existingMessages, ...messages],
     metadata: {
-      ...existingConversation.attributes.metadata,
+      ...existingItem.attributes.metadata,
       lastActivity: new Date(),
       totalMessages: existingMessages.length + messages.length,
     },
@@ -909,12 +945,12 @@ export async function sendCoachConversationMessage(
 
   // Create updated item maintaining original timestamps but updating the updatedAt field
   const updatedItem = {
-    ...existingConversation,
+    ...existingItem,
     attributes: updatedConversation,
     updatedAt: new Date().toISOString(),
   };
 
-  const previousMessageCount = existingConversation.attributes.messages?.length || 0;
+  const previousMessageCount = existingItem.attributes.messages?.length || 0;
   const messagesAdded = messages.length;
 
   let saveResult: DynamoDBSaveResult;
@@ -987,14 +1023,14 @@ export async function updateCoachConversation(
   conversationId: string,
   updateData: { title?: string; tags?: string[]; isActive?: boolean }
 ): Promise<CoachConversation> {
-  // First load the existing conversation
-  const existingConversation = await getCoachConversation(
-    userId,
-    coachId,
-    conversationId
+  // Load the full DynamoDB item (needed for pk/sk/timestamps)
+  const existingItem = await loadFromDynamoDB<CoachConversation>(
+    `user#${userId}`,
+    `coachConversation#${coachId}#${conversationId}`,
+    "coachConversation"
   );
 
-  if (!existingConversation) {
+  if (!existingItem) {
     throw new Error(`Conversation not found: ${conversationId}`);
   }
 
@@ -1010,13 +1046,13 @@ export async function updateCoachConversation(
 
   // Deep merge to preserve nested properties
   const updatedConversation: CoachConversation = deepMerge(
-    existingConversation.attributes,
+    existingItem.attributes,
     updates
   );
 
   // Create updated item maintaining original timestamps but updating the updatedAt field
   const updatedItem = {
-    ...existingConversation,
+    ...existingItem,
     attributes: updatedConversation,
     updatedAt: new Date().toISOString(),
   };
@@ -1102,12 +1138,19 @@ export async function saveWorkout(workout: Workout): Promise<void> {
 export async function getWorkout(
   userId: string,
   workoutId: string
-): Promise<DynamoDBItem<Workout> | null> {
-  return await loadFromDynamoDB<Workout>(
+): Promise<Workout | null> {
+  const item = await loadFromDynamoDB<Workout>(
     `user#${userId}`,
     `workout#${workoutId}`,
     "workout"
   );
+  if (!item) return null;
+
+  return {
+    ...item.attributes,
+    createdAt: new Date(item.createdAt),
+    updatedAt: new Date(item.updatedAt)
+  };
 }
 
 // Function to get the total count of workout sessions for a user
@@ -1210,25 +1253,11 @@ export async function queryWorkoutsCount(
   }
 }
 
-// Lightweight function to query only workout summary fields
-// Uses ProjectionExpression to avoid fetching full workout data (30KB+ per workout)
 export async function queryWorkoutSummaries(
   userId: string,
   fromDate: Date,
   toDate: Date
-): Promise<Array<{
-  pk: string;
-  sk: string;
-  entityType: string;
-  attributes: {
-    workoutId: string;
-    completedAt: Date;
-    summary?: string;
-    workoutName?: string;
-    discipline?: string;
-    coachIds: string[];
-  };
-}>> {
+): Promise<WorkoutSummary[]> {
   const tableName = getTableName();
   const operationName = `Query workout summaries`;
 
@@ -1264,19 +1293,14 @@ export async function queryWorkoutSummaries(
       dateRange: `${fromDate.toISOString().split('T')[0]} to ${toDate.toISOString().split('T')[0]}`,
     });
 
-    // Deserialize and format the items
-    return items.map((item) => ({
-      pk: item.pk,
-      sk: item.sk,
-      entityType: item.entityType,
-      attributes: {
-        workoutId: item.attributes?.workoutId,
-        completedAt: new Date(item.attributes?.completedAt),
-        summary: item.attributes?.summary,
-        workoutName: item.attributes?.workoutData?.workout_name,
-        discipline: item.attributes?.workoutData?.discipline,
-        coachIds: item.attributes?.coachIds || [],
-      },
+    // Deserialize and format the items - return unwrapped summaries
+    return items.map((item): WorkoutSummary => ({
+      workoutId: item.attributes?.workoutId,
+      completedAt: new Date(item.attributes?.completedAt),
+      summary: item.attributes?.summary,
+      workoutName: item.attributes?.workoutData?.workout_name,
+      discipline: item.attributes?.workoutData?.discipline,
+      coachIds: item.attributes?.coachIds || [],
     }));
   }, operationName);
 }
@@ -1308,14 +1332,21 @@ export async function queryWorkouts(
     sortBy?: "completedAt" | "confidence" | "workoutName";
     sortOrder?: "asc" | "desc";
   }
-): Promise<DynamoDBItem<Workout>[]> {
+): Promise<Workout[]> {
   try {
     // Get all workout sessions for the user
-    const allSessions = await queryFromDynamoDB<Workout>(
+    const allSessionItems = await queryFromDynamoDB<Workout>(
       `user#${userId}`,
       "workout#",
       "workout"
     );
+
+    // Extract attributes and include timestamps
+    let allSessions = allSessionItems.map(item => ({
+      ...item.attributes,
+      createdAt: new Date(item.createdAt),
+      updatedAt: new Date(item.updatedAt)
+    }));
 
     // Apply filters
     let filteredSessions = allSessions;
@@ -1323,7 +1354,7 @@ export async function queryWorkouts(
     // Date filtering
     if (options?.fromDate || options?.toDate) {
       filteredSessions = filteredSessions.filter((session) => {
-        const completedAt = session.attributes.completedAt;
+        const completedAt = session.completedAt;
         const sessionDate = new Date(completedAt);
 
         if (options.fromDate && sessionDate < options.fromDate) return false;
@@ -1337,7 +1368,7 @@ export async function queryWorkouts(
     if (options?.discipline) {
       filteredSessions = filteredSessions.filter(
         (session) =>
-          session.attributes.workoutData.discipline === options.discipline
+          session.workoutData.discipline === options.discipline
       );
     }
 
@@ -1345,7 +1376,7 @@ export async function queryWorkouts(
     if (options?.workoutType) {
       filteredSessions = filteredSessions.filter(
         (session) =>
-          session.attributes.workoutData.workout_type === options.workoutType
+          session.workoutData.workout_type === options.workoutType
       );
     }
 
@@ -1353,14 +1384,14 @@ export async function queryWorkouts(
     if (options?.location) {
       filteredSessions = filteredSessions.filter(
         (session) =>
-          session.attributes.workoutData.location === options.location
+          session.workoutData.location === options.location
       );
     }
 
     // Coach filtering
     if (options?.coachId) {
       filteredSessions = filteredSessions.filter((session) =>
-        session.attributes.coachIds.includes(options.coachId!)
+        session.coachIds.includes(options.coachId!)
       );
     }
 
@@ -1368,7 +1399,7 @@ export async function queryWorkouts(
     if (options?.minConfidence) {
       filteredSessions = filteredSessions.filter(
         (session) =>
-          session.attributes.extractionMetadata.confidence >=
+          session.extractionMetadata.confidence >=
           options.minConfidence!
       );
     }
@@ -1380,20 +1411,20 @@ export async function queryWorkouts(
 
         switch (options.sortBy) {
           case "completedAt":
-            aValue = new Date(a.attributes.completedAt);
-            bValue = new Date(b.attributes.completedAt);
+            aValue = new Date(a.completedAt);
+            bValue = new Date(b.completedAt);
             break;
           case "confidence":
-            aValue = a.attributes.extractionMetadata.confidence;
-            bValue = b.attributes.extractionMetadata.confidence;
+            aValue = a.extractionMetadata.confidence;
+            bValue = b.extractionMetadata.confidence;
             break;
           case "workoutName":
-            aValue = a.attributes.workoutData.workout_name || "";
-            bValue = b.attributes.workoutData.workout_name || "";
+            aValue = a.workoutData.workout_name || "";
+            bValue = b.workoutData.workout_name || "";
             break;
           default:
-            aValue = new Date(a.attributes.completedAt);
-            bValue = new Date(b.attributes.completedAt);
+            aValue = new Date(a.completedAt);
+            bValue = new Date(b.completedAt);
         }
 
         const comparison = aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
@@ -1403,8 +1434,8 @@ export async function queryWorkouts(
       // Default sort by completedAt descending (most recent first)
       filteredSessions.sort(
         (a, b) =>
-          new Date(b.attributes.completedAt).getTime() -
-          new Date(a.attributes.completedAt).getTime()
+          new Date(b.completedAt).getTime() -
+          new Date(a.completedAt).getTime()
       );
     }
 
@@ -1435,16 +1466,20 @@ export async function updateWorkout(
   workoutId: string,
   updates: Partial<Workout>
 ): Promise<Workout> {
-  // First get the existing workout session
-  const existingSession = await getWorkout(userId, workoutId);
+  // Load the full DynamoDB item (needed for pk/sk/timestamps)
+  const existingItem = await loadFromDynamoDB<Workout>(
+    `user#${userId}`,
+    `workout#${workoutId}`,
+    "workout"
+  );
 
-  if (!existingSession) {
+  if (!existingItem) {
     throw new Error(`Workout not found: ${workoutId}`);
   }
 
   // Deep merge updates into existing session to preserve nested properties
   const updatedSession: Workout = deepMerge(
-    existingSession.attributes,
+    existingItem.attributes,
     updates
   );
 
@@ -1460,7 +1495,7 @@ export async function updateWorkout(
 
   // Create updated item maintaining original timestamps but updating the updatedAt field
   const updatedItem = {
-    ...existingSession,
+    ...existingItem,
     attributes: updatedSession,
     updatedAt: new Date().toISOString(),
   };
@@ -1470,7 +1505,7 @@ export async function updateWorkout(
     userId,
     updateFields: Object.keys(updates),
     originalConfidence:
-      existingSession.attributes.extractionMetadata.confidence,
+      existingItem.attributes.extractionMetadata.confidence,
     newConfidence: updatedSession.extractionMetadata.confidence,
   });
 
@@ -1510,7 +1545,7 @@ export async function deleteWorkout(
  */
 export async function queryWorkoutsByGroup(
   groupId: string
-): Promise<DynamoDBItem<Workout>[]> {
+): Promise<Workout[]> {
   const tableName = getTableName();
 
   try {
@@ -1531,7 +1566,12 @@ export async function queryWorkoutsByGroup(
       return [];
     }
 
-    return result.Items as DynamoDBItem<Workout>[];
+    const items = result.Items as DynamoDBItem<Workout>[];
+    return items.map(item => ({
+      ...item.attributes,
+      createdAt: new Date(item.createdAt),
+      updatedAt: new Date(item.updatedAt)
+    }));
   } catch (error: any) {
     console.error(`Error querying workouts by groupId ${groupId}:`, error);
     throw error;
@@ -1544,7 +1584,7 @@ export async function queryWorkoutsByGroup(
  */
 export async function queryWorkoutsByTemplate(
   templateId: string
-): Promise<DynamoDBItem<Workout>[]> {
+): Promise<Workout[]> {
   const tableName = getTableName();
 
   try {
@@ -1565,7 +1605,12 @@ export async function queryWorkoutsByTemplate(
       return [];
     }
 
-    return result.Items as DynamoDBItem<Workout>[];
+    const items = result.Items as DynamoDBItem<Workout>[];
+    return items.map(item => ({
+      ...item.attributes,
+      createdAt: new Date(item.createdAt),
+      updatedAt: new Date(item.updatedAt)
+    }));
   } catch (error: any) {
     console.error(`Error querying workouts by templateId ${templateId}:`, error);
     throw error;
@@ -1600,12 +1645,13 @@ export async function saveCoachConversationSummary(
 export async function getCoachConversationSummary(
   userId: string,
   conversationId: string
-): Promise<DynamoDBItem<CoachConversationSummary> | null> {
-  return await loadFromDynamoDB<CoachConversationSummary>(
+): Promise<CoachConversationSummary | null> {
+  const item = await loadFromDynamoDB<CoachConversationSummary>(
     `user#${userId}`,
     `conversation#${conversationId}#summary`,
     "conversationSummary"
   );
+  return item?.attributes ?? null;
 }
 
 // Function to query coach conversation summaries for a user
@@ -1646,18 +1692,21 @@ export async function queryConversationsCount(
 export async function queryCoachConversationSummaries(
   userId: string,
   coachId?: string
-): Promise<DynamoDBItem<CoachConversationSummary>[]> {
+): Promise<CoachConversationSummary[]> {
   try {
     // Query all conversation summaries for the user
-    const items = await queryFromDynamoDB<CoachConversationSummary>(
+    const itemsWithDb = await queryFromDynamoDB<CoachConversationSummary>(
       `user#${userId}`,
       "conversation#",
       "conversationSummary"
     );
 
+      // Extract attributes
+      const items = itemsWithDb.map(item => item.attributes);
+
       // Filter by coach if specified
       const filteredItems = coachId
-        ? items.filter((item) => item.attributes.coachId === coachId)
+        ? items.filter((item) => item.coachId === coachId)
         : items;
 
       console.info("Conversation summaries queried successfully:", {
@@ -1717,12 +1766,19 @@ export async function saveUserProfile(userProfile: UserProfile): Promise<void> {
  */
 export async function getUserProfile(
   userId: string
-): Promise<DynamoDBItem<UserProfile> | null> {
-  return await loadFromDynamoDB<UserProfile>(
+): Promise<UserProfile | null> {
+  const item = await loadFromDynamoDB<UserProfile>(
     `user#${userId}`,
     "profile",
     "user"
   );
+  if (!item) return null;
+
+  return {
+    ...item.attributes,
+    createdAt: new Date(item.createdAt),
+    updatedAt: new Date(item.updatedAt)
+  };
 }
 
 /**
@@ -1730,7 +1786,7 @@ export async function getUserProfile(
  */
 export async function getUserProfileByEmail(
   email: string
-): Promise<DynamoDBItem<UserProfile> | null> {
+): Promise<UserProfile | null> {
   const tableName = getTableName();
   const operationName = `Query user profile by email: ${email}`;
 
@@ -1763,12 +1819,18 @@ export async function getUserProfileByEmail(
       });
     }
 
+    const item = items[0];
+    const profile = {
+      ...item.attributes,
+      createdAt: new Date(item.createdAt),
+      updatedAt: new Date(item.updatedAt)
+    };
     console.info(`User profile found for email: ${email}`, {
-      userId: items[0].attributes.userId,
-      username: items[0].attributes.username
+      userId: profile.userId,
+      username: profile.username
     });
 
-    return items[0];
+    return profile;
   }, operationName);
 }
 
@@ -1777,7 +1839,7 @@ export async function getUserProfileByEmail(
  */
 export async function getUserProfileByUsername(
   username: string
-): Promise<DynamoDBItem<UserProfile> | null> {
+): Promise<UserProfile | null> {
   const tableName = getTableName();
   const operationName = `Query user profile by username: ${username}`;
 
@@ -1810,12 +1872,18 @@ export async function getUserProfileByUsername(
       });
     }
 
+    const item = items[0];
+    const profile = {
+      ...item.attributes,
+      createdAt: new Date(item.createdAt),
+      updatedAt: new Date(item.updatedAt)
+    };
     console.info(`User profile found for username: ${username}`, {
-      userId: items[0].attributes.userId,
-      email: items[0].attributes.email
+      userId: profile.userId,
+      email: profile.email
     });
 
-    return items[0];
+    return profile;
   }, operationName);
 }
 
@@ -1826,19 +1894,23 @@ export async function updateUserProfile(
   userId: string,
   updates: Partial<UserProfile>
 ): Promise<UserProfile> {
-  // First get the existing profile
-  const existingProfile = await getUserProfile(userId);
+  // Load the full DynamoDB item (needed for pk/sk/timestamps)
+  const existingItem = await loadFromDynamoDB<UserProfile>(
+    `user#${userId}`,
+    "profile",
+    "user"
+  );
 
-  if (!existingProfile) {
+  if (!existingItem) {
     throw new Error(`User profile not found: ${userId}`);
   }
 
   // Deep merge updates into existing profile to preserve nested properties
-  const updatedProfile: UserProfile = deepMerge(existingProfile.attributes, updates);
+  const updatedProfile: UserProfile = deepMerge(existingItem.attributes, updates);
 
   // Create updated item maintaining original timestamps but updating the updatedAt field
   const updatedItem = {
-    ...existingProfile,
+    ...existingItem,
     attributes: updatedProfile,
     updatedAt: new Date().toISOString(),
     // Update GSI keys if email or username changed
@@ -2137,7 +2209,7 @@ export async function queryAllEntitiesByType<T>(
   filterExpression?: string,
   expressionAttributeValues?: Record<string, any>
 ): Promise<{
-  items: DynamoDBItem<T>[];
+  items: T[];
   lastEvaluatedKey?: any;
   count: number;
 }> {
@@ -2176,10 +2248,13 @@ export async function queryAllEntitiesByType<T>(
       hasMoreResults: !!result.LastEvaluatedKey,
     });
 
+    // Unwrap DynamoDB items to return pure domain types
+    const unwrappedItems = items.map(item => item.attributes);
+
     return {
-      items: items,
+      items: unwrappedItems,
       lastEvaluatedKey: result.LastEvaluatedKey,
-      count: items.length,
+      count: unwrappedItems.length,
     };
   }, `Query all ${entityType} entities using GSI-3`);
 }
@@ -2246,14 +2321,21 @@ export async function queryWeeklyAnalytics(
     sortBy?: "weekStart" | "weekEnd" | "workoutCount";
     sortOrder?: "asc" | "desc";
   }
-): Promise<DynamoDBItem<WeeklyAnalytics>[]> {
+): Promise<WeeklyAnalytics[]> {
   try {
     // Get all weekly analytics for the user
-    const allAnalytics = await queryFromDynamoDB<WeeklyAnalytics>(
+    const allAnalyticsItems = await queryFromDynamoDB<WeeklyAnalytics>(
       `user#${userId}`,
       "weeklyAnalytics#",
       "analytics"
     );
+
+    // Extract attributes and include timestamps
+    let allAnalytics = allAnalyticsItems.map(item => ({
+      ...item.attributes,
+      createdAt: new Date(item.createdAt),
+      updatedAt: new Date(item.updatedAt)
+    }));
 
     // Apply filters
     let filteredAnalytics = allAnalytics;
@@ -2261,14 +2343,14 @@ export async function queryWeeklyAnalytics(
     // Date filtering
     if (options?.fromDate) {
       filteredAnalytics = filteredAnalytics.filter((analytics) => {
-        const weekStart = new Date(analytics.attributes.weekStart);
+        const weekStart = new Date(analytics.weekStart);
         return weekStart >= options.fromDate!;
       });
     }
 
     if (options?.toDate) {
       filteredAnalytics = filteredAnalytics.filter((analytics) => {
-        const weekEnd = new Date(analytics.attributes.weekEnd);
+        const weekEnd = new Date(analytics.weekEnd);
         return weekEnd <= options.toDate!;
       });
     }
@@ -2282,20 +2364,20 @@ export async function queryWeeklyAnalytics(
 
       switch (sortBy) {
         case "weekStart":
-          aValue = new Date(a.attributes.weekStart);
-          bValue = new Date(b.attributes.weekStart);
+          aValue = new Date(a.weekStart);
+          bValue = new Date(b.weekStart);
           break;
         case "weekEnd":
-          aValue = new Date(a.attributes.weekEnd);
-          bValue = new Date(b.attributes.weekEnd);
+          aValue = new Date(a.weekEnd);
+          bValue = new Date(b.weekEnd);
           break;
         case "workoutCount":
-          aValue = a.attributes.metadata.workoutCount;
-          bValue = b.attributes.metadata.workoutCount;
+          aValue = a.metadata.workoutCount;
+          bValue = b.metadata.workoutCount;
           break;
         default:
-          aValue = new Date(a.attributes.weekStart);
-          bValue = new Date(b.attributes.weekStart);
+          aValue = new Date(a.weekStart);
+          bValue = new Date(b.weekStart);
       }
 
       if (sortOrder === "asc") {
@@ -2326,12 +2408,19 @@ export async function queryWeeklyAnalytics(
 export async function getWeeklyAnalytics(
   userId: string,
   weekId: string
-): Promise<DynamoDBItem<WeeklyAnalytics> | null> {
-  return await loadFromDynamoDB<WeeklyAnalytics>(
+): Promise<WeeklyAnalytics | null> {
+  const item = await loadFromDynamoDB<WeeklyAnalytics>(
     `user#${userId}`,
     `weeklyAnalytics#${weekId}`,
     "analytics"
   );
+  if (!item) return null;
+
+  return {
+    ...item.attributes,
+    createdAt: new Date(item.createdAt),
+    updatedAt: new Date(item.updatedAt)
+  };
 }
 
 // ===========================
@@ -2377,14 +2466,21 @@ export async function queryMonthlyAnalytics(
     sortBy?: "monthStart" | "monthEnd" | "workoutCount";
     sortOrder?: "asc" | "desc";
   }
-): Promise<DynamoDBItem<MonthlyAnalytics>[]> {
+): Promise<MonthlyAnalytics[]> {
   try {
     // Get all monthly analytics for the user
-    const allAnalytics = await queryFromDynamoDB<MonthlyAnalytics>(
+    const allAnalyticsItems = await queryFromDynamoDB<MonthlyAnalytics>(
       `user#${userId}`,
       "monthlyAnalytics#",
       "analytics"
     );
+
+    // Extract attributes and include timestamps
+    let allAnalytics = allAnalyticsItems.map(item => ({
+      ...item.attributes,
+      createdAt: new Date(item.createdAt),
+      updatedAt: new Date(item.updatedAt)
+    }));
 
     // Apply filters
     let filteredAnalytics = allAnalytics;
@@ -2392,14 +2488,14 @@ export async function queryMonthlyAnalytics(
     // Date filtering
     if (options?.fromDate) {
       filteredAnalytics = filteredAnalytics.filter((analytics) => {
-        const monthStart = new Date(analytics.attributes.monthStart);
+        const monthStart = new Date(analytics.monthStart);
         return monthStart >= options.fromDate!;
       });
     }
 
     if (options?.toDate) {
       filteredAnalytics = filteredAnalytics.filter((analytics) => {
-        const monthEnd = new Date(analytics.attributes.monthEnd);
+        const monthEnd = new Date(analytics.monthEnd);
         return monthEnd <= options.toDate!;
       });
     }
@@ -2413,20 +2509,20 @@ export async function queryMonthlyAnalytics(
 
       switch (sortBy) {
         case "monthStart":
-          aValue = new Date(a.attributes.monthStart);
-          bValue = new Date(b.attributes.monthStart);
+          aValue = new Date(a.monthStart);
+          bValue = new Date(b.monthStart);
           break;
         case "monthEnd":
-          aValue = new Date(a.attributes.monthEnd);
-          bValue = new Date(b.attributes.monthEnd);
+          aValue = new Date(a.monthEnd);
+          bValue = new Date(b.monthEnd);
           break;
         case "workoutCount":
-          aValue = a.attributes.metadata.workoutCount;
-          bValue = b.attributes.metadata.workoutCount;
+          aValue = a.metadata.workoutCount;
+          bValue = b.metadata.workoutCount;
           break;
         default:
-          aValue = new Date(a.attributes.monthStart);
-          bValue = new Date(b.attributes.monthStart);
+          aValue = new Date(a.monthStart);
+          bValue = new Date(b.monthStart);
       }
 
       if (sortOrder === "asc") {
@@ -2457,12 +2553,19 @@ export async function queryMonthlyAnalytics(
 export async function getMonthlyAnalytics(
   userId: string,
   monthId: string
-): Promise<DynamoDBItem<MonthlyAnalytics> | null> {
-  return await loadFromDynamoDB<MonthlyAnalytics>(
+): Promise<MonthlyAnalytics | null> {
+  const item = await loadFromDynamoDB<MonthlyAnalytics>(
     `user#${userId}`,
     `monthlyAnalytics#${monthId}`,
     "analytics"
   );
+  if (!item) return null;
+
+  return {
+    ...item.attributes,
+    createdAt: new Date(item.createdAt),
+    updatedAt: new Date(item.updatedAt)
+  };
 }
 
 // ===========================
@@ -2473,30 +2576,33 @@ export async function getMonthlyAnalytics(
  * Get all available coach templates
  */
 export async function queryCoachTemplates(): Promise<
-  DynamoDBItem<CoachTemplate>[]
+  CoachTemplate[]
 > {
   try {
     // Query all coach templates using the global template partition
-    const items = await queryFromDynamoDB<CoachTemplate>(
+    const itemsWithDb = await queryFromDynamoDB<CoachTemplate>(
       "template#global",
       "coachTemplate#",
       "coachTemplate"
     );
 
+      // Extract attributes
+      const items = itemsWithDb.map(item => item.attributes);
+
       // Filter to only active templates and sort by popularity/name
       const activeTemplates = items.filter(
-        (item) => item.attributes.metadata.is_active
+        (item) => item.metadata.is_active
       );
 
       // Sort by popularity score (desc) then by template name (asc)
       activeTemplates.sort((a, b) => {
         const popularityDiff =
-          (b.attributes.metadata.popularity_score || 0) -
-          (a.attributes.metadata.popularity_score || 0);
+          (b.metadata.popularity_score || 0) -
+          (a.metadata.popularity_score || 0);
         if (popularityDiff !== 0) return popularityDiff;
 
-        return a.attributes.template_name.localeCompare(
-          b.attributes.template_name
+        return a.template_name.localeCompare(
+          b.template_name
         );
       });
 
@@ -2517,12 +2623,13 @@ export async function queryCoachTemplates(): Promise<
  */
 export async function getCoachTemplate(
   templateId: string
-): Promise<DynamoDBItem<CoachTemplate> | null> {
-  return await loadFromDynamoDB<CoachTemplate>(
+): Promise<CoachTemplate | null> {
+  const item = await loadFromDynamoDB<CoachTemplate>(
     "template#global",
     `coachTemplate#${templateId}`,
     "coachTemplate"
   );
+  return item?.attributes ?? null;
 }
 
 /**
@@ -2540,7 +2647,7 @@ export async function createCoachConfigFromTemplate(
       throw new Error(`Coach template not found: ${templateId}`);
     }
 
-    if (!template.attributes.metadata.is_active) {
+    if (!template.metadata.is_active) {
       throw new Error(`Coach template is not active: ${templateId}`);
     }
 
@@ -2551,10 +2658,10 @@ export async function createCoachConfigFromTemplate(
 
     // Copy the base_config and update necessary fields
     const newCoachConfig: CoachConfig = {
-      ...template.attributes.base_config,
+      ...template.base_config,
       coach_id: newCoachId,
       metadata: {
-        ...template.attributes.base_config.metadata,
+        ...template.base_config.metadata,
         created_date: currentDate,
         total_conversations: 0,
         user_satisfaction: null,
@@ -2566,19 +2673,28 @@ export async function createCoachConfigFromTemplate(
 
     // Update template popularity score (optional - tracks usage)
     try {
-      const updatedTemplate = {
-        ...template,
-        attributes: {
-          ...template.attributes,
-          metadata: {
-            ...template.attributes.metadata,
-            popularity_score:
-              (template.attributes.metadata.popularity_score || 0) + 1,
+      // Load the full DynamoDB item for update
+      const templateItem = await loadFromDynamoDB<CoachTemplate>(
+        "template#global",
+        `coachTemplate#${templateId}`,
+        "coachTemplate"
+      );
+
+      if (templateItem) {
+        const updatedTemplate = {
+          ...templateItem,
+          attributes: {
+            ...templateItem.attributes,
+            metadata: {
+              ...templateItem.attributes.metadata,
+              popularity_score:
+                (templateItem.attributes.metadata.popularity_score || 0) + 1,
+            },
           },
-        },
-        updatedAt: currentDate,
-      };
-      await saveToDynamoDB(updatedTemplate);
+          updatedAt: currentDate,
+        };
+        await saveToDynamoDB(updatedTemplate);
+      }
     } catch (popularityError) {
       // Don't fail the whole operation if popularity update fails
       console.warn("Failed to update template popularity:", popularityError);
@@ -2586,7 +2702,7 @@ export async function createCoachConfigFromTemplate(
 
     console.info("Coach config created from template successfully:", {
       templateId,
-      templateName: template.attributes.template_name,
+      templateName: template.template_name,
       userId,
       newCoachId,
       coachName: newCoachConfig.coach_name,
@@ -2652,12 +2768,19 @@ export async function getTrainingProgram(
   userId: string,
   coachId: string,
   programId: string
-): Promise<DynamoDBItem<TrainingProgram> | null> {
-  return await loadFromDynamoDB<TrainingProgram>(
+): Promise<TrainingProgram | null> {
+  const item = await loadFromDynamoDB<TrainingProgram>(
     `user#${userId}#coach#${coachId}`,
     `program#${programId}`,
     "trainingProgram"
   );
+  if (!item) return null;
+
+  return {
+    ...item.attributes,
+    createdAt: new Date(item.createdAt),
+    updatedAt: new Date(item.updatedAt)
+  };
 }
 
 /**
@@ -2671,31 +2794,38 @@ export async function queryTrainingProgramsByCoach(
     limit?: number;
     sortOrder?: "asc" | "desc";
   }
-): Promise<DynamoDBItem<TrainingProgram>[]> {
+): Promise<TrainingProgram[]> {
   try {
     // Query all programs for this user + coach combination
-    const allPrograms = await queryFromDynamoDB<TrainingProgram>(
+    const allProgramsItems = await queryFromDynamoDB<TrainingProgram>(
       `user#${userId}#coach#${coachId}`,
       "program#",
       "trainingProgram"
     );
 
+    // Extract attributes and include timestamps
+    const allPrograms = allProgramsItems.map(item => ({
+      ...item.attributes,
+      createdAt: new Date(item.createdAt),
+      updatedAt: new Date(item.updatedAt)
+    }));
+
     // Filter out archived programs by default
     let filteredPrograms = allPrograms.filter(
-      (program) => program.attributes.status !== "archived"
+      (program) => program.status !== "archived"
     );
 
     // Filter by status if specified
     if (options?.status) {
       filteredPrograms = filteredPrograms.filter(
-        (program) => program.attributes.status === options.status
+        (program) => program.status === options.status
       );
     }
 
     // Sort by startDate
     filteredPrograms.sort((a, b) => {
-      const dateA = new Date(a.attributes.startDate).getTime();
-      const dateB = new Date(b.attributes.startDate).getTime();
+      const dateA = new Date(a.startDate).getTime();
+      const dateB = new Date(b.startDate).getTime();
       return options?.sortOrder === "asc" ? dateA - dateB : dateB - dateA;
     });
 
@@ -2732,7 +2862,7 @@ export async function queryTrainingPrograms(
     limit?: number;
     sortOrder?: "asc" | "desc";
   }
-): Promise<DynamoDBItem<TrainingProgram>[]> {
+): Promise<TrainingProgram[]> {
   const tableName = getTableName();
   const operationName = `Query all programs for user ${userId}`;
 
@@ -2758,15 +2888,22 @@ export async function queryTrainingPrograms(
     });
 
     const result = await docClient.send(command);
-    let programs = (result.Items || []) as DynamoDBItem<TrainingProgram>[];
+    let programItems = (result.Items || []) as DynamoDBItem<TrainingProgram>[];
 
     // Deserialize dates
-    programs = programs.map((item) => deserializeFromDynamoDB(item));
+    programItems = programItems.map((item) => deserializeFromDynamoDB(item));
+
+    // Extract attributes and include timestamps
+    let programs = programItems.map(item => ({
+      ...item.attributes,
+      createdAt: new Date(item.createdAt),
+      updatedAt: new Date(item.updatedAt)
+    }));
 
     // Sort by startDate
     programs.sort((a, b) => {
-      const dateA = new Date(a.attributes.startDate).getTime();
-      const dateB = new Date(b.attributes.startDate).getTime();
+      const dateA = new Date(a.startDate).getTime();
+      const dateB = new Date(b.startDate).getTime();
       return options?.sortOrder === "asc" ? dateA - dateB : dateB - dateA;
     });
 
@@ -2794,16 +2931,20 @@ export async function updateTrainingProgram(
   programId: string,
   updates: Partial<TrainingProgram>
 ): Promise<TrainingProgram> {
-  // First load the existing program
-  const existingProgram = await getTrainingProgram(userId, coachId, programId);
+  // Load the full DynamoDB item (needed for pk/sk/timestamps)
+  const existingItem = await loadFromDynamoDB<TrainingProgram>(
+    `user#${userId}#coach#${coachId}`,
+    `program#${programId}`,
+    "trainingProgram"
+  );
 
-  if (!existingProgram) {
+  if (!existingItem) {
     throw new Error(`Training program not found: ${programId}`);
   }
 
   // Deep merge updates into existing program
   const updatedProgram: TrainingProgram = deepMerge(
-    existingProgram.attributes,
+    existingItem.attributes,
     updates
   );
 
@@ -2817,7 +2958,7 @@ export async function updateTrainingProgram(
 
   // Create updated item
   const updatedItem = {
-    ...existingProgram,
+    ...existingItem,
     attributes: updatedProgram,
     updatedAt: new Date().toISOString(),
   };
@@ -2871,7 +3012,7 @@ export async function queryTrainingProgramSummaries(
   coachId?: string
 ): Promise<TrainingProgramSummary[]> {
   try {
-    let programs: DynamoDBItem<TrainingProgram>[];
+    let programs: TrainingProgram[];
 
     if (coachId) {
       // Query programs for specific coach
@@ -2883,16 +3024,16 @@ export async function queryTrainingProgramSummaries(
 
     // Map to lightweight summaries
     const summaries: TrainingProgramSummary[] = programs.map((program) => ({
-      programId: program.attributes.programId,
-      name: program.attributes.name,
-      status: program.attributes.status,
-      currentDay: program.attributes.currentDay,
-      totalDays: program.attributes.totalDays,
-      adherenceRate: program.attributes.adherenceRate,
-      startDate: program.attributes.startDate,
-      lastActivityAt: program.attributes.lastActivityAt,
-      coachIds: program.attributes.coachIds,
-      coachNames: program.attributes.coachNames,
+      programId: program.programId,
+      name: program.name,
+      status: program.status,
+      currentDay: program.currentDay,
+      totalDays: program.totalDays,
+      adherenceRate: program.adherenceRate,
+      startDate: program.startDate,
+      lastActivityAt: program.lastActivityAt,
+      coachIds: program.coachIds,
+      coachNames: program.coachNames,
     }));
 
     console.info("Training program summaries created:", {
@@ -2922,7 +3063,7 @@ export async function queryTrainingProgramsCount(
   }
 ): Promise<{ totalCount: number }> {
   try {
-    let allPrograms: DynamoDBItem<TrainingProgram>[];
+    let allPrograms: TrainingProgram[];
 
     if (options?.coachId) {
       allPrograms = await queryTrainingProgramsByCoach(userId, options.coachId);
@@ -2934,7 +3075,7 @@ export async function queryTrainingProgramsCount(
     let filteredPrograms = allPrograms;
     if (options?.status) {
       filteredPrograms = allPrograms.filter(
-        (program) => program.attributes.status === options.status
+        (program) => program.status === options.status
       );
     }
 

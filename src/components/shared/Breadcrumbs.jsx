@@ -36,8 +36,8 @@ function Breadcrumbs() {
   };
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-40 pt-2 pointer-events-none ${isSidebarCollapsed ? 'md:ml-20' : 'md:ml-[272px]'}`}>
-      <div className="px-4 py-1 pb-2">
+    <nav className={`fixed top-0 left-0 right-0 z-30 pointer-events-none ${isSidebarCollapsed ? 'md:ml-16' : 'md:ml-64'}`}>
+      <div className="px-4 py-2 bg-synthwave-gradient border-b border-synthwave-neon-cyan/10">
         <div className="flex items-center space-x-2 text-sm font-rajdhani overflow-x-auto synthwave-scrollbar-cyan pb-2 -mb-2 scrollbar-hide-on-mobile pointer-events-auto">
           {/* Logo - Mobile only */}
           <Link

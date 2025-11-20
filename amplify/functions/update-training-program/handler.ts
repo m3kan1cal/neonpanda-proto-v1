@@ -52,7 +52,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
         return createErrorResponse(404, 'Training program not found');
       }
 
-      const existingProgram = existingProgramData.attributes;
+      const existingProgram = existingProgramData;
       if (!existingProgram.pausedAt) {
         return createErrorResponse(400, 'Program is not currently paused');
       }

@@ -255,39 +255,35 @@ function ChatInput({
             <div className="w-12 h-12 bg-synthwave-text-muted/20 rounded-2xl animate-pulse"></div>
           </div>
 
-          {/* Status or Mode Toggle skeleton - compact on mobile */}
-          <div className="flex items-center justify-between gap-2 mt-2">
+          {/* Status or Mode Toggle skeleton - compact on mobile, aligned with text input */}
+          <div className="flex items-center justify-between gap-2 mt-2 text-xs text-synthwave-text-muted font-rajdhani pl-[70px] md:pl-[156px] pr-12 md:pr-[74px]">
             {showModeToggleSkeleton ? (
               <>
                 {/* Left: Mode Toggle skeleton - aligned with text input left edge */}
-                <div className="flex items-center pl-12 md:pl-40">
+                <div className="flex items-center">
                   <div className="h-8 w-32 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
                 </div>
-                {/* Right: Keyboard shortcuts + status */}
-                <div className="flex items-center gap-4">
+                {/* Right: Keyboard shortcuts only (no status indicator) */}
+                <div className="flex items-center">
                   {/* Desktop: Show keyboard shortcuts */}
-                  <div className="hidden md:block h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
-                  {/* Desktop: Status indicator */}
-                  <div className="hidden md:flex items-center gap-2">
-                    <div className="w-2 h-2 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
-                    <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-12"></div>
-                  </div>
+                  <div className="hidden md:block h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-64"></div>
                 </div>
               </>
             ) : (
               <>
-                {/* Default: Status skeleton */}
-                <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-32 sm:w-48"></div>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
-                  <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-12"></div>
+                {/* Left: Status text skeleton - aligned with text input left edge */}
+                <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-32 sm:w-56" style={{ marginLeft: '12px' }}></div>
+                {/* Right: Keyboard shortcuts only (no status indicator) */}
+                <div className="flex items-center">
+                  {/* Desktop: Show keyboard shortcuts */}
+                  <div className="hidden md:block h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-64"></div>
                 </div>
               </>
             )}
           </div>
 
           {/* Progress/Size Indicator skeleton - hide on mobile */}
-          <div className="mt-4 justify-end hidden md:flex">
+          <div className="mt-4 justify-end hidden md:flex pr-[74px]">
             <div className="max-w-xs w-full">
               <div className="flex items-center justify-between mb-1">
                 <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-32"></div>
@@ -1312,12 +1308,12 @@ function ChatInput({
           </div>
 
           {/* Voice/Send buttons */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 self-end mb-[6px]">
             {inputMessage.trim() ? (
               <button
                 type="submit"
                 disabled={isTyping}
-                className="p-4 bg-gradient-to-r from-synthwave-neon-purple to-synthwave-neon-pink text-white rounded-2xl shadow-lg shadow-synthwave-neon-purple/30 hover:shadow-xl hover:shadow-synthwave-neon-purple/40 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                className="w-12 h-12 bg-gradient-to-r from-synthwave-neon-purple to-synthwave-neon-pink text-white rounded-2xl shadow-lg shadow-synthwave-neon-purple/30 hover:shadow-xl hover:shadow-synthwave-neon-purple/40 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center flex-shrink-0"
               >
                 {isTyping ? (
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -1333,7 +1329,7 @@ function ChatInput({
                 onMouseLeave={handleStopRecording}
                 onTouchStart={handleStartRecording}
                 onTouchEnd={handleStopRecording}
-                className={`p-4 rounded-2xl transition-all transform hover:scale-105 active:scale-95 shadow-lg flex items-center justify-center ${
+                className={`w-12 h-12 rounded-2xl transition-all transform hover:scale-105 active:scale-95 shadow-lg flex items-center justify-center flex-shrink-0 ${
                   isRecording
                     ? "bg-red-500 text-white animate-pulse"
                     : "bg-synthwave-bg-primary/50 text-synthwave-text-secondary hover:bg-synthwave-neon-cyan/20 hover:text-synthwave-neon-cyan"
@@ -1346,37 +1342,30 @@ function ChatInput({
         </form>
 
         {/* Status or Mode Toggle */}
-        <div className="flex items-center justify-between gap-2 -mt-0.5 text-xs text-synthwave-text-muted font-rajdhani">
+        <div className="flex items-center justify-between gap-2 -mt-0.5 text-xs text-synthwave-text-muted font-rajdhani pl-[50px] md:pl-[156px] pr-12 md:pr-[74px]">
           {/* If conversation mode is provided, show mode toggle instead of status message */}
           {conversationMode && onConversationModeChange ? (
             <>
               {/* Left: Mode Toggle - aligned with text input left edge */}
-              <div className="flex items-center pl-[50px] md:pl-[150px]">
+              <div className="flex items-center">
                 <CoachConversationModeToggle
                   mode={conversationMode}
                   onModeChange={onConversationModeChange}
                   disabled={isTyping}
                 />
               </div>
-              {/* Right: Keyboard shortcuts + status */}
-              <div className="flex items-center gap-4">
+              {/* Right: Keyboard shortcuts */}
+              <div className="flex items-center">
                 {/* Desktop: Show keyboard shortcuts */}
                 <span className="hidden md:inline">
                   Press Enter to send • Shift+Enter for new line
                 </span>
-                {/* Desktop: Status indicator */}
-                <div className="hidden md:flex items-center gap-1">
-                  <div
-                    className={`w-2 h-2 rounded-full ${isOnline ? "bg-green-500 animate-pulse" : "bg-gray-500"}`}
-                  ></div>
-                  <span>{isOnline ? "Online" : "Away"}</span>
-                </div>
               </div>
             </>
           ) : (
             <>
               {/* Default: Full status message */}
-              {/* Desktop: Full status message */}
+              {/* Desktop: Full status message - aligned with text input left edge */}
               <span className="hidden md:block">
                 {coachName} is
                 {isOnline ? (
@@ -1398,18 +1387,12 @@ function ChatInput({
                   <span>{isOnline ? "Online" : "Away"}</span>
                 </div>
               </span>
-              <div className="flex items-center gap-4">
+              {/* Right: Keyboard shortcuts - aligned with text input right edge */}
+              <div className="flex items-center">
                 {/* Desktop: Show keyboard shortcuts */}
                 <span className="hidden md:inline">
                   Press Enter to send • Shift+Enter for new line
                 </span>
-                {/* Desktop: Status indicator */}
-                <div className="hidden md:flex items-center gap-1">
-                  <div
-                    className={`w-2 h-2 rounded-full ${isOnline ? "bg-green-500 animate-pulse" : "bg-gray-500"}`}
-                  ></div>
-                  <span>{isOnline ? "Online" : "Away"}</span>
-                </div>
               </div>
             </>
           )}
@@ -1417,7 +1400,7 @@ function ChatInput({
 
         {/* Coach Creation Progress Indicator - hide on mobile */}
         {progressData && (
-          <div className="mt-4 justify-end hidden md:flex">
+          <div className="mt-4 justify-end hidden md:flex pr-[74px]">
             <div className="max-w-xs w-full">
               <div className="flex items-center justify-between">
                 <span className="font-rajdhani text-xs">
@@ -1462,7 +1445,7 @@ function ChatInput({
 
         {/* Conversation Size Indicator - hide on mobile */}
         {conversationSize && (
-          <div className="mt-4 justify-end hidden md:flex">
+          <div className="mt-4 justify-end hidden md:flex pr-[74px]">
             <div className="max-w-xs w-full">
               <div className="flex items-center justify-between">
                 <span className="font-rajdhani text-xs text-synthwave-text-muted">

@@ -8,12 +8,13 @@
 export {
   parseSlashCommand,
   isWorkoutSlashCommand,
-  isWorkoutLog,
+  validateWorkoutContent,
   quickWorkoutExtraction,
   generateWorkoutDetectionContext,
   generateStructuredWorkoutContext,
   WORKOUT_SLASH_COMMANDS,
-  type SlashCommandResult
+  type SlashCommandResult,
+  type WorkoutContentValidation
 } from './detection';
 
 export {

@@ -58,7 +58,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       return createErrorResponse(404, 'Training program not found');
     }
 
-    const program = programData.attributes;
+    const program = programData;
 
     // Get program details from S3
     if (!program.s3DetailKey) {

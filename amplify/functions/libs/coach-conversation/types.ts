@@ -79,6 +79,9 @@ export interface CoachConversation {
     isActive: boolean;
     tags?: string[];
   };
+  // DynamoDB timestamps (populated from database metadata)
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 /**
@@ -97,6 +100,9 @@ export interface CoachConversationListItem {
     isActive: boolean;
     tags?: string[];
   };
+  // DynamoDB timestamps (populated from database metadata)
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 /**
@@ -191,10 +197,7 @@ export interface WorkoutContext {
   workoutName?: string;
 }
 
-/**
- * Coach config input type - can be either direct CoachConfig or DynamoDB item
- */
-export type CoachConfigInput = CoachConfig | DynamoDBItem<CoachConfig>;
+// CoachConfigInput removed - no longer needed since operations.ts returns unwrapped types
 
 /**
  * Interface for system prompt generation options

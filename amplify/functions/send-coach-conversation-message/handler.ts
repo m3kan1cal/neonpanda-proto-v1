@@ -104,7 +104,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     }
 
     // Extract conversation mode (default to chat for backwards compatibility)
-    const conversationMode = existingConversation.attributes.mode || 'chat';
+    const conversationMode = existingConversation.mode || 'chat';
 
     // Load coach config for system prompt
     const coachConfig = await getCoachConfig(userId, coachId);
@@ -116,8 +116,8 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     const userProfile = await getUserProfile(userId);
     console.info('📋 User profile loaded:', {
       hasProfile: !!userProfile,
-      hasCriticalDirective: !!userProfile?.attributes?.criticalTrainingDirective,
-      directiveEnabled: userProfile?.attributes?.criticalTrainingDirective?.enabled
+      hasCriticalDirective: !!userProfile?.criticalTrainingDirective,
+      directiveEnabled: userProfile?.criticalTrainingDirective?.enabled
     });
 
     // Gather all conversation context (workouts + Pinecone)
@@ -134,7 +134,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     };
 
     // Calculate conversation context from existing messages
-    const existingMessages = existingConversation.attributes.messages;
+    const existingMessages = existingConversation.messages;
     const conversationContext = {
       sessionNumber:
         existingMessages.filter((msg) => msg.role === "user").length + 1,
@@ -159,7 +159,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
           coachConfig,
           conversationContext,
           messageTimestamp,
-          userProfile
+          userProfile ?? undefined
         );
       } catch (error) {
         console.error('❌ Error in workout detection, using fallback:', error);
@@ -196,7 +196,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
         coachId,
         conversationId,
         existingMessages,
-        coachConfig.attributes.coach_name
+        coachConfig.coach_name
       );
 
       // Retrieve existing memories for context (BEFORE AI response)
@@ -312,7 +312,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
         // Get the updated conversation to check the current message count
         const updatedConversation = await getCoachConversation(userId, coachId, conversationId);
         if (updatedConversation) {
-          const currentMessageCount = updatedConversation.attributes.metadata.totalMessages;
+          const currentMessageCount = updatedConversation.metadata.totalMessages;
 
           const summaryResult = await detectAndProcessConversationSummary(
             userId,
@@ -507,7 +507,7 @@ async function generateSSEStream(
     }
 
     // Create final AI message
-    const conversationMode = existingConversation.attributes.mode || 'chat'; // Default to chat for backwards compatibility
+    const conversationMode = existingConversation.mode || 'chat'; // Default to chat for backwards compatibility
     const newAiMessage: CoachMessage = {
       id: `msg_${Date.now()}_assistant`,
       role: "assistant",
@@ -542,7 +542,7 @@ async function generateSSEStream(
     // Trigger async conversation summary if enabled
     if (FEATURE_FLAGS.ENABLE_CONVERSATION_SUMMARY) {
       try {
-        const allMessages = [...existingConversation.attributes.messages, newUserMessage, newAiMessage];
+        const allMessages = [...existingConversation.messages, newUserMessage, newAiMessage];
         const messageContext = existingMessages.slice(-3)
           .map((msg: any) => `${msg.role}: ${msg.content}`)
           .join('\n');

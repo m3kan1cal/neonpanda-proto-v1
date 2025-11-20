@@ -10,6 +10,7 @@ import {
 import { generateTrainingProgramSummary } from "../libs/training-program/summary";
 import { storeTrainingProgramSummaryInPinecone } from "../libs/training-program/pinecone";
 import { BuildTrainingProgramEvent } from "../libs/training-program/types";
+import { withHeartbeat } from "../libs/heartbeat";
 
 /**
  * Build Training Program Lambda Handler
@@ -24,9 +25,10 @@ import { BuildTrainingProgramEvent } from "../libs/training-program/types";
  * Similar to build-workout, but for multi-week training programs
  */
 export const handler = async (event: BuildTrainingProgramEvent) => {
-  let debugData: any = null; // Track debug data for error scenarios
+  return withHeartbeat('Training Program Generation', async () => {
+    let debugData: any = null; // Track debug data for error scenarios
 
-  try {
+    try {
     console.info("🏋️ Starting training program generation:", {
       userId: event.userId,
       coachId: event.coachId,
@@ -66,9 +68,9 @@ export const handler = async (event: BuildTrainingProgramEvent) => {
       },
     };
 
-    console.info("Calling AI to generate training program from conversation...");
+    console.info("Calling AI to generate training program from conversation..");
 
-    // Generate the complete training program using AI
+    // Generate the complete training program
     // This function handles:
     // - Structure extraction with normalization
     // - Workout template generation per phase
@@ -92,7 +94,7 @@ export const handler = async (event: BuildTrainingProgramEvent) => {
     });
 
     // Generate AI summary for coach context and UI display
-    console.info("Generating training program summary...");
+    console.info("Generating training program summary..");
     const summary = await generateTrainingProgramSummary(
       program,
       event.conversationMessages
@@ -100,7 +102,7 @@ export const handler = async (event: BuildTrainingProgramEvent) => {
     console.info("Generated summary:", { summary, length: summary.length });
 
     // Store program summary in Pinecone for semantic search and coach context
-    console.info("📝 Storing program summary in Pinecone...");
+    console.info("📝 Storing program summary in Pinecone..");
     const pineconeResult = await storeTrainingProgramSummaryInPinecone(
       event.userId,
       summary,
@@ -195,12 +197,13 @@ export const handler = async (event: BuildTrainingProgramEvent) => {
       }
     }
 
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown generation error";
-    return createErrorResponse(500, "Failed to generate training program", {
-      error: errorMessage,
-      userId: event.userId,
-      conversationId: event.conversationId,
-    });
-  }
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown generation error";
+      return createErrorResponse(500, "Failed to generate training program", {
+        error: errorMessage,
+        userId: event.userId,
+        conversationId: event.conversationId,
+      });
+    }
+  }); // 10 second default heartbeat interval
 };

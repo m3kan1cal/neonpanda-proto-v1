@@ -150,6 +150,9 @@ export interface WeeklyAnalytics {
     analysisConfidence: string; // "high" | "medium" | "low"
     dataCompleteness: number; // 0.0 - 1.0
   };
+  // DynamoDB timestamps (populated from database metadata)
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 /**
@@ -175,4 +178,7 @@ export interface MonthlyAnalytics {
     analysisConfidence: string; // "high" | "medium" | "low"
     dataCompleteness: number; // 0.0 - 1.0
   };
+  // DynamoDB timestamps (populated from database metadata)
+  createdAt?: Date;
+  updatedAt?: Date;
 }

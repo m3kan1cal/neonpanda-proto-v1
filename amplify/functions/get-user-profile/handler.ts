@@ -16,11 +16,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
   }
 
   return createOkResponse({
-    profile: {
-      ...userProfile.attributes,
-      createdAt: userProfile.createdAt,
-      updatedAt: userProfile.updatedAt
-    }
+    profile: userProfile
   });
 };
 

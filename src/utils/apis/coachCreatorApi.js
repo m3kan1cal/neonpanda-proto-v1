@@ -199,7 +199,7 @@ export const deleteCoachCreatorSession = async (userId, sessionId) => {
  * @returns {Promise<Object>} - The status response with status, message, and optional error
  */
 export const getCoachConfigStatus = async (userId, sessionId) => {
-  const url = `${getApiUrl('')}/users/${userId}/coach-creator-sessions/${sessionId}/status`;
+  const url = `${getApiUrl('')}/users/${userId}/coach-creator-sessions/${sessionId}/config-status`;
   const response = await authenticatedFetch(url, {
     method: 'GET',
   });

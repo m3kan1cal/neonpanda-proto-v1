@@ -5,6 +5,7 @@ import {
   MODEL_IDS,
   storeDebugDataInS3,
 } from "../libs/api-helpers";
+import { withHeartbeat } from "../libs/heartbeat";
 import { saveWorkout, getTrainingProgram } from "../../dynamodb/operations";
 import {
   buildWorkoutExtractionPrompt,
@@ -30,7 +31,8 @@ import {
 } from "../libs/training-program/s3-utils";
 
 export const handler = async (event: BuildWorkoutEvent) => {
-  try {
+  return withHeartbeat('Workout Extraction', async () => {
+    try {
     console.info("🏋️ Starting workout extraction:", {
       userId: event.userId,
       coachId: event.coachId,
@@ -116,7 +118,7 @@ export const handler = async (event: BuildWorkoutEvent) => {
       // Note: Prompt preview removed to avoid triggering SNS alerts on "CRITICAL" keyword
     });
 
-    console.info("Calling Claude for workout extraction...");
+    console.info("Calling Claude for workout extraction..");
 
     // Enable thinking for complex workouts to improve accuracy
     const isComplexWorkout = checkWorkoutComplexity(workoutContent);
@@ -128,12 +130,13 @@ export const handler = async (event: BuildWorkoutEvent) => {
       workoutLength: workoutContent.length
     });
 
+    // Extract workout data with AI
     const extractedData = await callBedrockApi(
       extractionPrompt,
       workoutContent,
       MODEL_IDS.CLAUDE_SONNET_4_FULL,
       { enableThinking }
-    );
+    ) as string; // No tools used, always returns string
 
     console.info("Claude extraction completed. Raw response:", {
       responseLength: extractedData.length,
@@ -190,7 +193,7 @@ export const handler = async (event: BuildWorkoutEvent) => {
       );
     }
 
-    console.info("Parsing extracted data...");
+    console.info("Parsing extracted data..");
 
     // Parse and validate the extracted data
     const workoutData: UniversalWorkoutSchema =
@@ -247,7 +250,7 @@ export const handler = async (event: BuildWorkoutEvent) => {
     let normalizationSummary = "Normalization skipped";
 
     if (shouldNormalizeWorkout(workoutData, confidence)) {
-      console.info("🔧 Running normalization on workout data...", {
+      console.info("🔧 Running normalization on workout data..", {
         reason: confidence < 0.7 ? "low_confidence" : "structural_check",
         confidence,
         hasCoachNotes: !!workoutData.coach_notes,
@@ -454,7 +457,7 @@ export const handler = async (event: BuildWorkoutEvent) => {
     });
 
     // Generate AI summary for coach context and UI display
-    console.info("Generating workout summary...");
+    console.info("Generating workout summary..");
     const summary = await generateWorkoutSummary(
       finalWorkoutData,
       event.userMessage
@@ -489,7 +492,7 @@ export const handler = async (event: BuildWorkoutEvent) => {
       },
     };
 
-    console.info("Saving workout to DynamoDB...", {
+    console.info("Saving workout to DynamoDB..", {
       workoutId: workout.workoutId,
       discipline: finalWorkoutData.discipline,
       workoutName: finalWorkoutData.workout_name,
@@ -531,7 +534,7 @@ export const handler = async (event: BuildWorkoutEvent) => {
     await saveWorkout(workout);
 
     // Store workout summary in Pinecone for semantic search and coach context
-    console.info("📝 Storing workout summary in Pinecone...");
+    console.info("📝 Storing workout summary in Pinecone..");
     const pineconeResult = await storeWorkoutSummaryInPinecone(
       event.userId,
       summary,
@@ -541,7 +544,7 @@ export const handler = async (event: BuildWorkoutEvent) => {
 
     // If this workout is from a template, update the template's linkedWorkoutId
     if (event.templateContext) {
-      console.info("🔗 Updating template linkedWorkoutId in S3...");
+      console.info("🔗 Updating template linkedWorkoutId in S3..");
       try {
         const programData = await getTrainingProgram(
           event.userId,
@@ -549,8 +552,8 @@ export const handler = async (event: BuildWorkoutEvent) => {
           event.templateContext.programId
         );
 
-        if (programData?.attributes?.s3DetailKey) {
-          const programDetails = await getTrainingProgramDetailsFromS3(programData.attributes.s3DetailKey);
+        if (programData?.s3DetailKey) {
+          const programDetails = await getTrainingProgramDetailsFromS3(programData.s3DetailKey);
 
           if (programDetails) {
             const templateIndex = programDetails.workoutTemplates.findIndex(
@@ -559,7 +562,7 @@ export const handler = async (event: BuildWorkoutEvent) => {
 
             if (templateIndex !== -1) {
               programDetails.workoutTemplates[templateIndex].linkedWorkoutId = workout.workoutId;
-              await saveTrainingProgramDetailsToS3(programData.attributes.s3DetailKey, programDetails);
+              await saveTrainingProgramDetailsToS3(programData.s3DetailKey, programDetails);
               console.info("✅ Template linkedWorkoutId updated:", {
                 templateId: event.templateContext.templateId,
                 workoutId: workout.workoutId,
@@ -597,21 +600,22 @@ export const handler = async (event: BuildWorkoutEvent) => {
       extractionMetadata: workout.extractionMetadata,
       normalizationSummary,
     });
-  } catch (error) {
-    console.error("❌ Error extracting workout session:", error);
-    console.error("Event data:", {
-      userId: event.userId,
-      coachId: event.coachId,
-      conversationId: event.conversationId,
-      messagePreview: event.userMessage.substring(0, 100),
-    });
+    } catch (error) {
+      console.error("❌ Error extracting workout session:", error);
+      console.error("Event data:", {
+        userId: event.userId,
+        coachId: event.coachId,
+        conversationId: event.conversationId,
+        messagePreview: event.userMessage.substring(0, 100),
+      });
 
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown extraction error";
-    return createErrorResponse(500, "Failed to extract workout session", {
-      error: errorMessage,
-      userId: event.userId,
-      conversationId: event.conversationId,
-    });
-  }
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown extraction error";
+      return createErrorResponse(500, "Failed to extract workout session", {
+        error: errorMessage,
+        userId: event.userId,
+        conversationId: event.conversationId,
+      });
+    }
+  }); // 10 second default heartbeat interval
 };

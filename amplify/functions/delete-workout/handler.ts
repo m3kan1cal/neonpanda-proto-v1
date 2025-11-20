@@ -28,7 +28,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     await deleteWorkout(userId, workoutId);
 
     // Clean up associated workout summary from Pinecone
-    console.info('🗑️ Cleaning up workout summary from Pinecone...');
+    console.info('🗑️ Cleaning up workout summary from Pinecone..');
     const pineconeResult = await deleteWorkoutSummaryFromPinecone(userId, workoutId);
 
     // Return success response

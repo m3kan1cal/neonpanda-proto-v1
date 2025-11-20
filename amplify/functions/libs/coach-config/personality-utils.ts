@@ -11,8 +11,8 @@ import type { UserProfile } from '../user/types';
 /**
  * Extract coach configuration data from DynamoDB item or direct config
  */
-export function extractCoachConfig(coachConfigInput: DynamoDBItem<CoachConfig> | CoachConfig): CoachConfig {
-  return "attributes" in coachConfigInput ? coachConfigInput.attributes : coachConfigInput;
+export function extractCoachConfig(coachConfigInput: CoachConfig | CoachConfig): CoachConfig {
+  return "attributes" in coachConfigInput ? coachConfigInput : coachConfigInput;
 }
 
 /**
@@ -61,8 +61,8 @@ export interface CoachPersonalityContext {
  * Extract structured coach personality context from config
  */
 export function getCoachPersonalityContext(
-  coachConfig: DynamoDBItem<CoachConfig> | CoachConfig,
-  userProfile?: DynamoDBItem<UserProfile> | null
+  coachConfig: CoachConfig | CoachConfig,
+  userProfile?: UserProfile | null
 ): CoachPersonalityContext {
   const config = extractCoachConfig(coachConfig);
 
@@ -100,7 +100,7 @@ export function getCoachPersonalityContext(
     periodizationApproach: config.selected_methodology.periodization_approach || 'systematic',
 
     // User context
-    criticalTrainingDirective: userProfile?.attributes?.criticalTrainingDirective,
+    criticalTrainingDirective: userProfile?.criticalTrainingDirective,
   };
 }
 
@@ -216,8 +216,8 @@ ${personalityContext.injuryConsiderations.length > 0
  * Convenience function: Get formatted coach personality prompt in one call
  */
 export function buildCoachPersonalityPrompt(
-  coachConfig: DynamoDBItem<CoachConfig> | CoachConfig,
-  userProfile?: DynamoDBItem<UserProfile> | null,
+  coachConfig: CoachConfig | CoachConfig,
+  userProfile?: UserProfile | null,
   options?: FormatCoachPersonalityOptions
 ): string {
   const context = getCoachPersonalityContext(coachConfig, userProfile);

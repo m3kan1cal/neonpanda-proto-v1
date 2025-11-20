@@ -34,18 +34,18 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     await deleteCoachConversation(userId, conversationId);
 
     // Clean up associated conversation summary from Pinecone
-    console.info('🗑️ Cleaning up conversation summary from Pinecone...');
+    console.info('🗑️ Cleaning up conversation summary from Pinecone..');
     const pineconeResult = await deleteConversationSummaryFromPinecone(userId, conversationId);
 
     // Update coach config conversation count
     try {
       const coachConfig = await getCoachConfig(userId, coachId);
       if (coachConfig) {
-        const currentCount = coachConfig.attributes.metadata.total_conversations || 0;
+        const currentCount = coachConfig.metadata.total_conversations || 0;
         const updated = {
-          ...coachConfig.attributes,
+          ...coachConfig,
           metadata: {
-            ...coachConfig.attributes.metadata,
+            ...coachConfig.metadata,
             total_conversations: Math.max(0, currentCount - 1), // Ensure count doesn't go below 0
           },
         };

@@ -101,179 +101,175 @@ export const isWorkoutSlashCommand = (slashCommandResult: SlashCommandResult): b
 };
 
 /**
- * AI-powered detection of completed workout logging in user messages
- * Analyzes both workout content and completion intent in a single pass
+ * Workout content validation result
+ */
+export interface WorkoutContentValidation {
+  hasPerformanceData: boolean;
+  hasLoggingIntent: boolean;
+  confidence: number;
+  reasoning: string;
+}
+
+/**
+ * Validates workout content for both performance data AND logging intent
  *
- * @param message - The user's message to analyze
- * @returns Promise<boolean> indicating if the message is a workout log
+ * This unified function handles BOTH use cases:
+ * 1. Natural language: "I did Fran in 8:57" → validates intent + content
+ * 2. Slash commands: "Fran in 8:57" → validates content only (intent implicit)
+ *
+ * The function intelligently detects whether intent validation is needed based on
+ * the presence of past-tense completion language in the input.
+ *
+ * @param workoutContent - The content to validate (can be full message or extracted content)
+ * @returns Promise<WorkoutContentValidation> with validation result and details
  *
  * @example
  * ```typescript
- * const isWorkout = await isWorkoutLog("I just finished Fran in 8:57");
- * // Returns: true
+ * // Natural language with intent
+ * const result1 = await validateWorkoutContent("I did Fran in 8:57");
+ * // Returns: { hasPerformanceData: true, hasLoggingIntent: true, confidence: 0.95, ... }
  *
- * const isPlanning = await isWorkoutLog("Can I superset bench press with pushups?");
- * // Returns: false (planning/advice, not completed workout)
+ * // Extracted content (slash command)
+ * const result2 = await validateWorkoutContent("Fran in 8:57");
+ * // Returns: { hasPerformanceData: true, hasLoggingIntent: false, confidence: 0.9, ... }
+ *
+ * // Incomplete content
+ * const result3 = await validateWorkoutContent("today, i did the following workout");
+ * // Returns: { hasPerformanceData: false, hasLoggingIntent: true, confidence: 0.9, ... }
  * ```
  */
-/**
- * @deprecated DEPRECATED: This function has been replaced by the Smart Request Router.
- *
- * Use `analyzeRequestCapabilities()` from `../coach-conversation/detection.ts` instead.
- * The smart router provides the same functionality via `routerResult.workoutDetection.isWorkoutLog`
- * along with comprehensive analysis of all processing needs in a single AI call.
- *
- * This function will be removed in a future version.
- */
-export const isWorkoutLog = async (message: string): Promise<boolean> => {
-  if (!message || typeof message !== 'string') {
-    return false;
+export const validateWorkoutContent = async (
+  workoutContent: string
+): Promise<WorkoutContentValidation> => {
+  if (!workoutContent || typeof workoutContent !== 'string') {
+    return {
+      hasPerformanceData: false,
+      hasLoggingIntent: false,
+      confidence: 1.0,
+      reasoning: 'Empty or invalid workout content'
+    };
   }
 
   try {
-    const detectionPrompt = `
-Analyze this message to determine if it describes a COMPLETED WORKOUT that should be logged.
+    const validationPrompt = `
+Analyze this message to determine if it's a valid workout or training session being logged WITH SPECIFIC performance data.
 
-MESSAGE: "${message}"
+MESSAGE: "${workoutContent}"
 
 ${JSON_FORMATTING_INSTRUCTIONS_STANDARD}
 
 REQUIRED JSON STRUCTURE:
 {
-  "isWorkoutLog": boolean,
+  "hasPerformanceData": boolean,
+  "hasLoggingIntent": boolean,
   "confidence": number,
   "reasoning": "brief explanation"
 }
 
-STRICT WORKOUT LOGGING DETECTION CRITERIA:
+VALIDATION CRITERIA:
 
-ONLY classify as workout logging if ALL THREE requirements are met:
+=== PERFORMANCE DATA (Required) ===
+MUST contain at least ONE of these SPECIFIC workout details:
+- Specific times: "8:57", "30 minutes", "45 seconds"
+- Weights/loads: "315 lbs", "50kg", "bodyweight", "135#"
+- Reps/rounds: "5 rounds", "20 reps", "3 sets", "AMRAP"
+- Named workouts: "Fran", "Murph", "Cindy", "Helen"
+- Distances: "3 miles", "5k", "400m"
+- Specific exercises: "deadlifts", "thrusters", "pull-ups", "squats"
+- Workout structures: "21-15-9", "EMOM", "tabata"
 
-1. PAST TENSE COMPLETION: Message must explicitly indicate a workout WAS COMPLETED
-   REQUIRED language patterns:
-   - "I did [workout]" / "Did [workout]"
-   - "I finished [workout]" / "Just finished [workout]" / "Finished [workout]"
-   - "I completed [workout]" / "Completed [workout]"
-   - "I crushed [workout]" / "Crushed [workout]"
-   - "I performed [workout]" / "Performed [workout]"
-   - "I trained [workout]" / "Trained [workout]"
-   - "I got through [workout]" / "Got through [workout]"
-   - "I knocked out [workout]" / "Knocked out [workout]"
+AVOID (these are NOT specific enough):
+- Vague phrases: "worked out", "exercised", "trained hard", "did a workout"
+- Incomplete references: "today, i did the following workout" (no actual workout details)
+- General statements: "I trained this morning" (no exercises or performance data)
 
-   AVOID: "will do", "going to", "planning", "want to", "should I", "might do"
+=== LOGGING INTENT (Optional - may not be present in slash command content) ===
+If present, check for:
+- Past tense completion: "I did", "I finished", "Just completed", "Crushed", "Knocked out"
+- Explicit logging language: "Log this workout:", "Track this:", "Record my workout:"
+- NOT questions: "Should I do..", "What do you think about..", "Can I.."
+- NOT future planning: "I'm going to..", "I will..", "Planning to.."
 
-2. SPECIFIC WORKOUT CONTENT: Must contain concrete workout details
-   REQUIRED content (at least one):
-   - Specific times: "8:57", "30 minutes", "45 seconds"
-   - Weights/loads: "315 lbs", "50kg", "bodyweight", "135#"
-   - Reps/rounds: "5 rounds", "20 reps", "3 sets", "AMRAP"
-   - Named workouts: "Fran", "Murph", "Cindy", "Helen"
-   - Distances: "3 miles", "5k", "400m"
-   - Specific exercises: "deadlifts", "thrusters", "pull-ups"
-   - Workout structures: "21-15-9", "EMOM", "tabata"
+IMPORTANT: hasLoggingIntent can be FALSE if the message is just workout content without explicit intent language.
+This is NORMAL for slash command extracted content (e.g., "Fran in 8:57" without "I did").
 
-   AVOID: Vague references like "worked out", "exercised", "trained hard"
+EXAMPLES:
 
-3. EXPLICIT LOGGING INTENT: Clear intent to record/document the completed workout
-   REQUIRED intent patterns:
-   - "I did [specific workout details]"
-   - "Just finished [specific workout details]"
-   - "Completed [specific workout details]"
-   - "Today's workout: [specific details]"
-   - "My workout today: [specific details]"
-   - "This morning I did [specific details]"
-   - "Workout done: [specific details]"
-   - "Training session complete: [specific details]"
+[YES - Both] "I did Fran in 8:57"
+→ { hasPerformanceData: true, hasLoggingIntent: true, confidence: 0.95 }
 
-   LOGGING REQUEST language (even more explicit):
-   - "Log this workout:"
-   - "Track this:"
-   - "Record my workout:"
-   - "Add this to my log:"
-   - "Save this workout:"
-   - "Document this session:"
+[YES - Content Only] "Fran in 8:57"
+→ { hasPerformanceData: true, hasLoggingIntent: false, confidence: 0.9 }
 
-   AVOID: Questions, discussions, experiences, feelings, commentary
+[YES - Content Only] "5x3 deadlifts at 315lbs, then 20 minute AMRAP"
+→ { hasPerformanceData: true, hasLoggingIntent: false, confidence: 0.95 }
 
-EXAMPLES THAT SHOULD BE DETECTED AS WORKOUT LOGS:
-[YES] "I did Fran today in 8:57"
-[YES] "Just finished my deadlift session - 5x3 at 315lbs"
-[YES] "Completed a 5k run this morning in 24:30"
-[YES] "Today's workout: 3 rounds of burpees and squats"
-[YES] "Crushed that EMOM - 10 minutes of thrusters"
-[YES] "Did 21-15-9 of pull-ups and push-ups"
-[YES] "Log this workout: 5 rounds of Cindy"
-[YES] "Record my training: back squats 3x5 at 275lbs"
-[YES] "Track this: 30-minute bike ride"
-[YES] "Workout done: bench press and rows"
+[NO - Intent Only] "I did a workout this morning"
+→ { hasPerformanceData: false, hasLoggingIntent: true, confidence: 0.8 }
 
-EXAMPLES THAT SHOULD NOT BE DETECTED (casual conversation):
-[NO] "I felt strong during squats" (discussing experience, no completion language)
-[NO] "The thrusters were tough today" (commentary on difficulty, not logging)
-[NO] "I'm sore from yesterday's deadlifts" (discussing recovery, not logging)
-[NO] "Should I do Murph this week?" (future planning question)
-[NO] "What did I do last Tuesday?" (asking about past, not logging new)
-[NO] "How was your workout?" (asking about others)
-[NO] "I love doing burpees" (expressing preferences)
-[NO] "My form felt off on squats" (technique discussion)
-[NO] "I want to work on pull-ups" (future goals, not completed workout)
-[NO] "The gym was crowded today" (general discussion)
-[NO] "That workout looks hard" (commenting on future workout)
-[NO] "I'm thinking about doing Fran" (considering, not completed)
-[NO] "Deadlifts are my favorite" (preference discussion)
+[NO - Incomplete] "today, i did the following workout"
+→ { hasPerformanceData: false, hasLoggingIntent: true, confidence: 0.85 }
 
-CRITICAL EXCLUSION PATTERNS:
-- Question words: "what", "how", "when", "where", "why", "should", "can", "could"
-- Future tense: "will", "going to", "planning", "want to", "need to"
-- Conditional: "if I", "maybe", "thinking about", "considering"
-- Discussion: "I like", "I prefer", "I think", "I feel"
-- Experience sharing: "it was", "felt like", "seemed", "appeared"
-- Advice seeking: "recommendations", "suggestions", "help", "tips"
+[NO - Question] "Should I do Fran today?"
+→ { hasPerformanceData: true, hasLoggingIntent: false, confidence: 0.9 }
 
 CONFIDENCE SCORING:
-- 0.9+: Clear past tense + specific details + explicit logging language
-- 0.7-0.9: Past tense + workout content but less explicit logging intent
-- 0.5-0.7: Ambiguous but contains some workout logging elements
-- <0.5: Missing key requirements or clearly not workout logging
+- 0.9+: Clear determination with strong signals
+- 0.7-0.9: Good signals but some ambiguity
+- 0.5-0.7: Unclear or mixed signals
+- <0.5: Insufficient information
 
-CRITICAL: When in doubt, DO NOT classify as workout logging. It's better to miss a workout log than create false positives from casual fitness conversation.`;
+CRITICAL: A valid workout log requires hasPerformanceData=true. The hasLoggingIntent field helps distinguish between:
+- Natural language logs (both true)
+- Slash command content (performance=true, intent=false or true)
+- Incomplete attempts (performance=false, intent=true)`;
 
-    console.info('🔍 Starting AI workout detection for message:', {
-      messageLength: message.length,
-      messagePreview: message.substring(0, 100)
+    console.info('🔍 Starting workout content validation:', {
+      contentLength: workoutContent.length,
+      contentPreview: workoutContent.substring(0, 100)
     });
 
     const response = await callBedrockApi(
-      detectionPrompt,
-      message,
+      validationPrompt,
+      workoutContent,
       MODEL_IDS.CLAUDE_HAIKU_4FULL,
       { prefillResponse: "{" } // Force JSON output format
-    );
+    ) as string; // No tools used, always returns string
 
-    console.info('🔍 Received response from AI workout detection:', {
+    console.info('🔍 Received validation response:', {
       responseLength: response.length,
       responsePreview: response.substring(0, 200)
     });
 
     const result = parseJsonWithFallbacks(response);
 
-    console.info('🔍 AI workout detection result:', {
-      message: message.substring(0, 100),
-      isWorkoutLog: result.isWorkoutLog,
+    console.info('🔍 Workout content validation result:', {
+      workoutContent: workoutContent.substring(0, 100),
+      hasPerformanceData: result.hasPerformanceData,
+      hasLoggingIntent: result.hasLoggingIntent,
       confidence: result.confidence,
-      reasoning: result.reasoning,
-      willReturnTrue: result.isWorkoutLog && result.confidence > 0.5
+      reasoning: result.reasoning
     });
 
-    return result.isWorkoutLog && result.confidence > 0.5;
+    return {
+      hasPerformanceData: result.hasPerformanceData && result.confidence > 0.5,
+      hasLoggingIntent: result.hasLoggingIntent || false,
+      confidence: result.confidence,
+      reasoning: result.reasoning
+    };
   } catch (error) {
-    console.error('❌ Error in isWorkoutLog function:', {
+    console.error('❌ Error in validateWorkoutContent:', {
       error: error instanceof Error ? error.message : 'Unknown error',
-      messageLength: message.length,
-      messagePreview: message.substring(0, 100)
+      contentLength: workoutContent.length,
+      contentPreview: workoutContent.substring(0, 100)
     });
     // Return false on error to prevent blocking the conversation
-    return false;
+    return {
+      hasPerformanceData: false,
+      hasLoggingIntent: false,
+      confidence: 0.0,
+      reasoning: 'Validation error occurred'
+    };
   }
 };
 
@@ -332,7 +328,7 @@ Examples:
     message,
     MODEL_IDS.CLAUDE_HAIKU_4FULL,
     { prefillResponse: "{" } // Force JSON output format
-  );
+  ) as string; // No tools used, always returns string
   const result = parseJsonWithFallbacks(response);
 
   console.info('AI quick workout extraction:', {
@@ -368,13 +364,13 @@ export const generateWorkoutDetectionContext = (isSlashCommand: boolean): string
   const baseContext = isSlashCommand
     ? [
         'The user has explicitly requested to log a workout using a slash command. Acknowledge this clearly and provide encouraging feedback.',
-        'Since they used a command, you can be more direct about the logging: "Perfect! I\'ve logged that workout for you..." or "Great! Got that workout recorded..."',
+        'Since they used a command, you can be more direct about the logging: "Perfect! I\'ve logged that workout for you.." or "Great! Got that workout recorded.."',
         'Focus on the specific workout content they provided and give coaching feedback about their performance, form, or progress.',
         'You can mention they can view their workout history in the Training Grounds if it fits naturally in the conversation.'
       ]
     : [
         'The user has just shared details about a completed workout. Respond naturally as their coach - be encouraging about their effort and performance.',
-        'You can casually mention that you\'re tracking their workout, but keep it brief and natural (e.g., "Great work! I\'m logging this for you..." or "Nice! Got this recorded..."). Don\'t be overly technical.',
+        'You can casually mention that you\'re tracking their workout, but keep it brief and natural (e.g., "Great work! I\'m logging this for you.." or "Nice! Got this recorded.."). Don\'t be overly technical.',
         'You can naturally let them know they can view their workout history by going back to the Training Grounds if it fits the conversation flow.',
         'Focus primarily on coaching feedback about their workout performance, form, progress, or next steps rather than the tracking mechanics.'
       ];

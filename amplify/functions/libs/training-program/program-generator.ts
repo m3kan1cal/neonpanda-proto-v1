@@ -53,8 +53,8 @@ export async function extractTrainingProgramStructure(
   conversationMessages: any[],
   userId: string,
   coachId: string,
-  coachConfig: DynamoDBItem<CoachConfig>,
-  userProfile: DynamoDBItem<UserProfile> | null,
+  coachConfig: CoachConfig,
+  userProfile: UserProfile | null,
   pineconeContext: string
 ): Promise<TrainingProgramGenerationData> {
   // Build conversation context for Claude
@@ -105,7 +105,7 @@ ${conversationText}
 
 ${getJsonFormattingInstructions()}`;
 
-  console.info('🔍 Extracting training program structure from conversation...', {
+  console.info('🔍 Extracting training program structure from conversation..', {
     messageCount: conversationMessages.length,
     userId,
     coachId,
@@ -125,7 +125,7 @@ ${getJsonFormattingInstructions()}`;
       prefillResponse: '{', // Force JSON response format
         enableThinking: true, // Enable thinking for complex extraction
     }
-  );
+  ) as string; // No tools used, always returns string
 
     // Store debug data in S3 for troubleshooting
     try {
@@ -249,8 +249,8 @@ export async function generatePhaseWorkouts(
   trainingProgramData: TrainingProgramGenerationData,
   daysBeforePhase: number,
   userId: string,
-  coachConfig: DynamoDBItem<CoachConfig>,
-  userProfile: DynamoDBItem<UserProfile> | null,
+  coachConfig: CoachConfig,
+  userProfile: UserProfile | null,
   pineconeContext: string
 ): Promise<WorkoutTemplate[]> {
   const phaseContext = {
@@ -311,7 +311,7 @@ Return a flat array of all templates for these ${phase.durationDays} days.
 
 ${getJsonFormattingInstructions()}`;
 
-  console.info('🏋️ Generating workout templates for phase...', {
+  console.info('🏋️ Generating workout templates for phase..', {
     phase: phase.name,
     durationDays: phase.durationDays,
     startDay: daysBeforePhase + 1,
@@ -331,7 +331,7 @@ ${getJsonFormattingInstructions()}`;
       prefillResponse: '[', // Force JSON array response format
         enableThinking: true, // Enable thinking for complex generation
     }
-  );
+  ) as string; // No tools used, always returns string
 
     // Store debug data in S3 for troubleshooting
     try {
@@ -487,7 +487,7 @@ export async function generateTrainingProgram(
   coachId: string,
   conversationId: string
 ): Promise<{ programId: string; program: TrainingProgram }> {
-  console.info('🚀 Starting AI training program generation...', {
+  console.info('🚀 Starting AI training program generation..', {
     userId,
     coachId,
     conversationId,
@@ -532,11 +532,11 @@ export async function generateTrainingProgram(
   }
 
   console.info('✅ Loaded personalization context:', {
-    coachName: coachConfig.attributes.coach_name,
-    specialty: coachConfig.attributes.technical_config?.specializations?.join(', '),
+    coachName: coachConfig.coach_name,
+    specialty: coachConfig.technical_config?.specializations?.join(', '),
     hasUserProfile: !!userProfile,
     hasPineconeContext: !!pineconeContext,
-    hasCriticalDirective: !!userProfile?.attributes?.criticalTrainingDirective?.enabled,
+    hasCriticalDirective: !!userProfile?.criticalTrainingDirective?.enabled,
   });
 
   // Step 1: Extract training program structure from conversation with full context
@@ -557,7 +557,7 @@ export async function generateTrainingProgram(
   const initialConfidence = 0.85; // Default assumption for AI-generated data
 
   if (shouldNormalizeTrainingProgram(rawTrainingProgramData, initialConfidence)) {
-    console.info('🔧 Running normalization on training program data...', {
+    console.info('🔧 Running normalization on training program data..', {
       reason: initialConfidence < 0.7 ? "low_confidence" : "structural_check",
       confidence: initialConfidence,
       phases: rawTrainingProgramData.phases?.length || 0,
@@ -682,7 +682,7 @@ export async function generateTrainingProgram(
   const endDateString = endDate.toISOString().split('T')[0];
 
   // Extract coach name for multi-coach support
-  const coachName = coachConfig.attributes.coach_name || 'Unknown Coach';
+  const coachName = coachConfig.coach_name || 'Unknown Coach';
 
   const trainingProgram: TrainingProgram = {
     programId,

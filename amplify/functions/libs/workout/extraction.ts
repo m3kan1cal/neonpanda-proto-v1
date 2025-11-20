@@ -772,7 +772,7 @@ export const parseAndValidateWorkoutData = async (
     );
 
     // Store raw response in S3 for debugging large responses
-    console.info("Storing Bedrock response in S3 for debugging...");
+    console.info("Storing Bedrock response in S3 for debugging..");
     storeDebugDataInS3(extractedData, {
       userId,
       type: "large-raw-response",
@@ -1000,7 +1000,7 @@ Examples:
       userMessage,
       MODEL_IDS.CLAUDE_HAIKU_4FULL,
       { prefillResponse: "{" } // Force JSON output format
-    );
+    ) as string; // No tools used, always returns string
 
     const result = parseJsonWithFallbacks(response.trim());
 
@@ -1070,7 +1070,7 @@ EXAMPLE GOOD SUMMARIES:
 SUMMARY:`;
 
   try {
-    const response = await callBedrockApi(summaryPrompt, originalMessage);
+    const response = await callBedrockApi(summaryPrompt, originalMessage) as string; // No tools used, always returns string
 
     // Clean up the response - remove any prefix like "SUMMARY:" and trim
     const cleanSummary = response.trim();
@@ -1189,7 +1189,7 @@ Return confidence 0.8+ for clear classifications, 0.5-0.7 for moderate cases, <0
       classificationPrompt,
       discipline,
       MODEL_IDS.CLAUDE_HAIKU_4FULL
-    );
+    ) as string; // No tools used, always returns string
 
     // Store prompt and response in S3 for debugging
     try {

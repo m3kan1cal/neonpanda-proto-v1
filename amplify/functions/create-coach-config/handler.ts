@@ -21,13 +21,13 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     }
 
     // Verify session is complete (has all answers)
-    if (!session.attributes.isComplete) {
+    if (!session.isComplete) {
       return createErrorResponse(400, 'Session must be complete before building coach config');
     }
 
     // Reset session status to IN_PROGRESS (whether it's FAILED or needs retry)
     const updatedSession = {
-      ...session.attributes,
+      ...session,
       configGeneration: {
         status: 'IN_PROGRESS' as const,
         startedAt: new Date()
