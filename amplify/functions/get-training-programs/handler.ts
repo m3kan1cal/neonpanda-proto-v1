@@ -37,7 +37,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     }
 
     return createOkResponse({
-      programs: programs.map(p => p.attributes),
+      programs: programs.map(p => p),
       count: programs.length
     });
   } catch (error) {

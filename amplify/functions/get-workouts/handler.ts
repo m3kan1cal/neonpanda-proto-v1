@@ -93,32 +93,32 @@ const baseHandler: AuthenticatedHandler = async (event) => {
 
     // Transform the response to include summary information
     const workoutSummaries = workouts.map(session => ({
-      workoutId: session.attributes.workoutId,
-      completedAt: session.attributes.completedAt,
-      discipline: session.attributes.workoutData.discipline,
-      workoutName: session.attributes.workoutData.workout_name,
-      workoutType: session.attributes.workoutData.workout_type,
-      duration: session.attributes.workoutData.duration,
-      location: session.attributes.workoutData.location,
-      coachIds: session.attributes.coachIds,
-      coachNames: session.attributes.coachNames,
-      conversationId: session.attributes.conversationId,
-      confidence: session.attributes.extractionMetadata.confidence,
-      extractedAt: session.attributes.extractionMetadata.extractedAt,
+      workoutId: session.workoutId,
+      completedAt: session.completedAt,
+      discipline: session.workoutData.discipline,
+      workoutName: session.workoutData.workout_name,
+      workoutType: session.workoutData.workout_type,
+      duration: session.workoutData.duration,
+      location: session.workoutData.location,
+      coachIds: session.coachIds,
+      coachNames: session.coachNames,
+      conversationId: session.conversationId,
+      confidence: session.extractionMetadata.confidence,
+      extractedAt: session.extractionMetadata.extractedAt,
       // NEW: AI-generated summary for display and coach context
-      summary: session.attributes.summary,
+      summary: session.summary,
       // Include key performance metrics for quick overview
       performanceMetrics: {
-        intensity: session.attributes.workoutData.performance_metrics?.intensity,
-        perceived_exertion: session.attributes.workoutData.performance_metrics?.perceived_exertion,
-        calories_burned: session.attributes.workoutData.performance_metrics?.calories_burned
+        intensity: session.workoutData.performance_metrics?.intensity,
+        perceived_exertion: session.workoutData.performance_metrics?.perceived_exertion,
+        calories_burned: session.workoutData.performance_metrics?.calories_burned
       },
       // Include CrossFit specific summary if applicable
-      crossfitSummary: session.attributes.workoutData.discipline === 'crossfit' ? {
-        workout_format: session.attributes.workoutData.discipline_specific?.crossfit?.workout_format,
-        rx_status: session.attributes.workoutData.discipline_specific?.crossfit?.rx_status,
-        total_time: session.attributes.workoutData.discipline_specific?.crossfit?.performance_data?.total_time,
-        rounds_completed: session.attributes.workoutData.discipline_specific?.crossfit?.performance_data?.rounds_completed
+      crossfitSummary: session.workoutData.discipline === 'crossfit' ? {
+        workout_format: session.workoutData.discipline_specific?.crossfit?.workout_format,
+        rx_status: session.workoutData.discipline_specific?.crossfit?.rx_status,
+        total_time: session.workoutData.discipline_specific?.crossfit?.performance_data?.total_time,
+        rounds_completed: session.workoutData.discipline_specific?.crossfit?.performance_data?.rounds_completed
       } : undefined
     }));
 

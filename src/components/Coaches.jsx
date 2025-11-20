@@ -214,6 +214,9 @@ function Coaches() {
         // Start polling for this session
         agentRef.current?.startPolling(buildingSession.sessionId);
       }
+
+      // Return the session ID that's currently building (if any) for tracking
+      return buildingSession?.sessionId || null;
     } catch (error) {
       console.error('Error loading in-progress sessions:', error);
       setInProgressSessions([]);
@@ -302,6 +305,12 @@ function Coaches() {
         onStateChange: (newState) => {
           if (setAgentState) {
             setAgentState(newState);
+          }
+
+          // When a coach appears in the list, refresh in-progress sessions to remove completed ones
+          if (newState.coaches && newState.coaches.length > 0 && !newState.inProgressCoach) {
+            // Coach was just added and in-progress cleared - refresh sessions
+            loadInProgressSessions();
           }
         },
         onNavigation: (type, data) => {
@@ -705,110 +714,7 @@ function Coaches() {
               </div>
             </div>
 
-            {/* In-Progress Coach Card */}
-            {agentState.inProgressCoach && (
-              <div className={`${
-                agentState.inProgressCoach.status === 'failed' || agentState.inProgressCoach.status === 'timeout'
-                  ? 'bg-synthwave-bg-card/60 border-2 border-synthwave-neon-pink/50 rounded-2xl shadow-xl shadow-synthwave-neon-pink/20 hover:shadow-2xl hover:shadow-synthwave-neon-pink/30 transition-all duration-300 hover:-translate-y-1'
-                  : 'bg-synthwave-bg-card/30 backdrop-blur-lg border border-synthwave-neon-cyan/20 rounded-2xl shadow-xl shadow-synthwave-neon-cyan/10 hover:border-synthwave-neon-cyan/30 hover:bg-synthwave-bg-card/40 transition-all duration-300'
-              } p-6 relative overflow-hidden`}>
-                {/* Animated background overlay - only for generating state */}
-                {agentState.inProgressCoach.status === 'generating' && (
-                  <div className="absolute inset-0 bg-gradient-to-r from-synthwave-neon-cyan/5 to-synthwave-neon-pink/5 animate-pulse"></div>
-                )}
-
-                <div className="relative z-10">
-                  {/* Status Icon */}
-                  <div className={`mb-6 flex justify-center ${
-                    agentState.inProgressCoach.status === 'failed' || agentState.inProgressCoach.status === 'timeout'
-                      ? 'text-synthwave-neon-pink'
-                      : 'text-synthwave-neon-cyan'
-                  }`}>
-                    {agentState.inProgressCoach.status === 'failed' || agentState.inProgressCoach.status === 'timeout' ? (
-                      <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    ) : (
-                      <div className="relative">
-                        <CoachIcon />
-                        <div className="absolute inset-0 border-2 border-synthwave-neon-cyan border-t-transparent rounded-full animate-spin"></div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Status Title */}
-                  <h3 className="font-russo font-bold text-white text-xl uppercase mb-4 text-center">
-                    {agentState.inProgressCoach.status === 'failed' ? 'Coach Creation Failed' :
-                     agentState.inProgressCoach.status === 'timeout' ? 'Coach Creation Timed Out' :
-                     'Creating Your Coach...'}
-                  </h3>
-
-                  {/* Status Details */}
-                  <div className="space-y-3">
-                    {/* Error message for failed state */}
-                    {(agentState.inProgressCoach.status === 'failed' || agentState.inProgressCoach.status === 'timeout') && (
-                      <div className="bg-synthwave-neon-pink/10 border border-synthwave-neon-pink/30 rounded-lg p-3 mb-3">
-                        <p className="font-rajdhani text-sm text-synthwave-neon-pink">
-                          {agentState.inProgressCoach.error || 'An error occurred during coach creation'}
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Loading message for generating state */}
-                    {agentState.inProgressCoach.status === 'generating' && (
-                      <div className="flex items-center space-x-2 text-synthwave-neon-cyan">
-                        <div className="w-5 h-5 border-2 border-synthwave-neon-cyan border-t-transparent rounded-full animate-spin"></div>
-                        <span className="font-rajdhani text-sm">
-                          {agentState.inProgressCoach.message || 'Generating AI Coach Configuration'}
-                        </span>
-                      </div>
-                    )}
-
-                    <div className="flex items-center space-x-2 text-synthwave-text-secondary">
-                      <CalendarIcon />
-                      <span className="font-rajdhani text-xs">
-                        Started {agentRef.current?.formatDate(new Date(agentState.inProgressCoach.timestamp).toISOString())}
-                      </span>
-                    </div>
-
-                    {agentState.inProgressCoach.status === 'generating' && (
-                      <div className="text-center pt-4 border-t border-synthwave-neon-cyan/20">
-                        <span className="font-rajdhani text-xs text-synthwave-text-muted">
-                          This usually takes 2-5 minutes
-                        </span>
-                      </div>
-                    )}
-
-                    {/* Retry button for failed/timeout state */}
-                    {(agentState.inProgressCoach.status === 'failed' || agentState.inProgressCoach.status === 'timeout') && (
-                      <div className="pt-4 border-t border-synthwave-neon-pink/20">
-                        <button
-                          onClick={() => {
-                            // Clear the failed in-progress coach and allow user to try again
-                            agentRef.current?.clearInProgressCoach();
-                          }}
-                          className={`${buttonPatterns.secondary} w-full text-sm`}
-                        >
-                          Dismiss
-                        </button>
-                        <p className="font-rajdhani text-xs text-synthwave-text-muted text-center mt-2">
-                          You can try creating a new coach or contact support if this problem persists.
-                        </p>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Progress indicator - only for generating state */}
-                  {agentState.inProgressCoach.status === 'generating' && (
-                    <div className="mt-6">
-                      <div className="w-full bg-synthwave-bg-primary/50 rounded-full h-2 border border-synthwave-neon-cyan/30">
-                        <div className="bg-synthwave-neon-cyan h-full rounded-full animate-pulse shadow-neon-cyan" style={{ width: '60%' }}></div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
+            {/* Note: In-progress coach building status is now shown directly on the coach creator session cards below */}
 
             {/* Existing Coaches */}
             {agentState.coaches && agentState.coaches.map((coach) => (
@@ -871,7 +777,7 @@ function Coaches() {
 
                 <div className="flex-1">
                   {/* Coach Name - Either editable or static */}
-                  <div className="flex items-start space-x-3 mb-4">
+                  <div className="flex items-start space-x-3 mb-2">
                     <div className="w-3 h-3 bg-synthwave-neon-cyan rounded-full flex-shrink-0 mt-2"></div>
                     {editingCoachId === coach.coach_id ? (
                       <InlineEditField
@@ -916,38 +822,66 @@ function Coaches() {
                     )}
                   </div>
 
+                  {/* Coach Description - Tagline */}
+                  {agentRef.current?.getCoachDescription(coach) && (
+                    <div className="ml-6 mb-4">
+                      <p className="font-rajdhani text-synthwave-neon-cyan text-sm italic">
+                        {agentRef.current?.getCoachDescription(coach)}
+                      </p>
+                    </div>
+                  )}
+
                   {/* Coach Details */}
                   <div className="space-y-3">
-                    {/* Experience Level */}
+                    {/* Experience Level & Training Frequency */}
                     <div className="flex items-center space-x-2 text-synthwave-text-secondary">
                       <TargetIcon />
                       <span className="font-rajdhani text-sm">
                         {formatDisplayText(agentRef.current?.getExperienceLevelDisplay(coach.technical_config?.experience_level)) || 'General'} Level
+                        {agentRef.current?.getTrainingFrequencyDisplay(coach) && (
+                          <> • {agentRef.current?.getTrainingFrequencyDisplay(coach)}</>
+                        )}
                       </span>
                     </div>
 
-                    {/* Programming Focus */}
+                    {/* Focus Areas */}
                     <div className="flex items-start space-x-2 text-synthwave-text-secondary">
                       <div className="mt-0.5">
-                        <TargetIcon />
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
                       </div>
-                      <span className="font-rajdhani text-sm">
-                        Focus: {formatDisplayText(agentRef.current?.getProgrammingFocusDisplay(coach.technical_config?.programming_focus))}
-                      </span>
+                      <div className="flex-1">
+                        <p className="font-rajdhani text-xs font-semibold text-synthwave-neon-cyan uppercase tracking-wide mb-1">
+                          Focus Areas
+                        </p>
+                        <p className="font-rajdhani text-sm leading-relaxed">
+                          {agentRef.current?.getMethodologyFocusDisplay(coach, 6)}
+                        </p>
+                      </div>
                     </div>
 
-                    {/* Specializations */}
-                    <div className="flex items-start space-x-2 text-synthwave-text-secondary">
-                      <div className="mt-0.5">
-                        <TargetIcon />
+                    {/* Coaching Style */}
+                    {agentRef.current?.getMethodologyPreferencesDisplay(coach) && (
+                      <div className="flex items-start space-x-2 text-synthwave-text-secondary">
+                        <div className="mt-0.5">
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                          </svg>
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-rajdhani text-xs font-semibold text-synthwave-neon-cyan uppercase tracking-wide mb-1">
+                            Coaching Style
+                          </p>
+                          <p className="font-rajdhani text-sm leading-relaxed">
+                            {agentRef.current?.getMethodologyPreferencesDisplay(coach, 8)}
+                          </p>
+                        </div>
                       </div>
-                      <span className="font-rajdhani text-sm">
-                        {formatDisplayText(agentRef.current?.getSpecializationDisplay(coach.technical_config?.specializations))}
-                      </span>
-                    </div>
+                    )}
 
                     {/* Conversations Count */}
-                    <div className="flex items-center space-x-2 text-synthwave-text-secondary">
+                    <div className="flex items-center space-x-2 text-synthwave-text-secondary pt-2 border-t border-synthwave-text-muted/20">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                       </svg>
@@ -1067,6 +1001,10 @@ function Coaches() {
                         <span className="font-rajdhani text-sm font-medium">
                           {isFailed ? 'Build Failed' : isBuilding ? 'Building Coach' : 'Answering Questions'}
                         </span>
+                        {/* Small cyan spinner for building status */}
+                        {isBuilding && (
+                          <div className="w-4 h-4 border-2 border-synthwave-neon-cyan border-t-transparent rounded-full animate-spin"></div>
+                        )}
                       </div>
 
                       <div className="flex items-center space-x-2 text-synthwave-text-secondary">

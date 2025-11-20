@@ -73,7 +73,7 @@ Analyze this message and determine if semantic search would enhance the coaching
       userPrompt,
       MODEL_IDS.CLAUDE_HAIKU_4FULL,
       { prefillResponse: "{" } // Force JSON output format
-    );
+    ) as string; // No tools used, always returns string
     const result = parseJsonWithFallbacks(response);
 
     return result.shouldUseSemanticSearch || false;
@@ -122,7 +122,7 @@ Examples:
       userMessage,
       MODEL_IDS.CLAUDE_HAIKU_4FULL,
       { prefillResponse: "{" } // Force JSON output format
-    );
+    ) as string; // No tools used, always returns string
     return parseJsonWithFallbacks(response);
   } catch (error) {
     console.error('Failed to analyze methodology intent:', error);

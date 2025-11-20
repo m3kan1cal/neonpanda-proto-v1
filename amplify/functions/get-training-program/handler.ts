@@ -25,7 +25,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     }
 
     return createOkResponse({
-      program: program.attributes
+      program: program
     });
   } catch (error) {
     console.error('Error getting training program:', error);

@@ -37,7 +37,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
         if (!coachConfig) {
           return createErrorResponse(404, "Coach configuration not found");
         }
-        coachName = coachConfig?.attributes?.coach_name;
+        coachName = coachConfig?.coach_name;
       } catch (error) {
         console.error(
           "Failed to load coach config for memory creation:",
@@ -56,7 +56,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     });
 
     // Use AI to determine memory characteristics (combined analysis)
-    console.info("🤖 Running AI analysis for memory...");
+    console.info("🤖 Running AI analysis for memory..");
     const memoryCharacteristics = await detectMemoryCharacteristics(
       content.trim(),
       coachName
@@ -96,7 +96,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     await saveMemory(memory);
 
     // Store memory in Pinecone for semantic search (async, don't block response)
-    console.info("🧠 Storing memory in Pinecone...");
+    console.info("🧠 Storing memory in Pinecone..");
     const pineconeResult = await storeMemoryInPinecone(memory);
 
     // Return success response with the created memory

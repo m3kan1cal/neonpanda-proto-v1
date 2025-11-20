@@ -21,7 +21,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     }
 
     return createOkResponse({
-      coachConfig: coachConfig.attributes
+      coachConfig: coachConfig
     });
 
 };

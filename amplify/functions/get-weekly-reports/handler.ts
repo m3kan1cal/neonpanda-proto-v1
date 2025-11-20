@@ -70,10 +70,8 @@ const baseHandler: AuthenticatedHandler = async (event) => {
 
     // Map to API response format
     const analyticsResponse = analytics.map(analyticsRecord => ({
-      ...analyticsRecord.attributes,
+      ...analyticsRecord,
       // Include DynamoDB metadata
-      createdAt: analyticsRecord.createdAt,
-      updatedAt: analyticsRecord.updatedAt
     }));
 
     return createOkResponse({

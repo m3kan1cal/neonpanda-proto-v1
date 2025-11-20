@@ -34,7 +34,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     await deleteMemory(userId, memoryId);
 
     // Clean up from Pinecone
-    console.info('🗑️ Cleaning up memory from Pinecone...');
+    console.info('🗑️ Cleaning up memory from Pinecone..');
     const pineconeResult = await deleteMemoryFromPinecone(userId, memoryId);
 
     // Return success response

@@ -113,7 +113,7 @@ export const normalizeAnalytics = async (
       "analytics_normalization",
       undefined, // Use default model
       { enableThinking }
-    );
+    ) as string; // No tools used, always returns string
 
     // Parse JSON with cleaning and fixing (handles markdown-wrapped JSON and common issues)
     const normalizationResult = parseJsonWithFallbacks(normalizationResponse);

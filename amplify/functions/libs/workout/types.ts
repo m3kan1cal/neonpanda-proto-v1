@@ -72,6 +72,9 @@ export interface Workout {
     phaseId: string;
     phaseName: string;
   };
+  // DynamoDB timestamps (populated from database metadata)
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 /**
@@ -445,6 +448,18 @@ export interface WorkoutDetectionResult {
   confidence: number;
   quickExtraction?: QuickWorkoutExtraction;
   detectedPatterns: string[];
+}
+
+// Lightweight function to query only workout summary fields
+// Uses ProjectionExpression to avoid fetching full workout data (30KB+ per workout)
+// Workout summary type for analytics queries
+export interface WorkoutSummary {
+  workoutId: string;
+  completedAt: Date;
+  summary?: string;
+  workoutName?: string;
+  discipline?: string;
+  coachIds: string[];
 }
 
 // Future types can be added here:

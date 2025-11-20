@@ -55,7 +55,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
         return createErrorResponse(404, "Coach configuration not found");
       }
 
-      coachConfig = fetchedCoachConfig.attributes;
+      coachConfig = fetchedCoachConfig;
       console.info("✅ Coach config fetched successfully:", {
         coachName: coachConfig.coach_name,
         methodology: coachConfig.technical_config.methodology

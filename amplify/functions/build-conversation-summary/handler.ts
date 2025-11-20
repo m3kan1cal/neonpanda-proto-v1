@@ -32,7 +32,7 @@ export const handler = async (event: BuildCoachConversationSummaryEvent) => {
     });
 
     // Load the conversation with full message history
-    console.info("📖 Loading conversation from DynamoDB...");
+    console.info("📖 Loading conversation from DynamoDB..");
     const conversationItem = await getCoachConversation(
       event.userId,
       event.coachId,
@@ -43,7 +43,7 @@ export const handler = async (event: BuildCoachConversationSummaryEvent) => {
       throw new Error(`Conversation not found: ${event.conversationId}`);
     }
 
-    const conversation = conversationItem.attributes;
+    const conversation = conversationItem;
 
     console.info("Conversation loaded:", {
       conversationId: conversation.conversationId,
@@ -53,14 +53,14 @@ export const handler = async (event: BuildCoachConversationSummaryEvent) => {
     });
 
     // Load the coach config for context
-    console.info("👨‍🏫 Loading coach configuration...");
+    console.info("👨‍🏫 Loading coach configuration..");
     const coachConfigItem = await getCoachConfig(event.userId, event.coachId);
 
     if (!coachConfigItem) {
       throw new Error(`Coach configuration not found: ${event.coachId}`);
     }
 
-    const coachConfig = coachConfigItem.attributes;
+    const coachConfig = coachConfigItem;
 
     console.info("Coach config loaded:", {
       coachName: coachConfig.coach_name,
@@ -69,16 +69,16 @@ export const handler = async (event: BuildCoachConversationSummaryEvent) => {
     });
 
     // Load user profile for critical training directive
-    console.info("📋 Loading user profile...");
+    console.info("📋 Loading user profile..");
     const userProfile = await getUserProfile(event.userId);
 
     // Check for existing conversation summary to build upon
-    console.info("🔍 Checking for existing conversation summary...");
+    console.info("🔍 Checking for existing conversation summary..");
     const existingSummaryItem = await getCoachConversationSummary(
       event.userId,
       event.conversationId
     );
-    const existingSummary = existingSummaryItem?.attributes;
+    const existingSummary = existingSummaryItem;
 
     if (existingSummary) {
       console.info("Found existing summary to build upon:", {
@@ -95,12 +95,12 @@ export const handler = async (event: BuildCoachConversationSummaryEvent) => {
     }
 
     // Build the summarization prompt
-    console.info("📝 Building conversation summary prompt...");
+    console.info("📝 Building conversation summary prompt..");
     const summaryPrompt = buildCoachConversationSummaryPrompt(
       conversation,
       coachConfig,
-      existingSummary,
-      userProfile?.attributes?.criticalTrainingDirective
+      existingSummary ?? undefined,
+      userProfile?.criticalTrainingDirective
     );
 
     console.info("Generated summary prompt:", {
@@ -133,7 +133,7 @@ export const handler = async (event: BuildCoachConversationSummaryEvent) => {
     }
 
     // Call Claude for conversation summarization
-    console.info("🤖 Calling Claude for conversation summarization...");
+    console.info("🤖 Calling Claude for conversation summarization..");
     const conversationContent = conversation.messages
       .map((msg) => `${msg.role}: ${msg.content}`)
       .join("\n\n");
@@ -143,7 +143,7 @@ export const handler = async (event: BuildCoachConversationSummaryEvent) => {
       conversationContent,
       undefined, // Use default model
       { prefillResponse: "{" } // Force JSON output format
-    );
+    ) as string; // No tools used, always returns string
 
     console.info("Claude summarization completed. Raw response:", {
       responseLength: aiResponse.length,
@@ -171,7 +171,7 @@ export const handler = async (event: BuildCoachConversationSummaryEvent) => {
     }
 
     // Parse and validate the conversation summary
-    console.info("⚙️ Parsing conversation summary...");
+    console.info("⚙️ Parsing conversation summary..");
     const summary = parseCoachConversationSummary(
       aiResponse,
       event,
@@ -189,7 +189,7 @@ export const handler = async (event: BuildCoachConversationSummaryEvent) => {
     });
 
     // Save the conversation summary to DynamoDB
-    console.info("💾 Saving conversation summary to DynamoDB...");
+    console.info("💾 Saving conversation summary to DynamoDB..");
     await saveCoachConversationSummary(summary);
 
     // Update the conversation with generated tags if any were created
@@ -221,7 +221,7 @@ export const handler = async (event: BuildCoachConversationSummaryEvent) => {
     }
 
     // Store the summary in Pinecone for semantic search
-    console.info("🔍 Storing conversation summary in Pinecone...");
+    console.info("🔍 Storing conversation summary in Pinecone..");
     const pineconeResult =
       await storeCoachConversationSummaryInPinecone(summary);
 

@@ -297,10 +297,10 @@ After your thinking, provide your final response outside the thinking tags.
 Example format:
 <thinking>
 Let me analyze this step by step:
-1. The user is asking for...
-2. I need to consider...
-3. The key challenges are...
-4. My approach should be...
+1. The user is asking for..
+2. I need to consider..
+3. The key challenges are..
+4. My approach should be..
 </thinking>
 
 [Your final response here]
@@ -327,6 +327,23 @@ const stripThinkingTags = (response: string): string => {
 /**
  * Options for Bedrock API calls with caching and thinking support
  */
+// Tool configuration for Bedrock tool use (schema enforcement)
+export interface BedrockToolConfig {
+  name: string;
+  description: string;
+  inputSchema: any; // JSON Schema object
+}
+
+// Result when tool is used by the model
+export interface BedrockToolUseResult {
+  toolName: string;
+  input: any;
+  stopReason: string;
+}
+
+// Union type for Bedrock API results (text or tool use)
+export type BedrockApiResult = string | BedrockToolUseResult;
+
 export interface BedrockApiOptions {
   /** Enable extended thinking for complex reasoning (adds thinking tags to prompt) */
   enableThinking?: boolean;
@@ -342,6 +359,66 @@ export interface BedrockApiOptions {
    * For JSON responses, use "{" to force Claude to start with JSON
    */
   prefillResponse?: string;
+
+  // Tool enforcement support for schema-based generation
+  /** Single tool or array of tools for schema enforcement */
+  tools?: BedrockToolConfig | BedrockToolConfig[];
+
+  /** Optional: validate which tool was used (throws error if mismatch) */
+  expectedToolName?: string;
+}
+
+/**
+ * Helper to build toolConfig for Bedrock commands
+ * Centralizes tool handling logic for all Bedrock functions
+ */
+function buildToolConfig(
+  tools: BedrockToolConfig | BedrockToolConfig[]
+): any {
+  const toolsArray = Array.isArray(tools) ? tools : [tools];
+
+  return {
+    tools: toolsArray.map(t => ({
+      toolSpec: {
+        name: t.name,
+        description: t.description,
+        inputSchema: { json: t.inputSchema }
+      }
+    }))
+  };
+}
+
+/**
+ * Helper to extract tool use result from Bedrock response
+ * Returns BedrockToolUseResult or throws if tool wasn't used
+ */
+function extractToolUseResult(
+  response: any,
+  expectedToolName?: string
+): BedrockToolUseResult {
+  if (response.stopReason !== 'tool_use') {
+    throw new Error(`Model did not use tool (stopReason: ${response.stopReason})`);
+  }
+
+  const toolUse = response.output?.message?.content?.find((c: any) => c.toolUse);
+  if (!toolUse) {
+    throw new Error('No tool use found in response');
+  }
+
+  const result: BedrockToolUseResult = {
+    toolName: toolUse.toolUse.name,
+    input: toolUse.toolUse.input,
+    stopReason: response.stopReason
+  };
+
+  // Optional validation
+  if (expectedToolName && result.toolName !== expectedToolName) {
+    throw new Error(
+      `Expected tool "${expectedToolName}" but model used "${result.toolName}"`
+    );
+  }
+
+  return result;
 }
 
 /**
@@ -448,22 +525,25 @@ function logCachePerformance(usage: any, context: string = "API call") {
   });
 }
 
-// Amazon Bedrock Converse API call with optional thinking capabilities
+// Amazon Bedrock Converse API call with optional thinking capabilities and tool support
 export const callBedrockApi = async (
   systemPrompt: string,
-  userMessage: string,
+  userMessage: string = "Please proceed.",
   modelId: string = CLAUDE_SONNET_4_MODEL_ID,
   options?: BedrockApiOptions
-): Promise<string> => {
+): Promise<BedrockApiResult> => {
   try {
     // Build system parameters with cache control and thinking support
     const { systemParams, enableThinking } = buildSystemParams(systemPrompt, options);
+
+    // Use default message if empty string provided
+    const effectiveUserMessage = userMessage.trim() || "Please proceed.";
 
     console.info("=== BEDROCK API CALL START ===");
     console.info("AWS Region:", process.env.AWS_REGION || "us-west-2");
     console.info("Model ID:", modelId);
     console.info("System prompt length:", systemPrompt.length);
-    console.info("User message length:", userMessage.length);
+    console.info("User message length:", effectiveUserMessage.length);
     console.info("Thinking enabled:", enableThinking);
     console.info("Bedrock client config:", {
       region: (await bedrockClient.config.region?.()) || "unknown",
@@ -480,7 +560,7 @@ export const callBedrockApi = async (
         role: "user",
         content: [
           {
-            text: userMessage,
+            text: effectiveUserMessage,
           },
         ],
       },
@@ -503,19 +583,20 @@ export const callBedrockApi = async (
       modelId: modelId,
       messages: messages,
       ...(systemParams.length > 0 && { system: systemParams }), // Only include if not empty
+      ...(options?.tools && { toolConfig: buildToolConfig(options.tools) }), // Add toolConfig if tools provided
       inferenceConfig: {
         maxTokens: getMaxTokensForModel(modelId),
         temperature: TEMPERATURE,
       },
     });
 
-    console.info("Converse command created successfully...");
+    console.info("Converse command created successfully..");
     console.info("About to call bedrockClient.send()...");
 
     // Add heartbeat logging to track if Lambda is still running
     const heartbeatInterval = setInterval(() => {
       console.info(
-        "HEARTBEAT: Lambda still running, waiting for Bedrock response..."
+        "HEARTBEAT: Lambda still running, waiting for Bedrock response.."
       );
     }, 5000);
 
@@ -523,7 +604,7 @@ export const callBedrockApi = async (
     let response;
 
     try {
-      console.info("Starting Bedrock API call with 60s timeout...");
+      console.info("Starting Bedrock API call with 60s timeout..");
 
       // Simple approach: just make the API call and let AWS SDK handle timeouts
       response = await bedrockClient.send(command);
@@ -565,6 +646,13 @@ export const callBedrockApi = async (
         JSON.stringify(response, null, 2)
       );
       throw new Error("Invalid response format from Bedrock - no content");
+    }
+
+    // If tools were provided, extract tool use result FIRST (before trying to extract text)
+    // Tool responses have a different structure than text responses
+    if (options?.tools) {
+      console.info("🔧 Tool use requested, extracting tool result");
+      return extractToolUseResult(response, options.expectedToolName);
     }
 
     // Extract the raw response text - handle both direct text and nested structures
@@ -652,6 +740,7 @@ export const callBedrockApi = async (
 
     console.info("=== BEDROCK API CALL SUCCESS ===");
 
+    // Return text response
     return responseText;
   } catch (error: any) {
     console.error("=== BEDROCK API CALL FAILED ===");
@@ -711,13 +800,14 @@ export const callBedrockApiStream = async (
         },
       ],
       system: systemParams,
+      ...(options?.tools && { toolConfig: buildToolConfig(options.tools) }), // Add toolConfig if tools provided
       inferenceConfig: {
         maxTokens: getMaxTokensForModel(modelId),
         temperature: TEMPERATURE,
       },
     });
 
-    console.info("Converse stream command created successfully...");
+    console.info("Converse stream command created successfully..");
 
     const response = await bedrockClient.send(command);
 
@@ -781,21 +871,21 @@ export const callBedrockApiStream = async (
 };
 
 /**
- * Amazon Bedrock Converse API call with multimodal content support (text + images)
+ * Amazon Bedrock Converse API call with multimodal content support (text + images) and tool support
  * Use this when you need to pass a full messages array with image content blocks
  *
  * @param systemPrompt - System prompt to set AI behavior
  * @param messages - Full Converse API messages array (e.g., from buildMultimodalContent)
  * @param modelId - Model ID to use (defaults to Claude Sonnet 4)
- * @param options - Optional parameters including staticPrompt and dynamicPrompt for caching
- * @returns Promise with AI response text
+ * @param options - Optional parameters including staticPrompt, dynamicPrompt for caching, and tools
+ * @returns Promise with AI response text or BedrockToolUseResult if tools provided
  */
 export const callBedrockApiMultimodal = async (
   systemPrompt: string,
   messages: any[], // Full Converse API messages array with images
   modelId: string = CLAUDE_SONNET_4_MODEL_ID,
   options?: BedrockApiOptions
-): Promise<string> => {
+): Promise<BedrockApiResult> => {
   try {
     // Build system parameters with cache control and thinking support
     const { systemParams, enableThinking } = buildSystemParams(systemPrompt, options);
@@ -814,13 +904,14 @@ export const callBedrockApiMultimodal = async (
       modelId: modelId,
       messages: messages,
       system: systemParams,
+      ...(options?.tools && { toolConfig: buildToolConfig(options.tools) }), // Add toolConfig if tools provided
       inferenceConfig: {
         maxTokens: getMaxTokensForModel(modelId),
         temperature: TEMPERATURE,
       },
     });
 
-    console.info("Multimodal converse command created successfully...");
+    console.info("Multimodal converse command created successfully..");
 
     const response = await bedrockClient.send(command);
 
@@ -832,6 +923,14 @@ export const callBedrockApiMultimodal = async (
       logCachePerformance(response.usage, "Multimodal API");
     }
 
+    // If tools were provided, extract tool use result FIRST (before trying to extract text)
+    // Tool responses have a different structure than text responses
+    if (options?.tools) {
+      console.info("🔧 Tool use requested (multimodal), extracting tool result");
+      return extractToolUseResult(response, options.expectedToolName);
+    }
+
+    // Otherwise extract text as usual
     if (!response.output?.message?.content?.[0]?.text) {
       console.error(
         "Invalid response structure:",
@@ -899,13 +998,14 @@ export const callBedrockApiMultimodalStream = async (
       modelId: modelId,
       messages: messages,
       system: systemParams,
+      ...(options?.tools && { toolConfig: buildToolConfig(options.tools) }), // Add toolConfig if tools provided
       inferenceConfig: {
         maxTokens: getMaxTokensForModel(modelId),
         temperature: TEMPERATURE,
       },
     });
 
-    console.info("Multimodal converse stream command created successfully...");
+    console.info("Multimodal converse stream command created successfully..");
 
     const response = await bedrockClient.send(command);
 
@@ -1021,7 +1121,7 @@ export const storePineconeContext = async (
       recordId = metadata.programId; // e.g., "program_userId_1761313084956_1f7lhmftx"
     } else if (metadata.summaryId) {
       // Conversation summary or coach creator summary records
-      recordId = metadata.summaryId; // e.g., "conversation_summary_..." or "coach_creator_summary_..."
+      recordId = metadata.summaryId; // e.g., "conversation_summary_.." or "coach_creator_summary_.."
     } else {
       // No ID field found - this is an error
       console.error("❌ No ID field found in metadata for Pinecone record", {
@@ -1845,7 +1945,7 @@ export const querySemanticMemories = async (
 
         // Must have memoryId (skip old context records without proper IDs)
         if (!hit.metadata.memoryId) {
-          console.warn("⚠️ Skipping Pinecone record without memoryId:", {
+          console.info("ℹ️ Skipping non-memory Pinecone record (expected behavior):", {
             pineconeId: hit.id,
             recordType: hit.metadata.recordType,
             contentPreview: extractTextContent(hit)?.substring(0, 100),

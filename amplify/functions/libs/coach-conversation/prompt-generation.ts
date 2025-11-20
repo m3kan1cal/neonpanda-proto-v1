@@ -1,8 +1,7 @@
-import { CoachConfig, DynamoDBItem } from "../coach-creator/types";
+import { CoachConfig } from "../coach-creator/types";
 import { UserMemory } from "../memory/types";
 import { UserProfile } from "../user/types";
 import {
-  CoachConfigInput,
   PromptGenerationOptions,
   SystemPrompt,
   CoachConfigValidationResult,
@@ -18,7 +17,7 @@ import { buildCoachPersonalityPrompt } from "../coach-config/personality-utils";
  * NEW: Supports Bedrock prompt caching by separating static (cacheable) and dynamic content
  */
 export const generateSystemPrompt = (
-  coachConfigInput: CoachConfigInput,
+  coachConfig: CoachConfig,
   options: PromptGenerationOptions & {
     existingMessages?: any[]; // Conversation history (moved from response-generation)
     pineconeContext?: string; // Semantic context
@@ -45,10 +44,7 @@ export const generateSystemPrompt = (
   } = options;
 
   // Extract config data - handle both DynamoDB item and direct config
-  const configData: CoachConfig =
-    "attributes" in coachConfigInput
-      ? coachConfigInput.attributes
-      : coachConfigInput;
+  const configData: CoachConfig = coachConfig;
 
   // Build STATIC prompt sections (cacheable) - coach config, guidelines, constraints
   const staticPromptSections = [];
@@ -264,22 +260,15 @@ The system will then:
 
   // 2. CORE COACH PERSONALITY (using reusable utility for consistency)
   // Build minimal user profile object for critical directive (if available)
-  const userProfileForPersonality: DynamoDBItem<UserProfile> | null =
+  const userProfileForPersonality: UserProfile | null =
     criticalTrainingDirective
-      ? {
-          pk: "user#temp",
-          sk: "profile",
-          entityType: "UserProfile" as const,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          attributes: {
-            criticalTrainingDirective,
-          } as UserProfile, // Minimal profile with just critical directive
-        }
+      ? ({
+          criticalTrainingDirective,
+        } as UserProfile) // Minimal profile with just critical directive
       : null;
 
   const corePersonalityPrompt = buildCoachPersonalityPrompt(
-    coachConfigInput,
+    coachConfig,
     userProfileForPersonality,
     {
       includeDetailedPersonality: true,
@@ -748,16 +737,12 @@ const generateCondensedConversationGuidelines = (
  * Validates that a coach config has all required prompts for system prompt generation
  */
 export const validateCoachConfig = (
-  coachConfigInput: CoachConfigInput
+  coachConfig: CoachConfig
 ): CoachConfigValidationResult => {
   const missingComponents: string[] = [];
   const warnings: string[] = [];
 
-  // Extract config data - handle both DynamoDB item and direct config
-  const configData: CoachConfig =
-    "attributes" in coachConfigInput
-      ? coachConfigInput.attributes
-      : coachConfigInput;
+  const configData: CoachConfig = coachConfig;
 
   // Check required prompt components (excluding gender_tone_prompt for backwards compatibility)
   const requiredPrompts = [
@@ -828,13 +813,9 @@ export const validateCoachConfig = (
  * Useful for debugging and testing
  */
 export const generateSystemPromptPreview = (
-  coachConfigInput: CoachConfigInput
+  coachConfig: CoachConfig
 ): SystemPromptPreview => {
-  // Extract config data - handle both DynamoDB item and direct config
-  const configData: CoachConfig =
-    "attributes" in coachConfigInput
-      ? coachConfigInput.attributes
-      : coachConfigInput;
+  const configData: CoachConfig = coachConfig;
 
   const keyFeatures = [];
   const dataRichness = [];

@@ -335,7 +335,7 @@ function CoachCreator() {
             // Delay showing completion modal to give user time to read final AI message
             setTimeout(() => {
               setShowCompletionModal(true);
-            }, 6000); // 6 second delay for better UX
+            }, 3000); // 3 second delay for better UX
           }
         },
         onError: (error) => {
@@ -764,26 +764,56 @@ function CoachCreator() {
         </div>
       </div>
 
-      {/* Chat Input Section - always show, but disable when session is complete */}
-      <ChatInput
-        userId={userId}
-        inputMessage={inputMessage}
-        setInputMessage={setInputMessage}
-        onSubmit={handleMessageSubmit}
-        isTyping={getTypingState(agentState).isTyping || agentState.isComplete}
-        placeholder="Tell me about your fitness goals..."
-        coachName="Vesper the Coach Creator"
-        isOnline={true}
-        context="creation"
-        showDeleteButton={true}
-        onDeleteClick={handleDeleteClick}
-        enableRecording={true}
-        showTipsButton={true}
-        tipsContent={coachCreatorTips}
-        tipsTitle="Coach creation tips"
-        textareaRef={inputRef}
-        progressData={agentState.progress}
-      />
+      {/* Chat Input Section - show completion message when done, otherwise show input */}
+      {agentState.isComplete ? (
+        <div className="fixed bottom-0 left-0 right-0 bg-synthwave-bg-card/95 backdrop-blur-lg border-t-2 border-synthwave-neon-cyan/30 shadow-lg shadow-synthwave-neon-cyan/20 z-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-8 py-6 flex justify-center">
+            <div className={`${containerPatterns.coachNotesSection} flex items-center justify-between w-full max-w-[75%]`}>
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-full bg-synthwave-neon-cyan/10 border-2 border-synthwave-neon-cyan flex items-center justify-center flex-shrink-0">
+                  <svg className="w-5 h-5 text-synthwave-neon-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="font-russo text-base text-white uppercase tracking-wider">
+                    Session Complete
+                  </h3>
+                  <p className="font-rajdhani text-sm text-synthwave-text-secondary mt-0.5">
+                    Your coach is being built (2-3 minutes). You can close this page or navigate to your coaches.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => navigate(`/coaches?userId=${userId}`)}
+                className={`${buttonPatterns.secondarySmall} flex-shrink-0`}
+              >
+                View Coaches
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <ChatInput
+          userId={userId}
+          inputMessage={inputMessage}
+          setInputMessage={setInputMessage}
+          onSubmit={handleMessageSubmit}
+          isTyping={getTypingState(agentState).isTyping}
+          placeholder="Tell me about your fitness goals..."
+          coachName="Vesper the Coach Creator"
+          isOnline={true}
+          context="creation"
+          showDeleteButton={true}
+          onDeleteClick={handleDeleteClick}
+          enableRecording={true}
+          showTipsButton={true}
+          tipsContent={coachCreatorTips}
+          tipsTitle="Coach creation tips"
+          textareaRef={inputRef}
+          progressData={agentState.progress}
+        />
+      )}
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (

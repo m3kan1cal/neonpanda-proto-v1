@@ -75,7 +75,7 @@ Analyze this message and determine if retrieving stored memories would enhance t
       userPrompt,
       MODEL_IDS.CLAUDE_HAIKU_4FULL,
       { prefillResponse: "{" } // Force JSON output format
-    );
+    ) as string; // No tools used, always returns string
     const result = parseJsonWithFallbacks(response);
 
     return result;
@@ -104,14 +104,14 @@ export async function detectMemoryRequest(
 TASK: Determine if the user is asking you to remember something, and if so, extract the memory content.
 
 MEMORY REQUEST INDICATORS:
-- "I want you to remember..."
-- "Please remember that..."
-- "Remember this about me..."
-- "Don't forget that I..."
-- "Keep in mind that..."
-- "Note that I..."
-- "For future reference..."
-- "Always remember..."
+- "I want you to remember.."
+- "Please remember that.."
+- "Remember this about me.."
+- "Don't forget that I.."
+- "Keep in mind that.."
+- "Note that I.."
+- "For future reference.."
+- "Always remember.."
 - Similar phrases expressing desire for persistent memory
 
 CRITICAL: DO NOT DETECT WORKOUT LOGS AS MEMORY REQUESTS
@@ -175,7 +175,7 @@ Analyze this message and respond with the JSON format specified.`;
       systemPrompt,
       userPrompt,
       MODEL_IDS.CLAUDE_HAIKU_4FULL
-    );
+    ) as string; // No tools used, always returns string
     // Use centralized parsing utility (handles markdown cleanup and JSON fixing)
     let result;
     try {
@@ -379,7 +379,7 @@ Analyze this memory and respond with the JSON format specified.`;
       systemPrompt,
       userPrompt,
       MODEL_IDS.CLAUDE_HAIKU_4FULL
-    );
+    ) as string; // No tools used, always returns string
     // Use centralized parsing utility (handles markdown cleanup and JSON fixing)
     let result;
     try {
@@ -517,10 +517,10 @@ Context Types for Retrieval:
 
 === MEMORY REQUEST DETECTION ===
 User wants to save something when they:
-- Explicitly ask: "Remember that I...", "I want you to know...", "For future reference..."
-- Share important preferences: "I prefer...", "I don't like...", "I work best with..."
-- Set goals or constraints: "My goal is...", "I can't do...", "I have limited time..."
-- Give coaching instructions: "When I do X, remind me to...", "Always check my form on..."
+- Explicitly ask: "Remember that I..", "I want you to know..", "For future reference.."
+- Share important preferences: "I prefer..", "I don't like..", "I work best with.."
+- Set goals or constraints: "My goal is..", "I can't do..", "I have limited time.."
+- Give coaching instructions: "When I do X, remind me to..", "Always check my form on.."
 - Use slash commands: "/save-memory [content]"
 
 CRITICAL: DO NOT DETECT WORKOUT LOGS AS MEMORY REQUESTS
@@ -597,7 +597,7 @@ Provide comprehensive memory analysis following the framework above.`;
       userPrompt,
       MODEL_IDS.CLAUDE_HAIKU_4FULL, // Reliable for critical memory analysis
       { prefillResponse: "{" } // Force JSON output format
-    );
+    ) as string; // No tools used, always returns string
 
     const result = parseJsonWithFallbacks(response);
     const processingTime = Date.now() - startTime;
@@ -660,4 +660,77 @@ Provide comprehensive memory analysis following the framework above.`;
       processingTime: Date.now() - startTime,
     };
   }
+}
+
+/**
+ * Filter memories for coach creator "clean slate" approach
+ * Only returns stable, universal constraints (injuries, equipment) not goals or programs
+ *
+ * @param memories - Array of user memories
+ * @returns Filtered array containing only clean slate-appropriate memories
+ */
+export function filterMemories(memories: any[]): any[] {
+  if (!memories || memories.length === 0) {
+    return [];
+  }
+
+  return memories.filter((memory) => {
+    const memoryType = memory.type?.toLowerCase() || "";
+    const coachId = memory.coachId;
+    const tags = memory.tags || [];
+
+    // ❌ EXCLUDE: Coach-specific memories (user is creating a NEW coach)
+    if (coachId && coachId !== "all") {
+      console.info(`🚫 Filtering out coach-specific memory: ${memory.memoryId}`);
+      return false;
+    }
+
+    // ❌ EXCLUDE: Goal-related memories (user is defining NEW goals)
+    if (memoryType === "goal") {
+      console.info(`🚫 Filtering out goal memory: ${memory.memoryId}`);
+      return false;
+    }
+
+    // ❌ EXCLUDE: Workout planning memories (tied to specific programs)
+    if (memoryType === "workout_planning" || tags.includes("workout_planning")) {
+      console.info(`🚫 Filtering out workout planning memory: ${memory.memoryId}`);
+      return false;
+    }
+
+    // ❌ EXCLUDE: Instruction memories (coach-specific approaches)
+    if (memoryType === "instruction") {
+      console.info(`🚫 Filtering out instruction memory: ${memory.memoryId}`);
+      return false;
+    }
+
+    // ❌ EXCLUDE: Motivational memories (coach-specific patterns)
+    if (memoryType === "motivational") {
+      console.info(`🚫 Filtering out motivational memory: ${memory.memoryId}`);
+      return false;
+    }
+
+    // ❌ EXCLUDE: Competition/event memories (specific timebound goals)
+    const competitionTags = ["competition", "meet", "event", "comp"];
+    if (tags.some((tag: string) => competitionTags.includes(tag.toLowerCase()))) {
+      console.info(`🚫 Filtering out competition memory: ${memory.memoryId}`);
+      return false;
+    }
+
+    // ✅ ALLOW: Constraint memories with stable physical info
+    if (memoryType === "constraint") {
+      const allowedTags = ["injury", "mobility", "equipment", "scheduling", "recovery"];
+      const hasAllowedTag = tags.some((tag: string) =>
+        allowedTags.some(allowed => tag.toLowerCase().includes(allowed))
+      );
+
+      if (hasAllowedTag) {
+        console.info(`✅ Including constraint memory: ${memory.memoryId}`);
+        return true;
+      }
+    }
+
+    // ❌ EXCLUDE: Everything else by default (clean slate approach)
+    console.info(`🚫 Filtering out memory (default exclusion): ${memory.memoryId}, type: ${memoryType}`);
+    return false;
+  });
 }

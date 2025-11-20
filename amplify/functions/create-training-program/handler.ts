@@ -35,7 +35,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     if (!coachConfig) {
       return createErrorResponse(404, `Coach not found: ${coachId}`);
     }
-    const coachName = coachConfig.attributes.coach_name || 'Unknown Coach';
+    const coachName = coachConfig.coach_name || 'Unknown Coach';
 
     // Generate program ID (consistent with workout/conversation pattern)
     const shortId = Math.random().toString(36).substring(2, 11);

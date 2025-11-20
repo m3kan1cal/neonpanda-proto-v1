@@ -52,7 +52,7 @@ const generateWeekId = (weekStart: Date): string => {
  * Process users in batches for weekly analytics generation
  */
 export const processBatch = async (
-  users: DynamoDBItem<UserProfile>[],
+  users: UserProfile[],
   batchNumber: number
 ): Promise<number> => {
   console.info(`📊 Processing batch ${batchNumber} with ${users.length} users`);
@@ -62,7 +62,7 @@ export const processBatch = async (
   for (const user of users) {
     try {
       console.info(
-        `🔍 Processing user: ${user.attributes.userId} (${user.attributes.email})`
+        `🔍 Processing user: ${user.userId} (${user.email})`
       );
 
       // Fetch all weekly data for this user
@@ -71,21 +71,21 @@ export const processBatch = async (
       // Check if user has >= 2 workouts this week (Phase 1 requirement)
       if (weeklyData.workouts.count < 2) {
         console.info(
-          `⏭️  Skipping user ${user.attributes.userId}: only ${weeklyData.workouts.count} workouts this week (minimum 2 required)`
+          `⏭️  Skipping user ${user.userId}: only ${weeklyData.workouts.count} workouts this week (minimum 2 required)`
         );
         continue;
       }
 
       // Generate analytics for this user using LLM
       try {
-        const analytics = await generateAnalytics(weeklyData, user.attributes);
+        const analytics = await generateAnalytics(weeklyData, user);
 
         // Store analytics in S3
         try {
           const s3Location = await storeDebugDataInS3(
             JSON.stringify(analytics, null, 2),
             {
-              userId: user.attributes.userId,
+              userId: user.userId,
               type: "weekly-analytics",
               weekStart: weeklyData.weekRange.weekStart.toISOString(),
               weekEnd: weeklyData.weekRange.weekEnd.toISOString(),
@@ -94,7 +94,7 @@ export const processBatch = async (
               memoryCount: weeklyData.userContext.memoryCount,
               historicalSummaryCount: weeklyData.historical.summaryCount,
               analyticsLength: JSON.stringify(analytics).length,
-              hasAthleteProfile: !!user.attributes.athleteProfile?.summary,
+              hasAthleteProfile: !!user.athleteProfile?.summary,
               hasDualOutput: !!(analytics.structured_analytics && analytics.human_summary),
               humanSummaryLength: analytics.human_summary?.length || 0,
             }
@@ -117,7 +117,7 @@ export const processBatch = async (
           try {
             const weekId = generateWeekId(weeklyData.weekRange.weekStart);
             const weeklyAnalytics: WeeklyAnalytics = {
-              userId: user.attributes.userId,
+              userId: user.userId,
               weekId,
               weekStart: weeklyData.weekRange.weekStart.toISOString().split("T")[0],
               weekEnd: weeklyData.weekRange.weekEnd.toISOString().split("T")[0],
@@ -129,7 +129,7 @@ export const processBatch = async (
                 memoryCount: weeklyData.userContext.memoryCount,
                 historicalSummaryCount: weeklyData.historical.summaryCount,
                 analyticsLength: JSON.stringify(analytics).length,
-                hasAthleteProfile: !!user.attributes.athleteProfile?.summary,
+                hasAthleteProfile: !!user.athleteProfile?.summary,
                 hasDualOutput: !!(analytics.structured_analytics && analytics.human_summary),
                 humanSummaryLength: analytics.human_summary?.length || 0,
                 normalizationApplied: !!analytics.structured_analytics?.metadata?.normalization_applied,
@@ -140,39 +140,39 @@ export const processBatch = async (
 
             await saveWeeklyAnalytics(weeklyAnalytics);
             console.info(
-              `✅ User ${user.attributes.userId} analytics completed and stored:`,
+              `✅ User ${user.userId} analytics completed and stored:`,
               {
                 ...logData,
-                dynamodbKey: `user#${user.attributes.userId} / weeklyAnalytics#${weekId}`,
+                dynamodbKey: `user#${user.userId} / weeklyAnalytics#${weekId}`,
               }
             );
           } catch (dynamoError) {
             console.warn(
-              `⚠️ Failed to store analytics in DynamoDB for user ${user.attributes.userId}:`,
+              `⚠️ Failed to store analytics in DynamoDB for user ${user.userId}:`,
               dynamoError
             );
 
             console.warn(
-              `⚠️ User ${user.attributes.userId} analytics completed (S3 only - DynamoDB failed):`,
+              `⚠️ User ${user.userId} analytics completed (S3 only - DynamoDB failed):`,
               logData
             );
           }
         } catch (s3Error) {
           console.warn(
-            `⚠️ Failed to store analytics in S3 for user ${user.attributes.userId}:`,
+            `⚠️ Failed to store analytics in S3 for user ${user.userId}:`,
             s3Error
           );
         }
       } catch (analyticsError) {
         console.error(
-          `❌ Failed to generate analytics for user ${user.attributes.userId}:`,
+          `❌ Failed to generate analytics for user ${user.userId}:`,
           analyticsError
         );
         console.info(`⚠️  Continuing with next user despite analytics failure`);
 
         // Log data collection success even if analytics failed
         console.info(
-          `✅ User ${user.attributes.userId} data collected (analytics failed):`,
+          `✅ User ${user.userId} data collected (analytics failed):`,
           {
             workoutCount: weeklyData.workouts.count,
             historicalSummaryCount: weeklyData.historical.summaryCount,
@@ -185,7 +185,7 @@ export const processBatch = async (
       processedCount++;
     } catch (userError) {
       console.error(
-        `❌ Failed to process user ${user.attributes.userId}:`,
+        `❌ Failed to process user ${user.userId}:`,
         userError
       );
       // Continue processing other users even if one fails
@@ -234,7 +234,7 @@ export const processAllUsersInBatches = async (
  * Process users in batches for monthly analytics generation
  */
 export const processMonthlyBatch = async (
-  users: DynamoDBItem<UserProfile>[],
+  users: UserProfile[],
   batchNumber: number
 ): Promise<number> => {
   console.info(`📊 Processing monthly batch ${batchNumber} with ${users.length} users`);
@@ -244,7 +244,7 @@ export const processMonthlyBatch = async (
   for (const user of users) {
     try {
       console.info(
-        `🔍 Processing user: ${user.attributes.userId} (${user.attributes.email})`
+        `🔍 Processing user: ${user.userId} (${user.email})`
       );
 
       // Fetch all monthly data for this user
@@ -253,21 +253,21 @@ export const processMonthlyBatch = async (
       // Check if user has >= 4 workouts this month (Phase 1 requirement)
       if (monthlyData.workouts.count < 4) {
         console.info(
-          `⏭️  Skipping user ${user.attributes.userId}: only ${monthlyData.workouts.count} workouts this month (minimum 4 required)`
+          `⏭️  Skipping user ${user.userId}: only ${monthlyData.workouts.count} workouts this month (minimum 4 required)`
         );
         continue;
       }
 
       // Generate analytics for this user using LLM
       try {
-        const analytics = await generateAnalytics(monthlyData, user.attributes);
+        const analytics = await generateAnalytics(monthlyData, user);
 
         // Store analytics in S3
         try {
           const s3Location = await storeDebugDataInS3(
             JSON.stringify(analytics, null, 2),
             {
-              userId: user.attributes.userId,
+              userId: user.userId,
               type: "monthly-analytics",
               monthStart: monthlyData.monthRange.monthStart.toISOString(),
               monthEnd: monthlyData.monthRange.monthEnd.toISOString(),
@@ -276,7 +276,7 @@ export const processMonthlyBatch = async (
               memoryCount: monthlyData.userContext.memoryCount,
               historicalSummaryCount: monthlyData.historical.summaryCount,
               analyticsLength: JSON.stringify(analytics).length,
-              hasAthleteProfile: !!user.attributes.athleteProfile?.summary,
+              hasAthleteProfile: !!user.athleteProfile?.summary,
               hasDualOutput: !!(analytics.structured_analytics && analytics.human_summary),
               humanSummaryLength: analytics.human_summary?.length || 0,
             }
@@ -299,7 +299,7 @@ export const processMonthlyBatch = async (
           try {
             const monthId = generateMonthId(monthlyData.monthRange.monthStart);
             const monthlyAnalytics: MonthlyAnalytics = {
-              userId: user.attributes.userId,
+              userId: user.userId,
               monthId,
               monthStart: monthlyData.monthRange.monthStart.toISOString().split("T")[0],
               monthEnd: monthlyData.monthRange.monthEnd.toISOString().split("T")[0],
@@ -311,7 +311,7 @@ export const processMonthlyBatch = async (
                 memoryCount: monthlyData.userContext.memoryCount,
                 historicalSummaryCount: monthlyData.historical.summaryCount,
                 analyticsLength: JSON.stringify(analytics).length,
-                hasAthleteProfile: !!user.attributes.athleteProfile?.summary,
+                hasAthleteProfile: !!user.athleteProfile?.summary,
                 hasDualOutput: !!(analytics.structured_analytics && analytics.human_summary),
                 humanSummaryLength: analytics.human_summary?.length || 0,
                 normalizationApplied: !!analytics.structured_analytics?.metadata?.normalization_applied,
@@ -322,39 +322,39 @@ export const processMonthlyBatch = async (
 
             await saveMonthlyAnalytics(monthlyAnalytics);
             console.info(
-              `✅ User ${user.attributes.userId} monthly analytics completed and stored:`,
+              `✅ User ${user.userId} monthly analytics completed and stored:`,
               {
                 ...logData,
-                dynamodbKey: `user#${user.attributes.userId} / monthlyAnalytics#${monthId}`,
+                dynamodbKey: `user#${user.userId} / monthlyAnalytics#${monthId}`,
               }
             );
           } catch (dynamoError) {
             console.warn(
-              `⚠️ Failed to store monthly analytics in DynamoDB for user ${user.attributes.userId}:`,
+              `⚠️ Failed to store monthly analytics in DynamoDB for user ${user.userId}:`,
               dynamoError
             );
 
             console.warn(
-              `⚠️ User ${user.attributes.userId} monthly analytics completed (S3 only - DynamoDB failed):`,
+              `⚠️ User ${user.userId} monthly analytics completed (S3 only - DynamoDB failed):`,
               logData
             );
           }
         } catch (s3Error) {
           console.warn(
-            `⚠️ Failed to store monthly analytics in S3 for user ${user.attributes.userId}:`,
+            `⚠️ Failed to store monthly analytics in S3 for user ${user.userId}:`,
             s3Error
           );
         }
       } catch (analyticsError) {
         console.error(
-          `❌ Failed to generate monthly analytics for user ${user.attributes.userId}:`,
+          `❌ Failed to generate monthly analytics for user ${user.userId}:`,
           analyticsError
         );
         console.info(`⚠️  Continuing with next user despite analytics failure`);
 
         // Log data collection success even if analytics failed
         console.info(
-          `✅ User ${user.attributes.userId} monthly data collected (analytics failed):`,
+          `✅ User ${user.userId} monthly data collected (analytics failed):`,
           {
             workoutCount: monthlyData.workouts.count,
             historicalSummaryCount: monthlyData.historical.summaryCount,
@@ -367,7 +367,7 @@ export const processMonthlyBatch = async (
       processedCount++;
     } catch (userError) {
       console.error(
-        `❌ Failed to process user ${user.attributes.userId}:`,
+        `❌ Failed to process user ${user.userId}:`,
         userError
       );
       // Continue processing other users even if one fails

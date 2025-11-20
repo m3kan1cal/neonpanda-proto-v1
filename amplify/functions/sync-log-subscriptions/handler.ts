@@ -32,7 +32,7 @@ const retryWithBackoff = async <T>(
 
       if (isThrottling && !isLastAttempt) {
         const delayMs = baseDelay * Math.pow(2, attempt); // Exponential backoff: 1s, 2s, 4s
-        console.warn(`⏱️ Throttled, retrying in ${delayMs}ms... (attempt ${attempt + 1}/${maxRetries})`);
+        console.warn(`⏱️ Throttled, retrying in ${delayMs}ms.. (attempt ${attempt + 1}/${maxRetries})`);
         await delay(delayMs);
       } else {
         throw error;

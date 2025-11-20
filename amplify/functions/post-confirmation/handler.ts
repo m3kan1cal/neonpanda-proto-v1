@@ -29,13 +29,13 @@ export const handler: PostConfirmationTriggerHandler = async (event: PostConfirm
 
     if (existingProfile) {
       console.warn(`⚠️ User profile already exists for email: ${email}`, {
-        existingUserId: existingProfile.attributes.userId,
-        existingUsername: existingProfile.attributes.username,
+        existingUserId: existingProfile.userId,
+        existingUsername: existingProfile.username,
         cognitoUsername: event.userName
       })
 
       // Update Cognito with the existing custom:user_id instead of creating a new profile
-      const existingCustomUserId = existingProfile.attributes.userId
+      const existingCustomUserId = existingProfile.userId
       console.info(`Using existing custom userId: ${existingCustomUserId} for Cognito user: ${event.userName}`)
 
       const cognitoCommand = new AdminUpdateUserAttributesCommand({
@@ -58,7 +58,7 @@ export const handler: PostConfirmationTriggerHandler = async (event: PostConfirm
           email: email,
           firstName: givenName,
           lastName: familyName,
-          displayName: existingProfile.attributes.displayName || `${givenName} ${familyName}`.trim() || preferredUsername,
+          displayName: existingProfile.displayName || `${givenName} ${familyName}`.trim() || preferredUsername,
           timestamp: new Date().toISOString(),
           isNewProfile: false
         };

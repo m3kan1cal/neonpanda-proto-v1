@@ -1,0 +1,346 @@
+{
+  "pk": "user#63gocaz-j-AYRsb0094ik",
+  "sk": "coachCreatorSession#coach_creator_63gocaz-j-AYRsb0094ik_1763388333682",
+  "attributes": {
+    "completedAt": "2025-11-20T04:08:44.596Z",
+    "configGeneration": {
+      "coachConfigId": "user_63gocaz-j-AYRsb0094ik_coach_1763611731945",
+      "completedAt": "2025-11-20T04:08:45.916Z",
+      "startedAt": "2025-11-20T04:08:44.596Z",
+      "status": "COMPLETE"
+    },
+    "conversationHistory": [
+      {
+        "content": "Hey! Welcome to NeonPanda - I'm stoked you're here! 🐼\n\nWe're about to build you a completely personalized AI coach that'll live right here on the platform - guiding your training, tracking your progress, and adapting to YOU. This conversation takes about 15-20 minutes, and I'll adjust my questions based on your experience level as we go.\n\nSo let's jump in: **What are your main fitness goals right now?** Building strength? Getting leaner? Training for something specific? Just tell me what you're chasing!",
+        "role": "ai",
+        "timestamp": "2025-11-17T14:05:38.089Z"
+      },
+      {
+        "content": "For my fitness goals I want to get progressively stronger, looker better with my shirt off, and be able to have general fitness.",
+        "role": "user",
+        "timestamp": "2025-11-17T14:06:57.700Z"
+      },
+      {
+        "content": "Hey! Welcome to NeonPanda - I'm stoked you're here! 🐼\n\nWe're about to build you a completely personalized AI coach that'll live right here on the platform - guiding your training, tracking your progress, and adapting to YOU. This conversation takes about 15-20 minutes, and I'll adjust my questions based on your experience level as we go.\n\nSo let's jump in: **What are your main fitness goals right now?** Building strength? Getting leaner? Training for something specific? Just tell me what you're chasing!",
+        "role": "ai",
+        "timestamp": "2025-11-17T14:06:59.307Z"
+      },
+      {
+        "content": "For my fitness goals I want to get progressively stronger, looker better with my shirt off, and be able to have general fitness.",
+        "role": "user",
+        "timestamp": "2025-11-18T01:55:19.726Z"
+      },
+      {
+        "content": "Love that combo - progressive strength, aesthetic gains, AND functional fitness. That's the trifecta right there! 💪\n\nAlright, let's set the foundation for your coach. **Would you prefer working with a male coach or a female coach?** (This helps us dial in the personality and communication style that'll vibe best with you)",
+        "role": "ai",
+        "timestamp": "2025-11-18T01:55:21.423Z"
+      },
+      {
+        "content": "I prefer working with a female coach.",
+        "role": "user",
+        "timestamp": "2025-11-18T01:55:45.341Z"
+      },
+      {
+        "content": "Perfect! A female coach it is - we'll build you someone who's knowledgeable, motivating, and totally dialed in to help you hit those goals. 🎯\n\nNow let's figure out where you're starting from. **How would you describe your current training experience?** Are you brand new to structured training, been lifting for a while, or somewhere in between?",
+        "role": "ai",
+        "timestamp": "2025-11-18T01:55:46.990Z"
+      },
+      {
+        "content": "I've been training for decades but with various methodologies. I've done bodybuilding (Inot competitive) for most of my life with a focus on hypertrophy workouts. I love to run (trail run) and for the better part of 3 years I've been doing functional fitness with a focus on Crossfit.",
+        "role": "user",
+        "timestamp": "2025-11-18T03:01:42.780Z"
+      },
+      {
+        "content": "Okay, now we're talking! Decades of training across bodybuilding, running, AND CrossFit - you've got a seriously well-rounded foundation. That hybrid background is going to make your programming really interesting because we can pull from all those methodologies. 🔥\n\nHere's what I'm thinking: with your experience level, we can get technical and strategic with your coach. She'll understand periodization, program design, and how to blend strength, aesthetics, and conditioning intelligently.\n\n**What does your training frequency look like right now?** How many days per week are you realistically able to train?",
+        "role": "ai",
+        "timestamp": "2025-11-18T03:01:46.067Z"
+      },
+      {
+        "content": "I'm doing 5-6 days per week right now with about 60 minutes per session. I do 4 or so strength + conditioning workouts and then 2 or so longer conditioning workouts.",
+        "role": "user",
+        "timestamp": "2025-11-18T03:02:56.568Z"
+      },
+      {
+        "content": "Solid setup! 5-6 days at 60 minutes gives us plenty of room to work with, and that split between strength+conditioning and pure conditioning days is smart - you're already thinking like a programmer. 💪\n\nGiven your decades of experience and that you've been hammering CrossFit-style training for 3 years, I need to know: **Do you have any current injuries, past injuries that still bug you, or movement limitations we need to work around?** (Think: cranky shoulders, finicky lower back, that knee that talks to you sometimes - anything your coach needs to be aware of when designing your program)",
+        "role": "ai",
+        "timestamp": "2025-11-18T03:02:58.957Z"
+      },
+      {
+        "content": "For injuries, I don't have any serious ones. I have some stiff shoulders that have limited mobility when it comes to putting my head through the windw that makes push jerks and overhead squats very difficult. I also have some pretty stiff hips, I can go parallel for squats but not much future. Other than that, I'm good.",
+        "role": "user",
+        "timestamp": "2025-11-18T03:15:37.874Z"
+      },
+      {
+        "content": "Got it - shoulder mobility limiting your overhead position and hip tightness keeping you from hitting deep squats. That's super common with your training background, and honestly? Your coach is going to LOVE working with this because there's real room for improvement here while we keep you training hard. We'll program around those limitations smart while also chipping away at them. 🎯\n\nNow, here's a big one for dialing in your coach's personality: **What kind of motivation style fires you up?** Are you the type who needs someone in your corner being supportive and encouraging, or do you respond better to a coach who's more direct and pushes you hard with tough love? (Or maybe somewhere in between?)",
+        "role": "ai",
+        "timestamp": "2025-11-18T03:15:40.337Z"
+      },
+      {
+        "content": "I like a coach that keeps me accountable to my goals, pushes me when I need it, calls me out when I'm making excuses, and is motivational when they can see I'm struggling.",
+        "role": "user",
+        "timestamp": "2025-11-18T03:17:03.838Z"
+      },
+      {
+        "content": "Perfect - so you want a coach who's got your back but won't let you off the hook. Someone who reads the room, knows when to push and when to support, and isn't afraid to call BS when you're sandbagging. That's the sweet spot for high performers like you. Your coach is shaping up to be exactly that kind of no-nonsense accountability partner. 💯\n\nAlright, let's talk about how you actually want to track your progress: **What metrics matter most to you for measuring success?** Are you tracking specific lifts (like hitting certain numbers on your squat or deadlift)? Body composition changes? How you look in the mirror? Performance benchmarks? Or is it more about how you feel - energy levels, how your clothes fit, overall confidence?",
+        "role": "ai",
+        "timestamp": "2025-11-18T03:17:05.873Z"
+      },
+      {
+        "content": "So I want to track specific PRs related to back squat, bench press, push press, deadlifts, and power cleans. Other than that, I'm not really tracking anything else other than consistency. i want to make sure I don't miss days.",
+        "role": "user",
+        "timestamp": "2025-11-18T03:18:27.977Z"
+      },
+      {
+        "content": "Love that - PRs on the big lifts plus consistency. That's a clean, focused approach that your coach can absolutely work with. We'll build in progression schemes to chase those numbers while making sure you're showing up day after day. 📈\n\nQuick practical question: **What time of day do you typically train?** Morning warrior, lunch break grinder, or evening session crusher? (This helps your coach understand your energy levels and how to structure your training intensity throughout the week)",
+        "role": "ai",
+        "timestamp": "2025-11-18T03:18:30.149Z"
+      },
+      {
+        "content": "I typically train in the evening around 7pm when I take my daughter to swimming. I'll either train at home in my garage gym or at the powerlifting functional commercial gym i have a membershipt at.",
+        "role": "user",
+        "timestamp": "2025-11-18T03:19:34.158Z"
+      },
+      {
+        "content": "Perfect - 7pm sessions when your daughter's at swimming. That's smart time management, and having both your garage gym AND a powerlifting gym gives you serious flexibility. Your coach can program knowing you've got access to whatever equipment you need. 🏋️\n\nHere's something that'll help dial in how your coach communicates with you: **What's your current life stage looking like?** Are you juggling young kids at home, managing a demanding career, dealing with irregular work schedules, or maybe you've got more flexibility in your routine? (Understanding what else is competing for your time and energy helps your coach be realistic and supportive about programming)",
+        "role": "ai",
+        "timestamp": "2025-11-18T03:19:37.358Z"
+      },
+      {
+        "content": "My current life stage is that I've got a 10 year old and 14 year old, both daughters, both in school and pretty active with activities, so I do have to do some running around. My work is stressful, but nothing is going to change there any time soon, so it is what it is. Other than that, nothing too much to worry about.",
+        "role": "user",
+        "timestamp": "2025-11-18T13:19:07.156Z"
+      },
+      {
+        "content": "Got it - you're in that classic juggling phase with two active daughters and a demanding job. Your coach will understand that some weeks are smooth sailing and others... well, you're just trying to get your reps in between school pickups and swim practice. Real life stuff. 💪\n\nLet's talk equipment since you mentioned both spots: **Walk me through what you've got access to between your garage gym and the powerlifting gym.** Barbell and plates obviously, but what else? Rack, bench, dumbbells, specialty bars, cables, machines? Just want to make sure your coach knows what tools are in the toolbox.",
+        "role": "ai",
+        "timestamp": "2025-11-18T13:19:09.613Z"
+      },
+      {
+        "content": "I've got access to barbells, racks, plates, dumbbells, cardio machines, pretty much anything functional that I need and weights that I need. I think I'm pretty much set and have access to everything.",
+        "role": "user",
+        "timestamp": "2025-11-18T13:21:01.231Z"
+      },
+      {
+        "content": "Awesome - you're fully loaded with equipment. Between the garage and the powerlifting gym, your coach can program literally anything without worrying about \"well, I don't have access to that.\" That's a huge advantage. 💪\n\nNow let's get real about timeline: **When are you hoping to hit those PRs and see these strength gains?** Are you thinking 3 months, 6 months, a year out? Or is this more of a \"steady long-term progress, no rush\" kind of vibe? (This helps your coach balance intensity and recovery to get you there without burning out)",
+        "role": "ai",
+        "timestamp": "2025-11-18T13:21:03.181Z"
+      },
+      {
+        "content": "I'm hoping to hit those PRs in 3 months. today is November 18, 2025 and I want to hit these by February about mid month.",
+        "role": "user",
+        "timestamp": "2025-11-18T13:25:09.943Z"
+      },
+      {
+        "content": "Okay, so we're talking **mid-February** - that's roughly 12 weeks out. That's a tight but totally doable timeline for hitting new PRs, especially since you're already training consistently. Your coach can structure a focused strength block to peak you right around then. 🎯\n\nHere's an important one for programming: **Are there any movements or exercises you just really don't enjoy or want to avoid?** Maybe you hate Bulgarian split squats, can't stand burpees, or just really don't vibe with certain exercises? (Your coach can work around stuff you dislike - no point grinding through movements that make training feel like a chore when there are plenty of effective alternatives)",
+        "role": "ai",
+        "timestamp": "2025-11-18T13:25:11.668Z"
+      },
+      {
+        "content": "No, not really. I really want to tackle all exercises and I have some weaknesses. I am good at bench press and lunging, but not so great at overhead movements like push jerks. My weaknesses are anything gymnastics like bar muscle ups, wall walks, T2Bs, those kinds of things. And I'm not good at burpees but I do want to get better at them.",
+        "role": "user",
+        "timestamp": "2025-11-18T13:27:26.372Z"
+      },
+      {
+        "content": "Love the self-awareness here! You know exactly where you're strong (bench and lunges) and where you need work (overhead movements, gymnastics, burpees). That's gold for your coach - they can lean into your strengths while strategically building up those weaknesses. The fact that you *want* to tackle the hard stuff instead of avoiding it? That's the attitude that gets PRs. 💪\n\nQuick one for context: **How old are you?** (Just helps your coach dial in recovery needs and training intensity appropriately - a 25-year-old and a 45-year-old can both crush PRs, but the programming tweaks are different)",
+        "role": "ai",
+        "timestamp": "2025-11-18T13:27:28.635Z"
+      },
+      {
+        "content": "I'm an awesome 52 years old and male.",
+        "role": "user",
+        "timestamp": "2025-11-18T13:28:31.872Z"
+      },
+      {
+        "content": "52 and crushing it - that's what I'm talking about! 🔥 And knowing you're male helps dial in the programming even more. At 52, you've got the advantage of training smarter (you know your body way better than you did at 25), and your coach will make sure recovery and intensity are balanced perfectly to keep you hitting those PRs without beating yourself up.\n\nLast key piece before we create your coach: **What kind of coaching style fires you up?** Are you someone who needs tough love and direct accountability (\"let's go, stop making excuses\"), or do you prefer a more encouraging, supportive approach (\"you've got this, let's break it down together\")? Or maybe something in between? (This shapes how your coach talks to you day-to-day and keeps you motivated)",
+        "role": "ai",
+        "timestamp": "2025-11-18T13:28:33.472Z"
+      },
+      {
+        "content": "The kind of coaching style that I favor is one that keeps me motivated, keeps me accountable, and calls me out when I'm not trying or when I'm sandbagging. Also, I like cues and tips on how to improve.",
+        "role": "user",
+        "timestamp": "2025-11-19T04:29:33.731Z"
+      },
+      {
+        "content": "Perfect - so you want a coach who keeps the fire lit, holds you accountable when you're coasting, and gives you the technical cues to actually get better. That's a killer combo. Your coach will call it like they see it (no sugarcoating when you're sandbagging) while also breaking down exactly *how* to improve those overhead movements and gymnastics skills you're working on. 🎯\n\nOne last optional question that could help dial things in even more: **Are you planning to compete in any specific events or competitions?** Like a CrossFit comp, a local throwdown, a masters event - anything like that? (If yes, your coach can program specifically toward peaking for that. If not, totally cool - we'll just focus on crushing those PRs and building your weaknesses!)",
+        "role": "ai",
+        "timestamp": "2025-11-19T04:29:36.261Z"
+      },
+      {
+        "content": "Not really. I'm not really looking to compete in any competitions, at least not serious ones. I want to be in shape to do them, but nothing is on the calendar right now.",
+        "role": "user",
+        "timestamp": "2025-11-20T04:08:37.049Z"
+      },
+      {
+        "content": "Wow, you just gave me EVERYTHING I need to create something truly special for you! 🎉 \n\nI'm so excited about building a coach who gets your unique situation - from your movement preferences and training style to your competition goals and the real-life context you're working within. This is going to be perfectly tailored to help you crush those goals while actually enjoying the journey!\n\n**I'm ready to create your coach now!** Let's bring this powerhouse to life! 💪✨",
+        "role": "ai",
+        "timestamp": "2025-11-20T04:08:44.596Z"
+      }
+    ],
+    "isComplete": true,
+    "isDeleted": true,
+    "lastActivity": "2025-11-20T04:08:45.916Z",
+    "sessionId": "coach_creator_63gocaz-j-AYRsb0094ik_1763388333682",
+    "sophisticationLevel": "UNKNOWN",
+    "startedAt": "2025-11-17T14:05:38.089Z",
+    "todoList": {
+      "age": {
+        "confidence": "high",
+        "extractedFrom": "message_28",
+        "notes": "User explicitly stated 'I'm an awesome 52 years old'",
+        "status": "complete",
+        "value": 52
+      },
+      "coachGenderPreference": {
+        "confidence": "high",
+        "extractedFrom": "message_8",
+        "notes": "User explicitly stated: 'I prefer working with a female coach'",
+        "status": "complete",
+        "value": "female"
+      },
+      "coachingStylePreference": {
+        "confidence": "high",
+        "extractedFrom": "message_30",
+        "notes": "User explicitly stated they want a coach that keeps them motivated, holds them accountable, calls them out when not trying or sandbagging, and provides cues and tips for improvement.",
+        "status": "complete",
+        "value": "Direct, motivational, and accountable coach who provides cues and technical tips for improvement. Calls out sandbagging and lack of effort while keeping the user motivated."
+      },
+      "competitionGoals": {
+        "confidence": "high",
+        "extractedFrom": "message_32",
+        "notes": "User explicitly stated they are not looking to compete in any serious competitions, though they want to be in shape to do them if the opportunity arises",
+        "status": "complete",
+        "value": "none"
+      },
+      "competitionTimeline": {
+        "confidence": "high",
+        "extractedFrom": "message_32",
+        "notes": "User stated nothing is on the calendar right now for competitions",
+        "status": "complete",
+        "value": "none"
+      },
+      "equipmentAccess": {
+        "confidence": "high",
+        "extractedFrom": "message_22",
+        "notes": "User explicitly stated they have access to barbells, racks, plates, dumbbells, cardio machines, and 'anything functional' they need. They have both a garage gym and powerlifting gym access.",
+        "status": "complete",
+        "value": ["barbells", "racks", "plates", "dumbbells", "cardio machines"]
+      },
+      "experienceLevel": {
+        "confidence": "high",
+        "extractedFrom": "message_8",
+        "notes": "User has been training for decades with various methodologies, extensive bodybuilding background, and 3 years of CrossFit/functional fitness experience",
+        "status": "complete",
+        "value": "advanced"
+      },
+      "goalTimeline": {
+        "confidence": "high",
+        "extractedFrom": "message_24",
+        "notes": "User explicitly stated they want to hit PRs in 3 months, with today being November 18, 2025, targeting mid-February",
+        "status": "complete",
+        "value": "3 months (by mid-February 2025)"
+      },
+      "injuryConsiderations": {
+        "confidence": "high",
+        "extractedFrom": "message_12",
+        "notes": "User explicitly described shoulder mobility limitations and hip stiffness as movement restrictions rather than serious injuries",
+        "status": "complete",
+        "value": "Stiff shoulders with limited mobility for overhead movements (push jerks, overhead squats difficult); stiff hips limiting squat depth beyond parallel"
+      },
+      "lifeStageContext": {
+        "confidence": "high",
+        "extractedFrom": "message_20",
+        "notes": "User explicitly stated they have two daughters in school with activities and must manage running around, plus stressful work situation that won't change",
+        "status": "complete",
+        "value": "Parent of two daughters (ages 10 and 14) who are in school and active with activities; manages family logistics while dealing with demanding/stressful work"
+      },
+      "motivationStyle": {
+        "confidence": "high",
+        "extractedFrom": "message_14",
+        "notes": "User explicitly stated they like a coach that keeps them accountable, pushes them, calls them out on excuses, and is motivational when struggling",
+        "status": "complete",
+        "value": "Accountability-focused with direct coaching - needs coach to keep them accountable to goals, push when needed, call out excuses, and provide motivation during struggles"
+      },
+      "movementDislikes": {
+        "confidence": "high",
+        "extractedFrom": "message_26",
+        "notes": "User explicitly stated they don't really have movements they want to avoid, but identified gymnastics movements and burpees as weaknesses they want to address",
+        "status": "complete",
+        "value": "No specific dislikes - user wants to tackle all exercises. However, user is not good at gymnastics movements (bar muscle ups, wall walks, T2Bs) and burpees, but wants to improve at them rather than avoid them."
+      },
+      "movementLimitations": {
+        "confidence": "high",
+        "extractedFrom": "message_12",
+        "notes": "User clearly stated these specific movement restrictions",
+        "status": "complete",
+        "value": "Limited shoulder mobility for overhead positions; limited hip mobility for deep squatting (can reach parallel but not deeper)"
+      },
+      "movementPreferences": {
+        "confidence": "high",
+        "extractedFrom": "message_8",
+        "notes": "User explicitly mentioned these as activities they do and enjoy",
+        "status": "complete",
+        "value": "Trail running, hypertrophy-focused bodybuilding workouts, CrossFit and functional fitness"
+      },
+      "primaryGoals": {
+        "confidence": "high",
+        "extractedFrom": "message_8",
+        "notes": "User explicitly stated these three main goals",
+        "status": "complete",
+        "value": "Get progressively stronger, look better with shirt off (aesthetic gains), and maintain general fitness"
+      },
+      "progressTrackingPreferences": {
+        "confidence": "high",
+        "extractedFrom": "message_16",
+        "notes": "User clearly stated these are the metrics they want to track",
+        "status": "complete",
+        "value": "Track specific PRs on compound lifts (back squat, bench press, push press, deadlifts, power cleans) and monitor training consistency/attendance"
+      },
+      "sessionDuration": {
+        "confidence": "high",
+        "extractedFrom": "message_10",
+        "notes": "User explicitly stated about 60 minutes per session",
+        "status": "complete",
+        "value": "60 minutes"
+      },
+      "successMetrics": {
+        "confidence": "high",
+        "extractedFrom": "message_16",
+        "notes": "User explicitly stated they want to track specific lifts and consistency",
+        "status": "complete",
+        "value": "Specific PRs on back squat, bench press, push press, deadlifts, and power cleans; consistency and not missing training days"
+      },
+      "timeOfDayPreference": {
+        "confidence": "high",
+        "extractedFrom": "message_18",
+        "notes": "User explicitly stated they train at 7pm when taking daughter to swimming",
+        "status": "complete",
+        "value": "evening around 7pm"
+      },
+      "trainingEnvironment": {
+        "confidence": "high",
+        "extractedFrom": "message_18",
+        "notes": "User trains at home in garage gym or at commercial powerlifting/functional gym with membership",
+        "status": "complete",
+        "value": "garage gym and powerlifting functional commercial gym"
+      },
+      "trainingFrequency": {
+        "confidence": "high",
+        "extractedFrom": "message_10",
+        "notes": "User stated 5-6 days per week, using midpoint of 5.5",
+        "status": "complete",
+        "value": 5.5
+      },
+      "trainingHistory": {
+        "confidence": "high",
+        "extractedFrom": "message_8",
+        "notes": "User provided detailed training background",
+        "status": "complete",
+        "value": "Decades of training with various methodologies. Extensive bodybuilding experience (non-competitive) with focus on hypertrophy workouts. Trail running enthusiast. 3+ years of functional fitness and CrossFit training"
+      }
+    },
+    "userId": "63gocaz-j-AYRsb0094ik"
+  },
+  "createdAt": "2025-11-20T04:08:45.916Z",
+  "entityType": "coachCreatorSession",
+  "updatedAt": "2025-11-20T04:08:45.916Z"
+}

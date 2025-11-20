@@ -13,7 +13,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
 
   return createOkResponse({
     userId,
-    coaches: coachConfigs.map(item => item.attributes),
+    coaches: coachConfigs.map(item => item),
     count: coachConfigs.length
   });
 };

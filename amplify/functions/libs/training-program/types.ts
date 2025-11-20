@@ -58,8 +58,9 @@ export interface TrainingProgram {
     };
   };
 
-  // NOTE: createdAt/updatedAt are provided by DynamoDBItem<TrainingProgram> wrapper
-  // They are NOT stored inside attributes to avoid redundancy and maintain consistency
+  // DynamoDB timestamps (populated from database metadata)
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 /**

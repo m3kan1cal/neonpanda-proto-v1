@@ -56,11 +56,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     });
 
     return createOkResponse({
-      profile: {
-        ...updatedProfile,
-        createdAt: fullProfile?.createdAt,
-        updatedAt: fullProfile?.updatedAt
-      }
+      profile: updatedProfile
     });
   } catch (error) {
     console.error('Error updating user profile:', error);

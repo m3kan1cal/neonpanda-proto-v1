@@ -1,3 +1,5 @@
+import type { DynamoDBItem } from "../coach-creator/types";
+
 /**
  * User Profile interface matching the Universal User Schema
  */
@@ -35,4 +37,9 @@ export interface UserProfile {
     createdAt: Date; // When the directive was first created
     updatedAt: Date; // When the directive was last updated
   };
+  // DynamoDB timestamps (populated from database metadata)
+  createdAt?: Date;
+  updatedAt?: Date;
 }
+
+// UserProfileInput removed - no longer needed since operations.ts returns unwrapped types

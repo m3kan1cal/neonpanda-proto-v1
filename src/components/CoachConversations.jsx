@@ -1235,21 +1235,25 @@ function CoachConversations() {
           </div>
         </header>
 
-        {/* Conversation Title - moved below header */}
+        {/* Conversation Title - styled to match ViewWorkouts metadata section */}
         {coachConversationAgentState.conversation &&
           coachConversationAgentState.conversation.title && (
-            <div className="font-rajdhani text-base text-synthwave-text-secondary -mt-4 mb-4 flex items-center">
-              <span className="text-synthwave-neon-pink mr-2">Topic:</span>
-              <InlineEditField
-                value={coachConversationAgentState.conversation.title}
-                onSave={handleSaveConversationTitle}
-                placeholder="Enter conversation title..."
-                maxLength={100}
-                showCharacterCount={false}
-                size="medium"
-                displayClassName="text-synthwave-text-secondary font-rajdhani text-base"
-                tooltipPrefix="conversation-title"
-              />
+            <div className="mb-4">
+              <div className="flex items-center gap-3 mb-1">
+                <div className="font-rajdhani text-lg text-white flex items-center">
+                  <span className="text-synthwave-neon-cyan mr-2">Conversation Title:</span>
+                  <InlineEditField
+                    value={coachConversationAgentState.conversation.title}
+                    onSave={handleSaveConversationTitle}
+                    placeholder="Enter conversation title..."
+                    maxLength={100}
+                    showCharacterCount={false}
+                    size="medium"
+                    displayClassName="text-white font-rajdhani text-lg"
+                    tooltipPrefix="conversation-title"
+                  />
+                </div>
+              </div>
             </div>
           )}
 

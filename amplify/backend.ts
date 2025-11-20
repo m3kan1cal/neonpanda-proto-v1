@@ -354,6 +354,7 @@ const sharedPolicies = new SharedPolicies(
 
 // Functions needing BEDROCK access
 [
+  backend.createCoachCreatorSession, // Added: Needs Bedrock for generating initial AI message
   backend.updateCoachCreatorSession,
   backend.streamCoachCreatorSession,
   backend.buildCoachConfig,

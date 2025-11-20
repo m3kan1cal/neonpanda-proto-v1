@@ -26,10 +26,8 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     // Return the complete workout object (no need for manual mapping)
     return createOkResponse({
       workout: {
-        ...workout.attributes, // All workout properties
+        ...workout, // All workout properties
         // Include DynamoDB metadata
-        createdAt: workout.createdAt,
-        updatedAt: workout.updatedAt
       }
     });
 

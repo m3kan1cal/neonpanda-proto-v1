@@ -1,267 +1,362 @@
+import { CoachCreatorSession, SophisticationLevel } from "./types";
 import {
-  CoachCreatorSession,
-  UserContext,
-  Question,
-  SophisticationLevel,
-} from "./types";
-import {
-  COACH_CREATOR_QUESTIONS,
-  shouldSkipQuestion,
-} from "./question-management";
-import { callBedrockApi, MODEL_IDS } from "../api-helpers";
-import { JSON_FORMATTING_INSTRUCTIONS_STANDARD } from "../prompt-helpers";
-import { parseJsonWithFallbacks } from "../response-utils";
-
-// Factory function to create a new coach creator session with default values
-// Generates unique session ID and initializes session state when user starts coach creator flow
-export const createCoachCreatorSession = (
-  userId: string
-): CoachCreatorSession => {
-  const sessionId = `coach_creator_${userId}_${Date.now()}`;
-  const now = new Date();
-
-  return {
-    userId,
-    sessionId,
-    userContext: {
-      sophisticationLevel: "UNKNOWN",
-      responses: {},
-      currentQuestion: 1,
-      detectedSignals: [],
-      sessionId,
-      userId,
-      startedAt: now,
-      lastActivity: now,
-    },
-    questionHistory: [],
-    isComplete: false,
-    startedAt: now,
-    lastActivity: now,
-  };
-};
-
-// Calculate detailed progress information
-export const getProgress = (userContext: UserContext) => {
-  if (!COACH_CREATOR_QUESTIONS || !Array.isArray(COACH_CREATOR_QUESTIONS)) {
-    console.error("COACH_CREATOR_QUESTIONS is not available or not an array");
-    return {
-      questionsCompleted: 0,
-      totalQuestions: 0,
-      percentage: 0,
-    };
-  }
-
-  const totalQuestions = COACH_CREATOR_QUESTIONS.filter(
-    (q: any) => !shouldSkipQuestion(q, userContext)
-  ).length;
-  const questionsCompleted = Object.keys(userContext.responses).length;
-  const percentage =
-    totalQuestions > 0
-      ? Math.round((questionsCompleted / totalQuestions) * 100)
-      : 0;
-
-  return {
-    questionsCompleted,
-    totalQuestions,
-    percentage,
-  };
-};
+  getCoachCreatorSession,
+  getUserProfile,
+  saveCoachCreatorSession,
+} from "../../../dynamodb/operations";
+import { invokeAsyncLambda } from "../api-helpers";
 
 // Generate coach creator session summary for analytics
-// Updated to match new question structure (11 questions, streamlined)
 export const generateCoachCreatorSessionSummary = (
   session: CoachCreatorSession
 ): string => {
-  const responses = session.userContext.responses;
-  const sophistication = session.userContext.sophisticationLevel;
+  const sophistication = session.sophisticationLevel || "UNKNOWN";
 
-  // New question mapping:
-  // 0: coach_gender_preference
-  // 1: goals_and_timeline
-  // 2: age_and_life_stage
-  // 3: experience_level
-  // 4: training_frequency_and_time
-  // 5: injuries_and_limitations
-  // 6: equipment_and_environment
-  // 7: movement_focus_and_love
-  // 8: coaching_style_and_motivation
-  // 9: success_metrics
-  // 10: competition_goals (optional)
+  // Build summary from conversation history (user responses only)
+  const userResponses =
+    session.conversationHistory
+      ?.filter((m) => m.role === "user")
+      .map((m) => m.content)
+      .join(" | ") || "No responses";
 
-  const genderPreference = responses["0"] || "No preference";
-  const goals = responses["1"] || "Not specified";
-  const age = responses["2"] || "Not specified";
-  const experience = responses["3"] || "Not specified";
-  const frequency = responses["4"] || "Not specified";
-  const injuries = responses["5"] || "None mentioned";
-  const equipment = responses["6"] || "Not specified";
-  const movementFocus = responses["7"] || "Not specified";
-  const coachingStyle = responses["8"] || "Not specified";
-  const successMetrics = responses["9"] || "Not specified";
-  const competition = responses["10"] || "Not applicable";
+  // Truncate if too long
+  const truncatedResponses =
+    userResponses.length > 1000
+      ? userResponses.substring(0, 1000) + "..."
+      : userResponses;
 
   return (
     `User ${session.userId} completed coach creator as ${sophistication.toLowerCase()} level athlete. ` +
-    `Gender preference: ${genderPreference.slice(0, 30)}... | ` +
-    `Goals: ${goals.slice(0, 100)}... | ` +
-    `Age: ${age.slice(0, 50)}... | ` +
-    `Experience: ${experience.slice(0, 100)}... | ` +
-    `Training frequency/time: ${frequency.slice(0, 80)}... | ` +
-    `Injuries/Limitations: ${injuries.slice(0, 100)}... | ` +
-    `Equipment: ${equipment.slice(0, 100)}... | ` +
-    `Movement focus: ${movementFocus.slice(0, 100)}... | ` +
-    `Coaching style: ${coachingStyle.slice(0, 100)}... | ` +
-    `Success metrics: ${successMetrics.slice(0, 100)}... | ` +
-    `Competition goals: ${competition.slice(0, 100)}... | ` +
-    `Session completed with ${session.questionHistory.length} questions answered in ${session.userContext.sophisticationLevel} sophistication path.`
+    `Responses: ${truncatedResponses}`
   );
-};
-
-// Store user response in session context, handling follow-up responses
-export const storeUserResponse = (
-  userContext: UserContext,
-  currentQuestion: Question,
-  userResponse: string
-): UserContext => {
-  const questionKey = currentQuestion.id.toString();
-  const existingResponse = userContext.responses[questionKey];
-
-  return {
-    ...userContext,
-    responses: {
-      ...userContext.responses,
-      [questionKey]: existingResponse
-        ? `${existingResponse}\n\n[Follow-up]: ${userResponse}`
-        : userResponse,
-    },
-  };
-};
-
-// Add question interaction to session history
-export const addQuestionHistory = (
-  session: CoachCreatorSession,
-  currentQuestion: Question,
-  userResponse: string,
-  aiResponse: string,
-  detectedSophistication: string,
-  imageS3Keys?: string[]
-): void => {
-  const historyEntry: any = {
-    questionId: currentQuestion.id,
-    userResponse,
-    aiResponse,
-    detectedSophistication,
-    timestamp: new Date(),
-  };
-
-  // Add image metadata if present
-  if (imageS3Keys && imageS3Keys.length > 0) {
-    historyEntry.imageS3Keys = imageS3Keys;
-    historyEntry.messageType = "text_with_images";
-  }
-
-  session.questionHistory.push(historyEntry);
-};
-
-/**
- * Check if user wants to finish the coach creator process using AI
- * Uses Claude Haiku for reliable intent detection with nuanced understanding
- *
- * @param userResponse - The user's response to the final question
- * @returns Promise<boolean> - True if user wants to finish and create the coach
- */
-export const checkUserWantsToFinish = async (
-  userResponse: string
-): Promise<boolean> => {
-  const systemPrompt = `You are an AI that analyzes user responses in a coach creator onboarding flow.
-Your task is to determine if the user wants to finish the questionnaire and create their custom AI coach.
-
-The user has just completed the final question in the coach creator flow. Now you need to determine if they're ready to proceed with coach creation.
-
-IMPORTANT CONTEXT:
-- This is the FINAL question - they've already answered all previous questions
-- They should be expressing readiness, confirmation, or willingness to proceed
-- Look for affirmative signals, even subtle ones
-- Consider both explicit statements ("yes", "ready") and implicit confirmation ("sounds good", "let's do it")
-
-RESPOND "YES" IF:
-- Expressing readiness or confirmation (e.g., "ready", "yes", "sure", "okay", "let's go")
-- Showing enthusiasm or agreement (e.g., "sounds good", "perfect", "absolutely", "definitely")
-- Indicating completion (e.g., "done", "finished", "all set", "that's it")
-- Requesting action (e.g., "create the coach", "build it", "proceed", "let's create it")
-- Being neutral but not objecting (e.g., "I think so", "probably", "I guess")
-
-RESPOND "NO" IF:
-- Expressing uncertainty or hesitation (e.g., "I'm not sure", "maybe not", "wait")
-- Asking clarifying questions (e.g., "what happens next?", "can I change this later?")
-- Indicating they need more time (e.g., "hold on", "let me think")
-- Explicitly declining (e.g., "no", "not yet", "I want to stop")
-- Requesting to go back or change answers
-
-EDGE CASES:
-- If the response is very short but affirmative (e.g., "yep", "ok", "sure"), respond YES
-- If they're asking about what comes next in a positive way (e.g., "what's next?", "when will it be ready?"), respond YES
-- CRITICAL: If the user is simply ANSWERING the final question (not expressing readiness), respond NO - they need to explicitly indicate they're ready to proceed
-- When in doubt, lean toward NO - better to ask for confirmation than to assume readiness
-
-${JSON_FORMATTING_INSTRUCTIONS_STANDARD}
-
-RESPONSE SCHEMA:
-{
-  "wantsToFinish": true or false,
-  "confidence": 0.0 to 1.0,
-  "reasoning": "brief explanation of your decision"
-}`;
-
-  const userPrompt = `User's response: "${userResponse}"
-
-Does this user want to finish the coach creator and create their custom AI coach?`;
-
-  // Use Claude Haiku for reliable intent detection
-  console.info("Using AI to detect finish intent (Claude Haiku)");
-
-  const response = await callBedrockApi(
-    systemPrompt,
-    userPrompt,
-    MODEL_IDS.CLAUDE_HAIKU_4FULL,
-    { prefillResponse: "{" } // Force JSON output format
-    // No extended thinking needed for this classification (default is false)
-  );
-
-  const result = parseJsonWithFallbacks(response.trim());
-
-  console.info("AI finish intent detection result:", {
-    userResponse: userResponse.substring(0, 100),
-    wantsToFinish: result.wantsToFinish,
-    confidence: result.confidence,
-    reasoning: result.reasoning,
-  });
-
-  return result.wantsToFinish;
-};
-
-// Update session context with new data
-export const updateSessionContext = (
-  userContext: UserContext,
-  detectedLevel: SophisticationLevel | null,
-  detectedSignals: string[],
-  isOnFinalQuestion: boolean
-): UserContext => {
-  return {
-    ...userContext,
-    sophisticationLevel: detectedLevel || userContext.sophisticationLevel,
-    currentQuestion: isOnFinalQuestion
-      ? userContext.currentQuestion
-      : userContext.currentQuestion + 1,
-    detectedSignals: [
-      ...new Set([...userContext.detectedSignals, ...detectedSignals]),
-    ],
-    lastActivity: new Date(),
-  };
 };
 
 // Mark session as complete
 export const markSessionComplete = (session: CoachCreatorSession): void => {
   session.isComplete = true;
   session.completedAt = new Date();
+};
+
+// ============================================================================
+// SESSION DATA LOADING AND SAVING
+// ============================================================================
+
+/**
+ * Session data interface
+ */
+export interface SessionData {
+  session: CoachCreatorSession;
+  userProfile: any;
+}
+
+/**
+ * Load session data from DynamoDB
+ */
+export async function loadSessionData(
+  userId: string,
+  sessionId: string
+): Promise<SessionData> {
+  console.info("📂 Loading session data:", { userId, sessionId });
+
+  const [session, userProfile] = await Promise.all([
+    getCoachCreatorSession(userId, sessionId),
+    getUserProfile(userId),
+  ]);
+
+  if (!session) {
+    throw new Error("Session not found or expired");
+  }
+
+  console.info("✅ Session data loaded successfully");
+
+  return {
+    session,
+    userProfile,
+  };
+}
+
+/**
+ * Save session and trigger coach config generation if complete
+ * Returns the coach config ID if it already exists (idempotency)
+ */
+export async function saveSessionAndTriggerCoachConfig(
+  userId: string,
+  sessionId: string,
+  session: CoachCreatorSession,
+  isComplete: boolean
+): Promise<{ coachConfigId?: string; alreadyGenerating?: boolean }> {
+  console.info("💾 Preparing to save session..");
+
+  // ✅ IDEMPOTENCY CHECK: Perform BEFORE saving to prevent race conditions
+  if (isComplete) {
+    const idempotencyCheck = checkCoachConfigIdempotency(session);
+
+    // Handle already-complete scenario
+    if (idempotencyCheck.reason === IDEMPOTENCY_REASONS.ALREADY_COMPLETE) {
+      console.info(
+        "⏭️ Coach config already exists for this session (IDEMPOTENCY SKIP):",
+        {
+          sessionId,
+          coachConfigId: idempotencyCheck.coachConfigId,
+          status: idempotencyCheck.status,
+          completedAt: idempotencyCheck.metadata?.completedAt,
+        }
+      );
+
+      // Don't save session again - already complete
+      // Return without triggering new Lambda - coach already created
+      return {
+        coachConfigId: idempotencyCheck.coachConfigId,
+        alreadyGenerating: false,
+      };
+    }
+
+    // Handle already-in-progress scenario
+    if (idempotencyCheck.reason === IDEMPOTENCY_REASONS.ALREADY_IN_PROGRESS) {
+      console.info(
+        "⏭️ Coach config generation already in progress for this session (IDEMPOTENCY SKIP):",
+        {
+          sessionId,
+          status: idempotencyCheck.status,
+          startedAt: idempotencyCheck.metadata?.startedAt,
+          elapsedSeconds: idempotencyCheck.metadata?.elapsedSeconds,
+        }
+      );
+
+      // Don't save session again - already in progress
+      // Return without triggering new Lambda - generation already running
+      return {
+        alreadyGenerating: true,
+      };
+    }
+
+    // ✅ CRITICAL: Apply lock to session BEFORE saving (prevents race condition)
+    // This ensures the lock is atomically written with the completion state
+    session = createCoachConfigGenerationLock(session);
+    console.info("🔒 Applied IN_PROGRESS lock to session before save");
+  }
+
+  // Save session once (with lock applied if needed)
+  await saveCoachCreatorSession(session);
+  console.info("✅ Session saved successfully", {
+    hasLock: !!session.configGeneration,
+    lockStatus: session.configGeneration?.status,
+  });
+
+  // Trigger async coach config generation if complete
+  if (isComplete) {
+    // Passed idempotency checks and lock is now saved - proceed with Lambda trigger
+    try {
+      const buildCoachConfigFunction =
+        process.env.BUILD_COACH_CONFIG_FUNCTION_NAME;
+      if (!buildCoachConfigFunction) {
+        console.warn(
+          "⚠️ BUILD_COACH_CONFIG_FUNCTION_NAME environment variable not set"
+        );
+      } else {
+        // Trigger the async Lambda (lock is already saved to DynamoDB)
+        await invokeAsyncLambda(
+          buildCoachConfigFunction,
+          {
+            userId,
+            sessionId,
+          },
+          "coach config generation"
+        );
+
+        console.info(
+          "✅ Triggered async coach config generation with idempotency protection"
+        );
+      }
+    } catch (error) {
+      console.error("❌ Failed to trigger coach config generation:", error);
+
+      // Reset status to allow retry using extracted utility
+      const failedSession = createCoachConfigGenerationFailure(session, error);
+
+      try {
+        await saveCoachCreatorSession(failedSession);
+        console.info(
+          "🔓 Reset session to FAILED status after Lambda trigger error"
+        );
+      } catch (resetError) {
+        console.error("❌ Failed to reset session status:", resetError);
+      }
+
+      // Don't fail the request if coach config trigger fails
+    }
+  }
+
+  return {};
+}
+
+// ============================================================================
+// IDEMPOTENCY UTILITIES FOR ASYNC COACH CONFIG GENERATION
+// ============================================================================
+
+/**
+ * Constants for idempotency check reasons
+ */
+export const IDEMPOTENCY_REASONS = {
+  NOT_STARTED: "NOT_STARTED" as const,
+  ALREADY_COMPLETE: "ALREADY_COMPLETE" as const,
+  ALREADY_IN_PROGRESS: "ALREADY_IN_PROGRESS" as const,
+};
+
+/**
+ * Type for idempotency check reasons
+ */
+export type IdempotencyReason =
+  (typeof IDEMPOTENCY_REASONS)[keyof typeof IDEMPOTENCY_REASONS];
+
+/**
+ * Result of idempotency check for coach config generation
+ */
+export interface IdempotencyCheckResult {
+  shouldProceed: boolean;
+  reason: IdempotencyReason;
+  coachConfigId?: string;
+  status?: "COMPLETE" | "IN_PROGRESS";
+  metadata?: {
+    completedAt?: string;
+    startedAt?: string;
+    elapsedSeconds?: number;
+  };
+}
+
+/**
+ * Check if coach config generation should proceed based on existing session state
+ *
+ * This prevents duplicate coach creation by checking:
+ * 1. If a coach config was already created (COMPLETE status)
+ * 2. If a coach config generation is already in progress (IN_PROGRESS status)
+ *
+ * @param session - The coach creator session to check
+ * @returns IdempotencyCheckResult indicating whether to proceed and why
+ *
+ * @example
+ * ```typescript
+ * const result = checkCoachConfigIdempotency(session);
+ *
+ * if (result.reason === IDEMPOTENCY_REASONS.ALREADY_COMPLETE) {
+ *   console.info("Coach already created:", result.coachConfigId);
+ *   return; // Early return with existing coach
+ * }
+ *
+ * if (result.reason === IDEMPOTENCY_REASONS.ALREADY_IN_PROGRESS) {
+ *   console.info("Coach creation in progress:", result.metadata);
+ *   return; // Early return - already building
+ * }
+ *
+ * // result.reason === IDEMPOTENCY_REASONS.NOT_STARTED
+ * // Safe to proceed with coach creation
+ * ```
+ */
+export const checkCoachConfigIdempotency = (
+  session: CoachCreatorSession
+): IdempotencyCheckResult => {
+  const existingGeneration = session.configGeneration;
+
+  // Check if coach config already exists (COMPLETE status)
+  if (
+    existingGeneration?.status === "COMPLETE" &&
+    existingGeneration?.coachConfigId
+  ) {
+    return {
+      shouldProceed: false,
+      reason: IDEMPOTENCY_REASONS.ALREADY_COMPLETE,
+      coachConfigId: existingGeneration.coachConfigId,
+      status: "COMPLETE",
+      metadata: {
+        completedAt: existingGeneration.completedAt?.toISOString(),
+      },
+    };
+  }
+
+  // Check if generation is already in progress (IN_PROGRESS status)
+  if (existingGeneration?.status === "IN_PROGRESS") {
+    const elapsedSeconds = existingGeneration.startedAt
+      ? Math.floor((Date.now() - existingGeneration.startedAt.getTime()) / 1000)
+      : undefined;
+
+    return {
+      shouldProceed: false,
+      reason: IDEMPOTENCY_REASONS.ALREADY_IN_PROGRESS,
+      status: "IN_PROGRESS",
+      metadata: {
+        startedAt: existingGeneration.startedAt.toISOString(),
+        elapsedSeconds,
+      },
+    };
+  }
+
+  // No existing generation found - safe to proceed
+  return {
+    shouldProceed: true,
+    reason: IDEMPOTENCY_REASONS.NOT_STARTED,
+  };
+};
+
+/**
+ * Create a session update object that sets the distributed lock for coach config generation
+ *
+ * This MUST be saved to DynamoDB BEFORE triggering the async Lambda to prevent race conditions.
+ * The IN_PROGRESS status acts as a distributed lock across multiple Lambda invocations.
+ *
+ * @param session - The coach creator session to lock
+ * @returns Updated session object with IN_PROGRESS status and lock metadata
+ *
+ * @example
+ * ```typescript
+ * const lockedSession = createCoachConfigGenerationLock(session);
+ * await saveCoachCreatorSession(lockedSession); // Save BEFORE Lambda trigger
+ * await invokeAsyncLambda(...); // Now safe to trigger
+ * ```
+ */
+export const createCoachConfigGenerationLock = (
+  session: CoachCreatorSession
+): CoachCreatorSession => {
+  return {
+    ...session,
+    configGeneration: {
+      status: "IN_PROGRESS" as const,
+      startedAt: new Date(),
+    },
+    lastActivity: new Date(),
+  };
+};
+
+/**
+ * Create a session update object that resets the generation status to FAILED
+ *
+ * Use this when the Lambda trigger fails to allow the user to retry.
+ *
+ * @param session - The coach creator session to reset
+ * @param error - The error that caused the failure
+ * @returns Updated session object with FAILED status
+ *
+ * @example
+ * ```typescript
+ * try {
+ *   await invokeAsyncLambda(...);
+ * } catch (error) {
+ *   const failedSession = createCoachConfigGenerationFailure(session, error);
+ *   await saveCoachCreatorSession(failedSession);
+ * }
+ * ```
+ */
+export const createCoachConfigGenerationFailure = (
+  session: CoachCreatorSession,
+  error: Error | unknown
+): CoachCreatorSession => {
+  return {
+    ...session,
+    configGeneration: {
+      status: "FAILED" as const,
+      startedAt: session.configGeneration?.startedAt || new Date(),
+      failedAt: new Date(),
+      error: error instanceof Error ? error.message : "Unknown error",
+    },
+    lastActivity: new Date(),
+  };
 };

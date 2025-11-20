@@ -15,7 +15,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     const conversationSummaries = await queryCoachConversations(userId, coachId);
 
     return createOkResponse({
-      conversations: conversationSummaries.map(item => item.attributes),
+      conversations: conversationSummaries.map(item => item),
       count: conversationSummaries.length
     });
 
