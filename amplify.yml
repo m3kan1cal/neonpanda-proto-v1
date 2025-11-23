@@ -5,8 +5,8 @@ applications:
       phases:
         preBuild:
           commands:
-            - nvm install 24
-            - nvm use 24
+            - nvm install 22
+            - nvm use 22
             - node -v
             - npm install --cache .npm --prefer-offline
 
@@ -80,4 +80,4 @@ applications:
         target: '/index.html'
         status: '200'
 settings:
-  nodeVersion: 24
+  nodeVersion: 22
