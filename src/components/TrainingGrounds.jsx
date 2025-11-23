@@ -381,7 +381,7 @@ function TrainingGrounds() {
               <div
                 key={workout.workoutId}
                 onClick={() => {
-                  navigate(`/training-grounds/workouts/${workout.workoutId}?userId=${userId}&coachId=${coachId}`);
+                  navigate(`/training-grounds/workouts?workoutId=${workout.workoutId}&userId=${userId}&coachId=${coachId}`);
                 }}
                 className="relative bg-synthwave-bg-primary/30 border border-synthwave-neon-pink/20 hover:border-synthwave-neon-pink/40 hover:bg-synthwave-bg-primary/50 rounded-lg p-3 cursor-pointer transition-all duration-200"
               >

@@ -1,5 +1,6 @@
 import "dotenv/config";
 import { defineFunction } from "@aws-amplify/backend";
+import { NODEJS_RUNTIME } from '../libs/configs';
 import * as events from "aws-cdk-lib/aws-events";
 import * as targets from "aws-cdk-lib/aws-events-targets";
 import * as lambda from "aws-cdk-lib/aws-lambda";
@@ -9,6 +10,7 @@ import { Stack } from "aws-cdk-lib";
 export const buildWeeklyAnalytics = defineFunction({
   name: "build-weekly-analytics",
   entry: "./handler.ts",
+  runtime: NODEJS_RUNTIME,
   timeoutSeconds: 900, // 15 minutes for processing all users
   memoryMB: 1024, // Standard memory for batch processing
 });

@@ -42,7 +42,7 @@ export const getRouteDisplayName = (segment) => {
 
 /**
  * Process a pathname into an array of display names
- * @param {string} pathname - The full pathname (e.g., '/training-grounds/workouts/:workoutId')
+ * @param {string} pathname - The full pathname (e.g., '/training-grounds/workouts')
  * @returns {string[]} - Array of display names (e.g., ['Training Grounds', 'Workouts'])
  */
 export const getRouteDisplayNames = (pathname) => {

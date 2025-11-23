@@ -19,8 +19,8 @@ export {
 
 export {
   buildWorkoutExtractionPrompt,
-  parseAndValidateWorkoutData,
   calculateConfidence,
+  calculateCompleteness,
   extractCompletedAtTime,
   checkWorkoutComplexity,
   isComplexWorkout,

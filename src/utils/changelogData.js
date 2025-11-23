@@ -10,6 +10,82 @@
 
 export const changelogEntries = [
   {
+    version: "Release v1.0.20251122-beta",
+    date: "2025-11-22",
+    changes: {
+      added: [
+        "Agentic AI architecture with orchestrator/synthesizer patterns for coach creator and workout extraction flows",
+        "Evaluator/optimizer patterns in AI processing for improved data quality and validation accuracy",
+        "Tool-based generation using Bedrock tool-use capabilities laying foundation for future MCP server integrations (SugarWOD, Push Press, Apple Health)",
+        "Parallel data processing in coach creator and workout flows achieving 2-3x speed improvements for multi-step operations",
+        "Multimodal workout logging with full image support - attach whiteboard photos, workout logs, training notes and AI extracts structured performance data",
+        "Coach creator question flow redesign based on real user observation - more intuitive, more natural, eliminates repetition, significantly more personal",
+        "Agentic memory architecture replacing goldfish memory - coach creator now tracks and remembers everything volunteered across entire conversation",
+        "Smart context retention preventing redundant questions when users volunteer information in early responses",
+        "Enhanced semantic storage and retrieval during coach creation process for richer context integration",
+        "Image processing in build-workout Lambda using callBedrockApiMultimodal for combined text + image content analysis",
+        "Schema provisioning in normalization prompts - AI now receives complete schemas as reference documents for validation",
+        "Smart defaulting logic in workout and coach config normalization to infer missing fields when AI omits them from tool responses",
+        "session_duration field to workout schema tracking total gym time (warm-up + workout + cool-down) separate from pure workout duration",
+        "Multi-phase workout duration interpretation with AI guidance for summing component durations (strength + conditioning sessions)",
+        "AMRAP duration rules explicitly enforcing duration must equal time_cap for timed AMRAPs",
+        "Resilient error handling across both coach creator and workout flows based on production usage patterns",
+        "Image S3 key support throughout workout logging pipeline from ChatInput through stream-coach-conversation to build-workout Lambda",
+        "buildMultimodalContent helper for loading image bytes from S3 and formatting for Claude multimodal API",
+        "Data completeness improvement tip box on WorkoutViewer showing missing fields with natural language examples when completeness < 80%",
+        "Conversation title skeleton loading structure matching actual UI layout",
+        "Immediate visual feedback for image uploads via instant spinner activation"
+      ],
+      changed: [
+            "Lambda runtime upgraded to Node.js 22 across all cloud functions via centralized NODEJS_RUNTIME constant in libs/configs.ts for consistent runtime management",
+        "Coach creator question flow completely redesigned from ground up based on end-user behavior analysis",
+        "Coach creator now detects and remembers information volunteered early in conversation, skipping related questions later",
+        "Coach creator personality and intelligence significantly enhanced with better context awareness and memory integration",
+        "Workout extraction redesigned with orchestrator pattern separating detection, extraction, normalization, and storage concerns",
+        "Both coach creator and workout flows now use advanced LLM tool-use APIs instead of text-based JSON parsing",
+        "Universal Workout Schema and Coach Config Schema converted from string templates to JSON Schema format for tool-use compatibility",
+        "Workout extraction and coach config generation now use Bedrock tools parameter with inputSchema for structured generation",
+        "Parallel processing implemented in both flows: router + data loading + config fetching execute concurrently instead of sequentially",
+        "build-workout and build-coach-config handlers refactored to orchestrator pattern with clear separation of extraction, validation, storage",
+        "Workout normalization tool response handling enhanced with smart defaulting and schema provisioning",
+        "buildNormalizationPrompt enhanced with explicit field logic, complete JSON examples, and reference schema inclusion",
+        "duration and time_cap field descriptions corrected from 'minutes' to 'seconds' across all workout schemas",
+        "Frontend workout duration calculations standardized on seconds storage with /60 conversion for display",
+        "detectAndProcessWorkout and workout validation functions extended to handle image-based logging",
+        "stream-coach-conversation handler updated to extract and route image data through workout detection pipeline",
+        "build-workout handler implements conditional multimodal logic based on image presence with fallback support",
+        "Coach creator prompts refined to emphasize natural conversation flow and eliminate robotic question sequences",
+        "Both flows now implement resilient retry logic, graceful degradation, and comprehensive error recovery",
+        "Data validation logic across both flows strengthened based on production failure patterns",
+        "Breadcrumb navigation detection updated for query parameter-based routing",
+        "UI components refined with better spacing, loading states, and visual feedback"
+      ],
+      fixed: [
+        "Coach creator asking redundant questions about information users already volunteered in previous responses",
+        "Coach creator repeating questions or losing context during multi-turn conversation flows",
+        "Workout extraction failing to process complex multi-phase workouts (strength + conditioning combinations)",
+        "Critical workout duration display bug showing '1 minute' instead of '30 minutes' due to unit confusion",
+        "Duration vs session_duration ambiguity - workouts now properly distinguish work time from total gym time",
+        "Normalization isValid bug where AI successfully validated data but reported failure (0 issues but isValid: false)",
+        "AI tool responses omitting required fields despite schema marking them as required",
+        "Missing schema provisioning in normalization prompts causing validation against invisible standards",
+        "Image-based workout logging completely non-functional - build-workout Lambda not calling multimodal API",
+        "Bedrock multimodal API not being invoked despite images being detected and passed through pipeline",
+        "Sequential processing bottlenecks causing 15+ second delays in coach creator and workout flows",
+        "Error recovery gaps in both flows where single failures cascaded into complete request failures",
+        "TypeScript scope errors in build-workout handler with variable accessibility in error handling blocks",
+        "Breadcrumb navigation showing incorrect paths for query parameter-based routes",
+        "InlineEditField label wrapping issues in conversation title editing",
+        "Image upload spinner showing delay before activation creating perception of unresponsiveness",
+        "Data completeness UI styling issues with excessive padding and bold text",
+        "RPE gradient scales showing faint color when empty instead of completely transparent"
+      ],
+      removed: [
+        "[Debug] Reconstruct JSON section from WorkoutDetails page (production debug artifacts cleaned up)"
+      ]
+    }
+  },
+  {
     version: "Release v1.0.20251112-beta",
     date: "2025-11-12",
     changes: {

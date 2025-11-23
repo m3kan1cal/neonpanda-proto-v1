@@ -319,7 +319,7 @@ export const QuickAccessPopover = ({
                 key={workout.workoutId}
                 onClick={() => {
                   navigate(
-                    `/training-grounds/workouts/${workout.workoutId}?userId=${userId}&coachId=${coachId}`
+                    `/training-grounds/workouts?workoutId=${workout.workoutId}&userId=${userId}&coachId=${coachId}`
                   );
                   onClose();
                 }}

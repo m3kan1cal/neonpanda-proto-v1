@@ -89,6 +89,7 @@ export interface UniversalWorkoutSchema {
   workout_name?: string;
   workout_type: string;
   duration?: number;
+  session_duration?: number;
   location?: string;
   performance_metrics?: PerformanceMetrics;
   discipline_specific?: DisciplineSpecific;
@@ -370,6 +371,8 @@ export interface WorkoutMetadata {
   extraction_method: string;
   validation_flags?: string[];
   extraction_notes?: string;
+  generation_method?: 'tool' | 'fallback';
+  generation_timestamp?: string;
 }
 
 /**
@@ -411,6 +414,7 @@ export interface BuildWorkoutEvent {
   userTimezone?: string; // User's timezone preference (e.g., 'America/Los_Angeles')
   criticalTrainingDirective?: { content: string; enabled: boolean }; // User's critical training directive
   templateContext?: TemplateContext; // Optional: Context from training program template
+  imageS3Keys?: string[]; // Optional: S3 keys for images attached to the message (may contain workout data)
 }
 
 /**

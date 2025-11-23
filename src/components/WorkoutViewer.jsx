@@ -474,6 +474,11 @@ const WorkoutSummary = ({ workoutData }) => {
         dataPath="workoutData.duration"
       />
       <ValueDisplay
+        label="Session Duration"
+        value={workoutData.session_duration ? `${Math.round(workoutData.session_duration / 60)} min` : null}
+        dataPath="workoutData.session_duration"
+      />
+      <ValueDisplay
         label="Location"
         value={workoutData.location}
         dataPath="workoutData.location"
@@ -1045,68 +1050,6 @@ const WorkoutViewer = ({
   const runningData = workoutData.discipline_specific?.running;
   const powerliftingData = workoutData.discipline_specific?.powerlifting;
 
-  // Function to reconstruct JSON from the rendered HTML
-  const reconstructJSON = () => {
-    const container = document.querySelector('[data-workout-viewer]');
-    if (!container) return null;
-
-    const result = {};
-    const elements = container.querySelectorAll('[data-json-path]');
-
-    elements.forEach(element => {
-      const path = element.getAttribute('data-json-path');
-      const value = element.getAttribute('data-json-value');
-
-      if (path && value) {
-        try {
-          const parsedValue = JSON.parse(value);
-          setNestedValue(result, path, parsedValue);
-        } catch (e) {
-          console.warn('Failed to parse JSON value:', value);
-        }
-      }
-    });
-
-    return result;
-  };
-
-  // Helper function to set nested object values
-  const setNestedValue = (obj, path, value) => {
-    const keys = path.split('.');
-    let current = obj;
-
-    for (let i = 0; i < keys.length - 1; i++) {
-      const key = keys[i];
-      const nextKey = keys[i + 1];
-
-      // Handle array indices
-      if (nextKey && nextKey.includes('[') && nextKey.includes(']')) {
-        const arrayKey = nextKey.split('[')[0];
-        const index = parseInt(nextKey.split('[')[1].split(']')[0]);
-
-        if (!current[key]) current[key] = {};
-        if (!current[key][arrayKey]) current[key][arrayKey] = [];
-
-        current = current[key];
-        i++; // Skip the next iteration since we handled it
-      } else {
-        if (!current[key]) current[key] = {};
-        current = current[key];
-      }
-    }
-
-    const finalKey = keys[keys.length - 1];
-    if (finalKey.includes('[') && finalKey.includes(']')) {
-      const arrayKey = finalKey.split('[')[0];
-      const index = parseInt(finalKey.split('[')[1].split(']')[0]);
-
-      if (!current[arrayKey]) current[arrayKey] = [];
-      current[arrayKey][index] = value;
-    } else {
-      current[finalKey] = value;
-    }
-  };
-
   return (
     <div className="space-y-6" data-workout-viewer>
       {/* Workout Title and Action Buttons */}
@@ -1385,6 +1328,75 @@ const WorkoutViewer = ({
             </span>
           </div>
 
+          {/* Data Completeness Tip */}
+          {workoutData.metadata.data_completeness !== undefined && workoutData.metadata.data_completeness < 0.8 && (
+            <div className="mt-4 p-3 bg-synthwave-neon-cyan/10 border border-synthwave-neon-cyan/30 rounded-lg">
+              <div className="flex items-start space-x-2">
+                <div className="flex-1">
+                  <h4 className="text-synthwave-neon-secondary font-rajdhani font-bold text-base mb-2">
+                    Improve Your Data Completeness (Currently {Math.round(workoutData.metadata.data_completeness * 100)}%)
+                  </h4>
+                  <p className="text-synthwave-text-secondary font-rajdhani text-sm mb-3">
+                    To get a more complete workout record, try including these details in your next workout log:
+                  </p>
+                  <ul className="space-y-1.5 text-synthwave-text-secondary font-rajdhani text-sm">
+                    {!workoutData.subjective_feedback?.enjoyment && (
+                      <li className="flex items-start space-x-2">
+                        <span className="text-synthwave-neon-cyan">•</span>
+                        <span><span className="text-white">Enjoyment:</span> How much you enjoyed the workout (1-10)</span>
+                      </li>
+                    )}
+                    {!workoutData.subjective_feedback?.difficulty && (
+                      <li className="flex items-start space-x-2">
+                        <span className="text-synthwave-neon-cyan">•</span>
+                        <span><span className="text-white">Difficulty:</span> How challenging it felt (1-10)</span>
+                      </li>
+                    )}
+                    {!workoutData.subjective_feedback?.notes && (
+                      <li className="flex items-start space-x-2">
+                        <span className="text-synthwave-neon-cyan">•</span>
+                        <span><span className="text-white">Personal Notes:</span> How you felt, what went well, areas to improve</span>
+                      </li>
+                    )}
+                    {!workoutData.performance_metrics?.perceived_exertion && (
+                      <li className="flex items-start space-x-2">
+                        <span className="text-synthwave-neon-cyan">•</span>
+                        <span><span className="text-white">RPE:</span> Rate of Perceived Exertion (1-10)</span>
+                      </li>
+                    )}
+                    {!workoutData.performance_metrics?.heart_rate?.avg && (
+                      <li className="flex items-start space-x-2">
+                        <span className="text-synthwave-neon-cyan">•</span>
+                        <span><span className="text-white">Heart Rate:</span> Average heart rate during workout</span>
+                      </li>
+                    )}
+                    {!workoutData.performance_metrics?.calories_burned && (
+                      <li className="flex items-start space-x-2">
+                        <span className="text-synthwave-neon-cyan">•</span>
+                        <span><span className="text-white">Calories:</span> Estimated calories burned</span>
+                      </li>
+                    )}
+                    {!workoutData.environmental_factors?.temperature && (
+                      <li className="flex items-start space-x-2">
+                        <span className="text-synthwave-neon-cyan">•</span>
+                        <span><span className="text-white">Environment:</span> Temperature, humidity, altitude</span>
+                      </li>
+                    )}
+                    {!workoutData.recovery_metrics?.sleep_hours && (
+                      <li className="flex items-start space-x-2">
+                        <span className="text-synthwave-neon-cyan">•</span>
+                        <span><span className="text-white">Recovery:</span> Hours of sleep before workout, morning HRV</span>
+                      </li>
+                    )}
+                  </ul>
+                  <p className="text-synthwave-neon-cyan font-rajdhani text-sm mt-3 italic">
+                    Just tell your coach naturally - e.g., "I enjoyed it 8/10, felt challenging at 7/10, and I got about 7 hours of sleep last night"
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Additional metadata info */}
           <div className="mt-4 grid grid-cols-2 md:grid-cols-3 gap-3">
             <ValueDisplay
@@ -1436,20 +1448,6 @@ const WorkoutViewer = ({
         </CollapsibleSection>
       )}
 
-      {/* Debug: JSON Reconstruction */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className={`mt-8 p-4 ${containerPatterns.infoCardCyan}`}>
-          <button
-            onClick={() => {
-              const reconstructed = reconstructJSON();
-              console.info('Reconstructed JSON:', reconstructed);
-            }}
-            className="text-synthwave-neon-cyan font-rajdhani text-sm hover:underline"
-          >
-            [Debug] Reconstruct JSON (check console)
-          </button>
-        </div>
-      )}
     </div>
   );
 };

@@ -79,3 +79,5 @@ applications:
       - source: '/<*>'
         target: '/index.html'
         status: '200'
+settings:
+  nodeVersion: 22

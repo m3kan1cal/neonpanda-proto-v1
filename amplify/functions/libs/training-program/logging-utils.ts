@@ -5,7 +5,7 @@
  * Converts natural language templates + user performance to Universal Workout Schema.
  */
 
-import { getSchemaWithContext } from '../schemas/universal-workout-schema';
+import { WORKOUT_SCHEMA } from '../schemas/universal-workout-schema';
 import type { CoachConfig } from '../coach-creator/types';
 import type { UserProfile } from '../user/types';
 import { buildCoachPersonalityPrompt } from '../coach-config/personality-utils';
@@ -109,7 +109,24 @@ Extract the workout into the Universal Workout Schema using:
    - Set metadata.extraction_method = "training_program_template"
    - Reference program context in appropriate fields
 
-${getSchemaWithContext('extraction')}
+EXTRACTION CONTEXT:
+You must extract data into this exact JSON structure. Use null for missing data, never omit fields.
+
+CRITICAL EFFICIENCY RULE: For workouts with >8 rounds, apply aggressive consolidation:
+- Consolidate warmup progressions into 1-2 rounds maximum
+- Use concise form_notes to capture progression details
+- Omit null fields that don't add contextual value
+- Prioritize working sets and metcon rounds for individual tracking
+
+ANTI-MALFORMED JSON STRATEGY:
+- For workouts with >15 rounds, prioritize JSON structural integrity over complete detail
+- Consider grouping similar consecutive rounds into single rounds with range notation
+- Example: Instead of 8 separate identical warmup rounds, use 1 round with form_notes: "Rounds 1-8: 135lbs x 3 reps progression"
+- Better to have valid parseable JSON with some detail loss than malformed JSON with full detail
+- Focus on: working sets, key lifts, metcon rounds - these are most important for tracking
+
+UNIVERSAL WORKOUT SCHEMA STRUCTURE:
+${JSON.stringify(WORKOUT_SCHEMA, null, 2)}
 
 Remember: This workout was performed as part of a training program. Preserve the connection
 between what was prescribed and what was actually done. If the user deviated significantly

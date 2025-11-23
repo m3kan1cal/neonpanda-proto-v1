@@ -105,6 +105,7 @@ async function processWorkoutDetection(
     existingConversation,
     coachConfig,
     userProfile,
+    imageS3Keys,
   } = params;
 
   const conversationContext = {
@@ -126,7 +127,8 @@ async function processWorkoutDetection(
         conversationContext,
         messageTimestamp,
         userProfile,
-        routerAnalysis // ✅ Pass Smart Router result to avoid duplicate AI call
+        routerAnalysis, // ✅ Pass Smart Router result to avoid duplicate AI call
+        imageS3Keys // ✅ Pass attached images (may contain workout data)
       );
     } catch (error) {
       console.error("❌ Error in workout detection, using fallback:", error);

@@ -13,8 +13,7 @@ import {
 } from "./types";
 import { storeDebugDataInS3, callBedrockApi, MODEL_IDS } from "../api-helpers";
 import { parseJsonWithFallbacks } from "../response-utils";
-import { JSON_FORMATTING_INSTRUCTIONS_MINIFIED, JSON_FORMATTING_INSTRUCTIONS_STANDARD } from '../prompt-helpers';
-import { getSchemaWithContext } from "../schemas/universal-workout-schema";
+import { JSON_FORMATTING_INSTRUCTIONS_STANDARD } from "../prompt-helpers";
 
 /**
  * Simple complexity check to determine if thinking should be enabled
@@ -327,24 +326,39 @@ CRITICAL TEMPORAL AWARENESS FOR WORKOUT LOGGING:
   return `
 ${directiveSection}${timezoneSection}${isComplex ? "COMPLEX WORKOUT DETECTED - APPLY AGGRESSIVE OPTIMIZATION!" : ""}
 
-${JSON_FORMATTING_INSTRUCTIONS_MINIFIED}
-
 EXTRACTION REQUIREMENTS:
-- Include ALL schema fields, use null for missing data
+- Use the Universal Workout Schema v2.0 structure provided via tool schema
 - Provide detailed extraction_notes explaining your reasoning
 - Be conservative with confidence scores - better to underestimate than overestimate
 - Focus on accuracy over completeness
 - For complex multi-phase workouts, break into clear round structures
 - EFFICIENCY: For workouts with >10 rounds, group similar warmup sets to stay within token limits
-- JSON OPTIMIZATION: Use concise structures and avoid repetitive null fields where possible
+- Use concise structures for nested objects (only include relevant weight fields, consolidate similar rounds)
 - WORKOUT NAMING: Use user-provided names when mentioned, otherwise ALWAYS generate Latin-inspired names
   * If user provides a name ("I did Fran", "workout called XYZ"), use that exact name
   * MANDATORY: When no explicit name is provided, create a Latin/Roman-inspired name (e.g., "Fortis Vigor", "Gladiator Complex", "Infernus Maximus", "Tempestus Power", "Dominus Strength")
   * DO NOT use generic English descriptive names like "Power & Conditioning Complex" - always use Latin-inspired naming
   * Latin naming adds character and memorability to workouts - this is a key feature
+- DURATION INTERPRETATION RULES (CRITICAL):
+  * duration = WORKOUT WORK TIME ONLY (actual workout duration in seconds)
+  * session_duration = TOTAL GYM TIME (optional, only if user specifies warm-up/cool-down time)
+  * For AMRAPs: duration MUST equal time_cap (e.g., 10-min AMRAP → duration = 600, time_cap = 600)
+  * For timed workouts: duration = actual work time completed
+  * For untimed workouts: duration = estimated/measured workout duration
+  * MULTI-PHASE WORKOUTS (strength + conditioning, multiple components):
+    - SUM all component durations for total work time
+    - If component durations not explicit, estimate based on rounds/sets/typical timing
+    - Strength work: estimate ~3-5 min per working set with rest
+    - Accessory work: estimate ~1-2 min per round
+    - Metcon/AMRAP: use explicit time cap
+  * EXAMPLES:
+    - User: "10min AMRAP, 7am-7:30am" → duration: 600, session_duration: 1800, time_cap: 600
+    - User: "Fran in 8:57" → duration: 537, session_duration: null
+    - User: "30min at gym, did 20min EMOM" → duration: 1200, session_duration: 1800
+    - User: "Back squat 5x5, then 12min AMRAP, 7-8am" → duration: ~2400 (estimated 20min + 12min explicit), session_duration: 3600, time_cap: 720
 ${isComplex ? "- COMPLEX WORKOUT OPTIMIZATION: Consolidate warmup rounds, use minimal weight objects, prioritize working sets and metcon rounds" : ""}
 
-You are an expert fitness data extraction AI that converts natural language workout descriptions into structured data following the Universal Workout Schema v2.0.
+You are an expert fitness data extraction AI that converts natural language workout descriptions into structured data.
 
 USER WORKOUT DESCRIPTION:
 "${userMessage}"
@@ -663,8 +677,6 @@ EXTRACTION GUIDELINES:
    - WEIGHT OBJECTS: Only include relevant weight fields (omit rx_weight/scaled_weight if not applicable)
    - MINIMAL NESTED OBJECTS: Flatten structures where possible without losing data integrity
    - STRENGTH+METCON OPTIMIZATION: For "strength then metcon" format, consolidate warmup progression into 1-2 rounds max
-
-${getSchemaWithContext('extraction')}
 `;
 };
 
@@ -753,153 +765,6 @@ const validateWorkoutTimes = (workoutData: any): void => {
 };
 
 /**
- * Parses and validates the extracted workout data from Claude's response
- */
-export const parseAndValidateWorkoutData = async (
-  extractedData: string,
-  userId: string
-): Promise<UniversalWorkoutSchema> => {
-  try {
-    // Log the raw response for debugging
-    console.info("Raw Claude response length:", extractedData.length);
-    console.info(
-      "Raw Claude response preview (first 500 chars):",
-      extractedData.substring(0, 500)
-    );
-    console.info(
-      "Raw Claude response end (last 500 chars):",
-      extractedData.substring(Math.max(0, extractedData.length - 500))
-    );
-
-    // Store raw response in S3 for debugging large responses
-    console.info("Storing Bedrock response in S3 for debugging..");
-    storeDebugDataInS3(extractedData, {
-      userId,
-      type: "large-raw-response",
-      length: extractedData.length,
-      timestamp: new Date().toISOString(),
-    }, "workout-extraction").catch((error) => {
-      console.warn("Failed to store large response in S3:", error);
-    });
-
-    // Parse the JSON response with cleaning and fixing (handles markdown-wrapped JSON and common issues)
-    // Note: parseJsonWithFallbacks will strip markdown code fences and clean the response
-    const workoutData = parseJsonWithFallbacks(extractedData);
-
-    // Validate time fields are in seconds
-    validateWorkoutTimes(workoutData);
-
-    // Set system-generated fields
-    const shortId = Math.random().toString(36).substring(2, 11);
-    workoutData.workout_id = `workout_${userId}_${Date.now()}_${shortId}`;
-    workoutData.user_id = userId;
-
-    // Ensure required fields have defaults
-    if (!workoutData.date) {
-      workoutData.date = new Date().toISOString().split("T")[0]; // Today's date in YYYY-MM-DD
-    }
-
-    if (!workoutData.discipline) {
-      workoutData.discipline = "hybrid";
-    }
-
-    if (!workoutData.workout_type) {
-      workoutData.workout_type = "hybrid";
-    }
-
-    // Ensure complete metadata structure according to Universal Workout Schema
-    if (!workoutData.metadata) {
-      workoutData.metadata = {};
-    }
-
-    // Set default values for all required metadata fields
-    workoutData.metadata.logged_via = "conversation";
-    workoutData.metadata.logging_time =
-      workoutData.metadata.logging_time || null;
-    workoutData.metadata.data_confidence =
-      workoutData.metadata.data_confidence || 0.5;
-    workoutData.metadata.ai_extracted = true;
-    workoutData.metadata.user_verified = false;
-    workoutData.metadata.version = "1.0";
-    workoutData.metadata.schema_version = "2.0";
-    workoutData.metadata.data_completeness =
-      workoutData.metadata.data_completeness || 0.5;
-    workoutData.metadata.extraction_method = "claude_conversation_analysis";
-    workoutData.metadata.validation_flags =
-      workoutData.metadata.validation_flags || [];
-    workoutData.metadata.extraction_notes =
-      workoutData.metadata.extraction_notes || null;
-
-    // Convert all undefined values to null for consistent DynamoDB storage
-    const cleanedWorkoutData = convertUndefinedToNull(workoutData);
-
-    return cleanedWorkoutData as UniversalWorkoutSchema;
-  } catch (error) {
-    console.error("Error parsing workout data:", error);
-    console.error("Raw extracted data length:", extractedData.length);
-
-    // Store the problematic response in S3 for debugging
-    try {
-      const s3Location = await storeDebugDataInS3(extractedData, {
-        userId,
-        type: "json-parse-error",
-        length: extractedData.length,
-        error: error instanceof Error ? error.message : "Unknown error",
-        timestamp: new Date().toISOString(),
-      }, "workout-extraction");
-      console.error("Problematic response stored in S3:", s3Location);
-    } catch (s3Error) {
-      console.warn("Failed to store problematic response in S3:", s3Error);
-    }
-
-    // If it's a JSON parsing error, try to identify the problematic location
-    if (error instanceof SyntaxError && error.message.includes("JSON")) {
-      console.error("JSON Syntax Error Details:", error.message);
-
-      // Try to find the position mentioned in the error
-      const positionMatch = error.message.match(/position (\d+)/);
-      if (positionMatch) {
-        const position = parseInt(positionMatch[1]);
-        const contextStart = Math.max(0, position - 200);
-        const contextEnd = Math.min(extractedData.length, position + 200);
-
-        console.error("Context around error position:", {
-          position,
-          contextStart,
-          contextEnd,
-          contextBefore: extractedData.substring(contextStart, position),
-          contextAfter: extractedData.substring(position, contextEnd),
-        });
-      }
-
-      // Try to validate JSON structure by checking for common issues
-      const commonIssues = [
-        { pattern: /,\s*}/, issue: "Trailing comma before closing brace" },
-        { pattern: /,\s*]/, issue: "Trailing comma before closing bracket" },
-        { pattern: /}\s*{/, issue: "Missing comma between objects" },
-        { pattern: /]\s*\[/, issue: "Missing comma between arrays" },
-        { pattern: /"\s*"/, issue: "Missing comma between strings" },
-        {
-          pattern: /\n\s*"[^"]*":\s*"[^"]*"\n\s*"/,
-          issue: "Missing comma between object properties",
-        },
-      ];
-
-      commonIssues.forEach(({ pattern, issue }) => {
-        const matches = extractedData.match(pattern);
-        if (matches) {
-          console.error(`Potential JSON issue found: ${issue}`, matches[0]);
-        }
-      });
-    }
-
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown parsing error";
-    throw new Error(`Failed to parse workout data: ${errorMessage}`);
-  }
-};
-
-/**
  * Calculates confidence score based on the extracted data quality
  */
 export const calculateConfidence = (
@@ -919,6 +784,65 @@ export const calculateConfidence = (
   confidence -= validationFlags.length * 0.05;
 
   return Math.max(0.1, Math.min(1.0, confidence));
+};
+
+/**
+ * Calculate data completeness score based on how many optional fields are populated
+ * @param workoutData - The workout data to analyze
+ * @returns Completeness score from 0.0 to 1.0
+ */
+export const calculateCompleteness = (
+  workoutData: UniversalWorkoutSchema
+): number => {
+  let score = 0;
+  let maxScore = 0;
+
+  // Core fields (weight: 2 points each)
+  maxScore += 2; score += workoutData.workout_name ? 2 : 0;
+  maxScore += 2; score += workoutData.duration ? 2 : 0;
+  maxScore += 2; score += workoutData.location ? 2 : 0;
+
+  // Performance metrics (weight: 1 point each)
+  maxScore += 1; score += workoutData.performance_metrics?.intensity ? 1 : 0;
+  maxScore += 1; score += workoutData.performance_metrics?.perceived_exertion ? 1 : 0;
+  maxScore += 1; score += workoutData.performance_metrics?.heart_rate?.avg ? 1 : 0;
+  maxScore += 1; score += workoutData.performance_metrics?.calories_burned ? 1 : 0;
+
+  // Discipline-specific data (weight: 3 points - most important)
+  maxScore += 3;
+  if (workoutData.discipline_specific) {
+    if (workoutData.discipline === 'crossfit' && workoutData.discipline_specific.crossfit?.rounds?.length) {
+      score += 3;
+    } else if (workoutData.discipline === 'powerlifting' && workoutData.discipline_specific.powerlifting?.sets?.length) {
+      score += 3;
+    } else if (workoutData.discipline === 'running' && workoutData.discipline_specific.running?.segments?.length) {
+      score += 3;
+    } else if (workoutData.discipline_specific[workoutData.discipline as keyof typeof workoutData.discipline_specific]) {
+      score += 2; // Partial credit for other disciplines with some data
+    }
+  }
+
+  // Subjective feedback (weight: 1 point each)
+  maxScore += 1; score += workoutData.subjective_feedback?.enjoyment ? 1 : 0;
+  maxScore += 1; score += workoutData.subjective_feedback?.difficulty ? 1 : 0;
+  maxScore += 1; score += workoutData.subjective_feedback?.notes ? 1 : 0;
+
+  // Environmental factors (weight: 0.5 points each)
+  maxScore += 0.5; score += workoutData.environmental_factors?.temperature ? 0.5 : 0;
+  maxScore += 0.5; score += workoutData.environmental_factors?.humidity ? 0.5 : 0;
+
+  // Recovery metrics (weight: 0.5 points each)
+  maxScore += 0.5; score += workoutData.recovery_metrics?.sleep_hours ? 0.5 : 0;
+  maxScore += 0.5; score += workoutData.recovery_metrics?.hrv_morning ? 0.5 : 0;
+
+  // Coach notes (weight: 1 point)
+  maxScore += 1; score += workoutData.coach_notes?.coaching_cues_given ? 1 : 0;
+
+  // PR achievements (weight: 1 point)
+  maxScore += 1; score += (workoutData.pr_achievements && workoutData.pr_achievements.length > 0) ? 1 : 0;
+
+  // Calculate percentage and ensure it's between 0 and 1
+  return Math.max(0, Math.min(1, score / maxScore));
 };
 
 /**

@@ -384,7 +384,7 @@ export const FloatingMenuManager = ({
                 key={workout.workoutId}
                 onClick={() => {
                   navigate(
-                    `/training-grounds/workouts/${workout.workoutId}?userId=${userId}&coachId=${coachId}`
+                    `/training-grounds/workouts?workoutId=${workout.workoutId}&userId=${userId}&coachId=${coachId}`
                   );
                   handleClosePopover();
                 }}

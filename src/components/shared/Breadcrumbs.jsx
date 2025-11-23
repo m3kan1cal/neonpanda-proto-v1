@@ -70,7 +70,8 @@ function Breadcrumbs() {
 
             // Special handling for workout details page - show it as a child of Manage Workouts
             // Exclude training-programs workouts from this handler
-            const isWorkoutDetailsPage = pathnames.includes('workouts') && pathnames.includes('training-grounds') && pathnames.length > 2 && !pathnames.includes('training-programs');
+            // Check for workoutId query param to identify details page (changed from path param to query param)
+            const isWorkoutDetailsPage = pathnames.includes('workouts') && pathnames.includes('training-grounds') && searchParams.has('workoutId') && !pathnames.includes('training-programs');
 
             // Special handling for coach-conversations page - show it as a child of Manage Coach Conversations
             const isCoachConversationsPage = pathnames.includes('coach-conversations') && pathnames.includes('training-grounds');

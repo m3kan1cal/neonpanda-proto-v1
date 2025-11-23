@@ -1116,6 +1116,18 @@ function CoachConversations() {
             <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
           </header>
 
+          {/* Conversation Title skeleton */}
+          <div className="mb-4">
+            <div className="flex items-center gap-3 mb-1">
+              <div className="flex items-center gap-2">
+                {/* "Conversation Title:" label skeleton */}
+                <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-36"></div>
+                {/* Title value skeleton */}
+                <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
+              </div>
+            </div>
+          </div>
+
           {/* Main Content Area skeleton */}
           <div className="flex-1 flex justify-center">
             <div className="w-full max-w-7xl">
@@ -1240,8 +1252,8 @@ function CoachConversations() {
           coachConversationAgentState.conversation.title && (
             <div className="mb-4">
               <div className="flex items-center gap-3 mb-1">
-                <div className="font-rajdhani text-lg text-white flex items-center">
-                  <span className="text-synthwave-neon-cyan mr-2">Conversation Title:</span>
+                <div className="font-rajdhani text-lg text-white flex items-center flex-nowrap">
+                  <span className="text-synthwave-neon-cyan mr-2 whitespace-nowrap">Conversation Title:</span>
                   <InlineEditField
                     value={coachConversationAgentState.conversation.title}
                     onSave={handleSaveConversationTitle}

@@ -1036,7 +1036,7 @@ Calories: `;
                       <button
                         onClick={() => {
                           navigate(
-                            `/training-grounds/workouts/${template.linkedWorkoutId}?userId=${userId}&coachId=${coachId}`
+                            `/training-grounds/workouts?workoutId=${template.linkedWorkoutId}&userId=${userId}&coachId=${coachId}`
                           );
                         }}
                         className={`flex-1 ${buttonPatterns.secondaryMedium} space-x-2`}
