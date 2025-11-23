@@ -116,11 +116,13 @@ export interface WorkoutContentValidation {
  * This unified function handles BOTH use cases:
  * 1. Natural language: "I did Fran in 8:57" → validates intent + content
  * 2. Slash commands: "Fran in 8:57" → validates content only (intent implicit)
+ * 3. Image-based: "I logged the workout in the image" + imageS3Keys → automatically passes validation
  *
  * The function intelligently detects whether intent validation is needed based on
  * the presence of past-tense completion language in the input.
  *
  * @param workoutContent - The content to validate (can be full message or extracted content)
+ * @param imageS3Keys - Optional array of S3 keys for attached images (may contain workout data)
  * @returns Promise<WorkoutContentValidation> with validation result and details
  *
  * @example
@@ -136,10 +138,15 @@ export interface WorkoutContentValidation {
  * // Incomplete content
  * const result3 = await validateWorkoutContent("today, i did the following workout");
  * // Returns: { hasPerformanceData: false, hasLoggingIntent: true, confidence: 0.9, ... }
+ *
+ * // Image-based workout
+ * const result4 = await validateWorkoutContent("I logged the workout in the image", ["image-key"]);
+ * // Returns: { hasPerformanceData: true, hasLoggingIntent: true, confidence: 0.95, ... }
  * ```
  */
 export const validateWorkoutContent = async (
-  workoutContent: string
+  workoutContent: string,
+  imageS3Keys?: string[]
 ): Promise<WorkoutContentValidation> => {
   if (!workoutContent || typeof workoutContent !== 'string') {
     return {
@@ -147,6 +154,21 @@ export const validateWorkoutContent = async (
       hasLoggingIntent: false,
       confidence: 1.0,
       reasoning: 'Empty or invalid workout content'
+    };
+  }
+
+  // ✅ NEW: If images are attached, skip text-based performance validation
+  // Images may contain workout data (whiteboard photos, workout logs, etc.)
+  if (imageS3Keys && imageS3Keys.length > 0) {
+    console.info('✅ Images detected - skipping text performance validation:', {
+      imageCount: imageS3Keys.length,
+      contentPreview: workoutContent.substring(0, 100)
+    });
+    return {
+      hasPerformanceData: true, // Assume images contain workout data
+      hasLoggingIntent: true, // User is logging with images
+      confidence: 0.95,
+      reasoning: `User provided ${imageS3Keys.length} image(s) which may contain workout performance data (whiteboard, workout log, etc.). Skipping text-based validation and allowing extraction to process images.`
     };
   }
 

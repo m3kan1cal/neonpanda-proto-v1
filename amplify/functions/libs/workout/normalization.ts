@@ -6,9 +6,10 @@
  */
 
 import { UniversalWorkoutSchema } from "./types";
-import { callBedrockApi } from "../api-helpers";
+import { callBedrockApi, storeDebugDataInS3 } from "../api-helpers";
 import { parseJsonWithFallbacks } from "../response-utils";
-import { getSchemaWithContext } from "../schemas/universal-workout-schema";
+import { NORMALIZATION_RESPONSE_SCHEMA } from "../schemas/workout-normalization-schema";
+import { WORKOUT_SCHEMA } from "../schemas/universal-workout-schema";
 
 export interface NormalizationResult {
   isValid: boolean;
@@ -16,7 +17,7 @@ export interface NormalizationResult {
   issues: NormalizationIssue[];
   confidence: number;
   summary: string;
-  normalizationMethod: "ai" | "skipped";
+  normalizationMethod: "tool" | "fallback" | "skipped";
 }
 
 export interface NormalizationIssue {
@@ -40,6 +41,54 @@ You are a workout data normalizer. Your job is to:
 3. FIX any structural or data issues found
 4. RETURN properly formatted workout data that conforms to the schema
 
+⚠️ CRITICAL: YOUR TOOL RESPONSE MUST INCLUDE ALL REQUIRED FIELDS:
+
+You MUST return a complete tool response with these REQUIRED fields:
+- isValid (boolean) - NEVER omit this field
+- normalizedData (object) - the complete workout object
+- issues (array) - empty array if no issues
+- confidence (number 0-1)
+- summary (string)
+
+🔴 ISVALID LOGIC - FOLLOW THIS EXACTLY:
+- isValid = true  →  IF no issues found (issues array is empty)
+- isValid = true  →  IF all issues were corrected (all issues have corrected: true)
+- isValid = false →  ONLY IF critical issues could NOT be corrected
+
+TOOL RESPONSE EXAMPLES (showing structure you must return):
+
+Example 1 - Perfect data with no issues:
+{
+  "isValid": true,
+  "normalizedData": { ...complete workout object... },
+  "issues": [],
+  "confidence": 1.0,
+  "summary": "Data is valid, no issues found"
+}
+
+Example 2 - Found and fixed 2 issues:
+{
+  "isValid": true,
+  "normalizedData": { ...corrected workout object... },
+  "issues": [
+    {"type":"structure","severity":"error","field":"coach_notes","description":"Moved to root level","corrected":true},
+    {"type":"data_quality","severity":"warning","field":"rounds_completed","description":"Fixed count","corrected":true}
+  ],
+  "confidence": 0.95,
+  "summary": "Fixed 2 issues - data is now valid"
+}
+
+Example 3 - Found uncorrectable issue:
+{
+  "isValid": false,
+  "normalizedData": { ...original workout object... },
+  "issues": [
+    {"type":"structure","severity":"error","field":"required_field","description":"Missing critical data","corrected":false}
+  ],
+  "confidence": 0.6,
+  "summary": "Critical issue could not be corrected"
+}
+
 CRITICAL INSTRUCTIONS:
 - Transform the input data to match the Universal Workout Schema v2.0 structure exactly
 - Move misplaced fields to their correct locations as defined in the schema
@@ -48,13 +97,7 @@ CRITICAL INSTRUCTIONS:
 - Don't add placeholder values for truly missing optional fields
 - Ensure the output is a complete, valid workout object matching the schema
 
-RESPONSE REQUIREMENTS:
-- Return ONLY valid JSON - no markdown, no code blocks, no explanations
-- Do not wrap the JSON in \`\`\`json blocks
-- Start directly with { and end with }
-- Ensure all JSON is properly escaped and parseable
-
-COMPLEX WORKOUT NORMALIZATION FOCUS:
+NORMALIZATION FOCUS:
 
 1. ROUND CONSISTENCY: Ensure all rounds follow identical structure patterns
    - All rounds must have same field structure (round_number, phase, exercises, etc.)
@@ -90,33 +133,49 @@ CRITICAL FIXES TO PRIORITIZE:
 - Missing phase markers for complex multi-part workouts
 - Incorrect nesting of discipline_specific or coach_notes
 
-${getSchemaWithContext('validation')}
+VALIDATION CONTEXT:
+Analyze this workout data for schema compliance and fix any structural issues you find.
 
-EXPECTED OUTPUT FORMAT:
-You must return a JSON object with this exact structure:
+VALIDATION APPROACH:
+- Only fix actual problems, don't add missing fields unless they contain misplaced data
+- Preserve all existing data, just move it to the correct location if needed
+- Don't create default/placeholder values for missing optional fields
+- Focus on structural correctness and data integrity
 
-{
-  "isValid": boolean,
-  "normalizedData": UniversalWorkoutSchema,
-  "issues": [
-    {
-      "type": "structure|data_quality|cross_reference",
-      "severity": "error|warning",
-      "field": "field.path",
-      "description": "Clear description of issue",
-      "corrected": boolean
-    }
-  ],
-  "confidence": number (0-1),
-  "summary": "Brief summary of normalization results and any corrections made"
-}
+COMMON ISSUES TO FIX:
+1. coach_notes misplaced inside discipline_specific (should be at root level)
+2. discipline_specific misplaced inside performance_metrics (should be at root level)
+3. Inconsistent round counts in CrossFit workouts
+4. Invalid data ranges or types that break the schema
 
-The "normalizedData" field MUST contain the workout data normalized to match the Universal Workout Schema v2.0 structure exactly.
+═══════════════════════════════════════════════════════════════════════
+UNIVERSAL WORKOUT SCHEMA V2.0 - YOUR REFERENCE DOCUMENT
+═══════════════════════════════════════════════════════════════════════
 
-WORKOUT DATA TO NORMALIZE:
+This is the schema that the workout data MUST conform to. Use this as your
+reference when identifying issues and normalizing the data structure.
+
+${JSON.stringify(WORKOUT_SCHEMA, null, 2)}
+
+═══════════════════════════════════════════════════════════════════════
+WORKOUT DATA TO NORMALIZE
+═══════════════════════════════════════════════════════════════════════
 ${JSON.stringify(workoutData, null, 2)}
 
-Transform this workout data to conform to the Universal Workout Schema v2.0 and return the normalization response in the exact JSON format specified above. Do not include any markdown formatting.`;
+📋 YOUR TASK:
+1. Analyze this workout data against Universal Workout Schema v2.0
+2. Identify any structural or data quality issues
+3. Fix/normalize any issues found
+4. Return the COMPLETE tool response with ALL required fields
+
+🎯 REMINDER - Your tool response MUST include:
+- isValid: true (if 0 issues OR all corrected) OR false (if uncorrected issues exist)
+- normalizedData: { complete workout object }
+- issues: [ array of issues found, empty if none ]
+- confidence: 0.0-1.0
+- summary: "brief description of what was done"
+
+DO NOT omit any required fields, especially isValid!`;
 };
 
 /**
@@ -153,7 +212,7 @@ export const normalizeWorkout = async (
       ],
       confidence: 0.3,
       summary: "Normalization failed due to system error",
-      normalizationMethod: "ai",
+      normalizationMethod: "skipped",
     };
   }
 };
@@ -174,29 +233,80 @@ const performNormalization = async (
       promptLength: normalizationPrompt.length
     });
 
-    const normalizationResponse = await callBedrockApi(
-      normalizationPrompt,
-      "workout_normalization",
-      undefined, // Use default model
-      { enableThinking }
-    ) as string; // No tools used, always returns string
+    let normalizationResult: any;
+    let normalizationMethod: "tool" | "fallback" = "tool";
 
-    // Parse JSON with cleaning and fixing (handles markdown-wrapped JSON and common issues)
-    const normalizationResult = parseJsonWithFallbacks(normalizationResponse);
+    // PRIMARY: Tool-based normalization with schema enforcement
+    console.info("🎯 Attempting tool-based workout normalization");
 
-    // Validate the response structure
-    if (!normalizationResult || typeof normalizationResult !== "object") {
-      throw new Error("Response is not a valid object");
-    }
-
-    if (
-      !normalizationResult.hasOwnProperty("isValid") ||
-      !normalizationResult.hasOwnProperty("normalizedData")
-    ) {
-      throw new Error(
-        "Response missing required fields (isValid, normalizedData)"
+    try {
+      const result = await callBedrockApi(
+        normalizationPrompt,
+        "workout_normalization",
+        undefined, // Use default model
+        {
+          enableThinking,
+          tools: {
+            name: 'normalize_workout',
+            description: 'Normalize workout data to conform to the Universal Workout Schema v2.0',
+            inputSchema: NORMALIZATION_RESPONSE_SCHEMA
+          },
+          expectedToolName: 'normalize_workout'
+        }
       );
+
+      if (typeof result === 'object' && result !== null) {
+        console.info("✅ Tool-based normalization succeeded");
+        normalizationResult = result;
+        normalizationMethod = "tool";
+      } else {
+        throw new Error("Tool did not return structured data");
+      }
+    } catch (toolError) {
+      // FALLBACK: Text-based normalization with parsing
+      console.warn("⚠️ Tool-based normalization failed, using fallback:", toolError);
+      normalizationMethod = "fallback";
+
+      const fallbackResponse = await callBedrockApi(
+        normalizationPrompt,
+        "workout_normalization",
+        undefined,
+        { enableThinking }
+      ) as string;
+
+      // Store debug data for fallback cases
+      await storeDebugDataInS3(
+        fallbackResponse,
+        {
+          type: 'normalization_fallback',
+          workoutId: workoutData.workout_id,
+          userId: workoutData.user_id,
+          discipline: workoutData.discipline,
+          error: toolError instanceof Error ? toolError.message : String(toolError)
+        },
+        'normalization-fallback'
+      );
+
+      normalizationResult = parseJsonWithFallbacks(fallbackResponse);
+
+      // Validate the response structure
+      if (!normalizationResult || typeof normalizationResult !== "object") {
+        throw new Error("Response is not a valid object");
+      }
+
+      if (
+        !normalizationResult.hasOwnProperty("isValid") ||
+        !normalizationResult.hasOwnProperty("normalizedData")
+      ) {
+        throw new Error(
+          "Response missing required fields (isValid, normalizedData)"
+        );
+      }
     }
+
+    console.info(
+      `Normalization completed: { method: '${normalizationMethod}', isValid: ${normalizationResult.isValid}, issues: ${normalizationResult.issues?.length || 0} }`
+    );
 
     // Add normalized flag
     if (normalizationResult.normalizedData?.metadata?.validation_flags) {
@@ -211,13 +321,21 @@ const performNormalization = async (
       }
     }
 
+    // Smart defaulting for isValid when AI doesn't provide it
+    // If isValid is undefined AND there are no issues (or all issues corrected), default to true
+    const issues = normalizationResult.issues || [];
+    const allIssuesCorrected = issues.length === 0 || issues.every((issue: any) => issue.corrected === true);
+    const isValidResult = normalizationResult.isValid !== undefined
+      ? normalizationResult.isValid
+      : allIssuesCorrected; // Default to true if no issues or all corrected
+
     return {
-      isValid: normalizationResult.isValid || false,
+      isValid: isValidResult,
       normalizedData: normalizationResult.normalizedData || workoutData,
-      issues: normalizationResult.issues || [],
+      issues: issues,
       confidence: normalizationResult.confidence || 0.8,
       summary: normalizationResult.summary || "Normalization completed",
-      normalizationMethod: "ai",
+      normalizationMethod,
     };
   } catch (error) {
     console.error("Normalization failed:", error);
@@ -235,7 +353,7 @@ const performNormalization = async (
       ],
       confidence: 0.3,
       summary: "Normalization failed, using original data",
-      normalizationMethod: "ai",
+      normalizationMethod: "skipped",
     };
   }
 };

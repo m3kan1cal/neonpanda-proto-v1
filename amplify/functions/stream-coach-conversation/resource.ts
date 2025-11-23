@@ -1,9 +1,11 @@
 import 'dotenv/config';
 import { defineFunction } from '@aws-amplify/backend';
+import { NODEJS_RUNTIME } from '../libs/configs';
 
 export const streamCoachConversation = defineFunction({
   name: 'stream-coach-conversation',
   entry: './handler.ts',
+  runtime: NODEJS_RUNTIME,
   timeoutSeconds: 300, // Same as send-coach-conversation-message for consistency
   memoryMB: 2048,     // Same as send-coach-conversation-message for consistency
   // Lambda Function URL configuration will be handled in backend.ts

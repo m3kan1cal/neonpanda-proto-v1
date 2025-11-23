@@ -225,7 +225,7 @@ function AppContent() {
             }
           />
           <Route
-            path="/training-grounds/workouts/:workoutId"
+            path="/training-grounds/workouts"
             element={
               <ProtectedRoute>
                 <WorkoutDetails />

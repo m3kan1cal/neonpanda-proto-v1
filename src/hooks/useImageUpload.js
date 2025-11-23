@@ -72,6 +72,10 @@ export function useImageUpload() {
       setUploadProgress(0);
       setError(null);
 
+      // ✅ Immediately mark ALL images as uploading (shows spinner instantly)
+      const allImageIds = selectedImages.map(img => img.id);
+      setUploadingImageIds(new Set(allImageIds));
+
       // Step 1: Get presigned URLs from backend
       const fileTypes = selectedImages.map(img => img.extension);
 
@@ -99,9 +103,6 @@ export function useImageUpload() {
         const { uploadUrl, s3Key } = uploadUrls[i];
         const image = selectedImages[i];
 
-        // Mark this image as uploading
-        setUploadingImageIds(prev => new Set(prev).add(image.id));
-
         // Direct upload to S3 using presigned URL
         await fetch(uploadUrl, {
           method: 'PUT',
@@ -114,7 +115,7 @@ export function useImageUpload() {
         s3Keys.push(s3Key);
         setUploadProgress(Math.round(((i + 1) / uploadUrls.length) * 100));
 
-        // Mark this image as done uploading
+        // Mark this image as done uploading (remove from uploading set)
         setUploadingImageIds(prev => {
           const newSet = new Set(prev);
           newSet.delete(image.id);
@@ -125,6 +126,8 @@ export function useImageUpload() {
       return s3Keys;
     } catch (err) {
       setError(err.message || 'Failed to upload images');
+      // Clear uploading state on error
+      setUploadingImageIds(new Set());
       throw err;
     } finally {
       setIsUploading(false);

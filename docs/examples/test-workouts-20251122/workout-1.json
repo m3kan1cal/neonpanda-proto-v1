@@ -1,0 +1,346 @@
+{
+  "pk": "user#63gocaz-j-AYRsb0094ik",
+  "sk": "workout#workout_63gocaz-j-AYRsb0094ik_1763861667099_7bv2tp7lv",
+  "attributes": {
+    "coachIds": ["user_63gocaz-j-AYRsb0094ik_coach_1756078034317"],
+    "coachNames": ["Victoria The Masters Champion"],
+    "completedAt": "2025-11-22T20:30:00.000Z",
+    "conversationId": "conv_1763761119267_ek3vk5fw0",
+    "extractionMetadata": {
+      "confidence": 1,
+      "extractedAt": "2025-11-23T01:35:14.579Z",
+      "normalizationSummary": "Normalization PASSED (confidence: 0.80)",
+      "reviewedAt": "2025-11-23T01:35:14.579Z",
+      "reviewedBy": "system"
+    },
+    "summary": "Completed \"Fortis Pressura\" - 5 rounds for time in 16:04 Rx, consisting of 10 push press @ 115#, 8 dips, 12 lunges @ 110# total (55# per hand), and 30 double unders. Solid upper body volume with consistent pacing across all movements, maintaining unbroken sets throughout the workout. Good balance of pressing strength, gymnastics, heavy lunges, and cardio conditioning with moderate-high intensity that felt challenging but enjoyable.",
+    "userId": "63gocaz-j-AYRsb0094ik",
+    "workoutData": {
+      "date": "2025-11-22",
+      "discipline": "crossfit",
+      "discipline_specific": {
+        "crossfit": {
+          "performance_data": {
+            "rounds_completed": 5,
+            "score": {
+              "type": "time",
+              "unit": "seconds",
+              "value": 964
+            },
+            "total_reps": 300,
+            "total_time": 964
+          },
+          "rounds": [
+            {
+              "exercises": [
+                {
+                  "exercise_name": "Push Press",
+                  "movement_type": "barbell",
+                  "reps": {
+                    "completed": 10,
+                    "prescribed": 10
+                  },
+                  "weight": {
+                    "unit": "lbs",
+                    "value": 115
+                  }
+                },
+                {
+                  "exercise_name": "Dips",
+                  "movement_type": "gymnastics",
+                  "reps": {
+                    "completed": 8,
+                    "prescribed": 8
+                  },
+                  "weight": {
+                    "unit": "lbs",
+                    "value": null
+                  }
+                },
+                {
+                  "exercise_name": "Lunges",
+                  "form_notes": "6 per leg, 55# each hand (110# total load)",
+                  "movement_type": "dumbbell",
+                  "reps": {
+                    "completed": 12,
+                    "prescribed": 12
+                  },
+                  "weight": {
+                    "unit": "lbs",
+                    "value": 110
+                  }
+                },
+                {
+                  "exercise_name": "Double Unders",
+                  "movement_type": "cardio",
+                  "reps": {
+                    "completed": 30,
+                    "prescribed": 30
+                  },
+                  "weight": {
+                    "unit": "lbs",
+                    "value": null
+                  }
+                }
+              ],
+              "round_number": 1
+            },
+            {
+              "exercises": [
+                {
+                  "exercise_name": "Push Press",
+                  "movement_type": "barbell",
+                  "reps": {
+                    "completed": 10,
+                    "prescribed": 10
+                  },
+                  "weight": {
+                    "unit": "lbs",
+                    "value": 115
+                  }
+                },
+                {
+                  "exercise_name": "Dips",
+                  "movement_type": "gymnastics",
+                  "reps": {
+                    "completed": 8,
+                    "prescribed": 8
+                  },
+                  "weight": {
+                    "unit": "lbs",
+                    "value": null
+                  }
+                },
+                {
+                  "exercise_name": "Lunges",
+                  "movement_type": "dumbbell",
+                  "reps": {
+                    "completed": 12,
+                    "prescribed": 12
+                  },
+                  "weight": {
+                    "unit": "lbs",
+                    "value": 110
+                  }
+                },
+                {
+                  "exercise_name": "Double Unders",
+                  "movement_type": "cardio",
+                  "reps": {
+                    "completed": 30,
+                    "prescribed": 30
+                  },
+                  "weight": {
+                    "unit": "lbs",
+                    "value": null
+                  }
+                }
+              ],
+              "round_number": 2
+            },
+            {
+              "exercises": [
+                {
+                  "exercise_name": "Push Press",
+                  "movement_type": "barbell",
+                  "reps": {
+                    "completed": 10,
+                    "prescribed": 10
+                  },
+                  "weight": {
+                    "unit": "lbs",
+                    "value": 115
+                  }
+                },
+                {
+                  "exercise_name": "Dips",
+                  "movement_type": "gymnastics",
+                  "reps": {
+                    "completed": 8,
+                    "prescribed": 8
+                  },
+                  "weight": {
+                    "unit": "lbs",
+                    "value": null
+                  }
+                },
+                {
+                  "exercise_name": "Lunges",
+                  "movement_type": "dumbbell",
+                  "reps": {
+                    "completed": 12,
+                    "prescribed": 12
+                  },
+                  "weight": {
+                    "unit": "lbs",
+                    "value": 110
+                  }
+                },
+                {
+                  "exercise_name": "Double Unders",
+                  "movement_type": "cardio",
+                  "reps": {
+                    "completed": 30,
+                    "prescribed": 30
+                  },
+                  "weight": {
+                    "unit": "lbs",
+                    "value": null
+                  }
+                }
+              ],
+              "round_number": 3
+            },
+            {
+              "exercises": [
+                {
+                  "exercise_name": "Push Press",
+                  "movement_type": "barbell",
+                  "reps": {
+                    "completed": 10,
+                    "prescribed": 10
+                  },
+                  "weight": {
+                    "unit": "lbs",
+                    "value": 115
+                  }
+                },
+                {
+                  "exercise_name": "Dips",
+                  "movement_type": "gymnastics",
+                  "reps": {
+                    "completed": 8,
+                    "prescribed": 8
+                  },
+                  "weight": {
+                    "unit": "lbs",
+                    "value": null
+                  }
+                },
+                {
+                  "exercise_name": "Lunges",
+                  "movement_type": "dumbbell",
+                  "reps": {
+                    "completed": 12,
+                    "prescribed": 12
+                  },
+                  "weight": {
+                    "unit": "lbs",
+                    "value": 110
+                  }
+                },
+                {
+                  "exercise_name": "Double Unders",
+                  "movement_type": "cardio",
+                  "reps": {
+                    "completed": 30,
+                    "prescribed": 30
+                  },
+                  "weight": {
+                    "unit": "lbs",
+                    "value": null
+                  }
+                }
+              ],
+              "round_number": 4
+            },
+            {
+              "exercises": [
+                {
+                  "exercise_name": "Push Press",
+                  "movement_type": "barbell",
+                  "reps": {
+                    "completed": 10,
+                    "prescribed": 10
+                  },
+                  "weight": {
+                    "unit": "lbs",
+                    "value": 115
+                  }
+                },
+                {
+                  "exercise_name": "Dips",
+                  "movement_type": "gymnastics",
+                  "reps": {
+                    "completed": 8,
+                    "prescribed": 8
+                  },
+                  "weight": {
+                    "unit": "lbs",
+                    "value": null
+                  }
+                },
+                {
+                  "exercise_name": "Lunges",
+                  "movement_type": "dumbbell",
+                  "reps": {
+                    "completed": 12,
+                    "prescribed": 12
+                  },
+                  "weight": {
+                    "unit": "lbs",
+                    "value": 110
+                  }
+                },
+                {
+                  "exercise_name": "Double Unders",
+                  "movement_type": "cardio",
+                  "reps": {
+                    "completed": 30,
+                    "prescribed": 30
+                  },
+                  "weight": {
+                    "unit": "lbs",
+                    "value": null
+                  }
+                }
+              ],
+              "round_number": 5
+            }
+          ],
+          "rx_status": "rx",
+          "time_cap": null,
+          "workout_format": "for_time"
+        }
+      },
+      "duration": 964,
+      "location": "gym",
+      "metadata": {
+        "ai_extracted": true,
+        "data_completeness": 0.7,
+        "data_confidence": 1,
+        "extraction_method": "claude_conversation_analysis",
+        "extraction_notes": "Workout extracted from user-provided image showing 5 rounds for time: 10 push press @ 115#, 8 dips, 6 (each leg) lunges @ 55# each hand, 30 double unders. Completed in 16:04. User specified 7/10 intensity, 8/10 RPE, 8/10 enjoyment. Session duration calculated from 3:30pm-4pm ET (30 minutes total). Lunge weight calculated as total load: 55# per hand × 2 = 110# total. High confidence in all data points.",
+        "generation_method": "tool",
+        "generation_timestamp": "2025-11-23T01:34:27.276Z",
+        "logged_via": "conversation",
+        "schema_version": "2.0",
+        "user_verified": false,
+        "validation_flags": [],
+        "version": "1.0"
+      },
+      "performance_metrics": {
+        "heart_rate": {
+          "avg": null,
+          "max": null
+        },
+        "intensity": 7,
+        "perceived_exertion": 8
+      },
+      "session_duration": 1800,
+      "subjective_feedback": {
+        "difficulty": 7,
+        "enjoyment": 8,
+        "notes": "Completed in 16:04. Good upper body volume with pressing and gymnastics, plus heavy lunges and cardio finisher."
+      },
+      "user_id": "63gocaz-j-AYRsb0094ik",
+      "workout_id": "workout_63gocaz-j-AYRsb0094ik_1763861667099_7bv2tp7lv",
+      "workout_name": "Fortis Pressura",
+      "workout_type": "hybrid"
+    },
+    "workoutId": "workout_63gocaz-j-AYRsb0094ik_1763861667099_7bv2tp7lv"
+  },
+  "createdAt": "2025-11-23T01:35:14.580Z",
+  "entityType": "workout",
+  "updatedAt": "2025-11-23T01:35:14.580Z"
+}

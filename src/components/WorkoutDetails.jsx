@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useSearchParams, useNavigate, useParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { Tooltip } from 'react-tooltip';
 import { useAuthorizeUser } from "../auth/hooks/useAuthorizeUser";
 import { AccessDenied, LoadingScreen } from "./shared/AccessDenied";
@@ -32,7 +32,7 @@ const JsonIcon = () => (
 function WorkoutDetails() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { workoutId } = useParams(); // Get workoutId from path params
+  const workoutId = searchParams.get("workoutId"); // Get workoutId from query params
   const userId = searchParams.get("userId");
   const coachId = searchParams.get("coachId");
 

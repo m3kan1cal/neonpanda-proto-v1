@@ -2,15 +2,18 @@ import {
   createOkResponse,
   createErrorResponse,
   callBedrockApi,
+  callBedrockApiMultimodal,
   MODEL_IDS,
   storeDebugDataInS3,
 } from "../libs/api-helpers";
+import { buildMultimodalContent } from "../libs/streaming/multimodal-helpers";
+import { MESSAGE_TYPES } from "../libs/coach-conversation/types";
 import { withHeartbeat } from "../libs/heartbeat";
 import { saveWorkout, getTrainingProgram } from "../../dynamodb/operations";
 import {
   buildWorkoutExtractionPrompt,
-  parseAndValidateWorkoutData,
   calculateConfidence,
+  calculateCompleteness,
   extractCompletedAtTime,
   generateWorkoutSummary,
   storeWorkoutSummaryInPinecone,
@@ -20,6 +23,8 @@ import {
   UniversalWorkoutSchema,
   DisciplineClassification,
 } from "../libs/workout";
+import { parseJsonWithFallbacks } from "../libs/response-utils";
+import { WORKOUT_SCHEMA } from "../libs/schemas/universal-workout-schema";
 import {
   normalizeWorkout,
   shouldNormalizeWorkout,
@@ -43,6 +48,8 @@ export const handler = async (event: BuildWorkoutEvent) => {
         ? "slash_command"
         : "natural_language",
       slashCommand: event.slashCommand || null,
+      hasImages: !!(event.imageS3Keys && event.imageS3Keys.length > 0),
+      imageCount: event.imageS3Keys?.length || 0,
       timestamp: new Date().toISOString(),
     });
 
@@ -130,74 +137,200 @@ export const handler = async (event: BuildWorkoutEvent) => {
       workoutLength: workoutContent.length
     });
 
-    // Extract workout data with AI
-    const extractedData = await callBedrockApi(
-      extractionPrompt,
-      workoutContent,
-      MODEL_IDS.CLAUDE_SONNET_4_FULL,
-      { enableThinking }
-    ) as string; // No tools used, always returns string
+    // Extract workout data with AI using tool-based extraction
+    let workoutData: UniversalWorkoutSchema;
+    let generationMethod: "tool" | "fallback" = "tool";
 
-    console.info("Claude extraction completed. Raw response:", {
-      responseLength: extractedData.length,
-      responsePreview:
-        extractedData.substring(0, 500) +
-        (extractedData.length > 500 ? "..." : ""),
-    });
+    // Check if images are present (declare outside try-catch so it's available in fallback)
+    const hasImages = event.imageS3Keys && event.imageS3Keys.length > 0;
 
-    // Store extraction prompt and response in S3 for debugging
     try {
-      const promptSizeKB = (extractionPrompt.length / 1024).toFixed(2);
-      const responseSizeKB = (extractedData.length / 1024).toFixed(2);
+      // PRIMARY: Tool-based generation with schema enforcement
+      console.info("🎯 Attempting tool-based workout extraction");
 
+      let result;
+
+      if (hasImages) {
+        console.info("🖼️ Processing workout extraction with images:", {
+          imageCount: event.imageS3Keys!.length,
+          imageKeys: event.imageS3Keys,
+        });
+
+        // Build multimodal message
+        const currentMessage = {
+          id: `msg_${Date.now()}_user`,
+          role: "user" as const,
+          content: workoutContent,
+          timestamp: new Date(),
+          messageType: MESSAGE_TYPES.TEXT_WITH_IMAGES,
+          imageS3Keys: event.imageS3Keys,
+        };
+
+        // Convert to Bedrock Converse format
+        const converseMessages = await buildMultimodalContent([currentMessage]);
+
+        // Call multimodal API with tools
+        result = await callBedrockApiMultimodal(
+          extractionPrompt,
+          converseMessages,
+          MODEL_IDS.CLAUDE_SONNET_4_FULL,
+          {
+            enableThinking,
+            tools: {
+              name: 'generate_workout',
+              description: 'Generate structured workout data from natural language workout descriptions and images using the Universal Workout Schema v2.0',
+              inputSchema: WORKOUT_SCHEMA
+            },
+            expectedToolName: 'generate_workout'
+          }
+        );
+      } else {
+        // Text-only extraction
+        result = await callBedrockApi(
+          extractionPrompt,
+          workoutContent,
+          MODEL_IDS.CLAUDE_SONNET_4_FULL,
+          {
+            enableThinking,
+            tools: {
+              name: 'generate_workout',
+              description: 'Generate structured workout data from natural language workout descriptions using the Universal Workout Schema v2.0',
+              inputSchema: WORKOUT_SCHEMA
+            },
+            expectedToolName: 'generate_workout'
+          }
+        );
+      }
+
+      // Extract workout data from tool use result (same as coach config)
+      if (typeof result !== 'string') {
+        workoutData = result.input as UniversalWorkoutSchema;
+        console.info("✅ Tool-based extraction succeeded");
+
+        // Set system-generated fields
+        const shortId = Math.random().toString(36).substring(2, 11);
+        workoutData.workout_id = `workout_${event.userId}_${Date.now()}_${shortId}`;
+        workoutData.user_id = event.userId;
+
+        // Store successful tool generation for analysis
+        try {
       await storeDebugDataInS3(
-        extractionPrompt,
-        {
-          userId: event.userId,
-          coachId: event.coachId,
-          conversationId: event.conversationId,
-          coachName: event.coachConfig.coach_name,
-          detectionType: event.isSlashCommand ? "slash_command" : "natural_language",
-          slashCommand: event.slashCommand || null,
-          workoutContentLength: workoutContent.length,
-          promptSizeKB,
-          isComplexWorkout,
-          enableThinking,
-          type: "workout-extraction-prompt",
-        },
-        "workout-extraction"
-      );
+            JSON.stringify(workoutData, null, 2),
+            {
+              type: 'workout-extraction-tool-success',
+              method: 'tool',
+              userId: event.userId,
+              conversationId: event.conversationId,
+              coachId: event.coachId,
+              discipline: workoutData.discipline,
+              isComplexWorkout,
+              enableThinking,
+            },
+            'workout-extraction'
+          );
+        } catch (err) {
+          console.warn("⚠️ Failed to store tool success data in S3 (non-critical):", err);
+        }
+      } else {
+        throw new Error("Tool use expected but received text response");
+      }
+    } catch (toolError) {
+      // FALLBACK: Prompt-based generation with JSON parsing (same as coach config)
+      console.warn("⚠️ Tool-based extraction failed, using fallback:", toolError);
+      generationMethod = "fallback";
 
-      await storeDebugDataInS3(
-        extractedData,
-        {
-          userId: event.userId,
-          coachId: event.coachId,
-          conversationId: event.conversationId,
-          responseSizeKB,
-          responseLength: extractedData.length,
-          detectionType: event.isSlashCommand ? "slash_command" : "natural_language",
-          type: "workout-extraction-response",
-        },
-        "workout-extraction"
-      );
+      console.info("🔄 Falling back to prompt-based extraction");
 
-      console.info("✅ Stored workout extraction prompt + response in S3", {
-        promptSizeKB,
-        responseSizeKB,
-      });
-    } catch (s3Error) {
-      console.warn(
-        "⚠️ Failed to store extraction data in S3 (non-critical):",
-        s3Error
+      let fallbackResult: string;
+
+      if (hasImages) {
+        console.info("🖼️ Fallback extraction with images");
+
+        // Build multimodal message for fallback
+        const currentMessage = {
+          id: `msg_${Date.now()}_user_fallback`,
+          role: "user" as const,
+          content: workoutContent,
+          timestamp: new Date(),
+          messageType: MESSAGE_TYPES.TEXT_WITH_IMAGES,
+          imageS3Keys: event.imageS3Keys,
+        };
+
+        const converseMessages = await buildMultimodalContent([currentMessage]);
+
+        fallbackResult = await callBedrockApiMultimodal(
+          extractionPrompt,
+          converseMessages,
+          MODEL_IDS.CLAUDE_SONNET_4_FULL,
+          {
+            enableThinking,
+            staticPrompt: extractionPrompt, // Cache the large static prompt
+            dynamicPrompt: "", // No dynamic content
+          }
+        ) as string;
+      } else {
+        // Text-only fallback
+        fallbackResult = await callBedrockApi(
+          extractionPrompt,
+          workoutContent,
+          MODEL_IDS.CLAUDE_SONNET_4_FULL,
+          {
+            enableThinking,
+            staticPrompt: extractionPrompt, // Cache the large static prompt
+            dynamicPrompt: "", // No dynamic content
+          }
+        ) as string;
+      }
+
+      console.info("✅ Fallback extraction completed");
+
+      // Parse JSON with fallbacks (same as coach config)
+      workoutData = parseJsonWithFallbacks(fallbackResult);
+
+      // Set system-generated fields for fallback
+      const shortId = Math.random().toString(36).substring(2, 11);
+      workoutData.workout_id = `workout_${event.userId}_${Date.now()}_${shortId}`;
+      workoutData.user_id = event.userId;
+
+      // Store fallback response and error for debugging
+      try {
+        await storeDebugDataInS3(
+          JSON.stringify({
+            toolError: toolError instanceof Error ? toolError.message : String(toolError),
+            toolStack: toolError instanceof Error ? toolError.stack : undefined,
+            fallbackResponse: fallbackResult,
+          }, null, 2),
+          {
+            type: 'workout-extraction-fallback',
+            reason: 'tool_extraction_failed',
+          userId: event.userId,
+            conversationId: event.conversationId,
+          coachId: event.coachId,
+            errorMessage: toolError instanceof Error ? toolError.message : String(toolError),
+            isComplexWorkout,
+            enableThinking,
+        },
+          'workout-extraction'
       );
+        console.info("✅ Stored fallback debug data in S3");
+      } catch (err) {
+        console.warn("⚠️ Failed to store fallback data in S3 (non-critical):", err);
+    }
     }
 
-    console.info("Parsing extracted data..");
+    // Add generation method to metadata
+    if (!workoutData.metadata) {
+      workoutData.metadata = {} as any;
+    }
+    workoutData.metadata.generation_method = generationMethod;
+    workoutData.metadata.generation_timestamp = new Date().toISOString();
 
-    // Parse and validate the extracted data
-    const workoutData: UniversalWorkoutSchema =
-      await parseAndValidateWorkoutData(extractedData, event.userId);
+    console.info("Extraction completed:", {
+      method: generationMethod,
+      workoutId: workoutData.workout_id,
+      discipline: workoutData.discipline,
+      workoutName: workoutData.workout_name,
+    });
 
     // For slash commands, add metadata about explicit logging
     if (event.isSlashCommand) {
@@ -241,9 +374,12 @@ export const handler = async (event: BuildWorkoutEvent) => {
       validationFlags: workoutData.metadata?.validation_flags?.length || 0,
     });
 
-    // Calculate confidence score and update metadata
+    // Calculate confidence and completeness scores and update metadata
     const confidence = calculateConfidence(workoutData);
     workoutData.metadata.data_confidence = confidence;
+
+    const completeness = calculateCompleteness(workoutData);
+    workoutData.metadata.data_completeness = completeness;
 
     // NORMALIZATION STEP - Normalize workout data for schema compliance
     let finalWorkoutData = workoutData;

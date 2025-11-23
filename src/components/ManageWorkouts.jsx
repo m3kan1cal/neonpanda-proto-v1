@@ -352,7 +352,7 @@ function ManageWorkouts() {
         className={`${containerPatterns.cardMedium} p-5 group transition-all duration-300 hover:border-synthwave-neon-cyan/40 hover:bg-synthwave-bg-card/40 relative cursor-pointer flex flex-col h-full`}
         onClick={() =>
           navigate(
-            `/training-grounds/workouts/${workout.workoutId}?userId=${userId}&coachId=${workout.coachIds?.[0] || "default"}`
+            `/training-grounds/workouts?workoutId=${workout.workoutId}&userId=${userId}&coachId=${workout.coachIds?.[0] || "default"}`
           )
         }
       >
@@ -489,7 +489,7 @@ function ManageWorkouts() {
               </div>
               <div className="w-full bg-gradient-to-r from-synthwave-neon-pink via-pink-800 to-purple-800 rounded-full h-2 relative overflow-hidden">
                 <div
-                  className="absolute top-0 right-0 h-2 bg-synthwave-bg-primary/90 rounded-r-full"
+                  className="absolute top-0 right-0 h-2 bg-synthwave-bg-primary rounded-r-full"
                   style={{ width: `${100 - ((intensity || 0) / 10) * 100}%` }}
                 ></div>
               </div>
@@ -503,7 +503,7 @@ function ManageWorkouts() {
               </div>
               <div className="w-full bg-gradient-to-r from-synthwave-neon-pink via-pink-800 to-purple-800 rounded-full h-2 relative overflow-hidden">
                 <div
-                  className="absolute top-0 right-0 h-2 bg-synthwave-bg-primary/90 rounded-r-full"
+                  className="absolute top-0 right-0 h-2 bg-synthwave-bg-primary rounded-r-full"
                   style={{ width: `${100 - ((rpe || 0) / 10) * 100}%` }}
                 ></div>
               </div>

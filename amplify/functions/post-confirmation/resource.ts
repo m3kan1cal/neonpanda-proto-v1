@@ -1,9 +1,11 @@
 import 'dotenv/config';
 import { defineFunction } from '@aws-amplify/backend';
+import { NODEJS_RUNTIME } from '../libs/configs';
 
 export const postConfirmation = defineFunction({
   name: 'post-confirmation',
   entry: './handler.ts',
+  runtime: NODEJS_RUNTIME,
   timeoutSeconds: 30,
   memoryMB: 1024,
   resourceGroupName: 'auth',  // Assign to auth stack to avoid circular dependency

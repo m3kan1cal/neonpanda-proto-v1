@@ -23,6 +23,7 @@ export interface WorkoutDetectionResult {
  * Detects workout logging (natural language or slash commands) and triggers extraction
  *
  * @param routerAnalysis - Optional Smart Router result to avoid duplicate AI calls for natural language detection
+ * @param imageS3Keys - Optional array of S3 keys for attached images (may contain workout data)
  */
 export async function detectAndProcessWorkout(
   userMessage: string,
@@ -33,7 +34,8 @@ export async function detectAndProcessWorkout(
   conversationContext: { sessionNumber: number },
   messageTimestamp?: string,
   userProfile?: UserProfile,
-  routerAnalysis?: SmartRequestRouter
+  routerAnalysis?: SmartRequestRouter,
+  imageS3Keys?: string[]
 ): Promise<WorkoutDetectionResult> {
 
   // Check for workout logging detection (natural language OR slash commands)
@@ -74,7 +76,7 @@ export async function detectAndProcessWorkout(
       } else {
         // Fallback: Call validateWorkoutContent if no router result (shouldn't happen in streaming flow)
         console.warn('⚠️ No Smart Router result provided - falling back to validateWorkoutContent');
-        const naturalLanguageValidation = await validateWorkoutContent(userMessage);
+        const naturalLanguageValidation = await validateWorkoutContent(userMessage, imageS3Keys);
         isNaturalLanguageWorkout = naturalLanguageValidation.hasPerformanceData && naturalLanguageValidation.hasLoggingIntent;
 
         console.info('🔍 Natural language workout check (fallback validation):', {
@@ -133,10 +135,12 @@ export async function detectAndProcessWorkout(
     console.info("🔍 Validating workout content for performance data..", {
       contentLength: workoutContent.length,
       contentPreview: workoutContent.substring(0, 100),
-      detectionType: isSlashCommandWorkout ? "slash_command" : "natural_language"
+      detectionType: isSlashCommandWorkout ? "slash_command" : "natural_language",
+      hasImages: !!(imageS3Keys && imageS3Keys.length > 0),
+      imageCount: imageS3Keys?.length || 0
     });
 
-    const validationResult = await validateWorkoutContent(workoutContent);
+    const validationResult = await validateWorkoutContent(workoutContent, imageS3Keys);
 
     if (!validationResult.hasPerformanceData) {
       console.warn("⚠️ WORKOUT VALIDATION FAILED: No performance data detected in workout content", {
@@ -202,6 +206,7 @@ export async function detectAndProcessWorkout(
         messageTimestamp, // Pass messageTimestamp to workout extraction
         userTimezone: userProfile?.preferences?.timezone, // Pass user timezone for temporal context
         criticalTrainingDirective: userProfile?.criticalTrainingDirective, // Pass critical training directive
+        imageS3Keys, // Pass attached images (may contain workout data)
       };
 
       await invokeAsyncLambda(

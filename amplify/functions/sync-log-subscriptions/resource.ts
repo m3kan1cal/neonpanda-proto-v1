@@ -1,4 +1,5 @@
 import { defineFunction } from "@aws-amplify/backend";
+import { NODEJS_RUNTIME } from '../libs/configs';
 import * as events from "aws-cdk-lib/aws-events";
 import * as targets from "aws-cdk-lib/aws-events-targets";
 import * as lambda from "aws-cdk-lib/aws-lambda";
@@ -7,6 +8,7 @@ import { Stack } from "aws-cdk-lib";
 export const syncLogSubscriptions = defineFunction({
   name: "sync-log-subscriptions",
   entry: "./handler.ts",
+  runtime: NODEJS_RUNTIME,
   timeoutSeconds: 300,
   memoryMB: 2048,
 });

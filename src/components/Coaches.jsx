@@ -730,9 +730,9 @@ function Coaches() {
                         e.stopPropagation();
                         setOpenMenuId(openMenuId === coach.coach_id ? null : coach.coach_id);
                       }}
-                      className={`p-2 rounded-lg transition-all duration-200 focus:outline-none active:outline-none ${
+                      className={`p-2 rounded-lg transition-colors duration-200 focus:outline-none active:outline-none focus:ring-1 focus:ring-synthwave-neon-cyan/50 ${
                         openMenuId === coach.coach_id
-                          ? 'text-synthwave-neon-cyan bg-synthwave-bg-primary/50'
+                          ? 'text-synthwave-neon-cyan bg-synthwave-bg-primary/50 ring-1 ring-synthwave-neon-cyan/50'
                           : 'text-synthwave-text-muted hover:text-synthwave-neon-cyan hover:bg-synthwave-bg-primary/50'
                       }`}
                       style={{ WebKitTapHighlightColor: 'transparent' }}

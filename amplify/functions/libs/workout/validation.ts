@@ -8,7 +8,7 @@
 import { UniversalWorkoutSchema } from "./types";
 import { callBedrockApi } from "../api-helpers";
 import { parseJsonWithFallbacks } from "../response-utils";
-import { getSchemaWithContext } from "../schemas/universal-workout-schema";
+import { WORKOUT_SCHEMA } from "../schemas/universal-workout-schema";
 
 export interface NormalizationResult {
   isValid: boolean;
@@ -54,7 +54,23 @@ RESPONSE REQUIREMENTS:
 - Start directly with { and end with }
 - Ensure all JSON is properly escaped and parseable
 
-${getSchemaWithContext('validation')}
+VALIDATION CONTEXT:
+Analyze this workout data for schema compliance and fix any structural issues you find.
+
+VALIDATION APPROACH:
+- Only fix actual problems, don't add missing fields unless they contain misplaced data
+- Preserve all existing data, just move it to the correct location if needed
+- Don't create default/placeholder values for missing optional fields
+- Focus on structural correctness and data integrity
+
+COMMON ISSUES TO FIX:
+1. coach_notes misplaced inside discipline_specific (should be at root level)
+2. discipline_specific misplaced inside performance_metrics (should be at root level)
+3. Inconsistent round counts in CrossFit workouts
+4. Invalid data ranges or types that break the schema
+
+UNIVERSAL WORKOUT SCHEMA v2.0 (Complete Structure):
+${JSON.stringify(WORKOUT_SCHEMA, null, 2)}
 
 EXPECTED OUTPUT FORMAT:
 You must return a JSON object with this exact structure:
