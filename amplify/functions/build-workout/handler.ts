@@ -9,7 +9,7 @@ import {
 import { buildMultimodalContent } from "../libs/streaming/multimodal-helpers";
 import { MESSAGE_TYPES } from "../libs/coach-conversation/types";
 import { withHeartbeat } from "../libs/heartbeat";
-import { saveWorkout, getTrainingProgram } from "../../dynamodb/operations";
+import { saveWorkout, getProgram } from "../../dynamodb/operations";
 import {
   buildWorkoutExtractionPrompt,
   calculateConfidence,
@@ -24,16 +24,16 @@ import {
   DisciplineClassification,
 } from "../libs/workout";
 import { parseJsonWithFallbacks } from "../libs/response-utils";
-import { WORKOUT_SCHEMA } from "../libs/schemas/universal-workout-schema";
+import { WORKOUT_SCHEMA } from "../libs/schemas/workout-schema";
 import {
   normalizeWorkout,
   shouldNormalizeWorkout,
   generateNormalizationSummary,
 } from "../libs/workout/normalization";
 import {
-  getTrainingProgramDetailsFromS3,
-  saveTrainingProgramDetailsToS3,
-} from "../libs/training-program/s3-utils";
+  getProgramDetailsFromS3,
+  saveProgramDetailsToS3,
+} from "../libs/program/s3-utils";
 
 export const handler = async (event: BuildWorkoutEvent) => {
   return withHeartbeat('Workout Extraction', async () => {
@@ -682,14 +682,14 @@ export const handler = async (event: BuildWorkoutEvent) => {
     if (event.templateContext) {
       console.info("🔗 Updating template linkedWorkoutId in S3..");
       try {
-        const programData = await getTrainingProgram(
+        const programData = await getProgram(
           event.userId,
           event.coachId,
           event.templateContext.programId
         );
 
         if (programData?.s3DetailKey) {
-          const programDetails = await getTrainingProgramDetailsFromS3(programData.s3DetailKey);
+          const programDetails = await getProgramDetailsFromS3(programData.s3DetailKey);
 
           if (programDetails) {
             const templateIndex = programDetails.workoutTemplates.findIndex(
@@ -698,7 +698,7 @@ export const handler = async (event: BuildWorkoutEvent) => {
 
             if (templateIndex !== -1) {
               programDetails.workoutTemplates[templateIndex].linkedWorkoutId = workout.workoutId;
-              await saveTrainingProgramDetailsToS3(programData.s3DetailKey, programDetails);
+              await saveProgramDetailsToS3(programData.s3DetailKey, programDetails);
               console.info("✅ Template linkedWorkoutId updated:", {
                 templateId: event.templateContext.templateId,
                 workoutId: workout.workoutId,

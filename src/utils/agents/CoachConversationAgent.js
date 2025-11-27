@@ -54,6 +54,8 @@ export class CoachConversationAgent {
       streamingMessageId: null,
       // Contextual updates (ephemeral UX feedback)
       contextualUpdate: null, // { content: string, stage: string }
+      // Conversation size tracking
+      conversationSize: null,
     };
 
     // Bind methods
@@ -356,6 +358,15 @@ export class CoachConversationAgent {
         });
       }
 
+      // Debug: Log workout session on load
+      if (actualConversation.workoutCreatorSession) {
+        console.log('🏋️ Loaded conversation with active workout session:', {
+          conversationId,
+          turnCount: actualConversation.workoutCreatorSession.turnCount,
+          progress: actualConversation.workoutCreatorSession.progressDetails
+        });
+      }
+
       // Update state with loaded messages and conversation size
       this._updateState({
         conversation: actualConversation,
@@ -461,6 +472,7 @@ export class CoachConversationAgent {
       this._updateState({
         isTyping: false,
         conversation: result.conversation || this.state.conversation,
+        conversationSize: result.conversationSize || this.state.conversationSize || null,
       });
 
       return result;
@@ -480,6 +492,7 @@ export class CoachConversationAgent {
       this._updateState({
         isTyping: false,
         error: "Failed to send message",
+        conversationSize: this.state.conversationSize || null,
       });
 
       if (typeof this.onError === "function") {
@@ -512,6 +525,7 @@ export class CoachConversationAgent {
       this._addMessage(userMessage);
 
       // Create streaming message placeholder with conversation mode metadata
+      // Use the conversation mode directly (CHAT, PROGRAM_DESIGN, or WORKOUT_LOG)
       const conversationMode = this.state.conversation?.mode || CONVERSATION_MODES.CHAT;
       const streamingMsg = createStreamingMessage(this, { mode: conversationMode });
 
@@ -564,21 +578,44 @@ export class CoachConversationAgent {
             const finalContent =
               chunk.aiMessage?.content || chunk.fullMessage || "";
 
-            // CRITICAL: Update the message content first, then reset streaming state
-            streamingMsg.update(finalContent);
+            // Extract metadata from the AI message if available
+            const messageMetadata = chunk.aiMessage?.metadata || null;
+
+            // CRITICAL: Update the message content and metadata first, then reset streaming state
+            streamingMsg.update(finalContent, messageMetadata);
 
             // Wait a brief moment to ensure the UI has updated with the final content
             await new Promise((resolve) => setTimeout(resolve, 50));
 
+            // Clear workout session immediately if workout generation was triggered
+            // This prevents the badge from showing on subsequent messages
+            const workoutGenerationTriggered = chunk.metadata?.workoutGenerationTriggered === true;
+            const shouldClearSession = workoutGenerationTriggered || chunk.workoutCreatorSession === null;
+
+            // Build the updated conversation object with explicit mode assignment
+            const updatedConversation = chunk.conversationId
+              ? {
+                  ...this.state.conversation,
+                  conversationId: chunk.conversationId,
+                  // Update workout session state
+                  ...(shouldClearSession
+                    ? { workoutCreatorSession: undefined }
+                    : chunk.hasOwnProperty('workoutCreatorSession')
+                      ? { workoutCreatorSession: chunk.workoutCreatorSession }
+                      : {}
+                  ),
+                }
+              : this.state.conversation;
+
+            // Explicitly set mode AFTER object creation if provided by backend
+            if (chunk.hasOwnProperty('mode')) {
+              updatedConversation.mode = chunk.mode;
+            }
+
             // Reset streaming state and update conversation with size data
             resetStreamingState(this, {
-              conversation: chunk.conversationId
-                ? {
-                    ...this.state.conversation,
-                    conversationId: chunk.conversationId,
-                  }
-                : this.state.conversation,
-              conversationSize: chunk.conversationSize || null,
+              conversation: updatedConversation,
+              conversationSize: chunk.conversationSize || this.state.conversationSize || null,
             });
 
             return chunk;
@@ -586,17 +623,40 @@ export class CoachConversationAgent {
 
           onFallback: async (data) => {
             const aiResponseContent = this._extractAiResponse(data);
-            streamingMsg.update(aiResponseContent);
+
+            // Extract metadata from the AI message if available
+            const messageMetadata = data?.aiMessage?.metadata || null;
+
+            streamingMsg.update(aiResponseContent, messageMetadata);
+
+            // Clear workout session immediately if workout generation was triggered
+            const workoutGenerationTriggered = data?.metadata?.workoutGenerationTriggered === true;
+            const shouldClearSession = workoutGenerationTriggered || data?.workoutCreatorSession === null;
+
+            // Build the updated conversation object
+            const updatedConversation = data?.conversationId
+              ? {
+                  ...this.state.conversation,
+                  conversationId: data.conversationId,
+                  // Update workout session state
+                  ...(shouldClearSession
+                    ? { workoutCreatorSession: undefined }
+                    : data?.hasOwnProperty('workoutCreatorSession')
+                      ? { workoutCreatorSession: data.workoutCreatorSession }
+                      : {}
+                  ),
+                }
+              : this.state.conversation;
+
+            // Explicitly set mode AFTER object creation if provided by backend
+            if (data?.hasOwnProperty('mode')) {
+              updatedConversation.mode = data.mode;
+            }
 
             // Reset streaming state and update conversation with size data
             resetStreamingState(this, {
-              conversation: data?.conversationId
-                ? {
-                    ...this.state.conversation,
-                    conversationId: data.conversationId,
-                  }
-                : this.state.conversation,
-              conversationSize: data?.conversationSize || null,
+              conversation: updatedConversation,
+              conversationSize: data?.conversationSize || this.state.conversationSize || null,
             });
 
             return data;
@@ -665,6 +725,7 @@ export class CoachConversationAgent {
       conversation: result?.conversationId
         ? { ...this.state.conversation, conversationId: result.conversationId }
         : this.state.conversation,
+      conversationSize: result?.conversationSize || this.state.conversationSize || null,
     });
 
     return result;
@@ -689,7 +750,10 @@ export class CoachConversationAgent {
     };
 
     this._addMessage(errorResponse);
-    resetStreamingState(this, { error: "Failed to send message" });
+    resetStreamingState(this, {
+      error: "Failed to send message",
+      conversationSize: this.state.conversationSize || null,
+    });
 
     if (typeof this.onError === "function") {
       this.onError(error);
@@ -707,12 +771,23 @@ export class CoachConversationAgent {
 
   /**
    * Updates the content of a streaming message by ID
+   * @param {string} messageId - The message ID to update
+   * @param {string} content - The new content
+   * @param {Object} metadata - Optional metadata to merge into the message
    */
-  _updateStreamingMessage(messageId, content) {
+  _updateStreamingMessage(messageId, content, metadata = null) {
     // Create a new messages array with the updated message
-    const messages = this.state.messages.map((msg) =>
-      msg.id === messageId ? { ...msg, content } : msg
-    );
+    const messages = this.state.messages.map((msg) => {
+      if (msg.id === messageId) {
+        const updatedMsg = { ...msg, content };
+        // Merge metadata if provided
+        if (metadata) {
+          updatedMsg.metadata = { ...msg.metadata, ...metadata };
+        }
+        return updatedMsg;
+      }
+      return msg;
+    });
 
     // Use _updateState to ensure proper state management
     this._updateState({

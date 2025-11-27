@@ -13,7 +13,7 @@ Phase 1 successfully established the complete backend infrastructure for the Tra
 
 ## ✅ Completed Components
 
-### 1. Data Model & Types (`amplify/functions/libs/training-program/`)
+### 1. Data Model & Types (`amplify/functions/libs/program/`)
 
 **Files Created:**
 - `types.ts` - Complete TypeScript type definitions
@@ -23,29 +23,29 @@ Phase 1 successfully established the complete backend infrastructure for the Tra
 - `index.ts` - Module exports
 
 **Key Types Defined:**
-- `TrainingProgram` - Main program entity with phases, status, analytics
+- `Program` - Main program entity with phases, status, analytics
 - `WorkoutTemplate` - Individual workout template structure (prescribed workouts)
-- `TrainingProgramPhase` - Phase definitions with focus areas
-- `TrainingProgramDetails` - S3-stored detailed program data
+- `ProgramPhase` - Phase definitions with focus areas
+- `ProgramDetails` - S3-stored detailed program data
 - `Exercise` - Movement definitions compatible with Universal Workout Schema
 - Event types for all API operations
-- UI helper types (TodaysWorkoutTemplates, TrainingProgramSummary)
+- UI helper types (TodaysWorkoutTemplates, ProgramSummary)
 
 ### 2. Database Operations (`amplify/dynamodb/operations.ts`)
 
 **Functions Added:**
 ```typescript
 // Core CRUD
-saveTrainingProgram(program: TrainingProgram): Promise<void>
-getTrainingProgram(userId, coachId, programId): Promise<DynamoDBItem<TrainingProgram> | null>
-updateTrainingProgram(userId, coachId, programId, updates): Promise<TrainingProgram>
-deleteTrainingProgram(userId, coachId, programId): Promise<void>
+saveProgram(program: Program): Promise<void>
+getProgram(userId, coachId, programId): Promise<DynamoDBItem<Program> | null>
+updateProgram(userId, coachId, programId, updates): Promise<Program>
+deleteProgram(userId, coachId, programId): Promise<void>
 
 // Query operations
-queryTrainingProgramsByCoach(userId, coachId, options?): Promise<DynamoDBItem<TrainingProgram>[]>
-queryTrainingPrograms(userId, options?): Promise<DynamoDBItem<TrainingProgram>[]>
-queryTrainingProgramSummaries(userId, coachId?): Promise<TrainingProgramSummary[]>
-queryTrainingProgramsCount(userId, options?): Promise<{ totalCount: number }>
+queryProgramsByCoach(userId, coachId, options?): Promise<DynamoDBItem<Program>[]>
+queryPrograms(userId, options?): Promise<DynamoDBItem<Program>[]>
+queryProgramSummaries(userId, coachId?): Promise<ProgramSummary[]>
+queryProgramsCount(userId, options?): Promise<{ totalCount: number }>
 ```
 
 **DynamoDB Schema:**
@@ -82,7 +82,7 @@ gsi1sk: program#{programId}
 
 **S3 Structure:**
 ```
-training-programs/{userId}/{programId}_{timestamp}.json
+programs/{userId}/{programId}_{timestamp}.json
 ```
 
 **Note:** S3 key structure was simplified (removed branch prefix) for main apps bucket.
@@ -91,26 +91,26 @@ training-programs/{userId}/{programId}_{timestamp}.json
 
 #### CREATE Training Program
 - **Path:** `POST /users/{userId}/coaches/{coachId}/programs`
-- **Handler:** `amplify/functions/create-training-program/handler.ts`
+- **Handler:** `amplify/functions/create-program/handler.ts`
 - **Function:** Create program structure (workout templates generated in Phase 2)
 - **Permissions:** DynamoDB Read/Write, S3 Apps
 
 #### GET Training Program
 - **Path:** `GET /users/{userId}/coaches/{coachId}/programs/{programId}`
-- **Handler:** `amplify/functions/get-training-program/handler.ts`
+- **Handler:** `amplify/functions/get-program/handler.ts`
 - **Function:** Retrieve single program with details
 - **Permissions:** DynamoDB Read, S3 Apps
 
 #### GET Training Programs (List)
 - **Path:** `GET /users/{userId}/coaches/{coachId}/programs`
-- **Handler:** `amplify/functions/get-training-programs/handler.ts`
+- **Handler:** `amplify/functions/get-programs/handler.ts`
 - **Function:** List programs with filters (status, limit)
 - **Query Params:** `?status=active&limit=10`
 - **Permissions:** DynamoDB Read
 
 #### UPDATE Training Program
 - **Path:** `PUT /users/{userId}/coaches/{coachId}/programs/{programId}`
-- **Handler:** `amplify/functions/update-training-program/handler.ts`
+- **Handler:** `amplify/functions/update-program/handler.ts`
 - **Function:** Update status (pause, resume, complete, archive) or modify program fields
 - **Body Actions:** `{ action: 'pause' | 'resume' | 'complete' | 'archive' }` or direct field updates
 - **Permissions:** DynamoDB Read/Write
@@ -147,18 +147,18 @@ training-programs/{userId}/{programId}_{timestamp}.json
 ### 7. IAM Permissions
 
 **DynamoDB Read/Write:**
-- `createTrainingProgram`
-- `updateTrainingProgram`
+- `createProgram`
+- `updateProgram`
 - `logWorkoutTemplate`
 
 **DynamoDB Read-Only:**
-- `getTrainingProgram`
-- `getTrainingPrograms`
+- `getProgram`
+- `getPrograms`
 - `getWorkoutTemplate`
 
 **S3 Apps Bucket Access:**
-- `createTrainingProgram` (store program details with empty templates)
-- `getTrainingProgram` (read program details)
+- `createProgram` (store program details with empty templates)
+- `getProgram` (read program details)
 - `logWorkoutTemplate` (update template status, create workout log)
 - `getWorkoutTemplate` (read workout templates)
 
@@ -209,10 +209,10 @@ Transitions:
 ```
 1. User initiates program creation (frontend)
 2. POST /programs with program structure
-3. createTrainingProgram Lambda:
+3. createProgram Lambda:
    - Validates input
    - Calculates dates and phases
-   - Creates TrainingProgram entity
+   - Creates Program entity
    - Saves to DynamoDB
 4. Returns programId and structure
 5. [Phase 2] AI generates daily workouts

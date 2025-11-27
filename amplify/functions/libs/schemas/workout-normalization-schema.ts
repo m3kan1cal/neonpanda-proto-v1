@@ -5,7 +5,7 @@
  * AI-powered workout normalization responses
  */
 
-import { WORKOUT_SCHEMA } from './universal-workout-schema';
+import { WORKOUT_SCHEMA } from './workout-schema';
 
 export const NORMALIZATION_RESPONSE_SCHEMA = {
   type: 'object',

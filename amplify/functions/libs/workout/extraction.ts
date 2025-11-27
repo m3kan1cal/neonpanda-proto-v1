@@ -922,7 +922,7 @@ Examples:
     const response = await callBedrockApi(
       timeExtractionPrompt,
       userMessage,
-      MODEL_IDS.CLAUDE_HAIKU_4FULL,
+      MODEL_IDS.CLAUDE_HAIKU_4_FULL,
       { prefillResponse: "{" } // Force JSON output format
     ) as string; // No tools used, always returns string
 
@@ -1112,7 +1112,7 @@ Return confidence 0.8+ for clear classifications, 0.5-0.7 for moderate cases, <0
     const response = await callBedrockApi(
       classificationPrompt,
       discipline,
-      MODEL_IDS.CLAUDE_HAIKU_4FULL
+      MODEL_IDS.CLAUDE_HAIKU_4_FULL
     ) as string; // No tools used, always returns string
 
     // Store prompt and response in S3 for debugging

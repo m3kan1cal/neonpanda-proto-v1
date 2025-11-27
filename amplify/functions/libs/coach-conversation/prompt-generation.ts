@@ -57,7 +57,7 @@ export const generateSystemPrompt = (
   // ============================================================================
 
   // 0. MODE-SPECIFIC DIRECTIVE (Build mode for program creation)
-  if (mode === CONVERSATION_MODES.BUILD) {
+  if (mode === CONVERSATION_MODES.PROGRAM_DESIGN) {
     staticPromptSections.push(`🏗️ BUILD MODE - TRAINING PROGRAM CREATION:
 
 You are in PROGRAM CREATION mode. Your role is to guide the user through creating a structured, multi-week training program through natural, conversational design.
@@ -277,7 +277,7 @@ The system will then:
       includeSafety: true,
       includeCriticalDirective: true,
       context:
-        mode === CONVERSATION_MODES.BUILD
+        mode === CONVERSATION_MODES.PROGRAM_DESIGN
           ? "CONVERSATIONAL PROGRAM CREATION MODE"
           : "CONVERSATIONAL COACHING MODE",
     }

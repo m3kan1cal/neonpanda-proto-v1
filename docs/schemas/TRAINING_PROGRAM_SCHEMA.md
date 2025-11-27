@@ -119,7 +119,7 @@ Training Programs are one way to use NeonPanda. Users can:
 ```json
 {
   // Core Program Identity
-  "programId": "trainingProgram_{userId}_{timestamp}_{shortId}",
+  "programId": "program_{userId}_{timestamp}_{shortId}",
   "userId": "user_reference",
   "coachId": "coach_reference",
   "name": "Program name (concise, descriptive)",
@@ -215,11 +215,11 @@ Training Programs are one way to use NeonPanda. Users can:
 
 #### programId Pattern
 ```
-Format: trainingProgram_{userId}_{timestamp}_{shortId}
-Example: trainingProgram_user123_1705708800000_a1b2c3
+Format: program_{userId}_{timestamp}_{shortId}
+Example: program_user123_1705708800000_a1b2c3
 
 Components:
-- entityType: "trainingProgram" (entity namespace)
+- entityType: "program" (entity namespace)
 - userId: User-scoped (not coach-scoped)
 - timestamp: Creation timestamp for chronological sorting
 - shortId: Random identifier for uniqueness
@@ -817,7 +817,7 @@ If acceptable, return original with validation confirmation.
 const cachedPrompt = `
 You are ${coachName}, a ${methodology} coach.
 ${coachPersonality}
-${trainingProgramSchemaDefinition}
+${programSchemaDefinition}
 ${jsonFormattingInstructions}
 `;
 
@@ -840,7 +840,7 @@ Equipment: ${equipment}
 When program is created, generate calendar of all days:
 
 ```typescript
-interface TrainingProgramCalendarDay {
+interface ProgramCalendarDay {
   dayNumber: number              // 1-indexed day within program
   calendarDate: string           // "YYYY-MM-DD" in user timezone
   dayType: 'training' | 'rest'   // Based on training frequency
@@ -858,7 +858,7 @@ function generateCalendar(
   totalDays: number,
   trainingFrequency: number,
   phases: Phase[]
-): TrainingProgramCalendarDay[] {
+): ProgramCalendarDay[] {
   const calendar = [];
   const start = new Date(startDate);
 
@@ -899,9 +899,9 @@ function generateCalendar(
 
 ```typescript
 function getTodaysWorkout(
-  program: TrainingProgram,
+  program: Program,
   userTimezone: string = 'America/Los_Angeles'
-): TrainingProgramCalendarDay | null {
+): ProgramCalendarDay | null {
   // Get today's date in user's timezone
   const today = getTodayInTimezone(userTimezone); // "YYYY-MM-DD"
 
@@ -1001,7 +1001,7 @@ After 7-Day Pause:
 ```
 Table: AllItems
 PK: user#{userId}
-SK: trainingProgram#{programId}
+SK: program#{programId}
 
 Attributes:
 - All program metadata
@@ -1018,7 +1018,7 @@ Attributes:
 **Program Details + Full Calendar:**
 ```
 Bucket: midgard-apps-{branch}
-Key: training-programs/{userId}/{programId}/details.json
+Key: programs/{userId}/{programId}/details.json
 
 Content:
 {
@@ -1033,7 +1033,7 @@ Content:
 
 **Workout Templates:**
 ```
-Key: training-programs/{userId}/{programId}/workout-templates.json
+Key: programs/{userId}/{programId}/workout-templates.json
 
 Content: [
   { templateId, dayNumber, workoutContent, ... },
@@ -1107,42 +1107,42 @@ Focus Areas: {allFocusAreas.join(', ')}
 
 **Create Training Program:**
 ```
-POST /training-programs
+POST /programs
 Body: { userId, coachId, conversationContext }
 Response: { programId, name, phases, templateCount }
 ```
 
 **Get Training Program:**
 ```
-GET /training-programs/{programId}
+GET /programs/{programId}
 Query: ?userId={userId}
 Response: { program metadata, S3 presigned URLs for details/templates }
 ```
 
 **Update Training Program:**
 ```
-PUT /training-programs/{programId}
+PUT /programs/{programId}
 Body: { partial updates }
 Response: { updated program }
 ```
 
 **Delete Training Program:**
 ```
-DELETE /training-programs/{programId}
+DELETE /programs/{programId}
 Query: ?userId={userId}
 Response: { success }
 ```
 
 **List User's Programs:**
 ```
-GET /training-programs
+GET /programs
 Query: ?userId={userId}&status=active
 Response: { programs: [...] }
 ```
 
 **Get Today's Workout:**
 ```
-GET /training-programs/{programId}/today
+GET /programs/{programId}/today
 Query: ?userId={userId}
 Response: { calendarDay, template(s), phaseContext }
 ```
@@ -1156,7 +1156,7 @@ Response: { calendarDay, template(s), phaseContext }
 // Stream handler detects [GENERATE_PROGRAM] trigger
 // Invokes async Lambda
 
-await invokeAsyncLambda('build-training-program', {
+await invokeAsyncLambda('build-program', {
   conversationId,
   userId,
   coachId,
@@ -1223,7 +1223,7 @@ If user needs form guidance, suggest video links:
 
 1. **Add Program Type:**
 ```typescript
-interface TrainingProgram {
+interface Program {
   // ... existing fields ...
   programType?: 'general' | 'competition_prep' | 'off_season' | 'rehabilitation'
   competitionDate?: string // For competition_prep type
@@ -1333,12 +1333,12 @@ interface ProgramOutcome {
 
 ## Complete Schema Reference
 
-### TrainingProgram Interface
+### Program Interface
 
 ```typescript
-interface TrainingProgram {
+interface Program {
   // Core Identity
-  programId: string                    // trainingProgram_{userId}_{timestamp}_{shortId}
+  programId: string                    // program_{userId}_{timestamp}_{shortId}
   userId: string                       // User who owns program
   coachId: string                      // Coach who created program
 
@@ -1356,7 +1356,7 @@ interface TrainingProgram {
   status: 'active' | 'completed' | 'paused' | 'abandoned'
 
   // Structure
-  phases: TrainingProgramPhase[]       // Array of training phases
+  phases: ProgramPhase[]       // Array of training phases
 
   // Goals & Constraints
   trainingGoals: string[]              // User's specific objectives
@@ -1372,7 +1372,7 @@ interface TrainingProgram {
   pauseHistory: ProgramPause[]
 
   // Calendar (stored in S3)
-  calendar?: TrainingProgramCalendar   // Full calendar (S3 only)
+  calendar?: ProgramCalendar   // Full calendar (S3 only)
 
   // Metadata
   createdAt: string                    // ISO timestamp
@@ -1381,10 +1381,10 @@ interface TrainingProgram {
 }
 ```
 
-### TrainingProgramPhase Interface
+### ProgramPhase Interface
 
 ```typescript
-interface TrainingProgramPhase {
+interface ProgramPhase {
   phaseId: string                      // "phase_1", "phase_2", etc.
   name: string                         // "Foundation Building", "Strength Development"
   startDay: number                     // 1-indexed day within program
@@ -1444,16 +1444,16 @@ interface PrescribedExercise {
 }
 ```
 
-### TrainingProgramCalendar Interface
+### ProgramCalendar Interface
 
 ```typescript
-interface TrainingProgramCalendar {
-  daysGenerated: TrainingProgramCalendarDay[]
+interface ProgramCalendar {
+  daysGenerated: ProgramCalendarDay[]
   todayIndex: number | null            // Index of today's day (or null)
   currentPhaseId: string | null        // Current phase user is in
 }
 
-interface TrainingProgramCalendarDay {
+interface ProgramCalendarDay {
   dayNumber: number                    // 1-indexed
   calendarDate: string                 // "YYYY-MM-DD" in user timezone
   dayType: 'training' | 'rest'

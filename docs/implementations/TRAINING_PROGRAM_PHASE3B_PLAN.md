@@ -4,7 +4,7 @@
 **Last Updated:** January 2025
 **Status:** ✅ COMPLETE (98%) - Ready for Production
 **Next Phase:** See TRAINING_PROGRAM_PHASE4_PLAN.md
-**Based On:** Actual implementation in training-program-3.json, workout-templates-3.json, TRAINING_PROGRAM_SCHEMA.md
+**Based On:** Actual implementation in program-3.json, workout-templates-3.json, TRAINING_PROGRAM_SCHEMA.md
 
 ---
 
@@ -32,7 +32,7 @@
   - Used when no active program exists
 
 **TrainingGrounds.jsx Integration:**
-- ✅ TrainingProgramAgent initialized and integrated
+- ✅ ProgramAgent initialized and integrated
 - ✅ Program state management added
 - ✅ Data loading on mount (active programs + today's workout)
 - ✅ Dynamic rendering based on program state:
@@ -50,16 +50,16 @@
   - Color: pink
 
 **Files Created:**
-- `src/components/training-programs/TodaysWorkoutCard.jsx`
-- `src/components/training-programs/ActiveProgramSummary.jsx`
-- `src/components/training-programs/CreateProgramCard.jsx`
+- `src/components/programs/TodaysWorkoutCard.jsx`
+- `src/components/programs/ActiveProgramSummary.jsx`
+- `src/components/programs/CreateProgramCard.jsx`
 
 **Files Modified:**
 - `src/components/TrainingGrounds.jsx`
 - `src/utils/navigation/navigationConfig.js`
 
 **Files Deleted:**
-- `src/components/training-programs/EmptyProgramState.jsx` (replaced with CreateProgramCard)
+- `src/components/programs/EmptyProgramState.jsx` (replaced with CreateProgramCard)
 
 **Status:** ✅ Complete - Ready for testing
 
@@ -74,7 +74,7 @@
 ### ⏳ Section 3: Program Dashboard (Upcoming)
 
 **Status:** Planning Complete - See TRAINING_PROGRAM_DASHBOARD_IMPLEMENTATION.md
-**Route:** `/training-grounds/training-programs/:programId`
+**Route:** `/training-grounds/programs/:programId`
 
 **Phased Implementation:**
 - **Phase 1 (Week 1)**: MVP - Header, Today's Workout Summary, Progress Overview
@@ -231,15 +231,15 @@ Phase 3b focuses on building the **user-facing UI** for training programs. Users
 
 ### 2. Manage Training Programs Page
 
-**Route:** `/training-grounds/training-programs`
+**Route:** `/training-grounds/programs`
 
 **Purpose:** Central hub for viewing all programs (similar to Coaches page)
 
 **Status:** ✅ IMPLEMENTED
 
 **Current Implementation:**
-- Route: `/training-grounds/training-programs?userId={userId}`
-- Component: `src/components/training-programs/ManageTrainingPrograms.jsx`
+- Route: `/training-grounds/programs?userId={userId}`
+- Component: `src/components/programs/ManagePrograms.jsx`
 - Fetches all user's coaches, then fetches programs for each coach
 - Combines and displays programs from all coaches in a single view
 - Grid layout modeled after `Coaches.jsx`
@@ -252,7 +252,7 @@ Phase 3b focuses on building the **user-facing UI** for training programs. Users
 
 **Implementation Details:**
 - Uses `CoachAgent` to fetch user's coaches
-- Creates a `TrainingProgramAgent` instance for each coach
+- Creates a `ProgramAgent` instance for each coach
 - Fetches programs in parallel for all coaches using `Promise.all()`
 - Updates local state immediately for optimistic UI feedback
 - Cleanup of all agents on unmount
@@ -260,7 +260,7 @@ Phase 3b focuses on building the **user-facing UI** for training programs. Users
 **Navigation:**
 - Added to navigation config as "Training Programs" in contextual section
 - Only requires `userId` parameter
-- Route: `/training-grounds/training-programs`
+- Route: `/training-grounds/programs`
 
 **Layout:**
 ```
@@ -436,7 +436,7 @@ Phase 3b focuses on building the **user-facing UI** for training programs. Users
 └── EmptyProgramState (new)
 
 /training-grounds/programs (Manage Programs)
-├── ManageTrainingPrograms (new)
+├── ManagePrograms (new)
 │   ├── PageHeader
 │   ├── TabNavigation (Active, Completed, Paused)
 │   ├── ProgramList
@@ -487,7 +487,7 @@ Phase 3b focuses on building the **user-facing UI** for training programs. Users
 
 ### 4. State Management
 
-**TrainingProgramAgent (expand existing)**
+**ProgramAgent (expand existing)**
 
 ```javascript
 // State
@@ -738,7 +738,7 @@ export const handler = async (event) => {
 
 **Day 6: Manage Training Programs Page**
 - Route: `/training-grounds/programs`
-- Component: `ManageTrainingPrograms.jsx`
+- Component: `ManagePrograms.jsx`
 - Tabbed interface (Active, Completed, Paused)
 - Program cards with actions
 - Filters and sorting
@@ -883,8 +883,8 @@ Once users can view and interact with programs, Phase 4 adds smart adaptation:
 - 🔲 Lambda: Log workout from template
 
 ### Frontend:
-- ✅ `TrainingProgramAgent.js` (basic, needs expansion)
-- ✅ `trainingProgramApi.js` (basic, needs expansion)
+- ✅ `ProgramAgent.js` (basic, needs expansion)
+- ✅ `programApi.js` (basic, needs expansion)
 - 🔲 All new UI components listed above
 - 🔲 Integration with existing WorkoutAgent for logging
 

@@ -34,9 +34,9 @@ import CoachAgent from '../utils/agents/CoachAgent';
 import CoachConversationAgent from '../utils/agents/CoachConversationAgent';
 import WorkoutAgent from '../utils/agents/WorkoutAgent';
 import ReportAgent from '../utils/agents/ReportAgent';
-import { TrainingProgramAgent } from '../utils/agents/TrainingProgramAgent';
-import TodaysWorkoutCard from './training-programs/TodaysWorkoutCard';
-import ActiveProgramSummary from './training-programs/ActiveProgramSummary';
+import { ProgramAgent } from '../utils/agents/ProgramAgent';
+import TodaysWorkoutCard from './programs/TodaysWorkoutCard';
+import ActiveProgramSummary from './programs/ActiveProgramSummary';
 
 function TrainingGrounds() {
   const [searchParams] = useSearchParams();
@@ -92,7 +92,7 @@ function TrainingGrounds() {
     error: null,
   });
 
-  // Training Program state (managed by TrainingProgramAgent)
+  // Training Program state (managed by ProgramAgent)
   const [programState, setProgramState] = useState({
     programs: [],
     activePrograms: [],
@@ -232,7 +232,7 @@ function TrainingGrounds() {
   // Initialize training program agent
   useEffect(() => {
     if (!programAgentRef.current && userId && coachId) {
-      programAgentRef.current = new TrainingProgramAgent(userId, coachId, (newState) => {
+      programAgentRef.current = new ProgramAgent(userId, coachId, (newState) => {
         setProgramState(newState);
       });
     }
@@ -264,7 +264,7 @@ function TrainingGrounds() {
     }
     if (programAgentRef.current && userId && coachId) {
       // Load active programs and today's workout
-      programAgentRef.current.loadTrainingPrograms({ status: 'active', limit: 5 })
+      programAgentRef.current.loadPrograms({ status: 'active', limit: 5 })
         .then(() => {
           // After loading programs, load today's workout if there's an active program
           if (programAgentRef.current.hasActiveProgram()) {

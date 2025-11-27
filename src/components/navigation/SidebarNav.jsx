@@ -3,6 +3,8 @@
 
 import React, { useState, useRef } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { Popover } from '@headlessui/react';
+import { useFloating, flip, shift, offset, autoUpdate, size, limitShift } from '@floating-ui/react';
 import { useAuth } from '../../auth';
 import { useNavigationContext } from '../../contexts/NavigationContext';
 import { navigationPatterns, tooltipPatterns, badgePatterns } from '../../utils/ui/uiPatterns';
@@ -18,6 +20,200 @@ import {
 } from '../../utils/navigation';
 import { Tooltip } from 'react-tooltip';
 import QuickAccessPopover from './QuickAccessPopover';
+
+// Utility Popover Component with Floating UI positioning
+const UtilityPopover = ({ utilityItems, isSidebarCollapsed, navigate, context, getItemRoute, getItemColorClasses }) => {
+  // Create a custom boundary function that excludes the chat input area
+  const getBoundary = () => {
+    const chatInput = document.querySelector('[data-chat-input-container]');
+    if (!chatInput) {
+      return {
+        top: 0,
+        left: 0,
+        right: window.innerWidth,
+        bottom: window.innerHeight,
+        width: window.innerWidth,
+        height: window.innerHeight,
+        x: 0,
+        y: 0,
+      };
+    }
+
+    const chatInputRect = chatInput.getBoundingClientRect();
+
+    // Create a virtual boundary that ends where chat input begins
+    return {
+      top: 0,
+      left: 0,
+      right: window.innerWidth,
+      bottom: chatInputRect.top - 16, // Stop 16px above chat input
+      width: window.innerWidth,
+      height: chatInputRect.top - 16,
+      x: 0,
+      y: 0,
+    };
+  };
+
+  const { refs, floatingStyles } = useFloating({
+    placement: 'right-start',
+    middleware: [
+      offset(0), // No gap between button and popover
+      flip({
+        fallbackPlacements: ['right-end', 'right', 'left-start', 'left-end'],
+        boundary: getBoundary(),
+      }),
+      shift({
+        padding: 8,
+        boundary: getBoundary(),
+        limiter: limitShift(),
+      }),
+      size({
+        boundary: getBoundary(),
+        apply({ availableHeight, elements }) {
+          // Apply max height and enable scrolling
+          Object.assign(elements.floating.style, {
+            maxHeight: `${Math.max(200, availableHeight)}px`,
+            overflowY: 'auto',
+          });
+        },
+        padding: 8,
+      }),
+    ],
+    whileElementsMounted: autoUpdate,
+  });
+
+  return (
+    <Popover className={navigationPatterns.sectionSpacing.both}>
+      {({ open }) => {
+        const colorClasses = getItemColorClasses('default', false);
+        const getHoverClasses = () => {
+          return 'hover:border-synthwave-neon-cyan/50 hover:bg-synthwave-bg-primary/20 focus:ring-2 focus:ring-synthwave-neon-cyan/50';
+        };
+
+        return (
+          <>
+            {!isSidebarCollapsed && (
+              <div className={navigationPatterns.desktop.sectionHeader}>
+                <h3 className={navigationPatterns.desktop.sectionTitle}>
+                  More Resources
+                </h3>
+              </div>
+            )}
+
+            <Popover.Button
+              ref={refs.setReference}
+              className={`
+                ${navigationPatterns.desktop.navItem}
+                ${isSidebarCollapsed ? navigationPatterns.desktop.navItemCollapsed : ''}
+                ${open ? 'text-synthwave-neon-cyan' : colorClasses.inactive}
+                ${open
+                  ? 'border-t-synthwave-neon-cyan/50 border-b-synthwave-neon-cyan/50 bg-synthwave-bg-primary/20'
+                  : getHoverClasses()
+                }
+                focus:outline-none
+                active:outline-none
+              `}
+              style={{ WebKitTapHighlightColor: 'transparent' }}
+              aria-label="More resources"
+              title={isSidebarCollapsed ? 'More Resources' : undefined}
+              data-tooltip-id={isSidebarCollapsed ? 'sidebar-nav-tooltip' : undefined}
+              data-tooltip-content={isSidebarCollapsed ? 'More Resources' : undefined}
+            >
+              {/* Icon */}
+              <div className={`
+                ${isSidebarCollapsed ? navigationPatterns.desktop.navItemIconCollapsed : navigationPatterns.desktop.navItemIcon}
+                flex items-center justify-center
+              `}>
+                <svg
+                  className={isSidebarCollapsed ? "w-6 h-6" : "w-5 h-5"}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+
+              {/* Label */}
+              <span className={`
+                ${navigationPatterns.desktop.navItemLabel}
+                ${isSidebarCollapsed ? navigationPatterns.desktop.navItemLabelCollapsed : ''}
+              `}>
+                More Resources
+              </span>
+            </Popover.Button>
+
+            <Popover.Panel
+              ref={refs.setFloating}
+              style={floatingStyles}
+              className="z-[60]"
+            >
+              {({ close }) => (
+                <div className={navigationPatterns.utilityFlyout.container}>
+                  {/* Header Section */}
+                  <div className={navigationPatterns.utilityFlyout.header}>
+                    <h3 className={navigationPatterns.utilityFlyout.headerTitle}>
+                      More Resources
+                    </h3>
+                  </div>
+
+                  {/* Menu Items */}
+                  <div className={navigationPatterns.utilityFlyout.itemsContainer}>
+                    {utilityItems.map((item) => {
+                      const Icon = item.icon;
+                      const itemColorClasses = getItemColorClasses(item.color || 'default', false);
+
+                      return (
+                        <button
+                          key={item.id}
+                          onClick={() => {
+                            const route = getItemRoute(item, context);
+                            if (route && route !== '#') {
+                              navigate(route);
+                              close();
+                            }
+                          }}
+                          className={`
+                            ${navigationPatterns.desktop.navItem}
+                            ${itemColorClasses.inactive}
+                            hover:border-synthwave-neon-cyan/50
+                            hover:bg-synthwave-bg-primary/20
+                            focus:ring-2 focus:ring-synthwave-neon-cyan/50
+                            focus:outline-none
+                            active:outline-none
+                            w-full
+                          `}
+                          style={{ WebKitTapHighlightColor: 'transparent' }}
+                        >
+                          {/* Icon */}
+                          {Icon && (
+                            <div className={navigationPatterns.desktop.navItemIcon}>
+                              <Icon className="w-5 h-5" />
+                            </div>
+                          )}
+
+                          {/* Label */}
+                          <span className={navigationPatterns.desktop.navItemLabel}>
+                            {item.label}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </Popover.Panel>
+          </>
+        );
+      }}
+    </Popover>
+  );
+};
 
 const SidebarNav = () => {
   const navigate = useNavigate();
@@ -334,77 +530,16 @@ const SidebarNav = () => {
           )}
 
           {/* Help & Info - Single button that opens popover */}
-          {utilityItems.length > 0 && (() => {
-            // Use same styling pattern as other nav items (defaults to cyan)
-            const colorClasses = getItemColorClasses('default', false);
-            const isUtilityActive = activePopover === 'utility';
-            const getHoverClasses = () => {
-              return 'hover:border-synthwave-neon-cyan/50 hover:bg-synthwave-bg-primary/20 focus:ring-2 focus:ring-synthwave-neon-cyan/50';
-            };
-
-            return (
-              <div
-                className={navigationPatterns.sectionSpacing.both}
-                onMouseEnter={() => setActivePopover('utility')}
-                onMouseLeave={() => setActivePopover(null)}
-              >
-                {!isSidebarCollapsed && (
-                  <div className={navigationPatterns.desktop.sectionHeader}>
-                    <h3 className={navigationPatterns.desktop.sectionTitle}>
-                      More Resources
-                    </h3>
-                  </div>
-                )}
-                <button
-                  ref={popoverRefs.current['utility-popover'] || (popoverRefs.current['utility-popover'] = React.createRef())}
-                  className={`
-                    ${navigationPatterns.desktop.navItem}
-                    ${isSidebarCollapsed ? navigationPatterns.desktop.navItemCollapsed : ''}
-                    ${isUtilityActive ? 'text-synthwave-neon-cyan' : colorClasses.inactive}
-                    ${isUtilityActive
-                      ? 'border-t-synthwave-neon-cyan/50 border-b-synthwave-neon-cyan/50 bg-synthwave-bg-primary/20'
-                      : getHoverClasses()
-                    }
-                    focus:outline-none
-                    active:outline-none
-                  `}
-                  style={{ WebKitTapHighlightColor: 'transparent' }}
-                  aria-label="More resources"
-                  title={isSidebarCollapsed ? 'More Resources' : undefined}
-                  data-tooltip-id={isSidebarCollapsed ? 'sidebar-nav-tooltip' : undefined}
-                  data-tooltip-content={isSidebarCollapsed ? 'More Resources' : undefined}
-                >
-                  {/* Icon */}
-                  <div className={`
-                    ${isSidebarCollapsed ? navigationPatterns.desktop.navItemIconCollapsed : navigationPatterns.desktop.navItemIcon}
-                    flex items-center justify-center
-                  `}>
-                    <svg
-                      className={isSidebarCollapsed ? "w-6 h-6" : "w-5 h-5"}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                  </div>
-
-                  {/* Label */}
-                  <span className={`
-                    ${navigationPatterns.desktop.navItemLabel}
-                    ${isSidebarCollapsed ? navigationPatterns.desktop.navItemLabelCollapsed : ''}
-                  `}>
-                    More Resources
-                  </span>
-                </button>
-              </div>
-            );
-          })()}
+          {utilityItems.length > 0 && (
+            <UtilityPopover
+              utilityItems={utilityItems}
+              isSidebarCollapsed={isSidebarCollapsed}
+              navigate={navigate}
+              context={context}
+              getItemRoute={getItemRoute}
+              getItemColorClasses={getItemColorClasses}
+            />
+          )}
         </nav>
 
         {/* User Profile Section */}
@@ -488,72 +623,6 @@ const SidebarNav = () => {
           coachData={context.coachData}
         />
       ))}
-
-      {/* Utility Flyout - Fixed positioned outside scrollable area */}
-      {activePopover === 'utility' && popoverRefs.current['utility-popover']?.current && (
-        <div
-          className="fixed z-[60]"
-          style={{
-            top: `${popoverRefs.current['utility-popover'].current.getBoundingClientRect().top}px`,
-            left: isSidebarCollapsed ? '64px' : '256px', // Align directly with sidebar right edge (no gap)
-          }}
-          onMouseEnter={() => setActivePopover('utility')}
-          onMouseLeave={() => setActivePopover(null)}
-        >
-          <div className={navigationPatterns.utilityFlyout.container}>
-            {/* Header Section */}
-            <div className={navigationPatterns.utilityFlyout.header}>
-              <h3 className={navigationPatterns.utilityFlyout.headerTitle}>
-                More Resources
-              </h3>
-            </div>
-
-            {/* Menu Items */}
-            <div className={navigationPatterns.utilityFlyout.itemsContainer}>
-              {utilityItems.map((item) => {
-                const Icon = item.icon;
-                const colorClasses = getItemColorClasses(item.color || 'default', false);
-
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => {
-                      const route = getItemRoute(item, context);
-                      if (route && route !== '#') {
-                        navigate(route);
-                        setActivePopover(null);
-                      }
-                    }}
-                    className={`
-                      ${navigationPatterns.desktop.navItem}
-                      ${colorClasses.inactive}
-                      hover:border-synthwave-neon-cyan/50
-                      hover:bg-synthwave-bg-primary/20
-                      focus:ring-2 focus:ring-synthwave-neon-cyan/50
-                      focus:outline-none
-                      active:outline-none
-                      w-full
-                    `}
-                    style={{ WebKitTapHighlightColor: 'transparent' }}
-                  >
-                    {/* Icon */}
-                    {Icon && (
-                      <div className={navigationPatterns.desktop.navItemIcon}>
-                        <Icon className="w-5 h-5" />
-                      </div>
-                    )}
-
-                    {/* Label */}
-                    <span className={navigationPatterns.desktop.navItemLabel}>
-                      {item.label}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      )}
     </aside>
   );
 };

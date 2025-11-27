@@ -255,35 +255,28 @@ function ChatInput({
             <div className="w-12 h-12 bg-synthwave-text-muted/20 rounded-2xl animate-pulse"></div>
           </div>
 
-          {/* Status or Mode Toggle skeleton - compact on mobile, aligned with text input */}
-          <div className="flex items-center justify-between gap-2 mt-2 text-xs text-synthwave-text-muted font-rajdhani pl-[70px] md:pl-[156px] pr-12 md:pr-[74px]">
-            {showModeToggleSkeleton ? (
-              <>
-                {/* Left: Mode Toggle skeleton - aligned with text input left edge */}
-                <div className="flex items-center">
-                  <div className="h-8 w-32 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
-                </div>
-                {/* Right: Keyboard shortcuts only (no status indicator) */}
+          {/* AI disclaimer and keyboard shortcuts skeleton */}
+          <div className="flex items-center justify-between gap-2 mt-2 text-xs text-synthwave-text-muted font-rajdhani pl-[90px] md:pl-[168px] pr-12 md:pr-[74px]">
+            {/* Left: AI disclaimer skeleton */}
+            <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
+            {/* Right: Keyboard shortcuts skeleton */}
                 <div className="flex items-center">
                   {/* Desktop: Show keyboard shortcuts */}
                   <div className="hidden md:block h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-64"></div>
                 </div>
-              </>
-            ) : (
-              <>
-                {/* Left: Status text skeleton - aligned with text input left edge */}
-                <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-32 sm:w-56" style={{ marginLeft: '12px' }}></div>
-                {/* Right: Keyboard shortcuts only (no status indicator) */}
-                <div className="flex items-center">
-                  {/* Desktop: Show keyboard shortcuts */}
-                  <div className="hidden md:block h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-64"></div>
-                </div>
-              </>
-            )}
           </div>
 
-          {/* Progress/Size Indicator skeleton - hide on mobile */}
-          <div className="mt-4 justify-end hidden md:flex pr-[74px]">
+          {/* Mode toggle and Progress/Size Indicator skeleton - hide on mobile */}
+          <div className="mt-4 flex items-start justify-between gap-4 hidden md:flex pl-[90px] md:pl-[168px] pr-[74px] min-h-[32px]">
+            {/* Left: Mode toggle skeleton */}
+            {showModeToggleSkeleton && (
+                <div className="flex items-center">
+                <div className="h-8 w-32 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
+                </div>
+            )}
+            {!showModeToggleSkeleton && <div></div>}
+
+            {/* Right: Progress/Size Indicator skeleton */}
             <div className="max-w-xs w-full">
               <div className="flex items-center justify-between mb-1">
                 <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-32"></div>
@@ -1341,66 +1334,26 @@ function ChatInput({
           </div>
         </form>
 
-        {/* Status or Mode Toggle */}
+        {/* AI disclaimer and keyboard shortcuts */}
         <div className="flex items-center justify-between gap-2 -mt-0.5 text-xs text-synthwave-text-muted font-rajdhani pl-[50px] md:pl-[156px] pr-12 md:pr-[74px]">
-          {/* If conversation mode is provided, show mode toggle instead of status message */}
-          {conversationMode && onConversationModeChange ? (
-            <>
-              {/* Left: Mode Toggle - aligned with text input left edge */}
+          {/* Left: AI disclaimer - aligned with text input left edge */}
               <div className="flex items-center">
-                <CoachConversationModeToggle
-                  mode={conversationMode}
-                  onModeChange={onConversationModeChange}
-                  disabled={isTyping}
-                />
+            <span className="text-synthwave-text-muted/80">
+              AI can make mistakes • Always verify important information
+                </span>
               </div>
-              {/* Right: Keyboard shortcuts */}
+          {/* Right: Keyboard shortcuts - always visible */}
               <div className="flex items-center">
                 {/* Desktop: Show keyboard shortcuts */}
                 <span className="hidden md:inline">
                   Press Enter to send • Shift+Enter for new line
                 </span>
               </div>
-            </>
-          ) : (
-            <>
-              {/* Default: Full status message */}
-              {/* Desktop: Full status message - aligned with text input left edge */}
-              <span className="hidden md:block">
-                {coachName} is
-                {isOnline ? (
-                  <span className="text-green-400 ml-1">
-                    online and ready to help with your training
-                  </span>
-                ) : (
-                  <span className="text-synthwave-text-secondary ml-1">away</span>
-                )}
-              </span>
-              {/* Mobile: Compact status */}
-              <span className="md:hidden flex items-center gap-1.5">
-                <span>{coachName}</span>
-                <span className="text-synthwave-text-secondary">•</span>
-                <div className="flex items-center gap-1">
-                  <div
-                    className={`w-2 h-2 rounded-full ${isOnline ? "bg-green-500 animate-pulse" : "bg-gray-500"}`}
-                  ></div>
-                  <span>{isOnline ? "Online" : "Away"}</span>
-                </div>
-              </span>
-              {/* Right: Keyboard shortcuts - aligned with text input right edge */}
-              <div className="flex items-center">
-                {/* Desktop: Show keyboard shortcuts */}
-                <span className="hidden md:inline">
-                  Press Enter to send • Shift+Enter for new line
-                </span>
-              </div>
-            </>
-          )}
         </div>
 
         {/* Coach Creation Progress Indicator - hide on mobile */}
         {progressData && (
-          <div className="mt-4 justify-end hidden md:flex pr-[74px]">
+          <div className="mt-4 flex items-start justify-end hidden md:flex pr-[74px] min-h-[32px]">
             <div className="max-w-xs w-full">
               <div className="flex items-center justify-between">
                 <span className="font-rajdhani text-xs">
@@ -1443,9 +1396,24 @@ function ChatInput({
           </div>
         )}
 
-        {/* Conversation Size Indicator - hide on mobile */}
+        {/* Mode Toggle and Conversation Size Indicator - hide on mobile */}
+        {(conversationMode || conversationSize) && (
+          <div className="mt-4 flex items-start justify-between gap-4 hidden md:flex pl-[50px] md:pl-[156px] pr-[74px] min-h-[32px]">
+            {/* Left: Mode Toggle */}
+            {conversationMode && onConversationModeChange ? (
+              <div className="flex items-center">
+                <CoachConversationModeToggle
+                  mode={conversationMode}
+                  onModeChange={onConversationModeChange}
+                  disabled={isTyping}
+                />
+              </div>
+            ) : (
+              <div></div>
+            )}
+
+            {/* Right: Conversation Size Indicator */}
         {conversationSize && (
-          <div className="mt-4 justify-end hidden md:flex pr-[74px]">
             <div className="max-w-xs w-full">
               <div className="flex items-center justify-between">
                 <span className="font-rajdhani text-xs text-synthwave-text-muted">
@@ -1473,6 +1441,7 @@ function ChatInput({
                 ></div>
               </div>
             </div>
+            )}
           </div>
         )}
       </div>

@@ -64,7 +64,7 @@ export interface Workout {
   groupId?: string; // Links workouts from same training day/session
 
   // Legacy training program context (kept for backward compatibility)
-  trainingProgramContext?: {
+  programContext?: {
     programId: string;
     coachId: string;
     templateId: string;

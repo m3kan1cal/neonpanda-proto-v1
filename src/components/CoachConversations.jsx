@@ -172,11 +172,18 @@ const MessageItem = memo(
         <div
           className={`max-w-[95%] md:max-w-[70%] ${message.type === "user" ? "items-end" : "items-start"} flex flex-col`}
         >
-          {/* Build Mode Indicator Badge (only for AI messages created in Build mode) */}
-          {message.type === "ai" && message.metadata?.mode === CONVERSATION_MODES.BUILD && (
-            <div className={`${buttonPatterns.modeBadgeBuild} mb-1`}>
+          {/* Workout Log Indicator Badge (only for AI messages created during workout log artifact creation) */}
+          {message.type === "ai" && message.metadata?.mode === CONVERSATION_MODES.WORKOUT_LOG && (
+            <div className={`${buttonPatterns.modeBadgeWorkoutLog} mb-1`}>
+              <span>Workout Log</span>
+            </div>
+          )}
+
+          {/* Program Design Indicator Badge (only for AI messages created during program design artifact creation) */}
+          {message.type === "ai" && message.metadata?.mode === CONVERSATION_MODES.PROGRAM_DESIGN && (
+            <div className={`${buttonPatterns.modeBadgeProgramDesign} mb-1`}>
               <BuildModeIconTiny />
-              <span className="translate-y-px">Build Mode</span>
+              <span className="translate-y-px">Program Design</span>
             </div>
           )}
 
@@ -186,8 +193,8 @@ const MessageItem = memo(
               agentState,
               message.type === "user"
                 ? containerPatterns.userMessageBubble
-                : message.type === "ai" && message.metadata?.mode === CONVERSATION_MODES.BUILD
-                  ? containerPatterns.aiBuildModeBubble
+                : message.type === "ai" && message.metadata?.mode === CONVERSATION_MODES.PROGRAM_DESIGN
+                  ? containerPatterns.aiProgramDesignModeBubble
                   : `${containerPatterns.aiChatBubble} px-4 py-3`
             )}
           >
@@ -211,12 +218,12 @@ const MessageItem = memo(
             {message.type === "ai" && (
               <div className="flex gap-1">
                 <div className={`${messagePatterns.statusDotSecondary} ${
-                  message.metadata?.mode === CONVERSATION_MODES.BUILD
+                  message.metadata?.mode === CONVERSATION_MODES.PROGRAM_DESIGN
                     ? messagePatterns.statusDotPurple
                     : messagePatterns.statusDotCyan
                 }`}></div>
                 <div className={`${messagePatterns.statusDotPrimary} ${
-                  message.metadata?.mode === CONVERSATION_MODES.BUILD
+                  message.metadata?.mode === CONVERSATION_MODES.PROGRAM_DESIGN
                     ? messagePatterns.statusDotPurple
                     : messagePatterns.statusDotCyan
                 }`}></div>
@@ -234,10 +241,12 @@ const MessageItem = memo(
     // 2. Message ID changed (different message)
     // 3. Agent streaming state changed (affects this message's rendering)
     // 4. Coach name changed (affects avatar)
+    // 5. Message metadata changed (affects badges like Multi-Turn or Build Mode)
 
     const messageChanged =
       prevProps.message.id !== nextProps.message.id ||
-      prevProps.message.content !== nextProps.message.content;
+      prevProps.message.content !== nextProps.message.content ||
+      prevProps.message.metadata !== nextProps.message.metadata;
 
     const streamingStateChanged =
       prevProps.agentState.isStreaming !== nextProps.agentState.isStreaming ||
@@ -1449,20 +1458,20 @@ function CoachConversations() {
                           "C"}
                       </div>
                       <div
-                        className={conversationMode === CONVERSATION_MODES.BUILD
+                        className={conversationMode === CONVERSATION_MODES.PROGRAM_DESIGN
                           ? containerPatterns.aiBuildModeBubble
                           : `${containerPatterns.aiChatBubble} px-4 py-3`
                         }
                       >
                         <div className="flex space-x-1">
                           <div className={`w-2 h-2 rounded-full animate-bounce ${
-                            conversationMode === CONVERSATION_MODES.BUILD
+                            conversationMode === CONVERSATION_MODES.PROGRAM_DESIGN
                               ? "bg-synthwave-neon-purple"
                               : "bg-synthwave-neon-cyan"
                           }`}></div>
                           <div
                             className={`w-2 h-2 rounded-full animate-bounce ${
-                              conversationMode === CONVERSATION_MODES.BUILD
+                              conversationMode === CONVERSATION_MODES.PROGRAM_DESIGN
                                 ? "bg-synthwave-neon-purple"
                                 : "bg-synthwave-neon-cyan"
                             }`}
@@ -1470,7 +1479,7 @@ function CoachConversations() {
                           ></div>
                           <div
                             className={`w-2 h-2 rounded-full animate-bounce ${
-                              conversationMode === CONVERSATION_MODES.BUILD
+                              conversationMode === CONVERSATION_MODES.PROGRAM_DESIGN
                                 ? "bg-synthwave-neon-purple"
                                 : "bg-synthwave-neon-cyan"
                             }`}

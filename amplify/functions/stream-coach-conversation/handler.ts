@@ -20,7 +20,7 @@ import {
   getCoachConfig,
   getUserProfile,
 } from "../../dynamodb/operations";
-import { CoachMessage, MESSAGE_TYPES } from "../libs/coach-conversation/types";
+import { CoachMessage, MESSAGE_TYPES, CoachConversation } from "../libs/coach-conversation/types";
 import { gatherConversationContext } from "../libs/coach-conversation/context";
 import {
   detectAndProcessWorkout,
@@ -43,12 +43,17 @@ import {
   generateAndFormatUpdate,
   categorizeUserMessage,
 } from "../libs/coach-conversation/contextual-updates";
-import { extractLatestBuildModeSection } from "../libs/coach-conversation/message-utils";
 import { analyzeMemoryNeeds } from "../libs/memory/detection";
-import { detectAndPrepareForTrainingProgramGeneration } from "../libs/training-program/program-generator";
-import { BuildTrainingProgramEvent } from "../libs/training-program/types";
+import { BuildProgramEvent } from "../libs/program/types";
 import { CONVERSATION_MODES } from "../libs/coach-conversation/types";
 import { removeTriggerFromStream } from "../libs/response-utils";
+import { handleProgramCreatorFlow } from "../libs/program-creator/handler-helpers";
+import {
+  startWorkoutCollection,
+  handleWorkoutCreatorFlow,
+  clearWorkoutSession,
+} from "../libs/workout-creator/handler-helpers";
+import { parseSlashCommand, isWorkoutSlashCommand } from "../libs/workout";
 
 // Import auth middleware (consolidated)
 import {
@@ -426,6 +431,67 @@ async function* processCoachConversationAsync(
     fallbackUsed: routerAnalysis.routerMetadata.fallbackUsed,
   });
 
+  // ============================================================================
+  // SLASH COMMAND BYPASS: Check if user provided slash command during multi-turn session
+  // ============================================================================
+  // If user provides a slash command (like /log-workout) while in a multi-turn session,
+  // they're explicitly providing complete data - clear the session and log directly
+  const slashCommandResult = parseSlashCommand(params.userResponse);
+  const isSlashCommandWorkout = isWorkoutSlashCommand(slashCommandResult);
+
+  if (isSlashCommandWorkout && conversationData.existingConversation.workoutCreatorSession) {
+    console.info('⚡ Slash command detected during multi-turn session - clearing session and logging directly');
+    console.info('🧹 User provided complete workout data via slash command - bypassing multi-turn flow');
+
+    // Clear the workout creator session
+    delete conversationData.existingConversation.workoutCreatorSession;
+
+    // Continue to normal workout detection flow below (don't return early)
+    // This allows the slash command to be processed normally
+  }
+
+  // ============================================================================
+  // MULTI-TURN WORKOUT LOGGING: Check if workout collection session is in progress
+  // ============================================================================
+  const workoutSession = conversationData.existingConversation.workoutCreatorSession;
+
+  if (workoutSession) {
+    console.info('🏋️ Workout collection session in progress - continuing multi-turn flow');
+
+    // Track message count before handling
+    const messageCountBefore = conversationData.existingConversation.messages.length;
+
+    const businessLogicParams = { ...params, ...conversationData };
+    yield* handleWorkoutCreatorFlow(
+      businessLogicParams,
+      conversationData,
+      workoutSession
+    );
+
+    // Check if session was cancelled (topic change) vs completed successfully
+    // Cancellation: session deleted, no messages added, should re-process
+    // Completion: session deleted, messages added, should NOT re-process
+    const sessionWasCleared = !conversationData.existingConversation.workoutCreatorSession;
+    const messagesWereAdded = conversationData.existingConversation.messages.length > messageCountBefore;
+
+    if (sessionWasCleared && !messagesWereAdded) {
+      console.info('🔀 Workout session was cancelled - re-processing message as normal conversation');
+      // Don't return - fall through to normal conversation processing below
+    } else {
+      return; // Exit early - handled the workout collection flow normally (completed or in-progress)
+    }
+  }
+
+  // ============================================================================
+  // PROGRAM_DESIGN MODE: Check if this is a training program creation conversation
+  // ============================================================================
+  const conversationMode = conversationData.existingConversation.mode || CONVERSATION_MODES.CHAT;
+
+  if (conversationMode === CONVERSATION_MODES.PROGRAM_DESIGN) {
+    yield* handleProgramCreatorFlow(params, conversationData);
+    return; // Exit early if we handled the PROGRAM_DESIGN mode flow
+  }
+
   // Step 4: Generate initial acknowledgment ONLY if router determines it's appropriate
   let contextualUpdates: string[] = [];
 
@@ -452,13 +518,16 @@ async function* processCoachConversationAsync(
   let didInitiateMemorySave = false; // Track if we initiated a memory save (for "I'll remember this" acknowledgment)
 
   // Determine what processing is needed
-  const needsWorkout = routerAnalysis.workoutDetection.isWorkoutLog;
+  // NEW: Also check for workout_logging intent to support multi-turn collection
+  const needsWorkout =
+    routerAnalysis.workoutDetection.isWorkoutLog ||
+    routerAnalysis.userIntent === 'workout_logging';
   const needsMemory =
     routerAnalysis.memoryProcessing.needsRetrieval ||
     routerAnalysis.memoryProcessing.isMemoryRequest;
 
   console.info(
-    `📊 Processing plan: workout=${needsWorkout}, memory=${needsMemory}`
+    `📊 Processing plan: workout=${needsWorkout}, memory=${needsMemory}, workoutIntent=${routerAnalysis.userIntent === 'workout_logging'}`
   );
 
   // CASE 1: Both workout and memory needed - PARALLELIZE
@@ -696,6 +765,20 @@ async function* processCoachConversationAsync(
     memoryResult = { memoryFeedback: null };
   }
 
+  // ============================================================================
+  // MULTI-TURN WORKOUT LOGGING: Check if workout was detected but has insufficient data
+  // ============================================================================
+  // Check if: 1) workout intent exists, 2) not a complete workout, 3) has some context
+  if (
+    workoutResult &&
+    !workoutResult.isWorkoutLogging &&
+    (routerAnalysis.workoutDetection.isWorkoutLog || routerAnalysis.userIntent === 'workout_logging')
+  ) {
+    console.info('🏋️ Workout intent detected but insufficient data - starting multi-turn collection');
+    yield* startWorkoutCollection(businessLogicParams, conversationData);
+    return; // Exit early - handled the workout collection start
+  }
+
   // OPTIMIZATION: Removed pattern/insights updates (Phase 4) to focus on 2-3 key updates
   // Keeping only: Initial acknowledgment + Workout/Memory analysis (most critical for UX)
 
@@ -750,7 +833,7 @@ async function* processCoachConversationAsync(
       params.imageS3Keys, // Pass imageS3Keys
       routerAnalysis.conversationComplexity.requiresDeepReasoning, // NEW: Smart model selection
       conversationData.existingConversation.mode ||
-        CONVERSATION_MODES.CHAT // NEW: Conversation mode (defaults to chat for backwards compatibility)
+        CONVERSATION_MODES.CHAT // NEW: Conversation mode (defaults to CHAT - no specific artifact)
     );
 
     // Yield AI response chunks using optimized buffering strategy
@@ -796,81 +879,6 @@ async function* processCoachConversationAsync(
   // Note: Memory saving happens fire-and-forget in background (Phase 2/3)
   if (FEATURE_FLAGS.ENABLE_MEMORY_PROCESSING && didInitiateMemorySave) {
     fullAiResponse = `I'll remember this.\n\n${fullAiResponse}`;
-  }
-
-  // NEW: Check if this is a Build mode conversation with training program generation trigger
-  const conversationMode =
-    conversationData.existingConversation.mode ||
-    CONVERSATION_MODES.CHAT; // Default to chat for backwards compatibility
-
-  if (conversationMode === CONVERSATION_MODES.BUILD) {
-    const generationDetection =
-      detectAndPrepareForTrainingProgramGeneration(fullAiResponse);
-
-    if (generationDetection.shouldGenerate) {
-      console.info(
-        "🏗️ Training program generation trigger detected in Build mode conversation"
-      );
-
-      // Remove trigger from the response and append permanent status message
-      fullAiResponse = generationDetection.cleanedResponse;
-
-      // Add persistent message about program generation (saved to conversation history)
-      const persistentMessage = `\n\nI'm generating your personalized training program now. This will take a few moments as I analyze your goals and create detailed workout templates for each phase. I'll add it to your programs list once it's ready!`;
-      fullAiResponse += persistentMessage;
-
-      // Stream the persistent message so it appears smoothly in the UI
-      yield formatChunkEvent(persistentMessage);
-
-      // Note: No contextual updates after AI response is complete
-      // The AI's conversational response already informs the user what's happening
-
-      try {
-        // Extract the latest continuous Build mode section
-        // This prevents confusion from multiple Build sessions in the same conversation
-        // while allowing multi-day Build sessions (e.g., started last night, continued this morning)
-        const buildModeMessages = extractLatestBuildModeSection(
-          conversationData.existingConversation.messages
-        );
-
-        // Prepare the payload for the build-training-program lambda
-        const buildTrainingProgramPayload: BuildTrainingProgramEvent = {
-          userId: params.userId,
-          coachId: params.coachId,
-          conversationId: params.conversationId,
-          conversationMessages: buildModeMessages, // Only recent Build mode section!
-          coachConfig: conversationData.coachConfig,
-          userProfile: conversationData.userProfile,
-        };
-
-        // Invoke the build-training-program lambda asynchronously
-        const buildTrainingProgramFunctionName =
-          process.env.BUILD_TRAINING_PROGRAM_FUNCTION_NAME;
-        if (!buildTrainingProgramFunctionName) {
-          console.error(
-            "❌ BUILD_TRAINING_PROGRAM_FUNCTION_NAME environment variable not set"
-          );
-          throw new Error(
-            "Configuration error. Unable to generate training program."
-          );
-        }
-
-        await invokeAsyncLambda(
-          buildTrainingProgramFunctionName,
-          buildTrainingProgramPayload,
-          `training program generation for user ${params.userId}`
-        );
-
-        console.info("✅ Build-training-program lambda invoked successfully");
-
-        // Note: No contextual updates after AI response is complete
-        // The AI's conversational response already informs the user what's happening
-      } catch (error) {
-        console.error("❌ Training program generation failed:", error);
-
-        // Note: No contextual updates even on error - AI response is sufficient
-      }
-    }
   }
 
   // Create final AI message with complete response

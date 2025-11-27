@@ -6,13 +6,13 @@ import {
   invokeAsyncLambda,
 } from '../libs/api-helpers';
 import {
-  getTrainingProgram,
-  updateTrainingProgram,
+  getProgram,
+  updateProgram,
   getUserProfile,
   getCoachConfig,
 } from '../../dynamodb/operations';
-import { getTrainingProgramDetailsFromS3, saveTrainingProgramDetailsToS3 } from '../libs/training-program/s3-utils';
-import { WorkoutTemplate, WorkoutFeedback } from '../libs/training-program/types';
+import { getProgramDetailsFromS3, saveProgramDetailsToS3 } from '../libs/program/s3-utils';
+import { WorkoutTemplate, WorkoutFeedback } from '../libs/program/types';
 import { getUserTimezoneOrDefault } from '../libs/analytics/date-utils';
 import { parseJsonWithFallbacks } from '../libs/response-utils';
 import { BuildWorkoutEvent, TemplateContext } from '../libs/workout/types';
@@ -21,7 +21,7 @@ import {
   buildScalingAnalysisPrompt,
   getDefaultScalingAnalysis,
   normalizeScalingAnalysis
-} from '../libs/training-program/scaling-analysis';
+} from '../libs/program/scaling-analysis';
 
 const baseHandler: AuthenticatedHandler = async (event) => {
   try {
@@ -54,7 +54,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
 
     // Fetch user profile, program, and coach config in parallel
     const [programData, userProfile, coachConfigData] = await Promise.all([
-      getTrainingProgram(userId, coachId, programId),
+      getProgram(userId, coachId, programId),
       getUserProfile(userId),
       getCoachConfig(userId, coachId),
     ]);
@@ -78,7 +78,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       return createErrorResponse(404, 'Program details not found');
     }
 
-    const programDetails = await getTrainingProgramDetailsFromS3(program.s3DetailKey);
+    const programDetails = await getProgramDetailsFromS3(program.s3DetailKey);
 
     if (!programDetails) {
       return createErrorResponse(404, 'Program details not found in S3');
@@ -134,7 +134,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       const scalingResponse = await callBedrockApi(
         scalingPrompt, // System prompt contains all instructions and context
         'Analyze the scaling and modifications for this workout.', // Simple user request
-        MODEL_IDS.CLAUDE_HAIKU_4FULL, // Claude Haiku 4.5 - fast, cheap model for scaling analysis
+        MODEL_IDS.CLAUDE_HAIKU_4_FULL, // Claude Haiku 4.5 - fast, cheap model for scaling analysis
         {
           prefillResponse: '{',
           enableThinking: false,
@@ -179,7 +179,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     template.userFeedback = workoutFeedback;
 
     programDetails.workoutTemplates[templateIndex] = template;
-    await saveTrainingProgramDetailsToS3(program.s3DetailKey, programDetails);
+    await saveProgramDetailsToS3(program.s3DetailKey, programDetails);
 
     console.info('✅ Template status updated in S3:', {
       templateId,
@@ -324,7 +324,7 @@ ${userPerformance}`;
       updates.status = 'completed';
     }
 
-    const updatedProgram = await updateTrainingProgram(
+    const updatedProgram = await updateProgram(
       userId,
       coachId,
       programId,

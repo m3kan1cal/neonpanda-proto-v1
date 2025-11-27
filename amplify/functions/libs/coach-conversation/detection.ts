@@ -70,7 +70,7 @@ Analyze this message for complexity triggers that would warrant conversation sum
     const response = await callBedrockApi(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.CLAUDE_HAIKU_4FULL,
+      MODEL_IDS.CLAUDE_HAIKU_4_FULL,
       { prefillResponse: "{" } // Force JSON output format
     ) as string; // No tools used, always returns string
     const result = parseJsonWithFallbacks(response);
@@ -529,7 +529,7 @@ Provide comprehensive analysis following the framework above.`;
     const response = await callBedrockApi(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.CLAUDE_HAIKU_4FULL, // More accurate for complex routing decisions
+      MODEL_IDS.CLAUDE_HAIKU_4_FULL, // More accurate for complex routing decisions
       { prefillResponse: "{" } // Force JSON output format
     ) as string; // No tools used, always returns string
 

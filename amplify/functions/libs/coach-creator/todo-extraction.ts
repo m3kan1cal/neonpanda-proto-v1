@@ -58,7 +58,7 @@ Return JSON with ONLY the fields you found information for:
     const extractionResponse = await callBedrockApi(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.CLAUDE_HAIKU_4FULL,
+      MODEL_IDS.CLAUDE_HAIKU_4_FULL,
       {
         tools: [{
           name: 'extract_intake_info',

@@ -50,7 +50,7 @@ These are deferred items from `TRAINING_PROGRAM_DASHBOARD_IMPLEMENTATION.md` tha
 **Implementation:**
 
 ```jsx
-// src/components/training-programs/ProgramDashboard.jsx
+// src/components/programs/ProgramDashboard.jsx
 const handleViewConversation = () => {
   if (!program.creationConversationId) {
     toast.error('Creation conversation not found');
@@ -99,7 +99,7 @@ const handleViewConversation = () => {
 **Implementation:**
 
 ```jsx
-// src/components/training-programs/ViewWorkouts.jsx
+// src/components/programs/ViewWorkouts.jsx
 const handleRequestChanges = async (template) => {
   // Build context message for coach
   const contextMessage = `I'd like to modify Day ${template.dayNumber} of my "${program.name}" program. Here's the current workout:\n\n${template.description}`;
@@ -132,7 +132,7 @@ export const handler = withAuth(async (event) => {
   const { newWorkoutDescription, regenerationReason } = JSON.parse(event.body);
 
   // 1. Get current template
-  const programDetails = await getTrainingProgramDetailsFromS3(program.s3DetailKey);
+  const programDetails = await getProgramDetailsFromS3(program.s3DetailKey);
   const template = programDetails.workoutTemplates.find(t => t.templateId === templateId);
 
   // 2. Store old version in adaptation history
@@ -150,10 +150,10 @@ export const handler = withAuth(async (event) => {
   template.adaptationHistory = template.adaptationHistory || [];
   template.adaptationHistory.push(adaptationEvent);
 
-  await saveTrainingProgramDetailsToS3(program.s3DetailKey, programDetails);
+  await saveProgramDetailsToS3(program.s3DetailKey, programDetails);
 
   // 4. Update program entity with adaptation log
-  await updateTrainingProgram(userId, coachId, programId, {
+  await updateProgram(userId, coachId, programId, {
     adaptationLog: [...(program.adaptationLog || []), adaptationEvent]
   });
 
@@ -282,8 +282,8 @@ export const handler = async (event) => {
   const { userId, programId, patterns } = JSON.parse(event.body);
 
   // 1. Get program details
-  const program = await getTrainingProgram(userId, coachId, programId);
-  const programDetails = await getTrainingProgramDetailsFromS3(program.s3DetailKey);
+  const program = await getProgram(userId, coachId, programId);
+  const programDetails = await getProgramDetailsFromS3(program.s3DetailKey);
 
   // 2. Find future workouts that contain the scaled movement
   const futureWorkouts = programDetails.workoutTemplates.filter(t =>
@@ -330,8 +330,8 @@ export const handler = async (event) => {
   }
 
   // 5. Save updates
-  await saveTrainingProgramDetailsToS3(program.s3DetailKey, programDetails);
-  await updateTrainingProgram(userId, coachId, programId, {
+  await saveProgramDetailsToS3(program.s3DetailKey, programDetails);
+  await updateProgram(userId, coachId, programId, {
     adaptationLog: program.adaptationLog
   });
 
@@ -454,7 +454,7 @@ This should help you stay in the optimal training zone. Keep crushing it! 💪
 **Frontend - Adaptation History Display:**
 
 ```jsx
-// src/components/training-programs/AdaptationHistory.jsx
+// src/components/programs/AdaptationHistory.jsx
 
 export function AdaptationHistory({ program }) {
   const adaptations = program.adaptationLog || [];
@@ -540,8 +540,8 @@ async function detectMissedWorkoutPattern(
   userId: string,
   programId: string
 ): Promise<MissedWorkoutPattern | null> {
-  const program = await getTrainingProgram(userId, coachId, programId);
-  const programDetails = await getTrainingProgramDetailsFromS3(program.s3DetailKey);
+  const program = await getProgram(userId, coachId, programId);
+  const programDetails = await getProgramDetailsFromS3(program.s3DetailKey);
 
   // Count recent skips
   const last7Workouts = programDetails.workoutTemplates
@@ -573,8 +573,8 @@ async function applyMissedWorkoutAdaptation(
   programId: string,
   pattern: MissedWorkoutPattern
 ) {
-  const program = await getTrainingProgram(userId, coachId, programId);
-  const programDetails = await getTrainingProgramDetailsFromS3(program.s3DetailKey);
+  const program = await getProgram(userId, coachId, programId);
+  const programDetails = await getProgramDetailsFromS3(program.s3DetailKey);
 
   // Get next 2-3 workouts
   const upcomingWorkouts = programDetails.workoutTemplates
@@ -605,8 +605,8 @@ async function applyMissedWorkoutAdaptation(
   program.adaptationLog = program.adaptationLog || [];
   program.adaptationLog.push(adaptationEvent);
 
-  await saveTrainingProgramDetailsToS3(program.s3DetailKey, programDetails);
-  await updateTrainingProgram(userId, coachId, programId, {
+  await saveProgramDetailsToS3(program.s3DetailKey, programDetails);
+  await updateProgram(userId, coachId, programId, {
     adaptationLog: program.adaptationLog
   });
 
@@ -698,7 +698,7 @@ async function analyzeWorkoutFeedback(
   workoutId: string,
   feedback: WorkoutFeedback
 ) {
-  const program = await getTrainingProgram(userId, coachId, programId);
+  const program = await getProgram(userId, coachId, programId);
 
   // Get recent feedback (last 5 workouts)
   const recentFeedback = await getRecentFeedback(programId, { limit: 5 });
@@ -805,7 +805,7 @@ interface WeeklyCheckIn {
 **UI Component:**
 
 ```jsx
-// src/components/training-programs/WeeklyCheckIn.jsx
+// src/components/programs/WeeklyCheckIn.jsx
 
 export function WeeklyCheckIn({ program, onSubmit }) {
   const [checkIn, setCheckIn] = useState({
@@ -925,7 +925,7 @@ export function WeeklyCheckIn({ program, onSubmit }) {
 
 ```typescript
 // Check when user opens dashboard or completes workout
-async function shouldShowCheckInPrompt(program: TrainingProgram): Promise<boolean> {
+async function shouldShowCheckInPrompt(program: Program): Promise<boolean> {
   const currentWeek = Math.ceil(program.currentDay / 7);
   const lastCheckIn = program.checkIns?.[program.checkIns.length - 1];
 
@@ -957,7 +957,7 @@ export const handler = withAuth(async (event) => {
     ...checkInData
   };
 
-  const program = await getTrainingProgram(userId, coachId, programId);
+  const program = await getProgram(userId, coachId, programId);
   program.checkIns = program.checkIns || [];
   program.checkIns.push(checkIn);
 
@@ -971,7 +971,7 @@ export const handler = withAuth(async (event) => {
   checkIn.coachResponse = coachResponse;
 
   // 3. Update program
-  await updateTrainingProgram(userId, coachId, programId, {
+  await updateProgram(userId, coachId, programId, {
     checkIns: program.checkIns
   });
 
@@ -994,7 +994,7 @@ export const handler = withAuth(async (event) => {
 ```typescript
 async function generateCheckInResponse(
   checkIn: WeeklyCheckIn,
-  program: TrainingProgram,
+  program: Program,
   coachConfig: CoachConfig
 ): Promise<CoachResponse> {
   const prompt = `
@@ -1077,7 +1077,7 @@ Track and visualize program performance for users and platform insights.
 **Enhanced Progress Overview:**
 
 ```jsx
-// src/components/training-programs/EnhancedProgressOverview.jsx
+// src/components/programs/EnhancedProgressOverview.jsx
 
 export function EnhancedProgressOverview({ program, programDetails }) {
   const metrics = calculateProgramMetrics(program, programDetails);
@@ -1147,8 +1147,8 @@ export function EnhancedProgressOverview({ program, programDetails }) {
 
 ```typescript
 function calculateProgramMetrics(
-  program: TrainingProgram,
-  programDetails: TrainingProgramDetails
+  program: Program,
+  programDetails: ProgramDetails
 ) {
   // Adherence
   const adherenceRate = Math.round(
@@ -1219,7 +1219,7 @@ export async function trackProgramMetric(
   dimensions: Record<string, string>
 ) {
   await cloudwatch.putMetricData({
-    Namespace: 'NeonPanda/TrainingPrograms',
+    Namespace: 'NeonPanda/Programs',
     MetricData: [{
       MetricName: metricName,
       Value: value,
@@ -1354,7 +1354,7 @@ async function getCachedProgramDetails(programId: string) {
     return cached.data;
   }
 
-  const data = await getTrainingProgramDetailsFromS3(programId);
+  const data = await getProgramDetailsFromS3(programId);
   programCache.set(programId, {
     data,
     expiry: Date.now() + 5 * 60 * 1000 // 5 minutes
@@ -1601,7 +1601,7 @@ amplify/functions/
 
 ### Frontend
 - ✅ Program dashboard components
-- ✅ TrainingProgramAgent
+- ✅ ProgramAgent
 - 🔲 Adaptation history component
 - 🔲 Check-in modal/page
 - 🔲 Enhanced metrics dashboard

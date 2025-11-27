@@ -10,6 +10,58 @@
 
 export const changelogEntries = [
   {
+    version: "Release v1.0.20251127-beta",
+    date: "2025-11-27",
+    changes: {
+      added: [
+        "Multi-turn conversational workout logging with AI-activated session flow - log workouts through natural back-and-forth conversation instead of one massive message",
+        "Intelligent AI-powered intent detection automatically activating Workout Log mode when users want to log a workout conversationally",
+        "Auto-cancel on topic change detection - AI recognizes when user changes subject and gracefully exits workout logging session",
+        "In-session editing and correction capability - users can fix or update workout information during multi-turn conversation flow",
+        "Smart question batching allowing AI to ask up to 2 related questions at a time (sets + reps, date + duration) for 40% faster data collection",
+        "Workout Creator badge displayed above AI messages during multi-turn sessions using cyan theme and 'Workout Creator' text",
+        "Two-tier normalization system using Claude Haiku 4 for high-confidence extractions (≥80%, ~8-10s) and Claude Sonnet 4 for low-confidence (<80%, ~44s) with automatic escalation fallback",
+        "Universal getCondensedSchema utility for reducing prompt sizes by 70-80% by stripping verbose schema fields (descriptions, patterns, examples, defaults)",
+        "Topic change detection field (userChangedTopic) in workout extraction schema triggering session cancellation when user shifts conversation away from logging",
+        "Workout logging progress tracking with turn count, field completion percentage, and required vs optional field indicators",
+        "Auto-completion trigger after 7 turns with partial data if user hasn't finished providing required fields"
+      ],
+      changed: [
+        "Workout logging experience transformed from single-message extraction to intelligent multi-turn conversation flow with context retention across messages",
+        "Workout extraction now supports both traditional slash command (/log-workout with full details) and new conversational multi-turn approach",
+        "Conversation modes renamed to artifact-focused naming: 'chat' → CHAT, 'build' → PROGRAM_DESIGN, 'workout-creator' → WORKOUT_LOG",
+        "Mode tracking moved from workoutCreatorSession state to conversation.mode property for consistent mode management across all artifact types",
+        "Workout Creator question generation updated to ask 1-2 related questions per turn instead of single questions for faster completion",
+        "Maximum turn count increased from 6 to 7 in workout logging sessions to allow users extra turn for required field completion",
+        "Mode toggle highlighting logic updated to highlight 'Chat' button when mode is CHAT or WORKOUT_LOG, 'Program' button only for PROGRAM_DESIGN",
+        "Message metadata now includes mode property (CHAT, PROGRAM_DESIGN, WORKOUT_LOG) for persistent visual indicators on historical messages",
+        "Workout normalization prompt optimized with condensed schema reducing prompt size from ~63KB to ~15KB for 3-4x speed improvement",
+        "All schema usages across backend (workout, program, phase generation) now use getCondensedSchema for consistent prompt size optimization",
+        "Haiku 4 max tokens increased to match Sonnet 4 (8192 tokens) for complex normalization tasks",
+        "Model selection for normalization now based on extraction confidence using MODEL_IDS constants instead of hardcoded model strings",
+        "DynamoDB serialization warnings now only log when more than 3 undefined keys detected, reducing noise from optional fields like 'notes'",
+        "Workout creator prompts enhanced with efficiency guidance for asking related questions together in natural sequences",
+        "Turn count warning threshold adjusted from turn 4/6 to turn 5/7 to match new maximum turn limit"
+      ],
+      fixed: [
+        "Workout Creator badge not appearing during streaming AI responses due to missing mode metadata in chunk events",
+        "Mode toggle buttons in ChatInput not highlighting correctly when conversation mode was WORKOUT_LOG",
+        "Workout normalization taking 50+ seconds due to oversized prompts including entire verbose schema definitions",
+        "TypeScript errors in handler files related to workoutCreatorSession type definitions and mode property assignments",
+        "conversationSize property missing from CoachConversationAgent initial state causing TypeScript errors",
+        "Streaming mode updates not applying correctly due to spread operator precedence issues in state merging logic",
+        "DynamoDB logs flooded with undefined value warnings for every optional field (notes, equipment, etc.) creating noise in CloudWatch",
+        "Nested conditional checks in workout session completion logic causing code complexity and readability issues",
+        "Mode property defaulting to undefined instead of CHAT when loading existing conversations without explicit mode set"
+      ],
+      removed: [
+        "workoutCreatorSession handling from frontend CoachConversationAgent state management (replaced with conversation.mode tracking)",
+        "workoutCreatorSession property from formatCompleteEvent streaming responses (no longer needed on frontend)",
+        "Hardcoded model IDs in normalization functions (replaced with MODEL_IDS constants from api-helpers)"
+      ]
+    }
+  },
+  {
     version: "Release v1.0.20251122-beta",
     date: "2025-11-22",
     changes: {
@@ -113,8 +165,8 @@ export const changelogEntries = [
     changes: {
       added: [
         "Complete Training Program Dashboard with comprehensive program overview, calendar view, phase timeline, and progress tracking",
-        "TrainingProgramDashboard.jsx main container component with dedicated route at /training-grounds/training-programs/:programId/dashboard",
-        "TrainingProgramCalendar.jsx week-by-week grid layout showing all program days with visual status indicators",
+        "ProgramDashboard.jsx main container component with dedicated route at /training-grounds/programs/:programId/dashboard",
+        "ProgramCalendar.jsx week-by-week grid layout showing all program days with visual status indicators",
         "CalendarDayCell.jsx clickable day cells with color-coded status (done: pink, skipped: cyan, pending: muted gray, rest: dark)",
         "ProgramOverview.jsx section displaying program metadata (name, description, status, coach, type, focus areas, stats)",
         "ProgressOverview.jsx section showing adherence rate, completed/skipped workouts, current phase, and progress metrics",
@@ -122,7 +174,7 @@ export const changelogEntries = [
         "Training program calendar legend showing status indicators (Done, Partial, Skipped, Pending, Rest) with color-coded dots",
         "Week-by-week calendar navigation with 'Current' and 'All Weeks' filter buttons for focused vs full program view",
         "Current day highlighting in calendar with 'Day X' badge below the timeline progress bar",
-        "Clickable day cells navigating to specific day workouts at /training-grounds/training-programs/workouts?day=X",
+        "Clickable day cells navigating to specific day workouts at /training-grounds/programs/workouts?day=X",
         "Calendar day cells showing workout count badges (1, 2, 3+ workouts per day) styled like sidebar count badges",
         "Phase Timeline with proportional visual segments (50% phase 1, 25% phase 2, 25% phase 3) matching actual program structure",
         "Phase breakdown cards with phase name, duration, description, current/completed badges, and focus area tags",
@@ -131,11 +183,11 @@ export const changelogEntries = [
         "Program Focus tags displayed as badges (strength, conditioning, mobility, etc.) using consistent badge styling",
         "Metadata display pattern with label (secondary gray) and value (neon cyan) for consistent information presentation",
         "Subcontainer pattern (bg-synthwave-bg-card/30, border-synthwave-neon-cyan/20) for grouped information sections",
-        "Three-dot 'More Actions' menu on ManageTrainingPrograms program cards with Rename and Delete options",
+        "Three-dot 'More Actions' menu on ManagePrograms program cards with Rename and Delete options",
         "Three-dot 'More Actions' menu on Coaches page coach cards with Rename Coach and Delete Coach options",
         "Inline edit functionality triggered from More Actions menu for renaming programs and coaches",
         "startInEditMode prop for InlineEditField component allowing immediate edit mode without hover interaction",
-        "Escape key handler for canceling inline edit across ManageTrainingPrograms and Coaches pages",
+        "Escape key handler for canceling inline edit across ManagePrograms and Coaches pages",
         "Click-outside detection for closing More Actions dropdown menus with mousedown event listeners",
         "Focus outline removal (focus:outline-none, active:outline-none) on three-dot menu buttons preventing white border flash",
         "Tap highlight prevention (WebKitTapHighlightColor: transparent) on three-dot menu buttons for mobile polish",
@@ -147,7 +199,7 @@ export const changelogEntries = [
         "Shadow styling on dropdown menus (shadow-[4px_4px_16px_rgba(0,255,255,0.06)]) for depth perception",
         "EditIcon SVG component for consistent rename action icon across management pages",
         "EllipsisVerticalIcon SVG component for three-dot menu button across management pages",
-        "Pause/Resume/Complete program actions integrated into ManageTrainingPrograms cards",
+        "Pause/Resume/Complete program actions integrated into ManagePrograms cards",
         "Loading states with spinners for pause/resume/complete actions showing specific action in progress",
         "Disabled state management preventing multiple simultaneous program actions (pause + complete simultaneously)",
         "Program status tracking with real-time updates (active → paused, paused → active, active → completed)",
@@ -164,7 +216,7 @@ export const changelogEntries = [
         "Coach compact card integration on Program Dashboard header matching Training Grounds header design"
       ],
       changed: [
-        "ManageTrainingPrograms program cards refactored to use three-dot menu instead of direct delete button for cleaner action organization",
+        "ManagePrograms program cards refactored to use three-dot menu instead of direct delete button for cleaner action organization",
         "Coaches page coach cards refactored to use three-dot menu instead of direct delete button for consistent UX across pages",
         "InlineEditField component enhanced to support startInEditMode prop, immediately entering edit mode when triggered from menu",
         "InlineEditField hover-based edit icon completely removed from display mode, requiring explicit 'Rename' action from menu",
@@ -174,8 +226,8 @@ export const changelogEntries = [
         "Three-dot menu positioning changed to absolute positioning in top-right corner of program/coach cards",
         "Menu dropdown width standardized to w-44 (176px) with pl-4 pr-3 padding for balanced spacing",
         "Menu item icons sized to w-4 h-4 for consistency with text (font-rajdhani font-medium text-sm)",
-        "Program Dashboard route changed from /training-grounds/training-programs/:programId to /training-grounds/training-programs/dashboard?programId=X",
-        "View Workouts route structure unified: /training-grounds/training-programs/workouts?programId=X&day=Y",
+        "Program Dashboard route changed from /training-grounds/programs/:programId to /training-grounds/programs/dashboard?programId=X",
+        "View Workouts route structure unified: /training-grounds/programs/workouts?programId=X&day=Y",
         "Training program status badge repositioned from header area to Program Overview Intel subcontainer",
         "Program metadata layout changed from simple list to organized subcontainers (Intel, Stats, Description, Focus)",
         "Progress metrics layout changed from simple list to 2-column metadata grid with subcontainer wrapper",
@@ -251,13 +303,13 @@ export const changelogEntries = [
         "Phase timeline progress indicator line not properly animating/pulsing on current day marker"
       ],
       removed: [
-        "Direct delete button from ManageTrainingPrograms program cards (replaced with three-dot menu)",
+        "Direct delete button from ManagePrograms program cards (replaced with three-dot menu)",
         "Direct delete button from Coaches page coach cards (replaced with three-dot menu)",
         "Hover-based edit icon from InlineEditField component in display mode",
         "Status badge from Program Dashboard page header (moved to Program Overview section)",
         "Horizontal dividers (hr elements) from Program Overview and Progress Overview sections",
-        "ProgramCalendar.jsx duplicate component (consolidated to TrainingProgramCalendar.jsx)",
-        "TrainingProgramActionsMenu.jsx component (actions moved to ManageTrainingPrograms cards)"
+        "ProgramCalendar.jsx duplicate component (consolidated to ProgramCalendar.jsx)",
+        "ProgramActionsMenu.jsx component (actions moved to ManagePrograms cards)"
       ]
     }
   },
@@ -274,24 +326,24 @@ export const changelogEntries = [
         "Skip workout functionality with full API integration, visual feedback (spinner, badge, dimmed card), and optional skip reason/notes",
         "Unskip workout functionality allowing users to revert skipped workouts back to pending status with single button click",
         "Skipped workouts tracking in training programs with skippedWorkouts field incremented/decremented on skip/unskip actions",
-        "Combined workout statistics display on ManageTrainingPrograms cards showing completed, skipped, and total workouts on single line with icons (✓ X / ✕ Y of Z workouts)",
+        "Combined workout statistics display on ManagePrograms cards showing completed, skipped, and total workouts on single line with icons (✓ X / ✕ Y of Z workouts)",
         "SkipAction const enum (SKIP, UNSKIP) in skip-workout-template handler for type-safe action handling",
         "View Workout button for completed templates linking directly to logged workout details page with all captured user edits",
         "Processing Workout spinner state with animated loading indicator on Log Workout button during backend processing",
         "Empty state messaging for rest days on specific day view (No workouts scheduled for day X)",
         "Toast notification system for workout actions (success: logging initiated, template skipped, template unskipped; errors: API failures)",
-        "Specific day view functionality allowing navigation to any program day via /training-grounds/training-programs/{programId}/day/{dayNumber} route",
+        "Specific day view functionality allowing navigation to any program day via /training-grounds/programs/{programId}/day/{dayNumber} route",
         "Backend Lambda support for ?day=X query parameter in get-workout-templates handler (lines 81-111)",
         "API Gateway route for specific day template retrieval at /users/{userId}/coaches/{coachId}/programs/{programId}/templates?day={dayNumber}",
-        "TrainingProgramAgent.loadWorkoutTemplates() { day } option for loading specific day's workout templates",
+        "ProgramAgent.loadWorkoutTemplates() { day } option for loading specific day's workout templates",
         "Dynamic breadcrumb text based on route ('Today's Workouts' for /today vs 'View Workouts' for /day/X)",
-        "Map-based polling interval management in TrainingProgramAgent with automatic cleanup on component unmount",
+        "Map-based polling interval management in ProgramAgent with automatic cleanup on component unmount",
         "Exponential backoff retry logic in sync-log-subscriptions handler to prevent CloudWatch API throttling",
         "250ms delays between CloudWatch API calls to stay below 5 requests/second rate limit",
         "Celebration animation state management (showCelebration, celebrationType) in ViewWorkouts component"
       ],
       changed: [
-        "ViewWorkouts page refactored to centralize workout actions (log, skip, unskip) in TrainingProgramAgent instead of component-level logic",
+        "ViewWorkouts page refactored to centralize workout actions (log, skip, unskip) in ProgramAgent instead of component-level logic",
         "Workout template cards now display comprehensive status-based UI: pending shows Log/Skip buttons, completed shows View Workout button, skipped shows Unskip Workout button",
         "Workout description textarea now disabled (read-only) for completed and skipped templates preventing accidental edits",
         "Helper text below workout description dynamically updates based on template status: '✓ Workout logged - This is the workout as it was logged...' for completed templates",
@@ -300,19 +352,19 @@ export const changelogEntries = [
         "Day Complete badge repositioned from workout stats line to right of training program name for better visibility",
         "Program context section spacing tightened on ViewWorkouts (mb-8 → mb-4, program name mb-2 → mb-1, metadata py-1 → pb-1)",
         "Program context section displays phase name, current day, and total workouts scheduled for better user orientation",
-        "Workout template logging moved to TrainingProgramAgent.logWorkoutFromTemplate() method for cleaner separation of concerns",
+        "Workout template logging moved to ProgramAgent.logWorkoutFromTemplate() method for cleaner separation of concerns",
         "Skip workout button text changed from 'Skip Workout' to 'Skipped Workout' when in skipped state",
         "Skipped badge styling updated to match logged badge with neon cyan color and ✕ icon (previously purple)",
         "Completed/logged workout cards now show 75% opacity for visual distinction from pending workouts",
         "Training program day advancement logic fixed to only advance when ALL workouts for that day are completed/skipped (not just primary template)",
         "Adherence rate calculation corrected to store as percentage (multiply by 100) instead of decimal in backend",
-        "ManageTrainingPrograms workout stats redesigned with color-coded metrics (completed: neon pink, skipped: neon cyan, total: secondary text)",
+        "ManagePrograms workout stats redesigned with color-coded metrics (completed: neon pink, skipped: neon cyan, total: secondary text)",
         "Last activity timestamp on program cards now displays in neon cyan for consistency",
         "Progress percentage on program cards now displays in neon cyan matching other key metrics",
         "Command Palette implementation standardized across 10 management pages to use global instance from App.jsx instead of local duplicates",
         "Keyboard shortcut handlers (Cmd/Ctrl+K) consolidated to single global handler in App.jsx, removing 10 duplicate local handlers",
         "NavigationContext integrated across all management pages for centralized Command Palette state management",
-        "Tooltip system standardized across ViewWorkouts, ManageTrainingPrograms, and TrainingGrounds with 'Go to the Training Grounds' message",
+        "Tooltip system standardized across ViewWorkouts, ManagePrograms, and TrainingGrounds with 'Go to the Training Grounds' message",
         "Textarea refs in ViewWorkouts changed from array to Map keyed by templateId for reliable user edit capture",
         "Skip workout API endpoint enhanced to support both skip and unskip actions via action parameter ('skip' | 'unskip')",
         "Program stats updated to show skipped count even when zero for transparency",
@@ -349,7 +401,7 @@ export const changelogEntries = [
     changes: {
       added: [
         "Complete Training Programs infrastructure with multi-week/multi-phase program creation, calendar-based scheduling, and adherence tracking",
-        "TrainingProgram entity with full CRUD operations (create, read, update, delete) and DynamoDB single-table design integration",
+        "Program entity with full CRUD operations (create, read, update, delete) and DynamoDB single-table design integration",
         "Training program calendar generation with start dates, rest days, pause/resume functionality, and 'today' workout identification",
         "Natural language workout templates stored as human-readable coaching instructions instead of rigid JSON structures",
         "AI-powered workout template logging that converts natural language prescriptions to Universal Workout Schema on completion",
@@ -358,12 +410,12 @@ export const changelogEntries = [
         "CoachConversationModeToggle component for seamless switching between Chat and Build modes with persistent mode state",
         "Build mode system prompt with structured guidance for training program creation through conversational Q&A flow",
         "Training program generation from conversational context using AI to extract program structure, phases, and workout templates",
-        "Async build-training-program Lambda handler for non-blocking program generation with progress updates",
+        "Async build-program Lambda handler for non-blocking program generation with progress updates",
         "AI normalization and validation for training program structures ensuring data integrity and schema compliance",
         "Pinecone integration for training program summaries with semantic search and coach context retrieval",
         "Training program Pinecone metadata including program name, goal, duration, phase structure, and focus areas for rich semantic search",
         "S3 storage for detailed training program data and daily workout templates with efficient retrieval patterns",
-        "Training program types and interfaces (TrainingProgram, TrainingProgramPhase, WorkoutTemplate, TrainingProgramCalendar)",
+        "Training program types and interfaces (Program, ProgramPhase, WorkoutTemplate, ProgramCalendar)",
         "Training program schema definitions with comprehensive field documentation and validation rules",
         "Timezone-aware calendar calculations using user's local timezone (defaults to America/Los_Angeles) for 'today' detection",
         "Message-level mode tracking with metadata.mode property for historical accuracy of Chat vs Build conversations",
@@ -390,11 +442,11 @@ export const changelogEntries = [
         "SidebarNav menu items now span full width with only top/bottom borders (no left/right) for cleaner visual design",
         "SidebarNav gradient dividers and section spacing now use centralized patterns from uiPatterns.js",
         "Navigation icon centering logic extended to include CoachIconSmall and MemoryIconTiny for consistent collapsed sidebar alignment",
-        "Training program naming standardized to use 'TrainingProgram' or 'trainingProgram' consistently (not 'Program' or 'program')",
-        "Calendar functions renamed for clarity (isProgramActive → isTrainingProgramActive, ProgramCalendarDay → TrainingProgramCalendarDay)",
+        "Training program naming standardized to use 'Program' or 'Program' consistently (not 'Program' or 'program')",
+        "Calendar functions renamed for clarity (isProgramActive → isProgramActive, ProgramCalendarDay → ProgramCalendarDay)",
         "Coach personality integration enhanced in program-generator.ts to match rich prompts used in conversation flow",
-        "Training program ID generation pattern simplified to remove coachId (now: trainingProgram_userId_timestamp_shortId)",
-        "DynamoDB query function renamed from queryAllTrainingPrograms to queryTrainingPrograms for cleaner naming",
+        "Training program ID generation pattern simplified to remove coachId (now: Program_userId_timestamp_shortId)",
+        "DynamoDB query function renamed from queryAllPrograms to queryPrograms for cleaner naming",
         "Universal Workout Schema Exercise interface expanded with comprehensive field definitions (equipment, intensity, notes, tempo)",
         "Command palette parsing logic refactored from regex pattern to indexOf/substring approach for maximum UTF-8 and multi-line content compatibility",
         "Command detection now uses simple string splitting instead of regex patterns to handle emojis, special characters, and newlines reliably",
@@ -402,12 +454,12 @@ export const changelogEntries = [
       ],
       fixed: [
         "Training program date handling inconsistency where calendar used UTC instead of user's local timezone for 'today' calculation",
-        "Create-training-program handler errors due to accessing old property names after interface simplification",
-        "Update-training-program handler potential property overwriting by adding atomic ConditionExpression checks",
+        "Create-program handler errors due to accessing old property names after interface simplification",
+        "Update-program handler potential property overwriting by adding atomic ConditionExpression checks",
         "Inconsistent camelCase naming (itemWithGSI corrected from itemWithGSI, convertUtcToUserDate from convertUTCToUserDate)",
         "AI responses in Build mode not showing purple styling during real-time streaming (metadata.mode missing in placeholder message)",
         "Build Mode badge text not vertically centered in message bubbles (added translate-y-px adjustment)",
-        "Build-training-program Lambda missing DynamoDB environment variables and Bedrock permissions causing failures",
+        "Build-program Lambda missing DynamoDB environment variables and Bedrock permissions causing failures",
         "Training program generation sending entire conversation history instead of only latest continuous Build mode section",
         "Pinecone storage failure for training programs due to storing complex phases array in metadata (now stores phaseNames and focusAreas only)",
         "[GENERATE_PROGRAM] trigger text briefly appearing in AI chat bubbles before being removed during streaming",
@@ -425,7 +477,7 @@ export const changelogEntries = [
       ],
       removed: [
         "Structured workout template schemas and normalization utilities (replaced with natural language approach)",
-        "libs/training-program/workout-template-utils.ts (consolidated into workout-utils.ts)",
+        "libs/program/workout-template-utils.ts (consolidated into workout-utils.ts)",
         "Test scripts for manually updating message modes (update-message-modes-for-testing.js, list-conversation-messages.js)"
       ]
     }
@@ -486,7 +538,7 @@ export const changelogEntries = [
         "Messy contextual update implementation with hardcoded structured messages for training programs instead of AI-generated ephemeral feedback"
       ],
       removed: [
-        "libs/training-program/messages.ts file (replaced with AI-generated contextual updates for consistency with memory/workout handling)"
+        "libs/program/messages.ts file (replaced with AI-generated contextual updates for consistency with memory/workout handling)"
       ]
     }
   },

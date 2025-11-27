@@ -9,7 +9,7 @@
 This document tracks testing for all changes made in Phase 3B, including:
 - Breadcrumb navigation updates (dynamic text for today vs specific day)
 - ViewWorkouts page (generic component for today or specific day)
-- ManageTrainingPrograms badge styling
+- ManagePrograms badge styling
 - Backend API integration for log/skip workout
 - Generic workout viewing (supports both /today and /day/:dayNumber routes)
 
@@ -25,7 +25,7 @@ This document tracks testing for all changes made in Phase 3B, including:
 #### Test Steps - Today's Workouts Route:
 - [PASSED] Navigate to Training Grounds
 - [PASSED] Click "View Workout(s)" from Today's Workout card
-- [PASSED] **Verify URL is**: `/training-grounds/training-programs/{programId}/today`
+- [PASSED] **Verify URL is**: `/training-grounds/programs/{programId}/today`
 - [PASSED] **Verify breadcrumb shows**: `Home > Training Grounds > Today's Workouts`
 - [PASSED] **Verify**: Only 3 breadcrumb items (Home, Training Grounds, Today's Workouts)
 - [PASSED] **Verify**: Page title shows "Today's Workouts"
@@ -33,8 +33,8 @@ This document tracks testing for all changes made in Phase 3B, including:
 - [PASSED] Click "Home" breadcrumb → should navigate to home/training grounds
 
 #### Test Steps - Specific Day Route:
-- [PASSED] Navigate to a specific day (e.g., `/training-grounds/training-programs/{programId}/day/3`)
-- [PASSED] **Verify URL is**: `/training-grounds/training-programs/{programId}/day/{dayNumber}`
+- [PASSED] Navigate to a specific day (e.g., `/training-grounds/programs/{programId}/day/3`)
+- [PASSED] **Verify URL is**: `/training-grounds/programs/{programId}/day/{dayNumber}`
 - [PASSED] **Verify breadcrumb shows**: `Home > Training Grounds > View Workouts`
 - [PASSED] **Verify**: Only 3 breadcrumb items (Home, Training Grounds, View Workouts)
 - [PASSED] **Verify**: Page title shows "View Workouts" (not "Today's Workouts")
@@ -60,7 +60,7 @@ None - All tests passed ✅
 **Status**: ✅ COMPLETED
 
 #### Test Steps - ViewWorkouts.jsx:
-- [PASSED] Navigate to `/training-grounds/training-programs/{programId}/today`
+- [PASSED] Navigate to `/training-grounds/programs/{programId}/today`
 - [PASSED] **Verify**: Command Palette button (⌘) is visible in header
 - [PASSED] Click Command Palette button → verify modal opens
 - [PASSED] Press `Cmd+K` (Mac) or `Ctrl+K` (Windows) → verify modal opens
@@ -69,8 +69,8 @@ None - All tests passed ✅
 - [PASSED] **Verify**: Command Palette has userId and coachId passed correctly
 - [PASSED] Close and reopen → verify state resets properly (input clears)
 
-#### Test Steps - ManageTrainingPrograms.jsx:
-- [PASSED] Navigate to `/training-grounds/training-programs`
+#### Test Steps - ManagePrograms.jsx:
+- [PASSED] Navigate to `/training-grounds/programs`
 - [PASSED] **Verify**: Command Palette button (⌘) is visible in header
 - [PASSED] Click Command Palette button → verify modal opens
 - [PASSED] Press `Cmd+K` (Mac) or `Ctrl+K` (Windows) → verify modal opens
@@ -183,7 +183,7 @@ None - All tests passed ✅
 
 ---
 
-### 5. ManageTrainingPrograms - Create Card Badge
+### 5. ManagePrograms - Create Card Badge
 
 **Priority**: MEDIUM
 **Status**: ✅ COMPLETED
@@ -406,12 +406,12 @@ All issues resolved - skip/unskip API integration, visual feedback, badge stylin
 - [PASSED] Backend Lambda function for `get-workout-templates` handles `?day=X` query parameter
 - [PASSED] API Gateway route for `/users/{userId}/coaches/{coachId}/programs/{programId}/templates?day={dayNumber}` exists
 - [PASSED] Test backend API directly with Postman/curl
-- [PASSED] `TrainingProgramAgent.loadWorkoutTemplates()` supports `{ day }` option
+- [PASSED] `ProgramAgent.loadWorkoutTemplates()` supports `{ day }` option
 
 #### Test Steps:
 
 **9.1 Navigate to Specific Day**
-- [PASSED] Manually navigate to `/training-grounds/training-programs/{programId}/day/3`
+- [PASSED] Manually navigate to `/training-grounds/programs/{programId}/day/3`
 - [PASSED] Verify page loads correctly
 - [PASSED] **Verify breadcrumb shows**: `Home > Training Grounds > View Workouts` (not "Today's Workouts")
 - [PASSED] **Verify page title**: "View Workouts" (not "Today's Workouts")
@@ -582,14 +582,14 @@ The ViewWorkouts component is production-ready and handles all expected use case
 
 **Priority**: HIGH
 **Status**: ⏳ READY FOR TESTING - All Components Built
-**Route**: `/training-grounds/training-programs/:programId`
+**Route**: `/training-grounds/programs/:programId`
 
 ### 12.1 Dashboard Navigation
 
 #### Test Steps:
 - [ ] Navigate to Manage Training Programs page
 - [ ] Click "View Dashboard" button on any program card
-- [ ] **Verify**: Navigates to `/training-grounds/training-programs/{programId}?userId={userId}&coachId={coachId}`
+- [ ] **Verify**: Navigates to `/training-grounds/programs/{programId}?userId={userId}&coachId={coachId}`
 - [ ] **Verify breadcrumbs**: `Home > Training Grounds > Training Programs > Program Dashboard`
 - [ ] Click coach avatar → should navigate to Training Grounds
 - [ ] Click "Training Programs" in breadcrumbs → should go back to list
@@ -903,7 +903,7 @@ The ViewWorkouts component is production-ready and handles all expected use case
 - [ ] **From Training Grounds**:
   - Click "View Dashboard" on ActiveProgramSummary
   - Navigates correctly
-- [ ] **From ManageTrainingPrograms**:
+- [ ] **From ManagePrograms**:
   - Click "View Dashboard" on any card
   - Navigates correctly
 - [ ] **To ViewWorkouts**:
