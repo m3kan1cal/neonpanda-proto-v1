@@ -254,7 +254,7 @@ CRITICAL: A valid workout log requires hasPerformanceData=true. The hasLoggingIn
     const response = await callBedrockApi(
       validationPrompt,
       workoutContent,
-      MODEL_IDS.CLAUDE_HAIKU_4FULL,
+      MODEL_IDS.CLAUDE_HAIKU_4_FULL,
       { prefillResponse: "{" } // Force JSON output format
     ) as string; // No tools used, always returns string
 
@@ -348,7 +348,7 @@ Examples:
     const response = await callBedrockApi(
     extractionPrompt,
     message,
-    MODEL_IDS.CLAUDE_HAIKU_4FULL,
+    MODEL_IDS.CLAUDE_HAIKU_4_FULL,
     { prefillResponse: "{" } // Force JSON output format
   ) as string; // No tools used, always returns string
   const result = parseJsonWithFallbacks(response);

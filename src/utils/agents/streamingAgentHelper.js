@@ -68,9 +68,9 @@ export function createStreamingMessage(agent, metadata = {}) {
       // Append chunk to current streaming content
       agent._appendToStreamingMessage(messageId, chunk);
     },
-    update: (content) => {
-      // Set full content (used for final update)
-      agent._updateStreamingMessage(messageId, content);
+    update: (content, metadata = null) => {
+      // Set full content and optionally update metadata (used for final update)
+      agent._updateStreamingMessage(messageId, content, metadata);
     },
     remove: () => {
       console.info('🗑️ StreamingMessage.remove:', { messageId });

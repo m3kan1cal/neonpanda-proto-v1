@@ -49,11 +49,11 @@ export function createCoreApi(
   checkUserAvailabilityLambda: lambda.IFunction,
   generateUploadUrlsLambda: lambda.IFunction,
   generateDownloadUrlsLambda: lambda.IFunction,
-  createTrainingProgramLambda: lambda.IFunction,
-  getTrainingProgramLambda: lambda.IFunction,
-  getTrainingProgramsLambda: lambda.IFunction,
-  updateTrainingProgramLambda: lambda.IFunction,
-  deleteTrainingProgramLambda: lambda.IFunction,
+  createProgramLambda: lambda.IFunction,
+  getProgramLambda: lambda.IFunction,
+  getProgramsLambda: lambda.IFunction,
+  updateProgramLambda: lambda.IFunction,
+  deleteProgramLambda: lambda.IFunction,
   logWorkoutTemplateLambda: lambda.IFunction,
   skipWorkoutTemplateLambda: lambda.IFunction,
   getWorkoutTemplateLambda: lambda.IFunction,
@@ -344,29 +344,29 @@ export function createCoreApi(
   );
 
   // Create Lambda integrations for training program functions
-  const createTrainingProgramIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
-    'CreateTrainingProgramIntegration',
-    createTrainingProgramLambda
+  const createProgramIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
+    'CreateProgramIntegration',
+    createProgramLambda
   );
 
-  const getTrainingProgramIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
-    'GetTrainingProgramIntegration',
-    getTrainingProgramLambda
+  const getProgramIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
+    'GetProgramIntegration',
+    getProgramLambda
   );
 
-  const getTrainingProgramsIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
-    'GetTrainingProgramsIntegration',
-    getTrainingProgramsLambda
+  const getProgramsIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
+    'GetProgramsIntegration',
+    getProgramsLambda
   );
 
-  const updateTrainingProgramIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
-    'UpdateTrainingProgramIntegration',
-    updateTrainingProgramLambda
+  const updateProgramIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
+    'UpdateProgramIntegration',
+    updateProgramLambda
   );
 
-  const deleteTrainingProgramIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
-    'DeleteTrainingProgramIntegration',
-    deleteTrainingProgramLambda
+  const deleteProgramIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
+    'DeleteProgramIntegration',
+    deleteProgramLambda
   );
 
   const logWorkoutTemplateIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
@@ -427,11 +427,11 @@ export function createCoreApi(
     checkUserAvailability: checkUserAvailabilityIntegration,
     generateUploadUrls: generateUploadUrlsIntegration,
     generateDownloadUrls: generateDownloadUrlsIntegration,
-    createTrainingProgram: createTrainingProgramIntegration,
-    getTrainingProgram: getTrainingProgramIntegration,
-    getTrainingPrograms: getTrainingProgramsIntegration,
-    updateTrainingProgram: updateTrainingProgramIntegration,
-    deleteTrainingProgram: deleteTrainingProgramIntegration,
+    createProgram: createProgramIntegration,
+    getProgram: getProgramIntegration,
+    getPrograms: getProgramsIntegration,
+    updateProgram: updateProgramIntegration,
+    deleteProgram: deleteProgramIntegration,
     logWorkoutTemplate: logWorkoutTemplateIntegration,
     skipWorkoutTemplate: skipWorkoutTemplateIntegration,
     getWorkoutTemplate: getWorkoutTemplateIntegration
@@ -515,35 +515,35 @@ export function createCoreApi(
   httpApi.addRoutes({
     path: '/users/{userId}/coaches/{coachId}/programs',
     methods: [apigatewayv2.HttpMethod.POST],
-    integration: integrations.createTrainingProgram,
+    integration: integrations.createProgram,
     authorizer: userPoolAuthorizer
   });
 
   httpApi.addRoutes({
     path: '/users/{userId}/coaches/{coachId}/programs',
     methods: [apigatewayv2.HttpMethod.GET],
-    integration: integrations.getTrainingPrograms,
+    integration: integrations.getPrograms,
     authorizer: userPoolAuthorizer
   });
 
   httpApi.addRoutes({
     path: '/users/{userId}/coaches/{coachId}/programs/{programId}',
     methods: [apigatewayv2.HttpMethod.GET],
-    integration: integrations.getTrainingProgram,
+    integration: integrations.getProgram,
     authorizer: userPoolAuthorizer
   });
 
   httpApi.addRoutes({
     path: '/users/{userId}/coaches/{coachId}/programs/{programId}',
     methods: [apigatewayv2.HttpMethod.PUT],
-    integration: integrations.updateTrainingProgram,
+    integration: integrations.updateProgram,
     authorizer: userPoolAuthorizer
   });
 
   httpApi.addRoutes({
     path: '/users/{userId}/coaches/{coachId}/programs/{programId}',
     methods: [apigatewayv2.HttpMethod.DELETE],
-    integration: integrations.deleteTrainingProgram,
+    integration: integrations.deleteProgram,
     authorizer: userPoolAuthorizer
   });
 

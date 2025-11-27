@@ -87,7 +87,7 @@ export const navigationItems = {
       id: 'programs',
       label: 'Training Programs',
       icon: ProgramIconTiny,
-      getRoute: (ctx) => `/training-grounds/training-programs?userId=${ctx.userId}&coachId=${ctx.coachId}`,
+      getRoute: (ctx) => `/training-grounds/programs?userId=${ctx.userId}&coachId=${ctx.coachId}`,
       requiresAuth: true,
       requiresCoach: true, // Requires coachId to show contextual nav items
       badge: (ctx) => ctx.newItemCounts.programs || 0, // Always show count

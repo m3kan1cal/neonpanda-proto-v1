@@ -42,24 +42,26 @@ export const buttonPatterns = {
   // Base classes for all mode toggle buttons
   modeToggleBase: "px-2.5 py-0.5 rounded-lg font-rajdhani font-semibold text-xs uppercase tracking-wide transition-all duration-200 flex items-center justify-center gap-1.5",
 
-  // Chat mode active state (Cyan themed)
+  // Chat mode active state (Cyan themed - no specific artifact)
   modeToggleChatActive: "bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan border-2 border-synthwave-neon-cyan/40",
 
   // Chat mode inactive state
   modeToggleChatInactive: "bg-synthwave-bg-primary/30 text-synthwave-neon-cyan border-2 border-transparent hover:border-synthwave-neon-cyan/20 hover:bg-synthwave-neon-cyan/10",
 
-  // Build mode active state (Purple themed)
-  modeToggleBuildActive: "bg-synthwave-neon-purple/20 text-synthwave-neon-purple border-2 border-synthwave-neon-purple/40",
+  // Program Design mode active state (Purple themed - creating program artifact)
+  modeToggleProgramDesignActive: "bg-synthwave-neon-purple/20 text-synthwave-neon-purple border-2 border-synthwave-neon-purple/40",
 
-  // Build mode inactive state
-  modeToggleBuildInactive: "bg-synthwave-bg-primary/30 text-synthwave-neon-purple border-2 border-transparent hover:border-synthwave-neon-purple/20 hover:bg-synthwave-neon-purple/10",
+  // Program Design mode inactive state
+  modeToggleProgramDesignInactive: "bg-synthwave-bg-primary/30 text-synthwave-neon-purple border-2 border-transparent hover:border-synthwave-neon-purple/20 hover:bg-synthwave-neon-purple/10",
 
   // Mode toggle container
-  modeToggleContainer: "flex items-center gap-2 bg-synthwave-bg-card/50 backdrop-blur-sm border border-synthwave-neon-cyan/10 rounded-lg p-1 shadow-lg",
+  modeToggleContainer: "flex items-center gap-1 bg-synthwave-bg-card/50 backdrop-blur-sm border border-synthwave-neon-cyan/10 rounded-lg px-1 py-0.5 shadow-lg",
 
-  // Mode indicator badges - For displaying which mode a message was created in (not interactive)
-  // Build mode indicator badge (purple themed) - shows on AI messages created in Build mode
-  modeBadgeBuild: "flex items-center gap-1.5 px-2.5 py-0.5 bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 rounded-lg w-fit text-xs font-rajdhani font-semibold uppercase tracking-wide text-synthwave-neon-purple",
+  // Mode indicator badges - Artifact-focused naming for conversation modes (not interactive)
+  // Program Design mode badge (purple themed) - shows on AI messages creating program design artifact
+  modeBadgeProgramDesign: "flex items-center gap-1.5 px-2.5 py-0.5 bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 rounded-lg w-fit text-xs font-rajdhani font-semibold uppercase tracking-wide text-synthwave-neon-purple",
+  // Workout Log mode badge (cyan themed) - shows on AI messages creating workout log artifact
+  modeBadgeWorkoutLog: "flex items-center gap-1.5 px-2.5 py-0.5 bg-synthwave-neon-cyan/10 border border-synthwave-neon-cyan/30 rounded-lg w-fit text-xs font-rajdhani font-semibold uppercase tracking-wide text-synthwave-neon-cyan",
 
   // Tab Toggle Buttons - For switching between views (Weekly/Monthly, Current/All Weeks, etc.)
   tabToggleActive: "px-4 py-2 rounded-lg font-rajdhani font-bold text-sm uppercase tracking-wide transition-all duration-200 bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan border-2 border-synthwave-neon-cyan/40",
@@ -345,8 +347,8 @@ export const containerPatterns = {
   // AI Chat Bubble - Modern glassmorphism with cyan background tint (default Chat mode) (removed backdrop-blur to prevent scroll artifacts)
   aiChatBubble: "bg-synthwave-neon-cyan/10 border border-synthwave-neon-cyan/20 text-synthwave-text-primary rounded-2xl rounded-bl-md shadow-xl shadow-synthwave-neon-cyan/20",
 
-  // AI Build Mode Bubble - Purple gradient for Build mode AI responses (removed backdrop-blur to prevent scroll artifacts)
-  aiBuildModeBubble: "px-4 py-3 rounded-2xl rounded-bl-md shadow-lg bg-gradient-to-br from-synthwave-neon-purple/5 to-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 text-synthwave-text-primary shadow-synthwave-neon-purple/10",
+  // AI Program Design Mode Bubble - Purple gradient for program design artifact creation (removed backdrop-blur to prevent scroll artifacts)
+  aiProgramDesignModeBubble: "px-4 py-3 rounded-2xl rounded-bl-md shadow-lg bg-gradient-to-br from-synthwave-neon-purple/5 to-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 text-synthwave-text-primary shadow-synthwave-neon-purple/10",
 
   // Info Card - Static information display without hover effects
   infoCard: "bg-synthwave-bg-card/30 border border-synthwave-neon-pink/20 rounded-lg p-3",

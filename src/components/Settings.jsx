@@ -11,7 +11,6 @@ import FormInput from './shared/FormInput';
 import AuthInput from '../auth/components/AuthInput';
 import AuthButton from '../auth/components/AuthButton';
 import { useToast } from '../contexts/ToastContext';
-import Footer from './shared/Footer';
 import { getUserProfile, updateUserProfile } from '../utils/apis/userProfileApi';
 import {
   ProfileIcon,
@@ -443,7 +442,6 @@ function Settings() {
             </div>
           </div>
         </div>
-        <Footer />
       </div>
     );
   }
@@ -854,7 +852,6 @@ function Settings() {
           </div>
         </div>
       </div>
-      <Footer />
     </div>
   );
 }

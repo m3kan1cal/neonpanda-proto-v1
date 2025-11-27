@@ -1,20 +1,13 @@
+import { TodoItem, ConversationMessage } from '../todo-types';
+
 export type SophisticationLevel = 'UNKNOWN' | 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
+
+// Re-export for backward compatibility
+export type { TodoItem, ConversationMessage };
 
 // ============================================================================
 // TO-DO LIST BASED CONVERSATIONAL FLOW (New Approach)
 // ============================================================================
-
-/**
- * A single item in the coach creator to-do list
- * Tracks whether a piece of information has been collected
- */
-export interface TodoItem {
-  status: 'pending' | 'in_progress' | 'complete';
-  value: any | null;
-  confidence?: 'high' | 'medium' | 'low';
-  notes?: string;
-  extractedFrom?: string; // Which message index this was extracted from
-}
 
 /**
  * Complete to-do list for coach creator intake
@@ -64,15 +57,6 @@ export interface CoachCreatorTodoList {
   // Question 11: Competition Goals (Optional)
   competitionGoals: TodoItem;
   competitionTimeline: TodoItem;
-}
-
-/**
- * Message in the conversation history
- */
-export interface ConversationMessage {
-  role: 'ai' | 'user';
-  content: string;
-  timestamp: string;
 }
 
 // ============================================================================

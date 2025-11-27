@@ -62,7 +62,7 @@ Return ONLY one word: "male", "female", or "neutral"`;
       const response = await callBedrockApi(
         prompt,
         '', // Empty string will default to "Please proceed."
-        MODEL_IDS.CLAUDE_HAIKU_4FULL
+        MODEL_IDS.CLAUDE_HAIKU_4_FULL
       ) as string;
 
       const cleaned = response.toLowerCase().trim();
@@ -116,7 +116,7 @@ Return ONLY a single number between 1-7. If not found, return 4.`;
       const response = await callBedrockApi(
         prompt,
         '', // Empty string will default to "Please proceed."
-        MODEL_IDS.CLAUDE_HAIKU_4FULL
+        MODEL_IDS.CLAUDE_HAIKU_4_FULL
       ) as string;
 
       const parsed = parseInt(response.trim(), 10);
@@ -164,7 +164,7 @@ Return a simple phrase. If not mentioned, return "6 months"`;
       const response = await callBedrockApi(
         prompt,
         '', // Empty string will default to "Please proceed."
-        MODEL_IDS.CLAUDE_HAIKU_4FULL
+        MODEL_IDS.CLAUDE_HAIKU_4_FULL
       ) as string;
 
       return response.trim() || '6 months';
@@ -197,7 +197,7 @@ Return ONLY one word: "high", "moderate", or "low"`;
       const response = await callBedrockApi(
         prompt,
         '', // Empty string will default to "Please proceed."
-        MODEL_IDS.CLAUDE_HAIKU_4FULL
+        MODEL_IDS.CLAUDE_HAIKU_4_FULL
       ) as string;
 
       const cleaned = response.toLowerCase().trim();
@@ -248,7 +248,7 @@ If "none" or empty, use empty arrays. Be specific and helpful.`;
         const response = await callBedrockApi(
           prompt,
           '', // Empty string will default to "Please proceed."
-          MODEL_IDS.CLAUDE_HAIKU_4FULL,
+          MODEL_IDS.CLAUDE_HAIKU_4_FULL,
           { prefillResponse: '{' }
         ) as string;
 
@@ -315,7 +315,7 @@ Focus should be training goals like "strength", "conditioning", "olympic lifting
         const response = await callBedrockApi(
           prompt,
           '', // Empty string will default to "Please proceed."
-          MODEL_IDS.CLAUDE_HAIKU_4FULL,
+          MODEL_IDS.CLAUDE_HAIKU_4_FULL,
           { prefillResponse: '{' }
         ) as string;
 
@@ -378,7 +378,7 @@ If none apply, return an empty array: []`;
         const response = await callBedrockApi(
           prompt,
           '', // Empty string will default to "Please proceed."
-          MODEL_IDS.CLAUDE_HAIKU_4FULL,
+          MODEL_IDS.CLAUDE_HAIKU_4_FULL,
           { prefillResponse: '[' }
         ) as string;
 

@@ -71,7 +71,7 @@ Analyze this message and determine if semantic search would enhance the coaching
     const response = await callBedrockApi(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.CLAUDE_HAIKU_4FULL,
+      MODEL_IDS.CLAUDE_HAIKU_4_FULL,
       { prefillResponse: "{" } // Force JSON output format
     ) as string; // No tools used, always returns string
     const result = parseJsonWithFallbacks(response);
@@ -120,7 +120,7 @@ Examples:
     const response = await callBedrockApi(
       analysisPrompt,
       userMessage,
-      MODEL_IDS.CLAUDE_HAIKU_4FULL,
+      MODEL_IDS.CLAUDE_HAIKU_4_FULL,
       { prefillResponse: "{" } // Force JSON output format
     ) as string; // No tools used, always returns string
     return parseJsonWithFallbacks(response);

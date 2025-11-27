@@ -68,12 +68,12 @@ import { updateUserProfile } from "./functions/update-user-profile/resource";
 import { checkUserAvailability } from "./functions/check-user-availability/resource";
 import { generateUploadUrls } from "./functions/generate-upload-urls/resource";
 import { generateDownloadUrls } from "./functions/generate-download-urls/resource";
-import { createTrainingProgram } from "./functions/create-training-program/resource";
-import { buildTrainingProgram } from "./functions/build-training-program/resource";
-import { getTrainingProgram } from "./functions/get-training-program/resource";
-import { getTrainingPrograms } from "./functions/get-training-programs/resource";
-import { updateTrainingProgram } from "./functions/update-training-program/resource";
-import { deleteTrainingProgram } from "./functions/delete-training-program/resource";
+import { createProgram } from "./functions/create-program/resource";
+import { buildProgram } from "./functions/build-program/resource";
+import { getProgram } from "./functions/get-program/resource";
+import { getPrograms } from "./functions/get-programs/resource";
+import { updateProgram } from "./functions/update-program/resource";
+import { deleteProgram } from "./functions/delete-program/resource";
 import { logWorkoutTemplate } from "./functions/log-workout-template/resource";
 import { skipWorkoutTemplate } from "./functions/skip-workout-template/resource";
 import { getWorkoutTemplate } from "./functions/get-workout-template/resource";
@@ -152,12 +152,12 @@ const backend = defineBackend({
   generateUploadUrls,
   generateDownloadUrls,
   syncLogSubscriptions,
-  createTrainingProgram,
-  buildTrainingProgram,
-  getTrainingProgram,
-  getTrainingPrograms,
-  updateTrainingProgram,
-  deleteTrainingProgram,
+  createProgram,
+  buildProgram,
+  getProgram,
+  getPrograms,
+  updateProgram,
+  deleteProgram,
   logWorkoutTemplate,
   skipWorkoutTemplate,
   getWorkoutTemplate,
@@ -165,7 +165,7 @@ const backend = defineBackend({
 
 // Disable retries for stateful async generation functions
 // This prevents confusing double-runs on timeouts or errors.
-backend.buildTrainingProgram.resources.lambda.configureAsyncInvoke({
+backend.buildProgram.resources.lambda.configureAsyncInvoke({
   retryAttempts: 0,
 });
 backend.buildWorkout.resources.lambda.configureAsyncInvoke({
@@ -231,11 +231,11 @@ const coreApi = apiGatewayv2.createCoreApi(
   backend.checkUserAvailability.resources.lambda,
   backend.generateUploadUrls.resources.lambda,
   backend.generateDownloadUrls.resources.lambda,
-  backend.createTrainingProgram.resources.lambda,
-  backend.getTrainingProgram.resources.lambda,
-  backend.getTrainingPrograms.resources.lambda,
-  backend.updateTrainingProgram.resources.lambda,
-  backend.deleteTrainingProgram.resources.lambda,
+  backend.createProgram.resources.lambda,
+  backend.getProgram.resources.lambda,
+  backend.getPrograms.resources.lambda,
+  backend.updateProgram.resources.lambda,
+  backend.deleteProgram.resources.lambda,
   backend.logWorkoutTemplate.resources.lambda,
   backend.skipWorkoutTemplate.resources.lambda,
   backend.getWorkoutTemplate.resources.lambda,
@@ -316,10 +316,10 @@ const sharedPolicies = new SharedPolicies(
   backend.createMemory,
   backend.deleteMemory,
   backend.updateUserProfile,
-  backend.createTrainingProgram,
-  backend.buildTrainingProgram,
-  backend.updateTrainingProgram,
-  backend.deleteTrainingProgram,
+  backend.createProgram,
+  backend.buildProgram,
+  backend.updateProgram,
+  backend.deleteProgram,
   backend.logWorkoutTemplate,
   backend.skipWorkoutTemplate,
   // NOTE: postConfirmation excluded to avoid circular dependency with auth stack
@@ -345,8 +345,8 @@ const sharedPolicies = new SharedPolicies(
   backend.checkUserAvailability,
   backend.generateUploadUrls,
   backend.generateDownloadUrls,
-  backend.getTrainingProgram,
-  backend.getTrainingPrograms,
+  backend.getProgram,
+  backend.getPrograms,
   backend.getWorkoutTemplate,
 ].forEach((func) => {
   sharedPolicies.attachDynamoDbReadOnly(func.resources.lambda);
@@ -361,7 +361,7 @@ const sharedPolicies = new SharedPolicies(
   backend.sendCoachConversationMessage,
   backend.streamCoachConversation,
   backend.buildWorkout,
-  backend.buildTrainingProgram, // Added: Needs Bedrock for AI program generation
+  backend.buildProgram, // Added: Needs Bedrock for AI program generation
   backend.buildConversationSummary,
   backend.buildWeeklyAnalytics,
   backend.buildMonthlyAnalytics,
@@ -376,7 +376,7 @@ const sharedPolicies = new SharedPolicies(
   backend.buildWorkout,
   backend.buildCoachConfig,
   backend.buildConversationSummary,
-  backend.buildTrainingProgram,
+  backend.buildProgram,
   backend.sendCoachConversationMessage,
   backend.streamCoachConversation,
   backend.streamCoachCreatorSession,
@@ -401,10 +401,10 @@ sharedPolicies.attachS3AnalyticsAccess(
   backend.streamCoachConversation,
   backend.streamCoachCreatorSession,
   backend.updateCoachCreatorSession,
-  backend.createTrainingProgram,
-  backend.buildTrainingProgram,
+  backend.createProgram,
+  backend.buildProgram,
   backend.buildWorkout, // Added: needs to update template.linkedWorkoutId in S3
-  backend.getTrainingProgram,
+  backend.getProgram,
   backend.logWorkoutTemplate,
   backend.skipWorkoutTemplate,
   backend.getWorkoutTemplate,
@@ -512,10 +512,10 @@ grantLambdaInvokePermissions(
   ]
 );
 
-// Grant permission to streamCoachConversation to invoke buildWorkout, buildTrainingProgram, and buildConversationSummary
+// Grant permission to streamCoachConversation to invoke buildWorkout, buildProgram, and buildConversationSummary
 grantLambdaInvokePermissions(backend.streamCoachConversation.resources.lambda, [
   backend.buildWorkout.resources.lambda.functionArn,
-  backend.buildTrainingProgram.resources.lambda.functionArn,
+  backend.buildProgram.resources.lambda.functionArn,
   backend.buildConversationSummary.resources.lambda.functionArn,
 ]);
 
@@ -628,12 +628,12 @@ const allFunctions = [
   backend.updateUserProfile,
   backend.checkUserAvailability,
   backend.generateUploadUrls,
-  backend.createTrainingProgram,
-  backend.buildTrainingProgram,
-  backend.getTrainingProgram,
-  backend.getTrainingPrograms,
-  backend.updateTrainingProgram,
-  backend.deleteTrainingProgram,
+  backend.createProgram,
+  backend.buildProgram,
+  backend.getProgram,
+  backend.getPrograms,
+  backend.updateProgram,
+  backend.deleteProgram,
   backend.logWorkoutTemplate,
   backend.skipWorkoutTemplate,
   backend.getWorkoutTemplate,
@@ -664,8 +664,8 @@ allFunctions.forEach((func) => {
   backend.streamCoachConversation,
   backend.streamCoachCreatorSession,
   backend.updateCoachCreatorSession,
-  backend.createTrainingProgram,
-  backend.buildTrainingProgram,
+  backend.createProgram,
+  backend.buildProgram,
   backend.buildWorkout, // Added: needs access to S3 for updating template.linkedWorkoutId
   backend.getWorkoutTemplate,
   backend.logWorkoutTemplate,
@@ -767,7 +767,7 @@ backend.streamCoachConversation.addEnvironment(
 );
 backend.streamCoachConversation.addEnvironment(
   "BUILD_TRAINING_PROGRAM_FUNCTION_NAME",
-  backend.buildTrainingProgram.resources.lambda.functionName
+  backend.buildProgram.resources.lambda.functionName
 );
 backend.streamCoachConversation.addEnvironment(
   "BUILD_CONVERSATION_SUMMARY_FUNCTION_NAME",

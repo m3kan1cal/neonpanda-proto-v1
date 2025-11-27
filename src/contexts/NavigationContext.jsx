@@ -10,7 +10,7 @@ import { getWorkoutsCount } from '../utils/apis/workoutApi';
 import { getCoachConversationsCount } from '../utils/apis/coachConversationApi';
 import { getMemories } from '../utils/apis/memoryApi';
 import { getWeeklyReports } from '../utils/apis/reportApi';
-import { getTrainingPrograms } from '../utils/apis/trainingProgramApi';
+import { getPrograms } from '../utils/apis/programApi';
 import CoachAgent from '../utils/agents/CoachAgent';
 
 const NavigationContext = createContext(null);
@@ -124,7 +124,7 @@ export const NavigationProvider = ({ children }) => {
             console.warn('NavigationContext: Failed to fetch reports:', err);
             return { items: [] };
           }),
-          getTrainingPrograms(userId, coachId).catch((err) => {
+          getPrograms(userId, coachId).catch((err) => {
             console.warn('NavigationContext: Failed to fetch training programs:', err);
             return { programs: [] };
           }),

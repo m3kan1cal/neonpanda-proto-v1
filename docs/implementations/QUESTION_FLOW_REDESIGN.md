@@ -284,7 +284,7 @@ async function extractInformationFromResponse(
   }
   `;
 
-  const extracted = await callBedrockApi(prompt, '', MODEL_IDS.CLAUDE_HAIKU_4FULL);
+  const extracted = await callBedrockApi(prompt, '', MODEL_IDS.CLAUDE_HAIKU_4_FULL);
   return parseJsonWithFallbacks(extracted);
 }
 ```

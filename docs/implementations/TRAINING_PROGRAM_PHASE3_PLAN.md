@@ -54,10 +54,10 @@ Phase 3 focuses on **Frontend Integration** - building the user-facing component
 - ✅ Program ID in message metadata
 
 **Data Models:**
-- ✅ `TrainingProgram` - Full program entity
-- ✅ `TrainingProgramPhase` - Phase structure
+- ✅ `Program` - Full program entity
+- ✅ `ProgramPhase` - Phase structure
 - ✅ `WorkoutTemplate` - Daily workout templates
-- ✅ `TrainingProgramSummary` - Lightweight list view
+- ✅ `ProgramSummary` - Lightweight list view
 - ✅ `TodaysWorkoutTemplates` - Today's workout response
 
 ---
@@ -93,11 +93,11 @@ export const CoachConversationModeToggle = ({ mode, onModeChange, disabled }) =>
         💬 Chat
       </button>
       <button
-        onClick={() => onModeChange(CONVERSATION_MODES.BUILD)}
+        onClick={() => onModeChange(CONVERSATION_MODES.PROGRAM_DESIGN)}
         disabled={disabled}
         className={`
           px-4 py-2 rounded-md text-sm font-medium transition-all
-          ${mode === CONVERSATION_MODES.BUILD
+          ${mode === CONVERSATION_MODES.PROGRAM_DESIGN
             ? 'bg-cyan-500 text-white shadow-sm'
             : 'text-gray-600 dark:text-gray-400 hover:text-gray-900'
           }
@@ -119,9 +119,9 @@ export const CoachConversationModeToggle = ({ mode, onModeChange, disabled }) =>
 
 ---
 
-### 2. TrainingProgramAgent (State Management)
+### 2. ProgramAgent (State Management)
 
-**Location:** `src/utils/agents/TrainingProgramAgent.js`
+**Location:** `src/utils/agents/ProgramAgent.js`
 
 **Purpose:** Manage program state and API calls
 
@@ -131,7 +131,7 @@ export const CoachConversationModeToggle = ({ mode, onModeChange, disabled }) =>
 import { useState, useCallback } from 'react';
 import { programApi } from '../utils/api/programApi';
 
-export const useTrainingProgramAgent = (userId, coachId) => {
+export const useProgramAgent = (userId, coachId) => {
   const [programs, setPrograms] = useState([]);
   const [activeProgram, setActiveProgram] = useState(null);
   const [todaysWorkout, setTodaysWorkout] = useState(null);
@@ -250,7 +250,7 @@ export const useTrainingProgramAgent = (userId, coachId) => {
 
 ```jsx
 export const ProgramList = ({ userId, coachId, onSelectProgram }) => {
-  const { programs, loading, error, loadPrograms } = useTrainingProgramAgent(userId, coachId);
+  const { programs, loading, error, loadPrograms } = useProgramAgent(userId, coachId);
   const [filter, setFilter] = useState('active'); // active, completed, archived, all
 
   useEffect(() => {
@@ -300,7 +300,7 @@ export const ProgramList = ({ userId, coachId, onSelectProgram }) => {
 
 ```jsx
 export const ProgramDetail = ({ userId, coachId, programId }) => {
-  const { activeProgram, loading, error, loadProgram } = useTrainingProgramAgent(userId, coachId);
+  const { activeProgram, loading, error, loadProgram } = useProgramAgent(userId, coachId);
 
   useEffect(() => {
     loadProgram(programId);
@@ -351,7 +351,7 @@ export const ProgramDetail = ({ userId, coachId, programId }) => {
 
 ```jsx
 export const TodaysWorkout = ({ userId, coachId, programId }) => {
-  const { todaysWorkout, loading, error, loadTodaysWorkout, logWorkout } = useTrainingProgramAgent(userId, coachId);
+  const { todaysWorkout, loading, error, loadTodaysWorkout, logWorkout } = useProgramAgent(userId, coachId);
   const [showLogModal, setShowLogModal] = useState(false);
 
   useEffect(() => {
@@ -421,12 +421,12 @@ export const TodaysWorkout = ({ userId, coachId, programId }) => {
 
 ## API Utility Functions
 
-**Location:** `src/utils/apis/trainingProgramApi.js`
+**Location:** `src/utils/apis/programApi.js`
 
 ```javascript
 import { getApiUrl, authenticatedFetch } from './apiConfig.js';
 
-export const trainingProgramApi = {
+export const programApi = {
   // List programs
   async listPrograms(userId, coachId, options = {}) {
     const params = new URLSearchParams();
@@ -543,7 +543,7 @@ const [conversationMode, setConversationMode] = useState(
 // Pass mode to create conversation
 await createConversation(userId, coachId, {
   mode: conversationMode,
-  title: conversationMode === CONVERSATION_MODES.BUILD ? "New Training Program" : undefined
+  title: conversationMode === CONVERSATION_MODES.PROGRAM_DESIGN ? "New Training Program" : undefined
 });
 
 // Detect program creation in streamed events
@@ -620,8 +620,8 @@ Add programs tab/section showing active program and today's workout prominently.
 
 ### Phase 3A (Days 1-5)
 - [ ] `CoachConversationModeToggle.jsx` component
-- [ ] `useTrainingProgramAgent.js` hook
-- [ ] `trainingProgramApi.js` utility
+- [ ] `useProgramAgent.js` hook
+- [ ] `programApi.js` utility
 - [ ] `ProgramList.jsx` component
 - [ ] `ProgramDetail.jsx` component
 - [ ] `TodaysWorkout.jsx` component

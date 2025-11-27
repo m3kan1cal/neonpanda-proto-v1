@@ -3,11 +3,11 @@ import {
   createErrorResponse,
 } from '../libs/api-helpers';
 import {
-  getTrainingProgram,
-  updateTrainingProgram,
+  getProgram,
+  updateProgram,
 } from '../../dynamodb/operations';
-import { getTrainingProgramDetailsFromS3, saveTrainingProgramDetailsToS3 } from '../libs/training-program/s3-utils';
-import { WorkoutTemplate } from '../libs/training-program/types';
+import { getProgramDetailsFromS3, saveProgramDetailsToS3 } from '../libs/program/s3-utils';
+import { WorkoutTemplate } from '../libs/program/types';
 import { withAuth, AuthenticatedHandler } from '../libs/auth/middleware';
 
 // Action types for skip/unskip operations
@@ -52,7 +52,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     }
 
     // Fetch program
-    const programData = await getTrainingProgram(userId, coachId, programId);
+    const programData = await getProgram(userId, coachId, programId);
 
     if (!programData) {
       return createErrorResponse(404, 'Training program not found');
@@ -65,7 +65,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       return createErrorResponse(404, 'Program details not found');
     }
 
-    const programDetails = await getTrainingProgramDetailsFromS3(program.s3DetailKey);
+    const programDetails = await getProgramDetailsFromS3(program.s3DetailKey);
 
     if (!programDetails) {
       return createErrorResponse(404, 'Program details not found in S3');
@@ -105,7 +105,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       template.userFeedback = null;
 
       programDetails.workoutTemplates[templateIndex] = template;
-      await saveTrainingProgramDetailsToS3(program.s3DetailKey, programDetails);
+      await saveProgramDetailsToS3(program.s3DetailKey, programDetails);
 
       console.info('✅ Template status reverted to pending in S3:', {
         templateId,
@@ -113,7 +113,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       });
 
       // Update lastActivityAt and decrement skippedWorkouts in DynamoDB
-      await updateTrainingProgram(
+      await updateProgram(
         userId,
         coachId,
         programId,
@@ -180,7 +180,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     }
 
     programDetails.workoutTemplates[templateIndex] = template;
-    await saveTrainingProgramDetailsToS3(program.s3DetailKey, programDetails);
+    await saveProgramDetailsToS3(program.s3DetailKey, programDetails);
 
     console.info('✅ Template status updated to skipped in S3:', {
       templateId,
@@ -257,7 +257,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       updates.status = 'completed';
     }
 
-    const updatedProgram = await updateTrainingProgram(
+    const updatedProgram = await updateProgram(
       userId,
       coachId,
       programId,

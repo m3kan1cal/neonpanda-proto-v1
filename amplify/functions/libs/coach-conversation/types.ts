@@ -7,6 +7,8 @@
 
 import { CoachConfig, DynamoDBItem } from "../coach-creator/types";
 import { UserMemory } from "../memory";
+import { ConversationMessage } from "../todo-types";
+import { WorkoutCreatorTodoList } from "../workout-creator/types";
 
 /**
  * Message type definitions
@@ -27,19 +29,32 @@ export const MESSAGE_TYPES = {
 } satisfies Record<string, MessageType>;
 
 /**
- * Conversation mode types
- * - 'chat': Standard coaching conversation (default)
- * - 'build': Training program creation mode with structured generation
+ * Conversation mode types - Artifact-Focused Naming
+ *
+ * Modes are named after the primary artifact/deliverable they produce:
+ * - 'chat': Standard coaching conversation (no specific artifact)
+ * - 'program_design': Training program creation mode → produces Program artifact
+ * - 'workout_log': Multi-turn workout logging session → produces Workout artifact
+ *
+ * Future modes should follow this pattern:
+ * - 'nutrition_plan': Creates nutrition plan artifact
+ * - 'goal_setting': Creates goal/milestone artifacts
+ * - 'assessment': Creates assessment/evaluation artifacts
  */
-export type ConversationMode = 'chat' | 'build';
+export type ConversationMode = 'chat' | 'program_design' | 'workout_log';
 
 /**
  * Conversation mode constants
  * Use these instead of string literals to ensure type safety and consistency
+ *
+ * ARTIFACT-FOCUSED NAMING CONVENTION:
+ * Each mode is named after the artifact it produces, not the process.
+ * This makes it clear what the conversation is building towards.
  */
 export const CONVERSATION_MODES = {
   CHAT: 'chat' as const,
-  BUILD: 'build' as const,
+  PROGRAM_DESIGN: 'program_design' as const,
+  WORKOUT_LOG: 'workout_log' as const,
 } satisfies Record<string, ConversationMode>;
 
 /**
@@ -79,6 +94,17 @@ export interface CoachConversation {
     isActive: boolean;
     tags?: string[];
   };
+
+  // Multi-turn workout collection session (in progress)
+  workoutCreatorSession?: {
+    todoList: WorkoutCreatorTodoList;
+    conversationHistory: ConversationMessage[];
+    startedAt: Date;
+    lastActivity: Date;
+    turnCount: number; // Track conversation turns to prevent infinite loops
+    imageS3Keys?: string[]; // Images collected during session
+  };
+
   // DynamoDB timestamps (populated from database metadata)
   createdAt?: Date;
   updatedAt?: Date;

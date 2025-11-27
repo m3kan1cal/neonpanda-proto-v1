@@ -34,7 +34,7 @@ export function extractLatestBuildModeSection(
 
     if (msg.role === 'assistant') {
       // If this AI message has Build mode, this is part of the Build section
-      if (msg.metadata?.mode === CONVERSATION_MODES.BUILD) {
+      if (msg.metadata?.mode === CONVERSATION_MODES.PROGRAM_DESIGN) {
         buildSectionStartIndex = i;
       } else {
         // Hit a non-Build AI message - stop here
@@ -46,7 +46,7 @@ export function extractLatestBuildModeSection(
       // Check if the next message (if it exists and is AI) has Build mode
       if (i < allMessages.length - 1) {
         const nextMsg = allMessages[i + 1];
-        if (nextMsg.role === 'assistant' && nextMsg.metadata?.mode === CONVERSATION_MODES.BUILD) {
+        if (nextMsg.role === 'assistant' && nextMsg.metadata?.mode === CONVERSATION_MODES.PROGRAM_DESIGN) {
           buildSectionStartIndex = i;
         }
       }
@@ -60,7 +60,7 @@ export function extractLatestBuildModeSection(
     totalMessages: allMessages.length,
     buildSectionStartIndex,
     extractedMessages: buildSectionMessages.length,
-    buildModeAiCount: buildSectionMessages.filter(m => m.role === 'assistant' && m.metadata?.mode === CONVERSATION_MODES.BUILD).length,
+    buildModeAiCount: buildSectionMessages.filter(m => m.role === 'assistant' && m.metadata?.mode === CONVERSATION_MODES.PROGRAM_DESIGN).length,
     userMessageCount: buildSectionMessages.filter(m => m.role === 'user').length,
     firstMessageTimestamp: buildSectionMessages[0]?.timestamp,
     lastMessageTimestamp: buildSectionMessages[buildSectionMessages.length - 1]?.timestamp,

@@ -122,7 +122,7 @@ User (Authenticated via Cognito)
 DynamoDB Pattern:
 pk: "user#{userId}#coach#{coachId}"
 sk: "program#{programId}"
-entityType: "trainingProgram"
+entityType: "program"
 
 Core Attributes:
 - programId (unique identifier)
@@ -693,7 +693,7 @@ const jsonBlockMatch = fullResponse.match(/```json\n(.*?)\n```/s);
 
 if (jsonBlockMatch && mode === 'build') {
   const programData = JSON.parse(jsonBlockMatch[1]);
-  await createTrainingProgram(userId, coachId, programData);
+  await createProgram(userId, coachId, programData);
 
   return {
     ...streamedResponse,

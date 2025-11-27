@@ -1,9 +1,9 @@
 import { createOkResponse, createErrorResponse } from '../libs/api-helpers';
-import { getTrainingProgram, getUserProfile } from '../../dynamodb/operations';
-import { getTrainingProgramDetailsFromS3 } from '../libs/training-program/s3-utils';
-import { getPhaseForDay } from '../libs/training-program/calendar-utils';
+import { getProgram, getUserProfile } from '../../dynamodb/operations';
+import { getProgramDetailsFromS3 } from '../libs/program/s3-utils';
+import { getPhaseForDay } from '../libs/program/calendar-utils';
 import { getUserTimezoneOrDefault } from '../libs/analytics/date-utils';
-import { TodaysWorkoutTemplates } from '../libs/training-program/types';
+import { TodaysWorkoutTemplates } from '../libs/program/types';
 import { withAuth, AuthenticatedHandler } from '../libs/auth/middleware';
 
 const baseHandler: AuthenticatedHandler = async (event) => {
@@ -28,7 +28,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
 
     // Fetch user profile for timezone (parallel with program fetch)
     const [programData, userProfile] = await Promise.all([
-      getTrainingProgram(userId, coachId, programId),
+      getProgram(userId, coachId, programId),
       getUserProfile(userId)
     ]);
 
@@ -51,7 +51,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       return createErrorResponse(404, 'Program workouts not yet generated');
     }
 
-    const programDetails = await getTrainingProgramDetailsFromS3(program.s3DetailKey);
+    const programDetails = await getProgramDetailsFromS3(program.s3DetailKey);
 
     if (!programDetails) {
       return createErrorResponse(404, 'Program details not found in S3');

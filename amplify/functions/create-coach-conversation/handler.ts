@@ -27,8 +27,8 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     const body = JSON.parse(event.body);
     const { title, initialMessage, mode } = body;
 
-    // Validate mode if provided
-    const conversationMode = mode === CONVERSATION_MODES.BUILD ? CONVERSATION_MODES.BUILD : CONVERSATION_MODES.CHAT;
+    // Validate mode if provided (artifact-focused: PROGRAM_DESIGN creates program, CHAT is default)
+    const conversationMode = mode === CONVERSATION_MODES.PROGRAM_DESIGN ? CONVERSATION_MODES.PROGRAM_DESIGN : CONVERSATION_MODES.CHAT;
 
     // Generate unique conversation ID
     const conversationId = `conv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -38,7 +38,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       conversationId,
       coachId,
       userId,
-      title: title || (conversationMode === CONVERSATION_MODES.BUILD ? "New Training Program" : "New Conversation"),
+      title: title || (conversationMode === CONVERSATION_MODES.PROGRAM_DESIGN ? "New Training Program" : "New Conversation"),
       mode: conversationMode,
       messages: [],
       metadata: {
@@ -46,7 +46,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
         lastActivity: new Date(),
         totalMessages: 0,
         isActive: true,
-        tags: conversationMode === CONVERSATION_MODES.BUILD ? ['program_creation'] : [],
+        tags: conversationMode === CONVERSATION_MODES.PROGRAM_DESIGN ? ['program_design'] : [],
       },
     };
 

@@ -33,7 +33,7 @@ Attributes: {
     timelineDefined: boolean,
     finalized: boolean
   },
-  programInProgress: Partial<TrainingProgram>,
+  programInProgress: Partial<Program>,
   sessionState: 'active' | 'completed' | 'abandoned',
   createdAt: Date,
   updatedAt: Date
@@ -57,7 +57,7 @@ Attributes: {
   programId: string,
   userId: string,
   coachId: string,
-  
+
   programDefinition: {
     name: string,
     totalDuration: number, // weeks
@@ -69,7 +69,7 @@ Attributes: {
       successMetrics: string[]
     }
   },
-  
+
   methodology: {
     progressionStrategy: string,
     intensityPattern: string,
@@ -77,16 +77,16 @@ Attributes: {
     deloadStrategy: string,
     adaptationRules: AdaptationRule[]
   },
-  
+
   workoutHistory: ProgramWorkout[],
   checkIns: ProgramCheckIn[],
   adaptations: ProgramAdaptation[],
-  
+
   creationSession: {
     sessionId: string,
     createdFromSessionId: string
   },
-  
+
   status: 'active' | 'completed' | 'paused' | 'modified',
   createdAt: Date,
   updatedAt: Date
@@ -275,7 +275,7 @@ GET    /users/{userId}/coaches/{coachId}/programs/{programId}/context
 
 export async function streamCoachResponse(req: Request, res: Response) {
   const { message, userId, coachId, sessionId } = req.body;
-  
+
   // Set up streaming response
   res.writeHead(200, {
     'Content-Type': 'text/event-stream',
@@ -287,7 +287,7 @@ export async function streamCoachResponse(req: Request, res: Response) {
   try {
     // Get conversation context + memory
     const context = await buildConversationContext(userId, coachId, sessionId);
-    
+
     // Stream response from Bedrock
     const stream = await bedrock.converseStream({
       modelId: 'claude-3-sonnet',
@@ -296,33 +296,33 @@ export async function streamCoachResponse(req: Request, res: Response) {
     });
 
     let fullResponse = '';
-    
+
     for await (const chunk of stream.stream) {
       if (chunk.contentBlockDelta) {
         const deltaText = chunk.contentBlockDelta.delta.text;
         fullResponse += deltaText;
-        
+
         // Send chunk to frontend
-        res.write(`data: ${JSON.stringify({ 
-          type: 'chunk', 
-          content: deltaText 
+        res.write(`data: ${JSON.stringify({
+          type: 'chunk',
+          content: deltaText
         })}\n\n`);
       }
     }
-    
+
     // Send completion signal
-    res.write(`data: ${JSON.stringify({ 
-      type: 'complete', 
-      fullMessage: fullResponse 
+    res.write(`data: ${JSON.stringify({
+      type: 'complete',
+      fullMessage: fullResponse
     })}\n\n`);
-    
+
     // Store complete message
     await storeCoachMessage(sessionId, fullResponse);
-    
+
   } catch (error) {
-    res.write(`data: ${JSON.stringify({ 
-      type: 'error', 
-      message: error.message 
+    res.write(`data: ${JSON.stringify({
+      type: 'error',
+      message: error.message
     })}\n\n`);
   } finally {
     res.end();
@@ -341,11 +341,11 @@ function CoachConversations({ userId, coachId, conversationType, sessionId }) {
     // Add user message immediately
     const newUserMessage = { role: 'user', content: userMessage };
     setMessages(prev => [...prev, newUserMessage]);
-    
+
     // Start streaming coach response
     setIsStreaming(true);
     setStreamingMessage('');
-    
+
     const endpoint = conversationType === 'program-creation'
       ? `/users/${userId}/coaches/${coachId}/program-creator-sessions/${sessionId}/send-message`
       : `/users/${userId}/coaches/${coachId}/conversations/${sessionId}/send-message`;
@@ -359,18 +359,18 @@ function CoachConversations({ userId, coachId, conversationType, sessionId }) {
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
-      
+
       while (true) {
         const { value, done } = await reader.read();
         if (done) break;
-        
+
         const chunk = decoder.decode(value);
         const lines = chunk.split('\n');
-        
+
         for (const line of lines) {
           if (line.startsWith('data: ')) {
             const data = JSON.parse(line.slice(6));
-            
+
             if (data.type === 'chunk') {
               setStreamingMessage(prev => prev + data.content);
             } else if (data.type === 'complete') {
@@ -390,36 +390,36 @@ function CoachConversations({ userId, coachId, conversationType, sessionId }) {
   };
 
   // Different API endpoints based on conversation type
-  const configStatus = conversationType === 'program-creation' 
-    ? useConfigStatus(sessionId) 
+  const configStatus = conversationType === 'program-creation'
+    ? useConfigStatus(sessionId)
     : null;
 
   return (
     <div className="conversation-container">
       {/* Program creation progress indicator */}
       {conversationType === 'program-creation' && (
-        <ProgramCreationProgress configStatus={configStatus} />
+        <ProgramCreatorProgress configStatus={configStatus} />
       )}
-      
+
       <div className="messages">
         {messages.map((message, index) => (
           <MessageBubble key={index} message={message} />
         ))}
-        
+
         {/* Show streaming message */}
         {isStreaming && (
-          <MessageBubble 
-            message={{ role: 'assistant', content: streamingMessage }} 
+          <MessageBubble
+            message={{ role: 'assistant', content: streamingMessage }}
             isStreaming={true}
           />
         )}
       </div>
-      
-      <MessageInput 
-        onSendMessage={sendMessage} 
+
+      <MessageInput
+        onSendMessage={sendMessage}
         disabled={isStreaming}
       />
-      
+
       {/* Program creation specific footer */}
       {conversationType === 'program-creation' && configStatus?.finalized && (
         <ProgramFinalizationButton onFinalize={handleFinalize} />
@@ -471,7 +471,7 @@ await storeChallengeOutcome({
 ```typescript
 interface EnhancedWorkoutContext {
   // Existing context...
-  
+
   programContext?: {
     programId: string,
     currentWeek: number,
@@ -486,7 +486,7 @@ interface EnhancedWorkoutContext {
 **Coach Prompt Enhancement:**
 ```typescript
 const workoutPrompt = `
-You are generating Week ${programContext.currentWeek}, Day ${programContext.currentDay} 
+You are generating Week ${programContext.currentWeek}, Day ${programContext.currentDay}
 of the user's "${programContext.name}" program.
 
 Current Phase: ${programContext.currentPhase.name}
@@ -504,9 +504,9 @@ Generate today's workout keeping the program progression in mind...
 // During program creation
 if (coach.primaryDiscipline !== inferredProgramDiscipline) {
   const softGuidanceMessage = `
-    I should mention - my expertise is really in ${coach.primaryDiscipline}. 
-    I'm happy to create a ${inferredProgramDiscipline} program for you, but you 
-    might get more specialized programming from a coach designed for that discipline. 
+    I should mention - my expertise is really in ${coach.primaryDiscipline}.
+    I'm happy to create a ${inferredProgramDiscipline} program for you, but you
+    might get more specialized programming from a coach designed for that discipline.
     Want to continue with me or create a specialized coach?
   `;
 }
@@ -595,7 +595,7 @@ if (coach.primaryDiscipline !== inferredProgramDiscipline) {
 ## Implementation Timeline
 
 **Week 1-2**: Phase 1 (Program Creation Foundation)
-**Week 3-4**: Phase 2 (Program-Aware Workout Generation)  
+**Week 3-4**: Phase 2 (Program-Aware Workout Generation)
 **Week 5**: Phase 3 (Check-in System)
 **Week 6**: Phase 4 (Program Dashboard)
 **Week 7**: Integration testing and bug fixes

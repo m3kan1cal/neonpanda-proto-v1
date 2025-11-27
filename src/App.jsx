@@ -29,9 +29,9 @@ import ManageMemories from "./components/ManageMemories";
 import ManageCoachConversations from "./components/ManageCoachConversations";
 import ViewReports from "./components/ViewReports";
 import WeeklyReports from "./components/WeeklyReports";
-import ManageTrainingPrograms from "./components/training-programs/ManageTrainingPrograms";
-import ViewWorkouts from "./components/training-programs/ViewWorkouts";
-import TrainingProgramDashboard from "./components/training-programs/TrainingProgramDashboard";
+import ManagePrograms from "./components/programs/ManagePrograms";
+import ViewWorkouts from "./components/programs/ViewWorkouts";
+import ProgramDashboard from "./components/programs/ProgramDashboard";
 import Changelog from "./components/Changelog";
 import Settings from "./components/Settings";
 import Theme from "./components/Theme";
@@ -273,23 +273,23 @@ function AppContent() {
             }
           />
           <Route
-            path="/training-grounds/training-programs"
+            path="/training-grounds/programs"
             element={
               <ProtectedRoute>
-                <ManageTrainingPrograms />
+                <ManagePrograms />
               </ProtectedRoute>
             }
           />
         <Route
-          path="/training-grounds/training-programs/dashboard"
+          path="/training-grounds/programs/dashboard"
           element={
             <ProtectedRoute>
-              <TrainingProgramDashboard />
+              <ProgramDashboard />
             </ProtectedRoute>
           }
         />
         <Route
-          path="/training-grounds/training-programs/workouts"
+          path="/training-grounds/programs/workouts"
           element={
             <ProtectedRoute>
               <ViewWorkouts />
@@ -297,7 +297,7 @@ function AppContent() {
           }
         />
           <Route
-            path="/training-grounds/training-programs/:programId/day/:dayNumber"
+            path="/training-grounds/programs/:programId/day/:dayNumber"
             element={
               <ProtectedRoute>
                 <ViewWorkouts />

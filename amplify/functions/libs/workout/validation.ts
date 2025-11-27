@@ -8,7 +8,7 @@
 import { UniversalWorkoutSchema } from "./types";
 import { callBedrockApi } from "../api-helpers";
 import { parseJsonWithFallbacks } from "../response-utils";
-import { WORKOUT_SCHEMA } from "../schemas/universal-workout-schema";
+import { WORKOUT_SCHEMA } from "../schemas/workout-schema";
 
 export interface NormalizationResult {
   isValid: boolean;

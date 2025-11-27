@@ -69,18 +69,18 @@ function Breadcrumbs() {
             const isCoachCreatorPage = pathnames.includes('coach-creator');
 
             // Special handling for workout details page - show it as a child of Manage Workouts
-            // Exclude training-programs workouts from this handler
+            // Exclude programs workouts from this handler
             // Check for workoutId query param to identify details page (changed from path param to query param)
-            const isWorkoutDetailsPage = pathnames.includes('workouts') && pathnames.includes('training-grounds') && searchParams.has('workoutId') && !pathnames.includes('training-programs');
+            const isWorkoutDetailsPage = pathnames.includes('workouts') && pathnames.includes('training-grounds') && searchParams.has('workoutId') && !pathnames.includes('programs');
 
             // Special handling for coach-conversations page - show it as a child of Manage Coach Conversations
             const isCoachConversationsPage = pathnames.includes('coach-conversations') && pathnames.includes('training-grounds');
 
             // Special handling for view workouts page (today or specific day) - show it as a child of Training Grounds
-            const isViewWorkoutsPage = (pathnames.includes('today') || pathnames.includes('day')) && pathnames.includes('training-programs');
+            const isViewWorkoutsPage = (pathnames.includes('today') || pathnames.includes('day')) && pathnames.includes('programs');
 
             // Special handling for new training program workouts page - skip "workouts" breadcrumb
-            const isTrainingProgramWorkoutsPage = pathnames.includes('training-programs') && pathnames.includes('workouts') && !pathnames.includes('manage-workouts');
+            const isProgramWorkoutsPage = pathnames.includes('programs') && pathnames.includes('workouts') && !pathnames.includes('manage-workouts');
 
             if (isCoachCreatorPage) {
               // Build custom breadcrumb path: Coaches > Coach Creator
@@ -219,7 +219,7 @@ function Breadcrumbs() {
               ];
             }
 
-            if (isTrainingProgramWorkoutsPage) {
+            if (isProgramWorkoutsPage) {
               // Build custom breadcrumb path: Training Grounds > Training Programs > (Today's Workouts or Day X Workouts)
               // Skip the "workouts" segment but show all parent segments as links
               const filteredPathnames = pathnames.filter(name => name !== 'workouts');

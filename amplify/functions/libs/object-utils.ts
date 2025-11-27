@@ -263,3 +263,152 @@ export const mergeAndFilter = <T extends Record<string, any>>(
   const merged = Object.assign({}, ...objects);
   return filterNullish(merged);
 };
+
+/**
+ * Deeply sanitizes an object by recursively removing all null/undefined values
+ * from objects and arrays at any nesting level.
+ *
+ * This is essential for Pinecone metadata which does not accept null values:
+ * - Filters null/undefined from object properties
+ * - Filters null/undefined elements from arrays
+ * - Recursively processes nested objects and arrays
+ * - Preserves other falsy values (0, false, empty strings)
+ *
+ * @param value - The value to sanitize (can be object, array, or primitive)
+ * @returns Sanitized version with all nulls/undefined removed
+ *
+ * @example
+ * ```typescript
+ * const data = {
+ *   topics: ['workout', null, 'training', undefined],
+ *   metadata: {
+ *     discipline: 'crossfit',
+ *     workoutType: null,
+ *     nested: {
+ *       values: [1, null, 2, undefined, 3]
+ *     }
+ *   }
+ * };
+ * deepSanitizeNullish(data);
+ * // Returns: {
+ * //   topics: ['workout', 'training'],
+ * //   metadata: {
+ *  //     discipline: 'crossfit',
+ * //     nested: { values: [1, 2, 3] }
+ * //   }
+ * // }
+ * ```
+ */
+export const deepSanitizeNullish = (value: any): any => {
+  // Handle null/undefined at root level
+  if (value === null || value === undefined) {
+    return undefined; // Will be filtered out by parent
+  }
+
+  // Handle arrays - filter out nulls and recursively sanitize elements
+  if (Array.isArray(value)) {
+    return value
+      .filter(item => item !== null && item !== undefined)
+      .map(item => deepSanitizeNullish(item));
+  }
+
+  // Handle objects - filter out null properties and recursively sanitize
+  if (typeof value === 'object') {
+    const sanitized: Record<string, any> = {};
+
+    for (const [key, val] of Object.entries(value)) {
+      // Skip null/undefined values
+      if (val === null || val === undefined) {
+        continue;
+      }
+
+      // Recursively sanitize the value
+      const sanitizedValue = deepSanitizeNullish(val);
+
+      // Only add if the sanitized value is not undefined
+      if (sanitizedValue !== undefined) {
+        sanitized[key] = sanitizedValue;
+      }
+    }
+
+    return sanitized;
+  }
+
+  // Primitives (strings, numbers, booleans) pass through
+  return value;
+};
+
+/**
+ * Creates a condensed version of a JSON schema for use in AI prompts
+ *
+ * Removes verbose fields that increase prompt size without adding value:
+ * - description (verbose text explanations)
+ * - pattern (regex patterns for validation)
+ * - examples (example values)
+ * - default (default values)
+ *
+ * Keeps essential structure needed for normalization:
+ * - type, required, properties (core schema structure)
+ * - enum (abbreviated to first value + count)
+ *
+ * @param schema - Full JSON schema object
+ * @returns Condensed schema with verbose fields removed
+ *
+ * @example
+ * ```typescript
+ * const fullSchema = {
+ *   type: 'object',
+ *   properties: {
+ *     name: {
+ *       type: 'string',
+ *       description: 'User full name',
+ *       pattern: '^[A-Za-z ]+$',
+ *       examples: ['John Doe', 'Jane Smith']
+ *     },
+ *     role: {
+ *       type: 'string',
+ *       enum: ['admin', 'user', 'guest', 'moderator']
+ *     }
+ *   }
+ * };
+ *
+ * const condensed = getCondensedSchema(fullSchema);
+ * // Returns:
+ * // {
+ * //   type: 'object',
+ * //   properties: {
+ * //     name: { type: 'string' },
+ * //     role: { type: 'string', enum: ['admin', '...3 more'] }
+ * //   }
+ * // }
+ * ```
+ */
+export const getCondensedSchema = (schema: any): any => {
+  const condense = (obj: any): any => {
+    if (obj === null || typeof obj !== 'object') return obj;
+
+    if (Array.isArray(obj)) {
+      return obj.map(condense);
+    }
+
+    const result: any = {};
+    for (const [key, value] of Object.entries(obj)) {
+      // Skip verbose fields that aren't needed for structural normalization
+      if (key === 'description' || key === 'pattern' || key === 'examples' || key === 'default') {
+        continue;
+      }
+
+      // Keep only first enum value as example (instead of all possible values)
+      // This reduces size while still showing the AI what kind of values are expected
+      if (key === 'enum' && Array.isArray(value) && value.length > 3) {
+        result[key] = [value[0], `...${value.length - 1} more`];
+        continue;
+      }
+
+      result[key] = condense(value);
+    }
+    return result;
+  };
+
+  return condense(schema);
+};

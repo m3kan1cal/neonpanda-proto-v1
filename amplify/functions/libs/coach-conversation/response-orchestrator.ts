@@ -33,7 +33,7 @@ export function selectModelForConversation(
 ): string {
   const modelToUse = requiresDeepReasoning
     ? MODEL_IDS.CLAUDE_SONNET_4_FULL
-    : MODEL_IDS.CLAUDE_HAIKU_4FULL;
+    : MODEL_IDS.CLAUDE_HAIKU_4_FULL;
 
   console.info(
     `🤖 Model selection: ${requiresDeepReasoning ? "SONNET 4.5" : "HAIKU 4.5"} (requiresDeepReasoning=${requiresDeepReasoning})`

@@ -6,10 +6,11 @@
  */
 
 import { UniversalWorkoutSchema } from "./types";
-import { callBedrockApi, storeDebugDataInS3 } from "../api-helpers";
+import { callBedrockApi, storeDebugDataInS3, MODEL_IDS } from "../api-helpers";
 import { parseJsonWithFallbacks } from "../response-utils";
+import { getCondensedSchema } from "../object-utils";
 import { NORMALIZATION_RESPONSE_SCHEMA } from "../schemas/workout-normalization-schema";
-import { WORKOUT_SCHEMA } from "../schemas/universal-workout-schema";
+import { WORKOUT_SCHEMA } from "../schemas/workout-schema";
 
 export interface NormalizationResult {
   isValid: boolean;
@@ -34,128 +35,37 @@ export interface NormalizationIssue {
  */
 export const buildNormalizationPrompt = (workoutData: any): string => {
   return `
-You are a workout data normalizer. Your job is to:
+Normalize workout data to match the Universal Workout Schema v2.0.
 
-1. ANALYZE the workout data against the Universal Workout Schema v2.0
-2. NORMALIZE the structure to match the schema exactly
-3. FIX any structural or data issues found
-4. RETURN properly formatted workout data that conforms to the schema
-
-⚠️ CRITICAL: YOUR TOOL RESPONSE MUST INCLUDE ALL REQUIRED FIELDS:
-
-You MUST return a complete tool response with these REQUIRED fields:
-- isValid (boolean) - NEVER omit this field
-- normalizedData (object) - the complete workout object
-- issues (array) - empty array if no issues
-- confidence (number 0-1)
-- summary (string)
-
-🔴 ISVALID LOGIC - FOLLOW THIS EXACTLY:
-- isValid = true  →  IF no issues found (issues array is empty)
-- isValid = true  →  IF all issues were corrected (all issues have corrected: true)
-- isValid = false →  ONLY IF critical issues could NOT be corrected
-
-TOOL RESPONSE EXAMPLES (showing structure you must return):
-
-Example 1 - Perfect data with no issues:
+RESPONSE FORMAT (all fields required):
 {
-  "isValid": true,
-  "normalizedData": { ...complete workout object... },
-  "issues": [],
-  "confidence": 1.0,
-  "summary": "Data is valid, no issues found"
+  "isValid": boolean,  // true if no issues OR all corrected, false if uncorrectable issues
+  "normalizedData": object,  // complete normalized workout
+  "issues": array,  // [{type, severity, field, description, corrected}] or []
+  "confidence": number,  // 0-1
+  "summary": string
 }
 
-Example 2 - Found and fixed 2 issues:
-{
-  "isValid": true,
-  "normalizedData": { ...corrected workout object... },
-  "issues": [
-    {"type":"structure","severity":"error","field":"coach_notes","description":"Moved to root level","corrected":true},
-    {"type":"data_quality","severity":"warning","field":"rounds_completed","description":"Fixed count","corrected":true}
-  ],
-  "confidence": 0.95,
-  "summary": "Fixed 2 issues - data is now valid"
-}
+KEY NORMALIZATION RULES:
+- Match schema structure exactly, move misplaced fields to correct locations
+- Ensure all rounds have identical field structure
+- Normalize exercise names consistently across rounds
+- Preserve all data, only restructure (don't add placeholders for missing optionals)
+- Fix data type inconsistencies
 
-Example 3 - Found uncorrectable issue:
-{
-  "isValid": false,
-  "normalizedData": { ...original workout object... },
-  "issues": [
-    {"type":"structure","severity":"error","field":"required_field","description":"Missing critical data","corrected":false}
-  ],
-  "confidence": 0.6,
-  "summary": "Critical issue could not be corrected"
-}
-
-CRITICAL INSTRUCTIONS:
-- Transform the input data to match the Universal Workout Schema v2.0 structure exactly
-- Move misplaced fields to their correct locations as defined in the schema
-- Preserve all existing data - only restructure, don't lose information
-- Fix data type inconsistencies (ensure numbers are numbers, arrays are arrays, etc.)
-- Don't add placeholder values for truly missing optional fields
-- Ensure the output is a complete, valid workout object matching the schema
-
-NORMALIZATION FOCUS:
-
-1. ROUND CONSISTENCY: Ensure all rounds follow identical structure patterns
-   - All rounds must have same field structure (round_number, phase, exercises, etc.)
-   - Exercise objects within rounds must be uniformly structured
-   - Check for missing fields that should be present in all rounds
-
-2. EXERCISE OBJECT UNIFORMITY: All exercises must have same field structure
-   - Consistent field names across all exercise instances
-   - Same optional field patterns (e.g., if one exercise has "weight", all should have weight field)
-   - Uniform data types for equivalent fields
-
-3. LOGICAL GROUPING: Verify exercises are grouped logically by time domain
-   - Warmup exercises should be in "warmup" phase rounds
-   - Working sets should be in "working" phase rounds
-   - Cooldown/accessory work in "cooldown" phase rounds
-   - Don't mix strength and metcon in same round unless explicitly indicated
-
-4. MOVEMENT PROGRESSION: Check for consistent naming of same exercises across rounds
-   - "pull-up", "pullup", "pull ups" should be normalized to consistent format
-   - Same movement should have identical exercise_name across all rounds
-   - Maintain movement standards and variations correctly
-
-5. TIME DOMAIN VALIDATION: Ensure strength and metcon phases are properly separated
-   - Heavy strength work should not be mixed with high-intensity metcon
-   - Progressive warmup should precede working sets
-   - Recovery/accessory work should follow main workout content
-
-CRITICAL FIXES TO PRIORITIZE:
-- Inconsistent exercise field structures across rounds
-- Misplaced exercises in wrong time domains (strength in metcon rounds)
-- Incomplete round objects missing required fields (round_number, exercises array)
-- Inconsistent movement naming (normalize to standard format)
-- Missing phase markers for complex multi-part workouts
-- Incorrect nesting of discipline_specific or coach_notes
-
-VALIDATION CONTEXT:
-Analyze this workout data for schema compliance and fix any structural issues you find.
-
-VALIDATION APPROACH:
-- Only fix actual problems, don't add missing fields unless they contain misplaced data
-- Preserve all existing data, just move it to the correct location if needed
-- Don't create default/placeholder values for missing optional fields
-- Focus on structural correctness and data integrity
-
-COMMON ISSUES TO FIX:
-1. coach_notes misplaced inside discipline_specific (should be at root level)
-2. discipline_specific misplaced inside performance_metrics (should be at root level)
-3. Inconsistent round counts in CrossFit workouts
-4. Invalid data ranges or types that break the schema
+COMMON FIXES:
+- coach_notes/discipline_specific misplaced inside other objects (move to root)
+- Inconsistent exercise structures across rounds
+- Mixed time domains (separate strength from metcon)
 
 ═══════════════════════════════════════════════════════════════════════
-UNIVERSAL WORKOUT SCHEMA V2.0 - YOUR REFERENCE DOCUMENT
+UNIVERSAL WORKOUT SCHEMA V2.0 - STRUCTURE REFERENCE
 ═══════════════════════════════════════════════════════════════════════
 
-This is the schema that the workout data MUST conform to. Use this as your
-reference when identifying issues and normalizing the data structure.
+This is the condensed schema structure (descriptions removed to reduce size).
+Focus on field names, types, and required fields for normalization.
 
-${JSON.stringify(WORKOUT_SCHEMA, null, 2)}
+${JSON.stringify(getCondensedSchema(WORKOUT_SCHEMA), null, 2)}
 
 ═══════════════════════════════════════════════════════════════════════
 WORKOUT DATA TO NORMALIZE
@@ -218,7 +128,10 @@ export const normalizeWorkout = async (
 };
 
 /**
- * Perform normalization of workout data
+ * Perform normalization of workout data with two-tier model selection
+ *
+ * Tier 1 (Haiku 4): Fast structural validation for high-confidence extractions (>= 0.80)
+ * Tier 2 (Sonnet 4): Thorough validation for low-confidence or complex cases (< 0.80)
  */
 const performNormalization = async (
   workoutData: any,
@@ -227,10 +140,30 @@ const performNormalization = async (
 ): Promise<NormalizationResult> => {
   try {
     const normalizationPrompt = buildNormalizationPrompt(workoutData);
+    const promptSizeKB = (normalizationPrompt.length / 1024).toFixed(1);
+
+    // Determine which model to use based on extraction confidence
+    const extractionConfidence = workoutData.metadata?.data_confidence || 0;
+    const useHaiku = extractionConfidence >= 0.80;
+    const selectedModel = useHaiku
+      ? MODEL_IDS.CLAUDE_HAIKU_4_FULL
+      : MODEL_IDS.CLAUDE_SONNET_4_FULL;
+
+    console.info("🔀 Two-tier normalization model selection:", {
+      extractionConfidence,
+      threshold: 0.80,
+      selectedTier: useHaiku ? 'Tier 1 (Haiku 4 - Fast)' : 'Tier 2 (Sonnet 4 - Thorough)',
+      selectedModel,
+      reasoning: useHaiku
+        ? 'High confidence extraction - use fast structural validation'
+        : 'Low confidence extraction - use thorough validation with deep reasoning'
+    });
 
     console.info("Normalization call configuration:", {
       enableThinking,
-      promptLength: normalizationPrompt.length
+      promptLength: normalizationPrompt.length,
+      promptSizeKB: `${promptSizeKB}KB`,
+      model: useHaiku ? 'Haiku 4' : 'Sonnet 4'
     });
 
     let normalizationResult: any;
@@ -243,7 +176,7 @@ const performNormalization = async (
       const result = await callBedrockApi(
         normalizationPrompt,
         "workout_normalization",
-        undefined, // Use default model
+        selectedModel, // Use tier-selected model
         {
           enableThinking,
           tools: {
@@ -263,14 +196,14 @@ const performNormalization = async (
         throw new Error("Tool did not return structured data");
       }
     } catch (toolError) {
-      // FALLBACK: Text-based normalization with parsing
+      // FALLBACK: Text-based normalization with parsing (using same tier-selected model)
       console.warn("⚠️ Tool-based normalization failed, using fallback:", toolError);
       normalizationMethod = "fallback";
 
       const fallbackResponse = await callBedrockApi(
         normalizationPrompt,
         "workout_normalization",
-        undefined,
+        selectedModel, // Use same tier-selected model for fallback
         { enableThinking }
       ) as string;
 
@@ -329,7 +262,39 @@ const performNormalization = async (
       ? normalizationResult.isValid
       : allIssuesCorrected; // Default to true if no issues or all corrected
 
-    return {
+    const resultConfidence = normalizationResult.confidence || 0.8;
+
+    // AUTO-ESCALATION: If Haiku produced low confidence result, re-run with Sonnet
+    if (useHaiku && resultConfidence < 0.6) {
+      console.warn("⚠️ Haiku normalization confidence too low, escalating to Sonnet:", {
+        haikuConfidence: resultConfidence,
+        escalationThreshold: 0.6
+      });
+
+      // Re-run with Sonnet
+      const sonnetResult = await callBedrockApi(
+        normalizationPrompt,
+        "workout_normalization",
+        MODEL_IDS.CLAUDE_SONNET_4_FULL,
+        {
+          enableThinking,
+          tools: {
+            name: 'normalize_workout',
+            description: 'Normalize workout data to conform to the Universal Workout Schema v2.0',
+            inputSchema: NORMALIZATION_RESPONSE_SCHEMA
+          },
+          expectedToolName: 'normalize_workout'
+        }
+      );
+
+      if (typeof sonnetResult === 'object' && sonnetResult !== null) {
+        console.info("✅ Escalated to Sonnet - normalization succeeded");
+        normalizationResult = sonnetResult;
+        normalizationMethod = "tool";
+      }
+    }
+
+    const finalResult = {
       isValid: isValidResult,
       normalizedData: normalizationResult.normalizedData || workoutData,
       issues: issues,
@@ -337,6 +302,18 @@ const performNormalization = async (
       summary: normalizationResult.summary || "Normalization completed",
       normalizationMethod,
     };
+
+    // Log final normalization result with tier info
+    console.info("✅ Normalization complete:", {
+      tier: useHaiku ? 'Haiku 4' : 'Sonnet 4',
+      escalated: useHaiku && resultConfidence < 0.6,
+      confidence: finalResult.confidence,
+      isValid: finalResult.isValid,
+      issuesFound: finalResult.issues.length,
+      method: normalizationMethod
+    });
+
+    return finalResult;
   } catch (error) {
     console.error("Normalization failed:", error);
     return {
