@@ -8,7 +8,7 @@
 import { CoachMessage, MESSAGE_TYPES, CoachConversation, CONVERSATION_MODES } from '../coach-conversation/types';
 import { MODEL_IDS, invokeAsyncLambda } from '../api-helpers';
 import { sendCoachConversationMessage, saveCoachConversation } from '../../../dynamodb/operations';
-import { formatChunkEvent, formatCompleteEvent } from '../streaming';
+import { formatChunkEvent, formatCompleteEvent, formatMetadataEvent } from '../streaming';
 import type { BusinessLogicParams, ConversationData } from '../streaming';
 import { handleTodoListConversation as handleWorkoutTodoListConversation } from './conversation-handler';
 import { createEmptyWorkoutTodoList, getCollectedDataSummary, getTodoProgress } from './todo-list-utils';
@@ -46,6 +46,10 @@ export async function* startWorkoutCollection(
       conversationId: fullWorkoutSession.conversationId,
       hasImages: (params.imageS3Keys?.length || 0) > 0,
     });
+
+    // Yield metadata event to inform UI we're in workout_log mode
+    yield formatMetadataEvent({ mode: CONVERSATION_MODES.WORKOUT_LOG });
+    console.info('📋 Metadata event sent: mode=workout_log (session start)');
 
     // Prepare user context from conversation data
     const userContext = {
@@ -203,6 +207,10 @@ export async function* handleWorkoutCreatorFlow(
       },
       collectedDataBefore: getCollectedDataSummary(fullWorkoutSession.todoList),
     });
+
+    // Yield metadata event to inform UI we're still in workout_log mode
+    yield formatMetadataEvent({ mode: CONVERSATION_MODES.WORKOUT_LOG });
+    console.info('📋 Metadata event sent: mode=workout_log (session continue)');
 
     // Prepare user context from conversation data
     const userContext = {

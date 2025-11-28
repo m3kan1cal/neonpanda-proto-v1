@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, memo } from "react";
+import React, { useState, useRef, useEffect, memo, useCallback } from "react";
 import { flushSync } from "react-dom";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Tooltip } from "react-tooltip";
@@ -375,9 +375,6 @@ function CoachCreator() {
     };
   }, [userId, coachCreatorSessionId, navigate]);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
 
   // Quick suggestions for coach creator
   const quickSuggestions = [
@@ -423,21 +420,20 @@ function CoachCreator() {
     ],
   };
 
+
+  const scrollToBottom = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, []);
+
   useEffect(() => {
     scrollToBottom();
-  }, [agentState.messages, agentState.isTyping, agentState.contextualUpdate]);
-
-  // Auto-scroll to bottom on page load when messages are first loaded
-  useEffect(() => {
-    if (agentState.messages.length > 0 && !agentState.isLoadingItem) {
-      // Use a longer delay for initial load to ensure everything is rendered
-      const timeoutId = setTimeout(() => {
-        scrollToBottom();
-      }, 300);
-
-      return () => clearTimeout(timeoutId);
-    }
-  }, [agentState.messages.length, agentState.isLoadingItem]);
+  }, [
+    agentState.messages,
+    agentState.isTyping,
+    agentState.contextualUpdate,
+    agentState.streamingMessage, // Added to scroll during streaming
+    scrollToBottom
+  ]);
 
   // Handle message submission
   const handleMessageSubmit = async (messageContent, imageS3Keys = []) => {
@@ -701,7 +697,6 @@ function CoachCreator() {
             {/* Removed mainContent container for immersive chat UX - messages flow edge-to-edge */}
             <div className="h-full flex flex-col">
               {/* Messages Area - with bottom padding for floating input + progress indicator */}
-              {/* Removed backdrop-blur and semi-transparent backgrounds to prevent scroll artifacts */}
               <div className="flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-6 pb-32 sm:pb-48 space-y-4 custom-scrollbar">
                 {agentState.messages
                   .filter((message) => {
@@ -757,6 +752,7 @@ function CoachCreator() {
                   );
                 })()}
 
+                {/* Scroll anchor - always at the bottom */}
                 <div ref={messagesEndRef} />
               </div>
             </div>

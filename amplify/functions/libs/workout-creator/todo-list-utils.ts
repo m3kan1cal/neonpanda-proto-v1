@@ -67,6 +67,40 @@ export function isSessionComplete(todoList: WorkoutCreatorTodoList): boolean {
 }
 
 /**
+ * Check if session has enough data to allow user-initiated completion
+ * More lenient than isSessionComplete - allows finish with substantial progress
+ *
+ * Returns true if ANY of these conditions are met:
+ * - 5/6 or more required fields complete (83%+)
+ * - 4/6 required fields (67%+) AND all high-priority fields complete
+ *
+ * This prevents users from being stuck in endless questioning when they have
+ * sufficient workout data to create a meaningful log entry.
+ */
+export function hasSubstantialProgress(todoList: WorkoutCreatorTodoList): boolean {
+  const requiredCompleted = REQUIRED_WORKOUT_FIELDS.filter(
+    (field) => todoList[field]?.status === "complete"
+  ).length;
+  const requiredTotal = REQUIRED_WORKOUT_FIELDS.length;
+
+  const highPriorityComplete = HIGH_PRIORITY_RECOMMENDED.every(
+    (field) => todoList[field]?.status === "complete"
+  );
+
+  // Condition 1: 5 or 6 out of 6 required fields (83%+)
+  if (requiredCompleted >= 5) {
+    return true;
+  }
+
+  // Condition 2: 4+ required fields (67%+) AND all high-priority fields
+  if (requiredCompleted >= 4 && highPriorityComplete) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
  * Check if user should be prompted for HIGH-PRIORITY recommended fields
  * Returns true if required fields are done but high-priority recommended fields are incomplete
  */

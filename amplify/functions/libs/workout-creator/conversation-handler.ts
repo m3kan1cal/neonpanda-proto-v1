@@ -13,6 +13,7 @@ import { extractAndUpdateTodoList } from './todo-extraction';
 import {
   getTodoProgress,
   isSessionComplete,
+  hasSubstantialProgress,
   shouldPromptHighPriorityRecommendedFields,
   shouldPromptLowPriorityRecommendedFields,
   getCollectedDataSummary,
@@ -211,15 +212,37 @@ export async function* handleTodoListConversation(
       );
     }
 
-    // Condition 3: User explicitly wants to finish (skip remaining optional fields)
-    if (extractionResult.userWantsToFinish && atRecommendedPhase) {
-      console.info("⏭️ AI detected user wants to skip remaining optional fields - finishing workout logging");
-      return yield* completeWorkoutSession(
-        session,
-        "Perfect! Let me get that logged for you right now.",
-        'info',
-        'User wants to finish'
-      );
+    // Condition 3: User explicitly wants to finish
+    // Respect user's desire to finish, with different messages based on data quality
+    if (extractionResult.userWantsToFinish) {
+      // Check if we have substantial progress (5/6 required OR 4/6 + all high-priority)
+      const hasGoodProgress = hasSubstantialProgress(session.todoList);
+
+      if (requiredComplete) {
+        console.info("⏭️ User wants to finish - all required fields complete");
+        return yield* completeWorkoutSession(
+          session,
+          "Perfect! I have everything I need. Let me get that logged for you right now.",
+          'info',
+          'User wants to finish (complete)'
+        );
+      } else if (hasGoodProgress) {
+        console.info("⏭️ User wants to finish - substantial progress (5/6 or 4/6+high-priority)");
+        return yield* completeWorkoutSession(
+          session,
+          "Got it! I have enough to log this workout. Let me get that done for you now.",
+          'info',
+          'User wants to finish (substantial)'
+        );
+      } else {
+        console.info("⏭️ User wants to finish - limited data, but respecting user intent");
+        return yield* completeWorkoutSession(
+          session,
+          "I'll log what we have so far. You can always edit the workout later to add more details.",
+          'info',
+          'User wants to finish (partial)'
+        );
+      }
     }
 
     // Step 3: Generate next question or completion message using UPDATED todoList

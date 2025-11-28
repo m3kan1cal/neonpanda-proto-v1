@@ -1931,6 +1931,24 @@ export async function updateUserProfile(
   return updatedProfile;
 }
 
+/**
+ * Update a user profile by email address (used for unsubscribe)
+ */
+export async function updateUserProfileByEmail(
+  email: string,
+  updates: Partial<UserProfile>
+): Promise<UserProfile> {
+  // First, find the user by email
+  const userProfile = await getUserProfileByEmail(email);
+
+  if (!userProfile) {
+    throw new Error(`User profile not found for email: ${email}`);
+  }
+
+  // Then update using the userId
+  return updateUserProfile(userProfile.userId, updates);
+}
+
 // ===========================
 // MEMORY OPERATIONS
 // ===========================

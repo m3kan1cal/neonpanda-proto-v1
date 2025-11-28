@@ -40,6 +40,26 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     updates.criticalTrainingDirective = normalizeCriticalTrainingDirective(updates.criticalTrainingDirective);
   }
 
+  // Validate email notification preferences if provided
+  if (updates.preferences?.emailNotifications) {
+    const { emailNotifications } = updates.preferences;
+    const validKeys = ['coachCheckIns', 'weeklyReports', 'monthlyReports', 'programUpdates', 'featureAnnouncements'];
+    const providedKeys = Object.keys(emailNotifications);
+
+    // Check for invalid keys
+    const invalidKeys = providedKeys.filter(key => !validKeys.includes(key));
+    if (invalidKeys.length > 0) {
+      return createErrorResponse(400, `Invalid email notification preference keys: ${invalidKeys.join(', ')}`);
+    }
+
+    // Check that all values are booleans
+    for (const [key, value] of Object.entries(emailNotifications)) {
+      if (typeof value !== 'boolean') {
+        return createErrorResponse(400, `Email notification preference '${key}' must be a boolean`);
+      }
+    }
+  }
+
   try {
     // 1. Update DynamoDB (primary source of truth)
     const updatedProfile = await updateUserProfile(userId, updates);

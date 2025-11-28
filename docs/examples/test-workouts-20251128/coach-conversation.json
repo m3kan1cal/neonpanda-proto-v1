@@ -4,7 +4,7 @@
   "attributes": {
    "coachId": "user_63gocaz-j-AYRsb0094ik_coach_1756078034317",
    "conversationId": "conv_1763761119267_ek3vk5fw0",
-   "createdAt": "2025-11-26T15:49:22.417Z",
+   "createdAt": "2025-11-28T19:25:55.532Z",
    "messages": [
     {
      "content": "I need to log a new workout that I completed 3 days ago. I did the following on 11/18/2025 from 2pm - 2:30pm ET. This was the workout:\n10 rounds\n30 seconds: 10 hang power clean @ 115#\n90 seconds: rest",
@@ -161,6 +161,7 @@
      "content": "Nice! I'd love to help you log that morning session. What exercises did you hit today?",
      "id": "msg_1764113277983_assistant",
      "metadata": {
+      "mode": "workout_log",
       "model": "claude-4.5-haiku"
      },
      "role": "assistant",
@@ -176,6 +177,7 @@
      "content": "Perfect - that's a solid chipper! How long did the whole workout take you from start to finish?",
      "id": "msg_1764113311126_assistant",
      "metadata": {
+      "mode": "workout_log",
       "model": "claude-4.5-haiku"
      },
      "role": "assistant",
@@ -191,6 +193,7 @@
      "content": "Excellent - 27 minutes for 3 rounds of heavy deadlifts and 800m runs is solid pacing at that weight. How would you rate the intensity of that session on a scale of 1-10? I'm curious where your head was at during those rounds.",
      "id": "msg_1764113343574_assistant",
      "metadata": {
+      "mode": "workout_log",
       "model": "claude-4.5-haiku"
      },
      "role": "assistant",
@@ -206,6 +209,7 @@
      "content": "Got it - that's a strong effort with good data. One last thing: was this at your usual CrossFit box, or did you train somewhere different today?",
      "id": "msg_1764113381079_assistant",
      "metadata": {
+      "mode": "workout_log",
       "model": "claude-4.5-haiku"
      },
      "role": "assistant",
@@ -221,6 +225,7 @@
      "content": "Perfect - home garage gym, got it. That's a solid setup for heavy deadlift work.\n\nQuick one before we wrap: how many hours of sleep did you get last night? With that RPE 8 effort, I'm curious if recovery is dialed in - it's one of the biggest performance predictors I track with my athletes.",
      "id": "msg_1764113416029_assistant",
      "metadata": {
+      "mode": "workout_log",
       "model": "claude-4.5-haiku"
      },
      "role": "assistant",
@@ -236,118 +241,363 @@
      "content": "Perfect! I have what I need. Let me get that logged for you right now.",
      "id": "msg_1764113450573_assistant",
      "metadata": {
+      "mode": "workout_log",
       "model": "claude-4.5-haiku"
      },
      "role": "assistant",
      "timestamp": "2025-11-25T23:30:50.573Z"
     },
     {
-     "content": "I want to log a workout that I completed this morning.",
-     "id": "msg_1764171959207_user",
+     "content": "Perfect, thank you.",
+     "id": "msg_1764220522771_user",
+     "messageType": "text",
      "role": "user",
-     "timestamp": "2025-11-26T15:45:59.207Z"
+     "timestamp": "2025-11-27T05:15:15.944Z"
     },
     {
-     "content": "Perfect! Let's capture this one. What exercises did you hit this morning?",
-     "id": "msg_1764171959207_assistant",
+     "content": "You're welcome! Your workout is all set.\n\n**Gladiator Fortis - November 23, 2025**\n- 3 rounds for time:\n  - 20 deadlifts @ 225#\n  - 800m run\n- **Finish time: 27 minutes**\n- Total volume: 60 deadlifts + 2,400m running\n- Intensity 7/10 | RPE 8/10\n- Calories burned: ~240\n- Sleep prior: 6 hours\n- Location: Home garage gym\n- Session duration: 45 minutes (including warmup)\n\n**Solid strength-endurance work.** You maintained 225# across all 60 reps while covering 2.4 miles of running—that's excellent work capacity. The pacing tells me you weren't blowing up early; you managed the fatigue intelligently.\n\n**One coaching note:** You're now at 7 consecutive training days with significant volume and intensity. Combined with only 6 hours of sleep last night (below your typical 7.5-8 hour baseline), your recovery is starting to show some strain. \n\nI want to make sure we're strategic about the next 24-48 hours. Are you planning to train again tomorrow (11/24), or are we looking at a recovery day? Your body's giving us signals that intelligent rest would be valuable right now.",
+     "id": "msg_1764220527254_assistant",
      "metadata": {
-      "mode": "workout-creator",
+      "mode": "chat",
+      "model": "claude-sonnet-4.5"
+     },
+     "role": "assistant",
+     "timestamp": "2025-11-27T05:15:27.254Z"
+    },
+    {
+     "content": "Now I want to log a workout that I completed yesterday morning on 11/25/2025 from 7am - 7:45am ET.",
+     "id": "msg_1764220591306_user",
+     "role": "user",
+     "timestamp": "2025-11-27T05:16:31.306Z"
+    },
+    {
+     "content": "Perfect! So you crushed a 45-minute session yesterday morning. What exercises did you hit during that workout?",
+     "id": "msg_1764220591306_assistant",
+     "metadata": {
+      "mode": "workout_log",
       "model": "claude-4.5-haiku"
      },
      "role": "assistant",
-     "timestamp": "2025-11-26T15:45:59.207Z"
+     "timestamp": "2025-11-27T05:16:31.306Z"
     },
     {
-     "content": "I did the following workout for 24 minutes. 8 rounds of:\nMin 1: 6 bench press @ 205#\nMin 2: 6 pull-ups\nMin 3: 30 DUs",
-     "id": "msg_1764172022847_user",
+     "content": "I did the following workout movements:\n8 rounds\nMin 1: 6 bench press @ 205#\nMin 2: 6 pull-ups\nMin 3:  30 DUs",
+     "id": "msg_1764220646455_user",
      "role": "user",
-     "timestamp": "2025-11-26T15:47:02.847Z"
+     "timestamp": "2025-11-27T05:17:26.455Z"
     },
     {
-     "content": "Excellent work this morning! That's a solid EMOM structure - heavy bench press paired with gymnastics work is perfect for building that competition-ready strength and conditioning.\n\nI've got the core details locked in. One quick question that really helps me coach you better:\n\n**What was your RPE on this one (1-10)?** This tells me if you're recovering properly between sessions and helps me spot if you're pushing too hard or need more intensity. Or just say \"skip\" if you want to log it as-is!",
-     "id": "msg_1764172022847_assistant",
+     "content": "Excellent work—that's a serious EMOM with some heavy bench pressing mixed in. How did the workout feel overall? What would you rate your intensity level on that one, 1-10?",
+     "id": "msg_1764220646455_assistant",
      "metadata": {
-      "mode": "workout-creator",
+      "mode": "workout_log",
       "model": "claude-4.5-haiku"
      },
      "role": "assistant",
-     "timestamp": "2025-11-26T15:47:02.847Z"
+     "timestamp": "2025-11-27T05:17:26.455Z"
     },
     {
-     "content": "thanks. I would say my RPE was six on this one and intensity was six. It was more of just a steady grind.",
-     "id": "msg_1764172136760_user",
+     "content": "the workout actually felt great. I'll give it a 6 for intensity and 6 for rpe. It was more of a moderate workout that was meant to get my body moving.",
+     "id": "msg_1764220703729_user",
      "role": "user",
-     "timestamp": "2025-11-26T15:48:56.760Z"
+     "timestamp": "2025-11-27T05:18:23.729Z"
     },
     {
-     "content": "Perfect - that steady grind approach is exactly what you need at this stage. RPE 6 with controlled effort means you've got recovery capacity and room to build on this, which is smart training.\n\nOne last thing that really unlocks better insights for your programming:\n\n**Where did you work out today?** I'm tracking if your home gym vs. the box makes a difference in your performance - sometimes environment impacts how you move under load. Or we can log it now if you prefer!",
-     "id": "msg_1764172136760_assistant",
+     "content": "Perfect—that's exactly the kind of intentional, moderate-intensity session that keeps you fresh and moving well. Just to lock everything in: did you do this workout yesterday (November 25th), or was it a different day?",
+     "id": "msg_1764220703729_assistant",
      "metadata": {
-      "mode": "workout-creator",
+      "mode": "workout_log",
       "model": "claude-4.5-haiku"
      },
      "role": "assistant",
-     "timestamp": "2025-11-26T15:48:56.760Z"
+     "timestamp": "2025-11-27T05:18:23.729Z"
     },
     {
-     "content": "I worked out in my home garage gym.",
-     "id": "msg_1764172162417_user",
+     "content": "yes, I did it on 11/25/2025 in my home garage gym.",
+     "id": "msg_1764220731152_user",
      "role": "user",
-     "timestamp": "2025-11-26T15:49:22.417Z"
+     "timestamp": "2025-11-27T05:18:51.152Z"
     },
     {
-     "content": "Got it - your home garage gym. That's your consistent training ground, which is great for tracking baseline performance.\n\nQuick one more: **How many hours of sleep did you get last night?** Sleep is honestly one of the biggest performance predictors I track - helps me see if there's a correlation between your rest and how you're moving on heavy days like this.\n\nOr we can lock this in as-is if you want to wrap!",
-     "id": "msg_1764172162417_assistant",
+     "content": "Perfect! One last thing to nail this down—how long did the actual workout take you from start to finish? Was it around 30 minutes, 45 minutes, or closer to an hour?",
+     "id": "msg_1764220731152_assistant",
      "metadata": {
-      "mode": "workout-creator",
+      "mode": "workout_log",
       "model": "claude-4.5-haiku"
      },
      "role": "assistant",
-     "timestamp": "2025-11-26T15:49:22.417Z"
+     "timestamp": "2025-11-27T05:18:51.152Z"
     },
     {
-     "content": "Let's just log it as is.",
-     "id": "msg_1764172187596_user",
+     "content": "Including warmup it was 45 minutes, but the actual workout was 24 minutes.",
+     "id": "msg_1764220758463_user",
      "role": "user",
-     "timestamp": "2025-11-26T15:49:47.596Z"
+     "timestamp": "2025-11-27T05:19:18.463Z"
     },
     {
-     "content": "Perfect! Let me get that logged for you right now.",
-     "id": "msg_1764172187596_assistant",
+     "content": "Got it—so 24 minutes of actual work time. That's solid efficiency on an 8-round EMOM, especially with the bench press in there. \n\nJust to clarify for the log: should I record that as 24 minutes for the workout duration, or do you prefer I capture both the 24-minute work time and the 45-minute total session?",
+     "id": "msg_1764220758463_assistant",
      "metadata": {
-      "mode": "workout-creator",
+      "mode": "workout_log",
       "model": "claude-4.5-haiku"
      },
      "role": "assistant",
-     "timestamp": "2025-11-26T15:49:47.596Z"
+     "timestamp": "2025-11-27T05:19:18.463Z"
+    },
+    {
+     "content": "let's go. with 24 minutes.",
+     "id": "msg_1764220782185_user",
+     "role": "user",
+     "timestamp": "2025-11-27T05:19:42.185Z"
+    },
+    {
+     "content": "I'll log what we have so far. Some details might be missing, but you can edit the workout later if needed.",
+     "id": "msg_1764220782185_assistant",
+     "metadata": {
+      "mode": "workout_log",
+      "model": "claude-4.5-haiku"
+     },
+     "role": "assistant",
+     "timestamp": "2025-11-27T05:19:42.185Z"
+    },
+    {
+     "content": "perfect, thanks.",
+     "id": "msg_1764220799824_user",
+     "messageType": "text",
+     "role": "user",
+     "timestamp": "2025-11-27T05:19:55.845Z"
+    },
+    {
+     "content": "You got it! Let me get this locked in for you.\n\n**Fortis Triad - November 25, 2025**\n- 8 rounds EMOM:\n  - Minute 1: 6 bench press @ 205#\n  - Minute 2: 6 pull-ups\n  - Minute 3: 30 double unders\n- **Total volume: 48 bench press + 48 pull-ups + 240 double unders = 336 total reps**\n- Workout duration: 24 minutes\n- Intensity 6/10 | RPE 6/10\n- Location: Home garage gym\n- Session duration: 45 minutes (including warmup)\n\n**This is smart training.** You executed a moderate-intensity EMOM that kept you moving well without chasing fatigue—exactly what your body needed after the accumulated volume from earlier in the week. The bench press at 205# (solid working weight), pull-ups for upper body pull, and double unders for conditioning created a nice balanced stimulus.\n\n**What I'm noticing:** You've strategically shifted from high-intensity accumulation (11/18-11/21) to more moderate, intentional work (11/22-11/25). That's intelligent periodization—you're managing fatigue while staying consistent.\n\nHow are you feeling recovery-wise heading into today (Thursday, 11/27)? Energy levels back up, or still managing some accumulated fatigue?",
+     "id": "msg_1764220803949_assistant",
+     "metadata": {
+      "mode": "chat",
+      "model": "claude-sonnet-4.5"
+     },
+     "role": "assistant",
+     "timestamp": "2025-11-27T05:20:03.949Z"
+    },
+    {
+     "content": "Perfect. Now I want to log a workout that I completed this evening on 11/26/2025 from 7pm - 7:45pm ET.",
+     "id": "msg_1764221107254_user",
+     "role": "user",
+     "timestamp": "2025-11-27T05:25:07.254Z"
+    },
+    {
+     "content": "Great! So you crushed a 45-minute session tonight. What exercises did you hit during that time?",
+     "id": "msg_1764221107254_assistant",
+     "metadata": {
+      "mode": "workout_log",
+      "model": "claude-4.5-haiku"
+     },
+     "role": "assistant",
+     "timestamp": "2025-11-27T05:25:07.254Z"
+    },
+    {
+     "content": "I did the following movements:\nFront squat @ 95x5, 95x5, 135x5,  135x5, 155x3, 155x3, 175x2,  175x2, 195x1, 195x1\n\nThen a conditioning finisher:\n3 rounds\n800m run\n10 sandbag cleans over-the-shoulder @ 75#",
+     "id": "msg_1764221203566_user",
+     "role": "user",
+     "timestamp": "2025-11-27T05:26:43.566Z"
+    },
+    {
+     "content": "Excellent work—that's a solid pyramid up to those heavy singles, then finishing with that conditioning grind. \n\nHow would you rate the intensity of tonight's session on a scale of 1-10?",
+     "id": "msg_1764221203566_assistant",
+     "metadata": {
+      "mode": "workout_log",
+      "model": "claude-4.5-haiku"
+     },
+     "role": "assistant",
+     "timestamp": "2025-11-27T05:26:43.566Z"
+    },
+    {
+     "content": "intensity was a 6, rpe was a 6.",
+     "id": "msg_1764221232232_user",
+     "role": "user",
+     "timestamp": "2025-11-27T05:27:12.232Z"
+    },
+    {
+     "content": "Perfect—so you had some gas left in the tank. That's smart pacing for a strength-focused day.\n\nWhere did you train tonight—your usual box, or somewhere different?",
+     "id": "msg_1764221232232_assistant",
+     "metadata": {
+      "mode": "workout_log",
+      "model": "claude-4.5-haiku"
+     },
+     "role": "assistant",
+     "timestamp": "2025-11-27T05:27:12.232Z"
+    },
+    {
+     "content": "I worked out at home in my garage gym.",
+     "id": "msg_1764221254593_user",
+     "role": "user",
+     "timestamp": "2025-11-27T05:27:34.593Z"
+    },
+    {
+     "content": "Got it—garage gym sessions have that nice flexibility. Quick question: how long did the whole thing take you from start to finish?",
+     "id": "msg_1764221254593_assistant",
+     "metadata": {
+      "mode": "workout_log",
+      "model": "claude-4.5-haiku"
+     },
+     "role": "assistant",
+     "timestamp": "2025-11-27T05:27:34.593Z"
+    },
+    {
+     "content": "I worked out including the warm up for 50 minutes but the actual workout was 45 minutes.",
+     "id": "msg_1764221318659_user",
+     "role": "user",
+     "timestamp": "2025-11-27T05:28:38.659Z"
+    },
+    {
+     "content": "Perfect—45 minutes of actual work is solid for that volume and intensity mix. That ramping front squat ladder into the conditioning finisher is a lot to pack in efficiently.\n\nOne last thing: how are you feeling recovery-wise after that session? Any soreness, fatigue, or movement quality notes worth tracking?",
+     "id": "msg_1764221318659_assistant",
+     "metadata": {
+      "mode": "workout_log",
+      "model": "claude-4.5-haiku"
+     },
+     "role": "assistant",
+     "timestamp": "2025-11-27T05:28:38.659Z"
+    },
+    {
+     "content": "I'm actually pretty well! No lingering bad soreness. All good.",
+     "id": "msg_1764221343699_user",
+     "role": "user",
+     "timestamp": "2025-11-27T05:29:03.699Z"
+    },
+    {
+     "content": "I'll log what we have so far. Some details might be missing, but you can edit the workout later if needed.",
+     "id": "msg_1764221343699_assistant",
+     "metadata": {
+      "mode": "workout_log",
+      "model": "claude-4.5-haiku"
+     },
+     "role": "assistant",
+     "timestamp": "2025-11-27T05:29:03.699Z"
+    },
+    {
+     "content": "Perfect, thank you.",
+     "id": "msg_1764221599498_user",
+     "messageType": "text",
+     "role": "user",
+     "timestamp": "2025-11-27T05:33:10.559Z"
+    },
+    {
+     "content": "You got it! Let me get this locked in for you.\n\n**Fortis Cursus - November 26, 2025**\n- Front squat pyramid: 95×5, 95×5, 135×5, 135×5, 155×3, 155×3, 175×2, 175×2, 195×1, 195×1\n- Conditioning finisher (3 rounds):\n  - 800m run\n  - 10 sandbag cleans over-the-shoulder @ 75#\n- **Total volume: 28 front squat reps + 3 rounds of running/sandbag work**\n- Workout duration: 45 minutes\n- Intensity 6/10 | RPE 6/10\n- Location: Home garage gym\n- Session duration: 50 minutes (including warmup)\n- Recovery status: No lingering soreness, feeling strong\n\n**Solid progression work.** You built intelligently from 95# up to heavy singles at 195#, then finished with conditioning that kept intensity moderate. That's exactly the right structure for a strength-focused day—you got the heavy lifting in without overdoing the metabolic demand.\n\n**What I'm tracking:** Over the past week, you've strategically managed your training intensity:\n- Heavy accumulation block (11/18-11/21)\n- Moderate recovery-focused work (11/22-11/25)\n- Back to strength focus with controlled conditioning (11/26)\n\nThat's solid periodization. You're building well heading into whatever's next for your competition prep.\n\nHow are you feeling about your training direction right now?",
+     "id": "msg_1764221603663_assistant",
+     "metadata": {
+      "mode": "chat",
+      "model": "claude-sonnet-4.5"
+     },
+     "role": "assistant",
+     "timestamp": "2025-11-27T05:33:23.663Z"
+    },
+    {
+     "content": "I want to log a workout that I completed last night. I did a run for 2.5 miles with a 20# vest on.",
+     "id": "msg_1764357893530_user",
+     "role": "user",
+     "timestamp": "2025-11-28T19:24:53.530Z"
+    },
+    {
+     "content": "Nice work! That's solid running volume with the added challenge of the vest.\n\nQuick question - **how long did that run take you**, and **did you do it as one continuous effort or break it into rounds?**",
+     "id": "msg_1764357893530_assistant",
+     "metadata": {
+      "mode": "workout_log",
+      "model": "claude-4.5-haiku"
+     },
+     "role": "assistant",
+     "timestamp": "2025-11-28T19:24:53.530Z"
+    },
+    {
+     "content": "The run was 25 minutes total and I did it as one continuous effort.",
+     "id": "msg_1764357925802_user",
+     "role": "user",
+     "timestamp": "2025-11-28T19:25:25.802Z"
+    },
+    {
+     "content": "Perfect - that's a strong steady-state effort with the vest. \n\nNow, to really understand how this session fit into your training: **what was your RPE (1-10)** on that run, and **where did you work out?** These help me gauge your recovery needs and see if environment affects your performance.\n\n(Or just say \"skip\" if you want to wrap it up!)",
+     "id": "msg_1764357925802_assistant",
+     "metadata": {
+      "mode": "workout_log",
+      "model": "claude-4.5-haiku"
+     },
+     "role": "assistant",
+     "timestamp": "2025-11-28T19:25:25.802Z"
+    },
+    {
+     "content": "I ran outdoors around a route by my house. My intensity was 6, rpe was 6.",
+     "id": "msg_1764357955532_user",
+     "role": "user",
+     "timestamp": "2025-11-28T19:25:55.532Z"
+    },
+    {
+     "content": "Solid - a controlled, sustainable effort. That's smart pacing with the vest.\n\nGot time for just one more? **How many hours of sleep did you get the night before?** Sleep is one of the biggest performance predictors, and I want to see if there's a pattern between your rest and how you're moving.\n\n(Or we can lock this in as-is - you've already given me the core data!)",
+     "id": "msg_1764357955532_assistant",
+     "metadata": {
+      "mode": "workout_log",
+      "model": "claude-4.5-haiku"
+     },
+     "role": "assistant",
+     "timestamp": "2025-11-28T19:25:55.532Z"
+    },
+    {
+     "content": "I got about 6 hours sleep the night before.",
+     "id": "msg_1764357978818_user",
+     "role": "user",
+     "timestamp": "2025-11-28T19:26:18.818Z"
+    },
+    {
+     "content": "Perfect! I have everything I need. Let me get that logged for you right now.",
+     "id": "msg_1764357978818_assistant",
+     "metadata": {
+      "mode": "workout_log",
+      "model": "claude-4.5-haiku"
+     },
+     "role": "assistant",
+     "timestamp": "2025-11-28T19:26:18.818Z"
+    },
+    {
+     "content": "Perfect, thank you.",
+     "id": "msg_1764357992815_user",
+     "messageType": "text",
+     "role": "user",
+     "timestamp": "2025-11-28T19:26:29.318Z"
+    },
+    {
+     "content": "You got it! Let me get this locked in for you.\n\n**Gravitas Cursus - November 25, 2025**\n- 2.5 mile weighted vest run (continuous effort)\n- Vest weight: 20#\n- Finish time: 25 minutes\n- Pace: 10:00/mile average\n- Intensity 6/10 | RPE 6/10\n- Location: Outdoor route around your house\n- Sleep prior: 6 hours\n\n**Solid steady-state work.** You maintained a controlled 10:00/mile pace with 20# of additional load for the full 2.5 miles—that's excellent aerobic capacity and load management. The fact that you kept intensity and RPE both at 6/10 tells me you weren't pushing hard; you were maintaining quality movement under load, which is exactly what you want in a weighted running session.\n\n**One coaching note:** You're running on 6 hours of sleep again (similar to 11/23). That's below your optimal baseline of 7.5-8 hours. Combined with your recent training volume, I want to make sure sleep becomes a priority over the next few days—that's where your adaptation happens.\n\nYou're now at **8 consecutive training days** with solid consistency. Where does your schedule take you from here? Are you planning to train again today (Friday, 11/28), or are we looking at a recovery day?",
+     "id": "msg_1764357997756_assistant",
+     "metadata": {
+      "mode": "chat",
+      "model": "claude-sonnet-4.5"
+     },
+     "role": "assistant",
+     "timestamp": "2025-11-28T19:26:37.756Z"
     }
    ],
    "metadata": {
     "isActive": true,
-    "lastActivity": "2025-11-26T15:49:47.690Z",
+    "lastActivity": "2025-11-28T19:26:37.764Z",
     "startedAt": "2025-11-21T21:38:39.267Z",
     "tags": [
+     "crossfit-training",
+     "periodization-strategy",
      "workout-logging",
-     "crossfit",
-     "olympic-lifting",
-     "periodization",
-     "recovery-metrics"
+     "recovery-management",
+     "benchmark-pr"
     ],
-    "totalMessages": 38
+    "totalMessages": 68
    },
    "mode": "chat",
    "tags": [
+    "crossfit-training",
+    "periodization-strategy",
     "workout-logging",
-    "crossfit",
-    "olympic-lifting",
-    "periodization",
-    "recovery-metrics"
+    "recovery-management",
+    "benchmark-pr"
    ],
    "title": "Nov 21, 2025, 04:38 PM",
-   "updatedAt": "2025-11-26T15:49:22.417Z",
+   "updatedAt": "2025-11-28T19:25:55.532Z",
    "userId": "63gocaz-j-AYRsb0094ik"
   },
-  "createdAt": "2025-11-26T15:49:47.690Z",
+  "createdAt": "2025-11-28T19:26:18.919Z",
   "entityType": "coachConversation",
-  "updatedAt": "2025-11-26T15:49:47.690Z"
+  "updatedAt": "2025-11-28T19:26:37.764Z"
  }

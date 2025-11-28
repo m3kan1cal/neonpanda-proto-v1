@@ -650,6 +650,28 @@ export class CoachCreatorAgent {
   }
 
   /**
+   * Updates only the metadata of a message without changing content
+   * Used for early metadata events during streaming (e.g., mode badge)
+   */
+  _updateMessageMetadata(messageId, metadata) {
+    this.state = {
+      ...this.state,
+      messages: this.state.messages.map((msg) => {
+        if (msg.id === messageId) {
+          return {
+            ...msg,
+            metadata: { ...msg.metadata, ...metadata }
+          };
+        }
+        return msg;
+      })
+    };
+    if (typeof this.onStateChange === "function") {
+      this.onStateChange(this.state);
+    }
+  }
+
+  /**
    * Removes a message by ID
    */
   _removeMessage(messageId) {

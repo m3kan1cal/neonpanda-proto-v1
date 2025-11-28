@@ -77,6 +77,11 @@ import { deleteProgram } from "./functions/delete-program/resource";
 import { logWorkoutTemplate } from "./functions/log-workout-template/resource";
 import { skipWorkoutTemplate } from "./functions/skip-workout-template/resource";
 import { getWorkoutTemplate } from "./functions/get-workout-template/resource";
+import {
+  notifyInactiveUsers,
+  createInactiveUsersNotificationSchedule
+} from "./functions/notify-inactive-users/resource";
+import { unsubscribeEmail } from "./functions/unsubscribe-email/resource";
 import { apiGatewayv2 } from "./api/resource";
 import { dynamodbTable } from "./dynamodb/resource";
 import { createAppsBucket } from "./storage/resource";
@@ -161,6 +166,8 @@ const backend = defineBackend({
   logWorkoutTemplate,
   skipWorkoutTemplate,
   getWorkoutTemplate,
+  notifyInactiveUsers,
+  unsubscribeEmail,
 });
 
 // Disable retries for stateful async generation functions
@@ -239,6 +246,7 @@ const coreApi = apiGatewayv2.createCoreApi(
   backend.logWorkoutTemplate.resources.lambda,
   backend.skipWorkoutTemplate.resources.lambda,
   backend.getWorkoutTemplate.resources.lambda,
+  backend.unsubscribeEmail.resources.lambda,
   userPoolAuthorizer
 );
 
@@ -352,6 +360,13 @@ const sharedPolicies = new SharedPolicies(
   sharedPolicies.attachDynamoDbReadOnly(func.resources.lambda);
 });
 
+// Functions needing DynamoDB READ/WRITE for user profile updates (but only read for everything else)
+// NOTE: notifyInactiveUsers needs write access to update lastInactivityReminderSent
+// NOTE: unsubscribeEmail needs write access to update email preferences
+[backend.notifyInactiveUsers, backend.unsubscribeEmail].forEach((func) => {
+  sharedPolicies.attachDynamoDbReadWrite(func.resources.lambda);
+});
+
 // Functions needing BEDROCK access
 [
   backend.createCoachCreatorSession, // Added: Needs Bedrock for generating initial AI message
@@ -455,6 +470,19 @@ backend.postConfirmation.resources.lambda.addToRolePolicy(
       "cognito-idp:ListUsers",
     ],
     resources: ["*"],
+  })
+);
+
+// ============================================================================
+// SES PERMISSIONS
+// ============================================================================
+
+// Grant SES send email permissions to notifyInactiveUsers
+backend.notifyInactiveUsers.resources.lambda.addToRolePolicy(
+  new PolicyStatement({
+    effect: Effect.ALLOW,
+    actions: ['ses:SendEmail', 'ses:SendRawEmail'],
+    resources: ['*'], // SES requires wildcard for email sending
   })
 );
 
@@ -637,6 +665,8 @@ const allFunctions = [
   backend.logWorkoutTemplate,
   backend.skipWorkoutTemplate,
   backend.getWorkoutTemplate,
+  backend.notifyInactiveUsers,
+  backend.unsubscribeEmail,
   // NOTE: forwardLogsToSns and syncLogSubscriptions excluded - they're utility functions that don't need app resources
 ];
 
@@ -890,6 +920,14 @@ const monthlyAnalyticsSchedule = createMonthlyAnalyticsSchedule(
 );
 
 console.info("✅ Monthly analytics scheduled (1st of month at 9am UTC)");
+
+// Create EventBridge schedule for inactive user notifications (every 14 days)
+const inactiveUsersSchedule = createInactiveUsersNotificationSchedule(
+  backend.notifyInactiveUsers.stack,
+  backend.notifyInactiveUsers.resources.lambda
+);
+
+console.info("✅ Inactive user notifications scheduled (every 14 days)");
 
 // ============================================================================
 // COGNITO USER POOL CONFIGURATION
