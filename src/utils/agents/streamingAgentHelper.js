@@ -8,12 +8,13 @@
  * @param {AsyncGenerator} messageStream - The streaming API response
  * @param {Function} onChunk - Called for each content chunk (chunk)
  * @param {Function} onContextual - Called for contextual updates (chunk) - optional
+ * @param {Function} onMetadata - Called for early metadata (chunk) - optional
  * @param {Function} onComplete - Called when streaming completes (chunk)
  * @param {Function} onFallback - Called for fallback response (data)
  * @param {Function} onError - Called for errors (errorMessage)
  * @returns {Promise} - Result from the appropriate handler
  */
-export async function processStreamingChunks(messageStream, { onChunk, onContextual, onComplete, onFallback, onError }) {
+export async function processStreamingChunks(messageStream, { onChunk, onContextual, onMetadata, onComplete, onFallback, onError }) {
   try {
     for await (const chunk of messageStream) {
       if (chunk.type === 'start') {
@@ -23,6 +24,11 @@ export async function processStreamingChunks(messageStream, { onChunk, onContext
         // Contextual update - ephemeral UX feedback, not saved to conversation
         if (onContextual) {
           await onContextual(chunk.content, chunk.stage);
+        }
+      } else if (chunk.type === 'metadata') {
+        // Metadata event - early message configuration (mode, etc.) sent before AI streaming
+        if (onMetadata) {
+          await onMetadata(chunk);
         }
       } else if (chunk.type === 'chunk') {
         await onChunk(chunk.content);
@@ -71,6 +77,10 @@ export function createStreamingMessage(agent, metadata = {}) {
     update: (content, metadata = null) => {
       // Set full content and optionally update metadata (used for final update)
       agent._updateStreamingMessage(messageId, content, metadata);
+    },
+    updateMetadata: (metadata) => {
+      // Update only metadata without changing content (for early metadata events)
+      agent._updateMessageMetadata(messageId, metadata);
     },
     remove: () => {
       console.info('🗑️ StreamingMessage.remove:', { messageId });

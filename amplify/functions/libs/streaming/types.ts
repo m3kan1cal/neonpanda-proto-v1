@@ -23,6 +23,7 @@ export type SseEvent =
   | { type: "start"; status: "initialized" }
   | { type: "chunk"; content: string }
   | { type: "contextual"; content: string; stage?: string } // Ephemeral UX feedback (not saved to conversation)
+  | { type: "metadata"; mode?: string; [key: string]: any } // Early metadata for UI configuration (sent after detection, before AI streaming)
   | SseCompleteEvent
   | { type: "error"; message: string; code?: string };
 

@@ -1,8 +1,0 @@
-
-Issues noted:
-- Warnings about undefined imageS3Keys
-- Repeated "start to finish" questions
-- Neither duration property captured
-- Session was noted as logged but never actually logged the workout
-- I'm still not seeing AI suggest other metrics that help make a workout have more meaningful data
--

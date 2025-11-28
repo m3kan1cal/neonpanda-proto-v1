@@ -141,6 +141,8 @@ ${JSON.stringify(collectedData, null, 2)}
 YOUR TASK:
 Generate a brief, enthusiastic confirmation message that you're logging their workout. Keep it natural and conversational.
 
+⚠️ CRITICAL RULE: This is THE FINAL MESSAGE before the workout is logged. DO NOT generate completion messages ("I'll log this", "logging now", "all set") UNLESS this is truly the completion phase where all data collection is done.
+
 GUIDELINES:
 - Be brief (1-2 sentences max)
 - Show genuine enthusiasm about their workout
@@ -169,6 +171,8 @@ ${JSON.stringify(collectedData, null, 2)}
 
 WHAT WE STILL NEED:
 ${missingSummary}${turnWarning}
+
+⚠️ CRITICAL RULE: DO NOT say "You're all logged!", "I'll log this now", "Logging that for you", or similar completion phrases. You are STILL COLLECTING DATA. Only ask for the next piece of information. The system will tell you when it's time to complete.
 
 ${atHighPriorityPhase ? `
 ⚠️ IMPORTANT - HIGH-PRIORITY OPTIONAL FIELDS:
@@ -258,8 +262,9 @@ function buildConversationContext(conversationHistory: ConversationMessage[]): s
     return "Generate the first question to start collecting workout information.";
   }
 
-  const recentHistory = conversationHistory.slice(-4); // Last 2 exchanges
-  return recentHistory
+  // Include FULL conversation history so AI doesn't repeat questions
+  // This matches the extraction function which also uses full history
+  return conversationHistory
     .map(m => `${m.role.toUpperCase()}: ${m.content}`)
     .join('\n\n');
 }

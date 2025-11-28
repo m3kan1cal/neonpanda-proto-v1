@@ -57,6 +57,7 @@ export function createCoreApi(
   logWorkoutTemplateLambda: lambda.IFunction,
   skipWorkoutTemplateLambda: lambda.IFunction,
   getWorkoutTemplateLambda: lambda.IFunction,
+  unsubscribeEmailLambda: lambda.IFunction,
   userPoolAuthorizer: HttpUserPoolAuthorizer
 ) {
   // Create branch-aware API name using utility
@@ -384,6 +385,11 @@ export function createCoreApi(
     getWorkoutTemplateLambda
   );
 
+  const unsubscribeEmailIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
+    'UnsubscribeEmailIntegration',
+    unsubscribeEmailLambda
+  );
+
   // Create integrations object for route configuration
   const integrations = {
     contactForm: contactFormIntegration,
@@ -434,7 +440,8 @@ export function createCoreApi(
     deleteProgram: deleteProgramIntegration,
     logWorkoutTemplate: logWorkoutTemplateIntegration,
     skipWorkoutTemplate: skipWorkoutTemplateIntegration,
-    getWorkoutTemplate: getWorkoutTemplateIntegration
+    getWorkoutTemplate: getWorkoutTemplateIntegration,
+    unsubscribeEmail: unsubscribeEmailIntegration
   };
 
   // *******************************************************
@@ -446,6 +453,13 @@ export function createCoreApi(
     path: '/contact',
     methods: [apigatewayv2.HttpMethod.POST],
     integration: integrations.contactForm
+  });
+
+  // Email unsubscribe (PUBLIC - no auth required for compliance)
+  httpApi.addRoutes({
+    path: '/unsubscribe',
+    methods: [apigatewayv2.HttpMethod.GET],
+    integration: integrations.unsubscribeEmail
   });
 
   // User Availability Check (PUBLIC - for registration)

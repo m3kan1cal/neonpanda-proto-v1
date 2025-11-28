@@ -130,50 +130,69 @@ export async function detectAndProcessWorkout(
       workoutContent = slashCommand.content;
     }
 
-    // ✅ VALIDATION: Check if workout content has actual performance data (applies to BOTH slash commands and NLP)
-    // This prevents triggering async Lambda for incomplete workout descriptions like "today, i did the following workout"
-    console.info("🔍 Validating workout content for performance data..", {
-      contentLength: workoutContent.length,
-      contentPreview: workoutContent.substring(0, 100),
-      detectionType: isSlashCommandWorkout ? "slash_command" : "natural_language",
-      hasImages: !!(imageS3Keys && imageS3Keys.length > 0),
-      imageCount: imageS3Keys?.length || 0
-    });
+    // ============================================================================
+    // DECISION POINT: Slash Command vs Natural Language
+    // ============================================================================
+    // Slash commands: Validate and extract directly (user explicitly structured the data)
+    // Natural language: Always create multi-turn session (inherently conversational)
 
-    const validationResult = await validateWorkoutContent(workoutContent, imageS3Keys);
+    if (isSlashCommandWorkout) {
+      // ✅ SLASH COMMAND VALIDATION: Check if workout content has actual performance data
+      console.info("🔍 Validating slash command workout content for performance data..", {
+        contentLength: workoutContent.length,
+        contentPreview: workoutContent.substring(0, 100),
+        hasImages: !!(imageS3Keys && imageS3Keys.length > 0),
+        imageCount: imageS3Keys?.length || 0
+      });
 
-    if (!validationResult.hasPerformanceData) {
-      console.warn("⚠️ WORKOUT VALIDATION FAILED: No performance data detected in workout content", {
-        userId,
-        conversationId,
-        detectionType: isSlashCommandWorkout ? "slash_command" : "natural_language",
-        contentPreview: workoutContent.substring(0, 200),
+      const validationResult = await validateWorkoutContent(workoutContent, imageS3Keys);
+
+      if (!validationResult.hasPerformanceData) {
+        console.warn("⚠️ SLASH COMMAND VALIDATION FAILED: No performance data detected", {
+          userId,
+          conversationId,
+          contentPreview: workoutContent.substring(0, 200),
+          confidence: validationResult.confidence,
+          reasoning: validationResult.reasoning
+        });
+
+        // Return early - don't trigger async Lambda for incomplete workout
+        // Note: AI will naturally handle the error conversationally, no context needed
+        return {
+          isWorkoutLogging: false, // Set to false since validation failed
+          workoutContent,
+          workoutDetectionContext: [], // Empty - AI handles errors naturally
+          slashCommand,
+          isSlashCommandWorkout: false, // Reset since validation failed
+          isNaturalLanguageWorkout: false,
+        };
+      }
+
+      console.info("✅ Slash command validation passed - performance data detected", {
         confidence: validationResult.confidence,
         reasoning: validationResult.reasoning
       });
 
-      // Set detection context to indicate incomplete workout
-      workoutDetectionContext = [
-        "User attempted to log a workout but didn't provide complete workout details.",
-        "Please ask them to provide specific information like exercises, weights, reps, times, or distances.",
-        "Example: 'What exercises did you do? How many sets and reps? What weights did you use?'"
-      ];
+      // Continue to extraction below...
+    } else {
+      // ✅ NATURAL LANGUAGE: Always trigger multi-turn session (skip validation)
+      console.info("🔄 Natural language workout detected - triggering multi-turn session", {
+        userId,
+        conversationId,
+        contentPreview: workoutContent.substring(0, 100)
+      });
 
-      // Return early - don't trigger async Lambda for incomplete workout
+      // Return false to trigger session creation in handler
+      // Note: workoutCreatorSession has its own specialized prompts, no context needed here
       return {
-        isWorkoutLogging: false, // Set to false since validation failed
+        isWorkoutLogging: false, // False triggers multi-turn session creation
         workoutContent,
-        workoutDetectionContext,
+        workoutDetectionContext: [], // Empty - session handles prompts internally
         slashCommand,
-        isSlashCommandWorkout: false, // Reset these since validation failed
-        isNaturalLanguageWorkout: false,
+        isSlashCommandWorkout: false,
+        isNaturalLanguageWorkout: true, // Keep this true to indicate workout intent
       };
     }
-
-    console.info("✅ Workout content validation passed - performance data detected", {
-      confidence: validationResult.confidence,
-      reasoning: validationResult.reasoning
-    });
 
     // Generate appropriate workout detection context for AI coach
     workoutDetectionContext = generateWorkoutDetectionContext(

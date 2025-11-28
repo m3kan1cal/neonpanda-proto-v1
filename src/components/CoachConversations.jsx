@@ -672,19 +672,6 @@ function CoachConversations() {
     }
   }, [coachConversationAgentState.messages.length]);
 
-  const scrollToBottom = () => {
-    if (messagesEndRef.current) {
-      // Try scrollIntoView first (preferred for smooth scrolling)
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-
-      // Fallback: Also try to scroll the messages container directly
-      const messagesContainer =
-        messagesEndRef.current.closest(".overflow-y-auto");
-      if (messagesContainer) {
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-      }
-    }
-  };
 
   const autoResizeTextarea = (textarea) => {
     if (!textarea) return;
@@ -737,68 +724,21 @@ function CoachConversations() {
     }
   };
 
-  // Voice recording functions moved to ChatInput component
-
-  // Auto-scroll page to top when component loads (with scroll restoration disabled)
-  useEffect(() => {
-    if ("scrollRestoration" in window.history) {
-      window.history.scrollRestoration = "manual";
-    }
-    window.scrollTo(0, 0);
-    return () => {
-      if ("scrollRestoration" in window.history) {
-        window.history.scrollRestoration = "auto";
-      }
-    };
+  const scrollToBottom = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, []);
 
-  // Scroll page to top after loading completes
   useEffect(() => {
-    if (
-      !isValidatingUserId &&
-      !coachConversationAgentState.isLoadingItem &&
-      !isPollingForMessages
-    ) {
-      window.scrollTo(0, 0);
-    }
-  }, [
-    isValidatingUserId,
-    coachConversationAgentState.isLoadingItem,
-    isPollingForMessages,
-  ]);
-
-  useEffect(() => {
-    // Use a small delay to ensure DOM is fully updated before scrolling
-    const timeoutId = setTimeout(() => {
-      scrollToBottom();
-    }, 100);
-
-    return () => clearTimeout(timeoutId);
+    scrollToBottom();
   }, [
     coachConversationAgentState.messages,
     coachConversationAgentState.isTyping,
     coachConversationAgentState.contextualUpdate,
+    coachConversationAgentState.streamingMessage, // Added to scroll during streaming
+    scrollToBottom
   ]);
 
-  // Scroll to bottom when conversation is first loaded
-  useEffect(() => {
-    if (
-      coachConversationAgentState.messages.length > 0 &&
-      !coachConversationAgentState.isLoadingItem &&
-      coachConversationAgentState.conversation
-    ) {
-      // Use a longer delay for initial load to ensure everything is rendered
-      const timeoutId = setTimeout(() => {
-        scrollToBottom();
-      }, 300);
-
-      return () => clearTimeout(timeoutId);
-    }
-  }, [
-    coachConversationAgentState.messages.length,
-    coachConversationAgentState.isLoadingItem,
-    coachConversationAgentState.conversation,
-  ]);
+  // Voice recording functions moved to ChatInput component
 
   // Focus input when chat interface is visible
   useEffect(() => {
@@ -932,8 +872,8 @@ function CoachConversations() {
         {
           enableStreaming: supportsStreaming(),
           onStreamingStart: () => {
-            // Streaming started - scroll to show new message
-            setTimeout(() => scrollToBottom(), 100);
+            // Streaming started - instant scroll to show new message
+            setTimeout(() => scrollToBottom(true), 50);
           },
           onStreamingError: (error) => {
             handleStreamingError(error, { error: showError });
@@ -942,7 +882,8 @@ function CoachConversations() {
       );
 
       // Scroll after message is sent to ensure we're at the bottom
-      setTimeout(() => scrollToBottom(), 150);
+      // Use timeout to ensure React has rendered the new message
+      setTimeout(() => scrollToBottom(true), 100);
     } catch (error) {
       console.error("Error sending message:", error);
       handleStreamingError(error, { error: showError });
@@ -1284,8 +1225,7 @@ function CoachConversations() {
             {/* Removed mainContent container for immersive chat UX - messages flow edge-to-edge */}
             <div className="h-full flex flex-col">
               {/* Messages Area - with bottom padding for floating input */}
-              {/* Removed backdrop-blur and semi-transparent backgrounds to prevent scroll artifacts */}
-              <div className="flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-6 pb-32 sm:pb-48 space-y-4">
+              <div className="flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-6 pb-40 sm:pb-56 space-y-4">
                 {/* Empty State - Show tips when no messages */}
                 {coachConversationAgentState.messages.length === 0 &&
                  !coachConversationAgentState.isTyping &&
@@ -1490,6 +1430,7 @@ function CoachConversations() {
                     </div>
                   )}
 
+                {/* Scroll anchor - always at the bottom */}
                 <div ref={messagesEndRef} />
               </div>
             </div>

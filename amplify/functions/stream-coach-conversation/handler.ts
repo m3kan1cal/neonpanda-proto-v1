@@ -70,6 +70,7 @@ import {
   formatStartEvent,
   formatChunkEvent,
   formatContextualEvent,
+  formatMetadataEvent,
   formatCompleteEvent,
   formatAuthErrorEvent,
   formatValidationErrorEvent,
@@ -766,21 +767,47 @@ async function* processCoachConversationAsync(
   }
 
   // ============================================================================
-  // MULTI-TURN WORKOUT LOGGING: Check if workout was detected but has insufficient data
+  // MULTI-TURN WORKOUT LOGGING: Natural language workout detection
   // ============================================================================
-  // Check if: 1) workout intent exists, 2) not a complete workout, 3) has some context
+  // Natural language workouts ALWAYS trigger multi-turn session (slash commands bypass this)
+  // Check if: 1) workout intent exists, 2) not a slash command (isWorkoutLogging=false), 3) router confirms workout
   if (
     workoutResult &&
     !workoutResult.isWorkoutLogging &&
     (routerAnalysis.workoutDetection.isWorkoutLog || routerAnalysis.userIntent === 'workout_logging')
   ) {
-    console.info('🏋️ Workout intent detected but insufficient data - starting multi-turn collection');
+    console.info('🏋️ Natural language workout detected - starting multi-turn collection session');
     yield* startWorkoutCollection(businessLogicParams, conversationData);
     return; // Exit early - handled the workout collection start
   }
 
   // OPTIMIZATION: Removed pattern/insights updates (Phase 4) to focus on 2-3 key updates
   // Keeping only: Initial acknowledgment + Workout/Memory analysis (most critical for UX)
+
+  // ============================================================================
+  // SEND METADATA EVENT: Inform UI of message mode BEFORE AI streaming starts
+  // ============================================================================
+  // Determine the mode early so UI can show badges during streaming, not after
+
+  // Check if we're in an active workout logging flow (multi-turn collection)
+  // Only set workout_log mode if there's an ACTIVE (not complete) session
+  const isInWorkoutFlow =
+    conversationData.existingConversation.workoutCreatorSession &&
+    !conversationData.existingConversation.workoutCreatorSession.isComplete;
+
+  // Determine message mode:
+  // 1. Slash command with complete data → WORKOUT_LOG
+  // 2. Natural language with active session → WORKOUT_LOG
+  // 3. Otherwise → conversation's default mode
+  const messageMode = workoutResult?.isWorkoutLogging
+    ? CONVERSATION_MODES.WORKOUT_LOG
+    : isInWorkoutFlow
+    ? CONVERSATION_MODES.WORKOUT_LOG
+    : conversationMode;
+
+  // Yield metadata event with mode information
+  yield formatMetadataEvent({ mode: messageMode });
+  console.info(`📋 Metadata event sent: mode=${messageMode}${isInWorkoutFlow ? ' (continuing workout flow)' : ''}`);
 
   // Create user message and conversation context
   const newUserMessage: CoachMessage = {
@@ -882,6 +909,7 @@ async function* processCoachConversationAsync(
   }
 
   // Create final AI message with complete response
+  // Note: messageMode was already determined earlier (before AI streaming) and sent via metadata event
   const newAiMessage: CoachMessage = {
     id: `msg_${Date.now()}_assistant`,
     role: "assistant",
@@ -889,7 +917,7 @@ async function* processCoachConversationAsync(
     timestamp: new Date(),
     metadata: {
       model: MODEL_IDS.CLAUDE_SONNET_4_DISPLAY,
-      mode: conversationMode, // Track which mode this message was created in
+      mode: messageMode, // Use the mode we determined earlier (same as metadata event)
       // Note: Training program generation is now async, so programId not available here
     },
   };

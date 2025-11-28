@@ -16,6 +16,7 @@ import { Pinecone } from "@pinecone-database/pinecone";
 import { getEnhancedMethodologyContext } from "./pinecone-utils";
 import { putObject } from "./s3-utils";
 import { deepSanitizeNullish } from "./object-utils";
+import { parseJsonWithFallbacks } from "./response-utils";
 
 // Amazon Bedrock Converse API configuration
 const CLAUDE_SONNET_4_MODEL_ID = "us.anthropic.claude-sonnet-4-5-20250929-v1:0";
@@ -653,7 +654,38 @@ export const callBedrockApi = async (
     // Tool responses have a different structure than text responses
     if (options?.tools) {
       console.info("🔧 Tool use requested, extracting tool result");
-      return extractToolUseResult(response, options.expectedToolName);
+
+      // Try to extract tool use, but gracefully handle text responses
+      if (response.stopReason === 'tool_use') {
+        return extractToolUseResult(response, options.expectedToolName);
+      } else {
+        // Model returned text instead of using tool - try to parse as JSON
+        console.warn("⚠️ Tool was requested but model returned text response, attempting to parse as JSON");
+        const contentItem = response.output.message.content[0];
+        const textContent = typeof contentItem === 'string' ? contentItem : contentItem.text;
+
+        if (textContent) {
+          // Try to parse the text as JSON
+          const parsed = parseJsonWithFallbacks(textContent);
+          if (parsed && typeof parsed === 'object') {
+            console.info("✅ Successfully parsed text response as JSON");
+            // Return in tool use format for consistency
+            return {
+              toolName: options.expectedToolName ?? 'unknown',
+              input: parsed,
+              stopReason: response.stopReason ?? 'end_turn'
+            };
+          }
+        }
+
+        // If we can't parse as JSON, return empty object
+        console.warn("⚠️ Could not parse text response as JSON, returning empty object");
+        return {
+          toolName: options.expectedToolName ?? 'unknown',
+          input: {},
+          stopReason: response.stopReason ?? 'end_turn'
+        };
+      }
     }
 
     // Extract the raw response text - handle both direct text and nested structures
@@ -928,7 +960,37 @@ export const callBedrockApiMultimodal = async (
     // Tool responses have a different structure than text responses
     if (options?.tools) {
       console.info("🔧 Tool use requested (multimodal), extracting tool result");
-      return extractToolUseResult(response, options.expectedToolName);
+
+      // Try to extract tool use, but gracefully handle text responses
+      if (response.stopReason === 'tool_use') {
+        return extractToolUseResult(response, options.expectedToolName);
+      } else {
+        // Model returned text instead of using tool - try to parse as JSON
+        console.warn("⚠️ Tool was requested but model returned text response (multimodal), attempting to parse as JSON");
+        const textContent = response.output?.message?.content?.[0]?.text;
+
+        if (textContent) {
+          // Try to parse the text as JSON
+          const parsed = parseJsonWithFallbacks(textContent);
+          if (parsed && typeof parsed === 'object') {
+            console.info("✅ Successfully parsed text response as JSON (multimodal)");
+            // Return in tool use format for consistency
+            return {
+              toolName: options.expectedToolName ?? 'unknown',
+              input: parsed,
+              stopReason: response.stopReason ?? 'end_turn'
+            };
+          }
+        }
+
+        // If we can't parse as JSON, return empty object
+        console.warn("⚠️ Could not parse text response as JSON (multimodal), returning empty object");
+        return {
+          toolName: options.expectedToolName ?? 'unknown',
+          input: {},
+          stopReason: response.stopReason ?? 'end_turn'
+        };
+      }
     }
 
     // Otherwise extract text as usual

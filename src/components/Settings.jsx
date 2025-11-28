@@ -90,6 +90,20 @@ function Settings() {
   // State for preferences
   const [timezone, setTimezone] = useState('America/Los_Angeles');
   const [originalTimezone, setOriginalTimezone] = useState('America/Los_Angeles');
+  const [emailNotifications, setEmailNotifications] = useState({
+    coachCheckIns: true,
+    weeklyReports: true,
+    monthlyReports: true,
+    programUpdates: true,
+    featureAnnouncements: true
+  });
+  const [originalEmailNotifications, setOriginalEmailNotifications] = useState({
+    coachCheckIns: true,
+    weeklyReports: true,
+    monthlyReports: true,
+    programUpdates: true,
+    featureAnnouncements: true
+  });
   const [isSavingPreferences, setIsSavingPreferences] = useState(false);
 
   // State for Critical Training Directive
@@ -139,6 +153,17 @@ function Settings() {
           const userTimezone = profile.preferences?.timezone || 'America/Los_Angeles';
           setOriginalTimezone(userTimezone);
           setTimezone(userTimezone);
+
+          // Set email notification preferences (default to true if not set)
+          const userEmailNotifications = {
+            coachCheckIns: profile.preferences?.emailNotifications?.coachCheckIns ?? true,
+            weeklyReports: profile.preferences?.emailNotifications?.weeklyReports ?? true,
+            monthlyReports: profile.preferences?.emailNotifications?.monthlyReports ?? true,
+            programUpdates: profile.preferences?.emailNotifications?.programUpdates ?? true,
+            featureAnnouncements: profile.preferences?.emailNotifications?.featureAnnouncements ?? true
+          };
+          setOriginalEmailNotifications(userEmailNotifications);
+          setEmailNotifications(userEmailNotifications);
 
           // Set Critical Training Directive from profile
           const directive = profile.criticalTrainingDirective || { content: '', enabled: false };
@@ -289,30 +314,41 @@ function Settings() {
     setPasswordErrors({});
   };
 
-  // Handle timezone save
-  const handleSaveTimezone = async () => {
+  // Handle email notification preference toggle
+  const handleEmailNotificationToggle = (key) => {
+    setEmailNotifications(prev => ({
+      ...prev,
+      [key]: !prev[key]
+    }));
+  };
+
+  // Handle preferences save (timezone + email notifications)
+  const handleSavePreferences = async () => {
     setIsSavingPreferences(true);
     try {
       // Update preferences in DynamoDB
       await updateUserProfile(userId, {
         preferences: {
-          timezone: timezone
+          timezone: timezone,
+          emailNotifications: emailNotifications
         }
       });
 
       setOriginalTimezone(timezone);
-      showSuccess('Timezone updated successfully');
+      setOriginalEmailNotifications(emailNotifications);
+      showSuccess('Preferences updated successfully');
     } catch (error) {
-      console.error('Error updating timezone:', error);
-      showError(error.message || 'Failed to update timezone');
+      console.error('Error updating preferences:', error);
+      showError(error.message || 'Failed to update preferences');
     } finally {
       setIsSavingPreferences(false);
     }
   };
 
-  // Handle timezone cancel
-  const handleCancelTimezone = () => {
+  // Handle preferences cancel
+  const handleCancelPreferences = () => {
     setTimezone(originalTimezone);
+    setEmailNotifications(originalEmailNotifications);
   };
 
   // Handle Critical Training Directive change
@@ -668,48 +704,244 @@ function Settings() {
                 icon={<PreferencesIcon />}
                 defaultOpen={false}
               >
-                <div>
-                  <div className="mb-6">
-                    <label htmlFor="timezone" className={formPatterns.label}>
-                      Timezone
+                <div className="space-y-8">
+                  {/* Timezone Settings */}
+                  <div>
+                    <div className="mb-6">
+                      <label htmlFor="timezone" className={formPatterns.label}>
+                        Your Timezone
+                      </label>
+                      <select
+                        id="timezone"
+                        value={timezone}
+                        onChange={(e) => setTimezone(e.target.value)}
+                        className={inputPatterns.select}
+                        disabled={isSavingPreferences}
+                      >
+                        <optgroup label="US Time Zones">
+                          <option value="America/Los_Angeles">Pacific Time (Los Angeles)</option>
+                          <option value="America/Denver">Mountain Time (Denver)</option>
+                          <option value="America/Chicago">Central Time (Chicago)</option>
+                          <option value="America/New_York">Eastern Time (New York)</option>
+                          <option value="America/Anchorage">Alaska Time (Anchorage)</option>
+                          <option value="Pacific/Honolulu">Hawaii Time (Honolulu)</option>
+                        </optgroup>
+                        <optgroup label="Other Time Zones">
+                          <option value="Europe/London">London (GMT)</option>
+                          <option value="Europe/Paris">Paris (CET)</option>
+                          <option value="Asia/Tokyo">Tokyo (JST)</option>
+                          <option value="Australia/Sydney">Sydney (AEST)</option>
+                          <option value="America/Sao_Paulo">São Paulo (BRT)</option>
+                        </optgroup>
+                      </select>
+                      <div className="flex items-start space-x-2 mt-2">
+                        <div className="text-synthwave-neon-cyan mt-0.5 flex-shrink-0">
+                          <InfoIcon />
+                        </div>
+                        <p className={`${formPatterns.helperText} text-synthwave-neon-cyan`}>
+                          This affects how dates and times are displayed throughout the application.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Email Notifications Settings */}
+                  <div>
+                    <label className={formPatterns.label}>
+                      Email Notifications
                     </label>
-                    <select
-                      id="timezone"
-                      value={timezone}
-                      onChange={(e) => setTimezone(e.target.value)}
-                      className={inputPatterns.select}
-                      disabled={isSavingPreferences}
-                    >
-                      <optgroup label="US Time Zones">
-                        <option value="America/Los_Angeles">Pacific Time (Los Angeles)</option>
-                        <option value="America/Denver">Mountain Time (Denver)</option>
-                        <option value="America/Chicago">Central Time (Chicago)</option>
-                        <option value="America/New_York">Eastern Time (New York)</option>
-                        <option value="America/Anchorage">Alaska Time (Anchorage)</option>
-                        <option value="Pacific/Honolulu">Hawaii Time (Honolulu)</option>
-                      </optgroup>
-                      <optgroup label="Other Time Zones">
-                        <option value="Europe/London">London (GMT)</option>
-                        <option value="Europe/Paris">Paris (CET)</option>
-                        <option value="Asia/Tokyo">Tokyo (JST)</option>
-                        <option value="Australia/Sydney">Sydney (AEST)</option>
-                        <option value="America/Sao_Paulo">São Paulo (BRT)</option>
-                      </optgroup>
-                    </select>
-                    <div className="flex items-start space-x-2 mt-2">
+                    <div className="space-y-4 mt-3">
+                      {/* Coach Check-ins & Reminders */}
+                      <div className="flex items-start space-x-3">
+                        <div className="relative mt-1">
+                          <input
+                            type="checkbox"
+                            id="coachCheckIns"
+                            checked={emailNotifications.coachCheckIns}
+                            onChange={() => handleEmailNotificationToggle('coachCheckIns')}
+                            disabled={isSavingPreferences}
+                            className={`${inputPatterns.checkbox} peer relative`}
+                          />
+                          {emailNotifications.coachCheckIns && (
+                            <svg
+                              className="absolute inset-0 w-5 h-5 text-white pointer-events-none"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <label
+                            htmlFor="coachCheckIns"
+                            className="font-rajdhani text-white font-medium cursor-pointer hover:text-synthwave-neon-pink transition-colors duration-300 block"
+                          >
+                            Coach Check-ins & Reminders
+                          </label>
+                          <p className="font-rajdhani text-sm text-synthwave-text-secondary mt-1">
+                            Receive friendly check-ins from your coach, including activity reminders, motivation boosts, holiday greetings, and more. We're here to support you!
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Weekly Reports */}
+                      <div className="flex items-start space-x-3">
+                        <div className="relative mt-1">
+                          <input
+                            type="checkbox"
+                            id="weeklyReports"
+                            checked={emailNotifications.weeklyReports}
+                            onChange={() => handleEmailNotificationToggle('weeklyReports')}
+                            disabled={isSavingPreferences}
+                            className={`${inputPatterns.checkbox} peer relative`}
+                          />
+                          {emailNotifications.weeklyReports && (
+                            <svg
+                              className="absolute inset-0 w-5 h-5 text-white pointer-events-none"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <label
+                            htmlFor="weeklyReports"
+                            className="font-rajdhani text-white font-medium cursor-pointer hover:text-synthwave-neon-pink transition-colors duration-300 block"
+                          >
+                            Weekly Progress Reports
+                          </label>
+                          <p className="font-rajdhani text-sm text-synthwave-text-secondary mt-1">
+                            Get a summary of your training week delivered to your inbox (coming soon).
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Monthly Reports */}
+                      <div className="flex items-start space-x-3">
+                        <div className="relative mt-1">
+                          <input
+                            type="checkbox"
+                            id="monthlyReports"
+                            checked={emailNotifications.monthlyReports}
+                            onChange={() => handleEmailNotificationToggle('monthlyReports')}
+                            disabled={isSavingPreferences}
+                            className={`${inputPatterns.checkbox} peer relative`}
+                          />
+                          {emailNotifications.monthlyReports && (
+                            <svg
+                              className="absolute inset-0 w-5 h-5 text-white pointer-events-none"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <label
+                            htmlFor="monthlyReports"
+                            className="font-rajdhani text-white font-medium cursor-pointer hover:text-synthwave-neon-pink transition-colors duration-300 block"
+                          >
+                            Monthly Progress Reports
+                          </label>
+                          <p className="font-rajdhani text-sm text-synthwave-text-secondary mt-1">
+                            Get a comprehensive monthly summary of your training progress and achievements (coming soon).
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Program Updates */}
+                      <div className="flex items-start space-x-3">
+                        <div className="relative mt-1">
+                          <input
+                            type="checkbox"
+                            id="programUpdates"
+                            checked={emailNotifications.programUpdates}
+                            onChange={() => handleEmailNotificationToggle('programUpdates')}
+                            disabled={isSavingPreferences}
+                            className={`${inputPatterns.checkbox} peer relative`}
+                          />
+                          {emailNotifications.programUpdates && (
+                            <svg
+                              className="absolute inset-0 w-5 h-5 text-white pointer-events-none"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <label
+                            htmlFor="programUpdates"
+                            className="font-rajdhani text-white font-medium cursor-pointer hover:text-synthwave-neon-pink transition-colors duration-300 block"
+                          >
+                            Training Program Updates
+                          </label>
+                          <p className="font-rajdhani text-sm text-synthwave-text-secondary mt-1">
+                            Be notified when your training programs are updated or when new workouts are available (coming soon).
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Feature Announcements */}
+                      <div className="flex items-start space-x-3">
+                        <div className="relative mt-1">
+                          <input
+                            type="checkbox"
+                            id="featureAnnouncements"
+                            checked={emailNotifications.featureAnnouncements}
+                            onChange={() => handleEmailNotificationToggle('featureAnnouncements')}
+                            disabled={isSavingPreferences}
+                            className={`${inputPatterns.checkbox} peer relative`}
+                          />
+                          {emailNotifications.featureAnnouncements && (
+                            <svg
+                              className="absolute inset-0 w-5 h-5 text-white pointer-events-none"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <label
+                            htmlFor="featureAnnouncements"
+                            className="font-rajdhani text-white font-medium cursor-pointer hover:text-synthwave-neon-pink transition-colors duration-300 block"
+                          >
+                            New Feature Announcements
+                          </label>
+                          <p className="font-rajdhani text-sm text-synthwave-text-secondary mt-1">
+                            Stay up to date with new features, improvements, and app releases.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start space-x-2 mt-4">
                       <div className="text-synthwave-neon-cyan mt-0.5 flex-shrink-0">
                         <InfoIcon />
                       </div>
                       <p className={`${formPatterns.helperText} text-synthwave-neon-cyan`}>
-                        This affects how dates and times are displayed throughout the application.
+                        You can unsubscribe from any email notification type at any time using the link in the email footer.
                       </p>
                     </div>
                   </div>
 
+                  {/* Action Buttons */}
                   <div className="flex space-x-4 pt-4">
                     <AuthButton
                       variant="primary"
-                      onClick={handleSaveTimezone}
+                      onClick={handleSavePreferences}
                       loading={isSavingPreferences}
                       disabled={isSavingPreferences}
                       className="flex-1"
@@ -718,7 +950,7 @@ function Settings() {
                     </AuthButton>
                     <AuthButton
                       variant="secondary"
-                      onClick={handleCancelTimezone}
+                      onClick={handleCancelPreferences}
                       disabled={isSavingPreferences}
                       className="flex-1"
                     >

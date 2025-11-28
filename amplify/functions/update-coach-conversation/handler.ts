@@ -1,6 +1,7 @@
 import { createOkResponse, createErrorResponse } from '../libs/api-helpers';
 import { updateCoachConversation } from '../../dynamodb/operations';
 import { withAuth, AuthenticatedHandler } from '../libs/auth/middleware';
+import { CONVERSATION_MODES } from '../libs/coach-conversation/types';
 
 const baseHandler: AuthenticatedHandler = async (event) => {
   // Auth handled by middleware - userId is already validated
@@ -45,8 +46,8 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     return createErrorResponse(400, 'mode must be a string');
   }
 
-  if (mode !== undefined && mode !== 'chat' && mode !== 'build') {
-    return createErrorResponse(400, 'mode must be either "chat" or "build"');
+  if (mode !== undefined && mode !== CONVERSATION_MODES.CHAT && mode !== CONVERSATION_MODES.PROGRAM_DESIGN) {
+    return createErrorResponse(400, 'mode must be either "chat" or "program_design"');
   }
 
   // Prepare update data

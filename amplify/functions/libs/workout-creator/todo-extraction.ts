@@ -342,12 +342,22 @@ IMAGE ANALYSIS (if images provided):
 
 INTENT DETECTION (userWantsToFinish field):
 Set "userWantsToFinish": true if the user indicates they want to skip remaining optional fields and finish logging.
-Detect phrases like:
-- Explicit: "skip", "that's all", "that's it", "log it now", "I'm done", "done", "just log it"
-- Dismissive: "no more", "nah", "nope", "nothing else", "no", "n"
-- Short/terse: ".", single letter responses when asked for optional info
-- Repetition: User repeating the same information (indicates they want to finish)
-- Context clues: "gotta go", "in a hurry", "quick log"
+
+**CRITICAL CONTEXT**: If we've collected 4+ required fields already, be MORE SENSITIVE to dismissal signals.
+
+Detect these patterns:
+- **Explicit**: "skip", "that's all", "that's it", "log it now", "I'm done", "done", "just log it", "finish"
+- **Dismissive**: "no more", "nah", "nope", "nothing else", "no", "n"
+- **Short/terse**: ".", "ok", "okay", single letter responses when asked for optional info
+- **Acknowledgment after substantial data**: "thanks", "thank you", "got it", "sounds good", "perfect"
+  * ESPECIALLY if we already have 5+ required fields or 4+ required + all high-priority fields
+  * These signal "I'm satisfied, wrap it up" rather than continuing the conversation
+- **Deflection**: "I'll let you know", "maybe later", "not sure", "don't remember"
+  * User avoiding answering → wants to finish
+- **Repetition**: User repeating the same information (indicates they want to finish)
+- **Context clues**: "gotta go", "in a hurry", "quick log", "busy"
+
+**IMPORTANT**: If we have substantial progress (5/6 required OR 4/6+high-priority complete), simple acknowledgments like "thanks", "okay", "got it" should be treated as finish signals, NOT as continuing the conversation.
 
 EXTRACTION RULES:
 1. ONLY extract information that is clearly stated or strongly implied
@@ -362,8 +372,11 @@ EXTRACTION RULES:
 
 INTENT DETECTION:
 - **userWantsToFinish**: Set to true if user wants to skip remaining fields and finish logging
-  - Phrases: "skip", "that's all", "I'm done", "just log it", "log it now", "finish", "no more"
+  - Explicit phrases: "skip", "that's all", "I'm done", "just log it", "log it now", "finish", "no more"
+  - Acknowledgments with substantial progress (5/6 or 4/6+high-priority): "thanks", "thank you", "okay", "got it", "sounds good"
+  - Deflections: "I'll let you know", "not sure", "don't remember"
   - Consider context and tone, not just exact keywords
+  - If we have good progress already, be generous in interpreting dismissal intent
 
 - **userChangedTopic**: Set to true if user has abandoned workout logging and changed topics
   - Phrases: "never mind", "forget it", "what's a good workout?", "how should I program?", "tell me about..."

@@ -53,6 +53,21 @@ export function formatContextualEvent(content: string, stage?: string): string {
 }
 
 /**
+ * Creates a formatted SSE metadata event for early UI configuration
+ * Sent after processing (e.g., workout detection) but before AI streaming
+ * to inform UI about message mode/type so badges can show during streaming
+ */
+export function formatMetadataEvent(metadata: {
+  mode?: string;
+  [key: string]: any;
+}): string {
+  return formatSseEvent({
+    type: "metadata",
+    ...metadata
+  });
+}
+
+/**
  * Creates a formatted SSE progress event for user feedback
  */
 export function formatProgressEvent(progressType: ProgressEventType, message?: string): string {

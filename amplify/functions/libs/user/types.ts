@@ -17,6 +17,17 @@ export interface UserProfile {
   };
   preferences: {
     timezone?: string; // User's preferred timezone (e.g., 'America/Los_Angeles')
+    emailNotifications?: {
+      coachCheckIns?: boolean; // Receive coach check-ins and reminders (inactivity, motivation, holidays, etc.)
+      weeklyReports?: boolean; // Receive weekly progress reports
+      monthlyReports?: boolean; // Receive monthly progress reports
+      programUpdates?: boolean; // Receive notifications about training program updates
+      featureAnnouncements?: boolean; // Receive notifications about new features and app releases
+    };
+  };
+  emailNotificationMetadata?: {
+    lastInactivityReminderSent?: Date; // When the last inactivity reminder was sent
+    lastWeeklyReportSent?: Date; // When the last weekly report was sent
   };
   subscription: {};
   demographics: {};

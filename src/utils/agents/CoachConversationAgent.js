@@ -560,6 +560,14 @@ export class CoachConversationAgent {
             });
           },
 
+          onMetadata: async (metadata) => {
+            // Metadata event - early message configuration (mode, etc.)
+            // Update the streaming message metadata immediately so UI can show badges during streaming
+            if (metadata.mode) {
+              streamingMsg.updateMetadata({ mode: metadata.mode });
+            }
+          },
+
           onChunk: async (content) => {
             // Clear contextual update when real AI response starts
             if (this.state.contextualUpdate) {
@@ -797,6 +805,26 @@ export class CoachConversationAgent {
     });
 
     // Streaming message updated
+  }
+
+  /**
+   * Updates only the metadata of a message without changing content
+   * Used for early metadata events during streaming (e.g., mode badge)
+   * @param {string} messageId - The message ID to update
+   * @param {Object} metadata - Metadata to merge into the message
+   */
+  _updateMessageMetadata(messageId, metadata) {
+    const messages = this.state.messages.map((msg) => {
+      if (msg.id === messageId) {
+        return {
+          ...msg,
+          metadata: { ...msg.metadata, ...metadata }
+        };
+      }
+      return msg;
+    });
+
+    this._updateState({ messages });
   }
 
   /**

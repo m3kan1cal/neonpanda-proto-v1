@@ -8,7 +8,7 @@
 import { CoachConfig, DynamoDBItem } from "../coach-creator/types";
 import { UserMemory } from "../memory";
 import { ConversationMessage } from "../todo-types";
-import { WorkoutCreatorTodoList } from "../workout-creator/types";
+import { WorkoutCreatorTodoList, WorkoutCreatorSession } from "../workout-creator/types";
 
 /**
  * Message type definitions
@@ -96,14 +96,7 @@ export interface CoachConversation {
   };
 
   // Multi-turn workout collection session (in progress)
-  workoutCreatorSession?: {
-    todoList: WorkoutCreatorTodoList;
-    conversationHistory: ConversationMessage[];
-    startedAt: Date;
-    lastActivity: Date;
-    turnCount: number; // Track conversation turns to prevent infinite loops
-    imageS3Keys?: string[]; // Images collected during session
-  };
+  workoutCreatorSession?: WorkoutCreatorSession;
 
   // DynamoDB timestamps (populated from database metadata)
   createdAt?: Date;

@@ -66,6 +66,7 @@ export {
   formatStartEvent,
   formatChunkEvent,
   formatContextualEvent,
+  formatMetadataEvent,
   formatProgressEvent,
   formatErrorEvent,
   formatCompleteEvent,
