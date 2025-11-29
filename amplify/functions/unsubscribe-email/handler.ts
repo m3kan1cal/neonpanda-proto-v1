@@ -1,4 +1,4 @@
-import { updateUserProfileByEmail } from '../../dynamodb/operations';
+import { updateUserProfileByEmail, getUserProfileByEmail } from '../../dynamodb/operations';
 import { buildSettingsLink } from '../libs/email-utils';
 import {
   createHtmlResponse,
@@ -22,23 +22,33 @@ export const handler = async (event: any) => {
 
   // Validate required parameters
   if (!email) {
-    return createBadRequestHtmlResponse('Bad Request', 'Email address is required');
+    return createBadRequestHtmlResponse(
+      'Missing Email Address',
+      "Looks like the unsubscribe link is incomplete – no email address included. If you clicked this from an email, the link might be broken. Reach out to us and we'll help you update your preferences manually."
+    );
   }
 
   if (!notificationType) {
-    return createBadRequestHtmlResponse('Bad Request', 'Notification type is required');
+    return createBadRequestHtmlResponse(
+      'Missing Notification Type',
+      "This unsubscribe link is missing some info. Not sure which emails you want to stop receiving? Reach out to us or log into your account settings to customize your notifications."
+    );
   }
 
   // Validate notification type
   const validTypes = ['coach-checkins', 'weekly', 'monthly', 'program', 'features', 'all'];
   if (!validTypes.includes(notificationType)) {
     return createBadRequestHtmlResponse(
-      'Bad Request',
-      `Invalid notification type. Must be one of: ${validTypes.join(', ')}`
+      'Invalid Link',
+      "This unsubscribe link looks a bit off – the notification type isn't recognized. Head to your account settings to manage your email preferences, or reach out if you need help."
     );
   }
 
   try {
+    // Get user profile to retrieve userId
+    const userProfile = await getUserProfileByEmail(email);
+    const userId = userProfile?.userId;
+
     // Determine which preferences to update based on type
     const updates: any = {
       preferences: {
@@ -82,14 +92,19 @@ export const handler = async (event: any) => {
 
     return createHtmlResponse(
       200,
-      'Unsubscribed Successfully',
+      "We'll Miss You",
       `
-        <p>You have been successfully unsubscribed from ${getNotificationDisplayName(notificationType)} notifications.</p>
-        <p>We're sorry to see you go, but we respect your preferences.</p>
-        <p>You can update your notification preferences anytime by logging into your <a href="${buildSettingsLink()}" style="color: #667eea; text-decoration: none;">account settings</a>.</p>
-        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
-          <p style="font-size: 14px; color: #666;">If you change your mind, you can re-enable notifications in your account settings at any time.</p>
+        <p>You've been successfully unsubscribed from ${getNotificationDisplayName(notificationType)} notifications.</p>
+
+        <p>We get it – inboxes get crowded, priorities shift, or maybe these emails just weren't landing right for you. No hard feelings. We're here to support your journey however works best for you.</p>
+
+        <p>If you ever want to adjust what you hear from us (without going all-in again), you can fine-tune your notification preferences in your <a href="${buildSettingsLink(userId)}">account settings</a>. Pick what matters, silence what doesn't.</p>
+
+        <div class="feature-box">
+          <p style="margin: 0; color: #1a1a1a;"><strong style="color: #FF10F0;">Changed your mind?</strong> We'd love to have you back. You can re-enable any notifications in your account settings whenever you're ready. Your coach will be here.</p>
         </div>
+
+        <p>Keep training hard, and remember – we're still in your corner, even if we're a little quieter now. 💪</p>
       `
     );
   } catch (error: any) {
@@ -98,15 +113,15 @@ export const handler = async (event: any) => {
     // Handle case where user not found
     if (error.message?.includes('not found')) {
       return createNotFoundHtmlResponse(
-        'User Not Found',
-        "We couldn't find an account associated with this email address."
+        "Hmm, We Can't Find That Account",
+        "We searched high and low, but couldn't find an account with that email address. Double-check the email link or reach out to us if you think something's off."
       );
     }
 
     return createErrorHtmlResponse(
-      'Error Processing Request',
-      'We encountered an error while processing your unsubscribe request.',
-      '<p>Please try again later or contact our support team if the problem persists.</p>'
+      'Oops, Something Went Wrong',
+      "We hit a snag trying to process your unsubscribe request. Not your fault – we're on it.",
+      "<p>Give it another shot in a few minutes, or reach out to us directly if it keeps happening. We'll get you sorted.</p>"
     );
   }
 };

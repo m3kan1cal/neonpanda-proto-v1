@@ -5,7 +5,7 @@ import { createOkResponse, createErrorResponse } from '../libs/api-helpers';
 import { sendEmail, buildEmailFooterHtml, buildEmailFooterText, getAppUrl } from '../libs/email-utils';
 
 const INACTIVITY_PERIOD_DAYS = 14; // 2 weeks
-const MIN_DAYS_BETWEEN_REMINDERS = 14; // Don't send more than once per 2 weeks
+const MIN_DAYS_BETWEEN_REMINDERS = 28; // Don't send more than once per month
 
 interface InactivityStats {
   totalUsers: number;
@@ -117,7 +117,7 @@ async function processUser(user: UserProfile, stats: InactivityStats): Promise<v
   }
 
   // Skip if we sent a reminder recently
-  const lastReminderSent = user.emailNotificationMetadata?.lastInactivityReminderSent;
+  const lastReminderSent = user.preferences?.lastSent?.coachCheckIns;
   if (lastReminderSent) {
     const daysSinceLastReminder = Math.floor(
       (Date.now() - new Date(lastReminderSent).getTime()) / (1000 * 60 * 60 * 24)
@@ -177,6 +177,12 @@ async function sendInactivityReminderEmail(user: UserProfile): Promise<void> {
       margin: 0;
       padding: 0;
       background-color: #f9f9f9;
+      font-size: 16px;
+    }
+    p {
+      font-size: 16px;
+      margin: 15px 0;
+      color: #333;
     }
     .email-wrapper {
       width: 100%;
@@ -203,48 +209,41 @@ async function sendInactivityReminderEmail(user: UserProfile): Promise<void> {
       height: auto;
     }
     h1 {
-      color: #00ffff;
+      color: #ff6ec7;
       font-size: 28px;
-      margin-bottom: 10px;
+      margin-bottom: 20px;
       margin-top: 0;
     }
-    .subtitle {
-      color: #666;
-      font-size: 16px;
-      margin-bottom: 20px;
+    .feature-box {
+      background-color: #fff5f8;
+      border-left: 4px solid #FF10F0;
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 4px;
     }
-    .highlight-box {
-      background: linear-gradient(135deg, rgba(255, 110, 199, 0.35) 0%, rgba(255, 16, 240, 0.25) 50%, rgba(0, 255, 255, 0.35) 100%);
-      border: 3px solid rgba(255, 110, 199, 0.8);
-      border-radius: 8px;
-      padding: 20px;
-      margin: 25px 0;
-    }
-    .highlight-box h3 {
+    .feature-box h2 {
       color: #FF10F0;
       margin-top: 0;
       font-size: 18px;
-      font-weight: 700;
+      margin-bottom: 10px;
     }
-    .highlight-box p {
-      color: #1a1a1a;
+    .feature-box p {
+      color: #333;
+      margin: 0;
+    }
+    .footer {
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid #e0e0e0;
+      font-size: 14px;
+      color: #666;
+    }
+    .footer p {
       margin: 10px 0;
     }
-    .cta-button {
-      background-color: #00ffff;
-      color: #0A0A0A;
-      padding: 12px 24px;
+    .footer a {
+      color: #00ffff;
       text-decoration: none;
-      border-radius: 6px;
-      display: inline-block;
-      margin: 20px 0;
-      font-weight: 600;
-      font-size: 16px;
-    }
-    .signature {
-      margin-top: 30px;
-      font-style: italic;
-      color: #666;
     }
   </style>
 </head>
@@ -256,29 +255,21 @@ async function sendInactivityReminderEmail(user: UserProfile): Promise<void> {
       </div>
 
       <h1>Hey ${firstName}! 👋</h1>
-      <p class="subtitle">We noticed it's been a couple weeks since your last workout, and we wanted to check in with you.</p>
 
-      <p>Your goals are important, and we're here to help you achieve them. Whether you took a planned break or life got busy, there's no judgment—just support.</p>
+      <p>It's been a few weeks since your last workout, and we wanted to check in – not to pile on pressure, but to let you know we're still in your corner.</p>
 
-      <div class="highlight-box">
-        <h3>🎯 Remember:</h3>
-        <p><strong>Consistency beats perfection.</strong> Every workout counts, no matter how small. Your coach is ready when you are.</p>
+      <p>Maybe life got hectic. Maybe motivation dipped. Maybe the app didn't click. Whatever the reason, no judgment. We get it. Training is hard, staying consistent is harder.</p>
+
+      <div class="feature-box">
+        <h2>💪 Here's the Thing:</h2>
+        <p><strong>You don't need to be perfect to come back.</strong> You don't need a grand plan or a fresh start on Monday. Just one workout. That's all it takes. Your coach is still here, and we'd love to see you again.</p>
       </div>
 
-      <p>Ready to get back to it? Log into NeonPanda and let's keep building momentum toward your goals.</p>
+      <p>If now's not the time, that's okay too. But whenever you're ready – your NeonPanda coaches will be here. Keep training hard, and remember – we're still in your corner, even if we're a little quieter now. 💪</p>
 
-      <div style="text-align: center;">
-        <a href="${getAppUrl()}" class="cta-button">Log Your Next Workout</a>
-      </div>
+      <p style="margin-top: 30px; font-style: italic; color: #333;">– The NeonPanda Team</p>
 
-      <p>We believe in you and we're here to support your journey. 💪</p>
-
-      <div class="signature">
-        <p>Keep training,<br>
-        <strong>The NeonPanda Team</strong></p>
-      </div>
-
-${buildEmailFooterHtml(user.email, 'coach-checkins')}
+${buildEmailFooterHtml(user.email, 'coach-checkins', user.userId)}
     </div>
   </div>
 </body>
@@ -288,27 +279,25 @@ ${buildEmailFooterHtml(user.email, 'coach-checkins')}
   const textBody = `
 Hey ${firstName}! 👋
 
-We noticed it's been a couple weeks since your last workout, and we wanted to check in with you.
+It's been a few weeks since your last workout, and we wanted to check in – not to pile on pressure, but to let you know we're still in your corner.
 
-Your goals are important, and we're here to help you achieve them. Whether you took a planned break or life got busy, there's no judgment—just support.
+Maybe life got hectic. Maybe motivation dipped. Maybe the app didn't click. Whatever the reason, no judgment. We get it. Training is hard, staying consistent is harder.
 
-🎯 Remember:
-Consistency beats perfection. Every workout counts, no matter how small. Your coach is ready when you are.
+💪 Here's the Thing:
 
-Ready to get back to it? Log into NeonPanda and let's keep building momentum toward your goals.
+You don't need to be perfect to come back. You don't need a grand plan or a fresh start on Monday. Just one workout. That's all it takes. Your coach is still here, and we'd love to see you again.
 
-Visit: ${getAppUrl()}
+If now's not the time, that's okay too. But whenever you're ready – your NeonPanda coaches will be here. Keep training hard, and remember – we're still in your corner, even if we're a little quieter now. 💪
 
-We believe in you and we're here to support your journey. 💪
+– The NeonPanda Team
 
-Keep training,
-The NeonPanda Team
-${buildEmailFooterText(user.email, 'coach-checkins')}
+Visit NeonPanda: ${getAppUrl()}
+${buildEmailFooterText(user.email, 'coach-checkins', user.userId)}
   `.trim();
 
   const result = await sendEmail({
     to: user.email,
-    subject: `${firstName}, we miss you! 💙`,
+    subject: `NeonPanda - ${firstName}, we miss you!`,
     htmlBody,
     textBody,
   });
@@ -324,14 +313,16 @@ ${buildEmailFooterText(user.email, 'coach-checkins')}
 }
 
 /**
- * Update the lastInactivityReminderSent timestamp for the user
+ * Update the lastSent.coachCheckIns timestamp for the user
  */
 async function updateLastReminderSent(userId: string): Promise<void> {
   await updateUserProfile(userId, {
-    emailNotificationMetadata: {
-      lastInactivityReminderSent: new Date(),
+    preferences: {
+      lastSent: {
+        coachCheckIns: new Date(),
+      },
     },
   });
 
-  console.info(`Updated lastInactivityReminderSent for user ${userId}`);
+  console.info(`Updated preferences.lastSent.coachCheckIns for user ${userId}`);
 }

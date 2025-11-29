@@ -10,6 +10,116 @@
 
 export const changelogEntries = [
   {
+    version: "Release v1.0.20251129-beta",
+    date: "2025-11-29",
+    changes: {
+      added: [
+        "Automated email notification system for inactive users using Amazon EventBridge and SES",
+        "EventBridge scheduled rule triggering inactive user check every 14 days with Lambda execution",
+        "notify-inactive-users Lambda function with batch processing (50 users/batch) for scalable user engagement",
+        "Comprehensive email notification preferences system with 5 notification types (coachCheckIns, weeklyReports, monthlyReports, programUpdates, featureAnnouncements)",
+        "Frontend Settings page UI for managing email notification preferences with toggle switches",
+        "Public unsubscribe endpoint (/unsubscribe) with no authentication required for legal compliance and UX",
+        "unsubscribe-email Lambda function handling opt-out requests with branded HTML responses",
+        "Email tracking system with preferences.lastSent timestamps for each notification type preventing spam",
+        "Centralized email utilities (sendEmail, buildEmailFooterHtml, buildEmailFooterText) in libs/email-utils.ts for consistent email composition",
+        "Centralized HTML response utilities (createHtmlResponse, createErrorHtmlResponse, createNotFoundHtmlResponse) in libs/html-utils.ts for branded web pages",
+        "Centralized domain utilities (getAppUrl, getApiUrl, getAppDomain, getApiDomain) in libs/domain-utils.ts for branch-aware URL generation",
+        "Branch-aware URL system dynamically generating correct URLs based on BRANCH_NAME environment variable (sandbox, dev, prod)",
+        "Settings link in email footer with userId parameter for direct navigation to user preferences",
+        "Unsubscribe page with empathetic coach-like tone and brand-aligned styling matching beta update emails",
+        "28-day minimum between coach check-in reminders (once per month max) to respect user inbox",
+        "14-day inactivity detection period before sending first reminder email",
+        "withHeartbeat wrapper integration in notify-inactive-users handler for progress logging in CloudWatch",
+        "Batch processing with pagination support in notify-inactive-users using queryAllUsers with lastEvaluatedKey",
+        "Comprehensive statistics tracking (totalUsers, activeUsers, inactiveUsers, emailsSent, emailsSkipped) in notification runs",
+        "Email notification metadata structure tracking last sent timestamps per notification type"
+      ],
+      changed: [
+        "User profile preferences structure redesigned: emailNotificationMetadata moved to preferences.lastSent with matching property names",
+        "User profile preferences.lastSent now uses same keys as emailNotifications (coachCheckIns, weeklyReports, etc.) for symmetry",
+        "Coach check-in email content written with empathetic, understanding coach tone aligned with NeonPanda brand strategy",
+        "Email HTML styling aligned with public/updates/beta-update-nov-27-2025.html using Inter font, neon colors, and logo header",
+        "Email footer simplified to concise tagline + Visit NeonPanda + Update Preferences + Unsubscribe links",
+        "Text email footer horizontal line (---) removed to prevent Gmail auto-collapse signature detection",
+        "Signature line integrated naturally into final paragraph to bypass Gmail signature detection heuristics",
+        "Email text color standardized to #333 (matching beta updates) for consistent readability",
+        "Email font size standardized to 16px for body text and paragraphs for optimal readability",
+        "Email subject line format: 'NeonPanda - {firstName}, we miss you!' with personalized first name",
+        "Email H1 color changed to neon pink (#ff6ec7) for brand consistency",
+        "Feature box styling changed to pink background (#fff5f8) with pink left border (#FF10F0) matching beta update callouts",
+        "notify-inactive-users refactored to use centralized DynamoDB operations (queryAllUsers, queryWorkoutsCount, updateUserProfile)",
+        "Settings page email notifications section styled consistently with timezone section header design",
+        "Settings page checkbox descriptions enhanced with clear explanations for each notification type",
+        "update-user-profile handler validation updated to accept new email notification preference keys",
+        "Email reminder cadence optimized: EventBridge runs every 14 days, but users max 1 email per 28 days",
+        "Unsubscribe page messaging made more empathetic and coach-like with understanding tone about inbox management",
+        "Email footer 'Update Preferences' link now includes userId query parameter for direct settings access",
+        "SES email sending centralized to email-utils.ts sendEmail() function for DRY code and consistent error handling",
+        "All email HTML templates now use buildEmailFooterHtml() for consistent footer structure across notification types"
+      ],
+      fixed: [
+        "Gmail auto-collapsing email content after signature line by removing signature detection patterns",
+        "EventBridge schedule syntax error (missing Duration import) causing deployment failure",
+        "Text color inconsistency in emails with some paragraphs gray (#666) and others black (#333)",
+        "Email footer styling misalignment with beta update footer structure and content",
+        "Incorrect app URL (https://app.neonpanda.ai) corrected to https://neonpanda.ai throughout codebase",
+        "Static hardcoded URLs replaced with dynamic branch-aware URLs using domain-utils.ts functions",
+        "HTML signature block triggering Gmail collapse by integrating team name into final paragraph",
+        "Email notification metadata stored at wrong path (emailNotificationMetadata vs preferences.lastSent)",
+        "Missing BRANCH_NAME environment variable handling in Lambda functions for URL generation",
+        "Unsubscribe page styling inconsistent with email styling and beta update page design",
+        "Paragraph font sizes inconsistent on unsubscribe page (some 16px, some 14px) causing poor UX",
+        "Email text body 'Visit NeonPanda' link displaying before footer separator causing layout issues",
+        "Missing SES send email permissions on notify-inactive-users Lambda causing send failures",
+        "Missing DynamoDB read/write permissions on unsubscribe-email Lambda for profile updates"
+      ],
+      removed: [
+        "inactivityReminders preference key (replaced with more general coachCheckIns key)",
+        "Legacy emailNotificationMetadata property from user profile (consolidated to preferences.lastSent)",
+        "Horizontal line separator (---) from text email footer to prevent Gmail signature collapse"
+      ]
+    }
+  },
+  {
+    version: "Release v1.0.20251128-beta",
+    date: "2025-11-28",
+    changes: {
+      added: [
+        "Flexible completion check (hasSubstantialProgress) allowing workout session completion with 5/6 required fields (83%+) OR 4/6 required + all high-priority fields",
+        "Three-tier completion messaging system (all required, substantial progress, minimal progress) for contextual user feedback during workout logging",
+        "Enhanced userWantsToFinish detection in extraction prompts sensitive to acknowledgments ('thanks', 'okay', 'sounds good') when substantial progress collected",
+        "Metadata SSE event sent early in streaming pipeline to enable workout_log badge display during AI response streaming, not just after completion",
+        "Full conversation history support in workout creator question generation ensuring AI sees all previous Q&A exchanges to prevent repetition",
+        "Graceful handling in Bedrock API when model returns text instead of using tool (acknowledgments like 'Thanks') with automatic JSON parsing fallback"
+      ],
+      changed: [
+        "Workout creator session completion logic refactored to respect userWantsToFinish regardless of required field completion percentage for better UX",
+        "Question generation conversation context expanded from last 4 messages to full session history matching extraction function context availability",
+        "Extraction prompts enhanced with context-aware userWantsToFinish detection based on collected data progress (5/6 or 4/6+high-priority triggers higher sensitivity)",
+        "Question generator prompts strengthened with critical rule preventing AI from saying 'logged' or 'complete' phrases during data collection phase",
+        "Mode determination logic updated to check for active workoutCreatorSession.isComplete state instead of scanning previous message metadata",
+        "Bedrock API functions (callBedrockApi, callBedrockApiMultimodal) enhanced to check stopReason before extracting tool use, parsing text as JSON fallback",
+        "Auto-scroll behavior optimized during streaming: instant scroll (no animation) while streaming active, smooth scroll when complete for performance",
+        "Auto-scroll triggers moved to immediate execution during streaming with requestAnimationFrame for reliable DOM update synchronization",
+        "Message scrolling effects split into separate concerns: new message detection vs streaming update detection for more reliable scroll behavior",
+        "CoachConversation type interface simplified to use WorkoutCreatorSession type reference instead of inline object definition"
+      ],
+      fixed: [
+        "Critical bug where AI repeated questions about information already provided due to question generator only seeing last 2 exchanges (4 messages) instead of full conversation",
+        "Workout not logging when AI said 'You're all logged!' because userWantsToFinish required both flag AND atRecommendedPhase conditions",
+        "Mode stuck in workout_log after session completion due to checking most recent assistant message mode instead of active session state",
+        "Bedrock API errors when model correctly returns text for acknowledgments ('Thanks') instead of tool use, causing 'Model did not use tool' exceptions",
+        "Auto-scroll not working after message submission requiring manual scrolling every time due to missing cleanup function in streaming effect",
+        "AI streaming content briefly going behind ChatInput container during long responses due to smooth scroll animation lag with rapid content updates",
+        "TypeScript error in stream-coach-conversation handler (line 800) with 'Object is possibly undefined' when accessing messages[i].metadata.mode",
+        "TypeScript errors in api-helpers.ts due to missing parseJsonWithFallbacks import and incorrect nullish coalescing operator usage",
+        "Metadata event not being sent for natural language workout sessions because handler returned early when workoutCreatorSession initiated/continued"
+      ],
+      removed: []
+    }
+  },
+  {
     version: "Release v1.0.20251127-beta",
     date: "2025-11-27",
     changes: {

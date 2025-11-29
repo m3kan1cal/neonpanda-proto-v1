@@ -24,10 +24,13 @@ export interface UserProfile {
       programUpdates?: boolean; // Receive notifications about training program updates
       featureAnnouncements?: boolean; // Receive notifications about new features and app releases
     };
-  };
-  emailNotificationMetadata?: {
-    lastInactivityReminderSent?: Date; // When the last inactivity reminder was sent
-    lastWeeklyReportSent?: Date; // When the last weekly report was sent
+    lastSent?: {
+      coachCheckIns?: Date; // When the last coach check-in was sent
+      weeklyReports?: Date; // When the last weekly report was sent
+      monthlyReports?: Date; // When the last monthly report was sent
+      programUpdates?: Date; // When the last program update notification was sent
+      featureAnnouncements?: Date; // When the last feature announcement was sent
+    };
   };
   subscription: {};
   demographics: {};

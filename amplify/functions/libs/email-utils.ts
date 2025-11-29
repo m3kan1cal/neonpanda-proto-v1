@@ -11,7 +11,7 @@
  */
 
 import { SESClient, SendEmailCommand, SendEmailCommandOutput } from '@aws-sdk/client-ses';
-import { getApiDomain, getAppDomain } from './domain-utils';
+import { getAppUrl, getApiUrl } from './domain-utils';
 
 // Shared SES client instance
 // Reused across all email sending functions to avoid creating multiple clients
@@ -130,22 +130,26 @@ export async function sendEmail(options: SendEmailOptions): Promise<SendEmailRes
  * @returns Full unsubscribe URL
  */
 export function buildUnsubscribeLink(email: string, notificationType: string): string {
-  const apiDomain = getApiDomain();
-  return `https://${apiDomain}/unsubscribe?email=${encodeURIComponent(email)}&type=${notificationType}`;
+  const apiUrl = getApiUrl();
+  return `${apiUrl}/unsubscribe?email=${encodeURIComponent(email)}&type=${notificationType}`;
 }
 
 /**
  * Build settings link for email footer
  *
  * Uses branch-aware app domain:
- * - Production (main): https://neonpanda.ai/settings
- * - Development: https://dev.neonpanda.ai/settings
+ * - Production (main): https://neonpanda.ai/settings?userId={userId}
+ * - Development: https://dev.neonpanda.ai/settings?userId={userId}
  *
+ * @param userId - Optional user ID to pre-populate settings page
  * @returns Full settings URL
  */
-export function buildSettingsLink(): string {
-  const appDomain = getAppDomain();
-  return `https://${appDomain}/settings`;
+export function buildSettingsLink(userId?: string): string {
+  const appUrl = getAppUrl();
+  if (userId) {
+    return `${appUrl}/settings?userId=${encodeURIComponent(userId)}`;
+  }
+  return `${appUrl}/settings`;
 }
 
 /**
@@ -153,17 +157,20 @@ export function buildSettingsLink(): string {
  *
  * @param email - User's email address
  * @param notificationType - Type of notification for unsubscribe link
+ * @param userId - Optional user ID for settings link
  * @returns HTML footer string
  */
-export function buildEmailFooterHtml(email: string, notificationType: string): string {
+export function buildEmailFooterHtml(email: string, notificationType: string, userId?: string): string {
+  const appUrl = getAppUrl();
   return `
-  <div style="text-align: center; padding: 20px; color: #666; font-size: 13px;">
-    <p style="margin: 5px 0;">NeonPanda - Your AI-Powered Training Coach</p>
-    <p style="margin: 5px 0;">
-      <a href="${buildSettingsLink()}" style="color: #667eea; text-decoration: none;">Update Preferences</a> |
-      <a href="${buildUnsubscribeLink(email, notificationType)}" style="color: #667eea; text-decoration: none;">Unsubscribe</a>
-    </p>
-  </div>`;
+      <div class="footer">
+        <p><strong>NeonPanda</strong> – Where electric intelligence meets approachable excellence.</p>
+        <p style="margin-top: 15px;">
+          <a href="${appUrl}" style="color: #00ffff; text-decoration: none; margin-right: 15px;">Visit NeonPanda</a>
+          <a href="${buildSettingsLink(userId)}" style="color: #00ffff; text-decoration: none; margin-right: 15px;">Update Preferences</a>
+          <a href="${buildUnsubscribeLink(email, notificationType)}" style="color: #00ffff; text-decoration: none;">Unsubscribe</a>
+        </p>
+      </div>`;
 }
 
 /**
@@ -171,13 +178,16 @@ export function buildEmailFooterHtml(email: string, notificationType: string): s
  *
  * @param email - User's email address
  * @param notificationType - Type of notification for unsubscribe link
+ * @param userId - Optional user ID for settings link
  * @returns Plain text footer string
  */
-export function buildEmailFooterText(email: string, notificationType: string): string {
+export function buildEmailFooterText(email: string, notificationType: string, userId?: string): string {
+  const appUrl = getAppUrl();
   return `
----
-NeonPanda - Your AI-Powered Training Coach
-Update Preferences: ${buildSettingsLink()}
+
+NeonPanda – Where electric intelligence meets approachable excellence.
+Visit NeonPanda: ${appUrl}
+Update Preferences: ${buildSettingsLink(userId)}
 Unsubscribe: ${buildUnsubscribeLink(email, notificationType)}`;
 }
 
