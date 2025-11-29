@@ -361,7 +361,7 @@ const sharedPolicies = new SharedPolicies(
 });
 
 // Functions needing DynamoDB READ/WRITE for user profile updates (but only read for everything else)
-// NOTE: notifyInactiveUsers needs write access to update lastInactivityReminderSent
+// NOTE: notifyInactiveUsers needs write access to update preferences.lastSent.coachCheckIns
 // NOTE: unsubscribeEmail needs write access to update email preferences
 [backend.notifyInactiveUsers, backend.unsubscribeEmail].forEach((func) => {
   sharedPolicies.attachDynamoDbReadWrite(func.resources.lambda);
