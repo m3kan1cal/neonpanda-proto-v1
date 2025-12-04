@@ -1,0 +1,28 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Get the commit message
+commit_msg=$(cat "$1")
+
+# Check if commit message is empty
+if [ -z "$commit_msg" ]; then
+  echo "❌ Commit message cannot be empty"
+  exit 1
+fi
+
+# Check minimum length (at least 10 characters)
+if [ ${#commit_msg} -lt 10 ]; then
+  echo "❌ Commit message too short (minimum 10 characters)"
+  echo "Current message: $commit_msg"
+  exit 1
+fi
+
+# Optional: Check for conventional commit format (uncomment to enable)
+# if ! echo "$commit_msg" | grep -qE "^(feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert)(\(.+\))?: .+"; then
+#   echo "❌ Commit message must follow conventional commits format"
+#   echo "Examples: feat: add login, fix(auth): resolve token issue"
+#   exit 1
+# fi
+
+echo "✅ Commit message validated"
+

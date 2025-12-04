@@ -1,0 +1,44 @@
+# Dependencies
+node_modules
+
+# Build outputs
+dist
+dist-ssr
+build
+.amplify
+
+# Environment files
+.env
+.env.*
+amplify_outputs*
+amplifyconfiguration*
+
+# Logs
+*.log
+logs
+
+# Lock files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Cache
+.cache
+*.cache
+
+# Coverage
+coverage
+
+# OS files
+.DS_Store
+
+# IDE
+.vscode
+.idea
+
+# Amplify
+amplify/data/resource.ts
+
+# Archived files
+archived/
+
