@@ -100,6 +100,27 @@ export class Agent<TContext extends AgentContext = AgentContext> {
           "Response exceeded token limit.";
         shouldContinue = false;
       }
+
+      if (response.stopReason === "stop_sequence") {
+        console.info("🛑 Response stopped at stop sequence");
+        finalResponse = this.extractTextFromResponse(response);
+
+        // Add final assistant message to history
+        this.conversationHistory.push({
+          role: "assistant",
+          content: response.output.message.content,
+        });
+
+        shouldContinue = false;
+      }
+
+      if (response.stopReason === "content_filtered") {
+        console.warn("⚠️ Response was content filtered");
+        finalResponse =
+          this.extractTextFromResponse(response) ||
+          "Response was filtered due to content policy.";
+        shouldContinue = false;
+      }
     }
 
     if (iterationCount >= MAX_ITERATIONS) {
