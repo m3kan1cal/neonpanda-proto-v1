@@ -8,18 +8,18 @@
  * Critical: Parallel execution required for MVP (15-min Lambda timeout)
  */
 
-import { callBedrockApi, MODEL_IDS } from '../api-helpers';
-import { parseJsonWithFallbacks } from '../response-utils';
-import { getCondensedSchema } from '../object-utils';
+import { callBedrockApi, MODEL_IDS } from "../api-helpers";
+import { parseJsonWithFallbacks } from "../response-utils";
+import { getCondensedSchema } from "../object-utils";
 import {
   PHASE_SCHEMA,
   PHASE_STRUCTURE_SCHEMA,
-} from '../schemas/program-schema';
-import type { ProgramPhase, WorkoutTemplate } from './types';
-import type { CoachConfig } from '../coach-creator/types';
-import type { UserProfile } from '../user/types';
-import { buildCoachPersonalityPrompt } from '../coach-config/personality-utils';
-import type { ProgramCreatorTodoList } from '../program-creator/types';
+} from "../schemas/program-schema";
+import type { ProgramPhase, WorkoutTemplate } from "./types";
+import type { CoachConfig } from "../coach-creator/types";
+import type { UserProfile } from "../user/types";
+import { buildCoachPersonalityPrompt } from "../coach-config/personality-utils";
+import type { ProgramCreatorTodoList } from "../program-creator/types";
 
 /**
  * Phase structure without workouts (for initial breakdown)
@@ -57,22 +57,189 @@ interface PhaseGenerationContext {
 }
 
 /**
+ * Debug data for phase structure generation
+ */
+export interface PhaseStructureDebugData {
+  prompt: string;
+  response: string;
+  method: "tool" | "text_fallback";
+  duration: number;
+}
+
+/**
+ * Rest day information for workout scheduling
+ */
+interface RestDayInfo {
+  indices: number[]; // ISO day-of-week indices (1=Monday, 7=Sunday)
+  names: string[]; // Human-readable day names
+  isFlexible: boolean; // True if user wants flexible rest days
+}
+
+/**
+ * Parse rest day preferences from todoList into structured format
+ * Converts day names to ISO day-of-week indices (1=Monday, 7=Sunday)
+ * Handles special keywords like "weekends" and "flexible"
+ */
+function parseRestDayPreferences(restDaysValue: any): RestDayInfo {
+  const defaultResult: RestDayInfo = {
+    indices: [],
+    names: [],
+    isFlexible: true,
+  };
+
+  // Handle missing or invalid value
+  if (!restDaysValue || !Array.isArray(restDaysValue)) {
+    return defaultResult;
+  }
+
+  // Check for "flexible" keyword
+  if (
+    restDaysValue.some(
+      (val) => typeof val === "string" && val.toLowerCase() === "flexible",
+    )
+  ) {
+    return {
+      indices: [],
+      names: [],
+      isFlexible: true,
+    };
+  }
+
+  // Map day names to ISO day-of-week indices
+  const dayMap: { [key: string]: number } = {
+    monday: 1,
+    mon: 1,
+    tuesday: 2,
+    tue: 2,
+    tues: 2,
+    wednesday: 3,
+    wed: 3,
+    thursday: 4,
+    thu: 4,
+    thurs: 4,
+    friday: 5,
+    fri: 5,
+    saturday: 6,
+    sat: 6,
+    sunday: 7,
+    sun: 7,
+  };
+
+  const indices: number[] = [];
+  const names: string[] = [];
+
+  for (const day of restDaysValue) {
+    if (typeof day !== "string") continue;
+
+    const normalized = day.toLowerCase().trim();
+
+    // Handle "weekends" keyword
+    if (normalized === "weekends" || normalized === "weekend") {
+      if (!indices.includes(6)) {
+        indices.push(6);
+        names.push("Saturday");
+      }
+      if (!indices.includes(7)) {
+        indices.push(7);
+        names.push("Sunday");
+      }
+      continue;
+    }
+
+    // Handle specific day names
+    const dayIndex = dayMap[normalized];
+    if (dayIndex && !indices.includes(dayIndex)) {
+      indices.push(dayIndex);
+      // Capitalize day name for display
+      const capitalizedName =
+        day.charAt(0).toUpperCase() + day.slice(1).toLowerCase();
+      names.push(capitalizedName);
+    }
+  }
+
+  // Sort indices for consistency
+  indices.sort((a, b) => a - b);
+
+  return {
+    indices,
+    names,
+    isFlexible: indices.length === 0,
+  };
+}
+
+/**
+ * Validate that generated workouts don't fall on restricted rest days
+ * Calculates actual calendar dates and checks against rest day preferences
+ */
+function validateRestDayCompliance(
+  workoutTemplates: WorkoutTemplate[],
+  startDate: string,
+  restDayIndices: number[],
+): { valid: boolean; violations: string[] } {
+  // If no rest day restrictions, everything is valid
+  if (restDayIndices.length === 0) {
+    return { valid: true, violations: [] };
+  }
+
+  const violations: string[] = [];
+  const programStartDate = new Date(startDate);
+
+  for (const template of workoutTemplates) {
+    // Calculate the actual date for this workout (dayNumber is 1-indexed)
+    const workoutDate = new Date(programStartDate);
+    workoutDate.setDate(programStartDate.getDate() + (template.dayNumber - 1));
+
+    // Get ISO day of week (1=Monday, 7=Sunday)
+    const dayOfWeek = workoutDate.getDay() === 0 ? 7 : workoutDate.getDay();
+
+    // Check if this day is restricted
+    if (restDayIndices.includes(dayOfWeek)) {
+      const dayNames = [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday",
+      ];
+      const dayName = dayNames[dayOfWeek - 1];
+      violations.push(
+        `Day ${template.dayNumber} (${workoutDate.toISOString().split("T")[0]}, ${dayName}): "${template.name}"`,
+      );
+    }
+  }
+
+  return {
+    valid: violations.length === 0,
+    violations,
+  };
+}
+
+/**
  * Generate high-level phase structure (without workouts)
  * This determines how to break the program into logical phases
  *
  * Tool name: generate_phase_structure
  */
 export async function generatePhaseStructure(
-  context: PhaseGenerationContext
-): Promise<PhaseStructure[]> {
-  console.info('🎯 Generating phase structure:', {
+  context: PhaseGenerationContext,
+): Promise<{ phases: PhaseStructure[]; debugData: PhaseStructureDebugData }> {
+  const startTime = Date.now();
+  console.info("🎯 Generating phase structure:", {
     totalDays: context.totalDays,
     trainingFrequency: context.trainingFrequency,
     userId: context.userId,
     programId: context.programId,
   });
 
-  const { todoList, coachConfig, userProfile, conversationContext, pineconeContext } = context;
+  const {
+    todoList,
+    coachConfig,
+    userProfile,
+    conversationContext,
+    pineconeContext,
+  } = context;
 
   // Build coach personality prompt
   const coachPersonalityPrompt = buildCoachPersonalityPrompt(
@@ -84,11 +251,11 @@ export async function generatePhaseStructure(
       includeMotivation: false,
       includeSafety: true,
       includeCriticalDirective: true,
-      context: 'GENERATING PROGRAM PHASE STRUCTURE',
-    }
+      context: "GENERATING PROGRAM PHASE STRUCTURE",
+    },
   );
 
-  const memoryContext = pineconeContext || 'No specific user context found.';
+  const memoryContext = pineconeContext || "No specific user context found.";
 
   const prompt = `${coachPersonalityPrompt}
 
@@ -111,6 +278,25 @@ ${memoryContext}
 - Training Frequency: ${context.trainingFrequency} days per week
 - Total Workouts: ~${Math.floor((context.totalDays / 7) * context.trainingFrequency)} workouts
 
+## CRITICAL TRAINING FREQUENCY CONSTRAINT:
+**Training Frequency:** ${context.trainingFrequency} workout days per week
+
+**This means EXACTLY ${context.trainingFrequency} days with actual workouts (strength, conditioning, accessory, metcon, etc.)**
+
+**Recovery days are ADDITIONAL and do NOT count toward the ${context.trainingFrequency} workout days.**
+
+**Weekly Structure Requirements:**
+- Each week MUST have ${context.trainingFrequency} workout days minimum
+- Recovery days (mobility, active recovery) are extra and optional
+- Rest days (no workouts) are the remaining days
+
+**Example for ${context.trainingFrequency} days/week:**
+- Days 1-${context.trainingFrequency}: Workouts (various types)
+- Day ${context.trainingFrequency + 1}: Optional recovery or additional workout
+- Day ${context.trainingFrequency + 2}: Rest (if 7-day week)
+
+You MUST ensure every week in every phase has at least ${context.trainingFrequency} workout days.
+
 ## PHASE BREAKDOWN GUIDELINES:
 
 ### Optimal Phase Count:
@@ -131,45 +317,61 @@ ${memoryContext}
 - Avoid generic names like "Phase 1", "Part A"
 
 ### Equipment Context:
-${todoList.equipmentAccess?.value ? `Available Equipment: ${JSON.stringify(todoList.equipmentAccess.value)}` : 'Equipment constraints not specified'}
-${todoList.equipmentAccess?.imageRefs ? `Equipment images provided: ${todoList.equipmentAccess.imageRefs.length} image(s)` : ''}
+${todoList.equipmentAccess?.value ? `Available Equipment: ${JSON.stringify(todoList.equipmentAccess.value)}` : "Equipment constraints not specified"}
+${todoList.equipmentAccess?.imageRefs ? `Equipment images provided: ${todoList.equipmentAccess.imageRefs.length} image(s)` : ""}
 
 ### Injury/Limitation Context:
-${todoList.injuryConsiderations?.value || 'No injury considerations specified'}
-${todoList.injuryConsiderations?.imageRefs ? `Injury documentation images: ${todoList.injuryConsiderations.imageRefs.length} image(s)` : ''}
+${todoList.injuryConsiderations?.value || "No injury considerations specified"}
+${todoList.injuryConsiderations?.imageRefs ? `Injury documentation images: ${todoList.injuryConsiderations.imageRefs.length} image(s)` : ""}
 
 ## CRITICAL REQUIREMENTS:
 - Phases MUST be consecutive (no gaps, no overlaps)
 - Phase 1 MUST start on day 1
 - Last phase MUST end on day ${context.totalDays}
 - Each phase must have at least ${Math.floor(context.trainingFrequency * 2)} workouts (2 weeks minimum)
-- Focus areas must be specific and actionable
+- Focus areas must be specific, actionable, and concise (2-4 words each)
+- Focus areas must use sentence case (e.g., "Upper body strength", "Core stability", "Power development")
+- Avoid all caps or title case for focus areas
 
 Generate the phase structure using the tool.`;
 
   try {
     // PRIMARY: Tool-based generation
-    console.info('🎯 Attempting tool-based phase structure generation');
+    console.info("🎯 Attempting tool-based phase structure generation");
 
     const result = await callBedrockApi(
       prompt,
-      'phase_structure_generation',
+      "phase_structure_generation",
       MODEL_IDS.CLAUDE_SONNET_4_FULL,
       {
         enableThinking: true,
         tools: {
-          name: 'generate_phase_structure',
-          description: 'Generate program phase breakdown with logical periodization',
+          name: "generate_phase_structure",
+          description:
+            "Generate program phase breakdown with logical periodization",
           inputSchema: PHASE_STRUCTURE_SCHEMA,
         },
-        expectedToolName: 'generate_phase_structure',
-      }
+        expectedToolName: "generate_phase_structure",
+      },
     );
 
-    if (typeof result === 'object' && result !== null && 'phases' in result) {
-      console.info('✅ Tool-based phase structure generation succeeded:', {
-        phaseCount: (result as any).phases.length,
-        phases: (result as any).phases.map((p: any) => ({
+    // Tool returns { toolName, input: { phases: [...] }, stopReason }
+    // We need to check result.input.phases, not result.phases
+    if (
+      typeof result === "object" &&
+      result !== null &&
+      "input" in result &&
+      typeof result.input === "object" &&
+      result.input !== null &&
+      "phases" in result.input
+    ) {
+      const phases = (result.input as any).phases;
+      const duration = Date.now() - startTime;
+
+      console.info("✅ Tool-based phase structure generation succeeded:", {
+        phaseCount: phases.length,
+        durationMs: duration,
+        phases: phases.map((p: any) => ({
           name: p.name,
           startDay: p.startDay,
           endDay: p.endDay,
@@ -177,39 +379,72 @@ Generate the phase structure using the tool.`;
         })),
       });
 
-      return (result as any).phases;
+      return {
+        phases,
+        debugData: {
+          prompt: prompt.substring(0, 5000), // First 5000 chars
+          response: JSON.stringify(phases, null, 2).substring(0, 5000), // First 5000 chars
+          method: "tool" as const,
+          duration,
+        },
+      };
     } else {
-      throw new Error('Tool did not return valid phase structure');
+      throw new Error("Tool did not return valid phase structure");
     }
   } catch (toolError) {
-    console.error('❌ Tool-based phase structure generation failed:', toolError);
+    console.error(
+      "❌ Tool-based phase structure generation failed:",
+      toolError,
+    );
 
     // FALLBACK: Text-based generation with parsing
-    console.info('⚠️ Falling back to text-based phase structure generation');
+    console.info("⚠️ Falling back to text-based phase structure generation");
 
     const fallbackPrompt = `${prompt}
 
 Return ONLY valid JSON matching this structure (no markdown, no explanation):
 ${JSON.stringify(getCondensedSchema(PHASE_STRUCTURE_SCHEMA), null, 2)}`;
 
-    const fallbackResult = await callBedrockApi(
+    const fallbackResult = (await callBedrockApi(
       fallbackPrompt,
-      'phase_structure_generation_fallback',
+      "phase_structure_generation_fallback",
       MODEL_IDS.CLAUDE_SONNET_4_FULL,
-      { prefillResponse: '{' }
-    ) as string;
+      { prefillResponse: "{" },
+    )) as string;
 
     const parsed = parseJsonWithFallbacks(fallbackResult);
+    const duration = Date.now() - startTime;
 
     if (parsed && parsed.phases && Array.isArray(parsed.phases)) {
-      console.info('✅ Fallback phase structure generation succeeded:', {
+      console.info("✅ Fallback phase structure generation succeeded:", {
         phaseCount: parsed.phases.length,
+        durationMs: duration,
       });
-      return parsed.phases;
+      return {
+        phases: parsed.phases,
+        debugData: {
+          prompt: fallbackPrompt.substring(0, 5000), // First 5000 chars
+          response: fallbackResult.substring(0, 5000), // First 5000 chars
+          method: "text_fallback" as const,
+          duration,
+        },
+      };
     } else {
-      throw new Error('Failed to generate phase structure via fallback');
+      throw new Error("Failed to generate phase structure via fallback");
     }
   }
+}
+
+/**
+ * Debug data for phase workout generation
+ */
+export interface PhaseWorkoutDebugData {
+  phaseId: string;
+  phaseName: string;
+  prompt: string;
+  response: string;
+  method: "tool" | "text_fallback";
+  duration: number;
 }
 
 /**
@@ -221,16 +456,26 @@ ${JSON.stringify(getCondensedSchema(PHASE_STRUCTURE_SCHEMA), null, 2)}`;
 export async function generateSinglePhaseWorkouts(
   phase: PhaseStructure,
   context: PhaseGenerationContext,
-  allPhases: PhaseStructure[]
-): Promise<PhaseWithWorkouts> {
-  console.info('🏋️ Generating workouts for phase:', {
+  allPhases: PhaseStructure[],
+): Promise<{
+  phaseWithWorkouts: PhaseWithWorkouts;
+  debugData: PhaseWorkoutDebugData;
+}> {
+  const startTime = Date.now();
+  console.info("🏋️ Generating workouts for phase:", {
     phaseName: phase.name,
     startDay: phase.startDay,
     endDay: phase.endDay,
     durationDays: phase.durationDays,
   });
 
-  const { todoList, coachConfig, userProfile, conversationContext, pineconeContext } = context;
+  const {
+    todoList,
+    coachConfig,
+    userProfile,
+    conversationContext,
+    pineconeContext,
+  } = context;
 
   // Build coach personality prompt
   const coachPersonalityPrompt = buildCoachPersonalityPrompt(
@@ -243,13 +488,20 @@ export async function generateSinglePhaseWorkouts(
       includeSafety: true,
       includeCriticalDirective: true,
       context: `GENERATING WORKOUTS FOR ${phase.name.toUpperCase()}`,
-    }
+    },
   );
 
-  const memoryContext = pineconeContext || 'No specific user context found.';
+  const memoryContext = pineconeContext || "No specific user context found.";
+
+  // Parse rest day preferences from todoList
+  const restDayInfo = parseRestDayPreferences(
+    todoList.restDaysPreference?.value,
+  );
 
   // Calculate expected workout count
-  const expectedWorkouts = Math.floor((phase.durationDays / 7) * context.trainingFrequency);
+  const expectedWorkouts = Math.floor(
+    (phase.durationDays / 7) * context.trainingFrequency,
+  );
 
   // Build phase context (where this phase fits in the program)
   const phaseContext = allPhases.map((p, idx) => ({
@@ -274,9 +526,14 @@ ${JSON.stringify(phase, null, 2)}
 ## PHASE CONTEXT (Full Program):
 ${JSON.stringify(phaseContext, null, 2)}
 
-This is ${allPhases.findIndex(p => p.phaseId === phase.phaseId) === 0 ? 'the FIRST phase' :
-           allPhases.findIndex(p => p.phaseId === phase.phaseId) === allPhases.length - 1 ? 'the FINAL phase' :
-           `phase ${allPhases.findIndex(p => p.phaseId === phase.phaseId) + 1} of ${allPhases.length}`} in the program.
+This is ${
+    allPhases.findIndex((p) => p.phaseId === phase.phaseId) === 0
+      ? "the FIRST phase"
+      : allPhases.findIndex((p) => p.phaseId === phase.phaseId) ===
+          allPhases.length - 1
+        ? "the FINAL phase"
+        : `phase ${allPhases.findIndex((p) => p.phaseId === phase.phaseId) + 1} of ${allPhases.length}`
+  } in the program.
 
 ## USER REQUIREMENTS FROM TODO LIST:
 ${JSON.stringify(todoList, null, 2)}
@@ -289,11 +546,67 @@ ${memoryContext}
 
 ## WORKOUT GENERATION REQUIREMENTS:
 
+${
+  !restDayInfo.isFlexible && restDayInfo.indices.length > 0
+    ? `
+## CRITICAL REST DAY CONSTRAINTS:
+**User requires REST on these specific days each week:** ${restDayInfo.names.join(", ")}
+
+**STRICT REQUIREMENTS:**
+- DO NOT schedule ANY workouts on ${restDayInfo.names.join(" or ")}
+- These are non-negotiable rest days
+- Distribute workouts across the remaining ${7 - restDayInfo.indices.length} available days per week
+- Ensure training frequency (${context.trainingFrequency} workouts/week) fits within available days
+
+**Example valid weekly schedule (avoiding ${restDayInfo.names.join(", ")}):**
+${(() => {
+  const days = [
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday",
+  ];
+  const availableDays = days.filter(
+    (_, idx) => !restDayInfo.indices.includes(idx + 1),
+  );
+  const workoutDays = availableDays.slice(0, context.trainingFrequency);
+  return workoutDays.map((day) => `- ${day}: Workout`).join("\n");
+})()}
+
+`
+    : ""
+}
+## CRITICAL TRAINING FREQUENCY CONSTRAINT:
+**Training Frequency:** ${context.trainingFrequency} workout days per week
+
+**STRICT REQUIREMENT:** Each week in this phase MUST have EXACTLY ${context.trainingFrequency} days with workouts.
+
+**What counts as a workout day:**
+- Strength sessions
+- Conditioning sessions
+- Metcons/WODs
+- Accessory work
+- Skill work
+
+**What does NOT count as a workout day:**
+- Recovery days (mobility, stretching, light aerobic work)
+- Rest days (complete rest)
+
+**Weekly Structure for ${context.trainingFrequency} days/week:**
+- ${context.trainingFrequency} days with actual workouts (strength/conditioning/accessory/metcon)
+- ${7 - context.trainingFrequency} days that are either rest OR optional recovery
+- Recovery sessions are ADDITIONAL, not replacement for workout days
+
+**Validation:** Count workout days per week. If any week has fewer than ${context.trainingFrequency} workout days, you FAILED the constraint.
+
 ### Workout Count & Distribution:
 - Generate approximately ${expectedWorkouts} workouts for this ${phase.durationDays}-day phase
-- Training Frequency: ${context.trainingFrequency} days per week
+- Training Frequency: ${context.trainingFrequency} days per week (STRICTLY ENFORCED)
 - Distribute workouts evenly across the phase duration
-- Account for rest days based on training frequency
+- Each week must have ${context.trainingFrequency} workout days minimum
 
 ### Workout Template Structure (CRITICAL):
 Each workout must follow the segmented, implicitly grouped structure:
@@ -322,20 +635,28 @@ Each workout must follow the segmented, implicitly grouped structure:
 - Example: "5 rounds for time: 21 thrusters (95/65), 21 pull-ups, 400m run. Scale: reduce reps to 15-12-9-6-3"
 
 ### Equipment Context:
-${todoList.equipmentAccess?.value ? `Available Equipment: ${JSON.stringify(todoList.equipmentAccess.value)}` : 'Use standard gym equipment'}
-${todoList.equipmentAccess?.imageRefs ? `
+${todoList.equipmentAccess?.value ? `Available Equipment: ${JSON.stringify(todoList.equipmentAccess.value)}` : "Use standard gym equipment"}
+${
+  todoList.equipmentAccess?.imageRefs
+    ? `
 User provided ${todoList.equipmentAccess.imageRefs.length} image(s) showing their equipment/space.
 Context extracted: ${todoList.equipmentAccess.value}
-Design workouts that work with this equipment.` : ''}
+Design workouts that work with this equipment.`
+    : ""
+}
 
 ### Injury/Safety Context:
-${todoList.injuryConsiderations?.value ? `
+${
+  todoList.injuryConsiderations?.value
+    ? `
 CRITICAL SAFETY CONSIDERATIONS:
 ${todoList.injuryConsiderations.value}
 
-${todoList.injuryConsiderations.imageRefs ? `User provided ${todoList.injuryConsiderations.imageRefs.length} image(s) documenting injuries/limitations.` : ''}
+${todoList.injuryConsiderations.imageRefs ? `User provided ${todoList.injuryConsiderations.imageRefs.length} image(s) documenting injuries/limitations.` : ""}
 
-Modify exercises and loading to accommodate these constraints.` : 'No specific injury considerations.'}
+Modify exercises and loading to accommodate these constraints.`
+    : "No specific injury considerations."
+}
 
 ### Progression Within Phase:
 - Early phase: Lower intensity, focus on movement quality and adaptation
@@ -343,13 +664,13 @@ Modify exercises and loading to accommodate these constraints.` : 'No specific i
 - Late phase: Peak complexity/intensity before next phase (or taper if final phase)
 
 ### Focus Areas for This Phase:
-${phase.focusAreas.map(area => `- ${area}`).join('\n')}
+${phase.focusAreas.map((area) => `- ${area}`).join("\n")}
 
 Generate the complete phase with all workouts using the tool.`;
 
   try {
     // PRIMARY: Tool-based generation
-    console.info('🎯 Attempting tool-based phase workout generation');
+    console.info("🎯 Attempting tool-based phase workout generation");
 
     const result = await callBedrockApi(
       prompt,
@@ -358,58 +679,160 @@ Generate the complete phase with all workouts using the tool.`;
       {
         enableThinking: true,
         tools: {
-          name: 'generate_program_phase',
-          description: 'Generate complete program phase with all workout templates',
+          name: "generate_program_phase",
+          description:
+            "Generate complete program phase with all workout templates",
           inputSchema: PHASE_SCHEMA,
         },
-        expectedToolName: 'generate_program_phase',
-      }
+        expectedToolName: "generate_program_phase",
+      },
     );
 
-    if (typeof result === 'object' && result !== null && 'workouts' in result) {
+    // Tool returns { toolName, input: { workouts: [...] }, stopReason }
+    // We need to check result.input.workouts, not result.workouts
+    if (
+      typeof result === "object" &&
+      result !== null &&
+      "input" in result &&
+      typeof result.input === "object" &&
+      result.input !== null &&
+      "workouts" in result.input
+    ) {
       // Merge the phase structure with the generated workouts
       const phaseWithWorkouts: PhaseWithWorkouts = {
         ...phase,
-        ...(result as any),
+        ...(result.input as any),
       };
-      console.info('✅ Tool-based phase workout generation succeeded:', {
+      const duration = Date.now() - startTime;
+
+      console.info("✅ Tool-based phase workout generation succeeded:", {
         phaseName: phase.name,
         workoutCount: phaseWithWorkouts.workouts.length,
-        daysCovered: new Set(phaseWithWorkouts.workouts.map(w => w.dayNumber)).size,
+        daysCovered: new Set(phaseWithWorkouts.workouts.map((w) => w.dayNumber))
+          .size,
+        durationMs: duration,
       });
 
-      return phaseWithWorkouts;
+      // Validate rest day compliance if rest days are specified
+      if (
+        !restDayInfo.isFlexible &&
+        restDayInfo.indices.length > 0 &&
+        todoList.startDate?.value
+      ) {
+        const validation = validateRestDayCompliance(
+          phaseWithWorkouts.workouts,
+          todoList.startDate.value,
+          restDayInfo.indices,
+        );
+
+        if (!validation.valid) {
+          console.warn("⚠️ Rest day compliance violations detected:", {
+            phaseName: phase.name,
+            violationCount: validation.violations.length,
+            violations: validation.violations,
+            restDays: restDayInfo.names,
+          });
+          // Log violations but don't fail - AI should have respected the constraints
+          // This is a sanity check to track if the AI is following instructions
+        } else {
+          console.info("✅ Rest day compliance validated - no violations:", {
+            phaseName: phase.name,
+            restDays: restDayInfo.names,
+          });
+        }
+      }
+
+      return {
+        phaseWithWorkouts,
+        debugData: {
+          phaseId: phase.phaseId,
+          phaseName: phase.name,
+          prompt: prompt.substring(0, 5000), // First 5000 chars
+          response: JSON.stringify(result.input, null, 2).substring(0, 5000), // First 5000 chars
+          method: "tool" as const,
+          duration,
+        },
+      };
     } else {
-      throw new Error('Tool did not return valid phase with workouts');
+      throw new Error("Tool did not return valid phase with workouts");
     }
   } catch (toolError) {
-    console.error('❌ Tool-based phase workout generation failed:', toolError);
+    console.error("❌ Tool-based phase workout generation failed:", toolError);
 
     // FALLBACK: Text-based generation with parsing
-    console.info('⚠️ Falling back to text-based phase workout generation');
+    console.info("⚠️ Falling back to text-based phase workout generation");
 
     const fallbackPrompt = `${prompt}
 
 Return ONLY valid JSON matching this structure (no markdown, no explanation):
 ${JSON.stringify(getCondensedSchema(PHASE_SCHEMA), null, 2)}`;
 
-    const fallbackResult = await callBedrockApi(
+    const fallbackResult = (await callBedrockApi(
       fallbackPrompt,
       `phase_${phase.phaseId}_generation_fallback`,
       MODEL_IDS.CLAUDE_SONNET_4_FULL,
-      { prefillResponse: '{' }
-    ) as string;
+      { prefillResponse: "{" },
+    )) as string;
 
     const parsed = parseJsonWithFallbacks(fallbackResult);
+    const duration = Date.now() - startTime;
 
     if (parsed && parsed.workouts && Array.isArray(parsed.workouts)) {
-      console.info('✅ Fallback phase workout generation succeeded:', {
+      const phaseWithWorkouts = parsed as PhaseWithWorkouts;
+      console.info("✅ Fallback phase workout generation succeeded:", {
         phaseName: phase.name,
-        workoutCount: parsed.workouts.length,
+        workoutCount: phaseWithWorkouts.workouts.length,
+        durationMs: duration,
       });
-      return parsed as PhaseWithWorkouts;
+
+      // Validate rest day compliance if rest days are specified
+      if (
+        !restDayInfo.isFlexible &&
+        restDayInfo.indices.length > 0 &&
+        todoList.startDate?.value
+      ) {
+        const validation = validateRestDayCompliance(
+          phaseWithWorkouts.workouts,
+          todoList.startDate.value,
+          restDayInfo.indices,
+        );
+
+        if (!validation.valid) {
+          console.warn(
+            "⚠️ Rest day compliance violations detected (fallback):",
+            {
+              phaseName: phase.name,
+              violationCount: validation.violations.length,
+              violations: validation.violations,
+              restDays: restDayInfo.names,
+            },
+          );
+        } else {
+          console.info(
+            "✅ Rest day compliance validated (fallback) - no violations:",
+            {
+              phaseName: phase.name,
+              restDays: restDayInfo.names,
+            },
+          );
+        }
+      }
+
+      return {
+        phaseWithWorkouts,
+        debugData: {
+          phaseId: phase.phaseId,
+          phaseName: phase.name,
+          prompt: fallbackPrompt.substring(0, 5000), // First 5000 chars
+          response: fallbackResult.substring(0, 5000), // First 5000 chars
+          method: "text_fallback" as const,
+          duration,
+        },
+      };
     } else {
-      throw new Error(`Failed to generate workouts for phase ${phase.name} via fallback`);
+      throw new Error(
+        `Failed to generate workouts for phase ${phase.name} via fallback`,
+      );
     }
   }
 }
@@ -420,41 +843,55 @@ ${JSON.stringify(getCondensedSchema(PHASE_SCHEMA), null, 2)}`;
  */
 export async function generateAllPhasesParallel(
   phases: PhaseStructure[],
-  context: PhaseGenerationContext
-): Promise<PhaseWithWorkouts[]> {
-  console.info('🚀 Starting parallel phase generation:', {
+  context: PhaseGenerationContext,
+): Promise<{
+  phasesWithWorkouts: PhaseWithWorkouts[];
+  debugData: PhaseWorkoutDebugData[];
+}> {
+  console.info("🚀 Starting parallel phase generation:", {
     phaseCount: phases.length,
     totalDays: context.totalDays,
-    estimatedWorkouts: Math.floor((context.totalDays / 7) * context.trainingFrequency),
+    estimatedWorkouts: Math.floor(
+      (context.totalDays / 7) * context.trainingFrequency,
+    ),
   });
 
   const startTime = Date.now();
 
   try {
     // Execute all phase generations in parallel
-    const phasePromises = phases.map(phase =>
-      generateSinglePhaseWorkouts(phase, context, phases)
+    const phasePromises = phases.map((phase) =>
+      generateSinglePhaseWorkouts(phase, context, phases),
     );
 
-    const generatedPhases = await Promise.all(phasePromises);
+    const results = await Promise.all(phasePromises);
+
+    // Extract phases and debug data from results
+    const phasesWithWorkouts = results.map((r) => r.phaseWithWorkouts);
+    const debugData = results.map((r) => r.debugData);
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
 
-    console.info('✅ Parallel phase generation complete:', {
-      phaseCount: generatedPhases.length,
-      totalWorkouts: generatedPhases.reduce((sum, p) => sum + p.workouts.length, 0),
+    console.info("✅ Parallel phase generation complete:", {
+      phaseCount: phasesWithWorkouts.length,
+      totalWorkouts: phasesWithWorkouts.reduce(
+        (sum, p) => sum + p.workouts.length,
+        0,
+      ),
       elapsedSeconds: elapsed,
-      phases: generatedPhases.map(p => ({
+      phases: phasesWithWorkouts.map((p) => ({
         name: p.name,
         workoutCount: p.workouts.length,
         dayRange: `${p.startDay}-${p.endDay}`,
       })),
     });
 
-    return generatedPhases;
+    return { phasesWithWorkouts, debugData };
   } catch (error) {
-    console.error('❌ Parallel phase generation failed:', error);
-    throw new Error(`Failed to generate phases: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    console.error("❌ Parallel phase generation failed:", error);
+    throw new Error(
+      `Failed to generate phases: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
   }
 }
 
@@ -464,13 +901,13 @@ export async function generateAllPhasesParallel(
  */
 export function assembleProgram(
   phases: PhaseWithWorkouts[],
-  context: PhaseGenerationContext
+  context: PhaseGenerationContext,
 ): {
   phases: ProgramPhase[];
   workoutTemplates: WorkoutTemplate[];
   totalWorkouts: number;
 } {
-  console.info('🔧 Assembling complete program from phases:', {
+  console.info("🔧 Assembling complete program from phases:", {
     phaseCount: phases.length,
   });
 
@@ -482,13 +919,13 @@ export function assembleProgram(
     const phase = sortedPhases[i];
 
     if (i === 0 && phase.startDay !== 1) {
-      console.warn('⚠️ First phase does not start on day 1:', phase);
+      console.warn("⚠️ First phase does not start on day 1:", phase);
     }
 
     if (i > 0) {
       const prevPhase = sortedPhases[i - 1];
       if (phase.startDay !== prevPhase.endDay + 1) {
-        console.warn('⚠️ Phase gap detected:', {
+        console.warn("⚠️ Phase gap detected:", {
           prevPhase: prevPhase.name,
           prevEnd: prevPhase.endDay,
           currentPhase: phase.name,
@@ -500,7 +937,7 @@ export function assembleProgram(
   }
 
   // Extract phase metadata (without workouts)
-  const programPhases: ProgramPhase[] = sortedPhases.map(phase => ({
+  const programPhases: ProgramPhase[] = sortedPhases.map((phase) => ({
     phaseId: phase.phaseId,
     name: phase.name,
     description: phase.description,
@@ -531,10 +968,10 @@ export function assembleProgram(
     return a.templateId.localeCompare(b.templateId);
   });
 
-  console.info('✅ Program assembly complete:', {
+  console.info("✅ Program assembly complete:", {
     phaseCount: programPhases.length,
     totalWorkouts: allWorkouts.length,
-    daysCovered: new Set(allWorkouts.map(w => w.dayNumber)).size,
+    daysCovered: new Set(allWorkouts.map((w) => w.dayNumber)).size,
     programDuration: context.totalDays,
   });
 
@@ -544,4 +981,3 @@ export function assembleProgram(
     totalWorkouts: allWorkouts.length,
   };
 }
-

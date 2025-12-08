@@ -1,13 +1,21 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
-import { useAuthorizeUser } from '../../auth/hooks/useAuthorizeUser';
-import { AccessDenied, LoadingScreen } from '../shared/AccessDenied';
-import { buttonPatterns, containerPatterns, layoutPatterns, tooltipPatterns, typographyPatterns, messagePatterns, iconButtonPatterns } from '../../utils/ui/uiPatterns';
-import { Tooltip } from 'react-tooltip';
-import CompactCoachCard from '../shared/CompactCoachCard';
-import CommandPaletteButton from '../shared/CommandPaletteButton';
-import { InlineEditField } from '../shared/InlineEditField';
-import { useNavigationContext } from '../../contexts/NavigationContext';
+import React, { useState, useEffect, useRef } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
+import { useAuthorizeUser } from "../../auth/hooks/useAuthorizeUser";
+import { AccessDenied, LoadingScreen } from "../shared/AccessDenied";
+import {
+  buttonPatterns,
+  containerPatterns,
+  layoutPatterns,
+  tooltipPatterns,
+  typographyPatterns,
+  messagePatterns,
+  iconButtonPatterns,
+} from "../../utils/ui/uiPatterns";
+import { Tooltip } from "react-tooltip";
+import CompactCoachCard from "../shared/CompactCoachCard";
+import CommandPaletteButton from "../shared/CommandPaletteButton";
+import { InlineEditField } from "../shared/InlineEditField";
+import { useNavigationContext } from "../../contexts/NavigationContext";
 import {
   NeonBorder,
   NewBadge,
@@ -22,25 +30,45 @@ import {
   CheckIcon,
   ArrowRightIcon,
   HomeIcon,
-  ChevronRightIcon
-} from '../themes/SynthwaveComponents';
+  ChevronRightIcon,
+} from "../themes/SynthwaveComponents";
 
 // Three-dot vertical menu icon
 const EllipsisVerticalIcon = () => (
-  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+  <svg
+    className="w-5 h-5"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
+    />
   </svg>
 );
 
 const EditIcon = () => (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+  <svg
+    className="w-4 h-4"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+    />
   </svg>
 );
-import { ProgramAgent } from '../../utils/agents/ProgramAgent';
-import CoachAgent from '../../utils/agents/CoachAgent';
-import { useToast } from '../../contexts/ToastContext';
-import { PROGRAM_STATUS } from '../../constants/conversationModes';
+import { ProgramAgent } from "../../utils/agents/ProgramAgent";
+import CoachAgent from "../../utils/agents/CoachAgent";
+import { useToast } from "../../contexts/ToastContext";
+import { PROGRAM_STATUS } from "../../constants/conversationModes";
 
 // Helper function to check if a program is new (created within last 7 days)
 const isNewProgram = (createdDate, programId) => {
@@ -63,7 +91,7 @@ const isNewProgram = (createdDate, programId) => {
 const extractTimestampFromProgramId = (programId) => {
   if (!programId) return null;
   // Format: program_{userId}_{timestamp}_{shortId}
-  const parts = programId.split('_');
+  const parts = programId.split("_");
   if (parts.length >= 3) {
     const timestamp = parseInt(parts[parts.length - 2]);
     if (!isNaN(timestamp)) {
@@ -80,22 +108,26 @@ const formatDate = (dateString, fallbackProgramId = null) => {
     dateString = extractTimestampFromProgramId(fallbackProgramId);
   }
 
-  if (!dateString) return 'Unknown';
+  if (!dateString) return "Unknown";
 
   try {
     const date = new Date(dateString);
     // Check if date is valid
-    if (isNaN(date.getTime())) return 'Unknown';
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    if (isNaN(date.getTime())) return "Unknown";
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
   } catch (error) {
-    return 'Unknown';
+    return "Unknown";
   }
 };
 
 // Helper function to format coach names (remove underscores)
 const formatCoachName = (name) => {
-  if (!name) return 'Unknown';
-  return name.replace(/_/g, ' ');
+  if (!name) return "Unknown";
+  return name.replace(/_/g, " ");
 };
 
 // Helper function to get progress percentage
@@ -107,11 +139,11 @@ const getProgressPercentage = (program) => {
 
 // Helper function to format last activity
 const formatLastActivity = (dateString) => {
-  if (!dateString) return 'Never';
+  if (!dateString) return "Never";
 
   try {
     const date = new Date(dateString);
-    if (isNaN(date.getTime())) return 'Unknown';
+    if (isNaN(date.getTime())) return "Unknown";
 
     const now = new Date();
     const diffInMs = now - date;
@@ -119,40 +151,44 @@ const formatLastActivity = (dateString) => {
     const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
     const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
 
-    if (diffInMinutes < 1) return 'Just now';
+    if (diffInMinutes < 1) return "Just now";
     if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
     if (diffInHours < 24) return `${diffInHours}h ago`;
-    if (diffInDays === 1) return 'Yesterday';
+    if (diffInDays === 1) return "Yesterday";
     if (diffInDays < 7) return `${diffInDays}d ago`;
 
     // For older dates, show actual date
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   } catch (error) {
-    return 'Unknown';
+    return "Unknown";
   }
 };
 
 // Vesper coach data - static coach for coach creator/program guidance
 const vesperCoachData = {
-  coach_id: 'vesper-coach-creator',
-  coach_name: 'Vesper_the_Coach_Creator',
-  name: 'Vesper',
-  avatar: 'V',
+  coach_id: "vesper-coach-creator",
+  coach_name: "Vesper_the_Coach_Creator",
+  name: "Vesper",
+  avatar: "V",
   metadata: {
-    title: 'Training Program Guide',
-    description: 'Your guide through program creation and management'
-  }
+    title: "Training Program Guide",
+    description: "Your guide through program creation and management",
+  },
 };
 
 function ManagePrograms() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const userId = searchParams.get('userId');
-  const coachId = searchParams.get('coachId'); // Add coachId from URL
+  const userId = searchParams.get("userId");
+  const coachId = searchParams.get("coachId"); // Add coachId from URL
   const toast = useToast();
 
   // Authorize that URL userId matches authenticated user
-  const { isValidating: isValidatingUserId, isValid: isValidUserId, error: userIdError } = useAuthorizeUser(userId);
+  const {
+    isValidating: isValidatingUserId,
+    isValid: isValidUserId,
+    error: userIdError,
+  } = useAuthorizeUser(userId);
   const programAgentsRef = useRef({}); // Map of coachId -> ProgramAgent
   const coachAgentRef = useRef(null);
 
@@ -177,7 +213,10 @@ function ManagePrograms() {
   const [isLoadingCoachData, setIsLoadingCoachData] = useState(false);
 
   // Local loading states - track both programId and action type
-  const [updatingProgram, setUpdatingProgram] = useState({ programId: null, action: null });
+  const [updatingProgram, setUpdatingProgram] = useState({
+    programId: null,
+    action: null,
+  });
 
   // Delete confirmation modal state
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -196,23 +235,23 @@ function ManagePrograms() {
   // Close menu when clicking outside or pressing Escape
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (openMenuId && !event.target.closest('.actions-menu-container')) {
+      if (openMenuId && !event.target.closest(".actions-menu-container")) {
         setOpenMenuId(null);
       }
     };
 
     const handleEscapeKey = (event) => {
-      if (event.key === 'Escape' && openMenuId) {
+      if (event.key === "Escape" && openMenuId) {
         setOpenMenuId(null);
       }
     };
 
     if (openMenuId) {
-      document.addEventListener('mousedown', handleClickOutside);
-      document.addEventListener('keydown', handleEscapeKey);
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("keydown", handleEscapeKey);
       return () => {
-        document.removeEventListener('mousedown', handleClickOutside);
-        document.removeEventListener('keydown', handleEscapeKey);
+        document.removeEventListener("mousedown", handleClickOutside);
+        document.removeEventListener("keydown", handleEscapeKey);
       };
     }
   }, [openMenuId]);
@@ -220,7 +259,7 @@ function ManagePrograms() {
   // Close delete modal on Escape key and cancel inline edit
   useEffect(() => {
     const handleEscapeKey = (event) => {
-      if (event.key === 'Escape') {
+      if (event.key === "Escape") {
         // Cancel inline edit if active
         if (editingProgramId) {
           setEditingProgramId(null);
@@ -234,8 +273,8 @@ function ManagePrograms() {
     };
 
     if (showDeleteModal || editingProgramId) {
-      document.addEventListener('keydown', handleEscapeKey);
-      return () => document.removeEventListener('keydown', handleEscapeKey);
+      document.addEventListener("keydown", handleEscapeKey);
+      return () => document.removeEventListener("keydown", handleEscapeKey);
     }
   }, [showDeleteModal, isDeleting, editingProgramId]);
 
@@ -249,10 +288,13 @@ function ManagePrograms() {
         if (!coachAgentRef.current) {
           coachAgentRef.current = new CoachAgent({ userId });
         }
-        const loadedCoachData = await coachAgentRef.current.loadCoachDetails(userId, coachId);
+        const loadedCoachData = await coachAgentRef.current.loadCoachDetails(
+          userId,
+          coachId,
+        );
         setCoachData(loadedCoachData);
       } catch (error) {
-        console.error('Error loading coach data:', error);
+        console.error("Error loading coach data:", error);
       } finally {
         setIsLoadingCoachData(false);
       }
@@ -266,7 +308,11 @@ function ManagePrograms() {
     if (!userId) return;
 
     const loadCoachesAndPrograms = async () => {
-      setProgramState(prev => ({ ...prev, isLoadingCoaches: true, isLoadingPrograms: true }));
+      setProgramState((prev) => ({
+        ...prev,
+        isLoadingCoaches: true,
+        isLoadingPrograms: true,
+      }));
 
       try {
         // Initialize coach agent if needed
@@ -299,15 +345,24 @@ function ManagePrograms() {
 
           // Create a program agent for this coach if it doesn't exist
           if (!programAgentsRef.current[coachId]) {
-            programAgentsRef.current[coachId] = new ProgramAgent(userId, coachId, () => {});
+            programAgentsRef.current[coachId] = new ProgramAgent(
+              userId,
+              coachId,
+              () => {},
+            );
           }
 
           try {
-            const response = await programAgentsRef.current[coachId].loadPrograms({});
+            const response = await programAgentsRef.current[
+              coachId
+            ].loadPrograms({});
             // Programs already have coachIds and coachNames arrays from the API
             return response.programs || [];
           } catch (error) {
-            console.error(`Error loading programs for coach ${coachId}:`, error);
+            console.error(
+              `Error loading programs for coach ${coachId}:`,
+              error,
+            );
             return [];
           }
         });
@@ -317,9 +372,15 @@ function ManagePrograms() {
         const allPrograms = programArrays.flat();
 
         // Categorize programs by status
-        const activePrograms = allPrograms.filter(p => p.status === PROGRAM_STATUS.ACTIVE);
-        const pausedPrograms = allPrograms.filter(p => p.status === PROGRAM_STATUS.PAUSED);
-        const completedPrograms = allPrograms.filter(p => p.status === PROGRAM_STATUS.COMPLETED);
+        const activePrograms = allPrograms.filter(
+          (p) => p.status === PROGRAM_STATUS.ACTIVE,
+        );
+        const pausedPrograms = allPrograms.filter(
+          (p) => p.status === PROGRAM_STATUS.PAUSED,
+        );
+        const completedPrograms = allPrograms.filter(
+          (p) => p.status === PROGRAM_STATUS.COMPLETED,
+        );
 
         setProgramState({
           programs: allPrograms,
@@ -332,10 +393,10 @@ function ManagePrograms() {
           error: null,
         });
       } catch (error) {
-        console.error('Error loading coaches and programs:', error);
-        setProgramState(prev => ({
+        console.error("Error loading coaches and programs:", error);
+        setProgramState((prev) => ({
           ...prev,
-          error: error.message || 'Failed to load programs',
+          error: error.message || "Failed to load programs",
           isLoadingPrograms: false,
           isLoadingCoaches: false,
         }));
@@ -346,7 +407,7 @@ function ManagePrograms() {
 
     return () => {
       // Clean up all program agents
-      Object.values(programAgentsRef.current).forEach(agent => {
+      Object.values(programAgentsRef.current).forEach((agent) => {
         if (agent && agent.destroy) {
           agent.destroy();
         }
@@ -366,27 +427,35 @@ function ManagePrograms() {
     const agent = programAgentsRef.current[primaryCoachId];
     if (!agent || !program?.programId) return;
 
-    setUpdatingProgram({ programId: program.programId, action: 'pause' });
+    setUpdatingProgram({ programId: program.programId, action: "pause" });
     try {
       await agent.pauseProgram(program.programId);
-      toast.success('Training program paused successfully');
+      toast.success("Training program paused successfully");
 
       // Update local state
-      setProgramState(prev => {
-        const programs = prev.programs.map(p =>
-          p.programId === program.programId ? { ...p, status: PROGRAM_STATUS.PAUSED } : p
+      setProgramState((prev) => {
+        const programs = prev.programs.map((p) =>
+          p.programId === program.programId
+            ? { ...p, status: PROGRAM_STATUS.PAUSED }
+            : p,
         );
         return {
           ...prev,
           programs,
-          activePrograms: programs.filter(p => p.status === PROGRAM_STATUS.ACTIVE),
-          pausedPrograms: programs.filter(p => p.status === PROGRAM_STATUS.PAUSED),
-          completedPrograms: programs.filter(p => p.status === PROGRAM_STATUS.COMPLETED),
+          activePrograms: programs.filter(
+            (p) => p.status === PROGRAM_STATUS.ACTIVE,
+          ),
+          pausedPrograms: programs.filter(
+            (p) => p.status === PROGRAM_STATUS.PAUSED,
+          ),
+          completedPrograms: programs.filter(
+            (p) => p.status === PROGRAM_STATUS.COMPLETED,
+          ),
         };
       });
     } catch (error) {
-      console.error('Error pausing program:', error);
-      toast.error('Failed to pause training program');
+      console.error("Error pausing program:", error);
+      toast.error("Failed to pause training program");
     } finally {
       setUpdatingProgram({ programId: null, action: null });
     }
@@ -398,27 +467,35 @@ function ManagePrograms() {
     const agent = programAgentsRef.current[primaryCoachId];
     if (!agent || !program?.programId) return;
 
-    setUpdatingProgram({ programId: program.programId, action: 'resume' });
+    setUpdatingProgram({ programId: program.programId, action: "resume" });
     try {
       await agent.resumeProgram(program.programId);
-      toast.success('Training program resumed successfully');
+      toast.success("Training program resumed successfully");
 
       // Update local state
-      setProgramState(prev => {
-        const programs = prev.programs.map(p =>
-          p.programId === program.programId ? { ...p, status: PROGRAM_STATUS.ACTIVE } : p
+      setProgramState((prev) => {
+        const programs = prev.programs.map((p) =>
+          p.programId === program.programId
+            ? { ...p, status: PROGRAM_STATUS.ACTIVE }
+            : p,
         );
         return {
           ...prev,
           programs,
-          activePrograms: programs.filter(p => p.status === PROGRAM_STATUS.ACTIVE),
-          pausedPrograms: programs.filter(p => p.status === PROGRAM_STATUS.PAUSED),
-          completedPrograms: programs.filter(p => p.status === PROGRAM_STATUS.COMPLETED),
+          activePrograms: programs.filter(
+            (p) => p.status === PROGRAM_STATUS.ACTIVE,
+          ),
+          pausedPrograms: programs.filter(
+            (p) => p.status === PROGRAM_STATUS.PAUSED,
+          ),
+          completedPrograms: programs.filter(
+            (p) => p.status === PROGRAM_STATUS.COMPLETED,
+          ),
         };
       });
     } catch (error) {
-      console.error('Error resuming program:', error);
-      toast.error('Failed to resume training program');
+      console.error("Error resuming program:", error);
+      toast.error("Failed to resume training program");
     } finally {
       setUpdatingProgram({ programId: null, action: null });
     }
@@ -430,27 +507,39 @@ function ManagePrograms() {
     const agent = programAgentsRef.current[primaryCoachId];
     if (!agent || !program?.programId) return;
 
-    setUpdatingProgram({ programId: program.programId, action: 'complete' });
+    setUpdatingProgram({ programId: program.programId, action: "complete" });
     try {
       await agent.completeProgram(program.programId);
-      toast.success('Training program completed! Great work!');
+      toast.success("Training program completed! Great work!");
 
       // Update local state
-      setProgramState(prev => {
-        const programs = prev.programs.map(p =>
-          p.programId === program.programId ? { ...p, status: PROGRAM_STATUS.COMPLETED, completedAt: new Date().toISOString() } : p
+      setProgramState((prev) => {
+        const programs = prev.programs.map((p) =>
+          p.programId === program.programId
+            ? {
+                ...p,
+                status: PROGRAM_STATUS.COMPLETED,
+                completedAt: new Date().toISOString(),
+              }
+            : p,
         );
         return {
           ...prev,
           programs,
-          activePrograms: programs.filter(p => p.status === PROGRAM_STATUS.ACTIVE),
-          pausedPrograms: programs.filter(p => p.status === PROGRAM_STATUS.PAUSED),
-          completedPrograms: programs.filter(p => p.status === PROGRAM_STATUS.COMPLETED),
+          activePrograms: programs.filter(
+            (p) => p.status === PROGRAM_STATUS.ACTIVE,
+          ),
+          pausedPrograms: programs.filter(
+            (p) => p.status === PROGRAM_STATUS.PAUSED,
+          ),
+          completedPrograms: programs.filter(
+            (p) => p.status === PROGRAM_STATUS.COMPLETED,
+          ),
         };
       });
     } catch (error) {
-      console.error('Error completing program:', error);
-      toast.error('Failed to complete training program');
+      console.error("Error completing program:", error);
+      toast.error("Failed to complete training program");
     } finally {
       setUpdatingProgram({ programId: null, action: null });
     }
@@ -475,23 +564,31 @@ function ManagePrograms() {
       await agent.deleteProgram(programToDelete.programId);
 
       // Remove the deleted program from local state
-      setProgramState(prev => {
-        const programs = prev.programs.filter(p => p.programId !== programToDelete.programId);
+      setProgramState((prev) => {
+        const programs = prev.programs.filter(
+          (p) => p.programId !== programToDelete.programId,
+        );
         return {
           ...prev,
           programs,
-          activePrograms: programs.filter(p => p.status === PROGRAM_STATUS.ACTIVE),
-          pausedPrograms: programs.filter(p => p.status === PROGRAM_STATUS.PAUSED),
-          completedPrograms: programs.filter(p => p.status === PROGRAM_STATUS.COMPLETED),
+          activePrograms: programs.filter(
+            (p) => p.status === PROGRAM_STATUS.ACTIVE,
+          ),
+          pausedPrograms: programs.filter(
+            (p) => p.status === PROGRAM_STATUS.PAUSED,
+          ),
+          completedPrograms: programs.filter(
+            (p) => p.status === PROGRAM_STATUS.COMPLETED,
+          ),
         };
       });
 
-      toast.success('Training program deleted successfully');
+      toast.success("Training program deleted successfully");
       setShowDeleteModal(false);
       setProgramToDelete(null);
     } catch (error) {
-      console.error('Error deleting program:', error);
-      toast.error('Failed to delete training program');
+      console.error("Error deleting program:", error);
+      toast.error("Failed to delete training program");
     } finally {
       setIsDeleting(false);
     }
@@ -507,7 +604,9 @@ function ManagePrograms() {
   const handleViewProgram = (program) => {
     const primaryCoachId = program.coachIds?.[0];
     if (!userId || !program?.programId || !primaryCoachId) return;
-    navigate(`/training-grounds/programs/dashboard?userId=${userId}&coachId=${primaryCoachId}&programId=${program.programId}`);
+    navigate(
+      `/training-grounds/programs/dashboard?userId=${userId}&coachId=${primaryCoachId}&programId=${program.programId}`,
+    );
   };
 
   // Handle create new program - navigate to training grounds with appropriate coach
@@ -525,10 +624,17 @@ function ManagePrograms() {
   const renderProgramCard = (program, showActions = true) => {
     const isNew = isNewProgram(program.createdAt, program.programId);
     const progressPercentage = getProgressPercentage(program);
-    const isPausing = updatingProgram.programId === program.programId && updatingProgram.action === 'pause';
-    const isCompleting = updatingProgram.programId === program.programId && updatingProgram.action === 'complete';
-    const isResuming = updatingProgram.programId === program.programId && updatingProgram.action === 'resume';
-    const isAnyActionInProgress = updatingProgram.programId === program.programId;
+    const isPausing =
+      updatingProgram.programId === program.programId &&
+      updatingProgram.action === "pause";
+    const isCompleting =
+      updatingProgram.programId === program.programId &&
+      updatingProgram.action === "complete";
+    const isResuming =
+      updatingProgram.programId === program.programId &&
+      updatingProgram.action === "resume";
+    const isAnyActionInProgress =
+      updatingProgram.programId === program.programId;
     const workoutCount = program.totalWorkouts || program.workoutCount || 0;
 
     return (
@@ -537,7 +643,11 @@ function ManagePrograms() {
         className={`${containerPatterns.cardMedium} p-6 flex flex-col justify-between h-full relative`}
       >
         {/* New Badge */}
-        {isNew && <NewBadge />}
+        {isNew && (
+          <div className="relative z-20">
+            <NewBadge />
+          </div>
+        )}
 
         {/* Actions Menu - Hide when editing */}
         {editingProgramId !== program.programId && (
@@ -545,14 +655,16 @@ function ManagePrograms() {
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                setOpenMenuId(openMenuId === program.programId ? null : program.programId);
+                setOpenMenuId(
+                  openMenuId === program.programId ? null : program.programId,
+                );
               }}
               className={`p-2 rounded-lg transition-all duration-200 focus:outline-none active:outline-none ${
                 openMenuId === program.programId
-                  ? 'text-synthwave-neon-cyan bg-synthwave-bg-primary/50'
-                  : 'text-synthwave-text-muted hover:text-synthwave-neon-cyan hover:bg-synthwave-bg-primary/50'
+                  ? "text-synthwave-neon-cyan bg-synthwave-bg-primary/50"
+                  : "text-synthwave-text-muted hover:text-synthwave-neon-cyan hover:bg-synthwave-bg-primary/50"
               }`}
-              style={{ WebKitTapHighlightColor: 'transparent' }}
+              style={{ WebKitTapHighlightColor: "transparent" }}
               aria-label="More actions"
               data-tooltip-id={`program-actions-${program.programId}`}
               data-tooltip-content="More actions"
@@ -572,7 +684,9 @@ function ManagePrograms() {
                   className="w-full pl-4 pr-3 py-2 text-left flex items-center space-x-2 text-synthwave-text-secondary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-200"
                 >
                   <EditIcon />
-                  <span className="font-rajdhani font-medium text-sm">Rename Program</span>
+                  <span className="font-rajdhani font-medium text-sm">
+                    Rename Program
+                  </span>
                 </button>
                 <button
                   onClick={(e) => {
@@ -585,7 +699,9 @@ function ManagePrograms() {
                   <div className="w-4 h-4 flex items-center justify-center">
                     <TrashIcon />
                   </div>
-                  <span className="font-rajdhani font-medium text-sm">Delete Program</span>
+                  <span className="font-rajdhani font-medium text-sm">
+                    Delete Program
+                  </span>
                 </button>
               </div>
             )}
@@ -595,48 +711,52 @@ function ManagePrograms() {
         <div className="flex-1">
           {/* Program Name - Either editable or static */}
           <div className="flex items-start space-x-3 mb-4">
-            <div className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotCyan} flex-shrink-0 mt-2`}></div>
+            <div
+              className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotCyan} flex-shrink-0 mt-2`}
+            ></div>
             {editingProgramId === program.programId ? (
               <InlineEditField
                 value={program.name}
                 onSave={async (newName) => {
                   if (!newName || !newName.trim()) {
-                    throw new Error('Program name cannot be empty');
+                    throw new Error("Program name cannot be empty");
                   }
                   const primaryCoachId = program.coachIds?.[0];
                   const agent = programAgentsRef.current[primaryCoachId];
                   if (!agent) {
-                    throw new Error('Failed to update program name');
+                    throw new Error("Failed to update program name");
                   }
 
-                  await agent.updateProgramStatus(program.programId, 'update', { name: newName.trim() });
+                  await agent.updateProgramStatus(program.programId, "update", {
+                    name: newName.trim(),
+                  });
 
                   // Update local state
-                  setProgramState(prevState => ({
+                  setProgramState((prevState) => ({
                     ...prevState,
-                    programs: prevState.programs.map(p =>
+                    programs: prevState.programs.map((p) =>
                       p.programId === program.programId
                         ? { ...p, name: newName.trim() }
-                        : p
+                        : p,
                     ),
-                    activePrograms: prevState.activePrograms.map(p =>
+                    activePrograms: prevState.activePrograms.map((p) =>
                       p.programId === program.programId
                         ? { ...p, name: newName.trim() }
-                        : p
+                        : p,
                     ),
-                    pausedPrograms: prevState.pausedPrograms.map(p =>
+                    pausedPrograms: prevState.pausedPrograms.map((p) =>
                       p.programId === program.programId
                         ? { ...p, name: newName.trim() }
-                        : p
+                        : p,
                     ),
-                    completedPrograms: prevState.completedPrograms.map(p =>
+                    completedPrograms: prevState.completedPrograms.map((p) =>
                       p.programId === program.programId
                         ? { ...p, name: newName.trim() }
-                        : p
-                    )
+                        : p,
+                    ),
                   }));
                   setEditingProgramId(null);
-                  toast.success('Program name updated successfully');
+                  toast.success("Program name updated successfully");
                 }}
                 onCancel={() => {
                   setEditingProgramId(null);
@@ -648,7 +768,7 @@ function ManagePrograms() {
                 tooltipPrefix={`program-${program.programId}`}
                 onError={(error) => {
                   setEditingProgramId(null);
-                  toast.error(error.message || 'Failed to update program name');
+                  toast.error(error.message || "Failed to update program name");
                 }}
                 startInEditMode={true}
               />
@@ -661,7 +781,9 @@ function ManagePrograms() {
 
           {/* Program Description */}
           {program.description && (
-            <p className={`${typographyPatterns.cardText} text-sm mb-4 line-clamp-2`}>
+            <p
+              className={`${typographyPatterns.cardText} text-sm mb-4 line-clamp-2`}
+            >
               {program.description}
             </p>
           )}
@@ -669,62 +791,107 @@ function ManagePrograms() {
           {/* Program Details */}
           <div className="space-y-3">
             {/* Coach Name */}
-            <div className={`flex items-center space-x-2 ${typographyPatterns.cardText}`}>
+            <div
+              className={`flex items-center space-x-2 ${typographyPatterns.cardText}`}
+            >
               <TargetIcon />
               <span className="text-sm">
-                Coach: <span className="text-synthwave-neon-cyan">{formatCoachName(program.coachNames?.[0]) || 'Unknown'}</span>
+                Coach:{" "}
+                <span className="text-synthwave-neon-cyan">
+                  {formatCoachName(program.coachNames?.[0]) || "Unknown"}
+                </span>
               </span>
             </div>
 
             {/* Combined Workout Stats - only for active/paused programs */}
-            {(program.status === PROGRAM_STATUS.ACTIVE || program.status === PROGRAM_STATUS.PAUSED) && workoutCount > 0 && (
-              <div className={`flex items-center space-x-2 ${typographyPatterns.cardText}`}>
-                <WorkoutIconSmall />
-                <span className="text-sm">
-                  <span className="text-synthwave-neon-pink font-semibold">✓ {program.completedWorkouts || 0}</span>
-                  <span className="text-synthwave-neon-cyan font-semibold"> / ✕ {program.skippedWorkouts || 0}</span>
-                  <span className="text-synthwave-text-secondary"> of {workoutCount} workouts</span>
-                </span>
-              </div>
-            )}
+            {(program.status === PROGRAM_STATUS.ACTIVE ||
+              program.status === PROGRAM_STATUS.PAUSED) &&
+              workoutCount > 0 && (
+                <div
+                  className={`flex items-center space-x-2 ${typographyPatterns.cardText}`}
+                >
+                  <WorkoutIconSmall />
+                  <span className="text-sm">
+                    <span className="text-synthwave-neon-pink font-semibold">
+                      ✓ {program.completedWorkouts || 0}
+                    </span>
+                    <span className="text-synthwave-neon-cyan font-semibold">
+                      {" "}
+                      / ✕ {program.skippedWorkouts || 0}
+                    </span>
+                    <span className="text-synthwave-text-secondary">
+                      {" "}
+                      of {workoutCount} workouts
+                    </span>
+                  </span>
+                </div>
+              )}
 
             {/* Workout Count - only for completed programs */}
-            {program.status === PROGRAM_STATUS.COMPLETED && workoutCount > 0 && (
-              <div className={`flex items-center space-x-2 ${typographyPatterns.cardText}`}>
-                <WorkoutIconSmall />
-                <span className="text-sm">
-                  <span className="text-synthwave-neon-cyan font-semibold">{workoutCount}</span> {workoutCount === 1 ? 'Workout' : 'Workouts'}
-                </span>
-              </div>
-            )}
+            {program.status === PROGRAM_STATUS.COMPLETED &&
+              workoutCount > 0 && (
+                <div
+                  className={`flex items-center space-x-2 ${typographyPatterns.cardText}`}
+                >
+                  <WorkoutIconSmall />
+                  <span className="text-sm">
+                    <span className="text-synthwave-neon-cyan font-semibold">
+                      {workoutCount}
+                    </span>{" "}
+                    {workoutCount === 1 ? "Workout" : "Workouts"}
+                  </span>
+                </div>
+              )}
 
             {/* Adherence Rate - only for active/paused programs with meaningful rate */}
-            {(program.status === PROGRAM_STATUS.ACTIVE || program.status === PROGRAM_STATUS.PAUSED) && program.adherenceRate && program.adherenceRate > 0 && program.completedWorkouts > 0 && (
-              <div className={`flex items-center space-x-2 ${typographyPatterns.cardText}`}>
-                <TargetIcon />
-                <span className="text-sm">
-                  Adherence: <span className="text-synthwave-neon-cyan font-semibold">{Math.round(program.adherenceRate)}%</span>
-                </span>
-              </div>
-            )}
+            {(program.status === PROGRAM_STATUS.ACTIVE ||
+              program.status === PROGRAM_STATUS.PAUSED) &&
+              program.adherenceRate &&
+              program.adherenceRate > 0 &&
+              program.completedWorkouts > 0 && (
+                <div
+                  className={`flex items-center space-x-2 ${typographyPatterns.cardText}`}
+                >
+                  <TargetIcon />
+                  <span className="text-sm">
+                    Adherence:{" "}
+                    <span className="text-synthwave-neon-cyan font-semibold">
+                      {Math.round(program.adherenceRate)}%
+                    </span>
+                  </span>
+                </div>
+              )}
 
             {/* Last Activity - only for active/paused programs */}
-            {(program.status === PROGRAM_STATUS.ACTIVE || program.status === PROGRAM_STATUS.PAUSED) && program.lastActivityAt && (
-              <div className={`flex items-center space-x-2 ${typographyPatterns.cardText}`}>
-                <CalendarIcon />
-                <span className="text-sm">
-                  Last activity: <span className="text-synthwave-neon-cyan">{formatLastActivity(program.lastActivityAt)}</span>
-                </span>
-              </div>
-            )}
-
-            {/* Progress - only for active/paused programs */}
-            {(program.status === PROGRAM_STATUS.ACTIVE || program.status === PROGRAM_STATUS.PAUSED) && (
-              <>
-                <div className={`flex items-center space-x-2 ${typographyPatterns.cardText}`}>
+            {(program.status === PROGRAM_STATUS.ACTIVE ||
+              program.status === PROGRAM_STATUS.PAUSED) &&
+              program.lastActivityAt && (
+                <div
+                  className={`flex items-center space-x-2 ${typographyPatterns.cardText}`}
+                >
                   <CalendarIcon />
                   <span className="text-sm">
-                    Day {program.currentDay || 1} of {program.totalDays} • <span className="text-synthwave-neon-cyan font-semibold">{progressPercentage}% Complete</span>
+                    Last activity:{" "}
+                    <span className="text-synthwave-neon-cyan">
+                      {formatLastActivity(program.lastActivityAt)}
+                    </span>
+                  </span>
+                </div>
+              )}
+
+            {/* Progress - only for active/paused programs */}
+            {(program.status === PROGRAM_STATUS.ACTIVE ||
+              program.status === PROGRAM_STATUS.PAUSED) && (
+              <>
+                <div
+                  className={`flex items-center space-x-2 ${typographyPatterns.cardText}`}
+                >
+                  <CalendarIcon />
+                  <span className="text-sm">
+                    Day {program.currentDay || 1} of {program.totalDays} •{" "}
+                    <span className="text-synthwave-neon-cyan font-semibold">
+                      {progressPercentage}% Complete
+                    </span>
                   </span>
                 </div>
 
@@ -740,7 +907,9 @@ function ManagePrograms() {
 
             {/* Completion stats - for completed programs */}
             {program.status === PROGRAM_STATUS.COMPLETED && (
-              <div className={`flex items-center space-x-2 text-synthwave-neon-cyan ${typographyPatterns.cardText}`}>
+              <div
+                className={`flex items-center space-x-2 text-synthwave-neon-cyan ${typographyPatterns.cardText}`}
+              >
                 <CheckIcon />
                 <span className="text-sm font-medium">
                   Completed {formatDate(program.completedAt, program.programId)}
@@ -749,7 +918,9 @@ function ManagePrograms() {
             )}
 
             {/* Created Date */}
-            <div className={`flex items-center space-x-2 ${typographyPatterns.caption}`}>
+            <div
+              className={`flex items-center space-x-2 ${typographyPatterns.caption}`}
+            >
               <CalendarIcon />
               <span>
                 Created {formatDate(program.createdAt, program.programId)}
@@ -822,7 +993,10 @@ function ManagePrograms() {
   };
 
   // Show skeleton loading while validating userId or loading programs
-  if (isValidatingUserId || (programState.isLoadingPrograms && programState.programs.length === 0)) {
+  if (
+    isValidatingUserId ||
+    (programState.isLoadingPrograms && programState.programs.length === 0)
+  ) {
     return (
       <div className={layoutPatterns.pageContainer}>
         <div className={layoutPatterns.contentWrapper}>
@@ -847,7 +1021,10 @@ function ManagePrograms() {
           {/* Programs grid skeleton */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[1, 2, 3].map((i) => (
-              <div key={i} className={`${containerPatterns.cardMedium} p-6 flex flex-col justify-between h-full`}>
+              <div
+                key={i}
+                className={`${containerPatterns.cardMedium} p-6 flex flex-col justify-between h-full`}
+              >
                 <div className="flex-1">
                   {/* Program name skeleton */}
                   <div className="flex items-start space-x-3 mb-4">
@@ -919,7 +1096,10 @@ function ManagePrograms() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {[1, 2].map((i) => (
-                <div key={`paused-skeleton-${i}`} className={`${containerPatterns.cardMedium} p-6 flex flex-col justify-between h-full`}>
+                <div
+                  key={`paused-skeleton-${i}`}
+                  className={`${containerPatterns.cardMedium} p-6 flex flex-col justify-between h-full`}
+                >
                   <div className="flex-1">
                     {/* Program name skeleton */}
                     <div className="flex items-start space-x-3 mb-4">
@@ -986,12 +1166,18 @@ function ManagePrograms() {
 
   // Show access denied if user authorization failed
   if (userIdError || !isValidUserId) {
-    return <AccessDenied message={userIdError || "You can only access your own training programs."} />;
+    return (
+      <AccessDenied
+        message={
+          userIdError || "You can only access your own training programs."
+        }
+      />
+    );
   }
 
   // Redirect to home if no userId
   if (!userId) {
-    navigate('/', { replace: true });
+    navigate("/", { replace: true });
     return null;
   }
 
@@ -1020,7 +1206,11 @@ function ManagePrograms() {
               <CompactCoachCard
                 coachData={coachData}
                 isOnline={true}
-                onClick={() => navigate(`/training-grounds?userId=${userId}&coachId=${coachId}`)}
+                onClick={() =>
+                  navigate(
+                    `/training-grounds?userId=${userId}&coachId=${coachId}`,
+                  )
+                }
                 tooltipContent="Go to the Training Grounds"
               />
             )}
@@ -1028,14 +1218,18 @@ function ManagePrograms() {
 
           {/* Right section: Command Palette Button */}
           <div className="flex items-center gap-3">
-            <CommandPaletteButton onClick={() => setIsCommandPaletteOpen(true)} />
+            <CommandPaletteButton
+              onClick={() => setIsCommandPaletteOpen(true)}
+            />
           </div>
         </header>
 
         {/* Error State */}
         {programState.error && (
           <div className={`${containerPatterns.inlineError} text-center mb-8`}>
-            <p className={`${typographyPatterns.description} text-red-400`}>{programState.error}</p>
+            <p className={`${typographyPatterns.description} text-red-400`}>
+              {programState.error}
+            </p>
           </div>
         )}
 
@@ -1051,8 +1245,18 @@ function ManagePrograms() {
               <div className="flex-1 flex flex-col justify-center items-center">
                 {/* Plus Icon */}
                 <div className="text-synthwave-neon-pink/40 group-hover:text-synthwave-neon-pink/80 transition-colors duration-300 mb-4">
-                  <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  <svg
+                    className="w-12 h-12"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                    />
                   </svg>
                 </div>
 
@@ -1062,8 +1266,11 @@ function ManagePrograms() {
                 </h3>
 
                 {/* Description */}
-                <p className={`${typographyPatterns.cardText} text-synthwave-text-secondary/60 group-hover:text-synthwave-text-secondary text-sm transition-colors duration-300 text-center mb-4 max-w-xs mx-auto`}>
-                  Build a structured program with your coach through conversation
+                <p
+                  className={`${typographyPatterns.cardText} text-synthwave-text-secondary/60 group-hover:text-synthwave-text-secondary text-sm transition-colors duration-300 text-center mb-4 max-w-xs mx-auto`}
+                >
+                  Build a structured program with your coach through
+                  conversation
                 </p>
 
                 {/* Info Badge */}
@@ -1077,21 +1284,57 @@ function ManagePrograms() {
               {/* Bottom Features */}
               <div className="border-t border-synthwave-neon-pink/20 pt-3 mt-3 pb-4">
                 <div className="grid grid-cols-1 gap-2">
-                  <div className={`flex items-center justify-center space-x-2 ${typographyPatterns.cardText} text-synthwave-text-secondary/60 group-hover:text-synthwave-text-secondary transition-colors duration-300`}>
-                    <svg className="w-3 h-3 text-synthwave-neon-pink" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  <div
+                    className={`flex items-center justify-center space-x-2 ${typographyPatterns.cardText} text-synthwave-text-secondary/60 group-hover:text-synthwave-text-secondary transition-colors duration-300`}
+                  >
+                    <svg
+                      className="w-3 h-3 text-synthwave-neon-pink"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
                     </svg>
                     <span className="text-sm">AI-Generated Workouts</span>
                   </div>
-                  <div className={`flex items-center justify-center space-x-2 ${typographyPatterns.cardText} text-synthwave-text-secondary/60 group-hover:text-synthwave-text-secondary transition-colors duration-300`}>
-                    <svg className="w-3 h-3 text-synthwave-neon-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  <div
+                    className={`flex items-center justify-center space-x-2 ${typographyPatterns.cardText} text-synthwave-text-secondary/60 group-hover:text-synthwave-text-secondary transition-colors duration-300`}
+                  >
+                    <svg
+                      className="w-3 h-3 text-synthwave-neon-cyan"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
                     </svg>
                     <span className="text-sm">Progress Tracking</span>
                   </div>
-                  <div className={`flex items-center justify-center space-x-2 ${typographyPatterns.cardText} text-synthwave-text-secondary/60 group-hover:text-synthwave-text-secondary transition-colors duration-300`}>
-                    <svg className="w-3 h-3 text-synthwave-neon-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  <div
+                    className={`flex items-center justify-center space-x-2 ${typographyPatterns.cardText} text-synthwave-text-secondary/60 group-hover:text-synthwave-text-secondary transition-colors duration-300`}
+                  >
+                    <svg
+                      className="w-3 h-3 text-synthwave-neon-purple"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
                     </svg>
                     <span className="text-sm">Adaptive Programming</span>
                   </div>
@@ -1101,7 +1344,9 @@ function ManagePrograms() {
           </div>
 
           {/* Active Programs */}
-          {programState.activePrograms.map(program => renderProgramCard(program))}
+          {programState.activePrograms.map((program) =>
+            renderProgramCard(program),
+          )}
         </div>
 
         {/* Paused Programs Section */}
@@ -1112,12 +1357,16 @@ function ManagePrograms() {
                 Paused Training Programs
               </h2>
               <p className="font-rajdhani text-lg text-synthwave-text-secondary max-w-2xl mx-auto leading-relaxed">
-                Training programs you've paused. Resume anytime to continue your training journey to achieve something great and personalized to your goals.
+                Training programs you've paused. Resume anytime to continue your
+                training journey to achieve something great and personalized to
+                your goals.
               </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 auto-rows-fr">
-              {programState.pausedPrograms.map(program => renderProgramCard(program))}
+              {programState.pausedPrograms.map((program) =>
+                renderProgramCard(program),
+              )}
             </div>
           </div>
         )}
@@ -1130,16 +1379,18 @@ function ManagePrograms() {
                 Completed Programs
               </h2>
               <p className="font-rajdhani text-lg text-synthwave-text-secondary max-w-2xl mx-auto leading-relaxed">
-                Programs you've successfully completed. Celebrate your achievements!
+                Programs you've successfully completed. Celebrate your
+                achievements!
               </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 auto-rows-fr">
-              {programState.completedPrograms.map(program => renderProgramCard(program, false))}
+              {programState.completedPrograms.map((program) =>
+                renderProgramCard(program, false),
+              )}
             </div>
           </div>
         )}
-
       </div>
 
       {/* Delete Confirmation Modal */}
@@ -1153,13 +1404,17 @@ function ManagePrograms() {
             }
           }}
         >
-          <div className={`${containerPatterns.deleteModal} p-6 max-w-md w-full mx-4`}>
+          <div
+            className={`${containerPatterns.deleteModal} p-6 max-w-md w-full mx-4`}
+          >
             <div className="text-center">
               <h3 className="text-synthwave-neon-pink font-rajdhani text-xl font-bold mb-2">
                 Delete Training Program
               </h3>
               <p className="font-rajdhani text-base text-synthwave-text-secondary mb-6">
-                Are you sure you want to delete "<strong className="text-white">{programToDelete.name}</strong>"? This will remove it from your programs list.
+                Are you sure you want to delete "
+                <strong className="text-white">{programToDelete.name}</strong>"?
+                This will remove it from your programs list.
               </p>
 
               <div className="flex space-x-4">
@@ -1230,4 +1485,3 @@ function ManagePrograms() {
 }
 
 export default ManagePrograms;
-

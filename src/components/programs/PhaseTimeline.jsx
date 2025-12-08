@@ -1,8 +1,20 @@
-import React from 'react';
-import { containerPatterns, badgePatterns, messagePatterns } from '../../utils/ui/uiPatterns';
+import React, { useState } from "react";
+import {
+  containerPatterns,
+  badgePatterns,
+  messagePatterns,
+} from "../../utils/ui/uiPatterns";
 
 export default function PhaseTimeline({ program }) {
+  const [expandedPhases, setExpandedPhases] = useState({});
   const totalDays = program.totalDays || program.duration || 1;
+
+  const togglePhase = (phaseId) => {
+    setExpandedPhases((prev) => ({
+      ...prev,
+      [phaseId]: !prev[phaseId],
+    }));
+  };
 
   if (!program.phases || program.phases.length === 0) {
     return null;
@@ -17,11 +29,11 @@ export default function PhaseTimeline({ program }) {
   // Determine if phase is current, completed, or upcoming
   const getPhaseStatus = (phase) => {
     if (program.currentDay < phase.startDay) {
-      return 'upcoming';
+      return "upcoming";
     } else if (program.currentDay > phase.endDay) {
-      return 'completed';
+      return "completed";
     } else {
-      return 'current';
+      return "current";
     }
   };
 
@@ -29,22 +41,22 @@ export default function PhaseTimeline({ program }) {
   const getPhaseColor = (index) => {
     const colors = [
       {
-        bg: 'bg-synthwave-neon-pink/20',
-        border: 'border-synthwave-neon-pink/40',
-        text: 'text-synthwave-neon-pink',
-        progress: 'bg-synthwave-neon-pink',
+        bg: "bg-synthwave-neon-pink/20",
+        border: "border-synthwave-neon-pink/40",
+        text: "text-synthwave-neon-pink",
+        progress: "bg-synthwave-neon-pink",
       },
       {
-        bg: 'bg-synthwave-neon-cyan/20',
-        border: 'border-synthwave-neon-cyan/40',
-        text: 'text-synthwave-neon-cyan',
-        progress: 'bg-synthwave-neon-cyan',
+        bg: "bg-synthwave-neon-cyan/20",
+        border: "border-synthwave-neon-cyan/40",
+        text: "text-synthwave-neon-cyan",
+        progress: "bg-synthwave-neon-cyan",
       },
       {
-        bg: 'bg-synthwave-neon-purple/20',
-        border: 'border-synthwave-neon-purple/40',
-        text: 'text-synthwave-neon-purple',
-        progress: 'bg-synthwave-neon-purple',
+        bg: "bg-synthwave-neon-purple/20",
+        border: "border-synthwave-neon-purple/40",
+        text: "text-synthwave-neon-purple",
+        progress: "bg-synthwave-neon-purple",
       },
     ];
 
@@ -68,7 +80,9 @@ export default function PhaseTimeline({ program }) {
     <div className={`${containerPatterns.cardMedium} p-6`}>
       {/* Section Header */}
       <div className="flex items-start space-x-3 mb-6">
-        <div className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotCyan} flex-shrink-0 mt-2`}></div>
+        <div
+          className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotCyan} flex-shrink-0 mt-2`}
+        ></div>
         <h3 className="font-russo font-bold text-white text-lg uppercase">
           Phase Timeline
         </h3>
@@ -119,7 +133,7 @@ export default function PhaseTimeline({ program }) {
                   style={{ width: `${width}%` }}
                 >
                   {/* Progress fill for current phase */}
-                  {status === 'current' && (
+                  {status === "current" && (
                     <div
                       className={`absolute inset-0 ${colors.progress} opacity-50 transition-all duration-300`}
                       style={{ width: `${progress}%` }}
@@ -127,12 +141,14 @@ export default function PhaseTimeline({ program }) {
                   )}
 
                   {/* Completed phase fill */}
-                  {status === 'completed' && (
-                    <div className={`absolute inset-0 ${colors.progress} opacity-40`} />
+                  {status === "completed" && (
+                    <div
+                      className={`absolute inset-0 ${colors.progress} opacity-40`}
+                    />
                   )}
 
                   {/* Current day indicator */}
-                  {status === 'current' && (
+                  {status === "current" && (
                     <div
                       className="absolute top-0 bottom-0 w-0.5 bg-synthwave-neon-pink"
                       style={{ left: `${progress}%` }}
@@ -152,7 +168,7 @@ export default function PhaseTimeline({ program }) {
             const status = getPhaseStatus(phase);
             const progress = getCurrentPhaseProgress(phase);
 
-            if (status !== 'current') return null;
+            if (status !== "current") return null;
 
             // Calculate cumulative width up to this phase
             const cumulativeWidth = program.phases
@@ -160,7 +176,7 @@ export default function PhaseTimeline({ program }) {
               .reduce((sum, p) => sum + getPhaseWidth(p), 0);
 
             // Calculate exact position within the timeline
-            const exactPosition = cumulativeWidth + (width * progress / 100);
+            const exactPosition = cumulativeWidth + (width * progress) / 100;
 
             return (
               <div
@@ -168,7 +184,9 @@ export default function PhaseTimeline({ program }) {
                 className="absolute top-full mt-1 -translate-x-1/2 whitespace-nowrap z-10"
                 style={{ left: `${exactPosition}%` }}
               >
-                <span className={`${badgePatterns.pink} text-xs font-bold uppercase`}>
+                <span
+                  className={`${badgePatterns.pink} text-xs font-bold uppercase`}
+                >
                   Day {program.currentDay}
                 </span>
               </div>
@@ -179,7 +197,9 @@ export default function PhaseTimeline({ program }) {
         {/* Day markers */}
         <div className="flex justify-between mt-2 px-1 font-rajdhani">
           <span className="text-xs text-synthwave-text-muted">Day 1</span>
-          <span className="text-xs text-synthwave-text-muted">Day {totalDays}</span>
+          <span className="text-xs text-synthwave-text-muted">
+            Day {totalDays}
+          </span>
         </div>
       </div>
 
@@ -189,49 +209,81 @@ export default function PhaseTimeline({ program }) {
           const status = getPhaseStatus(phase);
           const colors = getPhaseColor(index);
           const phaseDays = phase.endDay - phase.startDay + 1;
+          const phaseKey = phase.phaseId || `phase-${index}`;
+          const isExpanded = expandedPhases[phaseKey];
 
           return (
             <div
-              key={phase.phaseId || index}
+              key={phaseKey}
               className={`${containerPatterns.coachNotesSection} font-rajdhani`}
             >
-              <div className="flex items-start justify-between mb-2">
-                <div>
-                  <h3 className="font-semibold text-base text-white">
-                    {phase.name || `Phase ${index + 1}`}
-                  </h3>
+              <button
+                onClick={() => togglePhase(phaseKey)}
+                className="w-full flex items-start justify-between mb-2 cursor-pointer hover:opacity-80 transition-opacity"
+              >
+                <div className="text-left">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold text-base text-white">
+                      {phase.name || `Phase ${index + 1}`}
+                    </h3>
+                    <svg
+                      className={`w-4 h-4 transition-transform duration-200 text-synthwave-text-secondary ${
+                        isExpanded ? "rotate-180" : ""
+                      }`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  </div>
                   <p className="text-xs mt-1">
-                    <span className="text-synthwave-text-secondary">Duration: </span>
-                    <span className="text-synthwave-neon-cyan">Days {phase.startDay}-{phase.endDay} • {phaseDays} days</span>
+                    <span className="text-synthwave-text-secondary">
+                      Duration:{" "}
+                    </span>
+                    <span className="text-synthwave-neon-cyan">
+                      Days {phase.startDay}-{phase.endDay} • {phaseDays} days
+                    </span>
                   </p>
                 </div>
 
-                {status === 'current' && (
-                  <span className={`${badgePatterns.pinkBorder} uppercase`}>
-                    Current
-                  </span>
-                )}
-                {status === 'completed' && (
-                  <span className={`${badgePatterns.cyanBorder} uppercase`}>
-                    ✓ Complete
-                  </span>
-                )}
-              </div>
-
-              {phase.description && (
-                <p className="text-sm text-synthwave-text-secondary mb-2">
-                  {phase.description}
-                </p>
-              )}
-
-              {/* Focus areas */}
-              {phase.focusAreas && phase.focusAreas.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {phase.focusAreas.map((area, idx) => (
-                    <span key={idx} className={badgePatterns.workoutDetail}>
-                      {area.replace(/_/g, ' ')}
+                <div className="flex-shrink-0">
+                  {status === "current" && (
+                    <span className={`${badgePatterns.pinkBorder} uppercase`}>
+                      Current
                     </span>
-                  ))}
+                  )}
+                  {status === "completed" && (
+                    <span className={`${badgePatterns.cyanBorder} uppercase`}>
+                      ✓ Complete
+                    </span>
+                  )}
+                </div>
+              </button>
+
+              {isExpanded && (
+                <div className="animate-fadeIn">
+                  {phase.description && (
+                    <p className="text-sm text-synthwave-text-secondary mb-2">
+                      {phase.description}
+                    </p>
+                  )}
+
+                  {/* Focus areas */}
+                  {phase.focusAreas && phase.focusAreas.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {phase.focusAreas.map((area, idx) => (
+                        <span key={idx} className={badgePatterns.workoutDetail}>
+                          {area.replace(/_/g, " ")}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -241,4 +293,3 @@ export default function PhaseTimeline({ program }) {
     </div>
   );
 }
-

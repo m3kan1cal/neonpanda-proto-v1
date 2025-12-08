@@ -49,6 +49,8 @@ export interface ProgramCreatorSession {
   startedAt: Date;
   lastActivity: Date;
   completedAt?: Date;
+  turnCount: number; // Track number of conversation turns (matches workout creator pattern)
+  imageS3Keys: string[]; // Store image keys for multimodal context (matches workout creator pattern)
 
   // Progress tracking
   progressDetails?: {

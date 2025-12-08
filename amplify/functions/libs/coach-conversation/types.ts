@@ -96,7 +96,11 @@ export interface CoachConversation {
   };
 
   // Multi-turn workout collection session (in progress)
+  // NOTE: WorkoutCreatorSession is embedded in the conversation (not a separate DynamoDB entity)
   workoutCreatorSession?: WorkoutCreatorSession;
+
+  // NOTE: ProgramCreatorSession is stored separately in DynamoDB (not embedded here)
+  // Use getProgramCreatorSession(userId, conversationId) to load it
 
   // DynamoDB timestamps (populated from database metadata)
   createdAt?: Date;

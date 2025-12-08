@@ -1,20 +1,25 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { Tooltip } from 'react-tooltip';
-import { useAuthorizeUser } from '../auth/hooks/useAuthorizeUser';
-import { containerPatterns, buttonPatterns, layoutPatterns, tooltipPatterns } from "../utils/ui/uiPatterns";
-import { AccessDenied } from './shared/AccessDenied';
+import { Tooltip } from "react-tooltip";
+import { useAuthorizeUser } from "../auth/hooks/useAuthorizeUser";
+import {
+  containerPatterns,
+  buttonPatterns,
+  layoutPatterns,
+  tooltipPatterns,
+} from "../utils/ui/uiPatterns";
+import { AccessDenied } from "./shared/AccessDenied";
 import { isNewWorkout } from "../utils/dateUtils";
 import { NeonBorder, NewBadge } from "./themes/SynthwaveComponents";
 import { useToast } from "../contexts/ToastContext";
 import { WorkoutAgent } from "../utils/agents/WorkoutAgent";
 import CoachAgent from "../utils/agents/CoachAgent";
 import { FloatingMenuManager } from "./shared/FloatingMenuManager";
-import CoachHeader from './shared/CoachHeader';
-import CompactCoachCard from './shared/CompactCoachCard';
-import CommandPaletteButton from './shared/CommandPaletteButton';
-import { useNavigationContext } from '../contexts/NavigationContext';
-import QuickStats from './shared/QuickStats';
+import CoachHeader from "./shared/CoachHeader";
+import CompactCoachCard from "./shared/CompactCoachCard";
+import CommandPaletteButton from "./shared/CommandPaletteButton";
+import { useNavigationContext } from "../contexts/NavigationContext";
+import QuickStats from "./shared/QuickStats";
 import {
   WorkoutIcon,
   WorkoutIconSmall,
@@ -67,7 +72,6 @@ const TrashIcon = () => (
   </svg>
 );
 
-
 const PreviewIcon = () => (
   <svg
     className="w-5 h-5"
@@ -92,11 +96,20 @@ const PreviewIcon = () => (
 
 // Small clock icon for metadata
 const ClockIconSmall = () => (
-  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+  <svg
+    className="w-3 h-3"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+    />
   </svg>
 );
-
 
 function ManageWorkouts() {
   const [searchParams] = useSearchParams();
@@ -105,7 +118,11 @@ function ManageWorkouts() {
   const coachId = searchParams.get("coachId");
 
   // Authorize that URL userId matches authenticated user
-  const { isValidating: isValidatingUserId, isValid: isValidUserId, error: userIdError } = useAuthorizeUser(userId);
+  const {
+    isValidating: isValidatingUserId,
+    isValid: isValidUserId,
+    error: userIdError,
+  } = useAuthorizeUser(userId);
   const [activeTooltip, setActiveTooltip] = useState(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
 
@@ -208,10 +225,13 @@ function ManageWorkouts() {
         if (!coachAgentRef.current) {
           coachAgentRef.current = new CoachAgent();
         }
-        const coachData = await coachAgentRef.current.loadCoachDetails(userId, coachId);
+        const coachData = await coachAgentRef.current.loadCoachDetails(
+          userId,
+          coachId,
+        );
         setCoachData(coachData);
       } catch (error) {
-        console.error('Failed to load coach data:', error);
+        console.error("Failed to load coach data:", error);
       }
     };
 
@@ -265,7 +285,7 @@ function ManageWorkouts() {
     userId,
     coachId,
     setCoachData,
-    { success, error }
+    { success, error },
   );
 
   // Handle delete click
@@ -282,8 +302,10 @@ function ManageWorkouts() {
     try {
       await workoutAgentRef.current.deleteWorkout(
         userId,
-        workoutToDelete.workoutId
+        workoutToDelete.workoutId,
       );
+      // Refresh the total workout count after deletion
+      await workoutAgentRef.current.loadTotalWorkoutCount();
       success("Workout deleted successfully");
       setShowDeleteModal(false);
       setWorkoutToDelete(null);
@@ -324,25 +346,45 @@ function ManageWorkouts() {
   // Render workout card
   const renderWorkoutCard = (workout) => {
     const dateInfo = formatWorkoutDate(workout.completedAt || workout.date);
-    const workoutName = workoutAgentRef.current?.formatWorkoutSummary(workout, true) || workout.workoutName || "Workout";
+    const workoutName =
+      workoutAgentRef.current?.formatWorkoutSummary(workout, true) ||
+      workout.workoutName ||
+      "Workout";
 
-    const duration = workout.duration ? Math.round(workout.duration / 60) : null;
+    const duration = workout.duration
+      ? Math.round(workout.duration / 60)
+      : null;
     const discipline = workout.discipline || "fitness";
-    const intensity = workout.performanceMetrics?.intensity || workout.workoutData?.performance_metrics?.intensity || 0;
-    const rpe = workout.performanceMetrics?.perceived_exertion || workout.workoutData?.performance_metrics?.perceived_exertion || 0;
-    const calories = workout.workoutData?.performance_metrics?.calories_burned || workout.performanceMetrics?.calories_burned;
-    const confidence = workout.extractionMetadata?.confidence || workout.confidence || 0;
-    const extractedAt = workout.extractionMetadata?.extractedAt || workout.extractedAt;
-    const coachName = workout.coachNames?.[0]?.replace(/_/g, ' ') || 'AI Coach';
-    const isNew = isNewWorkout(workout.completedAt);
+    const intensity =
+      workout.performanceMetrics?.intensity ||
+      workout.workoutData?.performance_metrics?.intensity ||
+      0;
+    const rpe =
+      workout.performanceMetrics?.perceived_exertion ||
+      workout.workoutData?.performance_metrics?.perceived_exertion ||
+      0;
+    const calories =
+      workout.workoutData?.performance_metrics?.calories_burned ||
+      workout.performanceMetrics?.calories_burned;
+    const confidence =
+      workout.extractionMetadata?.confidence || workout.confidence || 0;
+    const extractedAt =
+      workout.extractionMetadata?.extractedAt || workout.extractedAt;
+    const coachName = workout.coachNames?.[0]?.replace(/_/g, " ") || "AI Coach";
+    // Show "new" badge for workouts within 24 hours OR in the future
+    const workoutDate = new Date(workout.completedAt);
+    const now = new Date();
+    const isNew = isNewWorkout(workout.completedAt) || workoutDate > now;
 
     // Helper function to get consistent color spectrum (all start with same "easy" green, progress to purple at 10)
     const getGaugeColor = (value) => {
-      if (value >= 8) return 'from-green-400 via-synthwave-neon-pink to-synthwave-neon-purple'; // Hard (8-10)
-      if (value >= 6) return 'from-green-400 via-orange-400 to-synthwave-neon-pink'; // Moderate-Hard (6-7)
-      if (value >= 4) return 'from-green-400 to-synthwave-neon-cyan'; // Moderate (4-5)
-      if (value >= 2) return 'from-green-400 to-green-300'; // Easy-Moderate (2-3)
-      return 'from-green-400 to-green-400'; // Very Easy (0-1)
+      if (value >= 8)
+        return "from-green-400 via-synthwave-neon-pink to-synthwave-neon-purple"; // Hard (8-10)
+      if (value >= 6)
+        return "from-green-400 via-orange-400 to-synthwave-neon-pink"; // Moderate-Hard (6-7)
+      if (value >= 4) return "from-green-400 to-synthwave-neon-cyan"; // Moderate (4-5)
+      if (value >= 2) return "from-green-400 to-green-300"; // Easy-Moderate (2-3)
+      return "from-green-400 to-green-400"; // Very Easy (0-1)
     };
 
     return (
@@ -352,55 +394,55 @@ function ManageWorkouts() {
         className={`${containerPatterns.cardMedium} p-5 group transition-all duration-300 hover:border-synthwave-neon-cyan/40 hover:bg-synthwave-bg-card/40 relative cursor-pointer flex flex-col h-full`}
         onClick={() =>
           navigate(
-            `/training-grounds/workouts?workoutId=${workout.workoutId}&userId=${userId}&coachId=${workout.coachIds?.[0] || "default"}`
+            `/training-grounds/workouts?workoutId=${workout.workoutId}&userId=${userId}&coachId=${workout.coachIds?.[0] || "default"}`,
           )
         }
       >
-        {/* NEW badge for workouts within 24 hours */}
+        {/* NEW badge for workouts within 24 hours or in the future */}
         {isNew && <NewBadge />}
 
-          {/* Action buttons - always visible */}
-          <div className="absolute top-4 right-4 flex space-x-2">
-            {/* Preview button */}
-            {workout.summary && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-
-                  if (activeTooltip === workout.workoutId) {
-                    setActiveTooltip(null);
-                  } else {
-                    // Get the workout card element (the parent with relative positioning)
-                    const workoutCard = e.target.closest("[data-workout-card]");
-                    if (workoutCard) {
-                      const rect = workoutCard.getBoundingClientRect();
-                      setTooltipPosition({
-                        x: rect.left + rect.width / 2, // Center horizontally on the card
-                        y: rect.bottom + 10, // Position below the card with some spacing
-                      });
-                    }
-                    setActiveTooltip(workout.workoutId);
-                  }
-                }}
-                className="p-2 bg-synthwave-neon-cyan/10 text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/20 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50"
-                title="Preview workout summary"
-              >
-                <EyeIcon className="w-4 h-4" />
-              </button>
-            )}
-
-            {/* Delete button */}
+        {/* Action buttons - always visible */}
+        <div className="absolute top-4 right-4 flex space-x-2">
+          {/* Preview button */}
+          {workout.summary && (
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                handleDeleteClick(workout);
+
+                if (activeTooltip === workout.workoutId) {
+                  setActiveTooltip(null);
+                } else {
+                  // Get the workout card element (the parent with relative positioning)
+                  const workoutCard = e.target.closest("[data-workout-card]");
+                  if (workoutCard) {
+                    const rect = workoutCard.getBoundingClientRect();
+                    setTooltipPosition({
+                      x: rect.left + rect.width / 2, // Center horizontally on the card
+                      y: rect.bottom + 10, // Position below the card with some spacing
+                    });
+                  }
+                  setActiveTooltip(workout.workoutId);
+                }
               }}
-              className="p-2 bg-synthwave-neon-pink/10 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/20 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50"
-              title="Delete workout"
+              className="p-2 bg-synthwave-neon-cyan/10 text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/20 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50"
+              title="Preview workout summary"
             >
-              <TrashIcon className="w-4 h-4" />
+              <EyeIcon className="w-4 h-4" />
             </button>
-          </div>
+          )}
+
+          {/* Delete button */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDeleteClick(workout);
+            }}
+            className="p-2 bg-synthwave-neon-pink/10 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/20 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50"
+            title="Delete workout"
+          >
+            <TrashIcon className="w-4 h-4" />
+          </button>
+        </div>
 
         {/* Card header with colored dot */}
         <div className="flex items-start space-x-3 mb-4 pr-16">
@@ -420,9 +462,24 @@ function ManageWorkouts() {
           {/* Location Tag with Pin Icon - Cyan */}
           {workout.location && (
             <div className="bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan px-2 py-0.5 rounded text-xs font-rajdhani font-medium flex items-center space-x-1">
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              <svg
+                className="w-3 h-3"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                />
               </svg>
               <span>{workout.location}</span>
             </div>
@@ -430,8 +487,18 @@ function ManageWorkouts() {
 
           {/* Coach Name Tag - Purple */}
           <div className="bg-synthwave-neon-purple/20 text-synthwave-neon-purple px-2 py-0.5 rounded text-xs font-rajdhani font-medium flex items-center space-x-1">
-            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            <svg
+              className="w-3 h-3"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+              />
             </svg>
             <span>{coachName}</span>
           </div>
@@ -442,7 +509,7 @@ function ManageWorkouts() {
           {/* Duration */}
           <div className="text-center p-2 bg-synthwave-bg-primary/30 rounded-lg">
             <div className="text-lg font-russo font-bold text-white mb-1">
-              {duration ? `${duration}m` : '--'}
+              {duration ? `${duration}m` : "--"}
             </div>
             <div className="text-xs text-synthwave-text-muted font-rajdhani flex items-center justify-center gap-1">
               <ClockIconSmall />
@@ -453,12 +520,27 @@ function ManageWorkouts() {
           {/* Calories */}
           <div className="text-center p-2 bg-synthwave-bg-primary/30 rounded-lg">
             <div className="text-lg font-russo font-bold text-white mb-1">
-              {calories || '--'}
+              {calories || "--"}
             </div>
             <div className="text-xs text-synthwave-text-muted font-rajdhani flex items-center justify-center gap-1">
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z" />
+              <svg
+                className="w-3 h-3"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z"
+                />
               </svg>
               Calories
             </div>
@@ -470,8 +552,18 @@ function ManageWorkouts() {
               {Math.round(confidence * 100)}%
             </div>
             <div className="text-xs text-synthwave-text-muted font-rajdhani flex items-center justify-center gap-1">
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+              <svg
+                className="w-3 h-3"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                />
               </svg>
               AI Score
             </div>
@@ -484,8 +576,12 @@ function ManageWorkouts() {
             {/* Intensity Gauge */}
             <div>
               <div className="flex justify-between text-xs mb-1">
-                <span className="text-synthwave-text-secondary font-rajdhani">Intensity</span>
-                <span className="font-medium text-white font-rajdhani">{intensity || 0}/10</span>
+                <span className="text-synthwave-text-secondary font-rajdhani">
+                  Intensity
+                </span>
+                <span className="font-medium text-white font-rajdhani">
+                  {intensity || 0}/10
+                </span>
               </div>
               <div className="w-full bg-gradient-to-r from-synthwave-neon-pink via-pink-800 to-purple-800 rounded-full h-2 relative overflow-hidden">
                 <div
@@ -498,8 +594,12 @@ function ManageWorkouts() {
             {/* RPE Gauge */}
             <div>
               <div className="flex justify-between text-xs mb-1">
-                <span className="text-synthwave-text-secondary font-rajdhani">RPE</span>
-                <span className="font-medium text-white font-rajdhani">{rpe || 0}/10</span>
+                <span className="text-synthwave-text-secondary font-rajdhani">
+                  RPE
+                </span>
+                <span className="font-medium text-white font-rajdhani">
+                  {rpe || 0}/10
+                </span>
               </div>
               <div className="w-full bg-gradient-to-r from-synthwave-neon-pink via-pink-800 to-purple-800 rounded-full h-2 relative overflow-hidden">
                 <div
@@ -517,9 +617,9 @@ function ManageWorkouts() {
             <div className="p-3 bg-synthwave-bg-primary/30 rounded-lg">
               <p className="font-rajdhani text-synthwave-text-secondary text-sm leading-relaxed line-clamp-3">
                 {(() => {
-                  const words = workout.summary.split(' ');
+                  const words = workout.summary.split(" ");
                   if (words.length > 20) {
-                    return words.slice(0, 20).join(' ') + '...';
+                    return words.slice(0, 20).join(" ") + "...";
                   }
                   return workout.summary;
                 })()}
@@ -535,16 +635,30 @@ function ManageWorkouts() {
             {/* Completion Date */}
             <div className="flex items-center space-x-1 text-xs text-synthwave-text-secondary font-rajdhani">
               <ClockIconSmall />
-              <span>{dateInfo.date} at {dateInfo.time}</span>
+              <span>
+                {dateInfo.date} at {dateInfo.time}
+              </span>
             </div>
 
             {/* Extraction Date */}
             {extractedAt && (
               <div className="flex items-center space-x-1 text-xs text-synthwave-text-secondary font-rajdhani">
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                <svg
+                  className="w-3 h-3"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                  />
                 </svg>
-                <span>Extracted {new Date(extractedAt).toLocaleDateString()}</span>
+                <span>
+                  Extracted {new Date(extractedAt).toLocaleDateString()}
+                </span>
               </div>
             )}
           </div>
@@ -555,13 +669,13 @@ function ManageWorkouts() {
 
   // Auto-scroll to top when page loads (with scroll restoration disabled)
   useEffect(() => {
-    if ('scrollRestoration' in window.history) {
-      window.history.scrollRestoration = 'manual';
+    if ("scrollRestoration" in window.history) {
+      window.history.scrollRestoration = "manual";
     }
     window.scrollTo(0, 0);
     return () => {
-      if ('scrollRestoration' in window.history) {
-        window.history.scrollRestoration = 'auto';
+      if ("scrollRestoration" in window.history) {
+        window.history.scrollRestoration = "auto";
       }
     };
   }, []);
@@ -638,7 +752,10 @@ function ManageWorkouts() {
           <div className="mb-8">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div key={i} className={`${containerPatterns.cardMedium} p-5 flex flex-col h-80`}>
+                <div
+                  key={i}
+                  className={`${containerPatterns.cardMedium} p-5 flex flex-col h-80`}
+                >
                   <div className="flex items-start space-x-2 mb-3">
                     <div className="w-2.5 h-2.5 bg-synthwave-text-muted/20 rounded-full flex-shrink-0 mt-1.5 animate-pulse"></div>
                     <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-32"></div>
@@ -680,7 +797,7 @@ function ManageWorkouts() {
 
   // Find the active workout for tooltip display
   const activeWorkout = workoutAgentState.allWorkouts.find(
-    (w) => w.workoutId === activeTooltip
+    (w) => w.workoutId === activeTooltip,
   );
 
   return (
@@ -758,7 +875,9 @@ function ManageWorkouts() {
 
             {/* Right section: Command Palette Button */}
             <div className="flex items-center gap-3">
-              <CommandPaletteButton onClick={() => setIsCommandPaletteOpen(true)} />
+              <CommandPaletteButton
+                onClick={() => setIsCommandPaletteOpen(true)}
+              />
             </div>
           </header>
 
@@ -767,68 +886,88 @@ function ManageWorkouts() {
             stats={[
               {
                 icon: StackIcon,
-                value: workoutAgentState.totalCount || workoutAgentState.allWorkouts.length || 0,
+                value:
+                  workoutAgentState.totalCount ||
+                  workoutAgentState.allWorkouts.length ||
+                  0,
                 tooltip: {
-                  title: 'Total Workouts',
-                  description: 'All workouts logged in your training history'
+                  title: "Total Workouts",
+                  description: "All workouts logged in your training history",
                 },
-                color: 'pink',
+                color: "pink",
                 isLoading: workoutAgentState.isLoading,
-                ariaLabel: `${workoutAgentState.totalCount || workoutAgentState.allWorkouts.length || 0} total workouts`
+                ariaLabel: `${workoutAgentState.totalCount || workoutAgentState.allWorkouts.length || 0} total workouts`,
               },
               {
                 icon: CalendarMonthIcon,
-                value: workoutAgentState.allWorkouts.filter((w) => {
-                  const workoutDate = new Date(w.completedAt || w.date);
-                  const now = new Date();
-                  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-                  return workoutDate >= thirtyDaysAgo;
-                }).length || 0,
+                value:
+                  workoutAgentState.allWorkouts.filter((w) => {
+                    const workoutDate = new Date(w.completedAt || w.date);
+                    const now = new Date();
+                    const thirtyDaysAgo = new Date(
+                      now.getTime() - 30 * 24 * 60 * 60 * 1000,
+                    );
+                    return workoutDate >= thirtyDaysAgo;
+                  }).length || 0,
                 tooltip: {
-                  title: 'This Month',
-                  description: 'Workouts completed in the last 30 days'
+                  title: "This Month",
+                  description: "Workouts completed in the last 30 days",
                 },
-                color: 'cyan',
+                color: "cyan",
                 isLoading: workoutAgentState.isLoading,
-                ariaLabel: `${workoutAgentState.allWorkouts.filter((w) => {
-                  const workoutDate = new Date(w.completedAt || w.date);
-                  const now = new Date();
-                  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-                  return workoutDate >= thirtyDaysAgo;
-                }).length || 0} workouts this month`
+                ariaLabel: `${
+                  workoutAgentState.allWorkouts.filter((w) => {
+                    const workoutDate = new Date(w.completedAt || w.date);
+                    const now = new Date();
+                    const thirtyDaysAgo = new Date(
+                      now.getTime() - 30 * 24 * 60 * 60 * 1000,
+                    );
+                    return workoutDate >= thirtyDaysAgo;
+                  }).length || 0
+                } workouts this month`,
               },
               {
                 icon: ClockIcon,
-                value: workoutAgentState.allWorkouts.filter((w) => {
-                  const workoutDate = new Date(w.completedAt || w.date);
-                  const now = new Date();
-                  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-                  return workoutDate >= sevenDaysAgo;
-                }).length || 0,
+                value:
+                  workoutAgentState.allWorkouts.filter((w) => {
+                    const workoutDate = new Date(w.completedAt || w.date);
+                    const now = new Date();
+                    const sevenDaysAgo = new Date(
+                      now.getTime() - 7 * 24 * 60 * 60 * 1000,
+                    );
+                    return workoutDate >= sevenDaysAgo;
+                  }).length || 0,
                 tooltip: {
-                  title: 'This Week',
-                  description: 'Workouts completed in the last 7 days'
+                  title: "This Week",
+                  description: "Workouts completed in the last 7 days",
                 },
-                color: 'purple',
+                color: "purple",
                 isLoading: workoutAgentState.isLoading,
-                ariaLabel: `${workoutAgentState.allWorkouts.filter((w) => {
-                  const workoutDate = new Date(w.completedAt || w.date);
-                  const now = new Date();
-                  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-                  return workoutDate >= sevenDaysAgo;
-                }).length || 0} workouts this week`
+                ariaLabel: `${
+                  workoutAgentState.allWorkouts.filter((w) => {
+                    const workoutDate = new Date(w.completedAt || w.date);
+                    const now = new Date();
+                    const sevenDaysAgo = new Date(
+                      now.getTime() - 7 * 24 * 60 * 60 * 1000,
+                    );
+                    return workoutDate >= sevenDaysAgo;
+                  }).length || 0
+                } workouts this week`,
               },
               {
                 icon: TargetIcon,
-                value: workoutAgentState.allWorkouts.filter((w) => isNewWorkout(w.completedAt)).length || 0,
+                value:
+                  workoutAgentState.allWorkouts.filter((w) =>
+                    isNewWorkout(w.completedAt),
+                  ).length || 0,
                 tooltip: {
-                  title: 'Recent',
-                  description: 'Workouts completed in the last 24 hours'
+                  title: "Recent",
+                  description: "Workouts completed in the last 24 hours",
                 },
-                color: 'pink',
+                color: "pink",
                 isLoading: workoutAgentState.isLoading,
-                ariaLabel: `${workoutAgentState.allWorkouts.filter((w) => isNewWorkout(w.completedAt)).length || 0} recent workouts`
-              }
+                ariaLabel: `${workoutAgentState.allWorkouts.filter((w) => isNewWorkout(w.completedAt)).length || 0} recent workouts`,
+              },
             ]}
           />
 
@@ -888,7 +1027,9 @@ function ManageWorkouts() {
       {/* Delete Confirmation Modal */}
       {showDeleteModal && workoutToDelete && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[10000]">
-          <div className={`${containerPatterns.deleteModal} p-6 max-w-md w-full mx-4`}>
+          <div
+            className={`${containerPatterns.deleteModal} p-6 max-w-md w-full mx-4`}
+          >
             <div className="text-center">
               <h3 className="text-synthwave-neon-pink font-rajdhani text-xl font-bold mb-2">
                 Delete Workout
@@ -952,4 +1093,3 @@ function ManageWorkouts() {
 }
 
 export default ManageWorkouts;
-

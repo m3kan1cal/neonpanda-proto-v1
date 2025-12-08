@@ -119,6 +119,14 @@ export const handler = async (event: BuildWorkoutEvent) => {
       event.userTimezone
     );
 
+    // Store prompt for debugging
+    const debugInfo = {
+      extractionPrompt,
+      extractionPromptLength: extractionPrompt.length,
+      aiResponse: '', // Will be populated after AI call
+      aiResponseLength: 0,
+    };
+
     console.info("Generated extraction prompt:", {
       promptLength: extractionPrompt.length,
       userMessage: workoutContent,
@@ -212,10 +220,38 @@ export const handler = async (event: BuildWorkoutEvent) => {
         workoutData.workout_id = `workout_${event.userId}_${Date.now()}_${shortId}`;
         workoutData.user_id = event.userId;
 
-        // Store successful tool generation for analysis
+        // Capture AI response for debugging
+        debugInfo.aiResponse = JSON.stringify(result, null, 2);
+        debugInfo.aiResponseLength = debugInfo.aiResponse.length;
+
+        // Store successful tool generation with prompts and responses for debugging
         try {
       await storeDebugDataInS3(
-            JSON.stringify(workoutData, null, 2),
+            JSON.stringify({
+              timestamp: new Date().toISOString(),
+              userId: event.userId,
+              conversationId: event.conversationId,
+              coachId: event.coachId,
+              workoutId: workoutData.workout_id,
+
+              // AI Prompts and Responses
+              aiGeneration: {
+                extractionPrompt: debugInfo.extractionPrompt.substring(0, 1000) + '...', // First 1000 chars
+                extractionPromptLength: debugInfo.extractionPromptLength,
+                aiResponse: debugInfo.aiResponse.substring(0, 2000) + '...', // First 2000 chars
+                aiResponseLength: debugInfo.aiResponseLength,
+                method: 'tool',
+                hasImages,
+                enableThinking,
+              },
+
+              // Extracted workout data
+              workoutData,
+
+              // Metadata
+              discipline: workoutData.discipline,
+              isComplexWorkout,
+            }, null, 2),
             {
               type: 'workout-extraction-tool-success',
               method: 'tool',
@@ -292,13 +328,37 @@ export const handler = async (event: BuildWorkoutEvent) => {
       workoutData.workout_id = `workout_${event.userId}_${Date.now()}_${shortId}`;
       workoutData.user_id = event.userId;
 
-      // Store fallback response and error for debugging
+      // Capture fallback response for debugging
+      debugInfo.aiResponse = fallbackResult;
+      debugInfo.aiResponseLength = fallbackResult.length;
+
+      // Store fallback response with prompts and error for debugging
       try {
         await storeDebugDataInS3(
           JSON.stringify({
+            timestamp: new Date().toISOString(),
+            userId: event.userId,
+            conversationId: event.conversationId,
+            coachId: event.coachId,
+            workoutId: workoutData.workout_id,
+
+            // AI Prompts and Responses
+            aiGeneration: {
+              extractionPrompt: debugInfo.extractionPrompt.substring(0, 1000) + '...', // First 1000 chars
+              extractionPromptLength: debugInfo.extractionPromptLength,
+              fallbackResponse: fallbackResult.substring(0, 2000) + '...', // First 2000 chars
+              fallbackResponseLength: fallbackResult.length,
+              method: 'fallback',
+              hasImages,
+              enableThinking,
+            },
+
+            // Error info
             toolError: toolError instanceof Error ? toolError.message : String(toolError),
             toolStack: toolError instanceof Error ? toolError.stack : undefined,
-            fallbackResponse: fallbackResult,
+
+            // Extracted workout data
+            workoutData,
           }, null, 2),
           {
             type: 'workout-extraction-fallback',

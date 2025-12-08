@@ -78,7 +78,7 @@ export const CORS_HEADERS = {
 // Helper function to create standardized API responses
 export function createResponse(
   statusCode: number,
-  body: any
+  body: any,
 ): APIGatewayProxyResultV2 {
   return {
     statusCode,
@@ -91,7 +91,7 @@ export function createResponse(
 export function createErrorResponse(
   statusCode: number,
   error: string,
-  details?: any
+  details?: any,
 ): APIGatewayProxyResultV2 {
   const errorBody: any = { error };
   if (details) {
@@ -103,7 +103,7 @@ export function createErrorResponse(
 // Helper function to create OK responses (HTTP 200)
 export function createOkResponse(
   data: any,
-  message?: string
+  message?: string,
 ): APIGatewayProxyResultV2 {
   const successBody: any = { success: true };
   if (message) {
@@ -115,7 +115,7 @@ export function createOkResponse(
 // Helper function to create created responses (HTTP 201)
 export function createCreatedResponse(
   data: any,
-  message?: string
+  message?: string,
 ): APIGatewayProxyResultV2 {
   const successBody: any = { success: true };
   if (message) {
@@ -131,7 +131,7 @@ export function getHttpMethod(event: APIGatewayProxyEventV2): string {
 
 // Helper function to get request ID from API Gateway event
 export function getRequestId(
-  event: APIGatewayProxyEventV2
+  event: APIGatewayProxyEventV2,
 ): string | undefined {
   return event.requestContext?.requestId;
 }
@@ -159,7 +159,7 @@ export { fixMalformedJson } from "./response-utils";
 export const invokeLambda = async (
   functionName: string,
   payload: Record<string, any>,
-  context?: string
+  context?: string,
 ): Promise<any> => {
   try {
     console.info(
@@ -168,7 +168,7 @@ export const invokeLambda = async (
         functionName,
         payloadKeys: Object.keys(payload),
         context,
-      }
+      },
     );
 
     const command = new InvokeCommand({
@@ -185,13 +185,13 @@ export const invokeLambda = async (
         functionName,
         payloadSize: JSON.stringify(payload).length,
         statusCode: response.StatusCode,
-      }
+      },
     );
 
     // Parse and return the response payload if it exists
     if (response.Payload) {
       const responsePayload = JSON.parse(
-        new TextDecoder().decode(response.Payload)
+        new TextDecoder().decode(response.Payload),
       );
       return responsePayload;
     }
@@ -204,12 +204,12 @@ export const invokeLambda = async (
         functionName,
         error: error instanceof Error ? error.message : "Unknown error",
         context,
-      }
+      },
     );
 
     // Re-throw to allow caller to handle the error appropriately
     throw new Error(
-      `Failed to invoke sync Lambda ${functionName}: ${error instanceof Error ? error.message : "Unknown error"}`
+      `Failed to invoke sync Lambda ${functionName}: ${error instanceof Error ? error.message : "Unknown error"}`,
     );
   }
 };
@@ -224,7 +224,7 @@ export const invokeLambda = async (
 export const invokeAsyncLambda = async (
   functionName: string,
   payload: Record<string, any>,
-  context?: string
+  context?: string,
 ): Promise<void> => {
   try {
     console.info(
@@ -233,7 +233,7 @@ export const invokeAsyncLambda = async (
         functionName,
         payloadKeys: Object.keys(payload),
         context,
-      }
+      },
     );
 
     const command = new InvokeCommand({
@@ -249,7 +249,7 @@ export const invokeAsyncLambda = async (
       {
         functionName,
         payloadSize: JSON.stringify(payload).length,
-      }
+      },
     );
   } catch (error) {
     console.error(
@@ -258,12 +258,12 @@ export const invokeAsyncLambda = async (
         functionName,
         error: error instanceof Error ? error.message : "Unknown error",
         context,
-      }
+      },
     );
 
     // Re-throw to allow caller to handle the error appropriately
     throw new Error(
-      `Failed to invoke async Lambda ${functionName}: ${error instanceof Error ? error.message : "Unknown error"}`
+      `Failed to invoke async Lambda ${functionName}: ${error instanceof Error ? error.message : "Unknown error"}`,
     );
   }
 };
@@ -319,7 +319,7 @@ const stripThinkingTags = (response: string): string => {
   // Remove everything between <thinking> and </thinking> tags (including the tags)
   const withoutThinking = response.replace(
     /<thinking>[\s\S]*?<\/thinking>/gi,
-    ""
+    "",
   );
 
   // Clean up any extra whitespace that might be left
@@ -374,19 +374,17 @@ export interface BedrockApiOptions {
  * Helper to build toolConfig for Bedrock commands
  * Centralizes tool handling logic for all Bedrock functions
  */
-function buildToolConfig(
-  tools: BedrockToolConfig | BedrockToolConfig[]
-): any {
+function buildToolConfig(tools: BedrockToolConfig | BedrockToolConfig[]): any {
   const toolsArray = Array.isArray(tools) ? tools : [tools];
 
   return {
-    tools: toolsArray.map(t => ({
+    tools: toolsArray.map((t) => ({
       toolSpec: {
         name: t.name,
         description: t.description,
-        inputSchema: { json: t.inputSchema }
-      }
-    }))
+        inputSchema: { json: t.inputSchema },
+      },
+    })),
   };
 }
 
@@ -396,27 +394,31 @@ function buildToolConfig(
  */
 function extractToolUseResult(
   response: any,
-  expectedToolName?: string
+  expectedToolName?: string,
 ): BedrockToolUseResult {
-  if (response.stopReason !== 'tool_use') {
-    throw new Error(`Model did not use tool (stopReason: ${response.stopReason})`);
+  if (response.stopReason !== "tool_use") {
+    throw new Error(
+      `Model did not use tool (stopReason: ${response.stopReason})`,
+    );
   }
 
-  const toolUse = response.output?.message?.content?.find((c: any) => c.toolUse);
+  const toolUse = response.output?.message?.content?.find(
+    (c: any) => c.toolUse,
+  );
   if (!toolUse) {
-    throw new Error('No tool use found in response');
+    throw new Error("No tool use found in response");
   }
 
   const result: BedrockToolUseResult = {
     toolName: toolUse.toolUse.name,
     input: toolUse.toolUse.input,
-    stopReason: response.stopReason
+    stopReason: response.stopReason,
   };
 
   // Optional validation
   if (expectedToolName && result.toolName !== expectedToolName) {
     throw new Error(
-      `Expected tool "${expectedToolName}" but model used "${result.toolName}"`
+      `Expected tool "${expectedToolName}" but model used "${result.toolName}"`,
     );
   }
 
@@ -433,24 +435,34 @@ function extractToolUseResult(
  */
 function buildSystemParams(
   systemPrompt: string,
-  options?: BedrockApiOptions
+  options?: BedrockApiOptions,
 ): { systemParams: any[]; enableThinking: boolean } {
   const enableThinking = options?.enableThinking || false;
 
   // Handle empty system prompt (Bedrock requires non-empty text)
-  if (!systemPrompt || systemPrompt.trim() === '') {
+  if (!systemPrompt || systemPrompt.trim() === "") {
     console.info("ℹ️ No system prompt provided, skipping system parameter");
     return {
       systemParams: [],
-      enableThinking: false // No thinking without system context
+      enableThinking: false, // No thinking without system context
     };
   }
 
   // Build system parameter with cache control if static/dynamic prompts are provided
   if (options?.staticPrompt && options?.dynamicPrompt) {
-    console.info("🔥 CACHE OPTIMIZATION: Using static/dynamic prompt structure");
-    console.info("Static prompt size:", (options.staticPrompt.length / 1024).toFixed(2), "KB");
-    console.info("Dynamic prompt size:", (options.dynamicPrompt.length / 1024).toFixed(2), "KB");
+    console.info(
+      "🔥 CACHE OPTIMIZATION: Using static/dynamic prompt structure",
+    );
+    console.info(
+      "Static prompt size:",
+      (options.staticPrompt.length / 1024).toFixed(2),
+      "KB",
+    );
+    console.info(
+      "Dynamic prompt size:",
+      (options.dynamicPrompt.length / 1024).toFixed(2),
+      "KB",
+    );
 
     // Apply thinking to static prompt if enabled
     const baseStaticPrompt = enableThinking
@@ -460,27 +472,29 @@ function buildSystemParams(
     return {
       systemParams: [
         {
-          text: baseStaticPrompt // Static content (with thinking if enabled)
+          text: baseStaticPrompt, // Static content (with thinking if enabled)
         },
         {
-          cachePoint: { type: "default" } // Cache marker (separate object)
+          cachePoint: { type: "default" }, // Cache marker (separate object)
         },
         {
-          text: options.dynamicPrompt // Dynamic content (not cached)
-        }
+          text: options.dynamicPrompt, // Dynamic content (not cached)
+        },
       ],
-      enableThinking
+      enableThinking,
     };
   }
 
   // Fallback: Use single system prompt (no caching)
   return {
-    systemParams: [{
-      text: enableThinking
-        ? enhancePromptForThinking(systemPrompt)
-        : systemPrompt
-    }],
-    enableThinking
+    systemParams: [
+      {
+        text: enableThinking
+          ? enhancePromptForThinking(systemPrompt)
+          : systemPrompt,
+      },
+    ],
+    enableThinking,
   };
 }
 
@@ -500,16 +514,20 @@ function logCachePerformance(usage: any, context: string = "API call") {
 
   // Calculate cache hit rate
   const totalCacheableTokens = cacheReadTokens + cacheCreateTokens;
-  const cacheHitRate = totalCacheableTokens > 0
-    ? (cacheReadTokens / totalCacheableTokens * 100).toFixed(1)
-    : "0.0";
+  const cacheHitRate =
+    totalCacheableTokens > 0
+      ? ((cacheReadTokens / totalCacheableTokens) * 100).toFixed(1)
+      : "0.0";
 
   // Calculate cost savings (approximate)
   // Normal: $3/1M tokens, Cached read: $0.30/1M tokens (90% discount), Cache creation: $3.75/1M tokens (25% markup)
   const normalCost = inputTokens * 0.000003; // $3 per 1M tokens
   const cachedCost = cacheReadTokens * 0.0000003; // $0.30 per 1M tokens
   const creationCost = cacheCreateTokens * 0.00000375; // $3.75 per 1M tokens
-  const actualCost = cachedCost + creationCost + ((inputTokens - cacheReadTokens - cacheCreateTokens) * 0.000003);
+  const actualCost =
+    cachedCost +
+    creationCost +
+    (inputTokens - cacheReadTokens - cacheCreateTokens) * 0.000003;
   const savings = normalCost - actualCost;
 
   console.info("💰 CACHE PERFORMANCE:", {
@@ -522,8 +540,8 @@ function logCachePerformance(usage: any, context: string = "API call") {
     costs: {
       withoutCache: `$${normalCost.toFixed(6)}`,
       withCache: `$${actualCost.toFixed(6)}`,
-      saved: `$${savings.toFixed(6)} (${savings > 0 ? ((savings / normalCost) * 100).toFixed(1) : 0}%)`
-    }
+      saved: `$${savings.toFixed(6)} (${savings > 0 ? ((savings / normalCost) * 100).toFixed(1) : 0}%)`,
+    },
   });
 }
 
@@ -532,11 +550,14 @@ export const callBedrockApi = async (
   systemPrompt: string,
   userMessage: string = "Please proceed.",
   modelId: string = CLAUDE_SONNET_4_MODEL_ID,
-  options?: BedrockApiOptions
+  options?: BedrockApiOptions,
 ): Promise<BedrockApiResult> => {
   try {
     // Build system parameters with cache control and thinking support
-    const { systemParams, enableThinking } = buildSystemParams(systemPrompt, options);
+    const { systemParams, enableThinking } = buildSystemParams(
+      systemPrompt,
+      options,
+    );
 
     // Use default message if empty string provided
     const effectiveUserMessage = userMessage.trim() || "Please proceed.";
@@ -598,7 +619,7 @@ export const callBedrockApi = async (
     // Add heartbeat logging to track if Lambda is still running
     const heartbeatInterval = setInterval(() => {
       console.info(
-        "HEARTBEAT: Lambda still running, waiting for Bedrock response.."
+        "HEARTBEAT: Lambda still running, waiting for Bedrock response..",
       );
     }, 5000);
 
@@ -617,7 +638,7 @@ export const callBedrockApi = async (
       clearInterval(heartbeatInterval);
       console.error(
         "SEND ERROR - Error calling bedrockClient.send():",
-        sendError
+        sendError,
       );
       console.error("SEND ERROR - Error name:", sendError.name);
       console.error("SEND ERROR - Error message:", sendError.message);
@@ -645,7 +666,7 @@ export const callBedrockApi = async (
     if (!response.output?.message?.content?.[0]) {
       console.error(
         "Invalid response structure - no content[0]:",
-        JSON.stringify(response, null, 2)
+        JSON.stringify(response, null, 2),
       );
       throw new Error("Invalid response format from Bedrock - no content");
     }
@@ -656,34 +677,44 @@ export const callBedrockApi = async (
       console.info("🔧 Tool use requested, extracting tool result");
 
       // Try to extract tool use, but gracefully handle text responses
-      if (response.stopReason === 'tool_use') {
+      if (response.stopReason === "tool_use") {
         return extractToolUseResult(response, options.expectedToolName);
       } else {
         // Model returned text instead of using tool - try to parse as JSON
-        console.warn("⚠️ Tool was requested but model returned text response, attempting to parse as JSON");
+        console.warn(
+          "⚠️ Tool was requested but model returned text response, attempting to parse as JSON",
+        );
         const contentItem = response.output.message.content[0];
-        const textContent = typeof contentItem === 'string' ? contentItem : contentItem.text;
+        const textContent =
+          typeof contentItem === "string" ? contentItem : contentItem.text;
 
         if (textContent) {
-          // Try to parse the text as JSON
-          const parsed = parseJsonWithFallbacks(textContent);
-          if (parsed && typeof parsed === 'object') {
-            console.info("✅ Successfully parsed text response as JSON");
-            // Return in tool use format for consistency
-            return {
-              toolName: options.expectedToolName ?? 'unknown',
-              input: parsed,
-              stopReason: response.stopReason ?? 'end_turn'
-            };
+          // Try to parse the text as JSON with graceful error handling
+          try {
+            const parsed = parseJsonWithFallbacks(textContent);
+            if (parsed && typeof parsed === "object") {
+              console.info("✅ Successfully parsed text response as JSON");
+              // Return in tool use format for consistency
+              return {
+                toolName: options.expectedToolName ?? "unknown",
+                input: parsed,
+                stopReason: response.stopReason ?? "end_turn",
+              };
+            }
+          } catch (parseError) {
+            // Parsing failed - this is expected for conversational text responses
+            console.info(
+              "ℹ️ Text response is not JSON (likely conversational response), using empty object",
+            );
           }
         }
 
         // If we can't parse as JSON, return empty object
-        console.warn("⚠️ Could not parse text response as JSON, returning empty object");
+        console.info("ℹ️ Returning empty tool input (non-JSON text response)");
         return {
-          toolName: options.expectedToolName ?? 'unknown',
+          toolName: options.expectedToolName ?? "unknown",
           input: {},
-          stopReason: response.stopReason ?? 'end_turn'
+          stopReason: response.stopReason ?? "end_turn",
         };
       }
     }
@@ -693,46 +724,57 @@ export const callBedrockApi = async (
     let rawResponseText: any;
 
     // Check if text is nested or direct
-    if (typeof contentItem === 'string') {
+    if (typeof contentItem === "string") {
       rawResponseText = contentItem;
     } else if (contentItem.text !== undefined) {
       rawResponseText = contentItem.text;
 
       // Verify contentItem.text is actually a string
-      if (typeof rawResponseText !== 'string') {
+      if (typeof rawResponseText !== "string") {
         console.error("❌ contentItem.text exists but is not a string:", {
           textType: typeof rawResponseText,
           textValue: rawResponseText,
-          textKeys: typeof rawResponseText === 'object' ? Object.keys(rawResponseText) : 'N/A',
+          textKeys:
+            typeof rawResponseText === "object"
+              ? Object.keys(rawResponseText)
+              : "N/A",
           fullContentItem: contentItem,
           stringified: JSON.stringify(contentItem, null, 2),
         });
-        throw new Error(`Invalid response format from Bedrock - contentItem.text is ${typeof rawResponseText}, not string`);
+        throw new Error(
+          `Invalid response format from Bedrock - contentItem.text is ${typeof rawResponseText}, not string`,
+        );
       }
-    } else if (typeof contentItem === 'object') {
+    } else if (typeof contentItem === "object") {
       // If it's an object but no .text property, log the structure
       console.error("❌ Content item is an object without .text property:", {
         contentItem,
         keys: Object.keys(contentItem),
         stringified: JSON.stringify(contentItem, null, 2),
       });
-      throw new Error("Invalid response format from Bedrock - content item has no text property");
+      throw new Error(
+        "Invalid response format from Bedrock - content item has no text property",
+      );
     } else {
       console.error("❌ Unexpected content item type:", {
         type: typeof contentItem,
         value: contentItem,
       });
-      throw new Error("Invalid response format from Bedrock - unexpected content type");
+      throw new Error(
+        "Invalid response format from Bedrock - unexpected content type",
+      );
     }
 
     // Final type check: ensure we have a string at this point
-    if (typeof rawResponseText !== 'string') {
+    if (typeof rawResponseText !== "string") {
       console.error("❌ rawResponseText is not a string after extraction:", {
         type: typeof rawResponseText,
         value: rawResponseText,
         stringified: JSON.stringify(rawResponseText, null, 2),
       });
-      throw new Error(`Invalid response type from Bedrock: expected string, got ${typeof rawResponseText}`);
+      throw new Error(
+        `Invalid response type from Bedrock: expected string, got ${typeof rawResponseText}`,
+      );
     }
 
     let responseText = rawResponseText;
@@ -754,7 +796,7 @@ export const callBedrockApi = async (
 
     console.info(
       "Successfully extracted response text, length:",
-      responseText.length
+      responseText.length,
     );
 
     // Check if response might be truncated due to token limits
@@ -767,7 +809,7 @@ export const callBedrockApi = async (
           responseLength: responseText.length,
           maxTokens: maxTokensUsed,
           estimatedTokens: Math.round(responseText.length / 3.5),
-        }
+        },
       );
     }
 
@@ -807,11 +849,14 @@ export const callBedrockApiStream = async (
   systemPrompt: string,
   userMessage: string,
   modelId: string = CLAUDE_SONNET_4_MODEL_ID,
-  options?: BedrockApiOptions
+  options?: BedrockApiOptions,
 ): Promise<AsyncGenerator<string, void, unknown>> => {
   try {
     // Build system parameters with cache control and thinking support
-    const { systemParams, enableThinking } = buildSystemParams(systemPrompt, options);
+    const { systemParams, enableThinking } = buildSystemParams(
+      systemPrompt,
+      options,
+    );
 
     console.info("=== BEDROCK STREAMING API CALL START ===");
     console.info("AWS Region:", process.env.AWS_REGION || "us-west-2");
@@ -851,7 +896,7 @@ export const callBedrockApiStream = async (
     console.info("Stream response received from Bedrock");
 
     // Return an async generator that yields chunks as they come in
-    return async function* streamGenerator() {
+    return (async function* streamGenerator() {
       try {
         let fullResponse = "";
 
@@ -865,20 +910,21 @@ export const callBedrockApiStream = async (
           // Handle end of stream
           if (chunk.messageStop) {
             console.info("=== BEDROCK STREAMING API CALL SUCCESS ===");
-            console.info("Stream complete. Total response length:", fullResponse.length);
+            console.info(
+              "Stream complete. Total response length:",
+              fullResponse.length,
+            );
 
             // If thinking was enabled, we need to handle the thinking tags in the full response
             // For streaming, we'll yield the raw content and let the client handle thinking tag removal if needed
             break;
           }
         }
-
       } catch (streamError: any) {
         console.error("Error processing stream:", streamError);
         throw streamError;
       }
-    }();
-
+    })();
   } catch (error: any) {
     console.error("=== BEDROCK STREAMING API CALL FAILED ===");
     console.error("Error type:", typeof error);
@@ -917,11 +963,14 @@ export const callBedrockApiMultimodal = async (
   systemPrompt: string,
   messages: any[], // Full Converse API messages array with images
   modelId: string = CLAUDE_SONNET_4_MODEL_ID,
-  options?: BedrockApiOptions
+  options?: BedrockApiOptions,
 ): Promise<BedrockApiResult> => {
   try {
     // Build system parameters with cache control and thinking support
-    const { systemParams, enableThinking } = buildSystemParams(systemPrompt, options);
+    const { systemParams, enableThinking } = buildSystemParams(
+      systemPrompt,
+      options,
+    );
 
     console.info("=== BEDROCK MULTIMODAL API CALL START ===");
     console.info("AWS Region:", process.env.AWS_REGION || "us-west-2");
@@ -929,9 +978,10 @@ export const callBedrockApiMultimodal = async (
     console.info("System prompt length:", systemPrompt.length);
     console.info("Messages count:", messages.length);
     console.info("Thinking enabled:", enableThinking);
-    console.info("Has images:", messages.some(m =>
-      m.content?.some((c: any) => c.image)
-    ));
+    console.info(
+      "Has images:",
+      messages.some((m) => m.content?.some((c: any) => c.image)),
+    );
 
     const command = new ConverseCommand({
       modelId: modelId,
@@ -959,36 +1009,51 @@ export const callBedrockApiMultimodal = async (
     // If tools were provided, extract tool use result FIRST (before trying to extract text)
     // Tool responses have a different structure than text responses
     if (options?.tools) {
-      console.info("🔧 Tool use requested (multimodal), extracting tool result");
+      console.info(
+        "🔧 Tool use requested (multimodal), extracting tool result",
+      );
 
       // Try to extract tool use, but gracefully handle text responses
-      if (response.stopReason === 'tool_use') {
+      if (response.stopReason === "tool_use") {
         return extractToolUseResult(response, options.expectedToolName);
       } else {
         // Model returned text instead of using tool - try to parse as JSON
-        console.warn("⚠️ Tool was requested but model returned text response (multimodal), attempting to parse as JSON");
+        console.warn(
+          "⚠️ Tool was requested but model returned text response (multimodal), attempting to parse as JSON",
+        );
         const textContent = response.output?.message?.content?.[0]?.text;
 
         if (textContent) {
-          // Try to parse the text as JSON
-          const parsed = parseJsonWithFallbacks(textContent);
-          if (parsed && typeof parsed === 'object') {
-            console.info("✅ Successfully parsed text response as JSON (multimodal)");
-            // Return in tool use format for consistency
-            return {
-              toolName: options.expectedToolName ?? 'unknown',
-              input: parsed,
-              stopReason: response.stopReason ?? 'end_turn'
-            };
+          // Try to parse the text as JSON with graceful error handling
+          try {
+            const parsed = parseJsonWithFallbacks(textContent);
+            if (parsed && typeof parsed === "object") {
+              console.info(
+                "✅ Successfully parsed text response as JSON (multimodal)",
+              );
+              // Return in tool use format for consistency
+              return {
+                toolName: options.expectedToolName ?? "unknown",
+                input: parsed,
+                stopReason: response.stopReason ?? "end_turn",
+              };
+            }
+          } catch (parseError) {
+            // Parsing failed - this is expected for conversational text responses
+            console.info(
+              "ℹ️ Text response is not JSON (likely conversational response), using empty object",
+            );
           }
         }
 
         // If we can't parse as JSON, return empty object
-        console.warn("⚠️ Could not parse text response as JSON (multimodal), returning empty object");
+        console.info(
+          "ℹ️ Returning empty tool input (multimodal non-JSON text response)",
+        );
         return {
-          toolName: options.expectedToolName ?? 'unknown',
+          toolName: options.expectedToolName ?? "unknown",
           input: {},
-          stopReason: response.stopReason ?? 'end_turn'
+          stopReason: response.stopReason ?? "end_turn",
         };
       }
     }
@@ -997,7 +1062,7 @@ export const callBedrockApiMultimodal = async (
     if (!response.output?.message?.content?.[0]?.text) {
       console.error(
         "Invalid response structure:",
-        JSON.stringify(response, null, 2)
+        JSON.stringify(response, null, 2),
       );
       throw new Error("Invalid response format from Bedrock");
     }
@@ -1006,7 +1071,7 @@ export const callBedrockApiMultimodal = async (
 
     console.info(
       "Successfully extracted response text, length:",
-      responseText.length
+      responseText.length,
     );
     console.info("=== BEDROCK MULTIMODAL API CALL SUCCESS ===");
 
@@ -1041,11 +1106,14 @@ export const callBedrockApiMultimodalStream = async (
   systemPrompt: string,
   messages: any[], // Full Converse API messages array with images
   modelId: string = CLAUDE_SONNET_4_MODEL_ID,
-  options?: BedrockApiOptions
+  options?: BedrockApiOptions,
 ): Promise<AsyncGenerator<string, void, unknown>> => {
   try {
     // Build system parameters with cache control and thinking support
-    const { systemParams, enableThinking } = buildSystemParams(systemPrompt, options);
+    const { systemParams, enableThinking } = buildSystemParams(
+      systemPrompt,
+      options,
+    );
 
     console.info("=== BEDROCK MULTIMODAL STREAMING API CALL START ===");
     console.info("AWS Region:", process.env.AWS_REGION || "us-west-2");
@@ -1053,9 +1121,10 @@ export const callBedrockApiMultimodalStream = async (
     console.info("System prompt length:", systemPrompt.length);
     console.info("Messages count:", messages.length);
     console.info("Thinking enabled:", enableThinking);
-    console.info("Has images:", messages.some(m =>
-      m.content?.some((c: any) => c.image)
-    ));
+    console.info(
+      "Has images:",
+      messages.some((m) => m.content?.some((c: any) => c.image)),
+    );
 
     const command = new ConverseStreamCommand({
       modelId: modelId,
@@ -1079,7 +1148,7 @@ export const callBedrockApiMultimodalStream = async (
     console.info("Stream response received from Bedrock");
 
     // Return an async generator that yields chunks as they come in
-    return async function* streamGenerator() {
+    return (async function* streamGenerator() {
       try {
         let fullResponse = "";
         let streamEnded = false;
@@ -1093,8 +1162,13 @@ export const callBedrockApiMultimodalStream = async (
 
           // Mark stream as ended but continue to capture metadata
           if (chunk.messageStop) {
-            console.info("=== BEDROCK MULTIMODAL STREAMING API CALL SUCCESS ===");
-            console.info("Stream complete. Total response length:", fullResponse.length);
+            console.info(
+              "=== BEDROCK MULTIMODAL STREAMING API CALL SUCCESS ===",
+            );
+            console.info(
+              "Stream complete. Total response length:",
+              fullResponse.length,
+            );
             streamEnded = true;
             // DON'T break yet - metadata event comes after messageStop
           }
@@ -1119,13 +1193,11 @@ export const callBedrockApiMultimodalStream = async (
             }
           }
         }
-
       } catch (streamError: any) {
         console.error("Error processing multimodal stream:", streamError);
         throw streamError;
       }
-    }();
-
+    })();
   } catch (error: any) {
     console.error("=== BEDROCK MULTIMODAL STREAMING API CALL FAILED ===");
     console.error("Error type:", typeof error);
@@ -1163,7 +1235,7 @@ export const getUserNamespace = (userId: string): string => {
 export const storePineconeContext = async (
   userId: string,
   content: string,
-  metadata: Record<string, any>
+  metadata: Record<string, any>,
 ) => {
   try {
     const { index } = await getPineconeClient();
@@ -1190,15 +1262,17 @@ export const storePineconeContext = async (
       console.error("❌ No ID field found in metadata for Pinecone record", {
         userId,
         metadata,
-        availableFields: Object.keys(metadata)
+        availableFields: Object.keys(metadata),
       });
-      throw new Error(`Cannot store Pinecone record without ID field (memoryId, workoutId, programId, or summaryId)`);
+      throw new Error(
+        `Cannot store Pinecone record without ID field (memoryId, workoutId, programId, or summaryId)`,
+      );
     }
 
     // Prepare metadata for Pinecone storage (additional fields beyond the embedded text)
     const additionalFields = {
       // Core identification
-      userId: userId,  // Using camelCase for consistency
+      userId: userId, // Using camelCase for consistency
       timestamp: new Date().toISOString(),
 
       // Merge provided metadata
@@ -1209,7 +1283,7 @@ export const storePineconeContext = async (
     // This handles nested objects and arrays at any depth
     const sanitizedFields = deepSanitizeNullish(additionalFields);
 
-    console.info('🧹 Sanitized Pinecone metadata:', {
+    console.info("🧹 Sanitized Pinecone metadata:", {
       originalKeys: Object.keys(additionalFields).length,
       sanitizedKeys: Object.keys(sanitizedFields).length,
       recordId,
@@ -1243,7 +1317,7 @@ export const storePineconeContext = async (
 export const storeDebugDataInS3 = async (
   content: string,
   metadata: Record<string, any>,
-  prefix: string = "debug"
+  prefix: string = "debug",
 ): Promise<string> => {
   try {
     const bucketName = "midgard-sandbox-logs";
@@ -1317,7 +1391,7 @@ const queryUserNamespace = async (
     includeWorkouts: boolean;
     includeCoachCreator: boolean;
     includeConversationSummaries: boolean;
-  }
+  },
 ): Promise<any[]> => {
   const {
     topK,
@@ -1387,7 +1461,7 @@ const queryUserNamespace = async (
 const queryMethodologyNamespace = async (
   userMessage: string,
   userId: string,
-  options: { topK: number }
+  options: { topK: number },
 ): Promise<any[]> => {
   try {
     const { topK } = options;
@@ -1465,7 +1539,7 @@ const rerankPineconeResults = async (
     topN?: number;
     model?: string;
     truncate?: string;
-  } = {}
+  } = {},
 ): Promise<any[]> => {
   if (!RERANKING_CONFIG.enabled || matches.length === 0) {
     return matches;
@@ -1481,7 +1555,6 @@ const rerankPineconeResults = async (
     // Validate Pinecone configuration for reranking
     validatePineconeConfig();
     const { client } = await getPineconeClient();
-
 
     // Extract documents for reranking (use text content from matches)
     const documents = matches.map((match, index) => {
@@ -1542,12 +1615,12 @@ const rerankPineconeResults = async (
         parameters: {
           truncate,
         },
-      }
+      },
     );
 
     if (!rerankResponse.data || rerankResponse.data.length === 0) {
       console.warn(
-        "⚠️ Reranking returned no results, falling back to original matches"
+        "⚠️ Reranking returned no results, falling back to original matches",
       );
       return matches.slice(0, topN);
     }
@@ -1582,7 +1655,7 @@ const rerankPineconeResults = async (
       avgRerankScore:
         rerankedMatches.reduce(
           (sum: number, m: any) => sum + (m.score || 0),
-          0
+          0,
         ) / rerankedMatches.length,
     });
 
@@ -1590,7 +1663,7 @@ const rerankPineconeResults = async (
   } catch (error) {
     console.error(
       "❌ Reranking failed, falling back to original results:",
-      error
+      error,
     );
     // Graceful degradation - return original matches
     return matches.slice(0, options.topN || RERANKING_CONFIG.finalTopN);
@@ -1625,15 +1698,15 @@ const normalizeMatch = (match: any, namespace?: string): any => {
     // Ensure text content is available in standard location
     text: textContent,
     content: textContent, // Backward compatibility
-  // Normalize metadata
-  metadata: {
-    ...match.metadata,
-    // Ensure recordType is set
-    recordType:
-      match.metadata?.recordType ||
-      (namespace === "methodology" ? "methodology" : "unknown"),
-  },
-};
+    // Normalize metadata
+    metadata: {
+      ...match.metadata,
+      // Ensure recordType is set
+      recordType:
+        match.metadata?.recordType ||
+        (namespace === "methodology" ? "methodology" : "unknown"),
+    },
+  };
 };
 
 // Helper function to process and filter results
@@ -1641,7 +1714,7 @@ const processAndFilterResults = async (
   allMatches: any[],
   options: { topK: number; minScore: number; enableReranking?: boolean },
   userId: string,
-  originalQuery?: string
+  originalQuery?: string,
 ) => {
   const {
     topK,
@@ -1672,7 +1745,7 @@ const processAndFilterResults = async (
       // Use more matches for reranking to improve quality
       const matchesForReranking = normalizedMatches.slice(
         0,
-        Math.min(RERANKING_CONFIG.initialTopK, normalizedMatches.length)
+        Math.min(RERANKING_CONFIG.initialTopK, normalizedMatches.length),
       );
 
       console.info("🔄 Applying reranking:", {
@@ -1686,12 +1759,12 @@ const processAndFilterResults = async (
         matchesForReranking,
         {
           topN: RERANKING_CONFIG.finalTopN,
-        }
+        },
       );
     } catch (error) {
       console.error(
         "❌ Reranking failed in processing, using original results:",
-        error
+        error,
       );
       processedMatches = normalizedMatches.slice(0, topK);
     }
@@ -1702,24 +1775,25 @@ const processAndFilterResults = async (
 
   // When reranking is enabled, use reranking minScore (different scale: 0.3)
   // Otherwise, use passed minScore or fallback minScore (0.5)
-  const finalMinScore = (enableReranking && originalQuery)
-    ? RERANKING_CONFIG.minScore
-    : (minScore || RERANKING_CONFIG.fallbackMinScore);
+  const finalMinScore =
+    enableReranking && originalQuery
+      ? RERANKING_CONFIG.minScore
+      : minScore || RERANKING_CONFIG.fallbackMinScore;
 
   // Filter results by minimum score and format for consumption
   const relevantMatches = processedMatches
     .filter((match: any) => match.score && match.score >= finalMinScore)
-  .map((match: any) => ({
-    id: match.id,
-    score: match.score,
-    content: extractTextContent(match), // Use standardized extraction
-    recordType: match.metadata?.recordType || "methodology",
-    metadata: match.metadata,
-    namespace:
-      match.metadata?.recordType === "methodology"
-        ? "methodology"
-        : userNamespace,
-  }));
+    .map((match: any) => ({
+      id: match.id,
+      score: match.score,
+      content: extractTextContent(match), // Use standardized extraction
+      recordType: match.metadata?.recordType || "methodology",
+      metadata: match.metadata,
+      namespace:
+        match.metadata?.recordType === "methodology"
+          ? "methodology"
+          : userNamespace,
+    }));
 
   const wasReranked =
     enableReranking && originalQuery && normalizedMatches.length > 1;
@@ -1734,7 +1808,7 @@ const processAndFilterResults = async (
     wasReranked,
     wasNormalized: true, // Indicate normalization was applied
     methodologyMatches: relevantMatches.filter(
-      (m) => m.recordType === "methodology"
+      (m) => m.recordType === "methodology",
     ).length,
     userMatches: relevantMatches.filter((m) => m.recordType !== "methodology")
       .length,
@@ -1769,7 +1843,7 @@ export const queryPineconeContext = async (
     includeMethodology?: boolean;
     minScore?: number;
     enableReranking?: boolean;
-  } = {}
+  } = {},
 ) => {
   try {
     const {
@@ -1829,7 +1903,7 @@ export const queryPineconeContext = async (
       allMatches,
       { topK, minScore, enableReranking },
       userId,
-      userMessage // Pass original query for reranking
+      userMessage, // Pass original query for reranking
     );
   } catch (error) {
     console.error("Failed to query Pinecone context:", error);
@@ -1855,7 +1929,7 @@ export const queryPineconeContext = async (
  */
 export const deletePineconeContext = async (
   userId: string,
-  filter: Record<string, any>
+  filter: Record<string, any>,
 ): Promise<{ success: boolean; deletedCount: number; error?: string }> => {
   try {
     const { index } = await getPineconeClient();
@@ -1876,7 +1950,7 @@ export const deletePineconeContext = async (
         userId,
         namespace: userNamespace,
         filter,
-      }
+      },
     );
 
     // Note: Pinecone deleteMany by filter doesn't return count, so we return success without count
@@ -1903,7 +1977,7 @@ export const querySemanticMemories = async (
     minScore?: number;
     contextTypes?: string[];
     enableReranking?: boolean;
-  } = {}
+  } = {},
 ): Promise<any[]> => {
   const {
     topK = 6,
@@ -1991,12 +2065,12 @@ export const querySemanticMemories = async (
           normalizedHits,
           {
             topN: topK,
-          }
+          },
         );
       } catch (error) {
         console.error(
           "❌ Memory reranking failed, using original results:",
-          error
+          error,
         );
         normalizedHits = normalizedHits.slice(0, topK);
       }
@@ -2018,11 +2092,14 @@ export const querySemanticMemories = async (
 
         // Must have memoryId (skip old context records without proper IDs)
         if (!hit.metadata.memoryId) {
-          console.info("ℹ️ Skipping non-memory Pinecone record (expected behavior):", {
-            pineconeId: hit.id,
-            recordType: hit.metadata.recordType,
-            contentPreview: extractTextContent(hit)?.substring(0, 100),
-          });
+          console.info(
+            "ℹ️ Skipping non-memory Pinecone record (expected behavior):",
+            {
+              pineconeId: hit.id,
+              recordType: hit.metadata.recordType,
+              contentPreview: extractTextContent(hit)?.substring(0, 100),
+            },
+          );
           return false;
         }
 

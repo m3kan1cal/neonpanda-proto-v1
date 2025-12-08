@@ -363,6 +363,11 @@ function CoachConversations() {
       example: "/log-workout I did Fran in 8:57",
     },
     {
+      command: "/design-program",
+      description: "Start designing a new training program",
+      example: "/design-program I want to train for a marathon",
+    },
+    {
       command: "/save-memory",
       description: "Save a memory or note",
       example: "/save-memory I prefer morning workouts",
@@ -372,6 +377,7 @@ function CoachConversations() {
   // Quick suggestions configuration
   const quickSuggestions = [
     { label: "Log Workout", message: "/log-workout " },
+    { label: "Design Program", message: "/design-program " },
     {
       label: "Daily Check-in",
       message: "I'm checking in for the day. What do I need to be aware of?",
@@ -397,7 +403,7 @@ function CoachConversations() {
       {
         title: "Slash Commands",
         description:
-          "Type '/' to see available commands like /log-workout or /save-memory for quick actions.",
+          "Type '/' to see available commands like /log-workout, /design-program, or /save-memory for quick actions.",
       },
       {
         title: "Be Specific",
@@ -424,17 +430,26 @@ function CoachConversations() {
   const pollingConversationIdRef = useRef(null); // Track which conversation is being polled
   const hasAttemptedPollingRef = useRef(null); // Track if we've tried to start polling for this conversation
 
-  // Conversation mode state (chat vs. build)
-  const [conversationMode, setConversationMode] = useState(
-    coachConversationAgentState.conversation?.mode || CONVERSATION_MODES.CHAT
-  );
+  // NOTE: conversationMode state removed - mode is now AI-detected automatically
+  // Mode is determined from message metadata for UI indicators
 
-  // Sync conversation mode when conversation loads
-  useEffect(() => {
+  // Derive current mode from active sessions for UI styling (typing indicator, etc.)
+  const getCurrentMode = () => {
+    // PRIORITY 1: Use conversation mode set by backend (set during program design, workout logging, etc.)
     if (coachConversationAgentState.conversation?.mode) {
-      setConversationMode(coachConversationAgentState.conversation.mode);
+      return coachConversationAgentState.conversation.mode;
     }
-  }, [coachConversationAgentState.conversation?.mode]);
+
+    // PRIORITY 2: Check for active workout session (backward compatibility for embedded sessions)
+    if (coachConversationAgentState.conversation?.workoutCreatorSession?.isComplete === false) {
+      return CONVERSATION_MODES.WORKOUT_LOG;
+    }
+
+    // Default to chat mode
+    return CONVERSATION_MODES.CHAT;
+  };
+
+  const conversationMode = getCurrentMode();
 
   // Debug: Track component re-renders during streaming
 
@@ -924,31 +939,8 @@ function CoachConversations() {
     }
   };
 
-  const handleConversationModeChange = async (newMode) => {
-    if (!agentRef.current) {
-      console.error("Conversation agent not initialized");
-      return;
-    }
-
-    // Update local state immediately for responsive UI
-    setConversationMode(newMode);
-
-    try {
-      // Persist mode change to DynamoDB
-      await agentRef.current.updateCoachConversation(
-        userId,
-        coachId,
-        conversationId,
-        { mode: newMode }
-      );
-      console.log(`Conversation mode updated to: ${newMode}`);
-    } catch (error) {
-      console.error("Error updating conversation mode:", error);
-      showError("Failed to update conversation mode");
-      // Revert local state on error
-      setConversationMode(coachConversationAgentState.conversation?.mode || CONVERSATION_MODES.CHAT);
-    }
-  };
+  // NOTE: Mode toggle removed - mode is now AI-detected automatically
+  // The UI still shows mode badges based on message metadata
 
   const handleDeleteClick = () => {
     setShowDeleteModal(true);
@@ -1459,8 +1451,6 @@ function CoachConversations() {
         tipsTitle="Chat tips & help"
         textareaRef={textareaRef}
         conversationSize={coachConversationAgentState.conversationSize}
-        conversationMode={conversationMode}
-        onConversationModeChange={handleConversationModeChange}
       />
 
       {/* Floating Menu Manager */}

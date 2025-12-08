@@ -17,12 +17,19 @@ import { PROGRAM_TODO_SCHEMA } from '../schemas/program-creator-todo-schema';
  * Extract training program information from user's response and update the to-do list
  * Uses Claude Haiku 4.5 for fast, cheap extraction
  * Supports multimodal input (text + images)
+ * Pattern: Matches workout-creator/todo-extraction.ts exactly
  */
 export async function extractAndUpdateTodoList(
   userResponse: string,
   conversationHistory: ConversationMessage[],
   currentTodoList: ProgramCreatorTodoList,
-  imageS3Keys?: string[]
+  imageS3Keys?: string[],
+  userContext?: {
+    recentWorkouts?: any[];
+    pineconeMemories?: any[];
+    userProfile?: any;
+    activeProgram?: any;
+  }
 ): Promise<ProgramCreatorTodoList> {
   console.info('🔍 Extracting training program information from user response');
 
@@ -51,7 +58,7 @@ ${conversationContext}
 CURRENT USER RESPONSE:
 "${userResponse}"
 
-Extract any training program creation information from the user's response and return a JSON object with the fields that were mentioned. Only include fields where you found information.
+Extract any training program creation information from the user's response. Return structured data matching the schema.
 
 IMPORTANT:
 - Only extract information that is EXPLICITLY stated or strongly implied
@@ -63,12 +70,7 @@ IMPORTANT:
 - For duration: extract timeframes (e.g., "8 weeks", "12 weeks", "3 months")
 - Images may contain equipment, space, or injury information - analyze them carefully
 
-Return JSON with ONLY the fields you found information for:
-{
-  "trainingGoals": { "value": "extracted goals", "confidence": "high|medium|low", "notes": "optional context" },
-  "programDuration": { "value": "8 weeks", "confidence": "high|medium|low" },
-  // ... only include fields you found
-}
+Return ONLY the fields you found information for using the tool. If no information is found, return an empty object {}.
 `;
 
   try {
@@ -214,7 +216,7 @@ WHAT WE STILL NEED:
 ${pendingFields.join(', ')}
 
 YOUR TASK:
-Analyze the user's response (text and/or images) and extract any training program creation information. Return a JSON object with ONLY the fields you found.
+Analyze the user's response (text and/or images) and extract any training program creation information. Return structured data matching the schema provided.
 
 AVAILABLE FIELDS (only include if you find information):
 - trainingGoals: string describing their training objectives

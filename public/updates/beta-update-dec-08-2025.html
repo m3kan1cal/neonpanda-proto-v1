@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Your Coach Just Got Smarter - December 2025</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family:
+          "Inter",
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          "Roboto",
+          "Oxygen",
+          "Ubuntu",
+          "Cantarell",
+          sans-serif;
+        line-height: 1.6;
+        color: #333;
+        margin: 0;
+        padding: 0;
+        background-color: #f9f9f9;
+      }
+      .email-wrapper {
+        width: 100%;
+        background-color: #f9f9f9;
+        padding: 20px 0;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        background-color: #ffffff;
+        border-radius: 8px;
+        padding: 30px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+      .logo-header {
+        background-color: #0a0a0a;
+        padding: 10px;
+        margin: -30px -30px 30px -30px;
+        border-radius: 8px 8px 0 0;
+        text-align: center;
+      }
+      .logo-header img {
+        max-width: 400px;
+        height: auto;
+      }
+      h1 {
+        color: #00ffff;
+        font-size: 28px;
+        margin-bottom: 10px;
+        margin-top: 0;
+      }
+      h2 {
+        color: #ff10f0;
+        font-size: 20px;
+        margin-top: 30px;
+        margin-bottom: 15px;
+      }
+      .subtitle {
+        color: #666;
+        font-size: 16px;
+        margin-bottom: 25px;
+      }
+      ul {
+        padding-left: 20px;
+        margin-bottom: 20px;
+      }
+      li {
+        margin-bottom: 10px;
+      }
+      .highlight {
+        background-color: #f0f9ff;
+        border-left: 4px solid #00ffff;
+        padding: 15px;
+        margin: 20px 0;
+        border-radius: 4px;
+      }
+      .feature-box {
+        background-color: #fff5f8;
+        border-left: 4px solid #ff10f0;
+        padding: 15px;
+        margin: 20px 0;
+        border-radius: 4px;
+      }
+      .cta {
+        background-color: #00ffff;
+        color: #0a0a0a;
+        padding: 12px 24px;
+        text-decoration: none;
+        border-radius: 6px;
+        display: inline-block;
+        margin: 10px 10px 10px 0;
+        font-weight: 600;
+      }
+      .footer {
+        margin-top: 40px;
+        padding-top: 20px;
+        border-top: 1px solid #e0e0e0;
+        font-size: 14px;
+        color: #666;
+      }
+      a {
+        color: #00ffff;
+      }
+      .signature {
+        margin-top: 30px;
+        font-style: italic;
+        color: #666;
+      }
+      .section-badge {
+        display: inline-block;
+        background-color: #00ffff;
+        color: #0a0a0a;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        margin-bottom: 10px;
+      }
+      .callout-hero {
+        background: linear-gradient(
+          135deg,
+          rgba(255, 110, 199, 0.35) 0%,
+          rgba(255, 16, 240, 0.25) 50%,
+          rgba(0, 255, 255, 0.35) 100%
+        );
+        border: 3px solid rgba(255, 110, 199, 0.8);
+        border-radius: 8px;
+        padding: 20px;
+        margin: 25px 0;
+      }
+      .callout-hero h3 {
+        color: #ff10f0;
+        margin-top: 0;
+        font-size: 18px;
+        font-weight: 700;
+      }
+      .callout-hero p {
+        color: #1a1a1a;
+      }
+      .callout-hero strong {
+        color: #0a0a0a;
+      }
+      .visual-box {
+        background: #0a0a0a;
+        border: 2px solid #00ffff;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 25px 0;
+        color: #ffffff;
+      }
+      .visual-box h3 {
+        color: #00ffff;
+        margin-top: 0;
+        font-size: 18px;
+      }
+      .visual-box p {
+        color: #e0e0e0;
+      }
+      .visual-box ul {
+        color: #e0e0e0;
+      }
+      .stats-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin: 20px 0;
+      }
+      .stat-card {
+        background-color: #f0f9ff;
+        border-left: 4px solid #00ffff;
+        padding: 15px;
+        border-radius: 4px;
+      }
+      .stat-card h4 {
+        margin-top: 0;
+        margin-bottom: 5px;
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #00ffff;
+      }
+      .stat-card .stat-number {
+        font-size: 32px;
+        font-weight: 700;
+        color: #ff10f0;
+        margin: 10px 0 5px 0;
+      }
+      .stat-card p {
+        margin: 0;
+        font-size: 14px;
+        line-height: 1.5;
+        color: #666;
+      }
+      @media (max-width: 600px) {
+        .stats-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="email-wrapper">
+      <div class="container">
+        <div class="logo-header">
+          <img
+            src="https://neonpanda.ai/images/logo-light-sm.png"
+            alt="NeonPanda Logo"
+          />
+        </div>
+        <h1>🧠 Your Coach Just Got Seriously Smarter</h1>
+        <p class="subtitle">
+          We rebuilt workout logging with true AI agents. Better accuracy on
+          complex workouts, 40-50s faster on simple ones.
+        </p>
+
+        <div class="callout-hero">
+          <h3>🎉 Agentic AI Architecture</h3>
+          <p style="margin-bottom: 10px">
+            Your coach is now a true <strong>AI agent</strong> that orchestrates
+            specialized tools – each built for extraction, validation, or
+            normalization. The agent decides which tools to use and when, rather
+            than following a fixed workflow.
+          </p>
+          <p style="margin-top: 10px; margin-bottom: 0">
+            Same conversational experience. Same slash commands. Just
+            significantly smarter decision-making under the hood.
+          </p>
+        </div>
+
+        <h2>🤖 What Changed: Agentic Workflow</h2>
+
+        <p>
+          We upgraded from a <strong>hard-coded workflow</strong> to an
+          <strong>agentic architecture</strong>. Your coach now autonomously
+          orchestrates specialized tools based on what each workout needs:
+        </p>
+
+        <div class="visual-box">
+          <h3>🔄 The Agent Loop</h3>
+          <p style="margin-bottom: 15px">
+            Behind every workout log, the agent coordinates specialized tools:
+          </p>
+          <ul style="margin-top: 0; margin-bottom: 0">
+            <li>
+              <strong>Extract:</strong> Pulls exercises, sets, reps, weights,
+              times, subjective data
+            </li>
+            <li>
+              <strong>Validate:</strong> Checks completeness and exercise
+              structure
+            </li>
+            <li>
+              <strong>Decide:</strong> Save now, normalize first, or ask for
+              more info?
+            </li>
+            <li>
+              <strong>Normalize:</strong> (If needed) Cleans structure, fills
+              smart defaults
+            </li>
+            <li>
+              <strong>Save:</strong> Stores structured data for progress
+              tracking
+            </li>
+          </ul>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <h4>Accuracy</h4>
+            <div class="stat-number">95%+</div>
+            <p>On complex multi-phase workouts (strength + conditioning)</p>
+          </div>
+          <div class="stat-card">
+            <h4>Speed Boost</h4>
+            <div class="stat-number">40-50s</div>
+            <p>Faster on simple workouts by skipping unnecessary validation</p>
+          </div>
+        </div>
+
+        <h2>💡 What This Means For You</h2>
+
+        <div class="feature-box">
+          <span class="section-badge">MORE ROBUST</span>
+          <h2 style="margin-top: 10px; color: #ff10f0">
+            Complex Workouts, Perfectly Logged
+          </h2>
+          <p>
+            Multi-phase workouts (strength + conditioning), running intervals,
+            partner WODs – the agent excels at these by using specialized tools
+            only when needed.
+          </p>
+          <p style="margin-top: 15px">
+            <strong>Example:</strong> "Back squat 5x5, then Fran in 9:34" →
+            agent recognizes two phases, validates each, logs everything.
+          </p>
+        </div>
+
+        <div class="feature-box">
+          <span class="section-badge">FASTER</span>
+          <h2 style="margin-top: 10px; color: #ff10f0">Smart Tool Selection</h2>
+          <p>
+            Simple session with clear data? Agent validates and saves
+            immediately. Complex workout with ambiguous structure? Agent uses
+            normalization tools.
+          </p>
+          <p style="margin-top: 15px">
+            <strong>Result:</strong> Simple workouts process 40-50s faster.
+            Complex workouts get deeper validation only when needed.
+          </p>
+        </div>
+
+        <div class="feature-box">
+          <span class="section-badge">SMARTER VALIDATION</span>
+          <h2 style="margin-top: 10px; color: #ff10f0">
+            Better Blocking Logic
+          </h2>
+          <p>
+            Validation now catches planning questions and reflections before
+            extraction. Stays conversational instead of trying to log
+            non-workouts.
+          </p>
+          <p style="margin-top: 15px">
+            <strong>Blocked examples:</strong>
+          </p>
+          <ul style="margin-top: 10px; margin-bottom: 0">
+            <li>"Thinking about doing some squats later"</li>
+            <li>"Yesterday's workout made my legs so sore"</li>
+            <li>"What should I do for my workout today?"</li>
+          </ul>
+        </div>
+
+        <div class="highlight">
+          <h2 style="margin-top: 10px; color: #00ffff">
+            🏃‍♂️ All Disciplines, Properly Validated
+          </h2>
+          <p style="margin-bottom: 10px">
+            The agent uses <strong>hybrid validation</strong>:
+          </p>
+          <ul style="margin-top: 10px; margin-bottom: 10px">
+            <li>
+              <strong>Fast check:</strong> Does this have the core structure?
+            </li>
+            <li>
+              <strong>AI semantic check:</strong> If unclear, analyze if they
+              did something meaningful
+            </li>
+          </ul>
+          <p style="margin-top: 15px; margin-bottom: 0">
+            Running intervals, yoga flows, martial arts rounds – all logged
+            correctly, not rejected for lacking "sets and reps."
+          </p>
+        </div>
+
+        <h2>🎯 What Hasn't Changed</h2>
+        <p>Your experience. All interactions work the same:</p>
+        <ul style="margin-top: 15px">
+          <li>
+            <strong>Conversational logging:</strong> "Just did some deadlifts" →
+            coach asks questions
+          </li>
+          <li>
+            <strong>Slash commands:</strong> <code>/log-workout</code> with full
+            details → instant
+          </li>
+          <li>
+            <strong>Multi-turn sessions:</strong> Coach guides you through
+            missing info
+          </li>
+          <li>
+            <strong>Image support:</strong> Snap whiteboard → coach extracts
+          </li>
+        </ul>
+
+        <p style="margin-top: 20px">
+          Behind-the-scenes intelligence upgrade. Same experience, smarter
+          orchestration.
+        </p>
+
+        <div class="visual-box">
+          <h3>🔬 Technical Details</h3>
+          <ul style="margin-top: 0; margin-bottom: 0">
+            <li>
+              <strong>Agentic architecture:</strong> Specialized tools
+              orchestrated by AI, not hard-coded workflow
+            </li>
+            <li>
+              <strong>Five tools:</strong> Extract → Validate → Normalize →
+              Generate Summary → Save
+            </li>
+            <li>
+              <strong>Confidence scoring:</strong> Agent normalizes only when
+              confidence < 95%
+            </li>
+            <li>
+              <strong>Two-tier models:</strong> Haiku for simple fixes, Sonnet
+              for complex reasoning
+            </li>
+            <li>
+              <strong>Code-level blocking:</strong> Validation decisions are
+              authoritative
+            </li>
+          </ul>
+        </div>
+
+        <h2>🧪 Test It This Week</h2>
+
+        <p><strong>Try something complex:</strong></p>
+        <ul style="margin-top: 10px; margin-bottom: 0">
+          <li>Multi-phase workout (strength + conditioning)</li>
+          <li>Partner WOD with shared reps</li>
+          <li>Running intervals with pace changes</li>
+          <li>EMOM with multiple movements</li>
+        </ul>
+
+        <div class="feature-box">
+          <h2 style="margin-top: 0; color: #ff10f0">
+            📊 Other Updates This Week
+          </h2>
+          <ul style="margin-top: 10px; margin-bottom: 0">
+            <li>
+              <strong>NEW badge on scheduled workouts:</strong> Future workouts
+              now get the same visual love as recent ones
+            </li>
+            <li>
+              <strong>Training program improvements:</strong> Better methodology
+              integration when generating programs
+            </li>
+            <li>
+              <strong>Quick stats fix:</strong> Workout counts update
+              immediately after deletion (no more stale numbers)
+            </li>
+          </ul>
+        </div>
+
+        <div class="signature">
+          <p>
+            You might not notice anything different... until you log a complex
+            workout and it just <em>works</em>. That's good AI: invisible,
+            intelligent, working for you.
+          </p>
+          <p style="margin-top: 15px">– The NeonPanda Team</p>
+        </div>
+
+        <div class="footer">
+          <p>
+            <strong>NeonPanda</strong> – Where electric intelligence meets
+            approachable excellence.
+          </p>
+          <p>Questions? Reply to this email or find us in Discord.</p>
+          <p style="margin-top: 15px">
+            <a href="https://neonpanda.ai" style="margin-right: 15px"
+              >Visit NeonPanda</a
+            >
+            <a href="https://discord.gg/AmbuFTrU" style="margin-right: 15px"
+              >Join Discord</a
+            >
+            <a href="https://neonpanda.ai/changelog">View Full Changelog</a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

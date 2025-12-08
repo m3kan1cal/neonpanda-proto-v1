@@ -5,10 +5,18 @@
  * Pattern: Same structure as coach-creator/question-generator.ts
  */
 
-import { callBedrockApi, callBedrockApiStream, MODEL_IDS } from '../api-helpers';
-import { ConversationMessage } from '../todo-types';
-import { ProgramCreatorTodoList } from './types';
-import { getTodoSummary, getTodoItemLabel, isRequiredField } from './todo-list-utils';
+import {
+  callBedrockApi,
+  callBedrockApiStream,
+  MODEL_IDS,
+} from "../api-helpers";
+import { ConversationMessage } from "../todo-types";
+import { ProgramCreatorTodoList } from "./types";
+import {
+  getTodoSummary,
+  getTodoItemLabel,
+  isRequiredField,
+} from "./todo-list-utils";
 
 /**
  * Generate the next question based on conversation context and to-do list
@@ -17,17 +25,17 @@ import { getTodoSummary, getTodoItemLabel, isRequiredField } from './todo-list-u
 export async function generateNextQuestion(
   conversationHistory: ConversationMessage[],
   todoList: ProgramCreatorTodoList,
-  coachPersonality?: string
+  coachPersonality?: string,
 ): Promise<string | null> {
-  console.info('🎯 Generating next program question');
+  console.info("🎯 Generating next program question");
 
   // Get summary of what's collected and what's missing
   const summary = getTodoSummary(todoList);
 
-  // If all required items are complete, return completion message
+  // If all required items are complete, signal completion (caller handles completion message)
   if (summary.requiredPending.length === 0) {
-    console.info('✅ All required information collected, generating completion message');
-    return generateCompletionMessage(todoList, coachPersonality);
+    console.info("✅ All required information collected, session complete");
+    return null;
   }
 
   // Check if this is the initial message (no conversation history)
@@ -39,8 +47,8 @@ export async function generateNextQuestion(
   // Get recent conversation context
   const recentMessages = conversationHistory.slice(-6); // Last 6 messages
   const conversationContext = recentMessages
-    .map(m => `${m.role.toUpperCase()}: ${m.content}`)
-    .join('\n\n');
+    .map((m) => `${m.role.toUpperCase()}: ${m.content}`)
+    .join("\n\n");
 
   const userPrompt = isInitialMessage
     ? `
@@ -67,18 +75,25 @@ CONVERSATION SO FAR:
 ${conversationContext}
 
 INFORMATION COLLECTED:
-${summary.completed.join(', ')}
+${summary.completed.join(", ")}
 
 STILL NEEDED (REQUIRED):
-${summary.requiredPending.join(', ')}
+${summary.requiredPending.join(", ")}
 
-${summary.optionalPending.length > 0 ? `STILL NEEDED (OPTIONAL):\n${summary.optionalPending.join(', ')}` : ''}
+${summary.optionalPending.length > 0 ? `STILL NEEDED (OPTIONAL):\n${summary.optionalPending.join(", ")}` : ""}
+
+🚨 CRITICAL - AVOID DUPLICATE QUESTIONS:
+BEFORE asking about something, CHECK THE CONVERSATION HISTORY ABOVE.
+- If the user ALREADY answered a question (even if not yet in "INFORMATION COLLECTED"), DO NOT ask it again
+- Example: If they said "6 weeks" earlier, DON'T ask "How long do you want the program?"
+- If they repeat themselves or say "I already answered this", acknowledge it and move to the next question
+- The "STILL NEEDED" list shows what hasn't been extracted yet, but they may have already mentioned it
 
 Generate your next response:
 1. Acknowledge what they just shared (if appropriate) with genuine warmth
-2. Ask about the MOST IMPORTANT missing piece of information
+2. Ask about the MOST IMPORTANT missing piece of information that HASN'T been mentioned yet
 3. Be conversational, supportive, and coach-like
-4. ${coachPersonality ? `Match the coach personality: ${coachPersonality}` : 'Be professional but friendly'}
+4. ${coachPersonality ? `Match the coach personality: ${coachPersonality}` : "Be professional but friendly"}
 
 🚨 CRITICAL: Ask EXACTLY ONE QUESTION. Not two, not "and also...", just ONE.
 - ✅ Good: "How many days per week can you train?"
@@ -88,23 +103,22 @@ Remember: You're helping them create a training program that will actually work 
 `;
 
   try {
-    // Call Bedrock with Sonnet 4 (high quality for conversation)
-    const questionResponse = await callBedrockApi(
+    // Call Bedrock with Haiku 4.5 (fast and cost-effective for simple Q&A)
+    const questionResponse = (await callBedrockApi(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.CLAUDE_SONNET_4_FULL
-    ) as string;
+      MODEL_IDS.CLAUDE_HAIKU_4_FULL,
+    )) as string;
 
-    console.info('✅ Generated next program question');
+    console.info("✅ Generated next program question");
 
     return questionResponse.trim();
-
   } catch (error) {
-    console.error('❌ Error generating program question:', error);
+    console.error("❌ Error generating program question:", error);
 
     // Special fallback for initial message
     if (isInitialMessage) {
-      console.warn('⚠️ Using fallback for initial message');
+      console.warn("⚠️ Using fallback for initial message");
       return `Alright! Let's build your training program! 💪 I'm going to ask you a few questions so I can design something perfect for you. First things first - what are you training for? What's the main goal?`;
     }
 
@@ -117,29 +131,43 @@ Remember: You're helping them create a training program that will actually work 
 /**
  * STREAMING version: Generate the next question with real-time streaming
  * Yields chunks as they arrive from Bedrock
+ * Pattern: Matches workout-creator/question-generator.ts exactly
  */
 export async function* generateNextQuestionStream(
   conversationHistory: ConversationMessage[],
   todoList: ProgramCreatorTodoList,
-  coachPersonality?: string
+  coachPersonality?: string,
+  userContext?: {
+    recentWorkouts?: any[];
+    pineconeMemories?: any[];
+    userProfile?: any;
+    activeProgram?: any;
+  },
 ): AsyncGenerator<string, string, unknown> {
-  console.info('🎯 Generating next program question (STREAMING)');
+  console.info("🎯 Generating next program question (STREAMING)");
 
   // Get summary of what's collected and what's missing
   const summary = getTodoSummary(todoList);
 
-  // If all required items are complete, generate completion message (non-streaming for simplicity)
+  // If all required items are complete, generate completion message (streaming)
   if (summary.requiredPending.length === 0) {
-    console.info('✅ All required information collected, generating completion message');
-    const completionMsg = await generateCompletionMessage(todoList, coachPersonality);
+    console.info(
+      "✅ All required information collected, generating completion message",
+    );
 
-    // Simulate streaming by yielding word-by-word
-    const words = completionMsg.split(' ');
-    for (let i = 0; i < words.length; i++) {
-      yield (i === 0 ? '' : ' ') + words[i];
+    let fullResponse = "";
+    const completionStream = generateCompletionMessage(
+      todoList,
+      coachPersonality,
+      userContext,
+    );
+
+    for await (const chunk of completionStream) {
+      fullResponse += chunk;
+      yield chunk;
     }
 
-    return completionMsg;
+    return fullResponse;
   }
 
   // Check if this is the initial message (no conversation history)
@@ -151,8 +179,8 @@ export async function* generateNextQuestionStream(
   // Get recent conversation context
   const recentMessages = conversationHistory.slice(-6); // Last 6 messages
   const conversationContext = recentMessages
-    .map(m => `${m.role.toUpperCase()}: ${m.content}`)
-    .join('\n\n');
+    .map((m) => `${m.role.toUpperCase()}: ${m.content}`)
+    .join("\n\n");
 
   const userPrompt = isInitialMessage
     ? `
@@ -179,18 +207,25 @@ CONVERSATION SO FAR:
 ${conversationContext}
 
 INFORMATION COLLECTED:
-${summary.completed.join(', ')}
+${summary.completed.join(", ")}
 
 STILL NEEDED (REQUIRED):
-${summary.requiredPending.join(', ')}
+${summary.requiredPending.join(", ")}
 
-${summary.optionalPending.length > 0 ? `STILL NEEDED (OPTIONAL):\n${summary.optionalPending.join(', ')}` : ''}
+${summary.optionalPending.length > 0 ? `STILL NEEDED (OPTIONAL):\n${summary.optionalPending.join(", ")}` : ""}
+
+🚨 CRITICAL - AVOID DUPLICATE QUESTIONS:
+BEFORE asking about something, CHECK THE CONVERSATION HISTORY ABOVE.
+- If the user ALREADY answered a question (even if not yet in "INFORMATION COLLECTED"), DO NOT ask it again
+- Example: If they said "6 weeks" earlier, DON'T ask "How long do you want the program?"
+- If they repeat themselves or say "I already answered this", acknowledge it and move to the next question
+- The "STILL NEEDED" list shows what hasn't been extracted yet, but they may have already mentioned it
 
 Generate your next response:
 1. Acknowledge what they just shared (if appropriate) with genuine warmth
-2. Ask about the MOST IMPORTANT missing piece of information
+2. Ask about the MOST IMPORTANT missing piece of information that HASN'T been mentioned yet
 3. Be conversational, supportive, and coach-like
-4. ${coachPersonality ? `Match the coach personality: ${coachPersonality}` : 'Be professional but friendly'}
+4. ${coachPersonality ? `Match the coach personality: ${coachPersonality}` : "Be professional but friendly"}
 
 🚨 CRITICAL: Ask EXACTLY ONE QUESTION. Not two, not "and also...", just ONE.
 - ✅ Good: "How many days per week can you train?"
@@ -200,14 +235,14 @@ Remember: You're helping them create a training program that will actually work 
 `;
 
   try {
-    // Call Bedrock with STREAMING enabled (await the promise to get the generator)
+    // Call Bedrock with STREAMING enabled using Haiku 4.5 (fast and cost-effective for simple Q&A)
     const questionStream = await callBedrockApiStream(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.CLAUDE_SONNET_4_FULL
+      MODEL_IDS.CLAUDE_HAIKU_4_FULL,
     );
 
-    let fullResponse = '';
+    let fullResponse = "";
 
     // Yield chunks as they arrive from Bedrock
     for await (const chunk of questionStream) {
@@ -215,22 +250,21 @@ Remember: You're helping them create a training program that will actually work 
       yield chunk;
     }
 
-    console.info('✅ Generated next program question (streaming complete)');
+    console.info("✅ Generated next program question (streaming complete)");
 
     return fullResponse.trim();
-
   } catch (error) {
-    console.error('❌ Error generating program question (streaming):', error);
+    console.error("❌ Error generating program question (streaming):", error);
 
     // Special fallback for initial message
     if (isInitialMessage) {
-      console.warn('⚠️ Using fallback for initial message');
+      console.warn("⚠️ Using fallback for initial message");
       const fallback = `Alright! Let's build your training program! 💪 I'm going to ask you a few questions so I can design something perfect for you. First things first - what are you training for? What's the main goal?`;
 
       // Simulate streaming for fallback
-      const words = fallback.split(' ');
+      const words = fallback.split(" ");
       for (let i = 0; i < words.length; i++) {
-        yield (i === 0 ? '' : ' ') + words[i];
+        yield (i === 0 ? "" : " ") + words[i];
       }
 
       return fallback;
@@ -241,9 +275,9 @@ Remember: You're helping them create a training program that will actually work 
     const fallbackQuestion = generateFallbackQuestion(firstMissing);
 
     // Simulate streaming for fallback
-    const words = fallbackQuestion.split(' ');
+    const words = fallbackQuestion.split(" ");
     for (let i = 0; i < words.length; i++) {
-      yield (i === 0 ? '' : ' ') + words[i];
+      yield (i === 0 ? "" : " ") + words[i];
     }
 
     return fallbackQuestion;
@@ -253,69 +287,64 @@ Remember: You're helping them create a training program that will actually work 
 /**
  * Generate completion message when all required info is collected
  */
-async function generateCompletionMessage(
+/**
+ * Generate completion message (streaming) when all required info is collected
+ * Dynamic, AI-generated message with coach personality
+ */
+export async function* generateCompletionMessage(
   todoList: ProgramCreatorTodoList,
-  coachPersonality?: string
-): Promise<string> {
-  console.info('🎉 Generating program completion message');
+  coachPersonality?: string,
+  userContext?: any,
+): AsyncGenerator<string, void, unknown> {
+  console.info("🎉 Generating program completion message (streaming)");
 
-  const systemPrompt = `You're wrapping up a conversation to create a training program!
+  // Build system prompt with coach personality
+  const systemPrompt = coachPersonality
+    ? `You are an AI coach helping users design training programs.\n\nCOACH PERSONALITY:\n${coachPersonality}\n\nUse this personality in your response.`
+    : `You are an AI coach helping users design training programs. Be encouraging and supportive.`;
 
-The user just shared everything you need to build their perfect training program. Generate an energetic, exciting completion message that:
+  const completionPrompt = `The user has provided all the information needed to design their training program.
 
-1. Celebrates what they've shared (with genuine enthusiasm!)
-2. Briefly highlights 1-2 key things about their training program (e.g., their goal, their setup)
-3. **CRITICAL: Tell them the training program build is starting NOW and will take 3-5 minutes**
-4. Explain what they'll see: progress updates as the AI generates their full training program
-5. **Tell them WHERE to find it: Head to the Training Grounds and their training program will appear in the training programs list once ready**
-6. Make them feel excited to wait for something custom-built for them
-${coachPersonality ? `7. Match the coach personality: ${coachPersonality}` : ''}
+USER'S PROGRAM REQUIREMENTS:
+${JSON.stringify(todoList, null, 2)}
 
-TONE: Supportive and professional, like a coach who just finished designing a training program plan.
+YOUR TASK:
+1. Acknowledge that you have everything you need
+2. Summarize the key program parameters (duration, frequency, goals)
+3. Tell them you're starting the program generation NOW
+4. Provide clear instructions about what happens next:
+   - "I'm generating your personalized training program now"
+   - "This will take 3-5 minutes"
+   - "Head to the Training Grounds and your program will appear in your programs list once it's ready!"
 
-STRUCTURE (5-6 sentences):
-- Sentence 1-2: Celebrate what they shared + highlight 1-2 specific things
-- Sentence 3: Tell them the build is starting now and takes 3-5 minutes
-- Sentence 4: Mention they'll see progress updates
-- Sentence 5: Tell them to head to Training Grounds where it'll appear in their training programs list
-- Sentence 6: Get them excited for their custom training program
+IMPORTANT:
+- Be encouraging and excited about their program
+- Keep it concise (2-3 paragraphs max)
+- End with clear next steps
+- Use YOUR personality and coaching style
+- DO NOT say "I'll remember this" (memory handling is separate)
 
-EXAMPLE:
-"Perfect! I've got everything I need to build your training program. 🎯 I'm excited to create something tailored for your [specific goal] with your [specific setup]. **The AI is firing up now to generate your full training program - this takes about 3-5 minutes.** You'll see progress updates as it builds out all your phases and workouts. Head to the Training Grounds and your program will appear in your programs list once it's ready! This is going to be built specifically for YOU! 💪"
-
-NO MORE QUESTIONS - we're done gathering info and the build process is STARTING NOW! 🔥`;
-
-  const summary = getTodoSummary(todoList);
-  const userPrompt = `
-Generate a completion message for this training program build.
-
-WHAT THEY SHARED:
-${summary.completed.join(', ')}
-
-Generate an enthusiastic completion message (5-6 sentences) that:
-1. Celebrates their specific goals/setup (mention 1-2 actual things they shared)
-2. TELLS THEM the training program is being built NOW and takes 3-5 minutes
-3. Mentions they'll see progress updates
-4. Tells them to head to Training Grounds where it'll appear in their training programs list once ready
-5. Gets them excited for their custom training program
-
-CRITICAL: Make sure to tell them about the 3-5 minute build time, progress updates, AND where to find their training program (Training Grounds)!
+Generate the completion message now:
 `;
 
   try {
-    const completionMessage = await callBedrockApi(
+    // Stream the completion message using coach's personality
+    const stream = await callBedrockApiStream(
       systemPrompt,
-      userPrompt,
-      MODEL_IDS.CLAUDE_SONNET_4_FULL
-    ) as string;
+      completionPrompt,
+      MODEL_IDS.CLAUDE_SONNET_4_FULL,
+    );
 
-    return completionMessage.trim();
-
+    for await (const chunk of stream) {
+      yield chunk;
+    }
   } catch (error) {
-    console.error('❌ Error generating completion message, using fallback');
+    console.error("❌ Error generating completion message, using fallback");
 
     // Fallback completion message
-    return "Perfect! I've got everything I need to build your training program. 🔥\n\n**The AI is firing up now to generate your training program - this takes about 3-5 minutes.** You'll see progress updates as it works. Head to the Training Grounds and your program will appear in your programs list once it's ready! 💪";
+    const fallback =
+      "Perfect! I've got everything I need to build your training program. 🔥\n\n**The AI is firing up now to generate your training program - this takes about 3-5 minutes.** You'll see progress updates as it works. Head to the Training Grounds and your program will appear in your programs list once it's ready! 💪";
+    yield fallback;
   }
 }
 
@@ -329,11 +358,11 @@ function buildQuestionPrompt(
     requiredPending: string[];
     optionalPending: string[];
   },
-  coachPersonality?: string
+  coachPersonality?: string,
 ): string {
   return `You are an AI coach helping to create a custom training program through conversation.
 
-${coachPersonality ? `COACH PERSONALITY:\n${coachPersonality}\n\n` : ''}CONVERSATION GUIDELINES:
+${coachPersonality ? `COACH PERSONALITY:\n${coachPersonality}\n\n` : ""}CONVERSATION GUIDELINES:
 
 1. **Flow Like a Real Conversation**
    - This isn't a form - it's a chat with a coach who cares
@@ -373,24 +402,39 @@ Your goal: Gather the information needed to design a training program that actua
  */
 function generateFallbackQuestion(missingField: string): string {
   const fallbackQuestions: Record<string, string> = {
-    'Training Goals': "What are your main training goals? What are you working towards?",
-    'Program Duration': "How long do you want this program to run? (e.g., 8 weeks, 12 weeks)",
-    'Training Frequency': "How many days per week can you train?",
-    'Equipment Access': "What equipment do you have access to?",
-    'Experience Level': "What's your experience level with training? (beginner, intermediate, or advanced)",
-    'Target Event': "Are you training for a specific event or competition?",
-    'Session Duration': "How long are your typical training sessions?",
-    'Start Date': "When do you want to start this program?",
-    'Rest Days Preference': "Do you have preferred rest days? (e.g., weekends, specific days)",
-    'Training Environment': "Where do you train? (home gym, commercial gym, CrossFit box, etc.)",
-    'Current Fitness Baseline': "Can you give me a sense of your current fitness level? Any recent performance benchmarks?",
-    'Injury Considerations': "Do you have any injuries or limitations I should know about?",
-    'Movement Preferences': "Are there specific movements or exercises you really enjoy?",
-    'Movement Dislikes': "Are there movements you'd prefer to minimize or avoid?",
-    'Program Focus': "What should the program focus on? (strength, conditioning, mixed, etc.)",
-    'Intensity Preference': "What intensity level works best for you? (conservative, moderate, or aggressive)",
-    'Volume Tolerance': "How much training volume can you handle? (low, moderate, or high)",
+    "Training Goals":
+      "What are your main training goals? What are you working towards?",
+    "Program Duration":
+      "How long do you want this program to run? (e.g., 8 weeks, 12 weeks)",
+    "Training Frequency": "How many days per week can you train?",
+    "Equipment Access": "What equipment do you have access to?",
+    "Experience Level":
+      "What's your experience level with training? (beginner, intermediate, or advanced)",
+    "Target Event": "Are you training for a specific event or competition?",
+    "Session Duration": "How long are your typical training sessions?",
+    "Start Date": "When do you want to start this program?",
+    "Rest Days Preference":
+      "Do you have preferred rest days? (e.g., weekends, specific days)",
+    "Training Environment":
+      "Where do you train? (home gym, commercial gym, CrossFit box, etc.)",
+    "Current Fitness Baseline":
+      "Can you give me a sense of your current fitness level? Any recent performance benchmarks?",
+    "Injury Considerations":
+      "Do you have any injuries or limitations I should know about?",
+    "Movement Preferences":
+      "Are there specific movements or exercises you really enjoy?",
+    "Movement Dislikes":
+      "Are there movements you'd prefer to minimize or avoid?",
+    "Program Focus":
+      "What should the program focus on? (strength, conditioning, mixed, etc.)",
+    "Intensity Preference":
+      "What intensity level works best for you? (conservative, moderate, or aggressive)",
+    "Volume Tolerance":
+      "How much training volume can you handle? (low, moderate, or high)",
   };
 
-  return fallbackQuestions[missingField] || `Tell me about your ${missingField.toLowerCase()}.`;
+  return (
+    fallbackQuestions[missingField] ||
+    `Tell me about your ${missingField.toLowerCase()}.`
+  );
 }
