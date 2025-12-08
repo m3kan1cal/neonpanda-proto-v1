@@ -1,5 +1,5 @@
 import { createOkResponse, createErrorResponse } from '../libs/api-helpers';
-import { queryProgramsByCoach, queryPrograms } from '../../dynamodb/operations';
+import { queryPrograms } from '../../dynamodb/operations';
 import { withAuth, AuthenticatedHandler } from '../libs/auth/middleware';
 
 const baseHandler: AuthenticatedHandler = async (event) => {
@@ -15,33 +15,50 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     // Parse and validate limit
     const limit = limitParam ? parseInt(limitParam, 10) : undefined;
     if (limitParam && isNaN(limit!)) {
-      return createErrorResponse(400, 'Invalid limit parameter. Must be a number.');
+      return createErrorResponse(
+        400,
+        'Invalid limit parameter. Must be a number.',
+      );
     }
 
-    let programs;
+    console.info('📋 Querying programs:', {
+      userId,
+      coachId: coachId || 'all',
+      status: status || 'non-archived',
+      limit: limit || 'unlimited',
+      method: 'queryPrograms (GSI-based)',
+    });
 
+    // ALWAYS use queryPrograms (GSI-based) since programs are user-scoped, not coach-scoped
+    // This fixes the critical bug where queryProgramsByCoach used wrong composite PK
+    let programs = await queryPrograms(userId, {
+      status: status as any,
+      limit,
+      sortOrder: 'desc', // Most recent first
+    });
+
+    console.info('✅ Programs queried successfully:', {
+      totalFound: programs.length,
+      programIds: programs.map((p) => p.programId),
+    });
+
+    // Filter by coachId in memory if specified (optional filter)
     if (coachId) {
-      // Get programs for specific coach
-      programs = await queryProgramsByCoach(userId, coachId, {
-        status: status as any,
-        limit,
-        sortOrder: 'desc' // Most recent first
-      });
-    } else {
-      // Get all programs across all coaches
-      programs = await queryPrograms(userId, {
-        status: status as any,
-        limit,
-        sortOrder: 'desc'
+      const beforeFilterCount = programs.length;
+      programs = programs.filter((p) => p.coachIds?.includes(coachId));
+      console.info('🔍 Filtered by coachId:', {
+        coachId,
+        beforeFilter: beforeFilterCount,
+        afterFilter: programs.length,
       });
     }
 
     return createOkResponse({
-      programs: programs.map(p => p),
-      count: programs.length
+      programs: programs.map((p) => p),
+      count: programs.length,
     });
   } catch (error) {
-    console.error('Error getting training programs:', error);
+    console.error('❌ Error getting training programs:', error);
     return createErrorResponse(500, 'Failed to get training programs', error);
   }
 };

@@ -6,10 +6,11 @@
  */
 
 import { ProgramGenerationData } from "./types";
-import { callBedrockApi } from "../api-helpers";
+import { callBedrockApi, MODEL_IDS } from "../api-helpers";
 import { parseJsonWithFallbacks } from "../response-utils";
 import { getCondensedSchema } from "../object-utils";
 import { PROGRAM_SCHEMA } from "../schemas/program-schema";
+import { NORMALIZATION_RESPONSE_SCHEMA } from "../schemas/program-normalization-schema";
 
 export interface NormalizationResult {
   isValid: boolean;
@@ -21,62 +22,17 @@ export interface NormalizationResult {
 }
 
 export interface NormalizationIssue {
-  type: "structure" | "data_quality" | "cross_reference" | "date_logic" | "phase_logic";
+  type:
+    | "structure"
+    | "data_quality"
+    | "cross_reference"
+    | "date_logic"
+    | "phase_logic";
   severity: "error" | "warning";
   field: string;
   description: string;
   corrected: boolean;
 }
-
-/**
- * JSON Schema for normalization response (for toolConfig)
- * Tool name: normalize_training_program
- */
-const NORMALIZATION_RESPONSE_SCHEMA = {
-  type: 'object',
-  required: ['isValid', 'normalizedData', 'issues', 'confidence', 'summary'],
-  properties: {
-    isValid: {
-      type: 'boolean',
-      description: 'Whether the program data is valid after normalization',
-    },
-    normalizedData: {
-      type: 'object',
-      description: 'The normalized and corrected program data matching the schema',
-    },
-    issues: {
-      type: 'array',
-      items: {
-        type: 'object',
-        required: ['type', 'severity', 'field', 'description', 'corrected'],
-        properties: {
-          type: {
-            type: 'string',
-            enum: ['structure', 'data_quality', 'cross_reference', 'date_logic', 'phase_logic'],
-          },
-          severity: {
-            type: 'string',
-            enum: ['error', 'warning'],
-          },
-          field: { type: 'string' },
-          description: { type: 'string' },
-          corrected: { type: 'boolean' },
-        },
-      },
-      description: 'List of issues found and whether they were corrected',
-    },
-    confidence: {
-      type: 'number',
-      minimum: 0,
-      maximum: 1,
-      description: 'Confidence in the normalized data (0-1)',
-    },
-    summary: {
-      type: 'string',
-      description: 'Brief summary of normalization results',
-    },
-  },
-};
 
 /**
  * Builds AI normalization prompt that instructs the model to normalize
@@ -152,7 +108,8 @@ CRITICAL INSTRUCTIONS:
 TRAINING PROGRAM-SPECIFIC VALIDATION FOCUS:
 
 1. PROGRAM STRUCTURE: Verify core program metadata
-   - Program name, description, goals are clear and present
+   - Program name MUST be concise (50-60 characters max) - truncate if longer
+   - Program description, goals are clear and present
    - Duration fields (totalDays, totalWeeks) are consistent
    - Experience level and intensity level are valid enum values
 
@@ -187,7 +144,18 @@ TRAINING PROGRAM-SPECIFIC VALIDATION FOCUS:
    - Workout templates need sufficient detail for execution
    - Success metrics and tracking approach should be defined
 
+7. TRAINING FREQUENCY VALIDATION (CRITICAL):
+   - Count workout days per week (exclude recovery/rest days)
+   - Workout days = days with type: strength, conditioning, metcon, accessory, skill, power, etc.
+   - Recovery days (type: recovery, mobility) do NOT count as workout days
+   - Rest days (no workouts) do NOT count as workout days
+   - Each week MUST have AT LEAST trainingFrequency workout days
+   - If any week has fewer workout days than trainingFrequency, FLAG AS ERROR
+   - Example: trainingFrequency=5 means each week needs 5+ workout days minimum
+
 CRITICAL FIXES TO PRIORITIZE:
+- TRAINING FREQUENCY VIOLATION - Add missing workout days to meet trainingFrequency requirement
+- Program name exceeds 60 characters - MUST truncate to 50-60 chars max
 - Inconsistent or overlapping phase date ranges
 - Missing required fields in phases or workout templates
 - Missing or empty workoutContent field (must be natural language string)
@@ -233,7 +201,7 @@ Transform this training program data to conform to the expected schema structure
 export const normalizeProgram = async (
   programData: any,
   userId: string,
-  enableThinking: boolean = false
+  enableThinking: boolean = false,
 ): Promise<NormalizationResult> => {
   try {
     console.info("🔧 Starting training program normalization:", {
@@ -267,21 +235,47 @@ export const normalizeProgram = async (
 };
 
 /**
- * Perform normalization of program data using toolConfig
- * Pattern: Follows workout/normalization.ts exactly
+ * Perform normalization of program data with two-tier model selection
+ *
+ * Tier 1 (Haiku 4): Fast structural validation for high-confidence generations (>= 0.80)
+ * Tier 2 (Sonnet 4): Thorough validation for low-confidence or complex cases (< 0.80)
+ *
+ * Pattern: Matches workout/normalization.ts exactly
  */
 const performNormalization = async (
   programData: any,
   userId: string,
-  enableThinking: boolean = false
+  enableThinking: boolean = false,
 ): Promise<NormalizationResult> => {
   try {
     const normalizationPrompt = buildNormalizationPrompt(programData);
+    const promptSizeKB = (normalizationPrompt.length / 1024).toFixed(1);
+
+    // Determine which model to use based on extraction confidence
+    const extractionConfidence = programData.metadata?.data_confidence || 0;
+    const useHaiku = extractionConfidence >= 0.8;
+    const selectedModel = useHaiku
+      ? MODEL_IDS.CLAUDE_HAIKU_4_FULL
+      : MODEL_IDS.CLAUDE_SONNET_4_FULL;
+
+    console.info("🔀 Two-tier normalization model selection:", {
+      extractionConfidence,
+      threshold: 0.8,
+      selectedTier: useHaiku
+        ? "Tier 1 (Haiku 4 - Fast)"
+        : "Tier 2 (Sonnet 4 - Thorough)",
+      selectedModel,
+      reasoning: useHaiku
+        ? "High confidence generation - use fast structural validation"
+        : "Low confidence generation - use thorough validation with deep reasoning",
+    });
 
     console.info("Program normalization call configuration:", {
       enableThinking,
       promptLength: normalizationPrompt.length,
+      promptSizeKB: `${promptSizeKB}KB`,
       phases: programData.phases?.length || 0,
+      model: useHaiku ? "Haiku 4" : "Sonnet 4",
     });
 
     let normalizationResult: any;
@@ -294,28 +288,33 @@ const performNormalization = async (
       const result = await callBedrockApi(
         normalizationPrompt,
         "program_normalization",
-        undefined, // Use default model
+        selectedModel, // Use tier-selected model
         {
           enableThinking,
           tools: {
-            name: 'normalize_program',
-            description: 'Normalize training program data to conform to the Program Schema',
+            name: "normalize_program",
+            description:
+              "Normalize training program data to conform to the Program Schema",
             inputSchema: NORMALIZATION_RESPONSE_SCHEMA,
           },
-          expectedToolName: 'normalize_program',
-        }
+          expectedToolName: "normalize_program",
+        },
       );
 
-      if (typeof result === 'object' && result !== null) {
+      if (typeof result === "object" && result !== null) {
         console.info("✅ Tool-based program normalization succeeded");
-        normalizationResult = result;
+        // Extract the input from tool use result (callBedrockApi returns { toolName, input, stopReason })
+        normalizationResult = result.input || result;
         normalizationMethod = "tool";
       } else {
         throw new Error("Tool did not return structured data");
       }
     } catch (toolError) {
-      // FALLBACK: Text-based normalization with parsing
-      console.warn("⚠️ Tool-based normalization failed, falling back to text parsing:", toolError);
+      // FALLBACK: Text-based normalization with parsing (using same tier-selected model)
+      console.warn(
+        "⚠️ Tool-based normalization failed, falling back to text parsing:",
+        toolError,
+      );
       console.info("🔄 Attempting fallback program normalization");
 
       const fallbackPrompt = `${normalizationPrompt}
@@ -323,12 +322,12 @@ const performNormalization = async (
 Return ONLY valid JSON matching the normalization response structure (no markdown, no explanation):
 ${JSON.stringify(getCondensedSchema(NORMALIZATION_RESPONSE_SCHEMA), null, 2)}`;
 
-      const fallbackResponse = await callBedrockApi(
+      const fallbackResponse = (await callBedrockApi(
         fallbackPrompt,
         "program_normalization_fallback",
-        undefined,
-        { prefillResponse: "{" }
-      ) as string;
+        selectedModel, // Use same tier-selected model for fallback
+        { prefillResponse: "{" },
+      )) as string;
 
       normalizationResult = parseJsonWithFallbacks(fallbackResponse);
       normalizationMethod = "fallback";
@@ -345,7 +344,7 @@ ${JSON.stringify(getCondensedSchema(NORMALIZATION_RESPONSE_SCHEMA), null, 2)}`;
       !normalizationResult.hasOwnProperty("normalizedData")
     ) {
       throw new Error(
-        "Response missing required fields (isValid, normalizedData)"
+        "Response missing required fields (isValid, normalizedData)",
       );
     }
 
@@ -384,7 +383,7 @@ ${JSON.stringify(getCondensedSchema(NORMALIZATION_RESPONSE_SCHEMA), null, 2)}`;
  */
 export const shouldNormalizeProgram = (
   programData: any,
-  confidence: number
+  confidence: number,
 ): boolean => {
   // Always normalize if confidence is low
   if (confidence < 0.7) {
@@ -404,20 +403,20 @@ export const shouldNormalizeProgram = (
  * Returns true if structure is valid, false if normalization is needed
  */
 const hasCorrectRootStructure = (programData: any): boolean => {
-  // Expected root-level properties based on ProgramGenerationData
+  // Expected root-level properties based on Program interface
+  // Note: equipmentConstraints (not equipmentRequired), no totalWeeks field
   const expectedRootProperties = [
     "name",
     "description",
     "totalDays",
-    "totalWeeks",
     "phases",
     "trainingGoals",
-    "equipmentRequired",
+    "equipmentConstraints",
   ];
 
   // Check for required root properties
-  const hasRequiredProperties = expectedRootProperties.every(
-    (prop) => programData.hasOwnProperty(prop)
+  const hasRequiredProperties = expectedRootProperties.every((prop) =>
+    programData.hasOwnProperty(prop),
   );
 
   if (!hasRequiredProperties) {
@@ -465,7 +464,7 @@ const hasValidPhaseLogic = (programData: any): boolean => {
       const previousPhase = phases[i - 1];
       if (phase.startDay !== previousPhase.endDay + 1) {
         console.info(
-          `❌ Phase ${i + 1} does not follow previous phase sequentially`
+          `❌ Phase ${i + 1} does not follow previous phase sequentially`,
         );
         return false;
       }
@@ -484,12 +483,21 @@ const hasValidPhaseLogic = (programData: any): boolean => {
 
 /**
  * Validates workout template structures (natural language format)
+ * Note: Assembled programs store workouts in S3, not in phase objects
  */
 const hasValidWorkoutTemplates = (programData: any): boolean => {
   if (!programData.phases || !Array.isArray(programData.phases)) {
     return false;
   }
 
+  // If program has s3DetailKey, workouts are stored in S3 (assembled program)
+  // This is valid - skip workout template validation
+  if (programData.s3DetailKey) {
+    console.info("✅ Program has s3DetailKey - workouts stored in S3 (valid)");
+    return true;
+  }
+
+  // Otherwise, validate intermediate generation format (workouts in phases)
   for (const phase of programData.phases) {
     if (!phase.workoutTemplates || !Array.isArray(phase.workoutTemplates)) {
       console.info("❌ Phase missing workoutTemplates array");
@@ -503,19 +511,21 @@ const hasValidWorkoutTemplates = (programData: any): boolean => {
         !template.name ||
         !template.description ||
         !template.workoutContent ||
-        typeof template.workoutContent !== 'string' ||
+        typeof template.workoutContent !== "string" ||
         template.workoutContent.trim().length === 0
       ) {
-        console.info("❌ Workout template missing required fields (name, description, or workoutContent)");
+        console.info(
+          "❌ Workout template missing required fields (name, description, or workoutContent)",
+        );
         return false;
       }
 
       // Validate metadata fields
       if (
-        typeof template.dayNumber !== 'number' ||
+        typeof template.dayNumber !== "number" ||
         !template.templateType ||
-        !['primary', 'optional', 'accessory'].includes(template.templateType) ||
-        typeof template.estimatedDuration !== 'number' ||
+        !["primary", "optional", "accessory"].includes(template.templateType) ||
+        typeof template.estimatedDuration !== "number" ||
         !Array.isArray(template.requiredEquipment)
       ) {
         console.info("❌ Workout template has invalid metadata fields");
@@ -523,7 +533,10 @@ const hasValidWorkoutTemplates = (programData: any): boolean => {
       }
 
       // prescribedExercises is optional - if present, validate it's an array
-      if (template.prescribedExercises !== undefined && !Array.isArray(template.prescribedExercises)) {
+      if (
+        template.prescribedExercises !== undefined &&
+        !Array.isArray(template.prescribedExercises)
+      ) {
         console.info("❌ prescribedExercises must be an array if present");
         return false;
       }
@@ -537,7 +550,7 @@ const hasValidWorkoutTemplates = (programData: any): boolean => {
  * Generates a human-readable summary of normalization results
  */
 export const generateNormalizationSummary = (
-  result: NormalizationResult
+  result: NormalizationResult,
 ): string => {
   const { isValid, issues, confidence, normalizationMethod } = result;
 
@@ -566,7 +579,9 @@ export const generateNormalizationSummary = (
   }
 
   if (correctedCount > 0) {
-    parts.push(`${correctedCount} issue${correctedCount > 1 ? "s" : ""} corrected`);
+    parts.push(
+      `${correctedCount} issue${correctedCount > 1 ? "s" : ""} corrected`,
+    );
   }
 
   parts.push(`confidence: ${(confidence * 100).toFixed(0)}%`);

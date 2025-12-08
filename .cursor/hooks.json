@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "hooks": {
+    "afterFileEdit": [
+      {
+        "command": "./.cursor/hooks/lint-and-format.sh"
+      }
+    ],
+    "beforeShellExecution": [
+      {
+        "command": "./.cursor/hooks/audit-shell.sh"
+      }
+    ],
+    "afterAgentResponse": [
+      {
+        "command": "./.cursor/hooks/log-agent-response.sh"
+      }
+    ]
+  }
+}
+

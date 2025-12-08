@@ -34,58 +34,41 @@ export interface NormalizationIssue {
  * workout data against the Universal Workout Schema v2.0
  */
 export const buildNormalizationPrompt = (workoutData: any): string => {
-  return `
-Normalize workout data to match the Universal Workout Schema v2.0.
+  // Compact JSON formatting to reduce prompt size (no pretty-printing)
+  const schemaJson = JSON.stringify(getCondensedSchema(WORKOUT_SCHEMA));
+  const workoutJson = JSON.stringify(workoutData);
 
-RESPONSE FORMAT (all fields required):
+  return `Normalize workout data to Universal Workout Schema v2.0.
+
+RESPONSE FORMAT (all required):
 {
-  "isValid": boolean,  // true if no issues OR all corrected, false if uncorrectable issues
-  "normalizedData": object,  // complete normalized workout
-  "issues": array,  // [{type, severity, field, description, corrected}] or []
-  "confidence": number,  // 0-1
-  "summary": string
+  "isValid": boolean,           // true if no issues OR all corrected
+  "normalizedData": {...},      // complete normalized workout
+  "issues": [{type, severity, field, description, corrected}],  // or []
+  "confidence": 0.0-1.0,
+  "summary": "string"
 }
 
-KEY NORMALIZATION RULES:
-- Match schema structure exactly, move misplaced fields to correct locations
-- Ensure all rounds have identical field structure
+NORMALIZATION RULES:
+- Match schema structure exactly - move misplaced fields to correct locations
+- Ensure rounds have identical field structure within discipline_specific
 - Normalize exercise names consistently across rounds
-- Preserve all data, only restructure (don't add placeholders for missing optionals)
-- Fix data type inconsistencies
+- Preserve ALL data - only restructure, don't add placeholders for missing optionals
+- Fix data type inconsistencies (string->number, etc.)
 
-COMMON FIXES:
-- coach_notes/discipline_specific misplaced inside other objects (move to root)
-- Inconsistent exercise structures across rounds
-- Mixed time domains (separate strength from metcon)
+COMMON STRUCTURAL ISSUES TO FIX:
+- coach_notes/discipline_specific nested in wrong objects → move to root level
+- Inconsistent exercise structures across rounds → standardize
+- Mixed time domains in single round → separate strength from metcon phases
+- Performance data in wrong locations → consolidate in performance_metrics
 
-═══════════════════════════════════════════════════════════════════════
-UNIVERSAL WORKOUT SCHEMA V2.0 - STRUCTURE REFERENCE
-═══════════════════════════════════════════════════════════════════════
+SCHEMA REFERENCE:
+${schemaJson}
 
-This is the condensed schema structure (descriptions removed to reduce size).
-Focus on field names, types, and required fields for normalization.
+WORKOUT DATA TO NORMALIZE:
+${workoutJson}
 
-${JSON.stringify(getCondensedSchema(WORKOUT_SCHEMA), null, 2)}
-
-═══════════════════════════════════════════════════════════════════════
-WORKOUT DATA TO NORMALIZE
-═══════════════════════════════════════════════════════════════════════
-${JSON.stringify(workoutData, null, 2)}
-
-📋 YOUR TASK:
-1. Analyze this workout data against Universal Workout Schema v2.0
-2. Identify any structural or data quality issues
-3. Fix/normalize any issues found
-4. Return the COMPLETE tool response with ALL required fields
-
-🎯 REMINDER - Your tool response MUST include:
-- isValid: true (if 0 issues OR all corrected) OR false (if uncorrected issues exist)
-- normalizedData: { complete workout object }
-- issues: [ array of issues found, empty if none ]
-- confidence: 0.0-1.0
-- summary: "brief description of what was done"
-
-DO NOT omit any required fields, especially isValid!`;
+TASK: Analyze workout against schema, identify structural/data issues, fix them, return COMPLETE tool response with ALL required fields including isValid.`;
 };
 
 /**
@@ -95,7 +78,7 @@ DO NOT omit any required fields, especially isValid!`;
 export const normalizeWorkout = async (
   workoutData: any,
   userId: string,
-  enableThinking: boolean = false
+  enableThinking: boolean = false,
 ): Promise<NormalizationResult> => {
   try {
     console.info("🔧 Starting workout normalization:", {
@@ -136,7 +119,7 @@ export const normalizeWorkout = async (
 const performNormalization = async (
   workoutData: any,
   userId: string,
-  enableThinking: boolean = false
+  enableThinking: boolean = false,
 ): Promise<NormalizationResult> => {
   try {
     const normalizationPrompt = buildNormalizationPrompt(workoutData);
@@ -144,26 +127,28 @@ const performNormalization = async (
 
     // Determine which model to use based on extraction confidence
     const extractionConfidence = workoutData.metadata?.data_confidence || 0;
-    const useHaiku = extractionConfidence >= 0.80;
+    const useHaiku = extractionConfidence >= 0.8;
     const selectedModel = useHaiku
       ? MODEL_IDS.CLAUDE_HAIKU_4_FULL
       : MODEL_IDS.CLAUDE_SONNET_4_FULL;
 
     console.info("🔀 Two-tier normalization model selection:", {
       extractionConfidence,
-      threshold: 0.80,
-      selectedTier: useHaiku ? 'Tier 1 (Haiku 4 - Fast)' : 'Tier 2 (Sonnet 4 - Thorough)',
+      threshold: 0.8,
+      selectedTier: useHaiku
+        ? "Tier 1 (Haiku 4 - Fast)"
+        : "Tier 2 (Sonnet 4 - Thorough)",
       selectedModel,
       reasoning: useHaiku
-        ? 'High confidence extraction - use fast structural validation'
-        : 'Low confidence extraction - use thorough validation with deep reasoning'
+        ? "High confidence extraction - use fast structural validation"
+        : "Low confidence extraction - use thorough validation with deep reasoning",
     });
 
     console.info("Normalization call configuration:", {
       enableThinking,
       promptLength: normalizationPrompt.length,
       promptSizeKB: `${promptSizeKB}KB`,
-      model: useHaiku ? 'Haiku 4' : 'Sonnet 4'
+      model: useHaiku ? "Haiku 4" : "Sonnet 4",
     });
 
     let normalizationResult: any;
@@ -180,15 +165,16 @@ const performNormalization = async (
         {
           enableThinking,
           tools: {
-            name: 'normalize_workout',
-            description: 'Normalize workout data to conform to the Universal Workout Schema v2.0',
-            inputSchema: NORMALIZATION_RESPONSE_SCHEMA
+            name: "normalize_workout",
+            description:
+              "Normalize workout data to conform to the Universal Workout Schema v2.0",
+            inputSchema: NORMALIZATION_RESPONSE_SCHEMA,
           },
-          expectedToolName: 'normalize_workout'
-        }
+          expectedToolName: "normalize_workout",
+        },
       );
 
-      if (typeof result === 'object' && result !== null) {
+      if (typeof result === "object" && result !== null) {
         console.info("✅ Tool-based normalization succeeded");
         normalizationResult = result;
         normalizationMethod = "tool";
@@ -197,27 +183,31 @@ const performNormalization = async (
       }
     } catch (toolError) {
       // FALLBACK: Text-based normalization with parsing (using same tier-selected model)
-      console.warn("⚠️ Tool-based normalization failed, using fallback:", toolError);
+      console.warn(
+        "⚠️ Tool-based normalization failed, using fallback:",
+        toolError,
+      );
       normalizationMethod = "fallback";
 
-      const fallbackResponse = await callBedrockApi(
+      const fallbackResponse = (await callBedrockApi(
         normalizationPrompt,
         "workout_normalization",
         selectedModel, // Use same tier-selected model for fallback
-        { enableThinking }
-      ) as string;
+        { enableThinking },
+      )) as string;
 
       // Store debug data for fallback cases
       await storeDebugDataInS3(
         fallbackResponse,
         {
-          type: 'normalization_fallback',
+          type: "normalization_fallback",
           workoutId: workoutData.workout_id,
           userId: workoutData.user_id,
           discipline: workoutData.discipline,
-          error: toolError instanceof Error ? toolError.message : String(toolError)
+          error:
+            toolError instanceof Error ? toolError.message : String(toolError),
         },
-        'normalization-fallback'
+        "normalization-fallback",
       );
 
       normalizationResult = parseJsonWithFallbacks(fallbackResponse);
@@ -232,24 +222,24 @@ const performNormalization = async (
         !normalizationResult.hasOwnProperty("normalizedData")
       ) {
         throw new Error(
-          "Response missing required fields (isValid, normalizedData)"
+          "Response missing required fields (isValid, normalizedData)",
         );
       }
     }
 
     console.info(
-      `Normalization completed: { method: '${normalizationMethod}', isValid: ${normalizationResult.isValid}, issues: ${normalizationResult.issues?.length || 0} }`
+      `Normalization completed: { method: '${normalizationMethod}', isValid: ${normalizationResult.isValid}, issues: ${normalizationResult.issues?.length || 0} }`,
     );
 
     // Add normalized flag
     if (normalizationResult.normalizedData?.metadata?.validation_flags) {
       if (
         !normalizationResult.normalizedData.metadata.validation_flags.includes(
-          "normalized"
+          "normalized",
         )
       ) {
         normalizationResult.normalizedData.metadata.validation_flags.push(
-          "normalized"
+          "normalized",
         );
       }
     }
@@ -257,19 +247,25 @@ const performNormalization = async (
     // Smart defaulting for isValid when AI doesn't provide it
     // If isValid is undefined AND there are no issues (or all issues corrected), default to true
     const issues = normalizationResult.issues || [];
-    const allIssuesCorrected = issues.length === 0 || issues.every((issue: any) => issue.corrected === true);
-    const isValidResult = normalizationResult.isValid !== undefined
-      ? normalizationResult.isValid
-      : allIssuesCorrected; // Default to true if no issues or all corrected
+    const allIssuesCorrected =
+      issues.length === 0 ||
+      issues.every((issue: any) => issue.corrected === true);
+    const isValidResult =
+      normalizationResult.isValid !== undefined
+        ? normalizationResult.isValid
+        : allIssuesCorrected; // Default to true if no issues or all corrected
 
     const resultConfidence = normalizationResult.confidence || 0.8;
 
     // AUTO-ESCALATION: If Haiku produced low confidence result, re-run with Sonnet
     if (useHaiku && resultConfidence < 0.6) {
-      console.warn("⚠️ Haiku normalization confidence too low, escalating to Sonnet:", {
-        haikuConfidence: resultConfidence,
-        escalationThreshold: 0.6
-      });
+      console.warn(
+        "⚠️ Haiku normalization confidence too low, escalating to Sonnet:",
+        {
+          haikuConfidence: resultConfidence,
+          escalationThreshold: 0.6,
+        },
+      );
 
       // Re-run with Sonnet
       const sonnetResult = await callBedrockApi(
@@ -279,15 +275,16 @@ const performNormalization = async (
         {
           enableThinking,
           tools: {
-            name: 'normalize_workout',
-            description: 'Normalize workout data to conform to the Universal Workout Schema v2.0',
-            inputSchema: NORMALIZATION_RESPONSE_SCHEMA
+            name: "normalize_workout",
+            description:
+              "Normalize workout data to conform to the Universal Workout Schema v2.0",
+            inputSchema: NORMALIZATION_RESPONSE_SCHEMA,
           },
-          expectedToolName: 'normalize_workout'
-        }
+          expectedToolName: "normalize_workout",
+        },
       );
 
-      if (typeof sonnetResult === 'object' && sonnetResult !== null) {
+      if (typeof sonnetResult === "object" && sonnetResult !== null) {
         console.info("✅ Escalated to Sonnet - normalization succeeded");
         normalizationResult = sonnetResult;
         normalizationMethod = "tool";
@@ -305,12 +302,12 @@ const performNormalization = async (
 
     // Log final normalization result with tier info
     console.info("✅ Normalization complete:", {
-      tier: useHaiku ? 'Haiku 4' : 'Sonnet 4',
+      tier: useHaiku ? "Haiku 4" : "Sonnet 4",
       escalated: useHaiku && resultConfidence < 0.6,
       confidence: finalResult.confidence,
       isValid: finalResult.isValid,
       issuesFound: finalResult.issues.length,
-      method: normalizationMethod
+      method: normalizationMethod,
     });
 
     return finalResult;
@@ -342,11 +339,25 @@ const performNormalization = async (
 const hasCorrectRootStructure = (workoutData: any): boolean => {
   // Expected root-level properties based on Universal Workout Schema v2.0
   const expectedRootProperties = [
-    'workout_id', 'user_id', 'date', 'discipline', 'methodology',
-    'workout_name', 'workout_type', 'duration', 'location',
-    'coach_id', 'conversation_id', 'performance_metrics',
-    'discipline_specific', 'pr_achievements', 'subjective_feedback',
-    'environmental_factors', 'recovery_metrics', 'coach_notes', 'metadata'
+    "workout_id",
+    "user_id",
+    "date",
+    "discipline",
+    "methodology",
+    "workout_name",
+    "workout_type",
+    "duration",
+    "location",
+    "coach_id",
+    "conversation_id",
+    "performance_metrics",
+    "discipline_specific",
+    "pr_achievements",
+    "subjective_feedback",
+    "environmental_factors",
+    "recovery_metrics",
+    "coach_notes",
+    "metadata",
   ];
 
   // Check for critical structural issues (fields in wrong places)
@@ -356,18 +367,25 @@ const hasCorrectRootStructure = (workoutData: any): boolean => {
     // discipline_specific should be at root level, not in performance_metrics
     workoutData.performance_metrics?.discipline_specific,
     // performance_metrics should be at root level, not in discipline_specific
-    workoutData.discipline_specific?.performance_metrics
+    workoutData.discipline_specific?.performance_metrics,
   ];
 
   // If any structural issues exist, normalization is needed
-  if (structuralIssues.some(issue => issue !== undefined)) {
+  if (structuralIssues.some((issue) => issue !== undefined)) {
     return false;
   }
 
   // Check if core required root properties exist at root level
-  const coreProperties = ['workout_id', 'user_id', 'date', 'discipline', 'metadata'];
-  const hasCoreProperties = coreProperties.every(prop =>
-    workoutData.hasOwnProperty(prop) && workoutData[prop] !== undefined
+  const coreProperties = [
+    "workout_id",
+    "user_id",
+    "date",
+    "discipline",
+    "metadata",
+  ];
+  const hasCoreProperties = coreProperties.every(
+    (prop) =>
+      workoutData.hasOwnProperty(prop) && workoutData[prop] !== undefined,
   );
 
   if (!hasCoreProperties) {
@@ -375,13 +393,16 @@ const hasCorrectRootStructure = (workoutData: any): boolean => {
   }
 
   // Check if coach_notes exists and is at root level (not nested)
-  if (workoutData.coach_notes && typeof workoutData.coach_notes === 'object') {
+  if (workoutData.coach_notes && typeof workoutData.coach_notes === "object") {
     // coach_notes exists and appears to be structured correctly at root
     return true;
   }
 
   // Check if discipline_specific exists and is at root level (not nested)
-  if (workoutData.discipline_specific && typeof workoutData.discipline_specific === 'object') {
+  if (
+    workoutData.discipline_specific &&
+    typeof workoutData.discipline_specific === "object"
+  ) {
     // discipline_specific exists and appears to be structured correctly at root
     return true;
   }
@@ -395,7 +416,8 @@ const hasCorrectRootStructure = (workoutData: any): boolean => {
  */
 export const shouldNormalizeWorkout = (
   workoutData: any,
-  extractionConfidence: number
+  extractionConfidence: number,
+  completeness?: number,
 ): boolean => {
   // First, do a quick structural check
   const hasCorrectStructure = hasCorrectRootStructure(workoutData);
@@ -406,22 +428,11 @@ export const shouldNormalizeWorkout = (
   console.info("🔍 Normalization decision analysis:", {
     hasCorrectStructure,
     extractionConfidence,
+    completeness,
     isComplex,
     workoutId: workoutData.workout_id,
-    discipline: workoutData.discipline
+    discipline: workoutData.discipline,
   });
-
-  // If structure is correct and confidence is high, skip normalization (unless complex)
-  if (hasCorrectStructure && extractionConfidence > 0.8 && !isComplex) {
-    console.info("✅ Skipping normalization: correct structure + high confidence + simple workout");
-    return false;
-  }
-
-  // Normalize complex workouts even with good structure/confidence for quality assurance
-  if (isComplex && hasCorrectStructure && extractionConfidence > 0.7) {
-    console.info("🔧 Normalization required: complex workout needs validation");
-    return true;
-  }
 
   // If structure is incorrect, always normalize regardless of confidence
   if (!hasCorrectStructure) {
@@ -435,16 +446,70 @@ export const shouldNormalizeWorkout = (
     return true;
   }
 
+  // Skip normalization for very high confidence extractions (>= 0.95)
+  // Even complex workouts don't need normalization if AI is highly confident
+  if (extractionConfidence >= 0.95 && hasCorrectStructure) {
+    console.info(
+      "✅ Skipping normalization: very high confidence extraction (>= 0.95)",
+      {
+        extractionConfidence,
+        isComplex,
+        completeness: completeness || "not provided",
+      },
+    );
+    return false;
+  }
+
+  // Normalize complex workouts with medium-high confidence for quality assurance
+  // Only if confidence is between 0.7 and 0.95
+  if (isComplex && hasCorrectStructure && extractionConfidence >= 0.7) {
+    console.info(
+      "🔧 Normalization required: complex workout needs validation (confidence < 0.95)",
+      {
+        extractionConfidence,
+      },
+    );
+    return true;
+  }
+
+  // CRITICAL: Consider completeness for enrichment
+  // Even with perfect structure (high confidence), bare-bones data needs enrichment
+  if (completeness !== undefined && completeness < 0.65) {
+    console.info(
+      "🔧 Normalization required: low completeness (needs enrichment)",
+      {
+        completeness,
+        threshold: 0.65,
+      },
+    );
+    return true;
+  }
+
+  // If structure is correct, confidence is high, and completeness is good, skip normalization
+  if (hasCorrectStructure && extractionConfidence > 0.8 && !isComplex) {
+    console.info(
+      "✅ Skipping normalization: correct structure + high confidence + good completeness + simple workout",
+      {
+        completeness: completeness || "not provided",
+      },
+    );
+    return false;
+  }
+
   // For medium confidence (0.7-0.8), we already know structure is correct from above
-  // so we can skip normalization
-  console.info("✅ Skipping normalization: correct structure + medium confidence");
+  // so we can skip normalization if completeness is acceptable
+  console.info(
+    "✅ Skipping normalization: correct structure + medium confidence",
+  );
   return false;
 };
 
 /**
  * Generates a human-readable summary of normalization results for logging
  */
-export const generateNormalizationSummary = (result: NormalizationResult): string => {
+export const generateNormalizationSummary = (
+  result: NormalizationResult,
+): string => {
   const { isValid, issues, confidence, normalizationMethod } = result;
 
   let summary = `Normalization ${isValid ? "PASSED" : "FAILED"} (confidence: ${confidence.toFixed(2)})`;
@@ -475,7 +540,8 @@ export const generateNormalizationSummary = (result: NormalizationResult): strin
  */
 const checkForComplexWorkoutIndicators = (workoutData: any): boolean => {
   // Check for multiple rounds (potential complexity)
-  const roundCount = workoutData.discipline_specific?.crossfit?.rounds?.length || 0;
+  const roundCount =
+    workoutData.discipline_specific?.crossfit?.rounds?.length || 0;
   if (roundCount > 5) return true;
 
   // Check for multiple phases
@@ -484,13 +550,17 @@ const checkForComplexWorkoutIndicators = (workoutData: any): boolean => {
   if (phases.size > 2) return true;
 
   // Check for exercise count complexity
-  const totalExercises = rounds.reduce((count: number, round: any) =>
-    count + (round.exercises?.length || 0), 0);
+  const totalExercises = rounds.reduce(
+    (count: number, round: any) => count + (round.exercises?.length || 0),
+    0,
+  );
   if (totalExercises > 8) return true;
 
   // Check for many different movements
   const allExercises = rounds.flatMap((r: any) => r.exercises || []);
-  const exerciseNames = allExercises.map((e: any) => e.exercise_name?.toLowerCase()).filter(Boolean);
+  const exerciseNames = allExercises
+    .map((e: any) => e.exercise_name?.toLowerCase())
+    .filter(Boolean);
   const uniqueExercises = new Set(exerciseNames);
   if (uniqueExercises.size > 5) return true;
 

@@ -36,9 +36,6 @@ coverage
 .vscode
 .idea
 
-# Amplify
-amplify/data/resource.ts
-
 # Archived files
 archived/
 

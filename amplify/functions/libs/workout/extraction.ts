@@ -22,33 +22,48 @@ export const checkWorkoutComplexity = (workoutContent: string): boolean => {
   const content = workoutContent.toLowerCase();
 
   // Check for multiple phases
-  const phaseIndicators = ['warmup', 'warm-up', 'warm up', 'working', 'cooldown', 'cool-down', 'cool down', 'metcon', 'strength'];
-  const phaseMatches = phaseIndicators.filter(indicator => content.includes(indicator)).length;
+  const phaseIndicators = [
+    "warmup",
+    "warm-up",
+    "warm up",
+    "working",
+    "cooldown",
+    "cool-down",
+    "cool down",
+    "metcon",
+    "strength",
+  ];
+  const phaseMatches = phaseIndicators.filter((indicator) =>
+    content.includes(indicator),
+  ).length;
 
   // Check for complex structures
   const complexityIndicators = [
-    /\d+\s*rounds/gi,     // Multiple rounds
-    /\d+\s*sets/gi,       // Multiple sets
-    /superset/gi,         // Supersets
-    /circuit/gi,          // Circuits
-    /emom/gi,             // EMOM
-    /tabata/gi,           // Tabata
-    /for\s+time/gi,       // For time
-    /amrap/gi,            // AMRAP
-    /\d+:\d+/g,           // Time notation
-    /\d+\s*x\s*\d+/gi,    // Rep schemes like 5x5
+    /\d+\s*rounds/gi, // Multiple rounds
+    /\d+\s*sets/gi, // Multiple sets
+    /superset/gi, // Supersets
+    /circuit/gi, // Circuits
+    /emom/gi, // EMOM
+    /tabata/gi, // Tabata
+    /for\s+time/gi, // For time
+    /amrap/gi, // AMRAP
+    /\d+:\d+/g, // Time notation
+    /\d+\s*x\s*\d+/gi, // Rep schemes like 5x5
   ];
 
-  const complexMatches = complexityIndicators.filter(pattern => pattern.test(content)).length;
+  const complexMatches = complexityIndicators.filter((pattern) =>
+    pattern.test(content),
+  ).length;
 
   // Enable thinking for complex workouts
-  const isComplex = phaseMatches >= 2 || complexMatches >= 3 || workoutContent.length > 800;
+  const isComplex =
+    phaseMatches >= 2 || complexMatches >= 3 || workoutContent.length > 800;
 
   console.info("Workout complexity analysis:", {
     phaseMatches,
     complexMatches,
     contentLength: workoutContent.length,
-    isComplex
+    isComplex,
   });
 
   return isComplex;
@@ -103,7 +118,7 @@ export const isComplexWorkout = (userMessage: string): boolean => {
   ];
 
   const matchCount = complexityIndicators.filter((pattern) =>
-    pattern.test(userMessage)
+    pattern.test(userMessage),
   ).length;
   const messageLength = userMessage.length;
   const wordCount = userMessage.split(/\s+/).length;
@@ -115,18 +130,20 @@ export const isComplexWorkout = (userMessage: string): boolean => {
 /**
  * Validates workout structure for common issues and inconsistencies
  */
-export const validateWorkoutStructure = (workoutData: any): {
+export const validateWorkoutStructure = (
+  workoutData: any,
+): {
   hasIssues: boolean;
   issues: string[];
-  severity: 'minor' | 'major' | 'critical';
+  severity: "minor" | "major" | "critical";
 } => {
   const issues: string[] = [];
-  let severity: 'minor' | 'major' | 'critical' = 'minor';
+  let severity: "minor" | "major" | "critical" = "minor";
 
   // Check for basic structure
   if (!workoutData.rounds || !Array.isArray(workoutData.rounds)) {
-    issues.push('Missing or invalid rounds array');
-    severity = 'critical';
+    issues.push("Missing or invalid rounds array");
+    severity = "critical";
     return { hasIssues: true, issues, severity };
   }
 
@@ -135,11 +152,13 @@ export const validateWorkoutStructure = (workoutData: any): {
   // 1. Round consistency checks
   const roundStructures = rounds.map((round: any, index: number) => {
     const structure = {
-      hasRoundNumber: typeof round.round_number === 'number',
-      hasPhase: typeof round.phase === 'string',
+      hasRoundNumber: typeof round.round_number === "number",
+      hasPhase: typeof round.phase === "string",
       hasExercises: Array.isArray(round.exercises),
-      exerciseCount: Array.isArray(round.exercises) ? round.exercises.length : 0,
-      fields: Object.keys(round || {}).sort()
+      exerciseCount: Array.isArray(round.exercises)
+        ? round.exercises.length
+        : 0,
+      fields: Object.keys(round || {}).sort(),
     };
 
     if (!structure.hasRoundNumber) {
@@ -147,7 +166,7 @@ export const validateWorkoutStructure = (workoutData: any): {
     }
     if (!structure.hasExercises) {
       issues.push(`Round ${index + 1} missing or invalid exercises array`);
-      severity = 'major';
+      severity = "major";
     }
 
     return structure;
@@ -155,44 +174,53 @@ export const validateWorkoutStructure = (workoutData: any): {
 
   // Check for inconsistent round structures
   const firstRoundFields = roundStructures[0]?.fields || [];
-  const inconsistentRounds = roundStructures.filter((struct: any, index: number) =>
-    JSON.stringify(struct.fields) !== JSON.stringify(firstRoundFields)
+  const inconsistentRounds = roundStructures.filter(
+    (struct: any, index: number) =>
+      JSON.stringify(struct.fields) !== JSON.stringify(firstRoundFields),
   );
 
   if (inconsistentRounds.length > 0) {
-    issues.push(`Inconsistent round structures detected in ${inconsistentRounds.length} rounds`);
-    if (severity === 'minor') severity = 'major';
+    issues.push(
+      `Inconsistent round structures detected in ${inconsistentRounds.length} rounds`,
+    );
+    if (severity === "minor") severity = "major";
   }
 
   // 2. Exercise object uniformity checks
   const allExercises = rounds.flatMap((round: any) => round.exercises || []);
   if (allExercises.length > 0) {
     const exerciseStructures = allExercises.map((exercise: any) =>
-      Object.keys(exercise || {}).sort()
+      Object.keys(exercise || {}).sort(),
     );
 
     const firstExerciseFields = exerciseStructures[0] || [];
-    const inconsistentExercises = exerciseStructures.filter((fields: string[]) =>
-      JSON.stringify(fields) !== JSON.stringify(firstExerciseFields)
+    const inconsistentExercises = exerciseStructures.filter(
+      (fields: string[]) =>
+        JSON.stringify(fields) !== JSON.stringify(firstExerciseFields),
     );
 
     if (inconsistentExercises.length > 0 && allExercises.length > 1) {
-      issues.push(`Inconsistent exercise structures across ${inconsistentExercises.length} exercises`);
-      if (severity === 'minor') severity = 'major';
+      issues.push(
+        `Inconsistent exercise structures across ${inconsistentExercises.length} exercises`,
+      );
+      if (severity === "minor") severity = "major";
     }
 
     // Check for missing required exercise fields
     allExercises.forEach((exercise: any, index: number) => {
-      if (!exercise.exercise_name || typeof exercise.exercise_name !== 'string') {
+      if (
+        !exercise.exercise_name ||
+        typeof exercise.exercise_name !== "string"
+      ) {
         issues.push(`Exercise ${index + 1} missing exercise_name`);
-        severity = 'major';
+        severity = "major";
       }
     });
   }
 
   // 3. Logical grouping checks (phase consistency)
   const phaseRounds = rounds.reduce((acc: any, round: any) => {
-    const phase = round.phase || 'unknown';
+    const phase = round.phase || "unknown";
     if (!acc[phase]) acc[phase] = [];
     acc[phase].push(round);
     return acc;
@@ -200,64 +228,78 @@ export const validateWorkoutStructure = (workoutData: any): {
 
   // Check for mixed time domains in same phase
   Object.entries(phaseRounds).forEach(([phase, phaseRounds]: [string, any]) => {
-    if (phase === 'working' && phaseRounds.length > 1) {
+    if (phase === "working" && phaseRounds.length > 1) {
       // Look for strength/metcon mixing in working rounds
       const hasHeavyStrength = phaseRounds.some((round: any) =>
-        round.exercises?.some((ex: any) =>
-          ex.weight?.value > 200 || // Heavy weights
-          (ex.reps?.prescribed && ex.reps.prescribed <= 5) // Low rep ranges
-        )
+        round.exercises?.some(
+          (ex: any) =>
+            ex.weight?.value > 200 || // Heavy weights
+            (ex.reps?.prescribed && ex.reps.prescribed <= 5), // Low rep ranges
+        ),
       );
 
       const hasMetcon = phaseRounds.some((round: any) =>
-        round.exercises?.some((ex: any) =>
-          ex.reps?.prescribed > 15 || // High rep ranges
-          ['thruster', 'burpee', 'pull-up', 'push-up'].includes(ex.exercise_name?.toLowerCase())
-        )
+        round.exercises?.some(
+          (ex: any) =>
+            ex.reps?.prescribed > 15 || // High rep ranges
+            ["thruster", "burpee", "pull-up", "push-up"].includes(
+              ex.exercise_name?.toLowerCase(),
+            ),
+        ),
       );
 
       if (hasHeavyStrength && hasMetcon) {
-        issues.push('Potential strength/metcon mixing detected in working rounds');
-        if (severity === 'minor') severity = 'major';
+        issues.push(
+          "Potential strength/metcon mixing detected in working rounds",
+        );
+        if (severity === "minor") severity = "major";
       }
     }
   });
 
   // 4. Movement naming consistency
-  const exerciseNames = allExercises.map((ex: any) => ex.exercise_name?.toLowerCase()).filter(Boolean);
+  const exerciseNames = allExercises
+    .map((ex: any) => ex.exercise_name?.toLowerCase())
+    .filter(Boolean);
   const nameVariations = exerciseNames.reduce((acc: any, name: string) => {
-    const normalized = name.replace(/[^a-z]/g, ''); // Remove spaces, hyphens
+    const normalized = name.replace(/[^a-z]/g, ""); // Remove spaces, hyphens
     if (!acc[normalized]) acc[normalized] = new Set();
     acc[normalized].add(name);
     return acc;
   }, {});
 
-  Object.entries(nameVariations).forEach(([normalized, variations]: [string, any]) => {
-    if (variations.size > 1) {
-      issues.push(`Inconsistent naming for ${normalized}: ${Array.from(variations).join(', ')}`);
-    }
-  });
+  Object.entries(nameVariations).forEach(
+    ([normalized, variations]: [string, any]) => {
+      if (variations.size > 1) {
+        issues.push(
+          `Inconsistent naming for ${normalized}: ${Array.from(variations).join(", ")}`,
+        );
+      }
+    },
+  );
 
   // 5. Critical structural issues
-  if (workoutData.coach_notes && typeof workoutData.coach_notes !== 'object') {
-    issues.push('coach_notes should be an object at root level');
-    severity = 'major';
+  if (workoutData.coach_notes && typeof workoutData.coach_notes !== "object") {
+    issues.push("coach_notes should be an object at root level");
+    severity = "major";
   }
 
   if (workoutData.discipline_specific?.coach_notes) {
-    issues.push('coach_notes incorrectly nested in discipline_specific');
-    severity = 'major';
+    issues.push("coach_notes incorrectly nested in discipline_specific");
+    severity = "major";
   }
 
   if (workoutData.performance_metrics?.discipline_specific) {
-    issues.push('discipline_specific incorrectly nested in performance_metrics');
-    severity = 'major';
+    issues.push(
+      "discipline_specific incorrectly nested in performance_metrics",
+    );
+    severity = "major";
   }
 
   return {
     hasIssues: issues.length > 0,
     issues,
-    severity
+    severity,
   };
 };
 
@@ -268,13 +310,14 @@ export const buildWorkoutExtractionPrompt = (
   userMessage: string,
   coachConfig: CoachConfig,
   criticalTrainingDirective?: { content: string; enabled: boolean },
-  userTimezone?: string
+  userTimezone?: string,
 ): string => {
   const isComplex = isComplexWorkout(userMessage);
 
   // Build directive section if enabled
-  const directiveSection = criticalTrainingDirective?.enabled && criticalTrainingDirective?.content
-    ? `🚨 CRITICAL TRAINING DIRECTIVE - ABSOLUTE PRIORITY:
+  const directiveSection =
+    criticalTrainingDirective?.enabled && criticalTrainingDirective?.content
+      ? `🚨 CRITICAL TRAINING DIRECTIVE - ABSOLUTE PRIORITY:
 
 ${criticalTrainingDirective.content}
 
@@ -283,10 +326,10 @@ This directive takes precedence over all other instructions except safety constr
 ---
 
 `
-    : '';
+      : "";
 
   // Build timezone context section
-  const effectiveTimezone = userTimezone || 'America/Los_Angeles';
+  const effectiveTimezone = userTimezone || "America/Los_Angeles";
   const currentDateTime = new Date();
   const dateOptions: Intl.DateTimeFormatOptions = {
     weekday: "long",
@@ -301,8 +344,14 @@ This directive takes precedence over all other instructions except safety constr
     timeZone: effectiveTimezone,
     timeZoneName: "short",
   };
-  const formattedDate = currentDateTime.toLocaleDateString("en-US", dateOptions);
-  const formattedTime = currentDateTime.toLocaleTimeString("en-US", timeOptions);
+  const formattedDate = currentDateTime.toLocaleDateString(
+    "en-US",
+    dateOptions,
+  );
+  const formattedTime = currentDateTime.toLocaleTimeString(
+    "en-US",
+    timeOptions,
+  );
 
   const timezoneSection = `📅 TEMPORAL CONTEXT:
 **Current Date**: ${formattedDate}
@@ -443,7 +492,13 @@ EXTRACTION GUIDELINES:
 2. INTELLIGENT INFERENCE: Use context clues to infer missing information intelligently
    - If someone says "did Fran in 8:57", infer crossfit discipline, for_time format
    - If they mention weights without units, use coach's methodology to infer (lbs for US, kg for international)
-   - Estimate intensity/RPE from language: "crushed it" = 8-9, "easy day" = 4-5
+   - Estimate intensity/RPE from language: "crushed it" = 8-9, "easy day" = 4-5, "moderate" = 5-6
+   - **PERFORMANCE METRICS DEFAULTS**: When intensity or RPE cannot be inferred from the message:
+     * Set performance_metrics.intensity = 5 (moderate, on 1-10 scale)
+     * Set performance_metrics.perceived_exertion = 5 (moderate, on 1-10 scale)
+     * Set per-set RPE = 5 for individual exercises when not specified
+     * Only leave these fields null if the user explicitly indicates unknown intensity
+     * Default assumption: Most logged workouts are moderate intensity unless stated otherwise
 
 3. DISCIPLINE DETECTION:
    - CrossFit: Named benchmarks (Fran, Murph, Grace), AMRAP/EMOM formats, functional movements (thrusters, pull-ups, burpees), time domains, RX/scaled mentions
@@ -709,7 +764,10 @@ const convertUndefinedToNull = (obj: any): any => {
 /**
  * Validates and converts time values to ensure they are in seconds
  */
-const validateTimeInSeconds = (timeValue: any, fieldName: string): number | null => {
+const validateTimeInSeconds = (
+  timeValue: any,
+  fieldName: string,
+): number | null => {
   if (timeValue === null || timeValue === undefined) return null;
 
   const numValue = Number(timeValue);
@@ -717,8 +775,10 @@ const validateTimeInSeconds = (timeValue: any, fieldName: string): number | null
 
   // If value seems too small to be seconds (likely minutes), warn but don't auto-convert
   // Let the AI handle proper conversion based on context
-  if (numValue > 0 && numValue < 10 && fieldName.includes('duration')) {
-    console.warn(`⚠️ Suspicious ${fieldName} value: ${numValue} (too small for seconds, might be minutes)`);
+  if (numValue > 0 && numValue < 10 && fieldName.includes("duration")) {
+    console.warn(
+      `⚠️ Suspicious ${fieldName} value: ${numValue} (too small for seconds, might be minutes)`,
+    );
   }
 
   return numValue;
@@ -730,7 +790,10 @@ const validateTimeInSeconds = (timeValue: any, fieldName: string): number | null
 const validateWorkoutTimes = (workoutData: any): void => {
   // Validate main duration
   if (workoutData.duration) {
-    workoutData.duration = validateTimeInSeconds(workoutData.duration, 'duration');
+    workoutData.duration = validateTimeInSeconds(
+      workoutData.duration,
+      "duration",
+    );
   }
 
   // Validate CrossFit performance data times
@@ -738,27 +801,88 @@ const validateWorkoutTimes = (workoutData: any): void => {
     const perfData = workoutData.discipline_specific.crossfit.performance_data;
 
     if (perfData.total_time) {
-      perfData.total_time = validateTimeInSeconds(perfData.total_time, 'total_time');
+      perfData.total_time = validateTimeInSeconds(
+        perfData.total_time,
+        "total_time",
+      );
     }
 
     if (perfData.round_times && Array.isArray(perfData.round_times)) {
-      perfData.round_times = perfData.round_times.map((time: any, index: number) =>
-        validateTimeInSeconds(time, `round_times[${index}]`)
-      ).filter((time: any) => time !== null);
+      perfData.round_times = perfData.round_times
+        .map((time: any, index: number) =>
+          validateTimeInSeconds(time, `round_times[${index}]`),
+        )
+        .filter((time: any) => time !== null);
     }
   }
 
   // Validate rest times in exercises
   if (workoutData.discipline_specific?.crossfit?.rounds) {
-    workoutData.discipline_specific.crossfit.rounds.forEach((round: any, roundIndex: number) => {
-      if (round.exercises && Array.isArray(round.exercises)) {
-        round.exercises.forEach((exercise: any, exerciseIndex: number) => {
-          if (exercise.reps?.rest_between_sets && Array.isArray(exercise.reps.rest_between_sets)) {
-            exercise.reps.rest_between_sets = exercise.reps.rest_between_sets.map((rest: any, restIndex: number) =>
-              validateTimeInSeconds(rest, `round[${roundIndex}].exercise[${exerciseIndex}].rest_between_sets[${restIndex}]`)
-            ).filter((rest: any) => rest !== null);
-          }
-        });
+    workoutData.discipline_specific.crossfit.rounds.forEach(
+      (round: any, roundIndex: number) => {
+        if (round.exercises && Array.isArray(round.exercises)) {
+          round.exercises.forEach((exercise: any, exerciseIndex: number) => {
+            if (
+              exercise.reps?.rest_between_sets &&
+              Array.isArray(exercise.reps.rest_between_sets)
+            ) {
+              exercise.reps.rest_between_sets = exercise.reps.rest_between_sets
+                .map((rest: any, restIndex: number) =>
+                  validateTimeInSeconds(
+                    rest,
+                    `round[${roundIndex}].exercise[${exerciseIndex}].rest_between_sets[${restIndex}]`,
+                  ),
+                )
+                .filter((rest: any) => rest !== null);
+            }
+          });
+        }
+      },
+    );
+  }
+};
+
+/**
+ * Apply default performance metrics if not already set
+ * Ensures all workouts have baseline intensity and RPE values
+ */
+export const applyPerformanceMetricDefaults = (
+  workoutData: UniversalWorkoutSchema,
+): void => {
+  // Initialize performance_metrics if not exists
+  if (!workoutData.performance_metrics) {
+    workoutData.performance_metrics = {};
+  }
+
+  // Set default intensity (5 = moderate) if not specified
+  if (
+    workoutData.performance_metrics.intensity === null ||
+    workoutData.performance_metrics.intensity === undefined
+  ) {
+    workoutData.performance_metrics.intensity = 5;
+    console.info("📊 Applied default intensity: 5 (moderate)");
+  }
+
+  // Set default perceived_exertion (5 = moderate) if not specified
+  if (
+    workoutData.performance_metrics.perceived_exertion === null ||
+    workoutData.performance_metrics.perceived_exertion === undefined
+  ) {
+    workoutData.performance_metrics.perceived_exertion = 5;
+    console.info("📊 Applied default perceived_exertion: 5 (moderate)");
+  }
+
+  // Apply default RPE to individual exercises in discipline-specific data
+  // Note: CrossFit exercise reps don't have RPE field in current schema
+  // RPE is tracked at workout level in performance_metrics
+
+  if (workoutData.discipline_specific?.powerlifting?.sets) {
+    // PowerliftingWorkout uses [key: string]: any, so we can access sets dynamically
+    const sets = workoutData.discipline_specific.powerlifting.sets as any[];
+    sets.forEach((set: any, setIdx: number) => {
+      if (set.rpe === null || set.rpe === undefined) {
+        set.rpe = 5;
+        console.info(`📊 Applied default RPE to set ${setIdx + 1}: 5`);
       }
     });
   }
@@ -766,18 +890,63 @@ const validateWorkoutTimes = (workoutData: any): void => {
 
 /**
  * Calculates confidence score based on the extracted data quality
+ * Enhanced to be less conservative for workouts with explicit performance data
  */
 export const calculateConfidence = (
-  workoutData: UniversalWorkoutSchema
+  workoutData: UniversalWorkoutSchema,
 ): number => {
   let confidence = 0.5; // Base confidence
 
-  // Higher confidence for explicit data
-  if (workoutData.workout_name) confidence += 0.2;
-  if (workoutData.discipline_specific?.crossfit?.performance_data?.total_time)
-    confidence += 0.2;
-  if (workoutData.performance_metrics?.perceived_exertion) confidence += 0.1;
-  if (workoutData.subjective_feedback?.notes) confidence += 0.1;
+  // Core workout structure (high value)
+  if (workoutData.workout_name) confidence += 0.15;
+  if (workoutData.discipline) confidence += 0.1;
+  if (workoutData.duration) confidence += 0.05;
+
+  // Discipline-specific performance data (high value)
+  const disciplineData = workoutData.discipline_specific;
+  if (disciplineData) {
+    // CrossFit-specific
+    if (disciplineData.crossfit?.performance_data?.total_time)
+      confidence += 0.15;
+    if (
+      disciplineData.crossfit?.rounds &&
+      disciplineData.crossfit.rounds.length > 0
+    )
+      confidence += 0.1;
+
+    // Powerlifting-specific
+    if (
+      disciplineData.powerlifting?.sets?.length &&
+      disciplineData.powerlifting.sets.length > 0
+    )
+      confidence += 0.1;
+
+    // Running-specific
+    if (
+      disciplineData.running?.segments &&
+      disciplineData.running.segments.length > 0
+    )
+      confidence += 0.1;
+
+    // Generic discipline data
+    if (
+      Object.keys(disciplineData).some(
+        (key) => disciplineData[key as keyof typeof disciplineData],
+      )
+    ) {
+      confidence += 0.05; // Any discipline-specific data
+    }
+  }
+
+  // Performance metrics
+  if (workoutData.performance_metrics?.perceived_exertion) confidence += 0.05;
+  if (workoutData.performance_metrics?.intensity) confidence += 0.05;
+
+  // Subjective feedback
+  if (workoutData.subjective_feedback?.notes) confidence += 0.05;
+
+  // Bonus for generation method
+  if (workoutData.metadata?.generation_method === "tool") confidence += 0.05;
 
   // Lower confidence for validation flags
   const validationFlags = workoutData.metadata.validation_flags || [];
@@ -792,54 +961,86 @@ export const calculateConfidence = (
  * @returns Completeness score from 0.0 to 1.0
  */
 export const calculateCompleteness = (
-  workoutData: UniversalWorkoutSchema
+  workoutData: UniversalWorkoutSchema,
 ): number => {
   let score = 0;
   let maxScore = 0;
 
   // Core fields (weight: 2 points each)
-  maxScore += 2; score += workoutData.workout_name ? 2 : 0;
-  maxScore += 2; score += workoutData.duration ? 2 : 0;
-  maxScore += 2; score += workoutData.location ? 2 : 0;
+  maxScore += 2;
+  score += workoutData.workout_name ? 2 : 0;
+  maxScore += 2;
+  score += workoutData.duration ? 2 : 0;
+  maxScore += 2;
+  score += workoutData.location ? 2 : 0;
 
   // Performance metrics (weight: 1 point each)
-  maxScore += 1; score += workoutData.performance_metrics?.intensity ? 1 : 0;
-  maxScore += 1; score += workoutData.performance_metrics?.perceived_exertion ? 1 : 0;
-  maxScore += 1; score += workoutData.performance_metrics?.heart_rate?.avg ? 1 : 0;
-  maxScore += 1; score += workoutData.performance_metrics?.calories_burned ? 1 : 0;
+  maxScore += 1;
+  score += workoutData.performance_metrics?.intensity ? 1 : 0;
+  maxScore += 1;
+  score += workoutData.performance_metrics?.perceived_exertion ? 1 : 0;
+  maxScore += 1;
+  score += workoutData.performance_metrics?.heart_rate?.avg ? 1 : 0;
+  maxScore += 1;
+  score += workoutData.performance_metrics?.calories_burned ? 1 : 0;
 
   // Discipline-specific data (weight: 3 points - most important)
   maxScore += 3;
   if (workoutData.discipline_specific) {
-    if (workoutData.discipline === 'crossfit' && workoutData.discipline_specific.crossfit?.rounds?.length) {
+    if (
+      workoutData.discipline === "crossfit" &&
+      workoutData.discipline_specific.crossfit?.rounds?.length
+    ) {
       score += 3;
-    } else if (workoutData.discipline === 'powerlifting' && workoutData.discipline_specific.powerlifting?.sets?.length) {
+    } else if (
+      workoutData.discipline === "powerlifting" &&
+      workoutData.discipline_specific.powerlifting?.sets?.length
+    ) {
       score += 3;
-    } else if (workoutData.discipline === 'running' && workoutData.discipline_specific.running?.segments?.length) {
+    } else if (
+      workoutData.discipline === "running" &&
+      workoutData.discipline_specific.running?.segments?.length
+    ) {
       score += 3;
-    } else if (workoutData.discipline_specific[workoutData.discipline as keyof typeof workoutData.discipline_specific]) {
+    } else if (
+      workoutData.discipline_specific[
+        workoutData.discipline as keyof typeof workoutData.discipline_specific
+      ]
+    ) {
       score += 2; // Partial credit for other disciplines with some data
     }
   }
 
   // Subjective feedback (weight: 1 point each)
-  maxScore += 1; score += workoutData.subjective_feedback?.enjoyment ? 1 : 0;
-  maxScore += 1; score += workoutData.subjective_feedback?.difficulty ? 1 : 0;
-  maxScore += 1; score += workoutData.subjective_feedback?.notes ? 1 : 0;
+  maxScore += 1;
+  score += workoutData.subjective_feedback?.enjoyment ? 1 : 0;
+  maxScore += 1;
+  score += workoutData.subjective_feedback?.difficulty ? 1 : 0;
+  maxScore += 1;
+  score += workoutData.subjective_feedback?.notes ? 1 : 0;
 
   // Environmental factors (weight: 0.5 points each)
-  maxScore += 0.5; score += workoutData.environmental_factors?.temperature ? 0.5 : 0;
-  maxScore += 0.5; score += workoutData.environmental_factors?.humidity ? 0.5 : 0;
+  maxScore += 0.5;
+  score += workoutData.environmental_factors?.temperature ? 0.5 : 0;
+  maxScore += 0.5;
+  score += workoutData.environmental_factors?.humidity ? 0.5 : 0;
 
   // Recovery metrics (weight: 0.5 points each)
-  maxScore += 0.5; score += workoutData.recovery_metrics?.sleep_hours ? 0.5 : 0;
-  maxScore += 0.5; score += workoutData.recovery_metrics?.hrv_morning ? 0.5 : 0;
+  maxScore += 0.5;
+  score += workoutData.recovery_metrics?.sleep_hours ? 0.5 : 0;
+  maxScore += 0.5;
+  score += workoutData.recovery_metrics?.hrv_morning ? 0.5 : 0;
 
   // Coach notes (weight: 1 point)
-  maxScore += 1; score += workoutData.coach_notes?.coaching_cues_given ? 1 : 0;
+  maxScore += 1;
+  score += workoutData.coach_notes?.coaching_cues_given ? 1 : 0;
 
   // PR achievements (weight: 1 point)
-  maxScore += 1; score += (workoutData.pr_achievements && workoutData.pr_achievements.length > 0) ? 1 : 0;
+  maxScore += 1;
+  score +=
+    workoutData.pr_achievements && workoutData.pr_achievements.length > 0
+      ? 1
+      : 0;
 
   // Calculate percentage and ensure it's between 0 and 1
   return Math.max(0, Math.min(1, score / maxScore));
@@ -851,21 +1052,23 @@ export const calculateCompleteness = (
 export const extractCompletedAtTime = async (
   userMessage: string,
   messageTimestamp?: string,
-  userTimezone: string = 'America/Los_Angeles'
+  userTimezone: string = "America/Los_Angeles",
 ): Promise<Date | null> => {
   const referenceTime = messageTimestamp || new Date().toISOString();
   const messageDate = new Date(referenceTime);
 
   // Calculate context information
-  const timeSinceMessage = Math.round((Date.now() - messageDate.getTime()) / 1000);
-  const userLocalTime = messageDate.toLocaleString('en-US', {
+  const timeSinceMessage = Math.round(
+    (Date.now() - messageDate.getTime()) / 1000,
+  );
+  const userLocalTime = messageDate.toLocaleString("en-US", {
     hour12: false,
-    timeZone: userTimezone
+    timeZone: userTimezone,
   });
-  const messageDay = messageDate.toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric'
+  const messageDay = messageDate.toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
   });
 
   const timeExtractionPrompt = `
@@ -919,14 +1122,31 @@ Examples:
       timeSinceMessage: `${timeSinceMessage}s`,
     });
 
-    const response = await callBedrockApi(
+    const response = (await callBedrockApi(
       timeExtractionPrompt,
       userMessage,
       MODEL_IDS.CLAUDE_HAIKU_4_FULL,
-      { prefillResponse: "{" } // Force JSON output format
-    ) as string; // No tools used, always returns string
+      { prefillResponse: "{" }, // Force JSON output format
+    )) as string; // No tools used, always returns string
 
-    const result = parseJsonWithFallbacks(response.trim());
+    // Attempt to parse the response as JSON
+    let result;
+    try {
+      result = parseJsonWithFallbacks(response.trim());
+    } catch (parseError) {
+      // If parsing fails, log warning and use message time as fallback
+      console.warn(
+        "⚠️ Time extraction returned non-JSON response, using message time as fallback:",
+        {
+          responsePreview: response.substring(0, 100),
+          parseError:
+            parseError instanceof Error
+              ? parseError.message
+              : String(parseError),
+        },
+      );
+      return messageTimestamp ? new Date(messageTimestamp) : new Date();
+    }
 
     console.info("AI time extraction result:", {
       userMessage: userMessage.substring(0, 100),
@@ -942,22 +1162,37 @@ Examples:
       const timeDiff = extractedTime.getTime() - messageTime.getTime();
       const hoursDiff = timeDiff / (1000 * 60 * 60);
 
-      // Flag suspicious results (workout time in future relative to message time)
+      // AUTO-CORRECT workouts with future dates (more than 1 hour in the future)
+      // We never reject workouts, but we do correct impossible dates
       if (hoursDiff > 1) {
-        console.warn("⚠️ Extracted workout time is in the future relative to message time:", {
-          extractedTime: extractedTime.toISOString(),
-          messageTime: messageTime.toISOString(),
-          hoursDifference: hoursDiff.toFixed(2),
-          reasoning: result.reasoning
-        });
+        console.info(
+          "ℹ️ AUTO-CORRECTING: Extracted workout time is in the future relative to message time:",
+          {
+            extractedTime: extractedTime.toISOString(),
+            messageTime: messageTime.toISOString(),
+            hoursDifference: hoursDiff.toFixed(2),
+            reasoning: result.reasoning,
+            correction: "Using message time as workout completion time",
+          },
+        );
+
+        // Use message time as corrected completion time
+        // Workout will still be saved, just with corrected timestamp
+        console.info(
+          "✅ Corrected workout time to message timestamp (workout will be saved)",
+        );
+        return messageTime;
       }
+
+      // Allow reasonable past times (workouts logged hours/days after completion)
+      // No upper limit on how far in the past - users often log workouts later
     }
 
     return result.completedAt ? new Date(result.completedAt) : null;
   } catch (error) {
     console.error(
       "AI time extraction failed, using current time as default:",
-      error
+      error,
     );
     return new Date(); // Simple fallback to current time
   }
@@ -968,7 +1203,7 @@ Examples:
  */
 export const generateWorkoutSummary = async (
   workoutData: UniversalWorkoutSchema,
-  originalMessage: string
+  originalMessage: string,
 ): Promise<string> => {
   const summaryPrompt = `
 You are a fitness coach creating a concise summary of a completed workout for coaching context and display.
@@ -994,7 +1229,10 @@ EXAMPLE GOOD SUMMARIES:
 SUMMARY:`;
 
   try {
-    const response = await callBedrockApi(summaryPrompt, originalMessage) as string; // No tools used, always returns string
+    const response = (await callBedrockApi(
+      summaryPrompt,
+      originalMessage,
+    )) as string; // No tools used, always returns string
 
     // Clean up the response - remove any prefix like "SUMMARY:" and trim
     const cleanSummary = response.trim();
@@ -1006,7 +1244,9 @@ SUMMARY:`;
     // Fallback to basic summary if AI fails
     const workoutName = workoutData.workout_name || "Workout";
     const discipline = workoutData.discipline || "";
-    const duration = workoutData.duration ? `${Math.round(workoutData.duration / 60)}min` : "";
+    const duration = workoutData.duration
+      ? `${Math.round(workoutData.duration / 60)}min`
+      : "";
 
     let fallback = `Completed ${workoutName}`;
     if (discipline) fallback += ` (${discipline})`;
@@ -1026,7 +1266,7 @@ SUMMARY:`;
  */
 export const classifyDiscipline = async (
   discipline: string,
-  workoutData?: UniversalWorkoutSchema
+  workoutData?: UniversalWorkoutSchema,
 ): Promise<DisciplineClassification> => {
   if (!discipline || typeof discipline !== "string") {
     return {
@@ -1053,7 +1293,7 @@ ${
           location: workoutData.location,
         },
         null,
-        2
+        2,
       )}`
     : ""
 }
@@ -1109,11 +1349,11 @@ Return confidence 0.8+ for clear classifications, 0.5-0.7 for moderate cases, <0
       hasWorkoutContext: !!workoutData,
     });
 
-    const response = await callBedrockApi(
+    const response = (await callBedrockApi(
       classificationPrompt,
       discipline,
-      MODEL_IDS.CLAUDE_HAIKU_4_FULL
-    ) as string; // No tools used, always returns string
+      MODEL_IDS.CLAUDE_HAIKU_4_FULL,
+    )) as string; // No tools used, always returns string
 
     // Store prompt and response in S3 for debugging
     try {
@@ -1127,7 +1367,7 @@ Return confidence 0.8+ for clear classifications, 0.5-0.7 for moderate cases, <0
           promptLength: classificationPrompt.length,
           type: "discipline-classification-prompt",
         },
-        "workout-discipline"
+        "workout-discipline",
       );
 
       await storeDebugDataInS3(
@@ -1137,12 +1377,17 @@ Return confidence 0.8+ for clear classifications, 0.5-0.7 for moderate cases, <0
           responseLength: response.length,
           type: "discipline-classification-response",
         },
-        "workout-discipline"
+        "workout-discipline",
       );
 
-      console.info("✅ Stored discipline classification prompt + response in S3");
+      console.info(
+        "✅ Stored discipline classification prompt + response in S3",
+      );
     } catch (s3Error) {
-      console.warn("⚠️ Failed to store discipline classification in S3 (non-critical):", s3Error);
+      console.warn(
+        "⚠️ Failed to store discipline classification in S3 (non-critical):",
+        s3Error,
+      );
     }
 
     // Use existing response parsing utility
@@ -1163,7 +1408,7 @@ Return confidence 0.8+ for clear classifications, 0.5-0.7 for moderate cases, <0
   } catch (error) {
     console.error("AI discipline classification failed:", error);
     throw new Error(
-      `Failed to classify discipline "${discipline}": ${error instanceof Error ? error.message : "Unknown error"}`
+      `Failed to classify discipline "${discipline}": ${error instanceof Error ? error.message : "Unknown error"}`,
     );
   }
 };

@@ -1,13 +1,29 @@
-import React, { useState } from 'react';
-import { containerPatterns, messagePatterns, typographyPatterns, badgePatterns, buttonPatterns } from '../../utils/ui/uiPatterns';
-import { PauseIcon, CheckIcon, ArrowRightIcon } from '../themes/SynthwaveComponents';
-import { useToast } from '../../contexts/ToastContext';
-import { PROGRAM_STATUS } from '../../constants/conversationModes';
+import React, { useState } from "react";
+import {
+  containerPatterns,
+  messagePatterns,
+  typographyPatterns,
+  badgePatterns,
+  buttonPatterns,
+} from "../../utils/ui/uiPatterns";
+import {
+  PauseIcon,
+  CheckIcon,
+  ArrowRightIcon,
+} from "../themes/SynthwaveComponents";
+import { useToast } from "../../contexts/ToastContext";
+import { PROGRAM_STATUS } from "../../constants/conversationModes";
 
-export default function ProgramOverview({ program, programAgentRef, onProgramUpdate }) {
+export default function ProgramOverview({
+  program,
+  programAgentRef,
+  onProgramUpdate,
+}) {
   const [isPausing, setIsPausing] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
   const [isResuming, setIsResuming] = useState(false);
+  const [isTrainingFocusExpanded, setIsTrainingFocusExpanded] = useState(false);
+  const [isTimelineExpanded, setIsTimelineExpanded] = useState(false);
   const toast = useToast();
 
   if (!program) return null;
@@ -16,30 +32,27 @@ export default function ProgramOverview({ program, programAgentRef, onProgramUpd
   const getStatusBadge = () => {
     const statusConfig = {
       active: {
-        text: 'Active',
-        className: 'bg-green-500/20 text-green-400 px-2 py-1 rounded text-xs font-rajdhani uppercase border border-green-500/40'
+        text: "Active",
+        className:
+          "bg-green-500/20 text-green-400 px-2 py-1 rounded text-xs font-rajdhani uppercase border border-green-500/40",
       },
       paused: {
-        text: 'Paused',
-        className: `${badgePatterns.purpleBorder} uppercase`
+        text: "Paused",
+        className: `${badgePatterns.purpleBorder} uppercase`,
       },
       completed: {
-        text: 'Completed',
-        className: `${badgePatterns.cyanBorder} uppercase`
+        text: "Completed",
+        className: `${badgePatterns.cyanBorder} uppercase`,
       },
       abandoned: {
-        text: 'Abandoned',
-        className: `${badgePatterns.mutedBorder} uppercase`
+        text: "Abandoned",
+        className: `${badgePatterns.mutedBorder} uppercase`,
       },
     };
 
     const config = statusConfig[program.status] || statusConfig.abandoned;
 
-    return (
-      <span className={config.className}>
-        {config.text}
-      </span>
-    );
+    return <span className={config.className}>{config.text}</span>;
   };
 
   // Handle pause program
@@ -48,14 +61,17 @@ export default function ProgramOverview({ program, programAgentRef, onProgramUpd
 
     setIsPausing(true);
     try {
-      const response = await programAgentRef.current.updateProgramStatus(program.programId, 'pause');
-      toast.success('Training program paused successfully');
+      const response = await programAgentRef.current.updateProgramStatus(
+        program.programId,
+        "pause",
+      );
+      toast.success("Training program paused successfully");
       if (onProgramUpdate && response?.program) {
         onProgramUpdate(response.program);
       }
     } catch (error) {
-      console.error('Error pausing program:', error);
-      toast.error('Failed to pause training program');
+      console.error("Error pausing program:", error);
+      toast.error("Failed to pause training program");
     } finally {
       setIsPausing(false);
     }
@@ -67,14 +83,17 @@ export default function ProgramOverview({ program, programAgentRef, onProgramUpd
 
     setIsResuming(true);
     try {
-      const response = await programAgentRef.current.updateProgramStatus(program.programId, 'resume');
-      toast.success('Training program resumed successfully');
+      const response = await programAgentRef.current.updateProgramStatus(
+        program.programId,
+        "resume",
+      );
+      toast.success("Training program resumed successfully");
       if (onProgramUpdate && response?.program) {
         onProgramUpdate(response.program);
       }
     } catch (error) {
-      console.error('Error resuming program:', error);
-      toast.error('Failed to resume training program');
+      console.error("Error resuming program:", error);
+      toast.error("Failed to resume training program");
     } finally {
       setIsResuming(false);
     }
@@ -86,14 +105,17 @@ export default function ProgramOverview({ program, programAgentRef, onProgramUpd
 
     setIsCompleting(true);
     try {
-      const response = await programAgentRef.current.updateProgramStatus(program.programId, 'complete');
-      toast.success('Training program completed! Great work!');
+      const response = await programAgentRef.current.updateProgramStatus(
+        program.programId,
+        "complete",
+      );
+      toast.success("Training program completed! Great work!");
       if (onProgramUpdate && response?.program) {
         onProgramUpdate(response.program);
       }
     } catch (error) {
-      console.error('Error completing program:', error);
-      toast.error('Failed to complete training program');
+      console.error("Error completing program:", error);
+      toast.error("Failed to complete training program");
     } finally {
       setIsCompleting(false);
     }
@@ -101,17 +123,17 @@ export default function ProgramOverview({ program, programAgentRef, onProgramUpd
 
   // Format dates
   const formatDate = (dateString) => {
-    if (!dateString) return 'Unknown';
+    if (!dateString) return "Unknown";
     try {
       const date = new Date(dateString);
-      if (isNaN(date.getTime())) return 'Unknown';
-      return date.toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric'
+      if (isNaN(date.getTime())) return "Unknown";
+      return date.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
       });
     } catch (error) {
-      return 'Unknown';
+      return "Unknown";
     }
   };
 
@@ -137,7 +159,9 @@ export default function ProgramOverview({ program, programAgentRef, onProgramUpd
     <div className={`${containerPatterns.cardMedium} p-6`}>
       {/* Section Header */}
       <div className="flex items-start space-x-3 mb-4">
-        <div className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotPink} flex-shrink-0 mt-2`}></div>
+        <div
+          className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotPink} flex-shrink-0 mt-2`}
+        ></div>
         <h3 className="font-russo font-bold text-white text-lg uppercase">
           Program Overview
         </h3>
@@ -145,9 +169,7 @@ export default function ProgramOverview({ program, programAgentRef, onProgramUpd
 
       {/* Program Name with Status Badge */}
       <div className="mb-4 flex items-start gap-3">
-        <div className="font-rajdhani text-lg text-white">
-          {program.name}
-        </div>
+        <div className="font-rajdhani text-lg text-white">{program.name}</div>
         {getStatusBadge()}
       </div>
 
@@ -159,155 +181,240 @@ export default function ProgramOverview({ program, programAgentRef, onProgramUpd
             Program Intel
           </h4>
           <div className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-lg p-4">
-          <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-            {/* Coach - Full Width */}
-            {program.coachNames && program.coachNames.length > 0 && (
-              <div className="col-span-2 flex items-center gap-1.5 font-rajdhani text-sm">
-                <span className="text-synthwave-text-secondary">Coach:</span>
-                <span className="text-synthwave-neon-cyan font-medium">
-                  {program.coachNames.map((name) => name.replace(/_/g, ' ')).join(', ')}
-                </span>
-              </div>
-            )}
-
-            {/* Duration */}
-            {program.totalDays && (
-              <div className="flex items-center gap-1.5 font-rajdhani text-sm">
-                <span className="text-synthwave-text-secondary">Duration:</span>
-                <span className="text-synthwave-neon-cyan font-medium">
-                  {program.totalDays} days ({Math.ceil(program.totalDays / 7)} weeks)
-                </span>
-              </div>
-            )}
-
-            {/* Frequency */}
-            {program.trainingFrequency && (
-              <div className="flex items-center gap-1.5 font-rajdhani text-sm">
-                <span className="text-synthwave-text-secondary">Frequency:</span>
-                <span className="text-synthwave-neon-cyan font-medium">
-                  {program.trainingFrequency}x per week
-                </span>
-              </div>
-            )}
-
-            {/* Total Workouts */}
-            {program.totalWorkouts && (
-              <div className="flex items-center gap-1.5 font-rajdhani text-sm">
-                <span className="text-synthwave-text-secondary">Total Workouts:</span>
-                <span className="text-synthwave-neon-cyan font-medium">
-                  {program.totalWorkouts}
-                </span>
-              </div>
-            )}
-
-            {/* Phases */}
-            {program.phases && program.phases.length > 0 && (
-              <div className="flex items-center gap-1.5 font-rajdhani text-sm">
-                <span className="text-synthwave-text-secondary">Phases:</span>
-                <span className="text-synthwave-neon-cyan font-medium">
-                  {program.phases.length}
-                </span>
-              </div>
-            )}
-          </div>
-          </div>
-        </div>
-
-      {/* Program Description */}
-      {program.description && (
-        <div className="mb-4">
-          <h4 className="font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
-            The Game Plan
-          </h4>
-          <div className={containerPatterns.coachNotesSection}>
-            <div className="font-rajdhani text-sm text-synthwave-text-secondary">
-              {program.description}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Program Goals */}
-      {program.goals && (
-        <div className="mb-4">
-          <h4 className="font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
-            Your Targets
-          </h4>
-          <div className={containerPatterns.coachNotesSection}>
-            <div className="font-rajdhani text-sm text-synthwave-text-secondary">
-              {program.goals}
-            </div>
-          </div>
-        </div>
-      )}
-
-        {/* Program Focus Areas - collected from all phases */}
-        {(() => {
-          // Collect all unique focus areas from all phases
-          const allFocusAreas = program.phases?.reduce((acc, phase) => {
-            if (phase.focusAreas && Array.isArray(phase.focusAreas)) {
-              phase.focusAreas.forEach(area => {
-                if (!acc.includes(area)) {
-                  acc.push(area);
-                }
-              });
-            }
-            return acc;
-          }, []) || [];
-
-          if (allFocusAreas.length === 0) return null;
-
-          return (
-            <div>
-              <div className="font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
-                Training Focus
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {allFocusAreas.map((area, i) => (
-                  <span key={i} className={badgePatterns.workoutDetail}>
-                    {area}
+            <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+              {/* Coach - Full Width */}
+              {program.coachNames && program.coachNames.length > 0 && (
+                <div className="col-span-2 flex items-center gap-1.5 font-rajdhani text-sm">
+                  <span className="text-synthwave-text-secondary">Coach:</span>
+                  <span className="text-synthwave-neon-cyan font-medium">
+                    {program.coachNames
+                      .map((name) => name.replace(/_/g, " "))
+                      .join(", ")}
                   </span>
-                ))}
-              </div>
-            </div>
-          );
-        })()}
+                </div>
+              )}
 
-        {/* Dates */}
-        {(program.createdAt || program.startedAt || expectedCompletion || program.completedAt) && (
-          <div>
-            <div className="font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
-              Dates
+              {/* Duration */}
+              {program.totalDays && (
+                <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                  <span className="text-synthwave-text-secondary">
+                    Duration:
+                  </span>
+                  <span className="text-synthwave-neon-cyan font-medium">
+                    {program.totalDays} days ({Math.ceil(program.totalDays / 7)}{" "}
+                    weeks)
+                  </span>
+                </div>
+              )}
+
+              {/* Frequency */}
+              {program.trainingFrequency && (
+                <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                  <span className="text-synthwave-text-secondary">
+                    Frequency:
+                  </span>
+                  <span className="text-synthwave-neon-cyan font-medium">
+                    {program.trainingFrequency}x per week
+                  </span>
+                </div>
+              )}
+
+              {/* Total Workouts */}
+              {program.totalWorkouts && (
+                <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                  <span className="text-synthwave-text-secondary">
+                    Total Workouts:
+                  </span>
+                  <span className="text-synthwave-neon-cyan font-medium">
+                    {program.totalWorkouts}
+                  </span>
+                </div>
+              )}
+
+              {/* Phases */}
+              {program.phases && program.phases.length > 0 && (
+                <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                  <span className="text-synthwave-text-secondary">Phases:</span>
+                  <span className="text-synthwave-neon-cyan font-medium">
+                    {program.phases.length}
+                  </span>
+                </div>
+              )}
             </div>
-            <div className="flex flex-wrap gap-2">
-              {program.createdAt && (
-                <span className={badgePatterns.workoutDetail}>
-                  Created: {formatDate(program.createdAt)}
-                </span>
-              )}
-              {program.startedAt && (
-                <span className={badgePatterns.workoutDetail}>
-                  Started: {formatDate(program.startedAt)}
-                </span>
-              )}
-              {expectedCompletion && program.status === 'active' && (
-                <span className={badgePatterns.workoutDetail}>
-                  Expected: {expectedCompletion}
-                </span>
-              )}
-              {program.completedAt && (
-                <span className={badgePatterns.workoutDetail}>
-                  Completed: {formatDate(program.completedAt)}
-                </span>
-              )}
+          </div>
+        </div>
+
+        {/* Program Description */}
+        {program.description && (
+          <div className="mb-4">
+            <h4 className="font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
+              The Game Plan
+            </h4>
+            <div className={containerPatterns.coachNotesSection}>
+              <div className="font-rajdhani text-sm text-synthwave-text-secondary">
+                {program.description}
+              </div>
             </div>
           </div>
         )}
 
+        {/* Program Goals */}
+        {program.goals && (
+          <div className="mb-4">
+            <h4 className="font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2">
+              Your Targets
+            </h4>
+            <div className={containerPatterns.coachNotesSection}>
+              <div className="font-rajdhani text-sm text-synthwave-text-secondary">
+                {program.goals}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Program Focus Areas - collected from all phases - Collapsible */}
+        {(() => {
+          // Collect all unique focus areas from all phases
+          const allFocusAreas =
+            program.phases?.reduce((acc, phase) => {
+              if (phase.focusAreas && Array.isArray(phase.focusAreas)) {
+                phase.focusAreas.forEach((area) => {
+                  if (!acc.includes(area)) {
+                    acc.push(area);
+                  }
+                });
+              }
+              return acc;
+            }, []) || [];
+
+          if (allFocusAreas.length === 0) return null;
+
+          return (
+            <div className="mb-4">
+              <button
+                onClick={() =>
+                  setIsTrainingFocusExpanded(!isTrainingFocusExpanded)
+                }
+                className="w-full flex items-center justify-between font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2 hover:text-synthwave-neon-cyan transition-colors duration-200 cursor-pointer"
+              >
+                <span>Training Focus</span>
+                <svg
+                  className={`w-4 h-4 transition-transform duration-200 ${
+                    isTrainingFocusExpanded ? "rotate-180" : ""
+                  }`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </button>
+              {isTrainingFocusExpanded && (
+                <div
+                  className={`${containerPatterns.coachNotesSection} animate-fadeIn`}
+                >
+                  <ul className="space-y-2">
+                    {allFocusAreas.map((area, i) => (
+                      <li
+                        key={i}
+                        className="flex items-start gap-2 font-rajdhani text-sm text-synthwave-text-secondary"
+                      >
+                        <span className="text-synthwave-neon-cyan mt-0.5">
+                          •
+                        </span>
+                        <span>{area}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          );
+        })()}
+
+        {/* Timeline - Collapsible */}
+        <div className="mb-4">
+          <button
+            onClick={() => setIsTimelineExpanded(!isTimelineExpanded)}
+            className="w-full flex items-center justify-between font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2 hover:text-synthwave-neon-cyan transition-colors duration-200 cursor-pointer"
+          >
+            <span>Timeline</span>
+            <svg
+              className={`w-4 h-4 transition-transform duration-200 ${
+                isTimelineExpanded ? "rotate-180" : ""
+              }`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 9l-7 7-7-7"
+              />
+            </svg>
+          </button>
+          {isTimelineExpanded && (
+            <div
+              className={`${containerPatterns.coachNotesSection} animate-fadeIn`}
+            >
+              <div className="space-y-1">
+                {/* First row: Created and Started */}
+                <div className="flex gap-x-4">
+                  <div className="w-1/2 font-rajdhani text-sm text-synthwave-text-secondary">
+                    Created:{" "}
+                    {program.createdAt ? (
+                      <span className="text-synthwave-neon-cyan">
+                        {formatDate(program.createdAt)}
+                      </span>
+                    ) : (
+                      <span className="text-synthwave-text-muted">Unknown</span>
+                    )}
+                  </div>
+                  <div className="w-1/2 font-rajdhani text-sm text-synthwave-text-secondary">
+                    Started:{" "}
+                    {program.startedAt ? (
+                      <span className="text-synthwave-neon-cyan">
+                        {formatDate(program.startedAt)}
+                      </span>
+                    ) : (
+                      <span className="text-synthwave-text-muted">
+                        Not Started
+                      </span>
+                    )}
+                  </div>
+                </div>
+                {/* Second row: Completed */}
+                <div className="font-rajdhani text-sm text-synthwave-text-secondary">
+                  Completed:{" "}
+                  {program.completedAt ? (
+                    <span className="text-synthwave-neon-cyan">
+                      {formatDate(program.completedAt)}
+                    </span>
+                  ) : (
+                    <span className="text-synthwave-text-muted">
+                      {program.status === "active" ||
+                      program.status === "paused"
+                        ? "In Progress"
+                        : "Not Started"}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Action Buttons */}
-      {(program.status === PROGRAM_STATUS.ACTIVE || program.status === PROGRAM_STATUS.PAUSED) && (
+      {(program.status === PROGRAM_STATUS.ACTIVE ||
+        program.status === PROGRAM_STATUS.PAUSED) && (
         <div className="mt-6 space-y-2">
           {program.status === PROGRAM_STATUS.ACTIVE && (
             <div className="flex space-x-2">
@@ -357,4 +464,3 @@ export default function ProgramOverview({ program, programAgentRef, onProgramUpd
     </div>
   );
 }
-

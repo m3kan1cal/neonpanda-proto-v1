@@ -273,8 +273,8 @@ export const PROGRAM_SCHEMA = {
     name: {
       type: 'string',
       minLength: 3,
-      maxLength: 100,
-      description: 'Program name (creative, motivating)',
+      maxLength: 60,
+      description: 'Program name - MUST be concise and memorable (50-60 characters max). Examples: "42-Day Strength Builder", "6-Week Powerlifting Prep", "12-Week CrossFit Competition". Do NOT include full training goals or long descriptions in the name - keep it short and punchy.',
     },
     description: {
       type: 'string',

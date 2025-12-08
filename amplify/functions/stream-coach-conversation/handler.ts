@@ -19,6 +19,8 @@ import {
   sendCoachConversationMessage,
   getCoachConfig,
   getUserProfile,
+  getProgramCreatorSession,
+  saveProgramCreatorSession,
 } from "../../dynamodb/operations";
 import { CoachMessage, MESSAGE_TYPES, CoachConversation } from "../libs/coach-conversation/types";
 import { gatherConversationContext } from "../libs/coach-conversation/context";
@@ -47,7 +49,11 @@ import { analyzeMemoryNeeds } from "../libs/memory/detection";
 import { BuildProgramEvent } from "../libs/program/types";
 import { CONVERSATION_MODES } from "../libs/coach-conversation/types";
 import { removeTriggerFromStream } from "../libs/response-utils";
-import { handleProgramCreatorFlow } from "../libs/program-creator/handler-helpers";
+import {
+  handleProgramCreatorFlow,
+  startProgramDesignCollection,
+} from "../libs/program-creator/handler-helpers";
+import { isProgramDesignCommand } from "../libs/program-creator";
 import {
   startWorkoutCollection,
   handleWorkoutCreatorFlow,
@@ -484,13 +490,73 @@ async function* processCoachConversationAsync(
   }
 
   // ============================================================================
-  // PROGRAM_DESIGN MODE: Check if this is a training program creation conversation
+  // AI-DETECTED PROGRAM DESIGN: Check if user wants to design a training program
   // ============================================================================
-  const conversationMode = conversationData.existingConversation.mode || CONVERSATION_MODES.CHAT;
 
-  if (conversationMode === CONVERSATION_MODES.PROGRAM_DESIGN) {
-    yield* handleProgramCreatorFlow(params, conversationData);
-    return; // Exit early if we handled the PROGRAM_DESIGN mode flow
+  // Check for program design slash command
+  const isProgramDesignSlashCommand =
+    slashCommandResult.isSlashCommand && isProgramDesignCommand(slashCommandResult.command);
+
+  // Load program creator session from DynamoDB (separate entity, not embedded in conversation)
+  let programSession = await getProgramCreatorSession(params.userId, params.conversationId);
+
+  // If slash command detected during existing session, soft-delete it and start fresh
+  if (isProgramDesignSlashCommand && programSession) {
+    console.info('⚡ Program design slash command detected during session - soft-deleting and restarting');
+    programSession.isDeleted = true;
+    programSession.completedAt = new Date();
+    await saveProgramCreatorSession(programSession);
+    programSession = null; // Clear for fresh start
+  }
+
+  // Check if router detected program design intent (OR slash command)
+  const isProgramDesign =
+    routerAnalysis?.programDesignDetection?.isProgramDesign ||
+    isProgramDesignSlashCommand;
+
+  if (programSession) {
+    console.info('🏗️ Program design session in progress - continuing multi-turn flow');
+
+    // Track message count before handling
+    const messageCountBefore = conversationData.existingConversation.messages.length;
+
+    const businessLogicParams = { ...params, ...conversationData };
+    yield* handleProgramCreatorFlow(businessLogicParams, conversationData);
+
+    // Reload session to check if it was soft-deleted (topic change OR completion)
+    const reloadedSession = await getProgramCreatorSession(params.userId, params.conversationId);
+    const sessionWasDeleted = !reloadedSession || reloadedSession.isDeleted;
+    const messagesWereAdded = conversationData.existingConversation.messages.length > messageCountBefore;
+
+    if (sessionWasDeleted && !messagesWereAdded) {
+      console.info('🔀 Program design session ended - continuing as normal conversation');
+      programSession = null; // Clear deleted session so new session can be detected below
+      // Don't return - fall through to normal conversation processing below
+    } else {
+      return; // Exit early - handled the program design flow normally
+    }
+  }
+
+  // Start program design session if AI detected intent (OR slash command) and confidence threshold met
+  if (isProgramDesign && !programSession) {
+    const confidence = routerAnalysis?.programDesignDetection?.confidence || 1.0;
+    const meetsThreshold = isProgramDesignSlashCommand || confidence >= 0.7;
+
+    if (meetsThreshold) {
+      console.info('🎯 Program design intent detected - starting new session', {
+        triggeredBy: isProgramDesignSlashCommand ? 'slash_command' : 'natural_language',
+        confidence
+      });
+
+      const businessLogicParams = { ...params, ...conversationData };
+      yield* startProgramDesignCollection(businessLogicParams, conversationData);
+      return; // Exit early - handled the session start
+    } else {
+      console.info('⚠️ Program design intent detected but below confidence threshold', {
+        confidence,
+        threshold: 0.7
+      });
+    }
   }
 
   // Step 4: Generate initial acknowledgment ONLY if router determines it's appropriate
@@ -803,7 +869,7 @@ async function* processCoachConversationAsync(
     ? CONVERSATION_MODES.WORKOUT_LOG
     : isInWorkoutFlow
     ? CONVERSATION_MODES.WORKOUT_LOG
-    : conversationMode;
+    : conversationData.existingConversation.mode || CONVERSATION_MODES.CHAT;
 
   // Yield metadata event with mode information
   yield formatMetadataEvent({ mode: messageMode });
@@ -902,11 +968,9 @@ async function* processCoachConversationAsync(
     fullAiResponse += AI_ERROR_FALLBACK_MESSAGE;
   }
 
-  // Add generic memory acknowledgment if a save was initiated
-  // Note: Memory saving happens fire-and-forget in background (Phase 2/3)
-  if (FEATURE_FLAGS.ENABLE_MEMORY_PROCESSING && didInitiateMemorySave) {
-    fullAiResponse = `I'll remember this.\n\n${fullAiResponse}`;
-  }
+  // Memory saving happens fire-and-forget in background (Phase 2/3)
+  // No explicit "I'll remember this" acknowledgment - let AI respond naturally
+  // (User preference: don't force memory acknowledgments)
 
   // Create final AI message with complete response
   // Note: messageMode was already determined earlier (before AI streaming) and sent via metadata event

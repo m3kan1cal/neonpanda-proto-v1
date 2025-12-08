@@ -10,6 +10,136 @@
 
 export const changelogEntries = [
   {
+    version: "Release v1.0.20251207-beta",
+    date: "2025-12-07",
+    changes: {
+      added: [
+        "AI agent architecture for workout logging with intelligent tool orchestration (extract → validate → normalize → save) achieving 95%+ accuracy on complex multi-phase workouts",
+        "WorkoutLoggerAgent system using Bedrock tool-use capabilities for structured data extraction with automatic validation and quality assessment",
+        "Five-tool agent workflow for workout processing: extract_workout_data, validate_workout_completeness, normalize_workout_data, generate_workout_summary, save_workout_to_database",
+        "Hybrid exercise validation combining fast property checks (powerlifting/CrossFit/running) with AI semantic validation for qualitative disciplines (yoga/martial arts/climbing)",
+        "Code-level blocking enforcement preventing agent from overriding validation decisions (shouldSave: false) with defense-in-depth approach",
+        "Automatic normalization skipping for very high confidence extractions (≥95%) improving performance by 40-50 seconds per workout",
+        "Two-tier model selection for normalization using Claude Haiku 4.5 for simple fixes and Claude Sonnet 4.5 for complex structural issues",
+        "Comprehensive workout completeness scoring with confidence thresholds triggering normalization only when needed (confidence < 0.95 for complex workouts)",
+        "Enhanced prompt caching for agent workflows reducing token costs by 90% on repeated extractions",
+      ],
+      changed: [
+        "Workout logging backend completely rebuilt with agentic AI architecture replacing monolithic extraction function for improved reliability and maintainability",
+        "Exercise structure validation upgraded from simple property checks to hybrid approach using AI when structure is ambiguous or qualitative",
+        "Workout normalization now intelligently skipped for high-confidence extractions (≥95%) and complex workouts, reducing processing time from 53s to <10s",
+        "Validation decisions now treated as authoritative and final - agent cannot override blocking flags once set by validation tool",
+        "Agent system prompt enhanced with explicit blocking rules and workflow scenarios preventing normalization or saving of blocked workouts",
+        "Lambda timeout increased from 5 minutes to 7 minutes to accommodate complex workout processing with normalization",
+        "Normalization prompt optimized from ~56KB to ~35-40KB by removing verbose formatting and consolidating instructions",
+        "NEW badge now displays on workouts with future dates (scheduled/upcoming workouts) in addition to workouts completed within the last 24 hours",
+        "ManageWorkouts page workout card badge logic updated to highlight both recent and future-dated workouts for better visibility of scheduled sessions",
+        "TrainingGrounds recent workouts section badge logic updated to highlight both recent and future-dated workouts in workout list",
+      ],
+      fixed: [
+        "Critical bug where agent ignored shouldSave: false from validation tool and proceeded to normalize/save blocked workouts (planning questions, reflections)",
+        "Running workouts and other qualitative disciplines incorrectly blocked due to exercise validation only checking powerlifting/CrossFit structures",
+        "Gold-standard comprehensive workouts timing out at 5-minute Lambda limit due to forced normalization on already-perfect extractions",
+        "Workout extraction confidence calculation too conservative causing unnecessary normalization on straightforward powerlifting workouts",
+        "Performance metrics (intensity/RPE) not defaulting to 5/10 when unspecified despite explicit AI prompt instructions",
+        "Scheduled/future workouts not receiving NEW badge visual indicator despite being highly relevant to users planning upcoming training sessions",
+        "Quick stats total workout count on ManageWorkouts page not updating after workout deletion until page refresh",
+      ],
+      removed: [],
+    },
+  },
+  {
+    version: "Release v1.0.20251206-beta",
+    date: "2025-12-06",
+    changes: {
+      added: [],
+      changed: [
+        "Training program generation Pinecone query now explicitly includes methodology documents with includeMethodology: true flag for comprehensive training methodology context",
+        "Program generation topK increased from 5 to 8 results providing more comprehensive context including methodologies, workouts, coach creator sessions, and conversation summaries",
+        "Program generation Pinecone query now includes minScore: 0.7 parameter for consistent relevance filtering across all context types",
+        "Pinecone query comment in program-generator.ts clarified to 'Query Pinecone for relevant user context (including methodologies)' for better code documentation",
+      ],
+      fixed: [
+        "Training program generation potentially missing relevant methodology documents due to low topK (5) and implicit reliance on default includeMethodology flag",
+      ],
+      removed: [],
+    },
+  },
+  {
+    version: "Release v1.0.20251205-beta",
+    date: "2025-12-05",
+    changes: {
+      added: [
+        "Rest day preferences feature for training program generation allowing users to specify days to avoid workouts (e.g., 'no workouts on Sunday')",
+        "parseRestDayPreferences() helper function in phase-generator.ts converting day names to ISO day-of-week indices with support for 'weekends' and 'flexible' keywords",
+        "validateRestDayCompliance() validation function checking generated workouts against rest day constraints with detailed violation reporting",
+        "AI prompt integration for rest day constraints in phase workout generation with explicit scheduling instructions and example valid schedules",
+        "Post-generation rest day validation logging warnings when AI generates workouts on restricted days for compliance monitoring",
+        "Collapsible Timeline section in ProgramOverview component with expand/collapse animations matching Training Focus section design",
+        "Collapsible phase cards in PhaseTimeline component with expand/collapse functionality for cleaner default view",
+        "Collapsible Phase Strategy section in PhaseBreakdown component matching other collapsible section patterns",
+      ],
+      changed: [
+        "ProgramOverview Dates section renamed to Timeline with cleaner text-based styling instead of badge pills",
+        "Timeline dates now display in clean vertical list format using font-rajdhani text-sm matching phase metadata style",
+        "Timeline date values (Created, Started, Completed) now show cyan color for actual dates and muted color for status text (Not Started, In Progress)",
+        "Timeline layout changed to horizontal row format with Created and Started on first row, Completed on second row",
+        "Timeline date columns set to 50% width each for balanced layout",
+        "Expected completion date removed from Timeline section as unnecessary metadata",
+        "Phase cards in PhaseTimeline now collapsed by default showing only name, duration, and status badges",
+        "Phase descriptions and focus areas in PhaseTimeline now hidden until user expands individual phase cards",
+        "Phase Strategy section in PhaseBreakdown now collapsed by default for cleaner initial view",
+        "Rest day preferences from ProgramCreatorTodoList now actively used during phase workout generation instead of being collected but ignored",
+      ],
+      fixed: [],
+      removed: [],
+    },
+  },
+  {
+    version: "Release v1.0.20251204-beta",
+    date: "2025-12-04",
+    changes: {
+      added: [
+        "Two-tier model selection for training program normalization using Claude Haiku 4.5 (high confidence ≥0.8) and Claude Sonnet 4.5 (low confidence <0.8) for cost-optimized validation",
+        "S3 detail key preservation logic in build-program handler ensuring s3DetailKey survives normalization process and is correctly stored in DynamoDB",
+        "Smart model routing for program creator conversations using Claude Haiku 4.5 for Q&A (3x cost savings) and Claude Sonnet 4.5 for completion messages (quality)",
+        "Comprehensive logging throughout program generation flow tracking normalization model selection, S3 key preservation, and query methods",
+        "In-memory coach filtering in get-programs handler supporting optional coachId filtering after GSI-based query",
+        "Coach ownership verification in getProgram and updateProgram operations for multi-coach security",
+        "Collapsible Training Focus sections in ProgramOverview and PhaseBreakdown components with expand/collapse animations",
+        "AI prompt instructions for generating sentence-case, concise focus areas (2-4 words each) in phase generation",
+        "Z-index layering for New Badge component ensuring it always appears above actions menu on program cards",
+      ],
+      changed: [
+        "Program validation logic in normalization.ts updated to match actual Program interface (equipmentConstraints not equipmentRequired, no totalWeeks field)",
+        "Workout template validation now recognizes assembled programs with s3DetailKey as valid, skipping phase.workoutTemplates check for S3-backed programs",
+        "get-programs Lambda handler refactored to always use queryPrograms (GSI-based) instead of queryProgramsByCoach (composite PK)",
+        "getProgram, updateProgram, and deleteProgram functions updated to use correct user-scoped partition key (user#userId) instead of composite key (user#userId#coach#coachId)",
+        "Training Focus display changed from badge-style chips to bulleted list in styled subcontainer matching 'The Game Plan' section design",
+        "Phase Focus display changed from badge-style chips to bulleted list in styled subcontainer for visual consistency",
+        "Program creator question generation contextual update removed to eliminate repetitive 'Perfect! I've got everything I need' text duplication",
+        "Duplicate question detection enhanced with explicit AI instructions to check conversation history before asking questions",
+        "Program normalization refactored following workout normalization pattern with dual-schema approach (full schema in toolConfig, condensed in prompt)",
+      ],
+      fixed: [
+        "Critical bug where training programs weren't returned by get-programs API due to partition key mismatch between save (user#userId) and query (user#userId#coach#coachId)",
+        "Critical bug where s3DetailKey was lost during normalization causing 'Program details not found in S3' errors when accessing workout templates",
+        "Critical bug where getProgram returned 404 errors due to using wrong partition key format for DynamoDB queries",
+        "Validation errors showing 'Missing required root properties' and 'Phase missing workoutTemplates array' for valid assembled programs",
+        "New Badge being partially covered by actions menu hover state due to incorrect z-index stacking",
+        "Program creator timeline question being asked twice during conversation flow",
+        "Noticeable delay before AI response streaming started after collecting all required information",
+        "Training program normalization incorrectly checking for equipmentRequired instead of equipmentConstraints field",
+        "Validation logic failing for programs with workouts stored in S3 instead of embedded in phase objects",
+      ],
+      removed: [
+        "Hardcoded contextual update 'Perfect! I've got everything I need. Let me put together your program summary...' from question generator",
+        "Conditional thinking optimization for Phase 2 & 3 (removed due to parallel execution architecture not supporting sequential learning)",
+        "queryProgramsByCoach function deprecated with warnings (replaced with queryPrograms GSI-based approach)",
+      ],
+    },
+  },
+  {
     version: "Release v1.0.20251129-beta",
     date: "2025-11-29",
     changes: {
@@ -33,7 +163,7 @@ export const changelogEntries = [
         "withHeartbeat wrapper integration in notify-inactive-users handler for progress logging in CloudWatch",
         "Batch processing with pagination support in notify-inactive-users using queryAllUsers with lastEvaluatedKey",
         "Comprehensive statistics tracking (totalUsers, activeUsers, inactiveUsers, emailsSent, emailsSkipped) in notification runs",
-        "Email notification metadata structure tracking last sent timestamps per notification type"
+        "Email notification metadata structure tracking last sent timestamps per notification type",
       ],
       changed: [
         "User profile preferences structure redesigned: emailNotificationMetadata moved to preferences.lastSent with matching property names",
@@ -56,7 +186,7 @@ export const changelogEntries = [
         "Unsubscribe page messaging made more empathetic and coach-like with understanding tone about inbox management",
         "Email footer 'Update Preferences' link now includes userId query parameter for direct settings access",
         "SES email sending centralized to email-utils.ts sendEmail() function for DRY code and consistent error handling",
-        "All email HTML templates now use buildEmailFooterHtml() for consistent footer structure across notification types"
+        "All email HTML templates now use buildEmailFooterHtml() for consistent footer structure across notification types",
       ],
       fixed: [
         "Gmail auto-collapsing email content after signature line by removing signature detection patterns",
@@ -72,14 +202,14 @@ export const changelogEntries = [
         "Paragraph font sizes inconsistent on unsubscribe page (some 16px, some 14px) causing poor UX",
         "Email text body 'Visit NeonPanda' link displaying before footer separator causing layout issues",
         "Missing SES send email permissions on notify-inactive-users Lambda causing send failures",
-        "Missing DynamoDB read/write permissions on unsubscribe-email Lambda for profile updates"
+        "Missing DynamoDB read/write permissions on unsubscribe-email Lambda for profile updates",
       ],
       removed: [
         "inactivityReminders preference key (replaced with more general coachCheckIns key)",
         "Legacy emailNotificationMetadata property from user profile (consolidated to preferences.lastSent)",
-        "Horizontal line separator (---) from text email footer to prevent Gmail signature collapse"
-      ]
-    }
+        "Horizontal line separator (---) from text email footer to prevent Gmail signature collapse",
+      ],
+    },
   },
   {
     version: "Release v1.0.20251128-beta",
@@ -91,7 +221,7 @@ export const changelogEntries = [
         "Enhanced userWantsToFinish detection in extraction prompts sensitive to acknowledgments ('thanks', 'okay', 'sounds good') when substantial progress collected",
         "Metadata SSE event sent early in streaming pipeline to enable workout_log badge display during AI response streaming, not just after completion",
         "Full conversation history support in workout creator question generation ensuring AI sees all previous Q&A exchanges to prevent repetition",
-        "Graceful handling in Bedrock API when model returns text instead of using tool (acknowledgments like 'Thanks') with automatic JSON parsing fallback"
+        "Graceful handling in Bedrock API when model returns text instead of using tool (acknowledgments like 'Thanks') with automatic JSON parsing fallback",
       ],
       changed: [
         "Workout creator session completion logic refactored to respect userWantsToFinish regardless of required field completion percentage for better UX",
@@ -103,7 +233,7 @@ export const changelogEntries = [
         "Auto-scroll behavior optimized during streaming: instant scroll (no animation) while streaming active, smooth scroll when complete for performance",
         "Auto-scroll triggers moved to immediate execution during streaming with requestAnimationFrame for reliable DOM update synchronization",
         "Message scrolling effects split into separate concerns: new message detection vs streaming update detection for more reliable scroll behavior",
-        "CoachConversation type interface simplified to use WorkoutCreatorSession type reference instead of inline object definition"
+        "CoachConversation type interface simplified to use WorkoutCreatorSession type reference instead of inline object definition",
       ],
       fixed: [
         "Critical bug where AI repeated questions about information already provided due to question generator only seeing last 2 exchanges (4 messages) instead of full conversation",
@@ -114,10 +244,10 @@ export const changelogEntries = [
         "AI streaming content briefly going behind ChatInput container during long responses due to smooth scroll animation lag with rapid content updates",
         "TypeScript error in stream-coach-conversation handler (line 800) with 'Object is possibly undefined' when accessing messages[i].metadata.mode",
         "TypeScript errors in api-helpers.ts due to missing parseJsonWithFallbacks import and incorrect nullish coalescing operator usage",
-        "Metadata event not being sent for natural language workout sessions because handler returned early when workoutCreatorSession initiated/continued"
+        "Metadata event not being sent for natural language workout sessions because handler returned early when workoutCreatorSession initiated/continued",
       ],
-      removed: []
-    }
+      removed: [],
+    },
   },
   {
     version: "Release v1.0.20251127-beta",
@@ -134,7 +264,7 @@ export const changelogEntries = [
         "Universal getCondensedSchema utility for reducing prompt sizes by 70-80% by stripping verbose schema fields (descriptions, patterns, examples, defaults)",
         "Topic change detection field (userChangedTopic) in workout extraction schema triggering session cancellation when user shifts conversation away from logging",
         "Workout logging progress tracking with turn count, field completion percentage, and required vs optional field indicators",
-        "Auto-completion trigger after 7 turns with partial data if user hasn't finished providing required fields"
+        "Auto-completion trigger after 7 turns with partial data if user hasn't finished providing required fields",
       ],
       changed: [
         "Workout logging experience transformed from single-message extraction to intelligent multi-turn conversation flow with context retention across messages",
@@ -151,7 +281,7 @@ export const changelogEntries = [
         "Model selection for normalization now based on extraction confidence using MODEL_IDS constants instead of hardcoded model strings",
         "DynamoDB serialization warnings now only log when more than 3 undefined keys detected, reducing noise from optional fields like 'notes'",
         "Workout creator prompts enhanced with efficiency guidance for asking related questions together in natural sequences",
-        "Turn count warning threshold adjusted from turn 4/6 to turn 5/7 to match new maximum turn limit"
+        "Turn count warning threshold adjusted from turn 4/6 to turn 5/7 to match new maximum turn limit",
       ],
       fixed: [
         "Workout Creator badge not appearing during streaming AI responses due to missing mode metadata in chunk events",
@@ -162,14 +292,14 @@ export const changelogEntries = [
         "Streaming mode updates not applying correctly due to spread operator precedence issues in state merging logic",
         "DynamoDB logs flooded with undefined value warnings for every optional field (notes, equipment, etc.) creating noise in CloudWatch",
         "Nested conditional checks in workout session completion logic causing code complexity and readability issues",
-        "Mode property defaulting to undefined instead of CHAT when loading existing conversations without explicit mode set"
+        "Mode property defaulting to undefined instead of CHAT when loading existing conversations without explicit mode set",
       ],
       removed: [
         "workoutCreatorSession handling from frontend CoachConversationAgent state management (replaced with conversation.mode tracking)",
         "workoutCreatorSession property from formatCompleteEvent streaming responses (no longer needed on frontend)",
-        "Hardcoded model IDs in normalization functions (replaced with MODEL_IDS constants from api-helpers)"
-      ]
-    }
+        "Hardcoded model IDs in normalization functions (replaced with MODEL_IDS constants from api-helpers)",
+      ],
+    },
   },
   {
     version: "Release v1.0.20251122-beta",
@@ -196,10 +326,10 @@ export const changelogEntries = [
         "buildMultimodalContent helper for loading image bytes from S3 and formatting for Claude multimodal API",
         "Data completeness improvement tip box on WorkoutViewer showing missing fields with natural language examples when completeness < 80%",
         "Conversation title skeleton loading structure matching actual UI layout",
-        "Immediate visual feedback for image uploads via instant spinner activation"
+        "Immediate visual feedback for image uploads via instant spinner activation",
       ],
       changed: [
-            "Lambda runtime upgraded to Node.js 22 across all cloud functions via centralized NODEJS_RUNTIME constant in libs/configs.ts for consistent runtime management",
+        "Lambda runtime upgraded to Node.js 22 across all cloud functions via centralized NODEJS_RUNTIME constant in libs/configs.ts for consistent runtime management",
         "Coach creator question flow completely redesigned from ground up based on end-user behavior analysis",
         "Coach creator now detects and remembers information volunteered early in conversation, skipping related questions later",
         "Coach creator personality and intelligence significantly enhanced with better context awareness and memory integration",
@@ -220,7 +350,7 @@ export const changelogEntries = [
         "Both flows now implement resilient retry logic, graceful degradation, and comprehensive error recovery",
         "Data validation logic across both flows strengthened based on production failure patterns",
         "Breadcrumb navigation detection updated for query parameter-based routing",
-        "UI components refined with better spacing, loading states, and visual feedback"
+        "UI components refined with better spacing, loading states, and visual feedback",
       ],
       fixed: [
         "Coach creator asking redundant questions about information users already volunteered in previous responses",
@@ -240,12 +370,12 @@ export const changelogEntries = [
         "InlineEditField label wrapping issues in conversation title editing",
         "Image upload spinner showing delay before activation creating perception of unresponsiveness",
         "Data completeness UI styling issues with excessive padding and bold text",
-        "RPE gradient scales showing faint color when empty instead of completely transparent"
+        "RPE gradient scales showing faint color when empty instead of completely transparent",
       ],
       removed: [
-        "[Debug] Reconstruct JSON section from WorkoutDetails page (production debug artifacts cleaned up)"
-      ]
-    }
+        "[Debug] Reconstruct JSON section from WorkoutDetails page (production debug artifacts cleaned up)",
+      ],
+    },
   },
   {
     version: "Release v1.0.20251112-beta",
@@ -259,15 +389,15 @@ export const changelogEntries = [
         "Coaches.jsx skeleton loading in-progress coaches description changed from single row (w-96) to two rows (w-full max-w-2xl, w-full max-w-xl) matching multi-line actual description",
         "Coaches.jsx skeleton loading templates section description rows widened from w-96/w-80 to w-full max-w-2xl/w-full max-w-xl matching actual max-w-2xl constraint",
         "CoachCreator.jsx skeleton loading header refactored to remove extra centered description bones (two horizontal skeleton lines below header)",
-        "CoachConversations.jsx conversation title moved vertically closer to page header using -mt-4 negative margin for tighter, more compact layout"
+        "CoachConversations.jsx conversation title moved vertically closer to page header using -mt-4 negative margin for tighter, more compact layout",
       ],
       fixed: [
         "Coaches.jsx skeleton loading structure showing oversized headers for in-progress coaches and templates sections (h-10/h-8 vs actual text-xl md:text-2xl)",
         "Coaches.jsx skeleton loading showing single-line descriptions when actual descriptions span multiple lines with max-w-2xl constraint",
-        "CoachCreator.jsx skeleton loading showing extra horizontal centered description bones below header that don't exist in actual page layout"
+        "CoachCreator.jsx skeleton loading showing extra horizontal centered description bones below header that don't exist in actual page layout",
       ],
-      removed: []
-    }
+      removed: [],
+    },
   },
   {
     version: "Release v1.0.20251109-beta",
@@ -323,7 +453,7 @@ export const changelogEntries = [
         "Breadcrumb navigation on Program Dashboard: Home > Training Grounds > Training Programs > Program Dashboard",
         "Breadcrumb navigation on View Workouts: Home > Training Grounds > Training Programs > Workout Details",
         "Responsive calendar layout adapting to mobile, tablet, and desktop screen sizes",
-        "Coach compact card integration on Program Dashboard header matching Training Grounds header design"
+        "Coach compact card integration on Program Dashboard header matching Training Grounds header design",
       ],
       changed: [
         "ManagePrograms program cards refactored to use three-dot menu instead of direct delete button for cleaner action organization",
@@ -375,7 +505,7 @@ export const changelogEntries = [
         "View Workouts page breadcrumb text simplified to 'Workout Details' instead of dynamic 'Today's Workouts' vs 'View Workouts'",
         "uiPatterns.js extended with sectionHeader pattern for consistent dashboard section headers",
         "uiPatterns.js extended with metadataLabel and metadataValue patterns for consistent information display",
-        "uiPatterns.js extended with subcontainerBackground pattern for grouped content sections"
+        "uiPatterns.js extended with subcontainerBackground pattern for grouped content sections",
       ],
       fixed: [
         "Critical bug where three-dot menu button showed default white focus ring on click despite focus:outline-none class",
@@ -410,7 +540,7 @@ export const changelogEntries = [
         "Loading state not clearing properly after action completion causing stuck spinner",
         "Program Dashboard header not matching Training Grounds header layout (fonts, spacing, coach card)",
         "Calendar day cell hover effects not consistent with weekly heat map styling",
-        "Phase timeline progress indicator line not properly animating/pulsing on current day marker"
+        "Phase timeline progress indicator line not properly animating/pulsing on current day marker",
       ],
       removed: [
         "Direct delete button from ManagePrograms program cards (replaced with three-dot menu)",
@@ -419,9 +549,9 @@ export const changelogEntries = [
         "Status badge from Program Dashboard page header (moved to Program Overview section)",
         "Horizontal dividers (hr elements) from Program Overview and Progress Overview sections",
         "ProgramCalendar.jsx duplicate component (consolidated to ProgramCalendar.jsx)",
-        "ProgramActionsMenu.jsx component (actions moved to ManagePrograms cards)"
-      ]
-    }
+        "ProgramActionsMenu.jsx component (actions moved to ManagePrograms cards)",
+      ],
+    },
   },
   {
     version: "Release v1.0.20251104-beta",
@@ -450,7 +580,7 @@ export const changelogEntries = [
         "Map-based polling interval management in ProgramAgent with automatic cleanup on component unmount",
         "Exponential backoff retry logic in sync-log-subscriptions handler to prevent CloudWatch API throttling",
         "250ms delays between CloudWatch API calls to stay below 5 requests/second rate limit",
-        "Celebration animation state management (showCelebration, celebrationType) in ViewWorkouts component"
+        "Celebration animation state management (showCelebration, celebrationType) in ViewWorkouts component",
       ],
       changed: [
         "ViewWorkouts page refactored to centralize workout actions (log, skip, unskip) in ProgramAgent instead of component-level logic",
@@ -478,7 +608,7 @@ export const changelogEntries = [
         "Textarea refs in ViewWorkouts changed from array to Map keyed by templateId for reliable user edit capture",
         "Skip workout API endpoint enhanced to support both skip and unskip actions via action parameter ('skip' | 'unskip')",
         "Program stats updated to show skipped count even when zero for transparency",
-        "Training program creation now initializes skippedWorkouts: 0 for proper stat tracking"
+        "Training program creation now initializes skippedWorkouts: 0 for proper stat tracking",
       ],
       fixed: [
         "Critical bug where program day advanced too early when only first workout of day was completed instead of waiting for all workouts",
@@ -494,16 +624,16 @@ export const changelogEntries = [
         "Celebration animations not triggering on day completion due to missing status check logic",
         "Polling intervals not being cleared properly, causing memory leaks on component unmount",
         "Template status not reverting correctly on unskip (was set to 'scheduled' instead of 'pending')",
-        "Program stats showing '0' for adherence rate even with completed workouts due to backend calculation error"
+        "Program stats showing '0' for adherence rate even with completed workouts due to backend calculation error",
       ],
       removed: [
         "Local CommandPalette components and state from 10 management pages (TrainingGrounds, ManageWorkouts, WorkoutDetails, Coaches, CoachConversations, CoachCreator, ManageMemories, ViewReports, ManageCoachConversations, WeeklyReports)",
         "Local keyboard shortcut handlers (Cmd/Ctrl+K useEffect hooks) from 10 management pages now using global handler",
         "Temporary celebration test buttons from ViewWorkouts page after implementing automatic trigger",
         "Unskip workout API endpoint (/unskip) consolidated into skip endpoint with action parameter",
-        "Verbose debugging artifacts from Phase 3B testing document (244 lines removed)"
-      ]
-    }
+        "Verbose debugging artifacts from Phase 3B testing document (244 lines removed)",
+      ],
+    },
   },
   {
     version: "Release v1.0.20251026-beta",
@@ -536,10 +666,10 @@ export const changelogEntries = [
         "'More Resources' hover-based flyout menu in SidebarNav with clean header and aligned positioning",
         "Prompt caching for all 4 Bedrock calls in training program generation flow (structure, phases, workouts, normalization)",
         "Triple focus strategy for command palette input with immediate, requestAnimationFrame, and 100ms timeout attempts ensuring reliable focus on open",
-        "autoFocus and autoComplete attributes to command palette input for native browser focus support"
+        "autoFocus and autoComplete attributes to command palette input for native browser focus support",
       ],
       changed: [
-        "Workout templates now stored as natural language coaching instructions (\"3x5 Back Squat at 80% 1RM, focus on depth and bar speed\") instead of structured JSON",
+        'Workout templates now stored as natural language coaching instructions ("3x5 Back Squat at 80% 1RM, focus on depth and bar speed") instead of structured JSON',
         "Log workout flow refactored to use AI for converting natural language templates + user performance data to Universal Workout Schema",
         "Training program phases now contain prescribedExercises arrays (exercise name + coaching notes) instead of full structured workout objects",
         "Build mode prompt enhanced with sequential questioning strategy, methodology application, and comprehensive personalization",
@@ -560,7 +690,7 @@ export const changelogEntries = [
         "Universal Workout Schema Exercise interface expanded with comprehensive field definitions (equipment, intensity, notes, tempo)",
         "Command palette parsing logic refactored from regex pattern to indexOf/substring approach for maximum UTF-8 and multi-line content compatibility",
         "Command detection now uses simple string splitting instead of regex patterns to handle emojis, special characters, and newlines reliably",
-        "AGENTS.md documentation updated with 'Streaming Contextual Updates' pattern for AI-generated ephemeral feedback"
+        "AGENTS.md documentation updated with 'Streaming Contextual Updates' pattern for AI-generated ephemeral feedback",
       ],
       fixed: [
         "Training program date handling inconsistency where calendar used UTC instead of user's local timezone for 'today' calculation",
@@ -583,14 +713,14 @@ export const changelogEntries = [
         "Coach Details and Save Memory icons appearing different sizes in collapsed sidebar (added centering for CoachIconSmall and MemoryIconTiny)",
         "Critical command palette bug where multi-line workout data (with newlines) failed to parse due to regex .+ pattern not matching newline characters",
         "Command palette input not receiving focus when opened, causing users to manually click the input field before typing",
-        "Long workout logs with line breaks showing 'No commands found' error instead of recognizing /log-workout command"
+        "Long workout logs with line breaks showing 'No commands found' error instead of recognizing /log-workout command",
       ],
       removed: [
         "Structured workout template schemas and normalization utilities (replaced with natural language approach)",
         "libs/program/workout-template-utils.ts (consolidated into workout-utils.ts)",
-        "Test scripts for manually updating message modes (update-message-modes-for-testing.js, list-conversation-messages.js)"
-      ]
-    }
+        "Test scripts for manually updating message modes (update-message-modes-for-testing.js, list-conversation-messages.js)",
+      ],
+    },
   },
   {
     version: "Release v1.0.20251023-beta",
@@ -608,7 +738,7 @@ export const changelogEntries = [
         "AI-generated contextual updates for training program generation using Nova Micro (start, complete, error states)",
         "Message bubble UI patterns in uiPatterns.js (userMessageBubble, aiChatBubble, aiBuildModeBubble) for consistent chat styling",
         "Message status dot patterns in uiPatterns.js (statusDotPrimary, statusDotSecondary, color variants) for visual message state indicators",
-        "Build mode badge pattern (modeBadgeBuild) in uiPatterns.js for purple-themed mode indicators on AI messages"
+        "Build mode badge pattern (modeBadgeBuild) in uiPatterns.js for purple-themed mode indicators on AI messages",
       ],
       changed: [
         "Workout extraction parsing flow refactored to call parseJsonWithFallbacks() before validation checks, allowing proper markdown cleanup of AI responses",
@@ -629,7 +759,7 @@ export const changelogEntries = [
         "Build mode AI messages now styled with purple gradient bubble (aiBuildModeBubble) and purple status dots distinct from cyan Chat mode",
         "Build mode indicator badge now uses centralized modeBadgeBuild pattern and BuildModeIconTiny component for consistency",
         "Initial acknowledgment contextual update now uses generateAndFormatUpdate() helper for cleaner code",
-        "Training program contextual updates (start, complete, error) now use generateAndFormatUpdate() helper reducing duplication"
+        "Training program contextual updates (start, complete, error) now use generateAndFormatUpdate() helper reducing duplication",
       ],
       fixed: [
         "Critical workout extraction failure when Claude returns markdown-wrapped JSON (```json {...} ```) despite explicit instructions not to wrap",
@@ -645,12 +775,12 @@ export const changelogEntries = [
         "Code duplication in contextual update generation with repetitive generateContextualUpdate + formatContextualEvent pattern across 4 locations",
         "Inconsistent styling between Build mode messages and Chat mode messages using inline classes instead of centralized patterns",
         "Hardcoded SVG icon for Build mode duplicated in multiple locations instead of using shared component",
-        "Messy contextual update implementation with hardcoded structured messages for training programs instead of AI-generated ephemeral feedback"
+        "Messy contextual update implementation with hardcoded structured messages for training programs instead of AI-generated ephemeral feedback",
       ],
       removed: [
-        "libs/program/messages.ts file (replaced with AI-generated contextual updates for consistency with memory/workout handling)"
-      ]
-    }
+        "libs/program/messages.ts file (replaced with AI-generated contextual updates for consistency with memory/workout handling)",
+      ],
+    },
   },
   {
     version: "Release v1.0.20251021-beta",
@@ -669,18 +799,18 @@ export const changelogEntries = [
         "Warmup and cooldown sections with distance, time, and text descriptions for each phase",
         "Run type classification supporting 11 types: easy, tempo, interval, long, race, recovery, fartlek, progression, threshold, hill_repeats, speed_work",
         "Segment type classification: warmup, working, interval, recovery, cooldown, main",
-        "AI extraction pattern documentation for run type identification, pace/distance extraction, weather conditions, segment analysis, and equipment/route recognition"
+        "AI extraction pattern documentation for run type identification, pace/distance extraction, weather conditions, segment analysis, and equipment/route recognition",
       ],
       changed: [
         "RunningWorkout TypeScript interface upgraded from placeholder to fully-typed interface with comprehensive field definitions",
         "UNIVERSAL_WORKOUT_SCHEMA.md running section expanded with design philosophy, detailed examples, and AI extraction patterns",
         "WorkoutViewer component enhanced to display running workouts with collapsible sections for details and segments",
         "Running segments now display with color-coded effort level badges (max: pink, hard: cyan, moderate: secondary, easy: cyan/10)",
-        "Universal workout schema running section now includes elevation_loss field alongside elevation_gain for complete elevation profile"
+        "Universal workout schema running section now includes elevation_loss field alongside elevation_gain for complete elevation profile",
       ],
       fixed: [],
-      removed: []
-    }
+      removed: [],
+    },
   },
   {
     version: "Release v1.0.20251019-beta",
@@ -702,7 +832,7 @@ export const changelogEntries = [
         "Timezone-aware date conversion utilities (convertUTCToUserDate, getUserTimezoneOrDefault) in analytics/date-utils.ts for accurate date aggregation across timezones",
         "userTimezone field to WorkoutSummary interface for proper timezone context during analytics processing",
         "Workout date validation in build-workout handler to detect and correct dates with incorrect years (more than 1 year off from completedAt)",
-        "queryWorkoutSummaries DynamoDB function for efficient workout data retrieval using ProjectionExpression (fetches only summary fields instead of full workout objects)"
+        "queryWorkoutSummaries DynamoDB function for efficient workout data retrieval using ProjectionExpression (fetches only summary fields instead of full workout objects)",
       ],
       changed: [
         "Navigation system completely redesigned with SidebarNav for desktop, BottomNav/MoreMenu/QuickActionsFAB for mobile",
@@ -737,7 +867,7 @@ export const changelogEntries = [
         "AI prompt guidance in workout extraction simplified to include concise date field instruction in temporal context section for more natural AI interpretation",
         "Non-streaming coach conversation handler now passes only new messages (user + assistant) to sendCoachConversationMessage instead of all messages",
         "Coach creator conversation history instructions enhanced to check ALL previous responses for already-provided information before asking questions, preventing redundant questions",
-        "Mobile navigation components (BottomNav, MoreMenu, QuickActionsFAB) now hidden on authentication pages by adding /auth to publicRoutes array with prefix matching logic in App.jsx"
+        "Mobile navigation components (BottomNav, MoreMenu, QuickActionsFAB) now hidden on authentication pages by adding /auth to publicRoutes array with prefix matching logic in App.jsx",
       ],
       fixed: [
         "AWS EventBridge cron schedule for build-weekly-analytics corrected from Saturday (weekDay: 7) to Sunday (weekDay: 1)",
@@ -756,15 +886,15 @@ export const changelogEntries = [
         "Critical message duplication bug in coach conversations where messages exponentially doubled each turn (2→4→10→22) due to non-streaming handler passing all messages instead of only new ones to DynamoDB save operation",
         "Analytics flows pulling entire workout objects from DynamoDB instead of just summary properties, causing unnecessary data transfer and processing overhead",
         "Confusing workout ID naming convention (workout#workout_summary_...) inconsistent with actual data structure (workouts contain summaries, not summaries of workouts)",
-        "Coach creator asking redundant questions about information users already volunteered in previous responses (e.g., re-asking about equipment after user mentioned it 2 questions earlier)"
+        "Coach creator asking redundant questions about information users already volunteered in previous responses (e.g., re-asking about equipment after user mentioned it 2 questions earlier)",
       ],
       removed: [
         "NavigationTest.jsx component and related test navigation configuration files",
         "uiPatterns.js from root src/utils directory (consolidated to src/utils/ui/uiPatterns.js)",
         "Seven duplicate logo image files (logo-light-sm-1.png through logo-light-sm-6.png, logo-light-sm-cf.png)",
-        "Send message and voice record button tooltips from ChatInput component (self-explanatory buttons don't need hints, especially on mobile)"
-      ]
-    }
+        "Send message and voice record button tooltips from ChatInput component (self-explanatory buttons don't need hints, especially on mobile)",
+      ],
+    },
   },
   {
     version: "Release v1.0.20251016-beta",
@@ -774,7 +904,7 @@ export const changelogEntries = [
         "requiresDeepReasoning flag to SmartRequestRouter interface for intelligent model selection based on conversation complexity",
         "selectModelBasedOnReasoning() helper function for dynamic Sonnet 4.5 vs Haiku 4.5 routing based on deep reasoning requirements",
         "Comprehensive deep reasoning detection guidelines in smart router prompt distinguishing complex multi-variable scenarios from straightforward questions",
-        "Smart model selection logging showing selected model (Sonnet/Haiku) and reasoning flag in CloudWatch for monitoring and optimization"
+        "Smart model selection logging showing selected model (Sonnet/Haiku) and reasoning flag in CloudWatch for monitoring and optimization",
       ],
       changed: [
         "Coach conversation streaming now uses Haiku 4.5 by default (90-95% of traffic) with Sonnet 4.5 reserved for complex reasoning (5-10% of traffic)",
@@ -784,14 +914,14 @@ export const changelogEntries = [
         "Smart router now distinguishes between complexity (hasComplexity) and deep reasoning requirements (requiresDeepReasoning) for more selective model routing",
         "Model selection criteria optimized: Haiku for standard chat, acknowledgments, simple questions, clarifications; Sonnet for multi-variable program design, complex injury scenarios, methodology debates, performance analysis",
         "Cost optimization achieving ~5-10x reduction for standard conversations while maintaining quality for complex scenarios requiring sophisticated reasoning",
-        "Contextual updates in CoachConversations.jsx and CoachCreator.jsx now trigger automatic scroll-to-bottom for better real-time UX during AI processing stages"
+        "Contextual updates in CoachConversations.jsx and CoachCreator.jsx now trigger automatic scroll-to-bottom for better real-time UX during AI processing stages",
       ],
       fixed: [
         "Contextual update indicators not triggering scrollToBottom behavior in chat windows, causing updates to appear off-screen during AI processing",
         "Missing contextualUpdate dependency in useEffect scroll hooks preventing automatic scrolling when processing stages display",
-        "Cost inefficiency where all conversations used expensive Sonnet 4.5 regardless of complexity level or reasoning requirements"
-      ]
-    }
+        "Cost inefficiency where all conversations used expensive Sonnet 4.5 regardless of complexity level or reasoning requirements",
+      ],
+    },
   },
   {
     version: "Release v1.0.20251015-beta",
@@ -811,7 +941,7 @@ export const changelogEntries = [
         "Monthly report grid layout matching weekly reports design with purple theme accents",
         "Separated keyboard shortcut display with individual containers for modifier key (⌘/Ctrl) and letter key (K) in CommandPaletteButton",
         "Flexbox layout with gap spacing between keyboard shortcut containers for improved visual clarity",
-        "Platform-aware keyboard shortcut display showing ⌘ + K on macOS and Ctrl + K on Windows/Linux"
+        "Platform-aware keyboard shortcut display showing ⌘ + K on macOS and Ctrl + K on Windows/Linux",
       ],
       changed: [
         "ViewReports page refactored to support both weekly and monthly report types with tabbed interface",
@@ -826,20 +956,20 @@ export const changelogEntries = [
         "Empty state patterns standardized across management pages (ViewReports, ManageWorkouts, ManageMemories, ManageCoachConversations) to minimal text-only design",
         "Empty state titles changed to cyan color (text-synthwave-neon-cyan) with muted descriptions (text-synthwave-text-muted)",
         "QuickStats tooltips shortened to 2-4 word phrases for reduced cognitive load on ViewReports page",
-        "Monthly report summaries now display formatted month names (e.g., 'October 2025') instead of raw YYYY-MM format"
+        "Monthly report summaries now display formatted month names (e.g., 'October 2025') instead of raw YYYY-MM format",
       ],
       fixed: [
         "Visual inconsistency where keyboard shortcut appeared as single container instead of separate key containers",
         "Tab button styling inconsistency on ViewReports page with mixed color schemes",
         "Empty state pattern inconsistency across management pages with some using borders/buttons and others using minimal text-only approach",
         "Verbose QuickStats tooltips creating information overload for users",
-        "Missing monthly analytics causing users to only see weekly breakdowns of their training"
+        "Missing monthly analytics causing users to only see weekly breakdowns of their training",
       ],
       removed: [
         "NeonBorder wrappers and action buttons from empty states on management pages for cleaner, minimal design",
-        "Plus (+) separator between keyboard shortcut keys, replaced with flexbox gap for cleaner visual spacing"
-      ]
-    }
+        "Plus (+) separator between keyboard shortcut keys, replaced with flexbox gap for cleaner visual spacing",
+      ],
+    },
   },
   {
     version: "Release v1.0.20251012-beta",
@@ -856,7 +986,7 @@ export const changelogEntries = [
         "Coach pill tooltip system with customizable tooltipContent prop supporting page-specific messaging",
         "Unified coach pill navigation routing all main pages to training grounds and special pages to coaches dashboard",
         "Page title tooltips with hover information explaining page purpose and functionality",
-        "Command palette button tooltips providing keyboard shortcut hints to users"
+        "Command palette button tooltips providing keyboard shortcut hints to users",
       ],
       changed: [
         "Page headers refactored from centered/large layouts to compact horizontal design with title + coach card + command button",
@@ -871,7 +1001,7 @@ export const changelogEntries = [
         "CompactCoachCard component updated to accept tooltipContent prop with default value 'Go to the Training Grounds'",
         "CoachCreatorHeader component deprecated and replaced with compact horizontal header matching other pages",
         "Visual hierarchy improved with page titles (text-2xl md:text-3xl) larger than section headers (text-xl md:text-2xl)",
-        "Section headers on Coaches.jsx kept center-aligned for modern gallery-style presentation matching card grid layouts"
+        "Section headers on Coaches.jsx kept center-aligned for modern gallery-style presentation matching card grid layouts",
       ],
       fixed: [
         "Scroll position retention issue where pages remembered scroll position after refresh instead of resetting to top",
@@ -881,9 +1011,9 @@ export const changelogEntries = [
         "Coach pill tooltips showing incorrect text ('Go to the Training Grounds') on Coaches and CoachCreator pages",
         "Page header visual hierarchy issue where section headers (text-3xl md:text-4xl) were larger than main page title (text-2xl md:text-3xl)",
         "CompactCoachCard hardcoded tooltip not respecting custom tooltipContent prop passed from parent components",
-        "Command palette delay perception on ManageWorkouts.jsx (investigation revealed 300ms CSS animation is standard, not a bug)"
-      ]
-    }
+        "Command palette delay perception on ManageWorkouts.jsx (investigation revealed 300ms CSS animation is standard, not a bug)",
+      ],
+    },
   },
   {
     version: "Release v1.0.20251011-beta",
@@ -901,7 +1031,7 @@ export const changelogEntries = [
         "Centralized icon library with 4 new reusable icons (ProgramIcon, ResourcesIcon, MessagesIcon, BarChartIcon) in SynthwaveComponents.jsx",
         "getLatestVersions(count) helper function for retrieving N most recent changelog entries",
         "getTotalChanges(entry) helper function for calculating change statistics (added, changed, fixed, total)",
-        "generateVersionAnchor(version) helper function using regex to extract clean version numbers from release strings"
+        "generateVersionAnchor(version) helper function using regex to extract clean version numbers from release strings",
       ],
       changed: [
         "Changelog.jsx now imports centralized changelogEntries and generateVersionAnchor from changelogData.js instead of local definitions",
@@ -913,7 +1043,7 @@ export const changelogEntries = [
         "TrainingGrounds section text styling updated to match Reports section exactly for visual consistency",
         "Icon definitions moved from local TrainingGrounds.jsx declarations to centralized SynthwaveComponents.jsx for application-wide reusability",
         "TrainingGrounds.jsx now imports ProgramIcon, ResourcesIcon, MessagesIcon, and BarChartIcon from SynthwaveComponents instead of local definitions",
-        "Changelog page padding reduced by removing pb-8 to eliminate gap above footer"
+        "Changelog page padding reduced by removing pb-8 to eliminate gap above footer",
       ],
       fixed: [
         "Critical querySelector CSS selector bug where dots in anchor IDs (#version-Release-v1.0.20251005-beta) caused browser console errors",
@@ -921,9 +1051,9 @@ export const changelogEntries = [
         "Footer gap on Changelog page caused by unnecessary pb-8 padding creating navy blue band below footer",
         "Icon duplication where TrainingGrounds.jsx defined local versions of icons instead of importing from shared library",
         "Inconsistent styling between Messages & Notifications and Reports & Insights sections in TrainingGrounds",
-        "Missing visual indicators for recent releases making new versions blend in with older ones"
-      ]
-    }
+        "Missing visual indicators for recent releases making new versions blend in with older ones",
+      ],
+    },
   },
   {
     version: "Release v1.0.20251010-beta",
@@ -945,7 +1075,7 @@ export const changelogEntries = [
         "Final summary reporting for bulk migrations showing total namespaces, success/failure counts, and aggregate statistics",
         "Per-namespace migration tracking with individual success/failure status and resilient error handling",
         "Enhanced Pinecone query logging with match counts, processing times, and relevance score distributions",
-        "Memory usage tracking with enhanced tagging (workout_planning, form_analysis, injury_management, etc.)"
+        "Memory usage tracking with enhanced tagging (workout_planning, form_analysis, injury_management, etc.)",
       ],
       changed: [
         "Coach conversation streaming handler refactored to use parallel Promise.all() for Router + Conversation + Config loading (5-6 second total vs 15+ sequential)",
@@ -961,7 +1091,7 @@ export const changelogEntries = [
         "Memory retrieval logic now queries across all coaches (null coachId) for broader context availability",
         "Reranking configuration optimized with minScore: 0.3 for reranked results and fallbackMinScore: 0.5 for semantic search",
         "migrate-pinecone-ids.js script enhanced to support both single namespace and bulk migration modes with progress tracking",
-        "Conversation summary Pinecone storage no longer includes redundant userId field (automatically added by storePineconeContext)"
+        "Conversation summary Pinecone storage no longer includes redundant userId field (automatically added by storePineconeContext)",
       ],
       fixed: [
         "Critical Pinecone reranking bug where all 34 matches were filtered out due to mismatched score scales (0.7 threshold applied to 0.3-scale reranked scores)",
@@ -973,9 +1103,9 @@ export const changelogEntries = [
         "Conversation summaries creating duplicate user identification fields in Pinecone metadata",
         "Pinecone query results being discarded after reranking due to incompatible score threshold validation",
         "Memory retrieval potentially missing relevant context due to coach-specific scoping instead of global search",
-        "Migration script failing to continue when single namespace encountered errors (now resilient with per-namespace error handling)"
-      ]
-    }
+        "Migration script failing to continue when single namespace encountered errors (now resilient with per-namespace error handling)",
+      ],
+    },
   },
   {
     version: "Release v1.0.20251005-beta",
@@ -988,7 +1118,7 @@ export const changelogEntries = [
         "Platform context emphasizing NeonPanda as bridge between cutting-edge AI and genuine human connection",
         "Left-aligned contextual update indicators with coach avatar for improved visual flow and consistency",
         "Empty streaming placeholder message filtering to prevent empty AI chat bubbles from displaying",
-        "Consistent contextual update implementation across both CoachCreator and CoachConversations pages"
+        "Consistent contextual update implementation across both CoachCreator and CoachConversations pages",
       ],
       changed: [
         "Contextual update formatting in streaming handlers removed extra linebreaks (\\n\\n) for cleaner display",
@@ -999,7 +1129,7 @@ export const changelogEntries = [
         "Contextual update text size increased from text-sm to text-base for improved readability",
         "Quick acknowledgments converted from chunk events to contextual events (ephemeral, not saved to conversation history)",
         "Emoji picker repositioned to anchor bottom edge just above emoji button for better visual alignment",
-        "Contextual updates now display with coach avatar in left-aligned format matching message bubbles"
+        "Contextual updates now display with coach avatar in left-aligned format matching message bubbles",
       ],
       fixed: [
         "Extra spacing in contextual updates causing unnecessary whitespace between updates and AI responses",
@@ -1007,9 +1137,9 @@ export const changelogEntries = [
         "Inconsistent spacing in chat display during streaming contextual updates",
         "Empty pulsing AI chat bubble appearing before first chunk arrives during streaming",
         "Quick acknowledgments being unnecessarily saved to conversation history as permanent messages",
-        "Inconsistent contextual update display and behavior between CoachCreator and CoachConversations pages"
-      ]
-    }
+        "Inconsistent contextual update display and behavior between CoachCreator and CoachConversations pages",
+      ],
+    },
   },
   {
     version: "Release v1.0.20251004-beta",
@@ -1032,7 +1162,7 @@ export const changelogEntries = [
         "SubcontainerEnhanced pattern in uiPatterns.js matching Theme.jsx glassmorphism design",
         "Bangers Google Font integration for creative text styling with sans-serif fallback",
         "create-coach-config Lambda function for manual coach creation from completed sessions",
-        "Nested configGeneration object in CoachCreatorSession TypeScript interface for better data modeling"
+        "Nested configGeneration object in CoachCreatorSession TypeScript interface for better data modeling",
       ],
       changed: [
         "Coach creator session deletions now perform hard deletes when user-initiated from Coaches page",
@@ -1055,7 +1185,7 @@ export const changelogEntries = [
         "Data extraction functions updated to align with new 11-question structure (questions 0-10)",
         "Session summary generation updated to reflect new 11-question flow and mapping",
         "Frontend fallback estimates corrected for all sophistication levels (BEGINNER: 10, INTERMEDIATE/ADVANCED: 11 questions)",
-        "Gender preference selection added as first question (question 0) in coach creator flow"
+        "Gender preference selection added as first question (question 0) in coach creator flow",
       ],
       fixed: [
         "Browser alert popups and on-screen errors replaced with toast notifications for better UX",
@@ -1076,9 +1206,9 @@ export const changelogEntries = [
         "Unused data extraction functions (extractSessionDuration, extractCoachingStylePreferences) cluttering codebase",
         "Emoji picker internal CSS classes overriding custom synthwave styling for category labels",
         "Emoji picker placeholder text overlapping with search icon due to insufficient left padding",
-        "Emoji sizes too large (28px) in picker, reduced to 24px for better density and scanning"
-      ]
-    }
+        "Emoji sizes too large (28px) in picker, reduced to 24px for better density and scanning",
+      ],
+    },
   },
   {
     version: "Release v1.0.20251003-beta",
@@ -1093,7 +1223,7 @@ export const changelogEntries = [
         "Explicit markdown formatting prohibition in all AI prompts to prevent ```json wrapper issues",
         "Battle-tested JSON formatting rules applied across 15 backend functions for consistency",
         "AI-powered finish intent detection in coach creator using Claude Haiku for natural conversation flow",
-        "JSON formatting instructions to 6 critical detection functions (checkUserWantsToFinish, detectConversationComplexity, detectMemoryRetrievalNeed, detectMemoryRequest, shouldUsePineconeSearch, extractCompletedAtTime)"
+        "JSON formatting instructions to 6 critical detection functions (checkUserWantsToFinish, detectConversationComplexity, detectMemoryRetrievalNeed, detectMemoryRequest, shouldUsePineconeSearch, extractCompletedAtTime)",
       ],
       changed: [
         "Coach config generation now uses standardized JSON instructions from prompt-helpers",
@@ -1109,7 +1239,7 @@ export const changelogEntries = [
         "Migrated 11 critical detection/decision tasks from Nova Micro to Claude Haiku for superior reliability (workout detection, memory analysis, conversation complexity, Pinecone search decisions, time extraction, discipline classification)",
         "checkUserWantsToFinish() converted from synchronous keyword matching to async AI-powered intent detection",
         "stream-coach-creator-session and update-coach-creator-session handlers updated to await async checkUserWantsToFinish()",
-        "Nova Micro now only used for low-stakes tasks (contextual UI messages and simple binary classifications)"
+        "Nova Micro now only used for low-stakes tasks (contextual UI messages and simple binary classifications)",
       ],
       fixed: [
         "Coach config generation JSON parsing failures when Bedrock returns markdown-wrapped JSON (```json...```)",
@@ -1123,9 +1253,9 @@ export const changelogEntries = [
         "Coach creator '3 times to finish' bug where users needed to respond multiple times before coach creation triggered",
         "Keyword-based finish detection missing natural affirmative responses ('yep', 'sounds good', 'okay', 'sure')",
         "Nova Micro reliability issues with critical decision-making tasks requiring nuanced understanding",
-        "Potential JSON parsing errors in 6 detection functions due to missing formatting instructions"
-      ]
-    }
+        "Potential JSON parsing errors in 6 detection functions due to missing formatting instructions",
+      ],
+    },
   },
   {
     version: "Release v1.0.20251002-beta",
@@ -1147,7 +1277,7 @@ export const changelogEntries = [
         "Inline image display with 128x128px thumbnails using neon maroon styling",
         "Support for up to 5 images per message with automatic validation",
         "S3 bucket lifecycle policy for automatic cleanup of old images after 90 days",
-        "Dynamic S3 bucket name injection into amplify_outputs.json for frontend access"
+        "Dynamic S3 bucket name injection into amplify_outputs.json for frontend access",
       ],
       changed: [
         "CoachConversationAgent and CoachCreatorAgent now accept imageS3Keys parameter in message sending",
@@ -1160,7 +1290,7 @@ export const changelogEntries = [
         "Image previews styled with imagePreviewPatterns from uiPatterns.js for consistency",
         "Inline images display with neon maroon borders (border-synthwave-neon-maroon/80) and backgrounds",
         "authenticatedFetch now prepends API base URL to relative URLs for correct routing",
-        "Image preview thumbnails reduced from 80px to 64px for more compact display"
+        "Image preview thumbnails reduced from 80px to 64px for more compact display",
       ],
       fixed: [
         "Missing APPS_BUCKET_NAME environment variable in update-coach-creator-session Lambda",
@@ -1171,10 +1301,10 @@ export const changelogEntries = [
         "Images not disappearing from ChatInput after message submission",
         "ImageWithPresignedUrl component duplicated in CoachCreator.jsx and CoachConversations.jsx",
         "CoachCreatorAgent and CoachConversationAgent not loading imageS3Keys from DynamoDB into frontend state",
-        "Image borders and styling not standing out against user message container backgrounds"
-      ]
-    }
-  }
+        "Image borders and styling not standing out against user message container backgrounds",
+      ],
+    },
+  },
 ];
 
 /**
@@ -1200,7 +1330,7 @@ export const getTotalChanges = (entry) => {
     added: addedCount,
     changed: changedCount,
     fixed: fixedCount,
-    total: addedCount + changedCount + fixedCount
+    total: addedCount + changedCount + fixedCount,
   };
 };
 
@@ -1213,5 +1343,5 @@ export const getTotalChanges = (entry) => {
 export const generateVersionAnchor = (version) => {
   // Extract version number: "Release v1.0.20251010-beta" -> "v1.0.20251010-beta"
   const match = version.match(/v[\d.]+(?:-\w+)?/);
-  return match ? match[0] : version.replace(/\s+/g, '-');
+  return match ? match[0] : version.replace(/\s+/g, "-");
 };

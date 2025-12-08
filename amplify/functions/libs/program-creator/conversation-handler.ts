@@ -19,12 +19,20 @@ import { ProgramCreatorSession } from './types';
  * Handle to-do list based conversational flow for training program creation
  * Generates next question dynamically based on what's been collected
  * Supports multimodal input (text + images)
+ * Pattern: Matches workout-creator/conversation-handler.ts exactly
  */
 export async function* handleTodoListConversation(
   userResponse: string,
   session: ProgramCreatorSession,
   imageS3Keys?: string[],
-  coachConfig?: any
+  coachConfig?: any,
+  userContext?: {
+    recentWorkouts?: any[];
+    pineconeMemories?: any[];
+    userProfile?: any;
+    activeProgram?: any;
+  },
+  conversationMessages?: any[] // CoachConversation.messages for history sync
 ): AsyncGenerator<string, any, unknown> {
   console.info("✨ Handling program to-do list conversation");
 
@@ -36,11 +44,35 @@ export async function* handleTodoListConversation(
   }
 
   try {
-    // Step 1: Extract information from user response and update todoList FIRST
-    console.info("🔍 Extracting information and updating program to-do list BEFORE generating next question");
+    // Step 1: Synchronize conversation history from CoachConversation FIRST
+    // This ensures ALL messages (user + AI) are captured in correct order
+    console.info("🔄 Synchronizing conversation history from CoachConversation");
 
-    // Add user message to history
+    if (conversationMessages && conversationMessages.length > 0) {
+      // Extract ALL program design messages from CoachConversation
+      const buildModeMessages = conversationMessages
+        .filter((m: any) => m.metadata?.mode === 'program_design')
+        .map((m: any) => ({
+          role: (m.role === 'assistant' ? 'ai' : 'user') as 'ai' | 'user',
+          content: m.content,
+          timestamp: typeof m.timestamp === 'string' ? m.timestamp : m.timestamp.toISOString(),
+          ...(m.imageS3Keys && m.imageS3Keys.length > 0 ? {
+            imageS3Keys: m.imageS3Keys,
+            messageType: m.messageType || 'text_with_images'
+          } : {})
+        }));
+
+      // Set as session conversation history (source of truth)
+      session.conversationHistory = buildModeMessages;
+      console.info(`📚 Synchronized ${buildModeMessages.length} messages from CoachConversation`);
+    } else {
+      // Initialize empty history if no messages provided
     session.conversationHistory = session.conversationHistory || [];
+    }
+
+    // Step 2: Add current user message to history
+    console.info("🔍 Adding current user message and extracting information");
+
     const userMessage: ConversationMessage = {
       role: 'user',
       content: userResponse,
@@ -55,13 +87,79 @@ export async function* handleTodoListConversation(
 
     session.conversationHistory.push(userMessage);
 
-    // Extract with multimodal support
-    session.todoList = await extractAndUpdateTodoList(
+    // Increment turn counter (matches workout creator pattern)
+    session.turnCount = (session.turnCount || 0) + 1;
+    console.info(`📊 Turn ${session.turnCount} of program collection`);
+
+    // Extract with multimodal support (pass userContext for smarter extraction)
+    const extractionResult: any = await extractAndUpdateTodoList(
       userResponse,
       session.conversationHistory,
       session.todoList,
-      imageS3Keys // Pass images to extraction
+      imageS3Keys, // Pass images to extraction
+      userContext // Pass user context for smarter extraction (matches workout creator pattern)
     );
+
+    // Update todoList from extraction result
+    session.todoList = extractionResult;
+
+    // Step 1.5: Check for topic change (user abandoned program design)
+    if (extractionResult.userChangedTopic) {
+      console.info('🔀 User changed topics - cancelling program design session');
+      session.isComplete = false; // Don't complete the program
+
+      // Don't yield anything - the caller will handle re-processing the message
+      return {
+        cleanedResponse: '', // Empty response - message will be re-processed
+        isComplete: false,
+        sessionCancelled: true, // Signal to caller to clear session and re-process
+        progressDetails: {
+          completed: 0,
+          total: 5,
+          percentage: 0,
+        },
+      };
+    }
+
+    // Step 1.6: Check for early completion intent (user wants to skip optional fields)
+    if (extractionResult.userWantsToFinish) {
+      console.info('✅ User wants to finish early - checking if minimum requirements met');
+      const requiredComplete = isSessionComplete(session.todoList);
+
+      if (requiredComplete) {
+        console.info('✅ Required fields complete - triggering program generation');
+        // Generate completion message and trigger generation
+        const { generateCompletionMessage } = await import('./question-generator');
+        const coachPersonality = coachConfig?.generated_prompts?.personality_prompt;
+        const completionMessageStream = generateCompletionMessage(
+          session.todoList,
+          coachPersonality,
+          userContext // Pass user context for personalized completion message (matches workout creator pattern)
+        );
+
+        let completionMessage = '';
+        for await (const chunk of completionMessageStream) {
+          completionMessage += chunk;
+          yield formatChunkEvent(chunk);
+        }
+
+        session.conversationHistory.push({
+          role: 'ai',
+          content: completionMessage,
+          timestamp: new Date().toISOString()
+        });
+
+        session.isComplete = true;
+        return {
+          cleanedResponse: completionMessage,
+          isComplete: true,
+          progressDetails: getTodoProgress(session.todoList),
+        };
+      } else {
+        console.info('⚠️ User wants to finish but required fields incomplete - continuing collection');
+        // Continue normal flow
+      }
+    }
 
     // Step 2: Generate next question or completion message using UPDATED todoList
     console.info("🎯 Generating next program question based on UPDATED to-do list");
@@ -73,7 +171,8 @@ export async function* handleTodoListConversation(
     const questionStream = generateNextQuestionStream(
       session.conversationHistory,
       session.todoList,
-      coachPersonality
+      coachPersonality,
+      userContext // Pass user context for smarter question generation (matches workout creator pattern)
     );
 
     let nextResponse = '';

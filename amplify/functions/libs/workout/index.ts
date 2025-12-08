@@ -14,8 +14,8 @@ export {
   generateStructuredWorkoutContext,
   WORKOUT_SLASH_COMMANDS,
   type SlashCommandResult,
-  type WorkoutContentValidation
-} from './detection';
+  type WorkoutContentValidation,
+} from "./detection";
 
 export {
   buildWorkoutExtractionPrompt,
@@ -26,12 +26,11 @@ export {
   isComplexWorkout,
   generateWorkoutSummary,
   classifyDiscipline,
-  validateWorkoutStructure
-} from './extraction';
+  validateWorkoutStructure,
+  applyPerformanceMetricDefaults,
+} from "./extraction";
 
-export {
-  storeWorkoutSummaryInPinecone
-} from './pinecone';
+export { storeWorkoutSummaryInPinecone } from "./pinecone";
 
 export {
   Workout,
@@ -51,13 +50,13 @@ export {
   SorenessLevel,
   EnvironmentalFactors,
   RecoveryMetrics,
-  DisciplineSpecific
-} from './types';
+  DisciplineSpecific,
+} from "./types";
 
 export {
   normalizeWorkout,
   shouldNormalizeWorkout,
   generateNormalizationSummary,
   type NormalizationResult,
-  type NormalizationIssue
-} from './normalization';
+  type NormalizationIssue,
+} from "./normalization";

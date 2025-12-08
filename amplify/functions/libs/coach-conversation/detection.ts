@@ -254,7 +254,8 @@ TASK: Analyze the user's message and determine:
 ANALYSIS FRAMEWORK:
 
 === USER INTENT CLASSIFICATION ===
-- workout_logging: Message describes a completed workout with specific details
+- workout_logging: Message describes a completed workout with specific details (past tense)
+- program_design: User wants to design/create a new training program (future intent)
 - memory_request: User wants to save/remember something for future reference
 - question: User is asking for advice, guidance, or information
 - progress_check: User is discussing progress, results, or performance
@@ -321,11 +322,71 @@ STRICT CRITERIA - ALL THREE must be met:
   - "Add this to my log:", "Save this workout:", "Document this session:"
   AVOID: Questions, discussions, experiences, feelings, commentary
 
-Workout Types:
-- strength: Weightlifting, powerlifting, bodybuilding
-- cardio: Running, cycling, swimming, endurance
-- crossfit: CrossFit workouts, functional fitness
-- general: Mixed or unspecified training
+Workout Types (must match workout schema):
+- strength: Weightlifting, powerlifting, bodybuilding, resistance training
+- cardio: Running, cycling, swimming, rowing, endurance work
+- flexibility: Stretching, yoga, mobility work
+- skill: Gymnastics movements, Olympic lift technique, skill practice
+- competition: Competition workouts, benchmark tests, PRs
+- recovery: Active recovery, light movement, deload sessions
+- hybrid: Mixed modality workouts combining multiple types (e.g., CrossFit metcons)
+
+SLASH COMMAND DETECTION:
+- "/log-workout" slash command
+- If detected, ALWAYS set isWorkoutLog = true with confidence 1.0
+- Set isSlashCommand = true when slash command is present
+- Slash commands bypass all other criteria (explicit user intent)
+
+Workout Detection Response:
+{
+  "isWorkoutLog": boolean,
+  "confidence": number (0.0 to 1.0),
+  "workoutType": "strength" | "cardio" | "flexibility" | "skill" | "competition" | "recovery" | "hybrid" | null,
+  "reasoning": "brief explanation of workout detection decision",
+  "isSlashCommand": boolean  // true if /log-workout command detected
+}
+
+=== PROGRAM DESIGN DETECTION ===
+STRICT CRITERIA - ALL THREE must be met (OR slash command used):
+
+SLASH COMMAND DETECTION:
+- "/design-program" slash command
+- If detected, ALWAYS set isProgramDesign = true with confidence 1.0
+- Slash commands bypass all other criteria (explicit user intent)
+
+NATURAL LANGUAGE DETECTION (ALL THREE required):
+1. EXPLICIT PROGRAM DESIGN INTENT: Message must clearly indicate wanting to CREATE/DESIGN a training program
+   REQUIRED language patterns:
+   - "I want to design/create/build a [training] program"
+   - "Create/design/build me a program"
+   - "Help me design/create/build a program"
+   - "I need a new [training] program"
+   - "Can you create/design/build a program for me"
+   - "Let's design/create/build a program"
+   - "Design me a program for [goal]"
+   AVOID: Questions about programs ("what's a good program?"), discussions, feedback
+
+2. STRUCTURED PROGRAM REQUEST: Must indicate wanting a COMPLETE, STRUCTURED training program
+   Required context:
+   - NOT a single workout ("give me a workout" = WORKOUT_LOG, not PROGRAM_DESIGN)
+   - NOT asking for advice ("how should I program?" = question, not PROGRAM_DESIGN)
+   - NOT discussing existing program ("my program isn't working" = question, not PROGRAM_DESIGN)
+   - MUST be requesting a NEW, MULTI-WEEK program artifact
+
+3. CREATION INTENT: Clear intent to start the program design process NOW
+   REQUIRED intent patterns:
+   - Active request to begin designing
+   - Willingness to answer questions about goals, equipment, schedule
+   - Forward-looking language ("I want to", "let's", "can you")
+   AVOID: Past tense ("I had a program"), hypotheticals ("would a program work?"), research ("tell me about programs")
+
+Program Design Detection:
+{
+  "isProgramDesign": boolean,
+  "confidence": number (0.0 to 1.0),
+  "reasoning": "brief explanation of program design detection decision",
+  "isSlashCommand": boolean  // Track if this was slash command triggered
+}
 
 === MEMORY PROCESSING ===
 Memory Retrieval Needed:
@@ -458,13 +519,20 @@ ${JSON_FORMATTING_INSTRUCTIONS_STANDARD}
 
 REQUIRED JSON STRUCTURE:
 {
-  "userIntent": "workout_logging" | "memory_request" | "question" | "progress_check" | "acknowledgment" | "general",
+  "userIntent": "workout_logging" | "program_design" | "memory_request" | "question" | "progress_check" | "acknowledgment" | "general",
   "showContextualUpdates": boolean,
   "workoutDetection": {
     "isWorkoutLog": boolean,
     "confidence": number (0.0 to 1.0),
-    "workoutType": "strength" | "cardio" | "crossfit" | "general" | null,
-    "reasoning": "brief explanation of workout detection decision"
+    "workoutType": "strength" | "cardio" | "flexibility" | "skill" | "competition" | "recovery" | "hybrid" | null,
+    "reasoning": "brief explanation of workout detection decision",
+    "isSlashCommand": boolean
+  },
+  "programDesignDetection": {
+    "isProgramDesign": boolean,
+    "confidence": number (0.0 to 1.0),
+    "reasoning": "brief explanation of program design detection decision",
+    "isSlashCommand": boolean
   },
   "memoryProcessing": {
     "needsRetrieval": boolean,

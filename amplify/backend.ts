@@ -38,6 +38,7 @@ import { streamCoachConversation } from "./functions/stream-coach-conversation/r
 import { streamCoachCreatorSession } from "./functions/stream-coach-creator-session/resource";
 import { createWorkout } from "./functions/create-workout/resource";
 import { buildWorkout } from "./functions/build-workout/resource";
+import { buildWorkoutV2 } from "./functions/build-workout-v2/resource";
 import { buildConversationSummary } from "./functions/build-conversation-summary/resource";
 import { getWorkouts } from "./functions/get-workouts/resource";
 import { getWorkout } from "./functions/get-workout/resource";
@@ -79,7 +80,7 @@ import { skipWorkoutTemplate } from "./functions/skip-workout-template/resource"
 import { getWorkoutTemplate } from "./functions/get-workout-template/resource";
 import {
   notifyInactiveUsers,
-  createInactiveUsersNotificationSchedule
+  createInactiveUsersNotificationSchedule,
 } from "./functions/notify-inactive-users/resource";
 import { unsubscribeEmail } from "./functions/unsubscribe-email/resource";
 import { apiGatewayv2 } from "./api/resource";
@@ -132,6 +133,7 @@ const backend = defineBackend({
   streamCoachCreatorSession,
   createWorkout,
   buildWorkout,
+  buildWorkoutV2,
   buildConversationSummary,
   getWorkouts,
   getWorkout,
@@ -178,6 +180,9 @@ backend.buildProgram.resources.lambda.configureAsyncInvoke({
 backend.buildWorkout.resources.lambda.configureAsyncInvoke({
   retryAttempts: 0,
 });
+backend.buildWorkoutV2.resources.lambda.configureAsyncInvoke({
+  retryAttempts: 0,
+});
 backend.buildCoachConfig.resources.lambda.configureAsyncInvoke({
   retryAttempts: 0,
 });
@@ -191,7 +196,7 @@ const userPoolAuthorizer = new HttpUserPoolAuthorizer(
   backend.auth.resources.userPool,
   {
     userPoolClients: [backend.auth.resources.userPoolClient],
-  }
+  },
 );
 
 // Create the Core API with all endpoints
@@ -247,7 +252,7 @@ const coreApi = apiGatewayv2.createCoreApi(
   backend.skipWorkoutTemplate.resources.lambda,
   backend.getWorkoutTemplate.resources.lambda,
   backend.unsubscribeEmail.resources.lambda,
-  userPoolAuthorizer
+  userPoolAuthorizer,
 );
 
 // Create DynamoDB table
@@ -258,13 +263,13 @@ const appsBucket = createAppsBucket(backend.contactForm.stack);
 
 // Create SNS topics for notifications
 const contactFormNotifications = createContactFormNotificationTopic(
-  backend.contactForm.stack
+  backend.contactForm.stack,
 );
 const errorMonitoringTopic = createErrorMonitoringTopic(
-  backend.contactForm.stack
+  backend.contactForm.stack,
 );
 const userRegistrationTopic = createUserRegistrationTopic(
-  backend.postConfirmation.stack
+  backend.postConfirmation.stack,
 );
 
 // Get branch information for S3 policies
@@ -283,7 +288,7 @@ const sharedPolicies = new SharedPolicies(
   backend.contactForm.stack,
   coreTable.table,
   branchName,
-  appsBucket.bucket.bucketArn
+  appsBucket.bucket.bucketArn,
 );
 
 // ============================================================================
@@ -314,6 +319,7 @@ const sharedPolicies = new SharedPolicies(
   backend.streamCoachCreatorSession,
   backend.deleteCoachConversation,
   backend.buildWorkout,
+  backend.buildWorkoutV2,
   backend.buildConversationSummary,
   backend.getWorkouts,
   backend.getWorkout,
@@ -376,6 +382,7 @@ const sharedPolicies = new SharedPolicies(
   backend.sendCoachConversationMessage,
   backend.streamCoachConversation,
   backend.buildWorkout,
+  backend.buildWorkoutV2, // Agent-based workout extraction with Bedrock
   backend.buildProgram, // Added: Needs Bedrock for AI program generation
   backend.buildConversationSummary,
   backend.buildWeeklyAnalytics,
@@ -389,6 +396,7 @@ const sharedPolicies = new SharedPolicies(
 // Functions needing S3 DEBUG bucket access
 [
   backend.buildWorkout,
+  backend.buildWorkoutV2, // Agent-based workout extraction with debug logging
   backend.buildCoachConfig,
   backend.buildConversationSummary,
   backend.buildProgram,
@@ -402,10 +410,10 @@ const sharedPolicies = new SharedPolicies(
 
 // Functions needing S3 ANALYTICS bucket access
 sharedPolicies.attachS3AnalyticsAccess(
-  backend.buildWeeklyAnalytics.resources.lambda
+  backend.buildWeeklyAnalytics.resources.lambda,
 );
 sharedPolicies.attachS3AnalyticsAccess(
-  backend.buildMonthlyAnalytics.resources.lambda
+  backend.buildMonthlyAnalytics.resources.lambda,
 );
 
 // Functions needing S3 APPS bucket access (for image storage and training programs)
@@ -419,6 +427,7 @@ sharedPolicies.attachS3AnalyticsAccess(
   backend.createProgram,
   backend.buildProgram,
   backend.buildWorkout, // Added: needs to update template.linkedWorkoutId in S3
+  backend.buildWorkoutV2, // Agent-based: also needs template.linkedWorkoutId update
   backend.getProgram,
   backend.logWorkoutTemplate,
   backend.skipWorkoutTemplate,
@@ -455,7 +464,7 @@ backend.postConfirmation.resources.lambda.addToRolePolicy(
       "dynamodb:UpdateTable",
     ],
     resources: ["*"], // Must use wildcard - table ARN would create circular dependency
-  })
+  }),
 );
 
 // Grant Cognito admin permissions using inline policy
@@ -470,7 +479,7 @@ backend.postConfirmation.resources.lambda.addToRolePolicy(
       "cognito-idp:ListUsers",
     ],
     resources: ["*"],
-  })
+  }),
 );
 
 // ============================================================================
@@ -481,9 +490,9 @@ backend.postConfirmation.resources.lambda.addToRolePolicy(
 backend.notifyInactiveUsers.resources.lambda.addToRolePolicy(
   new PolicyStatement({
     effect: Effect.ALLOW,
-    actions: ['ses:SendEmail', 'ses:SendRawEmail'],
-    resources: ['*'], // SES requires wildcard for email sending
-  })
+    actions: ["ses:SendEmail", "ses:SendRawEmail"],
+    resources: ["*"], // SES requires wildcard for email sending
+  }),
 );
 
 // ============================================================================
@@ -492,17 +501,17 @@ backend.notifyInactiveUsers.resources.lambda.addToRolePolicy(
 
 // Grant SNS permissions to contact form function
 contactFormNotifications.topic.grantPublish(
-  backend.contactForm.resources.lambda
+  backend.contactForm.resources.lambda,
 );
 
 // Grant SNS publish permissions to post-confirmation function
 userRegistrationTopic.topic.grantPublish(
-  backend.postConfirmation.resources.lambda
+  backend.postConfirmation.resources.lambda,
 );
 
 // Grant SNS publish permissions to forwardLogsToSns
 errorMonitoringTopic.topic.grantPublish(
-  backend.forwardLogsToSns.resources.lambda
+  backend.forwardLogsToSns.resources.lambda,
 );
 
 // CRITICAL: Explicitly ensure forwardLogsToSns has NO managed policies
@@ -512,7 +521,7 @@ if (forwardLogsRole) {
   // The role should only have inline policies from SNS grant and CloudWatch permission
   // No managed policies should be attached
   console.info(
-    "🧹 forwardLogsToSns role configured with minimal inline policies only"
+    "🧹 forwardLogsToSns role configured with minimal inline policies only",
   );
 }
 
@@ -523,7 +532,7 @@ if (forwardLogsRole) {
 // Grant permission to updateCoachCreatorSession to invoke buildCoachConfig
 grantLambdaInvokePermissions(
   backend.updateCoachCreatorSession.resources.lambda,
-  [backend.buildCoachConfig.resources.lambda.functionArn]
+  [backend.buildCoachConfig.resources.lambda.functionArn],
 );
 
 // Grant permission to createWorkout to invoke buildWorkout
@@ -537,12 +546,13 @@ grantLambdaInvokePermissions(
   [
     backend.buildWorkout.resources.lambda.functionArn,
     backend.buildConversationSummary.resources.lambda.functionArn,
-  ]
+  ],
 );
 
-// Grant permission to streamCoachConversation to invoke buildWorkout, buildProgram, and buildConversationSummary
+// Grant permission to streamCoachConversation to invoke buildWorkout, buildWorkoutV2, buildProgram, and buildConversationSummary
 grantLambdaInvokePermissions(backend.streamCoachConversation.resources.lambda, [
   backend.buildWorkout.resources.lambda.functionArn,
+  backend.buildWorkoutV2.resources.lambda.functionArn,
   backend.buildProgram.resources.lambda.functionArn,
   backend.buildConversationSummary.resources.lambda.functionArn,
 ]);
@@ -550,7 +560,7 @@ grantLambdaInvokePermissions(backend.streamCoachConversation.resources.lambda, [
 // Grant permission to streamCoachCreatorSession to invoke buildCoachConfig
 grantLambdaInvokePermissions(
   backend.streamCoachCreatorSession.resources.lambda,
-  [backend.buildCoachConfig.resources.lambda.functionArn]
+  [backend.buildCoachConfig.resources.lambda.functionArn],
 );
 
 // Grant permission to logWorkoutTemplate to invoke buildWorkout
@@ -582,11 +592,11 @@ backend.forwardLogsToSns.resources.lambda.addPermission("AllowCloudWatchLogs", {
 // Configure forwarder
 backend.forwardLogsToSns.addEnvironment(
   "SNS_TOPIC_ARN",
-  errorMonitoringTopic.topicArn
+  errorMonitoringTopic.topicArn,
 );
 backend.forwardLogsToSns.addEnvironment(
   "GOOGLE_CHAT_ERRORS_WEBHOOK_URL",
-  config.GOOGLE_CHAT_ERRORS_WEBHOOK_URL
+  config.GOOGLE_CHAT_ERRORS_WEBHOOK_URL,
 );
 
 // Grant permissions to sync Lambda
@@ -599,7 +609,7 @@ backend.syncLogSubscriptions.resources.lambda.addToRolePolicy(
       "logs:DescribeSubscriptionFilters",
     ],
     resources: ["*"],
-  })
+  }),
 );
 
 // ============================================================================
@@ -630,6 +640,7 @@ const allFunctions = [
   backend.streamCoachCreatorSession,
   backend.createWorkout,
   backend.buildWorkout,
+  backend.buildWorkoutV2,
   backend.buildConversationSummary,
   backend.getWorkouts,
   backend.getWorkout,
@@ -697,6 +708,7 @@ allFunctions.forEach((func) => {
   backend.createProgram,
   backend.buildProgram,
   backend.buildWorkout, // Added: needs access to S3 for updating template.linkedWorkoutId
+  backend.buildWorkoutV2, // Agent-based: also needs S3 for template updates
   backend.getWorkoutTemplate,
   backend.logWorkoutTemplate,
   backend.skipWorkoutTemplate,
@@ -745,89 +757,89 @@ console.info("📋 Log group configuration:", {
 backend.syncLogSubscriptions.addEnvironment("LOG_GROUP_PREFIX", logGroupPrefix);
 backend.syncLogSubscriptions.addEnvironment(
   "DESTINATION_ARN",
-  backend.forwardLogsToSns.resources.lambda.functionArn
+  backend.forwardLogsToSns.resources.lambda.functionArn,
 );
 backend.syncLogSubscriptions.addEnvironment(
   "FILTER_PATTERN",
-  "[timestamp, request_id, level=ERROR || level=WARN || level=WARNING || level=FATAL || level=CRITICAL, ...]"
+  "[timestamp, request_id, level=ERROR || level=WARN || level=WARNING || level=FATAL || level=CRITICAL, ...]",
 );
 backend.syncLogSubscriptions.addEnvironment("IMMEDIATE_RUN", "true");
 
 // Add SNS topic ARN to contact form function
 backend.contactForm.addEnvironment(
   "CONTACT_FORM_TOPIC_ARN",
-  contactFormNotifications.topic.topicArn
+  contactFormNotifications.topic.topicArn,
 );
 
 // Add SNS topic ARN to post-confirmation function
 backend.postConfirmation.addEnvironment(
   "USER_REGISTRATION_TOPIC_ARN",
-  userRegistrationTopic.topicArn
+  userRegistrationTopic.topicArn,
 );
 
 // Add USER_POOL_ID to checkUserAvailability function
 backend.checkUserAvailability.addEnvironment(
   "USER_POOL_ID",
-  backend.auth.resources.userPool.userPoolId
+  backend.auth.resources.userPool.userPoolId,
 );
 
 // Add function name environment variables
 backend.updateCoachCreatorSession.addEnvironment(
   "BUILD_COACH_CONFIG_FUNCTION_NAME",
-  backend.buildCoachConfig.resources.lambda.functionName
+  backend.buildCoachConfig.resources.lambda.functionName,
 );
 
 backend.createWorkout.addEnvironment(
   "BUILD_WORKOUT_FUNCTION_NAME",
-  backend.buildWorkout.resources.lambda.functionName
+  backend.buildWorkout.resources.lambda.functionName,
 );
 
 backend.sendCoachConversationMessage.addEnvironment(
   "BUILD_WORKOUT_FUNCTION_NAME",
-  backend.buildWorkout.resources.lambda.functionName
+  backend.buildWorkout.resources.lambda.functionName,
 );
 backend.sendCoachConversationMessage.addEnvironment(
   "BUILD_CONVERSATION_SUMMARY_FUNCTION_NAME",
-  backend.buildConversationSummary.resources.lambda.functionName
+  backend.buildConversationSummary.resources.lambda.functionName,
 );
 
 backend.streamCoachConversation.addEnvironment(
   "BUILD_WORKOUT_FUNCTION_NAME",
-  backend.buildWorkout.resources.lambda.functionName
+  backend.buildWorkoutV2.resources.lambda.functionName,
 );
 backend.streamCoachConversation.addEnvironment(
   "BUILD_TRAINING_PROGRAM_FUNCTION_NAME",
-  backend.buildProgram.resources.lambda.functionName
+  backend.buildProgram.resources.lambda.functionName,
 );
 backend.streamCoachConversation.addEnvironment(
   "BUILD_CONVERSATION_SUMMARY_FUNCTION_NAME",
-  backend.buildConversationSummary.resources.lambda.functionName
+  backend.buildConversationSummary.resources.lambda.functionName,
 );
 
 backend.streamCoachCreatorSession.addEnvironment(
   "BUILD_COACH_CONFIG_FUNCTION_NAME",
-  backend.buildCoachConfig.resources.lambda.functionName
+  backend.buildCoachConfig.resources.lambda.functionName,
 );
 
 backend.createCoachConfig.addEnvironment(
   "BUILD_COACH_CONFIG_FUNCTION_NAME",
-  backend.buildCoachConfig.resources.lambda.functionName
+  backend.buildCoachConfig.resources.lambda.functionName,
 );
 
 backend.createCoachConversation.addEnvironment(
   "SEND_COACH_CONVERSATION_MESSAGE_FUNCTION_NAME",
-  backend.sendCoachConversationMessage.resources.lambda.functionName
+  backend.sendCoachConversationMessage.resources.lambda.functionName,
 );
 
 backend.logWorkoutTemplate.addEnvironment(
   "BUILD_WORKOUT_FUNCTION_NAME",
-  backend.buildWorkout.resources.lambda.functionName
+  backend.buildWorkout.resources.lambda.functionName,
 );
 
 // Add USER_POOL_ID environment variable to update-user-profile
 backend.updateUserProfile.addEnvironment(
   "USER_POOL_ID",
-  backend.auth.resources.userPool.userPoolId
+  backend.auth.resources.userPool.userPoolId,
 );
 
 // ============================================================================
@@ -860,7 +872,7 @@ new CfnPermission(
     action: "lambda:InvokeFunction",
     functionName: backend.streamCoachConversation.resources.lambda.functionName,
     principal: "*",
-  }
+  },
 );
 
 // Configure Lambda Function URL for streaming coach creator sessions
@@ -887,9 +899,10 @@ new CfnPermission(
   "StreamingCoachCreatorInvokePermission",
   {
     action: "lambda:InvokeFunction",
-    functionName: backend.streamCoachCreatorSession.resources.lambda.functionName,
+    functionName:
+      backend.streamCoachCreatorSession.resources.lambda.functionName,
     principal: "*",
-  }
+  },
 );
 
 // ============================================================================
@@ -899,7 +912,7 @@ new CfnPermission(
 // Create EventBridge schedule for log subscription sync (daily at 2am UTC)
 const syncLogSubscriptionsSchedule = createSyncLogSubscriptionsSchedule(
   backend.syncLogSubscriptions.stack,
-  backend.syncLogSubscriptions.resources.lambda
+  backend.syncLogSubscriptions.resources.lambda,
 );
 
 console.info("✅ Log subscription sync scheduled (daily at 2am UTC)");
@@ -908,7 +921,7 @@ console.info("✅ New functions automatically monitored within 24 hours");
 // Create EventBridge schedule for weekly analytics (Sundays at 9am UTC)
 const weeklyAnalyticsSchedule = createWeeklyAnalyticsSchedule(
   backend.buildWeeklyAnalytics.stack,
-  backend.buildWeeklyAnalytics.resources.lambda
+  backend.buildWeeklyAnalytics.resources.lambda,
 );
 
 console.info("✅ Weekly analytics scheduled (Sundays at 9am UTC)");
@@ -916,7 +929,7 @@ console.info("✅ Weekly analytics scheduled (Sundays at 9am UTC)");
 // Create EventBridge schedule for monthly analytics (1st of month at 9am UTC)
 const monthlyAnalyticsSchedule = createMonthlyAnalyticsSchedule(
   backend.buildMonthlyAnalytics.stack,
-  backend.buildMonthlyAnalytics.resources.lambda
+  backend.buildMonthlyAnalytics.resources.lambda,
 );
 
 console.info("✅ Monthly analytics scheduled (1st of month at 9am UTC)");
@@ -924,7 +937,7 @@ console.info("✅ Monthly analytics scheduled (1st of month at 9am UTC)");
 // Create EventBridge schedule for inactive user notifications (every 14 days)
 const inactiveUsersSchedule = createInactiveUsersNotificationSchedule(
   backend.notifyInactiveUsers.stack,
-  backend.notifyInactiveUsers.resources.lambda
+  backend.notifyInactiveUsers.resources.lambda,
 );
 
 console.info("✅ Inactive user notifications scheduled (every 14 days)");
@@ -940,7 +953,7 @@ const { cfnUserPool } = backend.auth.resources.cfnResources;
 const { resourceName: userPoolName } = createBranchAwareResourceName(
   backend.contactForm.stack,
   "NeonPanda-UserPool",
-  "Cognito User Pool"
+  "Cognito User Pool",
 );
 cfnUserPool.userPoolName = userPoolName;
 
@@ -949,7 +962,7 @@ const { cfnUserPoolClient } = backend.auth.resources.cfnResources;
 const { resourceName: userPoolClientName } = createBranchAwareResourceName(
   backend.contactForm.stack,
   "NeonPanda-UserPoolClient",
-  "Cognito User Pool Client"
+  "Cognito User Pool Client",
 );
 cfnUserPoolClient.clientName = userPoolClientName;
 
