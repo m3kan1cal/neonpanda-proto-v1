@@ -38,17 +38,33 @@ export async function generateNextQuestion(
     return null;
   }
 
-  // Check if this is the initial message (no conversation history)
-  const isInitialMessage = conversationHistory.length === 0;
+  // Separate pre-session context from current session messages
+  const preSessionMessages = conversationHistory.filter(
+    (m: any) => m.isPreSessionContext,
+  );
+  const sessionMessages = conversationHistory.filter(
+    (m: any) => !m.isPreSessionContext,
+  );
+
+  // Check if this is the initial message (no session messages, ignoring pre-session context)
+  const isInitialMessage = sessionMessages.length === 0;
 
   // Build the prompt for question generation
   const systemPrompt = buildQuestionPrompt(summary, coachPersonality);
 
-  // Get recent conversation context
-  const recentMessages = conversationHistory.slice(-6); // Last 6 messages
+  // Get recent conversation context from current session
+  const recentMessages = sessionMessages.slice(-6); // Last 6 session messages
   const conversationContext = recentMessages
     .map((m) => `${m.role.toUpperCase()}: ${m.content}`)
     .join("\n\n");
+
+  // Build pre-session context string
+  const preSessionContext =
+    preSessionMessages.length > 0
+      ? preSessionMessages
+          .map((m: any) => `${m.role.toUpperCase()}: ${m.content}`)
+          .join("\n\n")
+      : "";
 
   const userPrompt = isInitialMessage
     ? `
@@ -71,7 +87,18 @@ Keep it to 2-3 sentences of intro, then ask about their training goals.
 Generate your initial message now:
 `
     : `
-CONVERSATION SO FAR:
+${
+  preSessionContext
+    ? `PRE-SESSION CONTEXT (from earlier conversation):
+${preSessionContext}
+
+Note: The user discussed the above BEFORE entering program design mode. Use this context but don't re-ask about things they already mentioned.
+
+---
+
+`
+    : ""
+}CONVERSATION SO FAR (program design session):
 ${conversationContext}
 
 INFORMATION COLLECTED:
@@ -170,17 +197,33 @@ export async function* generateNextQuestionStream(
     return fullResponse;
   }
 
-  // Check if this is the initial message (no conversation history)
-  const isInitialMessage = conversationHistory.length === 0;
+  // Separate pre-session context from current session messages
+  const preSessionMessages = conversationHistory.filter(
+    (m: any) => m.isPreSessionContext,
+  );
+  const sessionMessages = conversationHistory.filter(
+    (m: any) => !m.isPreSessionContext,
+  );
+
+  // Check if this is the initial message (no session messages, ignoring pre-session context)
+  const isInitialMessage = sessionMessages.length === 0;
 
   // Build the prompt for question generation
   const systemPrompt = buildQuestionPrompt(summary, coachPersonality);
 
-  // Get recent conversation context
-  const recentMessages = conversationHistory.slice(-6); // Last 6 messages
+  // Get recent conversation context from current session
+  const recentMessages = sessionMessages.slice(-6); // Last 6 session messages
   const conversationContext = recentMessages
     .map((m) => `${m.role.toUpperCase()}: ${m.content}`)
     .join("\n\n");
+
+  // Build pre-session context string
+  const preSessionContext =
+    preSessionMessages.length > 0
+      ? preSessionMessages
+          .map((m: any) => `${m.role.toUpperCase()}: ${m.content}`)
+          .join("\n\n")
+      : "";
 
   const userPrompt = isInitialMessage
     ? `
@@ -203,7 +246,18 @@ Keep it to 2-3 sentences of intro, then ask about their training goals.
 Generate your initial message now:
 `
     : `
-CONVERSATION SO FAR:
+${
+  preSessionContext
+    ? `PRE-SESSION CONTEXT (from earlier conversation):
+${preSessionContext}
+
+Note: The user discussed the above BEFORE entering program design mode. Use this context but don't re-ask about things they already mentioned.
+
+---
+
+`
+    : ""
+}CONVERSATION SO FAR (program design session):
 ${conversationContext}
 
 INFORMATION COLLECTED:

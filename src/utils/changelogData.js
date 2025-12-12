@@ -10,6 +10,55 @@
 
 export const changelogEntries = [
   {
+    version: "Release v1.0.20251212-beta",
+    date: "2025-12-12",
+    changes: {
+      added: [
+        "AI-powered compression system for Pinecone metadata using Claude Sonnet 4.5 to intelligently compress oversized content while preserving semantic meaning and searchability",
+        "storeWithAutoCompression() wrapper function providing automatic retry logic: attempts original content first, then uses AI compression if size limit exceeded, with emergency truncation as last resort",
+        "compressContent() function using Claude Sonnet 4.5 to semantically compress content to target size while preserving keywords, concepts, entities, and searchable terms",
+        "calculateMetadataSize() utility for accurate byte-size estimation of Pinecone content and metadata before storage attempts",
+        "Intelligent compression targeting 80% of Pinecone's 40KB limit by default, leaving safety margin for metadata overhead and encoding variations",
+        "Comprehensive logging for compression operations showing original size, compressed size, compression ratio achieved, and whether result is within target limits",
+        "Three-tier fallback strategy: original content → AI compression → emergency truncation, ensuring storage always succeeds even if AI fails",
+        "Fire-and-forget Pinecone storage in agent tools (workout logger, program designer) eliminating user-facing latency from background storage operations",
+        "ProgramExtractionResult interface in todo-extraction.ts defining structured return type with todoList, userWantsToFinish, and userChangedTopic fields",
+        "Pre-session conversation history inclusion in program design mode providing AI with full context from messages before the session started",
+        "User context integration (recent workouts, Pinecone memories, user profile, active program) in program design question generation for smarter, more personalized questions",
+      ],
+      changed: [
+        "All Pinecone storage operations (conversations, programs, workouts, coach creator, user memory) now use AI compression instead of pre-truncation for size management",
+        "Conversation summary storage now includes ALL structured data (goals, progress, insights, preferences) without artificial truncation limits, relying on AI compression only when needed",
+        "Program summary storage now includes complete phase names, focus areas, goals, and equipment constraints without pre-truncation",
+        "Workout summary storage now includes all PR achievements without arbitrary limits, compressing only when total size exceeds 40KB",
+        "Coach creator summary storage now includes full reasoning fields, specializations, and considerations without character limits",
+        "User memory storage now includes all tags and full content without pre-truncation, preserving complete semantic context",
+        "Workout logger agent tool now uses fire-and-forget Pinecone storage (non-blocking) preventing AI compression latency from affecting user response times",
+        "Program designer agent tool now uses fire-and-forget Pinecone storage (non-blocking) ensuring immediate response to users regardless of compression needs",
+        "Agent tool return values now indicate Pinecone storage status as 'pending' rather than blocking on completion for improved performance",
+        "Program design mode intent detection made more explicit requiring keywords like 'program', 'routine', 'plan', or 'workout program/plan' to prevent accidental triggering on general exercise questions",
+        "extractAndUpdateTodoList function now returns structured ProgramExtractionResult object instead of raw todoList for proper intent signal propagation",
+        "Program design conversation handler now includes all messages from before session start (pre-session context) in conversationHistory for complete AI context",
+        "Program design question generator now includes userContext (recent workouts, memories, profile, active program) in prompts to avoid re-asking known information",
+      ],
+      fixed: [
+        "Production error where conversation summaries exceeding 45KB failed Pinecone storage with 'Metadata size exceeds the limit of 40960 bytes' error",
+        "Potential data loss from blind truncation of structured data arrays (goals, insights, progress items) when approaching size limits",
+        "Search quality degradation from arbitrary truncation cutting off important keywords and concepts mid-content",
+        "Agent conversation latency spikes (2-5+ seconds) when Pinecone storage with compression blocked user responses in workout logging and program design flows",
+        "Missing semantic context in Pinecone searches due to pre-emptive truncation removing searchable terms before actual size limits reached",
+        "Critical bug where program design mode was triggered too easily by general exercise questions due to overly permissive intent detection patterns",
+        "Critical bug preventing cancellation of program design sessions where userChangedTopic flag was not properly returned from todo-extraction.ts to conversation-handler.ts",
+        "Memory amnesia in program design mode where AI couldn't access conversation history from before the session started, causing repeated questions about already-discussed topics",
+        "Program design questions lacking context about user's recent workouts, saved memories, and active programs causing redundant information gathering",
+      ],
+      removed: [
+        "All pre-emptive truncation logic from Pinecone storage modules (truncateArray, truncateText functions) replaced with intelligent AI compression",
+        "Hard-coded truncation limits (e.g., 2000 chars for narratives, 10 items for arrays) replaced with dynamic AI-driven compression based on actual content size",
+      ],
+    },
+  },
+  {
     version: "Release v1.0.20251207-beta",
     date: "2025-12-07",
     changes: {

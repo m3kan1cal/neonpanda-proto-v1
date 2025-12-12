@@ -5,9 +5,10 @@
  * and coach memory capabilities.
  */
 
-import { storePineconeContext, deletePineconeContext } from '../api-helpers';
-import { filterNullish } from '../object-utils';
-import { Program } from './types';
+import { storePineconeContext, deletePineconeContext } from "../api-helpers";
+import { storeWithAutoCompression } from "../pinecone-compression";
+import { filterNullish } from "../object-utils";
+import { Program } from "./types";
 
 /**
  * Store training program summary in Pinecone for semantic search and coach context
@@ -21,12 +22,12 @@ import { Program } from './types';
 export const storeProgramSummaryInPinecone = async (
   userId: string,
   programSummary: string,
-  program: Program
+  program: Program,
 ) => {
   try {
     // Build base metadata (always present)
     const baseMetadata = {
-      recordType: 'training_program_summary',
+      recordType: "training_program_summary",
       programId: program.programId,
       programName: program.name,
       status: program.status,
@@ -43,26 +44,27 @@ export const storeProgramSummaryInPinecone = async (
       adherenceRate: program.adherenceRate,
       phaseCount: program.phases.length,
       topics: [
-        'training_program',
-        'program_structure',
+        "training_program",
+        "program_structure",
         program.status,
         ...program.trainingGoals.slice(0, 3), // Include up to 3 goals as topics
       ],
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
     };
 
     // Optional fields (filtered for null/undefined)
     const optionalFields = filterNullish({
       lastActivityAt: program.lastActivityAt?.toISOString(),
       pausedAt: program.pausedAt?.toISOString(),
-      pausedDuration: program.pausedDuration > 0 ? program.pausedDuration : undefined,
+      pausedDuration:
+        program.pausedDuration > 0 ? program.pausedDuration : undefined,
     });
 
     // Phase metadata (summarize phases for searchability)
     // Note: Only include arrays of strings, not complex objects (Pinecone limitation)
     const phasesMetadata = {
-      phaseNames: program.phases.map(p => p.name),
-      allFocusAreas: [...new Set(program.phases.flatMap(p => p.focusAreas))],
+      phaseNames: program.phases.map((p) => p.name),
+      allFocusAreas: [...new Set(program.phases.flatMap((p) => p.focusAreas))],
     };
 
     // Equipment and goals metadata
@@ -80,27 +82,42 @@ export const storeProgramSummaryInPinecone = async (
       ...contextMetadata,
     };
 
-    // Use centralized storage function
-    const result = await storePineconeContext(userId, programSummary, programMetadata);
+    // Store with automatic AI compression if size limit exceeded
+    const result = await storeWithAutoCompression(
+      (content) => storePineconeContext(userId, content, programMetadata),
+      programSummary,
+      programMetadata,
+      "training program summary",
+    );
 
-    console.info('✅ Successfully stored training program summary in Pinecone:', {
-      programId: program.programId,
-      recordId: result.recordId,
-      namespace: result.namespace,
-      programName: program.name,
-      summaryLength: programSummary.length,
-      status: program.status,
-    });
+    console.info(
+      "✅ Successfully stored training program summary in Pinecone:",
+      {
+        programId: program.programId,
+        recordId: result.recordId,
+        namespace: result.namespace,
+        programName: program.name,
+        summaryLength: programSummary.length,
+        status: program.status,
+      },
+    );
 
     return result;
-
   } catch (error) {
-    console.error('❌ Failed to store training program summary in Pinecone:', error);
+    console.error(
+      "❌ Failed to store training program summary in Pinecone:",
+      error,
+    );
 
     // Don't throw error to avoid breaking the program generation process
     // Pinecone storage is for future retrieval/analysis, not critical for immediate functionality
-    console.warn('Training program generation will continue despite Pinecone storage failure');
-    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+    console.warn(
+      "Training program generation will continue despite Pinecone storage failure",
+    );
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
   }
 };
 
@@ -114,50 +131,58 @@ export const storeProgramSummaryInPinecone = async (
  */
 export const deleteProgramSummaryFromPinecone = async (
   userId: string,
-  programId: string
+  programId: string,
 ): Promise<{ success: boolean; error?: string }> => {
   try {
-    console.info('🗑️ Deleting training program summary from Pinecone:', {
+    console.info("🗑️ Deleting training program summary from Pinecone:", {
       userId,
-      programId
+      programId,
     });
 
     // Use centralized deletion function with program-specific filter
     const result = await deletePineconeContext(userId, {
-      recordType: 'training_program_summary',
-      programId: programId
+      recordType: "training_program_summary",
+      programId: programId,
     });
 
     if (result.success) {
-      console.info('✅ Successfully deleted training program summary from Pinecone:', {
-        userId,
-        programId,
-        deletedRecords: result.deletedCount
-      });
+      console.info(
+        "✅ Successfully deleted training program summary from Pinecone:",
+        {
+          userId,
+          programId,
+          deletedRecords: result.deletedCount,
+        },
+      );
     } else {
-      console.warn('⚠️ Failed to delete training program summary from Pinecone:', {
-        userId,
-        programId,
-        error: result.error
-      });
+      console.warn(
+        "⚠️ Failed to delete training program summary from Pinecone:",
+        {
+          userId,
+          programId,
+          error: result.error,
+        },
+      );
     }
 
     return {
       success: result.success,
-      error: result.error
+      error: result.error,
     };
-
   } catch (error) {
-    console.error('❌ Failed to delete training program summary from Pinecone:', error);
+    console.error(
+      "❌ Failed to delete training program summary from Pinecone:",
+      error,
+    );
 
     // Don't throw error to avoid breaking the program deletion process
     // Pinecone cleanup failure shouldn't prevent DynamoDB deletion
-    console.warn('Training program deletion will continue despite Pinecone cleanup failure');
+    console.warn(
+      "Training program deletion will continue despite Pinecone cleanup failure",
+    );
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : "Unknown error",
     };
   }
 };
-
-

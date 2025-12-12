@@ -5,17 +5,20 @@
  * for semantic search and coach memory capabilities.
  */
 
-import { deletePineconeContext, storePineconeContext } from '../api-helpers';
-import { CoachConversationSummary } from './types';
+import { deletePineconeContext, storePineconeContext } from "../api-helpers";
+import { storeWithAutoCompression } from "../pinecone-compression";
+import { CoachConversationSummary } from "./types";
 
 /**
  * Store coach conversation summary in Pinecone for semantic search
+ * Uses AI compression if content exceeds Pinecone's 40KB metadata limit
  */
 export async function storeCoachConversationSummaryInPinecone(
-  summary: CoachConversationSummary
+  summary: CoachConversationSummary,
 ): Promise<{ success: boolean; recordId?: string; error?: string }> {
   try {
     // Create searchable content combining narrative and key structured data
+    // No truncation - we'll use AI compression if needed
     const searchableContent = `
 ${summary.narrative}
 
@@ -23,10 +26,12 @@ Goals: ${summary.structuredData.current_goals.join(", ")}
 Recent Progress: ${summary.structuredData.recent_progress.join(", ")}
 Communication Style: ${summary.structuredData.preferences.communication_style}
 Training Preferences: ${summary.structuredData.preferences.training_preferences.join(", ")}
+Schedule Constraints: ${summary.structuredData.preferences.schedule_constraints.join(", ")}
 Methodology Preferences: ${summary.structuredData.methodology_preferences.mentioned_methodologies.join(", ")} | Preferred Approaches: ${summary.structuredData.methodology_preferences.preferred_approaches.join(", ")} | Questions: ${summary.structuredData.methodology_preferences.methodology_questions.join(", ")}
-Emotional State: ${summary.structuredData.emotional_state.current_mood} (motivation: ${summary.structuredData.emotional_state.motivation_level})
+Emotional State: ${summary.structuredData.emotional_state.current_mood} (motivation: ${summary.structuredData.emotional_state.motivation_level}, confidence: ${summary.structuredData.emotional_state.confidence_level})
 Key Insights: ${summary.structuredData.key_insights.join(", ")}
 Important Context: ${summary.structuredData.important_context.join(", ")}
+Conversation Tags: ${summary.structuredData.conversation_tags?.join(", ") || "none"}
     `.trim();
 
     // Create metadata for Pinecone
@@ -53,11 +58,16 @@ Important Context: ${summary.structuredData.important_context.join(", ")}
           .length > 0,
     };
 
-    // Store in Pinecone - storePineconeContext will use summaryId as the Pinecone record ID
-    await storePineconeContext(summary.userId, searchableContent, metadata);
+    // Store in Pinecone with automatic AI compression if size limit exceeded
+    await storeWithAutoCompression(
+      (content) => storePineconeContext(summary.userId, content, metadata),
+      searchableContent,
+      metadata,
+      "conversation summary",
+    );
 
     console.info("✅ Conversation summary stored in Pinecone:", {
-      pineconeId: summary.summaryId, // This is the actual Pinecone record ID
+      pineconeId: summary.summaryId,
       summaryId: summary.summaryId,
       contentLength: searchableContent.length,
       confidence: summary.metadata.confidence,
@@ -82,48 +92,55 @@ Important Context: ${summary.structuredData.important_context.join(", ")}
  */
 export const deleteConversationSummaryFromPinecone = async (
   userId: string,
-  conversationId: string
+  conversationId: string,
 ): Promise<{ success: boolean; error?: string }> => {
   try {
-    console.info('🗑️ Deleting conversation summary from Pinecone:', {
+    console.info("🗑️ Deleting conversation summary from Pinecone:", {
       userId,
-      conversationId
+      conversationId,
     });
 
     // Use centralized deletion function with conversation-specific filter
     const result = await deletePineconeContext(userId, {
-      recordType: 'conversation_summary',
-      conversationId: conversationId
+      recordType: "conversation_summary",
+      conversationId: conversationId,
     });
 
     if (result.success) {
-      console.info('✅ Successfully deleted conversation summary from Pinecone:', {
-        userId,
-        conversationId,
-        deletedRecords: result.deletedCount
-      });
+      console.info(
+        "✅ Successfully deleted conversation summary from Pinecone:",
+        {
+          userId,
+          conversationId,
+          deletedRecords: result.deletedCount,
+        },
+      );
     } else {
-      console.warn('⚠️ Failed to delete conversation summary from Pinecone:', {
+      console.warn("⚠️ Failed to delete conversation summary from Pinecone:", {
         userId,
         conversationId,
-        error: result.error
+        error: result.error,
       });
     }
 
     return {
       success: result.success,
-      error: result.error
+      error: result.error,
     };
-
   } catch (error) {
-    console.error('❌ Failed to delete conversation summary from Pinecone:', error);
+    console.error(
+      "❌ Failed to delete conversation summary from Pinecone:",
+      error,
+    );
 
     // Don't throw error to avoid breaking the conversation deletion process
     // Pinecone cleanup failure shouldn't prevent DynamoDB deletion
-    console.warn('Conversation deletion will continue despite Pinecone cleanup failure');
+    console.warn(
+      "Conversation deletion will continue despite Pinecone cleanup failure",
+    );
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : "Unknown error",
     };
   }
 };

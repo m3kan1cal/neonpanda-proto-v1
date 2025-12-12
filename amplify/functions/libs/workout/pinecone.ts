@@ -5,9 +5,10 @@
  * and coach memory capabilities.
  */
 
-import { storePineconeContext, deletePineconeContext } from '../api-helpers';
-import { filterNullish } from '../object-utils';
-import { UniversalWorkoutSchema, Workout } from './types';
+import { storePineconeContext, deletePineconeContext } from "../api-helpers";
+import { storeWithAutoCompression } from "../pinecone-compression";
+import { filterNullish } from "../object-utils";
+import { UniversalWorkoutSchema, Workout } from "./types";
 
 /**
  * Store workout summary in Pinecone for semantic search and coach context
@@ -22,15 +23,15 @@ export const storeWorkoutSummaryInPinecone = async (
   userId: string,
   workoutSummary: string,
   workoutData: UniversalWorkoutSchema,
-  workout: Workout
+  workout: Workout,
 ) => {
   try {
     // Build base metadata (always present)
     const baseMetadata = {
-      recordType: 'workout_summary',
+      recordType: "workout_summary",
       workoutId: workoutData.workout_id,
       discipline: workoutData.discipline,
-      workoutName: workoutData.workout_name || 'Custom Workout',
+      workoutName: workoutData.workout_name || "Custom Workout",
       workoutType: workoutData.workout_type,
       completedAt: workout.completedAt.toISOString(),
       extractionConfidence: workout.extractionMetadata.confidence,
@@ -38,8 +39,13 @@ export const storeWorkoutSummaryInPinecone = async (
       coachId: workout.coachIds[0],
       coachName: workout.coachNames[0],
       conversationId: workout.conversationId,
-      topics: ['workout_performance', 'training_log', workoutData.discipline, workoutData.workout_type],
-      loggedAt: new Date().toISOString()
+      topics: [
+        "workout_performance",
+        "training_log",
+        workoutData.discipline,
+        workoutData.workout_type,
+      ],
+      loggedAt: new Date().toISOString(),
     };
 
     // Optional fields (filtered for null/undefined)
@@ -54,7 +60,10 @@ export const storeWorkoutSummaryInPinecone = async (
     // Discipline-specific metadata
     let disciplineMetadata = {};
 
-    if (workoutData.discipline === 'crossfit' && workoutData.discipline_specific?.crossfit) {
+    if (
+      workoutData.discipline === "crossfit" &&
+      workoutData.discipline_specific?.crossfit
+    ) {
       const crossfit = workoutData.discipline_specific.crossfit;
       disciplineMetadata = {
         workoutFormat: crossfit.workout_format,
@@ -63,11 +72,14 @@ export const storeWorkoutSummaryInPinecone = async (
           totalTime: crossfit.performance_data?.total_time,
           roundsCompleted: crossfit.performance_data?.rounds_completed,
           totalReps: crossfit.performance_data?.total_reps,
-        })
+        }),
       };
     }
 
-    if (workoutData.discipline === 'running' && workoutData.discipline_specific?.running) {
+    if (
+      workoutData.discipline === "running" &&
+      workoutData.discipline_specific?.running
+    ) {
       const running = workoutData.discipline_specific.running;
       disciplineMetadata = {
         runType: running.run_type,
@@ -77,46 +89,56 @@ export const storeWorkoutSummaryInPinecone = async (
           averagePace: running.average_pace,
           surface: running.surface,
           elevationGain: running.elevation_gain,
-        })
+        }),
       };
     }
 
     // PR achievements (if any)
-    const prMetadata = workoutData.pr_achievements && workoutData.pr_achievements.length > 0
-      ? {
-          prAchievements: workoutData.pr_achievements.map(pr => pr.pr_type),
-          hasPr: true
-        }
-      : {};
+    const prMetadata =
+      workoutData.pr_achievements && workoutData.pr_achievements.length > 0
+        ? {
+            prAchievements: workoutData.pr_achievements.map((pr) => pr.pr_type),
+            hasPr: true,
+          }
+        : {};
 
     // Combine all metadata
     const workoutMetadata = {
       ...baseMetadata,
       ...optionalFields,
       ...disciplineMetadata,
-      ...prMetadata
+      ...prMetadata,
     };
 
-    // Use centralized storage function
-    const result = await storePineconeContext(userId, workoutSummary, workoutMetadata);
+    // Store with automatic AI compression if size limit exceeded
+    const result = await storeWithAutoCompression(
+      (content) => storePineconeContext(userId, content, workoutMetadata),
+      workoutSummary,
+      workoutMetadata,
+      "workout summary",
+    );
 
-    console.info('✅ Successfully stored workout summary in Pinecone:', {
+    console.info("✅ Successfully stored workout summary in Pinecone:", {
       workoutId: workoutData.workout_id,
       recordId: result.recordId,
       namespace: result.namespace,
       discipline: workoutData.discipline,
-      summaryLength: workoutSummary.length
+      summaryLength: workoutSummary.length,
     });
 
     return result;
-
   } catch (error) {
-    console.error('❌ Failed to store workout summary in Pinecone:', error);
+    console.error("❌ Failed to store workout summary in Pinecone:", error);
 
     // Don't throw error to avoid breaking the workout extraction process
     // Pinecone storage is for future retrieval/analysis, not critical for immediate functionality
-    console.warn('Workout extraction will continue despite Pinecone storage failure');
-    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+    console.warn(
+      "Workout extraction will continue despite Pinecone storage failure",
+    );
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
   }
 };
 
@@ -129,48 +151,49 @@ export const storeWorkoutSummaryInPinecone = async (
  */
 export const deleteWorkoutSummaryFromPinecone = async (
   userId: string,
-  workoutId: string
+  workoutId: string,
 ): Promise<{ success: boolean; error?: string }> => {
   try {
-    console.info('🗑️ Deleting workout summary from Pinecone:', {
+    console.info("🗑️ Deleting workout summary from Pinecone:", {
       userId,
-      workoutId
+      workoutId,
     });
 
     // Use centralized deletion function with workout-specific filter
     const result = await deletePineconeContext(userId, {
-      recordType: 'workout_summary',
-      workoutId: workoutId
+      recordType: "workout_summary",
+      workoutId: workoutId,
     });
 
     if (result.success) {
-      console.info('✅ Successfully deleted workout summary from Pinecone:', {
+      console.info("✅ Successfully deleted workout summary from Pinecone:", {
         userId,
         workoutId,
-        deletedRecords: result.deletedCount
+        deletedRecords: result.deletedCount,
       });
     } else {
-      console.warn('⚠️ Failed to delete workout summary from Pinecone:', {
+      console.warn("⚠️ Failed to delete workout summary from Pinecone:", {
         userId,
         workoutId,
-        error: result.error
+        error: result.error,
       });
     }
 
     return {
       success: result.success,
-      error: result.error
+      error: result.error,
     };
-
   } catch (error) {
-    console.error('❌ Failed to delete workout summary from Pinecone:', error);
+    console.error("❌ Failed to delete workout summary from Pinecone:", error);
 
     // Don't throw error to avoid breaking the workout deletion process
     // Pinecone cleanup failure shouldn't prevent DynamoDB deletion
-    console.warn('Workout deletion will continue despite Pinecone cleanup failure');
+    console.warn(
+      "Workout deletion will continue despite Pinecone cleanup failure",
+    );
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error'
+      error: error instanceof Error ? error.message : "Unknown error",
     };
   }
 };
