@@ -5,13 +5,27 @@
  * Pattern: Same structure as coach-creator/todo-extraction.ts + multimodal support from build-workout
  */
 
-import { callBedrockApi, callBedrockApiMultimodal, MODEL_IDS } from '../api-helpers';
-import { parseJsonWithFallbacks } from '../response-utils';
-import { buildMultimodalContent } from '../streaming/multimodal-helpers';
-import { MESSAGE_TYPES } from '../coach-conversation/types';
-import { TodoItem, ConversationMessage } from '../todo-types';
-import { ProgramCreatorTodoList } from './types';
-import { PROGRAM_TODO_SCHEMA } from '../schemas/program-creator-todo-schema';
+import {
+  callBedrockApi,
+  callBedrockApiMultimodal,
+  MODEL_IDS,
+} from "../api-helpers";
+import { parseJsonWithFallbacks } from "../response-utils";
+import { buildMultimodalContent } from "../streaming/multimodal-helpers";
+import { MESSAGE_TYPES } from "../coach-conversation/types";
+import { TodoItem, ConversationMessage } from "../todo-types";
+import { ProgramCreatorTodoList } from "./types";
+import { PROGRAM_TODO_SCHEMA } from "../schemas/program-creator-todo-schema";
+
+/**
+ * Result of AI extraction from user's program design message
+ * Includes both structured program data and user intent signals
+ */
+export interface ProgramExtractionResult {
+  todoList: ProgramCreatorTodoList;
+  userWantsToFinish: boolean; // AI-detected intent to skip remaining optional fields
+  userChangedTopic: boolean; // AI-detected topic change (user abandoned program design)
+}
 
 /**
  * Extract training program information from user's response and update the to-do list
@@ -29,15 +43,15 @@ export async function extractAndUpdateTodoList(
     pineconeMemories?: any[];
     userProfile?: any;
     activeProgram?: any;
-  }
-): Promise<ProgramCreatorTodoList> {
-  console.info('🔍 Extracting training program information from user response');
+  },
+): Promise<ProgramExtractionResult> {
+  console.info("🔍 Extracting training program information from user response");
 
   // Check if images are present (same pattern as build-workout)
   const hasImages = imageS3Keys && imageS3Keys.length > 0;
 
   if (hasImages) {
-    console.info('🖼️ Processing with images:', {
+    console.info("🖼️ Processing with images:", {
       imageCount: imageS3Keys!.length,
       imageKeys: imageS3Keys,
     });
@@ -46,8 +60,8 @@ export async function extractAndUpdateTodoList(
   // Include FULL conversation history for better context
   // With 200K token context window, we have plenty of room
   const conversationContext = conversationHistory
-    .map(m => `${m.role.toUpperCase()}: ${m.content}`)
-    .join('\n');
+    .map((m) => `${m.role.toUpperCase()}: ${m.content}`)
+    .join("\n");
 
   // Build extraction prompt
   const systemPrompt = buildExtractionPrompt(currentTodoList);
@@ -97,12 +111,13 @@ Return ONLY the fields you found information for using the tool. If no informati
         MODEL_IDS.CLAUDE_HAIKU_4_FULL,
         {
           tools: {
-            name: 'extract_program_info',
-            description: 'Extract training program information from user response with optional images',
-            inputSchema: PROGRAM_TODO_SCHEMA
+            name: "extract_program_info",
+            description:
+              "Extract training program information from user response with optional images",
+            inputSchema: PROGRAM_TODO_SCHEMA,
           },
-          expectedToolName: 'extract_program_info'
-        }
+          expectedToolName: "extract_program_info",
+        },
       );
     } else {
       // Text-only extraction
@@ -112,69 +127,110 @@ Return ONLY the fields you found information for using the tool. If no informati
         MODEL_IDS.CLAUDE_HAIKU_4_FULL,
         {
           tools: {
-            name: 'extract_program_info',
-            description: 'Extract training program information from user response',
-            inputSchema: PROGRAM_TODO_SCHEMA
+            name: "extract_program_info",
+            description:
+              "Extract training program information from user response",
+            inputSchema: PROGRAM_TODO_SCHEMA,
           },
-          expectedToolName: 'extract_program_info'
-        }
+          expectedToolName: "extract_program_info",
+        },
       );
     }
 
-    console.info('✅ Received extraction response');
+    console.info("✅ Received extraction response");
 
     // Handle tool response
     let extracted: any;
-    if (typeof extractionResponse !== 'string') {
+    if (typeof extractionResponse !== "string") {
       // Tool was used - extract the input
       extracted = extractionResponse.input;
-      console.info('✅ Tool-based extraction successful');
+      console.info("✅ Tool-based extraction successful");
     } else {
       // Fallback to parsing (shouldn't happen with tool enforcement)
-      console.warn('⚠️ Received string response, parsing as JSON fallback');
+      console.warn("⚠️ Received string response, parsing as JSON fallback");
       extracted = parseJsonWithFallbacks(extractionResponse);
     }
 
-    if (!extracted || typeof extracted !== 'object') {
-      console.warn('⚠️ Failed to parse extraction response, returning current todo list');
-      return currentTodoList;
+    if (!extracted || typeof extracted !== "object") {
+      console.warn(
+        "⚠️ Failed to parse extraction response, returning current todo list",
+      );
+      return {
+        todoList: currentTodoList,
+        userWantsToFinish: false,
+        userChangedTopic: false,
+      };
     }
 
     // Update the to-do list with extracted information
     const updatedTodoList = { ...currentTodoList };
     const messageIndex = conversationHistory.length; // Index where this response will be stored
 
+    // Extract user intent signals (AI-detected)
+    const userWantsToFinish = extracted.userWantsToFinish === true;
+    const userChangedTopic = extracted.userChangedTopic === true;
+
+    if (userWantsToFinish) {
+      console.info(
+        "⏭️ AI detected user wants to finish designing and skip remaining fields",
+      );
+    }
+    if (userChangedTopic) {
+      console.info(
+        "🔀 AI detected user changed topics - abandoning program design session",
+      );
+    }
+
     for (const [key, extractedItem] of Object.entries(extracted)) {
-      if (key in updatedTodoList && extractedItem && typeof extractedItem === 'object') {
+      // Skip intent detection fields (not todo items)
+      if (key === "userWantsToFinish" || key === "userChangedTopic") continue;
+
+      if (
+        key in updatedTodoList &&
+        extractedItem &&
+        typeof extractedItem === "object"
+      ) {
         const item = extractedItem as Partial<TodoItem>;
 
         // Only update if we have a value
         if (item.value !== null && item.value !== undefined) {
           updatedTodoList[key as keyof ProgramCreatorTodoList] = {
-            status: 'complete',
+            status: "complete",
             value: item.value,
-            confidence: item.confidence || 'medium',
+            confidence: item.confidence || "medium",
             notes: item.notes,
             extractedFrom: `message_${messageIndex}`,
             // Store image references for fields that commonly benefit from images
-            imageRefs: hasImages && shouldStoreImageRef(key) ? imageS3Keys : undefined
+            imageRefs:
+              hasImages && shouldStoreImageRef(key) ? imageS3Keys : undefined,
           };
 
-          console.info(`✅ Extracted ${key}: ${JSON.stringify(item.value).substring(0, 50)}`);
+          console.info(
+            `✅ Extracted ${key}: ${JSON.stringify(item.value).substring(0, 50)}`,
+          );
         }
       }
     }
 
     // Log extraction summary
-    const extractedCount = Object.keys(extracted).length;
+    const extractedCount = Object.keys(extracted).filter(
+      (k) => k !== "userWantsToFinish" && k !== "userChangedTopic",
+    ).length;
     console.info(`✅ Extraction complete: ${extractedCount} fields updated`);
 
-    return updatedTodoList;
-
+    return {
+      todoList: updatedTodoList,
+      userWantsToFinish,
+      userChangedTopic,
+    };
   } catch (error) {
-    console.error('❌ Error during extraction:', error);
-    console.error('Returning current todo list unchanged');
-    return currentTodoList;
+    console.error("❌ Error during extraction:", error);
+    console.error("Returning current todo list unchanged");
+    return {
+      todoList: currentTodoList,
+      userWantsToFinish: false,
+      userChangedTopic: false,
+    };
   }
 }
 
@@ -184,23 +240,25 @@ Return ONLY the fields you found information for using the tool. If no informati
 function shouldStoreImageRef(fieldKey: string): boolean {
   // Fields that commonly benefit from image context
   return [
-    'equipmentAccess',
-    'trainingEnvironment',
-    'injuryConsiderations',
-    'currentFitnessBaseline'
+    "equipmentAccess",
+    "trainingEnvironment",
+    "injuryConsiderations",
+    "currentFitnessBaseline",
   ].includes(fieldKey);
 }
 
 /**
  * Build the system prompt for extraction
  */
-function buildExtractionPrompt(currentTodoList: ProgramCreatorTodoList): string {
+function buildExtractionPrompt(
+  currentTodoList: ProgramCreatorTodoList,
+): string {
   // Build a summary of what's already been collected
   const collectedFields: string[] = [];
   const pendingFields: string[] = [];
 
   for (const [key, item] of Object.entries(currentTodoList)) {
-    if (item.status === 'complete') {
+    if (item.status === "complete") {
       collectedFields.push(key);
     } else {
       pendingFields.push(key);
@@ -210,10 +268,10 @@ function buildExtractionPrompt(currentTodoList: ProgramCreatorTodoList): string 
   return `You are an expert at extracting structured training program information from conversational responses, including images.
 
 WHAT WE'VE ALREADY COLLECTED:
-${collectedFields.length > 0 ? collectedFields.join(', ') : 'Nothing yet'}
+${collectedFields.length > 0 ? collectedFields.join(", ") : "Nothing yet"}
 
 WHAT WE STILL NEED:
-${pendingFields.join(', ')}
+${pendingFields.join(", ")}
 
 YOUR TASK:
 Analyze the user's response (text and/or images) and extract any training program creation information. Return structured data matching the schema provided.

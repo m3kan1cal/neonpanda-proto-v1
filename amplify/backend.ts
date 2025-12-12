@@ -71,6 +71,7 @@ import { generateUploadUrls } from "./functions/generate-upload-urls/resource";
 import { generateDownloadUrls } from "./functions/generate-download-urls/resource";
 import { createProgram } from "./functions/create-program/resource";
 import { buildProgram } from "./functions/build-program/resource";
+import { buildProgramV2 } from "./functions/build-program-v2/resource";
 import { getProgram } from "./functions/get-program/resource";
 import { getPrograms } from "./functions/get-programs/resource";
 import { updateProgram } from "./functions/update-program/resource";
@@ -161,6 +162,7 @@ const backend = defineBackend({
   syncLogSubscriptions,
   createProgram,
   buildProgram,
+  buildProgramV2,
   getProgram,
   getPrograms,
   updateProgram,
@@ -175,6 +177,9 @@ const backend = defineBackend({
 // Disable retries for stateful async generation functions
 // This prevents confusing double-runs on timeouts or errors.
 backend.buildProgram.resources.lambda.configureAsyncInvoke({
+  retryAttempts: 0,
+});
+backend.buildProgramV2.resources.lambda.configureAsyncInvoke({
   retryAttempts: 0,
 });
 backend.buildWorkout.resources.lambda.configureAsyncInvoke({
@@ -332,6 +337,7 @@ const sharedPolicies = new SharedPolicies(
   backend.updateUserProfile,
   backend.createProgram,
   backend.buildProgram,
+  backend.buildProgramV2,
   backend.updateProgram,
   backend.deleteProgram,
   backend.logWorkoutTemplate,
@@ -384,6 +390,7 @@ const sharedPolicies = new SharedPolicies(
   backend.buildWorkout,
   backend.buildWorkoutV2, // Agent-based workout extraction with Bedrock
   backend.buildProgram, // Added: Needs Bedrock for AI program generation
+  backend.buildProgramV2, // Agent-based program generation with Bedrock
   backend.buildConversationSummary,
   backend.buildWeeklyAnalytics,
   backend.buildMonthlyAnalytics,
@@ -400,6 +407,7 @@ const sharedPolicies = new SharedPolicies(
   backend.buildCoachConfig,
   backend.buildConversationSummary,
   backend.buildProgram,
+  backend.buildProgramV2, // Agent-based program generation with debug logging
   backend.sendCoachConversationMessage,
   backend.streamCoachConversation,
   backend.streamCoachCreatorSession,
@@ -426,6 +434,7 @@ sharedPolicies.attachS3AnalyticsAccess(
   backend.updateCoachCreatorSession,
   backend.createProgram,
   backend.buildProgram,
+  backend.buildProgramV2, // Stores program details in S3
   backend.buildWorkout, // Added: needs to update template.linkedWorkoutId in S3
   backend.buildWorkoutV2, // Agent-based: also needs template.linkedWorkoutId update
   backend.getProgram,
@@ -549,11 +558,12 @@ grantLambdaInvokePermissions(
   ],
 );
 
-// Grant permission to streamCoachConversation to invoke buildWorkout, buildWorkoutV2, buildProgram, and buildConversationSummary
+// Grant permission to streamCoachConversation to invoke buildWorkout, buildWorkoutV2, buildProgram, buildProgramV2, and buildConversationSummary
 grantLambdaInvokePermissions(backend.streamCoachConversation.resources.lambda, [
   backend.buildWorkout.resources.lambda.functionArn,
   backend.buildWorkoutV2.resources.lambda.functionArn,
   backend.buildProgram.resources.lambda.functionArn,
+  backend.buildProgramV2.resources.lambda.functionArn,
   backend.buildConversationSummary.resources.lambda.functionArn,
 ]);
 
@@ -669,6 +679,7 @@ const allFunctions = [
   backend.generateUploadUrls,
   backend.createProgram,
   backend.buildProgram,
+  backend.buildProgramV2,
   backend.getProgram,
   backend.getPrograms,
   backend.updateProgram,
@@ -707,6 +718,7 @@ allFunctions.forEach((func) => {
   backend.updateCoachCreatorSession,
   backend.createProgram,
   backend.buildProgram,
+  backend.buildProgramV2, // Needs access to S3 for program template storage
   backend.buildWorkout, // Added: needs access to S3 for updating template.linkedWorkoutId
   backend.buildWorkoutV2, // Agent-based: also needs S3 for template updates
   backend.getWorkoutTemplate,
