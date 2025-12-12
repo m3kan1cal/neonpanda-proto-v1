@@ -14,6 +14,19 @@ import { callBedrockApi, MODEL_IDS } from "./api-helpers";
 export const PINECONE_METADATA_LIMIT = 40960;
 
 /**
+ * Default target size ratio for compression (80% of limit)
+ * Leaves 20% headroom for metadata overhead and safety margin
+ */
+export const DEFAULT_TARGET_SIZE_RATIO = 0.8;
+
+/**
+ * Safety margin for character count estimation (90%)
+ * Accounts for byte-to-character encoding differences (especially for non-ASCII characters)
+ * Applied after initial compression ratio calculation to ensure we don't overshoot
+ */
+export const COMPRESSION_SAFETY_MARGIN = 0.9;
+
+/**
  * Calculate approximate metadata size in bytes
  */
 export function calculateMetadataSize(
@@ -41,10 +54,12 @@ export async function compressContent(
   content: string,
   contentType: string,
   currentSize: number,
-  targetSize: number = PINECONE_METADATA_LIMIT * 0.8, // 80% of limit by default
+  targetSize: number = PINECONE_METADATA_LIMIT * DEFAULT_TARGET_SIZE_RATIO,
 ): Promise<string> {
   const compressionRatio = targetSize / currentSize;
-  const targetChars = Math.floor(content.length * compressionRatio * 0.9); // 90% safety margin
+  const targetChars = Math.floor(
+    content.length * compressionRatio * COMPRESSION_SAFETY_MARGIN,
+  );
 
   console.info("🤖 AI compressing content for Pinecone:", {
     contentType,

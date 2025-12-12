@@ -21,6 +21,17 @@ import { MODEL_IDS } from "../../api-helpers";
 import { enforceValidationBlocking } from "./helpers";
 
 /**
+ * Minimum number of tools that must be called for a complete program design workflow.
+ * A complete workflow requires at minimum:
+ * 1. load_program_requirements - Load user requirements and context
+ * 2. generate_phase_structure - Create program phase structure
+ * 3. generate_phase_workouts - Generate workouts for at least one phase
+ *
+ * Note: This is used to detect incomplete agent responses that should trigger a retry.
+ */
+const MIN_REQUIRED_TOOLS_FOR_COMPLETE_WORKFLOW = 3;
+
+/**
  * Program Designer Agent
  *
  * Coordinates program design using tool-based workflow.
@@ -89,7 +100,23 @@ export class ProgramDesignerAgent extends Agent<ProgramDesignerContext> {
 
           // Execute tool normally if not blocked
           const result = await tool.execute(input, context);
-          this.toolResults.set(tool.id, result); // Store result
+
+          // ============================================================
+          // IMPORTANT: Handle multiple calls to generate_phase_workouts
+          // ============================================================
+          // Since generate_phase_workouts is called once per phase,
+          // we need unique keys to avoid overwriting previous results.
+          // Use phaseId from input to create unique storage key.
+          // ============================================================
+          let storageKey = tool.id;
+          if (tool.id === "generate_phase_workouts" && input?.phase?.phaseId) {
+            storageKey = `${tool.id}:${input.phase.phaseId}`;
+            console.info(
+              `📦 Storing phase workout result with unique key: ${storageKey}`,
+            );
+          }
+
+          this.toolResults.set(storageKey, result);
           console.info(`📦 Stored tool result for ${tool.id}`);
           return result;
         },
@@ -181,7 +208,8 @@ export class ProgramDesignerAgent extends Agent<ProgramDesignerContext> {
 
     // Retry if no tools were called and response looks incomplete
     const noToolsCalled = this.toolResults.size === 0;
-    const minimalToolsCalled = this.toolResults.size < 3; // Should have at least requirements, structure, workouts
+    const minimalToolsCalled =
+      this.toolResults.size < MIN_REQUIRED_TOOLS_FOR_COMPLETE_WORKFLOW;
 
     const looksIncomplete =
       response.includes("?") ||
@@ -231,8 +259,10 @@ Now design the complete program using your tools.`;
     const phaseStructureResult = this.toolResults.get(
       "generate_phase_structure",
     );
+    // Collect ALL phase workout results (one per phase)
+    // Keys are stored as "generate_phase_workouts:phaseId" to avoid overwrites
     const phaseWorkoutsResults = Array.from(this.toolResults.entries())
-      .filter(([key]) => key === "generate_phase_workouts")
+      .filter(([key]) => key.startsWith("generate_phase_workouts"))
       .map(([, value]) => value);
     const validationResult = this.toolResults.get("validate_program_structure");
     const normalizationResult = this.toolResults.get("normalize_program_data");
