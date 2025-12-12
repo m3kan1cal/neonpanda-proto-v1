@@ -27,6 +27,20 @@ export const DEFAULT_TARGET_SIZE_RATIO = 0.8;
 export const COMPRESSION_SAFETY_MARGIN = 0.9;
 
 /**
+ * Truncation safety margin (95%)
+ * Applied when content must be truncated (post-AI-compression or fallback scenarios)
+ * Extra 5% buffer ensures we stay under the limit even with encoding variations
+ */
+export const TRUNCATION_SAFETY_MARGIN = 0.95;
+
+/**
+ * Emergency fallback ratio (80%)
+ * Used as last resort when normal truncation logic fails
+ * Provides significant buffer to ensure content fits
+ */
+export const EMERGENCY_FALLBACK_RATIO = 0.8;
+
+/**
  * Calculate approximate metadata size in bytes
  */
 export function calculateMetadataSize(
@@ -109,7 +123,9 @@ Return ONLY the compressed content, no explanations or meta-commentary.`;
     // If still too large, do emergency truncation as last resort
     if (finalSize > targetSize) {
       const truncateAt = Math.floor(
-        compressedContent.length * (targetSize / finalSize) * 0.95,
+        compressedContent.length *
+          (targetSize / finalSize) *
+          TRUNCATION_SAFETY_MARGIN,
       );
       console.warn("⚠️ AI compression still too large, applying truncation:", {
         compressedSize: finalSize,
@@ -123,10 +139,36 @@ Return ONLY the compressed content, no explanations or meta-commentary.`;
   } catch (error) {
     console.error("❌ AI compression failed:", error);
     // Fallback to simple truncation
-    const truncateAt = Math.floor(content.length * (targetSize / currentSize));
+    // If targetSize > currentSize (underestimated), use targetSize directly
+    // Otherwise, proportionally scale down
+    const ratio = Math.min(1, targetSize / currentSize);
+    const truncateAt = Math.floor(
+      content.length * ratio * TRUNCATION_SAFETY_MARGIN,
+    );
     console.warn("⚠️ Falling back to truncation due to AI error:", {
+      currentSize,
+      targetSize,
+      ratio,
       truncatingTo: truncateAt,
+      willTruncate: truncateAt < content.length,
     });
+
+    if (truncateAt >= content.length) {
+      console.error("❌ Truncation calculation error - would not reduce size", {
+        contentLength: content.length,
+        calculatedTruncateAt: truncateAt,
+        currentSize,
+        targetSize,
+      });
+      // Emergency fallback: use emergency ratio of target size
+      const emergencyTruncate = Math.floor(
+        (targetSize / Buffer.byteLength(content, "utf8")) *
+          content.length *
+          EMERGENCY_FALLBACK_RATIO,
+      );
+      return content.substring(0, emergencyTruncate) + "...";
+    }
+
     return content.substring(0, truncateAt) + "...";
   }
 }
@@ -191,25 +233,36 @@ export async function storeWithAutoCompression<T>(
   }
 
   // Size limit exceeded or size error caught - compress and retry
+  // IMPORTANT: Use actual content size, not estimate, for compression calculation
+  const actualContentSize = Buffer.byteLength(content, "utf8");
+  const actualMetadataSize = Buffer.byteLength(
+    JSON.stringify(metadata),
+    "utf8",
+  );
+  const actualTotalSize = actualContentSize + actualMetadataSize;
+
   console.info("🔄 Content exceeds Pinecone limit, using AI compression...", {
     contentType,
-    originalSize: initialSize,
-    overageBytes: initialSize - PINECONE_METADATA_LIMIT,
+    estimatedSize: initialSize,
+    actualSize: actualTotalSize,
+    sizeDifference: actualTotalSize - initialSize,
+    overageBytes: actualTotalSize - PINECONE_METADATA_LIMIT,
   });
 
   const compressedContent = await compressContent(
     content,
     contentType,
-    initialSize,
+    actualTotalSize, // Use actual size, not estimate
   );
 
   const compressedSize = calculateMetadataSize(compressedContent, metadata);
   console.info("🎯 Retrying storage with compressed content:", {
     contentType,
-    originalSize: initialSize,
+    originalSize: actualTotalSize,
     compressedSize,
     reduction:
-      Math.round(((initialSize - compressedSize) / initialSize) * 100) + "%",
+      Math.round(((actualTotalSize - compressedSize) / actualTotalSize) * 100) +
+      "%",
   });
 
   return await storeFn(compressedContent);

@@ -126,7 +126,7 @@ interface ProgramSaveResult {
   success: boolean;
   programId: string;
   s3Key: string;
-  pineconeRecordId: string | null;
+  pineconeRecordId: string | null; // "async-pending" if storage was attempted, null if skipped
 }
 
 /**
@@ -788,17 +788,21 @@ Returns: success, programId, s3Key, pineconeRecordId`,
       console.info("✅ Program details stored in S3:", s3Key);
     }
 
-    // 3. Store program summary in Pinecone (fire-and-forget, non-blocking)
+    // 3. Store program summary in Pinecone (async, attempt but don't block)
     console.info("Storing program summary in Pinecone (async)...");
-    storeProgramSummaryInPinecone(context.userId, summary, program).catch(
-      (error) => {
+    let pineconeAttempted = false;
+    storeProgramSummaryInPinecone(context.userId, summary, program)
+      .then(() => {
+        console.info("✅ Program stored in Pinecone successfully");
+      })
+      .catch((error) => {
         console.error(
           "⚠️ Failed to store program in Pinecone (non-blocking):",
           error,
         );
         // Don't throw - this is fire-and-forget
-      },
-    );
+      });
+    pineconeAttempted = true;
 
     // 4. Store debug data
     await storeGenerationDebugData(
@@ -831,7 +835,7 @@ Returns: success, programId, s3Key, pineconeRecordId`,
       success: true,
       programId: program.programId,
       s3Key,
-      pineconeRecordId: null, // Fire-and-forget mode, not available
+      pineconeRecordId: pineconeAttempted ? "async-pending" : null,
     };
   },
 };

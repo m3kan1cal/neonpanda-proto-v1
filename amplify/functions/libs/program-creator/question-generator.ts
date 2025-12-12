@@ -38,12 +38,6 @@ export async function generateNextQuestion(
     return null;
   }
 
-  // Check if this is the initial message (no conversation history)
-  const isInitialMessage = conversationHistory.length === 0;
-
-  // Build the prompt for question generation
-  const systemPrompt = buildQuestionPrompt(summary, coachPersonality);
-
   // Separate pre-session context from current session messages
   const preSessionMessages = conversationHistory.filter(
     (m: any) => m.isPreSessionContext,
@@ -51,6 +45,12 @@ export async function generateNextQuestion(
   const sessionMessages = conversationHistory.filter(
     (m: any) => !m.isPreSessionContext,
   );
+
+  // Check if this is the initial message (no session messages, ignoring pre-session context)
+  const isInitialMessage = sessionMessages.length === 0;
+
+  // Build the prompt for question generation
+  const systemPrompt = buildQuestionPrompt(summary, coachPersonality);
 
   // Get recent conversation context from current session
   const recentMessages = sessionMessages.slice(-6); // Last 6 session messages
@@ -197,12 +197,6 @@ export async function* generateNextQuestionStream(
     return fullResponse;
   }
 
-  // Check if this is the initial message (no conversation history)
-  const isInitialMessage = conversationHistory.length === 0;
-
-  // Build the prompt for question generation
-  const systemPrompt = buildQuestionPrompt(summary, coachPersonality);
-
   // Separate pre-session context from current session messages
   const preSessionMessages = conversationHistory.filter(
     (m: any) => m.isPreSessionContext,
@@ -210,6 +204,12 @@ export async function* generateNextQuestionStream(
   const sessionMessages = conversationHistory.filter(
     (m: any) => !m.isPreSessionContext,
   );
+
+  // Check if this is the initial message (no session messages, ignoring pre-session context)
+  const isInitialMessage = sessionMessages.length === 0;
+
+  // Build the prompt for question generation
+  const systemPrompt = buildQuestionPrompt(summary, coachPersonality);
 
   // Get recent conversation context from current session
   const recentMessages = sessionMessages.slice(-6); // Last 6 session messages
