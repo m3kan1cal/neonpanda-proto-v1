@@ -338,27 +338,18 @@ Now design the complete program using your tools.`;
       };
     }
 
-    // If some tools were called but save wasn't, try to parse the response
-    console.warn("⚠️ Partial tool execution - attempting to parse response");
+    // Partial tool execution without save - this is a failure
+    // Note: We DO NOT attempt to parse program IDs from text, as this can
+    // create false positives (e.g., Claude mentioning the input programId).
+    // Only saveResult provides authoritative confirmation of success.
+    console.warn("⚠️ Partial tool execution - workflow incomplete");
 
-    const programIdMatch = agentResponse.match(/program_[a-z0-9_]+/i);
-    if (programIdMatch) {
-      return {
-        success: true,
-        programId: programIdMatch[0],
-        programName: this.extractProgramName(),
-        totalDays: requirementsResult?.programDuration,
-        trainingFrequency: requirementsResult?.trainingFrequency,
-      };
-    }
-
-    // Complete failure - tools were partially called but workflow didn't complete
     return {
       success: false,
       skipped: true,
       reason:
         agentResponse ||
-        "Workflow incomplete - could not determine program design result",
+        "Workflow incomplete - program was not saved to database",
     };
   }
 

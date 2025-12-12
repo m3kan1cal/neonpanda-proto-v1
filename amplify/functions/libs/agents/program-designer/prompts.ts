@@ -168,14 +168,33 @@ ${context.conversationContext?.substring(0, 500) || "No conversation context pro
 - Use this information to personalize the program design
 - Don't ask for missing information - use sensible defaults`);
 
-  // 5. Coach personality (if available)
+  // 5. Coach personality
+  // ⚠️ IMPORTANT: coachConfig is NOT available at prompt construction time ⚠️
+  //
+  // BuildProgramEvent doesn't include coachConfig - it's loaded by the
+  // load_program_requirements tool during agent execution. This is expected.
+  //
+  // Coach personality IS applied during:
+  // - Program generation (coachConfig passed to generation functions)
+  // - Phase/workout design (via tool context)
+  // - Summary creation (generate_program_summary tool)
+  //
+  // Coach personality is NOT in system prompt (unlike workout-logger).
+  // This is acceptable because program design is more systematic than conversational.
+  //
+  // If prompt-level personality becomes critical, we'd need architectural changes:
+  // 1. Add coachConfig/userProfile to BuildProgramEvent interface
+  // 2. Fetch them in handler.ts before constructing ProgramDesignerAgent
+  // 3. Update caller (program-creator) to load and pass this data
+  //
+  // For now, the if-check below is intentionally unreachable (defensive programming).
   if (context.coachConfig) {
     const personalityPrompt = buildCoachPersonalityPrompt(
       context.coachConfig,
-      undefined, // No user profile needed for program design
+      undefined,
       {
-        includeDetailedPersonality: false, // Keep it concise
-        includeMethodologyDetails: true, // Important for program design
+        includeDetailedPersonality: false,
+        includeMethodologyDetails: true,
         includeMotivation: false,
         includeSafety: true,
         includeCriticalDirective: false,
@@ -187,9 +206,7 @@ ${context.conversationContext?.substring(0, 500) || "No conversation context pro
 
 ${personalityPrompt}
 
-Note: This is background context. Apply coach personality to workout names,
-descriptions, and programming approach. Your primary job is systematic design,
-not conversation. Be efficient and technical.`);
+Note: Apply coach personality to workout names, descriptions, and programming approach.`);
   }
 
   // 6. Common scenarios and responses
