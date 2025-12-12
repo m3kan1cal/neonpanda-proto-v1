@@ -4,6 +4,7 @@
  */
 
 import { storePineconeContext, deletePineconeContext } from "../api-helpers";
+import { storeWithAutoCompression } from "../pinecone-compression";
 import { filterNullish } from "../object-utils";
 import { UserMemory } from "../memory/types";
 
@@ -12,7 +13,7 @@ import { UserMemory } from "../memory/types";
  * Follows the same pattern as workout and coach creator summaries
  */
 export const storeMemoryInPinecone = async (
-  memory: UserMemory
+  memory: UserMemory,
 ): Promise<{ success: boolean; recordId?: string; error?: string }> => {
   try {
     console.info("🧠 Storing memory in Pinecone:", {
@@ -48,7 +49,7 @@ export const storeMemoryInPinecone = async (
 
     const metadata = {
       ...baseMetadata,
-      ...optionalFields
+      ...optionalFields,
     };
 
     // Enhance searchable content by including tags for better semantic matching
@@ -57,11 +58,12 @@ export const storeMemoryInPinecone = async (
       ...(memory.metadata.tags || []).map((tag) => `tag: ${tag}`),
     ].join(" ");
 
-    // Use centralized storage function with enhanced content
-    const result = await storePineconeContext(
-      memory.userId,
+    // Store with automatic AI compression if size limit exceeded
+    const result = await storeWithAutoCompression(
+      (content) => storePineconeContext(memory.userId, content, metadata),
       enhancedContent,
-      metadata
+      metadata,
+      "user memory",
     );
 
     console.info("✅ Successfully stored memory in Pinecone:", {
@@ -82,7 +84,7 @@ export const storeMemoryInPinecone = async (
     // Don't throw error to avoid breaking the memory creation process
     // Pinecone storage is for semantic search enhancement, not critical for core functionality
     console.warn(
-      "Memory creation will continue despite Pinecone storage failure"
+      "Memory creation will continue despite Pinecone storage failure",
     );
     return {
       success: false,
@@ -97,7 +99,7 @@ export const storeMemoryInPinecone = async (
  */
 export const deleteMemoryFromPinecone = async (
   userId: string,
-  memoryId: string
+  memoryId: string,
 ): Promise<{ success: boolean; deletedCount: number; error?: string }> => {
   try {
     console.info("🗑️ Deleting memory from Pinecone:", {

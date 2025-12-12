@@ -25,7 +25,7 @@ import { parseJsonWithFallbacks } from "../response-utils";
  */
 export async function detectConversationComplexity(
   userMessage: string,
-  messageContext?: string
+  messageContext?: string,
 ): Promise<boolean> {
   const systemPrompt = `You are an AI assistant that analyzes user messages in fitness coaching conversations to detect complexity that warrants immediate conversation summarization.
 
@@ -67,12 +67,12 @@ GUIDELINES:
 Analyze this message for complexity triggers that would warrant conversation summarization.`;
 
   try {
-    const response = await callBedrockApi(
+    const response = (await callBedrockApi(
       systemPrompt,
       userPrompt,
       MODEL_IDS.CLAUDE_HAIKU_4_FULL,
-      { prefillResponse: "{" } // Force JSON output format
-    ) as string; // No tools used, always returns string
+      { prefillResponse: "{" }, // Force JSON output format
+    )) as string; // No tools used, always returns string
     const result = parseJsonWithFallbacks(response);
 
     return result.hasComplexity || false;
@@ -99,7 +99,7 @@ export async function detectAndProcessConversationSummary(
   conversationId: string,
   userMessage: string,
   currentMessageCount: number,
-  messageContext?: string
+  messageContext?: string,
 ): Promise<{
   triggered: boolean;
   triggerReason?: "message_count" | "complexity";
@@ -107,7 +107,7 @@ export async function detectAndProcessConversationSummary(
 }> {
   const hasComplexityTriggers = await detectConversationComplexity(
     userMessage,
-    messageContext
+    messageContext,
   );
   const shouldTriggerSummary =
     currentMessageCount % 6 === 0 || hasComplexityTriggers;
@@ -135,7 +135,7 @@ export async function detectAndProcessConversationSummary(
       process.env.BUILD_CONVERSATION_SUMMARY_FUNCTION_NAME;
     if (!summaryFunction) {
       console.warn(
-        "⚠️ BUILD_CONVERSATION_SUMMARY_FUNCTION_NAME environment variable not set"
+        "⚠️ BUILD_CONVERSATION_SUMMARY_FUNCTION_NAME environment variable not set",
       );
       return {
         triggered: false,
@@ -156,7 +156,7 @@ export async function detectAndProcessConversationSummary(
           ? ["complexity_detected"]
           : undefined,
       },
-      "conversation summary generation"
+      "conversation summary generation",
     );
 
     return {
@@ -167,7 +167,7 @@ export async function detectAndProcessConversationSummary(
   } catch (error) {
     console.error(
       "❌ Failed to trigger conversation summary generation:",
-      error
+      error,
     );
     return {
       triggered: false,
@@ -193,12 +193,12 @@ export async function analyzeRequestCapabilities(
   messageContext?: string,
   conversationLength: number = 0,
   userTimezone?: string,
-  criticalTrainingDirective?: { content: string; enabled: boolean }
+  criticalTrainingDirective?: { content: string; enabled: boolean },
 ): Promise<SmartRequestRouter> {
   const startTime = Date.now();
 
   // Build temporal context section if timezone is provided
-  const effectiveTimezone = userTimezone || 'America/Los_Angeles';
+  const effectiveTimezone = userTimezone || "America/Los_Angeles";
   const currentDateTime = new Date();
   const dateOptions: Intl.DateTimeFormatOptions = {
     weekday: "long",
@@ -213,10 +213,17 @@ export async function analyzeRequestCapabilities(
     timeZone: effectiveTimezone,
     timeZoneName: "short",
   };
-  const formattedDate = currentDateTime.toLocaleDateString("en-US", dateOptions);
-  const formattedTime = currentDateTime.toLocaleTimeString("en-US", timeOptions);
+  const formattedDate = currentDateTime.toLocaleDateString(
+    "en-US",
+    dateOptions,
+  );
+  const formattedTime = currentDateTime.toLocaleTimeString(
+    "en-US",
+    timeOptions,
+  );
 
-  const temporalContextSection = userTimezone ? `
+  const temporalContextSection = userTimezone
+    ? `
 
 📅 TEMPORAL CONTEXT:
 **Current Date**: ${formattedDate}
@@ -229,17 +236,21 @@ CRITICAL: Use this temporal context when analyzing workout detection and tempora
 - "earlier" or "earlier today" means earlier on ${formattedDate}
 - Consider current time (${formattedTime}) when interpreting time-based references
 
-` : '';
+`
+    : "";
 
   // Build directive context section if enabled
-  const directiveContextSection = criticalTrainingDirective?.enabled && criticalTrainingDirective?.content ? `
+  const directiveContextSection =
+    criticalTrainingDirective?.enabled && criticalTrainingDirective?.content
+      ? `
 
 🚨 CRITICAL TRAINING DIRECTIVE:
 ${criticalTrainingDirective.content}
 
 IMPORTANT: This directive provides crucial context about the user's training priorities and constraints. Consider it when analyzing their message intent, especially for workout logging and goal-related discussions.
 
-` : '';
+`
+      : "";
 
   const systemPrompt = `You are an AI assistant that analyzes user messages in fitness coaching conversations to determine ALL processing capabilities needed in a single comprehensive analysis.
 ${temporalContextSection}${directiveContextSection}
@@ -354,7 +365,24 @@ SLASH COMMAND DETECTION:
 - If detected, ALWAYS set isProgramDesign = true with confidence 1.0
 - Slash commands bypass all other criteria (explicit user intent)
 
-NATURAL LANGUAGE DETECTION (ALL THREE required):
+EXPLICIT EXCLUSION RULES (DO NOT trigger program design for these):
+- Exercise selection questions: "what exercises should I do?", "suggest exercises for X"
+- Training focus discussions: "I want to focus on", "new focus for", "prioritize X"
+- Workout requests: "give me a workout", "design a workout"
+- General advice: "how should I train?", "what's a good approach?"
+- Preference statements: "I want to do more of", "I need a break from"
+
+THESE ARE NOT PROGRAM DESIGN:
+- "I want 4-5 exercises to become my new focus" = exercise selection (question)
+- "I need a break from my core 4" = preference discussion (question)
+- "What exercises should I focus on?" = training advice (question)
+
+THESE ARE PROGRAM DESIGN:
+- "Build me a 12-week program" = explicit program request
+- "I want to design a training program for my competition" = explicit design intent
+- "/design-program" = slash command
+
+NATURAL LANGUAGE DETECTION (ALL FOUR required):
 1. EXPLICIT PROGRAM DESIGN INTENT: Message must clearly indicate wanting to CREATE/DESIGN a training program
    REQUIRED language patterns:
    - "I want to design/create/build a [training] program"
@@ -366,14 +394,20 @@ NATURAL LANGUAGE DETECTION (ALL THREE required):
    - "Design me a program for [goal]"
    AVOID: Questions about programs ("what's a good program?"), discussions, feedback
 
-2. STRUCTURED PROGRAM REQUEST: Must indicate wanting a COMPLETE, STRUCTURED training program
+2. REQUIRED KEYWORDS: At least one of these must be present for natural language detection:
+   - "program" (training program, workout program)
+   - "routine" (new routine, build a routine)
+   - "plan" (workout plan, training plan, 12-week plan)
+   - Explicit timeframes with creation intent: "8-week program", "12-week plan", "3-month routine"
+
+3. STRUCTURED PROGRAM REQUEST: Must indicate wanting a COMPLETE, STRUCTURED training program
    Required context:
    - NOT a single workout ("give me a workout" = WORKOUT_LOG, not PROGRAM_DESIGN)
    - NOT asking for advice ("how should I program?" = question, not PROGRAM_DESIGN)
    - NOT discussing existing program ("my program isn't working" = question, not PROGRAM_DESIGN)
    - MUST be requesting a NEW, MULTI-WEEK program artifact
 
-3. CREATION INTENT: Clear intent to start the program design process NOW
+4. CREATION INTENT: Clear intent to start the program design process NOW
    REQUIRED intent patterns:
    - Active request to begin designing
    - Willingness to answer questions about goals, equipment, schedule
@@ -594,12 +628,12 @@ Provide comprehensive analysis following the framework above.`;
       hasCriticalDirective: criticalTrainingDirective?.enabled || false,
     });
 
-    const response = await callBedrockApi(
+    const response = (await callBedrockApi(
       systemPrompt,
       userPrompt,
       MODEL_IDS.CLAUDE_HAIKU_4_FULL, // More accurate for complex routing decisions
-      { prefillResponse: "{" } // Force JSON output format
-    ) as string; // No tools used, always returns string
+      { prefillResponse: "{" }, // Force JSON output format
+    )) as string; // No tools used, always returns string
 
     const result: SmartRequestRouter = parseJsonWithFallbacks(response);
 
@@ -613,7 +647,8 @@ Provide comprehensive analysis following the framework above.`;
       needsMemoryRetrieval: result.memoryProcessing.needsRetrieval,
       needsPineconeSearch: result.contextNeeds.needsPineconeSearch,
       hasComplexity: result.conversationComplexity.hasComplexity,
-      requiresDeepReasoning: result.conversationComplexity.requiresDeepReasoning,
+      requiresDeepReasoning:
+        result.conversationComplexity.requiresDeepReasoning,
       processingTime: result.routerMetadata.processingTime,
       confidence: result.routerMetadata.confidence,
     });

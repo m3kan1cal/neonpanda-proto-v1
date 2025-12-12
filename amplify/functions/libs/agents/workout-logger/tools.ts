@@ -47,6 +47,65 @@ import {
 } from "./helpers";
 
 /**
+ * Tool-specific result types
+ * (Internal to tools.ts, not exported from types.ts)
+ */
+
+/**
+ * Result from extract_workout_data tool
+ */
+interface WorkoutExtractionResult {
+  workoutData: UniversalWorkoutSchema;
+  completedAt: Date;
+  generationMethod: "tool" | "fallback";
+}
+
+/**
+ * Result from validate_workout_completeness tool
+ */
+interface WorkoutValidationResult {
+  isValid: boolean;
+  shouldNormalize: boolean;
+  shouldSave: boolean;
+  confidence: number;
+  completeness: number;
+  validationFlags: string[];
+  blockingFlags: string[];
+  disciplineClassification: DisciplineClassification;
+  reason?: string;
+}
+
+/**
+ * Result from normalize_workout_data tool
+ */
+interface WorkoutNormalizationResult {
+  normalizedData: UniversalWorkoutSchema;
+  isValid: boolean;
+  issuesFound: number;
+  issuesCorrected: number;
+  normalizationSummary: string;
+  normalizationConfidence: number;
+}
+
+/**
+ * Result from generate_workout_summary tool
+ */
+interface WorkoutSummaryResult {
+  summary: string;
+}
+
+/**
+ * Result from save_workout_to_database tool
+ */
+interface WorkoutSaveResult {
+  workoutId: string;
+  success: boolean;
+  pineconeStored: boolean;
+  pineconeRecordId: string | null;
+  templateLinked: boolean;
+}
+
+/**
  * Tool 1: Extract Workout Data
  *
  * Extracts structured workout information from user's message and images.
@@ -118,7 +177,10 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
     ],
   },
 
-  async execute(input: any, context: WorkoutLoggerContext) {
+  async execute(
+    input: any,
+    context: WorkoutLoggerContext,
+  ): Promise<WorkoutExtractionResult> {
     console.info("🏋️ Executing extract_workout_data tool");
 
     const {
@@ -424,7 +486,10 @@ Returns: validation result with shouldSave, shouldNormalize, confidence, complet
     required: ["workoutData", "completedAt", "isSlashCommand"],
   },
 
-  async execute(input: any, context: WorkoutLoggerContext) {
+  async execute(
+    input: any,
+    context: WorkoutLoggerContext,
+  ): Promise<WorkoutValidationResult> {
     console.info("✅ Executing validate_workout_completeness tool");
 
     const { workoutData, completedAt, isSlashCommand } = input;
@@ -622,7 +687,10 @@ Returns: normalizedData, isValid, issuesFound, issuesCorrected, normalizationSum
     required: ["workoutData", "enableThinking"],
   },
 
-  async execute(input: any, context: WorkoutLoggerContext) {
+  async execute(
+    input: any,
+    context: WorkoutLoggerContext,
+  ): Promise<WorkoutNormalizationResult> {
     console.info("🔧 Executing normalize_workout_data tool");
 
     const { workoutData, enableThinking } = input;
@@ -732,7 +800,10 @@ Returns: summary (string)`,
     required: ["workoutData", "originalMessage"],
   },
 
-  async execute(input: any, context: WorkoutLoggerContext) {
+  async execute(
+    input: any,
+    context: WorkoutLoggerContext,
+  ): Promise<WorkoutSummaryResult> {
     console.info("📝 Executing generate_workout_summary tool");
 
     const { workoutData, originalMessage } = input;
@@ -817,7 +888,10 @@ Returns: workoutId, success, pineconeStored, pineconeRecordId, templateLinked`,
     ],
   },
 
-  async execute(input: any, context: WorkoutLoggerContext) {
+  async execute(
+    input: any,
+    context: WorkoutLoggerContext,
+  ): Promise<WorkoutSaveResult> {
     console.info("💾 Executing save_workout_to_database tool");
 
     const {
@@ -866,21 +940,19 @@ Returns: workoutId, success, pineconeStored, pineconeRecordId, templateLinked`,
     await saveWorkout(workout);
     console.info("✅ Workout saved to DynamoDB");
 
-    // 3. Store workout summary in Pinecone
-    console.info("📝 Storing workout summary in Pinecone..");
-    const pineconeResult = await storeWorkoutSummaryInPinecone(
+    // 3. Store workout summary in Pinecone (fire-and-forget, non-blocking)
+    console.info("📝 Storing workout summary in Pinecone (async)..");
+    storeWorkoutSummaryInPinecone(
       context.userId,
       summary,
       workoutData,
       workout,
-    );
-
-    console.info("Pinecone storage result:", {
-      success: pineconeResult.success,
-      recordId:
-        pineconeResult.success && "recordId" in pineconeResult
-          ? pineconeResult.recordId
-          : null,
+    ).catch((error) => {
+      console.error(
+        "⚠️ Failed to store workout in Pinecone (non-blocking):",
+        error,
+      );
+      // Don't throw - this is fire-and-forget
     });
 
     // 4. Update template linkedWorkoutId if from program
@@ -898,11 +970,8 @@ Returns: workoutId, success, pineconeStored, pineconeRecordId, templateLinked`,
     return {
       workoutId: workout.workoutId,
       success: true,
-      pineconeStored: pineconeResult.success,
-      pineconeRecordId:
-        pineconeResult.success && "recordId" in pineconeResult
-          ? pineconeResult.recordId
-          : null,
+      pineconeStored: false, // Fire-and-forget (async), status unknown at return time
+      pineconeRecordId: null, // Not available in fire-and-forget mode
       templateLinked,
     };
   },
