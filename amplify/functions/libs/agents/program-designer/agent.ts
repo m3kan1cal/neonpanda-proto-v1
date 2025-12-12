@@ -366,14 +366,17 @@ Now design the complete program using your tools.`;
 
     // Try to extract from phase structure or requirements
     if (phaseStructureResult?.phases?.[0]?.name) {
-      return `${requirementsResult?.programDuration || ""}-Day Training Program`;
+      const durationDays = requirementsResult?.programDuration || 56;
+      const durationWeeks = Math.round(durationDays / 7);
+      return `${durationWeeks}-Week Training Program`;
     }
 
     // Fallback to todoList
     const todoList = this.config.context.todoList;
     if (todoList?.trainingGoals?.value) {
-      const duration = requirementsResult?.programDuration || "8-Week";
-      return `${duration}-Week ${todoList.trainingGoals.value}`;
+      const durationDays = requirementsResult?.programDuration || 56;
+      const durationWeeks = Math.round(durationDays / 7);
+      return `${durationWeeks}-Week ${todoList.trainingGoals.value}`;
     }
 
     return "Custom Training Program";

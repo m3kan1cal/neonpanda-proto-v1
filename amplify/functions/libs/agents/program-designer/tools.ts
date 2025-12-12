@@ -764,7 +764,7 @@ Returns: success, programId, s3Key, pineconeRecordId`,
 
     // 2. Store workout templates in S3 (if not already done)
     let s3Key = program.s3DetailKey;
-    if (!s3Key || workoutTemplates) {
+    if (!s3Key) {
       console.info("Storing program details in S3...");
       s3Key = await storeProgramDetailsInS3(
         context.programId,
