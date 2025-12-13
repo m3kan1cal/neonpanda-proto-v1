@@ -54,9 +54,21 @@ export function calculateMetadataSize(
 }
 
 /**
+ * Retry delays for throttling errors (in milliseconds)
+ * Progressive backoff: 2s, 5s, 10s = 17s total
+ */
+const THROTTLE_RETRY_DELAYS = [2000, 5000, 10000];
+
+/**
+ * Helper to wait for specified milliseconds
+ */
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
  * Compress content while preserving semantic meaning and searchability
  *
  * Uses AI (Claude Sonnet 4.5) to intelligently compress content.
+ * Implements retry logic with exponential backoff for throttling errors.
  *
  * @param content - The original content that needs compression
  * @param contentType - Type of content being compressed (for context)
@@ -100,58 +112,135 @@ ${content}
 
 Return ONLY the compressed content, no explanations or meta-commentary.`;
 
-  try {
-    const compressedContent = (await callBedrockApi(
-      compressionPrompt,
-      "", // No user content, it's in the prompt
-      MODEL_IDS.CLAUDE_SONNET_4_FULL, // Sonnet 4.5
-    )) as string;
+  // Retry logic for throttling errors with exponential backoff
+  let lastError: any;
+  for (let attempt = 0; attempt <= THROTTLE_RETRY_DELAYS.length; attempt++) {
+    try {
+      const compressedContent = (await callBedrockApi(
+        compressionPrompt,
+        "", // No user content, it's in the prompt
+        MODEL_IDS.CLAUDE_SONNET_4_FULL, // Sonnet 4.5
+      )) as string;
 
-    const finalSize = Buffer.byteLength(compressedContent, "utf8");
-    const compressionAchieved = ((currentSize - finalSize) / currentSize) * 100;
+      const finalSize = Buffer.byteLength(compressedContent, "utf8");
+      const compressionAchieved =
+        ((currentSize - finalSize) / currentSize) * 100;
 
-    console.info("✅ AI compression completed:", {
-      contentType,
-      originalSize: currentSize,
-      compressedSize: finalSize,
-      compressionAchieved: Math.round(compressionAchieved) + "%",
-      originalChars: content.length,
-      compressedChars: compressedContent.length,
-      withinTarget: finalSize <= targetSize,
-    });
-
-    // If still too large, do emergency truncation as last resort
-    if (finalSize > targetSize) {
-      const truncateAt = Math.floor(
-        compressedContent.length *
-          (targetSize / finalSize) *
-          TRUNCATION_SAFETY_MARGIN,
-      );
-      console.warn("⚠️ AI compression still too large, applying truncation:", {
+      console.info("✅ AI compression completed:", {
+        contentType,
+        originalSize: currentSize,
         compressedSize: finalSize,
-        targetSize,
-        truncatingTo: truncateAt,
+        compressionAchieved: Math.round(compressionAchieved) + "%",
+        originalChars: content.length,
+        compressedChars: compressedContent.length,
+        withinTarget: finalSize <= targetSize,
+        attemptsNeeded: attempt + 1,
       });
-      return compressedContent.substring(0, truncateAt) + "...";
-    }
 
-    return compressedContent;
-  } catch (error) {
-    console.error("❌ AI compression failed:", error);
-    // Fallback to simple truncation
-    // If targetSize > currentSize (underestimated), use targetSize directly
-    // Otherwise, proportionally scale down
+      // If still too large, do emergency truncation as last resort
+      if (finalSize > targetSize) {
+        const truncateAt = Math.floor(
+          compressedContent.length *
+            (targetSize / finalSize) *
+            TRUNCATION_SAFETY_MARGIN,
+        );
+        console.warn(
+          "⚠️ AI compression still too large, applying truncation:",
+          {
+            compressedSize: finalSize,
+            targetSize,
+            truncatingTo: truncateAt,
+          },
+        );
+        return compressedContent.substring(0, truncateAt) + "...";
+      }
+
+      return compressedContent;
+    } catch (error: any) {
+      lastError = error;
+
+      // Check if it's a throttling error that we should retry
+      const isThrottling =
+        error?.name === "ThrottlingException" ||
+        error?.message?.includes("ThrottlingException") ||
+        error?.message?.includes("Too many tokens") ||
+        error?.message?.includes("throttl") ||
+        error?.$metadata?.httpStatusCode === 429;
+
+      if (isThrottling && attempt < THROTTLE_RETRY_DELAYS.length) {
+        const delayMs = THROTTLE_RETRY_DELAYS[attempt];
+        console.warn(
+          `⚠️ Bedrock API throttled (attempt ${attempt + 1}/${THROTTLE_RETRY_DELAYS.length + 1}) - waiting ${delayMs}ms before retry`,
+          {
+            errorName: error.name,
+            errorMessage: error.message,
+            statusCode: error.$metadata?.httpStatusCode,
+            nextRetryIn: `${delayMs}ms`,
+          },
+        );
+        await wait(delayMs);
+        continue; // Retry
+      }
+
+      // Either not a throttling error, or we've exhausted retries
+      if (isThrottling) {
+        console.error(
+          "❌ Bedrock API still throttled after all retries - falling back to truncation",
+          {
+            totalAttempts: attempt + 1,
+            totalWaitTime: THROTTLE_RETRY_DELAYS.reduce(
+              (sum, delay) => sum + delay,
+              0,
+            ),
+          },
+        );
+      }
+
+      // Break out of retry loop to handle error below
+      break;
+    }
+  }
+
+  // If we get here, all attempts failed
+  console.error("❌ AI compression failed after all attempts:", lastError);
+
+  // Check if final error was throttling
+  const wasThrottling =
+    lastError?.name === "ThrottlingException" ||
+    lastError?.message?.includes("ThrottlingException") ||
+    lastError?.message?.includes("Too many tokens") ||
+    lastError?.message?.includes("throttl") ||
+    lastError?.$metadata?.httpStatusCode === 429;
+
+  if (wasThrottling) {
+    // Use conservative truncation for throttling scenarios
+    const conservativeTruncate = Math.floor(
+      (targetSize / currentSize) * content.length * 0.8, // Extra conservative (80% of target)
+    );
+    console.warn(
+      "⚠️ Falling back to conservative truncation due to persistent throttling",
+      {
+        targetChars: conservativeTruncate,
+      },
+    );
+    return content.substring(0, conservativeTruncate) + "...";
+  } else {
+    // Non-throttling error - use standard fallback truncation
     const ratio = Math.min(1, targetSize / currentSize);
     const truncateAt = Math.floor(
       content.length * ratio * TRUNCATION_SAFETY_MARGIN,
     );
-    console.warn("⚠️ Falling back to truncation due to AI error:", {
-      currentSize,
-      targetSize,
-      ratio,
-      truncatingTo: truncateAt,
-      willTruncate: truncateAt < content.length,
-    });
+    console.warn(
+      "⚠️ Falling back to truncation due to non-throttling AI error:",
+      {
+        currentSize,
+        targetSize,
+        ratio,
+        truncatingTo: truncateAt,
+        willTruncate: truncateAt < content.length,
+        errorType: lastError?.name || "unknown",
+      },
+    );
 
     if (truncateAt >= content.length) {
       console.error("❌ Truncation calculation error - would not reduce size", {
@@ -218,15 +307,16 @@ export async function storeWithAutoCompression<T>(
         error?.message?.includes("exceeds the limit")
       ) {
         console.warn(
-          "⚠️ Size error despite estimate being under limit, compressing...",
+          "⚠️ Size error despite estimate being under limit, will attempt compression...",
           {
             estimatedSize: initialSize,
             actualError: error.message,
           },
         );
-        // Fall through to compression
+        // Fall through to compression (which has its own retry logic for throttling)
       } else {
-        // Different error, re-throw
+        // Different error (including throttling during storage), re-throw
+        // Note: We only handle throttling during compression, not during storage itself
         throw error;
       }
     }
@@ -249,6 +339,7 @@ export async function storeWithAutoCompression<T>(
     overageBytes: actualTotalSize - PINECONE_METADATA_LIMIT,
   });
 
+  // Attempt AI compression (will fall back to truncation on throttling errors)
   const compressedContent = await compressContent(
     content,
     contentType,

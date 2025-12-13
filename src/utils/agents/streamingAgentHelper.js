@@ -9,41 +9,53 @@
  * @param {Function} onChunk - Called for each content chunk (chunk)
  * @param {Function} onContextual - Called for contextual updates (chunk) - optional
  * @param {Function} onMetadata - Called for early metadata (chunk) - optional
+ * @param {Function} onSuggestion - Called for suggestion events (chunk) - optional
  * @param {Function} onComplete - Called when streaming completes (chunk)
  * @param {Function} onFallback - Called for fallback response (data)
  * @param {Function} onError - Called for errors (errorMessage)
  * @returns {Promise} - Result from the appropriate handler
  */
-export async function processStreamingChunks(messageStream, { onChunk, onContextual, onMetadata, onComplete, onFallback, onError }) {
+export async function processStreamingChunks(
+  messageStream,
+  {
+    onChunk,
+    onContextual,
+    onMetadata,
+    onSuggestion,
+    onComplete,
+    onFallback,
+    onError,
+  },
+) {
   try {
     for await (const chunk of messageStream) {
-      if (chunk.type === 'start') {
+      if (chunk.type === "start") {
         // Start event - streaming has begun, no action needed
         continue;
-      } else if (chunk.type === 'contextual') {
+      } else if (chunk.type === "contextual") {
         // Contextual update - ephemeral UX feedback, not saved to conversation
         if (onContextual) {
           await onContextual(chunk.content, chunk.stage);
         }
-      } else if (chunk.type === 'metadata') {
-        // Metadata event - early message configuration (mode, etc.) sent before AI streaming
+      } else if (chunk.type === "metadata") {
+        // Metadata event - early message configuration (mode, suggestProgramDesign flag, etc.) sent before AI streaming
         if (onMetadata) {
           await onMetadata(chunk);
         }
-      } else if (chunk.type === 'chunk') {
+      } else if (chunk.type === "chunk") {
         await onChunk(chunk.content);
-      } else if (chunk.type === 'complete') {
+      } else if (chunk.type === "complete") {
         return await onComplete(chunk);
-      } else if (chunk.type === 'fallback') {
+      } else if (chunk.type === "fallback") {
         return await onFallback(chunk.data);
-      } else if (chunk.type === 'error') {
-        throw new Error(chunk.error || 'Streaming failed');
+      } else if (chunk.type === "error") {
+        throw new Error(chunk.error || "Streaming failed");
       } else {
-        console.warn('⚠️ Unknown chunk type:', chunk.type, chunk);
+        console.warn("⚠️ Unknown chunk type:", chunk.type, chunk);
       }
     }
   } catch (error) {
-    await onError(error.message || 'Stream processing failed');
+    await onError(error.message || "Stream processing failed");
     throw error;
   }
 }
@@ -83,9 +95,9 @@ export function createStreamingMessage(agent, metadata = {}) {
       agent._updateMessageMetadata(messageId, metadata);
     },
     remove: () => {
-      console.info('🗑️ StreamingMessage.remove:', { messageId });
+      console.info("🗑️ StreamingMessage.remove:", { messageId });
       agent._removeMessage(messageId);
-    }
+    },
   };
 }
 
@@ -97,8 +109,15 @@ export function createStreamingMessage(agent, metadata = {}) {
  * @param {string} operationName - Name for logging
  * @returns {Promise} - Result from handleResult
  */
-export async function handleStreamingFallback(fallbackApiFunction, fallbackApiParams, handleResult, operationName) {
-  console.info(`🔄 Streaming failed, falling back to non-streaming for ${operationName}`);
+export async function handleStreamingFallback(
+  fallbackApiFunction,
+  fallbackApiParams,
+  handleResult,
+  operationName,
+) {
+  console.info(
+    `🔄 Streaming failed, falling back to non-streaming for ${operationName}`,
+  );
 
   try {
     const result = await fallbackApiFunction(...fallbackApiParams);
@@ -118,13 +137,13 @@ export function resetStreamingState(agent, additionalState = {}) {
   const resetState = {
     isStreaming: false,
     isTyping: false,
-    streamingMessage: '',
+    streamingMessage: "",
     streamingMessageId: null,
-    ...additionalState
+    ...additionalState,
   };
 
   // Reset loading state if present (standardized as isLoadingItem)
-  if (agent.state.hasOwnProperty('isLoadingItem')) {
+  if (agent.state.hasOwnProperty("isLoadingItem")) {
     resetState.isLoadingItem = false;
   }
 
@@ -138,9 +157,14 @@ export function resetStreamingState(agent, additionalState = {}) {
  * @param {string[]} imageS3Keys - Optional array of image S3 keys
  * @returns {boolean} - Whether input is valid
  */
-export function validateStreamingInput(agent, messageContent, imageS3Keys = []) {
+export function validateStreamingInput(
+  agent,
+  messageContent,
+  imageS3Keys = [],
+) {
   // Allow sending if there's text OR images
-  const hasContent = messageContent.trim() || (imageS3Keys && imageS3Keys.length > 0);
+  const hasContent =
+    messageContent.trim() || (imageS3Keys && imageS3Keys.length > 0);
 
   return !!(
     hasContent &&
