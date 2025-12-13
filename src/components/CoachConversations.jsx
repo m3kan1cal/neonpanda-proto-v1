@@ -28,7 +28,7 @@ import { FullPageLoader, CenteredErrorState } from "./shared/ErrorStates";
 import CoachHeader from "./shared/CoachHeader";
 import CompactCoachCard from "./shared/CompactCoachCard";
 import CommandPaletteButton from "./shared/CommandPaletteButton";
-import { useNavigationContext } from '../contexts/NavigationContext';
+import { useNavigationContext } from "../contexts/NavigationContext";
 import { InlineEditField } from "./shared/InlineEditField.jsx";
 import ChatInput from "./shared/ChatInput";
 import UserAvatar from "./shared/UserAvatar";
@@ -173,19 +173,21 @@ const MessageItem = memo(
           className={`max-w-[95%] md:max-w-[70%] ${message.type === "user" ? "items-end" : "items-start"} flex flex-col`}
         >
           {/* Workout Log Indicator Badge (only for AI messages created during workout log artifact creation) */}
-          {message.type === "ai" && message.metadata?.mode === CONVERSATION_MODES.WORKOUT_LOG && (
-            <div className={`${buttonPatterns.modeBadgeWorkoutLog} mb-1`}>
-              <span>Workout Log</span>
-            </div>
-          )}
+          {message.type === "ai" &&
+            message.metadata?.mode === CONVERSATION_MODES.WORKOUT_LOG && (
+              <div className={`${buttonPatterns.modeBadgeWorkoutLog} mb-1`}>
+                <span>Workout Log</span>
+              </div>
+            )}
 
           {/* Program Design Indicator Badge (only for AI messages created during program design artifact creation) */}
-          {message.type === "ai" && message.metadata?.mode === CONVERSATION_MODES.PROGRAM_DESIGN && (
-            <div className={`${buttonPatterns.modeBadgeProgramDesign} mb-1`}>
-              <BuildModeIconTiny />
-              <span className="translate-y-px">Program Design</span>
-            </div>
-          )}
+          {message.type === "ai" &&
+            message.metadata?.mode === CONVERSATION_MODES.PROGRAM_DESIGN && (
+              <div className={`${buttonPatterns.modeBadgeProgramDesign} mb-1`}>
+                <BuildModeIconTiny />
+                <span className="translate-y-px">Program Design</span>
+              </div>
+            )}
 
           <div
             className={getStreamingMessageClasses(
@@ -193,9 +195,10 @@ const MessageItem = memo(
               agentState,
               message.type === "user"
                 ? containerPatterns.userMessageBubble
-                : message.type === "ai" && message.metadata?.mode === CONVERSATION_MODES.PROGRAM_DESIGN
+                : message.type === "ai" &&
+                    message.metadata?.mode === CONVERSATION_MODES.PROGRAM_DESIGN
                   ? containerPatterns.aiProgramDesignModeBubble
-                  : `${containerPatterns.aiChatBubble} px-4 py-3`
+                  : `${containerPatterns.aiChatBubble} px-4 py-3`,
             )}
           >
             <div className="font-rajdhani text-base leading-relaxed">
@@ -211,22 +214,30 @@ const MessageItem = memo(
             </span>
             {message.type === "user" && (
               <div className="flex gap-1">
-                <div className={`${messagePatterns.statusDotSecondary} ${messagePatterns.statusDotPink}`}></div>
-                <div className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotPink}`}></div>
+                <div
+                  className={`${messagePatterns.statusDotSecondary} ${messagePatterns.statusDotPink}`}
+                ></div>
+                <div
+                  className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotPink}`}
+                ></div>
               </div>
             )}
             {message.type === "ai" && (
               <div className="flex gap-1">
-                <div className={`${messagePatterns.statusDotSecondary} ${
-                  message.metadata?.mode === CONVERSATION_MODES.PROGRAM_DESIGN
-                    ? messagePatterns.statusDotPurple
-                    : messagePatterns.statusDotCyan
-                }`}></div>
-                <div className={`${messagePatterns.statusDotPrimary} ${
-                  message.metadata?.mode === CONVERSATION_MODES.PROGRAM_DESIGN
-                    ? messagePatterns.statusDotPurple
-                    : messagePatterns.statusDotCyan
-                }`}></div>
+                <div
+                  className={`${messagePatterns.statusDotSecondary} ${
+                    message.metadata?.mode === CONVERSATION_MODES.PROGRAM_DESIGN
+                      ? messagePatterns.statusDotPurple
+                      : messagePatterns.statusDotCyan
+                  }`}
+                ></div>
+                <div
+                  className={`${messagePatterns.statusDotPrimary} ${
+                    message.metadata?.mode === CONVERSATION_MODES.PROGRAM_DESIGN
+                      ? messagePatterns.statusDotPurple
+                      : messagePatterns.statusDotCyan
+                  }`}
+                ></div>
               </div>
             )}
           </div>
@@ -269,7 +280,7 @@ const MessageItem = memo(
     // Return true if props are equal (no re-render needed)
     // Return false if props changed (re-render needed)
     return !shouldRerender;
-  }
+  },
 );
 
 // Add display name for debugging
@@ -392,8 +403,7 @@ function CoachConversations() {
     },
     {
       label: "WOD Creation",
-      message:
-        "Create a WOD for me today based on my goals and training plan.",
+      message: "Create a WOD for me today based on my goals and training plan.",
     },
   ];
 
@@ -441,7 +451,10 @@ function CoachConversations() {
     }
 
     // PRIORITY 2: Check for active workout session (backward compatibility for embedded sessions)
-    if (coachConversationAgentState.conversation?.workoutCreatorSession?.isComplete === false) {
+    if (
+      coachConversationAgentState.conversation?.workoutCreatorSession
+        ?.isComplete === false
+    ) {
       return CONVERSATION_MODES.WORKOUT_LOG;
     }
 
@@ -529,7 +542,7 @@ function CoachConversations() {
           if (type === "conversation-not-found") {
             navigate(
               `/training-grounds/manage-conversations?userId=${userId}&coachId=${coachId}`,
-              { replace: true }
+              { replace: true },
             );
           }
         },
@@ -545,7 +558,7 @@ function CoachConversations() {
           agentRef.current.loadExistingConversation(
             userId,
             coachId,
-            conversationId
+            conversationId,
           );
 
           // Note: Conversations list will be loaded when popover is opened via FloatingMenuManager
@@ -556,7 +569,7 @@ function CoachConversations() {
       agentRef.current.loadExistingConversation(
         userId,
         coachId,
-        conversationId
+        conversationId,
       );
     }
 
@@ -600,7 +613,7 @@ function CoachConversations() {
     // Empty conversations show the canned greeting instead
     if (coachConversationAgentState.messages.length === 0) {
       console.info(
-        `⏭️ Skipping polling for empty conversation (no messages to wait for)`
+        `⏭️ Skipping polling for empty conversation (no messages to wait for)`,
       );
       hasAttemptedPollingRef.current = conversationId;
       return;
@@ -617,7 +630,7 @@ function CoachConversations() {
 
     const startTime = Date.now();
     console.info(
-      `🔄 [${new Date().toLocaleTimeString()}.${Date.now() % 1000}] Starting polling for initial messages in conversation: ${conversationId}`
+      `🔄 [${new Date().toLocaleTimeString()}.${Date.now() % 1000}] Starting polling for initial messages in conversation: ${conversationId}`,
     );
 
     // Capture values in closure
@@ -635,13 +648,13 @@ function CoachConversations() {
     const intervalId = setInterval(() => {
       const elapsedSeconds = ((Date.now() - startTime) / 1000).toFixed(1);
       console.info(
-        `🔄 [${new Date().toLocaleTimeString()}.${Date.now() % 1000}] Polling for messages... (${elapsedSeconds}s elapsed)`
+        `🔄 [${new Date().toLocaleTimeString()}.${Date.now() % 1000}] Polling for messages... (${elapsedSeconds}s elapsed)`,
       );
       if (agentRef.current) {
         agentRef.current.loadExistingConversation(
           currentUserId,
           currentCoachId,
-          currentConversationId
+          currentConversationId,
         );
       }
     }, 3000);
@@ -650,7 +663,7 @@ function CoachConversations() {
     // Stop polling after 90 seconds
     const timeoutId = setTimeout(() => {
       console.info(
-        `⏱️ [${new Date().toLocaleTimeString()}.${Date.now() % 1000}] Polling timeout reached (90s), stopping polling`
+        `⏱️ [${new Date().toLocaleTimeString()}.${Date.now() % 1000}] Polling timeout reached (90s), stopping polling`,
       );
       setIsPollingForMessages(false);
       if (pollingIntervalRef.current) {
@@ -674,7 +687,7 @@ function CoachConversations() {
       pollingIntervalRef.current
     ) {
       console.info(
-        `✅ [${new Date().toLocaleTimeString()}.${Date.now() % 1000}] Messages loaded (${coachConversationAgentState.messages.length} messages), stopping polling`
+        `✅ [${new Date().toLocaleTimeString()}.${Date.now() % 1000}] Messages loaded (${coachConversationAgentState.messages.length} messages), stopping polling`,
       );
       setIsPollingForMessages(false);
       clearInterval(pollingIntervalRef.current);
@@ -686,7 +699,6 @@ function CoachConversations() {
       }
     }
   }, [coachConversationAgentState.messages.length]);
-
 
   const autoResizeTextarea = (textarea) => {
     if (!textarea) return;
@@ -750,7 +762,7 @@ function CoachConversations() {
     coachConversationAgentState.isTyping,
     coachConversationAgentState.contextualUpdate,
     coachConversationAgentState.streamingMessage, // Added to scroll during streaming
-    scrollToBottom
+    scrollToBottom,
   ]);
 
   // Voice recording functions moved to ChatInput component
@@ -822,7 +834,7 @@ function CoachConversations() {
           name: newName,
         },
       })),
-    { success: showSuccess, error: showError }
+    { success: showSuccess, error: showError },
   );
 
   const handleSendMessage = async (e) => {
@@ -893,7 +905,7 @@ function CoachConversations() {
           onStreamingError: (error) => {
             handleStreamingError(error, { error: showError });
           },
-        }
+        },
       );
 
       // Scroll after message is sent to ensure we're at the bottom
@@ -929,7 +941,7 @@ function CoachConversations() {
         userId,
         coachId,
         conversationId,
-        { title: newTitle.trim() }
+        { title: newTitle.trim() },
       );
       showSuccess("Conversation title updated successfully");
     } catch (error) {
@@ -954,7 +966,7 @@ function CoachConversations() {
       const success = await agentRef.current.deleteCoachConversation(
         userId,
         coachId,
-        conversationId
+        conversationId,
       );
       if (success) {
         showSuccess("Conversation deleted successfully");
@@ -985,7 +997,7 @@ function CoachConversations() {
     // Get the appropriate content (streaming or final)
     const displayContent = getMessageDisplayContent(
       message,
-      coachConversationAgentState
+      coachConversationAgentState,
     );
 
     return (
@@ -1195,7 +1207,9 @@ function CoachConversations() {
             <div className="mb-4">
               <div className="flex items-center gap-3 mb-1">
                 <div className="font-rajdhani text-lg text-white flex items-center flex-nowrap">
-                  <span className="text-synthwave-neon-cyan mr-2 whitespace-nowrap">Conversation Title:</span>
+                  <span className="text-synthwave-neon-cyan mr-2 whitespace-nowrap">
+                    Conversation Title:
+                  </span>
                   <InlineEditField
                     value={coachConversationAgentState.conversation.title}
                     onSave={handleSaveConversationTitle}
@@ -1220,120 +1234,214 @@ function CoachConversations() {
               <div className="flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-6 pb-40 sm:pb-56 space-y-4">
                 {/* Empty State - Show tips when no messages */}
                 {coachConversationAgentState.messages.length === 0 &&
-                 !coachConversationAgentState.isTyping &&
-                 !coachConversationAgentState.isStreaming && (
-                  <div className="flex flex-col items-center justify-center min-h-[400px] space-y-6 px-4">
-                    {/* Welcome Header */}
-                    <div className="text-center space-y-2">
-                      <h2 className={typographyPatterns.emptyStateHeader}>
-                        Ready to Train?
-                      </h2>
-                      <p className={typographyPatterns.emptyStateDescription}>
-                        I'm here to help you reach your goals. Ask me anything or use these quick commands to get started.
-                      </p>
-                    </div>
+                  !coachConversationAgentState.isTyping &&
+                  !coachConversationAgentState.isStreaming && (
+                    <div className="flex flex-col items-center justify-center min-h-[400px] space-y-6 px-4">
+                      {/* Welcome Header */}
+                      <div className="text-center space-y-2">
+                        <h2 className={typographyPatterns.emptyStateHeader}>
+                          Ready to Train?
+                        </h2>
+                        <p className={typographyPatterns.emptyStateDescription}>
+                          I'm here to help you reach your goals. Ask me anything
+                          or use these quick commands to get started.
+                        </p>
+                      </div>
 
-                    {/* Command Tips Grid */}
-                    <div className="flex flex-col gap-6 w-full max-w-2xl">
-                      {/* Slash Commands */}
-                      <div>
-                        <h4 className={typographyPatterns.emptyStateSectionHeader}>
-                          Use Slash Commands
-                        </h4>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {/* Log Workout Command */}
-                          <div className={containerPatterns.emptyStateTipCard}>
-                            <h3 className={typographyPatterns.emptyStateCardTitle}>
-                              Log a Workout
-                            </h3>
-                            <p className={typographyPatterns.emptyStateCardTextWithMargin}>
-                              Track your training sessions and keep your coach in the loop
-                            </p>
-                            <code className={typographyPatterns.inlineCode}>
-                              /log-workout Fran 8:57
-                            </code>
+                      {/* Command Tips Grid */}
+                      <div className="flex flex-col gap-6 w-full max-w-2xl">
+                        {/* Slash Commands */}
+                        <div>
+                          <h4
+                            className={
+                              typographyPatterns.emptyStateSectionHeader
+                            }
+                          >
+                            Use Slash Commands
+                          </h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {/* Log Workout Command */}
+                            <div
+                              className={containerPatterns.emptyStateTipCard}
+                            >
+                              <h3
+                                className={
+                                  typographyPatterns.emptyStateCardTitle
+                                }
+                              >
+                                Log a Workout
+                              </h3>
+                              <p
+                                className={
+                                  typographyPatterns.emptyStateCardTextWithMargin
+                                }
+                              >
+                                Track your training sessions and keep your coach
+                                in the loop
+                              </p>
+                              <code className={typographyPatterns.inlineCode}>
+                                /log-workout Fran 8:57
+                              </code>
+                            </div>
+
+                            {/* Save Memory Command */}
+                            <div
+                              className={containerPatterns.emptyStateTipCard}
+                            >
+                              <h3
+                                className={
+                                  typographyPatterns.emptyStateCardTitle
+                                }
+                              >
+                                Save a Memory
+                              </h3>
+                              <p
+                                className={
+                                  typographyPatterns.emptyStateCardTextWithMargin
+                                }
+                              >
+                                Store important notes, preferences, or insights
+                                for future reference
+                              </p>
+                              <code className={typographyPatterns.inlineCode}>
+                                /save-memory prefer morning workouts
+                              </code>
+                            </div>
                           </div>
+                        </div>
 
-                          {/* Save Memory Command */}
-                          <div className={containerPatterns.emptyStateTipCard}>
-                            <h3 className={typographyPatterns.emptyStateCardTitle}>
-                              Save a Memory
-                            </h3>
-                            <p className={typographyPatterns.emptyStateCardTextWithMargin}>
-                              Store important notes, preferences, or insights for future reference
-                            </p>
-                            <code className={typographyPatterns.inlineCode}>
-                              /save-memory prefer morning workouts
-                            </code>
+                        {/* Chat & Build Features */}
+                        <div>
+                          <h4
+                            className={
+                              typographyPatterns.emptyStateSectionHeader
+                            }
+                          >
+                            Chat & Build
+                          </h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {/* Ask Anything */}
+                            <div
+                              className={containerPatterns.emptyStateTipCard}
+                            >
+                              <h3
+                                className={
+                                  typographyPatterns.emptyStateCardTitle
+                                }
+                              >
+                                Ask Questions
+                              </h3>
+                              <p
+                                className={
+                                  typographyPatterns.emptyStateCardText
+                                }
+                              >
+                                Get coaching advice, form tips, programming
+                                guidance, or motivation
+                              </p>
+                            </div>
+
+                            {/* Build Mode */}
+                            <div
+                              className={containerPatterns.emptyStateTipCard}
+                            >
+                              <h3
+                                className={
+                                  typographyPatterns.emptyStateCardTitle
+                                }
+                              >
+                                Build Mode
+                              </h3>
+                              <p
+                                className={
+                                  typographyPatterns.emptyStateCardText
+                                }
+                              >
+                                Toggle{" "}
+                                <span
+                                  className={`${buttonPatterns.modeBadgeBuild} inline-flex pointer-events-none scale-90`}
+                                >
+                                  <BuildModeIconTiny />
+                                  <span className="translate-y-px">Build</span>
+                                </span>{" "}
+                                at the bottom to create programs, workouts, and
+                                plans
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Media & Quick Actions */}
+                        <div>
+                          <h4
+                            className={
+                              typographyPatterns.emptyStateSectionHeader
+                            }
+                          >
+                            Media & Quick Actions
+                          </h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {/* Attach Photos */}
+                            <div
+                              className={containerPatterns.emptyStateTipCard}
+                            >
+                              <h3
+                                className={
+                                  typographyPatterns.emptyStateCardTitle
+                                }
+                              >
+                                Attach Photos
+                              </h3>
+                              <p
+                                className={
+                                  typographyPatterns.emptyStateCardText
+                                }
+                              >
+                                Click the{" "}
+                                <span className="inline-flex items-center scale-90 text-synthwave-neon-pink translate-y-1">
+                                  <CameraIcon />
+                                </span>{" "}
+                                icon at the bottom to share form checks,
+                                progress pics, or workout logs
+                              </p>
+                            </div>
+
+                            {/* Quick Prompts */}
+                            <div
+                              className={containerPatterns.emptyStateTipCard}
+                            >
+                              <h3
+                                className={
+                                  typographyPatterns.emptyStateCardTitle
+                                }
+                              >
+                                Quick Prompts
+                              </h3>
+                              <p
+                                className={
+                                  typographyPatterns.emptyStateCardText
+                                }
+                              >
+                                Use the Quick Prompts menu for pre-built prompts
+                                like daily check-ins and workout creation
+                              </p>
+                            </div>
                           </div>
                         </div>
                       </div>
 
-                      {/* Chat & Build Features */}
-                      <div>
-                        <h4 className={typographyPatterns.emptyStateSectionHeader}>
-                          Chat & Build
-                        </h4>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {/* Ask Anything */}
-                          <div className={containerPatterns.emptyStateTipCard}>
-                            <h3 className={typographyPatterns.emptyStateCardTitle}>
-                              Ask Questions
-                            </h3>
-                            <p className={typographyPatterns.emptyStateCardText}>
-                              Get coaching advice, form tips, programming guidance, or motivation
-                            </p>
-                          </div>
-
-                          {/* Build Mode */}
-                          <div className={containerPatterns.emptyStateTipCard}>
-                            <h3 className={typographyPatterns.emptyStateCardTitle}>
-                              Build Mode
-                            </h3>
-                            <p className={typographyPatterns.emptyStateCardText}>
-                              Toggle <span className={`${buttonPatterns.modeBadgeBuild} inline-flex pointer-events-none scale-90`}><BuildModeIconTiny /><span className="translate-y-px">Build</span></span> at the bottom to create programs, workouts, and plans
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Media & Quick Actions */}
-                      <div>
-                        <h4 className={typographyPatterns.emptyStateSectionHeader}>
-                          Media & Quick Actions
-                        </h4>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {/* Attach Photos */}
-                          <div className={containerPatterns.emptyStateTipCard}>
-                            <h3 className={typographyPatterns.emptyStateCardTitle}>
-                              Attach Photos
-                            </h3>
-                            <p className={typographyPatterns.emptyStateCardText}>
-                              Click the <span className="inline-flex items-center scale-90 text-synthwave-neon-pink translate-y-1"><CameraIcon /></span> icon at the bottom to share form checks, progress pics, or workout logs
-                            </p>
-                          </div>
-
-                          {/* Quick Prompts */}
-                          <div className={containerPatterns.emptyStateTipCard}>
-                            <h3 className={typographyPatterns.emptyStateCardTitle}>
-                              Quick Prompts
-                            </h3>
-                            <p className={typographyPatterns.emptyStateCardText}>
-                              Use the Quick Prompts menu for pre-built prompts like daily check-ins and workout creation
-                            </p>
-                          </div>
-                        </div>
+                      {/* Pro Tip */}
+                      <div className="text-center">
+                        <p className={typographyPatterns.emptyStateProTip}>
+                          Type{" "}
+                          <span className="text-synthwave-neon-cyan font-mono">
+                            /
+                          </span>{" "}
+                          to see all available commands
+                        </p>
                       </div>
                     </div>
-
-                    {/* Pro Tip */}
-                    <div className="text-center">
-                      <p className={typographyPatterns.emptyStateProTip}>
-                        Type <span className="text-synthwave-neon-cyan font-mono">/</span> to see all available commands
-                      </p>
-                    </div>
-                  </div>
-                )}
+                  )}
 
                 {coachConversationAgentState.messages
                   .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp)) // Ensure chronological order
@@ -1341,7 +1449,7 @@ function CoachConversations() {
                     // Filter out empty streaming placeholder messages
                     const streaming = isMessageStreaming(
                       message,
-                      coachConversationAgentState
+                      coachConversationAgentState,
                     );
                     const hasContent =
                       message.content && message.content.trim().length > 0;
@@ -1354,18 +1462,57 @@ function CoachConversations() {
                     return hasContent || (streaming && hasStreamingContent);
                   })
                   .map((message, index) => (
-                    <MessageItem
-                      key={message.id}
-                      message={message}
-                      agentState={coachConversationAgentState}
-                      coachName={coachConversationAgentState.coach?.name}
-                      userEmail={userEmail}
-                      userDisplayName={userDisplayName}
-                      getUserInitial={getUserInitial}
-                      formatTime={formatTime}
-                      renderMessageContent={renderMessageContent}
-                      conversationMode={conversationMode}
-                    />
+                    <React.Fragment key={message.id}>
+                      <MessageItem
+                        message={message}
+                        agentState={coachConversationAgentState}
+                        coachName={coachConversationAgentState.coach?.name}
+                        userEmail={userEmail}
+                        userDisplayName={userDisplayName}
+                        getUserInitial={getUserInitial}
+                        formatTime={formatTime}
+                        renderMessageContent={renderMessageContent}
+                        conversationMode={conversationMode}
+                      />
+
+                      {/* Program Design Suggestion Banner - Show below AI message with suggestion flag */}
+                      {message.type === "assistant" &&
+                        message.metadata?.suggestProgramDesign &&
+                        !message.metadata?.suggestionAccepted &&
+                        !message.metadata?.suggestionDismissed && (
+                          <div className="ml-12 mb-4 mt-2">
+                            <div className="bg-purple-600 dark:bg-purple-700 text-white p-4 rounded-lg shadow-lg max-w-md">
+                              <p className="text-sm font-medium mb-3">
+                                💡 Ready to start program design mode?
+                              </p>
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() =>
+                                    agentRef.current.handleProgramDesignSuggestion(
+                                      message.id,
+                                      "accept_program_design",
+                                    )
+                                  }
+                                  className="px-4 py-2 bg-white text-purple-600 hover:bg-gray-100 rounded-lg text-sm font-semibold transition-colors"
+                                >
+                                  Start Program Design
+                                </button>
+                                <button
+                                  onClick={() =>
+                                    agentRef.current.handleProgramDesignSuggestion(
+                                      message.id,
+                                      "decline_program_design",
+                                    )
+                                  }
+                                  className="px-4 py-2 bg-purple-800 hover:bg-purple-900 text-white rounded-lg text-sm font-medium transition-colors"
+                                >
+                                  No, just chat
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                    </React.Fragment>
                   ))}
 
                 {/* Contextual Update Indicator - Shows AI processing stages (ephemeral) */}
@@ -1390,20 +1537,25 @@ function CoachConversations() {
                           "C"}
                       </div>
                       <div
-                        className={conversationMode === CONVERSATION_MODES.PROGRAM_DESIGN
-                          ? containerPatterns.aiBuildModeBubble
-                          : `${containerPatterns.aiChatBubble} px-4 py-3`
+                        className={
+                          conversationMode === CONVERSATION_MODES.PROGRAM_DESIGN
+                            ? containerPatterns.aiBuildModeBubble
+                            : `${containerPatterns.aiChatBubble} px-4 py-3`
                         }
                       >
                         <div className="flex space-x-1">
-                          <div className={`w-2 h-2 rounded-full animate-bounce ${
-                            conversationMode === CONVERSATION_MODES.PROGRAM_DESIGN
-                              ? "bg-synthwave-neon-purple"
-                              : "bg-synthwave-neon-cyan"
-                          }`}></div>
                           <div
                             className={`w-2 h-2 rounded-full animate-bounce ${
-                              conversationMode === CONVERSATION_MODES.PROGRAM_DESIGN
+                              conversationMode ===
+                              CONVERSATION_MODES.PROGRAM_DESIGN
+                                ? "bg-synthwave-neon-purple"
+                                : "bg-synthwave-neon-cyan"
+                            }`}
+                          ></div>
+                          <div
+                            className={`w-2 h-2 rounded-full animate-bounce ${
+                              conversationMode ===
+                              CONVERSATION_MODES.PROGRAM_DESIGN
                                 ? "bg-synthwave-neon-purple"
                                 : "bg-synthwave-neon-cyan"
                             }`}
@@ -1411,7 +1563,8 @@ function CoachConversations() {
                           ></div>
                           <div
                             className={`w-2 h-2 rounded-full animate-bounce ${
-                              conversationMode === CONVERSATION_MODES.PROGRAM_DESIGN
+                              conversationMode ===
+                              CONVERSATION_MODES.PROGRAM_DESIGN
                                 ? "bg-synthwave-neon-purple"
                                 : "bg-synthwave-neon-cyan"
                             }`}

@@ -68,6 +68,8 @@ export class CoachConversationAgent {
     this.clearConversation = this.clearConversation.bind(this);
     this.generateConversationTitle = this.generateConversationTitle.bind(this);
     this.deleteCoachConversation = this.deleteCoachConversation.bind(this);
+    this.handleProgramDesignSuggestion =
+      this.handleProgramDesignSuggestion.bind(this);
   }
 
   /**
@@ -127,19 +129,19 @@ export class CoachConversationAgent {
       // Format coach data like TrainingGrounds does
       const coachAgent = new CoachAgent();
       const formattedName = coachAgent.formatCoachName(
-        coachData.coachConfig?.coach_name
+        coachData.coachConfig?.coach_name,
       );
 
       const formattedCoachData = {
         name: formattedName,
         specialization: coachAgent.getSpecializationDisplay(
-          coachData.coachConfig?.technical_config?.specializations
+          coachData.coachConfig?.technical_config?.specializations,
         ),
         experienceLevel: coachAgent.getExperienceLevelDisplay(
-          coachData.coachConfig?.technical_config?.experience_level
+          coachData.coachConfig?.technical_config?.experience_level,
         ),
         programmingFocus: coachAgent.getProgrammingFocusDisplay(
-          coachData.coachConfig?.technical_config?.programming_focus
+          coachData.coachConfig?.technical_config?.programming_focus,
         ),
         rawCoach: coachData, // Keep the full coach object for any additional data needed
       };
@@ -238,7 +240,7 @@ export class CoachConversationAgent {
     coachId,
     title = null,
     initialMessage = null,
-    mode = CONVERSATION_MODES.CHAT
+    mode = CONVERSATION_MODES.CHAT,
   ) {
     try {
       this._updateState({ isLoadingItem: true, error: null });
@@ -252,7 +254,7 @@ export class CoachConversationAgent {
         coachId,
         conversationTitle,
         initialMessage,
-        mode
+        mode,
       );
       const conversation = result.conversation;
       const conversationId = conversation.conversationId;
@@ -341,7 +343,7 @@ export class CoachConversationAgent {
             console.warn(
               "Message content is not a string, converting:",
               messageContent,
-              typeof messageContent
+              typeof messageContent,
             );
             messageContent = String(messageContent || "");
           }
@@ -360,10 +362,10 @@ export class CoachConversationAgent {
 
       // Debug: Log workout session on load
       if (actualConversation.workoutCreatorSession) {
-        console.log('🏋️ Loaded conversation with active workout session:', {
+        console.log("🏋️ Loaded conversation with active workout session:", {
           conversationId,
           turnCount: actualConversation.workoutCreatorSession.turnCount,
-          progress: actualConversation.workoutCreatorSession.progressDetails
+          progress: actualConversation.workoutCreatorSession.progressDetails,
         });
       }
 
@@ -434,7 +436,7 @@ export class CoachConversationAgent {
         this.coachId,
         this.conversationId,
         messageContent.trim(),
-        imageS3Keys
+        imageS3Keys,
       );
 
       // Extract AI response content from the message object
@@ -454,10 +456,10 @@ export class CoachConversationAgent {
         console.warn(
           "AI response content is not a string, converting:",
           aiResponseContent,
-          typeof aiResponseContent
+          typeof aiResponseContent,
         );
         aiResponseContent = String(
-          aiResponseContent || "Thank you for your message."
+          aiResponseContent || "Thank you for your message.",
         );
       }
 
@@ -472,7 +474,8 @@ export class CoachConversationAgent {
       this._updateState({
         isTyping: false,
         conversation: result.conversation || this.state.conversation,
-        conversationSize: result.conversationSize || this.state.conversationSize || null,
+        conversationSize:
+          result.conversationSize || this.state.conversationSize || null,
       });
 
       return result;
@@ -526,8 +529,11 @@ export class CoachConversationAgent {
 
       // Create streaming message placeholder with conversation mode metadata
       // Use the conversation mode directly (CHAT, PROGRAM_DESIGN, or WORKOUT_LOG)
-      const conversationMode = this.state.conversation?.mode || CONVERSATION_MODES.CHAT;
-      const streamingMsg = createStreamingMessage(this, { mode: conversationMode });
+      const conversationMode =
+        this.state.conversation?.mode || CONVERSATION_MODES.CHAT;
+      const streamingMsg = createStreamingMessage(this, {
+        mode: conversationMode,
+      });
 
       // Initialize streaming state atomically with message ID
       this._updateState({
@@ -545,7 +551,7 @@ export class CoachConversationAgent {
           this.coachId,
           this.conversationId,
           messageContent.trim(),
-          imageS3Keys
+          imageS3Keys,
         );
 
         // Process the stream
@@ -555,7 +561,7 @@ export class CoachConversationAgent {
             this._updateState({
               contextualUpdate: {
                 content: content.trim(),
-                stage: stage || 'processing',
+                stage: stage || "processing",
               },
             });
           },
@@ -566,12 +572,21 @@ export class CoachConversationAgent {
             if (metadata.mode) {
               streamingMsg.updateMetadata({ mode: metadata.mode });
             }
+            // Store program design suggestion flag for banner display
+            if (metadata.suggestProgramDesign) {
+              streamingMsg.updateMetadata({
+                suggestProgramDesign: metadata.suggestProgramDesign,
+                programDesignConfidence: metadata.programDesignConfidence,
+              });
+            }
           },
 
           onChunk: async (content) => {
             // Clear contextual update when real AI response starts
             if (this.state.contextualUpdate) {
-              this._updateState({ contextualUpdate: null });
+              this._updateState({
+                contextualUpdate: null,
+              });
             }
 
             // Append each chunk to the streaming message
@@ -597,8 +612,11 @@ export class CoachConversationAgent {
 
             // Clear workout session immediately if workout generation was triggered
             // This prevents the badge from showing on subsequent messages
-            const workoutGenerationTriggered = chunk.metadata?.workoutGenerationTriggered === true;
-            const shouldClearSession = workoutGenerationTriggered || chunk.workoutCreatorSession === null;
+            const workoutGenerationTriggered =
+              chunk.metadata?.workoutGenerationTriggered === true;
+            const shouldClearSession =
+              workoutGenerationTriggered ||
+              chunk.workoutCreatorSession === null;
 
             // Build the updated conversation object with explicit mode assignment
             const updatedConversation = chunk.conversationId
@@ -608,22 +626,22 @@ export class CoachConversationAgent {
                   // Update workout session state
                   ...(shouldClearSession
                     ? { workoutCreatorSession: undefined }
-                    : chunk.hasOwnProperty('workoutCreatorSession')
+                    : chunk.hasOwnProperty("workoutCreatorSession")
                       ? { workoutCreatorSession: chunk.workoutCreatorSession }
-                      : {}
-                  ),
+                      : {}),
                 }
               : this.state.conversation;
 
             // Explicitly set mode AFTER object creation if provided by backend
-            if (chunk.hasOwnProperty('mode')) {
+            if (chunk.hasOwnProperty("mode")) {
               updatedConversation.mode = chunk.mode;
             }
 
             // Reset streaming state and update conversation with size data
             resetStreamingState(this, {
               conversation: updatedConversation,
-              conversationSize: chunk.conversationSize || this.state.conversationSize || null,
+              conversationSize:
+                chunk.conversationSize || this.state.conversationSize || null,
             });
 
             return chunk;
@@ -638,8 +656,11 @@ export class CoachConversationAgent {
             streamingMsg.update(aiResponseContent, messageMetadata);
 
             // Clear workout session immediately if workout generation was triggered
-            const workoutGenerationTriggered = data?.metadata?.workoutGenerationTriggered === true;
-            const shouldClearSession = workoutGenerationTriggered || data?.workoutCreatorSession === null;
+            const workoutGenerationTriggered =
+              data?.metadata?.workoutGenerationTriggered === true;
+            const shouldClearSession =
+              workoutGenerationTriggered ||
+              data?.workoutCreatorSession === null;
 
             // Build the updated conversation object
             const updatedConversation = data?.conversationId
@@ -649,22 +670,22 @@ export class CoachConversationAgent {
                   // Update workout session state
                   ...(shouldClearSession
                     ? { workoutCreatorSession: undefined }
-                    : data?.hasOwnProperty('workoutCreatorSession')
+                    : data?.hasOwnProperty("workoutCreatorSession")
                       ? { workoutCreatorSession: data.workoutCreatorSession }
-                      : {}
-                  ),
+                      : {}),
                 }
               : this.state.conversation;
 
             // Explicitly set mode AFTER object creation if provided by backend
-            if (data?.hasOwnProperty('mode')) {
+            if (data?.hasOwnProperty("mode")) {
               updatedConversation.mode = data.mode;
             }
 
             // Reset streaming state and update conversation with size data
             resetStreamingState(this, {
               conversation: updatedConversation,
-              conversationSize: data?.conversationSize || this.state.conversationSize || null,
+              conversationSize:
+                data?.conversationSize || this.state.conversationSize || null,
             });
 
             return data;
@@ -688,7 +709,7 @@ export class CoachConversationAgent {
             imageS3Keys,
           ],
           (result, isErrorFallback) => this._handleFallbackResult(result),
-          "conversation message"
+          "conversation message",
         );
       }
     } catch (error) {
@@ -733,7 +754,8 @@ export class CoachConversationAgent {
       conversation: result?.conversationId
         ? { ...this.state.conversation, conversationId: result.conversationId }
         : this.state.conversation,
-      conversationSize: result?.conversationSize || this.state.conversationSize || null,
+      conversationSize:
+        result?.conversationSize || this.state.conversationSize || null,
     });
 
     return result;
@@ -818,7 +840,7 @@ export class CoachConversationAgent {
       if (msg.id === messageId) {
         return {
           ...msg,
-          metadata: { ...msg.metadata, ...metadata }
+          metadata: { ...msg.metadata, ...metadata },
         };
       }
       return msg;
@@ -869,7 +891,7 @@ export class CoachConversationAgent {
       Object.keys(metadata).length === 0
     ) {
       throw new Error(
-        "User ID, Coach ID, Conversation ID, and metadata are required"
+        "User ID, Coach ID, Conversation ID, and metadata are required",
       );
     }
 
@@ -886,7 +908,7 @@ export class CoachConversationAgent {
         userId,
         coachId,
         conversationId,
-        metadata
+        metadata,
       );
 
       // Update local state with new metadata
@@ -946,7 +968,7 @@ export class CoachConversationAgent {
       const result = await deleteCoachConversation(
         userId,
         coachId,
-        conversationId
+        conversationId,
       );
 
       // Refresh the recent conversations list to reflect the deletion
@@ -971,6 +993,98 @@ export class CoachConversationAgent {
       }
 
       throw error;
+    }
+  }
+
+  /**
+   * Handles suggestion action button clicks
+   * @param {Object} action - Action configuration from suggestion
+   */
+  async handleProgramDesignSuggestion(messageId, action) {
+    console.info("Handling program design suggestion:", { messageId, action });
+    const { conversation } = this.state;
+
+    if (!conversation) {
+      console.warn("No active conversation to act on.");
+      return;
+    }
+
+    this._updateState({
+      isLoadingItem: true, // Show loading while processing action
+    });
+
+    try {
+      if (action === "accept_program_design") {
+        console.info(
+          "✅ User accepted program design - updating mode and starting session",
+        );
+
+        // Update the conversation mode to program_design
+        await updateCoachConversation(
+          this.userId,
+          this.coachId,
+          this.conversationId,
+          { mode: CONVERSATION_MODES.PROGRAM_DESIGN },
+        );
+
+        // Update local conversation state
+        const updatedConversation = {
+          ...conversation,
+          mode: CONVERSATION_MODES.PROGRAM_DESIGN,
+        };
+
+        // Remove the suggestion flag from the message that had it
+        const messages = this.state.messages.map((msg) =>
+          msg.id === messageId && msg.metadata?.suggestProgramDesign
+            ? {
+                ...msg,
+                metadata: {
+                  ...msg.metadata,
+                  suggestProgramDesign: false,
+                  suggestionAccepted: true,
+                },
+              }
+            : msg,
+        );
+
+        this._updateState({
+          conversation: updatedConversation,
+          messages,
+        });
+
+        // Send a trigger message to start the program design session
+        // Backend will see mode=program_design and start the session
+        await this.sendMessage("Let's get started with program design!");
+      } else if (action === "decline_program_design") {
+        console.info("User declined program design suggestion.");
+
+        // Mark the suggestion as dismissed in the message metadata
+        const messages = this.state.messages.map((msg) =>
+          msg.id === messageId && msg.metadata?.suggestProgramDesign
+            ? {
+                ...msg,
+                metadata: {
+                  ...msg.metadata,
+                  suggestProgramDesign: false,
+                  suggestionDismissed: true,
+                },
+              }
+            : msg,
+        );
+
+        this._updateState({ messages });
+        // No follow-up message needed - just hide the banner
+      } else {
+        console.warn("Unknown suggestion action:", action);
+      }
+    } catch (error) {
+      console.error("Error handling program design suggestion:", error);
+      this._updateState({ error: "Failed to process suggestion." });
+      if (typeof this.onError === "function") {
+        this.onError(error);
+      }
+    } finally {
+      this._updateState({ isLoadingItem: false });
     }
   }
 
