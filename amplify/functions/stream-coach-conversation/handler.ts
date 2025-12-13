@@ -22,7 +22,11 @@ import {
   getProgramCreatorSession,
   saveProgramCreatorSession,
 } from "../../dynamodb/operations";
-import { CoachMessage, MESSAGE_TYPES, CoachConversation } from "../libs/coach-conversation/types";
+import {
+  CoachMessage,
+  MESSAGE_TYPES,
+  CoachConversation,
+} from "../libs/coach-conversation/types";
 import { gatherConversationContext } from "../libs/coach-conversation/context";
 import {
   detectAndProcessWorkout,
@@ -106,7 +110,7 @@ const FEATURE_FLAGS: StreamingFeatureFlags = {
 // Separate workout detection processing for concurrent execution
 async function processWorkoutDetection(
   params: BusinessLogicParams,
-  routerAnalysis?: SmartRequestRouter
+  routerAnalysis?: SmartRequestRouter,
 ): Promise<any> {
   const {
     userId,
@@ -122,9 +126,8 @@ async function processWorkoutDetection(
 
   const conversationContext = {
     sessionNumber:
-      existingConversation.messages.filter(
-        (msg: any) => msg.role === "user"
-      ).length + 1,
+      existingConversation.messages.filter((msg: any) => msg.role === "user")
+        .length + 1,
   };
 
   if (FEATURE_FLAGS.ENABLE_WORKOUT_DETECTION) {
@@ -140,7 +143,7 @@ async function processWorkoutDetection(
         messageTimestamp,
         userProfile,
         routerAnalysis, // ✅ Pass Smart Router result to avoid duplicate AI call
-        imageS3Keys // ✅ Pass attached images (may contain workout data)
+        imageS3Keys, // ✅ Pass attached images (may contain workout data)
       );
     } catch (error) {
       console.error("❌ Error in workout detection, using fallback:", error);
@@ -167,12 +170,12 @@ async function processWorkoutDetection(
 
 // Extract validation logic
 async function validateAndExtractParams(
-  event: AuthenticatedLambdaFunctionURLEvent
+  event: AuthenticatedLambdaFunctionURLEvent,
 ): Promise<ValidationParams> {
   // Extract and validate path parameters
   const pathParams = extractPathParameters(
     event.rawPath,
-    COACH_CONVERSATION_ROUTE
+    COACH_CONVERSATION_ROUTE,
   );
   const { userId, coachId, conversationId } = pathParams;
 
@@ -184,7 +187,7 @@ async function validateAndExtractParams(
   ]);
   if (!validation.isValid) {
     throw new Error(
-      `Missing required path parameters: ${validation.missing.join(", ")}. Expected: ${COACH_CONVERSATION_ROUTE}`
+      `Missing required path parameters: ${validation.missing.join(", ")}. Expected: ${COACH_CONVERSATION_ROUTE}`,
     );
   }
 
@@ -225,12 +228,12 @@ async function loadConversationData(
   conversationId: string,
   userResponse: string,
   shouldQueryPinecone?: boolean,
-  userProfile?: any // Optional: if already loaded, we can reuse it
+  userProfile?: any, // Optional: if already loaded, we can reuse it
 ): Promise<ConversationData> {
   const existingConversation = await getCoachConversation(
     userId,
     coachId,
-    conversationId
+    conversationId,
   );
   if (!existingConversation) {
     throw new Error("Conversation not found");
@@ -250,7 +253,7 @@ async function loadConversationData(
       hasUserProfile: !!profile,
       userTimezone: profile?.preferences?.timezone,
       profileWasReused: !!userProfile,
-    }
+    },
   );
 
   // Gather all conversation context (workouts + Pinecone)
@@ -258,7 +261,7 @@ async function loadConversationData(
   const context = await gatherConversationContext(
     userId,
     userResponse,
-    shouldQueryPinecone
+    shouldQueryPinecone,
   );
 
   return {
@@ -273,10 +276,10 @@ async function loadConversationData(
 const streamingHandler: StreamingHandler = async (
   event: AuthenticatedLambdaFunctionURLEvent,
   responseStream: any,
-  context: Context
+  context: Context,
 ) => {
   console.info(
-    "🚀 Starting stream-coach-conversation handler (Proper Pipeline Mode)"
+    "🚀 Starting stream-coach-conversation handler (Proper Pipeline Mode)",
   );
 
   console.info("📥 Event details:", {
@@ -302,7 +305,7 @@ const streamingHandler: StreamingHandler = async (
 // Generator function that yields SSE events with TRUE real-time streaming
 async function* createCoachConversationEventStream(
   event: AuthenticatedLambdaFunctionURLEvent,
-  context: Context
+  context: Context,
 ): AsyncGenerator<string, void, unknown> {
   // Yield start event IMMEDIATELY (this happens right away)
   yield formatStartEvent();
@@ -316,7 +319,7 @@ async function* createCoachConversationEventStream(
     const randomAcknowledgment = getRandomCoachAcknowledgement();
     yield formatContextualEvent(randomAcknowledgment, "initial_greeting");
     console.info(
-      `📡 Yielded coach acknowledgment (contextual): "${randomAcknowledgment}"`
+      `📡 Yielded coach acknowledgment (contextual): "${randomAcknowledgment}"`,
     );
 
     // Now yield events as they become available from the async processing
@@ -328,7 +331,7 @@ async function* createCoachConversationEventStream(
 
     // Yield error event
     const errorEvent = formatValidationErrorEvent(
-      error instanceof Error ? error : new Error("Unknown error occurred")
+      error instanceof Error ? error : new Error("Unknown error occurred"),
     );
     yield errorEvent;
   }
@@ -337,7 +340,7 @@ async function* createCoachConversationEventStream(
 // Smart Router-based processing with optimized AI calls
 async function* processCoachConversationAsync(
   event: AuthenticatedLambdaFunctionURLEvent,
-  context: Context
+  context: Context,
 ): AsyncGenerator<string, void, unknown> {
   // Step 1: Validate parameters (fast)
   const params = await validateAndExtractParams(event);
@@ -345,8 +348,7 @@ async function* processCoachConversationAsync(
   // Step 2: Load user profile FIRST (needed for smart router temporal context)
   const userProfile = await getUserProfile(params.userId);
   const userTimezone = userProfile?.preferences?.timezone;
-  const criticalTrainingDirective =
-    userProfile?.criticalTrainingDirective;
+  const criticalTrainingDirective = userProfile?.criticalTrainingDirective;
 
   console.info("✅ User profile loaded for smart router:", {
     hasProfile: !!userProfile,
@@ -357,7 +359,7 @@ async function* processCoachConversationAsync(
   // Step 3: PARALLEL BURST - Router analysis + DynamoDB calls
   // These operations are independent and can run simultaneously
   console.info(
-    "🚀 Starting parallel data loading: Router + Conversation + Config"
+    "🚀 Starting parallel data loading: Router + Conversation + Config",
   );
   const parallelStartTime = Date.now();
 
@@ -368,15 +370,15 @@ async function* processCoachConversationAsync(
         undefined, // messageContext - could be added later
         0, // conversationLength - could be calculated later
         userTimezone,
-        criticalTrainingDirective
+        criticalTrainingDirective,
       ),
       getCoachConversation(
         params.userId,
         params.coachId,
-        params.conversationId
+        params.conversationId,
       ),
       getCoachConfig(params.userId, params.coachId),
-    ]
+    ],
   );
 
   const parallelLoadTime = Date.now() - parallelStartTime;
@@ -398,23 +400,23 @@ async function* processCoachConversationAsync(
   let gatheredContext;
   if (routerAnalysis.contextNeeds.needsPineconeSearch) {
     console.info(
-      "🔍 Router approved Pinecone search - loading conversation context"
+      "🔍 Router approved Pinecone search - loading conversation context",
     );
     const contextStartTime = Date.now();
     gatheredContext = await gatherConversationContext(
       params.userId,
       params.userResponse,
-      true
+      true,
     );
     console.info(
-      `✅ Pinecone context loaded in ${Date.now() - contextStartTime}ms`
+      `✅ Pinecone context loaded in ${Date.now() - contextStartTime}ms`,
     );
   } else {
     console.info("⏭️ Router skipped Pinecone - loading basic context only");
     gatheredContext = await gatherConversationContext(
       params.userId,
       params.userResponse,
-      false
+      false,
     );
   }
 
@@ -446,9 +448,16 @@ async function* processCoachConversationAsync(
   const slashCommandResult = parseSlashCommand(params.userResponse);
   const isSlashCommandWorkout = isWorkoutSlashCommand(slashCommandResult);
 
-  if (isSlashCommandWorkout && conversationData.existingConversation.workoutCreatorSession) {
-    console.info('⚡ Slash command detected during multi-turn session - clearing session and logging directly');
-    console.info('🧹 User provided complete workout data via slash command - bypassing multi-turn flow');
+  if (
+    isSlashCommandWorkout &&
+    conversationData.existingConversation.workoutCreatorSession
+  ) {
+    console.info(
+      "⚡ Slash command detected during multi-turn session - clearing session and logging directly",
+    );
+    console.info(
+      "🧹 User provided complete workout data via slash command - bypassing multi-turn flow",
+    );
 
     // Clear the workout creator session
     delete conversationData.existingConversation.workoutCreatorSession;
@@ -460,29 +469,38 @@ async function* processCoachConversationAsync(
   // ============================================================================
   // MULTI-TURN WORKOUT LOGGING: Check if workout collection session is in progress
   // ============================================================================
-  const workoutSession = conversationData.existingConversation.workoutCreatorSession;
+  const workoutSession =
+    conversationData.existingConversation.workoutCreatorSession;
 
   if (workoutSession) {
-    console.info('🏋️ Workout collection session in progress - continuing multi-turn flow');
+    console.info(
+      "🏋️ Workout collection session in progress - continuing multi-turn flow",
+    );
 
     // Track message count before handling
-    const messageCountBefore = conversationData.existingConversation.messages.length;
+    const messageCountBefore =
+      conversationData.existingConversation.messages.length;
 
     const businessLogicParams = { ...params, ...conversationData };
     yield* handleWorkoutCreatorFlow(
       businessLogicParams,
       conversationData,
-      workoutSession
+      workoutSession,
     );
 
     // Check if session was cancelled (topic change) vs completed successfully
     // Cancellation: session deleted, no messages added, should re-process
     // Completion: session deleted, messages added, should NOT re-process
-    const sessionWasCleared = !conversationData.existingConversation.workoutCreatorSession;
-    const messagesWereAdded = conversationData.existingConversation.messages.length > messageCountBefore;
+    const sessionWasCleared =
+      !conversationData.existingConversation.workoutCreatorSession;
+    const messagesWereAdded =
+      conversationData.existingConversation.messages.length >
+      messageCountBefore;
 
     if (sessionWasCleared && !messagesWereAdded) {
-      console.info('🔀 Workout session was cancelled - re-processing message as normal conversation');
+      console.info(
+        "🔀 Workout session was cancelled - re-processing message as normal conversation",
+      );
       // Don't return - fall through to normal conversation processing below
     } else {
       return; // Exit early - handled the workout collection flow normally (completed or in-progress)
@@ -495,14 +513,20 @@ async function* processCoachConversationAsync(
 
   // Check for program design slash command
   const isProgramDesignSlashCommand =
-    slashCommandResult.isSlashCommand && isProgramDesignCommand(slashCommandResult.command);
+    slashCommandResult.isSlashCommand &&
+    isProgramDesignCommand(slashCommandResult.command);
 
   // Load program creator session from DynamoDB (separate entity, not embedded in conversation)
-  let programSession = await getProgramCreatorSession(params.userId, params.conversationId);
+  let programSession = await getProgramCreatorSession(
+    params.userId,
+    params.conversationId,
+  );
 
   // If slash command detected during existing session, soft-delete it and start fresh
   if (isProgramDesignSlashCommand && programSession) {
-    console.info('⚡ Program design slash command detected during session - soft-deleting and restarting');
+    console.info(
+      "⚡ Program design slash command detected during session - soft-deleting and restarting",
+    );
     programSession.isDeleted = true;
     programSession.completedAt = new Date();
     await saveProgramCreatorSession(programSession);
@@ -515,21 +539,31 @@ async function* processCoachConversationAsync(
     isProgramDesignSlashCommand;
 
   if (programSession) {
-    console.info('🏗️ Program design session in progress - continuing multi-turn flow');
+    console.info(
+      "🏗️ Program design session in progress - continuing multi-turn flow",
+    );
 
     // Track message count before handling
-    const messageCountBefore = conversationData.existingConversation.messages.length;
+    const messageCountBefore =
+      conversationData.existingConversation.messages.length;
 
     const businessLogicParams = { ...params, ...conversationData };
     yield* handleProgramCreatorFlow(businessLogicParams, conversationData);
 
     // Reload session to check if it was soft-deleted (topic change OR completion)
-    const reloadedSession = await getProgramCreatorSession(params.userId, params.conversationId);
+    const reloadedSession = await getProgramCreatorSession(
+      params.userId,
+      params.conversationId,
+    );
     const sessionWasDeleted = !reloadedSession || reloadedSession.isDeleted;
-    const messagesWereAdded = conversationData.existingConversation.messages.length > messageCountBefore;
+    const messagesWereAdded =
+      conversationData.existingConversation.messages.length >
+      messageCountBefore;
 
     if (sessionWasDeleted && !messagesWereAdded) {
-      console.info('🔀 Program design session ended - continuing as normal conversation');
+      console.info(
+        "🔀 Program design session ended - continuing as normal conversation",
+      );
       programSession = null; // Clear deleted session so new session can be detected below
       // Don't return - fall through to normal conversation processing below
     } else {
@@ -537,26 +571,71 @@ async function* processCoachConversationAsync(
     }
   }
 
-  // Start program design session if AI detected intent (OR slash command) and confidence threshold met
+  // Handle program design intent detection - suggest to user or start immediately
   if (isProgramDesign && !programSession) {
-    const confidence = routerAnalysis?.programDesignDetection?.confidence || 1.0;
-    const meetsThreshold = isProgramDesignSlashCommand || confidence >= 0.7;
+    const confidence =
+      routerAnalysis?.programDesignDetection?.confidence || 1.0;
+    // Relaxed threshold (0.75) - false positives are safe with decline button
+    // Detection rules are now more inclusive to catch cases like "lightweight training plan"
+    const PROGRAM_DESIGN_CONFIDENCE_THRESHOLD = 0.75;
+    const meetsThreshold = confidence >= PROGRAM_DESIGN_CONFIDENCE_THRESHOLD;
 
-    if (meetsThreshold) {
-      console.info('🎯 Program design intent detected - starting new session', {
-        triggeredBy: isProgramDesignSlashCommand ? 'slash_command' : 'natural_language',
-        confidence
-      });
-
+    // Slash commands bypass suggestion and start immediately (explicit user intent)
+    if (isProgramDesignSlashCommand) {
+      console.info(
+        "🎯 Program design slash command - starting session immediately",
+      );
       const businessLogicParams = { ...params, ...conversationData };
-      yield* startProgramDesignCollection(businessLogicParams, conversationData);
+      yield* startProgramDesignCollection(
+        businessLogicParams,
+        conversationData,
+      );
       return; // Exit early - handled the session start
-    } else {
-      console.info('⚠️ Program design intent detected but below confidence threshold', {
-        confidence,
-        threshold: 0.7
-      });
     }
+
+    // Natural language detection: add metadata flag to AI response
+    // Don't auto-start session - let user confirm via banner
+    if (meetsThreshold) {
+      console.info(
+        "💡 Program design intent detected - will add suggestion metadata to AI response",
+        {
+          confidence,
+          threshold: PROGRAM_DESIGN_CONFIDENCE_THRESHOLD,
+        },
+      );
+      // Flag will be added to AI message metadata below
+      // Continue with normal AI response generation
+    } else {
+      console.info(
+        "⚠️ Program design intent detected but below confidence threshold",
+        {
+          confidence,
+          threshold: PROGRAM_DESIGN_CONFIDENCE_THRESHOLD,
+        },
+      );
+    }
+  }
+
+  // Store program design suggestion flag for later use in AI message metadata
+  const shouldSuggestProgramDesign =
+    isProgramDesign &&
+    !programSession &&
+    !isProgramDesignSlashCommand &&
+    (routerAnalysis?.programDesignDetection?.confidence || 0) >= 0.75;
+
+  // If conversation mode is program_design but no session exists, start one
+  // This handles the case where user accepted the suggestion via button
+  if (
+    conversationData.existingConversation.mode ===
+      CONVERSATION_MODES.PROGRAM_DESIGN &&
+    !programSession
+  ) {
+    console.info(
+      "🎯 Program design mode active - starting session (user accepted suggestion)",
+    );
+    const businessLogicParams = { ...params, ...conversationData };
+    yield* startProgramDesignCollection(businessLogicParams, conversationData);
+    return;
   }
 
   // Step 4: Generate initial acknowledgment ONLY if router determines it's appropriate
@@ -568,7 +647,7 @@ async function* processCoachConversationAsync(
       conversationData.coachConfig,
       params.userResponse,
       "initial_greeting",
-      { stage: "starting" }
+      { stage: "starting" },
     );
     if (formattedUpdate) {
       console.info("📡 Initial acknowledgment ready");
@@ -588,13 +667,13 @@ async function* processCoachConversationAsync(
   // NEW: Also check for workout_logging intent to support multi-turn collection
   const needsWorkout =
     routerAnalysis.workoutDetection.isWorkoutLog ||
-    routerAnalysis.userIntent === 'workout_logging';
+    routerAnalysis.userIntent === "workout_logging";
   const needsMemory =
     routerAnalysis.memoryProcessing.needsRetrieval ||
     routerAnalysis.memoryProcessing.isMemoryRequest;
 
   console.info(
-    `📊 Processing plan: workout=${needsWorkout}, memory=${needsMemory}, workoutIntent=${routerAnalysis.userIntent === 'workout_logging'}`
+    `📊 Processing plan: workout=${needsWorkout}, memory=${needsMemory}, workoutIntent=${routerAnalysis.userIntent === "workout_logging"}`,
   );
 
   // CASE 1: Both workout and memory needed - PARALLELIZE
@@ -611,14 +690,14 @@ async function* processCoachConversationAsync(
         // Build message context
         const messageContext = buildMessageContextFromMessages(
           conversationData.existingConversation.messages,
-          5
+          5,
         );
 
         // Analyze memory needs
         const consolidatedMemoryAnalysis = await analyzeMemoryNeeds(
           params.userResponse,
           messageContext,
-          conversationData.coachConfig.coach_name
+          conversationData.coachConfig.coach_name,
         );
 
         // Process retrieval (MUST await - needed for AI response)
@@ -627,7 +706,7 @@ async function* processCoachConversationAsync(
               params.userId,
               params.coachId,
               params.userResponse,
-              messageContext
+              messageContext,
             )
           : { memories: [] };
 
@@ -640,7 +719,7 @@ async function* processCoachConversationAsync(
             params.coachId,
             params.conversationId,
             conversationData.existingConversation.messages,
-            conversationData.coachConfig.coach_name
+            conversationData.coachConfig.coach_name,
           ).catch((err) => {
             console.error("⚠️ Memory saving failed (non-blocking):", err);
           });
@@ -657,7 +736,7 @@ async function* processCoachConversationAsync(
           conversationData.coachConfig,
           params.userResponse,
           "workout_analysis",
-          { stage: "analyzing_workouts" }
+          { stage: "analyzing_workouts" },
         ),
         generateContextualUpdate(
           conversationData.coachConfig,
@@ -668,8 +747,8 @@ async function* processCoachConversationAsync(
             workoutDetected: true,
             recentWorkouts:
               conversationData.context?.recentWorkouts?.length || 0,
-          }
-        )
+          },
+        ),
       );
     }
 
@@ -677,7 +756,7 @@ async function* processCoachConversationAsync(
 
     const parallelTime = Date.now() - parallelStartTime;
     console.info(
-      `✅ Parallel workout + memory + updates completed in ${parallelTime}ms`
+      `✅ Parallel workout + memory + updates completed in ${parallelTime}ms`,
     );
 
     // Extract workout result
@@ -725,10 +804,10 @@ async function* processCoachConversationAsync(
           conversationData.coachConfig,
           params.userResponse,
           "workout_analysis",
-          { stage: "analyzing_workouts" }
+          { stage: "analyzing_workouts" },
         ),
         processWorkoutDetection(businessLogicParams, routerAnalysis),
-        "workout_analysis"
+        "workout_analysis",
       );
 
       workoutResult = workResult;
@@ -740,7 +819,10 @@ async function* processCoachConversationAsync(
       }
     } else {
       // No contextual update needed, just process workout
-      workoutResult = await processWorkoutDetection(businessLogicParams, routerAnalysis);
+      workoutResult = await processWorkoutDetection(
+        businessLogicParams,
+        routerAnalysis,
+      );
     }
 
     memoryRetrieval = getFallbackMemory();
@@ -753,14 +835,14 @@ async function* processCoachConversationAsync(
     // Build message context
     const messageContext = buildMessageContextFromMessages(
       conversationData.existingConversation.messages,
-      5
+      5,
     );
 
     // Analyze memory needs
     const consolidatedMemoryAnalysis = await analyzeMemoryNeeds(
       params.userResponse,
       messageContext,
-      conversationData.coachConfig.coach_name
+      conversationData.coachConfig.coach_name,
     );
 
     // Create retrieval work (this we need immediately)
@@ -770,7 +852,7 @@ async function* processCoachConversationAsync(
             params.userId,
             params.coachId,
             params.userResponse,
-            messageContext
+            messageContext,
           )
         : getFallbackMemory();
     };
@@ -784,7 +866,7 @@ async function* processCoachConversationAsync(
         params.coachId,
         params.conversationId,
         conversationData.existingConversation.messages,
-        conversationData.coachConfig.coach_name
+        conversationData.coachConfig.coach_name,
       ).catch((err) => {
         console.error("⚠️ Memory saving failed (non-blocking):", err);
       });
@@ -803,10 +885,10 @@ async function* processCoachConversationAsync(
             workoutDetected: false,
             recentWorkouts:
               conversationData.context?.recentWorkouts?.length || 0,
-          }
+          },
         ),
         processMemoryRetrieval(),
-        "memory_analysis"
+        "memory_analysis",
       );
 
       memoryRetrieval = workResult;
@@ -840,9 +922,12 @@ async function* processCoachConversationAsync(
   if (
     workoutResult &&
     !workoutResult.isWorkoutLogging &&
-    (routerAnalysis.workoutDetection.isWorkoutLog || routerAnalysis.userIntent === 'workout_logging')
+    (routerAnalysis.workoutDetection.isWorkoutLog ||
+      routerAnalysis.userIntent === "workout_logging")
   ) {
-    console.info('🏋️ Natural language workout detected - starting multi-turn collection session');
+    console.info(
+      "🏋️ Natural language workout detected - starting multi-turn collection session",
+    );
     yield* startWorkoutCollection(businessLogicParams, conversationData);
     return; // Exit early - handled the workout collection start
   }
@@ -868,12 +953,20 @@ async function* processCoachConversationAsync(
   const messageMode = workoutResult?.isWorkoutLogging
     ? CONVERSATION_MODES.WORKOUT_LOG
     : isInWorkoutFlow
-    ? CONVERSATION_MODES.WORKOUT_LOG
-    : conversationData.existingConversation.mode || CONVERSATION_MODES.CHAT;
+      ? CONVERSATION_MODES.WORKOUT_LOG
+      : conversationData.existingConversation.mode || CONVERSATION_MODES.CHAT;
 
-  // Yield metadata event with mode information
-  yield formatMetadataEvent({ mode: messageMode });
-  console.info(`📋 Metadata event sent: mode=${messageMode}${isInWorkoutFlow ? ' (continuing workout flow)' : ''}`);
+  // Yield metadata event with mode information and program design suggestion flag
+  const metadataPayload: any = { mode: messageMode };
+  if (shouldSuggestProgramDesign) {
+    metadataPayload.suggestProgramDesign = true;
+    metadataPayload.programDesignConfidence =
+      routerAnalysis?.programDesignDetection?.confidence;
+  }
+  yield formatMetadataEvent(metadataPayload);
+  console.info(
+    `📋 Metadata event sent: mode=${messageMode}${isInWorkoutFlow ? " (continuing workout flow)" : ""}${shouldSuggestProgramDesign ? " [SUGGEST_PROGRAM_DESIGN]" : ""}`,
+  );
 
   // Create user message and conversation context
   const newUserMessage: CoachMessage = {
@@ -893,7 +986,7 @@ async function* processCoachConversationAsync(
   const conversationContext = {
     sessionNumber:
       conversationData.existingConversation.messages.filter(
-        (msg: any) => msg.role === "user"
+        (msg: any) => msg.role === "user",
       ).length + 1,
   };
 
@@ -905,7 +998,7 @@ async function* processCoachConversationAsync(
   // This matches the coach creator behavior and keeps the conversation clean.
   // The contextualUpdates array is built above but intentionally NOT added to fullAiResponse.
   console.info(
-    `📝 Contextual updates streamed but not saved (${contextualUpdates.length} updates, ephemeral UX only)`
+    `📝 Contextual updates streamed but not saved (${contextualUpdates.length} updates, ephemeral UX only)`,
   );
 
   try {
@@ -925,18 +1018,17 @@ async function* processCoachConversationAsync(
       conversationData.userProfile,
       params.imageS3Keys, // Pass imageS3Keys
       routerAnalysis.conversationComplexity.requiresDeepReasoning, // NEW: Smart model selection
-      conversationData.existingConversation.mode ||
-        CONVERSATION_MODES.CHAT // NEW: Conversation mode (defaults to CHAT - no specific artifact)
+      conversationData.existingConversation.mode || CONVERSATION_MODES.CHAT, // NEW: Conversation mode (defaults to CHAT - no specific artifact)
     );
 
     // Yield AI response chunks using optimized buffering strategy
     const aiStartTime = Date.now();
     const optimizedChunkStream = createOptimizedChunkStream(
-      streamResult.responseStream
+      streamResult.responseStream,
     );
 
     // Buffer to handle partial triggers across chunk boundaries
-    let triggerBuffer = '';
+    let triggerBuffer = "";
 
     for await (const optimizedChunk of optimizedChunkStream) {
       const chunkTime = Date.now() - aiStartTime;
@@ -944,14 +1036,17 @@ async function* processCoachConversationAsync(
 
       // Clean the chunk before yielding to prevent trigger from appearing in UI
       // Pass the buffer to handle partial triggers from previous chunks
-      const { cleanedContent, buffer } = removeTriggerFromStream(optimizedChunk, triggerBuffer);
+      const { cleanedContent, buffer } = removeTriggerFromStream(
+        optimizedChunk,
+        triggerBuffer,
+      );
       triggerBuffer = buffer; // Update buffer for next iteration
 
       // Only yield non-empty chunks after cleaning
       if (cleanedContent.trim()) {
         yield formatChunkEvent(cleanedContent);
         console.info(
-          `📡 [${chunkTime}ms] Optimized AI chunk yielded: "${cleanedContent.substring(0, 30)}..." (${cleanedContent.length} chars)`
+          `📡 [${chunkTime}ms] Optimized AI chunk yielded: "${cleanedContent.substring(0, 30)}..." (${cleanedContent.length} chars)`,
         );
       }
     }
@@ -982,6 +1077,12 @@ async function* processCoachConversationAsync(
     metadata: {
       model: MODEL_IDS.CLAUDE_SONNET_4_DISPLAY,
       mode: messageMode, // Use the mode we determined earlier (same as metadata event)
+      // Add suggestion flag if program design was detected
+      ...(shouldSuggestProgramDesign && {
+        suggestProgramDesign: true,
+        programDesignConfidence:
+          routerAnalysis?.programDesignDetection?.confidence,
+      }),
       // Note: Training program generation is now async, so programId not available here
     },
   };
@@ -1002,7 +1103,7 @@ async function* processCoachConversationAsync(
     finalResults,
     params,
     conversationData,
-    routerAnalysis
+    routerAnalysis,
   );
   yield completeEvent;
 }
@@ -1012,7 +1113,7 @@ async function saveConversationAndYieldComplete(
   results: BusinessResults,
   params: ValidationParams,
   conversationData: ConversationData,
-  routerAnalysis: SmartRequestRouter
+  routerAnalysis: SmartRequestRouter,
 ): Promise<string> {
   const { userId, coachId, conversationId } = params;
   const { context } = conversationData;
@@ -1023,7 +1124,7 @@ async function saveConversationAndYieldComplete(
     userId,
     coachId,
     conversationId,
-    [newUserMessage, newAiMessage]
+    [newUserMessage, newAiMessage],
   );
 
   console.info("✅ Conversation updated successfully");
@@ -1055,7 +1156,7 @@ async function saveConversationAndYieldComplete(
       coachId,
       conversationId,
       params.userResponse,
-      currentMessageCount
+      currentMessageCount,
     );
 
     console.info("🚀 Conversation summary triggered (fire-and-forget)");
@@ -1085,7 +1186,7 @@ async function saveConversationAndYieldComplete(
   });
 
   console.info(
-    "✅ Proper pipeline streaming implementation completed successfully"
+    "✅ Proper pipeline streaming implementation completed successfully",
   );
   return completeEvent;
 }
@@ -1101,7 +1202,7 @@ const STREAMING_HEADERS = {
 const authenticatedStreamingHandler = async (
   event: any,
   responseStream: any,
-  context: Context
+  context: Context,
 ) => {
   // Set streaming headers (CORS headers are handled by Lambda Function URL CORS config)
   responseStream = awslambda.HttpResponseStream.from(responseStream, {
@@ -1142,7 +1243,7 @@ const authenticatedStreamingHandler = async (
 
     // Create error stream using pipeline approach
     const errorEvent = formatAuthErrorEvent(
-      error instanceof Error ? error : new Error("Authentication failed")
+      error instanceof Error ? error : new Error("Authentication failed"),
     );
 
     const errorStream = Readable.from([errorEvent]);
@@ -1154,11 +1255,11 @@ const authenticatedStreamingHandler = async (
 // awslambda is a global object provided by Lambda's Node.js runtime
 console.info(
   "🔧 awslambda global available:",
-  typeof (globalThis as any).awslambda !== "undefined"
+  typeof (globalThis as any).awslambda !== "undefined",
 );
 console.info(
   "🔧 streamifyResponse available:",
-  typeof (globalThis as any).awslambda?.streamifyResponse === "function"
+  typeof (globalThis as any).awslambda?.streamifyResponse === "function",
 );
 
 /* global awslambda */
@@ -1171,7 +1272,7 @@ if (
 ) {
   throw new Error(
     "❌ awslambda.streamifyResponse is not available. This function requires Lambda streaming support. " +
-      "Ensure the function is deployed with RESPONSE_STREAM invoke mode."
+      "Ensure the function is deployed with RESPONSE_STREAM invoke mode.",
   );
 }
 

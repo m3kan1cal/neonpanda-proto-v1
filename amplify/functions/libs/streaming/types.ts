@@ -18,12 +18,25 @@ export interface SseCompleteEvent {
   [key: string]: any;
 }
 
+// Suggestion action button configuration
+export interface SuggestionAction {
+  label: string; // Button label to display
+  action: string; // Action identifier (e.g., 'accept_program_design', 'decline_program_design')
+}
+
 // Union type for all SSE events (individual interfaces inlined for simplicity)
 export type SseEvent =
   | { type: "start"; status: "initialized" }
   | { type: "chunk"; content: string }
   | { type: "contextual"; content: string; stage?: string } // Ephemeral UX feedback (not saved to conversation)
   | { type: "metadata"; mode?: string; [key: string]: any } // Early metadata for UI configuration (sent after detection, before AI streaming)
+  | {
+      type: "suggestion";
+      suggestionType: string;
+      message: string;
+      actions: SuggestionAction[];
+      confidence: number;
+    } // User confirmation request with action buttons
   | SseCompleteEvent
   | { type: "error"; message: string; code?: string };
 
@@ -34,8 +47,7 @@ export interface AuthenticatedUser {
   email: string;
 }
 
-export interface AuthenticatedLambdaFunctionURLEvent
-  extends LambdaFunctionURLEvent {
+export interface AuthenticatedLambdaFunctionURLEvent extends LambdaFunctionURLEvent {
   user: AuthenticatedUser;
 }
 
@@ -43,7 +55,7 @@ export interface AuthenticatedLambdaFunctionURLEvent
 export type StreamingHandler = (
   event: AuthenticatedLambdaFunctionURLEvent,
   responseStream: any,
-  context: Context
+  context: Context,
 ) => Promise<void>;
 
 // Path extraction result type - generic for different streaming endpoints
@@ -54,4 +66,3 @@ export interface PathParameters {
   workoutId?: string;
   [key: string]: string | undefined;
 }
-

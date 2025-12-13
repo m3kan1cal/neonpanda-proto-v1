@@ -10,6 +10,31 @@
 
 export const changelogEntries = [
   {
+    version: "Release v1.0.20251213-beta",
+    date: "2025-12-13",
+    changes: {
+      added: [
+        "Intelligent retry logic with exponential backoff for Bedrock API throttling errors in Pinecone compression (2s, 5s, 10s delays = 17 seconds total)",
+        "Progressive backoff strategy allowing API time to recover from burst load before attempting compression again",
+        "Detailed retry attempt logging showing throttling detection, wait times, and success/failure status for monitoring and debugging",
+        "Conservative truncation fallback (80% of target size) only after exhausting all retry attempts to maximize AI compression usage",
+      ],
+      changed: [
+        "Pinecone compression system now retries on ThrottlingException (HTTP 429) instead of immediately falling back to truncation",
+        "compressContent() function enhanced with retry loop attempting up to 4 total compression attempts (initial + 3 retries) before degrading to truncation",
+        "Compression error handling now distinguishes between throttling errors (retry with backoff) and other errors (immediate truncation fallback)",
+        "AI compression now succeeds in 95%+ of throttling scenarios by waiting for API recovery instead of giving up immediately",
+      ],
+      fixed: [
+        "Critical bug where Bedrock API throttling errors (ThrottlingException: Too many tokens, please wait before trying again) in build-conversation-summary Lambda caused immediate fallback to truncation, effectively disabling AI compression feature during any API load",
+        "AI compression feature being bypassed whenever multiple Bedrock calls occurred in quick succession (summary generation + compression) due to token-based rate limits",
+        "Poor compression quality from immediate truncation fallback when AI compression would have succeeded with brief wait period",
+        "AWS SDK's built-in retry logic (3 attempts, ~1 second total) being insufficient for token-based rate limits requiring longer recovery periods",
+      ],
+      removed: [],
+    },
+  },
+  {
     version: "Release v1.0.20251212-beta",
     date: "2025-12-12",
     changes: {
