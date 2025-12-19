@@ -51,6 +51,7 @@ export const changelogEntries = [
         "Compression fallback ineffective when Pinecone size estimate underestimated due to truncateAt calculation producing values larger than content.length when targetSize > currentSize",
         "Uncaught exceptions in storeWithAutoCompression when compression retry failed with same size error because fallback truncation returned unchanged content",
         "Initial message greeting not triggering in program design mode when pre-session context messages existed in conversationHistory causing isInitialMessage check to fail",
+        "Critical bug in build-program-v2 handler where early return statement inside Pinecone storage try-block (line 221) exited entire Lambda without returning success response when programId was missing",
         "TypeScript errors in program-designer/prompts.ts passing entire context to buildCoachPersonalityPrompt instead of context.coachConfig",
         "TypeScript errors in program-designer/tools.ts calling generatePhaseWorkouts (incorrect name) instead of generateSinglePhaseWorkouts and missing allPhases argument",
         "TypeScript errors in program-designer/tools.ts accessing result.phaseWithWorkouts.phaseName (should be .name) and .workoutTemplates (should be .workouts)",

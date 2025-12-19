@@ -9,6 +9,7 @@ import {
 import { withAuth, AuthenticatedHandler } from "../libs/auth/middleware";
 import { createEmptyProgramTodoList } from "../libs/program-designer/todo-list-utils";
 import type { ProgramDesignerSession } from "../libs/program-designer/types";
+import { REQUIRED_PROGRAM_FIELDS } from "../libs/program-designer/types";
 
 /**
  * Lambda handler for creating a new program designer session
@@ -98,18 +99,22 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     userId,
   });
 
+  // Calculate totals dynamically from the todo list structure
+  const totalItems = Object.keys(session.todoList).length;
+  const requiredQuestions = REQUIRED_PROGRAM_FIELDS.length;
+
   // Return rich metadata for frontend progress tracking
   return createCreatedResponse({
     sessionId: session.sessionId,
     progress: 0,
     progressDetails: {
       itemsCompleted: 0,
-      totalItems: 19, // Total fields in ProgramDesignerTodoList
+      totalItems,
       percentage: 0,
     },
     estimatedDuration: "10-20 minutes",
-    totalQuestions: 19, // Total fields to collect
-    requiredQuestions: 5, // REQUIRED_PROGRAM_FIELDS count
+    totalQuestions: totalItems,
+    requiredQuestions,
     message: "Program designer session created successfully",
   });
 };

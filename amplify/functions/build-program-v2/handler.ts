@@ -18,6 +18,14 @@ import {
 import { generateProgramDesignerSessionSummary } from "../libs/program-designer/session-management";
 import { storeProgramDesignerSessionSummaryInPinecone } from "../libs/program-designer/pinecone";
 
+// Duration calculation constants
+const DEFAULT_DURATION_FALLBACK_MS = 600000; // 10 minutes in milliseconds
+
+// QA validation thresholds for detecting incomplete program generation
+const WORKOUT_COUNT_MIN_THRESHOLD = 0.5; // Expect at least 50% of calculated training days
+const DAY_COVERAGE_MIN_THRESHOLD = 0.7; // Expect at least 70% of expected day coverage
+const DAY_COVERAGE_FLOOR_PERCENT = 20; // Absolute minimum day coverage percentage
+
 export const handler = async (event: BuildProgramEvent) => {
   return withHeartbeat("Program Designer Agent", async () => {
     try {
@@ -92,7 +100,28 @@ export const handler = async (event: BuildProgramEvent) => {
       // Add program generation summary
       if (result.success) {
         const endTime = Date.now();
-        const startTimeMs = endTime - 600000; // Default to 10 minutes ago if no start time
+
+        // Calculate actual duration if session exists with startedAt timestamp
+        let startTimeMs = endTime - DEFAULT_DURATION_FALLBACK_MS;
+        if (event.sessionId) {
+          try {
+            const session = await getProgramDesignerSession(
+              event.userId,
+              event.sessionId,
+            );
+            if (session?.programGeneration?.startedAt) {
+              startTimeMs = new Date(
+                session.programGeneration.startedAt,
+              ).getTime();
+            }
+          } catch (error) {
+            console.warn(
+              "⚠️ Could not load session for duration calculation:",
+              error,
+            );
+          }
+        }
+
         const durationSeconds = Math.floor((endTime - startTimeMs) / 1000);
 
         console.info("📊 PROGRAM GENERATION SUMMARY:", {
@@ -144,26 +173,27 @@ export const handler = async (event: BuildProgramEvent) => {
         const expectedDayCoveragePercent =
           totalDays > 0 ? (expectedTrainingDays / totalDays) * 100 : 0;
 
-        // Check if workout count is suspiciously low (less than 50% of expected)
+        // Check if workout count is suspiciously low (less than threshold of expected)
         // This accounts for programs that may have multiple sessions per day
         if (
           expectedTrainingDays > 0 &&
-          totalWorkoutTemplates < expectedTrainingDays * 0.5
+          totalWorkoutTemplates <
+            expectedTrainingDays * WORKOUT_COUNT_MIN_THRESHOLD
         ) {
           console.error(
             `❌ METRICS ANOMALY DETECTED: Program has only ${totalWorkoutTemplates} workout templates ` +
-              `but expected at least ${Math.floor(expectedTrainingDays * 0.5)} based on ${trainingFrequency}x/week training over ${totalDays} days. ` +
+              `but expected at least ${Math.floor(expectedTrainingDays * WORKOUT_COUNT_MIN_THRESHOLD)} based on ${trainingFrequency}x/week training over ${totalDays} days. ` +
               `This may indicate incomplete generation.`,
           );
         }
 
-        // Check if day coverage is significantly lower than expected (more than 30% below expected)
+        // Check if day coverage is significantly lower than expected
         const actualDayCoveragePercent =
           totalDays > 0 ? (uniqueTrainingDays / totalDays) * 100 : 0;
         const coverageThreshold = Math.max(
-          expectedDayCoveragePercent * 0.7,
-          20,
-        ); // At least 70% of expected, minimum 20%
+          expectedDayCoveragePercent * DAY_COVERAGE_MIN_THRESHOLD,
+          DAY_COVERAGE_FLOOR_PERCENT,
+        );
 
         if (
           actualDayCoveragePercent > 0 &&
