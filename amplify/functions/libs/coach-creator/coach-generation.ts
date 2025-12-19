@@ -6,8 +6,8 @@ import {
   SafetyRule,
   CoachModificationCapabilities,
   CoachConfig,
-  ConversationMessage,
 } from "./types";
+import { CoachMessage } from "../coach-conversation/types";
 import { callBedrockApi, storeDebugDataInS3 } from "../api-helpers";
 import { JSON_FORMATTING_INSTRUCTIONS_STANDARD } from "../prompt-helpers";
 import { parseJsonWithFallbacks } from "../response-utils";
@@ -593,7 +593,7 @@ export const COACH_MODIFICATION_OPTIONS: CoachModificationCapabilities = {
 
 // Validate personality coherence
 export const validatePersonalityCoherence = async (
-  coachConfig: CoachConfig
+  coachConfig: CoachConfig,
 ): Promise<PersonalityCoherenceCheck> => {
   const personality = coachConfig.selected_personality;
   const methodology = coachConfig.selected_methodology;
@@ -623,7 +623,7 @@ export const validatePersonalityCoherence = async (
     personality.primary_template === "emma"
   ) {
     conflictingTraits.push(
-      "high_intensity_methodology_vs_beginner_personality"
+      "high_intensity_methodology_vs_beginner_personality",
     );
     consistencyScore -= 1;
   }
@@ -652,7 +652,7 @@ export const validatePersonalityCoherence = async (
 // Validate coach configuration against safety rules
 export const validateCoachConfigSafety = async (
   coachConfig: CoachConfig,
-  safetyProfile: any
+  safetyProfile: any,
 ) => {
   const issues = [];
   let safetyScore = 10;
@@ -720,7 +720,7 @@ async function buildCoachConfigPrompts(
   userProfile: string,
   safetyProfile: any,
   methodologyPreferences: any,
-  genderPreference: "male" | "female" | "neutral"
+  genderPreference: "male" | "female" | "neutral",
 ): Promise<{
   systemPrompt: string;
   userPrompt: string;
@@ -734,15 +734,15 @@ async function buildCoachConfigPrompts(
     await extractIntensityPreferenceFromSession(session);
   const sessionSummary = generateCoachCreatorSessionSummary(session).replace(
     /"/g,
-    '\\"'
+    '\\"',
   );
 
   // Pre-compute all JSON.stringify calls once to avoid repetition in template
   const programmingFocusJson = JSON.stringify(
-    methodologyPreferences.focus || ["strength", "conditioning"]
+    methodologyPreferences.focus || ["strength", "conditioning"],
   );
   const specializationsJson = JSON.stringify(
-    await extractSpecializationsFromSession(session)
+    await extractSpecializationsFromSession(session),
   );
   const injuryConsiderationsJson = JSON.stringify(safetyProfile.injuries);
   const equipmentAvailableJson = JSON.stringify(safetyProfile.equipment);
@@ -758,23 +758,23 @@ async function buildCoachConfigPrompts(
   const timeConstraintsJson = JSON.stringify(timeConstraintsFormatted);
 
   const contraindicatedExercisesJson = JSON.stringify(
-    safetyProfile.contraindications
+    safetyProfile.contraindications,
   );
   const requiredModificationsJson = JSON.stringify(safetyProfile.modifications);
   const recoveryRequirementsJson = JSON.stringify(safetyProfile.recoveryNeeds);
   const safetyMonitoringJson = JSON.stringify(
     SAFETY_RULES.filter((rule) => rule.severity === "critical").map(
-      (rule) => rule.id
-    )
+      (rule) => rule.id,
+    ),
   );
   const enabledModificationsJson = JSON.stringify(
-    Object.keys(COACH_MODIFICATION_OPTIONS)
+    Object.keys(COACH_MODIFICATION_OPTIONS),
   );
   const safetyProfileJson = JSON.stringify(safetyProfile, null, 2); // Pretty-printed for AI readability
   const methodologyProfileJson = JSON.stringify(
     methodologyPreferences,
     null,
-    2
+    2,
   ); // Pretty-printed for AI readability
 
   const finalPrompt = `You are NeonPanda's expert AI coach creator. Your mission is to design a highly personalized, powerfully effective coach that matches this user's unique needs, goals, and constraints.
@@ -850,7 +850,7 @@ ${COACH_PERSONALITY_TEMPLATES.map(
   Best for: ${template.bestFor.join(", ")}
   Communication Style: ${template.communicationStyle}
   Programming Approach: ${template.programmingApproach}
-  Motivation Style: ${template.motivationStyle}`
+  Motivation Style: ${template.motivationStyle}`,
 ).join("\n\n")}
 
 AVAILABLE METHODOLOGIES:
@@ -861,7 +861,7 @@ ${METHODOLOGY_TEMPLATES.map(
   Best for: ${method.bestFor.join(", ")}
   Programming Approach: ${method.programmingApproach}
   Strength Focus: ${method.strengthBias}
-  Conditioning: ${method.conditioningApproach}`
+  Conditioning: ${method.conditioningApproach}`,
 ).join("\n\n")}
 
 CRITICAL SAFETY RULES TO INTEGRATE:
@@ -1045,13 +1045,11 @@ ${JSON_FORMATTING_INSTRUCTIONS_STANDARD}`;
 // Generate final coach configuration
 export const generateCoachConfig = async (
   session: CoachCreatorSession,
-  creationTimestamp?: string
+  creationTimestamp?: string,
 ): Promise<CoachConfig> => {
   // Build user profile from conversation history for better AI context
   const userProfile = session.conversationHistory
-    .map(
-      (msg: ConversationMessage) => `${msg.role.toUpperCase()}: ${msg.content}`
-    )
+    .map((msg: CoachMessage) => `${msg.role.toUpperCase()}: ${msg.content}`)
     .join("\n\n");
 
   // Extract structured data - use new AI-powered session-based extraction
@@ -1070,7 +1068,7 @@ export const generateCoachConfig = async (
       userProfile,
       safetyProfile,
       methodologyPreferences,
-      genderPreference
+      genderPreference,
     );
 
   // Store prompt in S3 for debugging
@@ -1087,13 +1085,13 @@ export const generateCoachConfig = async (
         conversationLength: session.conversationHistory.length,
         promptLength: promptContent.length,
       },
-      "coach-config"
+      "coach-config",
     );
     console.info("✅ Stored coach config prompt in S3 for debugging");
   } catch (err) {
     console.warn(
       "⚠️ Failed to store coach config prompt in S3 (non-critical):",
-      err
+      err,
     );
   }
 
@@ -1118,7 +1116,7 @@ export const generateCoachConfig = async (
           inputSchema: COACH_CONFIG_SCHEMA,
         },
         expectedToolName: "generate_coach_config",
-      }
+      },
     );
 
     // Extract coach config from tool use result
@@ -1137,12 +1135,12 @@ export const generateCoachConfig = async (
             sessionId: session.sessionId,
             sophisticationLevel: session.sophisticationLevel,
           },
-          "coach-config"
+          "coach-config",
         );
       } catch (err) {
         console.warn(
           "⚠️ Failed to store tool success data in S3 (non-critical):",
-          err
+          err,
         );
       }
     } else {
@@ -1161,7 +1159,7 @@ export const generateCoachConfig = async (
       {
         staticPrompt: systemPrompt, // Cache the large static prompt
         dynamicPrompt: "", // No dynamic content
-      }
+      },
     )) as string;
 
     coachConfigResponse = fallbackResult;
@@ -1180,7 +1178,7 @@ export const generateCoachConfig = async (
             fallbackResponse: fallbackResult,
           },
           null,
-          2
+          2,
         ),
         {
           type: "coach-config-fallback",
@@ -1191,13 +1189,13 @@ export const generateCoachConfig = async (
           errorMessage:
             toolError instanceof Error ? toolError.message : String(toolError),
         },
-        "coach-config"
+        "coach-config",
       );
       console.info("✅ Stored fallback debug data in S3");
     } catch (err) {
       console.warn(
         "⚠️ Failed to store fallback data in S3 (non-critical):",
-        err
+        err,
       );
     }
 
@@ -1223,13 +1221,13 @@ export const generateCoachConfig = async (
   try {
     // Validate against schema (always run regardless of generation method)
     console.info(
-      `🔍 Validating coach config against schema (method: ${generationMethod})...`
+      `🔍 Validating coach config against schema (method: ${generationMethod})...`,
     );
     const schemaValidation = validateCoachConfig(coachConfig);
     if (!schemaValidation.isValid) {
       console.warn(
         `⚠️ Schema validation issues (${generationMethod}):`,
-        schemaValidation.errors
+        schemaValidation.errors,
       );
 
       // Store validation failures for analysis
@@ -1242,7 +1240,7 @@ export const generateCoachConfig = async (
               config: coachConfig,
             },
             null,
-            2
+            2,
           ),
           {
             type: "coach-config-validation-failure",
@@ -1250,17 +1248,17 @@ export const generateCoachConfig = async (
             sessionId: session.sessionId,
             generationMethod,
           },
-          "coach-config-validation"
+          "coach-config-validation",
         );
       } catch (err) {
         console.warn(
           "⚠️ Failed to store validation failure in S3 (non-critical):",
-          err
+          err,
         );
       }
     } else {
       console.info(
-        `✅ Coach config passed schema validation (method: ${generationMethod})`
+        `✅ Coach config passed schema validation (method: ${generationMethod})`,
       );
     }
 
@@ -1282,7 +1280,7 @@ export const generateCoachConfig = async (
               config: coachConfig,
             },
             null,
-            2
+            2,
           ),
           {
             type: "coach-config-gender-mismatch",
@@ -1292,12 +1290,12 @@ export const generateCoachConfig = async (
             requestedGender: genderPreference,
             generatedGender: coachConfig.gender_preference,
           },
-          "coach-config-validation"
+          "coach-config-validation",
         );
       } catch (err) {
         console.warn(
           "⚠️ Failed to store gender mismatch in S3 (non-critical):",
-          err
+          err,
         );
       }
 
@@ -1325,7 +1323,7 @@ export const generateCoachConfig = async (
     // Validate safety integration
     const safetyValidation = await validateCoachConfigSafety(
       coachConfig,
-      safetyProfile
+      safetyProfile,
     );
     if (!safetyValidation.approved) {
       console.warn("⚠️ Safety validation issues:", safetyValidation.issues);
@@ -1340,7 +1338,7 @@ export const generateCoachConfig = async (
     if (personalityValidation.consistency_score < 7) {
       console.warn(
         "⚠️ Personality coherence issues detected:",
-        personalityValidation.conflicting_traits
+        personalityValidation.conflicting_traits,
       );
     } else {
       console.info("✅ Coach config passed personality coherence validation");
@@ -1364,7 +1362,7 @@ export const generateCoachConfig = async (
   } catch (error) {
     console.error("❌ Failed to parse or validate coach configuration:", error);
     throw new Error(
-      `Failed to generate valid coach configuration: ${error instanceof Error ? error.message : "Unknown error"}`
+      `Failed to generate valid coach configuration: ${error instanceof Error ? error.message : "Unknown error"}`,
     );
   }
 };

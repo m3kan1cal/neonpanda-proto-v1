@@ -1,4 +1,5 @@
 # Training Program V2 Redesign Analysis
+
 **Date**: 2025-11-23
 **Last Updated**: 2025-11-29
 **Status**: ✅ FULLY IMPLEMENTED (Phases 1-5 Complete)
@@ -11,6 +12,7 @@
 **Phase 5: AI-Detected Mode Activation - COMPLETED 2025-11-29**
 
 All implementation steps completed successfully:
+
 - ✅ Step 1: Smart Router Detection + Slash Commands (3 hours)
 - ✅ Step 2: Schema + Session Management + Topic Change Detection (4 hours)
 - ✅ Step 3: Stream Handler + AI Detection Flow (5 hours)
@@ -24,6 +26,7 @@ All implementation steps completed successfully:
 **Total Implementation Time**: 18 hours
 
 **Key Changes Implemented**:
+
 1. Program design mode now AI-detected (confidence threshold 0.7+)
 2. Slash commands added: `/design-program`, `/create-program`, `/build-program`
 3. Topic change detection with automatic session cancellation
@@ -45,14 +48,16 @@ All implementation steps completed successfully:
 **All fixes verified and TypeScript compilation successful** ✅
 
 #### 1. Architectural Consistency (Smart Router)
+
 - ✅ Added `isSlashCommand` field to `workoutDetection` (matches `programDesignDetection`)
 - ✅ Added `"program_design"` to `userIntent` enum (consistency with `workout_logging`)
 - ✅ Updated `workoutType` enum to match workout schema (7 types: strength, cardio, flexibility, skill, competition, recovery, hybrid)
 - **Files Modified**: `business-types.ts`, `detection.ts`
 
 #### 2. Pattern Alignment with Workout Creator
+
 - ✅ Renamed `startProgramDesignSession()` → `startProgramDesignCollection()` (matches workout pattern)
-- ✅ Added `turnCount` and `imageS3Keys` to `ProgramCreatorSession` interface
+- ✅ Added `turnCount` and `imageS3Keys` to `ProgramDesignerSession` interface
 - ✅ Added `userContext` parameter to all conversation functions (extraction, questions, completion)
 - ✅ Implemented detailed progress logging (matches workout creator)
 - ✅ Changed message saving to push-to-array + single-save pattern (matches workout creator)
@@ -63,25 +68,26 @@ All implementation steps completed successfully:
 - **Files Modified**: `handler-helpers.ts`, `conversation-handler.ts`, `todo-extraction.ts`, `question-generator.ts`, `types.ts`, `slash-commands.ts`, `index.ts`, `stream-coach-conversation/handler.ts`
 
 #### 3. Schema Description Enhancement
+
 - ✅ Added comprehensive `description` fields to all 21 properties in `PROGRAM_TODO_SCHEMA`
 - ✅ Added comprehensive `description` fields to all 18 properties in `WORKOUT_TODO_SCHEMA`
 - **Benefits**: Eliminates AI inference ambiguity, provides clear examples, improves extraction accuracy by ~10-15%
-- **Files Modified**: `program-creator-todo-schema.ts`, `workout-creator-todo-schema.ts`
+- **Files Modified**: `program-designer-todo-schema.ts`, `workout-creator-todo-schema.ts`
 
 ### Final Compliance Status
 
-| Pattern Element | Status | Matches Workout Creator |
-|-----------------|--------|------------------------|
-| Function Naming | ✅ | 100% |
-| Session Fields | ✅ | 100% |
-| userContext Parameter | ✅ | 100% |
-| Progress Logging | ✅ | 100% |
-| Message Saving Pattern | ✅ | 100% |
-| Complete Event Structure | ✅ | 100% |
-| Slash Commands | ✅ | Simplified to 1 |
-| Type Safety | ✅ | 100% |
-| Smart Router Consistency | ✅ | 100% |
-| Schema Descriptions | ✅ | 100% |
+| Pattern Element          | Status | Matches Workout Creator |
+| ------------------------ | ------ | ----------------------- |
+| Function Naming          | ✅     | 100%                    |
+| Session Fields           | ✅     | 100%                    |
+| userContext Parameter    | ✅     | 100%                    |
+| Progress Logging         | ✅     | 100%                    |
+| Message Saving Pattern   | ✅     | 100%                    |
+| Complete Event Structure | ✅     | 100%                    |
+| Slash Commands           | ✅     | Simplified to 1         |
+| Type Safety              | ✅     | 100%                    |
+| Smart Router Consistency | ✅     | 100%                    |
+| Schema Descriptions      | ✅     | 100%                    |
 
 **Overall Pattern Compliance**: 10/10 (100%) ✅
 
@@ -94,6 +100,7 @@ All implementation steps completed successfully:
 **Root Cause**: Leftover `useEffect` trying to sync conversation mode state after state management was removed in Phase 5
 
 **Fix Applied**:
+
 - ✅ Removed obsolete `useEffect` that called `setConversationMode` (lines 454-459)
 - ✅ Mode is now correctly derived from active sessions via `getCurrentMode()`
 - ✅ No linter errors after fix
@@ -105,9 +112,10 @@ All implementation steps completed successfully:
 
 #### Bug #2: User Hanging - No Response When Todo List Already Complete
 
-**Location**: `handler-helpers.ts:487-490` (`handleProgramCreatorFlow`)
+**Location**: `handler-helpers.ts:487-490` (`handleProgramDesignerFlow`)
 
 **Root Cause**: When `isProgramTodoComplete()` returns `true`, the function just logs a message and exits without:
+
 - Soft-deleting the completed session
 - Allowing fallthrough to normal chat processing
 - Any continuation of the conversation
@@ -116,6 +124,7 @@ All implementation steps completed successfully:
 
 **Fix Applied**:
 When todo list is already complete:
+
 - ✅ Soft-delete the session (mark `isDeleted = true`)
 - ✅ Set `completedAt` timestamp if not already set
 - ✅ Save session to DynamoDB
@@ -125,28 +134,27 @@ When todo list is already complete:
 - ✅ AI responds naturally to user's message in CHAT mode
 
 **Files Modified**:
-- `amplify/functions/libs/program-creator/handler-helpers.ts` - Added session cleanup when complete
+
+- `amplify/functions/libs/program-designer/handler-helpers.ts` - Added session cleanup when complete
 - `amplify/functions/stream-coach-conversation/handler.ts` - Updated comment for clarity
 
 ### Files Modified Summary (Phase 5)
 
 **Core Functionality** (9 files):
-1. `amplify/functions/libs/program-creator/types.ts` - Added `turnCount`, `imageS3Keys`
-2. `amplify/functions/libs/program-creator/handler-helpers.ts` - Pattern alignment (all fixes)
-3. `amplify/functions/libs/program-creator/conversation-handler.ts` - Added `userContext` parameter
-4. `amplify/functions/libs/program-creator/todo-extraction.ts` - Added `userContext` parameter
-5. `amplify/functions/libs/program-creator/question-generator.ts` - Added `userContext` parameter
-6. `amplify/functions/libs/program-creator/slash-commands.ts` - Simplified to 1 command
-7. `amplify/functions/libs/program-creator/index.ts` - Updated exports
+
+1. `amplify/functions/libs/program-designer/types.ts` - Added `turnCount`, `imageS3Keys`
+2. `amplify/functions/libs/program-designer/handler-helpers.ts` - Pattern alignment (all fixes)
+3. `amplify/functions/libs/program-designer/conversation-handler.ts` - Added `userContext` parameter
+4. `amplify/functions/libs/program-designer/todo-extraction.ts` - Added `userContext` parameter
+5. `amplify/functions/libs/program-designer/question-generator.ts` - Added `userContext` parameter
+6. `amplify/functions/libs/program-designer/slash-commands.ts` - Simplified to 1 command
+7. `amplify/functions/libs/program-designer/index.ts` - Updated exports
 8. `amplify/functions/stream-coach-conversation/handler.ts` - AI detection integration
 9. `amplify/functions/libs/coach-conversation/detection.ts` - Program design detection
 
-**Schemas** (2 files):
-10. `amplify/functions/libs/schemas/program-creator-todo-schema.ts` - Added descriptions (21 fields)
-11. `amplify/functions/libs/schemas/workout-creator-todo-schema.ts` - Added descriptions (18 fields)
+**Schemas** (2 files): 10. `amplify/functions/libs/schemas/program-designer-todo-schema.ts` - Added descriptions (21 fields) 11. `amplify/functions/libs/schemas/workout-creator-todo-schema.ts` - Added descriptions (18 fields)
 
-**Smart Router Types** (1 file):
-12. `amplify/functions/libs/streaming/business-types.ts` - Architectural consistency
+**Smart Router Types** (1 file): 12. `amplify/functions/libs/streaming/business-types.ts` - Architectural consistency
 
 **Total Files Modified**: 12 files
 
@@ -155,6 +163,7 @@ When todo list is already complete:
 ## Executive Summary
 
 The coach creator redesign successfully transformed a rigid, scripted flow into an intelligent, conversational system using:
+
 1. ✅ **Todo-list based information tracking** (22 fields, AI-extracted)
 2. ✅ **AI-driven conversation flow** (no hardcoded questions)
 3. ✅ **Robust AI extraction** (Claude Haiku 4.5, not keyword matching)
@@ -163,36 +172,39 @@ The coach creator redesign successfully transformed a rigid, scripted flow into 
 6. ✅ **Separate session entity** (CoachCreatorSession in DynamoDB)
 
 **This document proposes applying these patterns to training program creation**, plus adding:
-- **Separate ProgramCreatorSession entity** (matches CoachCreatorSession pattern)
+
+- **Separate ProgramDesignerSession entity** (matches CoachCreatorSession pattern)
 - **Bedrock toolConfig with JSON schema** (structured output, not fragile code block parsing)
 - **AI normalization** (validate and normalize generated programs)
 - **Parallel phase generation** (**REQUIRED** - current single-call exceeds 15-minute Lambda limit)
 
 **Naming Convention**:
-- Code: "program" (e.g., `ProgramCreatorSession`, `programTodoList`)
+
+- Code: "program" (e.g., `ProgramDesignerSession`, `programTodoList`)
 - User-facing: "training program" (e.g., "Your training program is ready")
 
 ### Quick Decision Matrix
 
-| Change | Status | Reason |
-|--------|--------|--------|
-| **Todo-list conversation** | ✅ Adopt | Proven pattern from coach creator |
-| **toolConfig generation** | ✅ Adopt | Proven pattern from build-workout |
-| **Multimodal image support** | ✅ Adopt | Proven pattern from build-workout |
-| **AI normalization** | ✅ Adopt | Proven pattern from workout normalization |
-| **Parallel phase generation** | ✅ **REQUIRED** | Current approach exceeds Lambda timeout |
-| **File structure alignment** | ✅ Adopt | Consistency with existing libs |
-| **Cost increase to $0.60-0.75** | ⚠️ Accept | Required for functionality |
+| Change                          | Status          | Reason                                    |
+| ------------------------------- | --------------- | ----------------------------------------- |
+| **Todo-list conversation**      | ✅ Adopt        | Proven pattern from coach creator         |
+| **toolConfig generation**       | ✅ Adopt        | Proven pattern from build-workout         |
+| **Multimodal image support**    | ✅ Adopt        | Proven pattern from build-workout         |
+| **AI normalization**            | ✅ Adopt        | Proven pattern from workout normalization |
+| **Parallel phase generation**   | ✅ **REQUIRED** | Current approach exceeds Lambda timeout   |
+| **File structure alignment**    | ✅ Adopt        | Consistency with existing libs            |
+| **Cost increase to $0.60-0.75** | ⚠️ Accept       | Required for functionality                |
 
 ---
 
 ## Architecture Decision: Separate Entity
 
-### ProgramCreatorSession Entity
+### ProgramDesignerSession Entity
 
 Following the `CoachCreatorSession` pattern, program creation will use a **separate DynamoDB entity** rather than embedding state in `CoachConversation`.
 
 **Rationale:**
+
 - ✅ **Architectural consistency** - Matches CoachCreatorSession pattern
 - ✅ **Separation of concerns** - Coach conversations are multi-purpose; program creation is single-purpose
 - ✅ **Better state management** - Independent lifecycle, easy to query/resume
@@ -200,33 +212,37 @@ Following the `CoachCreatorSession` pattern, program creation will use a **separ
 - ✅ **Clean conversation object** - No build-specific pollution
 
 **DynamoDB Structure:**
+
 ```
 PK: user#{userId}
-SK: programCreatorSession#{sessionId}
+SK: programDesignerSession#{sessionId}
 ```
 
-Where `sessionId = program_creator_{conversationId}_{timestamp}`
+Where `sessionId = program_designer_{conversationId}_{timestamp}`
 
 **Example:**
+
 ```
 PK: user#user123
-SK: programCreatorSession#program_creator_conv123_1732469123456
+SK: programDesignerSession#program_designer_conv123_1732469123456
 ```
 
 **This structure enables efficient querying:**
-- All sessions for a user: `SK begins_with "programCreatorSession#"`
-- All sessions for a conversation: `SK begins_with "programCreatorSession#program_creator_{conversationId}_"`
+
+- All sessions for a user: `SK begins_with "programDesignerSession#"`
+- All sessions for a conversation: `SK begins_with "programDesignerSession#program_designer_{conversationId}_"`
 - Specific session: Direct get with exact SK
 - Supports multiple sessions per conversation (user can start multiple programs)
 
 **Entity:**
+
 ```typescript
-ProgramCreatorSession {
+ProgramDesignerSession {
   userId: string;
-  sessionId: string;  // program_creator_{conversationId}_{timestamp}
+  sessionId: string;  // program_designer_{conversationId}_{timestamp}
   conversationId: string; // Link to conversation
 
-  todoList: ProgramCreatorTodoList;
+  todoList: ProgramDesignerTodoList;
 
   isComplete: boolean;
   isDeleted?: boolean;
@@ -239,10 +255,11 @@ ProgramCreatorSession {
 ```
 
 **Session Management Functions** (mirroring coach-creator):
-- `getProgramCreatorSession(userId, conversationId)` - Load active session
-- `createProgramCreatorSession(userId, conversationId)` - Initialize new session
-- `saveProgramCreatorSession(session)` - Update session
-- `completeProgramCreatorSession(session, programId)` - Mark complete
+
+- `getProgramDesignerSession(userId, conversationId)` - Load active session
+- `createProgramDesignerSession(userId, conversationId)` - Initialize new session
+- `saveProgramDesignerSession(session)` - Update session
+- `completeProgramDesignerSession(session, programId)` - Mark complete
 
 ---
 
@@ -251,6 +268,7 @@ ProgramCreatorSession {
 ### Architecture Overview
 
 **Mode-Based System:**
+
 ```
 User opens conversation with coach
 ├── Chat Mode (default) - General conversation, workout logging, advice
@@ -258,6 +276,7 @@ User opens conversation with coach
 ```
 
 **Program Creation Process:**
+
 1. User switches to "Build Mode" via toggle
 2. Coach asks questions to gather info (goals, equipment, schedule, duration)
 3. Conversation continues until coach has enough context
@@ -266,6 +285,7 @@ User opens conversation with coach
 6. User switches back to Chat Mode
 
 **AI Generation:**
+
 - Single Claude Sonnet 4 call with full context
 - Returns complete program with phases and all daily workouts
 - Parsed from markdown code block: ` ```json {...} ``` `
@@ -295,6 +315,7 @@ User opens conversation with coach
 ### 1. Todo-List Based Information Tracking
 
 **What It Is:**
+
 ```typescript
 interface CoachCreatorTodoList {
   // 22 fields tracking all required information
@@ -310,15 +331,16 @@ interface CoachCreatorTodoList {
 }
 
 interface TodoItem {
-  status: 'pending' | 'in_progress' | 'complete';
+  status: "pending" | "in_progress" | "complete";
   value: any | null;
-  confidence?: 'high' | 'medium' | 'low';
+  confidence?: "high" | "medium" | "low";
   notes?: string;
   extractedFrom?: string;
 }
 ```
 
 **Benefits:**
+
 - ✅ **Always know what's missing** - Clear progress tracking
 - ✅ **No repeated questions** - AI checks todo list before asking
 - ✅ **Flexible order** - User can provide info in any order
@@ -328,11 +350,12 @@ interface TodoItem {
 ### 2. AI-Powered Extraction (Not Keyword Matching)
 
 **What It Does:**
+
 ```typescript
 async function extractAndUpdateTodoList(
   userResponse: string,
   conversationHistory: Message[],
-  currentTodoList: CoachCreatorTodoList
+  currentTodoList: CoachCreatorTodoList,
 ): Promise<CoachCreatorTodoList> {
   // AI analyzes user response
   // Extracts any relevant information
@@ -348,11 +371,12 @@ async function extractAndUpdateTodoList(
 ### 3. Dynamic Question Generation
 
 **What It Does:**
+
 ```typescript
 async function generateNextQuestion(
   conversationHistory: Message[],
   todoList: CoachCreatorTodoList,
-  sophisticationLevel: string
+  sophisticationLevel: string,
 ): Promise<string | null> {
   // Check what's missing
   const missing = getPendingRequiredItems(todoList);
@@ -367,6 +391,7 @@ async function generateNextQuestion(
 ```
 
 **Benefits:**
+
 - ✅ **Adaptive** - Adjusts to user's responses
 - ✅ **Natural** - Feels like conversation, not form
 - ✅ **Smart** - Won't ask for info already provided
@@ -375,6 +400,7 @@ async function generateNextQuestion(
 ### 4. Clean Architecture (No Dual Paths)
 
 **What Changed:**
+
 - Removed all legacy question-based code (~1000 lines)
 - Single approach: todo-list only
 - Clean, maintainable codebase
@@ -387,6 +413,7 @@ async function generateNextQuestion(
 ### From `stream-coach-creator-session/handler.ts`
 
 **Generator Pattern for Streaming:**
+
 ```typescript
 async function* handleTodoListConversation(
   userResponse: string,
@@ -414,6 +441,7 @@ async function* handleTodoListConversation(
 ```
 
 **Key Takeaways:**
+
 - ✅ Generator function with `async function*`
 - ✅ Yields chunks as they arrive (not simulated word-by-word)
 - ✅ Returns structured object at end for caller to handle
@@ -422,6 +450,7 @@ async function* handleTodoListConversation(
 ### From `build-workout/handler.ts`
 
 **Multimodal Image Handling:**
+
 ```typescript
 // Check if images are present
 const hasImages = event.imageS3Keys && event.imageS3Keys.length > 0;
@@ -483,6 +512,7 @@ try {
 ```
 
 **Key Takeaways:**
+
 - ✅ Check for images first: `event.imageS3Keys`
 - ✅ Branch between multimodal and text-only paths
 - ✅ Use `buildMultimodalContent()` to format messages
@@ -493,6 +523,7 @@ try {
 ### From `build-coach-config/handler.ts`
 
 **Async Handler Pattern:**
+
 ```typescript
 export const handler = async (event: CoachConfigEvent) => {
   return withHeartbeat('Coach Config Generation', async () => {
@@ -518,6 +549,7 @@ export const handler = async (event: CoachConfigEvent) => {
 ```
 
 **Key Takeaways:**
+
 - ✅ `withHeartbeat()` wrapper for long-running operations
 - ✅ Consistent timestamp for all operations
 - ✅ Store summary in Pinecone after generation
@@ -532,18 +564,19 @@ export const handler = async (event: CoachConfigEvent) => {
 
 **This redesign follows existing patterns EXACTLY - no deviation:**
 
-| Component | Pattern Source | Files to Match |
-|-----------|---------------|----------------|
-| **Todo-list conversation** | `libs/coach-creator/` | `todo-list-utils.ts`, `todo-extraction.ts`, `question-generator.ts`, `conversation-handler.ts` |
-| **Tool-based generation** | `libs/workout/` + `build-workout/handler.ts` | Schema definition, toolConfig usage, fallback handling |
-| **Multimodal images** | `build-workout/handler.ts` | `buildMultimodalContent()`, `callBedrockApiMultimodal()`, image branching |
-| **Normalization** | `libs/workout/normalization.ts` | AI normalization with schema comparison |
-| **Async handler** | `build-coach-config/handler.ts` | `withHeartbeat()`, error handling, Pinecone storage |
-| **Streaming** | `stream-coach-creator-session/handler.ts` | Generator functions, chunk yielding, SSE format |
+| Component                  | Pattern Source                               | Files to Match                                                                                 |
+| -------------------------- | -------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| **Todo-list conversation** | `libs/coach-creator/`                        | `todo-list-utils.ts`, `todo-extraction.ts`, `question-generator.ts`, `conversation-handler.ts` |
+| **Tool-based generation**  | `libs/workout/` + `build-workout/handler.ts` | Schema definition, toolConfig usage, fallback handling                                         |
+| **Multimodal images**      | `build-workout/handler.ts`                   | `buildMultimodalContent()`, `callBedrockApiMultimodal()`, image branching                      |
+| **Normalization**          | `libs/workout/normalization.ts`              | AI normalization with schema comparison                                                        |
+| **Async handler**          | `build-coach-config/handler.ts`              | `withHeartbeat()`, error handling, Pinecone storage                                            |
+| **Streaming**              | `stream-coach-creator-session/handler.ts`    | Generator functions, chunk yielding, SSE format                                                |
 
 **File Structure Must Match:**
+
 ```
-amplify/functions/libs/program-creator/
+amplify/functions/libs/program-designer/
 ├── types.ts                     ← Session entity + todo list types
 ├── session-management.ts        ← Load, save, create, complete session
 ├── todo-list-utils.ts           ← Same structure as coach-creator
@@ -558,7 +591,8 @@ amplify/functions/libs/program-creator/
 ```
 
 **Naming Convention:**
-- Code: "program" (`ProgramCreatorSession`, `programTodoList`, `generateProgram`)
+
+- Code: "program" (`ProgramDesignerSession`, `programTodoList`, `generateProgram`)
 - User-facing: "training program" ("Your training program is ready", "Building your training program")
 
 ---
@@ -576,43 +610,43 @@ Replace **free-form conversation → single generation** with **structured conve
 Define all required information for program creation:
 
 ```typescript
-interface ProgramCreatorTodoList {
+interface ProgramDesignerTodoList {
   // Core Program Definition
-  training_goals: TodoItem;              // Primary objectives
-  target_event: TodoItem;                // Competition, race, testing, or null
-  program_duration: TodoItem;            // Weeks or specific end date
+  training_goals: TodoItem; // Primary objectives
+  target_event: TodoItem; // Competition, race, testing, or null
+  program_duration: TodoItem; // Weeks or specific end date
 
   // Schedule & Logistics
-  training_frequency: TodoItem;          // Days per week
-  session_duration: TodoItem;            // Typical workout length
-  start_date: TodoItem;                  // When to begin
-  rest_days_preference: TodoItem;        // Specific days off, or flexible
+  training_frequency: TodoItem; // Days per week
+  session_duration: TodoItem; // Typical workout length
+  start_date: TodoItem; // When to begin
+  rest_days_preference: TodoItem; // Specific days off, or flexible
 
   // Equipment & Environment
-  equipment_access: TodoItem;            // Available equipment with specifics
-  training_environment: TodoItem;        // Home gym, commercial, CrossFit box, etc.
+  equipment_access: TodoItem; // Available equipment with specifics
+  training_environment: TodoItem; // Home gym, commercial, CrossFit box, etc.
 
   // User Context
-  experience_level: TodoItem;            // Beginner, intermediate, advanced
-  current_fitness_baseline: TodoItem;    // Recent performance indicators
-  injury_considerations: TodoItem;       // Current injuries or limitations
-  movement_preferences: TodoItem;        // What they enjoy
-  movement_dislikes: TodoItem;           // What to minimize
+  experience_level: TodoItem; // Beginner, intermediate, advanced
+  current_fitness_baseline: TodoItem; // Recent performance indicators
+  injury_considerations: TodoItem; // Current injuries or limitations
+  movement_preferences: TodoItem; // What they enjoy
+  movement_dislikes: TodoItem; // What to minimize
 
   // Program Structure Preferences
-  program_focus: TodoItem;               // Strength, conditioning, gymnastics, mixed
-  intensity_preference: TodoItem;        // Conservative, moderate, aggressive
-  volume_tolerance: TodoItem;            // How much work they can handle
+  program_focus: TodoItem; // Strength, conditioning, gymnastics, mixed
+  intensity_preference: TodoItem; // Conservative, moderate, aggressive
+  volume_tolerance: TodoItem; // How much work they can handle
 
   // Optional Advanced
-  deload_preference: TodoItem;           // Built-in recovery weeks
-  progression_style: TodoItem;           // Linear, undulating, block periodization
+  deload_preference: TodoItem; // Built-in recovery weeks
+  progression_style: TodoItem; // Linear, undulating, block periodization
 }
 
 interface TodoItem {
-  status: 'pending' | 'in_progress' | 'complete';
+  status: "pending" | "in_progress" | "complete";
   value: any | null;
-  confidence: 'high' | 'medium' | 'low';
+  confidence: "high" | "medium" | "low";
   notes?: string;
   extractedFrom?: string; // Message ID or timestamp
   imageRefs?: string[]; // S3 keys if extracted from images (e.g., equipment photos)
@@ -622,6 +656,7 @@ interface TodoItem {
 #### Conversation Flow (With Image Support)
 
 **Build Mode Activated:**
+
 1. Initialize empty todo list (all items = 'pending')
 2. Coach greeting: "Let's build your training program! What are you working towards?"
 3. User responds (text + optional images)
@@ -631,6 +666,7 @@ interface TodoItem {
 7. **Trigger program generation** (includes image context from conversation)
 
 **Image Use Cases:**
+
 - 📸 Home gym setup → Equipment assessment
 - 📸 Injury photos → Movement limitations understanding
 - 📸 Training space → Environment constraints
@@ -638,6 +674,7 @@ interface TodoItem {
 - 📸 Previous program screenshots → Context for goals
 
 **Example Conversation (with Images):**
+
 ```
 Coach: "Let's build your training program! What are you working towards?"
 User: "I want to compete in a local CrossFit competition in 8 weeks. I need to work on my Olympic lifts and pull-ups."
@@ -701,6 +738,7 @@ User: "Yes!"
 ```
 
 **Benefits:**
+
 - ✅ **Progress tracking** - User knows what's been covered
 - ✅ **No repetition** - AI won't re-ask what's already collected
 - ✅ **Flexible order** - User can volunteer info in any order
@@ -713,7 +751,7 @@ User: "Yes!"
 
 #### Current Approach (Fragile)
 
-```typescript
+````typescript
 // Coach generates response with embedded JSON
 const response = await bedrock.converse({
   messages: [...],
@@ -723,9 +761,10 @@ const response = await bedrock.converse({
 // Parse code block from markdown
 const jsonMatch = response.match(/```json\n(.*?)\n```/s);
 const program = JSON.parse(jsonMatch[1]); // ❌ Fragile!
-```
+````
 
 **Problems:**
+
 - ❌ AI might not format code block correctly
 - ❌ JSON might be incomplete or invalid
 - ❌ No type safety or validation
@@ -741,24 +780,24 @@ const programSchema = {
   properties: {
     programName: {
       type: "string",
-      description: "Creative, motivating program name"
+      description: "Creative, motivating program name",
     },
     programDescription: {
       type: "string",
-      description: "Overview of program goals and structure"
+      description: "Overview of program goals and structure",
     },
     totalDays: {
       type: "number",
-      description: "Total program length in days (includes rest days)"
+      description: "Total program length in days (includes rest days)",
     },
     trainingDays: {
       type: "number",
-      description: "Number of actual training days"
+      description: "Number of actual training days",
     },
     startDate: {
       type: "string",
       format: "date",
-      description: "Program start date (YYYY-MM-DD)"
+      description: "Program start date (YYYY-MM-DD)",
     },
     phases: {
       type: "array",
@@ -772,41 +811,47 @@ const programSchema = {
           endDay: { type: "number" },
           focusAreas: {
             type: "array",
-            items: { type: "string" }
+            items: { type: "string" },
           },
           intensityRange: {
             type: "array",
             items: { type: "number" },
             minItems: 2,
-            maxItems: 2
+            maxItems: 2,
           },
-          volumeCharacteristics: { type: "string" }
+          volumeCharacteristics: { type: "string" },
         },
-        required: ["phaseNumber", "phaseName", "startDay", "endDay", "focusAreas"]
-      }
+        required: [
+          "phaseNumber",
+          "phaseName",
+          "startDay",
+          "endDay",
+          "focusAreas",
+        ],
+      },
     },
     dailyWorkouts: {
       type: "array",
       items: {
         // Universal workout schema (existing)
-      }
+      },
     },
     equipmentConstraints: {
       type: "array",
-      items: { type: "string" }
+      items: { type: "string" },
     },
     trainingGoals: {
       type: "array",
-      items: { type: "string" }
+      items: { type: "string" },
     },
     methodology: {
       type: "object",
       properties: {
         progressionStrategy: { type: "string" },
         intensityPattern: { type: "string" },
-        deloadStrategy: { type: "string" }
-      }
-    }
+        deloadStrategy: { type: "string" },
+      },
+    },
   },
   required: [
     "programName",
@@ -815,8 +860,8 @@ const programSchema = {
     "phases",
     "dailyWorkouts",
     "equipmentConstraints",
-    "trainingGoals"
-  ]
+    "trainingGoals",
+  ],
 };
 ```
 
@@ -824,39 +869,49 @@ const programSchema = {
 
 ```typescript
 async function generateProgram(
-  todoList: ProgramCreatorTodoList,
+  todoList: ProgramDesignerTodoList,
   coachConfig: CoachConfig,
-  userContext: UserContext
+  userContext: UserContext,
 ): Promise<Program> {
-
   const response = await bedrock.converse({
     modelId: MODEL_IDS.CLAUDE_SONNET_4_FULL,
-    messages: [{
-      role: "user",
-      content: buildProgramGenerationPrompt(todoList, coachConfig, userContext)
-    }],
-    system: [{
-      text: buildCoachPersonalityPrompt(coachConfig)
-    }],
+    messages: [
+      {
+        role: "user",
+        content: buildProgramGenerationPrompt(
+          todoList,
+          coachConfig,
+          userContext,
+        ),
+      },
+    ],
+    system: [
+      {
+        text: buildCoachPersonalityPrompt(coachConfig),
+      },
+    ],
     toolConfig: {
-      tools: [{
-        toolSpec: {
-          name: "generate_training_program",
-          description: "Generate a complete training program with phases and daily workouts",
-          inputSchema: {
-            json: programSchema
-          }
-        }
-      }],
+      tools: [
+        {
+          toolSpec: {
+            name: "generate_training_program",
+            description:
+              "Generate a complete training program with phases and daily workouts",
+            inputSchema: {
+              json: programSchema,
+            },
+          },
+        },
+      ],
       toolChoice: {
-        tool: { name: "generate_training_program" }
-      }
-    }
+        tool: { name: "generate_training_program" },
+      },
+    },
   });
 
   // Extract tool use from response
   const toolUse = response.output.message.content.find(
-    block => block.toolUse?.name === "generate_training_program"
+    (block) => block.toolUse?.name === "generate_training_program",
   );
 
   if (!toolUse) {
@@ -873,6 +928,7 @@ async function generateProgram(
 ```
 
 **Benefits:**
+
 - ✅ **Structured output** - AI forced to follow schema
 - ✅ **Type safety** - JSON structure validated
 - ✅ **No parsing fragility** - No markdown code block detection
@@ -886,6 +942,7 @@ async function generateProgram(
 #### Normalization Purpose
 
 After AI generates program, normalize with a second AI pass to ensure:
+
 - Phase progression is logical
 - Daily workouts follow universal schema
 - Movements are properly structured
@@ -900,10 +957,9 @@ After AI generates program, normalize with a second AI pass to ensure:
 ```typescript
 async function normalizeProgram(
   rawProgram: any,
-  todoList: ProgramCreatorTodoList,
-  coachConfig: CoachConfig
+  todoList: ProgramDesignerTodoList,
+  coachConfig: CoachConfig,
 ): Promise<Program> {
-
   const normalizationPrompt = `
   You are normalizing a training program generated by an AI coach.
 
@@ -941,22 +997,26 @@ async function normalizeProgram(
 
   const response = await bedrock.converse({
     modelId: MODEL_IDS.CLAUDE_SONNET_4_FULL,
-    messages: [{
-      role: "user",
-      content: normalizationPrompt
-    }],
+    messages: [
+      {
+        role: "user",
+        content: normalizationPrompt,
+      },
+    ],
     toolConfig: {
-      tools: [{
-        toolSpec: {
-          name: "normalize_training_program",
-          description: "Return normalized training program matching schema",
-          inputSchema: { json: programSchema }
-        }
-      }],
+      tools: [
+        {
+          toolSpec: {
+            name: "normalize_training_program",
+            description: "Return normalized training program matching schema",
+            inputSchema: { json: programSchema },
+          },
+        },
+      ],
       toolChoice: {
-        tool: { name: "normalize_training_program" }
-      }
-    }
+        tool: { name: "normalize_training_program" },
+      },
+    },
   });
 
   const normalizedProgram = extractToolUseInput(response);
@@ -969,6 +1029,7 @@ async function normalizeProgram(
 ```
 
 **Benefits:**
+
 - ✅ **Quality assurance** - Catch AI generation errors
 - ✅ **Consistent structure** - All programs follow same schema
 - ✅ **Movement normalization** - Workouts use proper movement objects
@@ -982,12 +1043,14 @@ async function normalizeProgram(
 #### Why Parallel is Required (Not Optional)
 
 **Critical Issue**: Current `build-program` Lambda exceeds 15-minute timeout
+
 - Single AI call to generate 4-8 week program with all daily workouts
 - Can take 20-30+ minutes for complex programs
 - Lambda hard limit: 15 minutes maximum execution time
 - **Result**: Program generation fails for anything beyond simple 2-week programs
 
 **Parallel solves this**:
+
 - Generate phases independently in parallel
 - 3 phases × 5 minutes each = 5 minutes total (vs. 20+ minutes sequential)
 - Fits well within Lambda limits
@@ -996,6 +1059,7 @@ async function normalizeProgram(
 #### Current Approach (Fails)
 
 AI generates entire program in one call:
+
 - All phases at once
 - All daily workouts at once
 - Single large context window
@@ -1007,10 +1071,9 @@ AI generates entire program in one call:
 
 ```typescript
 async function generatePhaseStructure(
-  todoList: ProgramCreatorTodoList,
-  coachConfig: CoachConfig
+  todoList: ProgramDesignerTodoList,
+  coachConfig: CoachConfig,
 ): Promise<ProgramPhase[]> {
-
   // First, determine optimal phase structure
   const phaseStructure = await bedrock.converse({
     // ... prompt to determine number of phases and their purposes
@@ -1025,10 +1088,9 @@ async function generatePhaseStructure(
 ```typescript
 async function generatePhaseWorkouts(
   phase: ProgramPhase,
-  todoList: ProgramCreatorTodoList,
-  coachConfig: CoachConfig
+  todoList: ProgramDesignerTodoList,
+  coachConfig: CoachConfig,
 ): Promise<Workout[]> {
-
   // Generate all workouts for this specific phase
   const phasePrompt = `
   Generate ${phase.endDay - phase.startDay + 1} daily workouts for ${phase.phaseName}.
@@ -1052,12 +1114,11 @@ async function generatePhaseWorkouts(
 // Generate all phases in parallel
 async function generateAllPhaseWorkouts(
   phases: ProgramPhase[],
-  todoList: ProgramCreatorTodoList,
-  coachConfig: CoachConfig
+  todoList: ProgramDesignerTodoList,
+  coachConfig: CoachConfig,
 ): Promise<Workout[][]> {
-
-  const phaseWorkoutPromises = phases.map(phase =>
-    generatePhaseWorkouts(phase, todoList, coachConfig)
+  const phaseWorkoutPromises = phases.map((phase) =>
+    generatePhaseWorkouts(phase, todoList, coachConfig),
   );
 
   // Execute in parallel
@@ -1073,9 +1134,8 @@ async function generateAllPhaseWorkouts(
 async function assembleProgram(
   phases: ProgramPhase[],
   phaseWorkouts: Workout[][],
-  todoList: ProgramCreatorTodoList
+  todoList: ProgramDesignerTodoList,
 ): Promise<Program> {
-
   // Flatten phase workouts into single array
   const allWorkouts = phaseWorkouts.flat();
 
@@ -1099,6 +1159,7 @@ async function assembleProgram(
 ```
 
 **Benefits of Parallel Approach:**
+
 - ✅ **Faster generation** - 3 phases in parallel = 1/3 the time
 - ✅ **Better phase focus** - Each AI call focuses on single phase
 - ✅ **Higher quality per phase** - More context dedicated to phase goals
@@ -1106,6 +1167,7 @@ async function assembleProgram(
 - ✅ **Scalability** - Long programs (12+ weeks) still fast
 
 **Trade-offs:**
+
 - ⚠️ **More complex** - Assembly logic required (but manageable, follows existing patterns)
 - ⚠️ **Inter-phase coherence** - Normalization ensures phases connect smoothly (already required)
 - ⚠️ **More API calls** - Higher cost (3-5 calls instead of 1), but necessary for functionality
@@ -1146,6 +1208,7 @@ Instead of passing raw images through multiple AI calls (expensive), we:
 ### Implementation Sequence Overview
 
 **Week 1: Todo-List Foundation (Steps 1-7)** ✅ COMPLETE
+
 1. Define session entity and types
 2. Create session management functions
 3. Create todo list utilities
@@ -1154,22 +1217,11 @@ Instead of passing raw images through multiple AI calls (expensive), we:
 6. Create conversation handler
 7. Wire up stream handler
 
-**Week 1.5: Multimodal Integration (Step 7)** ✅ COMPLETE
-7. Test and refine image handling
+**Week 1.5: Multimodal Integration (Step 7)** ✅ COMPLETE 7. Test and refine image handling
 
-**Week 2: Parallel Generation (Steps 8-10)** ✅ COMPLETE
-8. Create schema + phase generator
-9. Update generation logic
-10. Update async handler + normalization
+**Week 2: Parallel Generation (Steps 8-10)** ✅ COMPLETE 8. Create schema + phase generator 9. Update generation logic 10. Update async handler + normalization
 
-**Phase 5: AI-Detected Mode Activation (Steps 11-17)** 🚀 NEXT
-11. Update Smart Router with program design detection
-12. Add topic change detection to program creator
-13. Update stream handler with AI detection flow
-14. Remove manual toggle from frontend
-15. Verify UI indicators work correctly
-16. Verify entity structure supports sessions
-17. Testing and validation
+**Phase 5: AI-Detected Mode Activation (Steps 11-17)** 🚀 NEXT 11. Update Smart Router with program design detection 12. Add topic change detection to program designer 13. Update stream handler with AI detection flow 14. Remove manual toggle from frontend 15. Verify UI indicators work correctly 16. Verify entity structure supports sessions 17. Testing and validation
 
 ---
 
@@ -1179,24 +1231,25 @@ Instead of passing raw images through multiple AI calls (expensive), we:
 
 #### Step 1: Define Session Entity and Types (45 minutes)
 
-**File**: `amplify/functions/libs/program-creator/types.ts` (NEW - following coach-creator pattern)
+**File**: `amplify/functions/libs/program-designer/types.ts` (NEW - following coach-creator pattern)
 
 **What to create:**
+
 ```typescript
 // Re-export shared types
-export type { TodoItem, ConversationMessage } from '../todo-types';
+export type { TodoItem, ConversationMessage } from "../todo-types";
 
 /**
- * ProgramCreatorSession - Separate entity for program creation
+ * ProgramDesignerSession - Separate entity for program creation
  * Pattern: Matches CoachCreatorSession structure exactly
  */
-export interface ProgramCreatorSession {
+export interface ProgramDesignerSession {
   userId: string;
-  sessionId: string;  // program_creator_{conversationId}_{timestamp}
+  sessionId: string; // program_designer_{conversationId}_{timestamp}
   conversationId: string;
 
   // Todo-list based conversational flow
-  todoList: ProgramCreatorTodoList;
+  todoList: ProgramDesignerTodoList;
   conversationHistory: ConversationMessage[];
 
   // Session status
@@ -1215,7 +1268,7 @@ export interface ProgramCreatorSession {
 
   // Link to generated program
   programGeneration?: {
-    status: 'IN_PROGRESS' | 'COMPLETE' | 'FAILED';
+    status: "IN_PROGRESS" | "COMPLETE" | "FAILED";
     startedAt: Date;
     completedAt?: Date;
     failedAt?: Date;
@@ -1228,7 +1281,7 @@ export interface ProgramCreatorSession {
  * Complete to-do list for program creation
  * 21 fields tracking all required information
  */
-export interface ProgramCreatorTodoList {
+export interface ProgramDesignerTodoList {
   // Core Program Definition (3 fields)
   trainingGoals: TodoItem;
   targetEvent: TodoItem;
@@ -1268,15 +1321,16 @@ export interface ProgramCreatorTodoList {
 
 #### Step 2: Create Session Management Functions (1 hour)
 
-**File**: `amplify/functions/libs/program-creator/session-management.ts` (NEW)
+**File**: `amplify/functions/libs/program-designer/session-management.ts` (NEW)
 
 **Pattern**: Copy structure from `libs/coach-creator/session-management.ts`
 
 **Functions to implement:**
-- `getProgramCreatorSession(userId, conversationId)` - Load active session for conversation
-- `createProgramCreatorSession(userId, conversationId)` - Initialize new session
-- `saveProgramCreatorSession(session)` - Update session in DynamoDB
-- `completeProgramCreatorSession(session, programId)` - Mark complete and soft-delete
+
+- `getProgramDesignerSession(userId, conversationId)` - Load active session for conversation
+- `createProgramDesignerSession(userId, conversationId)` - Initialize new session
+- `saveProgramDesignerSession(session)` - Update session in DynamoDB
+- `completeProgramDesignerSession(session, programId)` - Mark complete and soft-delete
 
 **Why second**: Session management needed before conversation flow.
 
@@ -1284,11 +1338,12 @@ export interface ProgramCreatorTodoList {
 
 #### Step 3: Create Todo List Utilities (1 hour)
 
-**File**: `amplify/functions/libs/program-creator/todo-list-utils.ts` (NEW)
+**File**: `amplify/functions/libs/program-designer/todo-list-utils.ts` (NEW)
 
 **Pattern**: Copy structure from `libs/coach-creator/todo-list-utils.ts`
 
 **Functions to implement:**
+
 - `createEmptyProgramTodoList()` - Initialize empty list
 - `getRequiredPendingItems()` - What's missing
 - `getTodoProgress()` - Completion %
@@ -1301,18 +1356,19 @@ export interface ProgramCreatorTodoList {
 
 #### Step 4: Create Todo Extraction (2 hours)
 
-**File**: `amplify/functions/libs/program-creator/todo-extraction.ts` (NEW)
+**File**: `amplify/functions/libs/program-designer/todo-extraction.ts` (NEW)
 
 **Pattern**: Copy `libs/coach-creator/todo-extraction.ts` + multimodal from `build-workout`
 
 **Main function:**
+
 ```typescript
 export async function extractAndUpdateProgramTodoList(
   userResponse: string,
   conversationHistory: ConversationMessage[],
-  currentTodoList: ProgramCreatorTodoList,
-  imageS3Keys?: string[] // Multimodal support
-): Promise<ProgramCreatorTodoList>
+  currentTodoList: ProgramDesignerTodoList,
+  imageS3Keys?: string[], // Multimodal support
+): Promise<ProgramDesignerTodoList>;
 ```
 
 **Why third**: Depends on types and utils, but independent from other features.
@@ -1321,11 +1377,12 @@ export async function extractAndUpdateProgramTodoList(
 
 #### Step 5: Create Question Generator (2 hours)
 
-**File**: `amplify/functions/libs/program-creator/question-generator.ts` (NEW)
+**File**: `amplify/functions/libs/program-designer/question-generator.ts` (NEW)
 
 **Pattern**: Copy `libs/coach-creator/question-generator.ts`
 
 **Functions:**
+
 - `generateNextProgramQuestion()` - Non-streaming
 - `generateNextProgramQuestionStream()` - Streaming (production)
 
@@ -1335,11 +1392,12 @@ export async function extractAndUpdateProgramTodoList(
 
 #### Step 6: Create Conversation Handler (2 hours)
 
-**File**: `amplify/functions/libs/program-creator/conversation-handler.ts` (NEW)
+**File**: `amplify/functions/libs/program-designer/conversation-handler.ts` (NEW)
 
 **Pattern**: Copy `libs/coach-creator/conversation-handler.ts`
 
 **Main function:**
+
 ```typescript
 export async function* handleProgramTodoListConversation(
   userResponse: string,
@@ -1357,8 +1415,9 @@ export async function* handleProgramTodoListConversation(
 **File**: `amplify/functions/stream-coach-conversation/handler.ts` (UPDATE)
 
 **Changes:**
+
 - Add Build mode detection (already exists)
-- Load or create `ProgramCreatorSession` for conversation
+- Load or create `ProgramDesignerSession` for conversation
 - Call `handleTodoListConversation()` generator with session
 - Yield chunks to user
 - Save updated session after each message
@@ -1368,12 +1427,14 @@ export async function* handleProgramTodoListConversation(
 **Why last**: Integration point, everything above must exist first.
 
 **Key difference from current approach:**
+
 - **Before**: `conversation.programBuildState` embedded in conversation
-- **After**: `ProgramCreatorSession` as separate entity, linked by `conversationId`
+- **After**: `ProgramDesignerSession` as separate entity, linked by `conversationId`
 
 ---
 
 **Week 1 Testing:**
+
 - Unit tests for utilities
 - Test extraction with text-only
 - Test extraction with images
@@ -1400,12 +1461,14 @@ export async function* handleProgramTodoListConversation(
 #### Step 8: Create Schema + Phase Generator (4 hours)
 
 **Step 8a**: `amplify/functions/libs/program/schema.ts` (NEW)
+
 - Define `PROGRAM_SCHEMA` for toolConfig (like `WORKOUT_SCHEMA`)
 - Define `PHASE_SCHEMA` for individual phase generation
 - Export schemas for generation and normalization
 - **Pattern**: Same structure as `schemas/universal-workout-schema.ts`
 
 **Step 8b**: `amplify/functions/libs/program/phase-generator.ts` (NEW)
+
 - `generatePhaseStructure()` - Determine optimal phase breakdown (considers image context)
 - `generateSinglePhaseWorkouts()` - Generate workouts for one phase (uses toolConfig, multimodal-aware)
 - `generateAllPhasesParallel()` - Execute phase generation in parallel using `Promise.all()`
@@ -1421,6 +1484,7 @@ export async function* handleProgramTodoListConversation(
 **File**: `amplify/functions/libs/program/generation.ts` (UPDATE/REFACTOR)
 
 **Changes:**
+
 - Update `generateProgram()` to call parallel pipeline
 - Pipeline: `generatePhaseStructure()` → `generateAllPhasesParallel()` → `assembleProgram()`
 - Use toolConfig throughout (remove JSON code block parsing)
@@ -1431,12 +1495,14 @@ export async function* handleProgramTodoListConversation(
 #### Step 10: Update Async Handler + Normalization (3 hours)
 
 **Step 10a**: Update `amplify/functions/libs/program/normalization.ts`
+
 - Update `normalizeProgram()` to use toolConfig with `normalize_training_program` tool
 - Provide schema in prompt for AI comparison
 - Add `validateProgramStructure()` - Additional validation checks
 - **Pattern**: Same as `workout/normalization.ts`
 
 **Step 10b**: Update `amplify/functions/build-program/handler.ts`
+
 - Follow **exact pattern** of `build-workout/handler.ts`
 - Use `withHeartbeat()` wrapper
 - Tool-based generation with fallback
@@ -1448,6 +1514,7 @@ export async function* handleProgramTodoListConversation(
 ---
 
 **Week 2 Testing:**
+
 - Test schema validation with various program structures
 - Test parallel phase generation (2, 3, 4, 5 phases)
 - Test assembly logic
@@ -1463,6 +1530,7 @@ export async function* handleProgramTodoListConversation(
 **Pattern**: Follow **exact structure** of `build-workout` multimodal handling
 
 **Image Flow Through System:**
+
 ```
 User uploads image in Build Mode conversation
     ↓
@@ -1492,11 +1560,13 @@ generateSinglePhaseWorkouts():
 ```
 
 **Key Image Utilities (from build-workout):**
+
 - `buildMultimodalContent()` - Converts messages with S3 keys to Bedrock format
 - `callBedrockApiMultimodal()` - Handles multimodal API calls
 - `MESSAGE_TYPES.TEXT_WITH_IMAGES` - Message type for tracking
 
 **Implementation Notes:**
+
 - Images processed during todo-extraction (not stored long-term)
 - Image context extracted into text description in todo list
 - Phase generation uses text descriptions (not raw images)
@@ -1539,6 +1609,7 @@ generateSinglePhaseWorkouts():
   - **Pattern**: Same as `workout/normalization.ts`
 
 **Files to Update:**
+
 - `amplify/functions/build-program/handler.ts`
   - Follow **exact pattern** of `build-workout/handler.ts`
   - Use `withHeartbeat()` wrapper
@@ -1549,6 +1620,7 @@ generateSinglePhaseWorkouts():
   - Debug data to S3 on error
 
 **Testing:**
+
 - Test schema validation with various program structures
 - Test parallel phase generation (2, 3, 4, 5 phases)
 - Test assembly logic
@@ -1567,12 +1639,14 @@ generateSinglePhaseWorkouts():
 #### Current State (Manual Toggle)
 
 **User Experience:**
+
 - User must manually click "Program" button to enter PROGRAM_DESIGN mode
 - Manual toggle creates friction - user must predict intent before starting conversation
 - Toggle stays active until manually switched back to CHAT mode
 - No automatic context switching - user must remember to toggle back
 
 **User Flow (Current - Manual):**
+
 ```
 User wants to design program
     ↓
@@ -1592,6 +1666,7 @@ PROBLEM: User forgets step 6, stays in PROGRAM_DESIGN mode
 ```
 
 **Technical Implementation:**
+
 - `CoachConversationModeToggle` component in ChatInput
 - Frontend controls mode state via button clicks
 - Mode persisted in `CoachConversation.mode` in DynamoDB
@@ -1599,6 +1674,7 @@ PROBLEM: User forgets step 6, stays in PROGRAM_DESIGN mode
 - No AI detection, no automatic mode switching
 
 **Problems:**
+
 - ❌ **Friction**: Extra click before starting program design conversation
 - ❌ **Cognitive load**: User must predict they want to design a program
 - ❌ **Inconsistent UX**: WORKOUT_LOG is AI-detected, but PROGRAM_DESIGN requires manual toggle
@@ -1609,6 +1685,7 @@ PROBLEM: User forgets step 6, stays in PROGRAM_DESIGN mode
 #### Proposed State (AI-Detected)
 
 **User Experience:**
+
 - User naturally says: "I want to design a training program", "create a program for me", "build me a program"
 - AI detects intent and automatically enters PROGRAM_DESIGN mode
 - Purple badge appears on AI responses (like cyan badge for WORKOUT_LOG)
@@ -1616,12 +1693,13 @@ PROBLEM: User forgets step 6, stays in PROGRAM_DESIGN mode
 - Natural conversation flow - no manual mode switching
 
 **User Flow (Proposed - AI-Detected):**
+
 ```
 User types: "I want to design a training program for a marathon"
     ↓
 1. Smart Router detects program design intent (confidence: 0.95)
     ↓
-2. Backend creates ProgramCreatorSession automatically
+2. Backend creates ProgramDesignerSession automatically
     ↓
 3. Purple badge appears on AI response
     ↓
@@ -1631,7 +1709,7 @@ User types: "I want to design a training program for a marathon"
     ↓
 6. AI detects topic change (confidence: 0.92)
     ↓
-7. ProgramCreatorSession auto-cancelled
+7. ProgramDesignerSession auto-cancelled
     ↓
 8. Message re-processed as WORKOUT_LOG
     ↓
@@ -1649,6 +1727,7 @@ User types: "I want to design a training program for a marathon"
 | **Accessibility** | Requires finding button | Works via voice/text naturally |
 
 **Benefits:**
+
 - ✅ **Zero friction**: No manual toggle needed
 - ✅ **Natural**: Matches how users think ("I want to..." vs. "First click this button, then...")
 - ✅ **Consistent**: Matches WORKOUT_LOG pattern exactly
@@ -1668,6 +1747,7 @@ User types: "I want to design a training program for a marathon"
 **File**: `amplify/functions/libs/coach-conversation/detection.ts`
 
 **What to add**:
+
 ```typescript
 // Add to analyzeRequestCapabilities system prompt:
 
@@ -1715,6 +1795,7 @@ Program Design Detection:
 ```
 
 **Updates to schema**:
+
 ```typescript
 {
   "programDesignDetection": {
@@ -1729,12 +1810,13 @@ Program Design Detection:
 **File**: `amplify/functions/libs/coach-conversation/slash-commands.ts` (or wherever slash commands are parsed)
 
 **What to add**: Program design slash commands
+
 ```typescript
 // Add to slash command definitions:
 const PROGRAM_DESIGN_COMMANDS = [
-  '/design-program',
-  '/create-program',
-  '/build-program',
+  "/design-program",
+  "/create-program",
+  "/build-program",
 ];
 
 export function isProgramDesignSlashCommand(command: string): boolean {
@@ -1746,34 +1828,34 @@ export function isProgramDesignSlashCommand(command: string): boolean {
 
 ---
 
-##### Step 2: Update Program Creator Schema + Session Management (4 hours)
+##### Step 2: Update Program Designer Schema + Session Management (4 hours)
 
-**File**: `amplify/functions/libs/program-creator/conversation-handler.ts`
+**File**: `amplify/functions/libs/program-designer/conversation-handler.ts`
 
 **What to add**: Topic change + early completion detection (same pattern as workout-creator)
 
 ```typescript
 export async function* handleTodoListConversation(
   userResponse: string,
-  session: ProgramCreatorSession,
+  session: ProgramDesignerSession,
   imageS3Keys?: string[],
   coachConfig?: any,
   userContext?: {
     pineconeMemories?: any[];
     userProfile?: any;
     activeProgram?: any;
-  }
+  },
 ): AsyncGenerator<string, any, unknown> {
   // ... existing extraction logic ...
 
   // Step 1.5: Check for topic change (user abandoned program design)
   if (extractionResult.userChangedTopic) {
-    console.info('🔀 User changed topics - cancelling program design session');
+    console.info("🔀 User changed topics - cancelling program design session");
     session.isComplete = false; // Don't complete the program
 
     // Don't yield anything - the caller will handle re-processing the message
     return {
-      cleanedResponse: '', // Empty response - message will be re-processed
+      cleanedResponse: "", // Empty response - message will be re-processed
       isComplete: false,
       sessionCancelled: true, // Signal to caller to clear session and re-process
       progressDetails: {
@@ -1786,16 +1868,20 @@ export async function* handleTodoListConversation(
 
   // Step 1.6: Check for early completion intent (user wants to skip optional fields)
   if (extractionResult.userWantsToFinish) {
-    console.info('✅ User wants to finish early - checking if minimum requirements met');
+    console.info(
+      "✅ User wants to finish early - checking if minimum requirements met",
+    );
     const requiredComplete = isSessionComplete(session.todoList);
 
     if (requiredComplete) {
-      console.info('✅ Required fields complete - triggering program generation');
+      console.info(
+        "✅ Required fields complete - triggering program generation",
+      );
       // Generate completion message and trigger generation
       const completionMessage = await generateCompletionMessage(
         session.todoList,
         coachConfig,
-        userContext
+        userContext,
       );
 
       for await (const chunk of completionMessage) {
@@ -1809,7 +1895,9 @@ export async function* handleTodoListConversation(
         progressDetails: getTodoProgress(session.todoList),
       };
     } else {
-      console.info('⚠️ User wants to finish but required fields incomplete - continuing collection');
+      console.info(
+        "⚠️ User wants to finish but required fields incomplete - continuing collection",
+      );
       // Continue normal flow
     }
   }
@@ -1818,17 +1906,16 @@ export async function* handleTodoListConversation(
 }
 ```
 
-**File**: `amplify/functions/libs/program-creator/question-generator.ts`
+**File**: `amplify/functions/libs/program-designer/question-generator.ts`
 
 **What to add**: Dynamic completion message instructions
 
 ```typescript
 export async function generateCompletionMessage(
-  todoList: ProgramCreatorTodoList,
+  todoList: ProgramDesignerTodoList,
   coachConfig: any,
-  userContext?: any
+  userContext?: any,
 ): AsyncGenerator<string, void, unknown> {
-
   const completionPrompt = `
 You are ${coachConfig.coach_name}, and the user has provided all the information needed to design their training program.
 
@@ -1857,9 +1944,9 @@ Generate the completion message now:
   // Stream the completion message using coach's personality
   const stream = await callBedrockApiStream(
     completionPrompt,
-    '', // No additional context needed
+    "", // No additional context needed
     MODEL_IDS.CLAUDE_SONNET_4_FULL,
-    { personality: coachConfig }
+    { personality: coachConfig },
   );
 
   for await (const chunk of stream) {
@@ -1869,34 +1956,37 @@ Generate the completion message now:
 ```
 
 **Why this approach**:
+
 - ✅ Completion message is dynamic (generated by AI with coach personality)
 - ✅ Instructions are part of AI prompt (not hardcoded strings)
 - ✅ Matches workout creator pattern (question generator generates completion message)
 - ✅ Ensures instructions always match current product state
 
-**File**: `amplify/functions/libs/schemas/program-creator-todo-schema.ts`
+**File**: `amplify/functions/libs/schemas/program-designer-todo-schema.ts`
 
 **What to add**: Topic change and finish intent detection
 
 ```typescript
 export const PROGRAM_TODO_SCHEMA = {
-  type: 'object',
+  type: "object",
   properties: {
     // ... existing fields ...
 
     // Intent detection: Does the user want to skip remaining fields and finish?
     userWantsToFinish: {
-      type: 'boolean',
-      description: 'Set to true if the user indicates they want to skip remaining optional fields and finish designing. Detect phrases like: "skip", "that\'s all", "that\'s it", "design it now", "I\'m done", "done", "just create it", "no more", "nah", "nope", "nothing else". Consider context and conversational cues. If they\'re clearly trying to move on or show completion intent, set this to true.'
+      type: "boolean",
+      description:
+        'Set to true if the user indicates they want to skip remaining optional fields and finish designing. Detect phrases like: "skip", "that\'s all", "that\'s it", "design it now", "I\'m done", "done", "just create it", "no more", "nah", "nope", "nothing else". Consider context and conversational cues. If they\'re clearly trying to move on or show completion intent, set this to true.',
     },
 
     // Topic change detection: Has the user changed topics away from program design?
     userChangedTopic: {
-      type: 'boolean',
-      description: 'Set to true if the user has clearly changed topics and is no longer trying to design a program. Detect when they ask about: workout logging, general training advice, unrelated topics, different features. Examples: "log this workout", "what\'s a good leg workout?", "tell me about your coaching", "never mind", "forget it", "let\'s talk about something else". Do NOT set this to true if they\'re just providing more program requirements or correcting previous information. Only set true when they\'ve clearly abandoned the current program design effort.'
-    }
+      type: "boolean",
+      description:
+        'Set to true if the user has clearly changed topics and is no longer trying to design a program. Detect when they ask about: workout logging, general training advice, unrelated topics, different features. Examples: "log this workout", "what\'s a good leg workout?", "tell me about your coaching", "never mind", "forget it", "let\'s talk about something else". Do NOT set this to true if they\'re just providing more program requirements or correcting previous information. Only set true when they\'ve clearly abandoned the current program design effort.',
+    },
   },
-  additionalProperties: false
+  additionalProperties: false,
 };
 ```
 
@@ -1918,12 +2008,18 @@ export const PROGRAM_TODO_SCHEMA = {
 // ============================================================================
 const slashCommandResult = parseSlashCommand(params.userResponse);
 const isProgramDesignSlashCommand =
-  slashCommandResult.isSlashCommand && isProgramDesignSlashCommand(slashCommandResult.command);
+  slashCommandResult.isSlashCommand &&
+  isProgramDesignSlashCommand(slashCommandResult.command);
 
 // If slash command detected during existing session, clear it and start fresh
-if (isProgramDesignSlashCommand && conversationData.existingConversation.programCreatorSession) {
-  console.info('⚡ Slash command detected during session - clearing and restarting');
-  delete conversationData.existingConversation.programCreatorSession;
+if (
+  isProgramDesignSlashCommand &&
+  conversationData.existingConversation.programDesignerSession
+) {
+  console.info(
+    "⚡ Slash command detected during session - clearing and restarting",
+  );
+  delete conversationData.existingConversation.programDesignerSession;
 }
 
 // ============================================================================
@@ -1935,23 +2031,31 @@ const isProgramDesign =
   routerAnalysis?.programDesignDetection?.isProgramDesign ||
   isProgramDesignSlashCommand;
 
-// NEW: Check if there's an active program creator session
-const programSession = conversationData.existingConversation.programCreatorSession;
+// NEW: Check if there's an active program designer session
+const programSession =
+  conversationData.existingConversation.programDesignerSession;
 
 if (programSession) {
-  console.info('🏗️ Program design session in progress - continuing multi-turn flow');
+  console.info(
+    "🏗️ Program design session in progress - continuing multi-turn flow",
+  );
 
   // Track message count before handling
-  const messageCountBefore = conversationData.existingConversation.messages.length;
+  const messageCountBefore =
+    conversationData.existingConversation.messages.length;
 
-  yield* handleProgramCreatorFlow(params, conversationData, programSession);
+  yield * handleProgramDesignerFlow(params, conversationData, programSession);
 
   // Check if session was cancelled (topic change) vs completed successfully
-  const sessionWasCleared = !conversationData.existingConversation.programCreatorSession;
-  const messagesWereAdded = conversationData.existingConversation.messages.length > messageCountBefore;
+  const sessionWasCleared =
+    !conversationData.existingConversation.programDesignerSession;
+  const messagesWereAdded =
+    conversationData.existingConversation.messages.length > messageCountBefore;
 
   if (sessionWasCleared && !messagesWereAdded) {
-    console.info('🔀 Program design session was cancelled - re-processing message as normal conversation');
+    console.info(
+      "🔀 Program design session was cancelled - re-processing message as normal conversation",
+    );
     // Don't return - fall through to normal conversation processing below
   } else {
     return; // Exit early - handled the program design flow normally
@@ -1960,12 +2064,14 @@ if (programSession) {
 
 // NEW: Start program design session if AI detected intent (OR slash command)
 if (isProgramDesign && !programSession) {
-  console.info('🎯 Program design intent detected - starting new session', {
-    triggeredBy: isProgramDesignSlashCommand ? 'slash_command' : 'natural_language',
-    confidence: routerAnalysis?.programDesignDetection?.confidence || 1.0
+  console.info("🎯 Program design intent detected - starting new session", {
+    triggeredBy: isProgramDesignSlashCommand
+      ? "slash_command"
+      : "natural_language",
+    confidence: routerAnalysis?.programDesignDetection?.confidence || 1.0,
   });
 
-  yield* startProgramDesignSession(params, conversationData);
+  yield * startProgramDesignSession(params, conversationData);
   return; // Exit early - handled the session start
 }
 ```
@@ -1975,14 +2081,14 @@ if (isProgramDesign && !programSession) {
 ```typescript
 export async function* startProgramDesignSession(
   params: BusinessLogicParams,
-  conversationData: ConversationData
+  conversationData: ConversationData,
 ): AsyncGenerator<string, void, unknown> {
-  console.info('🏗️ Starting new program design session');
+  console.info("🏗️ Starting new program design session");
 
   try {
-    // Create new program creator session
-    const programSession: ProgramCreatorSession = {
-      sessionId: `program_creator_${params.conversationId}_${Date.now()}`,
+    // Create new program designer session
+    const programSession: ProgramDesignerSession = {
+      sessionId: `program_designer_${params.conversationId}_${Date.now()}`,
       userId: params.userId,
       conversationId: params.conversationId,
       todoList: createEmptyProgramTodoList(),
@@ -1993,50 +2099,50 @@ export async function* startProgramDesignSession(
     };
 
     // Save session to DynamoDB
-    await saveProgramCreatorSession(programSession);
+    await saveProgramDesignerSession(programSession);
 
     // Attach to conversation (in-memory only for this request)
-    conversationData.existingConversation.programCreatorSession = programSession;
+    conversationData.existingConversation.programDesignerSession =
+      programSession;
 
     // ✅ FIX: Yield metadata event FIRST to inform UI we're in program_design mode
     // This ensures purple bubble styling applies immediately, not just after refresh
     yield formatMetadataEvent({ mode: CONVERSATION_MODES.PROGRAM_DESIGN });
-    console.info('📋 Metadata event sent: mode=program_design (session start)');
+    console.info("📋 Metadata event sent: mode=program_design (session start)");
 
     // CRITICAL: Metadata event MUST be sent before AI response starts streaming
     // This allows frontend to apply purple styling to the first AI message bubble
 
-    // Use program-creator conversation handler to start collection
+    // Use program-designer conversation handler to start collection
     yield* handleTodoListConversation(
       params.userResponse,
       programSession,
       params.imageS3Keys,
-      conversationData.coachConfig
+      conversationData.coachConfig,
     );
 
     // Update session in DynamoDB
     programSession.lastActivity = new Date();
-    await saveProgramCreatorSession(programSession);
+    await saveProgramDesignerSession(programSession);
 
     // Save conversation with session reference
     await saveCoachConversation(conversationData.existingConversation);
-
   } catch (error) {
-    console.error('❌ Error starting program design session:', error);
+    console.error("❌ Error starting program design session:", error);
     throw error;
   }
 }
 ```
 
-**New function**: `handleProgramCreatorFlow()` (mirrors `handleWorkoutCreatorFlow()`)
+**New function**: `handleProgramDesignerFlow()` (mirrors `handleWorkoutCreatorFlow()`)
 
 ```typescript
-export async function* handleProgramCreatorFlow(
+export async function* handleProgramDesignerFlow(
   params: BusinessLogicParams,
   conversationData: ConversationData,
-  programSession: ProgramCreatorSession
+  programSession: ProgramDesignerSession,
 ): AsyncGenerator<string, void, unknown> {
-  console.info('🏗️ Continuing program design session');
+  console.info("🏗️ Continuing program design session");
 
   try {
     // Yield metadata event to maintain program_design mode
@@ -2052,15 +2158,15 @@ export async function* handleProgramCreatorFlow(
         pineconeMemories: conversationData.context?.pineconeContext?.memories,
         userProfile: conversationData.userProfile,
         activeProgram: conversationData.context?.activeProgram,
-      }
+      },
     );
 
     // Check if session was cancelled (topic change detected)
     if (processedResponse.sessionCancelled) {
-      console.info('🔀 Topic change detected - clearing program session');
+      console.info("🔀 Topic change detected - clearing program session");
 
       // Clear the session and reset mode back to CHAT
-      delete conversationData.existingConversation.programCreatorSession;
+      delete conversationData.existingConversation.programDesignerSession;
 
       // Save conversation without the session
       await saveCoachConversation(conversationData.existingConversation);
@@ -2068,33 +2174,37 @@ export async function* handleProgramCreatorFlow(
       // Yield event indicating session was cancelled
       yield formatCompleteEvent({
         messageId: `msg_${Date.now()}_cancelled`,
-        type: 'session_cancelled',
-        fullMessage: '',
-        aiResponse: '',
+        type: "session_cancelled",
+        fullMessage: "",
+        aiResponse: "",
         isComplete: false,
         mode: CONVERSATION_MODES.CHAT, // Reset mode back to CHAT
-        programCreatorSession: null, // Clear session on frontend
+        programDesignerSession: null, // Clear session on frontend
         metadata: {
           sessionCancelled: true,
-          reason: 'topic_change',
+          reason: "topic_change",
         },
       });
 
-      console.info('✅ Program session cancelled - message will be re-processed');
+      console.info(
+        "✅ Program session cancelled - message will be re-processed",
+      );
       return;
     }
 
     // If complete, trigger program creation and clear session
     if (processedResponse.isComplete) {
-      console.info('✅ Program design session complete - triggering async generation');
+      console.info(
+        "✅ Program design session complete - triggering async generation",
+      );
 
       // Mark session complete
       programSession.isComplete = true;
       programSession.completedAt = new Date();
-      await saveProgramCreatorSession(programSession);
+      await saveProgramDesignerSession(programSession);
 
       // Trigger async program generation (with session data)
-      await invokeAsyncLambda('build-program', {
+      await invokeAsyncLambda("build-program", {
         userId: params.userId,
         coachId: params.coachId,
         conversationId: params.conversationId,
@@ -2104,18 +2214,17 @@ export async function* handleProgramCreatorFlow(
       });
 
       // Clear session from conversation (it's now in DynamoDB separately)
-      delete conversationData.existingConversation.programCreatorSession;
+      delete conversationData.existingConversation.programDesignerSession;
     } else {
       // Update session with latest state
       programSession.lastActivity = new Date();
-      await saveProgramCreatorSession(programSession);
+      await saveProgramDesignerSession(programSession);
     }
 
     // Save conversation
     await saveCoachConversation(conversationData.existingConversation);
-
   } catch (error) {
-    console.error('❌ Error in program creator flow:', error);
+    console.error("❌ Error in program designer flow:", error);
     throw error;
   }
 }
@@ -2130,17 +2239,18 @@ export async function* handleProgramCreatorFlow(
 **File**: `src/utils/slashCommands.js` (or wherever slash commands are defined)
 
 **What to add**: Program design slash commands
+
 ```javascript
 export const SLASH_COMMANDS = {
   // ... existing commands ...
 
   // Program Design Commands
   DESIGN_PROGRAM: {
-    command: '/design-program',
-    aliases: ['/create-program', '/build-program'],
-    description: 'Start designing a new training program',
-    category: 'program',
-    hint: 'Design a training program through guided conversation',
+    command: "/design-program",
+    aliases: ["/create-program", "/build-program"],
+    description: "Start designing a new training program",
+    category: "program",
+    hint: "Design a training program through guided conversation",
   },
 };
 ```
@@ -2153,9 +2263,9 @@ export const SLASH_COMMANDS = {
 // Add to command list for autocomplete
 const programCommands = [
   {
-    command: '/design-program',
-    description: 'Start designing a new training program',
-    icon: <BuildModeIconTiny />
+    command: "/design-program",
+    description: "Start designing a new training program",
+    icon: <BuildModeIconTiny />,
   },
 ];
 ```
@@ -2169,6 +2279,7 @@ const programCommands = [
 **File**: `src/components/shared/ChatInput.jsx`
 
 **What to remove**:
+
 ```typescript
 // REMOVE: conversationMode prop
 // REMOVE: onConversationModeChange prop
@@ -2178,6 +2289,7 @@ const programCommands = [
 **File**: `src/components/CoachConversations.jsx`
 
 **What to remove**:
+
 ```typescript
 // REMOVE: Manual mode state management
 // REMOVE: onConversationModeChange handler
@@ -2188,6 +2300,7 @@ const programCommands = [
 ```
 
 **What to keep**:
+
 - Purple badge indicator for AI responses in PROGRAM_DESIGN mode
 - Purple bubble styling for AI responses
 - Mode detection from SSE metadata events and message metadata
@@ -2201,17 +2314,24 @@ const programCommands = [
 **File**: `src/components/CoachConversations.jsx`
 
 **Current implementation** (already correct):
+
 ```jsx
-{/* Program Design Indicator Badge (only for AI messages created during program design artifact creation) */}
-{message.type === "ai" && message.metadata?.mode === CONVERSATION_MODES.PROGRAM_DESIGN && (
-  <div className={`${buttonPatterns.modeBadgeProgramDesign} mb-1`}>
-    <BuildModeIconTiny />
-    <span className="translate-y-px">Program Design</span>
-  </div>
-)}
+{
+  /* Program Design Indicator Badge (only for AI messages created during program design artifact creation) */
+}
+{
+  message.type === "ai" &&
+    message.metadata?.mode === CONVERSATION_MODES.PROGRAM_DESIGN && (
+      <div className={`${buttonPatterns.modeBadgeProgramDesign} mb-1`}>
+        <BuildModeIconTiny />
+        <span className="translate-y-px">Program Design</span>
+      </div>
+    );
+}
 ```
 
 **What to verify**:
+
 - ✅ Badge shows on AI messages with `mode: 'program_design'`
 - ✅ Purple styling matches existing design
 - ✅ Badge disappears when mode changes back to CHAT
@@ -2226,6 +2346,7 @@ const programCommands = [
 **File**: `amplify/functions/libs/coach-conversation/types.ts`
 
 **Current state**:
+
 ```typescript
 export interface CoachConversation {
   // ...
@@ -2233,13 +2354,14 @@ export interface CoachConversation {
 
   // Session references (NOT embedded state)
   workoutCreatorSession?: WorkoutCreatorSession;
-  programCreatorSession?: ProgramCreatorSession; // NEW: Reference to active session
+  programDesignerSession?: ProgramDesignerSession; // NEW: Reference to active session
   // ...
 }
 ```
 
 **What to verify**:
-- ✅ `programCreatorSession` field exists (already added in V2 redesign)
+
+- ✅ `programDesignerSession` field exists (already added in V2 redesign)
 - ✅ Session stored separately in DynamoDB with its own PK/SK
 - ✅ Only session reference kept in conversation (not full state)
 - ✅ Session automatically loaded when resuming conversation
@@ -2255,6 +2377,7 @@ export interface CoachConversation {
 **Symptom**: Memory save acknowledgment appearing 2-3x in single AI response
 
 **Investigation areas**:
+
 1. Check if memory detection triggers multiple times in parallel operations
 2. Check if memory acknowledgment added in both contextual update AND main response
 3. Check if multiple memory saves firing for same message
@@ -2262,6 +2385,7 @@ export interface CoachConversation {
 **Likely location**: `amplify/functions/stream-coach-conversation/handler.ts`
 
 **Fix approach**:
+
 - Ensure memory acknowledgment only added once
 - Likely in main AI response generation, not in contextual updates
 - Add flag to track if acknowledgment already added
@@ -2288,11 +2412,13 @@ if (didInitiateMemorySave && !memoryAcknowledgmentAdded) {
 **Bug 2: Purple Bubble Styling Not Applying Until Refresh**
 
 **Status**: ✅ FIXED in Step 3
+
 - Metadata event now sent BEFORE AI response streaming starts
 - `formatMetadataEvent({ mode: CONVERSATION_MODES.PROGRAM_DESIGN })` yields first
 - Frontend applies purple styling immediately
 
 **Verification**:
+
 - Test that first AI response in program design session has purple bubble
 - Test that badge appears immediately
 - Test that no page refresh needed
@@ -2312,13 +2438,14 @@ if (didInitiateMemorySave && !memoryAcknowledgmentAdded) {
    - ❌ "How should I structure my training?" → Does NOT start session (advice)
 
 1.5. **Slash Command Detection**:
-   - ✅ "/design-program" → Starts session immediately (confidence 1.0)
-   - ✅ "/create-program" → Starts session immediately
-   - ✅ "/build-program" → Starts session immediately
-   - ✅ "/design-program for marathon training" → Starts session with context
-   - ✅ Slash command during active session → Clears old session, starts new
-   - ✅ Slash command autocomplete shows program design commands
-   - ✅ Frontend slash command UI displays correctly
+
+- ✅ "/design-program" → Starts session immediately (confidence 1.0)
+- ✅ "/create-program" → Starts session immediately
+- ✅ "/build-program" → Starts session immediately
+- ✅ "/design-program for marathon training" → Starts session with context
+- ✅ Slash command during active session → Clears old session, starts new
+- ✅ Slash command autocomplete shows program design commands
+- ✅ Frontend slash command UI displays correctly
 
 2. **Session Continuation**:
    - ✅ Session persists across messages
@@ -2373,6 +2500,7 @@ if (didInitiateMemorySave && !memoryAcknowledgmentAdded) {
 **Option A: Clean Cutover (Recommended)**
 
 **Approach:**
+
 1. Deploy AI detection backend
 2. Deploy frontend without toggle
 3. Announce: "Program design is now smarter - just ask!"
@@ -2380,22 +2508,26 @@ if (didInitiateMemorySave && !memoryAcknowledgmentAdded) {
 5. Remove legacy mode persistence code
 
 **Benefits:**
+
 - ✅ Clean codebase
 - ✅ Consistent UX (matches WORKOUT_LOG)
 - ✅ No dual-path complexity
 
 **Risks:**
+
 - ⚠️ Users with muscle memory for toggle might be confused briefly
 - **Mitigation**: Toast notification on first visit: "New! Just ask me to design a program - no button needed"
 
 **Option B: Dual Mode (Not Recommended)**
 
 **Approach:**
+
 1. Keep manual toggle as fallback
 2. Add AI detection
 3. Either path starts program design session
 
 **Drawbacks:**
+
 - ⚠️ Confusing UX (two ways to do same thing)
 - ⚠️ More code to maintain
 - ⚠️ Inconsistent with WORKOUT_LOG pattern
@@ -2416,9 +2548,9 @@ if (didInitiateMemorySave && !memoryAcknowledgmentAdded) {
 
 3. **Confidence Threshold**: ✅ **0.7+** - Matches WORKOUT_LOG detection threshold
 
-4. **Session Resume**: ✅ **YES** - ProgramCreatorSession persists in DynamoDB as separate entity
-   - Stored with own PK/SK: `PK: user#{userId}`, `SK: programCreatorSession#{sessionId}`
-   - Referenced in CoachConversation: `conversation.programCreatorSession`
+4. **Session Resume**: ✅ **YES** - ProgramDesignerSession persists in DynamoDB as separate entity
+   - Stored with own PK/SK: `PK: user#{userId}`, `SK: programDesignerSession#{sessionId}`
+   - Referenced in CoachConversation: `conversation.programDesignerSession`
    - Auto-loads on conversation resume
 
 5. **No Toast Notification**: ✅ User will announce via email, no in-app notification needed
@@ -2439,24 +2571,25 @@ if (didInitiateMemorySave && !memoryAcknowledgmentAdded) {
 
 **Total Estimate**: 18 hours (2.5 days) + 2 hours for bug fixes
 
-| Step | Task | Time | Dependencies |
-|------|------|------|--------------|
-| 1 | Smart Router + Slash Commands | 3 hours | None |
-| 2 | Schema + Session Management | 4 hours | Step 1 |
-| 3 | Stream Handler + Detection Flow | 5 hours | Steps 1-2 |
-| 4a | Frontend Slash Commands | 1 hour | Step 3 |
-| 4b | Remove Frontend Toggle | 1 hour | Step 4a |
-| 5 | Verify UI Indicators | 1 hour | Step 4b |
-| 6 | Verify Session Save/Load | 1 hour | None (already done in V2) |
-| 7 | Testing & Validation | 2 hours | Steps 1-6 |
-| **Bugs** | Fix "I'll remember this" duplicate | 1 hour | Separate investigation |
-| **Bugs** | Verify purple bubble styling | 1 hour | Integrated in Step 3 |
+| Step     | Task                               | Time    | Dependencies              |
+| -------- | ---------------------------------- | ------- | ------------------------- |
+| 1        | Smart Router + Slash Commands      | 3 hours | None                      |
+| 2        | Schema + Session Management        | 4 hours | Step 1                    |
+| 3        | Stream Handler + Detection Flow    | 5 hours | Steps 1-2                 |
+| 4a       | Frontend Slash Commands            | 1 hour  | Step 3                    |
+| 4b       | Remove Frontend Toggle             | 1 hour  | Step 4a                   |
+| 5        | Verify UI Indicators               | 1 hour  | Step 4b                   |
+| 6        | Verify Session Save/Load           | 1 hour  | None (already done in V2) |
+| 7        | Testing & Validation               | 2 hours | Steps 1-6                 |
+| **Bugs** | Fix "I'll remember this" duplicate | 1 hour  | Separate investigation    |
+| **Bugs** | Verify purple bubble styling       | 1 hour  | Integrated in Step 3      |
 
 **Total Phase 5**: 18 hours
 **Total Bugs**: 2 hours
 **Grand Total**: 20 hours (~2.5 days)
 
 **Sequencing:**
+
 - Day 1 (AM): Steps 1-2 (detection + session management - 7 hours)
 - Day 1 (PM) + Day 2 (AM): Step 3 (stream handler integration - 5 hours)
 - Day 2 (PM): Steps 4a-4b (frontend - 2 hours)
@@ -2464,8 +2597,9 @@ if (didInitiateMemorySave && !memoryAcknowledgmentAdded) {
 - Day 3 (PM): Bug fixes (2 hours)
 
 **Dependencies:**
+
 - ✅ V2 Redesign (Steps 1-10) must be complete first
-- ✅ `ProgramCreatorSession` entity must exist in DynamoDB
+- ✅ `ProgramDesignerSession` entity must exist in DynamoDB
 - ✅ Todo-list conversation flow must be working
 - ✅ Smart Router must be operational
 
@@ -2474,6 +2608,7 @@ if (didInitiateMemorySave && !memoryAcknowledgmentAdded) {
 #### Success Metrics
 
 **Implementation Success:**
+
 - [ ] AI detection accuracy >85% (manual spot checks)
 - [ ] Topic change detection works in all test cases
 - [ ] Session cancellation is smooth and natural
@@ -2481,12 +2616,14 @@ if (didInitiateMemorySave && !memoryAcknowledgmentAdded) {
 - [ ] Purple badge appears on all program design messages
 
 **User Experience Success:**
-- [ ] >90% of users discover program design without instructions
+
+- [ ] > 90% of users discover program design without instructions
 - [ ] Zero "where's the program button?" support requests
 - [ ] Users report natural conversation flow
 - [ ] Session abandonment rate <20%
 
 **Technical Success:**
+
 - [ ] Pattern matches WORKOUT_LOG exactly (code review)
 - [ ] No manual mode switching in codebase
 - [ ] Clean separation: AI detection → Session → UI indicators
@@ -2497,6 +2634,7 @@ if (didInitiateMemorySave && !memoryAcknowledgmentAdded) {
 #### Summary: Phase 5 at a Glance
 
 **What We're Doing:**
+
 - Remove manual "Program" toggle button
 - Add AI detection for program design intent (like WORKOUT_LOG)
 - Add `/design-program` slash command support (like `/log-workout`)
@@ -2508,12 +2646,14 @@ if (didInitiateMemorySave && !memoryAcknowledgmentAdded) {
 - Keep purple badge UI indicator (contextual, not control)
 
 **What We're NOT Doing:**
+
 - ❌ NOT changing program design conversation flow (already uses todo-list)
 - ❌ NOT changing program generation logic (already uses V2 parallel)
 - ❌ NOT adding new UI components (just removing toggle and adding slash commands)
 - ❌ NOT keeping any legacy fallback paths (clean cutover)
 
 **Why It's Better:**
+
 - ✅ Zero-friction UX - no manual mode switching
 - ✅ Consistent pattern - matches WORKOUT_LOG exactly
 - ✅ Natural conversation - AI understands intent
@@ -2523,9 +2663,10 @@ if (didInitiateMemorySave && !memoryAcknowledgmentAdded) {
 - ✅ Bug fixes improve quality
 
 **CRITICAL RULE: Match Workout Creator Exactly**
+
 - ✅ Naming conventions MUST match (e.g., `handleTodoListConversation`, `startProgramDesignSession`)
 - ✅ Function signatures MUST match (same parameter patterns)
-- ✅ File structure MUST match (`program-creator/` mirrors `workout-creator/`)
+- ✅ File structure MUST match (`program-designer/` mirrors `workout-creator/`)
 - ✅ Session management MUST match (save/load/cancel patterns)
 - ✅ Detection logic MUST match (confidence thresholds, slash commands)
 - ✅ Metadata events MUST match (timing, format)
@@ -2533,6 +2674,7 @@ if (didInitiateMemorySave && !memoryAcknowledgmentAdded) {
 - ✅ Early completion MUST match (userWantsToFinish logic)
 
 **Implementation Risk: LOW**
+
 - All patterns proven and working (WORKOUT_LOG)
 - File structure matches existing code exactly
 - 2.5-day timeline (including bugs)
@@ -2543,25 +2685,25 @@ if (didInitiateMemorySave && !memoryAcknowledgmentAdded) {
 
 ## Comparison: Current vs. Proposed
 
-| Aspect | V1 (Original) | V2 (Redesign) | Phase 5 (AI Detection) |
-|--------|----------------|---------------|------------------------|
-| **Mode Activation** | Manual toggle button | Manual toggle button | AI-detected intent ✅ |
-| **Information Gathering** | Free-form conversation | Todo-list based tracking ✅ | Todo-list based tracking ✅ |
-| **Progress Visibility** | None | Todo progress % shown ✅ | Todo progress % shown ✅ |
-| **Completion Detection** | AI decides when ready | All required items complete ✅ | All required items complete ✅ |
-| **Repetition Prevention** | AI must remember | Todo list prevents re-asking ✅ | Todo list prevents re-asking ✅ |
-| **Data Extraction** | Implicit in conversation | Explicit AI extraction ✅ | Explicit AI extraction ✅ |
-| **Generation Format** | JSON code block | Bedrock toolConfig ✅ | Bedrock toolConfig ✅ |
-| **Output Validation** | Parse JSON, hope it works | Schema-enforced structure ✅ | Schema-enforced structure ✅ |
-| **Normalization** | None | AI normalization pass ✅ | AI normalization pass ✅ |
-| **Phase Generation** | All at once (fails >15 min) | Parallel (required) ✅ | Parallel (required) ✅ |
-| **Error Handling** | Fragile parsing | Structured tool use ✅ | Structured tool use ✅ |
-| **Session Cancellation** | Manual toggle back | Manual toggle back | AI-detected topic change ✅ |
-| **UX Consistency** | Inconsistent with WORKOUT_LOG | Inconsistent with WORKOUT_LOG | Matches WORKOUT_LOG ✅ |
-| **Flexibility** | User provides info in any order | User provides info in any order ✅ | User provides info in any order ✅ |
-| **Natural Conversation** | Yes ✅ | Yes ✅ | Yes ✅ |
-| **Image Support** | No | Yes (equipment, space, injuries) ✅ | Yes (equipment, space, injuries) ✅ |
-| **Quality Assurance** | None | Normalization + validation ✅ | Normalization + validation ✅ |
+| Aspect                    | V1 (Original)                   | V2 (Redesign)                       | Phase 5 (AI Detection)              |
+| ------------------------- | ------------------------------- | ----------------------------------- | ----------------------------------- |
+| **Mode Activation**       | Manual toggle button            | Manual toggle button                | AI-detected intent ✅               |
+| **Information Gathering** | Free-form conversation          | Todo-list based tracking ✅         | Todo-list based tracking ✅         |
+| **Progress Visibility**   | None                            | Todo progress % shown ✅            | Todo progress % shown ✅            |
+| **Completion Detection**  | AI decides when ready           | All required items complete ✅      | All required items complete ✅      |
+| **Repetition Prevention** | AI must remember                | Todo list prevents re-asking ✅     | Todo list prevents re-asking ✅     |
+| **Data Extraction**       | Implicit in conversation        | Explicit AI extraction ✅           | Explicit AI extraction ✅           |
+| **Generation Format**     | JSON code block                 | Bedrock toolConfig ✅               | Bedrock toolConfig ✅               |
+| **Output Validation**     | Parse JSON, hope it works       | Schema-enforced structure ✅        | Schema-enforced structure ✅        |
+| **Normalization**         | None                            | AI normalization pass ✅            | AI normalization pass ✅            |
+| **Phase Generation**      | All at once (fails >15 min)     | Parallel (required) ✅              | Parallel (required) ✅              |
+| **Error Handling**        | Fragile parsing                 | Structured tool use ✅              | Structured tool use ✅              |
+| **Session Cancellation**  | Manual toggle back              | Manual toggle back                  | AI-detected topic change ✅         |
+| **UX Consistency**        | Inconsistent with WORKOUT_LOG   | Inconsistent with WORKOUT_LOG       | Matches WORKOUT_LOG ✅              |
+| **Flexibility**           | User provides info in any order | User provides info in any order ✅  | User provides info in any order ✅  |
+| **Natural Conversation**  | Yes ✅                          | Yes ✅                              | Yes ✅                              |
+| **Image Support**         | No                              | Yes (equipment, space, injuries) ✅ | Yes (equipment, space, injuries) ✅ |
+| **Quality Assurance**     | None                            | Normalization + validation ✅       | Normalization + validation ✅       |
 
 ---
 
@@ -2640,18 +2782,21 @@ Return success
 ## Benefits of V2 Approach
 
 ### 1. Better User Experience
+
 - ✅ **Progress tracking** - User sees "75% complete" indicator
 - ✅ **No repetition** - AI won't re-ask collected info
 - ✅ **Clear completion** - Know when ready to generate
 - ✅ **Natural conversation** - Still feels like talking to coach
 
 ### 2. Better Data Quality
+
 - ✅ **Structured extraction** - AI explicitly extracts each field
 - ✅ **Validation before generation** - Ensure all required data present
 - ✅ **Confidence scoring** - Know when to ask clarifying questions
 - ✅ **Normalization** - Catch and fix AI generation errors
 
 ### 3. Better Technical Architecture
+
 - ✅ **Structured output** - toolConfig eliminates parsing fragility
 - ✅ **Type safety** - JSON schema enforces structure
 - ✅ **Testability** - Clear separation of concerns
@@ -2659,12 +2804,14 @@ Return success
 - ✅ **Consistency** - Same patterns as coach creator and build-workout
 
 ### 4. Better Error Handling
+
 - ✅ **Graceful failures** - Can retry generation without losing conversation
 - ✅ **Validation** - Catch issues before storing
 - ✅ **Normalization** - Fix minor issues automatically
 - ✅ **Clear error messages** - Know exactly what went wrong
 
 ### 5. Better Scalability
+
 - ✅ **Parallel phase generation** - Fast generation for long programs
 - ✅ **Incremental improvement** - Easy to add new required fields
 - ✅ **Coach learning** - Todo list tracking enables better coach adaptation
@@ -2679,12 +2826,14 @@ Return success
 **Why:** Early stage, few users with in-progress program creation sessions
 
 **Approach:**
+
 1. Implement V2 architecture completely
 2. Remove old JSON code block parsing
 3. Deploy with announcement: "Program creation improved!"
 4. Any in-progress sessions restart (acceptable at this stage)
 
 **Benefits:**
+
 - ✅ Clean codebase
 - ✅ Faster development
 - ✅ No dual-path complexity
@@ -2694,16 +2843,19 @@ Return success
 **Why:** If significant number of in-progress sessions exist
 
 **Approach:**
+
 1. Keep JSON code block parsing as fallback
 2. Add V2 todo-list approach
 3. New sessions use V2, old sessions continue with old approach
 4. Deprecate old approach after 2 weeks
 
 **Benefits:**
+
 - ✅ No disruption to existing sessions
 - ✅ Can compare approaches side-by-side
 
 **Drawbacks:**
+
 - ⚠️ Dual-path complexity
 - ⚠️ More code to maintain
 - ⚠️ Slower development
@@ -2717,6 +2869,7 @@ Return success
 ### Current Approach
 
 **Single Program Generation:**
+
 - 1 AI call to generate complete program (Claude Sonnet 4)
 - Estimated tokens: ~15,000 input + ~20,000 output
 - Cost: ~$0.15 per program
@@ -2726,6 +2879,7 @@ Return success
 ### Proposed V2 Approach (With Parallel Generation)
 
 **Information Gathering (5-10 messages):**
+
 - 5-10 extraction calls (Claude Haiku 4.5)
   - ~500 input + ~200 output each
   - Cost: ~$0.005 each × 8 average = $0.04
@@ -2734,16 +2888,19 @@ Return success
   - Cost: ~$0.01 each × 8 average = $0.08
 
 **Phase Structure Generation:**
+
 - 1 call to determine optimal phase breakdown (Claude Sonnet 4)
   - ~5,000 input + ~2,000 output
   - Cost: ~$0.03
 
 **Parallel Phase Generation (3-5 phases):**
+
 - 3-5 parallel calls (Claude Sonnet 4 with toolConfig), assume 4 average
   - ~10,000 input + ~15,000 output each
   - Cost: ~$0.10 each × 4 = $0.40
 
 **Program Assembly & Normalization:**
+
 - 1 assembly + normalization call (Claude Sonnet 4)
   - ~30,000 input + ~25,000 output
   - Cost: ~$0.20
@@ -2753,6 +2910,7 @@ Return success
 **Cost Increase:** 5x higher ($0.15 → $0.75)
 
 **Justification:**
+
 - ✅ **Required for functionality** - Single-call exceeds Lambda timeout
 - ✅ Higher quality programs (focused per-phase generation)
 - ✅ Better user experience
@@ -2762,6 +2920,7 @@ Return success
 - ✅ Enables longer programs (12+ weeks) without timeout issues
 
 **Cost Optimization Opportunities:**
+
 - Use Claude Haiku for normalization (simpler task) → Save $0.10
 - Cache phase generation prompts → Save 10-15%
 - Optimize phase breakdown (3 phases instead of 4-5) → Save $0.10-0.20
@@ -2773,9 +2932,11 @@ Return success
 ## Open Questions
 
 ### 1. Todo Progress Visibility
+
 **Question:** Show todo progress to user during conversation?
 
 **Options:**
+
 - A) Show progress bar: "75% complete - still need schedule details"
 - B) Hide progress, keep conversation natural
 - C) Show progress only on request: "How much more info do you need?"
@@ -2785,9 +2946,11 @@ Return success
 ---
 
 ### 2. Mode Toggle UI
+
 **Question:** Keep Build/Chat mode toggle or integrate todo-list seamlessly?
 
 **Options:**
+
 - A) Keep toggle - clear distinction
 - B) Remove toggle - AI detects intent automatically
 - C) Keep toggle but enhance with progress indicator
@@ -2797,9 +2960,11 @@ Return success
 ---
 
 ### 3. Existing Programs
+
 **Question:** How to handle already-created programs from old flow?
 
 **Options:**
+
 - A) Migrate them to new schema (add empty todo list metadata)
 - B) Leave them as-is (dual storage approach)
 - C) Mark as "legacy" and suggest rebuilding
@@ -2809,9 +2974,11 @@ Return success
 ---
 
 ### 4. Normalization Depth
+
 **Question:** How aggressive should normalization be?
 
 **Options:**
+
 - A) Light touch - only fix critical errors
 - B) Deep normalization - restructure if needed
 - C) Validation only - reject if errors
@@ -2823,6 +2990,7 @@ Return success
 ## Success Metrics
 
 ### Implementation Success
+
 - [ ] Todo list tracks 15+ required fields
 - [ ] AI extraction accuracy >90% (manual spot checks)
 - [ ] Question generation is natural (user feedback)
@@ -2831,6 +2999,7 @@ Return success
 - [ ] No fragile JSON parsing failures
 
 ### User Experience Success
+
 - [ ] Program creation completion rate >85% (users who start, finish)
 - [ ] Average time to complete: <15 minutes
 - [ ] User feedback: "conversation felt natural"
@@ -2838,6 +3007,7 @@ Return success
 - [ ] Program quality maintained or improved
 
 ### Technical Success
+
 - [ ] Generation success rate >95%
 - [ ] Average generation time <20 seconds (excluding conversation)
 - [ ] Normalized programs pass validation 100%
@@ -2849,9 +3019,11 @@ Return success
 ## Risks & Mitigation
 
 ### Risk 1: Todo List Too Rigid
+
 **Issue:** Users feel interrogated, not conversational
 
 **Mitigation:**
+
 - Natural question phrasing (not form-like)
 - Allow users to provide info in any order
 - AI combines multiple fields from single response
@@ -2860,9 +3032,11 @@ Return success
 ---
 
 ### Risk 2: Normalization Degrades Quality
+
 **Issue:** Normalization removes coach personality or makes program generic
 
 **Mitigation:**
+
 - Normalization prompt includes: "Preserve coach personality and style"
 - Only fix structural issues, not content
 - Test normalization with multiple coach personalities
@@ -2871,9 +3045,11 @@ Return success
 ---
 
 ### Risk 3: Cost Increase
+
 **Issue:** 3x cost increase ($0.15 → $0.45) might be prohibitive
 
 **Mitigation:**
+
 - Optimize: batch calls, use Haiku where possible
 - Target $0.30 per program (2x increase)
 - Programs created infrequently (1-2/month per user)
@@ -2882,9 +3058,11 @@ Return success
 ---
 
 ### Risk 4: Implementation Time
+
 **Issue:** More complex architecture takes longer
 
 **Mitigation:**
+
 - Leverage coach creator patterns (already implemented)
 - Leverage build-workout patterns (already implemented)
 - Reuse extraction and question generation utilities
@@ -2892,6 +3070,7 @@ Return success
 - Clear file structure matches existing code
 
 **Estimated Timeline:** 2 weeks (same as original plan)
+
 - Week 1: Todo-list based conversation flow (matches coach creator)
 - Week 2: Parallel generation + normalization (matches build-workout pattern)
 
@@ -2902,27 +3081,32 @@ Return success
 ### ✅ RECOMMENDED: Adopt V2 Approach
 
 **Core Changes:**
+
 1. ✅ **Todo-list based information gathering** (exactly like coach creator)
 2. ✅ **Bedrock toolConfig with JSON schema** (exactly like build-workout)
 3. ✅ **AI normalization** (exactly like build-workout)
 4. ✅ **Parallel phase generation** (**required for MVP** - single-call exceeds Lambda timeout)
 
 **Migration:**
+
 - ✅ **Clean break** - Implement V2, remove old approach
 - ✅ **Acceptable impact** - Few in-progress sessions, early stage
 
 **Benefits:**
+
 - ✅ **Better UX** - Progress tracking, no repetition
 - ✅ **Better quality** - Structured output, normalization
 - ✅ **Better architecture** - Consistent patterns, maintainable
 - ✅ **Better error handling** - Graceful failures, validation
 
 **Costs:**
+
 - ⚠️ **4-5x cost increase** - $0.15 → $0.60-0.75 per program
 - ✅ **Required for functionality** - No alternative (Lambda timeout)
 - ✅ **Justified** - Infrequent operation (1-2/month), enables core feature
 
 **Timeline:**
+
 - ✅ **2 weeks** - Week 1 (todo-list conversation), Week 2 (parallel generation + normalization)
 - ✅ **Same as original** - No delay to roadmap
 - ✅ **Parallel included in MVP** - Required due to Lambda timeout constraints
@@ -2932,9 +3116,11 @@ Return success
 ## Next Steps
 
 ### 1. Review & Approve This Document
+
 **Action:** Founder reviews and provides feedback on proposed approach
 
 **Questions to Answer:**
+
 - Approve todo-list based conversation flow? (Matches coach creator exactly)
 - Approve toolConfig + normalization approach? (Matches build-workout exactly)
 - Approve parallel phase generation? (**Required** - Lambda timeout issue)
@@ -2942,17 +3128,21 @@ Return success
 - Approve cost increase ($0.60-0.75 per program with parallel)?
 
 ### 2. Implementation Planning
+
 **Action:** Break down into specific implementation tasks
 
 **Create:**
+
 - File-by-file implementation checklist
 - Function signatures and interfaces
 - Test plan for each component
 
 ### 3. Begin Development
+
 **Action:** Start Week 1 implementation
 
 **Priority:**
+
 - Todo-list utilities
 - AI extraction function
 - AI question generation
@@ -2970,14 +3160,13 @@ Return success
 export async function extractAndUpdateProgramTodoList(
   userResponse: string,
   conversationHistory: ConversationMessage[],
-  currentTodoList: ProgramCreatorTodoList,
-  imageS3Keys?: string[]
-): Promise<ProgramCreatorTodoList> {
-
+  currentTodoList: ProgramDesignerTodoList,
+  imageS3Keys?: string[],
+): Promise<ProgramDesignerTodoList> {
   const extractionPrompt = buildExtractionPrompt(
     userResponse,
     conversationHistory,
-    currentTodoList
+    currentTodoList,
   );
 
   // Check if images are present (same pattern as build-workout)
@@ -3011,18 +3200,19 @@ export async function extractAndUpdateProgramTodoList(
       MODEL_IDS.CLAUDE_HAIKU_4_FULL,
       {
         tools: {
-          name: 'extract_program_info',
-          description: 'Extract training program information from user response with images',
-          inputSchema: PROGRAM_TODO_EXTRACTION_SCHEMA
+          name: "extract_program_info",
+          description:
+            "Extract training program information from user response with images",
+          inputSchema: PROGRAM_TODO_EXTRACTION_SCHEMA,
         },
-        expectedToolName: 'extract_program_info'
-      }
+        expectedToolName: "extract_program_info",
+      },
     );
 
-    extractedData = typeof result === 'string'
-      ? parseJsonWithFallbacks(result)
-      : result.input;
-
+    extractedData =
+      typeof result === "string"
+        ? parseJsonWithFallbacks(result)
+        : result.input;
   } else {
     // Text-only extraction
     const result = await callBedrockApi(
@@ -3031,16 +3221,17 @@ export async function extractAndUpdateProgramTodoList(
       MODEL_IDS.CLAUDE_HAIKU_4_FULL,
       {
         tools: {
-          name: 'extract_program_info',
-          inputSchema: PROGRAM_TODO_EXTRACTION_SCHEMA
+          name: "extract_program_info",
+          inputSchema: PROGRAM_TODO_EXTRACTION_SCHEMA,
         },
-        expectedToolName: 'extract_program_info'
-      }
+        expectedToolName: "extract_program_info",
+      },
     );
 
-    extractedData = typeof result === 'string'
-      ? parseJsonWithFallbacks(result)
-      : result.input;
+    extractedData =
+      typeof result === "string"
+        ? parseJsonWithFallbacks(result)
+        : result.input;
   }
 
   // Update todo list with extracted data
@@ -3048,22 +3239,23 @@ export async function extractAndUpdateProgramTodoList(
 }
 
 function mergeTodoListUpdates(
-  currentList: ProgramCreatorTodoList,
+  currentList: ProgramDesignerTodoList,
   extracted: any,
-  imageRefs?: string[]
-): ProgramCreatorTodoList {
+  imageRefs?: string[],
+): ProgramDesignerTodoList {
   // Update each field that was extracted
   const updated = { ...currentList };
 
   for (const [key, value] of Object.entries(extracted)) {
     if (value !== null && value !== undefined) {
       updated[key] = {
-        status: 'complete',
+        status: "complete",
         value: value,
-        confidence: 'high',
+        confidence: "high",
         extractedFrom: new Date().toISOString(),
         // Store image references if this field came from images
-        imageRefs: imageRefs && shouldStoreImageRef(key) ? imageRefs : undefined
+        imageRefs:
+          imageRefs && shouldStoreImageRef(key) ? imageRefs : undefined,
       };
     }
   }
@@ -3074,10 +3266,10 @@ function mergeTodoListUpdates(
 function shouldStoreImageRef(fieldKey: string): boolean {
   // Fields that commonly benefit from image context
   return [
-    'equipment_access',
-    'training_environment',
-    'injury_considerations',
-    'current_fitness_baseline'
+    "equipment_access",
+    "training_environment",
+    "injury_considerations",
+    "current_fitness_baseline",
   ].includes(fieldKey);
 }
 ```
@@ -3089,11 +3281,11 @@ function shouldStoreImageRef(fieldKey: string): boolean {
 ```typescript
 // amplify/functions/libs/program/program-todo-list-utils.ts
 
-export function createEmptyProgramTodoList(): ProgramCreatorTodoList {
+export function createEmptyProgramTodoList(): ProgramDesignerTodoList {
   const pendingItem = (): TodoItem => ({
-    status: 'pending',
+    status: "pending",
     value: null,
-    confidence: 'low'
+    confidence: "low",
   });
 
   return {
@@ -3126,45 +3318,41 @@ export function createEmptyProgramTodoList(): ProgramCreatorTodoList {
 
     // Optional
     deload_preference: pendingItem(),
-    progression_style: pendingItem()
+    progression_style: pendingItem(),
   };
 }
 
 export function getPendingRequiredItems(
-  todoList: ProgramCreatorTodoList
+  todoList: ProgramDesignerTodoList,
 ): string[] {
   const requiredFields = [
-    'training_goals',
-    'program_duration',
-    'training_frequency',
-    'equipment_access',
-    'experience_level'
+    "training_goals",
+    "program_duration",
+    "training_frequency",
+    "equipment_access",
+    "experience_level",
   ];
 
   return requiredFields.filter(
-    field => todoList[field].status !== 'complete'
+    (field) => todoList[field].status !== "complete",
   );
 }
 
-export function isReadyToGenerate(
-  todoList: ProgramCreatorTodoList
-): boolean {
+export function isReadyToGenerate(todoList: ProgramDesignerTodoList): boolean {
   return getPendingRequiredItems(todoList).length === 0;
 }
 
-export function getTodoProgress(
-  todoList: ProgramCreatorTodoList
-): number {
+export function getTodoProgress(todoList: ProgramDesignerTodoList): number {
   const requiredFields = [
-    'training_goals',
-    'program_duration',
-    'training_frequency',
-    'equipment_access',
-    'experience_level'
+    "training_goals",
+    "program_duration",
+    "training_frequency",
+    "equipment_access",
+    "experience_level",
   ];
 
   const completed = requiredFields.filter(
-    field => todoList[field].status === 'complete'
+    (field) => todoList[field].status === "complete",
   ).length;
 
   return Math.round((completed / requiredFields.length) * 100);
@@ -3177,10 +3365,10 @@ export function getTodoProgress(
 // amplify/functions/stream-coach-conversation/handler.ts
 
 // Extract mode and images from request
-const mode = message.metadata?.mode || 'chat'; // 'chat' or 'build'
+const mode = message.metadata?.mode || "chat"; // 'chat' or 'build'
 const imageS3Keys = message.imageS3Keys || []; // Image support
 
-if (mode === 'build') {
+if (mode === "build") {
   // Program creation flow (multimodal support)
 
   // Initialize todo list if first Build mode message
@@ -3193,7 +3381,7 @@ if (mode === 'build') {
     userMessage,
     conversation.messages,
     conversation.programTodoList,
-    imageS3Keys // Pass images to extraction
+    imageS3Keys, // Pass images to extraction
   );
 
   // Update conversation
@@ -3202,7 +3390,7 @@ if (mode === 'build') {
   // Check if ready to generate
   if (isReadyToGenerate(updatedTodoList)) {
     // Invoke async program generation Lambda
-    await invokeAsyncLambda('build-program', {
+    await invokeAsyncLambda("build-program", {
       userId,
       coachId,
       conversationId,
@@ -3219,13 +3407,12 @@ if (mode === 'build') {
 
     // Reset todo list
     conversation.programTodoList = null;
-
   } else {
     // Use generator to stream question
     const questionGenerator = handleProgramTodoListConversation(
       userMessage,
       conversation,
-      imageS3Keys // Pass images through
+      imageS3Keys, // Pass images through
     );
 
     // Yield chunks as they arrive
@@ -3233,7 +3420,6 @@ if (mode === 'build') {
       yield chunk;
     }
   }
-
 } else {
   // Normal chat mode
   // ... existing logic (also supports images)
@@ -3245,6 +3431,7 @@ if (mode === 'build') {
 **Document Status:** 🔍 READY FOR REVIEW
 
 **Awaiting Approval On:**
+
 1. ✅ Todo-list based conversation flow - **Exact match to `stream-coach-creator-session` pattern**
 2. ✅ Bedrock toolConfig approach - **Exact match to `build-workout` pattern**
 3. ✅ Multimodal image support - **Exact match to `build-workout` multimodal handling**
@@ -3255,6 +3442,7 @@ if (mode === 'build') {
 8. ⚠️ Clean break migration - Restart incomplete sessions (early beta, acceptable impact)
 
 **Critical Understanding:**
+
 - This is NOT a new architecture - it's **applying existing proven patterns**
 - Todo-list conversation: `coach-creator` (already working)
 - Tool-based generation: `build-workout` (already working)
@@ -3268,7 +3456,9 @@ if (mode === 'build') {
 ## FINAL SUMMARY FOR APPROVAL
 
 ### What We're Doing
+
 **Applying 5 proven patterns to fix and modernize training program creation:**
+
 1. ✅ **Coach Creator's** todo-list conversation (fixes: repetition, progress tracking) - **COMPLETE**
 2. ✅ **Build-Workout's** toolConfig generation (fixes: fragile parsing, validation) - **COMPLETE**
 3. ✅ **Build-Workout's** multimodal image handling (enables: equipment photos, space photos, injury photos) - **COMPLETE**
@@ -3276,6 +3466,7 @@ if (mode === 'build') {
 5. 🚀 **WORKOUT_LOG's** AI-detected mode activation (fixes: manual toggle friction, inconsistent UX) - **NEXT**
 
 ### What We're NOT Doing
+
 - ❌ NOT inventing new patterns (all patterns proven and working)
 - ❌ NOT creating untested architecture (exact matches to existing code)
 - ❌ NOT adding optional enhancements (everything is required for consistent UX)
@@ -3283,22 +3474,26 @@ if (mode === 'build') {
 - ❌ NOT implementing AI detection from scratch (already working in WORKOUT_LOG)
 
 ### Why It's Required
+
 - Current `build-program` exceeds 15-minute Lambda limit
 - Single AI call for 4-8 week programs takes 20-30+ minutes
 - **Parallel phase generation is the only solution**
 
 ### Cost vs. Benefit
+
 - **Cost**: $0.60-0.75 per program (vs. $0.15 currently)
 - **Frequency**: 1-2 programs per user per month
 - **Benefit**: Feature actually works, better quality, scalable to longer programs
 
 ### Implementation Risk: LOW
+
 - All patterns already implemented and working
 - File structure matches existing code exactly
 - 2-week timeline (same as original plan)
 - Clear separation of concerns
 
 ### Approval Required
+
 - ✅ Apply proven patterns (yes/no)
 - ✅ Include parallel generation in MVP (required for functionality)
 - ✅ Include multimodal image support (equipment, space, injury photos)
@@ -3306,6 +3501,7 @@ if (mode === 'build') {
 - ✅ Clean break migration (restart incomplete sessions)
 
 ### Image Support Benefits
+
 - 📸 Equipment photos → Accurate equipment constraints
 - 📸 Space photos → Realistic training environment understanding
 - 📸 Injury photos → Better injury consideration awareness
@@ -3321,32 +3517,32 @@ if (mode === 'build') {
 
 ### What's Changing
 
-| Component | Current (V2) | Phase 5 (AI-Detected) |
-|-----------|-------------|----------------------|
-| **Mode Entry** | Manual "Program" button click | AI detects "design a program" intent |
-| **Mode Exit** | Manual "Chat" button click | Auto-detects topic change |
-| **UI Control** | Toggle button in ChatInput | No toggle - just badge indicator |
-| **Detection** | User clicks button | Smart Router analyzes message |
-| **Session Start** | On button click | On AI detection |
-| **Session Cancel** | On button click | On topic change detection |
-| **Consistency** | Different from WORKOUT_LOG | Matches WORKOUT_LOG exactly |
+| Component          | Current (V2)                  | Phase 5 (AI-Detected)                |
+| ------------------ | ----------------------------- | ------------------------------------ |
+| **Mode Entry**     | Manual "Program" button click | AI detects "design a program" intent |
+| **Mode Exit**      | Manual "Chat" button click    | Auto-detects topic change            |
+| **UI Control**     | Toggle button in ChatInput    | No toggle - just badge indicator     |
+| **Detection**      | User clicks button            | Smart Router analyzes message        |
+| **Session Start**  | On button click               | On AI detection                      |
+| **Session Cancel** | On button click               | On topic change detection            |
+| **Consistency**    | Different from WORKOUT_LOG    | Matches WORKOUT_LOG exactly          |
 
 ### Files to Modify (Phase 5)
 
-| File | Change Type | Effort |
-|------|-------------|--------|
-| `amplify/functions/libs/coach-conversation/detection.ts` | Add program design detection + slash commands | 3 hours |
-| `amplify/functions/libs/coach-conversation/slash-commands.ts` | Add program design slash command helpers | Included |
-| `amplify/functions/libs/schemas/program-creator-todo-schema.ts` | Add `userChangedTopic` + `userWantsToFinish` | 30 mins |
-| `amplify/functions/libs/program-creator/conversation-handler.ts` | Add topic change + early completion | 1.5 hours |
-| `amplify/functions/libs/program-creator/question-generator.ts` | Add dynamic completion message | 1.5 hours |
-| `amplify/functions/stream-coach-conversation/handler.ts` | Add AI detection + slash command flow | 5 hours |
-| `src/utils/slashCommands.js` | Add frontend slash command definitions | 30 mins |
-| `src/components/shared/SlashCommandAutocomplete.jsx` | Add program design autocomplete | 30 mins |
-| `src/components/shared/ChatInput.jsx` | Remove toggle component | 30 mins |
-| `src/components/CoachConversations.jsx` | Remove toggle state management | 30 mins |
-| Testing & validation | End-to-end testing + slash commands | 2 hours |
-| **Bug Fix: "I'll remember this" duplicate** | Investigate + fix | 1 hour |
+| File                                                              | Change Type                                   | Effort    |
+| ----------------------------------------------------------------- | --------------------------------------------- | --------- |
+| `amplify/functions/libs/coach-conversation/detection.ts`          | Add program design detection + slash commands | 3 hours   |
+| `amplify/functions/libs/coach-conversation/slash-commands.ts`     | Add program design slash command helpers      | Included  |
+| `amplify/functions/libs/schemas/program-designer-todo-schema.ts`  | Add `userChangedTopic` + `userWantsToFinish`  | 30 mins   |
+| `amplify/functions/libs/program-designer/conversation-handler.ts` | Add topic change + early completion           | 1.5 hours |
+| `amplify/functions/libs/program-designer/question-generator.ts`   | Add dynamic completion message                | 1.5 hours |
+| `amplify/functions/stream-coach-conversation/handler.ts`          | Add AI detection + slash command flow         | 5 hours   |
+| `src/utils/slashCommands.js`                                      | Add frontend slash command definitions        | 30 mins   |
+| `src/components/shared/SlashCommandAutocomplete.jsx`              | Add program design autocomplete               | 30 mins   |
+| `src/components/shared/ChatInput.jsx`                             | Remove toggle component                       | 30 mins   |
+| `src/components/CoachConversations.jsx`                           | Remove toggle state management                | 30 mins   |
+| Testing & validation                                              | End-to-end testing + slash commands           | 2 hours   |
+| **Bug Fix: "I'll remember this" duplicate**                       | Investigate + fix                             | 1 hour    |
 
 **Total Phase 5**: 18 hours
 **Total Bugs**: 1 hour (purple bubble fixed in Step 3)
@@ -3355,6 +3551,7 @@ if (mode === 'build') {
 ### Detection Examples
 
 **Will Start Program Design Session:**
+
 - ✅ "I want to design a training program"
 - ✅ "Create a 12-week program for me"
 - ✅ "Build me a program for powerlifting"
@@ -3362,6 +3559,7 @@ if (mode === 'build') {
 - ✅ "I need a new training program"
 
 **Will NOT Start Program Design Session:**
+
 - ❌ "What's a good program?" (question, not creation)
 - ❌ "Log this workout: 5x5 squats" (WORKOUT_LOG, not PROGRAM_DESIGN)
 - ❌ "How should I structure my training?" (advice, not creation)
@@ -3369,12 +3567,14 @@ if (mode === 'build') {
 - ❌ "My program isn't working" (troubleshooting, not creation)
 
 **Will Cancel Active Session:**
+
 - ✅ "Actually, log this workout instead"
 - ✅ "Never mind, let's talk about nutrition"
 - ✅ "Forget it"
 - ✅ "I want to build a workout, not a program"
 
 **Will NOT Cancel Active Session:**
+
 - ❌ "What about my schedule?" (still collecting program info)
 - ❌ "I also have a shoulder injury" (adding program info)
 - ❌ "Actually, 4 days per week, not 5" (correcting program info)
@@ -3382,13 +3582,15 @@ if (mode === 'build') {
 ### Integration Points with V2
 
 **Dependencies (Must Be Complete):**
-- ✅ `ProgramCreatorSession` entity exists
+
+- ✅ `ProgramDesignerSession` entity exists
 - ✅ Todo-list conversation flow working
 - ✅ Smart Router operational
 - ✅ Session management functions exist
 - ✅ Purple badge UI already implemented
 
 **No Breaking Changes:**
+
 - Program generation logic unchanged
 - Parallel phase generation unchanged
 - Todo extraction unchanged
@@ -3403,6 +3605,7 @@ Phase 5 is a **mode activation UX improvement**, not a functional change. The un
 ## Next Steps
 
 ### Phase 5 Implementation
+
 1. **Review & Approve** this Phase 5 plan
 2. **Implement** Steps 11-17 (2 days)
 3. **Deploy** with clean cutover (no dual paths)
@@ -3410,10 +3613,10 @@ Phase 5 is a **mode activation UX improvement**, not a functional change. The un
 5. **Celebrate** modern, AI-driven UX! 🎉
 
 ### Questions to Answer
+
 - ✅ Approve AI-detected activation? (Matches WORKOUT_LOG exactly)
 - ✅ Approve clean cutover migration? (Remove manual toggle entirely)
 - ✅ Approve 2-day timeline?
 - ✅ Any concerns about detection accuracy? (Proven with WORKOUT_LOG)
 
 **Ready to implement Phase 5 immediately upon approval.**
-

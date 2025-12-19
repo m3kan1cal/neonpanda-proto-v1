@@ -36,7 +36,9 @@ export interface Tool<TContext extends AgentContext = AgentContext> {
  * @template TContext - The context type for this agent (extends AgentContext)
  */
 export interface AgentConfig<TContext extends AgentContext = AgentContext> {
-  systemPrompt: string;
+  systemPrompt: string; // Backward compatibility (or full prompt if no split)
+  staticPrompt?: string; // Large unchanging portion (cached) - NEW
+  dynamicPrompt?: string; // Small dynamic portion (not cached) - NEW
   tools: Tool<TContext>[];
   modelId?: string;
   context: TContext; // Shared context passed to all tools

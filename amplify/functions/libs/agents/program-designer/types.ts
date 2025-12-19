@@ -20,12 +20,13 @@ export interface ProgramDesignerContext
   // Inherits from AgentContext:
   // - userId (required)
   // Inherits from BuildProgramEvent:
-  // - coachId
-  // - conversationId
-  // - programId
-  // - sessionId
-  // - todoList
-  // - conversationContext
+  // - coachId (required)
+  // - conversationId (optional - not used for program designer sessions)
+  // - programId (required)
+  // - sessionId (required - primary identifier)
+  // - todoList (required)
+  // - conversationContext (required)
+  // - additionalConsiderations (optional)
 }
 
 /**
@@ -38,8 +39,10 @@ export interface ProgramDesignResult {
   programId?: string;
   programName?: string;
   totalDays?: number;
-  phases?: number;
-  totalWorkouts?: number;
+  phaseCount?: number; // Number of phases in the program
+  totalWorkoutTemplates?: number; // Total workout templates (may include multiple sessions per day)
+  uniqueTrainingDays?: number; // Number of unique training days covered
+  averageSessionsPerDay?: string; // Average sessions per training day
   trainingFrequency?: number;
   startDate?: string;
   endDate?: string;

@@ -12,17 +12,17 @@ import {
 } from "../api-helpers";
 import { parseJsonWithFallbacks } from "../response-utils";
 import { buildMultimodalContent } from "../streaming/multimodal-helpers";
-import { MESSAGE_TYPES } from "../coach-conversation/types";
-import { TodoItem, ConversationMessage } from "../todo-types";
-import { ProgramCreatorTodoList } from "./types";
-import { PROGRAM_TODO_SCHEMA } from "../schemas/program-creator-todo-schema";
+import { MESSAGE_TYPES, CoachMessage } from "../coach-conversation/types";
+import { TodoItem } from "../todo-types";
+import { ProgramDesignerTodoList } from "./types";
+import { PROGRAM_TODO_SCHEMA } from "../schemas/program-designer-todo-schema";
 
 /**
  * Result of AI extraction from user's program design message
  * Includes both structured program data and user intent signals
  */
 export interface ProgramExtractionResult {
-  todoList: ProgramCreatorTodoList;
+  todoList: ProgramDesignerTodoList;
   userWantsToFinish: boolean; // AI-detected intent to skip remaining optional fields
   userChangedTopic: boolean; // AI-detected topic change (user abandoned program design)
 }
@@ -35,8 +35,8 @@ export interface ProgramExtractionResult {
  */
 export async function extractAndUpdateTodoList(
   userResponse: string,
-  conversationHistory: ConversationMessage[],
-  currentTodoList: ProgramCreatorTodoList,
+  conversationHistory: CoachMessage[],
+  currentTodoList: ProgramDesignerTodoList,
   imageS3Keys?: string[],
   userContext?: {
     recentWorkouts?: any[];
@@ -45,7 +45,14 @@ export async function extractAndUpdateTodoList(
     activeProgram?: any;
   },
 ): Promise<ProgramExtractionResult> {
-  console.info("🔍 Extracting training program information from user response");
+  console.info(
+    "🔍 Extracting training program information from user response",
+    {
+      userResponseLength: userResponse.length,
+      conversationHistoryLength: conversationHistory.length,
+      hasImages: !!(imageS3Keys && imageS3Keys.length > 0),
+    },
+  );
 
   // Check if images are present (same pattern as build-workout)
   const hasImages = imageS3Keys && imageS3Keys.length > 0;
@@ -145,11 +152,23 @@ Return ONLY the fields you found information for using the tool. If no informati
       // Tool was used - extract the input
       extracted = extractionResponse.input;
       console.info("✅ Tool-based extraction successful");
+      console.info(
+        "🔎 Raw tool input:",
+        JSON.stringify(extractionResponse.input, null, 2),
+      );
     } else {
       // Fallback to parsing (shouldn't happen with tool enforcement)
       console.warn("⚠️ Received string response, parsing as JSON fallback");
       extracted = parseJsonWithFallbacks(extractionResponse);
     }
+
+    console.info("🔎 Extracted data structure:", {
+      keys: Object.keys(extracted),
+      types: Object.fromEntries(
+        Object.entries(extracted).map(([k, v]) => [k, typeof v]),
+      ),
+      sample: JSON.stringify(extracted).substring(0, 500),
+    });
 
     if (!extracted || typeof extracted !== "object") {
       console.warn(
@@ -185,20 +204,52 @@ Return ONLY the fields you found information for using the tool. If no informati
       // Skip intent detection fields (not todo items)
       if (key === "userWantsToFinish" || key === "userChangedTopic") continue;
 
+      console.info(
+        `🔍 Processing key: ${key}, type: ${typeof extractedItem}, isObject: ${typeof extractedItem === "object"}, inTodoList: ${key in updatedTodoList}`,
+      );
+
       if (
         key in updatedTodoList &&
-        extractedItem &&
-        typeof extractedItem === "object"
+        extractedItem !== null &&
+        extractedItem !== undefined
       ) {
-        const item = extractedItem as Partial<TodoItem>;
+        // Normalize the extracted item to handle both formats:
+        // 1. Simple value: "some string" or 5
+        // 2. Structured object: { value: "some string", confidence: "high" }
+        let normalizedItem: Partial<TodoItem>;
+
+        if (
+          typeof extractedItem === "object" &&
+          extractedItem.hasOwnProperty("value")
+        ) {
+          // Already in correct format with { value, confidence, notes }
+          normalizedItem = extractedItem as Partial<TodoItem>;
+        } else {
+          // Simple value format - wrap it
+          normalizedItem = {
+            value: extractedItem,
+            confidence: "high", // Default to high since AI extracted it
+          };
+          console.info(
+            `🔧 Normalized ${key} from simple value to structured format`,
+          );
+        }
+
+        console.info(
+          `🔍 Item structure for ${key}:`,
+          JSON.stringify(normalizedItem).substring(0, 200),
+        );
 
         // Only update if we have a value
-        if (item.value !== null && item.value !== undefined) {
-          updatedTodoList[key as keyof ProgramCreatorTodoList] = {
+        if (
+          normalizedItem.value !== null &&
+          normalizedItem.value !== undefined
+        ) {
+          updatedTodoList[key as keyof ProgramDesignerTodoList] = {
             status: "complete",
-            value: item.value,
-            confidence: item.confidence || "medium",
-            notes: item.notes,
+            value: normalizedItem.value,
+            confidence: normalizedItem.confidence || "medium",
+            notes: normalizedItem.notes,
             extractedFrom: `message_${messageIndex}`,
             // Store image references for fields that commonly benefit from images
             imageRefs:
@@ -206,8 +257,16 @@ Return ONLY the fields you found information for using the tool. If no informati
           };
 
           console.info(
-            `✅ Extracted ${key}: ${JSON.stringify(item.value).substring(0, 50)}`,
+            `✅ Extracted ${key}: ${JSON.stringify(normalizedItem.value).substring(0, 50)} - MARKED AS COMPLETE`,
           );
+        } else {
+          console.warn(
+            `⚠️ Skipping ${key}: normalizedItem.value is null or undefined`,
+          );
+        }
+      } else {
+        if (!(key in updatedTodoList)) {
+          console.warn(`⚠️ Key ${key} not found in updatedTodoList`);
         }
       }
     }
@@ -217,6 +276,14 @@ Return ONLY the fields you found information for using the tool. If no informati
       (k) => k !== "userWantsToFinish" && k !== "userChangedTopic",
     ).length;
     console.info(`✅ Extraction complete: ${extractedCount} fields updated`);
+
+    // Log which fields were actually marked as complete
+    const completedFields = Object.entries(updatedTodoList)
+      .filter(([_, item]) => item.status === "complete")
+      .map(([key, _]) => key);
+    console.info(
+      `📊 TodoList status: ${completedFields.length} complete out of ${Object.keys(updatedTodoList).length} total`,
+    );
 
     return {
       todoList: updatedTodoList,
@@ -251,7 +318,7 @@ function shouldStoreImageRef(fieldKey: string): boolean {
  * Build the system prompt for extraction
  */
 function buildExtractionPrompt(
-  currentTodoList: ProgramCreatorTodoList,
+  currentTodoList: ProgramDesignerTodoList,
 ): string {
   // Build a summary of what's already been collected
   const collectedFields: string[] = [];
@@ -291,6 +358,7 @@ AVAILABLE FIELDS (only include if you find information):
 - injuryConsiderations: description of injuries or "none"
 - movementPreferences: movements they enjoy
 - movementDislikes: movements they dislike
+- trainingMethodology: preferred training methodology, style, or discipline (e.g., "CrossFit", "Powerlifting", "Bodybuilding", "Strongman", "Olympic Weightlifting", "Hybrid Training", "Endurance", "Calisthenics", "General Strength & Conditioning", "Sport-Specific"). Be flexible - accept any methodology the user mentions. Extract from phrases like "CrossFit style", "bodybuilding focus", "powerlifting methodology", "hybrid approach", "functional fitness". Store exactly as user describes it. (REQUIRED)
 - programFocus: main focus (e.g., "strength", "conditioning", "mixed", "Olympic lifting")
 - intensityPreference: "conservative" | "moderate" | "aggressive"
 - volumeTolerance: "low" | "moderate" | "high"

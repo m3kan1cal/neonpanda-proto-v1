@@ -55,14 +55,129 @@ export function calculateMetadataSize(
 
 /**
  * Retry delays for throttling errors (in milliseconds)
- * Progressive backoff: 2s, 5s, 10s = 17s total
+ * Aggressive exponential backoff for Bedrock token throttling: 30s, 90s, 180s, 300s = 600s total
+ * This allows token bucket to refill after large summary generation calls
  */
-const THROTTLE_RETRY_DELAYS = [2000, 5000, 10000];
+const THROTTLE_RETRY_DELAYS = [30000, 90000, 180000, 300000];
 
 /**
  * Helper to wait for specified milliseconds
  */
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * Deterministic compression for conversation summaries
+ * Intelligently truncates arrays and text while preserving important information
+ * This is used as a fast fallback when AI compression isn't available or fails
+ *
+ * @param summaryData - The compact summary data object
+ * @param targetSize - Target size in bytes
+ * @returns Compressed summary data
+ */
+export function deterministicCompressSummary(
+  summaryData: any,
+  targetSize: number = PINECONE_METADATA_LIMIT * DEFAULT_TARGET_SIZE_RATIO,
+): any {
+  console.info("📐 Applying deterministic compression:", {
+    targetSize,
+    originalSize: Buffer.byteLength(JSON.stringify(summaryData), "utf8"),
+  });
+
+  const compressed = { ...summaryData };
+
+  // Priority order: narrative > goals > emotional_state > insights > progress
+  // Truncate arrays to keep only most important items
+  const truncateArray = (arr: any[], maxItems: number): any[] => {
+    if (!Array.isArray(arr)) return arr;
+    return arr.slice(0, maxItems);
+  };
+
+  // Keep narrative but cap at reasonable length
+  if (compressed.narrative && typeof compressed.narrative === "string") {
+    if (compressed.narrative.length > 500) {
+      compressed.narrative = compressed.narrative.substring(0, 497) + "...";
+    }
+  }
+
+  // Truncate arrays to top 3 items
+  if (compressed.current_goals) {
+    compressed.current_goals = truncateArray(compressed.current_goals, 3);
+  }
+  if (compressed.recent_progress) {
+    compressed.recent_progress = truncateArray(compressed.recent_progress, 3);
+  }
+  if (compressed.key_insights) {
+    compressed.key_insights = truncateArray(compressed.key_insights, 3);
+  }
+  if (compressed.important_context) {
+    compressed.important_context = truncateArray(
+      compressed.important_context,
+      3,
+    );
+  }
+  if (compressed.conversation_tags) {
+    compressed.conversation_tags = truncateArray(
+      compressed.conversation_tags,
+      5,
+    );
+  }
+
+  // Truncate nested preference arrays
+  if (compressed.preferences) {
+    if (compressed.preferences.training_preferences) {
+      compressed.preferences.training_preferences = truncateArray(
+        compressed.preferences.training_preferences,
+        3,
+      );
+    }
+    if (compressed.preferences.schedule_constraints) {
+      compressed.preferences.schedule_constraints = truncateArray(
+        compressed.preferences.schedule_constraints,
+        2,
+      );
+    }
+  }
+
+  // Truncate methodology preferences
+  if (compressed.methodology_preferences) {
+    if (compressed.methodology_preferences.mentioned_methodologies) {
+      compressed.methodology_preferences.mentioned_methodologies =
+        truncateArray(
+          compressed.methodology_preferences.mentioned_methodologies,
+          3,
+        );
+    }
+    if (compressed.methodology_preferences.preferred_approaches) {
+      compressed.methodology_preferences.preferred_approaches = truncateArray(
+        compressed.methodology_preferences.preferred_approaches,
+        2,
+      );
+    }
+    if (compressed.methodology_preferences.methodology_questions) {
+      compressed.methodology_preferences.methodology_questions = truncateArray(
+        compressed.methodology_preferences.methodology_questions,
+        2,
+      );
+    }
+  }
+
+  const compressedSize = Buffer.byteLength(JSON.stringify(compressed), "utf8");
+  console.info("✅ Deterministic compression completed:", {
+    originalSize: Buffer.byteLength(JSON.stringify(summaryData), "utf8"),
+    compressedSize,
+    targetSize,
+    withinTarget: compressedSize <= targetSize,
+    reduction:
+      Math.round(
+        ((Buffer.byteLength(JSON.stringify(summaryData), "utf8") -
+          compressedSize) /
+          Buffer.byteLength(JSON.stringify(summaryData), "utf8")) *
+          100,
+      ) + "%",
+  });
+
+  return compressed;
+}
 
 /**
  * Compress content while preserving semantic meaning and searchability

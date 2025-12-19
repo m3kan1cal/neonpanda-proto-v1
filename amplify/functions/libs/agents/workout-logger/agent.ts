@@ -28,8 +28,22 @@ export class WorkoutLoggerAgent extends Agent<WorkoutLoggerContext> {
   private toolResults: Map<string, any> = new Map(); // Track tool results
 
   constructor(context: WorkoutLoggerContext) {
+    const fullPrompt = buildWorkoutLoggerPrompt(context);
+
     super({
-      systemPrompt: buildWorkoutLoggerPrompt(context),
+      // Large static portion (tools, rules, examples) - ~90% of tokens
+      staticPrompt: fullPrompt,
+
+      // Small dynamic portion (session data) - ~10% of tokens
+      dynamicPrompt:
+        `\n## CURRENT LOGGING SESSION\n` +
+        `- User ID: ${context.userId}\n` +
+        `- Images: ${context.imageS3Keys?.length || 0}\n` +
+        `- Workout ID: ${context.workoutId}`,
+
+      // Backward compatibility (not used when staticPrompt/dynamicPrompt provided)
+      systemPrompt: fullPrompt,
+
       tools: [
         extractWorkoutDataTool,
         validateWorkoutCompletenessTool,
@@ -40,6 +54,8 @@ export class WorkoutLoggerAgent extends Agent<WorkoutLoggerContext> {
       modelId: MODEL_IDS.CLAUDE_SONNET_4_FULL,
       context,
     });
+
+    console.info("🔥 WorkoutLoggerAgent initialized with caching support");
   }
 
   /**
@@ -161,6 +177,9 @@ export class WorkoutLoggerAgent extends Agent<WorkoutLoggerContext> {
   /**
    * Determine if we should retry with a stronger prompt
    * This happens when AI asks a clarifying question instead of processing
+   *
+   * NOTE: While stream-coach-conversation does initial detection, this provides
+   * defense-in-depth to prevent retry logic from overriding correct blocking decisions.
    */
   private shouldRetryWithStrongerPrompt(
     result: WorkoutLogResult,
@@ -171,17 +190,82 @@ export class WorkoutLoggerAgent extends Agent<WorkoutLoggerContext> {
       return false;
     }
 
-    // Don't retry if it was a planning question (correctly detected)
-    if (
-      result.reason &&
-      (result.reason.toLowerCase().includes("planning") ||
-        result.reason.toLowerCase().includes("future workout") ||
-        result.reason.toLowerCase().includes("not a completed workout"))
-    ) {
-      return false;
+    // Don't retry if AI correctly detected non-workout content
+    // This is CRITICAL: If AI blocked something, trust that decision and don't override it
+    if (result.reason) {
+      const reasonLower = result.reason.toLowerCase();
+
+      // Past workout reflections (retrospective content)
+      const isPastWorkout =
+        reasonLower.includes("past workout") ||
+        reasonLower.includes("yesterday") ||
+        reasonLower.includes("retrospective") ||
+        reasonLower.includes("reflection") ||
+        reasonLower.includes("previous workout") ||
+        reasonLower.includes("last week") ||
+        reasonLower.includes("earlier today") ||
+        reasonLower.includes("already completed");
+
+      // Future/planning content
+      const isPlanning =
+        reasonLower.includes("planning") ||
+        reasonLower.includes("future workout") ||
+        reasonLower.includes("going to") ||
+        reasonLower.includes("will do") ||
+        reasonLower.includes("tomorrow") ||
+        reasonLower.includes("next week") ||
+        reasonLower.includes("thinking about") ||
+        reasonLower.includes("considering");
+
+      // Not a completed workout
+      const isNotCompleted =
+        reasonLower.includes("not a completed workout") ||
+        reasonLower.includes("no workout") ||
+        reasonLower.includes("didn't work out") ||
+        reasonLower.includes("did not work out") ||
+        reasonLower.includes("skipped");
+
+      // Questions/advice seeking
+      const isQuestion =
+        reasonLower.includes("asking") ||
+        reasonLower.includes("question") ||
+        reasonLower.includes("advice") ||
+        reasonLower.includes("should i") ||
+        reasonLower.includes("how do i") ||
+        reasonLower.includes("what should");
+
+      // General discussion/context
+      const isDiscussion =
+        reasonLower.includes("discussion") ||
+        reasonLower.includes("general") ||
+        reasonLower.includes("context") ||
+        reasonLower.includes("background");
+
+      // If ANY of these patterns match, don't retry
+      if (
+        isPastWorkout ||
+        isPlanning ||
+        isNotCompleted ||
+        isQuestion ||
+        isDiscussion
+      ) {
+        console.info(
+          "✋ Blocking retry - AI correctly detected non-workout content:",
+          {
+            isPastWorkout,
+            isPlanning,
+            isNotCompleted,
+            isQuestion,
+            isDiscussion,
+            reasonPreview: result.reason.substring(0, 100),
+          },
+        );
+        return false;
+      }
     }
 
-    // Retry if no tools were called and response looks like a question
+    // Only retry if no tools were called and response looks like a genuine clarifying question
+    // (e.g., AI needs more info about an actual workout being logged)
     const noToolsCalled = this.toolResults.size === 0;
     const looksLikeQuestion =
       response.includes("?") ||

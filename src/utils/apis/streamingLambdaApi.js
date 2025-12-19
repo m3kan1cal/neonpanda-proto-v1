@@ -34,7 +34,7 @@ async function* streamLambdaRequest({
 }) {
   if (!isStreamingEnabled(endpointType)) {
     throw new Error(
-      `${endpointType} Lambda Function URL streaming is not enabled or configured`
+      `${endpointType} Lambda Function URL streaming is not enabled or configured`,
     );
   }
 
@@ -80,7 +80,7 @@ async function* streamLambdaRequest({
 
     if (!response.ok) {
       throw new Error(
-        `Streaming request failed: ${response.status} ${response.statusText}`
+        `Streaming request failed: ${response.status} ${response.statusText}`,
       );
     }
 
@@ -130,7 +130,7 @@ async function* streamLambdaRequest({
                 "⚠️ Failed to parse Lambda SSE data:",
                 parseError,
                 "Line:",
-                line
+                line,
               );
             }
           }
@@ -142,7 +142,7 @@ async function* streamLambdaRequest({
   } catch (error) {
     console.error(
       `❌ ${endpointType} Lambda Function URL streaming error:`,
-      error
+      error,
     );
 
     // Provide more specific error messages
@@ -174,7 +174,7 @@ export async function* streamCoachConversationLambda(
   coachId,
   conversationId,
   userResponse,
-  imageS3Keys = []
+  imageS3Keys = [],
 ) {
   const path = `users/${userId}/coaches/${coachId}/conversations/${conversationId}/stream`;
 
@@ -199,7 +199,7 @@ export async function* streamCoachCreatorSessionLambda(
   userId,
   sessionId,
   userResponse,
-  imageS3Keys = []
+  imageS3Keys = [],
 ) {
   const path = `users/${userId}/coach-creator-sessions/${sessionId}/stream`;
 
@@ -207,6 +207,32 @@ export async function* streamCoachCreatorSessionLambda(
     endpointType: "coachCreatorSession",
     path,
     method: "PUT",
+    userResponse,
+    imageS3Keys,
+  });
+}
+
+/**
+ * Streams a program designer session using Lambda Function URL
+ * @param {string} userId - The user ID
+ * @param {string} coachId - The coach ID
+ * @param {string} conversationId - The conversation ID
+ * @param {string} userResponse - The user's message/response
+ * @param {string[]} imageS3Keys - Optional array of S3 keys for images
+ * @returns {AsyncGenerator} - Stream of SSE events
+ */
+export async function* streamProgramDesignerSessionLambda(
+  userId,
+  sessionId,
+  userResponse,
+  imageS3Keys = [],
+) {
+  const path = `users/${userId}/program-designer-sessions/${sessionId}/stream`;
+
+  yield* streamLambdaRequest({
+    endpointType: "programDesignerSession",
+    path,
+    method: "POST",
     userResponse,
     imageS3Keys,
   });
@@ -224,7 +250,7 @@ export async function testLambdaStreamingConnection(
   userId,
   coachId,
   conversationId,
-  testMessage = "Test message"
+  testMessage = "Test message",
 ) {
   const startTime = Date.now();
   const events = [];
@@ -235,7 +261,7 @@ export async function testLambdaStreamingConnection(
       userId,
       coachId,
       conversationId,
-      testMessage
+      testMessage,
     );
 
     for await (const event of stream) {
@@ -273,7 +299,7 @@ export async function testLambdaStreamingConnection(
  * @returns {Promise<Object>} - Health check result
  */
 export async function checkLambdaStreamingHealth(
-  endpointType = "coachConversation"
+  endpointType = "coachConversation",
 ) {
   return {
     available: isStreamingEnabled(endpointType),

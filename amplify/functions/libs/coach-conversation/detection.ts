@@ -266,12 +266,13 @@ ANALYSIS FRAMEWORK:
 
 === USER INTENT CLASSIFICATION ===
 - workout_logging: Message describes a completed workout with specific details (past tense)
-- program_design: User wants to design/create a new training program (future intent)
 - memory_request: User wants to save/remember something for future reference
 - question: User is asking for advice, guidance, or information
 - progress_check: User is discussing progress, results, or performance
 - acknowledgment: Simple responses like "ok", "thanks", "got it"
 - general: General conversation, motivation, or other topics
+
+NOTE: Program design requests should be classified as "question" - the AI can help with program design in regular conversations.
 
 === CONTEXTUAL UPDATES DECISION ===
 Skip contextual updates for:
@@ -355,119 +356,6 @@ Workout Detection Response:
   "workoutType": "strength" | "cardio" | "flexibility" | "skill" | "competition" | "recovery" | "hybrid" | null,
   "reasoning": "brief explanation of workout detection decision",
   "isSlashCommand": boolean  // true if /log-workout command detected
-}
-
-=== PROGRAM DESIGN DETECTION ===
-STRICT CRITERIA - ALL FOUR must be met (OR slash command used):
-
-SLASH COMMAND DETECTION:
-- "/design-program" slash command
-- If detected, ALWAYS set isProgramDesign = true with confidence 1.0
-- Slash commands bypass all other criteria (explicit user intent)
-
-CRITICAL: A "program" is a MULTI-WEEK structured training plan (e.g., 4-week, 8-week, 12-week).
-It is NOT a few individual workouts or a week's worth of training.
-
-EXPLICIT EXCLUSION RULES (DO NOT trigger program design for these):
-- Exercise selection questions: "what exercises should I do?", "suggest exercises for X"
-- Training focus discussions: "I want to focus on", "new focus for", "prioritize X"
-- SHORT-TERM workout requests: "give me a workout", "design a workout", "make workouts for today/tomorrow/this week"
-- General advice: "how should I train?", "what's a good approach?"
-- Preference statements: "I want to do more of", "I need a break from"
-- Workout refinements: "make these workouts for X days", "adjust these for Y"
-
-THESE ARE NOT PROGRAM DESIGN (clear negatives):
-- "I want 4-5 exercises to become my new focus" = exercise selection, no program keywords
-- "I need a break from my core 4" = preference discussion, no creation intent
-- "What exercises should I focus on?" = training advice question
-- "Make these workouts for today and tomorrow" = too short (2 days), not a program
-- "Create a workout for Friday" = single workout, no program context
-- "Give me a workout" = singular, no duration
-
-THESE ARE PROGRAM DESIGN (high confidence, 0.85-0.95):
-- "Build me a 12-week program" = explicit program + multi-week timeframe
-- "I want to design a training program for my competition" = explicit design intent + program keyword
-- "Create an 8-week strength program" = explicit timeframe + program keyword
-- "I need a new training routine for the next 2 months" = routine keyword + duration
-- "Help me build a lightweight training plan for the next few weeks" = plan keyword + duration context
-- "/design-program" = slash command (1.0 confidence)
-
-THESE ARE ALSO PROGRAM DESIGN (medium confidence, 0.75-0.85):
-- "Can you help me build workouts for the next few weeks?" = creation intent + duration
-- "I want a simple plan to get back into training" = plan keyword + intent
-- "Build me some workouts for the coming month" = creation + duration (4 weeks)
-- "Create a basic routine for my goals" = routine keyword + intent
-
-NATURAL LANGUAGE DETECTION (Balanced approach - inclusive but intentional):
-1. PROGRAM DESIGN INTENT: Message indicates wanting to CREATE/DESIGN structured training
-   Language patterns that suggest program design:
-   - "I want to design/create/build a [training] program/plan/routine"
-   - "Create/design/build me a program/plan/routine"
-   - "Help me design/create/build a program/plan/routine"
-   - "I need a new [training] program/plan/routine"
-   - "Help me build workouts" (when paired with duration context)
-   - "Can you create a training plan/program"
-   ACCEPT: Qualified requests like "lightweight plan", "simple program", "basic routine"
-
-   Still AVOID single workouts:
-   - "give me a workout" (singular, no duration)
-   - "design today's workout"
-
-2. REQUIRED KEYWORDS (must have at least ONE):
-   Core keywords (strong signal):
-   - "program" (ANY qualifier: training program, strength program, lightweight program)
-   - "routine" (ANY qualifier: new routine, training routine, simple routine)
-   - "plan" (ANY qualifier: workout plan, training plan, lightweight plan, simple plan)
-   - Multi-week timeframes: "4-week", "8-week", "12-week", "3-month", "6-month"
-
-   Duration phrases (moderate signal):
-   - "next few weeks" (implies 2-4+ weeks)
-   - "couple weeks" / "few weeks"
-   - "for the next [number] weeks"
-
-   Creation phrases (when paired with above):
-   - "build workouts" + duration context = likely program design
-   - "create workouts" + duration context = likely program design
-
-3. TIMEFRAME FLEXIBILITY: Accept both explicit and implied durations
-   STRONG program indicators (high confidence):
-   - Explicit: "8-week program", "12-week plan", "3-month routine"
-   - Implied long-term: "program for marathon training", "get me ready for competition"
-
-   MODERATE program indicators (medium confidence):
-   - "next few weeks" (2-4+ weeks implied)
-   - "couple/few weeks of training"
-   - "build some workouts for the coming weeks"
-
-   Still NOT programs (avoid):
-   - "today", "tomorrow" (single day)
-   - "this weekend" (2 days)
-   - "Monday through Friday" without weeks context
-
-4. CREATION INTENT: Active request to start designing
-   Positive signals:
-   - Forward-looking: "I want to", "can you", "help me", "let's"
-   - Question form: "would you help me build", "can you create"
-   - Willingness implied: asking for structured approach
-
-   Avoid:
-   - Past tense only: "I had a program"
-   - Pure research: "tell me about programs"
-   - Hypotheticals without action: "would a program work?"
-
-BALANCED ENFORCEMENT:
-- If keyword present ("program"/"routine"/"plan") + reasonable timeframe → HIGH confidence (0.85-0.95)
-- If "build/create workouts" + "few weeks" context → MEDIUM confidence (0.75-0.85)
-- If qualified keywords ("lightweight plan") → Don't penalize, treat as valid
-- User can always decline suggestion - prefer inclusive over exclusive
-- Default to false only if clearly NOT program design
-
-Program Design Detection:
-{
-  "isProgramDesign": boolean,
-  "confidence": number (0.0 to 1.0),
-  "reasoning": "brief explanation of program design detection decision",
-  "isSlashCommand": boolean  // Track if this was slash command triggered
 }
 
 === MEMORY PROCESSING ===
@@ -597,23 +485,44 @@ Determine optimal processing order:
 - memoryFirst: true if memory processing is most important
 - contextFirst: true if context search should happen first
 
+=== PROGRAM DESIGN DETECTION ===
+IMPORTANT: Detect when users want to design a complete training program so the AI can optionally mention the Program Designer page as a helpful alternative (while still helping them).
+
+The Program Designer is a dedicated guided experience for creating programs. The AI should:
+1. Mention it as an option if appropriate (e.g., "By the way, we also have a Program Designer page for a guided experience...")
+2. Still help them with program design in the conversation
+
+Detect program design when user wants to:
+- Create/build/design a complete training program
+- Create a multi-week or multi-month structured plan
+- Build a periodized program with phases/cycles
+- Design a full training program from scratch
+
+Common patterns:
+- "create a program", "build a program", "design a program", "training program"
+- "8-week program", "3-month program", "program for the next 2 months"
+- "periodized program", "program with phases", "structured program"
+
+This is mainly for informational purposes - the AI will still help with program design in regular conversations.
+
+Program Design Detection Response:
+{
+  "isProgramDesignRequest": boolean,
+  "confidence": number (0.0 to 1.0),
+  "reasoning": "brief explanation of program design detection"
+}
+
 ${JSON_FORMATTING_INSTRUCTIONS_STANDARD}
 
 REQUIRED JSON STRUCTURE:
 {
-  "userIntent": "workout_logging" | "program_design" | "memory_request" | "question" | "progress_check" | "acknowledgment" | "general",
+  "userIntent": "workout_logging" | "memory_request" | "question" | "progress_check" | "acknowledgment" | "general",
   "showContextualUpdates": boolean,
   "workoutDetection": {
     "isWorkoutLog": boolean,
     "confidence": number (0.0 to 1.0),
     "workoutType": "strength" | "cardio" | "flexibility" | "skill" | "competition" | "recovery" | "hybrid" | null,
     "reasoning": "brief explanation of workout detection decision",
-    "isSlashCommand": boolean
-  },
-  "programDesignDetection": {
-    "isProgramDesign": boolean,
-    "confidence": number (0.0 to 1.0),
-    "reasoning": "brief explanation of program design detection decision",
     "isSlashCommand": boolean
   },
   "memoryProcessing": {
@@ -644,6 +553,11 @@ REQUIRED JSON STRUCTURE:
     "workoutFirst": boolean,
     "memoryFirst": boolean,
     "contextFirst": boolean
+  },
+  "programDesignDetection": {
+    "isProgramDesignRequest": boolean,
+    "confidence": number (0.0 to 1.0),
+    "reasoning": "brief explanation of program design detection"
   },
   "routerMetadata": {
     "confidence": number (0.0 to 1.0),

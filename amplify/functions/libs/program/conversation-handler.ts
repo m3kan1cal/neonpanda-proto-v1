@@ -7,20 +7,23 @@
  * Pattern: Same structure as coach-creator/conversation-handler.ts + multimodal support
  */
 
-import { generateNextQuestion, generateNextQuestionStream } from './question-generator';
-import { formatChunkEvent } from '../streaming';
-import { extractAndUpdateTodoList } from './todo-extraction';
-import { getTodoProgress, isSessionComplete } from './todo-list-utils';
-import { ConversationMessage } from '../todo-types';
+import {
+  generateNextQuestion,
+  generateNextQuestionStream,
+} from "./question-generator";
+import { formatChunkEvent } from "../streaming";
+import { extractAndUpdateTodoList } from "./todo-extraction";
+import { getTodoProgress, isSessionComplete } from "./todo-list-utils";
+import { ConversationMessage } from "../todo-types";
 
 /**
  * Session interface for program creation
  */
-interface ProgramCreatorSession {
+interface ProgramDesignerSession {
   userId: string;
   conversationId: string;
   conversationHistory: ConversationMessage[];
-  programTodoList: any; // ProgramCreatorTodoList
+  programTodoList: any; // ProgramDesignerTodoList
   coachConfig?: any;
   lastActivity: Date;
 }
@@ -32,34 +35,36 @@ interface ProgramCreatorSession {
  */
 export async function* handleTodoListConversation(
   userResponse: string,
-  session: ProgramCreatorSession,
-  imageS3Keys?: string[]
+  session: ProgramDesignerSession,
+  imageS3Keys?: string[],
 ): AsyncGenerator<string, any, unknown> {
   console.info("✨ Handling training program to-do list conversation");
 
   if (imageS3Keys && imageS3Keys.length > 0) {
     console.info("🖼️ Conversation includes images:", {
       imageCount: imageS3Keys.length,
-      imageKeys: imageS3Keys
+      imageKeys: imageS3Keys,
     });
   }
 
   try {
     // Step 1: Extract information from user response and update todoList FIRST
-    console.info("🔍 Extracting information and updating training program to-do list BEFORE generating next question");
+    console.info(
+      "🔍 Extracting information and updating training program to-do list BEFORE generating next question",
+    );
 
     // Add user message to history
     session.conversationHistory = session.conversationHistory || [];
     const userMessage: ConversationMessage = {
-      role: 'user',
+      role: "user",
       content: userResponse,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
 
     // Add images to message if present
     if (imageS3Keys && imageS3Keys.length > 0) {
       userMessage.imageS3Keys = imageS3Keys;
-      userMessage.messageType = 'text_with_images';
+      userMessage.messageType = "text_with_images";
     }
 
     session.conversationHistory.push(userMessage);
@@ -69,23 +74,26 @@ export async function* handleTodoListConversation(
       userResponse,
       session.conversationHistory,
       session.programTodoList!,
-      imageS3Keys // Pass images to extraction
+      imageS3Keys, // Pass images to extraction
     );
 
     // Step 2: Generate next question or completion message using UPDATED todoList
-    console.info("🎯 Generating next training program question based on UPDATED to-do list");
+    console.info(
+      "🎯 Generating next training program question based on UPDATED to-do list",
+    );
 
     // Get coach personality for consistent voice (if available)
-    const coachPersonality = session.coachConfig?.generated_prompts?.personality_prompt;
+    const coachPersonality =
+      session.coachConfig?.generated_prompts?.personality_prompt;
 
     // REAL STREAMING: Get chunks directly from Bedrock as they're generated
     const questionStream = generateNextQuestionStream(
       session.conversationHistory,
       session.programTodoList!,
-      coachPersonality
+      coachPersonality,
     );
 
-    let nextResponse = '';
+    let nextResponse = "";
 
     // Yield each chunk as it arrives from Bedrock
     for await (const chunk of questionStream) {
@@ -96,7 +104,8 @@ export async function* handleTodoListConversation(
     // Fallback check (shouldn't happen with new streaming approach)
     if (!nextResponse) {
       console.warn("⚠️ No response generated, using fallback");
-      const fallback = "Thanks for sharing! Let me think about what else I need to know...";
+      const fallback =
+        "Thanks for sharing! Let me think about what else I need to know...";
       yield formatChunkEvent(fallback);
       nextResponse = fallback;
     }
@@ -106,9 +115,9 @@ export async function* handleTodoListConversation(
     // Step 3: Store AI response and finalize session state
     console.info("⚙️ Finalizing session state");
     session.conversationHistory.push({
-      role: 'ai',
+      role: "ai",
       content: nextResponse,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
 
     // Check if all required information is collected
@@ -137,21 +146,26 @@ export async function* handleTodoListConversation(
       isComplete: complete,
       progressDetails,
     };
-
   } catch (error) {
-    console.error("❌ Error in training program to-do list conversation:", error);
-    yield formatChunkEvent("I apologize, but I'm having trouble processing that. Could you try again?");
+    console.error(
+      "❌ Error in training program to-do list conversation:",
+      error,
+    );
+    yield formatChunkEvent(
+      "I apologize, but I'm having trouble processing that. Could you try again?",
+    );
 
     // Return error state
     return {
-      cleanedResponse: "I apologize, but I'm having trouble processing that. Could you try again?",
+      cleanedResponse:
+        "I apologize, but I'm having trouble processing that. Could you try again?",
       isComplete: false,
       progressDetails: {
         completed: 0,
         total: 5,
         percentage: 0,
       },
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: error instanceof Error ? error.message : "Unknown error",
     };
   }
 }

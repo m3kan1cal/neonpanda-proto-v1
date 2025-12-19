@@ -22,7 +22,7 @@ import {
   assembleProgram,
 } from "./phase-generator";
 import { storeProgramDetailsInS3 } from "./s3-utils";
-import type { ProgramCreatorTodoList } from "../program-creator/types";
+import type { ProgramDesignerTodoList } from "../program-designer/types";
 
 /**
  * Generate a concise program name (50-60 characters max)
@@ -191,8 +191,9 @@ export async function generateProgramV2(
   programId: string,
   conversationId: string,
   coachId: string,
-  todoList: ProgramCreatorTodoList,
+  todoList: ProgramDesignerTodoList,
   conversationContext: string,
+  additionalConsiderations?: string,
 ): Promise<{ program: Program; debugData: ProgramGenerationDebugData }> {
   console.info("🚀 Starting V2 parallel program generation:", {
     userId,
@@ -310,6 +311,7 @@ export async function generateProgramV2(
       pineconeContext,
       totalDays: programDuration,
       trainingFrequency,
+      additionalConsiderations, // User's final thoughts/requirements
     };
 
     // Track data loading time

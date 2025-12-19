@@ -23,7 +23,7 @@
  * Options:
  *   --function=NAME     Lambda function name (default: build-workout-v2)
  *   --test=NAME         Run specific test (default: all)
- *   --output=FILE       Save results to JSON file
+ *   --output=DIR        Save results to directory (creates timestamped files)
  *   --verbose           Show full CloudWatch logs and workout data
  *   --region=REGION     AWS region (default: us-west-2)
  *
@@ -33,7 +33,7 @@
  * Examples:
  *   tsx test/integration/test-build-workout-v2.ts
  *   tsx test/integration/test-build-workout-v2.ts --test=simple-slash-command --verbose
- *   tsx test/integration/test-build-workout-v2.ts --output=test-results.json
+ *   tsx test/integration/test-build-workout-v2.ts --output=test/fixtures/results --verbose
  *   DYNAMODB_TABLE_NAME=CustomTable tsx test/integration/test-build-workout-v2.ts
  */
 
@@ -45,6 +45,7 @@ import {
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, GetCommand } from "@aws-sdk/lib-dynamodb";
 import fs from "fs/promises";
+import * as fsSync from "fs";
 import path from "path";
 import { WORKOUT_SCHEMA } from "../../amplify/functions/libs/schemas/workout-schema.ts";
 import type {
@@ -59,6 +60,9 @@ import type {
   TestCase,
   TestResult,
 } from "./types.ts";
+
+// Note: Using fsSync for synchronous operations in output saving
+// to match the pattern from test-build-program-v2.ts
 
 // Configuration
 const DEFAULT_REGION = "us-west-2";
@@ -1039,7 +1043,7 @@ function parseArgs(): TestOptions {
   const options: TestOptions = {
     functionName: DEFAULT_FUNCTION,
     testNames: ["all"],
-    outputFile: null,
+    outputFile: null, // Will be used as outputDir but keeping name for compatibility with types
     verbose: false,
     region: DEFAULT_REGION,
   };
@@ -1057,7 +1061,7 @@ Options:
   --test=NAME         Run specific test(s) (default: all)
                       Can be comma-separated list: test1,test2,test3
                       Available: ${Object.keys(TEST_CASES).join(", ")}
-  --output=FILE       Save results to JSON file
+  --output=DIR        Save results to directory (creates timestamped files)
   --verbose           Show full CloudWatch logs
   --region=REGION     AWS region (default: ${DEFAULT_REGION})
   --help, -h          Show this help message
@@ -1066,7 +1070,7 @@ Examples:
   tsx test/integration/test-build-workout-v2.ts
   tsx test/integration/test-build-workout-v2.ts --test=simple-slash-command --verbose
   tsx test/integration/test-build-workout-v2.ts --test=simple-slash-command,crossfit-fran,running-10k
-  tsx test/integration/test-build-workout-v2.ts --output=test-results.json
+  tsx test/integration/test-build-workout-v2.ts --output=test/fixtures/results --verbose
 `);
       process.exit(0);
     }
@@ -1973,16 +1977,16 @@ async function main(): Promise<void> {
 
   // Create output directory if specified
   if (options.outputFile) {
-    const outputDir = path.dirname(options.outputFile);
-    if (outputDir && outputDir !== "." && outputDir !== options.outputFile) {
-      try {
-        await fs.mkdir(outputDir, { recursive: true });
-        console.info(`📁 Ensured output directory exists: ${outputDir}`);
-      } catch (error) {
-        console.warn(
-          `⚠️ Could not create output directory ${outputDir}: ${error.message}`,
-        );
+    const outputDir = options.outputFile; // Using as directory
+    try {
+      if (!fsSync.existsSync(outputDir)) {
+        fsSync.mkdirSync(outputDir, { recursive: true });
+        console.info(`📁 Created output directory: ${outputDir}`);
       }
+    } catch (error) {
+      console.warn(
+        `⚠️ Could not create output directory ${outputDir}: ${(error as Error).message}`,
+      );
     }
   }
 
@@ -2029,9 +2033,66 @@ async function main(): Promise<void> {
         options,
       );
       results.push(testResult);
+
+      // Save individual test result to file if --output flag provided
+      if (options.outputFile) {
+        const outputDir = options.outputFile; // Using as directory
+        try {
+          const timestamp = new Date()
+            .toISOString()
+            .replace(/[:.]/g, "-")
+            .split("T")[0];
+          const sanitizedTestName = testName.replace(/[^a-z0-9-]/gi, "-");
+          const individualFile = path.join(
+            outputDir,
+            `${timestamp}_${sanitizedTestName}_result.json`,
+          );
+
+          if (!fsSync.existsSync(outputDir)) {
+            fsSync.mkdirSync(outputDir, { recursive: true });
+          }
+
+          const individualData = {
+            timestamp: new Date().toISOString(),
+            testName,
+            description: testCase.description,
+            passed: testResult.validation?.passed || false,
+            duration: testResult.duration,
+            result: testResult.result,
+            logs: {
+              toolCalls: testResult.logs?.toolCalls,
+              iterations: testResult.logs?.iterations,
+              errors: testResult.logs?.errors,
+              warnings: testResult.logs?.warnings,
+            },
+            validation: {
+              checks: testResult.validation?.checks,
+              passed: testResult.validation?.passed,
+            },
+            workoutData: options.verbose ? testResult.workoutData : undefined,
+            config: {
+              region: options.region,
+              function: options.functionName,
+              dynamoTable: DYNAMODB_TABLE_NAME,
+            },
+          };
+
+          fsSync.writeFileSync(
+            individualFile,
+            JSON.stringify(individualData, null, 2),
+          );
+          console.info(
+            `   💾 Result saved to: ${path.basename(individualFile)}`,
+          );
+        } catch (error) {
+          console.error(
+            `   ⚠️  Failed to save individual result: ${(error as Error).message}`,
+          );
+        }
+      }
     } catch (error) {
       console.error(`\n❌ Test ${testName} failed with error:`, error);
-      results.push({
+      const errorResult = {
         testName,
         description: testCase.description,
         result: {},
@@ -2039,7 +2100,53 @@ async function main(): Promise<void> {
         logs: {},
         error: (error as Error).message,
         validation: { testName, passed: false, checks: [] },
-      });
+      };
+      results.push(errorResult);
+
+      // Save error result to file if --output flag provided
+      if (options.outputFile) {
+        const outputDir = options.outputFile;
+        try {
+          const timestamp = new Date()
+            .toISOString()
+            .replace(/[:.]/g, "-")
+            .split("T")[0];
+          const sanitizedTestName = testName.replace(/[^a-z0-9-]/gi, "-");
+          const individualFile = path.join(
+            outputDir,
+            `${timestamp}_${sanitizedTestName}_result.json`,
+          );
+
+          if (!fsSync.existsSync(outputDir)) {
+            fsSync.mkdirSync(outputDir, { recursive: true });
+          }
+
+          const individualData = {
+            timestamp: new Date().toISOString(),
+            testName,
+            description: testCase.description,
+            passed: false,
+            error: (error as Error).message,
+            config: {
+              region: options.region,
+              function: options.functionName,
+              dynamoTable: DYNAMODB_TABLE_NAME,
+            },
+          };
+
+          fsSync.writeFileSync(
+            individualFile,
+            JSON.stringify(individualData, null, 2),
+          );
+          console.info(
+            `   💾 Error result saved to: ${path.basename(individualFile)}`,
+          );
+        } catch (saveError) {
+          console.error(
+            `   ⚠️  Failed to save error result: ${(saveError as Error).message}`,
+          );
+        }
+      }
     }
   }
 
@@ -2066,26 +2173,50 @@ async function main(): Promise<void> {
 
   console.info(`\n📊 Overall: ${passed}/${total} tests passed`);
 
-  // Save to file if requested
+  // Save summary to file if requested
   if (options.outputFile) {
-    const outputData = {
-      timestamp: new Date().toISOString(),
-      options,
-      results,
-      summary: {
-        total,
-        passed,
-        failed: total - passed,
-        passRate: ((passed / total) * 100).toFixed(1) + "%",
-      },
-    };
+    const outputDir = options.outputFile; // Using as directory
+    try {
+      const timestamp = new Date()
+        .toISOString()
+        .replace(/[:.]/g, "-")
+        .split("T")[0];
+      const summaryFile = path.join(outputDir, `${timestamp}_summary.json`);
 
-    await fs.writeFile(
-      options.outputFile,
-      JSON.stringify(outputData, null, 2),
-      "utf-8",
-    );
-    console.info(`\n💾 Results saved to ${options.outputFile}`);
+      if (!fsSync.existsSync(outputDir)) {
+        fsSync.mkdirSync(outputDir, { recursive: true });
+      }
+
+      const outputData = {
+        timestamp: new Date().toISOString(),
+        summary: {
+          total,
+          passed,
+          failed: total - passed,
+          passRate: ((passed / total) * 100).toFixed(2) + "%",
+        },
+        results: results.map((r) => ({
+          testName: r.testName,
+          passed: r.validation?.passed || false,
+          duration: r.duration,
+          error: r.error,
+        })),
+        config: {
+          region: options.region,
+          function: options.functionName,
+          dynamoTable: DYNAMODB_TABLE_NAME,
+        },
+        note: "Individual test results saved in separate files with format: YYYY-MM-DD_test-name_result.json",
+      };
+
+      fsSync.writeFileSync(summaryFile, JSON.stringify(outputData, null, 2));
+      console.info(`\n💾 Summary saved to: ${path.basename(summaryFile)}`);
+      console.info(`   Individual test results also saved in: ${outputDir}/`);
+    } catch (error) {
+      console.error(
+        `\n⚠️  Failed to save summary: ${(error as Error).message}`,
+      );
+    }
   }
 
   // Exit with appropriate code

@@ -68,8 +68,6 @@ export class CoachConversationAgent {
     this.clearConversation = this.clearConversation.bind(this);
     this.generateConversationTitle = this.generateConversationTitle.bind(this);
     this.deleteCoachConversation = this.deleteCoachConversation.bind(this);
-    this.handleProgramDesignSuggestion =
-      this.handleProgramDesignSuggestion.bind(this);
   }
 
   /**
@@ -572,13 +570,6 @@ export class CoachConversationAgent {
             if (metadata.mode) {
               streamingMsg.updateMetadata({ mode: metadata.mode });
             }
-            // Store program design suggestion flag for banner display
-            if (metadata.suggestProgramDesign) {
-              streamingMsg.updateMetadata({
-                suggestProgramDesign: metadata.suggestProgramDesign,
-                programDesignConfidence: metadata.programDesignConfidence,
-              });
-            }
           },
 
           onChunk: async (content) => {
@@ -1000,94 +991,6 @@ export class CoachConversationAgent {
    * Handles suggestion action button clicks
    * @param {Object} action - Action configuration from suggestion
    */
-  async handleProgramDesignSuggestion(messageId, action) {
-    console.info("Handling program design suggestion:", { messageId, action });
-    const { conversation } = this.state;
-
-    if (!conversation) {
-      console.warn("No active conversation to act on.");
-      return;
-    }
-
-    this._updateState({
-      isLoadingItem: true, // Show loading while processing action
-    });
-
-    try {
-      if (action === "accept_program_design") {
-        console.info(
-          "✅ User accepted program design - updating mode and starting session",
-        );
-
-        // Update the conversation mode to program_design
-        await updateCoachConversation(
-          this.userId,
-          this.coachId,
-          this.conversationId,
-          { mode: CONVERSATION_MODES.PROGRAM_DESIGN },
-        );
-
-        // Update local conversation state
-        const updatedConversation = {
-          ...conversation,
-          mode: CONVERSATION_MODES.PROGRAM_DESIGN,
-        };
-
-        // Remove the suggestion flag from the message that had it
-        const messages = this.state.messages.map((msg) =>
-          msg.id === messageId && msg.metadata?.suggestProgramDesign
-            ? {
-                ...msg,
-                metadata: {
-                  ...msg.metadata,
-                  suggestProgramDesign: false,
-                  suggestionAccepted: true,
-                },
-              }
-            : msg,
-        );
-
-        this._updateState({
-          conversation: updatedConversation,
-          messages,
-        });
-
-        // Send a trigger message to start the program design session
-        // Backend will see mode=program_design and start the session
-        await this.sendMessage("Let's get started with program design!");
-      } else if (action === "decline_program_design") {
-        console.info("User declined program design suggestion.");
-
-        // Mark the suggestion as dismissed in the message metadata
-        const messages = this.state.messages.map((msg) =>
-          msg.id === messageId && msg.metadata?.suggestProgramDesign
-            ? {
-                ...msg,
-                metadata: {
-                  ...msg.metadata,
-                  suggestProgramDesign: false,
-                  suggestionDismissed: true,
-                },
-              }
-            : msg,
-        );
-
-        this._updateState({ messages });
-        // No follow-up message needed - just hide the banner
-      } else {
-        console.warn("Unknown suggestion action:", action);
-      }
-    } catch (error) {
-      console.error("Error handling program design suggestion:", error);
-      this._updateState({ error: "Failed to process suggestion." });
-      if (typeof this.onError === "function") {
-        this.onError(error);
-      }
-    } finally {
-      this._updateState({ isLoadingItem: false });
-    }
-  }
-
   /**
    * Gets the current state
    */

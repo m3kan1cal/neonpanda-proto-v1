@@ -8,7 +8,10 @@
 import { CoachConfig, DynamoDBItem } from "../coach-creator/types";
 import { UserMemory } from "../memory";
 import { ConversationMessage } from "../todo-types";
-import { WorkoutCreatorTodoList, WorkoutCreatorSession } from "../workout-creator/types";
+import {
+  WorkoutCreatorTodoList,
+  WorkoutCreatorSession,
+} from "../workout-creator/types";
 
 /**
  * Message type definitions
@@ -16,16 +19,16 @@ import { WorkoutCreatorTodoList, WorkoutCreatorSession } from "../workout-creato
  * - 'text_with_images': Text message with image attachments
  * - 'voice': Voice message (future feature)
  */
-export type MessageType = 'text' | 'text_with_images' | 'voice';
+export type MessageType = "text" | "text_with_images" | "voice";
 
 /**
  * Message type constants
  * Use these instead of string literals to ensure type safety and consistency
  */
 export const MESSAGE_TYPES = {
-  TEXT: 'text' as const,
-  TEXT_WITH_IMAGES: 'text_with_images' as const,
-  VOICE: 'voice' as const,
+  TEXT: "text" as const,
+  TEXT_WITH_IMAGES: "text_with_images" as const,
+  VOICE: "voice" as const,
 } satisfies Record<string, MessageType>;
 
 /**
@@ -35,13 +38,18 @@ export const MESSAGE_TYPES = {
  * - 'chat': Standard coaching conversation (no specific artifact)
  * - 'program_design': Training program creation mode → produces Program artifact
  * - 'workout_log': Multi-turn workout logging session → produces Workout artifact
+ * - 'coach_creator': Coach creation session → produces CoachConfig artifact
  *
  * Future modes should follow this pattern:
  * - 'nutrition_plan': Creates nutrition plan artifact
  * - 'goal_setting': Creates goal/milestone artifacts
  * - 'assessment': Creates assessment/evaluation artifacts
  */
-export type ConversationMode = 'chat' | 'program_design' | 'workout_log';
+export type ConversationMode =
+  | "chat"
+  | "program_design"
+  | "workout_log"
+  | "coach_creator";
 
 /**
  * Conversation mode constants
@@ -52,9 +60,10 @@ export type ConversationMode = 'chat' | 'program_design' | 'workout_log';
  * This makes it clear what the conversation is building towards.
  */
 export const CONVERSATION_MODES = {
-  CHAT: 'chat' as const,
-  PROGRAM_DESIGN: 'program_design' as const,
-  WORKOUT_LOG: 'workout_log' as const,
+  CHAT: "chat" as const,
+  PROGRAM_DESIGN: "program_design" as const,
+  WORKOUT_LOG: "workout_log" as const,
+  COACH_CREATOR: "coach_creator" as const,
 } satisfies Record<string, ConversationMode>;
 
 /**
@@ -74,6 +83,13 @@ export interface CoachMessage {
     model?: string;
     processingTime?: number;
     mode?: ConversationMode; // Track which mode this message was created in
+    isRedirectMessage?: boolean; // Flag for redirect messages (e.g. to program designer)
+    isQuestion?: boolean; // Flag if this message is a question (used in session-based flows)
+    progress?: {
+      completed: number;
+      total: number;
+      percentage: number;
+    };
   };
 }
 
@@ -99,8 +115,8 @@ export interface CoachConversation {
   // NOTE: WorkoutCreatorSession is embedded in the conversation (not a separate DynamoDB entity)
   workoutCreatorSession?: WorkoutCreatorSession;
 
-  // NOTE: ProgramCreatorSession is stored separately in DynamoDB (not embedded here)
-  // Use getProgramCreatorSession(userId, conversationId) to load it
+  // NOTE: ProgramDesignerSession is stored separately in DynamoDB (not embedded here)
+  // Use getProgramDesignerSession(userId) to load it
 
   // DynamoDB timestamps (populated from database metadata)
   createdAt?: Date;

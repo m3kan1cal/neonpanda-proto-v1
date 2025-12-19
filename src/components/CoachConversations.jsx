@@ -49,7 +49,6 @@ import {
   handleStreamingError,
   supportsStreaming,
 } from "../utils/ui/streamingUiHelper.jsx";
-import { FloatingMenuManager } from "./shared/FloatingMenuManager";
 import IconButton from "./shared/IconButton";
 import {
   WorkoutIconSmall,
@@ -62,7 +61,6 @@ import {
   XIcon,
   SendIcon,
   PlusIcon,
-  BuildModeIconTiny,
 } from "./themes/SynthwaveComponents";
 // Icons now imported from SynthwaveComponents for reusability
 
@@ -180,25 +178,13 @@ const MessageItem = memo(
               </div>
             )}
 
-          {/* Program Design Indicator Badge (only for AI messages created during program design artifact creation) */}
-          {message.type === "ai" &&
-            message.metadata?.mode === CONVERSATION_MODES.PROGRAM_DESIGN && (
-              <div className={`${buttonPatterns.modeBadgeProgramDesign} mb-1`}>
-                <BuildModeIconTiny />
-                <span className="translate-y-px">Program Design</span>
-              </div>
-            )}
-
           <div
             className={getStreamingMessageClasses(
               message,
               agentState,
               message.type === "user"
                 ? containerPatterns.userMessageBubble
-                : message.type === "ai" &&
-                    message.metadata?.mode === CONVERSATION_MODES.PROGRAM_DESIGN
-                  ? containerPatterns.aiProgramDesignModeBubble
-                  : `${containerPatterns.aiChatBubble} px-4 py-3`,
+                : `${containerPatterns.aiChatBubble} px-4 py-3`,
             )}
           >
             <div className="font-rajdhani text-base leading-relaxed">
@@ -225,18 +211,10 @@ const MessageItem = memo(
             {message.type === "ai" && (
               <div className="flex gap-1">
                 <div
-                  className={`${messagePatterns.statusDotSecondary} ${
-                    message.metadata?.mode === CONVERSATION_MODES.PROGRAM_DESIGN
-                      ? messagePatterns.statusDotPurple
-                      : messagePatterns.statusDotCyan
-                  }`}
+                  className={`${messagePatterns.statusDotSecondary} ${messagePatterns.statusDotCyan}`}
                 ></div>
                 <div
-                  className={`${messagePatterns.statusDotPrimary} ${
-                    message.metadata?.mode === CONVERSATION_MODES.PROGRAM_DESIGN
-                      ? messagePatterns.statusDotPurple
-                      : messagePatterns.statusDotCyan
-                  }`}
+                  className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotCyan}`}
                 ></div>
               </div>
             )}
@@ -445,12 +423,7 @@ function CoachConversations() {
 
   // Derive current mode from active sessions for UI styling (typing indicator, etc.)
   const getCurrentMode = () => {
-    // PRIORITY 1: Use conversation mode set by backend (set during program design, workout logging, etc.)
-    if (coachConversationAgentState.conversation?.mode) {
-      return coachConversationAgentState.conversation.mode;
-    }
-
-    // PRIORITY 2: Check for active workout session (backward compatibility for embedded sessions)
+    // Check for active workout session
     if (
       coachConversationAgentState.conversation?.workoutCreatorSession
         ?.isComplete === false
@@ -458,7 +431,7 @@ function CoachConversations() {
       return CONVERSATION_MODES.WORKOUT_LOG;
     }
 
-    // Default to chat mode
+    // Default to chat mode (program design is now in dedicated screen)
     return CONVERSATION_MODES.CHAT;
   };
 
@@ -1243,8 +1216,8 @@ function CoachConversations() {
                           Ready to Train?
                         </h2>
                         <p className={typographyPatterns.emptyStateDescription}>
-                          I'm here to help you reach your goals. Ask me anything
-                          or use these quick commands to get started.
+                          Let's get after it! Chat with me about anything
+                          fitness, or use these quick commands to dive right in.
                         </p>
                       </div>
 
@@ -1269,15 +1242,15 @@ function CoachConversations() {
                                   typographyPatterns.emptyStateCardTitle
                                 }
                               >
-                                Log a Workout
+                                Log Your Wins
                               </h3>
                               <p
                                 className={
                                   typographyPatterns.emptyStateCardTextWithMargin
                                 }
                               >
-                                Track your training sessions and keep your coach
-                                in the loop
+                                Drop your workout results so I can celebrate
+                                with you and track your gains
                               </p>
                               <code className={typographyPatterns.inlineCode}>
                                 /log-workout Fran 8:57
@@ -1293,15 +1266,15 @@ function CoachConversations() {
                                   typographyPatterns.emptyStateCardTitle
                                 }
                               >
-                                Save a Memory
+                                Store What Matters
                               </h3>
                               <p
                                 className={
                                   typographyPatterns.emptyStateCardTextWithMargin
                                 }
                               >
-                                Store important notes, preferences, or insights
-                                for future reference
+                                Save notes about what works for you—I'll
+                                remember so you don't have to
                               </p>
                               <code className={typographyPatterns.inlineCode}>
                                 /save-memory prefer morning workouts
@@ -1329,19 +1302,19 @@ function CoachConversations() {
                                   typographyPatterns.emptyStateCardTitle
                                 }
                               >
-                                Ask Questions
+                                Ask Me Anything
                               </h3>
                               <p
                                 className={
                                   typographyPatterns.emptyStateCardText
                                 }
                               >
-                                Get coaching advice, form tips, programming
-                                guidance, or motivation
+                                Need form checks, programming help, guidance,
+                                answers, or a pep talk? I'm here for all of it
                               </p>
                             </div>
 
-                            {/* Build Mode */}
+                            {/* Natural Language Workouts */}
                             <div
                               className={containerPatterns.emptyStateTipCard}
                             >
@@ -1350,22 +1323,15 @@ function CoachConversations() {
                                   typographyPatterns.emptyStateCardTitle
                                 }
                               >
-                                Build Mode
+                                Just Talk to Me
                               </h3>
                               <p
                                 className={
                                   typographyPatterns.emptyStateCardText
                                 }
                               >
-                                Toggle{" "}
-                                <span
-                                  className={`${buttonPatterns.modeBadgeBuild} inline-flex pointer-events-none scale-90`}
-                                >
-                                  <BuildModeIconTiny />
-                                  <span className="translate-y-px">Build</span>
-                                </span>{" "}
-                                at the bottom to create programs, workouts, and
-                                plans
+                                Log your session naturally or tell me what you
+                                want—I'll build the perfect workout for you
                               </p>
                             </div>
                           </div>
@@ -1390,19 +1356,19 @@ function CoachConversations() {
                                   typographyPatterns.emptyStateCardTitle
                                 }
                               >
-                                Attach Photos
+                                Show Me Your Work
                               </h3>
                               <p
                                 className={
                                   typographyPatterns.emptyStateCardText
                                 }
                               >
-                                Click the{" "}
+                                Hit the{" "}
                                 <span className="inline-flex items-center scale-90 text-synthwave-neon-pink translate-y-1">
                                   <CameraIcon />
                                 </span>{" "}
-                                icon at the bottom to share form checks,
-                                progress pics, or workout logs
+                                to share form videos, progress pics, or that
+                                whiteboard you just conquered
                               </p>
                             </div>
 
@@ -1415,15 +1381,15 @@ function CoachConversations() {
                                   typographyPatterns.emptyStateCardTitle
                                 }
                               >
-                                Quick Prompts
+                                One-Tap Favorites
                               </h3>
                               <p
                                 className={
                                   typographyPatterns.emptyStateCardText
                                 }
                               >
-                                Use the Quick Prompts menu for pre-built prompts
-                                like daily check-ins and workout creation
+                                Check out Quick Prompts for instant check-ins,
+                                workout requests, and other handy shortcuts
                               </p>
                             </div>
                           </div>
@@ -1433,11 +1399,11 @@ function CoachConversations() {
                       {/* Pro Tip */}
                       <div className="text-center">
                         <p className={typographyPatterns.emptyStateProTip}>
-                          Type{" "}
+                          Pro tip: Hit{" "}
                           <span className="text-synthwave-neon-cyan font-mono">
                             /
                           </span>{" "}
-                          to see all available commands
+                          anytime to see what I can do
                         </p>
                       </div>
                     </div>
@@ -1474,44 +1440,6 @@ function CoachConversations() {
                         renderMessageContent={renderMessageContent}
                         conversationMode={conversationMode}
                       />
-
-                      {/* Program Design Suggestion Banner - Show below AI message with suggestion flag */}
-                      {message.type === "assistant" &&
-                        message.metadata?.suggestProgramDesign &&
-                        !message.metadata?.suggestionAccepted &&
-                        !message.metadata?.suggestionDismissed && (
-                          <div className="ml-12 mb-4 mt-2">
-                            <div className="bg-purple-600 dark:bg-purple-700 text-white p-4 rounded-lg shadow-lg max-w-md">
-                              <p className="text-sm font-medium mb-3">
-                                💡 Ready to start program design mode?
-                              </p>
-                              <div className="flex gap-2">
-                                <button
-                                  onClick={() =>
-                                    agentRef.current.handleProgramDesignSuggestion(
-                                      message.id,
-                                      "accept_program_design",
-                                    )
-                                  }
-                                  className="px-4 py-2 bg-white text-purple-600 hover:bg-gray-100 rounded-lg text-sm font-semibold transition-colors"
-                                >
-                                  Start Program Design
-                                </button>
-                                <button
-                                  onClick={() =>
-                                    agentRef.current.handleProgramDesignSuggestion(
-                                      message.id,
-                                      "decline_program_design",
-                                    )
-                                  }
-                                  className="px-4 py-2 bg-purple-800 hover:bg-purple-900 text-white rounded-lg text-sm font-medium transition-colors"
-                                >
-                                  No, just chat
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        )}
                     </React.Fragment>
                   ))}
 
@@ -1537,37 +1465,16 @@ function CoachConversations() {
                           "C"}
                       </div>
                       <div
-                        className={
-                          conversationMode === CONVERSATION_MODES.PROGRAM_DESIGN
-                            ? containerPatterns.aiBuildModeBubble
-                            : `${containerPatterns.aiChatBubble} px-4 py-3`
-                        }
+                        className={`${containerPatterns.aiChatBubble} px-4 py-3`}
                       >
                         <div className="flex space-x-1">
+                          <div className="w-2 h-2 bg-synthwave-neon-cyan rounded-full animate-bounce"></div>
                           <div
-                            className={`w-2 h-2 rounded-full animate-bounce ${
-                              conversationMode ===
-                              CONVERSATION_MODES.PROGRAM_DESIGN
-                                ? "bg-synthwave-neon-purple"
-                                : "bg-synthwave-neon-cyan"
-                            }`}
-                          ></div>
-                          <div
-                            className={`w-2 h-2 rounded-full animate-bounce ${
-                              conversationMode ===
-                              CONVERSATION_MODES.PROGRAM_DESIGN
-                                ? "bg-synthwave-neon-purple"
-                                : "bg-synthwave-neon-cyan"
-                            }`}
+                            className="w-2 h-2 bg-synthwave-neon-cyan rounded-full animate-bounce"
                             style={{ animationDelay: "0.1s" }}
                           ></div>
                           <div
-                            className={`w-2 h-2 rounded-full animate-bounce ${
-                              conversationMode ===
-                              CONVERSATION_MODES.PROGRAM_DESIGN
-                                ? "bg-synthwave-neon-purple"
-                                : "bg-synthwave-neon-cyan"
-                            }`}
+                            className="w-2 h-2 bg-synthwave-neon-cyan rounded-full animate-bounce"
                             style={{ animationDelay: "0.2s" }}
                           ></div>
                         </div>
@@ -1604,14 +1511,6 @@ function CoachConversations() {
         tipsTitle="Chat tips & help"
         textareaRef={textareaRef}
         conversationSize={coachConversationAgentState.conversationSize}
-      />
-
-      {/* Floating Menu Manager */}
-      <FloatingMenuManager
-        userId={userId}
-        coachId={coachId}
-        currentPage="coach-conversations"
-        coachData={coachConversationAgentState.coach}
       />
 
       {/* Delete Confirmation Modal */}

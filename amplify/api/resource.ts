@@ -1,10 +1,13 @@
-import { Stack } from 'aws-cdk-lib';
-import * as apigatewayv2 from 'aws-cdk-lib/aws-apigatewayv2';
-import * as apigatewayv2_integrations from 'aws-cdk-lib/aws-apigatewayv2-integrations';
-import * as lambda from 'aws-cdk-lib/aws-lambda';
-import * as certificatemanager from 'aws-cdk-lib/aws-certificatemanager';
-import { HttpUserPoolAuthorizer } from 'aws-cdk-lib/aws-apigatewayv2-authorizers';
-import { createBranchAwareResourceName, getBranchInfo } from '../functions/libs/branch-naming';
+import { Stack } from "aws-cdk-lib";
+import * as apigatewayv2 from "aws-cdk-lib/aws-apigatewayv2";
+import * as apigatewayv2_integrations from "aws-cdk-lib/aws-apigatewayv2-integrations";
+import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as certificatemanager from "aws-cdk-lib/aws-certificatemanager";
+import { HttpUserPoolAuthorizer } from "aws-cdk-lib/aws-apigatewayv2-authorizers";
+import {
+  createBranchAwareResourceName,
+  getBranchInfo,
+} from "../functions/libs/branch-naming";
 
 export function createCoreApi(
   stack: Stack,
@@ -49,6 +52,11 @@ export function createCoreApi(
   checkUserAvailabilityLambda: lambda.IFunction,
   generateUploadUrlsLambda: lambda.IFunction,
   generateDownloadUrlsLambda: lambda.IFunction,
+  createProgramDesignerSessionLambda: lambda.IFunction,
+  getProgramDesignerSessionLambda: lambda.IFunction,
+  getProgramDesignerSessionsLambda: lambda.IFunction,
+  deleteProgramDesignerSessionLambda: lambda.IFunction,
+  streamProgramDesignLambda: lambda.IFunction,
   createProgramLambda: lambda.IFunction,
   getProgramLambda: lambda.IFunction,
   getProgramsLambda: lambda.IFunction,
@@ -58,17 +66,17 @@ export function createCoreApi(
   skipWorkoutTemplateLambda: lambda.IFunction,
   getWorkoutTemplateLambda: lambda.IFunction,
   unsubscribeEmailLambda: lambda.IFunction,
-  userPoolAuthorizer: HttpUserPoolAuthorizer
+  userPoolAuthorizer: HttpUserPoolAuthorizer,
 ) {
   // Create branch-aware API name using utility
   const { branchInfo, resourceName: apiName } = createBranchAwareResourceName(
     stack,
-    'neonpanda-proto-api',
-    'API Gateway'
+    "neonpanda-proto-api",
+    "API Gateway",
   );
 
   // Domain configuration - branch-aware
-  const baseDomain = 'neonpanda.ai';
+  const baseDomain = "neonpanda.ai";
   let domainName: string | null = null;
   let useCustomDomain = false;
 
@@ -76,7 +84,7 @@ export function createCoreApi(
     // Local sandbox development - use default Amplify endpoint (no custom domain)
     domainName = null;
     useCustomDomain = false;
-  } else if (branchInfo.branchName === 'main') {
+  } else if (branchInfo.branchName === "main") {
     // Production from main branch
     domainName = `api-prod.${baseDomain}`;
     useCustomDomain = true;
@@ -90,305 +98,386 @@ export function createCoreApi(
     isSandbox: branchInfo.isSandbox,
     branchName: branchInfo.branchName,
     apiName,
-    domainName: domainName || 'default-amplify-endpoint',
-    useCustomDomain
+    domainName: domainName || "default-amplify-endpoint",
+    useCustomDomain,
   });
 
   // Certificate ARN - only needed for custom domains (not sandboxes)
   let certificate = null;
 
   if (useCustomDomain) {
-    const certificateArn = stack.region === 'us-east-1'
-      ? 'arn:aws:acm:us-east-1:061920441871:certificate/09144037-9ab1-4161-8642-20b533aacc64'
-      : 'arn:aws:acm:us-west-2:061920441871:certificate/cb16d147-c35e-4406-a259-85e768ae943e';
+    const certificateArn =
+      stack.region === "us-east-1"
+        ? "arn:aws:acm:us-east-1:061920441871:certificate/09144037-9ab1-4161-8642-20b533aacc64"
+        : "arn:aws:acm:us-west-2:061920441871:certificate/cb16d147-c35e-4406-a259-85e768ae943e";
 
     // Import the existing certificate
     certificate = certificatemanager.Certificate.fromCertificateArn(
       stack,
-      'ApiCertificate',
-      certificateArn
+      "ApiCertificate",
+      certificateArn,
     );
 
     console.info(`📄 SSL Certificate imported for custom domain`);
   }
 
   // Create HTTP API Gateway v2
-  const httpApi = new apigatewayv2.HttpApi(stack, 'ProtoApi', {
+  const httpApi = new apigatewayv2.HttpApi(stack, "ProtoApi", {
     apiName: apiName,
-    description: 'Core HTTP API for the application',
+    description: "Core HTTP API for the application",
     corsPreflight: {
       allowCredentials: false,
-      allowHeaders: ['*'],
+      allowHeaders: ["*"],
       allowMethods: [
         apigatewayv2.CorsHttpMethod.GET,
         apigatewayv2.CorsHttpMethod.POST,
         apigatewayv2.CorsHttpMethod.PUT,
         apigatewayv2.CorsHttpMethod.DELETE,
-        apigatewayv2.CorsHttpMethod.OPTIONS
+        apigatewayv2.CorsHttpMethod.OPTIONS,
       ],
-      allowOrigins: ['*']
-    }
+      allowOrigins: ["*"],
+    },
   });
 
   // Create Lambda integration for contact form function
-  const contactFormIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
-    'ContactFormIntegration',
-    contactFormLambda
-  );
+  const contactFormIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "ContactFormIntegration",
+      contactFormLambda,
+    );
 
   // Create Lambda integrations for coach creator functions
-  const createCoachCreatorSessionIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
-    'CreateCoachCreatorSessionIntegration',
-    createCoachCreatorSessionLambda
-  );
+  const createCoachCreatorSessionIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "CreateCoachCreatorSessionIntegration",
+      createCoachCreatorSessionLambda,
+    );
 
-  const updateCoachCreatorSessionIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
-    'UpdateCoachCreatorSessionIntegration',
-    updateCoachCreatorSessionLambda
-  );
+  const updateCoachCreatorSessionIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "UpdateCoachCreatorSessionIntegration",
+      updateCoachCreatorSessionLambda,
+    );
 
-  const getCoachCreatorSessionIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
-    'GetCoachCreatorSessionIntegration',
-    getCoachCreatorSessionLambda
-  );
+  const getCoachCreatorSessionIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "GetCoachCreatorSessionIntegration",
+      getCoachCreatorSessionLambda,
+    );
 
-  const getCoachCreatorSessionsIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
-    'GetCoachCreatorSessionsIntegration',
-    getCoachCreatorSessionsLambda
-  );
+  const getCoachCreatorSessionsIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "GetCoachCreatorSessionsIntegration",
+      getCoachCreatorSessionsLambda,
+    );
 
-  const deleteCoachCreatorSessionIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
-    'DeleteCoachCreatorSessionIntegration',
-    deleteCoachCreatorSessionLambda
-  );
+  const deleteCoachCreatorSessionIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "DeleteCoachCreatorSessionIntegration",
+      deleteCoachCreatorSessionLambda,
+    );
 
-  const getCoachConfigsIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
-    'GetCoachConfigsIntegration',
-    getCoachConfigsLambda
-  );
+  const getCoachConfigsIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "GetCoachConfigsIntegration",
+      getCoachConfigsLambda,
+    );
 
-  const getCoachConfigIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
-    'GetCoachConfigIntegration',
-    getCoachConfigLambda
-  );
+  const getCoachConfigIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "GetCoachConfigIntegration",
+      getCoachConfigLambda,
+    );
 
-  const updateCoachConfigIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
-    'UpdateCoachConfigIntegration',
-    updateCoachConfigLambda
-  );
+  const updateCoachConfigIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "UpdateCoachConfigIntegration",
+      updateCoachConfigLambda,
+    );
 
-  const deleteCoachConfigIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
-    'DeleteCoachConfigIntegration',
-    deleteCoachConfigLambda
-  );
+  const deleteCoachConfigIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "DeleteCoachConfigIntegration",
+      deleteCoachConfigLambda,
+    );
 
-  const getCoachConfigStatusIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
-    'GetCoachConfigStatusIntegration',
-    getCoachConfigStatusLambda
-  );
+  const getCoachConfigStatusIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "GetCoachConfigStatusIntegration",
+      getCoachConfigStatusLambda,
+    );
 
   // Create Lambda integrations for coach template functions
-  const getCoachTemplatesIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
-    'GetCoachTemplatesIntegration',
-    getCoachTemplatesLambda
-  );
+  const getCoachTemplatesIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "GetCoachTemplatesIntegration",
+      getCoachTemplatesLambda,
+    );
 
-  const getCoachTemplateIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
-    'GetCoachTemplateIntegration',
-    getCoachTemplateLambda
-  );
+  const getCoachTemplateIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "GetCoachTemplateIntegration",
+      getCoachTemplateLambda,
+    );
 
-  const createCoachConfigFromTemplateIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
-    'CreateCoachConfigFromTemplateIntegration',
-    createCoachConfigFromTemplateLambda
-  );
+  const createCoachConfigFromTemplateIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "CreateCoachConfigFromTemplateIntegration",
+      createCoachConfigFromTemplateLambda,
+    );
 
-  const createCoachConfigIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
-    'CreateCoachConfigIntegration',
-    createCoachConfigLambda
-  );
+  const createCoachConfigIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "CreateCoachConfigIntegration",
+      createCoachConfigLambda,
+    );
 
   // Create Lambda integrations for coach conversation functions
-  const createCoachConversationIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
-    'CreateCoachConversationIntegration',
-    createCoachConversationLambda
-  );
+  const createCoachConversationIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "CreateCoachConversationIntegration",
+      createCoachConversationLambda,
+    );
 
-  const getCoachConversationsIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
-    'GetCoachConversationsIntegration',
-    getCoachConversationsLambda
-  );
+  const getCoachConversationsIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "GetCoachConversationsIntegration",
+      getCoachConversationsLambda,
+    );
 
-  const getCoachConversationIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
-    'GetCoachConversationIntegration',
-    getCoachConversationLambda
-  );
+  const getCoachConversationIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "GetCoachConversationIntegration",
+      getCoachConversationLambda,
+    );
 
-  const updateCoachConversationIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
-    'UpdateCoachConversationIntegration',
-    updateCoachConversationLambda
-  );
+  const updateCoachConversationIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "UpdateCoachConversationIntegration",
+      updateCoachConversationLambda,
+    );
 
-  const sendCoachConversationMessageIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
-    'SendCoachConversationMessageIntegration',
-    sendCoachConversationMessageLambda
-  );
+  const sendCoachConversationMessageIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "SendCoachConversationMessageIntegration",
+      sendCoachConversationMessageLambda,
+    );
 
   // Create Lambda integrations for workout functions
-  const createWorkoutIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
-    'CreateWorkoutIntegration',
-    createWorkoutLambda
-  );
+  const createWorkoutIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "CreateWorkoutIntegration",
+      createWorkoutLambda,
+    );
 
-  const getWorkoutsIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
-    'GetWorkoutsIntegration',
-    getWorkoutsLambda
-  );
+  const getWorkoutsIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "GetWorkoutsIntegration",
+      getWorkoutsLambda,
+    );
 
-  const getWorkoutIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
-    'GetWorkoutIntegration',
-    getWorkoutLambda
-  );
+  const getWorkoutIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "GetWorkoutIntegration",
+      getWorkoutLambda,
+    );
 
-  const updateWorkoutIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
-    'UpdateWorkoutIntegration',
-    updateWorkoutLambda
-  );
+  const updateWorkoutIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "UpdateWorkoutIntegration",
+      updateWorkoutLambda,
+    );
 
-  const deleteWorkoutIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
-    'DeleteWorkoutIntegration',
-    deleteWorkoutLambda
-  );
+  const deleteWorkoutIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "DeleteWorkoutIntegration",
+      deleteWorkoutLambda,
+    );
 
-  const getWorkoutsCountIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
-    'GetWorkoutsCountIntegration',
-    getWorkoutsCountLambda
-  );
+  const getWorkoutsCountIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "GetWorkoutsCountIntegration",
+      getWorkoutsCountLambda,
+    );
 
-  const getCoachConversationsCountIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
-    'GetCoachConversationsCountIntegration',
-    getCoachConversationsCountLambda
-  );
+  const getCoachConversationsCountIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "GetCoachConversationsCountIntegration",
+      getCoachConversationsCountLambda,
+    );
 
-  const getCoachConfigsCountIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
-    'GetCoachConfigsCountIntegration',
-    getCoachConfigsCountLambda
-  );
+  const getCoachConfigsCountIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "GetCoachConfigsCountIntegration",
+      getCoachConfigsCountLambda,
+    );
 
   // Create Lambda integrations for weekly report functions
-  const getWeeklyReportsIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
-    'GetWeeklyReportsIntegration',
-    getWeeklyReportsLambda
-  );
+  const getWeeklyReportsIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "GetWeeklyReportsIntegration",
+      getWeeklyReportsLambda,
+    );
 
-  const getWeeklyReportIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
-    'GetWeeklyReportIntegration',
-    getWeeklyReportLambda
-  );
+  const getWeeklyReportIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "GetWeeklyReportIntegration",
+      getWeeklyReportLambda,
+    );
 
   // Create Lambda integrations for monthly report functions
-  const getMonthlyReportsIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
-    'GetMonthlyReportsIntegration',
-    getMonthlyReportsLambda
-  );
+  const getMonthlyReportsIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "GetMonthlyReportsIntegration",
+      getMonthlyReportsLambda,
+    );
 
-  const getMonthlyReportIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
-    'GetMonthlyReportIntegration',
-    getMonthlyReportLambda
-  );
+  const getMonthlyReportIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "GetMonthlyReportIntegration",
+      getMonthlyReportLambda,
+    );
 
   // Create Lambda integrations for memory functions
-  const getMemoriesIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
-    'GetMemoriesIntegration',
-    getMemoriesLambda
-  );
+  const getMemoriesIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "GetMemoriesIntegration",
+      getMemoriesLambda,
+    );
 
-  const createMemoryIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
-    'CreateMemoryIntegration',
-    createMemoryLambda
-  );
+  const createMemoryIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "CreateMemoryIntegration",
+      createMemoryLambda,
+    );
 
-  const deleteMemoryIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
-    'DeleteMemoryIntegration',
-    deleteMemoryLambda
-  );
+  const deleteMemoryIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "DeleteMemoryIntegration",
+      deleteMemoryLambda,
+    );
 
-  const deleteCoachConversationIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
-    'DeleteCoachConversationIntegration',
-    deleteCoachConversationLambda
-  );
+  const deleteCoachConversationIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "DeleteCoachConversationIntegration",
+      deleteCoachConversationLambda,
+    );
 
   // Create Lambda integrations for user profile functions
-  const getUserProfileIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
-    'GetUserProfileIntegration',
-    getUserProfileLambda
-  );
+  const getUserProfileIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "GetUserProfileIntegration",
+      getUserProfileLambda,
+    );
 
-  const updateUserProfileIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
-    'UpdateUserProfileIntegration',
-    updateUserProfileLambda
-  );
+  const updateUserProfileIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "UpdateUserProfileIntegration",
+      updateUserProfileLambda,
+    );
 
-  const generateUploadUrlsIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
-    'GenerateUploadUrlsIntegration',
-    generateUploadUrlsLambda
-  );
+  const generateUploadUrlsIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "GenerateUploadUrlsIntegration",
+      generateUploadUrlsLambda,
+    );
 
-  const generateDownloadUrlsIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
-    'GenerateDownloadUrlsIntegration',
-    generateDownloadUrlsLambda
-  );
+  const generateDownloadUrlsIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "GenerateDownloadUrlsIntegration",
+      generateDownloadUrlsLambda,
+    );
 
-  const checkUserAvailabilityIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
-    'CheckUserAvailabilityIntegration',
-    checkUserAvailabilityLambda
-  );
+  const createProgramDesignerSessionIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "CreateProgramDesignerSessionIntegration",
+      createProgramDesignerSessionLambda,
+    );
+
+  const getProgramDesignerSessionIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "GetProgramDesignerSessionIntegration",
+      getProgramDesignerSessionLambda,
+    );
+
+  const getProgramDesignerSessionsIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "GetProgramDesignerSessionsIntegration",
+      getProgramDesignerSessionsLambda,
+    );
+
+  const deleteProgramDesignerSessionIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "DeleteProgramDesignerSessionIntegration",
+      deleteProgramDesignerSessionLambda,
+    );
+
+  const streamProgramDesignIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "StreamProgramDesignIntegration",
+      streamProgramDesignLambda,
+    );
+
+  const checkUserAvailabilityIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "CheckUserAvailabilityIntegration",
+      checkUserAvailabilityLambda,
+    );
 
   // Create Lambda integrations for training program functions
-  const createProgramIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
-    'CreateProgramIntegration',
-    createProgramLambda
-  );
+  const createProgramIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "CreateProgramIntegration",
+      createProgramLambda,
+    );
 
-  const getProgramIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
-    'GetProgramIntegration',
-    getProgramLambda
-  );
+  const getProgramIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "GetProgramIntegration",
+      getProgramLambda,
+    );
 
-  const getProgramsIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
-    'GetProgramsIntegration',
-    getProgramsLambda
-  );
+  const getProgramsIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "GetProgramsIntegration",
+      getProgramsLambda,
+    );
 
-  const updateProgramIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
-    'UpdateProgramIntegration',
-    updateProgramLambda
-  );
+  const updateProgramIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "UpdateProgramIntegration",
+      updateProgramLambda,
+    );
 
-  const deleteProgramIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
-    'DeleteProgramIntegration',
-    deleteProgramLambda
-  );
+  const deleteProgramIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "DeleteProgramIntegration",
+      deleteProgramLambda,
+    );
 
-  const logWorkoutTemplateIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
-    'LogWorkoutTemplateIntegration',
-    logWorkoutTemplateLambda
-  );
+  const logWorkoutTemplateIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "LogWorkoutTemplateIntegration",
+      logWorkoutTemplateLambda,
+    );
 
-  const skipWorkoutTemplateIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
-    'SkipWorkoutTemplateIntegration',
-    skipWorkoutTemplateLambda
-  );
+  const skipWorkoutTemplateIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "SkipWorkoutTemplateIntegration",
+      skipWorkoutTemplateLambda,
+    );
 
-  const getWorkoutTemplateIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
-    'GetWorkoutTemplateIntegration',
-    getWorkoutTemplateLambda
-  );
+  const getWorkoutTemplateIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "GetWorkoutTemplateIntegration",
+      getWorkoutTemplateLambda,
+    );
 
-  const unsubscribeEmailIntegration = new apigatewayv2_integrations.HttpLambdaIntegration(
-    'UnsubscribeEmailIntegration',
-    unsubscribeEmailLambda
-  );
+  const unsubscribeEmailIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "UnsubscribeEmailIntegration",
+      unsubscribeEmailLambda,
+    );
 
   // Create integrations object for route configuration
   const integrations = {
@@ -433,6 +522,11 @@ export function createCoreApi(
     checkUserAvailability: checkUserAvailabilityIntegration,
     generateUploadUrls: generateUploadUrlsIntegration,
     generateDownloadUrls: generateDownloadUrlsIntegration,
+    createProgramDesignerSession: createProgramDesignerSessionIntegration,
+    getProgramDesignerSession: getProgramDesignerSessionIntegration,
+    getProgramDesignerSessions: getProgramDesignerSessionsIntegration,
+    deleteProgramDesignerSession: deleteProgramDesignerSessionIntegration,
+    streamProgramDesign: streamProgramDesignIntegration,
     createProgram: createProgramIntegration,
     getProgram: getProgramIntegration,
     getPrograms: getProgramsIntegration,
@@ -441,7 +535,7 @@ export function createCoreApi(
     logWorkoutTemplate: logWorkoutTemplateIntegration,
     skipWorkoutTemplate: skipWorkoutTemplateIntegration,
     getWorkoutTemplate: getWorkoutTemplateIntegration,
-    unsubscribeEmail: unsubscribeEmailIntegration
+    unsubscribeEmail: unsubscribeEmailIntegration,
   };
 
   // *******************************************************
@@ -450,372 +544,409 @@ export function createCoreApi(
 
   // Miscellaneous Routes (PUBLIC)
   httpApi.addRoutes({
-    path: '/contact',
+    path: "/contact",
     methods: [apigatewayv2.HttpMethod.POST],
-    integration: integrations.contactForm
+    integration: integrations.contactForm,
   });
 
   // Email unsubscribe (PUBLIC - no auth required for compliance)
   httpApi.addRoutes({
-    path: '/unsubscribe',
+    path: "/unsubscribe",
     methods: [apigatewayv2.HttpMethod.GET],
-    integration: integrations.unsubscribeEmail
+    integration: integrations.unsubscribeEmail,
   });
 
   // User Availability Check (PUBLIC - for registration)
   httpApi.addRoutes({
-    path: '/users/check-availability',
+    path: "/users/check-availability",
     methods: [apigatewayv2.HttpMethod.GET],
-    integration: integrations.checkUserAvailability
+    integration: integrations.checkUserAvailability,
   });
 
   // Coach Templates (PUBLIC - as requested by user)
   httpApi.addRoutes({
-    path: '/coach-templates',
+    path: "/coach-templates",
     methods: [apigatewayv2.HttpMethod.GET],
-    integration: integrations.getCoachTemplates
+    integration: integrations.getCoachTemplates,
   });
 
   httpApi.addRoutes({
-    path: '/coach-templates/{templateId}',
+    path: "/coach-templates/{templateId}",
     methods: [apigatewayv2.HttpMethod.GET],
-    integration: integrations.getCoachTemplate
+    integration: integrations.getCoachTemplate,
   });
 
   // Workout Routes (PROTECTED)
   httpApi.addRoutes({
-    path: '/users/{userId}/workouts',
+    path: "/users/{userId}/workouts",
     methods: [apigatewayv2.HttpMethod.GET],
     integration: integrations.getWorkouts,
-    authorizer: userPoolAuthorizer
+    authorizer: userPoolAuthorizer,
   });
 
   httpApi.addRoutes({
-    path: '/users/{userId}/workouts/{workoutId}',
+    path: "/users/{userId}/workouts/{workoutId}",
     methods: [apigatewayv2.HttpMethod.GET],
     integration: integrations.getWorkout,
-    authorizer: userPoolAuthorizer
+    authorizer: userPoolAuthorizer,
   });
 
   httpApi.addRoutes({
-    path: '/users/{userId}/workouts/{workoutId}',
+    path: "/users/{userId}/workouts/{workoutId}",
     methods: [apigatewayv2.HttpMethod.PUT],
     integration: integrations.updateWorkout,
-    authorizer: userPoolAuthorizer
+    authorizer: userPoolAuthorizer,
   });
 
   httpApi.addRoutes({
-    path: '/users/{userId}/workouts/{workoutId}',
+    path: "/users/{userId}/workouts/{workoutId}",
     methods: [apigatewayv2.HttpMethod.DELETE],
     integration: integrations.deleteWorkout,
-    authorizer: userPoolAuthorizer
+    authorizer: userPoolAuthorizer,
   });
 
   httpApi.addRoutes({
-    path: '/users/{userId}/workouts',
+    path: "/users/{userId}/workouts",
     methods: [apigatewayv2.HttpMethod.POST],
     integration: integrations.createWorkout,
-    authorizer: userPoolAuthorizer
+    authorizer: userPoolAuthorizer,
   });
 
   httpApi.addRoutes({
-    path: '/users/{userId}/workouts/count',
+    path: "/users/{userId}/workouts/count",
     methods: [apigatewayv2.HttpMethod.GET],
     integration: integrations.getWorkoutsCount,
-    authorizer: userPoolAuthorizer
+    authorizer: userPoolAuthorizer,
   });
 
   // Training Program Routes (PROTECTED)
   httpApi.addRoutes({
-    path: '/users/{userId}/coaches/{coachId}/programs',
+    path: "/users/{userId}/coaches/{coachId}/programs",
     methods: [apigatewayv2.HttpMethod.POST],
     integration: integrations.createProgram,
-    authorizer: userPoolAuthorizer
+    authorizer: userPoolAuthorizer,
   });
 
   httpApi.addRoutes({
-    path: '/users/{userId}/coaches/{coachId}/programs',
+    path: "/users/{userId}/coaches/{coachId}/programs",
     methods: [apigatewayv2.HttpMethod.GET],
     integration: integrations.getPrograms,
-    authorizer: userPoolAuthorizer
+    authorizer: userPoolAuthorizer,
   });
 
   httpApi.addRoutes({
-    path: '/users/{userId}/coaches/{coachId}/programs/{programId}',
+    path: "/users/{userId}/coaches/{coachId}/programs/{programId}",
     methods: [apigatewayv2.HttpMethod.GET],
     integration: integrations.getProgram,
-    authorizer: userPoolAuthorizer
+    authorizer: userPoolAuthorizer,
   });
 
   httpApi.addRoutes({
-    path: '/users/{userId}/coaches/{coachId}/programs/{programId}',
+    path: "/users/{userId}/coaches/{coachId}/programs/{programId}",
     methods: [apigatewayv2.HttpMethod.PUT],
     integration: integrations.updateProgram,
-    authorizer: userPoolAuthorizer
+    authorizer: userPoolAuthorizer,
   });
 
   httpApi.addRoutes({
-    path: '/users/{userId}/coaches/{coachId}/programs/{programId}',
+    path: "/users/{userId}/coaches/{coachId}/programs/{programId}",
     methods: [apigatewayv2.HttpMethod.DELETE],
     integration: integrations.deleteProgram,
-    authorizer: userPoolAuthorizer
+    authorizer: userPoolAuthorizer,
   });
 
   // Log workout template (convert template to logged workout)
   httpApi.addRoutes({
-    path: '/users/{userId}/coaches/{coachId}/programs/{programId}/templates/{templateId}/log',
+    path: "/users/{userId}/coaches/{coachId}/programs/{programId}/templates/{templateId}/log",
     methods: [apigatewayv2.HttpMethod.POST],
     integration: integrations.logWorkoutTemplate,
-    authorizer: userPoolAuthorizer
+    authorizer: userPoolAuthorizer,
   });
 
   // Skip workout template (mark template as skipped, advance program)
   httpApi.addRoutes({
-    path: '/users/{userId}/coaches/{coachId}/programs/{programId}/templates/{templateId}/skip',
+    path: "/users/{userId}/coaches/{coachId}/programs/{programId}/templates/{templateId}/skip",
     methods: [apigatewayv2.HttpMethod.POST],
     integration: integrations.skipWorkoutTemplate,
-    authorizer: userPoolAuthorizer
+    authorizer: userPoolAuthorizer,
   });
 
   // Get workout template(s) - supports query params: ?today=true, ?day=N
   httpApi.addRoutes({
-    path: '/users/{userId}/coaches/{coachId}/programs/{programId}/templates',
+    path: "/users/{userId}/coaches/{coachId}/programs/{programId}/templates",
     methods: [apigatewayv2.HttpMethod.GET],
     integration: integrations.getWorkoutTemplate,
-    authorizer: userPoolAuthorizer
+    authorizer: userPoolAuthorizer,
   });
 
   // Get specific workout template by ID
   httpApi.addRoutes({
-    path: '/users/{userId}/coaches/{coachId}/programs/{programId}/templates/{templateId}',
+    path: "/users/{userId}/coaches/{coachId}/programs/{programId}/templates/{templateId}",
     methods: [apigatewayv2.HttpMethod.GET],
     integration: integrations.getWorkoutTemplate,
-    authorizer: userPoolAuthorizer
+    authorizer: userPoolAuthorizer,
   });
 
   // Coach Creator Routes
   httpApi.addRoutes({
-    path: '/users/{userId}/coach-creator-sessions',
+    path: "/users/{userId}/coach-creator-sessions",
     methods: [apigatewayv2.HttpMethod.POST],
     integration: integrations.createCoachCreatorSession,
-    authorizer: userPoolAuthorizer
+    authorizer: userPoolAuthorizer,
   });
 
   httpApi.addRoutes({
-    path: '/users/{userId}/coach-creator-sessions',
+    path: "/users/{userId}/coach-creator-sessions",
     methods: [apigatewayv2.HttpMethod.GET],
     integration: integrations.getCoachCreatorSessions,
-    authorizer: userPoolAuthorizer
+    authorizer: userPoolAuthorizer,
   });
 
   httpApi.addRoutes({
-    path: '/users/{userId}/coach-creator-sessions/{sessionId}',
+    path: "/users/{userId}/coach-creator-sessions/{sessionId}",
     methods: [apigatewayv2.HttpMethod.PUT],
     integration: integrations.updateCoachCreatorSession,
-    authorizer: userPoolAuthorizer
+    authorizer: userPoolAuthorizer,
   });
 
   httpApi.addRoutes({
-    path: '/users/{userId}/coach-creator-sessions/{sessionId}',
+    path: "/users/{userId}/coach-creator-sessions/{sessionId}",
     methods: [apigatewayv2.HttpMethod.GET],
     integration: integrations.getCoachCreatorSession,
-    authorizer: userPoolAuthorizer
+    authorizer: userPoolAuthorizer,
   });
 
   httpApi.addRoutes({
-    path: '/users/{userId}/coach-creator-sessions/{sessionId}',
+    path: "/users/{userId}/coach-creator-sessions/{sessionId}",
     methods: [apigatewayv2.HttpMethod.DELETE],
     integration: integrations.deleteCoachCreatorSession,
-    authorizer: userPoolAuthorizer
+    authorizer: userPoolAuthorizer,
   });
 
   httpApi.addRoutes({
-    path: '/users/{userId}/coach-creator-sessions/{sessionId}/config-status',
+    path: "/users/{userId}/coach-creator-sessions/{sessionId}/config-status",
     methods: [apigatewayv2.HttpMethod.GET],
     integration: integrations.getCoachConfigStatus,
-    authorizer: userPoolAuthorizer
+    authorizer: userPoolAuthorizer,
   });
 
   // Coach Config Routes
   httpApi.addRoutes({
-    path: '/users/{userId}/coaches',
+    path: "/users/{userId}/coaches",
     methods: [apigatewayv2.HttpMethod.GET],
     integration: integrations.getCoachConfigs,
-    authorizer: userPoolAuthorizer
+    authorizer: userPoolAuthorizer,
   });
 
   httpApi.addRoutes({
-    path: '/users/{userId}/coaches/{coachId}',
+    path: "/users/{userId}/coaches/{coachId}",
     methods: [apigatewayv2.HttpMethod.GET],
     integration: integrations.getCoachConfig,
-    authorizer: userPoolAuthorizer
+    authorizer: userPoolAuthorizer,
   });
 
   httpApi.addRoutes({
-    path: '/users/{userId}/coaches/{coachId}',
+    path: "/users/{userId}/coaches/{coachId}",
     methods: [apigatewayv2.HttpMethod.PUT],
     integration: integrations.updateCoachConfig,
-    authorizer: userPoolAuthorizer
+    authorizer: userPoolAuthorizer,
   });
 
   httpApi.addRoutes({
-    path: '/users/{userId}/coaches/{coachId}',
+    path: "/users/{userId}/coaches/{coachId}",
     methods: [apigatewayv2.HttpMethod.DELETE],
     integration: integrations.deleteCoachConfig,
-    authorizer: userPoolAuthorizer
+    authorizer: userPoolAuthorizer,
   });
 
   httpApi.addRoutes({
-    path: '/users/{userId}/coaches/from-template/{templateId}',
+    path: "/users/{userId}/coaches/from-template/{templateId}",
     methods: [apigatewayv2.HttpMethod.POST],
     integration: integrations.createCoachConfigFromTemplate,
-    authorizer: userPoolAuthorizer
+    authorizer: userPoolAuthorizer,
   });
 
   httpApi.addRoutes({
-    path: '/users/{userId}/coaches/from-session/{sessionId}',
+    path: "/users/{userId}/coaches/from-session/{sessionId}",
     methods: [apigatewayv2.HttpMethod.POST],
     integration: integrations.createCoachConfig,
-    authorizer: userPoolAuthorizer
+    authorizer: userPoolAuthorizer,
   });
 
   httpApi.addRoutes({
-    path: '/users/{userId}/coaches/count',
+    path: "/users/{userId}/coaches/count",
     methods: [apigatewayv2.HttpMethod.GET],
     integration: integrations.getCoachConfigsCount,
-    authorizer: userPoolAuthorizer
+    authorizer: userPoolAuthorizer,
   });
 
   // Coach Conversation Routes
   httpApi.addRoutes({
-    path: '/users/{userId}/coaches/{coachId}/conversations',
+    path: "/users/{userId}/coaches/{coachId}/conversations",
     methods: [apigatewayv2.HttpMethod.POST],
     integration: integrations.createCoachConversation,
-    authorizer: userPoolAuthorizer
+    authorizer: userPoolAuthorizer,
   });
 
   httpApi.addRoutes({
-    path: '/users/{userId}/coaches/{coachId}/conversations',
+    path: "/users/{userId}/coaches/{coachId}/conversations",
     methods: [apigatewayv2.HttpMethod.GET],
     integration: integrations.getCoachConversations,
-    authorizer: userPoolAuthorizer
+    authorizer: userPoolAuthorizer,
   });
 
   httpApi.addRoutes({
-    path: '/users/{userId}/coaches/{coachId}/conversations/{conversationId}',
+    path: "/users/{userId}/coaches/{coachId}/conversations/{conversationId}",
     methods: [apigatewayv2.HttpMethod.GET],
     integration: integrations.getCoachConversation,
-    authorizer: userPoolAuthorizer
+    authorizer: userPoolAuthorizer,
   });
 
   httpApi.addRoutes({
-    path: '/users/{userId}/coaches/{coachId}/conversations/{conversationId}',
+    path: "/users/{userId}/coaches/{coachId}/conversations/{conversationId}",
     methods: [apigatewayv2.HttpMethod.PUT],
     integration: integrations.updateCoachConversation,
-    authorizer: userPoolAuthorizer
+    authorizer: userPoolAuthorizer,
   });
 
   httpApi.addRoutes({
-    path: '/users/{userId}/coaches/{coachId}/conversations/{conversationId}/send-message',
+    path: "/users/{userId}/coaches/{coachId}/conversations/{conversationId}/send-message",
     methods: [apigatewayv2.HttpMethod.POST],
     integration: integrations.sendCoachConversationMessage,
-    authorizer: userPoolAuthorizer
+    authorizer: userPoolAuthorizer,
   });
 
   httpApi.addRoutes({
-    path: '/users/{userId}/coaches/{coachId}/conversations/count',
+    path: "/users/{userId}/coaches/{coachId}/conversations/count",
     methods: [apigatewayv2.HttpMethod.GET],
     integration: integrations.getCoachConversationsCount,
-    authorizer: userPoolAuthorizer
+    authorizer: userPoolAuthorizer,
   });
 
   httpApi.addRoutes({
-    path: '/users/{userId}/coaches/{coachId}/conversations/{conversationId}',
+    path: "/users/{userId}/coaches/{coachId}/conversations/{conversationId}",
     methods: [apigatewayv2.HttpMethod.DELETE],
     integration: integrations.deleteCoachConversation,
-    authorizer: userPoolAuthorizer
+    authorizer: userPoolAuthorizer,
   });
 
   // Report Routes
   httpApi.addRoutes({
-    path: '/users/{userId}/reports/weekly',
+    path: "/users/{userId}/reports/weekly",
     methods: [apigatewayv2.HttpMethod.GET],
     integration: integrations.getWeeklyReports,
-    authorizer: userPoolAuthorizer
+    authorizer: userPoolAuthorizer,
   });
 
   httpApi.addRoutes({
-    path: '/users/{userId}/reports/weekly/{weekId}',
+    path: "/users/{userId}/reports/weekly/{weekId}",
     methods: [apigatewayv2.HttpMethod.GET],
     integration: integrations.getWeeklyReport,
-    authorizer: userPoolAuthorizer
+    authorizer: userPoolAuthorizer,
   });
 
   httpApi.addRoutes({
-    path: '/users/{userId}/reports/monthly',
+    path: "/users/{userId}/reports/monthly",
     methods: [apigatewayv2.HttpMethod.GET],
     integration: integrations.getMonthlyReports,
-    authorizer: userPoolAuthorizer
+    authorizer: userPoolAuthorizer,
   });
 
   httpApi.addRoutes({
-    path: '/users/{userId}/reports/monthly/{monthId}',
+    path: "/users/{userId}/reports/monthly/{monthId}",
     methods: [apigatewayv2.HttpMethod.GET],
     integration: integrations.getMonthlyReport,
-    authorizer: userPoolAuthorizer
+    authorizer: userPoolAuthorizer,
   });
 
   // Memory Routes
   httpApi.addRoutes({
-    path: '/users/{userId}/memories',
+    path: "/users/{userId}/memories",
     methods: [apigatewayv2.HttpMethod.GET],
     integration: integrations.getMemories,
-    authorizer: userPoolAuthorizer
+    authorizer: userPoolAuthorizer,
   });
 
   httpApi.addRoutes({
-    path: '/users/{userId}/memories',
+    path: "/users/{userId}/memories",
     methods: [apigatewayv2.HttpMethod.POST],
     integration: integrations.createMemory,
-    authorizer: userPoolAuthorizer
+    authorizer: userPoolAuthorizer,
   });
 
   httpApi.addRoutes({
-    path: '/users/{userId}/memories/{memoryId}',
+    path: "/users/{userId}/memories/{memoryId}",
     methods: [apigatewayv2.HttpMethod.DELETE],
     integration: integrations.deleteMemory,
-    authorizer: userPoolAuthorizer
+    authorizer: userPoolAuthorizer,
   });
 
   // User Profile Routes
   httpApi.addRoutes({
-    path: '/users/{userId}/profile',
+    path: "/users/{userId}/profile",
     methods: [apigatewayv2.HttpMethod.GET],
     integration: integrations.getUserProfile,
-    authorizer: userPoolAuthorizer
+    authorizer: userPoolAuthorizer,
   });
 
   httpApi.addRoutes({
-    path: '/users/{userId}/profile',
+    path: "/users/{userId}/profile",
     methods: [apigatewayv2.HttpMethod.PUT],
     integration: integrations.updateUserProfile,
-    authorizer: userPoolAuthorizer
+    authorizer: userPoolAuthorizer,
   });
 
   // Image Upload Routes (PROTECTED)
   httpApi.addRoutes({
-    path: '/users/{userId}/generate-upload-urls',
+    path: "/users/{userId}/generate-upload-urls",
     methods: [apigatewayv2.HttpMethod.POST],
     integration: integrations.generateUploadUrls,
-    authorizer: userPoolAuthorizer // REQUIRED - JWT auth
+    authorizer: userPoolAuthorizer, // REQUIRED - JWT auth
   });
 
   // Image Download Routes (PROTECTED)
   httpApi.addRoutes({
-    path: '/users/{userId}/generate-download-urls',
+    path: "/users/{userId}/generate-download-urls",
     methods: [apigatewayv2.HttpMethod.POST],
     integration: integrations.generateDownloadUrls,
-    authorizer: userPoolAuthorizer // REQUIRED - JWT auth
+    authorizer: userPoolAuthorizer, // REQUIRED - JWT auth
+  });
+
+  // Program Designer Session Routes (PROTECTED)
+  httpApi.addRoutes({
+    path: "/users/{userId}/program-designer-sessions",
+    methods: [apigatewayv2.HttpMethod.POST],
+    integration: integrations.createProgramDesignerSession,
+    authorizer: userPoolAuthorizer,
+  });
+
+  httpApi.addRoutes({
+    path: "/users/{userId}/program-designer-sessions",
+    methods: [apigatewayv2.HttpMethod.GET],
+    integration: integrations.getProgramDesignerSessions,
+    authorizer: userPoolAuthorizer,
+  });
+
+  // Get a specific program designer session
+  httpApi.addRoutes({
+    path: "/users/{userId}/program-designer-sessions/{sessionId}",
+    methods: [apigatewayv2.HttpMethod.GET],
+    integration: integrations.getProgramDesignerSession,
+    authorizer: userPoolAuthorizer,
+  });
+
+  httpApi.addRoutes({
+    path: "/users/{userId}/program-designer-sessions/{sessionId}",
+    methods: [apigatewayv2.HttpMethod.DELETE],
+    integration: integrations.deleteProgramDesignerSession,
+    authorizer: userPoolAuthorizer,
+  });
+
+  httpApi.addRoutes({
+    path: "/users/{userId}/program-designer-sessions/{sessionId}/stream",
+    methods: [apigatewayv2.HttpMethod.POST],
+    integration: integrations.streamProgramDesign,
+    authorizer: userPoolAuthorizer,
   });
 
   // Conditionally create custom domain (only for deployed branches, not sandboxes)
@@ -823,13 +954,13 @@ export function createCoreApi(
 
   if (useCustomDomain && domainName && certificate) {
     // Create custom domain name
-    customDomain = new apigatewayv2.DomainName(stack, 'ApiCustomDomain', {
+    customDomain = new apigatewayv2.DomainName(stack, "ApiCustomDomain", {
       domainName: domainName,
       certificate: certificate,
     });
 
     // Create API mapping
-    new apigatewayv2.ApiMapping(stack, 'ApiMapping', {
+    new apigatewayv2.ApiMapping(stack, "ApiMapping", {
       api: httpApi,
       domainName: customDomain,
       stage: httpApi.defaultStage,
@@ -837,7 +968,9 @@ export function createCoreApi(
 
     console.info(`✅ Custom domain created: ${domainName}`);
   } else {
-    console.info(`ℹ️  Using default Amplify endpoint (no custom domain for sandbox)`);
+    console.info(
+      `ℹ️  Using default Amplify endpoint (no custom domain for sandbox)`,
+    );
   }
 
   // DNS records need to be created manually after deployment
@@ -848,7 +981,7 @@ export function createCoreApi(
     customDomain,
     domainName: domainName,
     // Export individual integrations for potential reuse
-    integrations
+    integrations,
   };
 }
 

@@ -10,8 +10,8 @@ import {
   callBedrockApiStream,
   MODEL_IDS,
 } from "../api-helpers";
-import { ConversationMessage } from "../todo-types";
-import { ProgramCreatorTodoList } from "./types";
+import { CoachMessage } from "../coach-conversation/types";
+import { ProgramDesignerTodoList } from "./types";
 import {
   getTodoSummary,
   getTodoItemLabel,
@@ -23,8 +23,8 @@ import {
  * Returns null if session is complete
  */
 export async function generateNextQuestion(
-  conversationHistory: ConversationMessage[],
-  todoList: ProgramCreatorTodoList,
+  conversationHistory: CoachMessage[],
+  todoList: ProgramDesignerTodoList,
   coachPersonality?: string,
 ): Promise<string | null> {
   console.info("🎯 Generating next program question");
@@ -161,14 +161,15 @@ Remember: You're helping them create a training program that will actually work 
  * Pattern: Matches workout-creator/question-generator.ts exactly
  */
 export async function* generateNextQuestionStream(
-  conversationHistory: ConversationMessage[],
-  todoList: ProgramCreatorTodoList,
+  conversationHistory: CoachMessage[],
+  todoList: ProgramDesignerTodoList,
   coachPersonality?: string,
   userContext?: {
     recentWorkouts?: any[];
     pineconeMemories?: any[];
     userProfile?: any;
     activeProgram?: any;
+    additionalConsiderations?: string; // Flag from session
   },
 ): AsyncGenerator<string, string, unknown> {
   console.info("🎯 Generating next program question (STREAMING)");
@@ -176,10 +177,43 @@ export async function* generateNextQuestionStream(
   // Get summary of what's collected and what's missing
   const summary = getTodoSummary(todoList);
 
-  // If all required items are complete, generate completion message (streaming)
+  // If all required items are complete, check for final considerations question
   if (summary.requiredPending.length === 0) {
+    // Check if we've asked the final considerations question
+    const hasAskedFinalConsiderations =
+      userContext?.additionalConsiderations !== undefined;
+
+    if (!hasAskedFinalConsiderations) {
+      console.info(
+        "🎯 All required items complete - asking final considerations question",
+      );
+
+      // Ask the final considerations question
+      const finalConsiderationsQuestion = `Perfect! I've got the core details for your training program.
+
+Before I create it, is there anything else you'd like me to know? This is your chance to mention:
+
+• Specific exercises you love or want to avoid
+• Any goals or preferences we haven't covered
+• Equipment limitations or preferences
+• Scheduling constraints
+• Recovery considerations
+• Previous injuries or concerns
+
+Feel free to share as much or as little as you'd like - or just say "nothing else" or "no" if we've covered everything!`;
+
+      // Simulate streaming for the question
+      const words = finalConsiderationsQuestion.split(" ");
+      for (let i = 0; i < words.length; i++) {
+        yield (i === 0 ? "" : " ") + words[i];
+      }
+
+      return finalConsiderationsQuestion;
+    }
+
+    // Final considerations collected, generate completion message
     console.info(
-      "✅ All required information collected, generating completion message",
+      "✅ All required information collected and final considerations received, generating completion message",
     );
 
     let fullResponse = "";
@@ -346,7 +380,7 @@ Remember: You're helping them create a training program that will actually work 
  * Dynamic, AI-generated message with coach personality
  */
 export async function* generateCompletionMessage(
-  todoList: ProgramCreatorTodoList,
+  todoList: ProgramDesignerTodoList,
   coachPersonality?: string,
   userContext?: any,
 ): AsyncGenerator<string, void, unknown> {
@@ -433,6 +467,7 @@ ${coachPersonality ? `COACH PERSONALITY:\n${coachPersonality}\n\n` : ""}CONVERSA
 3. **Priority Order for Missing Information**
    - First: Training goals (why they're here)
    - Then: Program duration and frequency (timeline)
+   - Then: Training methodology (what style/discipline)
    - Then: Equipment and environment (what's possible)
    - Then: Experience level (safety and progression)
    - Then: Preferences and context (personalization)
@@ -461,6 +496,8 @@ function generateFallbackQuestion(missingField: string): string {
     "Program Duration":
       "How long do you want this program to run? (e.g., 8 weeks, 12 weeks)",
     "Training Frequency": "How many days per week can you train?",
+    "Training Methodology":
+      "What training methodology or style are you interested in? (e.g., CrossFit, Powerlifting, Bodybuilding, Hybrid, or whatever approach you prefer)",
     "Equipment Access": "What equipment do you have access to?",
     "Experience Level":
       "What's your experience level with training? (beginner, intermediate, or advanced)",

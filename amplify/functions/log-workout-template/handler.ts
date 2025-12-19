@@ -219,7 +219,7 @@ ${userPerformance}`;
     const buildWorkoutPayload: BuildWorkoutEvent = {
       userId,
       coachId,
-      conversationId: program.creationConversationId,
+      conversationId: program.creationConversationId || "program_designer", // Fallback for program designer sessions
       userMessage: enrichedMessage,
       coachConfig,
       completedAt: template.completedAt.toISOString(),

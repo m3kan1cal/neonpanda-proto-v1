@@ -3,19 +3,19 @@ import {
   createErrorResponse,
   MODEL_IDS,
   storeDebugDataInS3,
-} from '../libs/api-helpers';
-import { generateProgramV2 } from '../libs/program/program-generator';
-import { generateProgramSummary } from '../libs/program/summary';
-import { storeProgramSummaryInPinecone } from '../libs/program/pinecone';
-import { BuildProgramEvent } from '../libs/program/types';
-import { withHeartbeat } from '../libs/heartbeat';
-import { saveProgram } from '../../dynamodb/operations';
-import { storeProgramDetailsInS3 } from '../libs/program/s3-utils';
+} from "../libs/api-helpers";
+import { generateProgramV2 } from "../libs/program/program-generator";
+import { generateProgramSummary } from "../libs/program/summary";
+import { storeProgramSummaryInPinecone } from "../libs/program/pinecone";
+import { BuildProgramEvent } from "../libs/program/types";
+import { withHeartbeat } from "../libs/heartbeat";
+import { saveProgram } from "../../dynamodb/operations";
+import { storeProgramDetailsInS3 } from "../libs/program/s3-utils";
 import {
   normalizeProgram,
   shouldNormalizeProgram,
   generateNormalizationSummary,
-} from '../libs/program/normalization';
+} from "../libs/program/normalization";
 
 /**
  * Build Training Program Lambda Handler (V2 - Parallel Generation)
@@ -31,11 +31,11 @@ import {
  * Critical: Uses parallel execution to stay within 15-minute Lambda timeout
  */
 export const handler = async (event: BuildProgramEvent) => {
-  return withHeartbeat('Training Program Generation', async () => {
+  return withHeartbeat("Training Program Generation", async () => {
     let debugData: any = null; // Track debug data for error scenarios
 
     try {
-      console.info('🏋️ Starting V2 parallel training program generation:', {
+      console.info("🏋️ Starting V2 parallel training program generation:", {
         userId: event.userId,
         coachId: event.coachId,
         conversationId: event.conversationId,
@@ -51,18 +51,18 @@ export const handler = async (event: BuildProgramEvent) => {
         !event.conversationId ||
         !event.programId
       ) {
-        console.error('❌ Missing required fields:', {
+        console.error("❌ Missing required fields:", {
           hasUserId: !!event.userId,
           hasCoachId: !!event.coachId,
           hasConversationId: !!event.conversationId,
           hasProgramId: !!event.programId,
         });
-        return createErrorResponse(400, 'Missing required fields');
+        return createErrorResponse(400, "Missing required fields");
       }
 
       if (!event.todoList) {
-        console.error('❌ No todo list provided');
-        return createErrorResponse(400, 'Todo list is required');
+        console.error("❌ No todo list provided");
+        return createErrorResponse(400, "Todo list is required");
       }
 
       // Prepare debug data for potential error scenarios
@@ -87,7 +87,7 @@ export const handler = async (event: BuildProgramEvent) => {
         },
       };
 
-      console.info('🚀 Calling V2 parallel program generator...');
+      console.info("🚀 Calling V2 parallel program generator...");
 
       // Generate the complete training program using V2 parallel approach
       const { program, debugData: programGenerationDebugData } =
@@ -98,12 +98,13 @@ export const handler = async (event: BuildProgramEvent) => {
           event.coachId,
           event.todoList,
           event.conversationContext,
+          event.additionalConsiderations, // User's final thoughts/requirements
         );
 
       // Merge generation debug data into outer debugData for error case
       debugData.programGenerationDebugData = programGenerationDebugData;
 
-      console.info('✅ V2 parallel program generation completed:', {
+      console.info("✅ V2 parallel program generation completed:", {
         programId: program.programId,
         programName: program.name,
         totalDays: program.totalDays,
@@ -117,11 +118,11 @@ export const handler = async (event: BuildProgramEvent) => {
       const shouldNormalize = shouldNormalizeProgram(program, 0.9);
 
       let normalizedProgram = program;
-      let normalizationSummary = 'Not needed - program structure is valid';
+      let normalizationSummary = "Not needed - program structure is valid";
 
       if (shouldNormalize) {
         console.info(
-          '🔧 Program normalization needed, running normalization pass...',
+          "🔧 Program normalization needed, running normalization pass...",
         );
 
         const normalizationResult = await normalizeProgram(
@@ -138,7 +139,7 @@ export const handler = async (event: BuildProgramEvent) => {
           if (program.s3DetailKey && !normalizedProgram.s3DetailKey) {
             normalizedProgram.s3DetailKey = program.s3DetailKey;
             console.info(
-              '✅ Preserved s3DetailKey from original program:',
+              "✅ Preserved s3DetailKey from original program:",
               program.s3DetailKey,
             );
           }
@@ -146,44 +147,44 @@ export const handler = async (event: BuildProgramEvent) => {
           normalizationSummary =
             generateNormalizationSummary(normalizationResult);
 
-          console.info('✅ Program normalization completed:', {
+          console.info("✅ Program normalization completed:", {
             isValid: normalizationResult.isValid,
             issuesFound: normalizationResult.issues.length,
             confidence: normalizationResult.confidence,
             method: normalizationResult.normalizationMethod,
           });
         } else {
-          console.warn('⚠️ Normalization completed but issues remain:', {
+          console.warn("⚠️ Normalization completed but issues remain:", {
             issues: normalizationResult.issues,
             confidence: normalizationResult.confidence,
           });
         }
       } else {
-        console.info('✅ Program structure is valid, skipping normalization');
+        console.info("✅ Program structure is valid, skipping normalization");
       }
 
       // Note: S3 storage of workout templates is handled inside generateProgramV2
       // The s3DetailKey is set during generation
 
       // Save program metadata to DynamoDB
-      console.info('💾 Saving program to DynamoDB...');
+      console.info("💾 Saving program to DynamoDB...");
       await saveProgram(normalizedProgram);
 
-      console.info('✅ Program storage completed:', {
+      console.info("✅ Program storage completed:", {
         programId: program.programId,
         s3DetailKey: program.s3DetailKey,
       });
 
       // Generate AI summary for coach context and UI display
-      console.info('📝 Generating training program summary...');
+      console.info("📝 Generating training program summary...");
       const summary = await generateProgramSummary(
         normalizedProgram,
         [], // conversationMessages not available in V2, summary generated from program data
       );
-      console.info('Generated summary:', { summary, length: summary.length });
+      console.info("Generated summary:", { summary, length: summary.length });
 
       // Store program summary in Pinecone for semantic search and coach context
-      console.info('🔍 Storing program summary in Pinecone...');
+      console.info("🔍 Storing program summary in Pinecone...");
       const pineconeResult = await storeProgramSummaryInPinecone(
         event.userId,
         summary,
@@ -227,7 +228,7 @@ export const handler = async (event: BuildProgramEvent) => {
             normalizationApplied: shouldNormalize,
             normalizationSummary,
 
-            generationMethod: 'v2_parallel',
+            generationMethod: "v2_parallel",
           },
           null,
           2,
@@ -240,20 +241,20 @@ export const handler = async (event: BuildProgramEvent) => {
             programId: normalizedProgram.programId,
             conversationId: event.conversationId,
             sessionId: event.sessionId,
-            type: 'program-generation-success',
+            type: "program-generation-success",
           },
-          'program',
+          "program",
         );
 
-        console.info('✅ Stored success debug data in S3');
+        console.info("✅ Stored success debug data in S3");
       } catch (debugError) {
         console.warn(
-          '⚠️ Failed to store debug data (non-critical):',
+          "⚠️ Failed to store debug data (non-critical):",
           debugError,
         );
       }
 
-      console.info('🎉 Training program generation completed successfully!');
+      console.info("🎉 Training program generation completed successfully!");
 
       return createOkResponse({
         success: true,
@@ -269,15 +270,15 @@ export const handler = async (event: BuildProgramEvent) => {
         summary,
         pineconeStored: pineconeResult.success,
         pineconeRecordId:
-          pineconeResult.success && 'recordId' in pineconeResult
+          pineconeResult.success && "recordId" in pineconeResult
             ? pineconeResult.recordId
             : null,
         normalizationApplied: shouldNormalize,
-        generationMethod: 'v2_parallel',
+        generationMethod: "v2_parallel",
       });
     } catch (error) {
-      console.error('❌ Error generating training program:', error);
-      console.error('Event data:', {
+      console.error("❌ Error generating training program:", error);
+      console.error("Event data:", {
         userId: event.userId,
         coachId: event.coachId,
         conversationId: event.conversationId,
@@ -308,23 +309,23 @@ export const handler = async (event: BuildProgramEvent) => {
               conversationId: event.conversationId,
               programId: event.programId,
               sessionId: event.sessionId,
-              type: 'program-generation-error',
+              type: "program-generation-error",
             },
-            'program',
+            "program",
           );
 
-          console.info('✅ Error debug data saved to S3');
+          console.info("✅ Error debug data saved to S3");
         } catch (debugError) {
           console.warn(
-            'Failed to store error debug data (non-critical):',
+            "Failed to store error debug data (non-critical):",
             debugError,
           );
         }
       }
 
       const errorMessage =
-        error instanceof Error ? error.message : 'Unknown generation error';
-      return createErrorResponse(500, 'Failed to generate training program', {
+        error instanceof Error ? error.message : "Unknown generation error";
+      return createErrorResponse(500, "Failed to generate training program", {
         error: errorMessage,
         userId: event.userId,
         conversationId: event.conversationId,

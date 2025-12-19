@@ -5,9 +5,14 @@ import {
   updateProgram,
   deleteProgram,
   logWorkout,
-  skipWorkout
-} from '../apis/programApi.js';
-import { PROGRAM_STATUS } from '../../constants/conversationModes.js';
+  skipWorkout,
+} from "../apis/programApi.js";
+import {
+  getProgramDesignerSessions,
+  deleteProgramDesignerSession,
+  retryProgramBuild,
+} from "../apis/programDesignerApi.js";
+import { PROGRAM_STATUS } from "../../constants/conversationModes.js";
 
 /**
  * ProgramAgent - Handles the business logic for training program management
@@ -21,8 +26,11 @@ export class ProgramAgent {
     this.onStateChange = onStateChange;
 
     // Validate callback
-    if (this.onStateChange && typeof this.onStateChange !== 'function') {
-      console.error('ProgramAgent: onStateChange must be a function, got:', typeof this.onStateChange);
+    if (this.onStateChange && typeof this.onStateChange !== "function") {
+      console.error(
+        "ProgramAgent: onStateChange must be a function, got:",
+        typeof this.onStateChange,
+      );
       this.onStateChange = null;
     }
 
@@ -47,7 +55,7 @@ export class ProgramAgent {
       isUpdating: false,
       isLoggingWorkout: false,
       error: null,
-      lastCheckTime: null
+      lastCheckTime: null,
     };
 
     // Add alias for backward compatibility
@@ -63,18 +71,21 @@ export class ProgramAgent {
     // Update state
     this.programState = {
       ...this.programState,
-      ...newStateData
+      ...newStateData,
     };
 
     // Update alias for backward compatibility
     this.state = this.programState;
 
     // Call state change callback if available
-    if (this.onStateChange && typeof this.onStateChange === 'function') {
+    if (this.onStateChange && typeof this.onStateChange === "function") {
       try {
         this.onStateChange(this.programState);
       } catch (error) {
-        console.error('ProgramAgent._updateState: Error in state change callback:', error);
+        console.error(
+          "ProgramAgent._updateState: Error in state change callback:",
+          error,
+        );
       }
     }
   }
@@ -84,12 +95,12 @@ export class ProgramAgent {
    */
   async setUserAndCoach(userId, coachId) {
     if (!userId) {
-      console.error('ProgramAgent.setUserAndCoach: userId is required');
+      console.error("ProgramAgent.setUserAndCoach: userId is required");
       return;
     }
 
     if (!coachId) {
-      console.error('ProgramAgent.setUserAndCoach: coachId is required');
+      console.error("ProgramAgent.setUserAndCoach: coachId is required");
       return;
     }
 
@@ -110,38 +121,43 @@ export class ProgramAgent {
    */
   async loadPrograms(options = {}) {
     if (!this.userId || !this.coachId) {
-      console.error('ProgramAgent.loadPrograms: userId and coachId are required');
+      console.error(
+        "ProgramAgent.loadPrograms: userId and coachId are required",
+      );
       return;
     }
 
     this._updateState({
       isLoadingPrograms: true,
-      error: null
+      error: null,
     });
 
     try {
       const response = await getPrograms(this.userId, this.coachId, options);
 
       const programs = response.programs || [];
-      const activePrograms = programs.filter(p => p.status === PROGRAM_STATUS.ACTIVE);
+      const activePrograms = programs.filter(
+        (p) => p.status === PROGRAM_STATUS.ACTIVE,
+      );
 
       // Set the first active program as the primary active program
-      const activeProgram = activePrograms.length > 0 ? activePrograms[0] : null;
+      const activeProgram =
+        activePrograms.length > 0 ? activePrograms[0] : null;
 
       this._updateState({
         programs,
         activePrograms,
         activeProgram,
         isLoadingPrograms: false,
-        lastCheckTime: new Date()
+        lastCheckTime: new Date(),
       });
 
       return response;
     } catch (error) {
-      console.error('ProgramAgent.loadPrograms: Error:', error);
+      console.error("ProgramAgent.loadPrograms: Error:", error);
       this._updateState({
         error: error.message,
-        isLoadingPrograms: false
+        isLoadingPrograms: false,
       });
 
       if (this.onError) {
@@ -158,18 +174,20 @@ export class ProgramAgent {
    */
   async loadProgram(programId) {
     if (!this.userId || !this.coachId) {
-      console.error('ProgramAgent.loadProgram: userId and coachId are required');
+      console.error(
+        "ProgramAgent.loadProgram: userId and coachId are required",
+      );
       return;
     }
 
     if (!programId) {
-      console.error('ProgramAgent.loadProgram: programId is required');
+      console.error("ProgramAgent.loadProgram: programId is required");
       return;
     }
 
     this._updateState({
       isLoadingProgram: true,
-      error: null
+      error: null,
     });
 
     try {
@@ -179,20 +197,23 @@ export class ProgramAgent {
 
       this._updateState({
         selectedProgram: program,
-        isLoadingProgram: false
+        isLoadingProgram: false,
       });
 
       // If this is an active program and we don't have an active program set, set it
-      if (program.status === PROGRAM_STATUS.ACTIVE && !this.programState.activeProgram) {
+      if (
+        program.status === PROGRAM_STATUS.ACTIVE &&
+        !this.programState.activeProgram
+      ) {
         this._updateState({ activeProgram: program });
       }
 
       return response;
     } catch (error) {
-      console.error('ProgramAgent.loadProgram: Error:', error);
+      console.error("ProgramAgent.loadProgram: Error:", error);
       this._updateState({
         error: error.message,
-        isLoadingProgram: false
+        isLoadingProgram: false,
       });
 
       if (this.onError) {
@@ -213,44 +234,57 @@ export class ProgramAgent {
    */
   async loadWorkoutTemplates(programId = null, options = {}) {
     if (!this.userId || !this.coachId) {
-      console.error('ProgramAgent.loadWorkoutTemplates: userId and coachId are required');
+      console.error(
+        "ProgramAgent.loadWorkoutTemplates: userId and coachId are required",
+      );
       return;
     }
 
     // Use provided programId or default to active program
-    const targetProgramId = programId || this.programState.activeProgram?.programId;
+    const targetProgramId =
+      programId || this.programState.activeProgram?.programId;
 
     if (!targetProgramId) {
-      console.error('ProgramAgent.loadWorkoutTemplates: No programId provided and no active program found');
+      console.error(
+        "ProgramAgent.loadWorkoutTemplates: No programId provided and no active program found",
+      );
       return;
     }
 
     this._updateState({
       isLoadingTodaysWorkout: true,
-      error: null
+      error: null,
     });
 
     try {
-      const response = await getWorkoutTemplates(this.userId, this.coachId, targetProgramId, options);
+      const response = await getWorkoutTemplates(
+        this.userId,
+        this.coachId,
+        targetProgramId,
+        options,
+      );
 
       // If loading today's workout, update the todaysWorkout state
       if (options.today) {
         this._updateState({
-          todaysWorkout: response.todaysWorkoutTemplates || response.workoutTemplates || null,
-          isLoadingTodaysWorkout: false
+          todaysWorkout:
+            response.todaysWorkoutTemplates ||
+            response.workoutTemplates ||
+            null,
+          isLoadingTodaysWorkout: false,
         });
       } else {
         this._updateState({
-          isLoadingTodaysWorkout: false
+          isLoadingTodaysWorkout: false,
         });
       }
 
       return response;
     } catch (error) {
-      console.error('ProgramAgent.loadWorkoutTemplates: Error:', error);
+      console.error("ProgramAgent.loadWorkoutTemplates: Error:", error);
       this._updateState({
         error: error.message,
-        isLoadingTodaysWorkout: false
+        isLoadingTodaysWorkout: false,
       });
 
       if (this.onError) {
@@ -269,63 +303,74 @@ export class ProgramAgent {
    */
   async updateProgramStatus(programId, action, data = {}) {
     if (!this.userId || !this.coachId) {
-      console.error('ProgramAgent.updateProgramStatus: userId and coachId are required');
+      console.error(
+        "ProgramAgent.updateProgramStatus: userId and coachId are required",
+      );
       return;
     }
 
     if (!programId) {
-      console.error('ProgramAgent.updateProgramStatus: programId is required');
+      console.error("ProgramAgent.updateProgramStatus: programId is required");
       return;
     }
 
     if (!action) {
-      console.error('ProgramAgent.updateProgramStatus: action is required');
+      console.error("ProgramAgent.updateProgramStatus: action is required");
       return;
     }
 
     this._updateState({
       isUpdating: true,
-      error: null
+      error: null,
     });
 
     try {
       const body = { action, ...data };
-      const response = await updateProgram(this.userId, this.coachId, programId, body);
+      const response = await updateProgram(
+        this.userId,
+        this.coachId,
+        programId,
+        body,
+      );
 
       const updatedProgram = response.program;
 
       // Update the program in our state
-      const programs = this.programState.programs.map(p =>
-        p.programId === programId ? updatedProgram : p
+      const programs = this.programState.programs.map((p) =>
+        p.programId === programId ? updatedProgram : p,
       );
 
-      const activePrograms = programs.filter(p => p.status === PROGRAM_STATUS.ACTIVE);
-      const activeProgram = activePrograms.length > 0 ? activePrograms[0] : null;
+      const activePrograms = programs.filter(
+        (p) => p.status === PROGRAM_STATUS.ACTIVE,
+      );
+      const activeProgram =
+        activePrograms.length > 0 ? activePrograms[0] : null;
 
       // Update selected program if it's the one we updated
-      const selectedProgram = this.programState.selectedProgram?.programId === programId
-        ? updatedProgram
-        : this.programState.selectedProgram;
+      const selectedProgram =
+        this.programState.selectedProgram?.programId === programId
+          ? updatedProgram
+          : this.programState.selectedProgram;
 
       this._updateState({
         programs,
         activePrograms,
         activeProgram,
         selectedProgram,
-        isUpdating: false
+        isUpdating: false,
       });
 
       // Trigger completion callback if program was completed
-      if (action === 'complete' && this.onProgramCompleted) {
+      if (action === "complete" && this.onProgramCompleted) {
         this.onProgramCompleted(updatedProgram);
       }
 
       return response;
     } catch (error) {
-      console.error('ProgramAgent.updateProgramStatus: Error:', error);
+      console.error("ProgramAgent.updateProgramStatus: Error:", error);
       this._updateState({
         error: error.message,
-        isUpdating: false
+        isUpdating: false,
       });
 
       if (this.onError) {
@@ -346,27 +391,42 @@ export class ProgramAgent {
    * @param {number} options.day - Specific day number if not today
    * @returns {Promise<Object>} - The API response
    */
-  async logWorkoutFromTemplate(programId, templateId, workoutData, options = {}) {
+  async logWorkoutFromTemplate(
+    programId,
+    templateId,
+    workoutData,
+    options = {},
+  ) {
     if (!this.userId || !this.coachId) {
-      console.error('ProgramAgent.logWorkoutFromTemplate: userId and coachId are required');
+      console.error(
+        "ProgramAgent.logWorkoutFromTemplate: userId and coachId are required",
+      );
       return;
     }
 
     if (!programId || !templateId) {
-      console.error('ProgramAgent.logWorkoutFromTemplate: programId and templateId are required');
+      console.error(
+        "ProgramAgent.logWorkoutFromTemplate: programId and templateId are required",
+      );
       return;
     }
 
     this._updateState({
       isLoggingWorkout: true,
-      error: null
+      error: null,
     });
 
     try {
-      const response = await logWorkout(this.userId, this.coachId, programId, templateId, workoutData);
+      const response = await logWorkout(
+        this.userId,
+        this.coachId,
+        programId,
+        templateId,
+        workoutData,
+      );
 
       this._updateState({
-        isLoggingWorkout: false
+        isLoggingWorkout: false,
       });
 
       // Start polling for linkedWorkoutId after a short delay
@@ -376,10 +436,10 @@ export class ProgramAgent {
 
       return response;
     } catch (error) {
-      console.error('ProgramAgent.logWorkoutFromTemplate: Error:', error);
+      console.error("ProgramAgent.logWorkoutFromTemplate: Error:", error);
       this._updateState({
         error: error.message,
-        isLoggingWorkout: false
+        isLoggingWorkout: false,
       });
 
       if (this.onError) {
@@ -406,19 +466,34 @@ export class ProgramAgent {
         const freshData = await this.loadWorkoutTemplates(programId, options);
 
         if (freshData && freshData.templates) {
-          const updatedTemplate = freshData.templates.find(t => t.templateId === templateId);
+          const updatedTemplate = freshData.templates.find(
+            (t) => t.templateId === templateId,
+          );
 
           // If linkedWorkoutId is now available, stop polling
           if (updatedTemplate && updatedTemplate.linkedWorkoutId) {
-            console.log('✅ linkedWorkoutId found:', updatedTemplate.linkedWorkoutId);
+            console.log(
+              "✅ linkedWorkoutId found:",
+              updatedTemplate.linkedWorkoutId,
+            );
             clearInterval(pollInterval);
             this.pollingIntervals.delete(templateId);
           }
-        } else if (freshData && freshData.todaysWorkoutTemplates && freshData.todaysWorkoutTemplates.templates) {
-          const updatedTemplate = freshData.todaysWorkoutTemplates.templates.find(t => t.templateId === templateId);
+        } else if (
+          freshData &&
+          freshData.todaysWorkoutTemplates &&
+          freshData.todaysWorkoutTemplates.templates
+        ) {
+          const updatedTemplate =
+            freshData.todaysWorkoutTemplates.templates.find(
+              (t) => t.templateId === templateId,
+            );
 
           if (updatedTemplate && updatedTemplate.linkedWorkoutId) {
-            console.log('✅ linkedWorkoutId found:', updatedTemplate.linkedWorkoutId);
+            console.log(
+              "✅ linkedWorkoutId found:",
+              updatedTemplate.linkedWorkoutId,
+            );
             clearInterval(pollInterval);
             this.pollingIntervals.delete(templateId);
           }
@@ -426,12 +501,15 @@ export class ProgramAgent {
 
         // Stop polling after max attempts
         if (pollCount >= maxPolls) {
-          console.warn('⏱️ Max polling attempts reached for template:', templateId);
+          console.warn(
+            "⏱️ Max polling attempts reached for template:",
+            templateId,
+          );
           clearInterval(pollInterval);
           this.pollingIntervals.delete(templateId);
         }
       } catch (err) {
-        console.error('Error polling for linkedWorkoutId:', err);
+        console.error("Error polling for linkedWorkoutId:", err);
         // Continue polling even if there's an error
       }
     }, 3000); // Poll every 3 seconds
@@ -453,29 +531,39 @@ export class ProgramAgent {
    */
   async skipWorkoutTemplate(programId, templateId, options = {}) {
     if (!this.userId || !this.coachId) {
-      console.error('ProgramAgent.skipWorkoutTemplate: userId and coachId are required');
+      console.error(
+        "ProgramAgent.skipWorkoutTemplate: userId and coachId are required",
+      );
       return;
     }
 
     if (!programId || !templateId) {
-      console.error('ProgramAgent.skipWorkoutTemplate: programId and templateId are required');
+      console.error(
+        "ProgramAgent.skipWorkoutTemplate: programId and templateId are required",
+      );
       return;
     }
 
     this._updateState({
       isUpdating: true,
-      error: null
+      error: null,
     });
 
     try {
-      const response = await skipWorkout(this.userId, this.coachId, programId, templateId, {
-        skipReason: options.skipReason || 'Skipped by user',
-        skipNotes: options.skipNotes,
-        action: 'skip'
-      });
+      const response = await skipWorkout(
+        this.userId,
+        this.coachId,
+        programId,
+        templateId,
+        {
+          skipReason: options.skipReason || "Skipped by user",
+          skipNotes: options.skipNotes,
+          action: "skip",
+        },
+      );
 
       this._updateState({
-        isUpdating: false
+        isUpdating: false,
       });
 
       // Reload workout templates to reflect the skip
@@ -490,10 +578,10 @@ export class ProgramAgent {
 
       return response;
     } catch (error) {
-      console.error('ProgramAgent.skipWorkoutTemplate: Error:', error);
+      console.error("ProgramAgent.skipWorkoutTemplate: Error:", error);
       this._updateState({
         error: error.message,
-        isUpdating: false
+        isUpdating: false,
       });
 
       if (this.onError) {
@@ -515,27 +603,37 @@ export class ProgramAgent {
    */
   async unskipWorkoutTemplate(programId, templateId, options = {}) {
     if (!this.userId || !this.coachId) {
-      console.error('ProgramAgent.unskipWorkoutTemplate: userId and coachId are required');
+      console.error(
+        "ProgramAgent.unskipWorkoutTemplate: userId and coachId are required",
+      );
       return;
     }
 
     if (!programId || !templateId) {
-      console.error('ProgramAgent.unskipWorkoutTemplate: programId and templateId are required');
+      console.error(
+        "ProgramAgent.unskipWorkoutTemplate: programId and templateId are required",
+      );
       return;
     }
 
     this._updateState({
       isUpdating: true,
-      error: null
+      error: null,
     });
 
     try {
-      const response = await skipWorkout(this.userId, this.coachId, programId, templateId, {
-        action: 'unskip'
-      });
+      const response = await skipWorkout(
+        this.userId,
+        this.coachId,
+        programId,
+        templateId,
+        {
+          action: "unskip",
+        },
+      );
 
       this._updateState({
-        isUpdating: false
+        isUpdating: false,
       });
 
       // Reload workout templates to reflect the unskip
@@ -550,10 +648,10 @@ export class ProgramAgent {
 
       return response;
     } catch (error) {
-      console.error('ProgramAgent.unskipWorkoutTemplate: Error:', error);
+      console.error("ProgramAgent.unskipWorkoutTemplate: Error:", error);
       this._updateState({
         error: error.message,
-        isUpdating: false
+        isUpdating: false,
       });
 
       if (this.onError) {
@@ -569,7 +667,7 @@ export class ProgramAgent {
    * @param {string} programId - The program ID
    */
   async pauseProgram(programId) {
-    return this.updateProgramStatus(programId, 'pause');
+    return this.updateProgramStatus(programId, "pause");
   }
 
   /**
@@ -577,7 +675,7 @@ export class ProgramAgent {
    * @param {string} programId - The program ID
    */
   async resumeProgram(programId) {
-    return this.updateProgramStatus(programId, 'resume');
+    return this.updateProgramStatus(programId, "resume");
   }
 
   /**
@@ -585,7 +683,7 @@ export class ProgramAgent {
    * @param {string} programId - The program ID
    */
   async completeProgram(programId) {
-    return this.updateProgramStatus(programId, 'complete');
+    return this.updateProgramStatus(programId, "complete");
   }
 
   /**
@@ -594,28 +692,30 @@ export class ProgramAgent {
    */
   async deleteProgram(programId) {
     if (!this.userId || !this.coachId) {
-      console.error('ProgramAgent.deleteProgram: userId and coachId are required');
-      throw new Error('userId and coachId are required');
+      console.error(
+        "ProgramAgent.deleteProgram: userId and coachId are required",
+      );
+      throw new Error("userId and coachId are required");
     }
 
     if (!programId) {
-      console.error('ProgramAgent.deleteProgram: programId is required');
-      throw new Error('programId is required');
+      console.error("ProgramAgent.deleteProgram: programId is required");
+      throw new Error("programId is required");
     }
 
     try {
       // Call the DELETE API via the programApi helper
       const result = await deleteProgram(this.userId, this.coachId, programId);
 
-      console.info('Training program deleted successfully:', {
+      console.info("Training program deleted successfully:", {
         programId,
         userId: this.userId,
-        coachId: this.coachId
+        coachId: this.coachId,
       });
 
       return result;
     } catch (error) {
-      console.error('Error deleting training program:', error);
+      console.error("Error deleting training program:", error);
       throw error;
     }
   }
@@ -671,5 +771,110 @@ export class ProgramAgent {
     this.onProgramCreated = null;
     this.onProgramCompleted = null;
   }
-}
 
+  /**
+   * Static method to get incomplete program designer sessions for a user
+   * @param {string} userId - The user ID
+   * @returns {Promise<Array>} - Array of session summaries
+   */
+  static async getIncompleteSessions(userId) {
+    if (!userId) {
+      console.warn("Cannot load program designer sessions without userId");
+      return [];
+    }
+
+    try {
+      // Query backend for incomplete sessions
+      // We assume the backend API supports filtering by isComplete
+      const result = await getProgramDesignerSessions(userId, {
+        isComplete: false,
+        limit: 10,
+        sortBy: "lastActivity",
+        sortOrder: "desc",
+      });
+
+      return result.sessions || [];
+    } catch (error) {
+      console.error(
+        "Error loading incomplete program designer sessions:",
+        error,
+      );
+      return [];
+    }
+  }
+
+  /**
+   * Static method to get completed program designer sessions (for checking build status)
+   * @param {string} userId - The user ID
+   * @returns {Promise<Array>} - Array of completed session summaries
+   */
+  static async getCompletedSessions(userId) {
+    if (!userId) {
+      console.warn(
+        "Cannot load completed program designer sessions without userId",
+      );
+      return [];
+    }
+
+    try {
+      // Query backend for completed sessions
+      // These might be completed Q&A but program build is still in progress or failed
+      const result = await getProgramDesignerSessions(userId, {
+        isComplete: true,
+        limit: 10,
+        sortBy: "lastActivity",
+        sortOrder: "desc",
+      });
+
+      return result.sessions || [];
+    } catch (error) {
+      console.error(
+        "Error loading completed program designer sessions:",
+        error,
+      );
+      return [];
+    }
+  }
+
+  /**
+   * Static method to delete a program designer session
+   * @param {string} userId - The user ID
+   * @param {string} sessionId - The session ID
+   * @returns {Promise<Object>} - The deletion result
+   */
+  static async deleteSession(userId, sessionId) {
+    if (!userId || !sessionId) {
+      throw new Error("User ID and Session ID are required");
+    }
+
+    try {
+      console.info("Deleting program designer session:", { userId, sessionId });
+      const result = await deleteProgramDesignerSession(userId, sessionId);
+      return result;
+    } catch (error) {
+      console.error("Error deleting program designer session:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Static method to retry building a program from a failed session
+   * @param {string} sessionId - The session ID
+   * @param {string} userId - The user ID
+   * @returns {Promise<Object>} - The retry result
+   */
+  static async retryBuild(sessionId, userId) {
+    if (!userId || !sessionId) {
+      throw new Error("User ID and Session ID are required");
+    }
+
+    try {
+      console.info("Retrying program build:", { userId, sessionId });
+      const result = await retryProgramBuild(userId, sessionId);
+      return result;
+    } catch (error) {
+      console.error("Error retrying program build:", error);
+      throw error;
+    }
+  }
+}

@@ -19,7 +19,7 @@ import type { ProgramPhase, WorkoutTemplate } from "./types";
 import type { CoachConfig } from "../coach-creator/types";
 import type { UserProfile } from "../user/types";
 import { buildCoachPersonalityPrompt } from "../coach-config/personality-utils";
-import type { ProgramCreatorTodoList } from "../program-creator/types";
+import type { ProgramDesignerTodoList } from "../program-designer/types";
 
 /**
  * Phase structure without workouts (for initial breakdown)
@@ -47,13 +47,14 @@ interface PhaseWithWorkouts extends PhaseStructure {
 interface PhaseGenerationContext {
   userId: string;
   programId: string;
-  todoList: ProgramCreatorTodoList;
+  todoList: ProgramDesignerTodoList;
   coachConfig: CoachConfig;
   userProfile: UserProfile | null;
   conversationContext: string;
   pineconeContext: string;
   totalDays: number;
   trainingFrequency: number;
+  additionalConsiderations?: string; // User's final thoughts/requirements
 }
 
 /**
@@ -241,19 +242,39 @@ export async function generatePhaseStructure(
     pineconeContext,
   } = context;
 
-  // Build coach personality prompt
-  const coachPersonalityPrompt = buildCoachPersonalityPrompt(
-    coachConfig,
-    userProfile,
-    {
-      includeDetailedPersonality: true,
-      includeMethodologyDetails: true,
-      includeMotivation: false,
-      includeSafety: true,
-      includeCriticalDirective: true,
-      context: "GENERATING PROGRAM PHASE STRUCTURE",
-    },
-  );
+  // Build coach personality prompt with error handling
+  let coachPersonalityPrompt: string;
+  try {
+    coachPersonalityPrompt = buildCoachPersonalityPrompt(
+      coachConfig,
+      userProfile,
+      {
+        includeDetailedPersonality: true,
+        includeMethodologyDetails: true,
+        includeMotivation: false,
+        includeSafety: true,
+        includeCriticalDirective: true,
+        context: "GENERATING PROGRAM PHASE STRUCTURE",
+      },
+    );
+  } catch (error) {
+    console.error(
+      "❌ Failed to build coach personality prompt (phase structure):",
+      {
+        error: error instanceof Error ? error.message : String(error),
+        hasCoachConfig: !!coachConfig,
+        hasUserProfile: !!userProfile,
+        coachConfigKeys: coachConfig ? Object.keys(coachConfig) : "undefined",
+        hasSelectedPersonality: !!coachConfig?.selected_personality,
+        hasPrimaryTemplate:
+          !!coachConfig?.selected_personality?.primary_template,
+      },
+    );
+    throw new Error(
+      `Failed to build coach personality prompt for phase structure: ${error instanceof Error ? error.message : String(error)}. ` +
+        `This usually means coachConfig is missing or incomplete. Check that load_program_requirements completed successfully.`,
+    );
+  }
 
   const memoryContext = pineconeContext || "No specific user context found.";
 
@@ -270,7 +291,14 @@ ${JSON.stringify(todoList, null, 2)}
 ## CONVERSATION CONTEXT:
 ${conversationContext}
 
-## USER MEMORIES & RELEVANT CONTEXT:
+${
+  context.additionalConsiderations
+    ? `## ADDITIONAL USER CONSIDERATIONS:
+${context.additionalConsiderations}
+
+`
+    : ""
+}## USER MEMORIES & RELEVANT CONTEXT:
 ${memoryContext}
 
 ## PROGRAM PARAMETERS:
@@ -477,19 +505,41 @@ export async function generateSinglePhaseWorkouts(
     pineconeContext,
   } = context;
 
-  // Build coach personality prompt
-  const coachPersonalityPrompt = buildCoachPersonalityPrompt(
-    coachConfig,
-    userProfile,
-    {
-      includeDetailedPersonality: true,
-      includeMethodologyDetails: true,
-      includeMotivation: false,
-      includeSafety: true,
-      includeCriticalDirective: true,
-      context: `GENERATING WORKOUTS FOR ${phase.name.toUpperCase()}`,
-    },
-  );
+  // Build coach personality prompt with error handling
+  let coachPersonalityPrompt: string;
+  try {
+    coachPersonalityPrompt = buildCoachPersonalityPrompt(
+      coachConfig,
+      userProfile,
+      {
+        includeDetailedPersonality: true,
+        includeMethodologyDetails: true,
+        includeMotivation: false,
+        includeSafety: true,
+        includeCriticalDirective: true,
+        context: `GENERATING WORKOUTS FOR ${phase.name.toUpperCase()}`,
+      },
+    );
+  } catch (error) {
+    console.error(
+      "❌ Failed to build coach personality prompt (phase workouts):",
+      {
+        error: error instanceof Error ? error.message : String(error),
+        phaseName: phase.name,
+        phaseId: phase.phaseId,
+        hasCoachConfig: !!coachConfig,
+        hasUserProfile: !!userProfile,
+        coachConfigKeys: coachConfig ? Object.keys(coachConfig) : "undefined",
+        hasSelectedPersonality: !!coachConfig?.selected_personality,
+        hasPrimaryTemplate:
+          !!coachConfig?.selected_personality?.primary_template,
+      },
+    );
+    throw new Error(
+      `Failed to build coach personality prompt for phase "${phase.name}": ${error instanceof Error ? error.message : String(error)}. ` +
+        `This usually means coachConfig is missing or incomplete. Check that programContext was passed correctly from load_program_requirements.`,
+    );
+  }
 
   const memoryContext = pineconeContext || "No specific user context found.";
 
@@ -541,7 +591,14 @@ ${JSON.stringify(todoList, null, 2)}
 ## CONVERSATION CONTEXT:
 ${conversationContext}
 
-## USER MEMORIES & RELEVANT CONTEXT:
+${
+  context.additionalConsiderations
+    ? `## ADDITIONAL USER CONSIDERATIONS:
+${context.additionalConsiderations}
+
+`
+    : ""
+}## USER MEMORIES & RELEVANT CONTEXT:
 ${memoryContext}
 
 ## WORKOUT GENERATION REQUIREMENTS:
@@ -629,10 +686,46 @@ Each workout must follow the segmented, implicitly grouped structure:
 - Templates for same day MUST share the exact same groupId
 
 ### Workout Description (Natural Language):
-- Write as a coach would prescribe it
+- Write as a coach would prescribe it - clear, motivating, and actionable
 - Be specific with sets, reps, weights/percentages, rest periods
 - Include scaling options when appropriate
-- Example: "5 rounds for time: 21 thrusters (95/65), 21 pull-ups, 400m run. Scale: reduce reps to 15-12-9-6-3"
+- CRITICAL FORMATTING: Use line breaks between exercises for readability
+  * Put each exercise or major section on its own line
+  * For multi-exercise rounds, list each exercise on a separate line
+  * Use blank lines to separate major sections (warmup, main work, finisher)
+  * This improves readability and makes workouts easier to follow
+
+Example (single exercise):
+"Bench Press: Work up to 2x2 @ 90-93% 1RM, rest 4-5 min. Show your pressing strength."
+
+Example (multi-exercise round):
+"Giant Set x3 rounds, 60 sec rest between rounds:
+- Cable Lateral Raise x15 per arm
+- Cable Tricep Pushdown x20
+- Incline DB Curl x15
+- Cable Crossover x15
+- Face Pull x20
+
+Focus on pump, contraction, and celebrating your physique transformation. Finish with 3x20 Cable Crunch for core."
+
+Example (complex workout):
+"Warmup:
+- 3 rounds: 10 air squats, 10 push-ups, 200m jog
+
+Main Work:
+Barbell Back Squat: 5x5 @ 80% 1RM, rest 3 min between sets
+
+Accessory Circuit (3 rounds):
+- Walking Lunges x20 steps
+- Romanian Deadlift x12 @ moderate weight
+- Plank Hold x60 seconds
+Rest 90 seconds between rounds
+
+Finisher:
+AMRAP 8 minutes:
+- 10 Box Jumps (24/20)
+- 15 Kettlebell Swings (53/35)
+- 20 Double Unders"
 
 ### Equipment Context:
 ${todoList.equipmentAccess?.value ? `Available Equipment: ${JSON.stringify(todoList.equipmentAccess.value)}` : "Use standard gym equipment"}
@@ -924,7 +1017,20 @@ export function assembleProgram(
 
     if (i > 0) {
       const prevPhase = sortedPhases[i - 1];
-      if (phase.startDay !== prevPhase.endDay + 1) {
+
+      // Check for phase overlap (current phase starts before or on previous phase's end day)
+      if (phase.startDay <= prevPhase.endDay) {
+        console.error("❌ Phase overlap detected:", {
+          prevPhase: prevPhase.name,
+          prevEnd: prevPhase.endDay,
+          currentPhase: phase.name,
+          currentStart: phase.startDay,
+          overlap: `Day ${phase.startDay} is in both phases`,
+        });
+      }
+
+      // Check for phase gap (current phase starts more than 1 day after previous phase ends)
+      if (phase.startDay > prevPhase.endDay + 1) {
         console.warn("⚠️ Phase gap detected:", {
           prevPhase: prevPhase.name,
           prevEnd: prevPhase.endDay,

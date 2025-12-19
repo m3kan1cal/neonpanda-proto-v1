@@ -414,13 +414,15 @@ const hasCorrectRootStructure = (programData: any): boolean => {
     "equipmentConstraints",
   ];
 
-  // Check for required root properties
-  const hasRequiredProperties = expectedRootProperties.every((prop) =>
-    programData.hasOwnProperty(prop),
+  // Check for required root properties and identify which are missing
+  const missingProperties = expectedRootProperties.filter(
+    (prop) => !programData.hasOwnProperty(prop),
   );
 
-  if (!hasRequiredProperties) {
-    console.info("❌ Missing required root properties");
+  if (missingProperties.length > 0) {
+    console.info(
+      `⚠️ Missing root properties (will be added during normalization): ${missingProperties.join(", ")}`,
+    );
     return false;
   }
 
@@ -494,6 +496,22 @@ const hasValidWorkoutTemplates = (programData: any): boolean => {
   // This is valid - skip workout template validation
   if (programData.s3DetailKey) {
     console.info("✅ Program has s3DetailKey - workouts stored in S3 (valid)");
+    return true;
+  }
+
+  // AGENT ARCHITECTURE: Phases may only have workoutCount, not full workoutTemplates array
+  // In the agent flow, phases have { phaseId, name, startDay, endDay, workoutCount }
+  // and workout templates are stored separately in the save tool
+  // If ALL phases have workoutCount (even if no workoutTemplates array), this is valid
+  const allPhasesHaveWorkoutCount = programData.phases.every(
+    (phase: any) =>
+      typeof phase.workoutCount === "number" && phase.workoutCount > 0,
+  );
+
+  if (allPhasesHaveWorkoutCount) {
+    console.info(
+      "✅ Agent architecture detected - phases have workoutCount (valid)",
+    );
     return true;
   }
 

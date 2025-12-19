@@ -4,7 +4,6 @@ import {
   BuildCoachConversationSummaryEvent,
 } from "./types";
 import { CoachConfig } from "../coach-creator/types";
-import { JSON_FORMATTING_INSTRUCTIONS_STANDARD } from "../prompt-helpers";
 import { parseJsonWithFallbacks } from "../response-utils";
 
 /**
@@ -14,7 +13,7 @@ export function buildCoachConversationSummaryPrompt(
   conversation: CoachConversation,
   coachConfig: CoachConfig,
   existingSummary?: CoachConversationSummary,
-  criticalTrainingDirective?: { content: string; enabled: boolean }
+  criticalTrainingDirective?: { content: string; enabled: boolean },
 ): string {
   const coachName = coachConfig.coach_name;
   const coachPersonality = coachConfig.selected_personality.primary_template;
@@ -54,7 +53,7 @@ Methodology Preferences: ${
           ? `Mentioned: ${existingSummary.structuredData.methodology_preferences.mentioned_methodologies?.join(", ") || "None"},
           Preferred: ${existingSummary.structuredData.methodology_preferences.preferred_approaches?.join(", ") || "None"}`
           : "None captured yet"
-}
+      }
 Emotional State: ${existingSummary.structuredData.emotional_state.current_mood} (motivation: ${existingSummary.structuredData.emotional_state.motivation_level})
 Key Insights: ${existingSummary.structuredData.key_insights.join(", ")}
 Important Context: ${existingSummary.structuredData.important_context.join(", ")}
@@ -65,102 +64,109 @@ INSTRUCTIONS: This is a cumulative summary. Build upon the previous summary, upd
 INSTRUCTIONS: This is the first summary for this conversation. Create a comprehensive summary that captures the foundation of the coaching relationship.
 `;
 
-  return `${directiveSection}You are an AI assistant helping to create conversation memory summaries for fitness coaches. Your task is to analyze a conversation between a user and their AI fitness coach "${coachName}" (${coachPersonality} personality, specializing in ${coachSpecializations}) and create a comprehensive summary that will help the coach provide better, more personalized coaching in future conversations.
+  return `${directiveSection}You are an AI assistant helping to create conversation memory summaries for fitness coaches.
+
+Analyze the conversation between a user and their AI fitness coach "${coachName}" (${coachPersonality} personality, specializing in ${coachSpecializations}) and create a dual-format summary using the generate_conversation_summary tool.
 
 ${existingSummaryContext}
 
 CONVERSATION TO ANALYZE:
 ${messages}
 
-Please create a comprehensive conversation summary as a JSON object with the following structure:
+---
 
-${JSON_FORMATTING_INSTRUCTIONS_STANDARD}
+## SUMMARY CREATION GUIDELINES
 
-{
-  "narrative": "A flowing 150-300 word narrative that captures: the essence of the coaching relationship and communication dynamic, key goals/challenges/progress discussed, important personal context and constraints, emotional state and motivation patterns, notable insights or breakthroughs, communication style preferences, training methodologies discussed/preferred/referenced, and any methodology-specific programming or approach preferences",
-  "current_goals": ["specific goal 1", "specific goal 2"],
-  "recent_progress": ["progress item 1", "progress item 2"],
-  "preferences": {
-    "communication_style": "brief description of how they like to communicate",
-    "training_preferences": ["preference 1", "preference 2"],
-    "schedule_constraints": ["constraint 1", "constraint 2"]
-  },
-  "methodology_preferences": {
-    "mentioned_methodologies": ["methodology names discussed", "programming approaches referenced"],
-    "preferred_approaches": ["user's stated preferences for training styles", "programming principles they responded well to"],
-    "methodology_questions": ["specific questions about methodologies", "areas of methodology interest"]
-  },
-  "emotional_state": {
-    "current_mood": "brief description",
-    "motivation_level": "high/medium/low with context",
-    "confidence_level": "high/medium/low with context"
-  },
-  "key_insights": ["insight 1", "insight 2"],
-  "important_context": ["context item 1", "context item 2"],
-  "conversation_tags": ["tag1", "tag2", "tag3"]
-}
+### FULL_SUMMARY (Complete Storage Version)
+Create a comprehensive summary with:
+- **Narrative (150-300 words)**: Flowing narrative capturing the essence of the coaching relationship, communication dynamic, goals/challenges/progress, personal context and constraints, emotional/motivation patterns, notable insights or breakthroughs, communication style, and training methodologies discussed
+- **Complete Arrays**: Include all relevant items for goals, progress, insights, context, preferences
+- **Professional Coaching Context**: Maintain focus on actionable coaching insights
+- **Evolution Over Time**: If building on an existing summary, update and evolve information rather than repeating old information unless still relevant or changed
+- **Specific Examples**: Use concrete details when they add value
 
-GUIDELINES:
-- Focus on information that will help the coach provide better future coaching
-- Capture personality, communication style, and relationship dynamics
-- Include specific goals, challenges, and progress patterns
-- Note any important personal context (schedule, family, work, etc.)
-- Track emotional and motivational patterns
-- Be concise but comprehensive
-- Update/evolve information from previous summaries rather than repeating
-- Use specific examples when relevant
-- Maintain professional coaching context
+### COMPACT_SUMMARY (Semantic Search Version, ~25KB Target)
+Create an optimized version for semantic search:
+- **Concise Narrative (75-150 words)**: Focus on core coaching context, goals, and critical information
+- **Limited Arrays**: Top 2-3 most important items per field only
+- **Preserve Searchability**: Keep ALL key searchable terms, numbers, dates, names that someone would search for
+- **Shorter Phrasing**: Remove redundancy and verbose explanations while preserving meaning
+- **Prioritize Keywords**: This version powers semantic search - ensure all important concepts are present
 
-## CONVERSATION TAGS GUIDELINES:
-Generate 2-5 descriptive tags that categorize this conversation. Tags should be:
-- Lowercase with hyphens (e.g., "strength-training", "weekly-wods", "crossfit")
-- Based on the main topics, methodologies, or themes discussed
-- Useful for filtering and organizing conversations
-- Examples: "strength-training", "cardio", "nutrition", "motivation", "injury-recovery", "crossfit", "powerlifting", "bodybuilding", "weekly-wods", "goal-setting", "progress-review", "technique-focus", "equipment-questions", "scheduling", "methodology-comparison"
+### CONVERSATION TAGS (Both Summaries)
+Generate 2-5 descriptive tags:
+- **Format**: Lowercase with hyphens (e.g., "strength-training", "weekly-wods", "crossfit")
+- **Content**: Main topics, methodologies, or themes discussed
+- **Purpose**: Useful for filtering and organizing conversations
+- **Examples**: "strength-training", "cardio", "nutrition", "motivation", "injury-recovery", "crossfit", "powerlifting", "bodybuilding", "goal-setting", "progress-review", "technique-focus", "equipment-questions", "scheduling", "methodology-comparison"
 
-## METHODOLOGY FOCUS AREAS:
+### METHODOLOGY FOCUS (Critical for Both)
 Pay special attention to capturing:
-- Specific methodology names mentioned (5/3/1, CrossFit, Starting Strength, etc.)
-- Programming concepts discussed (periodization, autoregulation, linear progression, etc.)
-- Training philosophy preferences (high frequency, conjugate method, block periodization, etc.)
-- Questions about different training approaches or systems
-- User responses to methodology-based coaching advice
-- Creator names or methodology sources referenced (Jim Wendler, Louie Simmons, etc.)
-- Discipline preferences (powerlifting, CrossFit, bodybuilding, etc.)
-- Any methodology comparison discussions or preferences expressed
+- **Specific Methodologies**: 5/3/1, CrossFit, Starting Strength, Westside Barbell, etc.
+- **Programming Concepts**: Periodization, autoregulation, linear progression, conjugate method, block periodization, etc.
+- **Training Philosophy**: High frequency, volume, intensity preferences, rest-pause, cluster sets, etc.
+- **Questions & Discussions**: Methodology comparisons, implementation questions, principle questions
+- **Authority References**: Creator names (Jim Wendler, Louie Simmons, Mark Rippetoe, etc.)
+- **Discipline Preferences**: Powerlifting, CrossFit, bodybuilding, Olympic lifting, hybrid approaches
+- **User Responses**: How they respond to methodology-based coaching advice
 
-The summary should help the coach remember and build upon the relationship in future conversations.`;
+---
+
+IMPORTANT: The summary should help the coach remember and build upon the relationship in future conversations. Focus on actionable insights that improve coaching quality.`;
 }
 
 /**
- * Parse and validate the coach conversation summary from AI response
+ * Parse and validate the coach conversation summary
+ * Accepts either a tool result data object (preferred) or JSON string (legacy)
+ * Now supports dual-format responses (full_summary + compact_summary)
  */
 export function parseCoachConversationSummary(
-  aiResponse: string,
+  dataOrString: any | string,
   event: BuildCoachConversationSummaryEvent,
-  conversation: CoachConversation
-): CoachConversationSummary {
+  conversation: CoachConversation,
+): CoachConversationSummary & { compactSummary?: any } {
   try {
-    console.info("Parsing AI response..", {
-      responseLength: aiResponse.length,
-      responsePreview: aiResponse.substring(0, 200)
-    });
+    // Determine if we have a string or already-parsed data
+    let parsedData: any;
+    if (typeof dataOrString === "string") {
+      console.info("Parsing JSON string (legacy mode)..", {
+        responseLength: dataOrString.length,
+        responsePreview: dataOrString.substring(0, 200),
+      });
+      // Use centralized parsing utility (handles markdown cleanup and JSON fixing)
+      parsedData = parseJsonWithFallbacks(dataOrString);
+    } else {
+      console.info("Processing tool result data (toolConfig mode)..");
+      parsedData = dataOrString;
+    }
 
-    // Use centralized parsing utility (handles markdown cleanup and JSON fixing)
-    const parsedData = parseJsonWithFallbacks(aiResponse);
+    // Check if this is the new dual-format response
+    let narrative: string;
+    let structuredData: any;
+    let compactSummary: any = undefined;
 
-    // Extract narrative from the parsed data (can be at top level or nested)
-    const narrative = parsedData.narrative || parsedData.narrative_summary || "";
-
-    // The rest is structured data (remove narrative if it exists at top level)
-    const structuredData = { ...parsedData };
-    if (structuredData.narrative) delete structuredData.narrative;
-    if (structuredData.narrative_summary) delete structuredData.narrative_summary;
+    if (parsedData.full_summary && parsedData.compact_summary) {
+      // New dual format (from toolConfig)
+      console.info("✅ Detected dual-format response (full + compact)");
+      narrative = parsedData.full_summary.narrative || "";
+      structuredData = { ...parsedData.full_summary };
+      delete structuredData.narrative;
+      compactSummary = parsedData.compact_summary;
+    } else {
+      // Legacy single format (backwards compatibility)
+      console.info("⚠️ Legacy single-format response detected");
+      narrative = parsedData.narrative || parsedData.narrative_summary || "";
+      structuredData = { ...parsedData };
+      if (structuredData.narrative) delete structuredData.narrative;
+      if (structuredData.narrative_summary)
+        delete structuredData.narrative_summary;
+    }
 
     console.info("Parsed conversation data:", {
       narrativeLength: narrative.length,
       hasGoals: !!structuredData.current_goals,
-      hasProgress: !!structuredData.recent_progress
+      hasProgress: !!structuredData.recent_progress,
+      hasCompactSummary: !!compactSummary,
     });
 
     // Validate required fields
@@ -247,12 +253,18 @@ export function parseCoachConversationSummary(
       },
     };
 
-    return summary;
+    // Return with compact summary if available (for Pinecone optimization)
+    return compactSummary ? { ...summary, compactSummary } : summary;
   } catch (error) {
     console.error("Error parsing conversation summary:", error);
-    console.error("AI Response:", aiResponse);
+    console.error(
+      "Input data:",
+      typeof dataOrString === "string"
+        ? dataOrString.substring(0, 500)
+        : JSON.stringify(dataOrString, null, 2).substring(0, 500),
+    );
     throw new Error(
-      `Failed to parse conversation summary: ${error instanceof Error ? error.message : "Unknown error"}`
+      `Failed to parse conversation summary: ${error instanceof Error ? error.message : "Unknown error"}`,
     );
   }
 }
@@ -262,7 +274,7 @@ export function parseCoachConversationSummary(
  */
 function calculateSummaryConfidence(
   narrative: string,
-  structuredData: any
+  structuredData: any,
 ): number {
   let confidence = 0;
 
@@ -303,4 +315,3 @@ function calculateSummaryConfidence(
 
   return Math.min(confidence, 100);
 }
-

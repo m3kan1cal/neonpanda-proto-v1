@@ -22,7 +22,7 @@ export const generateSystemPrompt = (
     existingMessages?: any[]; // Conversation history (moved from response-generation)
     pineconeContext?: string; // Semantic context
     includeCacheControl?: boolean; // Whether to separate static/dynamic for caching
-  } = {}
+  } = {},
 ): SystemPrompt & {
   staticPrompt?: string; // Cacheable portion (coach config, guidelines, etc.)
   dynamicPrompt?: string; // Non-cacheable portion (date, workouts, history, etc.)
@@ -280,12 +280,30 @@ The system will then:
         mode === CONVERSATION_MODES.PROGRAM_DESIGN
           ? "CONVERSATIONAL PROGRAM CREATION MODE"
           : "CONVERSATIONAL COACHING MODE",
-    }
+    },
   );
 
   staticPromptSections.push(corePersonalityPrompt);
 
-  // 3. Detailed User Background (if enabled and available)
+  // 3. Platform Features & Capabilities
+  staticPromptSections.push(`# AVAILABLE PLATFORM FEATURES
+
+You can help users with program design directly in this conversation. However, be aware that there's also a dedicated **Program Designer** page that provides a structured, guided experience specifically for creating multi-week training programs.
+
+## When to Mention Program Designer
+If a user asks to create a complete training program (multi-week structured plan), you can optionally mention:
+- "By the way, we also have a dedicated Program Designer page that provides a guided experience for creating programs. But I'm happy to help you here as well - whatever works best for you!"
+
+## Key Points
+- You CAN and SHOULD help with program design in this conversation
+- Only mention the Program Designer if it seems like it would genuinely benefit them
+- Don't force them to use it - they can get full program design help right here
+- If they want to use the Program Designer, they can find it in their Programs section
+- This is informational only - always help them regardless of which approach they choose
+
+`);
+
+  // 4. Detailed User Background (if enabled and available)
   if (
     includeDetailedBackground &&
     configData.metadata?.coach_creator_session_summary
@@ -313,7 +331,7 @@ ${configData.technical_config.preferred_intensity}`);
   // 4. Conversation Guidelines (CONDENSED VERSION - if enabled)
   if (includeConversationGuidelines) {
     staticPromptSections.push(
-      generateCondensedConversationGuidelines(configData)
+      generateCondensedConversationGuidelines(configData),
     );
   }
 
@@ -372,11 +390,11 @@ Begin each conversation by acknowledging the user and being ready to help them w
 
   const formattedDate = currentDateTime.toLocaleDateString(
     "en-US",
-    dateOptions
+    dateOptions,
   );
   const formattedTime = currentDateTime.toLocaleTimeString(
     "en-US",
-    timeOptions
+    timeOptions,
   );
 
   dynamicPromptSections.push(`📅 CURRENT DATE & TIME
@@ -446,7 +464,7 @@ IMPORTANT: Use the semantic context above to provide more informed and contextua
  * Generates user context for the system prompt
  */
 const generateUserContext = (
-  context: NonNullable<PromptGenerationOptions["conversationContext"]>
+  context: NonNullable<PromptGenerationOptions["conversationContext"]>,
 ): string | null => {
   if (!context.userName && !context.currentGoals && !context.sessionNumber) {
     return null;
@@ -472,7 +490,7 @@ ${context.currentGoals.map((goal) => `- ${goal}`).join("\n")}`);
     }
     if (context.previousSessions) {
       sessionInfo.push(
-        `You have had ${context.previousSessions} previous sessions together`
+        `You have had ${context.previousSessions} previous sessions together`,
       );
     }
     sections.push(`## Session Context
@@ -488,7 +506,7 @@ ${sessionInfo.join(". ")}.`);
  * Generates recent workout context for the system prompt
  */
 const generateWorkoutContext = (
-  workoutContext: NonNullable<PromptGenerationOptions["workoutContext"]>
+  workoutContext: NonNullable<PromptGenerationOptions["workoutContext"]>,
 ): string => {
   if (!workoutContext || workoutContext.length === 0) {
     return "";
@@ -499,7 +517,7 @@ const generateWorkoutContext = (
 
   const formatWorkoutGroup = (
     workouts: typeof workoutContext,
-    groupName: string
+    groupName: string,
   ) => {
     if (workouts.length === 0) return "";
 
@@ -556,7 +574,7 @@ const generateMemoriesSection = (userMemories: UserMemory[]): string => {
       acc[memory.memoryType].push(memory);
       return acc;
     },
-    {} as Record<string, UserMemory[]>
+    {} as Record<string, UserMemory[]>,
   );
 
   const sections = [
@@ -573,21 +591,21 @@ Based on previous conversations, here are important things the user has specific
         sections.push(`### ${index + 1}. ${memory.content}`);
         sections.push(`- **Importance**: ${memory.metadata.importance}`);
         sections.push(
-          `- **Usage**: Used ${memory.metadata.usageCount} times${memory.metadata.lastUsed ? ` (last: ${memory.metadata.lastUsed.toDateString()})` : ""}`
+          `- **Usage**: Used ${memory.metadata.usageCount} times${memory.metadata.lastUsed ? ` (last: ${memory.metadata.lastUsed.toDateString()})` : ""}`,
         );
         sections.push(
-          `- **Created**: ${memory.metadata.createdAt.toDateString()}`
+          `- **Created**: ${memory.metadata.createdAt.toDateString()}`,
         );
         if (memory.metadata.tags && memory.metadata.tags.length > 0) {
           sections.push(`- **Tags**: ${memory.metadata.tags.join(", ")}`);
         }
         sections.push("");
       });
-    }
+    },
   );
 
   sections.push(
-    `**IMPORTANT**: Use these memories to personalize your coaching. When relevant memories apply to the current conversation, reference them naturally to show continuity and personalized care.`
+    `**IMPORTANT**: Use these memories to personalize your coaching. When relevant memories apply to the current conversation, reference them naturally to show continuity and personalized care.`,
   );
 
   return sections.join("\n");
@@ -599,7 +617,7 @@ Based on previous conversations, here are important things the user has specific
 const formatTimeAgo = (date: Date): string => {
   const now = new Date();
   const diffInMinutes = Math.floor(
-    (now.getTime() - date.getTime()) / (1000 * 60)
+    (now.getTime() - date.getTime()) / (1000 * 60),
   );
   const days = Math.floor(diffInMinutes / 1440);
 
@@ -628,7 +646,7 @@ const formatTimeAgo = (date: Date): string => {
  * Helper function to group workouts by timeframe for better temporal context
  */
 const groupWorkoutsByTimeframe = (
-  workouts: NonNullable<PromptGenerationOptions["workoutContext"]>
+  workouts: NonNullable<PromptGenerationOptions["workoutContext"]>,
 ) => {
   const now = new Date();
   const thisWeek: typeof workouts = [];
@@ -637,7 +655,7 @@ const groupWorkoutsByTimeframe = (
 
   workouts.forEach((workout) => {
     const days = Math.floor(
-      (now.getTime() - workout.completedAt.getTime()) / (1000 * 60 * 60 * 24)
+      (now.getTime() - workout.completedAt.getTime()) / (1000 * 60 * 60 * 24),
     );
     if (days < 7) thisWeek.push(workout);
     else if (days < 14) lastWeek.push(workout);
@@ -653,7 +671,7 @@ const groupWorkoutsByTimeframe = (
  * while significantly reducing token count
  */
 const generateCondensedConversationGuidelines = (
-  configData: CoachConfig
+  configData: CoachConfig,
 ): string => {
   // Get equipment list for dynamic insertion
   const equipmentList =
@@ -737,7 +755,7 @@ const generateCondensedConversationGuidelines = (
  * Validates that a coach config has all required prompts for system prompt generation
  */
 export const validateCoachConfig = (
-  coachConfig: CoachConfig
+  coachConfig: CoachConfig,
 ): CoachConfigValidationResult => {
   const missingComponents: string[] = [];
   const warnings: string[] = [];
@@ -784,20 +802,20 @@ export const validateCoachConfig = (
   // Note: We don't check riskFactors because they can be non-medical (e.g., "overcommitment", "burnout")
   if (hasInjuries && !hasContraindications) {
     warnings.push(
-      "Injuries reported but no contraindicated exercises specified - safety review may be incomplete"
+      "Injuries reported but no contraindicated exercises specified - safety review may be incomplete",
     );
   }
 
   // Check for missing detailed background data
   if (!configData.metadata?.coach_creator_session_summary) {
     warnings.push(
-      "No coach creator session summary available - prompts will be less personalized"
+      "No coach creator session summary available - prompts will be less personalized",
     );
   }
 
   if (!configData.technical_config.equipment_available.length) {
     warnings.push(
-      "No equipment information available - programming recommendations may be generic"
+      "No equipment information available - programming recommendations may be generic",
     );
   }
 
@@ -813,7 +831,7 @@ export const validateCoachConfig = (
  * Useful for debugging and testing
  */
 export const generateSystemPromptPreview = (
-  coachConfig: CoachConfig
+  coachConfig: CoachConfig,
 ): SystemPromptPreview => {
   const configData: CoachConfig = coachConfig;
 
@@ -823,24 +841,24 @@ export const generateSystemPromptPreview = (
   // Analyze coach features
   if (configData.selected_personality.secondary_influences?.length) {
     keyFeatures.push(
-      `Blended personality (${configData.selected_personality.primary_template} + ${configData.selected_personality.secondary_influences.join(", ")})`
+      `Blended personality (${configData.selected_personality.primary_template} + ${configData.selected_personality.secondary_influences.join(", ")})`,
     );
   } else {
     keyFeatures.push(
-      `Pure ${configData.selected_personality.primary_template} personality`
+      `Pure ${configData.selected_personality.primary_template} personality`,
     );
   }
 
   keyFeatures.push(
-    `${configData.technical_config.experience_level} level adaptation`
+    `${configData.technical_config.experience_level} level adaptation`,
   );
   keyFeatures.push(
-    `${configData.technical_config.programming_focus.join(" + ")} focus`
+    `${configData.technical_config.programming_focus.join(" + ")} focus`,
   );
 
   if (configData.technical_config.specializations.length > 0) {
     keyFeatures.push(
-      `Specializes in: ${configData.technical_config.specializations.join(", ")}`
+      `Specializes in: ${configData.technical_config.specializations.join(", ")}`,
     );
   }
 
@@ -850,24 +868,24 @@ export const generateSystemPromptPreview = (
   }
   if (configData.technical_config.equipment_available.length > 0) {
     dataRichness.push(
-      `Equipment context: ${configData.technical_config.equipment_available.join(", ")}`
+      `Equipment context: ${configData.technical_config.equipment_available.join(", ")}`,
     );
   }
   if (configData.technical_config.time_constraints.session_duration) {
     dataRichness.push(
-      `Time constraints: ${configData.technical_config.time_constraints.session_duration}`
+      `Time constraints: ${configData.technical_config.time_constraints.session_duration}`,
     );
   }
   if (configData.technical_config.preferred_intensity) {
     dataRichness.push(
-      `Intensity preference: ${configData.technical_config.preferred_intensity}`
+      `Intensity preference: ${configData.technical_config.preferred_intensity}`,
     );
   }
 
   // Estimate prompt length (with enhanced background data)
   const baseLength = Object.values(configData.generated_prompts).reduce(
     (total, prompt) => total + (typeof prompt === "string" ? prompt.length : 0),
-    0
+    0,
   );
   const backgroundLength =
     configData.metadata?.coach_creator_session_summary?.length || 0;

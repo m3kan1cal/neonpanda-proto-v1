@@ -36,6 +36,7 @@ Be thorough but efficient - complete the task systematically using all required 
 - **NEVER ask questions or request clarification**
 - **ALWAYS make reasonable assumptions** when data is ambiguous
 - **Use sensible defaults** when information is missing:
+  - If methodology unclear → infer from training goals and equipment
   - If equipment unclear → use what they have available
   - If intensity preference unclear → default to moderate
   - If progression style unclear → use linear progression
@@ -47,6 +48,7 @@ Be thorough but efficient - complete the task systematically using all required 
 
 Your design tools are highly sophisticated and can handle:
 - **Multiple training disciplines**: CrossFit, powerlifting, bodybuilding, endurance, hybrid
+- **Training methodologies**: User's preferred style/approach (extracted from todoList.trainingMethodology)
 - **Periodization schemes**: Linear, undulating, block, conjugate
 - **Phase-based progression**: Foundation → Build → Peak → Recovery cycles
 - **Equipment adaptation**: Home gym, commercial gym, minimal equipment
@@ -55,7 +57,83 @@ Your design tools are highly sophisticated and can handle:
 - **Injury considerations**: Modifications, substitutions, progressive loading
 - **Event-specific prep**: Competition peaking, meet preparation`);
 
-  // 2. Available tools and workflow
+  // 2. Token efficiency (CRITICAL)
+  sections.push(`## 🔥 CRITICAL: TOKEN EFFICIENCY IN TOOL CALLS
+
+To prevent timeout issues, you MUST follow these rules strictly:
+
+### validate_program_structure: Pass ONLY lightweight data
+❌ **WRONG** (causes 3-minute timeout):
+{
+  "program": { /* full object with 60+ workouts embedded */ },
+  "phases": [ /* all phase objects with nested workouts */ ],
+  "workoutTemplates": [ /* 60+ workout objects */ ]
+}
+
+✅ **CORRECT** (completes in 15 seconds):
+{
+  "program": {
+    "programId": "program_xxx",
+    "name": "6-Week Strength Program",
+    "description": "A progressive strength-focused program...",
+    "totalDays": 42,
+    "startDate": "2025-01-15",
+    "trainingGoals": ["Increase squat 1RM", "Build muscle mass"],
+    "equipmentConstraints": ["Full gym access", "Barbells", "Power rack"],
+    "trainingFrequency": 4
+  },
+  "phaseIds": ["phase_1_xxx", "phase_2_xxx", "phase_3_xxx"]
+}
+
+**CRITICAL**: Include trainingGoals and equipmentConstraints from the requirements result.
+These fields are REQUIRED for proper program validation and storage.
+
+**Why this works:**
+- The tool automatically retrieves full phase workout data from internal storage
+- You only pass identifiers (phaseIds) - not massive data structures
+- Reduces response tokens from 16,000 to 2,000 (88% reduction)
+- Saves 2.75 minutes per validation call
+
+### normalize_program_data: Pass ONLY the lightweight program object
+- Do NOT include full phases or workouts
+- The tool has access to all necessary data internally
+- DO include trainingGoals and equipmentConstraints arrays
+
+### save_program_to_database: Auto-populated fields and workout retrieval
+
+**CRITICAL - DO NOT PASS workoutTemplates**: The tool automatically retrieves ALL workout templates
+from stored phase results (the single source of truth). Passing them causes token bloat and data loss.
+
+**Auto-populated fields** (you can omit these):
+- userId, programId, coachIds → from context
+- trainingGoals, equipmentConstraints, trainingFrequency → from requirements
+- **workoutTemplates** → from stored phase results (NEVER pass this)
+
+✅ **CORRECT** (minimal - everything auto-filled):
+{
+  "program": {
+    "name": "6-Week Strength Program",
+    "description": "Progressive strength and conditioning...",
+    "startDate": "2025-01-15",
+    "endDate": "2025-02-25",
+    "totalDays": 42,
+    "currentDay": 1,
+    "phases": [...]  // Include phase metadata, NOT workouts
+  },
+  "summary": "6-Week program targeting PR improvements..."
+}
+
+❌ **WRONG** (causes data loss due to token limits):
+{
+  "program": { ... },
+  "summary": "...",
+  "workoutTemplates": [...]  // ← DO NOT PASS - tool retrieves automatically
+}
+
+**Why?** When you pass 54 workouts (20,000+ tokens), Claude often truncates to just 2 examples
+to avoid context limits. The tool ALWAYS retrieves the complete set from stored phase results.`);
+
+  // 3. Available tools and workflow
   sections.push(`## YOUR TOOLS AND WORKFLOW
 
 You have 7 tools at your disposal. Here's the REQUIRED workflow:
@@ -66,6 +144,7 @@ You have 7 tools at your disposal. Here's the REQUIRED workflow:
 - Parses program duration (handles "weeks", "months", or days)
 - Calculates training frequency and total workouts needed
 - **ALWAYS call this first to gather all necessary context**
+- **Returns: requirementsResult (store this for later use)**
 
 ### 2. generate_phase_structure (CALL SECOND)
 - Determines optimal phase breakdown (typically 3-5 phases)
@@ -73,6 +152,7 @@ You have 7 tools at your disposal. Here's the REQUIRED workflow:
 - Uses AI with toolConfig for structured output
 - Considers program duration, goals, and user experience level
 - **Call this once to establish the overall program structure**
+- **Returns: phaseStructureResult (contains phases array)**
 
 ### 3. generate_phase_workouts (CALL MULTIPLE TIMES IN PARALLEL)
 - Generates workout templates for ONE specific phase
@@ -80,6 +160,104 @@ You have 7 tools at your disposal. Here's the REQUIRED workflow:
 - Each call is independent and can run simultaneously
 - Creates detailed workout prescriptions with exercises, sets, reps, loads
 - **Example: For 4-phase program, call this tool 4 times with different phase inputs**
+
+🚨 **CRITICAL DATA PASSING FOR generate_phase_workouts:**
+
+You MUST pass the COMPLETE requirementsResult as programContext. Do NOT construct it manually.
+
+**CORRECT PATTERN:**
+\`\`\`
+Step 1: const requirementsResult = load_program_requirements({...})
+Step 2: const phaseStructureResult = generate_phase_structure({
+  todoList: <todoList>,
+  coachConfig: requirementsResult.coachConfig,
+  userProfile: requirementsResult.userProfile,
+  conversationContext: <conversationContext>,
+  pineconeContext: requirementsResult.pineconeContext,
+  totalDays: requirementsResult.programDuration,
+  trainingFrequency: requirementsResult.trainingFrequency
+})
+Step 3: For each phase, call generate_phase_workouts({
+  phase: phaseStructureResult.phases[N],
+  allPhases: phaseStructureResult.phases,
+  programContext: requirementsResult  // ← ENTIRE requirementsResult object
+})
+\`\`\`
+
+**✅ CORRECT - Simple usage:**
+\`\`\`
+generate_phase_workouts({
+  phase: phaseStructureResult.phases[0],
+  allPhases: phaseStructureResult.phases
+})
+\`\`\`
+
+**Note**: Program requirements (coach config, training frequency, etc.) are automatically
+retrieved from the stored load_program_requirements result. You only need to pass the
+phase and allPhases parameters.
+
+**📋 EXAMPLE - Full tool call:**
+
+\`\`\`json
+{
+  "phase": {
+    "name": "Phase 1: Foundation Building",
+    "startDay": 1,
+    "endDay": 14,
+    "durationDays": 14,
+    "focusAreas": ["Movement quality", "Work capacity"],
+    "description": "...",
+    "phaseId": "phase_xxx"
+  },
+  "allPhases": [
+    /* array of all phase objects from generate_phase_structure */
+  ]
+}
+\`\`\`
+
+That's it! The tool automatically retrieves coach config, training frequency,
+and all other requirements from the stored load_program_requirements result.
+
+🚀 **CRITICAL: PARALLEL PHASE GENERATION**
+
+When you have the phase structure with multiple phases, call generate_phase_workouts MULTIPLE TIMES in the SAME response - once per phase.
+
+**Example for 3-phase program:**
+\`\`\`xml
+<thinking>I have 3 phases, so I'll call generate_phase_workouts 3 times in parallel</thinking>
+
+<tool_calls>
+  <tool_call id="phase1">
+    <tool_name>generate_phase_workouts</tool_name>
+    <parameters>
+      <phase>{{ phaseStructureResult.phases[0] }}</phase>
+      <allPhases>{{ phaseStructureResult.phases }}</allPhases>
+    </parameters>
+  </tool_call>
+
+  <tool_call id="phase2">
+    <tool_name>generate_phase_workouts</tool_name>
+    <parameters>
+      <phase>{{ phaseStructureResult.phases[1] }}</phase>
+      <allPhases>{{ phaseStructureResult.phases }}</allPhases>
+    </parameters>
+  </tool_call>
+
+  <tool_call id="phase3">
+    <tool_name>generate_phase_workouts</tool_name>
+    <parameters>
+      <phase>{{ phaseStructureResult.phases[2] }}</phase>
+      <allPhases>{{ phaseStructureResult.phases }}</allPhases>
+    </parameters>
+  </tool_call>
+</tool_calls>
+\`\`\`
+
+**The agent framework will execute these in parallel, significantly reducing total generation time.**
+- Sequential: ~225 seconds for 3 phases
+- Parallel: ~90 seconds for 3 phases (60% faster)
+
+DO NOT wait for one phase to complete before calling the next. Make all calls in the same response.
 
 ### 4. validate_program_structure (CALL AFTER ALL PHASES GENERATED)
 - Validates program completeness and quality
@@ -152,9 +330,8 @@ You have 7 tools at your disposal. Here's the REQUIRED workflow:
 
 **User ID**: ${context.userId}
 **Coach ID**: ${context.coachId}
-**Conversation ID**: ${context.conversationId}
 **Program ID**: ${context.programId}
-**Session ID**: ${context.sessionId}
+**Session ID**: ${context.sessionId}${context.conversationId ? `\n**Conversation ID**: ${context.conversationId}` : ""}
 
 ### Program Requirements (from Todo List):
 ${JSON.stringify(context.todoList, null, 2)}
@@ -164,6 +341,7 @@ ${context.conversationContext?.substring(0, 500) || "No conversation context pro
 
 📋 **REQUIREMENTS AWARENESS**:
 - All user requirements and preferences are in the todoList above
+- Training Methodology: ${context.todoList?.trainingMethodology?.value || "Not yet specified"}
 - Conversation context provides additional nuance and constraints
 - Use this information to personalize the program design
 - Don't ask for missing information - use sensible defaults`);
@@ -185,7 +363,7 @@ ${context.conversationContext?.substring(0, 500) || "No conversation context pro
   // If prompt-level personality becomes critical, we'd need architectural changes:
   // 1. Add coachConfig/userProfile to BuildProgramEvent interface
   // 2. Fetch them in handler.ts before constructing ProgramDesignerAgent
-  // 3. Update caller (program-creator) to load and pass this data
+  // 3. Update caller (program-designer) to load and pass this data
   //
   // For now, the if-check below is intentionally unreachable (defensive programming).
   if (context.coachConfig) {

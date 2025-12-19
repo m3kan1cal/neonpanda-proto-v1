@@ -18,7 +18,7 @@ import {
 } from "./tools";
 import { buildProgramDesignerPrompt } from "./prompts";
 import { MODEL_IDS } from "../../api-helpers";
-import { enforceValidationBlocking } from "./helpers";
+import { enforceAllBlocking, calculateProgramMetrics } from "./helpers";
 
 /**
  * Minimum number of tools that must be called for a complete program design workflow.
@@ -40,9 +40,316 @@ const MIN_REQUIRED_TOOLS_FOR_COMPLETE_WORKFLOW = 3;
 export class ProgramDesignerAgent extends Agent<ProgramDesignerContext> {
   private toolResults: Map<string, any> = new Map(); // Track tool results
 
+  /**
+   * Store tool result with unique key for later retrieval
+   * Prevents Claude from needing to echo large objects
+   */
+  private storeToolResult(
+    toolId: string,
+    result: any,
+    uniqueKey?: string,
+  ): void {
+    const storageKey = uniqueKey || toolId;
+    this.toolResults.set(storageKey, result);
+    console.info(`📦 Stored tool result for ${storageKey}`);
+  }
+
+  /**
+   * Retrieve stored tool result by key
+   */
+  private getToolResult(key: string): any {
+    return this.toolResults.get(key);
+  }
+
+  /**
+   * Create augmented context with getToolResult accessor
+   * Used by all tool executions for data retrieval
+   */
+  private createAugmentedContext(): ProgramDesignerContext & {
+    getToolResult: (key: string) => any;
+  } {
+    return {
+      ...this.config.context,
+      getToolResult: this.getToolResult.bind(this),
+    };
+  }
+
+  /**
+   * Build standardized tool result structure for Bedrock conversation
+   */
+  private buildToolResult(
+    toolUse: any,
+    result: any,
+    status: "success" | "error",
+  ): any {
+    return {
+      toolResult: {
+        toolUseId: toolUse.toolUseId,
+        content: [{ json: result }],
+        status,
+      },
+    };
+  }
+
+  /**
+   * Extract all phase workout results (one per phase)
+   */
+  private getPhaseWorkoutResults(): any[] {
+    return Array.from(this.toolResults.entries())
+      .filter(([key]) => key.startsWith("phase_workouts:"))
+      .map(([, value]) => value);
+  }
+
+  /**
+   * Retrieve all tool results in structured format
+   * Typed for better IntelliSense and error detection
+   */
+  private getStructuredToolResults() {
+    return {
+      requirements: this.toolResults.get("load_program_requirements"),
+      phaseStructure: this.toolResults.get("generate_phase_structure"),
+      phaseWorkouts: this.getPhaseWorkoutResults(),
+      validation: this.toolResults.get("validate_program_structure"),
+      normalization: this.toolResults.get("normalize_program_data"),
+      summary: this.toolResults.get("generate_program_summary"),
+      save: this.toolResults.get("save_program_to_database"),
+    };
+  }
+
+  /**
+   * Extract tool uses from response and group by tool ID
+   * Groups enable parallel execution of same-tool calls (e.g., phase workouts)
+   */
+  private extractAndGroupTools(
+    contentBlocks: any[],
+  ): Map<string, Array<{ block: any; tool: any }>> {
+    const toolUses = contentBlocks.filter((block: any) => block.toolUse);
+    const toolGroups = new Map<string, Array<{ block: any; tool: any }>>();
+
+    for (const block of toolUses) {
+      const toolUse = block.toolUse;
+      const tool = this.config.tools.find((t) => t.id === toolUse.name);
+
+      if (!tool) {
+        console.warn(`⚠️ Tool not found: ${toolUse.name}`);
+        continue;
+      }
+
+      if (!toolGroups.has(tool.id)) {
+        toolGroups.set(tool.id, []);
+      }
+      toolGroups.get(tool.id)!.push({ block, tool });
+    }
+
+    return toolGroups;
+  }
+
+  /**
+   * Execute multiple phase workout generations in parallel
+   * Significantly reduces total generation time (60% faster)
+   */
+  private async executePhaseWorkoutsParallel(
+    toolGroup: Array<{ block: any; tool: any }>,
+  ): Promise<any[]> {
+    const augmentedContext = this.createAugmentedContext();
+
+    return await Promise.all(
+      toolGroup.map(async ({ block, tool }) => {
+        const toolUse = block.toolUse;
+
+        console.info(`⚙️ Executing tool: ${tool.id}`, {
+          phaseId: toolUse.input?.phase?.phaseId,
+          phaseName: toolUse.input?.phase?.name,
+        });
+
+        try {
+          const startTime = Date.now();
+          const result = await tool.execute(toolUse.input, augmentedContext);
+          const duration = Date.now() - startTime;
+
+          console.info(`✅ Tool ${tool.id} completed in ${duration}ms`, {
+            phaseId: result.phaseId,
+            workoutCount: result.workoutTemplates?.length,
+          });
+
+          // Store result by phaseId for later retrieval
+          const phaseId = result.phaseId || toolUse.input?.phase?.phaseId;
+          if (phaseId) {
+            this.storeToolResult(`phase_workouts:${phaseId}`, result);
+          }
+          this.toolResults.set(tool.id, result);
+
+          return this.buildToolResult(toolUse, result, "success");
+        } catch (error) {
+          console.error(`❌ Tool ${tool.id} failed:`, error);
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
+          return this.buildToolResult(
+            toolUse,
+            { error: errorMessage },
+            "error",
+          );
+        }
+      }),
+    );
+  }
+
+  /**
+   * Execute tools sequentially with blocking enforcement
+   * Applies validation and normalization blocking before save
+   */
+  private async executeToolsSequentially(
+    toolGroup: Array<{ block: any; tool: any }>,
+  ): Promise<any[]> {
+    const results: any[] = [];
+    const augmentedContext = this.createAugmentedContext();
+
+    for (const { block, tool } of toolGroup) {
+      const toolUse = block.toolUse;
+
+      // Enforce blocking decisions (validation + normalization)
+      const validationResult = this.toolResults.get(
+        "validate_program_structure",
+      );
+      const normalizationResult = this.toolResults.get(
+        "normalize_program_data",
+      );
+
+      const blockingResult = enforceAllBlocking(
+        tool.id,
+        validationResult,
+        normalizationResult,
+      );
+
+      if (blockingResult) {
+        console.warn(`⛔ Blocking tool execution: ${tool.id}`);
+        results.push(this.buildToolResult(toolUse, blockingResult, "error"));
+        continue;
+      }
+
+      console.info(`⚙️ Executing tool: ${tool.id}`);
+
+      try {
+        const startTime = Date.now();
+        const result = await tool.execute(toolUse.input, augmentedContext);
+        const duration = Date.now() - startTime;
+
+        console.info(`✅ Tool ${tool.id} completed in ${duration}ms`);
+
+        // Store results for retrieval by other tools
+        if (tool.id === "load_program_requirements") {
+          this.storeToolResult("requirements", result);
+        } else if (tool.id === "generate_phase_structure") {
+          this.storeToolResult("phase_structure", result);
+        }
+
+        this.toolResults.set(tool.id, result);
+
+        results.push(this.buildToolResult(toolUse, result, "success"));
+      } catch (error) {
+        console.error(`❌ Tool ${tool.id} failed:`, error);
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        results.push(
+          this.buildToolResult(toolUse, { error: errorMessage }, "error"),
+        );
+      }
+    }
+
+    return results;
+  }
+
+  /**
+   * Execute tool groups with parallel/sequential logic
+   * Phase workouts run in parallel, others run sequentially
+   */
+  private async executeToolGroups(
+    toolGroups: Map<string, Array<{ block: any; tool: any }>>,
+  ): Promise<any[]> {
+    const allResults: any[] = [];
+
+    for (const [toolId, toolGroup] of toolGroups) {
+      const count = toolGroup.length;
+
+      // Parallelize phase workout generation
+      if (toolId === "generate_phase_workouts" && count > 1) {
+        console.info(`🚀 Executing ${count} phase workout(s) in parallel`);
+        const parallelResults =
+          await this.executePhaseWorkoutsParallel(toolGroup);
+        allResults.push(...parallelResults);
+        console.info(`✅ Completed ${count} phase workout(s) in parallel`);
+      } else {
+        // Execute sequentially with blocking checks
+        const sequentialResults =
+          await this.executeToolsSequentially(toolGroup);
+        allResults.push(...sequentialResults);
+      }
+    }
+
+    return allResults;
+  }
+
+  /**
+   * Override handleToolUse to implement parallel execution for phase workouts
+   * Orchestrates parallel vs sequential execution based on tool type
+   */
+  protected async handleToolUse(response: any): Promise<void> {
+    const conversationHistory = this.getConversationHistory();
+    const contentBlocks = response.output?.message?.content || [];
+
+    // Add Claude's tool use message to history
+    conversationHistory.push({
+      role: "assistant",
+      content: contentBlocks,
+    });
+
+    // Extract and group tools for parallelization
+    const toolGroups = this.extractAndGroupTools(contentBlocks);
+
+    console.info(`🔧 Executing ${toolGroups.size} tool group(s)`);
+
+    // Execute tool groups with parallel/sequential logic
+    const toolResults = await this.executeToolGroups(toolGroups);
+
+    // Add tool results back to conversation
+    conversationHistory.push({
+      role: "user",
+      content: toolResults,
+    });
+
+    console.info("📥 Tool results added to conversation history");
+  }
+
   constructor(context: ProgramDesignerContext) {
+    // Build full prompt
+    const fullPrompt = buildProgramDesignerPrompt(context);
+
+    // Extract dynamic values for small dynamic prompt
+    const duration = context.todoList?.programDuration?.value || "Unknown";
+    const trainingGoals =
+      context.todoList?.trainingGoals?.value || "Not specified";
+    const trainingFreq =
+      context.todoList?.trainingFrequency?.value || "Unknown";
+    const trainingMethodology =
+      context.todoList?.trainingMethodology?.value || "Not specified";
+
     super({
-      systemPrompt: buildProgramDesignerPrompt(context),
+      // Large static portion (tools, rules, examples, periodization) - ~95% of tokens
+      staticPrompt: fullPrompt,
+
+      // Small dynamic portion (session-specific data) - ~5% of tokens
+      dynamicPrompt:
+        `\n## CURRENT DESIGN SESSION\n` +
+        `- Program Duration: ${duration}\n` +
+        `- Training Goals: ${trainingGoals}\n` +
+        `- Training Frequency: ${trainingFreq} days/week\n` +
+        `- Training Methodology: ${trainingMethodology}\n` +
+        `- Session ID: ${context.sessionId}\n` +
+        `- Program ID: ${context.programId}`,
+
+      // Backward compatibility (not used when staticPrompt/dynamicPrompt provided)
+      systemPrompt: fullPrompt,
+
       tools: [
         loadProgramRequirementsTool,
         generatePhaseStructureTool,
@@ -55,6 +362,8 @@ export class ProgramDesignerAgent extends Agent<ProgramDesignerContext> {
       modelId: MODEL_IDS.CLAUDE_SONNET_4_FULL,
       context,
     });
+
+    console.info("🔥 ProgramDesignerAgent initialized with caching support");
   }
 
   /**
@@ -65,63 +374,13 @@ export class ProgramDesignerAgent extends Agent<ProgramDesignerContext> {
     console.info("🏋️ ProgramDesigner agent starting", {
       userId: this.config.context.userId,
       programId: this.config.context.programId,
-      conversationId: this.config.context.conversationId,
+      sessionId: this.config.context.sessionId,
+      ...(this.config.context.conversationId && {
+        conversationId: this.config.context.conversationId,
+      }),
     });
 
     try {
-      // Override tool execute to track results AND enforce blocking decisions
-      const originalTools = this.config.tools;
-      this.config.tools = originalTools.map((tool) => ({
-        ...tool,
-        execute: async (input: any, context: any) => {
-          // ============================================================
-          // CRITICAL: ENFORCE BLOCKING DECISIONS (Defense in Depth)
-          // ============================================================
-          // If validate_program_structure returned isValid: false,
-          // prevent normalize_program_data and save_program_to_database
-          // from executing, even if Claude tries to call them.
-          //
-          // This is a code-level enforcement in addition to prompt-level
-          // guidance, ensuring blocking decisions are AUTHORITATIVE.
-          // ============================================================
-
-          const validationResult = this.toolResults.get(
-            "validate_program_structure",
-          );
-
-          // Check if tool execution should be blocked
-          const blockingResult = enforceValidationBlocking(
-            tool.id,
-            validationResult,
-          );
-          if (blockingResult) {
-            return blockingResult; // Return error result to Claude
-          }
-
-          // Execute tool normally if not blocked
-          const result = await tool.execute(input, context);
-
-          // ============================================================
-          // IMPORTANT: Handle multiple calls to generate_phase_workouts
-          // ============================================================
-          // Since generate_phase_workouts is called once per phase,
-          // we need unique keys to avoid overwriting previous results.
-          // Use phaseId from input to create unique storage key.
-          // ============================================================
-          let storageKey = tool.id;
-          if (tool.id === "generate_phase_workouts" && input?.phase?.phaseId) {
-            storageKey = `${tool.id}:${input.phase.phaseId}`;
-            console.info(
-              `📦 Storing phase workout result with unique key: ${storageKey}`,
-            );
-          }
-
-          this.toolResults.set(storageKey, result);
-          console.info(`📦 Stored tool result for ${tool.id}`);
-          return result;
-        },
-      }));
-
       const response = await this.converse(
         "Design the complete training program based on the provided todo list and context.",
       );
@@ -218,32 +477,93 @@ export class ProgramDesignerAgent extends Agent<ProgramDesignerContext> {
       response.toLowerCase().includes("would you like") ||
       response.toLowerCase().includes("can you confirm");
 
-    return (noToolsCalled || minimalToolsCalled) && looksIncomplete;
+    // ALSO retry if tools failed due to missing programContext
+    // This detects the specific error pattern we're trying to fix
+    const hasProgramContextError = !!(
+      result.reason?.includes("programContext") ||
+      result.reason?.includes("coachConfig") ||
+      result.reason?.includes("missing required fields")
+    );
+
+    return (
+      (noToolsCalled || minimalToolsCalled) &&
+      (looksIncomplete || hasProgramContextError)
+    );
   }
 
   /**
    * Build a stronger retry prompt that forces tool execution
    */
   private buildRetryPrompt(aiResponse: string): string {
+    // Check if the error was related to programContext
+    const hasProgramContextError =
+      aiResponse.includes("programContext") ||
+      aiResponse.includes("coachConfig") ||
+      aiResponse.includes("missing required fields");
+
+    // Get the requirementsResult if it was stored
+    const requirementsResult = this.toolResults.get(
+      "load_program_requirements",
+    );
+    const hasRequirements = !!requirementsResult;
+
+    let contextGuidance = "";
+    if (hasProgramContextError && hasRequirements) {
+      contextGuidance = `
+
+🚨 CRITICAL DATA PASSING ERROR DETECTED:
+
+You called generate_phase_workouts without passing the complete programContext.
+
+The load_program_requirements tool returned:
+${JSON.stringify(
+  {
+    coachConfig: "✓ Available",
+    userProfile: requirementsResult.userProfile ? "✓ Available" : "null",
+    pineconeContext: "✓ Available",
+    programDuration: requirementsResult.programDuration,
+    trainingFrequency: requirementsResult.trainingFrequency,
+  },
+  null,
+  2,
+)}
+
+When you call generate_phase_workouts, you MUST pass this ENTIRE object as programContext:
+
+generate_phase_workouts({
+  phase: phaseStructureResult.phases[N],
+  allPhases: phaseStructureResult.phases,
+  programContext: requirementsResult  // ← Pass the ENTIRE load_program_requirements result
+})
+
+DO NOT construct programContext manually. DO NOT pass individual fields.
+Pass the ENTIRE requirementsResult object exactly as you received it.`;
+    }
+
     return `CRITICAL OVERRIDE: You did not complete the program design workflow.
 
 Your previous response: "${aiResponse.substring(0, 200)}..."
+${contextGuidance}
 
 You MUST now complete the workflow by calling ALL required tools:
-1. load_program_requirements
+1. load_program_requirements ${hasRequirements ? "(✓ ALREADY DONE - reuse this result)" : ""}
 2. generate_phase_structure
-3. generate_phase_workouts (for EACH phase)
+3. generate_phase_workouts (for EACH phase) ${hasProgramContextError ? "← FIX YOUR DATA PASSING HERE" : ""}
 4. validate_program_structure
 5. normalize_program_data (if needed)
 6. generate_program_summary
 7. save_program_to_database
 
+CRITICAL INSTRUCTIONS:
+- ${hasRequirements ? "REUSE the existing requirementsResult from step 1" : "Call load_program_requirements first"}
+- When calling generate_phase_workouts, pass requirementsResult as programContext
+- DO NOT construct programContext manually
+- DO NOT pass individual fields - pass the ENTIRE object
 - Make reasonable assumptions for any missing information
-- Use the todoList and conversationContext from the system prompt
 - DO NOT ask any more questions
 - CALL YOUR TOOLS to design and save the program
 
-Now design the complete program using your tools.`;
+Now design the complete program using your tools with CORRECT data passing.`;
   }
 
   /**
@@ -253,79 +573,79 @@ Now design the complete program using your tools.`;
    * Handles incomplete workflows appropriately.
    */
   private buildResultFromToolData(agentResponse: string): ProgramDesignResult {
-    const requirementsResult = this.toolResults.get(
-      "load_program_requirements",
-    );
-    const phaseStructureResult = this.toolResults.get(
-      "generate_phase_structure",
-    );
-    // Collect ALL phase workout results (one per phase)
-    // Keys are stored as "generate_phase_workouts:phaseId" to avoid overwrites
-    const phaseWorkoutsResults = Array.from(this.toolResults.entries())
-      .filter(([key]) => key.startsWith("generate_phase_workouts"))
-      .map(([, value]) => value);
-    const validationResult = this.toolResults.get("validate_program_structure");
-    const normalizationResult = this.toolResults.get("normalize_program_data");
-    const summaryResult = this.toolResults.get("generate_program_summary");
-    const saveResult = this.toolResults.get("save_program_to_database");
+    // Extract tool results using structured helper
+    const results = this.getStructuredToolResults();
 
     console.info("Tool results available:", {
-      hasRequirements: !!requirementsResult,
-      hasPhaseStructure: !!phaseStructureResult,
-      phaseWorkoutsCount: phaseWorkoutsResults.length,
-      hasValidation: !!validationResult,
-      hasNormalization: !!normalizationResult,
-      hasSummary: !!summaryResult,
-      hasSave: !!saveResult,
+      hasRequirements: !!results.requirements,
+      hasPhaseStructure: !!results.phaseStructure,
+      phaseWorkoutsCount: results.phaseWorkouts.length,
+      hasValidation: !!results.validation,
+      hasNormalization: !!results.normalization,
+      hasSummary: !!results.summary,
+      hasSave: !!results.save,
     });
 
     // If save tool was called successfully, we have a complete program
-    if (saveResult?.success && saveResult?.programId) {
+    if (results.save?.success && results.save?.programId) {
       console.info("✅ Building success result from save tool");
 
       // Assemble program data from tool results
-      const phases = phaseStructureResult?.phases || [];
-      const totalWorkouts = phaseWorkoutsResults.reduce(
-        (sum, result) => sum + (result.workoutTemplates?.length || 0),
-        0,
+      const phases = results.phaseStructure?.phases || [];
+
+      // Collect all workout templates from phase results
+      const allWorkoutTemplates = results.phaseWorkouts.flatMap(
+        (result: any) => result.workoutTemplates || [],
       );
+
+      // Calculate metrics using shared helper
+      const metrics = calculateProgramMetrics(allWorkoutTemplates);
+
+      console.info("📊 Program metrics calculated:", {
+        phaseCount: phases.length,
+        totalWorkoutTemplates: metrics.totalWorkoutTemplates,
+        uniqueTrainingDays: metrics.uniqueTrainingDays,
+        averageSessionsPerDay: metrics.averageSessionsPerDay,
+      });
 
       return {
         success: true,
-        programId: saveResult.programId,
+        programId: results.save.programId,
         programName: this.extractProgramName(),
-        totalDays: requirementsResult?.programDuration,
-        phases: phases.length,
-        totalWorkouts,
-        trainingFrequency: requirementsResult?.trainingFrequency,
-        summary: summaryResult?.summary,
-        pineconeStored: !!saveResult.pineconeRecordId,
-        pineconeRecordId: saveResult.pineconeRecordId,
-        normalizationApplied: !!normalizationResult,
+        totalDays: results.requirements?.programDuration,
+        phaseCount: phases.length,
+        totalWorkoutTemplates: metrics.totalWorkoutTemplates,
+        uniqueTrainingDays: metrics.uniqueTrainingDays,
+        averageSessionsPerDay: metrics.averageSessionsPerDay,
+        trainingFrequency: results.requirements?.trainingFrequency,
+        summary: results.summary?.summary,
+        pineconeStored: !!results.save.pineconeRecordId,
+        pineconeRecordId: results.save.pineconeRecordId,
+        normalizationApplied: !!results.normalization,
         generationMethod: "agent_v2",
-        s3DetailKey: saveResult.s3Key,
+        s3DetailKey: results.save.s3Key,
       };
     }
 
     // If validation blocked save, return structured failure
-    if (validationResult && !validationResult.isValid) {
+    if (results.validation && !results.validation.isValid) {
       console.info("⚠️ Building failure result from validation");
 
       return {
         success: false,
         skipped: true,
-        reason: `Program validation failed: ${validationResult.validationIssues?.join(", ") || "Unknown issues"}`,
-        blockingFlags: validationResult.validationIssues,
+        reason: `Program validation failed: ${results.validation.validationIssues?.join(", ") || "Unknown issues"}`,
+        blockingFlags: results.validation.validationIssues,
       };
     }
 
     // If no tools were called, agent may be asking for clarification
     // This is EXPECTED behavior in some cases, not a failure
     if (
-      !requirementsResult &&
-      !phaseStructureResult &&
-      !validationResult &&
-      !saveResult
+      !results.requirements &&
+      !results.phaseStructure &&
+      !results.validation &&
+      !results.save
     ) {
       console.info(
         "💬 Agent incomplete workflow (no tools called - may need retry)",

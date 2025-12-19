@@ -1,9 +1,14 @@
-import { TodoItem, ConversationMessage } from '../todo-types';
+import { TodoItem } from "../todo-types";
+import type { CoachMessage } from "../coach-conversation/types";
 
-export type SophisticationLevel = 'UNKNOWN' | 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
+export type SophisticationLevel =
+  | "UNKNOWN"
+  | "BEGINNER"
+  | "INTERMEDIATE"
+  | "ADVANCED";
 
 // Re-export for backward compatibility
-export type { TodoItem, ConversationMessage };
+export type { TodoItem, CoachMessage };
 
 // ============================================================================
 // TO-DO LIST BASED CONVERSATIONAL FLOW (New Approach)
@@ -96,7 +101,7 @@ export interface CoachCreatorSession {
 
   // To-do list based conversational flow
   todoList: CoachCreatorTodoList;
-  conversationHistory: ConversationMessage[];
+  conversationHistory: CoachMessage[];
   sophisticationLevel: SophisticationLevel;
 
   // Session status
@@ -114,7 +119,7 @@ export interface CoachCreatorSession {
     currentQuestion: number;
   };
   configGeneration?: {
-    status: 'IN_PROGRESS' | 'COMPLETE' | 'FAILED';
+    status: "IN_PROGRESS" | "COMPLETE" | "FAILED";
     startedAt: Date;
     completedAt?: Date;
     failedAt?: Date;
@@ -219,7 +224,8 @@ export interface CoachConfigSummary {
   metadata: {
     created_date: string;
     total_conversations: number;
-    methodology_profile?: { // NEW: Rich methodology metadata
+    methodology_profile?: {
+      // NEW: Rich methodology metadata
       primary?: string;
       focus?: string[];
       preferences?: string[];
@@ -236,8 +242,8 @@ export interface CoachConfig {
   coach_id: string;
   coach_name: string;
   coach_description?: string;
-  status?: 'active' | 'archived'; // Optional for backwards compatibility, defaults to active
-  gender_preference?: 'male' | 'female' | 'neutral'; // Optional for backwards compatibility
+  status?: "active" | "archived"; // Optional for backwards compatibility, defaults to active
+  gender_preference?: "male" | "female" | "neutral"; // Optional for backwards compatibility
   selected_personality: {
     primary_template: string;
     secondary_influences?: string[];
@@ -309,7 +315,7 @@ export interface CoachConfig {
     };
     coach_creator_session_summary: string;
     // Generation method tracking (for hybrid tool/fallback approach)
-    generation_method?: 'tool' | 'fallback';
+    generation_method?: "tool" | "fallback";
     generation_timestamp?: string;
   };
   // DynamoDB timestamps (populated from database metadata)
@@ -319,11 +325,11 @@ export interface CoachConfig {
 
 // Coach Template interface for pre-built coach configurations
 export interface CoachTemplate {
-  template_id: string;           // e.g., "tmpl_bsb_2025_08_23"
-  template_name: string;         // e.g., "Beginner Strength Builder"
-  persona_category: string;      // Maps to personas 1-7 (e.g., "persona_1")
-  description: string;           // User-facing description
-  target_audience: string[];     // ["beginners", "strength_focused", etc.]
+  template_id: string; // e.g., "tmpl_bsb_2025_08_23"
+  template_name: string; // e.g., "Beginner Strength Builder"
+  persona_category: string; // Maps to personas 1-7 (e.g., "persona_1")
+  description: string; // User-facing description
+  target_audience: string[]; // ["beginners", "strength_focused", etc.]
 
   // Pre-configured coach config (same structure as CoachConfig)
   base_config: CoachConfig;
@@ -332,7 +338,7 @@ export interface CoachTemplate {
   metadata: {
     created_date: string;
     version: string;
-    popularity_score?: number;   // Track usage for ordering
-    is_active: boolean;         // Enable/disable templates
+    popularity_score?: number; // Track usage for ordering
+    is_active: boolean; // Enable/disable templates
   };
 }

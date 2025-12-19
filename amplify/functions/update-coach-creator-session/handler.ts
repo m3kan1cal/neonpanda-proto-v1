@@ -5,21 +5,14 @@
  * This uses the same to-do list approach but without streaming
  */
 
-import {
-  createOkResponse,
-  createErrorResponse,
-} from "../libs/api-helpers";
+import { createOkResponse, createErrorResponse } from "../libs/api-helpers";
 import {
   saveCoachCreatorSession,
   getCoachCreatorSession,
 } from "../../dynamodb/operations";
 import { withAuth, AuthenticatedHandler } from "../libs/auth/middleware";
-import {
-  extractAndUpdateTodoList,
-} from "../libs/coach-creator/todo-extraction";
-import {
-  generateNextQuestion,
-} from "../libs/coach-creator/question-generator";
+import { extractAndUpdateTodoList } from "../libs/coach-creator/todo-extraction";
+import { generateNextQuestion } from "../libs/coach-creator/question-generator";
 import {
   getTodoProgress,
   isSessionComplete,
@@ -35,13 +28,13 @@ const baseHandler: AuthenticatedHandler = async (event) => {
 
   const sessionId = event.pathParameters?.sessionId;
   const { userResponse, messageTimestamp, imageS3Keys } = JSON.parse(
-    event.body || "{}"
+    event.body || "{}",
   );
 
   if (!sessionId || !userResponse) {
     return createErrorResponse(
       400,
-      "Missing required fields: sessionId or userResponse"
+      "Missing required fields: sessionId or userResponse",
     );
   }
 
@@ -61,16 +54,18 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     // Step 1: Store user message in conversation history
     session.conversationHistory = session.conversationHistory || [];
     session.conversationHistory.push({
-      role: 'user',
+      id: `msg_${Date.now()}_${session.userId}_user`,
+      role: "user",
       content: userResponse,
-      timestamp: new Date().toISOString()
+      timestamp: new Date(),
+      messageType: "text",
     });
 
     // Step 2: Extract information and update to-do list
     session.todoList = await extractAndUpdateTodoList(
       userResponse,
       session.conversationHistory,
-      session.todoList!
+      session.todoList!,
     );
 
     // Step 3: Check if session is complete
@@ -80,15 +75,20 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     const aiResponse = await generateNextQuestion(
       session.conversationHistory,
       session.todoList!,
-      session.sophisticationLevel || 'UNKNOWN'
+      session.sophisticationLevel || "UNKNOWN",
     );
 
     // Step 5: Store AI response
     if (aiResponse) {
       session.conversationHistory.push({
-        role: 'ai',
+        id: `msg_${Date.now()}_${session.userId}_assistant`,
+        role: "assistant",
         content: aiResponse,
-        timestamp: new Date().toISOString()
+        timestamp: new Date(),
+        metadata: {
+          mode: "coach_creator",
+          isQuestion: !complete,
+        },
       });
     }
 
@@ -104,7 +104,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       questionsCompleted: todoProgress.requiredCompleted,
       totalQuestions: todoProgress.requiredTotal,
       percentage: todoProgress.requiredPercentage,
-      sophisticationLevel: session.sophisticationLevel || 'UNKNOWN',
+      sophisticationLevel: session.sophisticationLevel || "UNKNOWN",
       currentQuestion: todoProgress.requiredCompleted + 1,
     };
 
@@ -113,7 +113,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       userId,
       sessionId,
       session,
-      complete
+      complete,
     );
 
     // Step 9: Return response
@@ -124,12 +124,11 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       isComplete: complete,
       progressDetails,
     });
-
   } catch (error) {
     console.error("Error updating coach creator session:", error);
     return createErrorResponse(
       500,
-      error instanceof Error ? error.message : "Failed to update session"
+      error instanceof Error ? error.message : "Failed to update session",
     );
   }
 };

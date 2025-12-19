@@ -12,9 +12,9 @@
  */
 
 import {
-  BedrockRuntimeClient,
-  ConverseCommand,
-} from "@aws-sdk/client-bedrock-runtime";
+  callBedrockApiForAgent,
+  type BedrockToolConfig,
+} from "../../api-helpers";
 import type {
   AgentContext,
   AgentConfig,
@@ -31,14 +31,10 @@ const MAX_TOKENS = 32768;
 const TEMPERATURE = 0.7;
 
 export class Agent<TContext extends AgentContext = AgentContext> {
-  private client: BedrockRuntimeClient;
   protected config: AgentConfig<TContext>; // Protected so subclasses can access
   private conversationHistory: AgentMessage[] = [];
 
   constructor(config: AgentConfig<TContext>) {
-    this.client = new BedrockRuntimeClient({
-      region: process.env.AWS_REGION || "us-west-2",
-    });
     this.config = {
       modelId: MODEL_IDS.CLAUDE_SONNET_4_FULL,
       ...config,
@@ -138,21 +134,47 @@ export class Agent<TContext extends AgentContext = AgentContext> {
 
   /**
    * Invoke Bedrock model with current conversation history and tools
+   * Uses api-helpers for automatic caching support
    */
   private async invokeModel(): Promise<BedrockResponse> {
-    const command = new ConverseCommand({
-      modelId: this.config.modelId,
-      messages: this.conversationHistory,
-      system: [{ text: this.config.systemPrompt }],
-      toolConfig: this.getToolConfig(),
-      inferenceConfig: {
-        maxTokens: MAX_TOKENS,
-        temperature: TEMPERATURE,
-      },
+    console.info("🤖 Invoking model with agent conversation history", {
+      messageCount: this.conversationHistory.length,
+      hasStaticPrompt: !!this.config.staticPrompt,
+      hasDynamicPrompt: !!this.config.dynamicPrompt,
+      toolCount: this.config.tools?.length || 0,
     });
 
+    // Convert tools to BedrockToolConfig format
+    const tools: BedrockToolConfig[] = this.config.tools.map((t) => ({
+      name: t.id,
+      description: t.description,
+      inputSchema: t.inputSchema,
+    }));
+
+    // Prepare caching options
+    const options: any = {};
+
+    // Use static/dynamic prompt split if available (enables caching)
+    if (this.config.staticPrompt && this.config.dynamicPrompt) {
+      options.staticPrompt = this.config.staticPrompt;
+      options.dynamicPrompt = this.config.dynamicPrompt;
+      console.info(
+        "🔥 AGENT CACHING ENABLED: Using static/dynamic prompt structure",
+      );
+    }
+
+    // Determine system prompt (use staticPrompt if available, else systemPrompt)
+    const systemPrompt = this.config.staticPrompt || this.config.systemPrompt;
+
+    // Call agent-optimized API helper (automatically gets caching + logging)
     const startTime = Date.now();
-    const response = await this.client.send(command);
+    const response = await callBedrockApiForAgent(
+      systemPrompt,
+      this.conversationHistory,
+      tools,
+      this.config.modelId || MODEL_IDS.CLAUDE_SONNET_4_FULL,
+      options,
+    );
     const duration = Date.now() - startTime;
 
     console.info("📊 Bedrock response received", {
@@ -160,6 +182,9 @@ export class Agent<TContext extends AgentContext = AgentContext> {
       duration: `${duration}ms`,
       inputTokens: response.usage?.inputTokens,
       outputTokens: response.usage?.outputTokens,
+      ...(response.usage?.cacheReadInputTokens && {
+        cacheHits: response.usage.cacheReadInputTokens,
+      }),
     });
 
     return response as BedrockResponse;
@@ -167,8 +192,9 @@ export class Agent<TContext extends AgentContext = AgentContext> {
 
   /**
    * Handle tool use by executing tools and adding results to conversation
+   * Can be overridden by subclasses for custom execution strategies (e.g., parallel execution)
    */
-  private async handleToolUse(response: BedrockResponse): Promise<void> {
+  protected async handleToolUse(response: BedrockResponse): Promise<void> {
     // Extract tool uses from response
     const contentBlocks = response.output?.message?.content || [];
     const toolUses = contentBlocks.filter(
@@ -183,7 +209,7 @@ export class Agent<TContext extends AgentContext = AgentContext> {
       content: contentBlocks,
     });
 
-    // Execute each tool and collect results
+    // Execute each tool and collect results (sequential by default)
     const toolResults: any[] = [];
 
     for (const block of toolUses) {
@@ -214,11 +240,9 @@ export class Agent<TContext extends AgentContext = AgentContext> {
 
       try {
         const startTime = Date.now();
-
-        // THIS IS WHERE YOUR CODE ACTUALLY EXECUTES THE TOOL
         const result = await tool.execute(toolUse.input, this.config.context);
-
         const duration = Date.now() - startTime;
+
         console.info(`✅ Tool ${tool.id} completed in ${duration}ms`, {
           resultPreview: this.truncateForLog(result),
         });
@@ -259,25 +283,6 @@ export class Agent<TContext extends AgentContext = AgentContext> {
     });
 
     console.info("📥 Tool results added to conversation history");
-  }
-
-  /**
-   * Build tool config for Bedrock
-   */
-  private getToolConfig(): { tools: any[] } | undefined {
-    if (!this.config.tools?.length) {
-      return undefined;
-    }
-
-    return {
-      tools: this.config.tools.map((t) => ({
-        toolSpec: {
-          name: t.id,
-          description: t.description,
-          inputSchema: { json: t.inputSchema },
-        },
-      })),
-    };
   }
 
   /**

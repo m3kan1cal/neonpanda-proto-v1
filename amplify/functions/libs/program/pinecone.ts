@@ -27,13 +27,12 @@ export const storeProgramSummaryInPinecone = async (
   try {
     // Build base metadata (always present)
     const baseMetadata = {
-      recordType: "training_program_summary",
+      recordType: "program_summary",
       programId: program.programId,
       programName: program.name,
       status: program.status,
       primaryCoachId: program.coachIds[0], // Primary coach (first in array)
       coachNames: program.coachNames, // All coach names
-      conversationId: program.creationConversationId,
       startDate: program.startDate,
       endDate: program.endDate,
       totalDays: program.totalDays,
@@ -122,67 +121,46 @@ export const storeProgramSummaryInPinecone = async (
 };
 
 /**
- * Delete training program summary from Pinecone when program is deleted
- * Follows the same pattern as workout deletion
- *
- * @param userId - The user ID for namespace targeting
- * @param programId - The program ID to delete from Pinecone
- * @returns Promise with deletion result
+ * Delete program summary from Pinecone vector database
+ * Cleans up indexed program data when programs are deleted
  */
-export const deleteProgramSummaryFromPinecone = async (
+export async function deleteProgramSummaryFromPinecone(
   userId: string,
   programId: string,
-): Promise<{ success: boolean; error?: string }> => {
+): Promise<{ success: boolean; deletedCount: number; error?: string }> {
   try {
-    console.info("🗑️ Deleting training program summary from Pinecone:", {
+    console.info("🗑️ Deleting program summary from Pinecone:", {
       userId,
       programId,
     });
 
-    // Use centralized deletion function with program-specific filter
+    // Use the existing deletePineconeContext helper with programId filter
     const result = await deletePineconeContext(userId, {
-      recordType: "training_program_summary",
       programId: programId,
+      recordType: "program_summary",
     });
 
     if (result.success) {
-      console.info(
-        "✅ Successfully deleted training program summary from Pinecone:",
-        {
-          userId,
-          programId,
-          deletedRecords: result.deletedCount,
-        },
-      );
+      console.info("✅ Program summary deleted from Pinecone:", {
+        userId,
+        programId,
+        deletedCount: result.deletedCount,
+      });
     } else {
-      console.warn(
-        "⚠️ Failed to delete training program summary from Pinecone:",
-        {
-          userId,
-          programId,
-          error: result.error,
-        },
-      );
+      console.warn("⚠️ Failed to delete program summary from Pinecone:", {
+        userId,
+        programId,
+        error: result.error,
+      });
     }
 
-    return {
-      success: result.success,
-      error: result.error,
-    };
+    return result;
   } catch (error) {
-    console.error(
-      "❌ Failed to delete training program summary from Pinecone:",
-      error,
-    );
-
-    // Don't throw error to avoid breaking the program deletion process
-    // Pinecone cleanup failure shouldn't prevent DynamoDB deletion
-    console.warn(
-      "Training program deletion will continue despite Pinecone cleanup failure",
-    );
+    console.error("❌ Error deleting program summary from Pinecone:", error);
     return {
       success: false,
+      deletedCount: 0,
       error: error instanceof Error ? error.message : "Unknown error",
     };
   }
-};
+}
