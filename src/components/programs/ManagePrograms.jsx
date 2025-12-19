@@ -69,6 +69,7 @@ import { ProgramAgent } from "../../utils/agents/ProgramAgent";
 import CoachAgent from "../../utils/agents/CoachAgent";
 import { useToast } from "../../contexts/ToastContext";
 import { PROGRAM_STATUS } from "../../constants/conversationModes";
+import { createProgramDesignerSession } from "../../utils/apis/programDesignerApi";
 
 // Helper function to check if a program is new (created within last 7 days)
 const isNewProgram = (createdDate, programId) => {
@@ -217,6 +218,7 @@ function ManagePrograms() {
     programId: null,
     action: null,
   });
+  const [isCreatingProgram, setIsCreatingProgram] = useState(false);
 
   // Delete confirmation modal state
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -226,6 +228,14 @@ function ManagePrograms() {
   // Actions menu state
   const [openMenuId, setOpenMenuId] = useState(null);
   const [editingProgramId, setEditingProgramId] = useState(null);
+
+  // In-progress sessions state
+  const [inProgressSessions, setInProgressSessions] = useState([]);
+  const [sessionsLoading, setSessionsLoading] = useState(false);
+  const [retryingSessionId, setRetryingSessionId] = useState(null);
+  const [showDeleteSessionModal, setShowDeleteSessionModal] = useState(false);
+  const [sessionToDelete, setSessionToDelete] = useState(null);
+  const previousBuildingSessionsRef = useRef(new Set()); // Track previous building sessions
 
   // Auto-scroll to top when component mounts
   useEffect(() => {
@@ -405,6 +415,9 @@ function ManagePrograms() {
 
     loadCoachesAndPrograms();
 
+    // Store reload function in ref so loadInProgressSessions can call it
+    reloadCoachesAndProgramsRef.current = loadCoachesAndPrograms;
+
     return () => {
       // Clean up all program agents
       Object.values(programAgentsRef.current).forEach((agent) => {
@@ -418,7 +431,92 @@ function ManagePrograms() {
       if (coachAgentRef.current) {
         coachAgentRef.current = null;
       }
+
+      // Clear the reload callback ref
+      reloadCoachesAndProgramsRef.current = null;
     };
+  }, [userId]);
+
+  // Callback function to reload coaches and programs
+  const reloadCoachesAndProgramsRef = useRef(null);
+
+  // Load in-progress sessions
+  const loadInProgressSessions = async () => {
+    if (!userId) return;
+
+    setSessionsLoading(true);
+    try {
+      // Get incomplete sessions (still answering questions)
+      const incompleteSessions =
+        await ProgramAgent.getIncompleteSessions(userId);
+
+      // Get completed sessions (to check for building/failed status)
+      const completedSessions = await ProgramAgent.getCompletedSessions(userId);
+
+      // Filter for sessions that are building or failed
+      const buildingOrFailedSessions = completedSessions.filter(
+        (session) =>
+          session.programGeneration?.status === "IN_PROGRESS" ||
+          session.programGeneration?.status === "FAILED",
+      );
+
+      // Check if any previously building sessions have completed
+      const currentBuildingSessionIds = new Set(
+        buildingOrFailedSessions
+          .filter((s) => s.programGeneration?.status === "IN_PROGRESS")
+          .map((s) => s.sessionId),
+      );
+
+      const previousBuildingSessionIds = previousBuildingSessionsRef.current;
+
+      // Find sessions that were building but are no longer (completed)
+      const completedSessionIds = Array.from(previousBuildingSessionIds).filter(
+        (id) => !currentBuildingSessionIds.has(id),
+      );
+
+      // If any sessions completed, refresh the programs list
+      if (completedSessionIds.length > 0) {
+        console.info(
+          `✅ ${completedSessionIds.length} program(s) completed building, refreshing programs list...`,
+        );
+        // Use the callback if available, otherwise trigger a reload
+        if (reloadCoachesAndProgramsRef.current) {
+          reloadCoachesAndProgramsRef.current();
+        }
+      }
+
+      // Update the tracking set
+      previousBuildingSessionsRef.current = currentBuildingSessionIds;
+
+      // Combine all sessions for display
+      const allActiveSessions = [
+        ...incompleteSessions,
+        ...buildingOrFailedSessions,
+      ];
+      setInProgressSessions(allActiveSessions);
+
+      // If there's a building session, set up polling
+      // (Simple polling for now - re-check every 5s)
+      const hasBuildingSession = buildingOrFailedSessions.some(
+        (session) => session.programGeneration?.status === "IN_PROGRESS",
+      );
+
+      if (hasBuildingSession) {
+        setTimeout(loadInProgressSessions, 5000);
+      }
+    } catch (error) {
+      console.error("Error loading in-progress sessions:", error);
+      setInProgressSessions([]);
+    } finally {
+      setSessionsLoading(false);
+    }
+  };
+
+  // Initial load of sessions
+  useEffect(() => {
+    if (userId) {
+      loadInProgressSessions();
+    }
   }, [userId]);
 
   // Handle pause program
@@ -600,6 +698,75 @@ function ManagePrograms() {
     setProgramToDelete(null);
   };
 
+  // Handle delete session
+  const handleDeleteSession = async (session) => {
+    setShowDeleteSessionModal(true);
+    setSessionToDelete(session);
+  };
+
+  const handleConfirmDeleteSession = async () => {
+    if (!sessionToDelete || !userId) return;
+
+    setIsDeleting(true);
+    try {
+      await ProgramAgent.deleteSession(userId, sessionToDelete.sessionId);
+      setInProgressSessions((prev) =>
+        prev.filter((s) => s.sessionId !== sessionToDelete.sessionId),
+      );
+      toast.success("Session deleted successfully");
+    } catch (error) {
+      console.error("Error deleting session:", error);
+      toast.error("Failed to delete session");
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteSessionModal(false);
+      setSessionToDelete(null);
+    }
+  };
+
+  const handleRetryBuild = async (session) => {
+    if (!userId || !session.sessionId) return;
+
+    setRetryingSessionId(session.sessionId);
+    try {
+      // Trigger rebuild
+      await ProgramAgent.retryBuild(session.sessionId, userId);
+
+      // Update session status locally
+      setInProgressSessions((prev) =>
+        prev.map((s) =>
+          s.sessionId === session.sessionId
+            ? {
+                ...s,
+                programGeneration: {
+                  status: "IN_PROGRESS",
+                  startedAt: new Date().toISOString(),
+                },
+                lastActivity: new Date().toISOString(),
+              }
+            : s,
+        ),
+      );
+      toast.success("Program build started successfully");
+
+      // Trigger polling
+      setTimeout(loadInProgressSessions, 2000);
+    } catch (error) {
+      console.error("Error retrying build:", error);
+      toast.error("Failed to retry build. Please try again.");
+    } finally {
+      setRetryingSessionId(null);
+    }
+  };
+
+  const handleContinueSession = (session) => {
+    // Navigate to program designer with existing session
+    // Use session.coachId instead of URL param to ensure correct coach
+    navigate(
+      `/training-grounds/program-designer?userId=${userId}&coachId=${session.coachId || coachId}&programDesignerSessionId=${session.sessionId}`,
+    );
+  };
+
   // Handle view program
   const handleViewProgram = (program) => {
     const primaryCoachId = program.coachIds?.[0];
@@ -609,14 +776,33 @@ function ManagePrograms() {
     );
   };
 
-  // Handle create new program - navigate to training grounds with appropriate coach
-  const handleCreateProgram = () => {
-    if (userId && coachId) {
-      // Navigate to training grounds with this coach
-      navigate(`/training-grounds?userId=${userId}&coachId=${coachId}`);
-    } else if (userId) {
-      // No coach selected - navigate to coaches page
+  // Handle create new program - create session then navigate
+  const handleCreateProgram = async () => {
+    if (!userId) {
+      navigate(`/coaches?userId=${userId || ""}`);
+      return;
+    }
+
+    if (!coachId) {
+      // No coach selected - navigate to coaches page to select one
       navigate(`/coaches?userId=${userId}`);
+      return;
+    }
+
+    setIsCreatingProgram(true);
+    try {
+      // Create a new program designer session (mirrors CoachCreator flow)
+      const result = await createProgramDesignerSession(userId, coachId);
+      const { sessionId } = result;
+
+      // Navigate to program designer with the session ID
+      navigate(
+        `/training-grounds/program-designer?userId=${userId}&coachId=${coachId}&programDesignerSessionId=${sessionId}`,
+      );
+    } catch (error) {
+      console.error("Error creating program designer session:", error);
+      toast.error("Failed to create program design session");
+      setIsCreatingProgram(false);
     }
   };
 
@@ -642,13 +828,6 @@ function ManagePrograms() {
         key={program.programId}
         className={`${containerPatterns.cardMedium} p-6 flex flex-col justify-between h-full relative`}
       >
-        {/* New Badge */}
-        {isNew && (
-          <div className="relative z-20">
-            <NewBadge />
-          </div>
-        )}
-
         {/* Actions Menu - Hide when editing */}
         {editingProgramId !== program.programId && (
           <div className="absolute top-3 right-3 z-10 actions-menu-container">
@@ -659,9 +838,9 @@ function ManagePrograms() {
                   openMenuId === program.programId ? null : program.programId,
                 );
               }}
-              className={`p-2 rounded-lg transition-all duration-200 focus:outline-none active:outline-none ${
+              className={`p-2 rounded-lg transition-colors duration-200 focus:outline-none active:outline-none focus:ring-1 focus:ring-synthwave-neon-cyan/50 ${
                 openMenuId === program.programId
-                  ? "text-synthwave-neon-cyan bg-synthwave-bg-primary/50"
+                  ? "text-synthwave-neon-cyan bg-synthwave-bg-primary/50 ring-1 ring-synthwave-neon-cyan/50"
                   : "text-synthwave-text-muted hover:text-synthwave-neon-cyan hover:bg-synthwave-bg-primary/50"
               }`}
               style={{ WebKitTapHighlightColor: "transparent" }}
@@ -707,6 +886,9 @@ function ManagePrograms() {
             )}
           </div>
         )}
+
+        {/* New Badge - placed after actions menu to appear on top in stacking order */}
+        {isNew && <NewBadge />}
 
         <div className="flex-1">
           {/* Program Name - Either editable or static */}
@@ -846,7 +1028,6 @@ function ManagePrograms() {
             {/* Adherence Rate - only for active/paused programs with meaningful rate */}
             {(program.status === PROGRAM_STATUS.ACTIVE ||
               program.status === PROGRAM_STATUS.PAUSED) &&
-              program.adherenceRate &&
               program.adherenceRate > 0 &&
               program.completedWorkouts > 0 && (
                 <div
@@ -1003,9 +1184,9 @@ function ManagePrograms() {
           {/* Compact Horizontal Header Skeleton */}
           <header className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-6">
             {/* Left: Title + Coach Card */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
               {/* Title skeleton */}
-              <div className="h-8 md:h-9 bg-synthwave-text-muted/20 rounded animate-pulse w-80"></div>
+              <div className="h-8 md:h-9 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
 
               {/* Compact coach card skeleton - horizontal pill */}
               <div className="flex items-center gap-2.5 px-3 py-2 bg-synthwave-neon-cyan/5 border border-synthwave-neon-cyan/20 rounded-full">
@@ -1020,141 +1201,137 @@ function ManagePrograms() {
 
           {/* Programs grid skeleton */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className={`${containerPatterns.cardMedium} p-6 flex flex-col justify-between h-full`}
-              >
+            {/* Add New Program Card skeleton */}
+            <div className={`${containerPatterns.dashedCard} opacity-60`}>
+              <div className="text-center h-full flex flex-col justify-between min-h-[400px]">
+                <div className="flex-1 flex flex-col justify-center items-center">
+                  <div className="w-12 h-12 bg-synthwave-text-muted/20 rounded animate-pulse mb-4"></div>
+                  <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-48 mb-3"></div>
+                  <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-56 mb-4"></div>
+                  <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-32"></div>
+                </div>
+              </div>
+            </div>
+
+            {/* Program card skeletons */}
+            {[1, 2].map((i) => (
+              <div key={i} className={`${containerPatterns.cardMedium} p-6`}>
                 <div className="flex-1">
                   {/* Program name skeleton */}
                   <div className="flex items-start space-x-3 mb-4">
                     <div className="w-3 h-3 bg-synthwave-text-muted/20 rounded-full flex-shrink-0 mt-2"></div>
-                    <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-3/4"></div>
-                  </div>
-
-                  {/* Program description skeleton */}
-                  <div className="mb-4 space-y-2">
-                    <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
-                    <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-5/6"></div>
+                    <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
                   </div>
 
                   {/* Program details skeleton */}
-                  <div className="space-y-3">
-                    {/* Coach name skeleton */}
+                  <div className="space-y-3 mb-6">
                     <div className="flex items-center space-x-2">
-                      <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded"></div>
-                      <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-32"></div>
+                      <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-32"></div>
                     </div>
-
-                    {/* Combined workout stats skeleton */}
                     <div className="flex items-center space-x-2">
-                      <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded"></div>
-                      <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
+                      <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-40"></div>
                     </div>
-
-                    {/* Last activity skeleton */}
                     <div className="flex items-center space-x-2">
-                      <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded"></div>
-                      <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-32"></div>
+                      <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-36"></div>
                     </div>
-
-                    {/* Progress skeleton */}
                     <div className="flex items-center space-x-2">
-                      <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded"></div>
-                      <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-40"></div>
-                    </div>
-
-                    {/* Progress bar skeleton */}
-                    <div className="w-full h-2 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
-
-                    {/* Created date skeleton */}
-                    <div className="flex items-center space-x-2">
-                      <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded"></div>
-                      <div className="h-2 bg-synthwave-text-muted/20 rounded animate-pulse w-28"></div>
+                      <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-28"></div>
                     </div>
                   </div>
                 </div>
 
-                {/* Action buttons skeleton */}
-                <div className="mt-6 space-y-2">
-                  <div className="h-10 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
-                  <div className="flex space-x-2">
-                    <div className="flex-1 h-10 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
-                    <div className="flex-1 h-10 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
-                  </div>
-                </div>
+                {/* Action button skeleton */}
+                <div className="h-10 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
               </div>
             ))}
+          </div>
+
+          {/* In-Progress Sessions skeleton */}
+          <div className="mt-16">
+            <div className="text-center mb-12">
+              <div className="h-7 bg-synthwave-text-muted/20 rounded animate-pulse w-80 mx-auto mb-4"></div>
+              <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-full max-w-2xl mx-auto mb-2"></div>
+              <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-full max-w-xl mx-auto"></div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {[1, 2].map((i) => (
+                <div
+                  key={i}
+                  className={`${containerPatterns.dashedCardCyan} p-6 opacity-60`}
+                >
+                  <div className="flex items-start space-x-3 mb-4">
+                    <div className="w-3 h-3 bg-synthwave-neon-cyan/30 rounded-full flex-shrink-0 mt-2"></div>
+                    <div className="flex-1">
+                      <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
+                    </div>
+                  </div>
+                  <div className="space-y-3 mb-4">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-32"></div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-40"></div>
+                    </div>
+                  </div>
+                  <div className="pt-4">
+                    <div className="h-4 bg-synthwave-neon-cyan/30 rounded animate-pulse w-36"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Paused Programs Section Skeleton */}
           <div className="mt-16">
             <div className="text-center mb-12">
-              <div className="h-8 bg-synthwave-text-muted/20 rounded animate-pulse w-64 mx-auto mb-4"></div>
-              <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-96 mx-auto"></div>
+              <div className="h-7 bg-synthwave-text-muted/20 rounded animate-pulse w-80 mx-auto mb-4"></div>
+              <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-full max-w-2xl mx-auto mb-2"></div>
+              <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-full max-w-xl mx-auto"></div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {[1, 2].map((i) => (
                 <div
                   key={`paused-skeleton-${i}`}
-                  className={`${containerPatterns.cardMedium} p-6 flex flex-col justify-between h-full`}
+                  className={`${containerPatterns.cardMedium} p-6`}
                 >
                   <div className="flex-1">
                     {/* Program name skeleton */}
                     <div className="flex items-start space-x-3 mb-4">
                       <div className="w-3 h-3 bg-synthwave-text-muted/20 rounded-full flex-shrink-0 mt-2"></div>
-                      <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-3/4"></div>
-                    </div>
-
-                    {/* Program description skeleton */}
-                    <div className="mb-4 space-y-2">
-                      <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
-                      <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-5/6"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
                     </div>
 
                     {/* Program details skeleton */}
-                    <div className="space-y-3">
-                      {/* Coach name skeleton */}
+                    <div className="space-y-3 mb-6">
                       <div className="flex items-center space-x-2">
-                        <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded"></div>
-                        <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-32"></div>
+                        <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                        <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-32"></div>
                       </div>
-
-                      {/* Combined workout stats skeleton */}
                       <div className="flex items-center space-x-2">
-                        <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded"></div>
-                        <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
+                        <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                        <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-40"></div>
                       </div>
-
-                      {/* Last activity skeleton */}
                       <div className="flex items-center space-x-2">
-                        <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded"></div>
-                        <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-32"></div>
+                        <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                        <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-36"></div>
                       </div>
-
-                      {/* Progress skeleton */}
                       <div className="flex items-center space-x-2">
-                        <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded"></div>
-                        <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-40"></div>
-                      </div>
-
-                      {/* Progress bar skeleton */}
-                      <div className="w-full h-2 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
-
-                      {/* Created date skeleton */}
-                      <div className="flex items-center space-x-2">
-                        <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded"></div>
-                        <div className="h-2 bg-synthwave-text-muted/20 rounded animate-pulse w-28"></div>
+                        <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                        <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-28"></div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Action buttons skeleton */}
-                  <div className="mt-6 space-y-2">
-                    <div className="h-10 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
-                    <div className="h-10 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
-                  </div>
+                  {/* Action button skeleton */}
+                  <div className="h-10 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
                 </div>
               ))}
             </div>
@@ -1237,109 +1414,124 @@ function ManagePrograms() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 auto-rows-fr animate-fadeIn">
           {/* Create New Program Card */}
           <div
-            onClick={handleCreateProgram}
-            className={`${containerPatterns.dashedCard} group cursor-pointer`}
+            onClick={isCreatingProgram ? undefined : handleCreateProgram}
+            className={`${containerPatterns.dashedCard} group ${
+              isCreatingProgram
+                ? "opacity-75 cursor-not-allowed"
+                : "cursor-pointer"
+            }`}
           >
             <div className="text-center h-full flex flex-col justify-between min-h-[400px]">
               {/* Top Section */}
               <div className="flex-1 flex flex-col justify-center items-center">
-                {/* Plus Icon */}
+                {/* Plus Icon or Spinner */}
                 <div className="text-synthwave-neon-pink/40 group-hover:text-synthwave-neon-pink/80 transition-colors duration-300 mb-4">
-                  <svg
-                    className="w-12 h-12"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.5}
-                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                    />
-                  </svg>
+                  {isCreatingProgram ? (
+                    <div className="w-12 h-12 border-4 border-current border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    <svg
+                      className="w-12 h-12"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.5}
+                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                      />
+                    </svg>
+                  )}
                 </div>
 
                 {/* Title */}
                 <h3 className="font-russo font-bold text-synthwave-neon-pink/60 group-hover:text-synthwave-neon-pink text-lg uppercase mb-3 transition-colors duration-300">
-                  Create Training Program
+                  {isCreatingProgram
+                    ? "Creating Session..."
+                    : "Design New Program"}
                 </h3>
 
                 {/* Description */}
                 <p
                   className={`${typographyPatterns.cardText} text-synthwave-text-secondary/60 group-hover:text-synthwave-text-secondary text-sm transition-colors duration-300 text-center mb-4 max-w-xs mx-auto`}
                 >
-                  Build a structured program with your coach through
-                  conversation
+                  {isCreatingProgram
+                    ? "Setting up your program design session"
+                    : "Chat with your coach to design a personalized training program"}
                 </p>
 
                 {/* Info Badge */}
-                <div className="bg-synthwave-neon-pink/10 border border-synthwave-neon-pink/30 rounded-lg px-3 py-1 mb-4">
-                  <p className="font-rajdhani text-synthwave-neon-pink text-xs font-semibold">
-                    Works with any coach
-                  </p>
-                </div>
+                {!isCreatingProgram && (
+                  <div className="bg-synthwave-neon-pink/10 border border-synthwave-neon-pink/30 rounded-lg px-3 py-1 mb-4">
+                    <p className="font-rajdhani text-synthwave-neon-pink text-xs font-semibold">
+                      5-10 minute guided conversation
+                    </p>
+                  </div>
+                )}
               </div>
 
-              {/* Bottom Features */}
-              <div className="border-t border-synthwave-neon-pink/20 pt-3 mt-3 pb-4">
-                <div className="grid grid-cols-1 gap-2">
-                  <div
-                    className={`flex items-center justify-center space-x-2 ${typographyPatterns.cardText} text-synthwave-text-secondary/60 group-hover:text-synthwave-text-secondary transition-colors duration-300`}
-                  >
-                    <svg
-                      className="w-3 h-3 text-synthwave-neon-pink"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+              {/* Bottom Features - Only show when not creating */}
+              {!isCreatingProgram && (
+                <div className="border-t border-synthwave-neon-pink/20 pt-3 mt-3 pb-4">
+                  <div className="grid grid-cols-1 gap-2">
+                    <div
+                      className={`flex items-center justify-center space-x-2 ${typographyPatterns.cardText} text-synthwave-text-secondary/60 group-hover:text-synthwave-text-secondary transition-colors duration-300`}
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                    <span className="text-sm">AI-Generated Workouts</span>
-                  </div>
-                  <div
-                    className={`flex items-center justify-center space-x-2 ${typographyPatterns.cardText} text-synthwave-text-secondary/60 group-hover:text-synthwave-text-secondary transition-colors duration-300`}
-                  >
-                    <svg
-                      className="w-3 h-3 text-synthwave-neon-cyan"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+                      <svg
+                        className="w-3 h-3 text-synthwave-neon-pink"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                      <span className="text-sm">AI-Generated Workouts</span>
+                    </div>
+                    <div
+                      className={`flex items-center justify-center space-x-2 ${typographyPatterns.cardText} text-synthwave-text-secondary/60 group-hover:text-synthwave-text-secondary transition-colors duration-300`}
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                    <span className="text-sm">Progress Tracking</span>
-                  </div>
-                  <div
-                    className={`flex items-center justify-center space-x-2 ${typographyPatterns.cardText} text-synthwave-text-secondary/60 group-hover:text-synthwave-text-secondary transition-colors duration-300`}
-                  >
-                    <svg
-                      className="w-3 h-3 text-synthwave-neon-purple"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+                      <svg
+                        className="w-3 h-3 text-synthwave-neon-cyan"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                      <span className="text-sm">Progress Tracking</span>
+                    </div>
+                    <div
+                      className={`flex items-center justify-center space-x-2 ${typographyPatterns.cardText} text-synthwave-text-secondary/60 group-hover:text-synthwave-text-secondary transition-colors duration-300`}
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                    <span className="text-sm">Adaptive Programming</span>
+                      <svg
+                        className="w-3 h-3 text-synthwave-neon-purple"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                      <span className="text-sm">Adaptive Programming</span>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
 
@@ -1348,6 +1540,282 @@ function ManagePrograms() {
             renderProgramCard(program),
           )}
         </div>
+
+        {/* In-Progress Program Design Sessions */}
+        {inProgressSessions && inProgressSessions.length > 0 && (
+          <div className="mt-16">
+            <div className="text-center mb-12">
+              <h2 className="font-russo font-black text-xl md:text-2xl text-white mb-4 uppercase">
+                Your In-Progress Program Designs
+              </h2>
+              <p className="font-rajdhani text-lg text-synthwave-text-secondary max-w-2xl mx-auto leading-relaxed">
+                Continue designing your training programs. Pick up exactly where
+                you left off and let's finish building something great together.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 auto-rows-fr">
+              {inProgressSessions.map((session) => {
+                // Determine session status
+                const isBuilding =
+                  session.programGeneration?.status === "IN_PROGRESS";
+                const isFailed = session.programGeneration?.status === "FAILED";
+                const isIncomplete = !session.isComplete;
+
+                // Card styling based on status
+                let cardClass, dotColor, statusColor;
+                if (isFailed) {
+                  cardClass = `${containerPatterns.dashedCardPinkBold} p-6 group`;
+                  dotColor = "bg-synthwave-neon-pink";
+                  statusColor = "text-synthwave-neon-pink";
+                } else if (isBuilding) {
+                  cardClass = `${containerPatterns.dashedCardCyan} p-6`;
+                  dotColor = "bg-synthwave-neon-cyan";
+                  statusColor = "text-synthwave-neon-cyan";
+                } else {
+                  cardClass = `${containerPatterns.dashedCardCyan} p-6 group cursor-pointer`;
+                  dotColor = "bg-synthwave-neon-cyan";
+                  statusColor = "text-synthwave-neon-cyan";
+                }
+
+                return (
+                  <div
+                    key={session.sessionId}
+                    onClick={() => {
+                      if (isIncomplete && !isBuilding && !isFailed) {
+                        handleContinueSession(session);
+                      }
+                    }}
+                    className={cardClass}
+                  >
+                    {/* Session Header */}
+                    <div className="flex items-start space-x-3 mb-4">
+                      <div
+                        className={`w-3 h-3 ${dotColor} rounded-full flex-shrink-0 mt-2`}
+                      ></div>
+                      <div className="flex-1">
+                        <h3 className="font-russo font-bold text-white text-lg uppercase">
+                          Program Design Session
+                        </h3>
+                      </div>
+                    </div>
+
+                    {/* Session Details */}
+                    <div className="space-y-3 mb-2">
+                      {/* Status */}
+                      <div
+                        className={`flex items-center space-x-2 ${statusColor}`}
+                      >
+                        {isFailed ? (
+                          <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                          </svg>
+                        ) : isBuilding ? (
+                          <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"
+                            />
+                          </svg>
+                        ) : (
+                          <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                            />
+                          </svg>
+                        )}
+                        <span className="font-rajdhani text-sm font-medium">
+                          {isFailed
+                            ? "Build Failed"
+                            : isBuilding
+                              ? "Building Program"
+                              : "Answering Questions"}
+                        </span>
+                        {isBuilding && (
+                          <div className="w-4 h-4 border-2 border-synthwave-neon-cyan border-t-transparent rounded-full animate-spin"></div>
+                        )}
+                      </div>
+
+                      {/* Coach Name */}
+                      <div className="flex items-center space-x-2 text-synthwave-text-secondary">
+                        <TargetIcon />
+                        <span className="font-rajdhani text-sm">
+                          Coach:{" "}
+                          <span className="text-synthwave-neon-cyan">
+                            {formatCoachName(session.coachName) || "Unknown"}
+                          </span>
+                        </span>
+                      </div>
+
+                      {/* Started Date */}
+                      <div className="flex items-center space-x-2 text-synthwave-text-secondary">
+                        <CalendarIcon />
+                        <span className="font-rajdhani text-sm">
+                          Started {formatDate(session.startedAt)}
+                        </span>
+                      </div>
+
+                      {/* Last Activity */}
+                      <div className="flex items-center space-x-2 text-synthwave-text-secondary">
+                        <svg
+                          className="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
+                        <span className="font-rajdhani text-sm">
+                          Last activity {formatDate(session.lastActivity)}
+                        </span>
+                      </div>
+
+                      {/* Progress - for incomplete sessions */}
+                      {isIncomplete && session.progressDetails && (
+                        <div className="space-y-2">
+                          <div className="flex items-center space-x-2 text-synthwave-neon-cyan">
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                              />
+                            </svg>
+                            <span className="font-rajdhani text-sm font-medium">
+                              Progress: {session.progressDetails.itemsCompleted}{" "}
+                              / {session.progressDetails.totalItems} (
+                              {session.progressDetails.percentage}%)
+                            </span>
+                          </div>
+                          {/* Progress Bar */}
+                          <div className="relative w-full h-2 bg-synthwave-bg-primary/50 rounded-full overflow-hidden">
+                            <div
+                              className="absolute top-0 left-0 h-full bg-gradient-to-r from-synthwave-neon-cyan to-synthwave-neon-purple rounded-full transition-all duration-500"
+                              style={{
+                                width: `${session.progressDetails.percentage}%`,
+                              }}
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Error message for failed builds */}
+                      {isFailed && session.programGeneration?.error && (
+                        <div className="bg-synthwave-neon-pink/10 border border-synthwave-neon-pink/30 rounded-lg p-3 mt-3">
+                          <p className="font-rajdhani text-xs text-synthwave-neon-pink">
+                            {session.programGeneration.error}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Action Links */}
+                    <div className="pt-2">
+                      {isIncomplete && !isBuilding && !isFailed ? (
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2 bg-transparent border-none text-synthwave-neon-cyan px-2 py-1 hover:text-white hover:bg-synthwave-neon-cyan/10 rounded-lg transition-all duration-200 font-rajdhani font-medium uppercase tracking-wide hover:cursor-pointer">
+                            <ArrowRightIcon />
+                            <span>Continue Session</span>
+                          </div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteSession(session);
+                            }}
+                            className="bg-transparent border-none text-synthwave-neon-pink px-2 py-1 hover:text-white hover:bg-synthwave-neon-pink/10 rounded-lg transition-all duration-200 font-rajdhani font-medium uppercase tracking-wide hover:cursor-pointer"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      ) : isFailed ? (
+                        <div className="flex items-center justify-between">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRetryBuild(session);
+                            }}
+                            disabled={retryingSessionId === session.sessionId}
+                            className="flex items-center space-x-2 bg-transparent border-none text-synthwave-neon-cyan px-2 py-1 hover:text-white hover:bg-synthwave-neon-cyan/10 rounded-lg transition-all duration-200 font-rajdhani font-medium uppercase tracking-wide hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <svg
+                              className={`w-4 h-4 ${retryingSessionId === session.sessionId ? "animate-spin-ccw" : ""}`}
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                              />
+                            </svg>
+                            <span>
+                              {retryingSessionId === session.sessionId
+                                ? "Retrying..."
+                                : "Retry Build"}
+                            </span>
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteSession(session);
+                            }}
+                            className="bg-transparent border-none text-synthwave-neon-pink px-2 py-1 hover:text-white hover:bg-synthwave-neon-pink/10 rounded-lg transition-all duration-200 font-rajdhani font-medium uppercase tracking-wide hover:cursor-pointer"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="text-center">
+                          <p className="font-rajdhani text-xs text-synthwave-text-muted">
+                            Program is being generated...
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Paused Programs Section */}
         {programState.pausedPrograms.length > 0 && (
@@ -1392,6 +1860,63 @@ function ManagePrograms() {
           </div>
         )}
       </div>
+
+      {/* Delete Session Confirmation Modal */}
+      {showDeleteSessionModal && sessionToDelete && (
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[10000]"
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !isDeleting) {
+              setShowDeleteSessionModal(false);
+              setSessionToDelete(null);
+            }
+          }}
+        >
+          <div
+            className={`${containerPatterns.deleteModal} p-6 max-w-md w-full mx-4`}
+          >
+            <div className="text-center">
+              <h3 className="text-synthwave-neon-pink font-rajdhani text-xl font-bold mb-2">
+                Delete Program Session
+              </h3>
+              <p className="font-rajdhani text-base text-synthwave-text-secondary mb-6">
+                Are you sure you want to delete this program design session?
+                This action cannot be undone.
+              </p>
+
+              <div className="flex space-x-4">
+                <button
+                  onClick={() => {
+                    setShowDeleteSessionModal(false);
+                    setSessionToDelete(null);
+                  }}
+                  disabled={isDeleting}
+                  className={`flex-1 ${buttonPatterns.secondarySmall} text-base disabled:opacity-50 disabled:cursor-not-allowed`}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmDeleteSession}
+                  disabled={isDeleting}
+                  className={`flex-1 ${buttonPatterns.primarySmall} text-base disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2`}
+                >
+                  {isDeleting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                      <span>Deleting...</span>
+                    </>
+                  ) : (
+                    <>
+                      <TrashIcon />
+                      <span>Delete</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && programToDelete && (

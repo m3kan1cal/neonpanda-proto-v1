@@ -17,10 +17,9 @@ import {
 import {
   getCoachConversation,
   sendCoachConversationMessage,
+  saveCoachConversation,
   getCoachConfig,
   getUserProfile,
-  getProgramCreatorSession,
-  saveProgramCreatorSession,
 } from "../../dynamodb/operations";
 import {
   CoachMessage,
@@ -53,11 +52,6 @@ import { analyzeMemoryNeeds } from "../libs/memory/detection";
 import { BuildProgramEvent } from "../libs/program/types";
 import { CONVERSATION_MODES } from "../libs/coach-conversation/types";
 import { removeTriggerFromStream } from "../libs/response-utils";
-import {
-  handleProgramCreatorFlow,
-  startProgramDesignCollection,
-} from "../libs/program-creator/handler-helpers";
-import { isProgramDesignCommand } from "../libs/program-creator";
 import {
   startWorkoutCollection,
   handleWorkoutCreatorFlow,
@@ -273,7 +267,7 @@ async function loadConversationData(
 }
 
 // Main streaming handler using PROPER pipeline approach with on-demand generation
-const streamingHandler: StreamingHandler = async (
+const internalStreamingHandler: StreamingHandler = async (
   event: AuthenticatedLambdaFunctionURLEvent,
   responseStream: any,
   context: Context,
@@ -508,135 +502,30 @@ async function* processCoachConversationAsync(
   }
 
   // ============================================================================
-  // AI-DETECTED PROGRAM DESIGN: Check if user wants to design a training program
+  // CREATE USER MESSAGE EARLY (before any early exits)
   // ============================================================================
+  // This ensures user message is always saved regardless of which flow path we take
+  const newUserMessage: CoachMessage = {
+    id: `msg_${Date.now()}_user`,
+    role: "user",
+    content: params.userResponse || "",
+    timestamp: new Date(params.messageTimestamp),
+    messageType:
+      params.imageS3Keys && params.imageS3Keys.length > 0
+        ? MESSAGE_TYPES.TEXT_WITH_IMAGES
+        : MESSAGE_TYPES.TEXT,
+    ...(params.imageS3Keys && params.imageS3Keys.length > 0
+      ? { imageS3Keys: params.imageS3Keys }
+      : {}),
+  };
 
-  // Check for program design slash command
-  const isProgramDesignSlashCommand =
-    slashCommandResult.isSlashCommand &&
-    isProgramDesignCommand(slashCommandResult.command);
-
-  // Load program creator session from DynamoDB (separate entity, not embedded in conversation)
-  let programSession = await getProgramCreatorSession(
-    params.userId,
-    params.conversationId,
-  );
-
-  // If slash command detected during existing session, soft-delete it and start fresh
-  if (isProgramDesignSlashCommand && programSession) {
-    console.info(
-      "⚡ Program design slash command detected during session - soft-deleting and restarting",
-    );
-    programSession.isDeleted = true;
-    programSession.completedAt = new Date();
-    await saveProgramCreatorSession(programSession);
-    programSession = null; // Clear for fresh start
-  }
-
-  // Check if router detected program design intent (OR slash command)
-  const isProgramDesign =
-    routerAnalysis?.programDesignDetection?.isProgramDesign ||
-    isProgramDesignSlashCommand;
-
-  if (programSession) {
-    console.info(
-      "🏗️ Program design session in progress - continuing multi-turn flow",
-    );
-
-    // Track message count before handling
-    const messageCountBefore =
-      conversationData.existingConversation.messages.length;
-
-    const businessLogicParams = { ...params, ...conversationData };
-    yield* handleProgramCreatorFlow(businessLogicParams, conversationData);
-
-    // Reload session to check if it was soft-deleted (topic change OR completion)
-    const reloadedSession = await getProgramCreatorSession(
-      params.userId,
-      params.conversationId,
-    );
-    const sessionWasDeleted = !reloadedSession || reloadedSession.isDeleted;
-    const messagesWereAdded =
-      conversationData.existingConversation.messages.length >
-      messageCountBefore;
-
-    if (sessionWasDeleted && !messagesWereAdded) {
-      console.info(
-        "🔀 Program design session ended - continuing as normal conversation",
-      );
-      programSession = null; // Clear deleted session so new session can be detected below
-      // Don't return - fall through to normal conversation processing below
-    } else {
-      return; // Exit early - handled the program design flow normally
-    }
-  }
-
-  // Handle program design intent detection - suggest to user or start immediately
-  if (isProgramDesign && !programSession) {
-    const confidence =
-      routerAnalysis?.programDesignDetection?.confidence || 1.0;
-    // Relaxed threshold (0.75) - false positives are safe with decline button
-    // Detection rules are now more inclusive to catch cases like "lightweight training plan"
-    const PROGRAM_DESIGN_CONFIDENCE_THRESHOLD = 0.75;
-    const meetsThreshold = confidence >= PROGRAM_DESIGN_CONFIDENCE_THRESHOLD;
-
-    // Slash commands bypass suggestion and start immediately (explicit user intent)
-    if (isProgramDesignSlashCommand) {
-      console.info(
-        "🎯 Program design slash command - starting session immediately",
-      );
-      const businessLogicParams = { ...params, ...conversationData };
-      yield* startProgramDesignCollection(
-        businessLogicParams,
-        conversationData,
-      );
-      return; // Exit early - handled the session start
-    }
-
-    // Natural language detection: add metadata flag to AI response
-    // Don't auto-start session - let user confirm via banner
-    if (meetsThreshold) {
-      console.info(
-        "💡 Program design intent detected - will add suggestion metadata to AI response",
-        {
-          confidence,
-          threshold: PROGRAM_DESIGN_CONFIDENCE_THRESHOLD,
-        },
-      );
-      // Flag will be added to AI message metadata below
-      // Continue with normal AI response generation
-    } else {
-      console.info(
-        "⚠️ Program design intent detected but below confidence threshold",
-        {
-          confidence,
-          threshold: PROGRAM_DESIGN_CONFIDENCE_THRESHOLD,
-        },
-      );
-    }
-  }
-
-  // Store program design suggestion flag for later use in AI message metadata
-  const shouldSuggestProgramDesign =
-    isProgramDesign &&
-    !programSession &&
-    !isProgramDesignSlashCommand &&
-    (routerAnalysis?.programDesignDetection?.confidence || 0) >= 0.75;
-
-  // If conversation mode is program_design but no session exists, start one
-  // This handles the case where user accepted the suggestion via button
-  if (
-    conversationData.existingConversation.mode ===
-      CONVERSATION_MODES.PROGRAM_DESIGN &&
-    !programSession
-  ) {
-    console.info(
-      "🎯 Program design mode active - starting session (user accepted suggestion)",
-    );
-    const businessLogicParams = { ...params, ...conversationData };
-    yield* startProgramDesignCollection(businessLogicParams, conversationData);
-    return;
-  }
+  // ============================================================================
+  // PROGRAM DESIGN IN COACH CONVERSATIONS
+  // ============================================================================
+  // The AI can help with program design in regular coach conversations.
+  // The dedicated Program Designer page exists for a guided, structured experience,
+  // but users can also get program design help here in regular chat.
+  // The AI may naturally mention the Program Designer as an option while still helping.
 
   // Step 4: Generate initial acknowledgment ONLY if router determines it's appropriate
   let contextualUpdates: string[] = [];
@@ -949,40 +838,21 @@ async function* processCoachConversationAsync(
   // Determine message mode:
   // 1. Slash command with complete data → WORKOUT_LOG
   // 2. Natural language with active session → WORKOUT_LOG
-  // 3. Otherwise → conversation's default mode
+  // 3. Otherwise → CHAT (program design is now in dedicated screen)
   const messageMode = workoutResult?.isWorkoutLogging
     ? CONVERSATION_MODES.WORKOUT_LOG
     : isInWorkoutFlow
       ? CONVERSATION_MODES.WORKOUT_LOG
-      : conversationData.existingConversation.mode || CONVERSATION_MODES.CHAT;
+      : CONVERSATION_MODES.CHAT; // Always use CHAT for regular conversations
 
-  // Yield metadata event with mode information and program design suggestion flag
+  // Yield metadata event with mode information
   const metadataPayload: any = { mode: messageMode };
-  if (shouldSuggestProgramDesign) {
-    metadataPayload.suggestProgramDesign = true;
-    metadataPayload.programDesignConfidence =
-      routerAnalysis?.programDesignDetection?.confidence;
-  }
   yield formatMetadataEvent(metadataPayload);
   console.info(
-    `📋 Metadata event sent: mode=${messageMode}${isInWorkoutFlow ? " (continuing workout flow)" : ""}${shouldSuggestProgramDesign ? " [SUGGEST_PROGRAM_DESIGN]" : ""}`,
+    `📋 Metadata event sent: mode=${messageMode}${isInWorkoutFlow ? " (continuing workout flow)" : ""}`,
   );
 
-  // Create user message and conversation context
-  const newUserMessage: CoachMessage = {
-    id: `msg_${Date.now()}_user`,
-    role: "user",
-    content: params.userResponse || "",
-    timestamp: new Date(params.messageTimestamp),
-    messageType:
-      params.imageS3Keys && params.imageS3Keys.length > 0
-        ? MESSAGE_TYPES.TEXT_WITH_IMAGES
-        : MESSAGE_TYPES.TEXT,
-    ...(params.imageS3Keys && params.imageS3Keys.length > 0
-      ? { imageS3Keys: params.imageS3Keys }
-      : {}),
-  };
-
+  // Calculate conversation context (user message already created earlier before redirects)
   const conversationContext = {
     sessionNumber:
       conversationData.existingConversation.messages.filter(
@@ -1077,12 +947,6 @@ async function* processCoachConversationAsync(
     metadata: {
       model: MODEL_IDS.CLAUDE_SONNET_4_DISPLAY,
       mode: messageMode, // Use the mode we determined earlier (same as metadata event)
-      // Add suggestion flag if program design was detected
-      ...(shouldSuggestProgramDesign && {
-        suggestProgramDesign: true,
-        programDesignConfidence:
-          routerAnalysis?.programDesignDetection?.confidence,
-      }),
       // Note: Training program generation is now async, so programId not available here
     },
   };
@@ -1232,7 +1096,7 @@ const authenticatedStreamingHandler = async (
     });
 
     // Call the authenticated handler
-    return await withStreamingAuth(streamingHandler, {
+    return await withStreamingAuth(internalStreamingHandler, {
       allowInternalCalls: false,
       requireUserId: true,
       validateUserIdMatch: true,

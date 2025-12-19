@@ -3,6 +3,7 @@ import {
   createErrorResponse,
   callBedrockApi,
   storeDebugDataInS3,
+  BedrockToolUseResult,
 } from "../libs/api-helpers";
 import {
   saveCoachConversationSummary,
@@ -18,6 +19,7 @@ import {
   storeCoachConversationSummaryInPinecone,
 } from "../libs/coach-conversation";
 import { updateCoachConversation } from "../../dynamodb/operations";
+import { CONVERSATION_SUMMARY_TOOL } from "../libs/schemas/conversation-summary-schema";
 
 export const handler = async (event: BuildCoachConversationSummaryEvent) => {
   try {
@@ -36,7 +38,7 @@ export const handler = async (event: BuildCoachConversationSummaryEvent) => {
     const conversationItem = await getCoachConversation(
       event.userId,
       event.coachId,
-      event.conversationId
+      event.conversationId,
     );
 
     if (!conversationItem) {
@@ -76,7 +78,7 @@ export const handler = async (event: BuildCoachConversationSummaryEvent) => {
     console.info("🔍 Checking for existing conversation summary..");
     const existingSummaryItem = await getCoachConversationSummary(
       event.userId,
-      event.conversationId
+      event.conversationId,
     );
     const existingSummary = existingSummaryItem;
 
@@ -90,7 +92,7 @@ export const handler = async (event: BuildCoachConversationSummaryEvent) => {
       });
     } else {
       console.info(
-        "No existing summary found - creating first summary for this conversation"
+        "No existing summary found - creating first summary for this conversation",
       );
     }
 
@@ -100,7 +102,7 @@ export const handler = async (event: BuildCoachConversationSummaryEvent) => {
       conversation,
       coachConfig,
       existingSummary ?? undefined,
-      userProfile?.criticalTrainingDirective
+      userProfile?.criticalTrainingDirective,
     );
 
     console.info("Generated summary prompt:", {
@@ -125,57 +127,93 @@ export const handler = async (event: BuildCoachConversationSummaryEvent) => {
           hasExistingSummary: !!existingSummary,
           promptLength: summaryPrompt.length,
         },
-        "conversation-summary"
+        "conversation-summary",
       );
       console.info("✅ Stored conversation summary prompt in S3 for debugging");
     } catch (err) {
       console.warn("⚠️ Failed to store prompt in S3 (non-critical):", err);
     }
 
-    // Call Claude for conversation summarization
-    console.info("🤖 Calling Claude for conversation summarization..");
+    // Call Claude for conversation summarization using toolConfig
+    console.info(
+      "🤖 Calling Claude for dual-format conversation summarization with toolConfig..",
+    );
     const conversationContent = conversation.messages
       .map((msg) => `${msg.role}: ${msg.content}`)
       .join("\n\n");
 
-    const aiResponse = await callBedrockApi(
+    // Estimate token usage for monitoring
+    const estimatedInputTokens = Math.ceil(
+      (summaryPrompt.length + conversationContent.length) / 4,
+    );
+    console.info("📊 Estimated token usage:", {
+      promptChars: summaryPrompt.length,
+      contentChars: conversationContent.length,
+      totalChars: summaryPrompt.length + conversationContent.length,
+      estimatedInputTokens,
+      estimatedCost:
+        "$" +
+        ((estimatedInputTokens / 1000) * 0.003).toFixed(4) +
+        " (input only)",
+    });
+
+    const startTime = Date.now();
+    const toolResult = (await callBedrockApi(
       summaryPrompt,
       conversationContent,
       undefined, // Use default model
-      { prefillResponse: "{" } // Force JSON output format
-    ) as string; // No tools used, always returns string
+      {
+        tools: [CONVERSATION_SUMMARY_TOOL],
+        expectedToolName: "generate_conversation_summary",
+      },
+    )) as BedrockToolUseResult; // When using tools, always returns BedrockToolUseResult
+    const endTime = Date.now();
 
-    console.info("Claude summarization completed. Raw response:", {
-      responseLength: aiResponse.length,
-      responsePreview:
-        aiResponse.substring(0, 500) + (aiResponse.length > 500 ? "..." : ""),
+    console.info("⏱️ AI call completed:", {
+      durationMs: endTime - startTime,
+      durationSeconds: Math.round((endTime - startTime) / 1000),
+      usedToolConfig: true,
+      toolName: toolResult.toolName,
     });
 
-    // Store AI response in S3 for debugging
+    // Extract the structured summary data from tool result
+    const summaryData = toolResult.input;
+    console.info("Claude summarization completed. Tool result:", {
+      toolName: toolResult.toolName,
+      hasFullSummary: !!summaryData.full_summary,
+      hasCompactSummary: !!summaryData.compact_summary,
+      fullNarrativeLength: summaryData.full_summary?.narrative?.length || 0,
+      compactNarrativeLength:
+        summaryData.compact_summary?.narrative?.length || 0,
+    });
+
+    // Store tool result in S3 for debugging
     try {
       await storeDebugDataInS3(
-        aiResponse,
+        JSON.stringify(summaryData, null, 2),
         {
-          type: "ai-response",
+          type: "tool-result",
           userId: event.userId,
           coachId: event.coachId,
           conversationId: event.conversationId,
-          responseLength: aiResponse.length,
+          toolName: toolResult.toolName,
           messageCount: conversation.messages.length,
         },
-        "conversation-summary"
+        "conversation-summary",
       );
-      console.info("✅ Stored conversation summary AI response in S3 for debugging");
+      console.info(
+        "✅ Stored conversation summary tool result in S3 for debugging",
+      );
     } catch (err) {
-      console.warn("⚠️ Failed to store AI response in S3 (non-critical):", err);
+      console.warn("⚠️ Failed to store tool result in S3 (non-critical):", err);
     }
 
-    // Parse and validate the conversation summary
-    console.info("⚙️ Parsing conversation summary..");
+    // Parse and validate the conversation summary from tool result
+    console.info("⚙️ Parsing conversation summary from tool result..");
     const summary = parseCoachConversationSummary(
-      aiResponse,
+      summaryData,
       event,
-      conversation
+      conversation,
     );
 
     console.info("Parsed conversation summary:", {
@@ -186,6 +224,10 @@ export const handler = async (event: BuildCoachConversationSummaryEvent) => {
       progressCount: summary.structuredData.recent_progress.length,
       hasEmotionalState: !!summary.structuredData.emotional_state.current_mood,
       insightCount: summary.structuredData.key_insights.length,
+      hasDualFormat: !!(summary as any).compactSummary,
+      compactSummarySize: (summary as any).compactSummary
+        ? JSON.stringify((summary as any).compactSummary).length
+        : 0,
     });
 
     // Save the conversation summary to DynamoDB
@@ -199,7 +241,7 @@ export const handler = async (event: BuildCoachConversationSummaryEvent) => {
     ) {
       console.info(
         "🏷️ Updating conversation with generated tags:",
-        summary.structuredData.conversation_tags
+        summary.structuredData.conversation_tags,
       );
       try {
         await updateCoachConversation(
@@ -208,13 +250,13 @@ export const handler = async (event: BuildCoachConversationSummaryEvent) => {
           event.conversationId,
           {
             tags: summary.structuredData.conversation_tags,
-          }
+          },
         );
         console.info("✅ Conversation tags updated successfully");
       } catch (tagUpdateError) {
         console.error(
           "⚠️ Failed to update conversation tags (non-critical):",
-          tagUpdateError
+          tagUpdateError,
         );
         // Don't fail the summary generation for tag update errors
       }
@@ -230,11 +272,15 @@ export const handler = async (event: BuildCoachConversationSummaryEvent) => {
       confidence: summary.metadata.confidence,
       triggerReason: summary.metadata.triggerReason,
       messageCount: summary.metadata.messageRange.totalMessages,
+      usedDualFormatGeneration: !!(summary as any).compactSummary,
       pineconeStored: pineconeResult.success,
       pineconeRecordId:
         pineconeResult.success && "recordId" in pineconeResult
           ? pineconeResult.recordId
           : null,
+      approachUsed: (summary as any).compactSummary
+        ? "dual-format-single-pass"
+        : "legacy-single-format",
     });
 
     return createOkResponse({

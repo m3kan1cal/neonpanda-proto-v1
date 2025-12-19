@@ -17,7 +17,7 @@ import {
   CoachConfig,
   CoachTemplate,
 } from "../functions/libs/coach-creator/types";
-import { ProgramCreatorSession } from "../functions/libs/program-creator/types";
+import { ProgramDesignerSession } from "../functions/libs/program-designer/types";
 import {
   CoachConversation,
   CoachConversationListItem,
@@ -2789,58 +2789,68 @@ export async function createCoachConfigFromTemplate(
 }
 
 // =====================================
-// PROGRAM CREATOR SESSION OPERATIONS
+// PROGRAM DESIGNER SESSION OPERATIONS
 // =====================================
 
 /**
- * Save a program creator session to DynamoDB
+ * Save a program designer session to DynamoDB
  * Pattern: Matches saveCoachCreatorSession exactly
  *
- * SK format: programCreatorSession#{sessionId}
+ * SK format: programDesignerSession#{sessionId}
  * Supports multiple sessions per conversation (user can start multiple programs)
  */
-export async function saveProgramCreatorSession(
-  session: ProgramCreatorSession,
+export async function saveProgramDesignerSession(
+  session: ProgramDesignerSession,
 ): Promise<void> {
-  // Note: No TTL - program creator sessions are permanent records
+  // Note: No TTL - program designer sessions are permanent records
   // Only soft-deleted (isDeleted flag) when program build succeeds
   // Hard-deleted only when user manually deletes incomplete session
 
-  const item = createDynamoDBItem<ProgramCreatorSession>(
-    "programCreatorSession",
+  const item = createDynamoDBItem<ProgramDesignerSession>(
+    "programDesignerSession",
     `user#${session.userId}`,
-    `programCreatorSession#${session.sessionId}`,
+    `programDesignerSession#${session.sessionId}`,
     session,
     session.lastActivity.toISOString(),
   );
 
   await saveToDynamoDB(item);
-  console.info("Program creator session saved successfully:", {
+  console.info("Program designer session saved successfully:", {
     sessionId: session.sessionId,
-    conversationId: session.conversationId,
     userId: session.userId,
   });
 }
 
 /**
- * Get a program creator session by conversation ID
- * Returns the most recent non-deleted session for this conversation
+ * Get the most recent active program designer session for a user
+ * Returns the most recent non-deleted session, or null if none exists
  *
- * Uses efficient DynamoDB query with begins_with: programCreatorSession#program_creator_{conversationId}_
+ * Design: Only ONE active session per user at a time
+ * Uses efficient DynamoDB query with begins_with: programDesignerSession#
  */
-export async function getProgramCreatorSession(
+export async function getProgramDesignerSession(
   userId: string,
-  conversationId: string,
-): Promise<ProgramCreatorSession | null> {
+  sessionId?: string,
+): Promise<ProgramDesignerSession | null> {
   try {
-    // Query sessions for this conversation using begins_with on sessionId prefix
-    const sessions = await queryFromDynamoDB<ProgramCreatorSession>(
+    // If sessionId provided, load specific session directly
+    if (sessionId) {
+      const item = await loadFromDynamoDB<ProgramDesignerSession>(
+        `user#${userId}`,
+        `programDesignerSession#${sessionId}`,
+        "programDesignerSession",
+      );
+      return item?.attributes ?? null;
+    }
+
+    // Otherwise, query all program designer sessions for this user
+    const sessions = await queryFromDynamoDB<ProgramDesignerSession>(
       `user#${userId}`,
-      `programCreatorSession#program_creator_${conversationId}_`,
-      "programCreatorSession",
+      `programDesignerSession#`,
+      "programDesignerSession",
     );
 
-    // Filter out soft-deleted sessions and sort by timestamp (most recent first)
+    // Filter out soft-deleted sessions and sort by lastActivity (most recent first)
     const activeSessions = sessions
       .map((item) => item.attributes)
       .filter((session) => !session.isDeleted)
@@ -2852,38 +2862,35 @@ export async function getProgramCreatorSession(
 
     return activeSessions[0] ?? null;
   } catch (error: any) {
-    console.error(
-      "Error getting program creator session by conversation:",
-      error,
-    );
+    console.error("Error getting program designer session:", error);
     return null;
   }
 }
 
 /**
- * Delete a program creator session
+ * Delete a program designer session
  *
  * @param userId - User ID
- * @param sessionId - Session ID (format: program_creator_{conversationId}_{timestamp})
+ * @param sessionId - Session ID (format: program_designer_{conversationId}_{timestamp})
  */
-export async function deleteProgramCreatorSession(
+export async function deleteProgramDesignerSession(
   userId: string,
   sessionId: string,
 ): Promise<void> {
   try {
     await deleteFromDynamoDB(
       `user#${userId}`,
-      `programCreatorSession#${sessionId}`,
-      "programCreatorSession",
+      `programDesignerSession#${sessionId}`,
+      "programDesignerSession",
     );
-    console.info("Program creator session deleted successfully:", {
+    console.info("Program designer session deleted successfully:", {
       sessionId,
       userId,
     });
   } catch (error: any) {
     if (error instanceof Error && error.message.includes("not found")) {
       throw new Error(
-        `Program creator session ${sessionId} not found for user ${userId}`,
+        `Program designer session ${sessionId} not found for user ${userId}`,
       );
     }
     throw error;
@@ -2891,14 +2898,13 @@ export async function deleteProgramCreatorSession(
 }
 
 /**
- * Query all program creator sessions for a user with optional filtering and sorting
+ * Query all program designer sessions for a user with optional filtering and sorting
  */
-export async function queryProgramCreatorSessions(
+export async function queryProgramDesignerSessions(
   userId: string,
   options?: {
     // Filtering options
     isComplete?: boolean;
-    conversationId?: string;
     fromDate?: Date;
     toDate?: Date;
 
@@ -2910,13 +2916,13 @@ export async function queryProgramCreatorSessions(
     sortBy?: "startedAt" | "lastActivity" | "sessionId";
     sortOrder?: "asc" | "desc";
   },
-): Promise<ProgramCreatorSession[]> {
+): Promise<ProgramDesignerSession[]> {
   try {
-    // Get all program creator sessions for the user
-    const allSessionItems = await queryFromDynamoDB<ProgramCreatorSession>(
+    // Get all program designer sessions for the user
+    const allSessionItems = await queryFromDynamoDB<ProgramDesignerSession>(
       `user#${userId}`,
-      "programCreatorSession#",
-      "programCreatorSession",
+      "programDesignerSession#",
+      "programDesignerSession",
     );
 
     // Extract attributes from DynamoDB items
@@ -2932,13 +2938,6 @@ export async function queryProgramCreatorSessions(
     if (options?.isComplete !== undefined) {
       filteredSessions = filteredSessions.filter(
         (session) => session.isComplete === options.isComplete,
-      );
-    }
-
-    // Filter by conversation ID
-    if (options?.conversationId) {
-      filteredSessions = filteredSessions.filter(
-        (session) => session.conversationId === options.conversationId,
       );
     }
 
@@ -2996,7 +2995,7 @@ export async function queryProgramCreatorSessions(
       filteredSessions = filteredSessions.slice(offset, offset + limit);
     }
 
-    console.info("Program creator sessions queried successfully:", {
+    console.info("Program designer sessions queried successfully:", {
       userId,
       totalFound: allSessions.length,
       afterFiltering: filteredSessions.length,
@@ -3004,7 +3003,7 @@ export async function queryProgramCreatorSessions(
 
     return filteredSessions;
   } catch (error: any) {
-    console.error("Error querying program creator sessions:", error);
+    console.error("Error querying program designer sessions:", error);
     throw error;
   }
 }

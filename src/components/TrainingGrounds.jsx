@@ -49,7 +49,6 @@ import CompactCoachCard from "./shared/CompactCoachCard";
 import CommandPaletteButton from "./shared/CommandPaletteButton";
 import QuickStats from "./shared/QuickStats";
 import { useNavigationContext } from "../contexts/NavigationContext";
-import { FloatingMenuManager } from "./shared/FloatingMenuManager";
 import CoachAgent from "../utils/agents/CoachAgent";
 import CoachConversationAgent from "../utils/agents/CoachConversationAgent";
 import WorkoutAgent from "../utils/agents/WorkoutAgent";
@@ -1003,14 +1002,6 @@ function TrainingGrounds() {
           </div>
         </div>
       </div>
-
-      {/* Floating Menu Manager */}
-      <FloatingMenuManager
-        userId={userId}
-        coachId={coachId}
-        currentPage="training-grounds"
-        coachData={coachData}
-      />
 
       {/* Tooltips */}
       <Tooltip

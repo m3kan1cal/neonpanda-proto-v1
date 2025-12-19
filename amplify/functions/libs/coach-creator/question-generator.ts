@@ -3,28 +3,43 @@
  * Generates next question based on conversation context and to-do list
  */
 
-import { callBedrockApi, callBedrockApiStream, MODEL_IDS } from '../api-helpers';
-import { CoachCreatorTodoList, ConversationMessage, SophisticationLevel } from './types';
-import { getTodoSummary, getTodoItemLabel, isRequiredField } from './todo-list-utils';
+import {
+  callBedrockApi,
+  callBedrockApiStream,
+  MODEL_IDS,
+} from "../api-helpers";
+import { CoachCreatorTodoList, SophisticationLevel } from "./types";
+import { CoachMessage } from "../coach-conversation/types";
+import {
+  getTodoSummary,
+  getTodoItemLabel,
+  isRequiredField,
+} from "./todo-list-utils";
 
 /**
  * Generate the next question based on conversation context and to-do list
  * Returns null if session is complete
  */
 export async function generateNextQuestion(
-  conversationHistory: ConversationMessage[],
+  conversationHistory: CoachMessage[],
   todoList: CoachCreatorTodoList,
-  sophisticationLevel: SophisticationLevel
+  sophisticationLevel: SophisticationLevel,
 ): Promise<string | null> {
-  console.info('🎯 Generating next question');
+  console.info("🎯 Generating next question");
 
   // Get summary of what's collected and what's missing
   const summary = getTodoSummary(todoList);
 
   // If all required items are complete, return completion message
   if (summary.requiredPending.length === 0) {
-    console.info('✅ All required information collected, generating completion message');
-    return generateCompletionMessage(conversationHistory, todoList, sophisticationLevel);
+    console.info(
+      "✅ All required information collected, generating completion message",
+    );
+    return generateCompletionMessage(
+      conversationHistory,
+      todoList,
+      sophisticationLevel,
+    );
   }
 
   // Check if this is the initial message (no conversation history)
@@ -33,14 +48,14 @@ export async function generateNextQuestion(
   // Build the prompt for question generation
   const systemPrompt = buildQuestionGenerationPrompt(
     summary,
-    sophisticationLevel
+    sophisticationLevel,
   );
 
   // Get recent conversation context
   const recentMessages = conversationHistory.slice(-6); // Last 6 messages
   const conversationContext = recentMessages
-    .map(m => `${m.role.toUpperCase()}: ${m.content}`)
-    .join('\n\n');
+    .map((m) => `${m.role.toUpperCase()}: ${m.content}`)
+    .join("\n\n");
 
   const userPrompt = isInitialMessage
     ? `
@@ -70,12 +85,12 @@ CONVERSATION SO FAR:
 ${conversationContext}
 
 INFORMATION COLLECTED:
-${summary.completed.join(', ')}
+${summary.completed.join(", ")}
 
 STILL NEEDED (REQUIRED):
-${summary.requiredPending.join(', ')}
+${summary.requiredPending.join(", ")}
 
-${summary.optionalPending.length > 0 ? `STILL NEEDED (OPTIONAL):\n${summary.optionalPending.join(', ')}` : ''}
+${summary.optionalPending.length > 0 ? `STILL NEEDED (OPTIONAL):\n${summary.optionalPending.join(", ")}` : ""}
 
 USER'S SOPHISTICATION LEVEL: ${sophisticationLevel}
 
@@ -94,22 +109,21 @@ Remember: You're NeonPanda - playfully powerful, energetically supportive, serio
 
   try {
     // Call Bedrock with Sonnet 4 (high quality for conversation)
-    const questionResponse = await callBedrockApi(
+    const questionResponse = (await callBedrockApi(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.CLAUDE_SONNET_4_FULL
-    ) as string;
+      MODEL_IDS.CLAUDE_SONNET_4_FULL,
+    )) as string;
 
-    console.info('✅ Generated next question');
+    console.info("✅ Generated next question");
 
     return questionResponse.trim();
-
   } catch (error) {
-    console.error('❌ Error generating question:', error);
+    console.error("❌ Error generating question:", error);
 
     // Special fallback for initial message
     if (isInitialMessage) {
-      console.warn('⚠️ Using fallback for initial message');
+      console.warn("⚠️ Using fallback for initial message");
       return `Hey! Ready to create your AI coach? This is where NeonPanda gets seriously cool. We're building you a coach that actually gets YOU. In about 15-20 minutes, we'll craft an AI coach as unique as your fingerprint, but way better at programming workouts and tracking progress. I'll adapt based on your experience level, so just be real with me. What are your main fitness goals right now?`;
     }
 
@@ -124,24 +138,30 @@ Remember: You're NeonPanda - playfully powerful, energetically supportive, serio
  * Yields chunks as they arrive from Bedrock
  */
 export async function* generateNextQuestionStream(
-  conversationHistory: ConversationMessage[],
+  conversationHistory: CoachMessage[],
   todoList: CoachCreatorTodoList,
-  sophisticationLevel: SophisticationLevel
+  sophisticationLevel: SophisticationLevel,
 ): AsyncGenerator<string, string, unknown> {
-  console.info('🎯 Generating next question (STREAMING)');
+  console.info("🎯 Generating next question (STREAMING)");
 
   // Get summary of what's collected and what's missing
   const summary = getTodoSummary(todoList);
 
   // If all required items are complete, generate completion message (non-streaming for simplicity)
   if (summary.requiredPending.length === 0) {
-    console.info('✅ All required information collected, generating completion message');
-    const completionMsg = await generateCompletionMessage(conversationHistory, todoList, sophisticationLevel);
+    console.info(
+      "✅ All required information collected, generating completion message",
+    );
+    const completionMsg = await generateCompletionMessage(
+      conversationHistory,
+      todoList,
+      sophisticationLevel,
+    );
 
     // Simulate streaming by yielding word-by-word
-    const words = completionMsg.split(' ');
+    const words = completionMsg.split(" ");
     for (let i = 0; i < words.length; i++) {
-      yield (i === 0 ? '' : ' ') + words[i];
+      yield (i === 0 ? "" : " ") + words[i];
     }
 
     return completionMsg;
@@ -153,14 +173,14 @@ export async function* generateNextQuestionStream(
   // Build the prompt for question generation
   const systemPrompt = buildQuestionGenerationPrompt(
     summary,
-    sophisticationLevel
+    sophisticationLevel,
   );
 
   // Get recent conversation context
   const recentMessages = conversationHistory.slice(-6); // Last 6 messages
   const conversationContext = recentMessages
-    .map(m => `${m.role.toUpperCase()}: ${m.content}`)
-    .join('\n\n');
+    .map((m) => `${m.role.toUpperCase()}: ${m.content}`)
+    .join("\n\n");
 
   const userPrompt = isInitialMessage
     ? `
@@ -190,12 +210,12 @@ CONVERSATION SO FAR:
 ${conversationContext}
 
 INFORMATION COLLECTED:
-${summary.completed.join(', ')}
+${summary.completed.join(", ")}
 
 STILL NEEDED (REQUIRED):
-${summary.requiredPending.join(', ')}
+${summary.requiredPending.join(", ")}
 
-${summary.optionalPending.length > 0 ? `STILL NEEDED (OPTIONAL):\n${summary.optionalPending.join(', ')}` : ''}
+${summary.optionalPending.length > 0 ? `STILL NEEDED (OPTIONAL):\n${summary.optionalPending.join(", ")}` : ""}
 
 USER'S SOPHISTICATION LEVEL: ${sophisticationLevel}
 
@@ -217,10 +237,10 @@ Remember: You're NeonPanda - playfully powerful, energetically supportive, serio
     const questionStream = await callBedrockApiStream(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.CLAUDE_SONNET_4_FULL
+      MODEL_IDS.CLAUDE_SONNET_4_FULL,
     );
 
-    let fullResponse = '';
+    let fullResponse = "";
 
     // Yield chunks as they arrive from Bedrock
     for await (const chunk of questionStream) {
@@ -228,22 +248,21 @@ Remember: You're NeonPanda - playfully powerful, energetically supportive, serio
       yield chunk;
     }
 
-    console.info('✅ Generated next question (streaming complete)');
+    console.info("✅ Generated next question (streaming complete)");
 
     return fullResponse.trim();
-
   } catch (error) {
-    console.error('❌ Error generating question (streaming):', error);
+    console.error("❌ Error generating question (streaming):", error);
 
     // Special fallback for initial message
     if (isInitialMessage) {
-      console.warn('⚠️ Using fallback for initial message');
+      console.warn("⚠️ Using fallback for initial message");
       const fallback = `Hey! Ready to create your AI coach? This is where NeonPanda gets seriously cool. We're building you a coach that actually gets YOU. In about 15-20 minutes, we'll craft an AI coach as unique as your fingerprint, but way better at programming workouts and tracking progress. I'll adapt based on your experience level, so just be real with me. What are your main fitness goals right now?`;
 
       // Simulate streaming for fallback
-      const words = fallback.split(' ');
+      const words = fallback.split(" ");
       for (let i = 0; i < words.length; i++) {
-        yield (i === 0 ? '' : ' ') + words[i];
+        yield (i === 0 ? "" : " ") + words[i];
       }
 
       return fallback;
@@ -251,12 +270,15 @@ Remember: You're NeonPanda - playfully powerful, energetically supportive, serio
 
     // Fallback: Ask about the first missing required item
     const firstMissing = summary.requiredPending[0];
-    const fallbackQuestion = generateFallbackQuestion(firstMissing, sophisticationLevel);
+    const fallbackQuestion = generateFallbackQuestion(
+      firstMissing,
+      sophisticationLevel,
+    );
 
     // Simulate streaming for fallback
-    const words = fallbackQuestion.split(' ');
+    const words = fallbackQuestion.split(" ");
     for (let i = 0; i < words.length; i++) {
-      yield (i === 0 ? '' : ' ') + words[i];
+      yield (i === 0 ? "" : " ") + words[i];
     }
 
     return fallbackQuestion;
@@ -267,11 +289,11 @@ Remember: You're NeonPanda - playfully powerful, energetically supportive, serio
  * Generate completion message when all required info is collected
  */
 async function generateCompletionMessage(
-  conversationHistory: ConversationMessage[],
+  conversationHistory: CoachMessage[],
   todoList: CoachCreatorTodoList,
-  sophisticationLevel: SophisticationLevel
+  sophisticationLevel: SophisticationLevel,
 ): Promise<string> {
-  console.info('🎉 Generating completion message');
+  console.info("🎉 Generating completion message");
 
   const systemPrompt = `You're NeonPanda's AI intake coach wrapping up an amazing conversation!
 
@@ -302,7 +324,7 @@ NO MORE QUESTIONS - we're done gathering info and the build process is STARTING 
 Generate a completion message for this user.
 
 WHAT THEY SHARED:
-${summary.completed.join(', ')}
+${summary.completed.join(", ")}
 
 SOPHISTICATION LEVEL: ${sophisticationLevel}
 
@@ -316,16 +338,15 @@ CRITICAL: Make sure to tell them about the 2-3 minute build time and that they'l
 `;
 
   try {
-    const completionMessage = await callBedrockApi(
+    const completionMessage = (await callBedrockApi(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.CLAUDE_SONNET_4_FULL
-    ) as string;
+      MODEL_IDS.CLAUDE_SONNET_4_FULL,
+    )) as string;
 
     return completionMessage.trim();
-
   } catch (error) {
-    console.error('❌ Error generating completion message, using fallback');
+    console.error("❌ Error generating completion message, using fallback");
 
     // Fallback completion message with proper expectations
     return "This is awesome! I've got everything I need to build your perfect coach. 🔥\n\n**The AI is firing up now to generate your coach - this takes about 2-3 minutes.** You'll see progress updates as it works, and when it's done, your personalized coach will be ready to start guiding your training! Hang tight! 💪";
@@ -342,7 +363,7 @@ function buildQuestionGenerationPrompt(
     requiredPending: string[];
     optionalPending: string[];
   },
-  sophisticationLevel: SophisticationLevel
+  sophisticationLevel: SophisticationLevel,
 ): string {
   return `You are NeonPanda's AI intake coach - your job is to gather information to create the user's perfect custom AI coach.
 
@@ -425,39 +446,50 @@ Your goal: Make this feel like an exciting conversation with a coach who's genui
  */
 function generateFallbackQuestion(
   missingField: string,
-  sophisticationLevel: SophisticationLevel
+  sophisticationLevel: SophisticationLevel,
 ): string {
   // Map of fallback questions for each field
-  const fallbackQuestions: Record<string, Record<SophisticationLevel, string>> = {
-    'Coach Gender Preference': {
-      UNKNOWN: "Do you have a preference for your coach's gender - male, female, or no preference?",
-      BEGINNER: "Would you prefer a male coach, female coach, or do you have no preference?",
+  const fallbackQuestions: Record<
+    string,
+    Record<SophisticationLevel, string>
+  > = {
+    "Coach Gender Preference": {
+      UNKNOWN:
+        "Do you have a preference for your coach's gender - male, female, or no preference?",
+      BEGINNER:
+        "Would you prefer a male coach, female coach, or do you have no preference?",
       INTERMEDIATE: "Do you have a gender preference for your coach?",
-      ADVANCED: "Any gender preference for your coach?"
+      ADVANCED: "Any gender preference for your coach?",
     },
-    'Primary Fitness Goals': {
+    "Primary Fitness Goals": {
       UNKNOWN: "What are your main fitness goals?",
-      BEGINNER: "What are you hoping to achieve with your training? What are your main goals?",
+      BEGINNER:
+        "What are you hoping to achieve with your training? What are your main goals?",
       INTERMEDIATE: "What are your primary fitness goals?",
-      ADVANCED: "What are your current training objectives?"
+      ADVANCED: "What are your current training objectives?",
     },
-    'Training Frequency': {
+    "Training Frequency": {
       UNKNOWN: "How many days per week can you train?",
-      BEGINNER: "How many days per week do you think you can commit to training?",
-      INTERMEDIATE: "What's your training frequency looking like? How many days per week?",
-      ADVANCED: "How many training days per week are you planning?"
+      BEGINNER:
+        "How many days per week do you think you can commit to training?",
+      INTERMEDIATE:
+        "What's your training frequency looking like? How many days per week?",
+      ADVANCED: "How many training days per week are you planning?",
     },
-    'Equipment Access': {
+    "Equipment Access": {
       UNKNOWN: "What equipment do you have access to?",
-      BEGINNER: "Tell me about your training setup - what equipment do you have available?",
+      BEGINNER:
+        "Tell me about your training setup - what equipment do you have available?",
       INTERMEDIATE: "What equipment do you have access to for training?",
-      ADVANCED: "Walk me through your equipment access and training environment."
+      ADVANCED:
+        "Walk me through your equipment access and training environment.",
     },
-    'Injury Considerations': {
-      UNKNOWN: "Do you have any injuries or physical limitations I should know about?",
+    "Injury Considerations": {
+      UNKNOWN:
+        "Do you have any injuries or physical limitations I should know about?",
       BEGINNER: "Do you have any injuries or areas we need to be careful with?",
       INTERMEDIATE: "Any current injuries or limitations I should be aware of?",
-      ADVANCED: "What's your injury history and current limitation profile?"
+      ADVANCED: "What's your injury history and current limitation profile?",
     },
   };
 
@@ -471,4 +503,3 @@ function generateFallbackQuestion(
   // Generic fallback
   return `Tell me about your ${missingField.toLowerCase()}.`;
 }
-

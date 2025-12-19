@@ -33,33 +33,58 @@ import {
 import { generateProgramSummary } from "../../program/summary";
 import { storeProgramSummaryInPinecone } from "../../program/pinecone";
 import { storeProgramDetailsInS3 } from "../../program/s3-utils";
-import {
-  storeGenerationDebugData,
-  validateProgramCompleteness,
-  calculateProgramConfidence,
-  buildPineconeContextString,
-} from "./helpers";
+import { storeGenerationDebugData, calculateProgramMetrics } from "./helpers";
+import { calculateEndDate } from "../../program/calendar-utils";
+
+/**
+ * Calculate program end date from start date and total days
+ * Uses the existing calendar-utils helper
+ */
+function ensureProgramDates(program: any): any {
+  if (!program.endDate && program.startDate && program.totalDays) {
+    console.info("📅 Calculating missing endDate", {
+      startDate: program.startDate,
+      totalDays: program.totalDays,
+    });
+    program.endDate = calculateEndDate(program.startDate, program.totalDays);
+  }
+
+  // Also set default startDate if missing
+  if (!program.startDate) {
+    console.info("📅 Setting default startDate to today");
+    program.startDate = new Date().toISOString().split("T")[0];
+    if (program.totalDays) {
+      program.endDate = calculateEndDate(program.startDate, program.totalDays);
+    }
+  }
+
+  return program;
+}
 
 /**
  * Tool-specific result types
- * (Internal to tools.ts, not exported from types.ts)
+ * Exported for use in agent and other modules
  */
 
 /**
  * Result from load_program_requirements tool
+ * Contains all context needed for program generation
  */
-interface ProgramRequirementsResult {
+export interface ProgramRequirementsResult {
   coachConfig: CoachConfig;
   userProfile: UserProfile | null;
   pineconeContext: string;
   programDuration: number; // In days
   trainingFrequency: number; // Days per week
+  trainingGoals: string[]; // Extracted from todoList
+  equipmentConstraints: string[]; // Extracted from todoList
 }
 
 /**
  * Result from generate_phase_structure tool
+ * Contains phase definitions and debug data
  */
-interface PhaseStructureResult {
+export interface PhaseStructureResult {
   phases: Array<{
     phaseId: string;
     name: string;
@@ -79,8 +104,9 @@ interface PhaseStructureResult {
 
 /**
  * Result from generate_phase_workouts tool
+ * Contains workout templates for a single phase
  */
-interface PhaseWorkoutsResult {
+export interface PhaseWorkoutsResult {
   phaseId: string;
   phaseName: string;
   workoutTemplates: WorkoutTemplate[];
@@ -94,8 +120,9 @@ interface PhaseWorkoutsResult {
 
 /**
  * Result from validate_program_structure tool
+ * Contains validation status and decisions
  */
-interface ProgramValidationResult {
+export interface ProgramValidationResult {
   isValid: boolean;
   shouldNormalize: boolean;
   confidence: number;
@@ -104,8 +131,9 @@ interface ProgramValidationResult {
 
 /**
  * Result from normalize_program_data tool
+ * Contains normalized program and summary
  */
-interface ProgramNormalizationResult {
+export interface ProgramNormalizationResult {
   normalizedProgram: Program;
   normalizationSummary: string;
   issuesFixed: number;
@@ -114,15 +142,17 @@ interface ProgramNormalizationResult {
 
 /**
  * Result from generate_program_summary tool
+ * Contains AI-generated program summary
  */
-interface ProgramSummaryResult {
+export interface ProgramSummaryResult {
   summary: string;
 }
 
 /**
  * Result from save_program_to_database tool
+ * Contains save status and storage keys
  */
-interface ProgramSaveResult {
+export interface ProgramSaveResult {
   success: boolean;
   programId: string;
   s3Key: string;
@@ -208,9 +238,13 @@ Returns: coachConfig, userProfile, pineconeContext, programDuration (days), trai
       },
     );
 
-    const pineconeContext = buildPineconeContextString(
-      pineconeResult.success ? pineconeResult.matches : [],
-    );
+    const pineconeContext =
+      pineconeResult.success && pineconeResult.matches
+        ? pineconeResult.matches
+            .map((match: any) => match.content || "")
+            .filter((content: string) => content.length > 0)
+            .join("\n\n")
+        : "";
 
     // 3. Parse program duration (supports "X weeks", "X months", or days as number)
     const programDurationRaw = todoList.programDuration?.value || "56";
@@ -253,12 +287,38 @@ Returns: coachConfig, userProfile, pineconeContext, programDuration (days), trai
         ? todoList.trainingFrequency.value
         : parseInt(todoList.trainingFrequency?.value || "4", 10);
 
+    // 5. Extract training goals (split comma-separated values into array)
+    const trainingGoalsRaw = todoList.trainingGoals?.value || "";
+    const trainingGoals =
+      typeof trainingGoalsRaw === "string"
+        ? trainingGoalsRaw
+            .split(",")
+            .map((g) => g.trim())
+            .filter((g) => g.length > 0)
+        : Array.isArray(trainingGoalsRaw)
+          ? trainingGoalsRaw
+          : [];
+
+    // 6. Extract equipment constraints
+    const equipmentAccessRaw = todoList.equipmentAccess?.value || "";
+    const equipmentConstraints =
+      typeof equipmentAccessRaw === "string"
+        ? equipmentAccessRaw
+            .split(",")
+            .map((e) => e.trim())
+            .filter((e) => e.length > 0)
+        : Array.isArray(equipmentAccessRaw)
+          ? equipmentAccessRaw
+          : [];
+
     console.info("✅ Requirements loaded:", {
       coachName: coachConfig.coach_name,
       hasUserProfile: !!userProfile,
       pineconeContextLength: pineconeContext.length,
       programDuration,
       trainingFrequency,
+      trainingGoals,
+      equipmentConstraints,
     });
 
     return {
@@ -267,6 +327,8 @@ Returns: coachConfig, userProfile, pineconeContext, programDuration (days), trai
       pineconeContext,
       programDuration,
       trainingFrequency,
+      trainingGoals,
+      equipmentConstraints,
     };
   },
 };
@@ -379,6 +441,21 @@ export const generatePhaseWorkoutsTool: Tool<ProgramDesignerContext> = {
 
 CRITICAL: Call this once PER PHASE - Claude can parallelize these calls.
 
+MULTI-SESSION TRAINING DAYS:
+- You can generate 1-5 workout templates per training day
+- Multiple templates for the same day MUST share the same groupId
+- Examples:
+  * Simple day: 1 template (e.g., "Full Body Strength")
+  * Complex day: 2-3 templates (e.g., "Squat Strength" + "Conditioning" + "Core Work")
+- Use the same dayNumber for all templates on the same training day
+- This allows tracking each session independently while grouping them logically
+
+Template Structure:
+- templateId: unique identifier for each workout template
+- groupId: shared identifier linking templates to the same training day
+- dayNumber: which day of the program (1 to totalDays)
+- Multiple templates with same dayNumber + groupId = multi-session day
+
 This tool:
 - Generates complete workout templates for a single phase
 - Creates detailed exercise prescriptions (sets, reps, loads)
@@ -391,8 +468,24 @@ PARALLELIZATION EXAMPLE:
 - Each call provides ONE phase from the phase structure
 - The agent framework will execute these in parallel
 
+🚨 CRITICAL DATA PASSING:
+You MUST pass the COMPLETE result from load_program_requirements as programContext.
+Do NOT construct programContext manually - use the entire requirementsResult object.
+
+Example:
+  const requirementsResult = await load_program_requirements(...)
+  const phaseStructureResult = await generate_phase_structure(...)
+
+  // Simple usage - program requirements are auto-retrieved
+  await generate_phase_workouts({
+    phase: phaseStructureResult.phases[0],
+    allPhases: phaseStructureResult.phases
+  })
+
 Input: Single phase definition from phase structure
-Returns: Phase with complete workout templates`,
+Returns: Phase with complete workout templates
+Note: Program requirements (coach config, training frequency, etc.) are automatically
+retrieved from the stored load_program_requirements result.`,
 
   inputSchema: {
     type: "object",
@@ -414,12 +507,8 @@ Returns: Phase with complete workout templates`,
         type: "array",
         description: "All phases from phase structure (for context)",
       },
-      programContext: {
-        type: "object",
-        description: "Full program context from load_program_requirements",
-      },
     },
-    required: ["phase", "allPhases", "programContext"],
+    required: ["phase", "allPhases"],
   },
 
   async execute(
@@ -427,11 +516,92 @@ Returns: Phase with complete workout templates`,
     context: ProgramDesignerContext,
   ): Promise<PhaseWorkoutsResult> {
     console.info("🏋️ Executing generate_phase_workouts tool", {
-      phaseName: input.phase.name,
-      phaseId: input.phase.phaseId,
+      phaseName: input.phase?.name,
+      phaseId: input.phase?.phaseId,
     });
 
-    const { phase, allPhases, programContext } = input;
+    const { phase, allPhases } = input;
+
+    // ============================================================
+    // Retrieve programContext from stored tool results
+    // ============================================================
+    // This eliminates token bloat from Claude echoing large objects
+    // through tool parameters. programContext is retrieved from memory
+    // where it was stored by load_program_requirements.
+    // ============================================================
+
+    const programContext = context.getToolResult?.("requirements");
+
+    if (!programContext) {
+      throw new Error(
+        "❌ Program requirements not loaded.\n\n" +
+          "Ensure load_program_requirements tool was called successfully before generate_phase_workouts.\n" +
+          "The requirements result is automatically stored and retrieved - no manual passing needed.",
+      );
+    }
+
+    console.info("✅ Retrieved programContext from stored tool results");
+
+    // Validate required fields in programContext
+    const requiredFields = [
+      "coachConfig",
+      "pineconeContext",
+      "programDuration",
+      "trainingFrequency",
+    ];
+    const missingFields = requiredFields.filter(
+      (field) => programContext[field] === undefined,
+    );
+
+    if (missingFields.length > 0) {
+      const errorMsg =
+        `❌ Stored program requirements are incomplete. Missing fields: ${missingFields.join(", ")}\n\n` +
+        "This indicates load_program_requirements did not return all required data.\n" +
+        "Expected fields: coachConfig, pineconeContext, programDuration, trainingFrequency";
+      console.error(errorMsg);
+      console.error("Retrieved programContext structure:", {
+        hasCoachConfig: !!programContext.coachConfig,
+        hasPineconeContext: !!programContext.pineconeContext,
+        hasProgramDuration: !!programContext.programDuration,
+        hasTrainingFrequency: !!programContext.trainingFrequency,
+        hasUserProfile: programContext.userProfile !== undefined,
+        actualKeys: Object.keys(programContext),
+      });
+      throw new Error(errorMsg);
+    }
+
+    // Additional validation for coachConfig structure
+    if (
+      programContext.coachConfig &&
+      !programContext.coachConfig.selected_personality?.primary_template
+    ) {
+      // Enhanced error diagnostics
+      const receivedStructure = {
+        hasCoachConfig: !!programContext.coachConfig,
+        coachConfigKeys: programContext.coachConfig
+          ? Object.keys(programContext.coachConfig)
+          : [],
+        hasSelectedPersonality:
+          !!programContext.coachConfig?.selected_personality,
+        hasPrimaryTemplate:
+          !!programContext.coachConfig?.selected_personality?.primary_template,
+        hasGeneratedPrompts: !!programContext.coachConfig?.generated_prompts,
+        hasSelectedMethodology:
+          !!programContext.coachConfig?.selected_methodology,
+        hasTechnicalConfig: !!programContext.coachConfig?.technical_config,
+      };
+
+      const errorMsg =
+        "❌ Retrieved coachConfig is incomplete or malformed.\n\n" +
+        "Expected: selected_personality.primary_template, generated_prompts, selected_methodology, technical_config\n" +
+        `Received: ${JSON.stringify(receivedStructure, null, 2)}\n\n` +
+        "This indicates load_program_requirements returned incomplete coach configuration data.";
+
+      console.error(errorMsg);
+      throw new Error(errorMsg);
+    }
+
+    console.info("✅ Program requirements validation passed");
 
     // Build full phase context (same structure as phase-generator expects)
     const fullContext = {
@@ -487,6 +657,11 @@ This tool checks:
 - Workout count matches training frequency
 - All templates have required fields
 
+CRITICAL: To prevent token bloat and timeouts, pass ONLY:
+- Lightweight program object (name, programId, totalDays, startDate, trainingGoals, equipmentConstraints, description, trainingFrequency)
+- Array of phaseIds (strings only)
+The tool will automatically retrieve full phase workout data from storage.
+
 Returns: isValid, shouldNormalize, confidence, validationIssues`,
 
   inputSchema: {
@@ -494,52 +669,169 @@ Returns: isValid, shouldNormalize, confidence, validationIssues`,
     properties: {
       program: {
         type: "object",
-        description: "The assembled program object",
+        description:
+          "LIGHTWEIGHT program object with basic fields: name, programId, totalDays, startDate, trainingGoals (array), equipmentConstraints (array), description, trainingFrequency. Do NOT include phases array or full workout data.",
       },
-      phases: {
+      phaseIds: {
         type: "array",
-        description: "Array of program phases",
-      },
-      workoutTemplates: {
-        type: "array",
-        description: "All workout templates from all phases",
+        description:
+          "Array of phaseIds from generated phases - tool will retrieve full data from storage",
+        items: { type: "string" },
       },
     },
-    required: ["program", "phases", "workoutTemplates"],
+    required: ["program", "phaseIds"],
   },
 
   async execute(
     input: any,
-    context: ProgramDesignerContext,
+    context: ProgramDesignerContext & { getToolResult?: (key: string) => any },
   ): Promise<ProgramValidationResult> {
     console.info("✅ Executing validate_program_structure tool");
 
-    const { program, workoutTemplates } = input;
+    let { program, phaseIds } = input;
 
-    // 1. Validate completeness
-    const validation = validateProgramCompleteness(program, workoutTemplates);
+    // Retrieve stored phase workout results and phase structure
+    let workoutTemplates: WorkoutTemplate[] = [];
+    const getToolResult = context.getToolResult;
+    if (getToolResult && phaseIds) {
+      // ROBUST: Auto-populate missing required fields from stored requirements
+      const requirementsResult = getToolResult("requirements");
+      if (requirementsResult) {
+        // Auto-populate trainingGoals if missing or empty
+        if (
+          !program.trainingGoals ||
+          (Array.isArray(program.trainingGoals) &&
+            program.trainingGoals.length === 0)
+        ) {
+          program.trainingGoals = requirementsResult.trainingGoals || [];
+          if (program.trainingGoals.length > 0) {
+            console.info(
+              `🔧 Auto-populated trainingGoals from requirements: ${program.trainingGoals.length} goals`,
+            );
+          }
+        }
 
-    console.info("Validation results:", {
-      isComplete: validation.isComplete,
-      missingFields: validation.missingFields,
-      issueCount: validation.issues.length,
-    });
+        // Auto-populate equipmentConstraints if missing or empty
+        if (
+          !program.equipmentConstraints ||
+          (Array.isArray(program.equipmentConstraints) &&
+            program.equipmentConstraints.length === 0)
+        ) {
+          program.equipmentConstraints =
+            requirementsResult.equipmentConstraints || [];
+          if (program.equipmentConstraints.length > 0) {
+            console.info(
+              `🔧 Auto-populated equipmentConstraints from requirements: ${program.equipmentConstraints.length} constraints`,
+            );
+          }
+        }
 
-    // 2. Calculate confidence
-    const confidence = calculateProgramConfidence(program, workoutTemplates);
+        // Auto-populate trainingFrequency if missing
+        if (
+          !program.trainingFrequency &&
+          requirementsResult.trainingFrequency
+        ) {
+          program.trainingFrequency = requirementsResult.trainingFrequency;
+          console.info(
+            `🔧 Auto-populated trainingFrequency from requirements: ${program.trainingFrequency}`,
+          );
+        }
+      }
 
-    console.info("Confidence score:", confidence);
+      // Get phase structure
+      const phaseStructure = getToolResult("phase_structure");
 
-    // 3. Determine if normalization is needed
+      const phaseWorkoutResults = phaseIds
+        .map((phaseId: string) => getToolResult(`phase_workouts:${phaseId}`))
+        .filter(Boolean);
+
+      // Extract all workout templates
+      workoutTemplates = phaseWorkoutResults.flatMap(
+        (result: any) => result.workoutTemplates || [],
+      );
+
+      console.info(
+        `📦 Retrieved ${workoutTemplates.length} workouts from ${phaseWorkoutResults.length} phases`,
+      );
+
+      // CRITICAL: Assemble phases array on program object before validation
+      if (
+        phaseStructure &&
+        phaseStructure.phases &&
+        phaseStructure.phases.length > 0
+      ) {
+        program.phases = phaseStructure.phases.map((phase: any) => {
+          // Find workout results for this phase
+          const phaseWorkouts = phaseWorkoutResults.find(
+            (result: any) => result.phaseId === phase.phaseId,
+          );
+
+          return {
+            phaseId: phase.phaseId,
+            name: phase.name,
+            description: phase.description,
+            startDay: phase.startDay,
+            endDay: phase.endDay,
+            durationDays: phase.durationDays,
+            workoutCount: phaseWorkouts?.workoutTemplates?.length || 0,
+          };
+        });
+
+        console.info(
+          `📦 Assembled ${program.phases.length} phases on program object`,
+        );
+      }
+    }
+
+    // Calculate missing dates before validation
+    program = ensureProgramDates(program);
+
+    // Validate program completeness
+    const isValid = !!(
+      program.programId &&
+      program.name &&
+      program.startDate &&
+      program.endDate &&
+      program.totalDays &&
+      program.phases &&
+      program.phases.length > 0 &&
+      workoutTemplates &&
+      workoutTemplates.length > 0
+    );
+
+    // Calculate confidence based on data completeness
+    let confidence = 1.0;
+    const validationIssues: string[] = [];
+
+    if (!program.programId) validationIssues.push("Missing programId");
+    if (!program.name) validationIssues.push("Missing name");
+    if (!program.startDate) validationIssues.push("Missing startDate");
+    if (!program.endDate) validationIssues.push("Missing endDate");
+    if (!program.totalDays) validationIssues.push("Missing totalDays");
+    if (!program.phases || program.phases.length === 0)
+      validationIssues.push("Missing phases");
+    if (!workoutTemplates || workoutTemplates.length === 0)
+      validationIssues.push("No workout templates");
+
+    // Deduct confidence for issues
+    confidence -= validationIssues.length * 0.1;
+    confidence = Math.max(0, Math.min(1, confidence));
+
+    // Determine if normalization is needed
     const shouldNormalize = shouldNormalizeProgram(program, confidence);
 
-    console.info("Should normalize:", shouldNormalize);
+    console.info("Validation results:", {
+      isValid,
+      confidence,
+      shouldNormalize,
+      issueCount: validationIssues.length,
+    });
 
     return {
-      isValid: validation.isComplete,
+      isValid,
       shouldNormalize,
       confidence,
-      validationIssues: [...validation.missingFields, ...validation.issues],
+      validationIssues,
     };
   },
 };
@@ -681,8 +973,8 @@ Returns: summary (string)`,
 
     const { program } = input;
 
-    // Generate AI summary
-    const summary = await generateProgramSummary(program, []);
+    // Generate AI summary with extended thinking enabled
+    const summary = await generateProgramSummary(program, [], true);
 
     console.info("Generated summary:", {
       summaryLength: summary.length,
@@ -737,32 +1029,446 @@ Returns: success, programId, s3Key, pineconeRecordId`,
         type: "string",
         description: "The AI-generated program summary",
       },
-      workoutTemplates: {
-        type: "array",
-        description: "All workout templates from all phases",
-      },
       debugData: {
         type: "object",
-        description: "Debug data collected during generation",
+        description: "Optional debug data collected during generation",
       },
     },
-    required: ["program", "summary", "workoutTemplates"],
+    required: ["program", "summary"],
   },
 
   async execute(
     input: any,
-    context: ProgramDesignerContext,
+    context: ProgramDesignerContext & { getToolResult?: (key: string) => any },
   ): Promise<ProgramSaveResult> {
     console.info("💾 Executing save_program_to_database tool");
 
-    const { program, summary, workoutTemplates, debugData = {} } = input;
+    let { program, summary, debugData = {} } = input;
 
-    // 1. Save program metadata to DynamoDB
-    console.info("Saving program to DynamoDB...");
-    await saveProgram(program);
-    console.info("✅ Program saved to DynamoDB");
+    const getToolResult = context.getToolResult;
 
-    // 2. Store workout templates in S3 (if not already done)
+    // ============================================================
+    // CRITICAL: ALWAYS retrieve workouts from stored phase results
+    // This is the SINGLE SOURCE OF TRUTH - never trust Claude's input
+    // ============================================================
+    console.info(
+      "📦 Retrieving workouts from stored phase results (single source of truth)...",
+    );
+
+    if (!getToolResult) {
+      throw new Error(
+        "Cannot retrieve workout templates - getToolResult not available in context",
+      );
+    }
+
+    if (!program.phases || program.phases.length === 0) {
+      throw new Error(
+        "Cannot retrieve workout templates - no phases defined on program object",
+      );
+    }
+
+    const phaseIds = program.phases.map((phase: any) => phase.phaseId);
+    console.info(
+      `🔍 Looking for workouts in ${phaseIds.length} phases:`,
+      phaseIds,
+    );
+
+    const phaseWorkoutResults = phaseIds
+      .map((phaseId: string) => {
+        const result = getToolResult(`phase_workouts:${phaseId}`);
+        if (result) {
+          console.info(
+            `  ✓ Found ${result.workoutTemplates?.length || 0} workouts for ${phaseId}`,
+          );
+        } else {
+          console.warn(`  ✗ No workouts found for ${phaseId}`);
+        }
+        return result;
+      })
+      .filter(Boolean);
+
+    const workoutTemplates = phaseWorkoutResults.flatMap(
+      (result: any) => result.workoutTemplates || [],
+    );
+
+    console.info(
+      `📦 Retrieved ${workoutTemplates.length} workout templates from ${phaseWorkoutResults.length} phases`,
+    );
+
+    // Validation: Ensure we have workouts
+    if (workoutTemplates.length === 0) {
+      throw new Error(
+        `No workout templates found in stored phase results. ` +
+          `Phases checked: ${phaseIds.join(", ")}. ` +
+          `Ensure generate_phase_workouts completed successfully for all phases.`,
+      );
+    }
+
+    // Validation: Check training day coverage (account for multi-session days)
+    const requirementsResult = getToolResult("requirements");
+    if (requirementsResult) {
+      const programDurationDays = requirementsResult.programDuration || 0;
+      const trainingFrequency = requirementsResult.trainingFrequency || 0;
+
+      // Calculate metrics using shared helper
+      const metrics = calculateProgramMetrics(workoutTemplates);
+      const expectedTrainingDays = Math.floor(
+        (programDurationDays / 7) * trainingFrequency,
+      );
+
+      // Group templates by day to identify multi-session days
+      const templatesByDay = workoutTemplates.reduce(
+        (acc: Record<number, any[]>, t: any) => {
+          if (!acc[t.dayNumber]) acc[t.dayNumber] = [];
+          acc[t.dayNumber].push(t);
+          return acc;
+        },
+        {} as Record<number, any[]>,
+      );
+
+      const multiSessionDays = Object.entries(templatesByDay).filter(
+        ([_, templates]) => (templates as any[]).length > 1,
+      ).length;
+
+      console.info("🔍 Workout template analysis:", {
+        totalTemplates: metrics.totalWorkoutTemplates,
+        uniqueTrainingDays: metrics.uniqueTrainingDays,
+        expectedTrainingDays,
+        multiSessionDays,
+        averageSessionsPerDay: metrics.averageSessionsPerDay,
+        dayCoverage: `${metrics.uniqueTrainingDays}/${expectedTrainingDays} days (${Math.round((metrics.uniqueTrainingDays / expectedTrainingDays) * 100)}%)`,
+      });
+
+      // Validate day coverage (allow ±20% variance)
+      const variance = expectedTrainingDays * 0.2;
+      if (
+        Math.abs(metrics.uniqueTrainingDays - expectedTrainingDays) > variance
+      ) {
+        console.warn(
+          `⚠️ Training day coverage variance: expected ~${expectedTrainingDays} days, got ${metrics.uniqueTrainingDays} days`,
+        );
+      }
+
+      // Validate reasonable sessions per day (1-5 templates per day is normal)
+      const templatesPerDay = parseFloat(metrics.averageSessionsPerDay);
+      if (templatesPerDay > 5) {
+        console.warn(
+          `⚠️ Unusually high sessions per day: ${templatesPerDay.toFixed(1)} templates/day (expected 1-5)`,
+        );
+      }
+
+      // Validate that training days are properly distributed throughout the program
+      const dayNumbers: number[] = Array.from<number>(
+        new Set(workoutTemplates.map((w: any) => w.dayNumber as number)),
+      ).sort((a, b) => a - b);
+
+      // Check for gaps in coverage
+      const gaps: string[] = [];
+      let expectedDay = 1;
+      for (const dayNum of dayNumbers) {
+        // Allow small gaps (rest days), but flag large gaps
+        const gap = dayNum - expectedDay;
+        if (gap > 7) {
+          // More than a week gap
+          gaps.push(
+            `Gap of ${gap} days between day ${expectedDay} and day ${dayNum}`,
+          );
+        }
+        expectedDay = dayNum + 1;
+      }
+
+      if (gaps.length > 0) {
+        console.warn("⚠️ Large gaps in training day coverage:", gaps);
+      }
+
+      // Validate day numbers don't exceed program duration
+      const invalidDays = dayNumbers.filter(
+        (d: number) => d < 1 || d > programDurationDays,
+      );
+      if (invalidDays.length > 0) {
+        console.error(
+          `❌ Invalid day numbers detected: ${invalidDays.join(", ")} (program is ${programDurationDays} days)`,
+        );
+      }
+
+      // Log coverage summary
+      console.info("✅ Day coverage summary:", {
+        firstDay: dayNumbers[0],
+        lastDay: dayNumbers[dayNumbers.length - 1],
+        totalDaysWithWorkouts: dayNumbers.length,
+        programDuration: programDurationDays,
+        expectedTrainingDays: expectedTrainingDays,
+        coveragePercentage: `${Math.round((dayNumbers.length / programDurationDays) * 100)}%`,
+        trainingDayCoverage: `${Math.round((dayNumbers.length / expectedTrainingDays) * 100)}%`,
+        hasGaps: gaps.length > 0,
+      });
+
+      // Validate training day coverage against expected training days (not total program days)
+      const trainingDayCoveragePercent =
+        (dayNumbers.length / expectedTrainingDays) * 100;
+      if (trainingDayCoveragePercent < 90) {
+        console.warn(
+          `⚠️ Training day coverage below 90%: ${trainingDayCoveragePercent.toFixed(0)}% (${dayNumbers.length}/${expectedTrainingDays} expected). ` +
+            `Missing training days may indicate incomplete program generation.`,
+        );
+      }
+
+      // Check for missing days at end of program (possible taper/rest period)
+      const lastWorkoutDay = dayNumbers[dayNumbers.length - 1];
+      const daysWithoutWorkouts = programDurationDays - lastWorkoutDay;
+      if (daysWithoutWorkouts > 0) {
+        console.info(
+          `ℹ️ Final ${daysWithoutWorkouts} day(s) of program have no scheduled workouts (days ${lastWorkoutDay + 1}-${programDurationDays}). ` +
+            `This may be intentional taper/recovery period.`,
+        );
+      }
+    }
+
+    // ROBUST: Auto-populate missing required fields from stored requirements
+    if (requirementsResult) {
+      // Auto-populate trainingGoals if missing or empty
+      if (
+        !program.trainingGoals ||
+        (Array.isArray(program.trainingGoals) &&
+          program.trainingGoals.length === 0)
+      ) {
+        program.trainingGoals = requirementsResult.trainingGoals || [];
+        if (program.trainingGoals.length > 0) {
+          console.info(
+            `🔧 Auto-populated trainingGoals: ${program.trainingGoals.length} goals`,
+          );
+        }
+      }
+
+      // Auto-populate equipmentConstraints if missing or empty
+      if (
+        !program.equipmentConstraints ||
+        (Array.isArray(program.equipmentConstraints) &&
+          program.equipmentConstraints.length === 0)
+      ) {
+        program.equipmentConstraints =
+          requirementsResult.equipmentConstraints || [];
+        if (program.equipmentConstraints.length > 0) {
+          console.info(
+            `🔧 Auto-populated equipmentConstraints: ${program.equipmentConstraints.length} constraints`,
+          );
+        }
+      }
+
+      // Auto-populate trainingFrequency if missing
+      if (!program.trainingFrequency && requirementsResult.trainingFrequency) {
+        program.trainingFrequency = requirementsResult.trainingFrequency;
+        console.info(
+          `🔧 Auto-populated trainingFrequency: ${program.trainingFrequency}`,
+        );
+      }
+    }
+
+    // CRITICAL: Auto-populate missing identity fields from context
+    // Claude often omits these when constructing the program object
+    console.info("Validating and auto-populating identity fields...");
+
+    if (!program.userId) {
+      program.userId = context.userId;
+      console.info(`🔧 Auto-populated userId: ${program.userId}`);
+    }
+
+    if (!program.programId) {
+      program.programId = context.programId;
+      console.info(`🔧 Auto-populated programId: ${program.programId}`);
+    }
+
+    if (!program.coachIds || program.coachIds.length === 0) {
+      program.coachIds = [context.coachId];
+      console.info(`🔧 Auto-populated coachIds: ${program.coachIds}`);
+    }
+
+    // Validate critical fields are present
+    const missingFields = [];
+    if (!program.userId) missingFields.push("userId");
+    if (!program.programId) missingFields.push("programId");
+    if (!program.coachIds || program.coachIds.length === 0)
+      missingFields.push("coachIds");
+
+    if (missingFields.length > 0) {
+      throw new Error(
+        `Program object is missing critical fields after auto-population: ${missingFields.join(", ")}. ` +
+          `Context may be invalid: userId=${context.userId}, programId=${context.programId}, coachId=${context.coachId}`,
+      );
+    }
+
+    console.info("✅ All identity fields validated and present");
+
+    // ============================================================
+    // Auto-populate coachNames from coachIds if missing or empty
+    // ============================================================
+    if (!program.coachNames || program.coachNames.length === 0) {
+      console.info("Resolving coach names from coach IDs...");
+      const coachNames: string[] = [];
+      for (const coachId of program.coachIds) {
+        try {
+          const coachConfig = await getCoachConfig(context.userId, coachId);
+          if (coachConfig?.coach_name) {
+            coachNames.push(coachConfig.coach_name);
+          }
+        } catch (error) {
+          console.error(`Failed to resolve coach name for ${coachId}:`, error);
+        }
+      }
+      program.coachNames = coachNames;
+      console.info(`🔧 Auto-populated coachNames: ${coachNames.length} names`);
+    }
+
+    // ============================================================
+    // Initialize tracking fields if not present
+    // ============================================================
+    console.info("Initializing program tracking fields...");
+
+    if (program.completedWorkouts === undefined) {
+      program.completedWorkouts = 0;
+      console.info("🔧 Initialized completedWorkouts: 0");
+    }
+
+    if (program.skippedWorkouts === undefined) {
+      program.skippedWorkouts = 0;
+      console.info("🔧 Initialized skippedWorkouts: 0");
+    }
+
+    if (program.adherenceRate === undefined) {
+      program.adherenceRate = 0;
+      console.info("🔧 Initialized adherenceRate: 0");
+    }
+
+    // Calculate totalWorkouts from workout templates
+    if (program.totalWorkouts === undefined) {
+      program.totalWorkouts = workoutTemplates.length;
+      console.info(
+        `🔧 Calculated totalWorkouts: ${program.totalWorkouts} from templates`,
+      );
+    }
+
+    if (program.lastActivityAt === undefined) {
+      program.lastActivityAt = null;
+      console.info("🔧 Initialized lastActivityAt: null");
+    }
+
+    if (program.pausedAt === undefined) {
+      program.pausedAt = null;
+      console.info("🔧 Initialized pausedAt: null");
+    }
+
+    if (program.pausedDuration === undefined) {
+      program.pausedDuration = 0;
+      console.info("🔧 Initialized pausedDuration: 0");
+    }
+
+    if (!program.adaptationLog) {
+      program.adaptationLog = [];
+      console.info("🔧 Initialized adaptationLog: []");
+    }
+
+    if (!program.dayCompletionStatus) {
+      program.dayCompletionStatus = {};
+      console.info("🔧 Initialized dayCompletionStatus: {}");
+    }
+
+    // Remove creationConversationId (no longer used)
+    if (program.creationConversationId) {
+      delete program.creationConversationId;
+      console.info("🔧 Removed creationConversationId (deprecated)");
+    }
+
+    console.info("✅ All tracking fields initialized");
+
+    // ============================================================
+    // Initialize status and currentDay BEFORE validation
+    // ============================================================
+    if (!program.status) {
+      program.status = "active";
+      console.info("🔧 Initialized status: active");
+    }
+
+    if (program.currentDay === undefined) {
+      program.currentDay = 1; // New programs start at day 1
+      console.info("🔧 Initialized currentDay: 1");
+    }
+
+    // ============================================================
+    // Validate program structure compliance
+    // ============================================================
+    console.info("Validating program structure...");
+
+    const requiredFields = {
+      // Identity
+      userId: program.userId,
+      programId: program.programId,
+      coachIds: program.coachIds,
+      coachNames: program.coachNames,
+
+      // Core metadata
+      name: program.name,
+      description: program.description,
+      status: program.status,
+
+      // Dates
+      startDate: program.startDate,
+      endDate: program.endDate,
+      totalDays: program.totalDays,
+      currentDay: program.currentDay,
+
+      // Training parameters
+      trainingGoals: program.trainingGoals,
+      equipmentConstraints: program.equipmentConstraints,
+      trainingFrequency: program.trainingFrequency,
+
+      // Tracking
+      completedWorkouts: program.completedWorkouts,
+      skippedWorkouts: program.skippedWorkouts,
+      adherenceRate: program.adherenceRate,
+      totalWorkouts: program.totalWorkouts,
+
+      // Structure
+      phases: program.phases,
+      adaptationLog: program.adaptationLog,
+      dayCompletionStatus: program.dayCompletionStatus,
+    };
+
+    const missingValidationFields = Object.entries(requiredFields)
+      .filter(([_, value]) => value === undefined || value === null)
+      .map(([field]) => field);
+
+    const emptyArrayFields = Object.entries(requiredFields)
+      .filter(
+        ([field, value]) =>
+          ["coachIds", "coachNames", "trainingGoals", "phases"].includes(
+            field,
+          ) &&
+          Array.isArray(value) &&
+          value.length === 0,
+      )
+      .map(([field]) => field);
+
+    if (missingValidationFields.length > 0) {
+      const errorMsg = `Program validation failed - missing required fields: ${missingValidationFields.join(", ")}`;
+      console.error("❌", errorMsg);
+      throw new Error(errorMsg);
+    }
+
+    if (emptyArrayFields.length > 0) {
+      const errorMsg = `Program validation failed - empty required arrays: ${emptyArrayFields.join(", ")}`;
+      console.error("❌", errorMsg);
+      throw new Error(errorMsg);
+    }
+
+    console.info("✅ Program structure validation passed", {
+      totalFields: Object.keys(requiredFields).length,
+      coachCount: program.coachIds.length,
+      phaseCount: program.phases.length,
+      totalWorkouts: program.totalWorkouts,
+      hasS3Key: !!program.s3DetailKey,
+    });
+
+    // Store workout templates in S3 FIRST (if not already done)
     let s3Key = program.s3DetailKey;
     if (!s3Key) {
       console.info("Storing program details in S3...");
@@ -786,9 +1492,39 @@ Returns: success, programId, s3Key, pineconeRecordId`,
         },
       );
       console.info("✅ Program details stored in S3:", s3Key);
+
+      // CRITICAL: Update program object with s3DetailKey BEFORE saving
+      program.s3DetailKey = s3Key;
     }
 
-    // 3. Store program summary in Pinecone (async, attempt but don't block)
+    // 4. Save program metadata to DynamoDB (with s3DetailKey)
+    console.info("Saving program to DynamoDB...");
+    await saveProgram(program);
+    console.info("✅ Program saved to DynamoDB with complete structure:", {
+      programId: program.programId,
+      name: program.name,
+      status: program.status,
+
+      // Structure
+      totalDays: program.totalDays,
+      phaseCount: program.phases.length,
+      totalWorkouts: program.totalWorkouts,
+
+      // Tracking (initialized)
+      completedWorkouts: program.completedWorkouts,
+      skippedWorkouts: program.skippedWorkouts,
+      adherenceRate: program.adherenceRate,
+
+      // Keys
+      hasS3DetailKey: !!program.s3DetailKey,
+      coachCount: program.coachIds.length,
+
+      // Validation
+      allFieldsPresent: true,
+      validationPassed: true,
+    });
+
+    // 5. Store program summary in Pinecone (async, attempt but don't block)
     console.info("Storing program summary in Pinecone (async)...");
     let pineconeAttempted = false;
     storeProgramSummaryInPinecone(context.userId, summary, program)
@@ -804,7 +1540,7 @@ Returns: success, programId, s3Key, pineconeRecordId`,
       });
     pineconeAttempted = true;
 
-    // 4. Store debug data
+    // 6. Store debug data
     await storeGenerationDebugData(
       "success",
       {

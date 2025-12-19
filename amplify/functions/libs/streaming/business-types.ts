@@ -25,8 +25,7 @@ export interface ConversationData {
 
 // Combined business logic parameters
 export interface BusinessLogicParams
-  extends ValidationParams,
-    ConversationData {}
+  extends ValidationParams, ConversationData {}
 
 // Business processing results
 export interface BusinessResults {
@@ -86,7 +85,6 @@ export interface SmartRequestRouter {
   // Intent & Contextual Updates
   userIntent:
     | "workout_logging"
-    | "program_design"
     | "memory_request"
     | "question"
     | "progress_check"
@@ -94,21 +92,28 @@ export interface SmartRequestRouter {
     | "general";
   showContextualUpdates: boolean;
 
+  // Program Design Detection (for redirect)
+  programDesignDetection?: {
+    isProgramDesignRequest: boolean;
+    confidence: number;
+    reasoning: string;
+  };
+
   // Workout Processing
   workoutDetection: {
     isWorkoutLog: boolean;
     confidence: number;
-    workoutType: "strength" | "cardio" | "flexibility" | "skill" | "competition" | "recovery" | "hybrid" | null;
+    workoutType:
+      | "strength"
+      | "cardio"
+      | "flexibility"
+      | "skill"
+      | "competition"
+      | "recovery"
+      | "hybrid"
+      | null;
     reasoning: string;
     isSlashCommand: boolean; // Track if triggered by /log-workout slash command
-  };
-
-  // Program Design Processing
-  programDesignDetection: {
-    isProgramDesign: boolean;
-    confidence: number;
-    reasoning: string;
-    isSlashCommand: boolean; // Track if triggered by /design-program slash command
   };
 
   // Memory Processing (CONSOLIDATED)

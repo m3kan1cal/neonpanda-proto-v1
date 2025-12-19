@@ -1204,6 +1204,7 @@ Examples:
 export const generateWorkoutSummary = async (
   workoutData: UniversalWorkoutSchema,
   originalMessage: string,
+  enableThinking: boolean = false,
 ): Promise<string> => {
   const summaryPrompt = `
 You are a fitness coach creating a concise summary of a completed workout for coaching context and display.
@@ -1232,6 +1233,8 @@ SUMMARY:`;
     const response = (await callBedrockApi(
       summaryPrompt,
       originalMessage,
+      undefined, // Use default model
+      { enableThinking },
     )) as string; // No tools used, always returns string
 
     // Clean up the response - remove any prefix like "SUMMARY:" and trim

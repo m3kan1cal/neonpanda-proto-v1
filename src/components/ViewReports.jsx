@@ -1,47 +1,94 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Tooltip } from 'react-tooltip';
-import { useAuthorizeUser } from '../auth/hooks/useAuthorizeUser';
-import { AccessDenied } from './shared/AccessDenied';
-import { containerPatterns, buttonPatterns, layoutPatterns, tooltipPatterns } from '../utils/ui/uiPatterns';
-import { NeonBorder, NewBadge } from './themes/SynthwaveComponents';
-import { isCurrentWeekReport, getWeekDateRange, formatWorkoutCount } from '../utils/dateUtils';
-import { useToast } from '../contexts/ToastContext';
-import ReportAgent from '../utils/agents/ReportAgent';
-import CoachAgent from '../utils/agents/CoachAgent';
-import { WorkoutAgent } from '../utils/agents/WorkoutAgent';
-import { FloatingMenuManager } from './shared/FloatingMenuManager';
-import CoachHeader from './shared/CoachHeader';
-import CompactCoachCard from './shared/CompactCoachCard';
-import CommandPaletteButton from './shared/CommandPaletteButton';
-import { useNavigationContext } from '../contexts/NavigationContext';
-import QuickStats from './shared/QuickStats';
+import React, { useState, useEffect, useRef } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
+import { Tooltip } from "react-tooltip";
+import { useAuthorizeUser } from "../auth/hooks/useAuthorizeUser";
+import { AccessDenied } from "./shared/AccessDenied";
+import {
+  containerPatterns,
+  buttonPatterns,
+  layoutPatterns,
+  tooltipPatterns,
+} from "../utils/ui/uiPatterns";
+import { NeonBorder, NewBadge } from "./themes/SynthwaveComponents";
+import {
+  isCurrentWeekReport,
+  getWeekDateRange,
+  formatWorkoutCount,
+} from "../utils/dateUtils";
+import { useToast } from "../contexts/ToastContext";
+import ReportAgent from "../utils/agents/ReportAgent";
+import CoachAgent from "../utils/agents/CoachAgent";
+import { WorkoutAgent } from "../utils/agents/WorkoutAgent";
+import CoachHeader from "./shared/CoachHeader";
+import CompactCoachCard from "./shared/CompactCoachCard";
+import CommandPaletteButton from "./shared/CommandPaletteButton";
+import { useNavigationContext } from "../contexts/NavigationContext";
+import QuickStats from "./shared/QuickStats";
 import {
   StackIcon,
   CalendarMonthIcon,
   ClockIcon,
   TargetIcon,
-} from './themes/SynthwaveComponents';
+} from "./themes/SynthwaveComponents";
 
 // Icons
 const EyeIcon = () => (
-  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+  <svg
+    className="w-5 h-5"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+    />
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+    />
   </svg>
 );
 
-
 const PreviewIcon = () => (
-  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+  <svg
+    className="w-5 h-5"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+    />
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+    />
   </svg>
 );
 
 const BarChartIcon = () => (
-  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+  <svg
+    className="w-5 h-5"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+    />
   </svg>
 );
 
@@ -64,11 +111,15 @@ const CalendarIcon = () => (
 function ViewReports() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const userId = searchParams.get('userId');
-  const coachId = searchParams.get('coachId');
+  const userId = searchParams.get("userId");
+  const coachId = searchParams.get("coachId");
 
   // Authorize that URL userId matches authenticated user
-  const { isValidating: isValidatingUserId, isValid: isValidUserId, error: userIdError } = useAuthorizeUser(userId);
+  const {
+    isValidating: isValidatingUserId,
+    isValid: isValidUserId,
+    error: userIdError,
+  } = useAuthorizeUser(userId);
   const [activeTooltip, setActiveTooltip] = useState(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
 
@@ -83,7 +134,6 @@ function ViewReports() {
   const coachAgentRef = useRef(null);
   const workoutAgentRef = useRef(null);
   const { addToast, success, error, info } = useToast();
-
 
   // Initialize workout agent
   useEffect(() => {
@@ -110,10 +160,13 @@ function ViewReports() {
         if (!coachAgentRef.current) {
           coachAgentRef.current = new CoachAgent();
         }
-        const loadedCoachData = await coachAgentRef.current.loadCoachDetails(userId, coachId);
+        const loadedCoachData = await coachAgentRef.current.loadCoachDetails(
+          userId,
+          coachId,
+        );
         setCoachData(loadedCoachData);
       } catch (error) {
-        console.error('Failed to load coach data:', error);
+        console.error("Failed to load coach data:", error);
       }
     };
 
@@ -128,36 +181,36 @@ function ViewReports() {
 
   // Report state for main page only (popover state handled by FloatingMenuManager)
   const [reportAgentState, setReportAgentState] = useState({
-    allReports: [],               // For main page grid (weekly)
-    allMonthlyReports: [],        // For monthly reports grid
-    isLoadingAllItems: !!userId,   // Start loading if we have userId
+    allReports: [], // For main page grid (weekly)
+    allMonthlyReports: [], // For monthly reports grid
+    isLoadingAllItems: !!userId, // Start loading if we have userId
     isLoadingAllMonthlyItems: false,
     isLoadingItem: false,
     error: null,
     totalCount: 0,
-    totalMonthlyCount: 0
+    totalMonthlyCount: 0,
   });
 
   // Tab state
-  const [activeTab, setActiveTab] = useState('weekly'); // 'weekly' or 'monthly'
+  const [activeTab, setActiveTab] = useState("weekly"); // 'weekly' or 'monthly'
 
   // Redirect if missing required parameters
   useEffect(() => {
     if (!userId) {
-      navigate('/training-grounds', { replace: true });
+      navigate("/training-grounds", { replace: true });
       return;
     }
   }, [userId, navigate]);
 
   // Auto-scroll to top when page loads (with scroll restoration disabled)
   useEffect(() => {
-    if ('scrollRestoration' in window.history) {
-      window.history.scrollRestoration = 'manual';
+    if ("scrollRestoration" in window.history) {
+      window.history.scrollRestoration = "manual";
     }
     window.scrollTo(0, 0);
     return () => {
-      if ('scrollRestoration' in window.history) {
-        window.history.scrollRestoration = 'auto';
+      if ("scrollRestoration" in window.history) {
+        window.history.scrollRestoration = "auto";
       }
     };
   }, []);
@@ -175,26 +228,28 @@ function ViewReports() {
 
     if (!reportAgentRef.current) {
       reportAgentRef.current = new ReportAgent(userId, (newState) => {
-        setReportAgentState(prevState => ({
+        setReportAgentState((prevState) => ({
           ...prevState,
           // Handle both weekly and monthly reports
           allReports: newState.allReports || prevState.allReports,
-          allMonthlyReports: newState.allMonthlyReports || prevState.allMonthlyReports,
+          allMonthlyReports:
+            newState.allMonthlyReports || prevState.allMonthlyReports,
           isLoadingAllItems: newState.isLoadingAllItems || false,
           isLoadingAllMonthlyItems: newState.isLoadingAllMonthlyItems || false,
           isLoadingItem: newState.isLoadingItem || false,
           error: newState.error || null,
           totalCount: newState.allReports?.length || prevState.totalCount,
-          totalMonthlyCount: newState.allMonthlyReports?.length || prevState.totalMonthlyCount
+          totalMonthlyCount:
+            newState.allMonthlyReports?.length || prevState.totalMonthlyCount,
         }));
       });
 
       // Set up error callback
       reportAgentRef.current.onError = (error) => {
-        console.error('Report agent error:', error);
-        setReportAgentState(prevState => ({
+        console.error("Report agent error:", error);
+        setReportAgentState((prevState) => ({
           ...prevState,
-          error: error.message || 'Failed to load reports'
+          error: error.message || "Failed to load reports",
         }));
       };
     }
@@ -207,8 +262,6 @@ function ViewReports() {
     };
   }, [userId]);
 
-
-
   // Load all reports (recent descending order)
   useEffect(() => {
     if (!userId || !reportAgentRef.current) return;
@@ -216,20 +269,20 @@ function ViewReports() {
     const loadReports = async () => {
       try {
         // Ensure loading state is active
-        setReportAgentState(prevState => ({
+        setReportAgentState((prevState) => ({
           ...prevState,
           isLoadingAllItems: true,
-          error: null
+          error: null,
         }));
 
         // Load all weekly reports without date filtering
         await reportAgentRef.current.loadAllReports({
-          sortBy: 'weekStart',
-          sortOrder: 'desc',
-          limit: 100  // Get up to 100 reports (increased from 50)
+          sortBy: "weekStart",
+          sortOrder: "desc",
+          limit: 100, // Get up to 100 reports (increased from 50)
         });
       } catch (error) {
-        console.error('Error loading report history:', error);
+        console.error("Error loading report history:", error);
         // Error handling is done by the agent callback
       }
     };
@@ -244,20 +297,20 @@ function ViewReports() {
     const loadMonthlyReports = async () => {
       try {
         // Ensure loading state is active
-        setReportAgentState(prevState => ({
+        setReportAgentState((prevState) => ({
           ...prevState,
           isLoadingAllMonthlyItems: true,
-          error: null
+          error: null,
         }));
 
         // Load all monthly reports
         await reportAgentRef.current.loadAllMonthlyReports({
-          sortBy: 'monthStart',
-          sortOrder: 'desc',
-          limit: 50
+          sortBy: "monthStart",
+          sortOrder: "desc",
+          limit: 50,
         });
       } catch (error) {
-        console.error('Error loading monthly report history:', error);
+        console.error("Error loading monthly report history:", error);
         // Error handling is done by the agent callback
       }
     };
@@ -269,60 +322,86 @@ function ViewReports() {
   const formatReportDate = (dateString) => {
     const date = new Date(dateString);
     return {
-      date: date.toLocaleDateString('en-US', {
-        month: '2-digit',
-        day: '2-digit',
-        year: 'numeric'
+      date: date.toLocaleDateString("en-US", {
+        month: "2-digit",
+        day: "2-digit",
+        year: "numeric",
       }),
-      time: date.toLocaleTimeString('en-US', {
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true
-      })
+      time: date.toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      }),
     };
   };
 
   // Render monthly report card
   const renderMonthlyReportCard = (report) => {
     // Use AI's actual session count (deduped) instead of raw workout count from DB
-    const workoutCount = report.analyticsData?.structured_analytics?.metadata?.sessions_completed || report.metadata?.workoutCount || 0;
+    const workoutCount =
+      report.analyticsData?.structured_analytics?.metadata
+        ?.sessions_completed ||
+      report.metadata?.workoutCount ||
+      0;
     const conversationCount = report.metadata?.conversationCount || 0;
     const memoryCount = report.metadata?.memoryCount || 0;
-    const analysisConfidence = report.metadata?.analysisConfidence || 'medium';
-    const dataCompleteness = Math.round((report.metadata?.dataCompleteness || 0.5) * 100);
+    const analysisConfidence = report.metadata?.analysisConfidence || "medium";
+    const dataCompleteness = Math.round(
+      (report.metadata?.dataCompleteness || 0.5) * 100,
+    );
 
     // Extract top priority insight from structured analytics
-    const topPriority = report.analyticsData?.structured_analytics?.actionable_insights?.top_priority?.insight;
+    const topPriority =
+      report.analyticsData?.structured_analytics?.actionable_insights
+        ?.top_priority?.insight;
     const humanSummary = report.analyticsData?.human_summary;
 
     // Get a preview of the human summary
     const summaryPreview = humanSummary
-      ? humanSummary.split('\n').slice(0, 4).join(' ').substring(0, 250) + '...'
-      : 'Comprehensive monthly training analysis with performance insights and recommendations.';
+      ? humanSummary.split("\n").slice(0, 4).join(" ").substring(0, 250) + "..."
+      : "Comprehensive monthly training analysis with performance insights and recommendations.";
 
     // Format month name (e.g., "2025-10" -> "October 2025")
-    const [year, month] = report.monthId.split('-');
-    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
-                        'July', 'August', 'September', 'October', 'November', 'December'];
+    const [year, month] = report.monthId.split("-");
+    const monthNames = [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
+    ];
     const monthName = monthNames[parseInt(month) - 1];
     const formattedMonth = `${monthName} ${year}`;
 
-    const createdAt = new Date(report.createdAt).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
+    const createdAt = new Date(report.createdAt).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
     });
 
     // Check if this is current month
     const now = new Date();
-    const isCurrentMonth = report.monthId === `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const isCurrentMonth =
+      report.monthId ===
+      `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 
     return (
       <div
         key={report.monthId}
         data-report-card
         className={`${containerPatterns.cardMedium} p-5 group transition-all duration-300 hover:border-synthwave-neon-purple/40 hover:bg-synthwave-bg-card/40 relative cursor-pointer flex flex-col h-full`}
-        onClick={() => navigate(`/training-grounds/reports/monthly?userId=${userId}&monthId=${report.monthId}&coachId=${coachId || 'default'}`)}
+        onClick={() =>
+          navigate(
+            `/training-grounds/reports/monthly?userId=${userId}&monthId=${report.monthId}&coachId=${coachId || "default"}`,
+          )
+        }
       >
         {/* NEW badge for current month reports */}
         {isCurrentMonth && <NewBadge />}
@@ -338,12 +417,12 @@ function ViewReports() {
                 if (activeTooltip === report.monthId) {
                   setActiveTooltip(null);
                 } else {
-                  const reportCard = e.target.closest('[data-report-card]');
+                  const reportCard = e.target.closest("[data-report-card]");
                   if (reportCard) {
                     const rect = reportCard.getBoundingClientRect();
                     setTooltipPosition({
                       x: rect.left + rect.width / 2,
-                      y: rect.bottom + 10
+                      y: rect.bottom + 10,
                     });
                   }
                   setActiveTooltip(report.monthId);
@@ -402,21 +481,45 @@ function ViewReports() {
               {workoutCount}
             </div>
             <div className="text-xs text-synthwave-text-muted font-rajdhani flex items-center justify-center gap-1">
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              <svg
+                className="w-3 h-3"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 10V3L4 14h7v7l9-11h-7z"
+                />
               </svg>
-              {workoutCount === 1 ? 'Workout' : 'Workouts'}
+              {workoutCount === 1 ? "Workout" : "Workouts"}
             </div>
           </div>
 
           {/* AI Confidence */}
           <div className="text-center p-2 bg-synthwave-bg-primary/30 rounded-lg">
             <div className="text-lg font-russo font-bold text-white mb-1">
-              {analysisConfidence === 'high' ? 'High' : analysisConfidence === 'medium' ? 'Med' : 'Low'}
+              {analysisConfidence === "high"
+                ? "High"
+                : analysisConfidence === "medium"
+                  ? "Med"
+                  : "Low"}
             </div>
             <div className="text-xs text-synthwave-text-muted font-rajdhani flex items-center justify-center gap-1">
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+              <svg
+                className="w-3 h-3"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                />
               </svg>
               AI Confidence
             </div>
@@ -428,8 +531,18 @@ function ViewReports() {
               {dataCompleteness}%
             </div>
             <div className="text-xs text-synthwave-text-muted font-rajdhani flex items-center justify-center gap-1">
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              <svg
+                className="w-3 h-3"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                />
               </svg>
               Complete
             </div>
@@ -463,29 +576,43 @@ function ViewReports() {
   const renderReportCard = (report) => {
     const dateRange = getWeekDateRange(report);
     // Use AI's actual session count (deduped) instead of raw workout count from DB
-    const workoutCount = report.analyticsData?.structured_analytics?.metadata?.sessions_completed || report.metadata?.workoutCount || 0;
+    const workoutCount =
+      report.analyticsData?.structured_analytics?.metadata
+        ?.sessions_completed ||
+      report.metadata?.workoutCount ||
+      0;
     const conversationCount = report.metadata?.conversationCount || 0;
     const memoryCount = report.metadata?.memoryCount || 0;
-    const analysisConfidence = report.metadata?.analysisConfidence || 'medium';
-    const dataCompleteness = Math.round((report.metadata?.dataCompleteness || 0.5) * 100);
+    const analysisConfidence = report.metadata?.analysisConfidence || "medium";
+    const dataCompleteness = Math.round(
+      (report.metadata?.dataCompleteness || 0.5) * 100,
+    );
     const isNew = isCurrentWeekReport(report.weekId);
 
     // Extract top priority insight from structured analytics
-    const topPriority = report.analyticsData?.structured_analytics?.actionable_insights?.top_priority?.insight;
+    const topPriority =
+      report.analyticsData?.structured_analytics?.actionable_insights
+        ?.top_priority?.insight;
     const humanSummary = report.analyticsData?.human_summary;
 
     // Get a preview of the human summary
     const summaryPreview = humanSummary
-      ? humanSummary.split('\n').slice(0, 4).join(' ').substring(0, 250) + '...'
-      : 'Comprehensive weekly training analysis with performance insights and recommendations.';
+      ? humanSummary.split("\n").slice(0, 4).join(" ").substring(0, 250) + "..."
+      : "Comprehensive weekly training analysis with performance insights and recommendations.";
 
     // Format dates
-    const weekStart = new Date(report.weekStart).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    const weekEnd = new Date(report.weekEnd).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    const createdAt = new Date(report.createdAt).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
+    const weekStart = new Date(report.weekStart).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+    });
+    const weekEnd = new Date(report.weekEnd).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+    });
+    const createdAt = new Date(report.createdAt).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
     });
 
     return (
@@ -493,7 +620,11 @@ function ViewReports() {
         key={report.weekId}
         data-report-card
         className={`${containerPatterns.cardMedium} p-5 group transition-all duration-300 hover:border-synthwave-neon-cyan/40 hover:bg-synthwave-bg-card/40 relative cursor-pointer flex flex-col h-full`}
-        onClick={() => navigate(`/training-grounds/reports/weekly?userId=${userId}&weekId=${report.weekId}&coachId=${coachId || 'default'}`)}
+        onClick={() =>
+          navigate(
+            `/training-grounds/reports/weekly?userId=${userId}&weekId=${report.weekId}&coachId=${coachId || "default"}`,
+          )
+        }
       >
         {/* NEW badge for current week reports */}
         {isNew && <NewBadge />}
@@ -510,12 +641,12 @@ function ViewReports() {
                   setActiveTooltip(null);
                 } else {
                   // Get the report card element (the parent with relative positioning)
-                  const reportCard = e.target.closest('[data-report-card]');
+                  const reportCard = e.target.closest("[data-report-card]");
                   if (reportCard) {
                     const rect = reportCard.getBoundingClientRect();
                     setTooltipPosition({
                       x: rect.left + rect.width / 2, // Center horizontally on the card
-                      y: rect.bottom + 10 // Position below the card with some spacing
+                      y: rect.bottom + 10, // Position below the card with some spacing
                     });
                   }
                   setActiveTooltip(report.weekId);
@@ -567,21 +698,45 @@ function ViewReports() {
               {workoutCount}
             </div>
             <div className="text-xs text-synthwave-text-muted font-rajdhani flex items-center justify-center gap-1">
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              <svg
+                className="w-3 h-3"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 10V3L4 14h7v7l9-11h-7z"
+                />
               </svg>
-              {workoutCount === 1 ? 'Workout' : 'Workouts'}
+              {workoutCount === 1 ? "Workout" : "Workouts"}
             </div>
           </div>
 
           {/* AI Confidence */}
           <div className="text-center p-2 bg-synthwave-bg-primary/30 rounded-lg">
             <div className="text-lg font-russo font-bold text-white mb-1">
-              {analysisConfidence === 'high' ? 'High' : analysisConfidence === 'medium' ? 'Med' : 'Low'}
+              {analysisConfidence === "high"
+                ? "High"
+                : analysisConfidence === "medium"
+                  ? "Med"
+                  : "Low"}
             </div>
             <div className="text-xs text-synthwave-text-muted font-rajdhani flex items-center justify-center gap-1">
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+              <svg
+                className="w-3 h-3"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                />
               </svg>
               AI Confidence
             </div>
@@ -593,8 +748,18 @@ function ViewReports() {
               {dataCompleteness}%
             </div>
             <div className="text-xs text-synthwave-text-muted font-rajdhani flex items-center justify-center gap-1">
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              <svg
+                className="w-3 h-3"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                />
               </svg>
               Complete
             </div>
@@ -634,37 +799,45 @@ function ViewReports() {
     userId,
     coachId,
     setCoachData,
-    { success: (msg) => addToast(msg, 'success'), error: (msg) => addToast(msg, 'error') }
+    {
+      success: (msg) => addToast(msg, "success"),
+      error: (msg) => addToast(msg, "error"),
+    },
   );
 
   // Close tooltip when clicking outside or pressing escape
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (activeTooltip && !event.target.closest('[data-tooltip-content]')) {
+      if (activeTooltip && !event.target.closest("[data-tooltip-content]")) {
         setActiveTooltip(null);
       }
     };
 
     const handleKeyDown = (event) => {
-      if (event.key === 'Escape') {
+      if (event.key === "Escape") {
         if (activeTooltip) {
           setActiveTooltip(null);
         }
       }
     };
 
-    document.addEventListener('click', handleClickOutside);
-    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener("click", handleClickOutside);
+    document.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      document.removeEventListener('click', handleClickOutside);
-      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener("click", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
     };
   }, [activeTooltip]);
 
   // Show loading while validating userId or loading reports
-  if (isValidatingUserId || (reportAgentState.isLoadingAllItems && reportAgentState.allReports.length === 0) ||
-      (reportAgentState.isLoadingAllMonthlyItems && reportAgentState.allMonthlyReports.length === 0)) {
+  if (
+    isValidatingUserId ||
+    (reportAgentState.isLoadingAllItems &&
+      reportAgentState.allReports.length === 0) ||
+    (reportAgentState.isLoadingAllMonthlyItems &&
+      reportAgentState.allMonthlyReports.length === 0)
+  ) {
     return (
       <div className={layoutPatterns.pageContainer}>
         <div className={layoutPatterns.contentWrapper}>
@@ -706,7 +879,10 @@ function ViewReports() {
           <div className="mb-8">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div key={i} className={`${containerPatterns.cardMedium} p-5 flex flex-col h-72`}>
+                <div
+                  key={i}
+                  className={`${containerPatterns.cardMedium} p-5 flex flex-col h-72`}
+                >
                   {/* Action button skeleton */}
                   <div className="absolute top-4 right-4 w-8 h-8 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
 
@@ -719,7 +895,10 @@ function ViewReports() {
                   {/* Performance stats grid skeleton */}
                   <div className="grid grid-cols-3 gap-3 mb-4">
                     {[1, 2, 3].map((j) => (
-                      <div key={j} className="text-center p-2 bg-synthwave-bg-primary/30 rounded-lg">
+                      <div
+                        key={j}
+                        className="text-center p-2 bg-synthwave-bg-primary/30 rounded-lg"
+                      >
                         <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-8 mx-auto mb-1"></div>
                         <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-12 mx-auto"></div>
                       </div>
@@ -764,41 +943,63 @@ function ViewReports() {
   }
 
   // Find the active report for tooltip display (works for both weekly and monthly)
-  const activeReport = activeTab === 'weekly'
-    ? reportAgentState.allReports.find(r => r.weekId === activeTooltip)
-    : reportAgentState.allMonthlyReports.find(r => r.monthId === activeTooltip);
+  const activeReport =
+    activeTab === "weekly"
+      ? reportAgentState.allReports.find((r) => r.weekId === activeTooltip)
+      : reportAgentState.allMonthlyReports.find(
+          (r) => r.monthId === activeTooltip,
+        );
 
   return (
     <>
       {/* Global tooltip - rendered outside all containers */}
-      {activeTooltip && activeReport && activeReport.analyticsData?.structured_analytics?.actionable_insights?.top_priority && (
-        <div
-          className="fixed w-[32rem] max-w-screen-md opacity-100 transition-opacity duration-300 z-[9999] transform -translate-x-1/2"
-          style={{
-            left: `${tooltipPosition.x}px`,
-            top: `${tooltipPosition.y}px`
-          }}
-        >
-          <div className="bg-synthwave-bg-card/95 backdrop-blur-md border-2 border-synthwave-neon-cyan/30 rounded-lg shadow-2xl shadow-synthwave-neon-cyan/20 p-4" data-tooltip-content>
-            <div className="flex justify-between items-center mb-2">
-              <div className="text-synthwave-neon-cyan font-rajdhani font-bold text-sm uppercase">
-                Top Priority Insight
+      {activeTooltip &&
+        activeReport &&
+        activeReport.analyticsData?.structured_analytics?.actionable_insights
+          ?.top_priority && (
+          <div
+            className="fixed w-[32rem] max-w-screen-md opacity-100 transition-opacity duration-300 z-[9999] transform -translate-x-1/2"
+            style={{
+              left: `${tooltipPosition.x}px`,
+              top: `${tooltipPosition.y}px`,
+            }}
+          >
+            <div
+              className="bg-synthwave-bg-card/95 backdrop-blur-md border-2 border-synthwave-neon-cyan/30 rounded-lg shadow-2xl shadow-synthwave-neon-cyan/20 p-4"
+              data-tooltip-content
+            >
+              <div className="flex justify-between items-center mb-2">
+                <div className="text-synthwave-neon-cyan font-rajdhani font-bold text-sm uppercase">
+                  Top Priority Insight
+                </div>
+                <button
+                  onClick={() => setActiveTooltip(null)}
+                  className="text-synthwave-text-secondary hover:text-synthwave-neon-cyan transition-colors duration-200"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
               </div>
-              <button
-                onClick={() => setActiveTooltip(null)}
-                className="text-synthwave-text-secondary hover:text-synthwave-neon-cyan transition-colors duration-200"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            <div className="text-synthwave-text-primary font-rajdhani text-sm leading-relaxed">
-              {activeReport.analyticsData.structured_analytics.actionable_insights.top_priority.insight}
+              <div className="text-synthwave-text-primary font-rajdhani text-sm leading-relaxed">
+                {
+                  activeReport.analyticsData.structured_analytics
+                    .actionable_insights.top_priority.insight
+                }
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
       <div className={layoutPatterns.pageContainer}>
         <div className={layoutPatterns.contentWrapper}>
@@ -830,137 +1031,173 @@ function ViewReports() {
 
             {/* Right section: Command Palette Button */}
             <div className="flex items-center gap-3">
-              <CommandPaletteButton onClick={() => setIsCommandPaletteOpen(true)} />
+              <CommandPaletteButton
+                onClick={() => setIsCommandPaletteOpen(true)}
+              />
             </div>
           </header>
 
           {/* Quick Stats */}
           <QuickStats
             stats={
-              activeTab === 'weekly'
+              activeTab === "weekly"
                 ? [
                     {
                       icon: StackIcon,
                       value: reportAgentState.allReports.length || 0,
                       tooltip: {
-                        title: 'Total Reports',
-                        description: 'All weekly reports'
+                        title: "Total Reports",
+                        description: "All weekly reports",
                       },
-                      color: 'pink',
+                      color: "pink",
                       isLoading: reportAgentState.isLoading,
-                      ariaLabel: `${reportAgentState.allReports.length || 0} total reports`
+                      ariaLabel: `${reportAgentState.allReports.length || 0} total reports`,
                     },
                     {
                       icon: CalendarMonthIcon,
-                      value: reportAgentState.allReports.filter((r) => {
-                        const weekStart = new Date(r.weekStart);
-                        const weekEnd = new Date(r.weekEnd);
-                        const now = new Date();
-                        const currentMonth = now.getMonth();
-                        const currentYear = now.getFullYear();
-                        const startsInCurrentMonth = weekStart.getMonth() === currentMonth && weekStart.getFullYear() === currentYear;
-                        const endsInCurrentMonth = weekEnd.getMonth() === currentMonth && weekEnd.getFullYear() === currentYear;
-                        return startsInCurrentMonth || endsInCurrentMonth;
-                      }).length || 0,
+                      value:
+                        reportAgentState.allReports.filter((r) => {
+                          const weekStart = new Date(r.weekStart);
+                          const weekEnd = new Date(r.weekEnd);
+                          const now = new Date();
+                          const currentMonth = now.getMonth();
+                          const currentYear = now.getFullYear();
+                          const startsInCurrentMonth =
+                            weekStart.getMonth() === currentMonth &&
+                            weekStart.getFullYear() === currentYear;
+                          const endsInCurrentMonth =
+                            weekEnd.getMonth() === currentMonth &&
+                            weekEnd.getFullYear() === currentYear;
+                          return startsInCurrentMonth || endsInCurrentMonth;
+                        }).length || 0,
                       tooltip: {
-                        title: 'This Month',
-                        description: 'Reports this month'
+                        title: "This Month",
+                        description: "Reports this month",
                       },
-                      color: 'cyan',
+                      color: "cyan",
                       isLoading: reportAgentState.isLoading,
-                      ariaLabel: `${reportAgentState.allReports.filter((r) => {
-                        const weekStart = new Date(r.weekStart);
-                        const weekEnd = new Date(r.weekEnd);
-                        const now = new Date();
-                        const currentMonth = now.getMonth();
-                        const currentYear = now.getFullYear();
-                        const startsInCurrentMonth = weekStart.getMonth() === currentMonth && weekStart.getFullYear() === currentYear;
-                        const endsInCurrentMonth = weekEnd.getMonth() === currentMonth && weekEnd.getFullYear() === currentYear;
-                        return startsInCurrentMonth || endsInCurrentMonth;
-                      }).length || 0} reports this month`
+                      ariaLabel: `${
+                        reportAgentState.allReports.filter((r) => {
+                          const weekStart = new Date(r.weekStart);
+                          const weekEnd = new Date(r.weekEnd);
+                          const now = new Date();
+                          const currentMonth = now.getMonth();
+                          const currentYear = now.getFullYear();
+                          const startsInCurrentMonth =
+                            weekStart.getMonth() === currentMonth &&
+                            weekStart.getFullYear() === currentYear;
+                          const endsInCurrentMonth =
+                            weekEnd.getMonth() === currentMonth &&
+                            weekEnd.getFullYear() === currentYear;
+                          return startsInCurrentMonth || endsInCurrentMonth;
+                        }).length || 0
+                      } reports this month`,
                     },
                     {
                       icon: ClockIcon,
-                      value: reportAgentState.allReports.filter((r) => isCurrentWeekReport(r.weekId)).length || 0,
+                      value:
+                        reportAgentState.allReports.filter((r) =>
+                          isCurrentWeekReport(r.weekId),
+                        ).length || 0,
                       tooltip: {
-                        title: 'This Week',
-                        description: 'Reports this week'
+                        title: "This Week",
+                        description: "Reports this week",
                       },
-                      color: 'purple',
+                      color: "purple",
                       isLoading: reportAgentState.isLoading,
-                      ariaLabel: `${reportAgentState.allReports.filter((r) => isCurrentWeekReport(r.weekId)).length || 0} reports this week`
+                      ariaLabel: `${reportAgentState.allReports.filter((r) => isCurrentWeekReport(r.weekId)).length || 0} reports this week`,
                     },
                     {
                       icon: TargetIcon,
-                      value: reportAgentState.allReports.filter((r) => r.metadata?.analysisConfidence === 'high').length || 0,
+                      value:
+                        reportAgentState.allReports.filter(
+                          (r) => r.metadata?.analysisConfidence === "high",
+                        ).length || 0,
                       tooltip: {
-                        title: 'High Confidence',
-                        description: 'High-confidence analysis'
+                        title: "High Confidence",
+                        description: "High-confidence analysis",
                       },
-                      color: 'pink',
+                      color: "pink",
                       isLoading: reportAgentState.isLoading,
-                      ariaLabel: `${reportAgentState.allReports.filter((r) => r.metadata?.analysisConfidence === 'high').length || 0} high confidence reports`
-                    }
+                      ariaLabel: `${reportAgentState.allReports.filter((r) => r.metadata?.analysisConfidence === "high").length || 0} high confidence reports`,
+                    },
                   ]
                 : [
                     {
                       icon: StackIcon,
                       value: reportAgentState.allMonthlyReports.length || 0,
                       tooltip: {
-                        title: 'Total Reports',
-                        description: 'All monthly reports'
+                        title: "Total Reports",
+                        description: "All monthly reports",
                       },
-                      color: 'purple',
+                      color: "purple",
                       isLoading: reportAgentState.isLoadingAllMonthlyItems,
-                      ariaLabel: `${reportAgentState.allMonthlyReports.length || 0} total monthly reports`
+                      ariaLabel: `${reportAgentState.allMonthlyReports.length || 0} total monthly reports`,
                     },
                     {
                       icon: CalendarMonthIcon,
-                      value: reportAgentState.allMonthlyReports.filter((r) => {
-                        const now = new Date();
-                        const currentMonthId = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-                        return r.monthId === currentMonthId;
-                      }).length || 0,
+                      value:
+                        reportAgentState.allMonthlyReports.filter((r) => {
+                          const now = new Date();
+                          const currentMonthId = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+                          return r.monthId === currentMonthId;
+                        }).length || 0,
                       tooltip: {
-                        title: 'This Month',
-                        description: 'Current month report'
+                        title: "This Month",
+                        description: "Current month report",
                       },
-                      color: 'cyan',
+                      color: "cyan",
                       isLoading: reportAgentState.isLoadingAllMonthlyItems,
-                      ariaLabel: `${reportAgentState.allMonthlyReports.filter((r) => {
-                        const now = new Date();
-                        const currentMonthId = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-                        return r.monthId === currentMonthId;
-                      }).length || 0} reports this month`
+                      ariaLabel: `${
+                        reportAgentState.allMonthlyReports.filter((r) => {
+                          const now = new Date();
+                          const currentMonthId = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+                          return r.monthId === currentMonthId;
+                        }).length || 0
+                      } reports this month`,
                     },
                     {
                       icon: TargetIcon,
-                      value: reportAgentState.allMonthlyReports.filter((r) => {
-                        const workoutCount = r.analyticsData?.structured_analytics?.metadata?.sessions_completed || r.metadata?.workoutCount || 0;
-                        return workoutCount >= 4;
-                      }).length || 0,
+                      value:
+                        reportAgentState.allMonthlyReports.filter((r) => {
+                          const workoutCount =
+                            r.analyticsData?.structured_analytics?.metadata
+                              ?.sessions_completed ||
+                            r.metadata?.workoutCount ||
+                            0;
+                          return workoutCount >= 4;
+                        }).length || 0,
                       tooltip: {
-                        title: 'Qualified Months',
-                        description: 'Months with 4+ workouts'
+                        title: "Qualified Months",
+                        description: "Months with 4+ workouts",
                       },
-                      color: 'pink',
+                      color: "pink",
                       isLoading: reportAgentState.isLoadingAllMonthlyItems,
-                      ariaLabel: `${reportAgentState.allMonthlyReports.filter((r) => {
-                        const workoutCount = r.analyticsData?.structured_analytics?.metadata?.sessions_completed || r.metadata?.workoutCount || 0;
-                        return workoutCount >= 4;
-                      }).length || 0} qualified months`
+                      ariaLabel: `${
+                        reportAgentState.allMonthlyReports.filter((r) => {
+                          const workoutCount =
+                            r.analyticsData?.structured_analytics?.metadata
+                              ?.sessions_completed ||
+                            r.metadata?.workoutCount ||
+                            0;
+                          return workoutCount >= 4;
+                        }).length || 0
+                      } qualified months`,
                     },
                     {
                       icon: TargetIcon,
-                      value: reportAgentState.allMonthlyReports.filter((r) => r.metadata?.analysisConfidence === 'high').length || 0,
+                      value:
+                        reportAgentState.allMonthlyReports.filter(
+                          (r) => r.metadata?.analysisConfidence === "high",
+                        ).length || 0,
                       tooltip: {
-                        title: 'High Confidence',
-                        description: 'High-confidence analysis'
+                        title: "High Confidence",
+                        description: "High-confidence analysis",
                       },
-                      color: 'purple',
+                      color: "purple",
                       isLoading: reportAgentState.isLoadingAllMonthlyItems,
-                      ariaLabel: `${reportAgentState.allMonthlyReports.filter((r) => r.metadata?.analysisConfidence === 'high').length || 0} high confidence reports`
-                    }
+                      ariaLabel: `${reportAgentState.allMonthlyReports.filter((r) => r.metadata?.analysisConfidence === "high").length || 0} high confidence reports`,
+                    },
                   ]
             }
           />
@@ -968,88 +1205,102 @@ function ViewReports() {
           {/* Tab Switcher */}
           <div className="flex items-center justify-center gap-2 mb-6 -mt-2">
             <button
-              onClick={() => setActiveTab('weekly')}
-              className={activeTab === 'weekly' ? buttonPatterns.tabToggleActive : buttonPatterns.tabToggleInactive}
+              onClick={() => setActiveTab("weekly")}
+              className={
+                activeTab === "weekly"
+                  ? buttonPatterns.tabToggleActive
+                  : buttonPatterns.tabToggleInactive
+              }
             >
               Weekly Reports
             </button>
             <button
-              onClick={() => setActiveTab('monthly')}
-              className={activeTab === 'monthly' ? buttonPatterns.tabToggleActive : buttonPatterns.tabToggleInactive}
+              onClick={() => setActiveTab("monthly")}
+              className={
+                activeTab === "monthly"
+                  ? buttonPatterns.tabToggleActive
+                  : buttonPatterns.tabToggleInactive
+              }
             >
               Monthly Reports
             </button>
           </div>
 
-        {/* Error state */}
-        {reportAgentState.error && (
-          <div className="text-center py-12">
-            <NeonBorder color="pink" className="max-w-md mx-auto p-6">
-              <p className="text-synthwave-neon-pink mb-2">Error Loading Reports</p>
-              <p className="text-synthwave-text-secondary text-sm">{reportAgentState.error}</p>
-            </NeonBorder>
-          </div>
-        )}
+          {/* Error state */}
+          {reportAgentState.error && (
+            <div className="text-center py-12">
+              <NeonBorder color="pink" className="max-w-md mx-auto p-6">
+                <p className="text-synthwave-neon-pink mb-2">
+                  Error Loading Reports
+                </p>
+                <p className="text-synthwave-text-secondary text-sm">
+                  {reportAgentState.error}
+                </p>
+              </NeonBorder>
+            </div>
+          )}
 
-        {/* Empty state */}
-        {!reportAgentState.isLoadingAllItems && !reportAgentState.isLoadingAllMonthlyItems && !reportAgentState.error &&
-         activeTab === 'weekly' && reportAgentState.allReports.length === 0 && (
-          <div className="text-center py-12">
-            <div className="font-rajdhani text-synthwave-neon-cyan text-base">
-              No Weekly Reports Found
-            </div>
-            <div className="font-rajdhani text-synthwave-text-muted text-sm mt-2">
-              Weekly reports are generated automatically when you complete 2+ workouts in a week.
-            </div>
-          </div>
-        )}
+          {/* Empty state */}
+          {!reportAgentState.isLoadingAllItems &&
+            !reportAgentState.isLoadingAllMonthlyItems &&
+            !reportAgentState.error &&
+            activeTab === "weekly" &&
+            reportAgentState.allReports.length === 0 && (
+              <div className="text-center py-12">
+                <div className="font-rajdhani text-synthwave-neon-cyan text-base">
+                  No Weekly Reports Found
+                </div>
+                <div className="font-rajdhani text-synthwave-text-muted text-sm mt-2">
+                  Weekly reports are generated automatically when you complete
+                  2+ workouts in a week.
+                </div>
+              </div>
+            )}
 
-        {/* Empty state for monthly */}
-        {!reportAgentState.isLoadingAllItems && !reportAgentState.isLoadingAllMonthlyItems && !reportAgentState.error &&
-         activeTab === 'monthly' && reportAgentState.allMonthlyReports.length === 0 && (
-          <div className="text-center py-12">
-            <div className="font-rajdhani text-synthwave-neon-cyan text-base">
-              No Monthly Reports Found
-            </div>
-            <div className="font-rajdhani text-synthwave-text-muted text-sm mt-2">
-              Monthly reports are generated automatically when you complete 4+ workouts in a month.
-            </div>
-          </div>
-        )}
+          {/* Empty state for monthly */}
+          {!reportAgentState.isLoadingAllItems &&
+            !reportAgentState.isLoadingAllMonthlyItems &&
+            !reportAgentState.error &&
+            activeTab === "monthly" &&
+            reportAgentState.allMonthlyReports.length === 0 && (
+              <div className="text-center py-12">
+                <div className="font-rajdhani text-synthwave-neon-cyan text-base">
+                  No Monthly Reports Found
+                </div>
+                <div className="font-rajdhani text-synthwave-text-muted text-sm mt-2">
+                  Monthly reports are generated automatically when you complete
+                  4+ workouts in a month.
+                </div>
+              </div>
+            )}
 
-        {/* Weekly Reports List */}
-        {!reportAgentState.isLoadingAllItems && !reportAgentState.error &&
-         activeTab === 'weekly' && reportAgentState.allReports.length > 0 && (
-          <div className="mb-8">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {reportAgentState.allReports.map(renderReportCard)}
-            </div>
-          </div>
-        )}
+          {/* Weekly Reports List */}
+          {!reportAgentState.isLoadingAllItems &&
+            !reportAgentState.error &&
+            activeTab === "weekly" &&
+            reportAgentState.allReports.length > 0 && (
+              <div className="mb-8">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {reportAgentState.allReports.map(renderReportCard)}
+                </div>
+              </div>
+            )}
 
-        {/* Monthly Reports List */}
-        {!reportAgentState.isLoadingAllMonthlyItems && !reportAgentState.error &&
-         activeTab === 'monthly' && reportAgentState.allMonthlyReports.length > 0 && (
-          <div className="mb-8">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {reportAgentState.allMonthlyReports.map(renderMonthlyReportCard)}
-            </div>
-          </div>
-        )}
+          {/* Monthly Reports List */}
+          {!reportAgentState.isLoadingAllMonthlyItems &&
+            !reportAgentState.error &&
+            activeTab === "monthly" &&
+            reportAgentState.allMonthlyReports.length > 0 && (
+              <div className="mb-8">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {reportAgentState.allMonthlyReports.map(
+                    renderMonthlyReportCard,
+                  )}
+                </div>
+              </div>
+            )}
+        </div>
       </div>
-    </div>
-
-      {/* Floating Menu Manager */}
-      <FloatingMenuManager
-        userId={userId}
-        coachId={coachId}
-        currentPage="reports"
-        coachData={coachData}
-        onCommandPaletteToggle={(command) => {
-          setCommandPaletteCommand(command);
-          setIsCommandPaletteOpen(true);
-        }}
-      />
 
       {/* Tooltips */}
       <Tooltip
@@ -1073,4 +1324,3 @@ function ViewReports() {
 }
 
 export default ViewReports;
-

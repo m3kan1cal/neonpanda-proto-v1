@@ -5,13 +5,17 @@
  * Pattern: Same structure as coach-creator/todo-extraction.ts + multimodal support from build-workout
  */
 
-import { callBedrockApi, callBedrockApiMultimodal, MODEL_IDS } from '../api-helpers';
-import { parseJsonWithFallbacks } from '../response-utils';
-import { buildMultimodalContent } from '../streaming/multimodal-helpers';
-import { MESSAGE_TYPES } from '../coach-conversation/types';
-import { TodoItem, ConversationMessage } from '../todo-types';
-import { ProgramCreatorTodoList } from './types';
-import { PROGRAM_TODO_SCHEMA } from '../schemas/program-creator-todo-schema';
+import {
+  callBedrockApi,
+  callBedrockApiMultimodal,
+  MODEL_IDS,
+} from "../api-helpers";
+import { parseJsonWithFallbacks } from "../response-utils";
+import { buildMultimodalContent } from "../streaming/multimodal-helpers";
+import { MESSAGE_TYPES } from "../coach-conversation/types";
+import { TodoItem, ConversationMessage } from "../todo-types";
+import { ProgramDesignerTodoList } from "./types";
+import { PROGRAM_TODO_SCHEMA } from "../schemas/program-designer-todo-schema";
 
 /**
  * Extract training program information from user's response and update the to-do list
@@ -21,16 +25,16 @@ import { PROGRAM_TODO_SCHEMA } from '../schemas/program-creator-todo-schema';
 export async function extractAndUpdateTodoList(
   userResponse: string,
   conversationHistory: ConversationMessage[],
-  currentTodoList: ProgramCreatorTodoList,
-  imageS3Keys?: string[]
-): Promise<ProgramCreatorTodoList> {
-  console.info('🔍 Extracting training program information from user response');
+  currentTodoList: ProgramDesignerTodoList,
+  imageS3Keys?: string[],
+): Promise<ProgramDesignerTodoList> {
+  console.info("🔍 Extracting training program information from user response");
 
   // Check if images are present (same pattern as build-workout)
   const hasImages = imageS3Keys && imageS3Keys.length > 0;
 
   if (hasImages) {
-    console.info('🖼️ Processing with images:', {
+    console.info("🖼️ Processing with images:", {
       imageCount: imageS3Keys!.length,
       imageKeys: imageS3Keys,
     });
@@ -39,8 +43,8 @@ export async function extractAndUpdateTodoList(
   // Include FULL conversation history for better context
   // With 200K token context window, we have plenty of room
   const conversationContext = conversationHistory
-    .map(m => `${m.role.toUpperCase()}: ${m.content}`)
-    .join('\n');
+    .map((m) => `${m.role.toUpperCase()}: ${m.content}`)
+    .join("\n");
 
   // Build extraction prompt
   const systemPrompt = buildExtractionPrompt(currentTodoList);
@@ -95,12 +99,13 @@ Return JSON with ONLY the fields you found information for:
         MODEL_IDS.CLAUDE_HAIKU_4_FULL,
         {
           tools: {
-            name: 'extract_training_program_info',
-            description: 'Extract training program information from user response with optional images',
-            inputSchema: PROGRAM_TODO_SCHEMA
+            name: "extract_training_program_info",
+            description:
+              "Extract training program information from user response with optional images",
+            inputSchema: PROGRAM_TODO_SCHEMA,
           },
-          expectedToolName: 'extract_training_program_info'
-        }
+          expectedToolName: "extract_training_program_info",
+        },
       );
     } else {
       // Text-only extraction
@@ -110,31 +115,34 @@ Return JSON with ONLY the fields you found information for:
         MODEL_IDS.CLAUDE_HAIKU_4_FULL,
         {
           tools: {
-            name: 'extract_training_program_info',
-            description: 'Extract training program information from user response',
-            inputSchema: PROGRAM_TODO_SCHEMA
+            name: "extract_training_program_info",
+            description:
+              "Extract training program information from user response",
+            inputSchema: PROGRAM_TODO_SCHEMA,
           },
-          expectedToolName: 'extract_training_program_info'
-        }
+          expectedToolName: "extract_training_program_info",
+        },
       );
     }
 
-    console.info('✅ Received extraction response');
+    console.info("✅ Received extraction response");
 
     // Handle tool response
     let extracted: any;
-    if (typeof extractionResponse !== 'string') {
+    if (typeof extractionResponse !== "string") {
       // Tool was used - extract the input
       extracted = extractionResponse.input;
-      console.info('✅ Tool-based extraction successful');
+      console.info("✅ Tool-based extraction successful");
     } else {
       // Fallback to parsing (shouldn't happen with tool enforcement)
-      console.warn('⚠️ Received string response, parsing as JSON fallback');
+      console.warn("⚠️ Received string response, parsing as JSON fallback");
       extracted = parseJsonWithFallbacks(extractionResponse);
     }
 
-    if (!extracted || typeof extracted !== 'object') {
-      console.warn('⚠️ Failed to parse extraction response, returning current todo list');
+    if (!extracted || typeof extracted !== "object") {
+      console.warn(
+        "⚠️ Failed to parse extraction response, returning current todo list",
+      );
       return currentTodoList;
     }
 
@@ -143,22 +151,29 @@ Return JSON with ONLY the fields you found information for:
     const messageIndex = conversationHistory.length; // Index where this response will be stored
 
     for (const [key, extractedItem] of Object.entries(extracted)) {
-      if (key in updatedTodoList && extractedItem && typeof extractedItem === 'object') {
+      if (
+        key in updatedTodoList &&
+        extractedItem &&
+        typeof extractedItem === "object"
+      ) {
         const item = extractedItem as Partial<TodoItem>;
 
         // Only update if we have a value
         if (item.value !== null && item.value !== undefined) {
-          updatedTodoList[key as keyof ProgramCreatorTodoList] = {
-            status: 'complete',
+          updatedTodoList[key as keyof ProgramDesignerTodoList] = {
+            status: "complete",
             value: item.value,
-            confidence: item.confidence || 'medium',
+            confidence: item.confidence || "medium",
             notes: item.notes,
             extractedFrom: `message_${messageIndex}`,
             // Store image references for fields that commonly benefit from images
-            imageRefs: hasImages && shouldStoreImageRef(key) ? imageS3Keys : undefined
+            imageRefs:
+              hasImages && shouldStoreImageRef(key) ? imageS3Keys : undefined,
           };
 
-          console.info(`✅ Extracted ${key}: ${JSON.stringify(item.value).substring(0, 50)}`);
+          console.info(
+            `✅ Extracted ${key}: ${JSON.stringify(item.value).substring(0, 50)}`,
+          );
         }
       }
     }
@@ -168,10 +183,9 @@ Return JSON with ONLY the fields you found information for:
     console.info(`✅ Extraction complete: ${extractedCount} fields updated`);
 
     return updatedTodoList;
-
   } catch (error) {
-    console.error('❌ Error during extraction:', error);
-    console.error('Returning current todo list unchanged');
+    console.error("❌ Error during extraction:", error);
+    console.error("Returning current todo list unchanged");
     return currentTodoList;
   }
 }
@@ -182,23 +196,25 @@ Return JSON with ONLY the fields you found information for:
 function shouldStoreImageRef(fieldKey: string): boolean {
   // Fields that commonly benefit from image context
   return [
-    'equipmentAccess',
-    'trainingEnvironment',
-    'injuryConsiderations',
-    'currentFitnessBaseline'
+    "equipmentAccess",
+    "trainingEnvironment",
+    "injuryConsiderations",
+    "currentFitnessBaseline",
   ].includes(fieldKey);
 }
 
 /**
  * Build the system prompt for extraction
  */
-function buildExtractionPrompt(currentTodoList: ProgramCreatorTodoList): string {
+function buildExtractionPrompt(
+  currentTodoList: ProgramDesignerTodoList,
+): string {
   // Build a summary of what's already been collected
   const collectedFields: string[] = [];
   const pendingFields: string[] = [];
 
   for (const [key, item] of Object.entries(currentTodoList)) {
-    if (item.status === 'complete') {
+    if (item.status === "complete") {
       collectedFields.push(key);
     } else {
       pendingFields.push(key);
@@ -208,10 +224,10 @@ function buildExtractionPrompt(currentTodoList: ProgramCreatorTodoList): string 
   return `You are an expert at extracting structured training program information from conversational responses, including images.
 
 WHAT WE'VE ALREADY COLLECTED:
-${collectedFields.length > 0 ? collectedFields.join(', ') : 'Nothing yet'}
+${collectedFields.length > 0 ? collectedFields.join(", ") : "Nothing yet"}
 
 WHAT WE STILL NEED:
-${pendingFields.join(', ')}
+${pendingFields.join(", ")}
 
 YOUR TASK:
 Analyze the user's response (text and/or images) and extract any training program creation information. Return a JSON object with ONLY the fields you found.

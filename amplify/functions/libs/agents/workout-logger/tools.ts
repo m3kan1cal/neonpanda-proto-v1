@@ -808,9 +808,13 @@ Returns: summary (string)`,
 
     const { workoutData, originalMessage } = input;
 
-    // Generate AI summary
+    // Generate AI summary with extended thinking enabled
     console.info("Generating workout summary..");
-    const summary = await generateWorkoutSummary(workoutData, originalMessage);
+    const summary = await generateWorkoutSummary(
+      workoutData,
+      originalMessage,
+      true,
+    );
 
     console.info("Generated summary:", { summary, length: summary.length });
 

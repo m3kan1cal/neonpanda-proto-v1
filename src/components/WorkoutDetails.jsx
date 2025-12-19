@@ -1,21 +1,25 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { Tooltip } from 'react-tooltip';
+import { Tooltip } from "react-tooltip";
 import { useAuthorizeUser } from "../auth/hooks/useAuthorizeUser";
 import { AccessDenied, LoadingScreen } from "./shared/AccessDenied";
 import { themeClasses } from "../utils/synthwaveThemeClasses";
-import { buttonPatterns, containerPatterns, layoutPatterns, tooltipPatterns } from "../utils/ui/uiPatterns";
+import {
+  buttonPatterns,
+  containerPatterns,
+  layoutPatterns,
+  tooltipPatterns,
+} from "../utils/ui/uiPatterns";
 import { NeonBorder } from "./themes/SynthwaveComponents";
 import CoachHeader from "./shared/CoachHeader";
-import CompactCoachCard from './shared/CompactCoachCard';
-import CommandPaletteButton from './shared/CommandPaletteButton';
+import CompactCoachCard from "./shared/CompactCoachCard";
+import CommandPaletteButton from "./shared/CommandPaletteButton";
 import WorkoutAgent from "../utils/agents/WorkoutAgent";
 import CoachAgent from "../utils/agents/CoachAgent";
 import { useToast } from "../contexts/ToastContext";
 import WorkoutViewer from "./WorkoutViewer";
-import { FloatingMenuManager } from "./shared/FloatingMenuManager";
-import IconButton from './shared/IconButton';
-import { useNavigationContext } from '../contexts/NavigationContext';
+import IconButton from "./shared/IconButton";
+import { useNavigationContext } from "../contexts/NavigationContext";
 import {
   FullPageLoader,
   CenteredErrorState,
@@ -24,8 +28,18 @@ import {
 import { CloseIcon, WorkoutIcon } from "./themes/SynthwaveComponents";
 
 const JsonIcon = () => (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+  <svg
+    className="w-4 h-4"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
+    />
   </svg>
 );
 
@@ -37,7 +51,11 @@ function WorkoutDetails() {
   const coachId = searchParams.get("coachId");
 
   // Authorize that URL userId matches authenticated user
-  const { isValidating: isValidatingUserId, isValid: isValidUserId, error: userIdError } = useAuthorizeUser(userId);
+  const {
+    isValidating: isValidatingUserId,
+    isValid: isValidUserId,
+    error: userIdError,
+  } = useAuthorizeUser(userId);
 
   // View state
   const [viewMode, setViewMode] = useState("formatted"); // 'formatted' or 'raw'
@@ -103,7 +121,7 @@ function WorkoutDetails() {
       workoutAgentRef.current.onNewWorkout = (workout) => {
         const title = workoutAgentRef.current.formatWorkoutSummary(
           workout,
-          true
+          true,
         );
         success(`Workout logged: ${title}`);
       };
@@ -126,10 +144,13 @@ function WorkoutDetails() {
         if (!coachAgentRef.current) {
           coachAgentRef.current = new CoachAgent();
         }
-        const coachData = await coachAgentRef.current.loadCoachDetails(userId, coachId);
+        const coachData = await coachAgentRef.current.loadCoachDetails(
+          userId,
+          coachId,
+        );
         setCoachData(coachData);
       } catch (error) {
-        console.error('Failed to load coach data:', error);
+        console.error("Failed to load coach data:", error);
       }
     };
 
@@ -144,13 +165,13 @@ function WorkoutDetails() {
 
   // Auto-scroll to top when page loads (with scroll restoration disabled)
   useEffect(() => {
-    if ('scrollRestoration' in window.history) {
-      window.history.scrollRestoration = 'manual';
+    if ("scrollRestoration" in window.history) {
+      window.history.scrollRestoration = "manual";
     }
     window.scrollTo(0, 0);
     return () => {
-      if ('scrollRestoration' in window.history) {
-        window.history.scrollRestoration = 'auto';
+      if ("scrollRestoration" in window.history) {
+        window.history.scrollRestoration = "auto";
       }
     };
   }, []);
@@ -207,7 +228,7 @@ function WorkoutDetails() {
     userId,
     coachId,
     setCoachData,
-    { success, error }
+    { success, error },
   );
 
   const formatDate = (dateString) => {
@@ -224,7 +245,11 @@ function WorkoutDetails() {
 
   // Workout title editing handler
   const handleSaveWorkoutTitle = async (newTitle) => {
-    if (!newTitle.trim() || !workoutAgentRef.current || !workoutAgentState.currentWorkout) {
+    if (
+      !newTitle.trim() ||
+      !workoutAgentRef.current ||
+      !workoutAgentState.currentWorkout
+    ) {
       return false;
     }
 
@@ -236,7 +261,7 @@ function WorkoutDetails() {
           workoutData: {
             workout_name: newTitle.trim(),
           },
-        }
+        },
       );
 
       // Update local state with the new title
@@ -273,14 +298,14 @@ function WorkoutDetails() {
     try {
       await workoutAgentRef.current.deleteWorkout(
         userId,
-        workoutToDelete.workoutId
+        workoutToDelete.workoutId,
       );
       success("Workout deleted successfully");
       setShowDeleteModal(false);
       setWorkoutToDelete(null);
       // Navigate back to manage workouts after successful deletion
       navigate(
-        `/training-grounds/manage-workouts?userId=${userId}&coachId=${coachId}`
+        `/training-grounds/manage-workouts?userId=${userId}&coachId=${coachId}`,
       );
     } catch (error) {
       console.error("Error deleting workout:", error);
@@ -343,7 +368,9 @@ function WorkoutDetails() {
 
           {/* Main Content Area skeleton */}
           <div className="flex-1">
-            <div className={`${containerPatterns.mainContent} h-full flex flex-col`}>
+            <div
+              className={`${containerPatterns.mainContent} h-full flex flex-col`}
+            >
               <div className="p-6 h-full overflow-y-auto space-y-6">
                 {/* Action buttons skeleton */}
                 <div className="flex justify-end space-x-2">
@@ -353,7 +380,10 @@ function WorkoutDetails() {
 
                 {/* Workout sections skeleton */}
                 {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className={`${containerPatterns.cardMedium} p-6`}>
+                  <div
+                    key={i}
+                    className={`${containerPatterns.cardMedium} p-6`}
+                  >
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center space-x-3">
                         <div className="w-6 h-6 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
@@ -404,7 +434,9 @@ function WorkoutDetails() {
 
   return (
     <div className={`${layoutPatterns.pageContainer} min-h-screen pb-8`}>
-      <div className={`${layoutPatterns.contentWrapper} min-h-[calc(100vh-5rem)] flex flex-col`}>
+      <div
+        className={`${layoutPatterns.contentWrapper} min-h-[calc(100vh-5rem)] flex flex-col`}
+      >
         {/* Compact Horizontal Header */}
         <header
           className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-6"
@@ -433,14 +465,18 @@ function WorkoutDetails() {
 
           {/* Right section: Command Palette Button */}
           <div className="flex items-center gap-3">
-            <CommandPaletteButton onClick={() => setIsCommandPaletteOpen(true)} />
+            <CommandPaletteButton
+              onClick={() => setIsCommandPaletteOpen(true)}
+            />
           </div>
         </header>
 
         {/* Main Content Area */}
         <div className="flex-1 flex justify-center">
           <div className="w-full max-w-7xl">
-            <div className={`${containerPatterns.mainContent} h-full flex flex-col`}>
+            <div
+              className={`${containerPatterns.mainContent} h-full flex flex-col`}
+            >
               <div className="p-6 h-full overflow-y-auto custom-scrollbar">
                 {workout ? (
                   <WorkoutViewer
@@ -453,7 +489,10 @@ function WorkoutDetails() {
                   />
                 ) : (
                   <div className="flex items-center justify-center h-full">
-                    <EmptyState title="No workout data available" size="large" />
+                    <EmptyState
+                      title="No workout data available"
+                      size="large"
+                    />
                   </div>
                 )}
               </div>
@@ -462,22 +501,12 @@ function WorkoutDetails() {
         </div>
       </div>
 
-      {/* Floating Menu Manager */}
-      <FloatingMenuManager
-        userId={userId}
-        coachId={coachId}
-        currentPage="workouts"
-        coachData={coachData}
-        onCommandPaletteToggle={(command) => {
-          setCommandPaletteCommand(command);
-          setIsCommandPaletteOpen(true);
-        }}
-      />
-
       {/* Delete Confirmation Modal */}
       {showDeleteModal && workoutToDelete && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[10000]">
-          <div className={`${containerPatterns.deleteModal} p-6 max-w-md w-full mx-4`}>
+          <div
+            className={`${containerPatterns.deleteModal} p-6 max-w-md w-full mx-4`}
+          >
             <div className="text-center">
               <h3 className="text-synthwave-neon-pink font-rajdhani text-xl font-bold mb-2">
                 Delete Workout
@@ -486,7 +515,7 @@ function WorkoutDetails() {
                 Are you sure you want to delete "
                 {workoutAgentRef.current?.formatWorkoutSummary(
                   workoutToDelete,
-                  true
+                  true,
                 ) || "this workout"}
                 "? This action cannot be undone.
               </p>
@@ -556,4 +585,3 @@ function WorkoutDetails() {
 }
 
 export default WorkoutDetails;
-

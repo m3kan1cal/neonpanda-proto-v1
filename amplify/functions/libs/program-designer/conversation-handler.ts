@@ -14,9 +14,9 @@ import {
 import { formatChunkEvent } from "../streaming";
 import { extractAndUpdateTodoList } from "./todo-extraction";
 import { getTodoProgress, isSessionComplete } from "./todo-list-utils";
-import { ConversationMessage } from "../todo-types";
+import { CoachMessage } from "../coach-conversation/types";
 
-import { ProgramCreatorSession } from "./types";
+import { ProgramDesignerSession } from "./types";
 
 /**
  * Handle to-do list based conversational flow for training program creation
@@ -26,7 +26,7 @@ import { ProgramCreatorSession } from "./types";
  */
 export async function* handleTodoListConversation(
   userResponse: string,
-  session: ProgramCreatorSession,
+  session: ProgramDesignerSession,
   imageS3Keys?: string[],
   coachConfig?: any,
   userContext?: {
@@ -35,7 +35,6 @@ export async function* handleTodoListConversation(
     userProfile?: any;
     activeProgram?: any;
   },
-  conversationMessages?: any[], // CoachConversation.messages for history sync
 ): AsyncGenerator<string, any, unknown> {
   console.info("✨ Handling program to-do list conversation");
 
@@ -47,78 +46,13 @@ export async function* handleTodoListConversation(
   }
 
   try {
-    // Step 1: Synchronize conversation history from CoachConversation FIRST
-    // This ensures ALL messages (user + AI) are captured in correct order
-    console.info(
-      "🔄 Synchronizing conversation history from CoachConversation",
-    );
+    // NOTE: User message already added to session.conversationHistory[] in main handler
+    // We don't need to add it again here - just use the existing history
 
-    if (conversationMessages && conversationMessages.length > 0) {
-      // Include recent pre-session messages for context (up to last 10 non-program_design messages)
-      const recentChatMessages = conversationMessages
-        .filter((m: any) => m.metadata?.mode !== "program_design")
-        .slice(-10) // Last 10 chat messages for context
-        .map((m: any) => ({
-          role: (m.role === "assistant" ? "ai" : "user") as "ai" | "user",
-          content: m.content,
-          timestamp:
-            typeof m.timestamp === "string"
-              ? m.timestamp
-              : m.timestamp.toISOString(),
-          isPreSessionContext: true, // Flag to indicate this is background context
-        }));
-
-      // Get program_design mode messages (current session)
-      const buildModeMessages = conversationMessages
-        .filter((m: any) => m.metadata?.mode === "program_design")
-        .map((m: any) => ({
-          role: (m.role === "assistant" ? "ai" : "user") as "ai" | "user",
-          content: m.content,
-          timestamp:
-            typeof m.timestamp === "string"
-              ? m.timestamp
-              : m.timestamp.toISOString(),
-          ...(m.imageS3Keys && m.imageS3Keys.length > 0
-            ? {
-                imageS3Keys: m.imageS3Keys,
-                messageType: m.messageType || "text_with_images",
-              }
-            : {}),
-        }));
-
-      // Combine: pre-session context + current session messages
-      session.conversationHistory = [
-        ...recentChatMessages,
-        ...buildModeMessages,
-      ];
-      console.info(
-        `📚 Synchronized ${recentChatMessages.length} pre-session + ${buildModeMessages.length} session messages from CoachConversation`,
-      );
-    } else {
-      // Initialize empty history if no messages provided
-      session.conversationHistory = session.conversationHistory || [];
-    }
-
-    // Step 2: Add current user message to history
-    console.info("🔍 Adding current user message and extracting information");
-
-    const userMessage: ConversationMessage = {
-      role: "user",
-      content: userResponse,
-      timestamp: new Date().toISOString(),
-    };
-
-    // Add images to message if present
-    if (imageS3Keys && imageS3Keys.length > 0) {
-      userMessage.imageS3Keys = imageS3Keys;
-      userMessage.messageType = "text_with_images";
-    }
-
-    session.conversationHistory.push(userMessage);
-
-    // Increment turn counter (matches workout creator pattern)
-    session.turnCount = (session.turnCount || 0) + 1;
-    console.info(`📊 Turn ${session.turnCount} of program collection`);
+    console.info("🔍 Extracting information from user response", {
+      conversationHistoryLength: session.conversationHistory.length,
+      turnCount: session.turnCount,
+    });
 
     // Extract with multimodal support (pass userContext for smarter extraction)
     const extractionResult = await extractAndUpdateTodoList(
@@ -181,9 +115,14 @@ export async function* handleTodoListConversation(
         }
 
         session.conversationHistory.push({
-          role: "ai",
+          id: `msg_${Date.now()}_${session.userId}_assistant`,
+          role: "assistant",
           content: completionMessage,
-          timestamp: new Date().toISOString(),
+          timestamp: new Date(),
+          metadata: {
+            mode: "program_design",
+            isQuestion: false,
+          },
         });
 
         session.isComplete = true;
@@ -200,7 +139,36 @@ export async function* handleTodoListConversation(
       }
     }
 
-    // Step 2: Generate next question or completion message using UPDATED todoList
+    // Step 2: Check if we need to ask the final considerations question
+    const requiredComplete = isSessionComplete(session.todoList);
+
+    // If required items are complete but additionalConsiderations hasn't been asked yet
+    if (requiredComplete && session.additionalConsiderations === undefined) {
+      console.info(
+        "🎯 Required items complete - will ask final considerations question",
+      );
+      // The question generator will handle asking this question
+    }
+
+    // If required items are complete and user just answered the final considerations question
+    if (requiredComplete && session.additionalConsiderations === undefined) {
+      // Check if the user's response looks like they're answering the final considerations question
+      // (This happens after we ask it in the previous turn)
+      const lastAiMessage = session.conversationHistory
+        .filter((m) => m.role === "assistant")
+        .slice(-1)[0];
+
+      if (
+        lastAiMessage &&
+        lastAiMessage.content.includes("anything else you'd like me to know")
+      ) {
+        console.info("💾 Storing user's final considerations response");
+        // Store their response (even if it's "nothing else" or "no")
+        session.additionalConsiderations = userResponse.trim();
+      }
+    }
+
+    // Step 3: Generate next question or completion message using UPDATED todoList
     console.info(
       "🎯 Generating next program question based on UPDATED to-do list",
     );
@@ -208,12 +176,18 @@ export async function* handleTodoListConversation(
     // Get coach personality for consistent voice (if available)
     const coachPersonality = coachConfig?.generated_prompts?.personality_prompt;
 
+    // Pass additionalConsiderations flag in userContext
+    const enhancedUserContext = {
+      ...userContext,
+      additionalConsiderations: session.additionalConsiderations,
+    };
+
     // REAL STREAMING: Get chunks directly from Bedrock as they're generated
     const questionStream = generateNextQuestionStream(
       session.conversationHistory,
       session.todoList,
       coachPersonality,
-      userContext, // Pass user context for smarter question generation (matches workout creator pattern)
+      enhancedUserContext, // Pass user context with additionalConsiderations flag
     );
 
     let nextResponse = "";
@@ -237,22 +211,30 @@ export async function* handleTodoListConversation(
 
     // Step 3: Store AI response and finalize session state
     console.info("⚙️ Finalizing session state");
-    session.conversationHistory.push({
-      role: "ai",
-      content: nextResponse,
-      timestamp: new Date().toISOString(),
-    });
 
-    // Check if all required information is collected
-    const complete = isSessionComplete(session.todoList);
-
-    // Get progress based on to-do list
+    // Get progress for metadata
     const todoProgress = getTodoProgress(session.todoList);
+    const todoComplete = isSessionComplete(session.todoList);
+    const complete =
+      todoComplete && session.additionalConsiderations !== undefined;
+
     const progressDetails = {
       completed: todoProgress.requiredCompleted,
       total: todoProgress.requiredTotal,
-      percentage: todoProgress.requiredPercentage,
+      percentage: complete ? 100 : todoProgress.requiredPercentage,
     };
+
+    session.conversationHistory.push({
+      id: `msg_${Date.now()}_${session.userId}_assistant`,
+      role: "assistant",
+      content: nextResponse,
+      timestamp: new Date(),
+      metadata: {
+        mode: "program_design",
+        isQuestion: !complete,
+        progress: progressDetails,
+      },
+    });
 
     // Update session metadata
     session.lastActivity = new Date();

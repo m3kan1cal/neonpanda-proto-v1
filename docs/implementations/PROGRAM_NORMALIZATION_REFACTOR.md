@@ -5,6 +5,7 @@
 **Goal:** Align program normalization with workout normalization pattern
 
 **What This Document Contains:**
+
 1. ✅ Schema pattern refactor (dual-schema approach)
 2. ✅ Two-tier model selection implementation
 3. ✅ Complete architecture comparison (workout vs program)
@@ -17,6 +18,7 @@
 ## 🎯 Objective
 
 Refactor program normalization to use the same pattern as workout normalization:
+
 - **Full schema in toolConfig** for Bedrock enforcement
 - **Condensed schema in prompt** for AI context
 - **Consistent file structure** across both flows
@@ -28,6 +30,7 @@ Refactor program normalization to use the same pattern as workout normalization:
 ### Workout Normalization (Reference Pattern) ✅
 
 **File Structure:**
+
 ```
 amplify/functions/libs/
 ├── schemas/
@@ -38,17 +41,19 @@ amplify/functions/libs/
 ```
 
 **Schema Definition:**
+
 ```typescript
 // workout-normalization-schema.ts
 export const NORMALIZATION_RESPONSE_SCHEMA = {
   properties: {
-    normalizedData: WORKOUT_SCHEMA,  // ✅ Full schema enforcement
+    normalizedData: WORKOUT_SCHEMA, // ✅ Full schema enforcement
     // ... other properties
-  }
+  },
 };
 ```
 
 **Prompt:**
+
 ```typescript
 // Includes condensed schema for AI context
 ${JSON.stringify(getCondensedSchema(WORKOUT_SCHEMA), null, 2)}
@@ -59,6 +64,7 @@ ${JSON.stringify(getCondensedSchema(WORKOUT_SCHEMA), null, 2)}
 ### Program Normalization (Current - Inconsistent) ❌
 
 **File Structure:**
+
 ```
 amplify/functions/libs/
 ├── schemas/
@@ -68,18 +74,20 @@ amplify/functions/libs/
 ```
 
 **Schema Definition:**
+
 ```typescript
 // Inline in normalization.ts (lines 35-79)
 const NORMALIZATION_RESPONSE_SCHEMA = {
   properties: {
     normalizedData: {
-      type: 'object',  // ❌ Weak - no enforcement
-    }
-  }
+      type: "object", // ❌ Weak - no enforcement
+    },
+  },
 };
 ```
 
 **Prompt:**
+
 ```typescript
 // Includes condensed schema for AI context
 ${JSON.stringify(getCondensedSchema(PROGRAM_SCHEMA), null, 2)}
@@ -94,12 +102,14 @@ ${JSON.stringify(getCondensedSchema(PROGRAM_SCHEMA), null, 2)}
 **File:** `amplify/functions/libs/schemas/program-normalization-schema.ts`
 
 **Content:**
+
 - Import `PROGRAM_SCHEMA`
 - Export `NORMALIZATION_RESPONSE_SCHEMA`
 - Set `normalizedData: PROGRAM_SCHEMA` (full schema)
 - Match workout schema structure exactly
 
 **Benefits:**
+
 - ✅ Bedrock enforces program structure
 - ✅ Consistent with workout pattern
 - ✅ Separate file for maintainability
@@ -107,6 +117,7 @@ ${JSON.stringify(getCondensedSchema(PROGRAM_SCHEMA), null, 2)}
 **Status:** ✅ **IMPLEMENTED & VALIDATED**
 
 **Implementation Details:**
+
 - File created: 67 lines
 - Imports `PROGRAM_SCHEMA` from `./program-schema`
 - Exports `NORMALIZATION_RESPONSE_SCHEMA` with identical structure to workout
@@ -115,39 +126,40 @@ ${JSON.stringify(getCondensedSchema(PROGRAM_SCHEMA), null, 2)}
 
 **Validation Results:**
 
-| Check | Status | Location |
-|-------|--------|----------|
-| Schema file exists | ✅ | `amplify/functions/libs/schemas/program-normalization-schema.ts` |
-| Imports entity schema | ✅ | Line 10: `import { PROGRAM_SCHEMA }` |
-| Exports response schema | ✅ | Line 12: `export const NORMALIZATION_RESPONSE_SCHEMA` |
-| Full schema in normalizedData | ✅ | Line 20: `normalizedData: PROGRAM_SCHEMA` |
-| Matches workout pattern | ✅ | 100% structural alignment |
+| Check                         | Status | Location                                                         |
+| ----------------------------- | ------ | ---------------------------------------------------------------- |
+| Schema file exists            | ✅     | `amplify/functions/libs/schemas/program-normalization-schema.ts` |
+| Imports entity schema         | ✅     | Line 10: `import { PROGRAM_SCHEMA }`                             |
+| Exports response schema       | ✅     | Line 12: `export const NORMALIZATION_RESPONSE_SCHEMA`            |
+| Full schema in normalizedData | ✅     | Line 20: `normalizedData: PROGRAM_SCHEMA`                        |
+| Matches workout pattern       | ✅     | 100% structural alignment                                        |
 
 **Pattern Comparison with Workout:**
 
 ```typescript
 // Workout Schema
 export const NORMALIZATION_RESPONSE_SCHEMA = {
-  type: 'object',
-  required: ['isValid', 'normalizedData', 'issues', 'confidence', 'summary'],
+  type: "object",
+  required: ["isValid", "normalizedData", "issues", "confidence", "summary"],
   properties: {
-    normalizedData: WORKOUT_SCHEMA,  // ✅ Full schema
-  }
+    normalizedData: WORKOUT_SCHEMA, // ✅ Full schema
+  },
 };
 
 // Program Schema (IDENTICAL PATTERN)
 export const NORMALIZATION_RESPONSE_SCHEMA = {
-  type: 'object',
-  required: ['isValid', 'normalizedData', 'issues', 'confidence', 'summary'],
+  type: "object",
+  required: ["isValid", "normalizedData", "issues", "confidence", "summary"],
   properties: {
-    normalizedData: PROGRAM_SCHEMA,  // ✅ Full schema
-  }
+    normalizedData: PROGRAM_SCHEMA, // ✅ Full schema
+  },
 };
 ```
 
 **Tool Configuration Verification:**
 
 Confirmed in `amplify/functions/libs/program/normalization.ts` (lines 257-270):
+
 ```typescript
 const result = await callBedrockApi(
   normalizationPrompt,
@@ -155,16 +167,17 @@ const result = await callBedrockApi(
   undefined,
   {
     tools: {
-      name: 'normalize_program',
-      inputSchema: NORMALIZATION_RESPONSE_SCHEMA,  // ✅ From schema file
-    }
-  }
+      name: "normalize_program",
+      inputSchema: NORMALIZATION_RESPONSE_SCHEMA, // ✅ From schema file
+    },
+  },
 );
 ```
 
 **Comparison with Workout Flow:**
 
 Confirmed in `amplify/functions/build-workout/handler.ts` (lines 176-189):
+
 ```typescript
 const result = await callBedrockApi(
   normalizationPrompt,
@@ -172,10 +185,10 @@ const result = await callBedrockApi(
   selectedModel,
   {
     tools: {
-      name: 'normalize_workout',
-      inputSchema: NORMALIZATION_RESPONSE_SCHEMA  // ✅ Same pattern
-    }
-  }
+      name: "normalize_workout",
+      inputSchema: NORMALIZATION_RESPONSE_SCHEMA, // ✅ Same pattern
+    },
+  },
 );
 ```
 
@@ -186,12 +199,14 @@ const result = await callBedrockApi(
 ### Step 2: Update `program/normalization.ts` ✅
 
 **Changes:**
+
 1. Remove inline `NORMALIZATION_RESPONSE_SCHEMA` (lines 35-79)
 2. Add import: `import { NORMALIZATION_RESPONSE_SCHEMA } from '../schemas/program-normalization-schema'`
 3. Keep condensed schema in prompt (lines 211-212)
 4. Keep all validation logic unchanged
 
 **No Breaking Changes:**
+
 - Same function signatures
 - Same return types
 - Same validation rules
@@ -199,6 +214,7 @@ const result = await callBedrockApi(
 **Status:** ✅ **IMPLEMENTED & VALIDATED**
 
 **Implementation Details:**
+
 - Removed: 48 lines (inline schema definition)
 - Added: 1 line (import statement at line 13)
 - Net change: -47 lines
@@ -207,16 +223,17 @@ const result = await callBedrockApi(
 
 **Validation Results:**
 
-| Check | Status | Evidence |
-|-------|--------|----------|
-| Inline schema removed | ✅ | Lines 35-79 no longer contain inline schema |
-| Import added | ✅ | Line 13: `import { NORMALIZATION_RESPONSE_SCHEMA } from "../schemas/program-normalization-schema"` |
-| Import of PROGRAM_SCHEMA kept | ✅ | Line 12: `import { PROGRAM_SCHEMA } from "../schemas/program-schema"` |
-| Condensed schema in prompt | ✅ | Line 76: `getCondensedSchema(PROGRAM_SCHEMA)` |
-| toolConfig uses imported schema | ✅ | Line 266: `inputSchema: NORMALIZATION_RESPONSE_SCHEMA` |
-| No breaking changes | ✅ | All function signatures identical |
+| Check                           | Status | Evidence                                                                                           |
+| ------------------------------- | ------ | -------------------------------------------------------------------------------------------------- |
+| Inline schema removed           | ✅     | Lines 35-79 no longer contain inline schema                                                        |
+| Import added                    | ✅     | Line 13: `import { NORMALIZATION_RESPONSE_SCHEMA } from "../schemas/program-normalization-schema"` |
+| Import of PROGRAM_SCHEMA kept   | ✅     | Line 12: `import { PROGRAM_SCHEMA } from "../schemas/program-schema"`                              |
+| Condensed schema in prompt      | ✅     | Line 76: `getCondensedSchema(PROGRAM_SCHEMA)`                                                      |
+| toolConfig uses imported schema | ✅     | Line 266: `inputSchema: NORMALIZATION_RESPONSE_SCHEMA`                                             |
+| No breaking changes             | ✅     | All function signatures identical                                                                  |
 
 **Functions Preserved:**
+
 - ✅ `buildNormalizationPrompt()` - Unchanged
 - ✅ `normalizeProgram()` - Unchanged
 - ✅ `performNormalization()` - Unchanged
@@ -228,6 +245,7 @@ const result = await callBedrockApi(
 **Prompt Structure Preserved:**
 
 The condensed schema is still included in the prompt for AI context (lines 87-239):
+
 ```typescript
 export const buildNormalizationPrompt = (programData: any): string => {
   const condensedSchema = getCondensedSchema(PROGRAM_SCHEMA);
@@ -245,6 +263,7 @@ ${JSON.stringify(condensedSchema, null, 2)}
 **Tool Configuration Uses Full Schema:**
 
 Line 266 in `performNormalization()`:
+
 ```typescript
 tools: {
   name: 'normalize_program',
@@ -271,60 +290,68 @@ tools: {
  * Pattern: Matches workout-normalization-schema.ts exactly
  */
 
-import { PROGRAM_SCHEMA } from './program-schema';
+import { PROGRAM_SCHEMA } from "./program-schema";
 
 export const NORMALIZATION_RESPONSE_SCHEMA = {
-  type: 'object',
-  required: ['isValid', 'normalizedData', 'issues', 'confidence', 'summary'],
+  type: "object",
+  required: ["isValid", "normalizedData", "issues", "confidence", "summary"],
   properties: {
     isValid: {
-      type: 'boolean',
-      description: 'Whether the program data is valid after normalization. Set to TRUE if: (1) no issues found, OR (2) all issues were corrected. Set to FALSE only if critical issues exist that could NOT be corrected.'
+      type: "boolean",
+      description:
+        "Whether the program data is valid after normalization. Set to TRUE if: (1) no issues found, OR (2) all issues were corrected. Set to FALSE only if critical issues exist that could NOT be corrected.",
     },
-    normalizedData: PROGRAM_SCHEMA,  // ✅ Full schema enforcement
+    normalizedData: PROGRAM_SCHEMA, // ✅ Full schema enforcement
     issues: {
-      type: 'array',
-      description: 'List of issues found and corrected during normalization',
+      type: "array",
+      description: "List of issues found and corrected during normalization",
       items: {
-        type: 'object',
-        required: ['type', 'severity', 'field', 'description', 'corrected'],
+        type: "object",
+        required: ["type", "severity", "field", "description", "corrected"],
         properties: {
           type: {
-            type: 'string',
-            enum: ['structure', 'data_quality', 'cross_reference', 'date_logic', 'phase_logic'],
-            description: 'Category of the issue'
+            type: "string",
+            enum: [
+              "structure",
+              "data_quality",
+              "cross_reference",
+              "date_logic",
+              "phase_logic",
+            ],
+            description: "Category of the issue",
           },
           severity: {
-            type: 'string',
-            enum: ['error', 'warning'],
-            description: 'Severity level of the issue'
+            type: "string",
+            enum: ["error", "warning"],
+            description: "Severity level of the issue",
           },
           field: {
-            type: 'string',
-            description: 'Field path where the issue was found'
+            type: "string",
+            description: "Field path where the issue was found",
           },
           description: {
-            type: 'string',
-            description: 'Clear description of the issue'
+            type: "string",
+            description: "Clear description of the issue",
           },
           corrected: {
-            type: 'boolean',
-            description: 'Whether the issue was corrected'
-          }
-        }
-      }
+            type: "boolean",
+            description: "Whether the issue was corrected",
+          },
+        },
+      },
     },
     confidence: {
-      type: 'number',
+      type: "number",
       minimum: 0,
       maximum: 1,
-      description: 'Confidence in the normalization result (0-1)'
+      description: "Confidence in the normalization result (0-1)",
     },
     summary: {
-      type: 'string',
-      description: 'Brief summary of normalization results and corrections made'
-    }
-  }
+      type: "string",
+      description:
+        "Brief summary of normalization results and corrections made",
+    },
+  },
 };
 ```
 
@@ -335,11 +362,13 @@ export const NORMALIZATION_RESPONSE_SCHEMA = {
 **Remove:** Lines 31-79 (inline `NORMALIZATION_RESPONSE_SCHEMA`)
 
 **Add at top (after other imports):**
+
 ```typescript
-import { NORMALIZATION_RESPONSE_SCHEMA } from '../schemas/program-normalization-schema';
+import { NORMALIZATION_RESPONSE_SCHEMA } from "../schemas/program-normalization-schema";
 ```
 
 **Keep Everything Else:**
+
 - ✅ `buildNormalizationPrompt()` with condensed schema
 - ✅ `normalizeProgram()` function
 - ✅ `performNormalization()` function
@@ -352,21 +381,21 @@ import { NORMALIZATION_RESPONSE_SCHEMA } from '../schemas/program-normalization-
 
 ### Before (Current State)
 
-| Component | Program | Workout |
-|-----------|---------|---------|
+| Component            | Program             | Workout        |
+| -------------------- | ------------------- | -------------- |
 | Schema in toolConfig | ❌ `type: 'object'` | ✅ Full schema |
-| Schema in prompt | ✅ Condensed | ✅ Condensed |
-| Enforcement | ❌ Weak | ✅ Strong |
-| Pattern | Inconsistent | Consistent |
+| Schema in prompt     | ✅ Condensed        | ✅ Condensed   |
+| Enforcement          | ❌ Weak             | ✅ Strong      |
+| Pattern              | Inconsistent        | Consistent     |
 
 ### After (Aligned)
 
-| Component | Program | Workout |
-|-----------|---------|---------|
+| Component            | Program        | Workout        |
+| -------------------- | -------------- | -------------- |
 | Schema in toolConfig | ✅ Full schema | ✅ Full schema |
-| Schema in prompt | ✅ Condensed | ✅ Condensed |
-| Enforcement | ✅ Strong | ✅ Strong |
-| Pattern | ✅ Consistent | ✅ Consistent |
+| Schema in prompt     | ✅ Condensed   | ✅ Condensed   |
+| Enforcement          | ✅ Strong      | ✅ Strong      |
+| Pattern              | ✅ Consistent  | ✅ Consistent  |
 
 ---
 
@@ -400,6 +429,7 @@ import { NORMALIZATION_RESPONSE_SCHEMA } from '../schemas/program-normalization-
    - **Net change:** -47 lines (schema) + 30 lines (model selection) = -17 lines
 
 ### Summary
+
 - **Files created:** 1 (+67 lines)
 - **Files updated:** 1 (-17 lines)
 - **Total net change:** +50 lines
@@ -430,15 +460,18 @@ import { NORMALIZATION_RESPONSE_SCHEMA } from '../schemas/program-normalization-
 ### What Changed
 
 **Created 1 new file:**
+
 - `amplify/functions/libs/schemas/program-normalization-schema.ts` (67 lines)
 
 **Modified 1 file:**
+
 - `amplify/functions/libs/program/normalization.ts`
   - Removed 48 lines (inline schema)
   - Added 1 line (import statement)
   - Net: -47 lines
 
 **Total Changes:**
+
 - +67 lines (new schema file)
 - -47 lines (removed inline schema)
 - Net: +20 lines
@@ -467,19 +500,22 @@ import { NORMALIZATION_RESPONSE_SCHEMA } from '../schemas/program-normalization-
 ## 🔄 Additional Enhancement: Two-Tier Model Selection
 
 ### Issue Identified
+
 During comprehensive architecture analysis, discovered that program normalization was **missing two-tier model selection** that workout normalization uses.
 
 ### Workout Normalization Pattern (Reference)
+
 ```typescript
 // Lines 145-150 in workout/normalization.ts
 const extractionConfidence = workoutData.metadata?.data_confidence || 0;
-const useHaiku = extractionConfidence >= 0.80;
+const useHaiku = extractionConfidence >= 0.8;
 const selectedModel = useHaiku
-  ? MODEL_IDS.CLAUDE_HAIKU_4_FULL      // Tier 1: Fast (≥0.80)
-  : MODEL_IDS.CLAUDE_SONNET_4_FULL;    // Tier 2: Thorough (<0.80)
+  ? MODEL_IDS.CLAUDE_HAIKU_4_FULL // Tier 1: Fast (≥0.80)
+  : MODEL_IDS.CLAUDE_SONNET_4_FULL; // Tier 2: Thorough (<0.80)
 ```
 
 ### Program Normalization (Before) ❌
+
 ```typescript
 // Always used default model (Sonnet 4.5)
 const result = await callBedrockApi(
@@ -491,6 +527,7 @@ const result = await callBedrockApi(
 ```
 
 ### Program Normalization (After) ✅
+
 ```typescript
 // Added two-tier model selection
 const extractionConfidence = programData.metadata?.data_confidence || 0;
@@ -531,30 +568,35 @@ const result = await callBedrockApi(
 **File:** `amplify/functions/libs/program/normalization.ts`
 
 1. ✅ **Added MODEL_IDS import** (line 9)
+
    ```typescript
    import { callBedrockApi, MODEL_IDS } from "../api-helpers";
    ```
 
 2. ✅ **Added two-tier model selection logic** (lines 245-257)
+
    ```typescript
    const extractionConfidence = programData.metadata?.data_confidence || 0;
-   const useHaiku = extractionConfidence >= 0.80;
+   const useHaiku = extractionConfidence >= 0.8;
    const selectedModel = useHaiku
      ? MODEL_IDS.CLAUDE_HAIKU_4_FULL
      : MODEL_IDS.CLAUDE_SONNET_4_FULL;
 
    console.info("🔀 Two-tier normalization model selection:", {
      extractionConfidence,
-     threshold: 0.80,
-     selectedTier: useHaiku ? 'Tier 1 (Haiku 4 - Fast)' : 'Tier 2 (Sonnet 4 - Thorough)',
+     threshold: 0.8,
+     selectedTier: useHaiku
+       ? "Tier 1 (Haiku 4 - Fast)"
+       : "Tier 2 (Sonnet 4 - Thorough)",
      selectedModel,
      reasoning: useHaiku
-       ? 'High confidence generation - use fast structural validation'
-       : 'Low confidence generation - use thorough validation with deep reasoning'
+       ? "High confidence generation - use fast structural validation"
+       : "Low confidence generation - use thorough validation with deep reasoning",
    });
    ```
 
 3. ✅ **Updated primary tool call** (line 283)
+
    ```typescript
    const result = await callBedrockApi(
      normalizationPrompt,
@@ -565,12 +607,13 @@ const result = await callBedrockApi(
    ```
 
 4. ✅ **Updated fallback call** (line 313)
+
    ```typescript
    const fallbackResponse = await callBedrockApi(
      fallbackPrompt,
      "program_normalization_fallback",
-     selectedModel,  // ✅ Use same tier-selected model for fallback (was: undefined)
-     { prefillResponse: "{" }
+     selectedModel, // ✅ Use same tier-selected model for fallback (was: undefined)
+     { prefillResponse: "{" },
    );
    ```
 
@@ -600,53 +643,54 @@ const result = await callBedrockApi(
 
 ### Architecture Alignment with Workout Normalization
 
-| Component | Workout | Program | Status |
-|-----------|---------|---------|--------|
-| **File Structure** |  |  |  |
-| Schema file in `/schemas/` | ✅ `workout-normalization-schema.ts` | ✅ `program-normalization-schema.ts` | ✅ Match |
-| Logic file in domain folder | ✅ `workout/normalization.ts` | ✅ `program/normalization.ts` | ✅ Match |
-| **Schema Pattern** |  |  |  |
-| Import entity schema | ✅ `WORKOUT_SCHEMA` | ✅ `PROGRAM_SCHEMA` | ✅ Match |
-| Export response schema | ✅ `NORMALIZATION_RESPONSE_SCHEMA` | ✅ `NORMALIZATION_RESPONSE_SCHEMA` | ✅ Match |
-| normalizedData uses full schema | ✅ `WORKOUT_SCHEMA` | ✅ `PROGRAM_SCHEMA` | ✅ Match |
-| **Imports** |  |  |  |
-| Import from schema file | ✅ Yes | ✅ Yes | ✅ Match |
-| Import entity schema for prompt | ✅ Yes | ✅ Yes | ✅ Match |
-| Import api-helpers | ✅ Yes | ✅ Yes | ✅ Match |
-| Import object-utils | ✅ Yes | ✅ Yes | ✅ Match |
-| **Interfaces** |  |  |  |
-| NormalizationResult | ✅ 6 fields | ✅ 6 fields | ✅ Match |
-| NormalizationIssue | ✅ 5 fields | ✅ 5 fields | ✅ Match |
-| **Prompt Structure** |  |  |  |
-| Condensed schema in prompt | ✅ `getCondensedSchema()` | ✅ `getCondensedSchema()` | ✅ Match |
-| Full schema in toolConfig | ✅ Via import | ✅ Via import | ✅ Match |
-| Validation instructions | ✅ Yes | ✅ Yes | ✅ Match |
-| **Functions** |  |  |  |
-| buildNormalizationPrompt() | ✅ Exists | ✅ Exists | ✅ Match |
-| normalizeWorkout/Program() | ✅ Exists | ✅ Exists | ✅ Match |
-| performNormalization() | ✅ Exists | ✅ Exists | ✅ Match |
-| Validation helpers | ✅ Multiple | ✅ Multiple | ✅ Match |
-| **Tool Call Pattern** |  |  |  |
-| Tool name | ✅ `normalize_workout` | ✅ `normalize_program` | ✅ Match |
-| Uses toolConfig | ✅ Yes | ✅ Yes | ✅ Match |
-| inputSchema | ✅ `NORMALIZATION_RESPONSE_SCHEMA` | ✅ `NORMALIZATION_RESPONSE_SCHEMA` | ✅ Match |
-| expectedToolName | ✅ Yes | ✅ Yes | ✅ Match |
-| **Error Handling** |  |  |  |
-| Try-catch wrapper | ✅ Yes | ✅ Yes | ✅ Match |
-| Fallback on tool error | ✅ Yes | ✅ Yes | ✅ Match |
-| Returns NormalizationResult | ✅ Yes | ✅ Yes | ✅ Match |
-| **Model Selection** |  |  |  |
-| Two-tier model selection | ✅ Yes (Haiku/Sonnet) | ✅ Yes (Haiku/Sonnet) | ✅ Match |
-| Confidence threshold | ✅ 0.80 | ✅ 0.80 | ✅ Match |
-| Tier 1 (High confidence ≥0.80) | ✅ Haiku 4.5 | ✅ Haiku 4.5 | ✅ Match |
-| Tier 2 (Low confidence <0.80) | ✅ Sonnet 4.5 | ✅ Sonnet 4.5 | ✅ Match |
-| Fallback uses tier-selected | ✅ Yes | ✅ Yes | ✅ Match |
+| Component                       | Workout                              | Program                              | Status   |
+| ------------------------------- | ------------------------------------ | ------------------------------------ | -------- |
+| **File Structure**              |                                      |                                      |          |
+| Schema file in `/schemas/`      | ✅ `workout-normalization-schema.ts` | ✅ `program-normalization-schema.ts` | ✅ Match |
+| Logic file in domain folder     | ✅ `workout/normalization.ts`        | ✅ `program/normalization.ts`        | ✅ Match |
+| **Schema Pattern**              |                                      |                                      |          |
+| Import entity schema            | ✅ `WORKOUT_SCHEMA`                  | ✅ `PROGRAM_SCHEMA`                  | ✅ Match |
+| Export response schema          | ✅ `NORMALIZATION_RESPONSE_SCHEMA`   | ✅ `NORMALIZATION_RESPONSE_SCHEMA`   | ✅ Match |
+| normalizedData uses full schema | ✅ `WORKOUT_SCHEMA`                  | ✅ `PROGRAM_SCHEMA`                  | ✅ Match |
+| **Imports**                     |                                      |                                      |          |
+| Import from schema file         | ✅ Yes                               | ✅ Yes                               | ✅ Match |
+| Import entity schema for prompt | ✅ Yes                               | ✅ Yes                               | ✅ Match |
+| Import api-helpers              | ✅ Yes                               | ✅ Yes                               | ✅ Match |
+| Import object-utils             | ✅ Yes                               | ✅ Yes                               | ✅ Match |
+| **Interfaces**                  |                                      |                                      |          |
+| NormalizationResult             | ✅ 6 fields                          | ✅ 6 fields                          | ✅ Match |
+| NormalizationIssue              | ✅ 5 fields                          | ✅ 5 fields                          | ✅ Match |
+| **Prompt Structure**            |                                      |                                      |          |
+| Condensed schema in prompt      | ✅ `getCondensedSchema()`            | ✅ `getCondensedSchema()`            | ✅ Match |
+| Full schema in toolConfig       | ✅ Via import                        | ✅ Via import                        | ✅ Match |
+| Validation instructions         | ✅ Yes                               | ✅ Yes                               | ✅ Match |
+| **Functions**                   |                                      |                                      |          |
+| buildNormalizationPrompt()      | ✅ Exists                            | ✅ Exists                            | ✅ Match |
+| normalizeWorkout/Program()      | ✅ Exists                            | ✅ Exists                            | ✅ Match |
+| performNormalization()          | ✅ Exists                            | ✅ Exists                            | ✅ Match |
+| Validation helpers              | ✅ Multiple                          | ✅ Multiple                          | ✅ Match |
+| **Tool Call Pattern**           |                                      |                                      |          |
+| Tool name                       | ✅ `normalize_workout`               | ✅ `normalize_program`               | ✅ Match |
+| Uses toolConfig                 | ✅ Yes                               | ✅ Yes                               | ✅ Match |
+| inputSchema                     | ✅ `NORMALIZATION_RESPONSE_SCHEMA`   | ✅ `NORMALIZATION_RESPONSE_SCHEMA`   | ✅ Match |
+| expectedToolName                | ✅ Yes                               | ✅ Yes                               | ✅ Match |
+| **Error Handling**              |                                      |                                      |          |
+| Try-catch wrapper               | ✅ Yes                               | ✅ Yes                               | ✅ Match |
+| Fallback on tool error          | ✅ Yes                               | ✅ Yes                               | ✅ Match |
+| Returns NormalizationResult     | ✅ Yes                               | ✅ Yes                               | ✅ Match |
+| **Model Selection**             |                                      |                                      |          |
+| Two-tier model selection        | ✅ Yes (Haiku/Sonnet)                | ✅ Yes (Haiku/Sonnet)                | ✅ Match |
+| Confidence threshold            | ✅ 0.80                              | ✅ 0.80                              | ✅ Match |
+| Tier 1 (High confidence ≥0.80)  | ✅ Haiku 4.5                         | ✅ Haiku 4.5                         | ✅ Match |
+| Tier 2 (Low confidence <0.80)   | ✅ Sonnet 4.5                        | ✅ Sonnet 4.5                        | ✅ Match |
+| Fallback uses tier-selected     | ✅ Yes                               | ✅ Yes                               | ✅ Match |
 
 ---
 
 ### Comprehensive Normalization Scope
 
 **Workout Normalization validates:**
+
 - ✅ Root-level workout structure
 - ✅ Exercise arrays and nested objects
 - ✅ Metadata and discipline-specific fields
@@ -654,6 +698,7 @@ const result = await callBedrockApi(
 - ✅ Data type consistency
 
 **Program Normalization validates:**
+
 - ✅ Root-level program structure
 - ✅ **ALL phases** (sequential, no gaps)
 - ✅ **ALL workout templates** (structure, content)
@@ -699,6 +744,7 @@ const result = await callBedrockApi(
 
 **Does it adhere to build-workout architecture?**
 ✅ **YES** - 100% pattern match across all dimensions:
+
 - File structure ✅
 - Schema pattern ✅
 - Import structure ✅
@@ -711,6 +757,7 @@ const result = await callBedrockApi(
 ✅ **YES** - No TypeScript errors, no breaking changes, fully tested pattern
 
 **Additional Benefits:**
+
 - 💰 3x cost savings on high-confidence normalizations (Haiku vs Sonnet)
 - ⚡ Faster normalization for high-confidence programs
 - 🎯 Appropriate model selection based on generation quality
@@ -724,12 +771,12 @@ const result = await callBedrockApi(
 
 Both workout and program flows use **identical generation patterns**:
 
-| Aspect | Workout | Program | Status |
-|--------|---------|---------|--------|
-| Schema in prompt | ❌ No (references "via tool") | ❌ No (references "via tool") | ✅ Consistent |
-| Schema in toolConfig | ✅ Yes (`WORKOUT_SCHEMA`) | ✅ Yes (`PHASE_SCHEMA`) | ✅ Consistent |
-| Model selection | ✅ Fixed (Sonnet 4.5) | ✅ Fixed (Sonnet 4.5) | ✅ Consistent |
-| Thinking enabled | ✅ Based on complexity | ✅ Always enabled | ✅ Consistent |
+| Aspect               | Workout                       | Program                       | Status        |
+| -------------------- | ----------------------------- | ----------------------------- | ------------- |
+| Schema in prompt     | ❌ No (references "via tool") | ❌ No (references "via tool") | ✅ Consistent |
+| Schema in toolConfig | ✅ Yes (`WORKOUT_SCHEMA`)     | ✅ Yes (`PHASE_SCHEMA`)       | ✅ Consistent |
+| Model selection      | ✅ Fixed (Sonnet 4.5)         | ✅ Fixed (Sonnet 4.5)         | ✅ Consistent |
+| Thinking enabled     | ✅ Based on complexity        | ✅ Always enabled             | ✅ Consistent |
 
 **Pattern:** Rely entirely on toolConfig for schema enforcement during generation/extraction.
 
@@ -737,16 +784,16 @@ Both workout and program flows use **identical generation patterns**:
 
 Both flows now use **identical normalization patterns**:
 
-| Aspect | Workout | Program | Status |
-|--------|---------|---------|--------|
-| Schema in prompt | ✅ Condensed | ✅ Condensed | ✅ Consistent |
-| Schema in toolConfig | ✅ Full | ✅ Full | ✅ Consistent |
-| Two-tier model selection | ✅ Yes (Haiku/Sonnet) | ✅ Yes (Haiku/Sonnet) | ✅ Consistent |
-| Confidence threshold | ✅ 0.80 | ✅ 0.80 | ✅ Consistent |
-| Tier 1 (≥0.80) | ✅ Haiku 4.5 | ✅ Haiku 4.5 | ✅ Consistent |
-| Tier 2 (<0.80) | ✅ Sonnet 4.5 | ✅ Sonnet 4.5 | ✅ Consistent |
-| Fallback uses tier model | ✅ Yes | ✅ Yes | ✅ Consistent |
-| Fallback debug data | ✅ Stores to S3 | ⚠️ Not implemented | ⚠️ Minor gap (intentional) |
+| Aspect                   | Workout               | Program               | Status                     |
+| ------------------------ | --------------------- | --------------------- | -------------------------- |
+| Schema in prompt         | ✅ Condensed          | ✅ Condensed          | ✅ Consistent              |
+| Schema in toolConfig     | ✅ Full               | ✅ Full               | ✅ Consistent              |
+| Two-tier model selection | ✅ Yes (Haiku/Sonnet) | ✅ Yes (Haiku/Sonnet) | ✅ Consistent              |
+| Confidence threshold     | ✅ 0.80               | ✅ 0.80               | ✅ Consistent              |
+| Tier 1 (≥0.80)           | ✅ Haiku 4.5          | ✅ Haiku 4.5          | ✅ Consistent              |
+| Tier 2 (<0.80)           | ✅ Sonnet 4.5         | ✅ Sonnet 4.5         | ✅ Consistent              |
+| Fallback uses tier model | ✅ Yes                | ✅ Yes                | ✅ Consistent              |
+| Fallback debug data      | ✅ Stores to S3       | ⚠️ Not implemented    | ⚠️ Minor gap (intentional) |
 
 **Pattern:** Dual-schema approach (condensed in prompt + full in toolConfig) with intelligent two-tier model selection.
 
@@ -759,30 +806,34 @@ Both flows now use **identical normalization patterns**:
 ### Two-Tier Model Selection Savings
 
 **Pricing:**
+
 - Haiku 4.5: ~$1.00 per million input tokens
 - Sonnet 4.5: ~$3.00 per million input tokens
 
 **Cost Savings:**
+
 - High confidence programs (≥0.80): **3x cost reduction** using Haiku
 - Example: 10,000 token normalization = $0.01 (Haiku) vs $0.03 (Sonnet)
 
 **Performance Gains:**
+
 - Haiku 4.5: 1-2 second response times
 - Sonnet 4.5: 3-5 second response times
 - **Result:** 50-70% faster normalization for high-confidence programs
 
 **Use Cases by Model:**
 
-| Confidence | Model | Typical Use Case |
-|-----------|-------|------------------|
-| ≥ 0.80 | Haiku 4.5 | Simple structural validation, field placement fixes, basic data type corrections |
-| < 0.80 | Sonnet 4.5 | Complex reasoning, data quality issues, cross-reference validation, phase logic errors |
+| Confidence | Model      | Typical Use Case                                                                       |
+| ---------- | ---------- | -------------------------------------------------------------------------------------- |
+| ≥ 0.80     | Haiku 4.5  | Simple structural validation, field placement fixes, basic data type corrections       |
+| < 0.80     | Sonnet 4.5 | Complex reasoning, data quality issues, cross-reference validation, phase logic errors |
 
 ---
 
 ## 🧪 Testing Strategy
 
 ### Pre-Deployment Checklist
+
 - ✅ All code changes complete
 - ✅ No compilation errors
 - ✅ No linter errors
@@ -792,6 +843,7 @@ Both flows now use **identical normalization patterns**:
 ### Post-Deployment Testing
 
 **1. Test High-Confidence Program Normalization**
+
 ```
 Expected CloudWatch Log:
 🔀 Two-tier normalization model selection:
@@ -803,12 +855,14 @@ Expected CloudWatch Log:
 ```
 
 **Verify:**
+
 - [ ] Haiku 4.5 is used for programs with confidence ≥ 0.80
 - [ ] Normalization succeeds
 - [ ] Response time is 1-2 seconds
 - [ ] Cost is reduced (check CloudWatch Insights)
 
 **2. Test Low-Confidence Program Normalization**
+
 ```
 Expected CloudWatch Log:
 🔀 Two-tier normalization model selection:
@@ -820,12 +874,14 @@ Expected CloudWatch Log:
 ```
 
 **Verify:**
+
 - [ ] Sonnet 4.5 is used for programs with confidence < 0.80
 - [ ] Thorough validation occurs
 - [ ] Complex issues are caught and corrected
 - [ ] Response time is 3-5 seconds
 
 **3. Test Fallback Path**
+
 - [ ] Force tool failure (temporarily break tool schema)
 - [ ] Verify fallback uses same tier-selected model
 - [ ] Verify successful normalization via text parsing
@@ -840,18 +896,21 @@ This refactor builds upon critical bug fixes implemented earlier:
 ### Bug Fixes from Previous Work
 
 **Bug 1: Conversation History** ✅ FIXED
+
 - **Issue:** Only 1 out of 6 user messages captured in conversation history
 - **Root Cause:** User message added AFTER handler call instead of before
 - **Fix:** Move user message addition to before handler call
-- **File:** `amplify/functions/libs/program-creator/handler-helpers.ts`
+- **File:** `amplify/functions/libs/program-designer/handler-helpers.ts`
 
 **Bug 2: Program Duration Parser** ✅ FIXED
+
 - **Issue:** "6 weeks" parsed as 6 days instead of 42 days
 - **Root Cause:** `parseInt("6 weeks", 10)` returns 6, not 42
 - **Fix:** Robust duration parser with regex and multiplier logic
 - **File:** `amplify/functions/libs/program/program-generator.ts`
 
 **Bug 3: AI Debug Data Storage** ✅ FIXED
+
 - **Issue:** No AI prompts/responses stored in S3 for debugging
 - **Fix:** Store AI generation debug data (phase structure, phase workouts, timings)
 - **Files:**
@@ -860,4 +919,3 @@ This refactor builds upon critical bug fixes implemented earlier:
   - `amplify/functions/build-workout/handler.ts` (bonus enhancement)
 
 These bug fixes ensure the foundation is solid before this normalization refactor.
-

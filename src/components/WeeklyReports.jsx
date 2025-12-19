@@ -1,55 +1,74 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { Tooltip } from 'react-tooltip';
-import { useAuthorizeUser } from '../auth/hooks/useAuthorizeUser';
-import { AccessDenied, LoadingScreen } from './shared/AccessDenied';
-import { containerPatterns, layoutPatterns, tooltipPatterns } from '../utils/ui/uiPatterns';
-import { FullPageLoader, CenteredErrorState } from './shared/ErrorStates';
-import CoachHeader from './shared/CoachHeader';
-import CompactCoachCard from './shared/CompactCoachCard';
-import CommandPaletteButton from './shared/CommandPaletteButton';
-import { useNavigationContext } from '../contexts/NavigationContext';
+import { Tooltip } from "react-tooltip";
+import { useAuthorizeUser } from "../auth/hooks/useAuthorizeUser";
+import { AccessDenied, LoadingScreen } from "./shared/AccessDenied";
+import {
+  containerPatterns,
+  layoutPatterns,
+  tooltipPatterns,
+} from "../utils/ui/uiPatterns";
+import { FullPageLoader, CenteredErrorState } from "./shared/ErrorStates";
+import CoachHeader from "./shared/CoachHeader";
+import CompactCoachCard from "./shared/CompactCoachCard";
+import CommandPaletteButton from "./shared/CommandPaletteButton";
+import { useNavigationContext } from "../contexts/NavigationContext";
 import WeeklyReportViewer from "./WeeklyReportViewer";
 import ReportAgent from "../utils/agents/ReportAgent";
 import CoachAgent from "../utils/agents/CoachAgent";
 import { WorkoutAgent } from "../utils/agents/WorkoutAgent";
-import { FloatingMenuManager } from './shared/FloatingMenuManager';
-import WeeklyHeatMap from './WeeklyHeatMap';
-import { ChevronDownIcon } from './themes/SynthwaveComponents';
+import WeeklyHeatMap from "./WeeklyHeatMap";
+import { ChevronDownIcon } from "./themes/SynthwaveComponents";
 
 // Icons for CollapsibleSection
 const CalendarHeatMapIcon = () => (
-  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+  <svg
+    className="w-5 h-5"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+    />
   </svg>
 );
 
 // Collapsible section component - matches WeeklyReportViewer pattern
-const CollapsibleSection = ({ title, icon, children, defaultOpen = false, className = "" }) => {
+const CollapsibleSection = ({
+  title,
+  icon,
+  children,
+  defaultOpen = false,
+  className = "",
+}) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
-    <div className={`${containerPatterns.collapsibleSection} overflow-hidden ${className}`}>
+    <div
+      className={`${containerPatterns.collapsibleSection} overflow-hidden ${className}`}
+    >
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={containerPatterns.collapsibleHeader}
       >
         <div className="flex items-center space-x-3">
-          <div className="text-synthwave-neon-cyan">
-            {icon}
-          </div>
+          <div className="text-synthwave-neon-cyan">{icon}</div>
           <h3 className="font-russo font-bold text-white text-base uppercase">
             {title}
           </h3>
         </div>
-        <div className={`text-synthwave-neon-cyan transition-transform duration-300 ${isOpen ? 'rotate-0' : '-rotate-90'}`}>
+        <div
+          className={`text-synthwave-neon-cyan transition-transform duration-300 ${isOpen ? "rotate-0" : "-rotate-90"}`}
+        >
           <ChevronDownIcon />
         </div>
       </button>
       {isOpen && (
-        <div className={containerPatterns.collapsibleContent}>
-          {children}
-        </div>
+        <div className={containerPatterns.collapsibleContent}>{children}</div>
       )}
     </div>
   );
@@ -63,7 +82,11 @@ function Reports() {
   const coachId = searchParams.get("coachId");
 
   // Authorize that URL userId matches authenticated user
-  const { isValidating: isValidatingUserId, isValid: isValidUserId, error: userIdError } = useAuthorizeUser(userId);
+  const {
+    isValidating: isValidatingUserId,
+    isValid: isValidUserId,
+    error: userIdError,
+  } = useAuthorizeUser(userId);
 
   const reportsAgentRef = useRef(null);
   const coachAgentRef = useRef(null);
@@ -81,7 +104,6 @@ function Reports() {
 
   // Coach data state (for FloatingMenuManager)
   const [coachData, setCoachData] = useState(null);
-
 
   // Initialize workout agent
   useEffect(() => {
@@ -111,7 +133,7 @@ function Reports() {
 
   useEffect(() => {
     reportsAgentRef.current = new ReportAgent(userId, (s) =>
-      setReportAgentState((prev) => ({ ...prev, ...s }))
+      setReportAgentState((prev) => ({ ...prev, ...s })),
     );
     return () => {
       reportsAgentRef.current?.destroy();
@@ -143,10 +165,13 @@ function Reports() {
         if (!coachAgentRef.current) {
           coachAgentRef.current = new CoachAgent();
         }
-        const loadedCoachData = await coachAgentRef.current.loadCoachDetails(userId, coachId);
+        const loadedCoachData = await coachAgentRef.current.loadCoachDetails(
+          userId,
+          coachId,
+        );
         setCoachData(loadedCoachData);
       } catch (error) {
-        console.error('Failed to load coach data:', error);
+        console.error("Failed to load coach data:", error);
       }
     };
 
@@ -161,13 +186,13 @@ function Reports() {
 
   // Auto-scroll to top when page loads (with scroll restoration disabled)
   useEffect(() => {
-    if ('scrollRestoration' in window.history) {
-      window.history.scrollRestoration = 'manual';
+    if ("scrollRestoration" in window.history) {
+      window.history.scrollRestoration = "manual";
     }
     window.scrollTo(0, 0);
     return () => {
-      if ('scrollRestoration' in window.history) {
-        window.history.scrollRestoration = 'auto';
+      if ("scrollRestoration" in window.history) {
+        window.history.scrollRestoration = "auto";
       }
     };
   }, []);
@@ -193,7 +218,7 @@ function Reports() {
     userId,
     coachId,
     setCoachData,
-    null // No toast notifications in WeeklyReports
+    null, // No toast notifications in WeeklyReports
   );
 
   // Show skeleton loading while validating userId or loading report
@@ -221,7 +246,9 @@ function Reports() {
 
           {/* Main Content Area skeleton */}
           <div className="flex-1">
-            <div className={`${containerPatterns.mainContent} h-full flex flex-col`}>
+            <div
+              className={`${containerPatterns.mainContent} h-full flex flex-col`}
+            >
               <div className="p-6 h-full overflow-y-auto space-y-6">
                 {/* Action buttons skeleton */}
                 <div className="flex justify-end space-x-2">
@@ -230,7 +257,10 @@ function Reports() {
 
                 {/* Report sections skeleton */}
                 {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className={`${containerPatterns.cardMedium} p-6`}>
+                  <div
+                    key={i}
+                    className={`${containerPatterns.cardMedium} p-6`}
+                  >
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center space-x-3">
                         <div className="w-6 h-6 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
@@ -281,7 +311,9 @@ function Reports() {
 
   return (
     <div className={`${layoutPatterns.pageContainer} min-h-screen pb-8`}>
-      <div className={`${layoutPatterns.contentWrapper} min-h-[calc(100vh-5rem)] flex flex-col`}>
+      <div
+        className={`${layoutPatterns.contentWrapper} min-h-[calc(100vh-5rem)] flex flex-col`}
+      >
         {/* Compact Horizontal Header */}
         <header
           className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-6"
@@ -310,14 +342,18 @@ function Reports() {
 
           {/* Right section: Command Palette Button */}
           <div className="flex items-center gap-3">
-            <CommandPaletteButton onClick={() => setIsCommandPaletteOpen(true)} />
+            <CommandPaletteButton
+              onClick={() => setIsCommandPaletteOpen(true)}
+            />
           </div>
         </header>
 
         {/* Main Content Area */}
         <div className="flex-1 flex justify-center">
           <div className="w-full max-w-7xl">
-            <div className={`${containerPatterns.mainContent} h-full flex flex-col`}>
+            <div
+              className={`${containerPatterns.mainContent} h-full flex flex-col`}
+            >
               <div className="p-6 h-full overflow-y-auto custom-scrollbar space-y-6">
                 {report ? (
                   <WeeklyReportViewer
@@ -331,7 +367,10 @@ function Reports() {
                         defaultOpen={true}
                       >
                         <WeeklyHeatMap
-                          dailyVolumeData={report.analyticsData?.structured_analytics?.raw_aggregations?.daily_volume || []}
+                          dailyVolumeData={
+                            report.analyticsData?.structured_analytics
+                              ?.raw_aggregations?.daily_volume || []
+                          }
                           weekStart={report.weekStart}
                           weekEnd={report.weekEnd}
                           userId={userId}
@@ -352,18 +391,6 @@ function Reports() {
           </div>
         </div>
       </div>
-
-      {/* Floating Menu Manager */}
-      <FloatingMenuManager
-        userId={userId}
-        coachId={coachId}
-        currentPage="weekly-report"
-        coachData={coachData}
-        onCommandPaletteToggle={(command) => {
-          setCommandPaletteCommand(command);
-          setIsCommandPaletteOpen(true);
-        }}
-      />
 
       {/* Tooltips */}
       <Tooltip

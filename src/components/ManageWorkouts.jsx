@@ -14,7 +14,6 @@ import { NeonBorder, NewBadge } from "./themes/SynthwaveComponents";
 import { useToast } from "../contexts/ToastContext";
 import { WorkoutAgent } from "../utils/agents/WorkoutAgent";
 import CoachAgent from "../utils/agents/CoachAgent";
-import { FloatingMenuManager } from "./shared/FloatingMenuManager";
 import CoachHeader from "./shared/CoachHeader";
 import CompactCoachCard from "./shared/CompactCoachCard";
 import CommandPaletteButton from "./shared/CommandPaletteButton";
@@ -1011,18 +1010,6 @@ function ManageWorkouts() {
             )}
         </div>
       </div>
-
-      {/* Floating Menu Manager */}
-      <FloatingMenuManager
-        userId={userId}
-        coachId={coachId}
-        currentPage="manage-workouts"
-        coachData={coachData}
-        onCommandPaletteToggle={(command) => {
-          setCommandPaletteCommand(command);
-          setIsCommandPaletteOpen(true);
-        }}
-      />
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && workoutToDelete && (
