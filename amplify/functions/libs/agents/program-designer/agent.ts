@@ -241,6 +241,16 @@ export class ProgramDesignerAgent extends Agent<ProgramDesignerContext> {
           this.storeToolResult("requirements", result);
         } else if (tool.id === "generate_phase_structure") {
           this.storeToolResult("phase_structure", result);
+        } else if (tool.id === "generate_phase_workouts") {
+          // Store phase workout results with phase_workouts prefix
+          // This ensures single-phase programs work correctly
+          const phaseId = result.phaseId || toolUse.input?.phase?.phaseId;
+          if (phaseId) {
+            this.storeToolResult(`phase_workouts:${phaseId}`, result);
+            console.info(
+              `📦 Stored single-phase workout result for ${phaseId}`,
+            );
+          }
         }
 
         this.toolResults.set(tool.id, result);

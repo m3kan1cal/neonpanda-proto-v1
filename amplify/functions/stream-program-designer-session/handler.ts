@@ -239,11 +239,9 @@ async function* createProgramDesignerEventStream(
     programSession.conversationHistory =
       programSession.conversationHistory || [];
     programSession.conversationHistory.push(userMessage);
-    programSession.turnCount += 1;
     programSession.lastActivity = new Date();
 
     console.info("📝 User message added to session conversation history", {
-      turnCount: programSession.turnCount,
       conversationHistoryLength: programSession.conversationHistory.length,
     });
 
