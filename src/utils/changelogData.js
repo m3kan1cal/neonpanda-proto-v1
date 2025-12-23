@@ -10,6 +10,35 @@
 
 export const changelogEntries = [
   {
+    version: "Release v1.0.20251223-beta",
+    date: "2025-12-23",
+    changes: {
+      added: [
+        "Five centralized icon components in SynthwaveComponents.jsx for weekly reports: JsonIcon, TrendingUpIcon, BrainIcon, ActivityIcon, HeartIcon with configurable className props",
+      ],
+      changed: [
+        "Weekly reports V2 components promoted to production as V1 (WeeklyReportsV2 → WeeklyReports, WeeklyReportViewerV2 → WeeklyReportViewer, WeeklyHeatMapV2 → WeeklyHeatMap)",
+        "Weekly reports now use 'THE NEW WAY' UI/UX patterns matching ProgramDashboard and WorkoutViewer with two-column layout (60/40 split), collapsible sections with pink dots and chevron icons, and compact coach card header design",
+        "Icon imports in WeeklyReports.jsx updated to use centralized TrendingUpIcon and HeartIcon from SynthwaveComponents instead of inline definitions",
+        "Icon imports in WeeklyReportViewer.jsx updated to use centralized TrendingUpIcon, BrainIcon, and ActivityIcon from SynthwaveComponents instead of inline definitions",
+        "Weekly reports route consolidated to single /training-grounds/reports/weekly endpoint (removed V2 variant)",
+        "Coach Analysis & Insights section in WeeklyReportViewer moved to left column (60%) directly under Weekly Training Intensity Heat Map section for better visual hierarchy",
+        "Coach Analysis & Insights section font styling adjusted to match Working Sets Summary (text-synthwave-text-secondary text-sm) for consistent readability",
+        "Movement Analysis, Training Intelligence, Weekly Progression, and Fatigue Management sections repositioned to right column (40%) under Analysis Metadata section",
+        "Coach Analysis & Insights section now collapsed by default for cleaner initial view",
+        "Actionable Insights section text color updated to text-synthwave-text-secondary matching other sections for visual consistency",
+        "Performance Markers exercise names now use text-synthwave-neon-pink matching PR Achievements section in WorkoutViewer for consistent record display styling",
+      ],
+      fixed: [],
+      removed: [
+        "Inline icon definitions (JsonIcon, TrendingUpIcon, BrainIcon, ActivityIcon, HeartIcon) from WeeklyReportsV2.jsx and WeeklyReportViewerV2.jsx (consolidated to SynthwaveComponents)",
+        "Old V1 weekly reports files (WeeklyReports.jsx, WeeklyReportViewer.jsx, WeeklyHeatMap.jsx) replaced by promoted V2 versions",
+        "/training-grounds/reports/weekly-v2 route removed with V2 import from App.jsx (consolidated to single /weekly route)",
+        "V2 suffix from weekly reports component filenames, imports, and component names throughout codebase",
+      ],
+    },
+  },
+  {
     version: "Release v1.0.20251222-beta",
     date: "2025-12-22",
     changes: {
