@@ -219,7 +219,7 @@ export async function loadFromDynamoDB<T>(
   }, operationName);
 }
 
-// Generic function to query multiple items from DynamoDB
+// Generic function to query multiple items from DynamoDB with pagination support
 export async function queryFromDynamoDB<T>(
   pk: string,
   skPrefix: string,
@@ -230,32 +230,49 @@ export async function queryFromDynamoDB<T>(
   const operationName = `Query ${entityType || "items"} from DynamoDB`;
 
   return withThroughputScaling(async () => {
-    const command = new QueryCommand({
-      TableName: tableName,
-      KeyConditionExpression: "#pk = :pk AND begins_with(#sk, :sk_prefix)",
-      FilterExpression: entityType ? "#entityType = :entityType" : undefined,
-      ExpressionAttributeNames: {
-        "#pk": "pk",
-        "#sk": "sk",
-        ...(entityType && { "#entityType": "entityType" }),
-      },
-      ExpressionAttributeValues: {
-        ":pk": pk,
-        ":sk_prefix": skPrefix,
-        ...(entityType && { ":entityType": entityType }),
-      },
-    });
+    let allItems: DynamoDBItem<T>[] = [];
+    let lastEvaluatedKey: any = undefined;
+    let pageCount = 0;
 
-    const result = await docClient.send(command);
+    // Paginate through all results
+    do {
+      pageCount++;
+      const command = new QueryCommand({
+        TableName: tableName,
+        KeyConditionExpression: "#pk = :pk AND begins_with(#sk, :sk_prefix)",
+        FilterExpression: entityType ? "#entityType = :entityType" : undefined,
+        ExpressionAttributeNames: {
+          "#pk": "pk",
+          "#sk": "sk",
+          ...(entityType && { "#entityType": "entityType" }),
+        },
+        ExpressionAttributeValues: {
+          ":pk": pk,
+          ":sk_prefix": skPrefix,
+          ...(entityType && { ":entityType": entityType }),
+        },
+        ExclusiveStartKey: lastEvaluatedKey,
+      });
+
+      const result = await docClient.send(command);
+      const pageItems = (result.Items as DynamoDBItem<T>[]) || [];
+
+      // Deserialize and add to collection
+      allItems = allItems.concat(
+        pageItems.map((item) => deserializeFromDynamoDB(item)),
+      );
+
+      lastEvaluatedKey = result.LastEvaluatedKey;
+    } while (lastEvaluatedKey);
 
     if (entityType) {
-      console.info(`${entityType} data queried from DynamoDB successfully`);
+      console.info(`${entityType} data queried from DynamoDB successfully`, {
+        totalItems: allItems.length,
+        pagesRead: pageCount,
+      });
     }
 
-    const items = (result.Items as DynamoDBItem<T>[]) || [];
-
-    // Deserialize all items to convert ISO strings back to Date objects
-    return items.map((item) => deserializeFromDynamoDB(item));
+    return allItems;
   }, operationName);
 }
 
@@ -3213,35 +3230,48 @@ export async function queryPrograms(
   const operationName = `Query all programs for user ${userId}`;
 
   return withThroughputScaling(async () => {
-    const command = new QueryCommand({
-      TableName: tableName,
-      IndexName: "gsi1",
-      KeyConditionExpression:
-        "gsi1pk = :gsi1pk AND begins_with(gsi1sk, :gsi1sk_prefix)",
-      FilterExpression: options?.status
-        ? "#entityType = :entityType AND #status = :status AND #status <> :archivedStatus"
-        : "#entityType = :entityType AND #status <> :archivedStatus",
-      ExpressionAttributeNames: {
-        "#entityType": "entityType",
-        "#status": "attributes.status",
-      },
-      ExpressionAttributeValues: {
-        ":gsi1pk": `user#${userId}`,
-        ":gsi1sk_prefix": "program#",
-        ":entityType": "program",
-        ":archivedStatus": "archived",
-        ...(options?.status && { ":status": options.status }),
-      },
-    });
+    let allProgramItems: DynamoDBItem<Program>[] = [];
+    let lastEvaluatedKey: any = undefined;
+    let pageCount = 0;
 
-    const result = await docClient.send(command);
-    let programItems = (result.Items || []) as DynamoDBItem<Program>[];
+    // Paginate through all results
+    do {
+      pageCount++;
+      const command = new QueryCommand({
+        TableName: tableName,
+        IndexName: "gsi1",
+        KeyConditionExpression:
+          "gsi1pk = :gsi1pk AND begins_with(gsi1sk, :gsi1sk_prefix)",
+        FilterExpression: options?.status
+          ? "#entityType = :entityType AND #status = :status AND #status <> :archivedStatus"
+          : "#entityType = :entityType AND #status <> :archivedStatus",
+        ExpressionAttributeNames: {
+          "#entityType": "entityType",
+          "#status": "attributes.status",
+        },
+        ExpressionAttributeValues: {
+          ":gsi1pk": `user#${userId}`,
+          ":gsi1sk_prefix": "program#",
+          ":entityType": "program",
+          ":archivedStatus": "archived",
+          ...(options?.status && { ":status": options.status }),
+        },
+        ExclusiveStartKey: lastEvaluatedKey,
+      });
 
-    // Deserialize dates
-    programItems = programItems.map((item) => deserializeFromDynamoDB(item));
+      const result = await docClient.send(command);
+      const pageItems = (result.Items || []) as DynamoDBItem<Program>[];
+
+      // Deserialize and add to collection
+      allProgramItems = allProgramItems.concat(
+        pageItems.map((item) => deserializeFromDynamoDB(item)),
+      );
+
+      lastEvaluatedKey = result.LastEvaluatedKey;
+    } while (lastEvaluatedKey);
 
     // Extract attributes and include timestamps
-    let programs = programItems.map((item) => ({
+    let programs = allProgramItems.map((item) => ({
       ...item.attributes,
       createdAt: new Date(item.createdAt),
       updatedAt: new Date(item.updatedAt),
@@ -3262,7 +3292,14 @@ export async function queryPrograms(
     console.info("All training programs queried successfully:", {
       userId,
       totalFound: programs.length,
+      pagesRead: pageCount,
       filters: options,
+      programDetails: programs.map((p) => ({
+        id: p.programId,
+        name: p.name,
+        status: p.status,
+        coachIds: p.coachIds,
+      })),
     });
 
     return programs;

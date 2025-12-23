@@ -1,5 +1,15 @@
-import { nanoid } from 'nanoid';
-import { getWorkouts, getWorkout, updateWorkout, deleteWorkout, getWorkoutsCount, getRecentWorkouts, getTrainingDaysCount, createWorkout, getWorkoutsByDateRange } from '../apis/workoutApi.js';
+import { nanoid } from "nanoid";
+import {
+  getWorkouts,
+  getWorkout,
+  updateWorkout,
+  deleteWorkout,
+  getWorkoutsCount,
+  getRecentWorkouts,
+  getTrainingDaysCount,
+  createWorkout,
+  getWorkoutsByDateRange,
+} from "../apis/workoutApi.js";
 
 /**
  * WorkoutAgent - Handles the business logic for workout management
@@ -12,8 +22,11 @@ export class WorkoutAgent {
     this.onStateChange = onStateChange;
 
     // Validate callback
-    if (this.onStateChange && typeof this.onStateChange !== 'function') {
-      console.error('WorkoutAgent: onStateChange must be a function, got:', typeof this.onStateChange);
+    if (this.onStateChange && typeof this.onStateChange !== "function") {
+      console.error(
+        "WorkoutAgent: onStateChange must be a function, got:",
+        typeof this.onStateChange,
+      );
       this.onStateChange = null;
     }
 
@@ -35,7 +48,7 @@ export class WorkoutAgent {
       isLoadingAllItems: false,
       isLoadingItem: false,
       error: null,
-      lastCheckTime: null
+      lastCheckTime: null,
     };
 
     // Add alias for backward compatibility
@@ -73,7 +86,10 @@ export class WorkoutAgent {
 
       return Math.max(0, diffInDays); // Ensure non-negative
     } catch (error) {
-      console.warn('WorkoutAgent._calculateLastWorkoutDaysAgo: Error calculating days ago:', error);
+      console.warn(
+        "WorkoutAgent._calculateLastWorkoutDaysAgo: Error calculating days ago:",
+        error,
+      );
       return 0;
     }
   }
@@ -87,21 +103,27 @@ export class WorkoutAgent {
     // Update state
     this.workoutState = {
       ...this.workoutState,
-      ...newStateData
+      ...newStateData,
     };
 
     // Update alias for backward compatibility
     this.state = this.workoutState;
 
     // Call state change callback if available
-    if (this.onStateChange && typeof this.onStateChange === 'function') {
+    if (this.onStateChange && typeof this.onStateChange === "function") {
       try {
         this.onStateChange(this.workoutState);
       } catch (error) {
-        console.error('WorkoutAgent._updateState: Error in state change callback:', error);
+        console.error(
+          "WorkoutAgent._updateState: Error in state change callback:",
+          error,
+        );
       }
     } else if (this.onStateChange !== null) {
-      console.warn('WorkoutAgent._updateState: Invalid callback type:', typeof this.onStateChange);
+      console.warn(
+        "WorkoutAgent._updateState: Invalid callback type:",
+        typeof this.onStateChange,
+      );
     }
   }
 
@@ -110,7 +132,7 @@ export class WorkoutAgent {
    */
   async setUserId(userId) {
     if (!userId) {
-      console.error('WorkoutAgent.setUserId: userId is required');
+      console.error("WorkoutAgent.setUserId: userId is required");
       return;
     }
 
@@ -121,12 +143,12 @@ export class WorkoutAgent {
   }
 
   /**
-   * Loads all workout stats with a single optimized API call
+   * Loads all workout stats with optimized API calls
    * Calculates: total count, recent workouts, this week count, training days, last workout days ago
    */
   async loadWorkoutStats() {
     if (!this.userId) {
-      console.error('WorkoutAgent.loadWorkoutStats: No userId set');
+      console.error("WorkoutAgent.loadWorkoutStats: No userId set");
       return;
     }
 
@@ -135,20 +157,24 @@ export class WorkoutAgent {
       isLoadingCount: true,
       isLoadingRecentItems: true,
       isLoadingTrainingDays: true,
-      error: null
+      error: null,
     });
 
     try {
-      // Single API call to get workouts with reasonable limit for calculations
-      const result = await getWorkouts(this.userId, {
-        limit: 100, // Get enough data to calculate all metrics accurately
-        sortBy: 'completedAt',
-        sortOrder: 'desc'
-      });
+      // Make parallel API calls for efficiency
+      const [workoutsResult, countResult] = await Promise.all([
+        // Get recent workouts for calculations (100 is enough for recent items and this week)
+        getWorkouts(this.userId, {
+          limit: 100,
+          sortBy: "completedAt",
+          sortOrder: "desc",
+        }),
+        // Get accurate total count from count endpoint
+        getWorkoutsCount(this.userId),
+      ]);
 
-
-      const workouts = result.workouts || [];
-      const totalCount = result.totalCount || workouts.length;
+      const workouts = workoutsResult.workouts || [];
+      const totalCount = countResult.totalCount || 0;
 
       // Calculate this week's date range
       const now = new Date();
@@ -166,7 +192,7 @@ export class WorkoutAgent {
       const recentWorkouts = workouts.slice(0, 5); // Take first 5 for recent list
 
       // Count this week's workouts
-      const thisWeekWorkouts = workouts.filter(workout => {
+      const thisWeekWorkouts = workouts.filter((workout) => {
         if (!workout.completedAt) return false;
         const workoutDate = new Date(workout.completedAt);
         return workoutDate >= startOfWeek && workoutDate <= endOfWeek;
@@ -174,14 +200,14 @@ export class WorkoutAgent {
 
       // Calculate unique training days
       const uniqueDates = new Set();
-      workouts.forEach(workout => {
+      workouts.forEach((workout) => {
         if (workout.completedAt) {
           try {
             const date = new Date(workout.completedAt);
-            const dateString = date.toISOString().split('T')[0];
+            const dateString = date.toISOString().split("T")[0];
             uniqueDates.add(dateString);
           } catch (error) {
-            console.warn('Invalid date format for workout:', workout.workoutId);
+            console.warn("Invalid date format for workout:", workout.workoutId);
           }
         }
       });
@@ -200,17 +226,18 @@ export class WorkoutAgent {
         isLoadingRecentItems: false,
         isLoadingTrainingDays: false,
         error: null,
-        lastCheckTime: Date.now()
+        lastCheckTime: Date.now(),
       });
-
-
     } catch (error) {
-      console.error('WorkoutAgent.loadWorkoutStats: Error loading workout stats:', error);
+      console.error(
+        "WorkoutAgent.loadWorkoutStats: Error loading workout stats:",
+        error,
+      );
       this._updateState({
         isLoadingCount: false,
         isLoadingRecentItems: false,
         isLoadingTrainingDays: false,
-        error: error.message || 'Failed to load workout statistics'
+        error: error.message || "Failed to load workout statistics",
       });
     }
   }
@@ -220,7 +247,7 @@ export class WorkoutAgent {
    */
   async loadTotalWorkoutCount() {
     if (!this.userId) {
-      console.error('WorkoutAgent.loadTotalWorkoutCount: No userId set');
+      console.error("WorkoutAgent.loadTotalWorkoutCount: No userId set");
       return;
     }
 
@@ -232,14 +259,16 @@ export class WorkoutAgent {
       this._updateState({
         totalWorkoutCount: result.totalCount || 0,
         isLoadingCount: false,
-        error: null
+        error: null,
       });
-
     } catch (error) {
-      console.error('WorkoutAgent.loadTotalWorkoutCount: Error loading count:', error);
+      console.error(
+        "WorkoutAgent.loadTotalWorkoutCount: Error loading count:",
+        error,
+      );
       this._updateState({
         isLoadingCount: false,
-        error: error.message || 'Failed to load workout count'
+        error: error.message || "Failed to load workout count",
       });
     }
   }
@@ -249,26 +278,31 @@ export class WorkoutAgent {
    */
   async loadTrainingDaysCount(options = {}) {
     if (!this.userId) {
-      console.error('WorkoutAgent.loadTrainingDaysCount: No userId set');
+      console.error("WorkoutAgent.loadTrainingDaysCount: No userId set");
       return;
     }
 
     this._updateState({ isLoadingTrainingDays: true });
 
     try {
-      const trainingDaysCount = await getTrainingDaysCount(this.userId, options);
+      const trainingDaysCount = await getTrainingDaysCount(
+        this.userId,
+        options,
+      );
 
       this._updateState({
         trainingDaysCount: trainingDaysCount || 0,
         isLoadingTrainingDays: false,
-        error: null
+        error: null,
       });
-
     } catch (error) {
-      console.error('WorkoutAgent.loadTrainingDaysCount: Error loading training days count:', error);
+      console.error(
+        "WorkoutAgent.loadTrainingDaysCount: Error loading training days count:",
+        error,
+      );
       this._updateState({
         isLoadingTrainingDays: false,
-        error: error.message || 'Failed to load training days count'
+        error: error.message || "Failed to load training days count",
       });
     }
   }
@@ -278,7 +312,7 @@ export class WorkoutAgent {
    */
   async loadThisWeekWorkoutCount() {
     if (!this.userId) {
-      console.error('WorkoutAgent.loadThisWeekWorkoutCount: No userId set');
+      console.error("WorkoutAgent.loadThisWeekWorkoutCount: No userId set");
       return;
     }
 
@@ -298,23 +332,28 @@ export class WorkoutAgent {
       endOfWeek.setDate(startOfWeek.getDate() + 6);
       endOfWeek.setHours(23, 59, 59, 999); // End of day
 
-
       // Use the statically imported API function
-      const result = await getWorkoutsByDateRange(this.userId, startOfWeek, endOfWeek);
+      const result = await getWorkoutsByDateRange(
+        this.userId,
+        startOfWeek,
+        endOfWeek,
+      );
 
       const thisWeekCount = result.workouts ? result.workouts.length : 0;
 
       this._updateState({
         thisWeekWorkoutCount: thisWeekCount,
         isLoadingCount: false,
-        error: null
+        error: null,
       });
-
     } catch (error) {
-      console.error('WorkoutAgent.loadThisWeekWorkoutCount: Error loading this week count:', error);
+      console.error(
+        "WorkoutAgent.loadThisWeekWorkoutCount: Error loading this week count:",
+        error,
+      );
       this._updateState({
         isLoadingCount: false,
-        error: error.message || 'Failed to load this week workout count'
+        error: error.message || "Failed to load this week workout count",
       });
     }
   }
@@ -324,7 +363,7 @@ export class WorkoutAgent {
    */
   async loadRecentWorkouts(limit = 10) {
     if (!this.userId) {
-      console.error('WorkoutAgent.loadRecentWorkouts: No userId set');
+      console.error("WorkoutAgent.loadRecentWorkouts: No userId set");
       return;
     }
 
@@ -333,8 +372,8 @@ export class WorkoutAgent {
     try {
       const result = await getWorkouts(this.userId, {
         limit,
-        sortBy: 'completedAt',
-        sortOrder: 'desc'  // Most recent first
+        sortBy: "completedAt",
+        sortOrder: "desc", // Most recent first
       });
 
       // Extract workouts from the API response
@@ -348,14 +387,16 @@ export class WorkoutAgent {
         lastWorkoutDaysAgo: lastWorkoutDaysAgo,
         isLoadingRecentItems: false,
         error: null,
-        lastCheckTime: new Date()
+        lastCheckTime: new Date(),
       });
-
     } catch (error) {
-      console.error('WorkoutAgent.loadRecentWorkouts: Error loading workouts:', error);
+      console.error(
+        "WorkoutAgent.loadRecentWorkouts: Error loading workouts:",
+        error,
+      );
       this._updateState({
         isLoadingRecentItems: false,
-        error: error.message || 'Failed to load workouts'
+        error: error.message || "Failed to load workouts",
       });
     }
   }
@@ -379,17 +420,16 @@ export class WorkoutAgent {
       this._updateState({
         allWorkouts,
         lastWorkoutDaysAgo: lastWorkoutDaysAgo,
-        isLoadingAllItems: false
+        isLoadingAllItems: false,
       });
 
       return allWorkouts;
-
     } catch (error) {
-      console.error('Error loading all workouts:', error);
+      console.error("Error loading all workouts:", error);
       this._updateState({
         isLoadingAllItems: false,
         error: error.message,
-        allWorkouts: []
+        allWorkouts: [],
       });
       this.onError(error);
       throw error;
@@ -409,12 +449,11 @@ export class WorkoutAgent {
 
       this._updateState({ isLoadingItem: false });
       return result.workout || null;
-
     } catch (error) {
-      console.error('Error loading workout details:', error);
-            this._updateState({
+      console.error("Error loading workout details:", error);
+      this._updateState({
         isLoadingItem: false,
-        error: error.message || 'Failed to load workout details'
+        error: error.message || "Failed to load workout details",
       });
       this.onError(error);
       return null;
@@ -442,7 +481,7 @@ export class WorkoutAgent {
       const result = await getWorkouts(this.userId, {
         fromDate: fiveMinutesAgo.toISOString(),
         limit: 5,
-        sortBy: 'completedAt'
+        sortBy: "completedAt",
       });
 
       // API returns 'workouts' property, not 'workouts'
@@ -464,9 +503,8 @@ export class WorkoutAgent {
           }
         }
       }
-
     } catch (error) {
-      console.error('Error checking for new workouts:', error);
+      console.error("Error checking for new workouts:", error);
     }
   }
 
@@ -480,7 +518,6 @@ export class WorkoutAgent {
     this.pollInterval = setInterval(() => {
       this.checkForNewWorkouts();
     }, 120000); // 2 minutes instead of 30 seconds
-
   }
 
   /**
@@ -497,12 +534,12 @@ export class WorkoutAgent {
    * Formats workout for display - returns title for lists, summary for detailed views
    */
   formatWorkoutSummary(workout, useTitle = false) {
-    if (!workout) return 'Unknown workout';
+    if (!workout) return "Unknown workout";
 
     // If explicitly requesting title format, or if no AI summary available, use concise format
     if (useTitle || !workout.summary) {
-      const workoutName = workout.workoutName || 'Workout';
-      const discipline = workout.discipline || '';
+      const workoutName = workout.workoutName || "Workout";
+      const discipline = workout.discipline || "";
 
       // Create a concise title without duration
       let title = workoutName;
@@ -521,7 +558,7 @@ export class WorkoutAgent {
    * Formats workout time for display
    */
   formatWorkoutTime(completedAt) {
-    if (!completedAt) return 'Unknown time';
+    if (!completedAt) return "Unknown time";
 
     try {
       const date = new Date(completedAt);
@@ -529,8 +566,8 @@ export class WorkoutAgent {
 
       // Check if date is valid
       if (isNaN(date.getTime())) {
-        console.warn('Invalid date format:', completedAt);
-        return 'Invalid date';
+        console.warn("Invalid date format:", completedAt);
+        return "Invalid date";
       }
 
       // Calculate difference in milliseconds, then convert to minutes
@@ -542,18 +579,19 @@ export class WorkoutAgent {
 
       // Log negative values for debugging
       if (diffInMinutes < 0) {
-        console.warn('Workout time calculation resulted in negative value:', {
+        console.warn("Workout time calculation resulted in negative value:", {
           completedAt,
           parsedDate: date.toISOString(),
           now: now.toISOString(),
           diffInMinutes,
-          absDiffInMinutes
+          absDiffInMinutes,
         });
       }
 
       if (absDiffInMinutes < 60) {
         return `${absDiffInMinutes}m ago`;
-      } else if (absDiffInMinutes < 1440) { // 24 hours
+      } else if (absDiffInMinutes < 1440) {
+        // 24 hours
         const hours = Math.floor(absDiffInMinutes / 60);
         return `${hours}h ago`;
       } else {
@@ -561,8 +599,8 @@ export class WorkoutAgent {
         return `${days}d ago`;
       }
     } catch (error) {
-      console.error('Error formatting workout time:', error, { completedAt });
-      return 'Unknown time';
+      console.error("Error formatting workout time:", error, { completedAt });
+      return "Unknown time";
     }
   }
 
@@ -570,43 +608,47 @@ export class WorkoutAgent {
    * Gets workout confidence level display
    */
   getConfidenceDisplay(confidence) {
-    if (confidence >= 0.8) return 'High';
-    if (confidence >= 0.6) return 'Good';
-    if (confidence >= 0.4) return 'Fair';
-    return 'Low';
+    if (confidence >= 0.8) return "High";
+    if (confidence >= 0.6) return "Good";
+    if (confidence >= 0.4) return "Fair";
+    return "Low";
   }
 
   /**
    * Gets workout confidence color class
    */
   getConfidenceColorClass(confidence) {
-    if (confidence >= 0.8) return 'text-green-400';
-    if (confidence >= 0.6) return 'text-yellow-400';
-    if (confidence >= 0.4) return 'text-orange-400';
-    return 'text-red-400';
+    if (confidence >= 0.8) return "text-green-400";
+    if (confidence >= 0.6) return "text-yellow-400";
+    if (confidence >= 0.4) return "text-orange-400";
+    return "text-red-400";
   }
 
   /**
    * Updates workout metadata (title, etc.)
    */
   async updateWorkout(userId, workoutId, updates) {
-    if (!userId || !workoutId || !updates || Object.keys(updates).length === 0) {
+    if (
+      !userId ||
+      !workoutId ||
+      !updates ||
+      Object.keys(updates).length === 0
+    ) {
       throw new Error("User ID, Workout ID, and updates are required");
     }
 
     try {
-
       // Call API to update workout
       const result = await updateWorkout(userId, workoutId, updates);
 
       // Update local state with new metadata
       const updatedWorkout = {
         ...this.state.workout,
-        ...updates
+        ...updates,
       };
 
       this._updateState({
-        workout: updatedWorkout
+        workout: updatedWorkout,
       });
 
       // Refresh recent workouts to show updated metadata
@@ -623,9 +665,9 @@ export class WorkoutAgent {
     } catch (error) {
       console.error("Error updating workout metadata:", error);
       this._updateState({
-        error: "Failed to update workout metadata"
+        error: "Failed to update workout metadata",
       });
-      if (typeof this.onError === 'function') {
+      if (typeof this.onError === "function") {
         this.onError(error);
       }
       throw error;
@@ -640,22 +682,29 @@ export class WorkoutAgent {
       throw new Error("User ID is required");
     }
 
-    if (!workoutContent || typeof workoutContent !== 'string' || workoutContent.trim().length === 0) {
+    if (
+      !workoutContent ||
+      typeof workoutContent !== "string" ||
+      workoutContent.trim().length === 0
+    ) {
       throw new Error("Workout content is required");
     }
 
     try {
-
       // Call API to create workout
-      const result = await createWorkout(this.userId, workoutContent.trim(), options);
+      const result = await createWorkout(
+        this.userId,
+        workoutContent.trim(),
+        options,
+      );
 
       return result;
     } catch (error) {
       console.error("Error creating workout:", error);
       this._updateState({
-        error: "Failed to create workout"
+        error: "Failed to create workout",
       });
-      if (typeof this.onError === 'function') {
+      if (typeof this.onError === "function") {
         this.onError(error);
       }
       throw error;
@@ -671,23 +720,26 @@ export class WorkoutAgent {
     }
 
     try {
-
       // Call API to delete workout
       const result = await deleteWorkout(userId, workoutId);
 
       // Remove from local state if it exists
       this._updateState({
-        recentWorkouts: this.state.recentWorkouts.filter(w => w.workoutId !== workoutId),
-        allWorkouts: this.state.allWorkouts.filter(w => w.workoutId !== workoutId)
+        recentWorkouts: this.state.recentWorkouts.filter(
+          (w) => w.workoutId !== workoutId,
+        ),
+        allWorkouts: this.state.allWorkouts.filter(
+          (w) => w.workoutId !== workoutId,
+        ),
       });
 
       return result;
     } catch (error) {
       console.error("Error deleting workout:", error);
       this._updateState({
-        error: "Failed to delete workout"
+        error: "Failed to delete workout",
       });
-      if (typeof this.onError === 'function') {
+      if (typeof this.onError === "function") {
         this.onError(error);
       }
       throw error;
@@ -709,7 +761,7 @@ export class WorkoutAgent {
       userId: this.userId,
       isActive: !!this.userId,
       workoutCount: this.state.recentWorkouts.length,
-      lastUpdate: this.state.lastCheckTime
+      lastUpdate: this.state.lastCheckTime,
     };
   }
 
@@ -750,7 +802,7 @@ export class WorkoutAgent {
       isLoadingAllItems: false,
       isLoadingItem: false,
       error: null,
-      lastCheckTime: null
+      lastCheckTime: null,
     };
     this.state = this.workoutState;
 

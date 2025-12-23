@@ -188,13 +188,22 @@ export default function ProgramDashboard() {
           {/* Left section: Title + Coach Card */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
             {/* Page Title */}
-            <h1
-              className="font-russo font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
-              data-tooltip-id="program-dashboard-info"
-              data-tooltip-content={`${program.name} - Day ${program.currentDay} of ${program.totalDays || program.duration}`}
-            >
-              Training Program Dashboard
-            </h1>
+            <div className="flex items-center gap-3">
+              <h1
+                className="font-russo font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
+                data-tooltip-id="program-dashboard-info"
+                data-tooltip-content={`${program.name} - Day ${program.currentDay} of ${program.totalDays || program.duration}`}
+              >
+                Training Program Dashboard
+              </h1>
+              <div
+                className="px-2 py-1 bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 rounded text-synthwave-neon-purple font-rajdhani text-xs font-bold uppercase tracking-wider cursor-help"
+                data-tooltip-id="beta-badge"
+                data-tooltip-content="Training programs are in beta. You may experience pre-release behavior. We appreciate your feedback!"
+              >
+                Beta
+              </div>
+            </div>
 
             {/* Compact Coach Card */}
             {coachData && (
@@ -357,6 +366,18 @@ export default function ProgramDashboard() {
       {/* Tooltips */}
       <Tooltip
         id="program-dashboard-info"
+        {...tooltipPatterns.standard}
+        place="bottom"
+        className="max-w-xs"
+      />
+      <Tooltip
+        id="beta-badge"
+        {...tooltipPatterns.standard}
+        place="bottom"
+        className="max-w-xs"
+      />
+      <Tooltip
+        id="beta-badge-todays-workout"
         {...tooltipPatterns.standard}
         place="bottom"
         className="max-w-xs"

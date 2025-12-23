@@ -1,6 +1,6 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { containerPatterns } from '../../utils/ui/uiPatterns';
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import { containerPatterns } from "../../utils/ui/uiPatterns";
 
 /**
  * ActiveProgramSummary - Displays a summary of the user's active training program
@@ -11,7 +11,7 @@ function ActiveProgramSummary({
   todaysWorkout,
   isLoading,
   userId,
-  coachId
+  coachId,
 }) {
   const navigate = useNavigate();
 
@@ -40,15 +40,18 @@ function ActiveProgramSummary({
   // Use program.currentDay instead of todaysWorkout.currentDayNumber to avoid NaN
   const currentDayNumber = program.currentDay || 1;
   const { phaseName } = todaysWorkout || {};
-  const progressPercentage = program.totalDays > 0
-    ? Math.round((currentDayNumber / program.totalDays) * 100)
-    : 0;
+  const progressPercentage =
+    program.totalDays > 0
+      ? Math.round((currentDayNumber / program.totalDays) * 100)
+      : 0;
 
   const completedWorkouts = program.completedWorkouts || 0;
   const totalWorkouts = program.totalWorkouts || program.totalDays;
 
   const handleViewProgram = () => {
-    navigate(`/training-grounds/programs/dashboard?userId=${userId}&coachId=${coachId}&programId=${program.programId}`);
+    navigate(
+      `/training-grounds/programs/dashboard?userId=${userId}&coachId=${coachId}&programId=${program.programId}`,
+    );
   };
 
   return (
@@ -59,6 +62,13 @@ function ActiveProgramSummary({
         <h3 className="font-russo font-bold text-white text-lg uppercase">
           Training Programs
         </h3>
+        <div
+          className="px-2 py-1 bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 rounded text-synthwave-neon-purple font-rajdhani text-xs font-bold uppercase tracking-wider cursor-help"
+          data-tooltip-id="beta-badge-program-summary"
+          data-tooltip-content="Training programs are in beta. You may experience pre-release behavior. We appreciate your feedback!"
+        >
+          Beta
+        </div>
       </div>
 
       {/* Program name - clickable */}
@@ -71,7 +81,8 @@ function ActiveProgramSummary({
 
       {/* Progress info */}
       <div className="font-rajdhani text-sm text-synthwave-text-secondary mb-4">
-        Day {currentDayNumber} of {program.totalDays} • {progressPercentage}% Complete
+        Day {currentDayNumber} of {program.totalDays} • {progressPercentage}%
+        Complete
       </div>
 
       {/* Progress bar */}
@@ -84,15 +95,11 @@ function ActiveProgramSummary({
 
       {/* Completion stats */}
       <div className="font-rajdhani text-xs text-synthwave-text-secondary mb-4">
-        <span className="text-synthwave-neon-cyan font-semibold">{completedWorkouts}/{totalWorkouts}</span> workouts completed
+        <span className="text-synthwave-neon-cyan font-semibold">
+          {completedWorkouts}/{totalWorkouts}
+        </span>{" "}
+        workouts completed
       </div>
-
-      {/* Program description */}
-      {program.description && (
-        <div className="font-rajdhani text-sm text-synthwave-text-secondary mb-4 leading-relaxed">
-          {program.description}
-        </div>
-      )}
 
       {/* Current phase */}
       {phaseName && (
@@ -118,4 +125,3 @@ function ActiveProgramSummary({
 }
 
 export default ActiveProgramSummary;
-

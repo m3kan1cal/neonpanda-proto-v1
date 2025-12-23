@@ -25,7 +25,6 @@ import CoachConversations from "./components/CoachConversations";
 import ProgramDesigner from "./components/ProgramDesigner";
 import StreamingDebugTest from "./components/StreamingDebugTest";
 import WorkoutDetails from "./components/WorkoutDetails";
-import WorkoutDetailsV2 from "./components/WorkoutDetailsV2";
 import ManageWorkouts from "./components/ManageWorkouts";
 import ManageMemories from "./components/ManageMemories";
 import ManageCoachConversations from "./components/ManageCoachConversations";
@@ -242,14 +241,6 @@ function AppContent() {
             element={
               <ProtectedRoute>
                 <WorkoutDetails />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/training-grounds/workouts-v2"
-            element={
-              <ProtectedRoute>
-                <WorkoutDetailsV2 />
               </ProtectedRoute>
             }
           />
