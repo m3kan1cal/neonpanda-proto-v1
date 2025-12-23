@@ -1,42 +1,42 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ProgramAgent } from '../../utils/agents/ProgramAgent';
-import { CoachAgent } from '../../utils/agents/CoachAgent';
-import CompactCoachCard from '../shared/CompactCoachCard';
-import CommandPaletteButton from '../shared/CommandPaletteButton';
-import QuickStats from '../shared/QuickStats';
-import { CenteredErrorState } from '../shared/ErrorStates';
-import { useNavigationContext } from '../../contexts/NavigationContext';
-import { Tooltip } from 'react-tooltip';
+import React, { useState, useEffect, useRef } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { ProgramAgent } from "../../utils/agents/ProgramAgent";
+import { CoachAgent } from "../../utils/agents/CoachAgent";
+import CompactCoachCard from "../shared/CompactCoachCard";
+import CommandPaletteButton from "../shared/CommandPaletteButton";
+import QuickStats from "../shared/QuickStats";
+import { CenteredErrorState } from "../shared/ErrorStates";
+import { useNavigationContext } from "../../contexts/NavigationContext";
+import { Tooltip } from "react-tooltip";
 import {
   containerPatterns,
   layoutPatterns,
   buttonPatterns,
   badgePatterns,
   typographyPatterns,
-  tooltipPatterns
-} from '../../utils/ui/uiPatterns';
+  tooltipPatterns,
+} from "../../utils/ui/uiPatterns";
 import {
   CalendarIcon,
   WorkoutIcon,
   CheckIcon,
   XIcon,
   LightningIcon,
-  ProgramIcon
-} from '../themes/SynthwaveComponents';
-import TodaysWorkoutCard from './TodaysWorkoutCard';
-import ProgramOverview from './ProgramOverview';
-import ProgressOverview from './ProgressOverview';
-import ProgramCalendar from './ProgramCalendar';
-import PhaseTimeline from './PhaseTimeline';
-import PhaseBreakdown from './PhaseBreakdown';
+  ProgramIcon,
+} from "../themes/SynthwaveComponents";
+import TodaysWorkoutCard from "./TodaysWorkoutCard";
+import ProgramOverview from "./ProgramOverview";
+import ProgressOverview from "./ProgressOverview";
+import ProgramCalendar from "./ProgramCalendar";
+import PhaseTimeline from "./PhaseTimeline";
+import PhaseBreakdown from "./PhaseBreakdown";
 
 export default function ProgramDashboard() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const programId = searchParams.get('programId');
-  const userId = searchParams.get('userId');
-  const coachId = searchParams.get('coachId');
+  const programId = searchParams.get("programId");
+  const userId = searchParams.get("userId");
+  const coachId = searchParams.get("coachId");
 
   const [program, setProgram] = useState(null);
   const [programDetails, setProgramDetails] = useState(null);
@@ -63,7 +63,7 @@ export default function ProgramDashboard() {
 
   const loadData = async () => {
     if (!userId || !coachId || !programId) {
-      setError('Missing required parameters');
+      setError("Missing required parameters");
       setIsLoading(false);
       return;
     }
@@ -88,42 +88,48 @@ export default function ProgramDashboard() {
             if (newState.todaysWorkout) {
               setTodaysWorkout(newState.todaysWorkout);
             }
-          }
+          },
         );
       }
 
       // Load coach data
-      const coach = await coachAgentRef.current.loadCoachDetails(userId, coachId);
+      const coach = await coachAgentRef.current.loadCoachDetails(
+        userId,
+        coachId,
+      );
       setCoachData(coach);
 
       // Load program with full details
       const programData = await programAgentRef.current.loadProgram(programId);
 
       if (!programData || !programData.program) {
-        throw new Error('Program not found');
+        throw new Error("Program not found");
       }
 
       setProgram(programData.program);
 
       // Load ALL workout templates for the calendar
-      const allTemplatesData = await programAgentRef.current.loadWorkoutTemplates(programId, {});
+      const allTemplatesData =
+        await programAgentRef.current.loadWorkoutTemplates(programId, {});
 
       if (allTemplatesData) {
         setProgramDetails(allTemplatesData);
       }
 
       // Load today's workout
-      const todayData = await programAgentRef.current.loadWorkoutTemplates(programId, {
-        today: true,
-      });
+      const todayData = await programAgentRef.current.loadWorkoutTemplates(
+        programId,
+        {
+          today: true,
+        },
+      );
 
       if (todayData) {
         setTodaysWorkout(todayData.todaysWorkoutTemplates || todayData);
       }
-
     } catch (err) {
-      console.error('Error loading program dashboard:', err);
-      setError(err.message || 'Failed to load program data');
+      console.error("Error loading program dashboard:", err);
+      setError(err.message || "Failed to load program data");
     } finally {
       setIsLoading(false);
     }
@@ -145,7 +151,11 @@ export default function ProgramDashboard() {
         title="Error Loading Program"
         message={error}
         buttonText="Back to Programs"
-        onButtonClick={() => navigate(`/training-grounds/programs?userId=${userId}&coachId=${coachId}`)}
+        onButtonClick={() =>
+          navigate(
+            `/training-grounds/programs?userId=${userId}&coachId=${coachId}`,
+          )
+        }
         variant="error"
       />
     );
@@ -157,7 +167,11 @@ export default function ProgramDashboard() {
         title="Program Not Found"
         message="The training program you're looking for doesn't exist or has been removed."
         buttonText="Back to Programs"
-        onButtonClick={() => navigate(`/training-grounds/programs?userId=${userId}&coachId=${coachId}`)}
+        onButtonClick={() =>
+          navigate(
+            `/training-grounds/programs?userId=${userId}&coachId=${coachId}`,
+          )
+        }
         variant="error"
       />
     );
@@ -187,7 +201,11 @@ export default function ProgramDashboard() {
               <CompactCoachCard
                 coachData={coachData}
                 isOnline={true}
-                onClick={() => navigate(`/training-grounds?userId=${userId}&coachId=${coachId}`)}
+                onClick={() =>
+                  navigate(
+                    `/training-grounds?userId=${userId}&coachId=${coachId}`,
+                  )
+                }
                 tooltipContent="Go to the Training Grounds"
               />
             )}
@@ -195,7 +213,9 @@ export default function ProgramDashboard() {
 
           {/* Right section: Command Palette Button */}
           <div className="flex items-center gap-3">
-            <CommandPaletteButton onClick={() => setIsCommandPaletteOpen(true)} />
+            <CommandPaletteButton
+              onClick={() => setIsCommandPaletteOpen(true)}
+            />
           </div>
         </header>
 
@@ -207,85 +227,85 @@ export default function ProgramDashboard() {
               value: program.currentDay || 0,
               tooltip: {
                 title: `Day ${program.currentDay || 0}`,
-                description: "Current day in your training program"
+                description: "Current day in your training program",
               },
               color: "pink",
               isLoading: false,
               ariaLabel: `Day ${program.currentDay || 0} of program`,
-              id: "program-stat-current-day"
+              id: "program-stat-current-day",
             },
             {
               icon: CalendarIcon,
               value: program.totalDays || program.duration || 0,
               tooltip: {
                 title: `${program.totalDays || program.duration || 0} Days Total`,
-                description: "Total duration of this training program"
+                description: "Total duration of this training program",
               },
               color: "cyan",
               isLoading: false,
               ariaLabel: `${program.totalDays || program.duration || 0} total days`,
-              id: "program-stat-total-days"
+              id: "program-stat-total-days",
             },
             {
               icon: ProgramIcon,
               value: `${Math.round(((program.currentDay || 0) / (program.totalDays || program.duration || 1)) * 100)}%`,
               tooltip: {
                 title: `${Math.round(((program.currentDay || 0) / (program.totalDays || program.duration || 1)) * 100)}% Complete`,
-                description: "Progress through the training program"
+                description: "Progress through the training program",
               },
               color: "purple",
               isLoading: false,
               ariaLabel: `${Math.round(((program.currentDay || 0) / (program.totalDays || program.duration || 1)) * 100)}% complete`,
-              id: "program-stat-progress"
+              id: "program-stat-progress",
             },
             {
               icon: CheckIcon,
               value: program.completedWorkouts || 0,
               tooltip: {
                 title: `${program.completedWorkouts || 0} Completed`,
-                description: "Workouts you've completed in this program"
+                description: "Workouts you've completed in this program",
               },
               color: "cyan",
               isLoading: false,
               ariaLabel: `${program.completedWorkouts || 0} completed workouts`,
-              id: "program-stat-completed"
+              id: "program-stat-completed",
             },
             {
               icon: XIcon,
               value: program.skippedWorkouts || 0,
               tooltip: {
                 title: `${program.skippedWorkouts || 0} Skipped`,
-                description: "Workouts you've skipped in this program"
+                description: "Workouts you've skipped in this program",
               },
               color: "pink",
               isLoading: false,
               ariaLabel: `${program.skippedWorkouts || 0} skipped workouts`,
-              id: "program-stat-skipped"
+              id: "program-stat-skipped",
             },
             {
               icon: WorkoutIcon,
               value: program.totalWorkouts || 0,
               tooltip: {
                 title: `${program.totalWorkouts || 0} Total Workouts`,
-                description: "Total workouts scheduled in this program"
+                description: "Total workouts scheduled in this program",
               },
               color: "purple",
               isLoading: false,
               ariaLabel: `${program.totalWorkouts || 0} total workouts`,
-              id: "program-stat-total"
+              id: "program-stat-total",
             },
             {
               icon: LightningIcon,
               value: program.phases?.length || 0,
               tooltip: {
                 title: `${program.phases?.length || 0} Phases`,
-                description: "Training phases in this program"
+                description: "Training phases in this program",
               },
               color: "cyan",
               isLoading: false,
               ariaLabel: `${program.phases?.length || 0} phases`,
-              id: "program-stat-phases"
-            }
+              id: "program-stat-phases",
+            },
           ]}
         />
 
@@ -313,30 +333,24 @@ export default function ProgramDashboard() {
             />
 
             {/* Phase Timeline */}
-            <PhaseTimeline
-              program={program}
-            />
+            <PhaseTimeline program={program} />
           </div>
 
-        {/* Sidebar - 40% (2 of 5 columns) */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Program Overview */}
-          <ProgramOverview
-            program={program}
-            programAgentRef={programAgentRef}
-            onProgramUpdate={handleProgramUpdate}
-          />
+          {/* Sidebar - 40% (2 of 5 columns) */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Program Overview */}
+            <ProgramOverview
+              program={program}
+              programAgentRef={programAgentRef}
+              onProgramUpdate={handleProgramUpdate}
+            />
 
-          {/* Progress Overview */}
-          <ProgressOverview
-            program={program}
-          />
+            {/* Progress Overview */}
+            <ProgressOverview program={program} />
 
-          {/* Phase Breakdown */}
-          <PhaseBreakdown
-            program={program}
-          />
-        </div>
+            {/* Phase Breakdown */}
+            <PhaseBreakdown program={program} />
+          </div>
         </div>
       </div>
 
@@ -389,68 +403,113 @@ function DashboardSkeleton() {
           stats={[1, 2, 3, 4, 5, 6, 7].map((i) => ({
             icon: null,
             value: 0,
-            tooltip: { title: '', description: '' },
-            color: 'cyan',
+            tooltip: { title: "", description: "" },
+            color: "cyan",
             isLoading: true,
-            id: `skeleton-stat-${i}`
+            id: `skeleton-stat-${i}`,
           }))}
         />
 
-        {/* Two-column layout skeleton */}
+        {/* Two-column layout skeleton - matching WorkoutViewerV2 structure */}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-          {/* Main content */}
+          {/* Main content - 60% */}
           <div className="lg:col-span-3 space-y-6">
-            <div className={`${containerPatterns.cardMedium} p-6 h-64`}>
-              <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-32 mb-4"></div>
-              <div className="space-y-3">
-                <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
-                <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-3/4"></div>
-                <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-1/2"></div>
+            {/* Program Overview Section Skeleton */}
+            <div className={`${containerPatterns.cardMedium}`}>
+              <div className="flex items-center justify-between p-6">
+                <div className="flex items-center gap-3 flex-1">
+                  <div className="w-3 h-3 bg-synthwave-neon-cyan/30 rounded-full animate-pulse flex-shrink-0 mt-0.5"></div>
+                  <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
+                </div>
+                <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+              </div>
+              <div className="px-6 pb-6 space-y-3">
+                <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                  <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                  <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                  <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                  <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                </div>
               </div>
             </div>
-            <div className={`${containerPatterns.cardMedium} p-6 h-96`}>
-              <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-40 mb-4"></div>
-              <div className="space-y-3">
-                <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
-                <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-5/6"></div>
-                <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-4/5"></div>
+
+            {/* Training Phases Section Skeleton */}
+            <div className={`${containerPatterns.cardMedium}`}>
+              <div className="flex items-center justify-between p-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-3 h-3 bg-synthwave-neon-cyan/30 rounded-full animate-pulse flex-shrink-0 mt-0.5"></div>
+                  <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-40"></div>
+                </div>
+                <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+              </div>
+              <div className="px-6 pb-6 space-y-4">
+                <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-3/4"></div>
+                <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-1/2"></div>
+                <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-2/3"></div>
               </div>
             </div>
-            <div className={`${containerPatterns.cardMedium} p-6 h-48`}>
-              <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-36 mb-4"></div>
-              <div className="space-y-3">
-                <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-3/4"></div>
-                <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-1/2"></div>
+
+            {/* Progress Tracking Section Skeleton */}
+            <div className={`${containerPatterns.cardMedium}`}>
+              <div className="flex items-center justify-between p-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-3 h-3 bg-synthwave-neon-cyan/30 rounded-full animate-pulse flex-shrink-0 mt-0.5"></div>
+                  <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-44"></div>
+                </div>
+                <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+              </div>
+              <div className="px-6 pb-6 space-y-3">
+                <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                  <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                  <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Sidebar */}
+          {/* Sidebar - 40% */}
           <div className="lg:col-span-2 space-y-6">
-            <div className={`${containerPatterns.cardMedium} p-6 h-72`}>
-              <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-32 mb-4"></div>
-              <div className="space-y-3 mb-6">
-                <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
-                <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-3/4"></div>
-                <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-1/2"></div>
+            {/* Program Goals Section Skeleton */}
+            <div className={`${containerPatterns.cardMedium}`}>
+              <div className="flex items-center justify-between p-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-3 h-3 bg-synthwave-neon-cyan/30 rounded-full animate-pulse flex-shrink-0 mt-0.5"></div>
+                  <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-36"></div>
+                </div>
+                <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
               </div>
-              <div className="space-y-3">
-                <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-5/6"></div>
-                <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-4/5"></div>
-              </div>
-            </div>
-            <div className={`${containerPatterns.cardMedium} p-6 h-56`}>
-              <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-36 mb-4"></div>
-              <div className="space-y-3">
-                <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
-                <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-2/3"></div>
+              <div className="px-6 pb-6">
+                <div className="h-16 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
               </div>
             </div>
-            <div className={`${containerPatterns.cardMedium} p-6 h-64`}>
-              <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-32 mb-4"></div>
-              <div className="space-y-3">
-                <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-3/4"></div>
-                <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-1/2"></div>
+
+            {/* Coach Insights Section Skeleton */}
+            <div className={`${containerPatterns.cardMedium}`}>
+              <div className="flex items-center justify-between p-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-3 h-3 bg-synthwave-neon-cyan/30 rounded-full animate-pulse flex-shrink-0 mt-0.5"></div>
+                  <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-40"></div>
+                </div>
+                <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+              </div>
+              <div className="px-6 pb-6 space-y-2">
+                <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-5/6"></div>
+              </div>
+            </div>
+
+            {/* Upcoming Workouts Section Skeleton */}
+            <div className={`${containerPatterns.cardMedium}`}>
+              <div className="flex items-center justify-between p-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-3 h-3 bg-synthwave-neon-cyan/30 rounded-full animate-pulse flex-shrink-0 mt-0.5"></div>
+                  <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
+                </div>
+                <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+              </div>
+              <div className="px-6 pb-6 space-y-2">
+                <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-3/4"></div>
+                <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-1/2"></div>
               </div>
             </div>
           </div>
@@ -459,4 +518,3 @@ function DashboardSkeleton() {
     </div>
   );
 }
-

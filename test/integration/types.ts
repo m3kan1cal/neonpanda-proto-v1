@@ -143,4 +143,3 @@ export interface TestResult {
   workoutData?: any;
   error?: string;
 }
-

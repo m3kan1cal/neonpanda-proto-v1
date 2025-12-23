@@ -35,9 +35,8 @@ export async function detectAndProcessWorkout(
   messageTimestamp?: string,
   userProfile?: UserProfile,
   routerAnalysis?: SmartRequestRouter,
-  imageS3Keys?: string[]
+  imageS3Keys?: string[],
 ): Promise<WorkoutDetectionResult> {
-
   // Check for workout logging detection (natural language OR slash commands)
 
   let slashCommand,
@@ -47,18 +46,18 @@ export async function detectAndProcessWorkout(
 
   try {
     slashCommand = parseSlashCommand(userMessage);
-    console.info('🔍 Slash command parsing result:', {
+    console.info("🔍 Slash command parsing result:", {
       userMessage: userMessage.substring(0, 100),
       isSlashCommand: slashCommand.isSlashCommand,
       command: slashCommand.command,
-      content: slashCommand.content?.substring(0, 100)
+      content: slashCommand.content?.substring(0, 100),
     });
 
     isSlashCommandWorkout = isWorkoutSlashCommand(slashCommand);
-    console.info('🔍 Slash command workout check:', {
+    console.info("🔍 Slash command workout check:", {
       isSlashCommandWorkout,
-      supportedCommands: ['log-workout'],
-      detectedCommand: slashCommand.command
+      supportedCommands: ["log-workout"],
+      detectedCommand: slashCommand.command,
     });
 
     // Natural language detection: Use Smart Router result if available to avoid duplicate AI call
@@ -67,37 +66,52 @@ export async function detectAndProcessWorkout(
         // ✅ Use Smart Router result (no duplicate AI call)
         isNaturalLanguageWorkout = routerAnalysis.workoutDetection.isWorkoutLog;
 
-        console.info('🔍 Natural language workout check (using Smart Router result):', {
-          isNaturalLanguageWorkout,
-          confidence: routerAnalysis.workoutDetection.confidence,
-          reasoning: routerAnalysis.workoutDetection.reasoning,
-          source: 'smart_router'
-        });
+        console.info(
+          "🔍 Natural language workout check (using Smart Router result):",
+          {
+            isNaturalLanguageWorkout,
+            confidence: routerAnalysis.workoutDetection.confidence,
+            reasoning: routerAnalysis.workoutDetection.reasoning,
+            source: "smart_router",
+          },
+        );
       } else {
         // Fallback: Call validateWorkoutContent if no router result (shouldn't happen in streaming flow)
-        console.warn('⚠️ No Smart Router result provided - falling back to validateWorkoutContent');
-        const naturalLanguageValidation = await validateWorkoutContent(userMessage, imageS3Keys);
-        isNaturalLanguageWorkout = naturalLanguageValidation.hasPerformanceData && naturalLanguageValidation.hasLoggingIntent;
+        console.warn(
+          "⚠️ No Smart Router result provided - falling back to validateWorkoutContent",
+        );
+        const naturalLanguageValidation = await validateWorkoutContent(
+          userMessage,
+          imageS3Keys,
+        );
+        isNaturalLanguageWorkout =
+          naturalLanguageValidation.hasPerformanceData &&
+          naturalLanguageValidation.hasLoggingIntent;
 
-        console.info('🔍 Natural language workout check (fallback validation):', {
-          isNaturalLanguageWorkout,
-          hasPerformanceData: naturalLanguageValidation.hasPerformanceData,
-          hasLoggingIntent: naturalLanguageValidation.hasLoggingIntent,
-          confidence: naturalLanguageValidation.confidence,
-          reasoning: naturalLanguageValidation.reasoning,
-          source: 'fallback_validation'
-        });
+        console.info(
+          "🔍 Natural language workout check (fallback validation):",
+          {
+            isNaturalLanguageWorkout,
+            hasPerformanceData: naturalLanguageValidation.hasPerformanceData,
+            hasLoggingIntent: naturalLanguageValidation.hasLoggingIntent,
+            confidence: naturalLanguageValidation.confidence,
+            reasoning: naturalLanguageValidation.reasoning,
+            source: "fallback_validation",
+          },
+        );
       }
     } else {
       isNaturalLanguageWorkout = false;
-      console.info('🔍 Natural language workout check skipped (slash command detected)');
+      console.info(
+        "🔍 Natural language workout check skipped (slash command detected)",
+      );
     }
 
     isWorkoutLogging = isSlashCommandWorkout || isNaturalLanguageWorkout;
-    console.info('🔍 Final workout detection result:', {
+    console.info("🔍 Final workout detection result:", {
       isWorkoutLogging,
       isSlashCommandWorkout,
-      isNaturalLanguageWorkout
+      isNaturalLanguageWorkout,
     });
   } catch (error) {
     console.error("❌ Error during workout detection:", error);
@@ -138,23 +152,32 @@ export async function detectAndProcessWorkout(
 
     if (isSlashCommandWorkout) {
       // ✅ SLASH COMMAND VALIDATION: Check if workout content has actual performance data
-      console.info("🔍 Validating slash command workout content for performance data..", {
-        contentLength: workoutContent.length,
-        contentPreview: workoutContent.substring(0, 100),
-        hasImages: !!(imageS3Keys && imageS3Keys.length > 0),
-        imageCount: imageS3Keys?.length || 0
-      });
+      console.info(
+        "🔍 Validating slash command workout content for performance data..",
+        {
+          contentLength: workoutContent.length,
+          contentPreview: workoutContent.substring(0, 100),
+          hasImages: !!(imageS3Keys && imageS3Keys.length > 0),
+          imageCount: imageS3Keys?.length || 0,
+        },
+      );
 
-      const validationResult = await validateWorkoutContent(workoutContent, imageS3Keys);
+      const validationResult = await validateWorkoutContent(
+        workoutContent,
+        imageS3Keys,
+      );
 
       if (!validationResult.hasPerformanceData) {
-        console.warn("⚠️ SLASH COMMAND VALIDATION FAILED: No performance data detected", {
-          userId,
-          conversationId,
-          contentPreview: workoutContent.substring(0, 200),
-          confidence: validationResult.confidence,
-          reasoning: validationResult.reasoning
-        });
+        console.warn(
+          "⚠️ SLASH COMMAND VALIDATION FAILED: No performance data detected",
+          {
+            userId,
+            conversationId,
+            contentPreview: workoutContent.substring(0, 200),
+            confidence: validationResult.confidence,
+            reasoning: validationResult.reasoning,
+          },
+        );
 
         // Return early - don't trigger async Lambda for incomplete workout
         // Note: AI will naturally handle the error conversationally, no context needed
@@ -168,19 +191,25 @@ export async function detectAndProcessWorkout(
         };
       }
 
-      console.info("✅ Slash command validation passed - performance data detected", {
-        confidence: validationResult.confidence,
-        reasoning: validationResult.reasoning
-      });
+      console.info(
+        "✅ Slash command validation passed - performance data detected",
+        {
+          confidence: validationResult.confidence,
+          reasoning: validationResult.reasoning,
+        },
+      );
 
       // Continue to extraction below...
     } else {
       // ✅ NATURAL LANGUAGE: Always trigger multi-turn session (skip validation)
-      console.info("🔄 Natural language workout detected - triggering multi-turn session", {
-        userId,
-        conversationId,
-        contentPreview: workoutContent.substring(0, 100)
-      });
+      console.info(
+        "🔄 Natural language workout detected - triggering multi-turn session",
+        {
+          userId,
+          conversationId,
+          contentPreview: workoutContent.substring(0, 100),
+        },
+      );
 
       // Return false to trigger session creation in handler
       // Note: workoutCreatorSession has its own specialized prompts, no context needed here
@@ -196,7 +225,7 @@ export async function detectAndProcessWorkout(
 
     // Generate appropriate workout detection context for AI coach
     workoutDetectionContext = generateWorkoutDetectionContext(
-      isSlashCommandWorkout
+      isSlashCommandWorkout,
     );
 
     // Trigger async workout extraction (fire-and-forget)
@@ -205,13 +234,16 @@ export async function detectAndProcessWorkout(
       const buildFunction = process.env.BUILD_WORKOUT_FUNCTION_NAME;
       if (!buildFunction) {
         throw new Error(
-          "BUILD_WORKOUT_FUNCTION_NAME environment variable not set"
+          "BUILD_WORKOUT_FUNCTION_NAME environment variable not set",
         );
       }
 
       // Ensure we have valid workout content to extract
       const extractionContent = workoutContent || userMessage;
 
+      // Build workout extraction payload
+      // Note: Discipline detection is handled by the WorkoutLoggerAgent's detect_discipline tool
+      // This follows the agent-first philosophy: agents orchestrate their own workflow
       const buildWorkoutPayload: BuildWorkoutEvent = {
         userId,
         coachId,
@@ -231,12 +263,12 @@ export async function detectAndProcessWorkout(
       await invokeAsyncLambda(
         buildFunction,
         buildWorkoutPayload,
-        "workout extraction"
+        "workout extraction",
       );
     } catch (error) {
       console.error(
         "❌ Failed to trigger workout extraction, but continuing conversation:",
-        error
+        error,
       );
       // Don't throw - we want the conversation to continue even if extraction fails
     }
@@ -261,7 +293,7 @@ export async function detectAndProcessWorkout(
 export function getFallbackWorkout(): WorkoutDetectionResult {
   return {
     isWorkoutLogging: false,
-    workoutContent: '',
+    workoutContent: "",
     workoutDetectionContext: [],
     slashCommand: { isSlashCommand: false },
     isSlashCommandWorkout: false,

@@ -12,7 +12,7 @@ import { WorkoutLoggerAgent } from "../libs/agents/workout-logger/agent";
 import type { WorkoutLoggerContext } from "../libs/agents/workout-logger/types";
 
 export const handler = async (event: BuildWorkoutEvent) => {
-  return withHeartbeat("Workout Builder Agent", async () => {
+  return withHeartbeat("Workout Logger Agent", async () => {
     try {
       console.info("🏋️ Starting workout builder agent (V2):", {
         userId: event.userId,
@@ -27,6 +27,7 @@ export const handler = async (event: BuildWorkoutEvent) => {
         hasImages: !!(event.imageS3Keys && event.imageS3Keys.length > 0),
         imageCount: event.imageS3Keys?.length || 0,
         timestamp: new Date().toISOString(),
+        note: "Discipline detection handled by agent's detect_discipline tool",
       });
 
       // Pre-validation (same as original build-workout)
@@ -83,6 +84,7 @@ export const handler = async (event: BuildWorkoutEvent) => {
       }
 
       // Build agent context (all BuildWorkoutEvent fields except message data)
+      // Note: Discipline detection is handled by the agent's detect_discipline tool (agent-first approach)
       const context: WorkoutLoggerContext = {
         userId: event.userId,
         coachId: event.coachId,

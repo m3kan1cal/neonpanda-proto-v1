@@ -38,6 +38,8 @@ import {
 } from "../../api-helpers";
 import { parseJsonWithFallbacks } from "../../response-utils";
 import { WORKOUT_SCHEMA } from "../../schemas/workout-schema";
+import { composeWorkoutSchema } from "../../schemas/schema-composer";
+import { parseCompletedAt } from "../../analytics/date-utils";
 import { saveWorkout } from "../../../../dynamodb/operations";
 import { storeWorkoutSummaryInPinecone } from "../../workout/pinecone";
 import { linkWorkoutToTemplate } from "../../program/template-linking";
@@ -45,6 +47,7 @@ import {
   buildWorkoutExtractionMessage,
   storeExtractionDebugData,
 } from "./helpers";
+import { detectDiscipline } from "../../workout/discipline-detector";
 
 /**
  * Tool-specific result types
@@ -106,7 +109,174 @@ interface WorkoutSaveResult {
 }
 
 /**
- * Tool 1: Extract Workout Data
+ * Recursively sanitize date fields in an object
+ * Converts invalid date strings to null and normalizes date formats to prevent DynamoDB serialization errors
+ */
+function sanitizeDateFields(obj: any): any {
+  if (obj === null || obj === undefined) {
+    return obj;
+  }
+
+  // Handle arrays
+  if (Array.isArray(obj)) {
+    return obj.map((item) => sanitizeDateFields(item));
+  }
+
+  // Handle objects
+  if (typeof obj === "object") {
+    const sanitized: any = {};
+    for (const [key, value] of Object.entries(obj)) {
+      // Special handling for top-level "date" field - must be YYYY-MM-DD only
+      if (key === "date" && typeof value === "string") {
+        const date = new Date(value);
+        if (isNaN(date.getTime())) {
+          console.warn(
+            `⚠️ Invalid date field: ${key} = "${value}" - setting to null`,
+          );
+          sanitized[key] = null;
+        } else {
+          // Extract YYYY-MM-DD only
+          sanitized[key] = date.toISOString().split("T")[0];
+        }
+        continue;
+      }
+
+      // Check if this looks like a date field (by key name or value format)
+      const isDateField =
+        key.includes("date") ||
+        key.includes("Date") ||
+        key.includes("_at") ||
+        key.includes("At") ||
+        key.includes("timestamp") ||
+        key.includes("Timestamp");
+
+      if (isDateField && typeof value === "string") {
+        // Try to parse the date
+        const date = new Date(value);
+        if (isNaN(date.getTime())) {
+          // Invalid date - set to null and log warning
+          console.warn(
+            `⚠️ Invalid date field detected: ${key} = "${value}" - setting to null`,
+          );
+          sanitized[key] = null;
+        } else {
+          // Valid date - normalize to ISO string
+          sanitized[key] = date.toISOString();
+        }
+      } else if (typeof value === "object") {
+        // Recursively sanitize nested objects
+        sanitized[key] = sanitizeDateFields(value);
+      } else {
+        // Keep other values as-is
+        sanitized[key] = value;
+      }
+    }
+    return sanitized;
+  }
+
+  // Return primitives as-is
+  return obj;
+}
+
+/**
+ * Result from detect_discipline tool
+ */
+interface DisciplineDetectionResult {
+  discipline: string;
+  confidence: number;
+  method: "ai_detection";
+  reasoning: string;
+}
+
+/**
+ * Tool 1: Detect Workout Discipline
+ *
+ * Detects the primary training discipline of the workout using AI analysis.
+ * This should be called FIRST before extraction to enable targeted extraction.
+ */
+export const detectDisciplineTool: Tool<WorkoutLoggerContext> = {
+  id: "detect_discipline",
+  description: `Detect the primary training discipline of the workout using AI analysis.
+
+ALWAYS CALL THIS FIRST before extract_workout_data to identify the workout type.
+
+This tool analyzes the workout description and classifies it into one of these disciplines:
+- crossfit: Functional fitness with AMRAPs, EMOMs, "For Time" workouts, benchmark WODs, mixed-modality training
+- powerlifting: Squat/bench/deadlift focus, low rep ranges (1-5), RPE tracking, competition lifts
+- bodybuilding: Hypertrophy focus (8-12 reps), split training, tempo work, isolation exercises
+- olympic_weightlifting: Snatch, clean & jerk, technique work, complexes
+- functional_bodybuilding: EMOM with quality/tempo focus, Marcus Filly/Persist style
+- calisthenics: Bodyweight skill development, gymnastics strength, progressions
+- hyrox: 8 stations + 9 runs, race simulation
+- running: Distance runs, pace work, intervals, race training
+
+NOTE: Mixed-modality or unclear workouts should be classified as "crossfit" (the functional fitness discipline).
+
+The detected discipline enables targeted extraction with discipline-specific schema and guidance,
+reducing token usage by ~70% and improving extraction accuracy.
+
+Returns: discipline, confidence (0-1), method ("ai_detection"), reasoning`,
+
+  inputSchema: {
+    type: "object",
+    properties: {
+      userMessage: {
+        type: "string",
+        description: "The user message describing their workout",
+      },
+      imageS3Keys: {
+        type: "array",
+        items: { type: "string" },
+        description: "Optional S3 keys for workout images",
+      },
+    },
+    required: ["userMessage"],
+  },
+
+  async execute(
+    input: any,
+    context: WorkoutLoggerContext,
+  ): Promise<DisciplineDetectionResult> {
+    console.info("🎯 Executing detect_discipline tool");
+
+    const { userMessage, imageS3Keys } = input;
+
+    // Run AI discipline detection
+    // Agent-first approach: Agent decides when to detect discipline using this tool
+    console.info("🔍 Running AI discipline detection...", {
+      messageLength: userMessage.length,
+      hasImages: !!(imageS3Keys && imageS3Keys.length > 0),
+    });
+
+    try {
+      const detection = await detectDiscipline(userMessage, imageS3Keys);
+
+      console.info("✅ Discipline detected:", {
+        discipline: detection.discipline,
+        confidence: detection.confidence,
+        reasoning: detection.reasoning,
+      });
+
+      return detection;
+    } catch (error) {
+      console.error(
+        "❌ Discipline detection failed, defaulting to crossfit:",
+        error,
+      );
+
+      // Fallback to crossfit (most flexible)
+      return {
+        discipline: "crossfit",
+        confidence: 0.5,
+        method: "ai_detection",
+        reasoning: "Detection failed, defaulting to crossfit discipline",
+      };
+    }
+  },
+};
+
+/**
+ * Tool 2: Extract Workout Data
  *
  * Extracts structured workout information from user's message and images.
  * Handles both text and multimodal input, determines completion time.
@@ -115,7 +285,7 @@ export const extractWorkoutDataTool: Tool<WorkoutLoggerContext> = {
   id: "extract_workout_data",
   description: `Extract structured workout information from user's message and images.
 
-ALWAYS CALL THIS FIRST to get workout data from the user's message.
+MUST call detect_discipline FIRST to get the workout discipline, then pass it to this tool.
 
 This tool:
 - Parses natural language workout descriptions into Universal Workout Schema
@@ -141,6 +311,11 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
   inputSchema: {
     type: "object",
     properties: {
+      discipline: {
+        type: "string",
+        description:
+          "The detected workout discipline from detect_discipline tool (e.g., 'crossfit', 'powerlifting')",
+      },
       userMessage: {
         type: "string",
         description: "The user message describing their workout",
@@ -170,6 +345,7 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
       },
     },
     required: [
+      "discipline",
       "userMessage",
       "userTimezone",
       "messageTimestamp",
@@ -184,6 +360,7 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
     console.info("🏋️ Executing extract_workout_data tool");
 
     const {
+      discipline,
       userMessage,
       imageS3Keys,
       userTimezone,
@@ -192,7 +369,27 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
       slashCommand,
     } = input;
 
-    // 1. Check workout complexity (determines if thinking should be enabled)
+    // Validate discipline parameter
+    if (!discipline) {
+      throw new Error(
+        "discipline parameter is required - must call detect_discipline tool first",
+      );
+    }
+
+    console.info("🎯 Using discipline for targeted extraction:", {
+      discipline,
+      source: "detect_discipline_tool",
+    });
+
+    // 2. Compose targeted schema (BASE + ONE discipline plugin)
+    const targetedSchema = composeWorkoutSchema(discipline);
+
+    console.info("📋 Composed targeted schema:", {
+      discipline,
+      schemaSize: JSON.stringify(targetedSchema).length,
+    });
+
+    // 3. Check workout complexity (determines if thinking should be enabled)
     const isComplexWorkout = checkWorkoutComplexity(userMessage);
     const enableThinking = isComplexWorkout;
 
@@ -203,22 +400,30 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
       hasImages: !!(imageS3Keys && imageS3Keys.length > 0),
     });
 
-    // 2. Build extraction prompt
+    // 4. Build targeted extraction prompt (BASE + ONE discipline guidance)
     const extractionPrompt = buildWorkoutExtractionPrompt(
       userMessage,
       context.coachConfig,
       context.criticalTrainingDirective,
       userTimezone,
+      discipline, // NEW: Pass discipline for targeted guidance
     );
 
-    // 3. Extract workout data with AI using tool-based extraction
+    console.info("📝 Built targeted extraction prompt:", {
+      promptSize: extractionPrompt.length,
+      discipline,
+    });
+
+    // 5. Extract workout data with AI using targeted schema
     let workoutData: UniversalWorkoutSchema;
     let generationMethod: "tool" | "fallback" = "tool";
     const hasImages = imageS3Keys && imageS3Keys.length > 0;
 
     try {
-      // PRIMARY: Tool-based generation with schema enforcement
-      console.info("🎯 Attempting tool-based workout extraction");
+      // PRIMARY: Tool-based generation with targeted schema enforcement
+      console.info(
+        "🎯 Attempting tool-based workout extraction with targeted schema",
+      );
 
       let result;
 
@@ -235,7 +440,7 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
           "user",
         );
 
-        // Call multimodal API with tools
+        // Call multimodal API with targeted schema (BASE + ONE discipline)
         result = await callBedrockApiMultimodal(
           extractionPrompt,
           converseMessages,
@@ -244,15 +449,14 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
             enableThinking,
             tools: {
               name: "generate_workout",
-              description:
-                "Generate structured workout data from natural language workout descriptions and images using the Universal Workout Schema v2.0",
-              inputSchema: WORKOUT_SCHEMA,
+              description: `Generate structured workout data for ${discipline} using the Universal Workout Schema v2.0`,
+              inputSchema: targetedSchema, // ONLY BASE + ONE DISCIPLINE
             },
             expectedToolName: "generate_workout",
           },
         );
       } else {
-        // Text-only extraction
+        // Text-only extraction with targeted schema (BASE + ONE discipline)
         result = await callBedrockApi(
           extractionPrompt,
           userMessage,
@@ -261,9 +465,8 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
             enableThinking,
             tools: {
               name: "generate_workout",
-              description:
-                "Generate structured workout data from natural language workout descriptions using the Universal Workout Schema v2.0",
-              inputSchema: WORKOUT_SCHEMA,
+              description: `Generate structured workout data for ${discipline} using the Universal Workout Schema v2.0`,
+              inputSchema: targetedSchema, // ONLY BASE + ONE DISCIPLINE
             },
             expectedToolName: "generate_workout",
           },
@@ -273,7 +476,7 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
       // Extract workout data from tool use result
       if (typeof result !== "string") {
         workoutData = result.input as UniversalWorkoutSchema;
-        console.info("✅ Tool-based extraction succeeded");
+        console.info("✅ Tool-based extraction succeeded with targeted schema");
 
         // Set system-generated fields
         const shortId = Math.random().toString(36).substring(2, 11);
@@ -414,7 +617,7 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
       userTimezone,
     );
     const completedAt = context.completedAt
-      ? new Date(context.completedAt)
+      ? parseCompletedAt(context.completedAt, "extract_workout_data")
       : extractedTime || new Date();
 
     console.info("Workout timing analysis:", {
@@ -492,8 +695,29 @@ Returns: validation result with shouldSave, shouldNormalize, confidence, complet
   ): Promise<WorkoutValidationResult> {
     console.info("✅ Executing validate_workout_completeness tool");
 
-    const { workoutData, completedAt, isSlashCommand } = input;
-    const completedAtDate = new Date(completedAt);
+    let { workoutData, completedAt, isSlashCommand } = input;
+
+    // Defensive parsing: Handle case where workoutData is serialized as string
+    if (typeof workoutData === "string") {
+      console.warn(
+        "⚠️ workoutData received as JSON string instead of object, parsing...",
+      );
+      try {
+        // Use parseJsonWithFallbacks for robust JSON parsing
+        workoutData = parseJsonWithFallbacks(workoutData);
+        console.info("✅ Successfully parsed workoutData string to object");
+      } catch (error) {
+        console.error("❌ Failed to parse workoutData string:", error);
+        throw new Error(
+          "Invalid workoutData format: received string but failed to parse as JSON",
+        );
+      }
+    }
+
+    const completedAtDate = parseCompletedAt(
+      completedAt,
+      "validate_workout_completeness",
+    );
 
     // 1. Calculate confidence and completeness scores
     const confidence = calculateConfidence(workoutData);
@@ -905,17 +1129,25 @@ Returns: workoutId, success, pineconeStored, pineconeRecordId, templateLinked`,
       confidence,
       normalizationSummary,
     } = input;
-    const completedAtDate = new Date(completedAt);
+
+    // Validate and convert completedAt to Date object using centralized utility
+    const completedAtDate = parseCompletedAt(
+      completedAt,
+      "save_workout_to_database",
+    );
+
+    // Sanitize all date fields in workoutData to prevent DynamoDB serialization errors
+    const sanitizedWorkoutData = sanitizeDateFields(workoutData);
 
     // 1. Build workout object
     const workout = {
-      workoutId: workoutData.workout_id,
+      workoutId: sanitizedWorkoutData.workout_id,
       userId: context.userId,
       coachIds: [context.coachId],
       coachNames: [context.coachConfig.coach_name],
       conversationId: context.conversationId,
       completedAt: completedAtDate,
-      workoutData: workoutData,
+      workoutData: sanitizedWorkoutData,
       summary,
       ...(context.templateContext && {
         templateId: context.templateContext.templateId,
@@ -935,8 +1167,8 @@ Returns: workoutId, success, pineconeStored, pineconeRecordId, templateLinked`,
 
     console.info("Saving workout to DynamoDB..", {
       workoutId: workout.workoutId,
-      discipline: workoutData.discipline,
-      workoutName: workoutData.workout_name,
+      discipline: sanitizedWorkoutData.discipline,
+      workoutName: sanitizedWorkoutData.workout_name,
       confidence,
     });
 
@@ -949,7 +1181,7 @@ Returns: workoutId, success, pineconeStored, pineconeRecordId, templateLinked`,
     storeWorkoutSummaryInPinecone(
       context.userId,
       summary,
-      workoutData,
+      sanitizedWorkoutData,
       workout,
     ).catch((error) => {
       console.error(

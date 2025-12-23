@@ -81,6 +81,9 @@ export const validateExerciseStructure = async (
   exerciseCount?: number;
   roundCount?: number;
   segmentCount?: number;
+  stationsCount?: number;
+  runsCount?: number;
+  liftsCount?: number;
   method: "property_check" | "ai_validation";
   aiReasoning?: string;
 }> => {
@@ -131,6 +134,36 @@ export const validateExerciseStructure = async (
     return {
       hasExercises: true,
       segmentCount,
+      method: "property_check",
+    };
+  }
+
+  // Check for hyrox stations/runs (hyrox)
+  const stationsCount = disciplineData?.stations?.length || 0;
+  const runsCount = disciplineData?.runs?.length || 0;
+  if (stationsCount > 0 || runsCount > 0) {
+    console.info(
+      "✅ Exercise structure validated via property check (hyrox stations/runs)",
+      { discipline, stationsCount, runsCount },
+    );
+    return {
+      hasExercises: true,
+      stationsCount,
+      runsCount,
+      method: "property_check",
+    };
+  }
+
+  // Check for lifts (olympic_weightlifting)
+  const liftsCount = disciplineData?.lifts?.length || 0;
+  if (liftsCount > 0) {
+    console.info(
+      "✅ Exercise structure validated via property check (lifts array)",
+      { discipline, liftsCount },
+    );
+    return {
+      hasExercises: true,
+      liftsCount,
       method: "property_check",
     };
   }

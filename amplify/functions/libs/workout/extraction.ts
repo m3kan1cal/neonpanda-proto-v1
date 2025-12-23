@@ -14,6 +14,7 @@ import {
 import { storeDebugDataInS3, callBedrockApi, MODEL_IDS } from "../api-helpers";
 import { parseJsonWithFallbacks } from "../response-utils";
 import { JSON_FORMATTING_INSTRUCTIONS_STANDARD } from "../prompt-helpers";
+import { parseCompletedAt } from "../analytics/date-utils";
 
 /**
  * Simple complexity check to determine if thinking should be enabled
@@ -305,13 +306,32 @@ export const validateWorkoutStructure = (
 
 /**
  * Builds a comprehensive workout extraction prompt using the Universal Workout Schema
+ *
+ * @param discipline - Optional discipline parameter for targeted extraction (new parameter for modular approach)
  */
 export const buildWorkoutExtractionPrompt = (
   userMessage: string,
   coachConfig: CoachConfig,
   criticalTrainingDirective?: { content: string; enabled: boolean },
   userTimezone?: string,
+  discipline?: string,
 ): string => {
+  // If discipline provided, use targeted prompt (new modular approach)
+  if (discipline) {
+    const {
+      buildTargetedExtractionPrompt,
+    } = require("./extraction/guidance-composer");
+    return buildTargetedExtractionPrompt(
+      userMessage,
+      coachConfig,
+      discipline,
+      userTimezone,
+      criticalTrainingDirective,
+    );
+  }
+
+  // Otherwise, fall back to full prompt below (for backward compatibility)
+
   const isComplex = isComplexWorkout(userMessage);
 
   // Build directive section if enabled
@@ -1157,7 +1177,10 @@ Examples:
 
     // Validate extracted time against message timestamp
     if (result.completedAt && messageTimestamp) {
-      const extractedTime = new Date(result.completedAt);
+      const extractedTime = parseCompletedAt(
+        result.completedAt,
+        "extractCompletedAtTime",
+      );
       const messageTime = new Date(messageTimestamp);
       const timeDiff = extractedTime.getTime() - messageTime.getTime();
       const hoursDiff = timeDiff / (1000 * 60 * 60);
@@ -1188,7 +1211,9 @@ Examples:
       // No upper limit on how far in the past - users often log workouts later
     }
 
-    return result.completedAt ? new Date(result.completedAt) : null;
+    return result.completedAt
+      ? parseCompletedAt(result.completedAt, "extractCompletedAtTime")
+      : null;
   } catch (error) {
     console.error(
       "AI time extraction failed, using current time as default:",
