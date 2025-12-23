@@ -107,13 +107,11 @@ Use the classify_discipline tool to return your analysis.`;
 
 export async function detectDiscipline(
   userMessage: string,
-  imageS3Keys?: string[],
 ): Promise<DisciplineDetectionResult> {
   try {
     console.info("🎯 Detecting workout discipline with AI:", {
       messageLength: userMessage.length,
       messagePreview: userMessage.substring(0, 100),
-      hasImages: !!(imageS3Keys && imageS3Keys.length > 0),
     });
 
     // Use tool-based detection with schema enforcement (established pattern)

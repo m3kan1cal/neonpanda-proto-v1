@@ -112,74 +112,6 @@ interface WorkoutSaveResult {
  * Recursively sanitize date fields in an object
  * Converts invalid date strings to null and normalizes date formats to prevent DynamoDB serialization errors
  */
-function sanitizeDateFields(obj: any): any {
-  if (obj === null || obj === undefined) {
-    return obj;
-  }
-
-  // Handle arrays
-  if (Array.isArray(obj)) {
-    return obj.map((item) => sanitizeDateFields(item));
-  }
-
-  // Handle objects
-  if (typeof obj === "object") {
-    const sanitized: any = {};
-    for (const [key, value] of Object.entries(obj)) {
-      // Special handling for fields that must be YYYY-MM-DD only
-      if (
-        (key === "date" || key === "date_previous") &&
-        typeof value === "string"
-      ) {
-        const date = new Date(value);
-        if (isNaN(date.getTime())) {
-          console.warn(
-            `⚠️ Invalid date field: ${key} = "${value}" - setting to null`,
-          );
-          sanitized[key] = null;
-        } else {
-          // Extract YYYY-MM-DD only
-          sanitized[key] = date.toISOString().split("T")[0];
-        }
-        continue;
-      }
-
-      // Check if this looks like a date field (by key name or value format)
-      const isDateField =
-        key.includes("date") ||
-        key.includes("Date") ||
-        key.includes("_at") ||
-        key.includes("At") ||
-        key.includes("timestamp") ||
-        key.includes("Timestamp");
-
-      if (isDateField && typeof value === "string") {
-        // Try to parse the date
-        const date = new Date(value);
-        if (isNaN(date.getTime())) {
-          // Invalid date - set to null and log warning
-          console.warn(
-            `⚠️ Invalid date field detected: ${key} = "${value}" - setting to null`,
-          );
-          sanitized[key] = null;
-        } else {
-          // Valid date - normalize to ISO string
-          sanitized[key] = date.toISOString();
-        }
-      } else if (typeof value === "object") {
-        // Recursively sanitize nested objects
-        sanitized[key] = sanitizeDateFields(value);
-      } else {
-        // Keep other values as-is
-        sanitized[key] = value;
-      }
-    }
-    return sanitized;
-  }
-
-  // Return primitives as-is
-  return obj;
-}
 
 /**
  * Result from detect_discipline tool
@@ -227,11 +159,6 @@ Returns: discipline, confidence (0-1), method ("ai_detection"), reasoning`,
         type: "string",
         description: "The user message describing their workout",
       },
-      imageS3Keys: {
-        type: "array",
-        items: { type: "string" },
-        description: "Optional S3 keys for workout images",
-      },
     },
     required: ["userMessage"],
   },
@@ -242,17 +169,17 @@ Returns: discipline, confidence (0-1), method ("ai_detection"), reasoning`,
   ): Promise<DisciplineDetectionResult> {
     console.info("🎯 Executing detect_discipline tool");
 
-    const { userMessage, imageS3Keys } = input;
+    const { userMessage } = input;
 
-    // Run AI discipline detection
-    // Agent-first approach: Agent decides when to detect discipline using this tool
+    // Run AI discipline detection (text-only, fast and cheap)
+    // Note: Images are already visible to Claude in the agent conversation context
+    // Detailed image analysis happens in extract_workout_data tool
     console.info("🔍 Running AI discipline detection...", {
       messageLength: userMessage.length,
-      hasImages: !!(imageS3Keys && imageS3Keys.length > 0),
     });
 
     try {
-      const detection = await detectDiscipline(userMessage, imageS3Keys);
+      const detection = await detectDiscipline(userMessage);
 
       console.info("✅ Discipline detected:", {
         discipline: detection.discipline,
@@ -1139,18 +1066,16 @@ Returns: workoutId, success, pineconeStored, pineconeRecordId, templateLinked`,
       "save_workout_to_database",
     );
 
-    // Sanitize all date fields in workoutData to prevent DynamoDB serialization errors
-    const sanitizedWorkoutData = sanitizeDateFields(workoutData);
-
     // 1. Build workout object
+    // Note: Date serialization is handled by DynamoDB's serializeForDynamoDB() in operations.ts
     const workout = {
-      workoutId: sanitizedWorkoutData.workout_id,
+      workoutId: workoutData.workout_id,
       userId: context.userId,
       coachIds: [context.coachId],
       coachNames: [context.coachConfig.coach_name],
       conversationId: context.conversationId,
       completedAt: completedAtDate,
-      workoutData: sanitizedWorkoutData,
+      workoutData: workoutData,
       summary,
       ...(context.templateContext && {
         templateId: context.templateContext.templateId,
@@ -1170,8 +1095,8 @@ Returns: workoutId, success, pineconeStored, pineconeRecordId, templateLinked`,
 
     console.info("Saving workout to DynamoDB..", {
       workoutId: workout.workoutId,
-      discipline: sanitizedWorkoutData.discipline,
-      workoutName: sanitizedWorkoutData.workout_name,
+      discipline: workoutData.discipline,
+      workoutName: workoutData.workout_name,
       confidence,
     });
 
@@ -1184,7 +1109,7 @@ Returns: workoutId, success, pineconeStored, pineconeRecordId, templateLinked`,
     storeWorkoutSummaryInPinecone(
       context.userId,
       summary,
-      sanitizedWorkoutData,
+      workoutData,
       workout,
     ).catch((error) => {
       console.error(
