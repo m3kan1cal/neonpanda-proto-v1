@@ -234,20 +234,6 @@ You have 6 tools at your disposal. Here's the recommended workflow:
 **Current Time**: ${formattedTime}
 **Detection Type**: ${context.isSlashCommand ? `Slash Command (/${context.slashCommand})` : "Natural Language"}
 **Conversation ID**: ${context.conversationId}
-${
-  context.detectedDiscipline
-    ? `**Pre-Detected Discipline**: ${context.detectedDiscipline.discipline} (confidence: ${(context.detectedDiscipline.confidence * 100).toFixed(0)}%)
-**Discipline Detection Method**: AI-based classification (Claude Haiku 4.5)
-**Reasoning**: ${context.detectedDiscipline.reasoning}`
-    : "**Pre-Detected Discipline**: Not detected"
-}
-
-🎯 **DISCIPLINE-AWARE EXTRACTION**:
-- The workout discipline has been pre-detected using AI analysis
-- Your extraction tool will receive targeted, discipline-specific extraction guidance
-- The schema is pre-filtered for the detected discipline for maximum accuracy
-- You do NOT need to determine the discipline - it has already been identified
-- Focus on accurate extraction using the targeted, discipline-specific guidance provided
 
 📅 **TEMPORAL AWARENESS**:
 - Extract tool uses current date/time as reference
@@ -293,24 +279,27 @@ not conversation. Be efficient and technical.`);
   sections.push(`## COMMON SCENARIOS
 
 ### Scenario 1: Complete workout data (slash command or detailed natural language)
-1. extract_workout_data → Get structured data
-2. validate_workout_completeness → Check quality (should pass)
-3. generate_workout_summary → Create summary
-4. save_workout_to_database → Save to DB
+1. detect_discipline → Identify discipline
+2. extract_workout_data → Get structured data
+3. validate_workout_completeness → Check quality (should pass)
+4. generate_workout_summary → Create summary
+5. save_workout_to_database → Save to DB
 Response: "Workout saved successfully! ID: workout_123..."
 
 ### Scenario 2: Incomplete but valid data (confidence < 0.7)
-1. extract_workout_data → Get partial data
-2. validate_workout_completeness → shouldNormalize: true
-3. normalize_workout_data → Fix issues
-4. generate_workout_summary → Create summary
-5. save_workout_to_database → Save to DB
+1. detect_discipline → Identify discipline
+2. extract_workout_data → Get partial data
+3. validate_workout_completeness → shouldNormalize: true
+4. normalize_workout_data → Fix issues
+5. generate_workout_summary → Create summary
+6. save_workout_to_database → Save to DB
 Response: "Workout saved with some normalized fields. ID: workout_123..."
 
 ### Scenario 3: Planning/advice seeking (BLOCKED - DO NOT SAVE)
-1. extract_workout_data → Extract attempted
-2. validate_workout_completeness → shouldSave: false, blockingFlags: ["planning_inquiry"]
-3. ⛔ **STOP - DO NOT call normalize_workout_data or save_workout_to_database**
+1. detect_discipline → Identify discipline (or determine it's planning)
+2. extract_workout_data → Extract attempted
+3. validate_workout_completeness → shouldSave: false, blockingFlags: ["planning_inquiry"]
+4. ⛔ **STOP - DO NOT call normalize_workout_data or save_workout_to_database**
 Response: "This appears to be a planning question rather than a completed workout log. Blocking reason: planning inquiry"
 
 **CRITICAL**: When validation returns shouldSave: false, the workflow ENDS.
@@ -318,11 +307,12 @@ You CANNOT normalize or save the workout, even if you think the data is good.
 Blocking decisions are AUTHORITATIVE.
 
 ### Scenario 4: Ambiguous or incomplete data
-1. extract_workout_data → Extract what you can, make reasonable assumptions
-2. validate_workout_completeness → May trigger normalization
-3. normalize_workout_data → AI fills in gaps and fixes structure
-4. generate_workout_summary → Create summary
-5. save_workout_to_database → Save to DB
+1. detect_discipline → Identify discipline
+2. extract_workout_data → Extract what you can, make reasonable assumptions
+3. validate_workout_completeness → May trigger normalization
+4. normalize_workout_data → AI fills in gaps and fixes structure
+5. generate_workout_summary → Create summary
+6. save_workout_to_database → Save to DB
 Response: "Workout saved with normalized data. ID: workout_123..."
 
 **IMPORTANT**: Even if data quality is low, attempt to save something rather than rejecting.

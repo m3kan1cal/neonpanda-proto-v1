@@ -14,7 +14,7 @@ import type { WorkoutLoggerContext } from "../libs/agents/workout-logger/types";
 export const handler = async (event: BuildWorkoutEvent) => {
   return withHeartbeat("Workout Logger Agent", async () => {
     try {
-      console.info("🏋️ Starting workout builder agent (V2):", {
+      console.info("🏋️ Starting Workout Logger Agent:", {
         userId: event.userId,
         coachId: event.coachId,
         conversationId: event.conversationId,
