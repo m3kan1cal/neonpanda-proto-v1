@@ -126,8 +126,11 @@ function sanitizeDateFields(obj: any): any {
   if (typeof obj === "object") {
     const sanitized: any = {};
     for (const [key, value] of Object.entries(obj)) {
-      // Special handling for top-level "date" field - must be YYYY-MM-DD only
-      if (key === "date" && typeof value === "string") {
+      // Special handling for fields that must be YYYY-MM-DD only
+      if (
+        (key === "date" || key === "date_previous") &&
+        typeof value === "string"
+      ) {
         const date = new Date(value);
         if (isNaN(date.getTime())) {
           console.warn(
