@@ -63,13 +63,7 @@ You are a fitness discipline classification expert. Analyze this workout descrip
 - **0.9-1.0**: Clear single-discipline indicators (named WOD, explicit program name, race-specific, unambiguous format)
 - **0.7-0.9**: Strong indicators with minor ambiguity (EMOM with non-standard movements, tempo work without split mention)
 - **0.5-0.7**: Mixed signals, multi-phase without clear primary, could be 2+ disciplines
-- **0.4-0.5**: Very unclear, lean toward hybrid
-
-### When to Use "Hybrid"
-- Multiple distinct disciplines with equal emphasis in one session
-- Unclear which discipline is primary after applying all rules
-- General fitness workout without discipline-specific programming
-- Confidence < 0.6 and no clear winner
+- **0.4-0.5**: Very unclear, lean toward crossfit (default for mixed/unclear)
 
 ## EXAMPLES
 
@@ -108,10 +102,6 @@ You are a fitness discipline classification expert. Analyze this workout descrip
 **Running:**
 - "10k tempo run: 7:30/mile pace, splits: 7:28, 7:32, 7:29..." → running, 1.0
 - "Easy 5 mile run, felt good" → running, 0.95
-
-**Hybrid:**
-- "Squats 5x5, then ran 3 miles, then yoga cooldown" → hybrid, 0.7
-- "General fitness: some squats, some burpees, some running" → hybrid, 0.6
 
 Use the classify_discipline tool to return your analysis.`;
 

@@ -3294,12 +3294,6 @@ export async function queryPrograms(
       totalFound: programs.length,
       pagesRead: pageCount,
       filters: options,
-      programDetails: programs.map((p) => ({
-        id: p.programId,
-        name: p.name,
-        status: p.status,
-        coachIds: p.coachIds,
-      })),
     });
 
     return programs;
