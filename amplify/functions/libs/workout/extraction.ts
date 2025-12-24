@@ -1258,7 +1258,7 @@ SUMMARY:`;
     const response = (await callBedrockApi(
       summaryPrompt,
       originalMessage,
-      undefined, // Use default model
+      MODEL_IDS.CLAUDE_HAIKU_4_FULL, // Use Haiku 4.5 - faster and cheaper for structured → text summaries
       { enableThinking },
     )) as string; // No tools used, always returns string
 

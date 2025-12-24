@@ -42,7 +42,7 @@ import { getProgramDesignerSession } from "./functions/get-program-designer-sess
 import { getProgramDesignerSessions } from "./functions/get-program-designer-sessions/resource";
 import { deleteProgramDesignerSession } from "./functions/delete-program-designer-session/resource";
 import { createWorkout } from "./functions/create-workout/resource";
-import { buildWorkoutV2 } from "./functions/build-workout-v2/resource";
+import { buildWorkout } from "./functions/build-workout/resource";
 import { buildConversationSummary } from "./functions/build-conversation-summary/resource";
 import { getWorkouts } from "./functions/get-workouts/resource";
 import { getWorkout } from "./functions/get-workout/resource";
@@ -74,7 +74,7 @@ import { checkUserAvailability } from "./functions/check-user-availability/resou
 import { generateUploadUrls } from "./functions/generate-upload-urls/resource";
 import { generateDownloadUrls } from "./functions/generate-download-urls/resource";
 import { createProgram } from "./functions/create-program/resource";
-import { buildProgramV2 } from "./functions/build-program-v2/resource";
+import { buildProgram } from "./functions/build-program/resource";
 import { getProgram } from "./functions/get-program/resource";
 import { getPrograms } from "./functions/get-programs/resource";
 import { updateProgram } from "./functions/update-program/resource";
@@ -141,7 +141,7 @@ const backend = defineBackend({
   getProgramDesignerSessions,
   deleteProgramDesignerSession,
   createWorkout,
-  buildWorkoutV2,
+  buildWorkout,
   buildConversationSummary,
   getWorkouts,
   getWorkout,
@@ -168,7 +168,7 @@ const backend = defineBackend({
   generateDownloadUrls,
   syncLogSubscriptions,
   createProgram,
-  buildProgramV2,
+  buildProgram,
   getProgram,
   getPrograms,
   updateProgram,
@@ -182,10 +182,10 @@ const backend = defineBackend({
 
 // Disable retries for stateful async generation functions
 // This prevents confusing double-runs on timeouts or errors.
-backend.buildProgramV2.resources.lambda.configureAsyncInvoke({
+backend.buildProgram.resources.lambda.configureAsyncInvoke({
   retryAttempts: 0,
 });
-backend.buildWorkoutV2.resources.lambda.configureAsyncInvoke({
+backend.buildWorkout.resources.lambda.configureAsyncInvoke({
   retryAttempts: 0,
 });
 backend.buildCoachConfig.resources.lambda.configureAsyncInvoke({
@@ -333,7 +333,7 @@ const sharedPolicies = new SharedPolicies(
   backend.getProgramDesignerSessions,
   backend.deleteProgramDesignerSession,
   backend.deleteCoachConversation,
-  backend.buildWorkoutV2,
+  backend.buildWorkout,
   backend.buildConversationSummary,
   backend.getWorkouts,
   backend.getWorkout,
@@ -345,7 +345,7 @@ const sharedPolicies = new SharedPolicies(
   backend.deleteMemory,
   backend.updateUserProfile,
   backend.createProgram,
-  backend.buildProgramV2,
+  backend.buildProgram,
   backend.updateProgram,
   backend.deleteProgram,
   backend.logWorkoutTemplate,
@@ -396,8 +396,8 @@ const sharedPolicies = new SharedPolicies(
   backend.sendCoachConversationMessage,
   backend.streamCoachConversation,
   backend.streamProgramDesign,
-  backend.buildWorkoutV2, // Agent-based workout extraction with Bedrock
-  backend.buildProgramV2, // Agent-based program generation with Bedrock
+  backend.buildWorkout, // Agent-based workout extraction with Bedrock
+  backend.buildProgram, // Agent-based program generation with Bedrock
   backend.buildConversationSummary,
   backend.buildWeeklyAnalytics,
   backend.buildMonthlyAnalytics,
@@ -409,10 +409,10 @@ const sharedPolicies = new SharedPolicies(
 
 // Functions needing S3 DEBUG bucket access
 [
-  backend.buildWorkoutV2, // Agent-based workout extraction with debug logging
+  backend.buildWorkout, // Agent-based workout extraction with debug logging
   backend.buildCoachConfig,
   backend.buildConversationSummary,
-  backend.buildProgramV2, // Agent-based program generation with debug logging
+  backend.buildProgram, // Agent-based program generation with debug logging
   backend.sendCoachConversationMessage,
   backend.streamCoachConversation,
   backend.streamCoachCreatorSession,
@@ -440,8 +440,8 @@ sharedPolicies.attachS3AnalyticsAccess(
   backend.streamProgramDesign,
   backend.updateCoachCreatorSession,
   backend.createProgram,
-  backend.buildProgramV2, // Stores program details in S3
-  backend.buildWorkoutV2, // Agent-based: also needs template.linkedWorkoutId update
+  backend.buildProgram, // Stores program details in S3
+  backend.buildWorkout, // Agent-based: also needs template.linkedWorkoutId update
   backend.getProgram,
   backend.logWorkoutTemplate,
   backend.skipWorkoutTemplate,
@@ -549,24 +549,24 @@ grantLambdaInvokePermissions(
   [backend.buildCoachConfig.resources.lambda.functionArn],
 );
 
-// Grant permission to createWorkout to invoke buildWorkoutV2
+// Grant permission to createWorkout to invoke buildWorkout
 grantLambdaInvokePermissions(backend.createWorkout.resources.lambda, [
-  backend.buildWorkoutV2.resources.lambda.functionArn,
+  backend.buildWorkout.resources.lambda.functionArn,
 ]);
 
-// Grant permission to sendCoachConversationMessage to invoke buildWorkoutV2 and buildConversationSummary
+// Grant permission to sendCoachConversationMessage to invoke buildWorkout and buildConversationSummary
 grantLambdaInvokePermissions(
   backend.sendCoachConversationMessage.resources.lambda,
   [
-    backend.buildWorkoutV2.resources.lambda.functionArn,
+    backend.buildWorkout.resources.lambda.functionArn,
     backend.buildConversationSummary.resources.lambda.functionArn,
   ],
 );
 
-// Grant permission to streamCoachConversation to invoke v2 functions only
+// Grant permission to streamCoachConversation to invoke functions
 grantLambdaInvokePermissions(backend.streamCoachConversation.resources.lambda, [
-  backend.buildWorkoutV2.resources.lambda.functionArn,
-  backend.buildProgramV2.resources.lambda.functionArn,
+  backend.buildWorkout.resources.lambda.functionArn,
+  backend.buildProgram.resources.lambda.functionArn,
   backend.buildConversationSummary.resources.lambda.functionArn,
 ]);
 
@@ -576,14 +576,14 @@ grantLambdaInvokePermissions(
   [backend.buildCoachConfig.resources.lambda.functionArn],
 );
 
-// Grant permission to streamProgramDesign to invoke buildProgramV2
+// Grant permission to streamProgramDesign to invoke buildProgram
 grantLambdaInvokePermissions(backend.streamProgramDesign.resources.lambda, [
-  backend.buildProgramV2.resources.lambda.functionArn,
+  backend.buildProgram.resources.lambda.functionArn,
 ]);
 
-// Grant permission to logWorkoutTemplate to invoke buildWorkoutV2
+// Grant permission to logWorkoutTemplate to invoke buildWorkout
 grantLambdaInvokePermissions(backend.logWorkoutTemplate.resources.lambda, [
-  backend.buildWorkoutV2.resources.lambda.functionArn,
+  backend.buildWorkout.resources.lambda.functionArn,
 ]);
 
 // Grant permission to createCoachConfig to invoke buildCoachConfig
@@ -658,7 +658,7 @@ const allFunctions = [
   backend.streamCoachCreatorSession,
   backend.streamProgramDesign,
   backend.createWorkout,
-  backend.buildWorkoutV2,
+  backend.buildWorkout,
   backend.buildConversationSummary,
   backend.getWorkouts,
   backend.getWorkout,
@@ -686,7 +686,7 @@ const allFunctions = [
   backend.checkUserAvailability,
   backend.generateUploadUrls,
   backend.createProgram,
-  backend.buildProgramV2,
+  backend.buildProgram,
   backend.getProgram,
   backend.getPrograms,
   backend.updateProgram,
@@ -729,8 +729,8 @@ allFunctions.forEach((func) => {
   backend.streamProgramDesign,
   backend.updateCoachCreatorSession,
   backend.createProgram,
-  backend.buildProgramV2, // Needs access to S3 for program template storage
-  backend.buildWorkoutV2, // Agent-based: also needs S3 for template updates
+  backend.buildProgram, // Needs access to S3 for program template storage
+  backend.buildWorkout, // Agent-based: also needs S3 for template updates
   backend.getWorkoutTemplate,
   backend.logWorkoutTemplate,
   backend.skipWorkoutTemplate,
@@ -813,12 +813,12 @@ backend.updateCoachCreatorSession.addEnvironment(
 
 backend.createWorkout.addEnvironment(
   "BUILD_WORKOUT_FUNCTION_NAME",
-  backend.buildWorkoutV2.resources.lambda.functionName,
+  backend.buildWorkout.resources.lambda.functionName,
 );
 
 backend.sendCoachConversationMessage.addEnvironment(
   "BUILD_WORKOUT_FUNCTION_NAME",
-  backend.buildWorkoutV2.resources.lambda.functionName,
+  backend.buildWorkout.resources.lambda.functionName,
 );
 backend.sendCoachConversationMessage.addEnvironment(
   "BUILD_CONVERSATION_SUMMARY_FUNCTION_NAME",
@@ -827,11 +827,11 @@ backend.sendCoachConversationMessage.addEnvironment(
 
 backend.streamCoachConversation.addEnvironment(
   "BUILD_WORKOUT_FUNCTION_NAME",
-  backend.buildWorkoutV2.resources.lambda.functionName,
+  backend.buildWorkout.resources.lambda.functionName,
 );
 backend.streamCoachConversation.addEnvironment(
   "BUILD_TRAINING_PROGRAM_FUNCTION_NAME",
-  backend.buildProgramV2.resources.lambda.functionName,
+  backend.buildProgram.resources.lambda.functionName,
 );
 backend.streamCoachConversation.addEnvironment(
   "BUILD_CONVERSATION_SUMMARY_FUNCTION_NAME",
@@ -845,7 +845,7 @@ backend.streamCoachCreatorSession.addEnvironment(
 
 backend.streamProgramDesign.addEnvironment(
   "BUILD_TRAINING_PROGRAM_FUNCTION_NAME",
-  backend.buildProgramV2.resources.lambda.functionName,
+  backend.buildProgram.resources.lambda.functionName,
 );
 
 backend.createCoachConfig.addEnvironment(
@@ -860,7 +860,7 @@ backend.createCoachConversation.addEnvironment(
 
 backend.logWorkoutTemplate.addEnvironment(
   "BUILD_WORKOUT_FUNCTION_NAME",
-  backend.buildWorkoutV2.resources.lambda.functionName,
+  backend.buildWorkout.resources.lambda.functionName,
 );
 
 // Add USER_POOL_ID environment variable to update-user-profile

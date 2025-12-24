@@ -46,6 +46,9 @@ export interface LogsData {
   agentResponse: string | null;
   fullLogs: string[];
   error?: string;
+  imagesProcessed?: boolean;
+  imageCount?: number;
+  multimodalApiCalls?: number;
 }
 
 /**
@@ -88,6 +91,15 @@ export interface WorkoutValidationExpectations {
 }
 
 /**
+ * Image processing validation expectations
+ */
+export interface ImageProcessingExpectations {
+  imagesUsed: boolean;
+  expectedImageCount?: number;
+  minMultimodalApiCalls?: number;
+}
+
+/**
  * Test expectations structure
  */
 export interface TestExpectations {
@@ -95,12 +107,14 @@ export interface TestExpectations {
   skipped?: boolean;
   shouldHave?: string[];
   discipline?: string;
+  disciplineOptions?: string[]; // For tests where multiple disciplines are acceptable
   workoutName?: string;
   minConfidence?: number;
   blockingFlags?: string[];
   toolsUsed?: string[];
   shouldNotUseTool?: string;
   workoutValidation?: WorkoutValidationExpectations;
+  imageProcessing?: ImageProcessingExpectations;
 }
 
 /**

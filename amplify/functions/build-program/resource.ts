@@ -2,8 +2,8 @@ import "dotenv/config";
 import { defineFunction } from "@aws-amplify/backend";
 import { NODEJS_RUNTIME } from "../libs/configs";
 
-export const buildProgramV2 = defineFunction({
-  name: "build-program-v2",
+export const buildProgram = defineFunction({
+  name: "build-program",
   entry: "./handler.ts",
   runtime: NODEJS_RUNTIME,
   timeoutSeconds: 900, // 15 minutes (same as build-program)

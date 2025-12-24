@@ -63,6 +63,12 @@ the minimum necessary tool calls.
 - **Advice seeking**: "How do I...", "Is it okay to...", "Would it be better to..."
 - **General conversation**: "Hey", "Thanks", "How are you?"
 - **Questions unrelated to logging**: Asking about the app, coach, program, etc.
+- **Reflection without loggable details**: "My legs are so sore from yesterday", "That workout was brutal", "Still recovering from..." - these mention past workouts but have NO actionable data (no sets, reps, weights, exercises, times)
+
+**⚠️ IMPORTANT: Reflection vs. Logging**
+If a user mentions a past workout but provides NO SPECIFIC DETAILS (exercises, sets, reps, weights, times), they are **reflecting**, not **logging**. Do NOT fabricate workout data from vague references.
+- ❌ "Yesterday's squats destroyed me" → No details = Skip (reflection)
+- ✅ "Did 5x5 squats at 225 yesterday" → Has details = Log it
 
 **If NOT a valid workout logging attempt:**
 1. **DO NOT call extract_workout_data or any other tools**

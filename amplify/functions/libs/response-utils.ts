@@ -18,14 +18,16 @@ export function toTitleCase(str: string): string {
   if (!str) return str;
 
   return str
-    .split(' ')
-    .map(word =>
+    .split(" ")
+    .map((word) =>
       word
-        .split('-')
-        .map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
-        .join('-')
+        .split("-")
+        .map(
+          (part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase(),
+        )
+        .join("-"),
     )
-    .join(' ');
+    .join(" ");
 }
 
 /**
@@ -37,11 +39,11 @@ export function toTitleCase(str: string): string {
 export const cleanResponse = (response: string): string => {
   // More aggressive markdown removal - handle all variations
   let cleaned = response
-    .replace(/^```json\s*/gm, '')  // Remove ```json at start of lines
-    .replace(/^```\s*/gm, '')       // Remove ``` at start of lines
-    .replace(/\s*```$/gm, '')       // Remove ``` at end of lines
-    .replace(/```json/g, '')        // Remove any remaining ```json
-    .replace(/```/g, '');           // Remove any remaining ```
+    .replace(/^```json\s*/gm, "") // Remove ```json at start of lines
+    .replace(/^```\s*/gm, "") // Remove ``` at start of lines
+    .replace(/\s*```$/gm, "") // Remove ``` at end of lines
+    .replace(/```json/g, "") // Remove any remaining ```json
+    .replace(/```/g, ""); // Remove any remaining ```
 
   // Trim whitespace
   cleaned = cleaned.trim();
@@ -58,14 +60,18 @@ export const cleanResponse = (response: string): string => {
   }
 
   // Detect if this is an array or object based on the first non-whitespace character
-  const firstNonWhitespace = cleaned.replace(/^\s+/, '')[0];
+  const firstNonWhitespace = cleaned.replace(/^\s+/, "")[0];
 
-  if (firstNonWhitespace === '[') {
+  if (firstNonWhitespace === "[") {
     // Handle JSON arrays - extract from first [ to last ]
-    const firstBracket = cleaned.indexOf('[');
-    const lastBracket = cleaned.lastIndexOf(']');
+    const firstBracket = cleaned.indexOf("[");
+    const lastBracket = cleaned.lastIndexOf("]");
 
-    if (firstBracket !== -1 && lastBracket !== -1 && lastBracket > firstBracket) {
+    if (
+      firstBracket !== -1 &&
+      lastBracket !== -1 &&
+      lastBracket > firstBracket
+    ) {
       const extracted = cleaned.substring(firstBracket, lastBracket + 1);
 
       if (extracted !== cleaned) {
@@ -79,10 +85,10 @@ export const cleanResponse = (response: string): string => {
 
       cleaned = extracted;
     }
-  } else if (firstNonWhitespace === '{') {
+  } else if (firstNonWhitespace === "{") {
     // Handle JSON objects - extract from first { to last }
-    const firstBrace = cleaned.indexOf('{');
-    const lastBrace = cleaned.lastIndexOf('}');
+    const firstBrace = cleaned.indexOf("{");
+    const lastBrace = cleaned.lastIndexOf("}");
 
     if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
       const extracted = cleaned.substring(firstBrace, lastBrace + 1);
@@ -113,8 +119,8 @@ export const stripNonJson = (response: string): string => {
   const cleaned = response.trim();
 
   // Find the first character of a JSON object or array
-  const firstBracket = cleaned.indexOf('[');
-  const firstBrace = cleaned.indexOf('{');
+  const firstBracket = cleaned.indexOf("[");
+  const firstBrace = cleaned.indexOf("{");
   let startIndex = -1;
 
   if (firstBracket !== -1 && firstBrace !== -1) {
@@ -131,8 +137,8 @@ export const stripNonJson = (response: string): string => {
   }
 
   // Find the last character of a JSON object or array
-  const lastBracket = cleaned.lastIndexOf(']');
-  const lastBrace = cleaned.lastIndexOf('}');
+  const lastBracket = cleaned.lastIndexOf("]");
+  const lastBrace = cleaned.lastIndexOf("}");
   const endIndex = Math.max(lastBracket, lastBrace);
 
   if (endIndex === -1 || endIndex < startIndex) {
@@ -203,7 +209,9 @@ export function fixMalformedJson(jsonString: string): string {
     // Fix bracket imbalance (for arrays)
     if (openBrackets > closeBrackets) {
       fixed += "]".repeat(openBrackets - closeBrackets);
-      console.info(`Added ${openBrackets - closeBrackets} missing closing brackets`);
+      console.info(
+        `Added ${openBrackets - closeBrackets} missing closing brackets`,
+      );
     }
 
     // Fix brace imbalance (for objects)
@@ -233,7 +241,7 @@ export function fixMalformedJson(jsonString: string): string {
         if (multipleCloseBraces) {
           console.info(
             "Found multiple consecutive closing braces:",
-            multipleCloseBraces
+            multipleCloseBraces,
           );
           // Replace multiple consecutive closing braces with single ones
           fixed = fixed.replace(/}{2,}/g, "}");
@@ -257,7 +265,7 @@ export function fixMalformedJson(jsonString: string): string {
           }
         }
         console.info(
-          `Removed ${remainingExtra} remaining extra closing braces from end`
+          `Removed ${remainingExtra} remaining extra closing braces from end`,
         );
       } else if (remainingExtra < 0) {
         // We need to add missing closing braces after cleaning up extras
@@ -275,12 +283,12 @@ export function fixMalformedJson(jsonString: string): string {
     } catch (fixError) {
       console.error(
         "Could not fix malformed JSON after all attempts:",
-        fixError
+        fixError,
       );
       throw new Error(
         `Unable to fix malformed JSON: ${
           fixError instanceof Error ? fixError.message : "Unknown error"
-        }`
+        }`,
       );
     }
   }
@@ -309,18 +317,18 @@ function generatePrefixes(str: string): string[] {
  */
 export function removeTriggerFromStream(
   chunk: string,
-  buffer: string = ''
+  buffer: string = "",
 ): { cleanedContent: string; wasTriggerRemoved: boolean; buffer: string } {
   // Combine buffer with new chunk
   const combined = buffer + chunk;
 
   // List of trigger strings to remove (tools, markers, etc.)
   const triggerStrings = [
-    '[GENERATE_PROGRAM]',
-    '[GENERATE]',
-    '[BUILD_TRAINING_PROGRAM]',
-    '[BUILD_WORKOUT]',
-    '[SAVE_MEMORY]',
+    "[GENERATE_PROGRAM]",
+    "[GENERATE]",
+    "[BUILD_TRAINING_PROGRAM]",
+    "[BUILD_WORKOUT]",
+    "[SAVE_MEMORY]",
   ];
 
   // Check if we have a complete trigger in the combined text
@@ -329,18 +337,23 @@ export function removeTriggerFromStream(
 
   for (const trigger of triggerStrings) {
     if (cleanedContent.includes(trigger)) {
-      cleanedContent = cleanedContent.replace(new RegExp(trigger.replace(/[[\]]/g, '\\$&'), 'gi'), '');
+      cleanedContent = cleanedContent.replace(
+        new RegExp(trigger.replace(/[[\]]/g, "\\$&"), "gi"),
+        "",
+      );
       wasTriggerRemoved = true;
     }
   }
 
   // Generate all possible partial triggers from our trigger strings
-  const possiblePartials = triggerStrings.flatMap(trigger => generatePrefixes(trigger));
+  const possiblePartials = triggerStrings.flatMap((trigger) =>
+    generatePrefixes(trigger),
+  );
   // Sort by length (longest first) to match the most specific partial first
   possiblePartials.sort((a, b) => b.length - a.length);
 
   // Check if the end of cleanedContent matches a partial trigger
-  let newBuffer = '';
+  let newBuffer = "";
   for (const partial of possiblePartials) {
     if (cleanedContent.endsWith(partial)) {
       // Hold this partial in the buffer for the next chunk
@@ -363,12 +376,107 @@ export function removeTriggerFromStream(
 }
 
 /**
+ * Detects and fixes double-encoded JSON strings
+ * Sometimes the AI returns JSON as a string (e.g., "{\"key\":\"value\"}") instead of an actual object
+ * This happens when the AI wraps the JSON in quotes or doesn't use the tool properly
+ */
+function fixDoubleEncodedJson(jsonString: string): string {
+  const trimmed = jsonString.trim();
+
+  // Check if the entire string is a JSON-encoded string (starts and ends with quotes)
+  if (trimmed.startsWith('"') && trimmed.endsWith('"')) {
+    try {
+      // Try to parse the outer quotes away
+      const parsed = JSON.parse(trimmed);
+
+      // If the result is a string that looks like JSON, we had double-encoding
+      if (
+        typeof parsed === "string" &&
+        (parsed.startsWith("{") || parsed.startsWith("["))
+      ) {
+        console.warn(
+          "⚠️ Fixed double-encoded JSON - AI returned JSON wrapped in quotes",
+        );
+        return parsed; // Return the inner JSON string
+      }
+    } catch (e) {
+      // If parsing fails, just return original
+      return trimmed;
+    }
+  }
+
+  return trimmed;
+}
+
+/**
+ * Recursively fixes double-encoded properties within an already-parsed object
+ * This handles cases where the AI properly returns an object, but some properties are stringified JSON
+ *
+ * Use this AFTER JSON.parse() to fix property-level double-encoding
+ */
+export function fixDoubleEncodedProperties(data: any): any {
+  // If data is a string that looks like JSON, parse it
+  if (
+    typeof data === "string" &&
+    (data.startsWith("{") || data.startsWith("["))
+  ) {
+    try {
+      const parsed = JSON.parse(data);
+      console.warn(
+        "⚠️ Fixed double-encoded property - value was JSON string instead of object",
+      );
+      return fixDoubleEncodedProperties(parsed); // Recursively check the parsed result
+    } catch (e) {
+      // If parsing fails, return as-is
+      return data;
+    }
+  }
+
+  // If data is an object, recursively check all properties
+  if (typeof data === "object" && data !== null && !Array.isArray(data)) {
+    const fixed: any = {};
+    let hadDoubleEncoding = false;
+
+    for (const [key, value] of Object.entries(data)) {
+      const fixedValue = fixDoubleEncodedProperties(value);
+      fixed[key] = fixedValue;
+      if (fixedValue !== value) {
+        hadDoubleEncoding = true;
+      }
+    }
+
+    if (hadDoubleEncoding) {
+      console.warn("⚠️ Fixed double-encoded properties in object");
+    }
+
+    return fixed;
+  }
+
+  // If data is an array, recursively check all elements
+  if (Array.isArray(data)) {
+    return data.map((item) => fixDoubleEncodedProperties(item));
+  }
+
+  return data;
+}
+
+/**
  * Convenience function that applies both cleaning and fixing in sequence
  * Useful for processing AI responses that might have both markdown formatting and JSON issues
+ *
+ * Pipeline:
+ * 1. stripNonJson - removes non-JSON text from start/end
+ * 2. cleanResponse - removes markdown formatting
+ * 3. fixMalformedJson - fixes common JSON issues (trailing commas, unbalanced braces)
+ * 4. fixDoubleEncodedJson - unwraps double-encoded JSON strings
+ * 5. JSON.parse - final parse
+ * 6. fixDoubleEncodedProperties - fixes property-level double-encoding (after parse)
  */
 export const parseJsonWithFallbacks = (response: string): any => {
   const strippedResponse = stripNonJson(response);
   const cleanedResponse = cleanResponse(strippedResponse);
   const fixedResponse = fixMalformedJson(cleanedResponse);
-  return JSON.parse(fixedResponse);
+  const unquotedResponse = fixDoubleEncodedJson(fixedResponse);
+  const parsed = JSON.parse(unquotedResponse);
+  return fixDoubleEncodedProperties(parsed);
 };

@@ -1,4 +1,9 @@
-import { callBedrockApi, MODEL_IDS } from "../api-helpers";
+import {
+  callBedrockApi,
+  callBedrockApiMultimodal,
+  MODEL_IDS,
+} from "../api-helpers";
+import { buildWorkoutExtractionMessage } from "../agents/workout-logger/helpers";
 import { DISCIPLINE_DETECTION_SCHEMA } from "../schemas/discipline-detection-schema";
 
 export interface DisciplineDetectionResult {
@@ -28,6 +33,16 @@ You are a fitness discipline classification expert. Analyze this workout descrip
 **hyrox**: 8 stations + 9 runs (1km each), specific exercises (SkiErg, Sled Push, Sled Pull, Burpee Broad Jumps, Rowing, Farmers Carry, Sandbag Lunges, Wall Balls), race simulation, division tracking (Open/Pro/Doubles)
 
 **running**: Distance runs (5k, 10k, half marathon, marathon), pace work, intervals, tempo runs, splits tracking, easy/long/speed runs, race training
+
+## IMAGE ANALYSIS GUIDANCE
+
+When images are provided:
+- **Whiteboard photos**: Look for workout format indicators (For Time, AMRAP, EMOM headers), movement lists, rep schemes
+- **Programming sheets**: Analyze percentage tables, periodization structure, training splits
+- **Workout screenshots**: Check for app-specific layouts (Mayhem, CompTrain, SugarWOD), branded elements
+- **Handwritten logs**: Note exercise selection patterns, set/rep notation, rest periods
+
+Visual indicators often trump text descriptions for discipline classification.
 
 ## CLASSIFICATION RULES
 
@@ -107,17 +122,28 @@ Use the classify_discipline tool to return your analysis.`;
 
 export async function detectDiscipline(
   userMessage: string,
+  imageS3Keys?: string[],
 ): Promise<DisciplineDetectionResult> {
   try {
+    const hasImages = imageS3Keys && imageS3Keys.length > 0;
+
     console.info("🎯 Detecting workout discipline with AI:", {
       messageLength: userMessage.length,
-      messagePreview: userMessage.substring(0, 100),
+      hasImages,
+      imageCount: imageS3Keys?.length || 0,
     });
 
-    // Use tool-based detection with schema enforcement (established pattern)
-    const result = await callBedrockApi(
+    // Build multimodal message (handles both text-only and text+images)
+    const converseMessages = await buildWorkoutExtractionMessage(
+      userMessage,
+      imageS3Keys,
+      "discipline",
+    );
+
+    // Always use multimodal API (gracefully handles text-only when no images)
+    const result = await callBedrockApiMultimodal(
       DISCIPLINE_DETECTION_PROMPT,
-      `Analyze this workout and classify its discipline:\n\n"${userMessage}"`,
+      converseMessages,
       MODEL_IDS.CLAUDE_HAIKU_4_FULL,
       {
         tools: {

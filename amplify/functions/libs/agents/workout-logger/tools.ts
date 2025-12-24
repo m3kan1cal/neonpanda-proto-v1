@@ -19,6 +19,7 @@ import {
   type UniversalWorkoutSchema,
   type DisciplineClassification,
 } from "../../workout";
+import { fixDoubleEncodedProperties } from "../../response-utils";
 import {
   normalizeWorkout,
   shouldNormalizeWorkout,
@@ -159,6 +160,12 @@ Returns: discipline, confidence (0-1), method ("ai_detection"), reasoning`,
         type: "string",
         description: "The user message describing their workout",
       },
+      imageS3Keys: {
+        type: "array",
+        items: { type: "string" },
+        description:
+          "Optional S3 keys for workout images (whiteboard photos, screenshots)",
+      },
     },
     required: ["userMessage"],
   },
@@ -169,17 +176,16 @@ Returns: discipline, confidence (0-1), method ("ai_detection"), reasoning`,
   ): Promise<DisciplineDetectionResult> {
     console.info("🎯 Executing detect_discipline tool");
 
-    const { userMessage } = input;
+    const { userMessage, imageS3Keys } = input;
 
-    // Run AI discipline detection (text-only, fast and cheap)
-    // Note: Images are already visible to Claude in the agent conversation context
-    // Detailed image analysis happens in extract_workout_data tool
     console.info("🔍 Running AI discipline detection...", {
       messageLength: userMessage.length,
+      hasImages: !!(imageS3Keys && imageS3Keys.length > 0),
+      imageCount: imageS3Keys?.length || 0,
     });
 
     try {
-      const detection = await detectDiscipline(userMessage);
+      const detection = await detectDiscipline(userMessage, imageS3Keys);
 
       console.info("✅ Discipline detected:", {
         discipline: detection.discipline,
@@ -658,9 +664,12 @@ Returns: validation result with shouldSave, shouldNormalize, confidence, complet
       completeness,
     });
 
-    // Update metadata with scores
+    // Update metadata with scores (ensure metadata always exists with proper structure)
     if (!workoutData.metadata) {
       workoutData.metadata = {};
+    }
+    if (!workoutData.metadata.validation_flags) {
+      workoutData.metadata.validation_flags = [];
     }
     workoutData.metadata.data_confidence = confidence;
     workoutData.metadata.data_completeness = completeness;
@@ -847,7 +856,12 @@ Returns: normalizedData, isValid, issuesFound, issuesCorrected, normalizationSum
   ): Promise<WorkoutNormalizationResult> {
     console.info("🔧 Executing normalize_workout_data tool");
 
-    const { workoutData, enableThinking } = input;
+    let { workoutData, enableThinking } = input;
+
+    // Fix double-encoded JSON if AI returned stringified properties
+    // This handles cases where the AI properly returns an object but some properties are JSON strings
+    workoutData = fixDoubleEncodedProperties(workoutData);
+
     const originalConfidence = workoutData.metadata?.data_confidence || 0;
 
     // Run normalization
@@ -878,6 +892,14 @@ Returns: normalizedData, isValid, issuesFound, issuesCorrected, normalizationSum
     ) {
       finalData = normalizationResult.normalizedData;
 
+      // Ensure metadata exists with proper structure before accessing
+      if (!finalData.metadata) {
+        finalData.metadata = {};
+      }
+      if (!finalData.metadata.validation_flags) {
+        finalData.metadata.validation_flags = [];
+      }
+
       // Update confidence if normalization improved the data
       if (normalizationResult.confidence > originalConfidence) {
         finalData.metadata.data_confidence = Math.min(
@@ -887,13 +909,16 @@ Returns: normalizedData, isValid, issuesFound, issuesCorrected, normalizationSum
       }
     }
 
-    // Add normalization flags to metadata
+    // Add normalization flags to metadata (ensure metadata structure exists)
+    if (!finalData.metadata) {
+      finalData.metadata = {};
+    }
+    if (!finalData.metadata.validation_flags) {
+      finalData.metadata.validation_flags = [];
+    }
     normalizationResult.issues.forEach((issue) => {
-      if (!finalData.metadata.validation_flags) {
-        finalData.metadata.validation_flags = [];
-      }
-      if (!finalData.metadata.validation_flags.includes(issue.field)) {
-        finalData.metadata.validation_flags.push(issue.field);
+      if (!finalData.metadata.validation_flags!.includes(issue.field)) {
+        finalData.metadata.validation_flags!.push(issue.field);
       }
     });
 
