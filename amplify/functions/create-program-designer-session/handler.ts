@@ -53,31 +53,50 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     sessionId,
   });
 
-  // Fetch coach config to get coach name
+  // Fetch coach config to validate it exists and get coach name
   let coachName: string | undefined;
   try {
     const coachConfig = await getCoachConfig(userId, coachId);
-    coachName = coachConfig?.coach_name;
+
+    // Validate coach exists - don't create session if coach is invalid
+    if (!coachConfig) {
+      console.warn("❌ Coach configuration not found", { coachId, userId });
+      return createErrorResponse(
+        400,
+        `Invalid coachId: ${coachId}. Coach configuration does not exist.`,
+        "INVALID_COACH_ID",
+      );
+    }
+
+    coachName = coachConfig.coach_name;
     if (!coachName) {
       console.warn("⚠️ Coach config found but no coach_name present", {
         coachId,
       });
     }
   } catch (error) {
-    console.error("❌ Failed to fetch coach config for name", {
+    console.error("❌ Failed to fetch coach config", {
       coachId,
       error,
     });
-    // Continue without coach name - it's optional for display purposes
+    return createErrorResponse(
+      500,
+      "Failed to validate coach configuration",
+      "COACH_VALIDATION_ERROR",
+    );
   }
 
-  // Create initial session object
+  // Create initial todo list and calculate totals BEFORE saving
+  const todoList = createEmptyProgramTodoList();
+  const totalItems = Object.keys(todoList).length;
+
+  // Create initial session object with correct totalItems
   const session: ProgramDesignerSession = {
     userId,
     coachId, // Store coachId in session
     coachName, // Store coach name for display (optional)
     sessionId,
-    todoList: createEmptyProgramTodoList(),
+    todoList,
     conversationHistory: [],
     isComplete: false,
     startedAt: new Date(),
@@ -86,7 +105,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     imageS3Keys: [],
     progressDetails: {
       itemsCompleted: 0,
-      totalItems: 0,
+      totalItems, // Use calculated value instead of 0
       percentage: 0,
     },
   };
@@ -97,10 +116,8 @@ const baseHandler: AuthenticatedHandler = async (event) => {
   console.info("✅ Program designer session created successfully", {
     sessionId,
     userId,
+    totalItems,
   });
-
-  // Calculate totals dynamically from the todo list structure
-  const totalItems = Object.keys(session.todoList).length;
   const requiredQuestions = REQUIRED_PROGRAM_FIELDS.length;
 
   // Return rich metadata for frontend progress tracking
