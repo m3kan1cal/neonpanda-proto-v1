@@ -57,6 +57,9 @@ export const WORKOUT_SCHEMA = {
         "crossfit",
         "powerlifting",
         "bodybuilding",
+        "olympic_weightlifting",
+        "functional_bodybuilding",
+        "calisthenics",
         "hiit",
         "running",
         "swimming",
@@ -64,6 +67,7 @@ export const WORKOUT_SCHEMA = {
         "yoga",
         "martial_arts",
         "climbing",
+        "hyrox",
         "hybrid",
       ],
       description: "Primary training discipline for this workout",
@@ -539,10 +543,112 @@ export const WORKOUT_SCHEMA = {
           },
         },
 
-        // Bodybuilding (placeholder for future implementation)
+        // Bodybuilding
         bodybuilding: {
           type: "object",
-          description: "Bodybuilding-specific data (to be implemented)",
+          required: ["split_type", "exercises"],
+          properties: {
+            split_type: {
+              type: "string",
+              enum: [
+                "push",
+                "pull",
+                "legs",
+                "upper",
+                "lower",
+                "full_body",
+                "push_pull_legs",
+                "bro_split",
+                "custom",
+              ],
+            },
+            target_muscle_groups: {
+              type: "array",
+              items: {
+                type: "string",
+                enum: [
+                  "chest",
+                  "back",
+                  "shoulders",
+                  "biceps",
+                  "triceps",
+                  "quads",
+                  "hamstrings",
+                  "glutes",
+                  "calves",
+                  "abs",
+                  "forearms",
+                ],
+              },
+            },
+            exercises: {
+              type: "array",
+              items: {
+                type: "object",
+                required: ["exercise_name", "movement_category", "sets"],
+                properties: {
+                  exercise_name: { type: "string" },
+                  movement_category: {
+                    type: "string",
+                    enum: ["compound", "isolation", "accessory"],
+                  },
+                  target_muscles: { type: "array", items: { type: "string" } },
+                  equipment: {
+                    type: "string",
+                    enum: [
+                      "barbell",
+                      "dumbbell",
+                      "cable",
+                      "machine",
+                      "bodyweight",
+                      "other",
+                    ],
+                  },
+                  variation: { type: ["string", "null"] },
+                  sets: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      required: ["set_number", "reps", "weight"],
+                      properties: {
+                        set_number: { type: "number" },
+                        set_type: {
+                          type: "string",
+                          enum: [
+                            "warmup",
+                            "working",
+                            "drop",
+                            "rest_pause",
+                            "amrap",
+                            "superset",
+                          ],
+                        },
+                        reps: { type: "number" },
+                        weight: { type: "number" },
+                        weight_unit: { type: "string", enum: ["lbs", "kg"] },
+                        rpe: {
+                          type: ["number", "null"],
+                          minimum: 1,
+                          maximum: 10,
+                        },
+                        rest_time: { type: ["number", "null"] },
+                        tempo: {
+                          type: ["string", "null"],
+                          pattern: "^\\d-\\d-\\d-\\d$",
+                          description:
+                            "Tempo (eccentric-pause-concentric-rest)",
+                        },
+                        time_under_tension: { type: ["number", "null"] },
+                        failure: { type: "boolean" },
+                        notes: { type: ["string", "null"] },
+                      },
+                    },
+                  },
+                  superset_with: { type: ["string", "null"] },
+                },
+              },
+            },
+          },
         },
 
         // HIIT (placeholder for future implementation)
@@ -808,6 +914,335 @@ export const WORKOUT_SCHEMA = {
                 hydration_oz: {
                   type: ["number", "null"],
                   description: "Hydration (ounces)",
+                },
+              },
+            },
+          },
+        },
+
+        // Hyrox
+        hyrox: {
+          type: "object",
+          required: ["race_or_training", "stations", "runs"],
+          properties: {
+            race_or_training: {
+              type: "string",
+              enum: ["race", "simulation", "training", "partial"],
+            },
+            division: {
+              type: ["string", "null"],
+              enum: ["open", "pro", "doubles", "relay", null],
+            },
+            total_time: { type: ["number", "null"] },
+            stations: {
+              type: "array",
+              items: {
+                type: "object",
+                required: ["station_number", "station_name"],
+                properties: {
+                  station_number: { type: "number", minimum: 1, maximum: 8 },
+                  station_name: {
+                    type: "string",
+                    enum: [
+                      "skierg",
+                      "sled_push",
+                      "sled_pull",
+                      "burpee_broad_jumps",
+                      "rowing",
+                      "farmers_carry",
+                      "sandbag_lunges",
+                      "wall_balls",
+                    ],
+                  },
+                  distance: { type: ["number", "null"] },
+                  reps: { type: ["number", "null"] },
+                  weight: { type: ["number", "null"] },
+                  weight_unit: {
+                    type: ["string", "null"],
+                    enum: ["kg", "lbs", null],
+                  },
+                  time: { type: ["number", "null"] },
+                  notes: { type: ["string", "null"] },
+                },
+              },
+            },
+            runs: {
+              type: "array",
+              items: {
+                type: "object",
+                required: ["run_number", "distance"],
+                properties: {
+                  run_number: { type: "number", minimum: 1, maximum: 9 },
+                  distance: { type: "number" },
+                  time: { type: ["number", "null"] },
+                  pace: {
+                    type: ["string", "null"],
+                    pattern: "^\\d{1,2}:\\d{2}$",
+                  },
+                  notes: { type: ["string", "null"] },
+                },
+              },
+            },
+            performance_notes: { type: ["string", "null"] },
+          },
+        },
+
+        // Olympic Weightlifting
+        olympic_weightlifting: {
+          type: "object",
+          required: ["session_type", "lifts"],
+          properties: {
+            session_type: {
+              type: "string",
+              enum: [
+                "technique",
+                "strength",
+                "competition_prep",
+                "competition",
+                "accessory",
+              ],
+            },
+            competition_prep: { type: "boolean" },
+            lifts: {
+              type: "array",
+              items: {
+                type: "object",
+                required: ["lift_name", "lift_category", "sets"],
+                properties: {
+                  lift_name: { type: "string" },
+                  lift_category: {
+                    type: "string",
+                    enum: [
+                      "competition_snatch",
+                      "competition_clean_jerk",
+                      "snatch_variation",
+                      "clean_variation",
+                      "jerk_variation",
+                      "pull",
+                      "squat",
+                      "accessory",
+                    ],
+                  },
+                  variation: { type: ["string", "null"] },
+                  position: { type: ["string", "null"] },
+                  attempts: {
+                    type: "object",
+                    properties: {
+                      opener: { type: ["number", "null"] },
+                      second_attempt: { type: ["number", "null"] },
+                      third_attempt: { type: ["number", "null"] },
+                      successful_attempts: {
+                        type: "array",
+                        items: { type: "number" },
+                      },
+                      missed_attempts: {
+                        type: "array",
+                        items: { type: "number" },
+                      },
+                      miss_reasons: {
+                        type: "array",
+                        items: { type: "string" },
+                      },
+                    },
+                  },
+                  sets: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      required: ["set_number", "weight", "reps"],
+                      properties: {
+                        set_number: { type: "number" },
+                        set_type: {
+                          type: "string",
+                          enum: [
+                            "warmup",
+                            "working",
+                            "technique",
+                            "opener",
+                            "second",
+                            "third",
+                            "complex",
+                          ],
+                        },
+                        weight: { type: "number" },
+                        weight_unit: { type: "string", enum: ["lbs", "kg"] },
+                        reps: { type: "number" },
+                        percentage_1rm: { type: ["number", "null"] },
+                        success: { type: "boolean" },
+                        rest_time: { type: ["number", "null"] },
+                        technique_notes: { type: ["string", "null"] },
+                      },
+                    },
+                  },
+                  complex_structure: { type: ["string", "null"] },
+                },
+              },
+            },
+          },
+        },
+
+        // Functional Bodybuilding
+        functional_bodybuilding: {
+          type: "object",
+          required: ["session_focus", "exercises"],
+          properties: {
+            session_focus: {
+              type: "string",
+              enum: [
+                "upper_body",
+                "lower_body",
+                "full_body",
+                "accessory",
+                "pump",
+                "hybrid",
+              ],
+            },
+            methodology: {
+              type: ["string", "null"],
+              enum: [
+                "functional_bodybuilding",
+                "persist",
+                "marcus_filly",
+                null,
+              ],
+            },
+            exercises: {
+              type: "array",
+              items: {
+                type: "object",
+                required: ["exercise_name", "movement_pattern", "sets"],
+                properties: {
+                  exercise_name: { type: "string" },
+                  movement_pattern: {
+                    type: "string",
+                    enum: [
+                      "push",
+                      "pull",
+                      "squat",
+                      "hinge",
+                      "carry",
+                      "accessory",
+                      "core",
+                    ],
+                  },
+                  target_muscles: { type: "array", items: { type: "string" } },
+                  equipment: {
+                    type: "string",
+                    enum: [
+                      "barbell",
+                      "dumbbell",
+                      "cable",
+                      "machine",
+                      "bodyweight",
+                      "kettlebell",
+                      "other",
+                    ],
+                  },
+                  structure: {
+                    type: "string",
+                    enum: [
+                      "emom",
+                      "straight_sets",
+                      "superset",
+                      "circuit",
+                      "amrap",
+                    ],
+                  },
+                  emom_details: {
+                    type: ["object", "null"],
+                    properties: {
+                      interval: { type: "number" },
+                      rounds: { type: "number" },
+                      reps_per_round: { type: "number" },
+                    },
+                  },
+                  sets: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      required: ["set_number", "reps", "weight"],
+                      properties: {
+                        set_number: { type: "number" },
+                        reps: { type: "number" },
+                        weight: { type: "number" },
+                        weight_unit: { type: "string", enum: ["lbs", "kg"] },
+                        rest_time: { type: ["number", "null"] },
+                        tempo: {
+                          type: ["string", "null"],
+                          pattern: "^\\d-\\d-\\d-\\d$",
+                        },
+                        quality_focus: { type: ["string", "null"] },
+                        notes: { type: ["string", "null"] },
+                      },
+                    },
+                  },
+                  superset_with: { type: ["string", "null"] },
+                },
+              },
+            },
+          },
+        },
+
+        // Calisthenics
+        calisthenics: {
+          type: "object",
+          required: ["session_focus", "exercises"],
+          properties: {
+            session_focus: {
+              type: "string",
+              enum: ["strength", "skill", "endurance", "mobility", "mixed"],
+            },
+            exercises: {
+              type: "array",
+              items: {
+                type: "object",
+                required: ["exercise_name", "skill_category"],
+                properties: {
+                  exercise_name: { type: "string" },
+                  skill_category: {
+                    type: "string",
+                    enum: [
+                      "pull",
+                      "push",
+                      "static_hold",
+                      "dynamic_movement",
+                      "core",
+                      "leg",
+                      "skill_transfer",
+                    ],
+                  },
+                  progression_level: { type: ["string", "null"] },
+                  assistance_method: { type: ["string", "null"] },
+                  sets: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      required: ["set_number"],
+                      properties: {
+                        set_number: { type: "number" },
+                        set_type: {
+                          type: "string",
+                          enum: [
+                            "warmup",
+                            "working",
+                            "skill_practice",
+                            "max_effort",
+                            "endurance",
+                          ],
+                        },
+                        reps: { type: ["number", "null"] },
+                        hold_time: { type: ["number", "null"] },
+                        rest_time: { type: ["number", "null"] },
+                        success: { type: "boolean" },
+                        quality_rating: {
+                          type: ["number", "null"],
+                          minimum: 1,
+                          maximum: 10,
+                        },
+                        notes: { type: ["string", "null"] },
+                      },
+                    },
+                  },
                 },
               },
             },

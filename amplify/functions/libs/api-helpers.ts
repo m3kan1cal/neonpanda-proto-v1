@@ -373,11 +373,17 @@ export interface BedrockApiOptions {
 /**
  * Helper to build toolConfig for Bedrock commands
  * Centralizes tool handling logic for all Bedrock functions
+ *
+ * @param tools - Single tool or array of tools
+ * @param enforceToolUse - If true and single tool provided, enforce its use with toolChoice
  */
-function buildToolConfig(tools: BedrockToolConfig | BedrockToolConfig[]): any {
+function buildToolConfig(
+  tools: BedrockToolConfig | BedrockToolConfig[],
+  enforceToolUse: boolean = true,
+): any {
   const toolsArray = Array.isArray(tools) ? tools : [tools];
 
-  return {
+  const config: any = {
     tools: toolsArray.map((t) => ({
       toolSpec: {
         name: t.name,
@@ -386,6 +392,19 @@ function buildToolConfig(tools: BedrockToolConfig | BedrockToolConfig[]): any {
       },
     })),
   };
+
+  // If enforcing tool use and exactly one tool provided, add toolChoice to force its use
+  // This ensures Claude MUST use the tool and follow the schema strictly
+  if (enforceToolUse && toolsArray.length === 1) {
+    config.toolChoice = {
+      tool: {
+        name: toolsArray[0].name,
+      },
+    };
+    console.info(`🔒 Enforcing strict tool use: ${toolsArray[0].name}`);
+  }
+
+  return config;
 }
 
 /**
@@ -606,7 +625,9 @@ export const callBedrockApi = async (
       modelId: modelId,
       messages: messages,
       ...(systemParams.length > 0 && { system: systemParams }), // Only include if not empty
-      ...(options?.tools && { toolConfig: buildToolConfig(options.tools) }), // Add toolConfig if tools provided
+      ...(options?.tools && {
+        toolConfig: buildToolConfig(options.tools, true),
+      }), // Add toolConfig with strict enforcement
       inferenceConfig: {
         maxTokens: getMaxTokensForModel(modelId),
         temperature: TEMPERATURE,
@@ -878,7 +899,9 @@ export const callBedrockApiStream = async (
         },
       ],
       system: systemParams,
-      ...(options?.tools && { toolConfig: buildToolConfig(options.tools) }), // Add toolConfig if tools provided
+      ...(options?.tools && {
+        toolConfig: buildToolConfig(options.tools, true),
+      }), // Add toolConfig with strict enforcement
       inferenceConfig: {
         maxTokens: getMaxTokensForModel(modelId),
         temperature: TEMPERATURE,
@@ -987,7 +1010,9 @@ export const callBedrockApiMultimodal = async (
       modelId: modelId,
       messages: messages,
       system: systemParams,
-      ...(options?.tools && { toolConfig: buildToolConfig(options.tools) }), // Add toolConfig if tools provided
+      ...(options?.tools && {
+        toolConfig: buildToolConfig(options.tools, true),
+      }), // Add toolConfig with strict enforcement
       inferenceConfig: {
         maxTokens: getMaxTokensForModel(modelId),
         temperature: TEMPERATURE,
@@ -1093,6 +1118,97 @@ export const callBedrockApiMultimodal = async (
 };
 
 /**
+ * Agent-optimized Bedrock call with full response and caching
+ * Returns raw Bedrock response for conversation loop management
+ *
+ * Differences from callBedrockApiMultimodal:
+ * - Returns full ConverseCommand response (not processed result)
+ * - Designed for multi-turn agent conversations
+ * - Supports static/dynamic prompt caching
+ * - Adds cache point after tools
+ *
+ * @param systemPrompt - System prompt (or staticPrompt if using caching)
+ * @param messages - Agent conversation history
+ * @param tools - Array of tool configurations
+ * @param modelId - Model ID to use (defaults to Claude Sonnet 4)
+ * @param options - Optional caching and thinking configuration
+ * @returns Promise with full Bedrock response for agent loop
+ */
+export const callBedrockApiForAgent = async (
+  systemPrompt: string,
+  messages: any[],
+  tools: BedrockToolConfig[],
+  modelId: string = CLAUDE_SONNET_4_MODEL_ID,
+  options?: {
+    staticPrompt?: string;
+    dynamicPrompt?: string;
+    enableThinking?: boolean;
+  },
+): Promise<any> => {
+  console.info("=== BEDROCK AGENT API CALL START ===");
+  console.info("Model ID:", modelId);
+  console.info("Messages count:", messages.length);
+  console.info("Tools count:", tools.length);
+
+  const useCaching = !!(options?.staticPrompt && options?.dynamicPrompt);
+  console.info("Caching enabled:", useCaching);
+
+  // Build system parameters with caching support
+  const { systemParams } = buildSystemParams(systemPrompt, options);
+
+  // Build tool config with cache point
+  const toolSpecs = tools.map((t) => ({
+    toolSpec: {
+      name: t.name,
+      description: t.description,
+      inputSchema: { json: t.inputSchema },
+    },
+  }));
+
+  if (useCaching) {
+    console.info("🔥 AGENT CACHE OPTIMIZATION: Adding cache point after tools");
+  }
+
+  // Add cache point after tools if caching is enabled
+  const toolConfig = useCaching
+    ? {
+        tools: [
+          ...toolSpecs,
+          { cachePoint: { type: "default" } } as any, // Cache tools (AWS SDK types not updated)
+        ],
+      }
+    : { tools: toolSpecs };
+
+  const command = new ConverseCommand({
+    modelId: modelId,
+    messages: messages,
+    system: systemParams,
+    toolConfig: toolConfig as any, // Type assertion needed for cache point support
+    inferenceConfig: {
+      maxTokens: getMaxTokensForModel(modelId),
+      temperature: TEMPERATURE,
+      ...(options?.enableThinking && {
+        thinkingConfig: { type: "enabled" },
+      }),
+    },
+  });
+
+  const response = await bedrockClient.send(command);
+
+  // Log cache performance if usage data available
+  if (response.usage) {
+    logCachePerformance(response.usage, "Agent API");
+  }
+
+  console.info("=== BEDROCK AGENT API CALL SUCCESS ===");
+  console.info("Stop reason:", response.stopReason);
+  console.info("Input tokens:", response.usage?.inputTokens);
+  console.info("Output tokens:", response.usage?.outputTokens);
+
+  return response; // Return full response for agent loop
+};
+
+/**
  * Amazon Bedrock Converse Stream API call with multimodal content support (text + images)
  * Use this when you need streaming responses with image support
  *
@@ -1130,7 +1246,9 @@ export const callBedrockApiMultimodalStream = async (
       modelId: modelId,
       messages: messages,
       system: systemParams,
-      ...(options?.tools && { toolConfig: buildToolConfig(options.tools) }), // Add toolConfig if tools provided
+      ...(options?.tools && {
+        toolConfig: buildToolConfig(options.tools, true),
+      }), // Add toolConfig with strict enforcement
       inferenceConfig: {
         maxTokens: getMaxTokensForModel(modelId),
         temperature: TEMPERATURE,

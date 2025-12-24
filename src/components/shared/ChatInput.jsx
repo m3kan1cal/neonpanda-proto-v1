@@ -22,7 +22,6 @@ import {
   TrashIcon,
 } from "../themes/SynthwaveComponents";
 import { useImageUpload } from "../../hooks/useImageUpload";
-import { CoachConversationModeToggle } from "./CoachConversationModeToggle";
 
 // Question mark icon for tips (standardized size)
 const QuestionIcon = () => (
@@ -217,20 +216,11 @@ function ChatInput({
 
   // Conversation size indicator (inline with status)
   conversationSize = null,
-
-  // Conversation mode toggle (for CoachConversations)
-  conversationMode = null,
-  onConversationModeChange = null,
 }) {
-  // Determine if mode toggle should be shown in skeleton
-  const showModeToggleSkeleton = conversationMode !== null;
-
   // Early return for skeleton loading state
   if (showSkeleton) {
     return (
-      <div
-        className="fixed bottom-0 left-0 right-0 bg-synthwave-bg-card/95 backdrop-blur-lg border-t-2 border-synthwave-neon-pink/30 shadow-lg shadow-synthwave-neon-pink/20 z-50"
-      >
+      <div className="fixed bottom-0 left-0 right-0 bg-synthwave-bg-card/95 backdrop-blur-lg border-t-2 border-synthwave-neon-pink/30 shadow-lg shadow-synthwave-neon-pink/20 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-8 py-4 sm:py-6">
           {/* Input area skeleton */}
           <div className="flex items-end gap-2 sm:gap-3">
@@ -241,7 +231,10 @@ function ChatInput({
               {/* Desktop: 3 buttons */}
               <div className="hidden md:flex items-center gap-2">
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="w-11 h-11 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
+                  <div
+                    key={i}
+                    className="w-11 h-11 bg-synthwave-text-muted/20 rounded-lg animate-pulse"
+                  ></div>
                 ))}
               </div>
             </div>
@@ -260,23 +253,15 @@ function ChatInput({
             {/* Left: AI disclaimer skeleton */}
             <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
             {/* Right: Keyboard shortcuts skeleton */}
-                <div className="flex items-center">
-                  {/* Desktop: Show keyboard shortcuts */}
-                  <div className="hidden md:block h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-64"></div>
-                </div>
+            <div className="flex items-center">
+              {/* Desktop: Show keyboard shortcuts */}
+              <div className="hidden md:block h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-64"></div>
+            </div>
           </div>
 
-          {/* Mode toggle and Progress/Size Indicator skeleton - hide on mobile */}
-          <div className="mt-4 flex items-start justify-between gap-4 hidden md:flex pl-[90px] md:pl-[168px] pr-[74px] min-h-[32px]">
-            {/* Left: Mode toggle skeleton */}
-            {showModeToggleSkeleton && (
-                <div className="flex items-center">
-                <div className="h-8 w-32 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
-                </div>
-            )}
-            {!showModeToggleSkeleton && <div></div>}
-
-            {/* Right: Progress/Size Indicator skeleton */}
+          {/* Progress/Size Indicator skeleton - hide on mobile */}
+          <div className="mt-4 flex items-start justify-end gap-4 hidden md:flex pr-[74px] min-h-[32px]">
+            {/* Progress/Size Indicator skeleton */}
             <div className="max-w-xs w-full">
               <div className="flex items-center justify-between mb-1">
                 <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-32"></div>
@@ -285,7 +270,6 @@ function ChatInput({
               <div className="w-full h-1.5 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
             </div>
           </div>
-
         </div>
       </div>
     );
@@ -424,12 +408,12 @@ function ChatInput({
       try {
         await selectImages(files);
       } catch (err) {
-        console.error('Error selecting images:', err);
+        console.error("Error selecting images:", err);
       }
     }
     // Reset file input
     if (photoInputRef.current) {
-      photoInputRef.current.value = '';
+      photoInputRef.current.value = "";
     }
   };
 
@@ -442,7 +426,7 @@ function ChatInput({
 
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
-      if (item.type.startsWith('image/')) {
+      if (item.type.startsWith("image/")) {
         e.preventDefault();
         const file = item.getAsFile();
         if (file) imageFiles.push(file);
@@ -453,7 +437,7 @@ function ChatInput({
       try {
         await selectImages(imageFiles);
       } catch (err) {
-        console.error('Error processing pasted images:', err);
+        console.error("Error processing pasted images:", err);
       }
     }
   };
@@ -530,10 +514,10 @@ function ChatInput({
       if (showQuickActionsPopup || showQuickPromptsSubmenu) {
         // Check if the click is outside the quick actions container
         const quickActionsContainer = document.querySelector(
-          "[data-quick-actions-container]"
+          "[data-quick-actions-container]",
         );
         const quickPromptsSubmenu = document.querySelector(
-          "[data-quick-prompts-submenu]"
+          "[data-quick-prompts-submenu]",
         );
 
         if (
@@ -549,7 +533,7 @@ function ChatInput({
       if (showEmojiPicker) {
         // Check if the click is outside the emoji picker container
         const emojiPickerContainer = document.querySelector(
-          "[data-emoji-picker-container]"
+          "[data-emoji-picker-container]",
         );
 
         if (
@@ -579,10 +563,10 @@ function ChatInput({
     const textarea = activeTextareaRef.current;
     if (!textarea) return;
 
-    textarea.addEventListener('paste', handlePaste);
+    textarea.addEventListener("paste", handlePaste);
 
     return () => {
-      textarea.removeEventListener('paste', handlePaste);
+      textarea.removeEventListener("paste", handlePaste);
     };
   }, [selectedImages]);
 
@@ -590,7 +574,11 @@ function ChatInput({
     e.preventDefault();
 
     // Allow sending if there's text OR images
-    if (isSendingMessage.current || (!inputMessage.trim() && selectedImages.length === 0)) return;
+    if (
+      isSendingMessage.current ||
+      (!inputMessage.trim() && selectedImages.length === 0)
+    )
+      return;
 
     isSendingMessage.current = true;
     const messageToSend = inputMessage.trim();
@@ -620,7 +608,6 @@ function ChatInput({
 
       // Send message with images
       await onSubmit(messageToSend, imageS3Keys);
-
     } catch (error) {
       console.error("Error sending message:", error);
       // Don't clear images on error so user can retry
@@ -647,7 +634,7 @@ function ChatInput({
       if (e.key === "ArrowDown") {
         e.preventDefault();
         setSelectedCommandIndex((prev) =>
-          prev < availableSlashCommands.length - 1 ? prev + 1 : 0
+          prev < availableSlashCommands.length - 1 ? prev + 1 : 0,
         );
         return;
       }
@@ -655,7 +642,7 @@ function ChatInput({
       if (e.key === "ArrowUp") {
         e.preventDefault();
         setSelectedCommandIndex((prev) =>
-          prev > 0 ? prev - 1 : availableSlashCommands.length - 1
+          prev > 0 ? prev - 1 : availableSlashCommands.length - 1,
         );
         return;
       }
@@ -689,13 +676,13 @@ function ChatInput({
   React.useEffect(() => {
     const updateChatInputHeight = () => {
       const chatInputElement = document.querySelector(
-        "[data-chat-input-container]"
+        "[data-chat-input-container]",
       );
       if (chatInputElement) {
         const height = chatInputElement.offsetHeight;
         document.documentElement.style.setProperty(
           "--chat-input-height",
-          `${height}px`
+          `${height}px`,
         );
       }
     };
@@ -705,7 +692,7 @@ function ChatInput({
 
     // Use ResizeObserver to track height changes
     const chatInputElement = document.querySelector(
-      "[data-chat-input-container]"
+      "[data-chat-input-container]",
     );
     if (chatInputElement) {
       const resizeObserver = new ResizeObserver(updateChatInputHeight);
@@ -735,11 +722,8 @@ function ChatInput({
         {selectedImages.length > 0 && (
           <div className="mb-2 pl-0 sm:pl-[156px]">
             <div className={imagePreviewPatterns.grid}>
-              {selectedImages.map(image => (
-                <div
-                  key={image.id}
-                  className={imagePreviewPatterns.container}
-                >
+              {selectedImages.map((image) => (
+                <div key={image.id} className={imagePreviewPatterns.container}>
                   <img
                     src={image.previewUrl}
                     alt={image.name}
@@ -774,7 +758,9 @@ function ChatInput({
         {imageError && (
           <div className="mb-3">
             <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 flex items-start justify-between">
-              <span className="text-sm font-rajdhani text-red-400">{imageError}</span>
+              <span className="text-sm font-rajdhani text-red-400">
+                {imageError}
+              </span>
               <button
                 type="button"
                 onClick={() => setImageError(null)}
@@ -804,14 +790,17 @@ function ChatInput({
         )}
 
         {/* Input area */}
-        <form onSubmit={handleSendMessage} className="flex items-end gap-2 sm:gap-3">
+        <form
+          onSubmit={handleSendMessage}
+          className="flex items-end gap-2 sm:gap-3"
+        >
           {/* Hidden file input */}
           <input
             ref={photoInputRef}
             type="file"
             accept="image/*,.heic,.heif"
             multiple
-            style={{ display: 'none' }}
+            style={{ display: "none" }}
             onChange={handlePhotoSelect}
           />
           {/* Action buttons */}
@@ -830,7 +819,10 @@ function ChatInput({
               </button>
             )}
             {/* Quick Actions button - always show (contains everything on mobile) */}
-            {(enablePhotoAttachment || enableFileAttachment || showTipsButton || showDeleteButton) && (
+            {(enablePhotoAttachment ||
+              enableFileAttachment ||
+              showTipsButton ||
+              showDeleteButton) && (
               <div className="relative" data-quick-actions-container>
                 <button
                   type="button"
@@ -855,9 +847,17 @@ function ChatInput({
                       <div className="relative">
                         <button
                           type="button"
-                          onClick={() => setShowQuickPromptsSubmenu(!showQuickPromptsSubmenu)}
-                          onMouseEnter={() => window.innerWidth >= 768 && setShowQuickPromptsSubmenu(true)}
-                          onMouseLeave={() => window.innerWidth >= 768 && setShowQuickPromptsSubmenu(false)}
+                          onClick={() =>
+                            setShowQuickPromptsSubmenu(!showQuickPromptsSubmenu)
+                          }
+                          onMouseEnter={() =>
+                            window.innerWidth >= 768 &&
+                            setShowQuickPromptsSubmenu(true)
+                          }
+                          onMouseLeave={() =>
+                            window.innerWidth >= 768 &&
+                            setShowQuickPromptsSubmenu(false)
+                          }
                           className="flex items-center justify-between space-x-3 px-4 py-2 font-rajdhani font-medium text-synthwave-text-primary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 transition-all duration-300 w-full text-left"
                         >
                           <div className="flex items-center space-x-3">
@@ -896,8 +896,14 @@ function ChatInput({
                           <div
                             className={`${navigationPatterns.quickPrompts.container} ${containerPatterns.cardMediumOpaque} synthwave-scrollbar-cyan`}
                             data-quick-prompts-submenu
-                            onMouseEnter={() => window.innerWidth >= 768 && setShowQuickPromptsSubmenu(true)}
-                            onMouseLeave={() => window.innerWidth >= 768 && setShowQuickPromptsSubmenu(false)}
+                            onMouseEnter={() =>
+                              window.innerWidth >= 768 &&
+                              setShowQuickPromptsSubmenu(true)
+                            }
+                            onMouseLeave={() =>
+                              window.innerWidth >= 768 &&
+                              setShowQuickPromptsSubmenu(false)
+                            }
                           >
                             <div className="py-2">
                               {currentPrompts.map((category, categoryIndex) => (
@@ -906,7 +912,12 @@ function ChatInput({
                                   className="mb-3 last:mb-0"
                                 >
                                   {/* Category Header */}
-                                  <div className={navigationPatterns.quickPrompts.categoryHeader}>
+                                  <div
+                                    className={
+                                      navigationPatterns.quickPrompts
+                                        .categoryHeader
+                                    }
+                                  >
                                     <span>{category.category}</span>
                                   </div>
 
@@ -920,11 +931,14 @@ function ChatInput({
                                           onClick={() =>
                                             handleQuickPromptSelect(prompt)
                                           }
-                                          className={navigationPatterns.quickPrompts.promptButton}
+                                          className={
+                                            navigationPatterns.quickPrompts
+                                              .promptButton
+                                          }
                                         >
                                           {prompt}
                                         </button>
-                                      )
+                                      ),
                                     )}
                                   </div>
                                 </div>
@@ -1005,7 +1019,12 @@ function ChatInput({
                           className="md:hidden flex items-center space-x-3 px-4 py-2 font-rajdhani font-medium text-synthwave-text-primary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-300 w-full text-left"
                         >
                           <TrashIcon />
-                          <span>{context === 'creation' ? 'Delete Session' : 'Delete Conversation'}</span>
+                          <span>
+                            {context === "creation" ||
+                            context === "program-design"
+                              ? "Delete Session"
+                              : "Delete Conversation"}
+                          </span>
                         </button>
                       )}
                     </div>
@@ -1022,7 +1041,11 @@ function ChatInput({
                 disabled={isTyping}
                 className={`${iconButtonPatterns.actionSmallPink} hidden md:flex`}
                 data-tooltip-id="delete-conversation-tooltip"
-                data-tooltip-content={context === 'creation' ? 'Delete session' : 'Delete conversation'}
+                data-tooltip-content={
+                  context === "creation" || context === "program-design"
+                    ? "Delete session"
+                    : "Delete conversation"
+                }
                 data-tooltip-place="top"
               >
                 <TrashIcon />
@@ -1031,10 +1054,7 @@ function ChatInput({
 
             {/* React Tooltips */}
             {showTipsButton && tipsContent && (
-              <Tooltip
-                id="tips-tooltip"
-                {...tooltipPatterns.standard}
-              />
+              <Tooltip id="tips-tooltip" {...tooltipPatterns.standard} />
             )}
             {(enablePhotoAttachment || enableFileAttachment) && (
               <Tooltip
@@ -1060,7 +1080,9 @@ function ChatInput({
                 autoResizeTextarea(e.target);
               }}
               onKeyDown={handleKeyPress}
-              placeholder={window.innerWidth < 768 ? "Talk to me..." : placeholder}
+              placeholder={
+                window.innerWidth < 768 ? "Talk to me..." : placeholder
+              }
               rows={1}
               className={`${inputPatterns.chatInput} ${scrollbarPatterns.pink} !text-synthwave-text-secondary`}
               style={{
@@ -1075,7 +1097,9 @@ function ChatInput({
                 type="button"
                 onClick={() => setShowEmojiPicker(!showEmojiPicker)}
                 className={`absolute right-3 bottom-3 p-1.5 text-synthwave-text-secondary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 ${
-                  showEmojiPicker ? 'text-synthwave-neon-cyan bg-synthwave-neon-cyan/10' : ''
+                  showEmojiPicker
+                    ? "text-synthwave-neon-cyan bg-synthwave-neon-cyan/10"
+                    : ""
                 }`}
                 data-tooltip-id="emoji-tooltip"
                 data-tooltip-content="Emojis"
@@ -1087,7 +1111,9 @@ function ChatInput({
               {/* Emoji Picker Popup */}
               {showEmojiPicker && (
                 <div className="absolute bottom-14 right-0 z-50">
-                  <div className={`${containerPatterns.cardMediumOpaque} overflow-hidden emoji-picker-synthwave`}>
+                  <div
+                    className={`${containerPatterns.cardMediumOpaque} overflow-hidden emoji-picker-synthwave`}
+                  >
                     <style>{`
                       .emoji-picker-synthwave .epr-emoji-category-label {
                         font-family: 'Rajdhani', sans-serif !important;
@@ -1156,84 +1182,85 @@ function ChatInput({
                       height={450}
                       emojiStyle="native"
                       previewConfig={{
-                        showPreview: false
+                        showPreview: false,
                       }}
                       skinTonesDisabled
                       searchDisabled={false}
                       categories={[
                         {
                           category: "suggested",
-                          name: "Recently Used"
+                          name: "Recently Used",
                         },
                         {
                           category: "activities",
-                          name: "Fitness & Activities"
+                          name: "Fitness & Activities",
                         },
                         {
                           category: "smileys_people",
-                          name: "Smileys & People"
+                          name: "Smileys & People",
                         },
                         {
                           category: "food_drink",
-                          name: "Food & Drink"
+                          name: "Food & Drink",
                         },
                         {
                           category: "objects",
-                          name: "Objects"
+                          name: "Objects",
                         },
                         {
                           category: "animals_nature",
-                          name: "Animals & Nature"
+                          name: "Animals & Nature",
                         },
                         {
                           category: "travel_places",
-                          name: "Travel & Places"
+                          name: "Travel & Places",
                         },
                         {
                           category: "symbols",
-                          name: "Symbols"
+                          name: "Symbols",
                         },
                         {
                           category: "flags",
-                          name: "Flags"
-                        }
+                          name: "Flags",
+                        },
                       ]}
                       style={{
-                        '--epr-bg-color': 'transparent',
-                        '--epr-category-label-bg-color': 'transparent',
-                        '--epr-picker-border-color': 'transparent',
-                        '--epr-search-input-bg-color': 'rgba(10, 10, 10, 0.5)',
-                        '--epr-search-input-bg-color-active': 'rgba(10, 10, 10, 0.7)',
-                        '--epr-search-input-border-color': 'rgba(0, 255, 255, 0.2)',
-                        '--epr-search-input-border-color-active': 'rgba(0, 255, 255, 0.5)',
-                        '--epr-hover-bg-color': 'rgba(0, 255, 255, 0.15)',
-                        '--epr-focus-bg-color': 'rgba(0, 255, 255, 0.2)',
-                        '--epr-text-color': '#b4b4b4',
-                        '--epr-search-input-text-color': '#f1f5f9',
-                        '--epr-search-input-placeholder-color': '#666666',
-                        '--epr-category-icon-active-color': '#00ffff',
-                        '--epr-skin-tone-picker-menu-color': 'rgba(30, 30, 46, 0.95)',
-                        '--epr-emoji-size': '24px',
-                        '--epr-emoji-padding': '4px',
-                        '--epr-category-padding': '8px',
-                        '--epr-header-padding': '12px',
-                        '--epr-search-input-height': '40px',
-                        '--epr-search-input-padding': '12px',
-                        '--epr-category-label-height': 'auto',
-                        fontSize: '0.75rem',
-                        fontFamily: 'Rajdhani, sans-serif',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.05em',
+                        "--epr-bg-color": "transparent",
+                        "--epr-category-label-bg-color": "transparent",
+                        "--epr-picker-border-color": "transparent",
+                        "--epr-search-input-bg-color": "rgba(10, 10, 10, 0.5)",
+                        "--epr-search-input-bg-color-active":
+                          "rgba(10, 10, 10, 0.7)",
+                        "--epr-search-input-border-color":
+                          "rgba(0, 255, 255, 0.2)",
+                        "--epr-search-input-border-color-active":
+                          "rgba(0, 255, 255, 0.5)",
+                        "--epr-hover-bg-color": "rgba(0, 255, 255, 0.15)",
+                        "--epr-focus-bg-color": "rgba(0, 255, 255, 0.2)",
+                        "--epr-text-color": "#b4b4b4",
+                        "--epr-search-input-text-color": "#f1f5f9",
+                        "--epr-search-input-placeholder-color": "#666666",
+                        "--epr-category-icon-active-color": "#00ffff",
+                        "--epr-skin-tone-picker-menu-color":
+                          "rgba(30, 30, 46, 0.95)",
+                        "--epr-emoji-size": "24px",
+                        "--epr-emoji-padding": "4px",
+                        "--epr-category-padding": "8px",
+                        "--epr-header-padding": "12px",
+                        "--epr-search-input-height": "40px",
+                        "--epr-search-input-padding": "12px",
+                        "--epr-category-label-height": "auto",
+                        fontSize: "0.75rem",
+                        fontFamily: "Rajdhani, sans-serif",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.05em",
                       }}
                     />
                   </div>
                 </div>
               )}
             </div>
-            <Tooltip
-              id="emoji-tooltip"
-              {...tooltipPatterns.standard}
-            />
+            <Tooltip id="emoji-tooltip" {...tooltipPatterns.standard} />
 
             {/* Slash Command Tooltip */}
             {showSlashCommandTooltip && enableSlashCommands && (
@@ -1302,7 +1329,7 @@ function ChatInput({
 
           {/* Voice/Send buttons */}
           <div className="flex items-center gap-2 self-end mb-[6px]">
-            {inputMessage.trim() ? (
+            {inputMessage.trim() || selectedImages.length > 0 ? (
               <button
                 type="submit"
                 disabled={isTyping}
@@ -1322,125 +1349,153 @@ function ChatInput({
                 onMouseLeave={handleStopRecording}
                 onTouchStart={handleStartRecording}
                 onTouchEnd={handleStopRecording}
+                disabled={isTyping}
                 className={`w-12 h-12 rounded-2xl transition-all transform hover:scale-105 active:scale-95 shadow-lg flex items-center justify-center flex-shrink-0 ${
                   isRecording
                     ? "bg-red-500 text-white animate-pulse"
                     : "bg-synthwave-bg-primary/50 text-synthwave-text-secondary hover:bg-synthwave-neon-cyan/20 hover:text-synthwave-neon-cyan"
-                }`}
+                } disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100`}
               >
                 <MicIcon />
               </button>
-            ) : null}
+            ) : (
+              <button
+                type="submit"
+                disabled
+                className="w-12 h-12 bg-synthwave-bg-primary/30 text-synthwave-text-muted rounded-2xl shadow-lg flex items-center justify-center flex-shrink-0 opacity-50 cursor-not-allowed"
+              >
+                <SendIcon />
+              </button>
+            )}
           </div>
         </form>
 
         {/* AI disclaimer and keyboard shortcuts */}
         <div className="flex items-center justify-between gap-2 -mt-0.5 text-xs text-synthwave-text-muted font-rajdhani pl-[50px] md:pl-[156px] pr-12 md:pr-[74px]">
           {/* Left: AI disclaimer - aligned with text input left edge */}
-              <div className="flex items-center">
+          <div className="flex items-center">
             <span className="text-synthwave-text-muted/80">
               AI can make mistakes • Always verify important information
-                </span>
-              </div>
+            </span>
+          </div>
           {/* Right: Keyboard shortcuts - always visible */}
-              <div className="flex items-center">
-                {/* Desktop: Show keyboard shortcuts */}
-                <span className="hidden md:inline">
-                  Press Enter to send • Shift+Enter for new line
-                </span>
-              </div>
+          <div className="flex items-center">
+            {/* Desktop: Show keyboard shortcuts */}
+            <span className="hidden md:inline">
+              Press Enter to send • Shift+Enter for new line
+            </span>
+          </div>
         </div>
 
-        {/* Coach Creation Progress Indicator - hide on mobile */}
-        {progressData && (
-          <div className="mt-4 flex items-start justify-end hidden md:flex pr-[74px] min-h-[32px]">
-            <div className="max-w-xs w-full">
-              <div className="flex items-center justify-between">
-                <span className="font-rajdhani text-xs">
-                  {progressData.percentage === 100 ? (
-                    <>
-                      <span className="text-synthwave-text-muted">Progress:</span> <span className="text-synthwave-neon-cyan">Fine-tuning your coach</span>
-                      {progressData.sophisticationLevel &&
-                        progressData.sophisticationLevel !== "UNKNOWN" && (
-                          <span className="ml-1 text-synthwave-text-muted">
-                            ({progressData.sophisticationLevel.toLowerCase()})
+        {/* Progress Indicator - hide on mobile */}
+        {progressData &&
+          (() => {
+            // Normalize progress data to handle both coach creator and program designer formats
+            const completed =
+              progressData.questionsCompleted ??
+              progressData.itemsCompleted ??
+              0;
+            const total =
+              progressData.estimatedTotal ?? progressData.totalItems ?? 0;
+            const percentage = progressData.percentage ?? 0;
+            const sophisticationLevel = progressData.sophisticationLevel;
+
+            return (
+              <div className="mt-4 flex items-start justify-end hidden md:flex pr-[74px] min-h-[32px]">
+                <div className="max-w-xs w-full">
+                  <div className="flex items-center justify-between">
+                    <span className="font-rajdhani text-xs">
+                      {percentage === 100 ? (
+                        <>
+                          <span className="text-synthwave-text-muted">
+                            Progress:
+                          </span>{" "}
+                          <span className="text-synthwave-neon-cyan">
+                            {context === "creation"
+                              ? "Fine-tuning your coach"
+                              : "Finalizing details"}
                           </span>
-                        )}
-                    </>
-                  ) : (
-                    <>
-                      <span className="text-synthwave-text-muted">Progress:</span> <span className="text-synthwave-neon-cyan">{progressData.questionsCompleted}/
-                      {progressData.estimatedTotal}</span>
-                      {progressData.sophisticationLevel &&
-                        progressData.sophisticationLevel !== "UNKNOWN" && (
-                          <span className="ml-1 text-synthwave-text-muted">
-                            ({progressData.sophisticationLevel.toLowerCase()})
+                          {sophisticationLevel &&
+                            sophisticationLevel !== "UNKNOWN" && (
+                              <span className="ml-1 text-synthwave-text-muted">
+                                ({sophisticationLevel.toLowerCase()})
+                              </span>
+                            )}
+                        </>
+                      ) : (
+                        <>
+                          <span className="text-synthwave-text-muted">
+                            Progress:
+                          </span>{" "}
+                          <span className="text-synthwave-neon-cyan">
+                            {completed}/{total}
                           </span>
-                        )}
-                    </>
-                  )}
-                </span>
-                <span className="font-rajdhani text-xs text-synthwave-neon-cyan font-medium">
-                  {progressData.percentage === 100 ? '✓ 100%' : `${progressData.percentage}%`}
-                </span>
-              </div>
+                          {sophisticationLevel &&
+                            sophisticationLevel !== "UNKNOWN" && (
+                              <span className="ml-1 text-synthwave-text-muted">
+                                ({sophisticationLevel.toLowerCase()})
+                              </span>
+                            )}
+                        </>
+                      )}
+                    </span>
+                    <span className="font-rajdhani text-xs text-synthwave-neon-cyan font-medium">
+                      {percentage === 100 ? "✓ 100%" : `${percentage}%`}
+                    </span>
+                  </div>
 
-              {/* Cyan Progress Bar */}
-              <div className="w-full bg-synthwave-bg-primary/50 rounded-full h-1.5 border border-synthwave-neon-cyan/20">
-                <div
-                  className="bg-gradient-to-r from-synthwave-neon-cyan/60 to-synthwave-neon-cyan h-full rounded-full transition-all duration-500 shadow-synthwave-neon-cyan/10"
-                  style={{ width: `${progressData.percentage}%` }}
-                ></div>
+                  {/* Cyan Progress Bar */}
+                  <div className="w-full bg-synthwave-bg-primary/50 rounded-full h-1.5 border border-synthwave-neon-cyan/20">
+                    <div
+                      className="bg-gradient-to-r from-synthwave-neon-cyan/60 to-synthwave-neon-cyan h-full rounded-full transition-all duration-500 shadow-synthwave-neon-cyan/10"
+                      style={{ width: `${percentage}%` }}
+                    ></div>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-        )}
+            );
+          })()}
 
-        {/* Mode Toggle and Conversation Size Indicator - hide on mobile */}
-        {(conversationMode || conversationSize) && (
-          <div className="mt-4 flex items-start justify-between gap-4 hidden md:flex pl-[50px] md:pl-[156px] pr-[74px] min-h-[32px]">
-            {/* Left: Mode Toggle */}
-            {conversationMode && onConversationModeChange ? (
-              <div className="flex items-center">
-                <CoachConversationModeToggle
-                  mode={conversationMode}
-                  onModeChange={onConversationModeChange}
-                  disabled={isTyping}
-                />
-              </div>
-            ) : (
-              <div></div>
-            )}
-
-            {/* Right: Conversation Size Indicator */}
+        {/* Conversation Size Indicator - hide on mobile */}
         {conversationSize && (
-            <div className="max-w-xs w-full">
-              <div className="flex items-center justify-between">
-                <span className="font-rajdhani text-xs text-synthwave-text-muted">
-                  {conversationSize.isApproachingLimit && '⚠️ '}
-                  Conversation Size: {conversationSize.sizeKB.toFixed(1)}KB / {conversationSize.maxSizeKB}KB
-                </span>
-                <span className={`font-rajdhani text-xs font-medium ${
-                  conversationSize.isApproachingLimit ? 'text-synthwave-neon-pink' : 'text-synthwave-neon-cyan'
-                }`}>
-                  {conversationSize.percentage}%
-                </span>
-              </div>
+          <div className="mt-4 flex items-start justify-end gap-4 hidden md:flex pr-[74px] min-h-[32px]">
+            {conversationSize && (
+              <div className="max-w-xs w-full">
+                <div className="flex items-center justify-between">
+                  <span className="font-rajdhani text-xs text-synthwave-text-muted">
+                    {conversationSize.isApproachingLimit && "⚠️ "}
+                    Conversation Size: {conversationSize.sizeKB.toFixed(1)}KB /{" "}
+                    {conversationSize.maxSizeKB}KB
+                  </span>
+                  <span
+                    className={`font-rajdhani text-xs font-medium ${
+                      conversationSize.isApproachingLimit
+                        ? "text-synthwave-neon-pink"
+                        : "text-synthwave-neon-cyan"
+                    }`}
+                  >
+                    {conversationSize.percentage}%
+                  </span>
+                </div>
 
-              {/* Size Progress Bar - changes color when approaching limit */}
-              <div className={`w-full bg-synthwave-bg-primary/50 rounded-full h-1.5 border ${
-                conversationSize.isApproachingLimit ? 'border-synthwave-neon-pink/20' : 'border-synthwave-neon-cyan/20'
-              }`}>
+                {/* Size Progress Bar - changes color when approaching limit */}
                 <div
-                  className={`h-full rounded-full transition-all duration-500 ${
+                  className={`w-full bg-synthwave-bg-primary/50 rounded-full h-1.5 border ${
                     conversationSize.isApproachingLimit
-                      ? 'bg-gradient-to-r from-synthwave-neon-pink/60 to-synthwave-neon-pink shadow-lg shadow-synthwave-neon-pink/20'
-                      : 'bg-gradient-to-r from-synthwave-neon-cyan/60 to-synthwave-neon-cyan shadow-synthwave-neon-cyan/10'
+                      ? "border-synthwave-neon-pink/20"
+                      : "border-synthwave-neon-cyan/20"
                   }`}
-                  style={{ width: `${conversationSize.percentage}%` }}
-                ></div>
+                >
+                  <div
+                    className={`h-full rounded-full transition-all duration-500 ${
+                      conversationSize.isApproachingLimit
+                        ? "bg-gradient-to-r from-synthwave-neon-pink/60 to-synthwave-neon-pink shadow-lg shadow-synthwave-neon-pink/20"
+                        : "bg-gradient-to-r from-synthwave-neon-cyan/60 to-synthwave-neon-cyan shadow-synthwave-neon-cyan/10"
+                    }`}
+                    style={{ width: `${conversationSize.percentage}%` }}
+                  ></div>
+                </div>
               </div>
-            </div>
             )}
           </div>
         )}

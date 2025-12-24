@@ -1,5 +1,9 @@
 # Project Instructions
 
+## General
+
+Please respond in a professional, measured tone without excessive enthusiasm or exclamation points. Use clear, direct language.
+
 ## Stack
 
 - **Backend**: AWS Amplify Gen 2, Lambda (TypeScript), API Gateway v2, DynamoDB, S3, Bedrock (Claude Sonnet 4.5)
@@ -18,28 +22,33 @@
 ## Architecture
 
 ### DynamoDB
+
 - Single-table design with partition key `pk: user#userId` and sort key `sk: entity_type#entityId`
 - Always use `withThroughputScaling()` wrapper for all operations
 - Always use `ConditionExpression: "attribute_exists(pk)"` for updates/deletes
 - Use `deepMerge()` utility for partial updates
 
 ### S3
+
 - Use centralized utilities from `libs/s3-utils.ts` (never create new S3 client instances)
 - Key structure: `programs/{userId}/{programId}/details.json`, `workouts/{userId}/{workoutId}.json`
 
 ### AI & Bedrock
+
 - Use `callBedrockApi()` helper from `libs/api-helpers.ts`
 - Always use `parseJsonWithFallbacks()` for AI-generated JSON (never `JSON.parse()` directly)
 - Always normalize AI-generated complex data (workouts, training programs) using AI normalization utilities
 - Use `buildCoachPersonalityPrompt()` from `libs/coach-config/personality-utils.ts` for consistent personality integration
 
 ### Lambda Functions
+
 - Async handlers (invoked via `invokeAsyncLambda`): `build-workout`, `build-program`, `build-conversation-summary`
 - Sync handlers (API Gateway): `stream-coach-conversation`, CRUD operations
 - Use typed event interfaces for async lambdas
 - Use `createOkResponse()` and `createErrorResponse()` helpers
 
 ### Frontend
+
 - Use Agent pattern for state management (in `src/utils/agents/`)
 - Use `uiPatterns.js` for consistent styling
 - Store mode in message metadata for historical accuracy
@@ -47,20 +56,24 @@
 ## Critical Patterns
 
 ### Timezone Handling
+
 - Always use `getUserTimezoneOrDefault()` (defaults to `America/Los_Angeles`)
 - Never use server UTC time for user-facing dates
 
 ### Pinecone Integration
+
 - Store AI-generated summaries for all major entities (workouts, training programs, memories)
 - Use pattern: generate summary → store in Pinecone with rich metadata
 
 ### Streaming Contextual Updates
+
 - Use AI-generated contextual updates (Nova Micro) via `generateContextualUpdate()` for ephemeral UX feedback
 - Brief, coach-like progress updates (e.g., "Firing up the program generator...")
 - AI naturally responds in conversation history - no structured message appending
 - Add new update types to `libs/coach-conversation/contextual-updates.ts`
 
 ### File Organization
+
 - Domain logic in `amplify/functions/libs/[entity]/` (types, extraction, normalization, summary, pinecone)
 - All DynamoDB operations in `amplify/dynamodb/operations.ts`
 - Centralized utilities in `amplify/functions/libs/` (api-helpers, s3-utils, date-utils, response-utils)

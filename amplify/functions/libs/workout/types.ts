@@ -133,6 +133,10 @@ export interface DisciplineSpecific {
   powerlifting?: PowerliftingWorkout;
   running?: RunningWorkout;
   bodybuilding?: BodybuildingWorkout;
+  hyrox?: HyroxWorkout;
+  olympic_weightlifting?: OlympicWeightliftingWorkout;
+  functional_bodybuilding?: FunctionalBodybuildingWorkout;
+  calisthenics?: CalisthenicsWorkout;
   // Add other disciplines as needed
 }
 
@@ -212,7 +216,18 @@ export interface PowerliftingWorkout {
 }
 
 export interface RunningWorkout {
-  run_type: "easy" | "tempo" | "interval" | "long" | "race" | "recovery" | "fartlek" | "progression" | "threshold" | "hill_repeats" | "speed_work";
+  run_type:
+    | "easy"
+    | "tempo"
+    | "interval"
+    | "long"
+    | "race"
+    | "recovery"
+    | "fartlek"
+    | "progression"
+    | "threshold"
+    | "hill_repeats"
+    | "speed_work";
   total_distance: number;
   distance_unit: "miles" | "km";
   total_time: number;
@@ -257,7 +272,13 @@ export interface RunningWorkout {
 
 export interface RunningSegment {
   segment_number: number;
-  segment_type: "warmup" | "working" | "interval" | "recovery" | "cooldown" | "main";
+  segment_type:
+    | "warmup"
+    | "working"
+    | "interval"
+    | "recovery"
+    | "cooldown"
+    | "main";
   distance: number;
   time: number;
   pace: string;
@@ -271,7 +292,152 @@ export interface RunningSegment {
 }
 
 export interface BodybuildingWorkout {
-  [key: string]: any; // Placeholder
+  split_type: string;
+  target_muscle_groups?: string[];
+  exercises: BodybuildingExercise[];
+}
+
+export interface BodybuildingExercise {
+  exercise_name: string;
+  movement_category: string;
+  target_muscles?: string[];
+  equipment?: string;
+  variation?: string | null;
+  sets: BodybuildingSet[];
+  superset_with?: string | null;
+}
+
+export interface BodybuildingSet {
+  set_number: number;
+  set_type?: string;
+  reps: number;
+  weight: number;
+  weight_unit?: string;
+  rpe?: number | null;
+  rest_time?: number | null;
+  tempo?: string | null;
+  time_under_tension?: number | null;
+  failure?: boolean;
+  notes?: string | null;
+}
+
+export interface HyroxWorkout {
+  race_or_training: string;
+  division?: string | null;
+  total_time?: number | null;
+  stations: HyroxStation[];
+  runs: HyroxRun[];
+  performance_notes?: string | null;
+}
+
+export interface HyroxStation {
+  station_number: number;
+  station_name: string;
+  distance?: number | null;
+  reps?: number | null;
+  weight?: number | null;
+  weight_unit?: string | null;
+  time?: number | null;
+  notes?: string | null;
+}
+
+export interface HyroxRun {
+  run_number: number;
+  distance: number;
+  time?: number | null;
+  pace?: string | null;
+  notes?: string | null;
+}
+
+export interface OlympicWeightliftingWorkout {
+  session_type: string;
+  competition_prep?: boolean;
+  lifts: OlympicLift[];
+}
+
+export interface OlympicLift {
+  lift_name: string;
+  lift_category: string;
+  variation?: string | null;
+  position?: string | null;
+  attempts?: {
+    opener?: number | null;
+    second_attempt?: number | null;
+    third_attempt?: number | null;
+    successful_attempts?: number[];
+    missed_attempts?: number[];
+    miss_reasons?: string[];
+  };
+  sets: OlympicLiftSet[];
+  complex_structure?: string | null;
+}
+
+export interface OlympicLiftSet {
+  set_number: number;
+  set_type?: string;
+  weight: number;
+  weight_unit: string;
+  reps: number;
+  percentage_1rm?: number | null;
+  success?: boolean;
+  rest_time?: number | null;
+  technique_notes?: string | null;
+}
+
+export interface FunctionalBodybuildingWorkout {
+  session_focus: string;
+  methodology?: string | null;
+  exercises: FunctionalBodybuildingExercise[];
+}
+
+export interface FunctionalBodybuildingExercise {
+  exercise_name: string;
+  movement_pattern: string;
+  target_muscles?: string[];
+  equipment?: string;
+  structure?: string;
+  emom_details?: {
+    interval: number;
+    rounds: number;
+    reps_per_round: number;
+  } | null;
+  sets: FunctionalBodybuildingSet[];
+  superset_with?: string | null;
+}
+
+export interface FunctionalBodybuildingSet {
+  set_number: number;
+  reps: number;
+  weight: number;
+  weight_unit?: string;
+  rest_time?: number | null;
+  tempo?: string | null;
+  quality_focus?: string | null;
+  notes?: string | null;
+}
+
+export interface CalisthenicsWorkout {
+  session_focus: string;
+  exercises: CalisthenicsExercise[];
+}
+
+export interface CalisthenicsExercise {
+  exercise_name: string;
+  skill_category: string;
+  progression_level?: string | null;
+  assistance_method?: string | null;
+  sets: CalisthenicsSet[];
+}
+
+export interface CalisthenicsSet {
+  set_number: number;
+  set_type?: string;
+  reps?: number | null;
+  hold_time?: number | null;
+  rest_time?: number | null;
+  success?: boolean;
+  quality_rating?: number | null;
+  notes?: string | null;
 }
 
 /**
@@ -371,7 +537,7 @@ export interface WorkoutMetadata {
   extraction_method: string;
   validation_flags?: string[];
   extraction_notes?: string;
-  generation_method?: 'tool' | 'fallback';
+  generation_method?: "tool" | "fallback";
   generation_timestamp?: string;
 }
 
@@ -415,6 +581,7 @@ export interface BuildWorkoutEvent {
   criticalTrainingDirective?: { content: string; enabled: boolean }; // User's critical training directive
   templateContext?: TemplateContext; // Optional: Context from training program template
   imageS3Keys?: string[]; // Optional: S3 keys for images attached to the message (may contain workout data)
+  // Note: Discipline detection is handled by WorkoutLoggerAgent's detect_discipline tool (agent-first approach)
 }
 
 /**

@@ -49,7 +49,6 @@ import CompactCoachCard from "./shared/CompactCoachCard";
 import CommandPaletteButton from "./shared/CommandPaletteButton";
 import QuickStats from "./shared/QuickStats";
 import { useNavigationContext } from "../contexts/NavigationContext";
-import { FloatingMenuManager } from "./shared/FloatingMenuManager";
 import CoachAgent from "../utils/agents/CoachAgent";
 import CoachConversationAgent from "../utils/agents/CoachConversationAgent";
 import WorkoutAgent from "../utils/agents/WorkoutAgent";
@@ -305,9 +304,9 @@ function TrainingGrounds() {
       reportsAgentRef.current.loadRecentReports(5);
     }
     if (programAgentRef.current && userId && coachId) {
-      // Load active programs and today's workout
+      // Load all programs (not just active) and today's workout
       programAgentRef.current
-        .loadPrograms({ status: "active", limit: 5 })
+        .loadPrograms({ limit: 5 })
         .then(() => {
           // After loading programs, load today's workout if there's an active program
           if (programAgentRef.current.hasActiveProgram()) {
@@ -654,7 +653,7 @@ function TrainingGrounds() {
               value: workoutState.totalWorkoutCount || 0,
               tooltip: {
                 title: `${workoutState.totalWorkoutCount || 0} Workouts`,
-                description: "Total workouts logged with this coach",
+                description: "Total workouts logged across all coaches",
               },
               color: "purple",
               isLoading: workoutState.isLoadingCount,
@@ -737,8 +736,20 @@ function TrainingGrounds() {
                 coachId={coachId}
               />
             </>
+          ) : programState.programs && programState.programs.length > 0 ? (
+            // User has programs but none are active - show first program
+            <>
+              {/* Program Summary Card */}
+              <ActiveProgramSummary
+                program={programState.programs[0]}
+                todaysWorkout={null}
+                isLoading={programState.isLoadingPrograms}
+                userId={userId}
+                coachId={coachId}
+              />
+            </>
           ) : (
-            // User has no active program - show empty state like other sections
+            // User has no programs at all - show empty state
             <div className={`${containerPatterns.cardMedium} p-6`}>
               <div className="flex items-start space-x-3 mb-4">
                 <div className="w-3 h-3 bg-synthwave-neon-pink rounded-full flex-shrink-0 mt-2"></div>
@@ -751,7 +762,7 @@ function TrainingGrounds() {
                 and your coach.
               </p>
               <EmptyState
-                title="No active programs"
+                title="No programs found"
                 message="Start a conversation with your coach to create your first training program"
                 size="medium"
               />
@@ -1004,17 +1015,21 @@ function TrainingGrounds() {
         </div>
       </div>
 
-      {/* Floating Menu Manager */}
-      <FloatingMenuManager
-        userId={userId}
-        coachId={coachId}
-        currentPage="training-grounds"
-        coachData={coachData}
-      />
-
       {/* Tooltips */}
       <Tooltip
         id="training-grounds-info"
+        {...tooltipPatterns.standard}
+        place="bottom"
+        className="max-w-xs"
+      />
+      <Tooltip
+        id="beta-badge-todays-workout"
+        {...tooltipPatterns.standard}
+        place="bottom"
+        className="max-w-xs"
+      />
+      <Tooltip
+        id="beta-badge-program-summary"
         {...tooltipPatterns.standard}
         place="bottom"
         className="max-w-xs"

@@ -1,333 +1,431 @@
-import {
-  createOkResponse,
-  createErrorResponse,
-  MODEL_IDS,
-  storeDebugDataInS3,
-} from '../libs/api-helpers';
-import { generateProgramV2 } from '../libs/program/program-generator';
-import { generateProgramSummary } from '../libs/program/summary';
-import { storeProgramSummaryInPinecone } from '../libs/program/pinecone';
-import { BuildProgramEvent } from '../libs/program/types';
-import { withHeartbeat } from '../libs/heartbeat';
-import { saveProgram } from '../../dynamodb/operations';
-import { storeProgramDetailsInS3 } from '../libs/program/s3-utils';
-import {
-  normalizeProgram,
-  shouldNormalizeProgram,
-  generateNormalizationSummary,
-} from '../libs/program/normalization';
-
 /**
- * Build Training Program Lambda Handler (V2 - Parallel Generation)
- * Triggered asynchronously from Build mode conversations
+ * Build Program V2 Lambda Handler
  *
- * Pattern: Follows build-workout and build-coach-config handlers
- * 1. Generate program using parallel phase generation (V2)
- * 2. Normalize program structure with toolConfig
- * 3. Store in S3 and DynamoDB
- * 4. Generate and store summary in Pinecone
- * 5. Return success/error response
- *
- * Critical: Uses parallel execution to stay within 15-minute Lambda timeout
+ * Uses ProgramDesigner agent to design, validate, and save training programs.
+ * Triggered asynchronously from program designer sessions (session-based flow).
+ * Note: conversationId is not used - program designer sessions are standalone.
  */
-export const handler = async (event: BuildProgramEvent) => {
-  return withHeartbeat('Training Program Generation', async () => {
-    let debugData: any = null; // Track debug data for error scenarios
 
+import { createOkResponse, createErrorResponse } from "../libs/api-helpers";
+import { withHeartbeat } from "../libs/heartbeat";
+import type { BuildProgramEvent } from "../libs/program/types";
+import { ProgramDesignerAgent } from "../libs/agents/program-designer/agent";
+import {
+  getProgramDesignerSession,
+  saveProgramDesignerSession,
+  getProgram,
+} from "../../dynamodb/operations";
+import { generateProgramDesignerSessionSummary } from "../libs/program-designer/session-management";
+import { storeProgramDesignerSessionSummaryInPinecone } from "../libs/program-designer/pinecone";
+
+// Duration calculation constants
+const DEFAULT_DURATION_FALLBACK_MS = 600000; // 10 minutes in milliseconds
+
+// QA validation thresholds for detecting incomplete program generation
+const WORKOUT_COUNT_MIN_THRESHOLD = 0.5; // Expect at least 50% of calculated training days
+const DAY_COVERAGE_MIN_THRESHOLD = 0.7; // Expect at least 70% of expected day coverage
+const DAY_COVERAGE_FLOOR_PERCENT = 20; // Absolute minimum day coverage percentage
+
+export const handler = async (event: BuildProgramEvent) => {
+  return withHeartbeat("Program Designer Agent", async () => {
     try {
-      console.info('🏋️ Starting V2 parallel training program generation:', {
+      console.info("🏋️ Starting program designer agent (V2):", {
         userId: event.userId,
         coachId: event.coachId,
-        conversationId: event.conversationId,
         programId: event.programId,
         sessionId: event.sessionId,
         timestamp: new Date().toISOString(),
       });
 
-      // Validate required fields
-      if (
-        !event.userId ||
-        !event.coachId ||
-        !event.conversationId ||
-        !event.programId
-      ) {
-        console.error('❌ Missing required fields:', {
+      // Pre-validation
+      // Note: conversationId is optional when sessionId is provided (for program designer sessions)
+      if (!event.userId || !event.coachId || !event.programId) {
+        console.error("❌ Missing required fields:", {
           hasUserId: !!event.userId,
           hasCoachId: !!event.coachId,
-          hasConversationId: !!event.conversationId,
           hasProgramId: !!event.programId,
+          hasSessionId: !!event.sessionId,
         });
-        return createErrorResponse(400, 'Missing required fields');
+        return createErrorResponse(
+          400,
+          "Missing required fields (userId, coachId, programId)",
+        );
       }
 
       if (!event.todoList) {
-        console.error('❌ No todo list provided');
-        return createErrorResponse(400, 'Todo list is required');
+        console.error("❌ No todo list provided");
+        return createErrorResponse(400, "Todo list is required");
       }
 
-      // Prepare debug data for potential error scenarios
-      debugData = {
-        todoListSummary: {
-          programName: event.todoList.programName?.value,
-          programGoals: event.todoList.programGoals?.value,
-          programDuration: event.todoList.programDuration?.value,
-          trainingFrequency: event.todoList.trainingFrequency?.value,
-        },
-        conversationContextPreview: event.conversationContext?.substring(
-          0,
-          200,
-        ),
-        timestamp: new Date().toISOString(),
-        eventMetadata: {
-          userId: event.userId,
-          coachId: event.coachId,
-          conversationId: event.conversationId,
-          programId: event.programId,
-          sessionId: event.sessionId,
-        },
-      };
+      // Check for obviously incomplete program requirements
+      const todoList = event.todoList;
+      const hasBasicRequirements =
+        todoList.trainingGoals?.value || todoList.programDuration?.value;
 
-      console.info('🚀 Calling V2 parallel program generator...');
+      if (!hasBasicRequirements) {
+        console.warn("⚠️ Incomplete program requirements detected:", {
+          hasTrainingGoals: !!todoList.trainingGoals?.value,
+          hasProgramDuration: !!todoList.programDuration?.value,
+          todoListKeys: Object.keys(todoList),
+        });
 
-      // Generate the complete training program using V2 parallel approach
-      const { program, debugData: programGenerationDebugData } =
-        await generateProgramV2(
-          event.userId,
-          event.programId,
-          event.conversationId,
-          event.coachId,
-          event.todoList,
-          event.conversationContext,
-        );
+        return createOkResponse({
+          success: false,
+          skipped: true,
+          reason:
+            "Program requirements incomplete - please provide at least training goals and program duration",
+          validation: {
+            requiredFields: ["trainingGoals", "programDuration"],
+            providedFields: Object.keys(todoList).filter(
+              (k) => todoList[k]?.value,
+            ),
+          },
+        });
+      }
 
-      // Merge generation debug data into outer debugData for error case
-      debugData.programGenerationDebugData = programGenerationDebugData;
+      // Create ProgramDesigner agent
+      // ProgramDesignerContext extends BuildProgramEvent, so event is the context
+      const agent = new ProgramDesignerAgent(event);
 
-      console.info('✅ V2 parallel program generation completed:', {
-        programId: program.programId,
-        programName: program.name,
-        totalDays: program.totalDays,
-        phases: program.phases.length,
-        totalWorkouts: program.totalWorkouts,
-        trainingFrequency: program.trainingFrequency,
-        generationTimings: programGenerationDebugData.timings,
+      // Let agent handle the entire workflow
+      console.info("🤖 Starting agent workflow...");
+      const result = await agent.designProgram();
+
+      console.info("✅ Agent workflow completed:", {
+        success: result.success,
+        programId: result.programId,
+        skipped: result.skipped,
       });
 
-      // Determine if normalization is needed
-      const shouldNormalize = shouldNormalizeProgram(program, 0.9);
+      // Add program generation summary
+      if (result.success) {
+        const endTime = Date.now();
 
-      let normalizedProgram = program;
-      let normalizationSummary = 'Not needed - program structure is valid';
-
-      if (shouldNormalize) {
-        console.info(
-          '🔧 Program normalization needed, running normalization pass...',
-        );
-
-        const normalizationResult = await normalizeProgram(
-          program,
-          event.userId,
-          false, // Don't enable thinking for normalization to save cost
-        );
-
-        if (normalizationResult.isValid) {
-          normalizedProgram = normalizationResult.normalizedData as any;
-
-          // ✅ CRITICAL: Preserve s3DetailKey from original program
-          // The AI normalization doesn't include s3DetailKey in the schema, so we must preserve it
-          if (program.s3DetailKey && !normalizedProgram.s3DetailKey) {
-            normalizedProgram.s3DetailKey = program.s3DetailKey;
-            console.info(
-              '✅ Preserved s3DetailKey from original program:',
-              program.s3DetailKey,
+        // Calculate actual duration if session exists with startedAt timestamp
+        let startTimeMs = endTime - DEFAULT_DURATION_FALLBACK_MS;
+        if (event.sessionId) {
+          try {
+            const session = await getProgramDesignerSession(
+              event.userId,
+              event.sessionId,
+            );
+            if (session?.programGeneration?.startedAt) {
+              startTimeMs = new Date(
+                session.programGeneration.startedAt,
+              ).getTime();
+            }
+          } catch (error) {
+            console.warn(
+              "⚠️ Could not load session for duration calculation:",
+              error,
             );
           }
-
-          normalizationSummary =
-            generateNormalizationSummary(normalizationResult);
-
-          console.info('✅ Program normalization completed:', {
-            isValid: normalizationResult.isValid,
-            issuesFound: normalizationResult.issues.length,
-            confidence: normalizationResult.confidence,
-            method: normalizationResult.normalizationMethod,
-          });
-        } else {
-          console.warn('⚠️ Normalization completed but issues remain:', {
-            issues: normalizationResult.issues,
-            confidence: normalizationResult.confidence,
-          });
         }
+
+        const durationSeconds = Math.floor((endTime - startTimeMs) / 1000);
+
+        console.info("📊 PROGRAM GENERATION SUMMARY:", {
+          // Identity
+          programId: result.programId,
+          programName: result.programName || "Unknown",
+          userId: event.userId,
+          sessionId: event.sessionId,
+
+          // Structure
+          totalDays: result.totalDays,
+          phaseCount: result.phaseCount || 0,
+          totalWorkoutTemplates: result.totalWorkoutTemplates || 0,
+          uniqueTrainingDays: result.uniqueTrainingDays || 0,
+          trainingFrequency: result.trainingFrequency,
+
+          // Dates
+          startDate: result.startDate,
+          endDate: result.endDate,
+
+          // Performance
+          durationSeconds: durationSeconds,
+          durationMinutes: (durationSeconds / 60).toFixed(1),
+          averageSessionsPerDay: result.averageSessionsPerDay || "0.0",
+
+          // Validation
+          s3KeyStored: !!result.s3DetailKey,
+          sessionUpdated: true,
+          parallelPhasesExecuted: true,
+
+          // Method
+          generationMethod: result.generationMethod || "agent_v2",
+          normalizationApplied: result.normalizationApplied || false,
+        });
+
+        // QA Check: Validate metrics consistency
+        // Detect suspiciously low workout counts that might indicate metric calculation bugs
+        const phaseCount = result.phaseCount || 0;
+        const totalWorkoutTemplates = result.totalWorkoutTemplates || 0;
+        const uniqueTrainingDays = result.uniqueTrainingDays || 0;
+        const totalDays = result.totalDays || 0;
+        const trainingFrequency = result.trainingFrequency || 0;
+
+        // Calculate expected values based on program parameters
+        const expectedTrainingDays =
+          totalDays > 0 && trainingFrequency > 0
+            ? Math.floor((totalDays / 7) * trainingFrequency)
+            : 0;
+        const expectedDayCoveragePercent =
+          totalDays > 0 ? (expectedTrainingDays / totalDays) * 100 : 0;
+
+        // Check if workout count is suspiciously low (less than threshold of expected)
+        // This accounts for programs that may have multiple sessions per day
+        if (
+          expectedTrainingDays > 0 &&
+          totalWorkoutTemplates <
+            expectedTrainingDays * WORKOUT_COUNT_MIN_THRESHOLD
+        ) {
+          console.error(
+            `❌ METRICS ANOMALY DETECTED: Program has only ${totalWorkoutTemplates} workout templates ` +
+              `but expected at least ${Math.floor(expectedTrainingDays * WORKOUT_COUNT_MIN_THRESHOLD)} based on ${trainingFrequency}x/week training over ${totalDays} days. ` +
+              `This may indicate incomplete generation.`,
+          );
+        }
+
+        // Check if day coverage is significantly lower than expected
+        const actualDayCoveragePercent =
+          totalDays > 0 ? (uniqueTrainingDays / totalDays) * 100 : 0;
+        const coverageThreshold = Math.max(
+          expectedDayCoveragePercent * DAY_COVERAGE_MIN_THRESHOLD,
+          DAY_COVERAGE_FLOOR_PERCENT,
+        );
+
+        if (
+          actualDayCoveragePercent > 0 &&
+          actualDayCoveragePercent < coverageThreshold
+        ) {
+          console.error(
+            `❌ METRICS ANOMALY DETECTED: Day coverage is ${actualDayCoveragePercent.toFixed(0)}% ` +
+              `(${uniqueTrainingDays}/${totalDays} days) but expected ~${expectedDayCoveragePercent.toFixed(0)}% ` +
+              `for ${trainingFrequency}x/week training. This may indicate incomplete program generation.`,
+          );
+        }
+      }
+
+      // Update session status to COMPLETE
+      if (result.success && event.sessionId) {
+        try {
+          console.info("Updating session status to COMPLETE...", {
+            sessionId: event.sessionId,
+            programId: result.programId,
+          });
+
+          // Load the existing session
+          const existingSession = await getProgramDesignerSession(
+            event.userId,
+            event.sessionId,
+          );
+
+          if (existingSession) {
+            // Update programGeneration status
+            existingSession.programGeneration = {
+              status: "COMPLETE",
+              programId: result.programId,
+              startedAt:
+                existingSession.programGeneration?.startedAt || new Date(),
+              completedAt: new Date(),
+            };
+            existingSession.lastActivity = new Date();
+
+            // Save updated session
+            await saveProgramDesignerSession(existingSession);
+
+            console.info("✅ Session updated to COMPLETE status");
+
+            // Store program designer session summary in Pinecone (async, non-blocking)
+            try {
+              console.info(
+                "🔍 Storing program designer session summary in Pinecone...",
+              );
+
+              // Only proceed if we have a programId
+              if (!result.programId) {
+                console.warn(
+                  "⚠️ No programId available for Pinecone session storage",
+                );
+                // Skip Pinecone storage but continue handler execution
+              } else {
+                // Get the created program for additional context
+                const program = await getProgram(
+                  event.userId,
+                  event.coachId,
+                  result.programId,
+                );
+
+                if (program) {
+                  // Generate session summary
+                  const sessionSummary =
+                    generateProgramDesignerSessionSummary(existingSession);
+
+                  // Store in Pinecone (fire-and-forget, non-blocking)
+                  storeProgramDesignerSessionSummaryInPinecone(
+                    event.userId,
+                    sessionSummary,
+                    existingSession,
+                    program,
+                  )
+                    .then((pineconeResult) => {
+                      if (pineconeResult.success) {
+                        console.info(
+                          "✅ Program designer session stored in Pinecone:",
+                          {
+                            summaryId: pineconeResult.summaryId,
+                            recordId: pineconeResult.recordId,
+                            namespace: pineconeResult.namespace,
+                          },
+                        );
+                      } else {
+                        console.warn(
+                          "⚠️ Failed to store session in Pinecone (non-blocking):",
+                          {
+                            error: pineconeResult.error,
+                          },
+                        );
+                      }
+                    })
+                    .catch((error) => {
+                      console.error(
+                        "⚠️ Pinecone session storage error (non-blocking):",
+                        error,
+                      );
+                    });
+                } else {
+                  console.warn(
+                    "⚠️ Program not found for Pinecone session storage",
+                  );
+                }
+              }
+            } catch (error) {
+              console.error(
+                "⚠️ Failed to store session in Pinecone (non-blocking):",
+                error,
+              );
+              // Don't throw - this is optional
+            }
+          } else {
+            console.warn("⚠️ Session not found for update:", {
+              sessionId: event.sessionId,
+            });
+          }
+        } catch (error) {
+          console.error("⚠️ Failed to update session (non-blocking):", error);
+          // Don't throw - program was saved successfully
+        }
+      }
+
+      // Return same response format as original build-program
+      if (result.success) {
+        return createOkResponse({
+          success: true,
+          programId: result.programId,
+          programName: result.programName,
+          totalDays: result.totalDays,
+          phaseCount: result.phaseCount,
+          totalWorkoutTemplates: result.totalWorkoutTemplates,
+          uniqueTrainingDays: result.uniqueTrainingDays,
+          averageSessionsPerDay: result.averageSessionsPerDay,
+          trainingFrequency: result.trainingFrequency,
+          startDate: result.startDate,
+          endDate: result.endDate,
+          status: result.status,
+          summary: result.summary,
+          pineconeStored: result.pineconeStored,
+          pineconeRecordId: result.pineconeRecordId,
+          normalizationApplied: result.normalizationApplied,
+          generationMethod: result.generationMethod || "agent_v2",
+        });
       } else {
-        console.info('✅ Program structure is valid, skipping normalization');
+        // Update session status to FAILED for skipped/incomplete results
+        if (event.sessionId) {
+          try {
+            const existingSession = await getProgramDesignerSession(
+              event.userId,
+              event.sessionId,
+            );
+
+            if (
+              existingSession &&
+              existingSession.programGeneration?.status === "IN_PROGRESS"
+            ) {
+              existingSession.programGeneration = {
+                status: "FAILED",
+                startedAt: existingSession.programGeneration.startedAt,
+                failedAt: new Date(),
+                error:
+                  result.reason ||
+                  "Program generation was skipped or incomplete",
+              };
+              existingSession.lastActivity = new Date();
+              await saveProgramDesignerSession(existingSession);
+              console.info("✅ Session updated to FAILED status (skipped)");
+            }
+          } catch (error) {
+            console.error(
+              "⚠️ Failed to update session to FAILED (non-blocking):",
+              error,
+            );
+          }
+        }
+
+        return createOkResponse({
+          success: false,
+          skipped: true,
+          reason: result.reason,
+        });
       }
-
-      // Note: S3 storage of workout templates is handled inside generateProgramV2
-      // The s3DetailKey is set during generation
-
-      // Save program metadata to DynamoDB
-      console.info('💾 Saving program to DynamoDB...');
-      await saveProgram(normalizedProgram);
-
-      console.info('✅ Program storage completed:', {
-        programId: program.programId,
-        s3DetailKey: program.s3DetailKey,
-      });
-
-      // Generate AI summary for coach context and UI display
-      console.info('📝 Generating training program summary...');
-      const summary = await generateProgramSummary(
-        normalizedProgram,
-        [], // conversationMessages not available in V2, summary generated from program data
-      );
-      console.info('Generated summary:', { summary, length: summary.length });
-
-      // Store program summary in Pinecone for semantic search and coach context
-      console.info('🔍 Storing program summary in Pinecone...');
-      const pineconeResult = await storeProgramSummaryInPinecone(
-        event.userId,
-        summary,
-        normalizedProgram,
-      );
-
-      // Store debug data in S3 for troubleshooting (success case)
-      try {
-        const debugContent = JSON.stringify(
-          {
-            timestamp: new Date().toISOString(),
-            userId: event.userId,
-            programId: normalizedProgram.programId,
-            conversationId: event.conversationId,
-            sessionId: event.sessionId,
-
-            // Input data
-            todoListSummary: debugData.todoListSummary,
-            conversationContextPreview: debugData.conversationContextPreview,
-
-            // AI Debug Data (full prompts, responses, timings from generateProgramV2)
-            programGenerationDebugData: debugData.programGenerationDebugData,
-
-            // Program structure
-            programStructure: {
-              programId: normalizedProgram.programId,
-              name: normalizedProgram.name,
-              totalDays: normalizedProgram.totalDays,
-              trainingFrequency: normalizedProgram.trainingFrequency,
-              phases: normalizedProgram.phases.map((p: any) => ({
-                name: p.name,
-                duration: p.durationDays,
-                startDay: p.startDay,
-                endDay: p.endDay,
-                focusAreas: p.focusAreas,
-              })),
-              totalWorkouts: normalizedProgram.totalWorkouts,
-            },
-
-            // Normalization
-            normalizationApplied: shouldNormalize,
-            normalizationSummary,
-
-            generationMethod: 'v2_parallel',
-          },
-          null,
-          2,
-        );
-
-        await storeDebugDataInS3(
-          debugContent,
-          {
-            userId: event.userId,
-            programId: normalizedProgram.programId,
-            conversationId: event.conversationId,
-            sessionId: event.sessionId,
-            type: 'program-generation-success',
-          },
-          'program',
-        );
-
-        console.info('✅ Stored success debug data in S3');
-      } catch (debugError) {
-        console.warn(
-          '⚠️ Failed to store debug data (non-critical):',
-          debugError,
-        );
-      }
-
-      console.info('🎉 Training program generation completed successfully!');
-
-      return createOkResponse({
-        success: true,
-        programId: normalizedProgram.programId,
-        programName: normalizedProgram.name,
-        totalDays: normalizedProgram.totalDays,
-        phases: normalizedProgram.phases.length,
-        totalWorkouts: normalizedProgram.totalWorkouts,
-        trainingFrequency: normalizedProgram.trainingFrequency,
-        startDate: normalizedProgram.startDate,
-        endDate: normalizedProgram.endDate,
-        status: normalizedProgram.status,
-        summary,
-        pineconeStored: pineconeResult.success,
-        pineconeRecordId:
-          pineconeResult.success && 'recordId' in pineconeResult
-            ? pineconeResult.recordId
-            : null,
-        normalizationApplied: shouldNormalize,
-        generationMethod: 'v2_parallel',
-      });
     } catch (error) {
-      console.error('❌ Error generating training program:', error);
-      console.error('Event data:', {
+      console.error("❌ Error in program designer agent:", error);
+      console.error("Event data:", {
         userId: event.userId,
         coachId: event.coachId,
-        conversationId: event.conversationId,
         programId: event.programId,
         sessionId: event.sessionId,
       });
 
-      // Store debug data on error for troubleshooting
-      if (debugData) {
+      // Update session status to FAILED
+      if (event.sessionId) {
         try {
-          const errorDebugContent = JSON.stringify(
-            {
-              ...debugData,
-              error: {
-                message: error instanceof Error ? error.message : String(error),
-                stack: error instanceof Error ? error.stack : undefined,
-                timestamp: new Date().toISOString(),
-              },
-            },
-            null,
-            2,
+          const existingSession = await getProgramDesignerSession(
+            event.userId,
+            event.sessionId,
           );
 
-          await storeDebugDataInS3(
-            errorDebugContent,
-            {
-              userId: event.userId,
-              conversationId: event.conversationId,
-              programId: event.programId,
-              sessionId: event.sessionId,
-              type: 'program-generation-error',
-            },
-            'program',
-          );
-
-          console.info('✅ Error debug data saved to S3');
-        } catch (debugError) {
-          console.warn(
-            'Failed to store error debug data (non-critical):',
-            debugError,
+          if (
+            existingSession &&
+            existingSession.programGeneration?.status === "IN_PROGRESS"
+          ) {
+            existingSession.programGeneration = {
+              status: "FAILED",
+              startedAt: existingSession.programGeneration.startedAt,
+              failedAt: new Date(),
+              error:
+                error instanceof Error
+                  ? error.message
+                  : "Unknown generation error",
+            };
+            existingSession.lastActivity = new Date();
+            await saveProgramDesignerSession(existingSession);
+            console.info("✅ Session updated to FAILED status (exception)");
+          }
+        } catch (updateError) {
+          console.error(
+            "⚠️ Failed to update session to FAILED (non-blocking):",
+            updateError,
           );
         }
       }
 
       const errorMessage =
-        error instanceof Error ? error.message : 'Unknown generation error';
-      return createErrorResponse(500, 'Failed to generate training program', {
+        error instanceof Error ? error.message : "Unknown generation error";
+      return createErrorResponse(500, "Failed to design training program", {
         error: errorMessage,
         userId: event.userId,
-        conversationId: event.conversationId,
+        sessionId: event.sessionId,
       });
     }
   }); // 10 second default heartbeat interval

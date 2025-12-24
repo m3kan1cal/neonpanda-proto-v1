@@ -3,10 +3,10 @@
  * Updates the to-do list based on what the user has shared
  */
 
-import { callBedrockApi, MODEL_IDS } from '../api-helpers';
-import { parseJsonWithFallbacks } from '../response-utils';
-import { CoachCreatorTodoList, TodoItem, ConversationMessage } from './types';
-import { COACH_CREATOR_TODO_SCHEMA } from '../schemas/coach-creator-todo-schema';
+import { callBedrockApi, MODEL_IDS } from "../api-helpers";
+import { parseJsonWithFallbacks } from "../response-utils";
+import { CoachCreatorTodoList, TodoItem, CoachMessage } from "./types";
+import { COACH_CREATOR_TODO_SCHEMA } from "../schemas/coach-creator-todo-schema";
 
 /**
  * Extract information from user's response and update the to-do list
@@ -14,16 +14,16 @@ import { COACH_CREATOR_TODO_SCHEMA } from '../schemas/coach-creator-todo-schema'
  */
 export async function extractAndUpdateTodoList(
   userResponse: string,
-  conversationHistory: ConversationMessage[],
-  currentTodoList: CoachCreatorTodoList
+  conversationHistory: CoachMessage[],
+  currentTodoList: CoachCreatorTodoList,
 ): Promise<CoachCreatorTodoList> {
-  console.info('🔍 Extracting information from user response');
+  console.info("🔍 Extracting information from user response");
 
   // Include FULL conversation history for better context
   // With 200K token context window, we have plenty of room
   const conversationContext = conversationHistory
-    .map(m => `${m.role.toUpperCase()}: ${m.content}`)
-    .join('\n');
+    .map((m) => `${m.role.toUpperCase()}: ${m.content}`)
+    .join("\n");
 
   // Build extraction prompt
   const systemPrompt = buildExtractionPrompt(currentTodoList);
@@ -60,31 +60,36 @@ Return JSON with ONLY the fields you found information for:
       userPrompt,
       MODEL_IDS.CLAUDE_HAIKU_4_FULL,
       {
-        tools: [{
-          name: 'extract_intake_info',
-          description: 'Extract fitness coach intake information from user response',
-          inputSchema: COACH_CREATOR_TODO_SCHEMA
-        }],
-        expectedToolName: 'extract_intake_info'
-      }
+        tools: [
+          {
+            name: "extract_intake_info",
+            description:
+              "Extract fitness coach intake information from user response",
+            inputSchema: COACH_CREATOR_TODO_SCHEMA,
+          },
+        ],
+        expectedToolName: "extract_intake_info",
+      },
     );
 
-    console.info('✅ Received extraction response');
+    console.info("✅ Received extraction response");
 
     // Handle tool response
     let extracted: any;
-    if (typeof extractionResponse !== 'string') {
+    if (typeof extractionResponse !== "string") {
       // Tool was used - extract the input
       extracted = extractionResponse.input;
-      console.info('✅ Tool-based extraction successful');
+      console.info("✅ Tool-based extraction successful");
     } else {
       // Fallback to parsing (shouldn't happen with tool enforcement)
-      console.warn('⚠️ Received string response, parsing as JSON fallback');
+      console.warn("⚠️ Received string response, parsing as JSON fallback");
       extracted = parseJsonWithFallbacks(extractionResponse);
     }
 
-    if (!extracted || typeof extracted !== 'object') {
-      console.warn('⚠️ Failed to parse extraction response, returning current todo list');
+    if (!extracted || typeof extracted !== "object") {
+      console.warn(
+        "⚠️ Failed to parse extraction response, returning current todo list",
+      );
       return currentTodoList;
     }
 
@@ -93,20 +98,26 @@ Return JSON with ONLY the fields you found information for:
     const messageIndex = conversationHistory.length; // Index where this response will be stored
 
     for (const [key, extractedItem] of Object.entries(extracted)) {
-      if (key in updatedTodoList && extractedItem && typeof extractedItem === 'object') {
+      if (
+        key in updatedTodoList &&
+        extractedItem &&
+        typeof extractedItem === "object"
+      ) {
         const item = extractedItem as Partial<TodoItem>;
 
         // Only update if we have a value
         if (item.value !== null && item.value !== undefined) {
           updatedTodoList[key as keyof CoachCreatorTodoList] = {
-            status: 'complete',
+            status: "complete",
             value: item.value,
-            confidence: item.confidence || 'medium',
+            confidence: item.confidence || "medium",
             notes: item.notes,
             extractedFrom: `message_${messageIndex}`,
           };
 
-          console.info(`✅ Extracted ${key}: ${JSON.stringify(item.value).substring(0, 50)}`);
+          console.info(
+            `✅ Extracted ${key}: ${JSON.stringify(item.value).substring(0, 50)}`,
+          );
         }
       }
     }
@@ -116,10 +127,9 @@ Return JSON with ONLY the fields you found information for:
     console.info(`✅ Extraction complete: ${extractedCount} fields updated`);
 
     return updatedTodoList;
-
   } catch (error) {
-    console.error('❌ Error during extraction:', error);
-    console.error('Returning current todo list unchanged');
+    console.error("❌ Error during extraction:", error);
+    console.error("Returning current todo list unchanged");
     return currentTodoList;
   }
 }
@@ -133,7 +143,7 @@ function buildExtractionPrompt(currentTodoList: CoachCreatorTodoList): string {
   const pendingFields: string[] = [];
 
   for (const [key, item] of Object.entries(currentTodoList)) {
-    if (item.status === 'complete') {
+    if (item.status === "complete") {
       collectedFields.push(key);
     } else {
       pendingFields.push(key);
@@ -143,10 +153,10 @@ function buildExtractionPrompt(currentTodoList: CoachCreatorTodoList): string {
   return `You are an expert at extracting structured fitness intake information from conversational responses.
 
 WHAT WE'VE ALREADY COLLECTED:
-${collectedFields.length > 0 ? collectedFields.join(', ') : 'Nothing yet'}
+${collectedFields.length > 0 ? collectedFields.join(", ") : "Nothing yet"}
 
 WHAT WE STILL NEED:
-${pendingFields.join(', ')}
+${pendingFields.join(", ")}
 
 YOUR TASK:
 Analyze the user's response and extract any fitness coach intake information. Return a JSON object with ONLY the fields you found.

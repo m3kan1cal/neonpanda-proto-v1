@@ -1,11 +1,11 @@
-import 'dotenv/config';
-import { defineFunction } from '@aws-amplify/backend';
-import { NODEJS_RUNTIME } from '../libs/configs';
+import "dotenv/config";
+import { defineFunction } from "@aws-amplify/backend";
+import { NODEJS_RUNTIME } from "../libs/configs";
 
 export const buildProgram = defineFunction({
-  name: 'build-program',
-  entry: './handler.ts',
+  name: "build-program",
+  entry: "./handler.ts",
   runtime: NODEJS_RUNTIME,
-  timeoutSeconds: 900, // 15 minutes for AI generation (program structure + all phase workouts)
-  memoryMB: 2048 // More memory for AI processing
+  timeoutSeconds: 900, // 15 minutes (same as build-program)
+  memoryMB: 3072, // More memory than build-program (2048) for agent overhead and parallel phase generation
 });

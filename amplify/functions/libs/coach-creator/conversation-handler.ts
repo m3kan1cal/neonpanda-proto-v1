@@ -5,16 +5,18 @@
  * This module orchestrates the AI-driven question generation and response streaming.
  */
 
-import { generateCoachCreatorContextualUpdate } from '../coach-conversation/contextual-updates';
-import { generateNextQuestion, generateNextQuestionStream } from './question-generator';
-import { formatChunkEvent, formatContextualEvent } from '../streaming';
-import { saveCoachCreatorSession } from '../../../dynamodb/operations';
-import { extractAndUpdateTodoList } from './todo-extraction';
-import { getTodoProgress, isSessionComplete } from './todo-list-utils';
-import { extractSophisticationLevel } from './data-extraction';
-import { markSessionComplete } from './session-management';
-import { ConversationMessage } from './types';
-
+import { generateCoachCreatorContextualUpdate } from "../coach-conversation/contextual-updates";
+import {
+  generateNextQuestion,
+  generateNextQuestionStream,
+} from "./question-generator";
+import { formatChunkEvent, formatContextualEvent } from "../streaming";
+import { saveCoachCreatorSession } from "../../../dynamodb/operations";
+import { extractAndUpdateTodoList } from "./todo-extraction";
+import { getTodoProgress, isSessionComplete } from "./todo-list-utils";
+import { extractSophisticationLevel } from "./data-extraction";
+import { markSessionComplete } from "./session-management";
+import { CoachMessage } from "../coach-conversation/types";
 
 /**
  * Handle to-do list based conversational flow
@@ -22,24 +24,28 @@ import { ConversationMessage } from './types';
  */
 export async function* handleTodoListConversation(
   userResponse: string,
-  session: any
+  session: any,
 ): AsyncGenerator<string, any, unknown> {
   console.info("✨ Handling to-do list conversation");
 
   try {
     // Step 1: Extract information from user response and update todoList FIRST
-    console.info("🔍 Extracting information and updating to-do list BEFORE generating next question");
+    console.info(
+      "🔍 Extracting information and updating to-do list BEFORE generating next question",
+    );
     session.conversationHistory = session.conversationHistory || [];
     session.conversationHistory.push({
-      role: 'user',
+      id: `msg_${Date.now()}_${session.userId}_user`,
+      role: "user",
       content: userResponse,
-      timestamp: new Date().toISOString()
+      timestamp: new Date(),
+      messageType: "text",
     });
 
     session.todoList = await extractAndUpdateTodoList(
       userResponse,
       session.conversationHistory,
-      session.todoList!
+      session.todoList!,
     );
 
     // Step 2: Generate next question or completion message using UPDATED todoList
@@ -47,19 +53,19 @@ export async function* handleTodoListConversation(
     const craftingUpdate = await generateCoachCreatorContextualUpdate(
       userResponse,
       "response_crafting",
-      {}
+      {},
     );
-    yield formatContextualEvent(craftingUpdate, 'response_crafting');
+    yield formatContextualEvent(craftingUpdate, "response_crafting");
     console.info("💬 Yielded crafting update (Vesper):", craftingUpdate);
 
     // REAL STREAMING: Get chunks directly from Bedrock as they're generated
     const questionStream = generateNextQuestionStream(
       session.conversationHistory,
       session.todoList!,
-      session.sophisticationLevel || 'UNKNOWN'
+      session.sophisticationLevel || "UNKNOWN",
     );
 
-    let nextResponse = '';
+    let nextResponse = "";
 
     // Yield each chunk as it arrives from Bedrock
     for await (const chunk of questionStream) {
@@ -70,7 +76,8 @@ export async function* handleTodoListConversation(
     // Fallback check (shouldn't happen with new streaming approach)
     if (!nextResponse) {
       console.warn("⚠️ No response generated, using fallback");
-      const fallback = "Thanks for sharing! Let me think about what else I need to know...";
+      const fallback =
+        "Thanks for sharing! Let me think about what else I need to know...";
       yield formatChunkEvent(fallback);
       nextResponse = fallback;
     }
@@ -79,11 +86,6 @@ export async function* handleTodoListConversation(
 
     // Step 3: Store AI response and finalize session state
     console.info("⚙️ Finalizing session state");
-    session.conversationHistory.push({
-      role: 'ai',
-      content: nextResponse,
-      timestamp: new Date().toISOString()
-    });
 
     // Detect sophistication level (still useful for adapting tone)
     const detectedLevel = extractSophisticationLevel(nextResponse);
@@ -100,9 +102,25 @@ export async function* handleTodoListConversation(
       questionsCompleted: todoProgress.requiredCompleted,
       totalQuestions: todoProgress.requiredTotal,
       percentage: todoProgress.requiredPercentage,
-      sophisticationLevel: session.sophisticationLevel || 'UNKNOWN',
+      sophisticationLevel: session.sophisticationLevel || "UNKNOWN",
       currentQuestion: todoProgress.requiredCompleted + 1,
     };
+
+    session.conversationHistory.push({
+      id: `msg_${Date.now()}_${session.userId}_assistant`,
+      role: "assistant",
+      content: nextResponse,
+      timestamp: new Date(),
+      metadata: {
+        mode: "coach_creator",
+        isQuestion: !complete,
+        progress: {
+          completed: progressDetails.questionsCompleted,
+          total: progressDetails.totalQuestions,
+          percentage: progressDetails.percentage,
+        },
+      },
+    });
 
     // Update session metadata
     session.lastActivity = new Date();
@@ -127,10 +145,11 @@ export async function* handleTodoListConversation(
       nextQuestion: null,
       isOnFinalQuestion: complete,
     };
-
   } catch (error) {
     console.error("❌ Error in to-do list conversation:", error);
-    yield formatChunkEvent("I apologize, but I'm having trouble processing that. Could you try again?");
+    yield formatChunkEvent(
+      "I apologize, but I'm having trouble processing that. Could you try again?",
+    );
 
     // Still try to save session
     try {
@@ -141,20 +160,20 @@ export async function* handleTodoListConversation(
 
     // Return error state
     return {
-      cleanedResponse: "I apologize, but I'm having trouble processing that. Could you try again?",
+      cleanedResponse:
+        "I apologize, but I'm having trouble processing that. Could you try again?",
       detectedLevel: null,
       isComplete: false,
       progressDetails: {
         questionsCompleted: 0,
         totalQuestions: 22,
         percentage: 0,
-        sophisticationLevel: 'UNKNOWN',
+        sophisticationLevel: "UNKNOWN",
         currentQuestion: 1,
       },
       nextQuestion: null,
       isOnFinalQuestion: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
+      error: error instanceof Error ? error.message : "Unknown error",
     };
   }
 }
-

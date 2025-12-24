@@ -1,17 +1,17 @@
 // Navigation Context Provider
 // Centralizes navigation-related state and logic
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useSearchParams, useLocation } from 'react-router-dom';
-import { useAuth } from '../auth';
-import { formatRoute } from '../utils/navigation';
-import { getCoach, getCoachesCount } from '../utils/apis/coachApi';
-import { getWorkoutsCount } from '../utils/apis/workoutApi';
-import { getCoachConversationsCount } from '../utils/apis/coachConversationApi';
-import { getMemories } from '../utils/apis/memoryApi';
-import { getWeeklyReports } from '../utils/apis/reportApi';
-import { getPrograms } from '../utils/apis/programApi';
-import CoachAgent from '../utils/agents/CoachAgent';
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { useSearchParams, useLocation } from "react-router-dom";
+import { useAuth } from "../auth";
+import { formatRoute } from "../utils/navigation";
+import { getCoach, getCoachesCount } from "../utils/apis/coachApi";
+import { getWorkoutsCount } from "../utils/apis/workoutApi";
+import { getCoachConversationsCount } from "../utils/apis/coachConversationApi";
+import { getMemories } from "../utils/apis/memoryApi";
+import { getWeeklyReports } from "../utils/apis/reportApi";
+import { getPrograms } from "../utils/apis/programApi";
+import CoachAgent from "../utils/agents/CoachAgent";
 
 const NavigationContext = createContext(null);
 
@@ -21,11 +21,11 @@ export const NavigationProvider = ({ children }) => {
   const { isAuthenticated, user, signOut } = useAuth();
 
   // Extract URL parameters
-  const userId = searchParams.get('userId');
-  const coachId = searchParams.get('coachId');
+  const userId = searchParams.get("userId");
+  const coachId = searchParams.get("coachId");
 
   // Local state
-  const [currentCoachName, setCurrentCoachName] = useState('');
+  const [currentCoachName, setCurrentCoachName] = useState("");
   const [coachData, setCoachData] = useState(null);
   const [coachesCount, setCoachesCount] = useState(0);
   const [newItemCounts, setNewItemCounts] = useState({
@@ -37,24 +37,27 @@ export const NavigationProvider = ({ children }) => {
   });
   const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
-    const stored = localStorage.getItem('neonpanda-sidebar-collapsed');
-    return stored === 'true';
+    const stored = localStorage.getItem("neonpanda-sidebar-collapsed");
+    return stored === "true";
   });
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
-  const [commandPaletteCommand, setCommandPaletteCommand] = useState('');
+  const [commandPaletteCommand, setCommandPaletteCommand] = useState("");
 
   // Derived state
   const hasCoachContext = !!(userId && coachId && isAuthenticated);
 
   // Persist sidebar collapse state to localStorage
   useEffect(() => {
-    localStorage.setItem('neonpanda-sidebar-collapsed', isSidebarCollapsed.toString());
+    localStorage.setItem(
+      "neonpanda-sidebar-collapsed",
+      isSidebarCollapsed.toString(),
+    );
   }, [isSidebarCollapsed]);
 
   // Fetch coach data when coachId changes
   useEffect(() => {
     if (!hasCoachContext) {
-      setCurrentCoachName('');
+      setCurrentCoachName("");
       setCoachData(null);
       return;
     }
@@ -66,7 +69,9 @@ export const NavigationProvider = ({ children }) => {
         setCoachData({ rawCoach: data, name: data.coachName });
         // Use CoachAgent helper to format coach name (replaces underscores with spaces)
         const coachAgent = new CoachAgent();
-        const formattedName = coachAgent.formatCoachName(data.coachConfig?.coach_name || data.coachName);
+        const formattedName = coachAgent.formatCoachName(
+          data.coachConfig?.coach_name || data.coachName,
+        );
         setCurrentCoachName(formattedName);
       } catch (error) {
         // Silently fail - this is just for nav UI enhancement
@@ -89,7 +94,10 @@ export const NavigationProvider = ({ children }) => {
         const data = await getCoachesCount(userId);
         setCoachesCount(data.totalCount || 0);
       } catch (error) {
-        console.warn('NavigationContext: Failed to fetch coaches count:', error);
+        console.warn(
+          "NavigationContext: Failed to fetch coaches count:",
+          error,
+        );
         setCoachesCount(0);
       }
     };
@@ -113,19 +121,31 @@ export const NavigationProvider = ({ children }) => {
     const fetchNewItemCounts = async () => {
       try {
         // Fetch counts using existing APIs
-        const [workoutsData, conversationsData, memoriesData, reportsData, programsData] = await Promise.all([
-          getWorkoutsCount(userId, { coachId }).catch(() => ({ totalCount: 0 })),
-          getCoachConversationsCount(userId, coachId).catch(() => ({ totalCount: 0, totalMessages: 0 })),
-          getMemories(userId, { coachId }).catch((err) => {
-            console.warn('NavigationContext: Failed to fetch memories:', err);
+        const [
+          workoutsData,
+          conversationsData,
+          memoriesData,
+          reportsData,
+          programsData,
+        ] = await Promise.all([
+          getWorkoutsCount(userId).catch(() => ({ totalCount: 0 })),
+          getCoachConversationsCount(userId, coachId).catch(() => ({
+            totalCount: 0,
+            totalMessages: 0,
+          })),
+          getMemories(userId).catch((err) => {
+            console.warn("NavigationContext: Failed to fetch memories:", err);
             return [];
           }),
           getWeeklyReports(userId, { coachId }).catch((err) => {
-            console.warn('NavigationContext: Failed to fetch reports:', err);
+            console.warn("NavigationContext: Failed to fetch reports:", err);
             return { items: [] };
           }),
           getPrograms(userId, coachId).catch((err) => {
-            console.warn('NavigationContext: Failed to fetch training programs:', err);
+            console.warn(
+              "NavigationContext: Failed to fetch training programs:",
+              err,
+            );
             return { programs: [] };
           }),
         ]);
@@ -172,7 +192,7 @@ export const NavigationProvider = ({ children }) => {
           programs: programsCount,
         });
       } catch (error) {
-        console.error('NavigationContext: Error fetching item counts:', error);
+        console.error("NavigationContext: Error fetching item counts:", error);
       }
     };
 
@@ -181,38 +201,38 @@ export const NavigationProvider = ({ children }) => {
 
   // Helper functions for route generation
   const getHomeRoute = () => {
-    if (!isAuthenticated) return '/';
+    if (!isAuthenticated) return "/";
     if (!coachId) return `/coaches?userId=${userId}`;
     return `/training-grounds?userId=${userId}&coachId=${coachId}`;
   };
 
   const getTrainingRoute = () => {
-    if (!hasCoachContext) return '#';
+    if (!hasCoachContext) return "#";
     return `/training-grounds?userId=${userId}&coachId=${coachId}`;
   };
 
   const getProgressRoute = () => {
-    if (!hasCoachContext) return '#';
+    if (!hasCoachContext) return "#";
     return `/progress?userId=${userId}&coachId=${coachId}`;
   };
 
   const getWorkoutsRoute = () => {
-    if (!hasCoachContext) return '#';
+    if (!hasCoachContext) return "#";
     return `/workouts?userId=${userId}&coachId=${coachId}`;
   };
 
   const getConversationsRoute = () => {
-    if (!hasCoachContext) return '#';
+    if (!hasCoachContext) return "#";
     return `/conversations?userId=${userId}&coachId=${coachId}`;
   };
 
   const getMemoriesRoute = () => {
-    if (!hasCoachContext) return '#';
+    if (!hasCoachContext) return "#";
     return `/memories?userId=${userId}&coachId=${coachId}`;
   };
 
   // Command palette toggle function
-  const onCommandPaletteToggle = (command = '') => {
+  const onCommandPaletteToggle = (command = "") => {
     setCommandPaletteCommand(command);
     setIsCommandPaletteOpen(true);
   };
@@ -279,9 +299,10 @@ export const useNavigationContext = () => {
   const context = useContext(NavigationContext);
 
   if (!context) {
-    throw new Error('useNavigationContext must be used within NavigationProvider');
+    throw new Error(
+      "useNavigationContext must be used within NavigationProvider",
+    );
   }
 
   return context;
 };
-

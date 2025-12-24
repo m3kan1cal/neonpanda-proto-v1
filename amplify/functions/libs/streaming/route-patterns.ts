@@ -12,28 +12,46 @@
 // Core streaming route patterns
 export const STREAMING_ROUTE_PATTERNS = {
   // Coach conversation streaming
-  COACH_CONVERSATION: 'users/{userId}/coaches/{coachId}/conversations/{conversationId}/stream',
+  COACH_CONVERSATION:
+    "users/{userId}/coaches/{coachId}/conversations/{conversationId}/stream",
   // Coach creator session streaming
-  COACH_CREATOR_SESSION: 'users/{userId}/coach-creator-sessions/{sessionId}/stream',
+  COACH_CREATOR_SESSION:
+    "users/{userId}/coach-creator-sessions/{sessionId}/stream",
+  // Program designer session streaming
+  PROGRAM_DESIGNER_SESSION:
+    "users/{userId}/program-designer-sessions/{sessionId}/stream",
 } as const;
 
 // Array of all available patterns (for validation and logging)
-export const AVAILABLE_STREAMING_PATTERNS = Object.values(STREAMING_ROUTE_PATTERNS);
+export const AVAILABLE_STREAMING_PATTERNS = Object.values(
+  STREAMING_ROUTE_PATTERNS,
+);
 
 // Pattern metadata for enhanced functionality
 export const ROUTE_PATTERN_METADATA = {
   [STREAMING_ROUTE_PATTERNS.COACH_CONVERSATION]: {
-    name: 'Coach Conversation Streaming',
-    description: 'Real-time streaming for coach conversations with AI responses',
-    requiredParams: ['userId', 'coachId', 'conversationId'],
+    name: "Coach Conversation Streaming",
+    description:
+      "Real-time streaming for coach conversations with AI responses",
+    requiredParams: ["userId", "coachId", "conversationId"],
     optionalParams: [],
     authRequired: true,
     validateUserMatch: true,
   },
   [STREAMING_ROUTE_PATTERNS.COACH_CREATOR_SESSION]: {
-    name: 'Coach Creator Session Streaming',
-    description: 'Real-time streaming for coach creator sessions with context-aware AI responses',
-    requiredParams: ['userId', 'sessionId'],
+    name: "Coach Creator Session Streaming",
+    description:
+      "Real-time streaming for coach creator sessions with context-aware AI responses",
+    requiredParams: ["userId", "sessionId"],
+    optionalParams: [],
+    authRequired: true,
+    validateUserMatch: true,
+  },
+  [STREAMING_ROUTE_PATTERNS.PROGRAM_DESIGNER_SESSION]: {
+    name: "Program Designer Session Streaming",
+    description:
+      "Real-time streaming for program designer sessions with guided Q&A flow",
+    requiredParams: ["userId", "sessionId"],
     optionalParams: [],
     authRequired: true,
     validateUserMatch: true,
@@ -42,19 +60,19 @@ export const ROUTE_PATTERN_METADATA = {
 
 // Helper function to get required parameters for a pattern
 export function getRequiredParams(pattern: string): readonly string[] {
-  const metadata = ROUTE_PATTERN_METADATA[pattern as keyof typeof ROUTE_PATTERN_METADATA];
+  const metadata =
+    ROUTE_PATTERN_METADATA[pattern as keyof typeof ROUTE_PATTERN_METADATA];
   return metadata?.requiredParams || [];
 }
 
-
 // Helper function to extract pattern from URL
 export function detectPatternFromUrl(url: string): string | null {
-  const cleanUrl = url.startsWith('/') ? url.substring(1) : url;
-  const urlParts = cleanUrl.split('/');
+  const cleanUrl = url.startsWith("/") ? url.substring(1) : url;
+  const urlParts = cleanUrl.split("/");
 
   // Try to match against known patterns
   for (const pattern of AVAILABLE_STREAMING_PATTERNS) {
-    const patternParts = pattern.split('/');
+    const patternParts = pattern.split("/");
 
     if (urlParts.length === patternParts.length) {
       let matches = true;
@@ -64,7 +82,7 @@ export function detectPatternFromUrl(url: string): string | null {
         const urlPart = urlParts[i];
 
         // If it's not a parameter placeholder, it must match exactly
-        if (!patternPart.startsWith('{') && patternPart !== urlPart) {
+        if (!patternPart.startsWith("{") && patternPart !== urlPart) {
           matches = false;
           break;
         }
@@ -81,4 +99,5 @@ export function detectPatternFromUrl(url: string): string | null {
 
 // Type exports for better TypeScript support
 export type StreamingRoutePattern = keyof typeof STREAMING_ROUTE_PATTERNS;
-export type RoutePatternValue = typeof STREAMING_ROUTE_PATTERNS[StreamingRoutePattern];
+export type RoutePatternValue =
+  (typeof STREAMING_ROUTE_PATTERNS)[StreamingRoutePattern];

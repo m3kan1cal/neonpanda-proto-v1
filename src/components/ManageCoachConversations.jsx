@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { Tooltip } from 'react-tooltip';
+import { Tooltip } from "react-tooltip";
 import { useAuthorizeUser } from "../auth/hooks/useAuthorizeUser";
 import { AccessDenied, LoadingScreen } from "./shared/AccessDenied";
 import {
@@ -12,17 +12,16 @@ import {
 import { themeClasses } from "../utils/synthwaveThemeClasses";
 import { getCoachConversations } from "../utils/apis/coachConversationApi";
 import CoachHeader from "./shared/CoachHeader";
-import CompactCoachCard from './shared/CompactCoachCard';
-import CommandPaletteButton from './shared/CommandPaletteButton';
-import { useNavigationContext } from '../contexts/NavigationContext';
-import QuickStats from './shared/QuickStats';
+import CompactCoachCard from "./shared/CompactCoachCard";
+import CommandPaletteButton from "./shared/CommandPaletteButton";
+import { useNavigationContext } from "../contexts/NavigationContext";
+import QuickStats from "./shared/QuickStats";
 import { isRecentConversation } from "../utils/dateUtils";
 import { NeonBorder, NewBadge } from "./themes/SynthwaveComponents";
 import { useToast } from "../contexts/ToastContext";
 import { CoachConversationAgent } from "../utils/agents/CoachConversationAgent";
 import CoachAgent from "../utils/agents/CoachAgent";
 import { WorkoutAgent } from "../utils/agents/WorkoutAgent";
-import { FloatingMenuManager } from "./shared/FloatingMenuManager";
 import {
   CloseIcon,
   ChatIconSmall,
@@ -168,7 +167,6 @@ function ManageCoachConversations() {
   const workoutAgentRef = useRef(null);
   const { addToast, success, error, info } = useToast();
 
-
   // Initialize workout agent
   useEffect(() => {
     if (!userId) return;
@@ -196,7 +194,7 @@ function ManageCoachConversations() {
         }
         const loadedCoachData = await coachAgentRef.current.loadCoachDetails(
           userId,
-          coachId
+          coachId,
         );
         setCoachData(loadedCoachData);
       } catch (error) {
@@ -249,7 +247,7 @@ function ManageCoachConversations() {
         }
         const coachData = await coachAgentRef.current.loadCoachDetails(
           userId,
-          coachId
+          coachId,
         );
 
         if (!coachData) {
@@ -291,13 +289,13 @@ function ManageCoachConversations() {
 
   // Auto-scroll to top when page loads (with scroll restoration disabled)
   useEffect(() => {
-    if ('scrollRestoration' in window.history) {
-      window.history.scrollRestoration = 'manual';
+    if ("scrollRestoration" in window.history) {
+      window.history.scrollRestoration = "manual";
     }
     window.scrollTo(0, 0);
     return () => {
-      if ('scrollRestoration' in window.history) {
-        window.history.scrollRestoration = 'auto';
+      if ("scrollRestoration" in window.history) {
+        window.history.scrollRestoration = "auto";
       }
     };
   }, []);
@@ -335,13 +333,14 @@ function ManageCoachConversations() {
   const handleSaveCoachName = coachAgentRef.current?.createCoachNameHandler(
     userId,
     coachId,
-    (newName) => setConversationAgentState((prevState) => ({
-      ...prevState,
-      coaches: prevState.coaches.map((coach) =>
-        coach.coachId === coachId ? { ...coach, name: newName } : coach
-      ),
-    })),
-    { success, error }
+    (newName) =>
+      setConversationAgentState((prevState) => ({
+        ...prevState,
+        coaches: prevState.coaches.map((coach) =>
+          coach.coachId === coachId ? { ...coach, name: newName } : coach,
+        ),
+      })),
+    { success, error },
   );
 
   const handleDeleteClick = (conversation) => {
@@ -369,7 +368,7 @@ function ManageCoachConversations() {
         await conversationAgentRef.current.deleteCoachConversation(
           userId,
           conversationToDelete.coachId,
-          conversationToDelete.conversationId
+          conversationToDelete.conversationId,
         );
 
       if (success) {
@@ -382,7 +381,7 @@ function ManageCoachConversations() {
           ...prev,
           allConversations: prev.allConversations.filter(
             (conv) =>
-              conv.conversationId !== conversationToDelete.conversationId
+              conv.conversationId !== conversationToDelete.conversationId,
           ),
           totalCount: prev.totalCount - 1,
         }));
@@ -404,7 +403,7 @@ function ManageCoachConversations() {
 
   const handleViewConversation = (conversation) => {
     navigate(
-      `/training-grounds/coach-conversations?userId=${userId}&coachId=${conversation.coachId}&conversationId=${conversation.conversationId}`
+      `/training-grounds/coach-conversations?userId=${userId}&coachId=${conversation.coachId}&conversationId=${conversation.conversationId}`,
     );
   };
 
@@ -428,7 +427,7 @@ function ManageCoachConversations() {
   const renderConversationCard = (conversation) => {
     const isRecent = isRecentConversation(
       conversation.metadata?.lastActivity,
-      conversation.createdAt
+      conversation.createdAt,
     );
     return (
       <div
@@ -509,7 +508,7 @@ function ManageCoachConversations() {
               <span>
                 Last:{" "}
                 {formatDate(
-                  conversation.metadata?.lastActivity || conversation.createdAt
+                  conversation.metadata?.lastActivity || conversation.createdAt,
                 )}
               </span>
             </div>
@@ -528,7 +527,7 @@ function ManageCoachConversations() {
                   >
                     {tag}
                   </span>
-                )
+                ),
               )}
             </div>
           )}
@@ -575,7 +574,8 @@ function ManageCoachConversations() {
             No Conversations Found
           </div>
           <div className="font-rajdhani text-synthwave-text-muted text-sm mt-2">
-            You haven't started any conversations yet. Create a coach and start your first conversation to see it here.
+            You haven't started any conversations yet. Create a coach and start
+            your first conversation to see it here.
           </div>
         </div>
       );
@@ -625,10 +625,10 @@ function ManageCoachConversations() {
             stats={[1, 2, 3, 4].map((i) => ({
               icon: null,
               value: 0,
-              tooltip: { title: '', description: '' },
-              color: 'cyan',
+              tooltip: { title: "", description: "" },
+              color: "cyan",
               isLoading: true,
-              id: `skeleton-stat-${i}`
+              id: `skeleton-stat-${i}`,
             }))}
           />
 
@@ -719,7 +719,9 @@ function ManageCoachConversations() {
 
             {/* Right section: Command Palette Button */}
             <div className="flex items-center gap-3">
-              <CommandPaletteButton onClick={() => setIsCommandPaletteOpen(true)} />
+              <CommandPaletteButton
+                onClick={() => setIsCommandPaletteOpen(true)}
+              />
             </div>
           </header>
 
@@ -731,70 +733,88 @@ function ManageCoachConversations() {
                 value: conversationAgentState.totalCount || 0,
                 tooltip: {
                   title: `${conversationAgentState.totalCount || 0} Total`,
-                  description: "Total conversations with this coach"
+                  description: "Total conversations with this coach",
                 },
                 color: "pink",
                 isLoading: conversationAgentState.isLoadingAllItems,
                 ariaLabel: `${conversationAgentState.totalCount || 0} total conversations`,
-                id: "manage-convos-stat-total"
+                id: "manage-convos-stat-total",
               },
               {
                 icon: LightningIcon,
-                value: conversationAgentState.allConversations.filter(c => c.metadata?.isActive !== false).length || 0,
+                value:
+                  conversationAgentState.allConversations.filter(
+                    (c) => c.metadata?.isActive !== false,
+                  ).length || 0,
                 tooltip: {
-                  title: `${conversationAgentState.allConversations.filter(c => c.metadata?.isActive !== false).length || 0} Active`,
-                  description: "Active conversations (not archived)"
+                  title: `${conversationAgentState.allConversations.filter((c) => c.metadata?.isActive !== false).length || 0} Active`,
+                  description: "Active conversations (not archived)",
                 },
                 color: "cyan",
                 isLoading: conversationAgentState.isLoadingAllItems,
-                ariaLabel: `${conversationAgentState.allConversations.filter(c => c.metadata?.isActive !== false).length || 0} active conversations`,
-                id: "manage-convos-stat-active"
+                ariaLabel: `${conversationAgentState.allConversations.filter((c) => c.metadata?.isActive !== false).length || 0} active conversations`,
+                id: "manage-convos-stat-active",
               },
               {
                 icon: MessagesIcon,
-                value: conversationAgentState.allConversations.reduce((total, conv) => total + (conv.metadata?.totalMessages || 0), 0),
+                value: conversationAgentState.allConversations.reduce(
+                  (total, conv) => total + (conv.metadata?.totalMessages || 0),
+                  0,
+                ),
                 tooltip: {
                   title: `${conversationAgentState.allConversations.reduce((total, conv) => total + (conv.metadata?.totalMessages || 0), 0)} Messages`,
-                  description: "Total messages across all conversations"
+                  description: "Total messages across all conversations",
                 },
                 color: "purple",
                 isLoading: conversationAgentState.isLoadingAllItems,
                 ariaLabel: `${conversationAgentState.allConversations.reduce((total, conv) => total + (conv.metadata?.totalMessages || 0), 0)} total messages`,
-                id: "manage-convos-stat-messages"
+                id: "manage-convos-stat-messages",
               },
               {
                 icon: CalendarMonthIcon,
                 value: (() => {
                   const oneWeekAgo = new Date();
                   oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-                  return conversationAgentState.allConversations.filter(conv => {
-                    const lastActivity = new Date(conv.metadata?.lastActivity || conv.createdAt || 0);
-                    return lastActivity >= oneWeekAgo;
-                  }).length;
+                  return conversationAgentState.allConversations.filter(
+                    (conv) => {
+                      const lastActivity = new Date(
+                        conv.metadata?.lastActivity || conv.createdAt || 0,
+                      );
+                      return lastActivity >= oneWeekAgo;
+                    },
+                  ).length;
                 })(),
                 tooltip: {
                   title: `${(() => {
                     const oneWeekAgo = new Date();
                     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-                    return conversationAgentState.allConversations.filter(conv => {
-                      const lastActivity = new Date(conv.metadata?.lastActivity || conv.createdAt || 0);
-                      return lastActivity >= oneWeekAgo;
-                    }).length;
+                    return conversationAgentState.allConversations.filter(
+                      (conv) => {
+                        const lastActivity = new Date(
+                          conv.metadata?.lastActivity || conv.createdAt || 0,
+                        );
+                        return lastActivity >= oneWeekAgo;
+                      },
+                    ).length;
                   })()} This Week`,
-                  description: "Conversations active this week"
+                  description: "Conversations active this week",
                 },
                 color: "pink",
                 isLoading: conversationAgentState.isLoadingAllItems,
                 ariaLabel: `${(() => {
                   const oneWeekAgo = new Date();
                   oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-                  return conversationAgentState.allConversations.filter(conv => {
-                    const lastActivity = new Date(conv.metadata?.lastActivity || conv.createdAt || 0);
-                    return lastActivity >= oneWeekAgo;
-                  }).length;
+                  return conversationAgentState.allConversations.filter(
+                    (conv) => {
+                      const lastActivity = new Date(
+                        conv.metadata?.lastActivity || conv.createdAt || 0,
+                      );
+                      return lastActivity >= oneWeekAgo;
+                    },
+                  ).length;
                 })()} conversations this week`,
-                id: "manage-convos-stat-this-week"
-              }
+                id: "manage-convos-stat-this-week",
+              },
             ]}
           />
 
@@ -803,22 +823,12 @@ function ManageCoachConversations() {
         </div>
       </div>
 
-      {/* Floating Menu Manager */}
-      <FloatingMenuManager
-        userId={userId}
-        coachId={coachId}
-        currentPage="manage-conversations"
-        coachData={coachData}
-        onCommandPaletteToggle={(command) => {
-          setCommandPaletteCommand(command);
-          setIsCommandPaletteOpen(true);
-        }}
-      />
-
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[10000]">
-          <div className={`${containerPatterns.deleteModal} p-6 max-w-md w-full mx-4`}>
+          <div
+            className={`${containerPatterns.deleteModal} p-6 max-w-md w-full mx-4`}
+          >
             <div className="text-center">
               <h3 className="text-synthwave-neon-pink font-rajdhani text-xl font-bold mb-2">
                 Delete Conversation

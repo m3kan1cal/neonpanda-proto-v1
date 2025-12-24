@@ -231,17 +231,21 @@ const performNormalization = async (
       `Normalization completed: { method: '${normalizationMethod}', isValid: ${normalizationResult.isValid}, issues: ${normalizationResult.issues?.length || 0} }`,
     );
 
-    // Add normalized flag
-    if (normalizationResult.normalizedData?.metadata?.validation_flags) {
-      if (
-        !normalizationResult.normalizedData.metadata.validation_flags.includes(
-          "normalized",
-        )
-      ) {
-        normalizationResult.normalizedData.metadata.validation_flags.push(
-          "normalized",
-        );
-      }
+    // Add normalized flag (ensure metadata structure exists)
+    if (!normalizationResult.normalizedData.metadata) {
+      normalizationResult.normalizedData.metadata = {};
+    }
+    if (!normalizationResult.normalizedData.metadata.validation_flags) {
+      normalizationResult.normalizedData.metadata.validation_flags = [];
+    }
+    if (
+      !normalizationResult.normalizedData.metadata.validation_flags.includes(
+        "normalized",
+      )
+    ) {
+      normalizationResult.normalizedData.metadata.validation_flags.push(
+        "normalized",
+      );
     }
 
     // Smart defaulting for isValid when AI doesn't provide it

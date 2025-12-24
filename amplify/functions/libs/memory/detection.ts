@@ -5,6 +5,11 @@
 import { callBedrockApi, MODEL_IDS } from "../api-helpers";
 import { JSON_FORMATTING_INSTRUCTIONS_STANDARD } from "../prompt-helpers";
 import {
+  MEMORY_REQUEST_DETECTION_SCHEMA,
+  CONSOLIDATED_MEMORY_ANALYSIS_SCHEMA,
+  MEMORY_CHARACTERISTICS_SCHEMA,
+} from "../schemas/memory-detection-schemas";
+import {
   MemoryDetectionEvent,
   MemoryDetectionResult,
   MemoryRetrievalNeedResult,
@@ -23,7 +28,7 @@ import { parseJsonWithFallbacks } from "../response-utils";
  */
 export async function detectMemoryRetrievalNeed(
   userMessage: string,
-  messageContext?: string
+  messageContext?: string,
 ): Promise<MemoryRetrievalNeedResult> {
   const systemPrompt = `You are an AI assistant that analyzes user messages to determine if retrieving past memories would enhance the coaching response.
 
@@ -70,12 +75,12 @@ GUIDELINES:
 Analyze this message and determine if retrieving stored memories would enhance the coaching response.`;
 
   try {
-    const response = await callBedrockApi(
+    const response = (await callBedrockApi(
       systemPrompt,
       userPrompt,
       MODEL_IDS.CLAUDE_HAIKU_4_FULL,
-      { prefillResponse: "{" } // Force JSON output format
-    ) as string; // No tools used, always returns string
+      { prefillResponse: "{" }, // Force JSON output format
+    )) as string; // No tools used, always returns string
     const result = parseJsonWithFallbacks(response);
 
     return result;
@@ -95,13 +100,13 @@ Analyze this message and determine if retrieving stored memories would enhance t
  * Detect if user message contains a memory request using Bedrock API
  */
 export async function detectMemoryRequest(
-  event: MemoryDetectionEvent
+  event: MemoryDetectionEvent,
 ): Promise<MemoryDetectionResult> {
   const { userMessage, messageContext } = event;
 
   const systemPrompt = `You are an AI assistant that analyzes user messages to detect when they want you to "remember" something about them for future conversations.
 
-TASK: Determine if the user is asking you to remember something, and if so, extract the memory content.
+TASK: Determine if the user is asking you to remember something, and if so, extract the memory content using the detect_memory_request tool.
 
 MEMORY REQUEST INDICATORS:
 - "I want you to remember.."
@@ -115,21 +120,14 @@ MEMORY REQUEST INDICATORS:
 - Similar phrases expressing desire for persistent memory
 
 CRITICAL: DO NOT DETECT WORKOUT LOGS AS MEMORY REQUESTS
-Workouts are already stored in two separate systems:
-1. Pinecone: Stores workout summaries for semantic search and progress tracking
-2. DynamoDB: Stores complete workout records with full details
+Workouts are already stored in two separate systems and should NEVER trigger memory saves.
 
 DO NOT save as memories:
-- Workout performance data (e.g., "I did Fran in 8:57", "Deadlifted 315 for 5 reps")
-- Exercise logs with sets, reps, weights, times, or distances
+- Workout performance data or exercise logs
 - Training session reports or workout completions
-- Slash commands like "/log-workout" (handled by workout system)
-- Messages that are primarily about logging today's training activity
+- Past-tense workout descriptions
 
-These are handled by the workout logging system (/log-workout) and should NEVER trigger memory saves.
-
-EXCEPTION: Future workout goals ARE memories (e.g., "I want to deadlift 315 by June" = goal memory)
-Only the GOAL is a memory, not the actual workout performance when achieved.
+EXCEPTION: Future workout goals ARE memories (e.g., "I want to deadlift 315 by June")
 
 MEMORY TYPES:
 - preference: Training preferences, communication style, etc.
@@ -138,30 +136,16 @@ MEMORY TYPES:
 - instruction: Specific coaching instructions or approaches
 - context: Personal context, background, lifestyle factors
 
-${JSON_FORMATTING_INSTRUCTIONS_STANDARD}
-
-RESPONSE SCHEMA:
-{
-  "isMemoryRequest": boolean,
-  "confidence": number (0.0 to 1.0),
-  "extractedMemory": {
-    "content": "string describing what to remember",
-    "type": "preference|goal|constraint|instruction|context",
-    "importance": "high|medium|low"
-  } | null,
-  "reasoning": "brief explanation of decision"
-}
-
 GUIDELINES:
 - Be conservative: only detect clear, explicit memory requests
 - Content should be concise but capture the essential information
 - Importance: high=critical for coaching, medium=helpful context, low=nice to know
 - If unsure, set isMemoryRequest to false
-- Don't detect questions, general statements, or workout logging as memory requests`;
+- If isMemoryRequest is false, set extractedMemory to null`;
 
   const userPrompt = `${messageContext ? `CONVERSATION CONTEXT:\n${messageContext}\n\n` : ""}USER MESSAGE TO ANALYZE:\n"${userMessage}"
 
-Analyze this message and respond with the JSON format specified.`;
+Analyze this message and use the detect_memory_request tool to provide your analysis.`;
 
   try {
     console.info("🔍 Detecting memory request:", {
@@ -174,35 +158,24 @@ Analyze this message and respond with the JSON format specified.`;
     const response = await callBedrockApi(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.CLAUDE_HAIKU_4_FULL
-    ) as string; // No tools used, always returns string
-    // Use centralized parsing utility (handles markdown cleanup and JSON fixing)
-    let result;
-    try {
-      result = parseJsonWithFallbacks(response);
-    } catch (parseError) {
-      const errorMessage = parseError instanceof Error ? parseError.message : String(parseError);
-      console.error("❌ JSON parsing failed for memory characteristics:", {
-        originalResponse: response.substring(0, 200) + (response.length > 200 ? "..." : ""),
-        originalLength: response.length,
-        parseError: errorMessage,
-      });
-      throw new Error(
-        `Invalid response format from memory characteristics detection: ${errorMessage}`
-      );
+      MODEL_IDS.CLAUDE_HAIKU_4_FULL,
+      {
+        tools: {
+          name: "detect_memory_request",
+          description:
+            "Detect if the user is requesting to save something as a memory for future conversations",
+          inputSchema: MEMORY_REQUEST_DETECTION_SCHEMA,
+        },
+        expectedToolName: "detect_memory_request",
+      },
+    );
+
+    // Tool use returns structured data directly
+    if (typeof response === "string") {
+      throw new Error("Expected tool use but received text response");
     }
 
-    // Validate the response structure
-    if (
-      typeof result.isMemoryRequest !== "boolean" ||
-      typeof result.confidence !== "number" ||
-      result.confidence < 0 ||
-      result.confidence > 1
-    ) {
-      throw new Error("Invalid response format from memory request detection");
-    }
-
-    return result;
+    return response.input as MemoryDetectionResult;
   } catch (error) {
     console.error("Error in memory request detection:", error);
 
@@ -232,7 +205,7 @@ Analyze this message and respond with the JSON format specified.`;
  */
 export async function detectMemoryCharacteristics(
   memoryContent: string,
-  coachName?: string
+  coachName?: string,
 ): Promise<MemoryCharacteristicsResult> {
   const systemPrompt = `You are an AI assistant that analyzes user memories to determine their type, importance, scope, and suggest relevant tags for fitness coaching.
 
@@ -364,7 +337,7 @@ GUIDELINES:
 
   const userPrompt = `${coachName ? `COACH NAME: ${coachName}\n\n` : ""}MEMORY TO ANALYZE:\n"${memoryContent}"
 
-Analyze this memory and respond with the JSON format specified.`;
+Use the detect_memory_characteristics tool to analyze this memory.`;
 
   try {
     console.info("🎯 Detecting memory characteristics (combined):", {
@@ -378,73 +351,34 @@ Analyze this memory and respond with the JSON format specified.`;
     const response = await callBedrockApi(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.CLAUDE_HAIKU_4_FULL
-    ) as string; // No tools used, always returns string
-    // Use centralized parsing utility (handles markdown cleanup and JSON fixing)
-    let result;
-    try {
-      result = parseJsonWithFallbacks(response);
-    } catch (parseError) {
-      const errorMessage = parseError instanceof Error ? parseError.message : String(parseError);
-      console.error("❌ JSON parsing failed for memory characteristics:", {
-        originalResponse: response.substring(0, 500) + (response.length > 500 ? "..." : ""),
-        originalLength: response.length,
-        parseError: errorMessage,
-        memoryContent: memoryContent.substring(0, 100) + (memoryContent.length > 100 ? "..." : ""),
-        coachName: coachName || "unknown"
-      });
-      throw new Error(
-        `Invalid response format from memory characteristics detection: ${errorMessage}`
-      );
+      MODEL_IDS.CLAUDE_HAIKU_4_FULL,
+      {
+        tools: {
+          name: "detect_memory_characteristics",
+          description:
+            "Analyze memory content to determine type, importance, scope, and relevant tags",
+          inputSchema: MEMORY_CHARACTERISTICS_SCHEMA,
+        },
+        expectedToolName: "detect_memory_characteristics",
+      },
+    );
+
+    // Tool use returns structured data directly
+    if (typeof response === "string") {
+      throw new Error("Expected tool use but received text response");
     }
 
-    // Validate the response structure
-    const validTypes = [
-      "preference",
-      "goal",
-      "constraint",
-      "instruction",
-      "context",
-    ];
-    const validImportance = ["high", "medium", "low"];
-
-    if (
-      !validTypes.includes(result.type) ||
-      !validImportance.includes(result.importance) ||
-      typeof result.isCoachSpecific !== "boolean" ||
-      typeof result.confidence !== "number" ||
-      result.confidence < 0 ||
-      result.confidence > 1 ||
-      !Array.isArray(result.suggestedTags) ||
-      result.suggestedTags.length === 0 ||
-      result.suggestedTags.length > 5 ||
-      !Array.isArray(result.exerciseTags) ||
-      !result.reasoning ||
-      typeof result.reasoning.type !== "string" ||
-      typeof result.reasoning.importance !== "string" ||
-      typeof result.reasoning.scope !== "string" ||
-      typeof result.reasoning.tags !== "string" ||
-      typeof result.reasoning.exercises !== "string"
-    ) {
-      console.error("❌ Memory characteristics validation failed:", {
-        type: result.type,
-        validTypes: validTypes,
-        typeValid: validTypes.includes(result.type)
-      });
-      throw new Error(
-        "Invalid response format from memory characteristics detection"
-      );
-    }
-
-    return result;
+    return response.input as MemoryCharacteristicsResult;
   } catch (error) {
     console.error("Error in memory characteristics detection:", error);
 
     // Log the error context for debugging
     console.error("❌ Memory characteristics detection failed:", {
-      memoryContent: memoryContent.substring(0, 100) + (memoryContent.length > 100 ? "..." : ""),
+      memoryContent:
+        memoryContent.substring(0, 100) +
+        (memoryContent.length > 100 ? "..." : ""),
       coachName: coachName || "unknown",
-      errorType: error instanceof Error ? error.constructor.name : typeof error
+      errorType: error instanceof Error ? error.constructor.name : typeof error,
     });
 
     // Return safe fallback
@@ -479,7 +413,7 @@ Analyze this memory and respond with the JSON format specified.`;
 export async function analyzeMemoryNeeds(
   userMessage: string,
   messageContext?: string,
-  coachName?: string
+  coachName?: string,
 ): Promise<{
   needsRetrieval: boolean;
   isMemoryRequest: boolean;
@@ -491,7 +425,7 @@ export async function analyzeMemoryNeeds(
 
   const systemPrompt = `You are an AI assistant that performs comprehensive memory analysis for fitness coaching conversations.
 
-TASK: Analyze the user's message to determine:
+TASK: Analyze the user's message using the analyze_memory_needs tool to determine:
 1. Whether retrieving past memories would enhance the coaching response
 2. Whether the user is requesting to save/remember something
 3. If memory saving is needed, classify the memory characteristics
@@ -524,21 +458,14 @@ User wants to save something when they:
 - Use slash commands: "/save-memory [content]"
 
 CRITICAL: DO NOT DETECT WORKOUT LOGS AS MEMORY REQUESTS
-Workouts are already stored in two separate systems:
-1. Pinecone: Stores workout summaries for semantic search and progress tracking
-2. DynamoDB: Stores complete workout records with full details
+Workouts are already stored separately and should NEVER trigger memory saves.
 
 DO NOT save as memories:
-- Workout performance data (e.g., "I did Fran in 8:57", "Deadlifted 315 for 5 reps")
-- Exercise logs with sets, reps, weights, times, or distances
+- Workout performance data or exercise logs
 - Training session reports or workout completions
-- Slash commands like "/log-workout" (handled by workout system)
-- Messages that are primarily about logging today's training activity
+- Past-tense workout descriptions
 
-These are handled by the workout logging system (/log-workout) and should NEVER trigger memory saves.
-
-EXCEPTION: Future workout goals ARE memories (e.g., "I want to deadlift 315 by June" = goal memory)
-Only the GOAL is a memory, not the actual workout performance when achieved.
+EXCEPTION: Future workout goals ARE memories (e.g., "I want to deadlift 315 by June")
 
 === MEMORY CHARACTERISTICS (if memory request detected) ===
 Memory Types:
@@ -546,6 +473,7 @@ Memory Types:
 - goal: Fitness goals, targets, aspirations, milestones
 - constraint: Physical limitations, time constraints, equipment limitations
 - instruction: Specific coaching instructions, form cues, reminders
+- context: Personal context, background, lifestyle factors
 
 Importance Levels:
 - high: Critical for safe and effective coaching (injuries, major goals, key preferences)
@@ -556,34 +484,14 @@ Scope Determination:
 - isCoachSpecific: true if the memory is specific to this coaching relationship
 - isCoachSpecific: false if it's general user information applicable to any coach
 
-Suggested Tags: Relevant keywords for easy retrieval (max 5 tags)
-
-${JSON_FORMATTING_INSTRUCTIONS_STANDARD}
-
-REQUIRED JSON STRUCTURE:
-{
-  "needsRetrieval": boolean,
-  "retrievalReasoning": "brief explanation of retrieval decision",
-  "contextTypes": ["goals", "preferences", "constraints", "progress", "techniques", "motivation"],
-  "retrievalConfidence": number (0.0 to 1.0),
-  "isMemoryRequest": boolean,
-  "memoryRequestReasoning": "brief explanation of memory request detection",
-  "memoryCharacteristics": {
-    "type": "preference" | "goal" | "constraint" | "instruction" | null,
-    "importance": "low" | "medium" | "high",
-    "isCoachSpecific": boolean,
-    "suggestedTags": ["tag1", "tag2", "tag3"],
-    "reasoning": "brief explanation of characteristics analysis"
-  } | null,
-  "overallConfidence": number (0.0 to 1.0)
-}`;
+Suggested Tags: Relevant keywords for easy retrieval (max 5 tags)`;
 
   const userPrompt = `ANALYZE THIS MESSAGE:
 Message: "${userMessage}"
 ${messageContext ? `Recent Context: "${messageContext}"` : ""}
 ${coachName ? `Coach Name: ${coachName}` : ""}
 
-Provide comprehensive memory analysis following the framework above.`;
+Use the analyze_memory_needs tool to provide comprehensive memory analysis following the framework above.`;
 
   try {
     console.info("🧠 Consolidated Memory Analysis starting:", {
@@ -596,10 +504,23 @@ Provide comprehensive memory analysis following the framework above.`;
       systemPrompt,
       userPrompt,
       MODEL_IDS.CLAUDE_HAIKU_4_FULL, // Reliable for critical memory analysis
-      { prefillResponse: "{" } // Force JSON output format
-    ) as string; // No tools used, always returns string
+      {
+        tools: {
+          name: "analyze_memory_needs",
+          description:
+            "Comprehensive analysis of memory retrieval needs and memory save requests",
+          inputSchema: CONSOLIDATED_MEMORY_ANALYSIS_SCHEMA,
+        },
+        expectedToolName: "analyze_memory_needs",
+      },
+    );
 
-    const result = parseJsonWithFallbacks(response);
+    // Tool use returns structured data directly
+    if (typeof response === "string") {
+      throw new Error("Expected tool use but received text response");
+    }
+
+    const result = response.input as any;
     const processingTime = Date.now() - startTime;
 
     // Transform result to match expected interface
@@ -681,7 +602,9 @@ export function filterMemories(memories: any[]): any[] {
 
     // ❌ EXCLUDE: Coach-specific memories (user is creating a NEW coach)
     if (coachId && coachId !== "all") {
-      console.info(`🚫 Filtering out coach-specific memory: ${memory.memoryId}`);
+      console.info(
+        `🚫 Filtering out coach-specific memory: ${memory.memoryId}`,
+      );
       return false;
     }
 
@@ -692,8 +615,13 @@ export function filterMemories(memories: any[]): any[] {
     }
 
     // ❌ EXCLUDE: Workout planning memories (tied to specific programs)
-    if (memoryType === "workout_planning" || tags.includes("workout_planning")) {
-      console.info(`🚫 Filtering out workout planning memory: ${memory.memoryId}`);
+    if (
+      memoryType === "workout_planning" ||
+      tags.includes("workout_planning")
+    ) {
+      console.info(
+        `🚫 Filtering out workout planning memory: ${memory.memoryId}`,
+      );
       return false;
     }
 
@@ -711,16 +639,24 @@ export function filterMemories(memories: any[]): any[] {
 
     // ❌ EXCLUDE: Competition/event memories (specific timebound goals)
     const competitionTags = ["competition", "meet", "event", "comp"];
-    if (tags.some((tag: string) => competitionTags.includes(tag.toLowerCase()))) {
+    if (
+      tags.some((tag: string) => competitionTags.includes(tag.toLowerCase()))
+    ) {
       console.info(`🚫 Filtering out competition memory: ${memory.memoryId}`);
       return false;
     }
 
     // ✅ ALLOW: Constraint memories with stable physical info
     if (memoryType === "constraint") {
-      const allowedTags = ["injury", "mobility", "equipment", "scheduling", "recovery"];
+      const allowedTags = [
+        "injury",
+        "mobility",
+        "equipment",
+        "scheduling",
+        "recovery",
+      ];
       const hasAllowedTag = tags.some((tag: string) =>
-        allowedTags.some(allowed => tag.toLowerCase().includes(allowed))
+        allowedTags.some((allowed) => tag.toLowerCase().includes(allowed)),
       );
 
       if (hasAllowedTag) {
@@ -730,7 +666,9 @@ export function filterMemories(memories: any[]): any[] {
     }
 
     // ❌ EXCLUDE: Everything else by default (clean slate approach)
-    console.info(`🚫 Filtering out memory (default exclusion): ${memory.memoryId}, type: ${memoryType}`);
+    console.info(
+      `🚫 Filtering out memory (default exclusion): ${memory.memoryId}, type: ${memoryType}`,
+    );
     return false;
   });
 }

@@ -5,7 +5,7 @@
  * training program functionality including programs, phases, workouts, and adaptation.
  */
 
-import { TodoItem } from '../todo-types';
+import { TodoItem } from "../todo-types";
 
 /**
  * Training Program entity - main program structure
@@ -15,7 +15,7 @@ export interface Program {
   userId: string;
   coachIds: string[]; // All coaches involved (supports multi-coach programs)
   coachNames: string[]; // Names of all coaches (for display without additional queries)
-  creationConversationId: string; // Link to the conversation that created it
+  creationConversationId?: string; // Optional: Link to the conversation that created it (not present for program designer sessions)
 
   // Program definition
   name: string; // Simplified from programName
@@ -249,7 +249,11 @@ export interface WorkoutAdaptation {
 export interface ProgramAdaptation {
   adaptationId: string;
   timestamp: Date;
-  trigger: "consistent_scaling" | "missed_workouts" | "user_feedback" | "performance_data";
+  trigger:
+    | "consistent_scaling"
+    | "missed_workouts"
+    | "user_feedback"
+    | "performance_data";
   description: string; // What was observed
   action: string; // What changed in programming
   affectedDays: number[]; // Which future workouts were adjusted
@@ -333,16 +337,17 @@ export interface UpdateProgramStatusEvent {
 
 /**
  * Event structure for the build-program Lambda function
- * Triggered asynchronously from Build mode conversations
+ * Triggered asynchronously from program designer sessions
  */
 export interface BuildProgramEvent {
   userId: string;
   coachId: string;
-  conversationId: string;
+  conversationId?: string; // Optional: Not used for program designer sessions (session-based flow)
   programId: string; // Pre-generated program ID
-  sessionId: string; // Program creator session ID
-  todoList: any; // ProgramCreatorTodoList with complete requirements
+  sessionId: string; // Program designer session ID (primary identifier)
+  todoList: any; // ProgramDesignerTodoList with complete requirements
   conversationContext: string; // Full conversation history as text
+  additionalConsiderations?: string; // User's final thoughts/requirements (asked as last question)
 }
 
 /**
@@ -415,7 +420,7 @@ export interface TodaysWorkoutTemplates {
 /**
  * Training Program creation result
  */
-export interface ProgramCreatorResult {
+export interface ProgramDesignerResult {
   success: boolean;
   programId: string;
   program?: Program;
@@ -453,7 +458,7 @@ export interface ProgramGenerationData {
  * Tracks all information needed for training program generation
  * Pattern: Same structure as CoachCreatorTodoList
  */
-export interface ProgramCreatorTodoList {
+export interface ProgramDesignerTodoList {
   // Core Program Definition (3 fields)
   trainingGoals: TodoItem;
   targetEvent: TodoItem;

@@ -35,7 +35,7 @@ function getDefaultApiUrl() {
 
   // This should rarely happen - amplify_outputs.json should always have an endpoint
   throw new Error(
-    "No API endpoint found in amplify_outputs.json. Please deploy your Amplify backend first."
+    "No API endpoint found in amplify_outputs.json. Please deploy your Amplify backend first.",
   );
 }
 
@@ -65,7 +65,7 @@ export const getAuthHeaders = async (forceRefresh = false) => {
 // Authenticated fetch wrapper with automatic token refresh on 401
 export const authenticatedFetch = async (url, options = {}) => {
   // Construct full URL (if url is relative, prepend API base URL)
-  const fullUrl = url.startsWith('http') ? url : getApiUrl(url);
+  const fullUrl = url.startsWith("http") ? url : getApiUrl(url);
 
   // First attempt with current token
   let authHeaders = await getAuthHeaders();
@@ -122,6 +122,11 @@ export const STREAMING_CONFIG = {
     functionUrl: getCoachCreatorStreamingUrl(),
   },
 
+  // Program Designer Session Streaming
+  programDesignerSession: {
+    functionUrl: getProgramDesignerSessionStreamingUrl(),
+  },
+
   // Feature toggle - can be controlled via environment variable
   enabled: import.meta.env.VITE_USE_LAMBDA_STREAMING !== "false", // Default to true
 
@@ -141,7 +146,9 @@ function getCoachConversationStreamingUrl() {
   const streamingConfig = outputs.custom?.coachConversationStreamingApi;
 
   if (!streamingConfig?.functionUrl) {
-    console.warn('⚠️ No coach conversation streaming function URL found in amplify_outputs.json');
+    console.warn(
+      "⚠️ No coach conversation streaming function URL found in amplify_outputs.json",
+    );
     return null;
   }
 
@@ -156,7 +163,26 @@ function getCoachCreatorStreamingUrl() {
   const streamingConfig = outputs.custom?.coachCreatorSessionStreamingApi;
 
   if (!streamingConfig?.functionUrl) {
-    console.warn('⚠️ No coach creator session streaming function URL found in amplify_outputs.json');
+    console.warn(
+      "⚠️ No coach creator session streaming function URL found in amplify_outputs.json",
+    );
+    return null;
+  }
+
+  return streamingConfig.functionUrl;
+}
+
+/**
+ * Get the program designer session streaming function URL from amplify_outputs.json
+ * @returns {string | null} - The Lambda Function URL for program designer session streaming
+ */
+function getProgramDesignerSessionStreamingUrl() {
+  const streamingConfig = outputs.custom?.programDesignerSessionStreamingApi;
+
+  if (!streamingConfig?.functionUrl) {
+    console.warn(
+      "⚠️ No program designer session streaming function URL found in amplify_outputs.json",
+    );
     return null;
   }
 
@@ -165,7 +191,7 @@ function getCoachCreatorStreamingUrl() {
 
 /**
  * Get the full streaming URL for a given endpoint type and path
- * @param {string} endpointType - The endpoint type ('coachConversation' or 'coachCreatorSession')
+ * @param {string} endpointType - The endpoint type ('coachConversation', 'coachCreatorSession', or 'programDesignerSession')
  * @param {string} path - The path to append (should start with 'users/')
  * @returns {string} - Full streaming URL
  */
@@ -203,8 +229,9 @@ export const isStreamingEnabled = (endpointType = null) => {
 
   // If no specific endpoint, check if ANY streaming is available
   return (
-    isStreamingEnabled('coachConversation') ||
-    isStreamingEnabled('coachCreatorSession')
+    isStreamingEnabled("coachConversation") ||
+    isStreamingEnabled("coachCreatorSession") ||
+    isStreamingEnabled("programDesignerSession")
   );
 };
 

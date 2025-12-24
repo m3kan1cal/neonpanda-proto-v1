@@ -5,8 +5,8 @@
  * to provide concise, coach-friendly context for semantic search and conversations.
  */
 
-import { callBedrockApi } from '../api-helpers';
-import { Program } from './types';
+import { callBedrockApi } from "../api-helpers";
+import { Program } from "./types";
 
 /**
  * Generate an AI-powered summary of a training program for coaching context
@@ -18,13 +18,14 @@ import { Program } from './types';
  */
 export const generateProgramSummary = async (
   program: Program,
-  conversationMessages: any[]
+  conversationMessages: any[],
+  enableThinking: boolean = false,
 ): Promise<string> => {
   // Extract relevant conversation context (last few messages for brevity)
   const conversationContext = conversationMessages
     .slice(-5)
-    .map(m => `${m.role}: ${m.content}`)
-    .join('\n');
+    .map((m) => `${m.role}: ${m.content}`)
+    .join("\n");
 
   // STATIC PROMPT (cacheable - instructions and examples don't change)
   const staticPrompt = `
@@ -45,23 +46,27 @@ EXAMPLE GOOD SUMMARIES:
 
   // DYNAMIC PROMPT (not cacheable - program data and conversation vary)
   const dynamicPrompt = `PROGRAM DATA:
-${JSON.stringify({
-  name: program.name,
-  description: program.description,
-  totalDays: program.totalDays,
-  trainingFrequency: program.trainingFrequency,
-  startDate: program.startDate,
-  endDate: program.endDate,
-  phases: program.phases.map(p => ({
-    name: p.name,
-    description: p.description,
-    durationDays: p.durationDays,
-    focusAreas: p.focusAreas,
-  })),
-  trainingGoals: program.trainingGoals,
-  equipmentConstraints: program.equipmentConstraints,
-  totalWorkouts: program.totalWorkouts,
-}, null, 2)}
+${JSON.stringify(
+  {
+    name: program.name,
+    description: program.description,
+    totalDays: program.totalDays,
+    trainingFrequency: program.trainingFrequency,
+    startDate: program.startDate,
+    endDate: program.endDate,
+    phases: program.phases.map((p) => ({
+      name: p.name,
+      description: p.description,
+      durationDays: p.durationDays,
+      focusAreas: p.focusAreas,
+    })),
+    trainingGoals: program.trainingGoals,
+    equipmentConstraints: program.equipmentConstraints,
+    totalWorkouts: program.totalWorkouts,
+  },
+  null,
+  2,
+)}
 
 CONVERSATION CONTEXT:
 ${conversationContext}
@@ -69,29 +74,31 @@ ${conversationContext}
 Write the summary now:`;
 
   try {
-    const response = await callBedrockApi(
+    const response = (await callBedrockApi(
       staticPrompt,
       dynamicPrompt,
       undefined, // Use default model
       {
         staticPrompt,
         dynamicPrompt,
-      }
-    ) as string; // No tools used, always returns string
+        enableThinking,
+      },
+    )) as string; // No tools used, always returns string
 
     // Clean up the response - remove any prefix like "SUMMARY:" and trim
     const cleanSummary = response.trim();
 
     return cleanSummary;
   } catch (error) {
-    console.error('Error generating training program summary:', error);
+    console.error("Error generating training program summary:", error);
 
     // Fallback to basic summary if AI fails
-    const phaseSummary = program.phases.length === 1
-      ? `${program.phases.length} phase`
-      : `${program.phases.length} phases`;
+    const phaseSummary =
+      program.phases.length === 1
+        ? `${program.phases.length} phase`
+        : `${program.phases.length} phases`;
 
-    const fallback = `${program.name}: ${program.totalDays}-day program (${program.trainingFrequency}x/week) with ${phaseSummary}. Goals: ${program.trainingGoals.slice(0, 2).join(', ')}.`;
+    const fallback = `${program.name}: ${program.totalDays}-day program (${program.trainingFrequency}x/week) with ${phaseSummary}. Goals: ${program.trainingGoals.slice(0, 2).join(", ")}.`;
 
     return fallback;
   }

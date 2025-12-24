@@ -7,7 +7,7 @@ This directory contains integration tests for the NeonPanda Proto V1 application
 ```
 test/
 ├── integration/          # Integration tests (Lambda, DynamoDB, S3, Bedrock)
-│   └── test-build-workout-v2.js
+│   └── test-build-workout.ts
 ├── fixtures/            # Test data, expected outputs, and test results
 │   └── test-workouts-20251206/
 └── unit/               # Unit tests (future)
@@ -17,7 +17,7 @@ test/
 
 ### Build Workout V2 Test Suite
 
-Comprehensive testing for the `build-workout-v2` Lambda function.
+Comprehensive testing for the `build-workout` Lambda function.
 
 **Features:**
 
@@ -31,18 +31,18 @@ Comprehensive testing for the `build-workout-v2` Lambda function.
 
 ```bash
 # Run all tests
-AWS_PROFILE=midgard-sandbox node test/integration/test-build-workout-v2.js
+AWS_PROFILE=midgard-sandbox tsx test/integration/test-build-workout.ts
 
 # Run specific tests
-AWS_PROFILE=midgard-sandbox node test/integration/test-build-workout-v2.js \
+AWS_PROFILE=midgard-sandbox tsx test/integration/test-build-workout.ts \
   --test=simple-slash-command,crossfit-fran
 
 # Run with verbose output (includes full logs and workout data)
-AWS_PROFILE=midgard-sandbox node test/integration/test-build-workout-v2.js \
+AWS_PROFILE=midgard-sandbox tsx test/integration/test-build-workout.ts \
   --verbose
 
 # Save results to file
-AWS_PROFILE=midgard-sandbox node test/integration/test-build-workout-v2.js \
+AWS_PROFILE=midgard-sandbox tsx test/integration/test-build-workout.ts \
   --output=test/fixtures/test-workouts-20251206/results.json \
   --verbose
 ```
@@ -89,7 +89,7 @@ export AWS_REGION="us-west-2"
 export DYNAMODB_TABLE_NAME="NeonPanda-ProtoApi-AllItems-V2-sandbox-abb89311"
 
 # Run all tests with full validation
-node test/integration/test-build-workout-v2.js \
+tsx test/integration/test-build-workout.ts \
   --output=test/fixtures/test-workouts-$(date +%Y%m%d)/results.json \
   --verbose
 ```
@@ -143,7 +143,7 @@ The test script automatically unwraps `attributes.workoutData` so validations ca
 
 ### Adding New Tests
 
-1. Edit `test/integration/test-build-workout-v2.js`
+1. Edit `test/integration/test-build-workout.ts`
 2. Add test case to `TEST_CASES` object
 3. Define `expected` validation rules
 4. Add `workoutValidation` for DynamoDB checks (using schema paths)
@@ -235,7 +235,7 @@ These tests can be integrated into CI/CD pipelines:
     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
     DYNAMODB_TABLE_NAME: ${{ secrets.DYNAMODB_TABLE_NAME }}
   run: |
-    node test/integration/test-build-workout-v2.js --output=test-results.json
+    tsx test/integration/test-build-workout.ts --output=test-results.json
 ```
 
 ## Troubleshooting

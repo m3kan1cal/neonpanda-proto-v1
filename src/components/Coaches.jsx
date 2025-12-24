@@ -1,13 +1,20 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
-import { useAuthorizeUser } from '../auth/hooks/useAuthorizeUser';
-import { AccessDenied, LoadingScreen } from './shared/AccessDenied';
-import { buttonPatterns, containerPatterns, layoutPatterns, typographyPatterns, tooltipPatterns, iconButtonPatterns } from '../utils/ui/uiPatterns';
-import { Tooltip } from 'react-tooltip';
-import CompactCoachCard from './shared/CompactCoachCard';
-import CommandPaletteButton from './shared/CommandPaletteButton';
-import { useNavigationContext } from '../contexts/NavigationContext';
-import { InlineEditField } from './shared/InlineEditField';
+import React, { useState, useEffect, useRef } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
+import { useAuthorizeUser } from "../auth/hooks/useAuthorizeUser";
+import { AccessDenied, LoadingScreen } from "./shared/AccessDenied";
+import {
+  buttonPatterns,
+  containerPatterns,
+  layoutPatterns,
+  typographyPatterns,
+  tooltipPatterns,
+  iconButtonPatterns,
+} from "../utils/ui/uiPatterns";
+import { Tooltip } from "react-tooltip";
+import CompactCoachCard from "./shared/CompactCoachCard";
+import CommandPaletteButton from "./shared/CommandPaletteButton";
+import { useNavigationContext } from "../contexts/NavigationContext";
+import { InlineEditField } from "./shared/InlineEditField";
 import {
   NeonBorder,
   NewBadge,
@@ -19,40 +26,70 @@ import {
   SparkleIcon,
   PlayIcon,
   ArrowRightIcon,
-  HomeIcon
-} from './themes/SynthwaveComponents';
+  HomeIcon,
+} from "./themes/SynthwaveComponents";
 
 // Three-dot vertical menu icon
 const EllipsisVerticalIcon = () => (
-  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+  <svg
+    className="w-5 h-5"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
+    />
   </svg>
 );
 
 const EditIcon = () => (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+  <svg
+    className="w-4 h-4"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+    />
   </svg>
 );
-import CoachAgent from '../utils/agents/CoachAgent';
-import CoachCreatorAgent from '../utils/agents/CoachCreatorAgent';
-import { useToast } from '../contexts/ToastContext';
+import CoachAgent from "../utils/agents/CoachAgent";
+import CoachCreatorAgent from "../utils/agents/CoachCreatorAgent";
+import { useToast } from "../contexts/ToastContext";
 
 // Vesper coach data - static coach for coach creator
 const vesperCoachData = {
-  coach_id: 'vesper-coach-creator',
-  coach_name: 'Vesper_the_Coach_Creator',
-  name: 'Vesper',
-  avatar: 'V',
+  coach_id: "vesper-coach-creator",
+  coach_name: "Vesper_the_Coach_Creator",
+  name: "Vesper",
+  avatar: "V",
   metadata: {
-    title: 'Coach Creator Guide & Mentor',
-    description: 'Your guide through the coach creation process'
-  }
+    title: "Coach Creator Guide & Mentor",
+    description: "Your guide through the coach creation process",
+  },
 };
 
 const PlusIcon = () => (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+  <svg
+    className="w-4 h-4"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+    />
   </svg>
 );
 
@@ -65,20 +102,35 @@ const isNewTemplate = (createdDate) => {
   return templateDate >= threeMonthsAgo;
 };
 
+// Helper function to check if a coach is new (created within last 7 days)
+const isNewCoach = (createdDate) => {
+  if (!createdDate) return false;
+  const coachDate = new Date(createdDate);
+  if (isNaN(coachDate.getTime())) return false;
+
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  return coachDate >= sevenDaysAgo;
+};
+
 // Helper function to replace underscores with spaces and & with commas for display
 const formatDisplayText = (text) => {
   if (!text) return text;
-  return text.replace(/_/g, ' ').replace(/\s*&\s*/g, ', ');
+  return text.replace(/_/g, " ").replace(/\s*&\s*/g, ", ");
 };
 
 function Coaches() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const userId = searchParams.get('userId');
+  const userId = searchParams.get("userId");
   const toast = useToast();
 
   // Authorize that URL userId matches authenticated user
-  const { isValidating: isValidatingUserId, isValid: isValidUserId, error: userIdError } = useAuthorizeUser(userId);
+  const {
+    isValidating: isValidatingUserId,
+    isValid: isValidUserId,
+    error: userIdError,
+  } = useAuthorizeUser(userId);
   const agentRef = useRef(null);
 
   // Agent state (managed by CoachesAgent)
@@ -86,7 +138,7 @@ function Coaches() {
     coaches: [],
     isLoading: false,
     error: null,
-    inProgressCoach: null
+    inProgressCoach: null,
   });
 
   // In-progress sessions state (managed separately via CoachCreatorAgent)
@@ -127,23 +179,23 @@ function Coaches() {
   // Close menu when clicking outside or pressing Escape
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (openMenuId && !event.target.closest('.actions-menu-container')) {
+      if (openMenuId && !event.target.closest(".actions-menu-container")) {
         setOpenMenuId(null);
       }
     };
 
     const handleEscapeKey = (event) => {
-      if (event.key === 'Escape' && openMenuId) {
+      if (event.key === "Escape" && openMenuId) {
         setOpenMenuId(null);
       }
     };
 
     if (openMenuId) {
-      document.addEventListener('mousedown', handleClickOutside);
-      document.addEventListener('keydown', handleEscapeKey);
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("keydown", handleEscapeKey);
       return () => {
-        document.removeEventListener('mousedown', handleClickOutside);
-        document.removeEventListener('keydown', handleEscapeKey);
+        document.removeEventListener("mousedown", handleClickOutside);
+        document.removeEventListener("keydown", handleEscapeKey);
       };
     }
   }, [openMenuId]);
@@ -151,7 +203,7 @@ function Coaches() {
   // Close delete modal on Escape key and cancel inline edit
   useEffect(() => {
     const handleEscapeKey = (event) => {
-      if (event.key === 'Escape') {
+      if (event.key === "Escape") {
         // Cancel inline edit if active
         if (editingCoachId) {
           setEditingCoachId(null);
@@ -168,10 +220,16 @@ function Coaches() {
     };
 
     if (showDeleteModal || showDeleteCoachModal || editingCoachId) {
-      document.addEventListener('keydown', handleEscapeKey);
-      return () => document.removeEventListener('keydown', handleEscapeKey);
+      document.addEventListener("keydown", handleEscapeKey);
+      return () => document.removeEventListener("keydown", handleEscapeKey);
     }
-  }, [showDeleteModal, showDeleteCoachModal, isDeleting, isDeletingCoach, editingCoachId]);
+  }, [
+    showDeleteModal,
+    showDeleteCoachModal,
+    isDeleting,
+    isDeletingCoach,
+    editingCoachId,
+  ]);
 
   // Load in-progress sessions and check for building/failed coaches
   const loadInProgressSessions = async () => {
@@ -180,24 +238,30 @@ function Coaches() {
     setSessionsLoading(true);
     try {
       // Get incomplete sessions (still answering questions)
-      const incompleteSessions = await CoachCreatorAgent.getInProgressSessions(userId);
+      const incompleteSessions =
+        await CoachCreatorAgent.getInProgressSessions(userId);
 
       // Get completed sessions (to check for building/failed status)
-      const completedSessions = await CoachCreatorAgent.getCompletedSessions(userId);
+      const completedSessions =
+        await CoachCreatorAgent.getCompletedSessions(userId);
 
       // Filter for sessions that are building or failed
-      const buildingOrFailedSessions = completedSessions.filter(session =>
-        session.configGeneration?.status === 'IN_PROGRESS' ||
-        session.configGeneration?.status === 'FAILED'
+      const buildingOrFailedSessions = completedSessions.filter(
+        (session) =>
+          session.configGeneration?.status === "IN_PROGRESS" ||
+          session.configGeneration?.status === "FAILED",
       );
 
       // Combine all sessions for display
-      const allActiveSessions = [...incompleteSessions, ...buildingOrFailedSessions];
+      const allActiveSessions = [
+        ...incompleteSessions,
+        ...buildingOrFailedSessions,
+      ];
       setInProgressSessions(allActiveSessions);
 
       // If there's a building session, set up polling and in-progress coach card
       const buildingSession = buildingOrFailedSessions.find(
-        session => session.configGeneration?.status === 'IN_PROGRESS'
+        (session) => session.configGeneration?.status === "IN_PROGRESS",
       );
 
       if (buildingSession) {
@@ -205,10 +269,12 @@ function Coaches() {
         agentRef.current?._updateState({
           inProgressCoach: {
             sessionId: buildingSession.sessionId,
-            timestamp: new Date(buildingSession.lastActivity || buildingSession.completedAt).getTime(),
-            status: 'generating',
-            message: 'Generating AI Coach Configuration'
-          }
+            timestamp: new Date(
+              buildingSession.lastActivity || buildingSession.completedAt,
+            ).getTime(),
+            status: "generating",
+            message: "Generating AI Coach Configuration",
+          },
         });
 
         // Start polling for this session
@@ -218,7 +284,7 @@ function Coaches() {
       // Return the session ID that's currently building (if any) for tracking
       return buildingSession?.sessionId || null;
     } catch (error) {
-      console.error('Error loading in-progress sessions:', error);
+      console.error("Error loading in-progress sessions:", error);
       setInProgressSessions([]);
     } finally {
       setSessionsLoading(false);
@@ -244,13 +310,20 @@ function Coaches() {
 
     setIsDeleting(true);
     try {
-      await CoachCreatorAgent.deleteCoachCreatorSession(userId, sessionToDelete.sessionId);
+      await CoachCreatorAgent.deleteCoachCreatorSession(
+        userId,
+        sessionToDelete.sessionId,
+      );
       // Remove the deleted session from the local state
-      setInProgressSessions(prev => prev.filter(session => session.sessionId !== sessionToDelete.sessionId));
+      setInProgressSessions((prev) =>
+        prev.filter(
+          (session) => session.sessionId !== sessionToDelete.sessionId,
+        ),
+      );
       setShowDeleteModal(false);
       setSessionToDelete(null);
     } catch (error) {
-      console.error('Error deleting session:', error);
+      console.error("Error deleting session:", error);
       // Could show toast notification here
       setShowDeleteModal(false);
       setSessionToDelete(null);
@@ -273,25 +346,27 @@ function Coaches() {
     try {
       await agentRef.current?.createCoachFromSession(session.sessionId, userId);
       // Update the session status locally to show it's building again
-      setInProgressSessions(prev => prev.map(s =>
-        s.sessionId === session.sessionId
-          ? {
-              ...s,
-              configGeneration: {
-                status: 'IN_PROGRESS',
-                startedAt: new Date().toISOString()
-              },
-              lastActivity: new Date().toISOString()
-            }
-          : s
-      ));
-      toast.success('Coach build started successfully');
+      setInProgressSessions((prev) =>
+        prev.map((s) =>
+          s.sessionId === session.sessionId
+            ? {
+                ...s,
+                configGeneration: {
+                  status: "IN_PROGRESS",
+                  startedAt: new Date().toISOString(),
+                },
+                lastActivity: new Date().toISOString(),
+              }
+            : s,
+        ),
+      );
+      toast.success("Coach build started successfully");
     } catch (error) {
-      console.error('Error retrying coach config build:', error);
+      console.error("Error retrying coach config build:", error);
       // Clear the agent error state to prevent it from showing on the page
       agentRef.current?._updateState({ error: null });
       // Show toast instead
-      toast.error('Failed to retry build. Please try again.');
+      toast.error("Failed to retry build. Please try again.");
     } finally {
       setRetryingSessionId(null);
     }
@@ -308,23 +383,27 @@ function Coaches() {
           }
 
           // When a coach appears in the list, refresh in-progress sessions to remove completed ones
-          if (newState.coaches && newState.coaches.length > 0 && !newState.inProgressCoach) {
+          if (
+            newState.coaches &&
+            newState.coaches.length > 0 &&
+            !newState.inProgressCoach
+          ) {
             // Coach was just added and in-progress cleared - refresh sessions
             loadInProgressSessions();
           }
         },
         onNavigation: (type, data) => {
-          if (type === 'coach-creator') {
+          if (type === "coach-creator") {
             const newSearchParams = new URLSearchParams();
-            newSearchParams.set('userId', data.userId);
-            newSearchParams.set('coachCreatorSessionId', data.sessionId);
+            newSearchParams.set("userId", data.userId);
+            newSearchParams.set("coachCreatorSessionId", data.sessionId);
             navigate(`/coach-creator?${newSearchParams.toString()}`);
           }
         },
         onError: (error) => {
-          console.error('CoachAgent error:', error);
+          console.error("CoachAgent error:", error);
           // Could show toast notification here
-        }
+        },
       });
 
       // Initialize after the component is ready
@@ -345,8 +424,6 @@ function Coaches() {
       }
     };
   }, [userId]);
-
-
 
   const handleCreateCoach = async () => {
     if (!agentRef.current) return;
@@ -377,13 +454,16 @@ function Coaches() {
 
     setCreatingTemplateId(templateId);
     try {
-      const coachConfig = await agentRef.current.createCoachFromTemplate(templateId, userId);
+      const coachConfig = await agentRef.current.createCoachFromTemplate(
+        templateId,
+        userId,
+      );
 
       // Redirect to training grounds for the newly created coach
       if (coachConfig && coachConfig.coach_id) {
         const newSearchParams = new URLSearchParams();
-        newSearchParams.set('userId', userId);
-        newSearchParams.set('coachId', coachConfig.coach_id);
+        newSearchParams.set("userId", userId);
+        newSearchParams.set("coachId", coachConfig.coach_id);
         navigate(`/training-grounds?${newSearchParams.toString()}`);
       }
     } catch (error) {
@@ -408,17 +488,19 @@ function Coaches() {
       await agentRef.current.deleteCoach(userId, coachToDelete.coach_id);
 
       // Remove the deleted coach from local state
-      setAgentState(prev => ({
+      setAgentState((prev) => ({
         ...prev,
-        coaches: prev.coaches.filter(c => c.coach_id !== coachToDelete.coach_id)
+        coaches: prev.coaches.filter(
+          (c) => c.coach_id !== coachToDelete.coach_id,
+        ),
       }));
 
-      toast.success('Coach deleted successfully');
+      toast.success("Coach deleted successfully");
       setShowDeleteCoachModal(false);
       setCoachToDelete(null);
     } catch (error) {
-      console.error('Error deleting coach:', error);
-      toast.error('Failed to delete coach');
+      console.error("Error deleting coach:", error);
+      toast.error("Failed to delete coach");
     } finally {
       setIsDeletingCoach(false);
     }
@@ -514,7 +596,10 @@ function Coaches() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {[1, 2].map((i) => (
-                <div key={i} className={`${containerPatterns.dashedCardCyan} p-6 opacity-60`}>
+                <div
+                  key={i}
+                  className={`${containerPatterns.dashedCardCyan} p-6 opacity-60`}
+                >
                   <div className="flex items-start space-x-3 mb-4">
                     <div className="w-3 h-3 bg-synthwave-neon-cyan/30 rounded-full flex-shrink-0 mt-2"></div>
                     <div className="flex-1">
@@ -550,7 +635,10 @@ function Coaches() {
             {/* Template cards skeleton */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[1, 2, 3].map((i) => (
-                <div key={i} className={`${containerPatterns.templateCard} p-6 flex flex-col justify-between h-full min-h-[350px]`}>
+                <div
+                  key={i}
+                  className={`${containerPatterns.templateCard} p-6 flex flex-col justify-between h-full min-h-[350px]`}
+                >
                   <div className="flex-1">
                     <div className="flex items-start space-x-3 mb-3">
                       <div className="w-3 h-3 bg-synthwave-text-muted/20 rounded-full flex-shrink-0 mt-2"></div>
@@ -581,12 +669,16 @@ function Coaches() {
 
   // Show access denied if user authorization failed
   if (userIdError || !isValidUserId) {
-    return <AccessDenied message={userIdError || "You can only access your own coaches."} />;
+    return (
+      <AccessDenied
+        message={userIdError || "You can only access your own coaches."}
+      />
+    );
   }
 
   // Redirect to home if no userId
   if (!userId) {
-    navigate('/', { replace: true });
+    navigate("/", { replace: true });
     return null;
   }
 
@@ -621,7 +713,9 @@ function Coaches() {
 
           {/* Right section: Command Palette Button */}
           <div className="flex items-center gap-3">
-            <CommandPaletteButton onClick={() => setIsCommandPaletteOpen(true)} />
+            <CommandPaletteButton
+              onClick={() => setIsCommandPaletteOpen(true)}
+            />
           </div>
         </header>
 
@@ -640,283 +734,411 @@ function Coaches() {
 
         {/* Coaches Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 auto-rows-fr animate-fadeIn">
-            {/* Add New Coach Card */}
-            <div
-              onClick={isCreatingCustomCoach ? undefined : handleCreateCoach}
-              className={`${containerPatterns.dashedCard} group ${
-                isCreatingCustomCoach
-                  ? 'opacity-75 cursor-not-allowed'
-                  : 'cursor-pointer'
-              }`}
-            >
-              <div className="text-center h-full flex flex-col justify-between min-h-[400px]">
-                {/* Top Section */}
-                <div className="flex-1 flex flex-col justify-center items-center">
-                  {/* Plus Icon or Spinner */}
-                  <div className="text-synthwave-neon-pink/40 group-hover:text-synthwave-neon-pink/80 transition-colors duration-300 mb-4">
-                    {isCreatingCustomCoach ? (
-                      <div className="w-12 h-12 border-4 border-current border-t-transparent rounded-full animate-spin"></div>
-                    ) : (
-                      <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                      </svg>
-                    )}
-                  </div>
-
-                  {/* Title */}
-                  <h3 className="font-russo font-bold text-synthwave-neon-pink/60 group-hover:text-synthwave-neon-pink text-lg uppercase mb-3 transition-colors duration-300">
-                    {isCreatingCustomCoach ? 'Creating Coach...' : 'Create Custom Coach'}
-                  </h3>
-
-                  {/* Description */}
-                  <p className="font-rajdhani text-synthwave-text-secondary/60 group-hover:text-synthwave-text-secondary text-sm transition-colors duration-300 text-center mb-4 max-w-xs mx-auto">
-                    {isCreatingCustomCoach
-                      ? 'Setting up your personalized coach'
-                      : 'Design your perfect coach through our guided process'
-                    }
-                  </p>
-
-                  {/* Time Estimate */}
-                  {!isCreatingCustomCoach && (
-                    <div className="bg-synthwave-neon-pink/10 border border-synthwave-neon-pink/30 rounded-lg px-3 py-1 mb-4">
-                      <p className="font-rajdhani text-synthwave-neon-pink text-xs font-semibold">
-                        Takes 25-30 minutes
-                      </p>
-                    </div>
+          {/* Add New Coach Card */}
+          <div
+            onClick={isCreatingCustomCoach ? undefined : handleCreateCoach}
+            className={`${containerPatterns.dashedCard} group ${
+              isCreatingCustomCoach
+                ? "opacity-75 cursor-not-allowed"
+                : "cursor-pointer"
+            }`}
+          >
+            <div className="text-center h-full flex flex-col justify-between min-h-[400px]">
+              {/* Top Section */}
+              <div className="flex-1 flex flex-col justify-center items-center">
+                {/* Plus Icon or Spinner */}
+                <div className="text-synthwave-neon-pink/40 group-hover:text-synthwave-neon-pink/80 transition-colors duration-300 mb-4">
+                  {isCreatingCustomCoach ? (
+                    <div className="w-12 h-12 border-4 border-current border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    <svg
+                      className="w-12 h-12"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.5}
+                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                      />
+                    </svg>
                   )}
                 </div>
 
-                {/* Bottom Features - Only show when not creating */}
+                {/* Title */}
+                <h3 className="font-russo font-bold text-synthwave-neon-pink/60 group-hover:text-synthwave-neon-pink text-lg uppercase mb-3 transition-colors duration-300">
+                  {isCreatingCustomCoach
+                    ? "Creating Coach..."
+                    : "Create Custom Coach"}
+                </h3>
+
+                {/* Description */}
+                <p className="font-rajdhani text-synthwave-text-secondary/60 group-hover:text-synthwave-text-secondary text-sm transition-colors duration-300 text-center mb-4 max-w-xs mx-auto">
+                  {isCreatingCustomCoach
+                    ? "Setting up your personalized coach"
+                    : "Design your perfect coach through our guided process"}
+                </p>
+
+                {/* Time Estimate */}
                 {!isCreatingCustomCoach && (
-                  <div className="border-t border-synthwave-neon-pink/20 pt-3 mt-3 pb-4">
-                    <div className="grid grid-cols-1 gap-2">
-                      <div className="flex items-center justify-center space-x-2 text-synthwave-text-secondary/60 group-hover:text-synthwave-text-secondary transition-colors duration-300">
-                        <svg className="w-3 h-3 text-synthwave-neon-pink" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                        <span className="font-rajdhani text-sm">Methodology Intelligence</span>
-                      </div>
-                      <div className="flex items-center justify-center space-x-2 text-synthwave-text-secondary/60 group-hover:text-synthwave-text-secondary transition-colors duration-300">
-                        <svg className="w-3 h-3 text-synthwave-neon-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                        <span className="font-rajdhani text-sm">Predictive Intelligence</span>
-                      </div>
-                      <div className="flex items-center justify-center space-x-2 text-synthwave-text-secondary/60 group-hover:text-synthwave-text-secondary transition-colors duration-300">
-                        <svg className="w-3 h-3 text-synthwave-neon-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                        <span className="font-rajdhani text-sm">Movement & Mental Coaching</span>
-                      </div>
-                    </div>
+                  <div className="bg-synthwave-neon-pink/10 border border-synthwave-neon-pink/30 rounded-lg px-3 py-1 mb-4">
+                    <p className="font-rajdhani text-synthwave-neon-pink text-xs font-semibold">
+                      Takes 25-30 minutes
+                    </p>
                   </div>
                 )}
               </div>
+
+              {/* Bottom Features - Only show when not creating */}
+              {!isCreatingCustomCoach && (
+                <div className="border-t border-synthwave-neon-pink/20 pt-3 mt-3 pb-4">
+                  <div className="grid grid-cols-1 gap-2">
+                    <div className="flex items-center justify-center space-x-2 text-synthwave-text-secondary/60 group-hover:text-synthwave-text-secondary transition-colors duration-300">
+                      <svg
+                        className="w-3 h-3 text-synthwave-neon-pink"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                      <span className="font-rajdhani text-sm">
+                        Methodology Intelligence
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-center space-x-2 text-synthwave-text-secondary/60 group-hover:text-synthwave-text-secondary transition-colors duration-300">
+                      <svg
+                        className="w-3 h-3 text-synthwave-neon-cyan"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                      <span className="font-rajdhani text-sm">
+                        Predictive Intelligence
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-center space-x-2 text-synthwave-text-secondary/60 group-hover:text-synthwave-text-secondary transition-colors duration-300">
+                      <svg
+                        className="w-3 h-3 text-synthwave-neon-purple"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                      <span className="font-rajdhani text-sm">
+                        Movement & Mental Coaching
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
+          </div>
 
-            {/* Note: In-progress coach building status is now shown directly on the coach creator session cards below */}
+          {/* Note: In-progress coach building status is now shown directly on the coach creator session cards below */}
 
-            {/* Existing Coaches */}
-            {agentState.coaches && agentState.coaches.map((coach) => (
-              <div
-                key={coach.coach_id}
-                className={`${containerPatterns.cardMedium} p-6 flex flex-col justify-between h-full relative`}
-              >
-                {/* Actions Menu - Hide when editing */}
-                {editingCoachId !== coach.coach_id && (
-                  <div className="absolute top-3 right-3 z-10 actions-menu-container">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setOpenMenuId(openMenuId === coach.coach_id ? null : coach.coach_id);
-                      }}
-                      className={`p-2 rounded-lg transition-colors duration-200 focus:outline-none active:outline-none focus:ring-1 focus:ring-synthwave-neon-cyan/50 ${
-                        openMenuId === coach.coach_id
-                          ? 'text-synthwave-neon-cyan bg-synthwave-bg-primary/50 ring-1 ring-synthwave-neon-cyan/50'
-                          : 'text-synthwave-text-muted hover:text-synthwave-neon-cyan hover:bg-synthwave-bg-primary/50'
-                      }`}
-                      style={{ WebKitTapHighlightColor: 'transparent' }}
-                      aria-label="More actions"
-                      data-tooltip-id={`coach-actions-${coach.coach_id}`}
-                      data-tooltip-content="More actions"
-                    >
-                      <EllipsisVerticalIcon />
-                    </button>
+          {/* Existing Coaches */}
+          {agentState.coaches &&
+            agentState.coaches.map((coach) => {
+              const isNew = isNewCoach(coach.metadata?.created_date);
 
-                    {/* Dropdown Menu */}
-                    {openMenuId === coach.coach_id && (
-                      <div className="absolute right-0 mt-2 w-44 bg-synthwave-bg-card border border-synthwave-neon-cyan/20 rounded-lg shadow-[4px_4px_16px_rgba(0,255,255,0.06)] overflow-hidden z-20">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setEditingCoachId(coach.coach_id);
-                            setOpenMenuId(null);
-                          }}
-                          className="w-full pl-4 pr-3 py-2 text-left flex items-center space-x-2 text-synthwave-text-secondary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-200"
-                        >
-                          <EditIcon />
-                          <span className="font-rajdhani font-medium text-sm">Rename Coach</span>
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteCoachClick(coach);
-                            setOpenMenuId(null);
-                          }}
-                          className="w-full pl-4 pr-3 py-2 text-left flex items-center space-x-2 text-synthwave-text-secondary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-200"
-                        >
-                          <div className="w-4 h-4 flex items-center justify-center">
-                            <TrashIcon />
-                          </div>
-                          <span className="font-rajdhani font-medium text-sm">Delete Coach</span>
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                <div className="flex-1">
-                  {/* Coach Name - Either editable or static */}
-                  <div className="flex items-start space-x-3 mb-2">
-                    <div className="w-3 h-3 bg-synthwave-neon-cyan rounded-full flex-shrink-0 mt-2"></div>
-                    {editingCoachId === coach.coach_id ? (
-                      <InlineEditField
-                        value={agentRef.current?.formatCoachName(coach.coach_name)}
-                        onSave={async (newName) => {
-                          if (!newName || !newName.trim()) {
-                            throw new Error('Coach name cannot be empty');
-                          }
-                          await agentRef.current?.updateCoachConfig(userId, coach.coach_id, {
-                            coach_name: newName.trim()
-                          });
-                          // Update local state directly instead of full refresh
-                          setAgentState(prevState => ({
-                            ...prevState,
-                            coaches: prevState.coaches.map(c =>
-                              c.coach_id === coach.coach_id
-                                ? { ...c, coach_name: newName.trim() }
-                                : c
-                            )
-                          }));
-                          setEditingCoachId(null);
-                          toast.success('Coach name updated successfully');
+              return (
+                <div
+                  key={coach.coach_id}
+                  className={`${containerPatterns.cardMedium} p-6 flex flex-col justify-between h-full relative`}
+                >
+                  {/* Actions Menu - Hide when editing */}
+                  {editingCoachId !== coach.coach_id && (
+                    <div className="absolute top-3 right-3 z-10 actions-menu-container">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenMenuId(
+                            openMenuId === coach.coach_id
+                              ? null
+                              : coach.coach_id,
+                          );
                         }}
-                        onCancel={() => {
-                          setEditingCoachId(null);
-                        }}
-                        placeholder="Coach name..."
-                        maxLength={50}
-                        size="large"
-                        displayClassName="font-russo font-bold text-white text-xl uppercase"
-                        tooltipPrefix={`coach-${coach.coach_id}`}
-                        onError={(error) => {
-                          setEditingCoachId(null);
-                          toast.error(error.message || 'Failed to update coach name');
-                        }}
-                        startInEditMode={true}
-                      />
-                    ) : (
-                      <h3 className="font-russo font-bold text-white text-xl uppercase">
-                        {agentRef.current?.formatCoachName(coach.coach_name)}
-                      </h3>
-                    )}
-                  </div>
+                        className={`p-2 rounded-lg transition-colors duration-200 focus:outline-none active:outline-none focus:ring-1 focus:ring-synthwave-neon-cyan/50 ${
+                          openMenuId === coach.coach_id
+                            ? "text-synthwave-neon-cyan bg-synthwave-bg-primary/50 ring-1 ring-synthwave-neon-cyan/50"
+                            : "text-synthwave-text-muted hover:text-synthwave-neon-cyan hover:bg-synthwave-bg-primary/50"
+                        }`}
+                        style={{ WebKitTapHighlightColor: "transparent" }}
+                        aria-label="More actions"
+                        data-tooltip-id={`coach-actions-${coach.coach_id}`}
+                        data-tooltip-content="More actions"
+                      >
+                        <EllipsisVerticalIcon />
+                      </button>
 
-                  {/* Coach Description - Tagline */}
-                  {agentRef.current?.getCoachDescription(coach) && (
-                    <div className="ml-6 mb-4">
-                      <p className="font-rajdhani text-synthwave-neon-cyan text-sm italic">
-                        {agentRef.current?.getCoachDescription(coach)}
-                      </p>
+                      {/* Dropdown Menu */}
+                      {openMenuId === coach.coach_id && (
+                        <div className="absolute right-0 mt-2 w-44 bg-synthwave-bg-card border border-synthwave-neon-cyan/20 rounded-lg shadow-[4px_4px_16px_rgba(0,255,255,0.06)] overflow-hidden z-20">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingCoachId(coach.coach_id);
+                              setOpenMenuId(null);
+                            }}
+                            className="w-full pl-4 pr-3 py-2 text-left flex items-center space-x-2 text-synthwave-text-secondary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-200"
+                          >
+                            <EditIcon />
+                            <span className="font-rajdhani font-medium text-sm">
+                              Rename Coach
+                            </span>
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteCoachClick(coach);
+                              setOpenMenuId(null);
+                            }}
+                            className="w-full pl-4 pr-3 py-2 text-left flex items-center space-x-2 text-synthwave-text-secondary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-200"
+                          >
+                            <div className="w-4 h-4 flex items-center justify-center">
+                              <TrashIcon />
+                            </div>
+                            <span className="font-rajdhani font-medium text-sm">
+                              Delete Coach
+                            </span>
+                          </button>
+                        </div>
+                      )}
                     </div>
                   )}
 
-                  {/* Coach Details */}
-                  <div className="space-y-3">
-                    {/* Experience Level & Training Frequency */}
-                    <div className="flex items-center space-x-2 text-synthwave-text-secondary">
-                      <TargetIcon />
-                      <span className="font-rajdhani text-sm">
-                        {formatDisplayText(agentRef.current?.getExperienceLevelDisplay(coach.technical_config?.experience_level)) || 'General'} Level
-                        {agentRef.current?.getTrainingFrequencyDisplay(coach) && (
-                          <> • {agentRef.current?.getTrainingFrequencyDisplay(coach)}</>
-                        )}
-                      </span>
+                  {/* New Badge - placed after actions menu to appear on top in stacking order */}
+                  {isNew && <NewBadge />}
+
+                  <div className="flex-1">
+                    {/* Coach Name - Either editable or static */}
+                    <div className="flex items-start space-x-3 mb-2">
+                      <div className="w-3 h-3 bg-synthwave-neon-cyan rounded-full flex-shrink-0 mt-2"></div>
+                      {editingCoachId === coach.coach_id ? (
+                        <InlineEditField
+                          value={agentRef.current?.formatCoachName(
+                            coach.coach_name,
+                          )}
+                          onSave={async (newName) => {
+                            if (!newName || !newName.trim()) {
+                              throw new Error("Coach name cannot be empty");
+                            }
+                            await agentRef.current?.updateCoachConfig(
+                              userId,
+                              coach.coach_id,
+                              {
+                                coach_name: newName.trim(),
+                              },
+                            );
+                            // Update local state directly instead of full refresh
+                            setAgentState((prevState) => ({
+                              ...prevState,
+                              coaches: prevState.coaches.map((c) =>
+                                c.coach_id === coach.coach_id
+                                  ? { ...c, coach_name: newName.trim() }
+                                  : c,
+                              ),
+                            }));
+                            setEditingCoachId(null);
+                            toast.success("Coach name updated successfully");
+                          }}
+                          onCancel={() => {
+                            setEditingCoachId(null);
+                          }}
+                          placeholder="Coach name..."
+                          maxLength={50}
+                          size="large"
+                          displayClassName="font-russo font-bold text-white text-xl uppercase"
+                          tooltipPrefix={`coach-${coach.coach_id}`}
+                          onError={(error) => {
+                            setEditingCoachId(null);
+                            toast.error(
+                              error.message || "Failed to update coach name",
+                            );
+                          }}
+                          startInEditMode={true}
+                        />
+                      ) : (
+                        <h3 className="font-russo font-bold text-white text-xl uppercase">
+                          {agentRef.current?.formatCoachName(coach.coach_name)}
+                        </h3>
+                      )}
                     </div>
 
-                    {/* Focus Areas */}
-                    <div className="flex items-start space-x-2 text-synthwave-text-secondary">
-                      <div className="mt-0.5">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-rajdhani text-xs font-semibold text-synthwave-neon-cyan uppercase tracking-wide mb-1">
-                          Focus Areas
-                        </p>
-                        <p className="font-rajdhani text-sm leading-relaxed">
-                          {agentRef.current?.getMethodologyFocusDisplay(coach, 6)}
+                    {/* Coach Description - Tagline */}
+                    {agentRef.current?.getCoachDescription(coach) && (
+                      <div className="ml-6 mb-4">
+                        <p className="font-rajdhani text-synthwave-neon-cyan text-sm italic">
+                          {agentRef.current?.getCoachDescription(coach)}
                         </p>
                       </div>
-                    </div>
+                    )}
 
-                    {/* Coaching Style */}
-                    {agentRef.current?.getMethodologyPreferencesDisplay(coach) && (
+                    {/* Coach Details */}
+                    <div className="space-y-3">
+                      {/* Experience Level & Training Frequency */}
+                      <div className="flex items-center space-x-2 text-synthwave-text-secondary">
+                        <TargetIcon />
+                        <span className="font-rajdhani text-sm">
+                          {formatDisplayText(
+                            agentRef.current?.getExperienceLevelDisplay(
+                              coach.technical_config?.experience_level,
+                            ),
+                          ) || "General"}{" "}
+                          Level
+                          {agentRef.current?.getTrainingFrequencyDisplay(
+                            coach,
+                          ) && (
+                            <>
+                              {" "}
+                              •{" "}
+                              {agentRef.current?.getTrainingFrequencyDisplay(
+                                coach,
+                              )}
+                            </>
+                          )}
+                        </span>
+                      </div>
+
+                      {/* Focus Areas */}
                       <div className="flex items-start space-x-2 text-synthwave-text-secondary">
                         <div className="mt-0.5">
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                          <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
                           </svg>
                         </div>
                         <div className="flex-1">
                           <p className="font-rajdhani text-xs font-semibold text-synthwave-neon-cyan uppercase tracking-wide mb-1">
-                            Coaching Style
+                            Focus Areas
                           </p>
                           <p className="font-rajdhani text-sm leading-relaxed">
-                            {agentRef.current?.getMethodologyPreferencesDisplay(coach, 8)}
+                            {agentRef.current?.getMethodologyFocusDisplay(
+                              coach,
+                              6,
+                            )}
                           </p>
                         </div>
                       </div>
-                    )}
 
-                    {/* Conversations Count */}
-                    <div className="flex items-center space-x-2 text-synthwave-text-secondary pt-2 border-t border-synthwave-text-muted/20">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                      </svg>
-                      <span className="font-rajdhani text-sm">
-                        {coach.metadata?.total_conversations || 0} conversations
-                      </span>
-                    </div>
+                      {/* Coaching Style */}
+                      {agentRef.current?.getMethodologyPreferencesDisplay(
+                        coach,
+                      ) && (
+                        <div className="flex items-start space-x-2 text-synthwave-text-secondary">
+                          <div className="mt-0.5">
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                              />
+                            </svg>
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-rajdhani text-xs font-semibold text-synthwave-neon-cyan uppercase tracking-wide mb-1">
+                              Coaching Style
+                            </p>
+                            <p className="font-rajdhani text-sm leading-relaxed">
+                              {agentRef.current?.getMethodologyPreferencesDisplay(
+                                coach,
+                                8,
+                              )}
+                            </p>
+                          </div>
+                        </div>
+                      )}
 
-                    {/* Created Date */}
-                    <div className="flex items-center space-x-2 text-synthwave-text-muted">
-                      <CalendarIcon />
-                      <span className="font-rajdhani text-xs">
-                        Created {agentRef.current?.formatDate(coach.metadata?.created_date)}
-                      </span>
+                      {/* Conversations Count */}
+                      <div className="flex items-center space-x-2 text-synthwave-text-secondary pt-2 border-t border-synthwave-text-muted/20">
+                        <svg
+                          className="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                          />
+                        </svg>
+                        <span className="font-rajdhani text-sm">
+                          {coach.metadata?.total_conversations || 0}{" "}
+                          conversations
+                        </span>
+                      </div>
+
+                      {/* Created Date */}
+                      <div className="flex items-center space-x-2 text-synthwave-text-muted">
+                        <CalendarIcon />
+                        <span className="font-rajdhani text-xs">
+                          Created{" "}
+                          {agentRef.current?.formatDate(
+                            coach.metadata?.created_date,
+                          )}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Action Button */}
-                <div className="mt-6">
-                  <button
-                    onClick={() => {
-                      const newSearchParams = new URLSearchParams();
-                      newSearchParams.set('userId', userId);
-                      newSearchParams.set('coachId', coach.coach_id);
-                      navigate(`/training-grounds?${newSearchParams.toString()}`);
-                    }}
-                    className={`${buttonPatterns.secondaryMedium} w-full space-x-2`}
-                  >
-                    <HomeIcon />
-                    <span>Enter Training Grounds</span>
-                  </button>
+                  {/* Action Button */}
+                  <div className="mt-6">
+                    <button
+                      onClick={() => {
+                        const newSearchParams = new URLSearchParams();
+                        newSearchParams.set("userId", userId);
+                        newSearchParams.set("coachId", coach.coach_id);
+                        navigate(
+                          `/training-grounds?${newSearchParams.toString()}`,
+                        );
+                      }}
+                      className={`${buttonPatterns.secondaryMedium} w-full space-x-2`}
+                    >
+                      <HomeIcon />
+                      <span>Enter Training Grounds</span>
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
         </div>
 
         {/* In-Progress Coach Creator Sessions */}
@@ -927,15 +1149,17 @@ function Coaches() {
                 Your In-Progress Coaches
               </h2>
               <p className="font-rajdhani text-lg text-synthwave-text-secondary max-w-2xl mx-auto leading-relaxed">
-                Great progress! You're building something amazing and personal. Pick up where you left off and bring your perfect coach to life.
+                Great progress! You're building something amazing and personal.
+                Pick up where you left off and bring your perfect coach to life.
               </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 auto-rows-fr">
               {inProgressSessions.map((session) => {
                 // Determine session status and styling
-                const isBuilding = session.configGeneration?.status === 'IN_PROGRESS';
-                const isFailed = session.configGeneration?.status === 'FAILED';
+                const isBuilding =
+                  session.configGeneration?.status === "IN_PROGRESS";
+                const isFailed = session.configGeneration?.status === "FAILED";
                 const isIncomplete = !session.isComplete;
 
                 // Get card styling based on status - all driven by uiPatterns.js for consistency
@@ -943,18 +1167,18 @@ function Coaches() {
                 if (isFailed) {
                   // Failed state: Pink theme with bold borders for emphasis
                   cardClass = `${containerPatterns.dashedCardPinkBold} p-6 group`;
-                  dotColor = 'bg-synthwave-neon-pink';
-                  statusColor = 'text-synthwave-neon-pink';
+                  dotColor = "bg-synthwave-neon-pink";
+                  statusColor = "text-synthwave-neon-pink";
                 } else if (isBuilding) {
                   // Building state: Cyan theme for in-progress indication
                   cardClass = `${containerPatterns.dashedCardCyan} p-6`;
-                  dotColor = 'bg-synthwave-neon-cyan';
-                  statusColor = 'text-synthwave-neon-cyan';
+                  dotColor = "bg-synthwave-neon-cyan";
+                  statusColor = "text-synthwave-neon-cyan";
                 } else {
                   // Incomplete state: Cyan theme with full interactivity
                   cardClass = `${containerPatterns.dashedCardCyan} p-6 group cursor-pointer`;
-                  dotColor = 'bg-synthwave-neon-cyan';
-                  statusColor = 'text-synthwave-neon-cyan';
+                  dotColor = "bg-synthwave-neon-cyan";
+                  statusColor = "text-synthwave-neon-cyan";
                 }
 
                 return (
@@ -964,16 +1188,23 @@ function Coaches() {
                       // Only allow clicking for incomplete sessions
                       if (isIncomplete && !isBuilding && !isFailed) {
                         const newSearchParams = new URLSearchParams();
-                        newSearchParams.set('userId', userId);
-                        newSearchParams.set('coachCreatorSessionId', session.sessionId);
-                        navigate(`/coach-creator?${newSearchParams.toString()}`);
+                        newSearchParams.set("userId", userId);
+                        newSearchParams.set(
+                          "coachCreatorSessionId",
+                          session.sessionId,
+                        );
+                        navigate(
+                          `/coach-creator?${newSearchParams.toString()}`,
+                        );
                       }
                     }}
                     className={cardClass}
                   >
                     {/* Session Header */}
                     <div className="flex items-start space-x-3 mb-4">
-                      <div className={`w-3 h-3 ${dotColor} rounded-full flex-shrink-0 mt-2`}></div>
+                      <div
+                        className={`w-3 h-3 ${dotColor} rounded-full flex-shrink-0 mt-2`}
+                      ></div>
                       <div className="flex-1">
                         <h3 className="font-russo font-bold text-white text-lg uppercase">
                           Coach Creator Session
@@ -984,22 +1215,58 @@ function Coaches() {
                     {/* Session Details */}
                     <div className="space-y-3 mb-2">
                       {/* Status - matches format of other metadata fields */}
-                      <div className={`flex items-center space-x-2 ${statusColor}`}>
+                      <div
+                        className={`flex items-center space-x-2 ${statusColor}`}
+                      >
                         {isFailed ? (
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
                           </svg>
                         ) : isBuilding ? (
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                          <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"
+                            />
                           </svg>
                         ) : (
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                            />
                           </svg>
                         )}
                         <span className="font-rajdhani text-sm font-medium">
-                          {isFailed ? 'Build Failed' : isBuilding ? 'Building Coach' : 'Answering Questions'}
+                          {isFailed
+                            ? "Build Failed"
+                            : isBuilding
+                              ? "Building Coach"
+                              : "Answering Questions"}
                         </span>
                         {/* Small cyan spinner for building status */}
                         {isBuilding && (
@@ -1010,23 +1277,45 @@ function Coaches() {
                       <div className="flex items-center space-x-2 text-synthwave-text-secondary">
                         <CalendarIcon />
                         <span className="font-rajdhani text-sm">
-                          Started {agentRef.current?.formatDate(session.startedAt)}
+                          Started{" "}
+                          {agentRef.current?.formatDate(session.startedAt)}
                         </span>
                       </div>
 
                       <div className="flex items-center space-x-2 text-synthwave-text-secondary">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <svg
+                          className="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
                         </svg>
                         <span className="font-rajdhani text-sm">
-                          Last activity {agentRef.current?.formatDate(session.lastActivity)}
+                          Last activity{" "}
+                          {agentRef.current?.formatDate(session.lastActivity)}
                         </span>
                       </div>
 
                       {session.questionsCompleted && (
                         <div className="flex items-center space-x-2 text-synthwave-neon-cyan">
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          <svg
+                            className="w-5 h-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
                           </svg>
                           <span className="font-rajdhani text-sm font-medium">
                             {session.questionsCompleted} questions answered
@@ -1073,14 +1362,23 @@ function Coaches() {
                             className="flex items-center space-x-2 bg-transparent border-none text-synthwave-neon-cyan px-2 py-1 hover:text-white hover:bg-synthwave-neon-cyan/10 rounded-lg transition-all duration-200 font-rajdhani font-medium uppercase tracking-wide hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             <svg
-                              className={`w-4 h-4 ${retryingSessionId === session.sessionId ? 'animate-spin-ccw' : ''}`}
+                              className={`w-4 h-4 ${retryingSessionId === session.sessionId ? "animate-spin-ccw" : ""}`}
                               fill="none"
                               stroke="currentColor"
                               viewBox="0 0 24 24"
                             >
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                              />
                             </svg>
-                            <span>{retryingSessionId === session.sessionId ? 'Retrying...' : 'Retry Build'}</span>
+                            <span>
+                              {retryingSessionId === session.sessionId
+                                ? "Retrying..."
+                                : "Retry Build"}
+                            </span>
                           </button>
                           <button
                             onClick={(e) => {
@@ -1112,7 +1410,9 @@ function Coaches() {
           <div className="text-center mb-12">
             <div className="flex items-center justify-center mb-6">
               <div className="flex-1 h-px bg-gradient-to-r from-transparent to-synthwave-neon-cyan/30"></div>
-              <span className="font-russo text-synthwave-neon-cyan text-lg uppercase mx-6 tracking-wider">OR</span>
+              <span className="font-russo text-synthwave-neon-cyan text-lg uppercase mx-6 tracking-wider">
+                OR
+              </span>
               <div className="flex-1 h-px bg-gradient-to-l from-transparent to-synthwave-neon-cyan/30"></div>
             </div>
 
@@ -1120,7 +1420,9 @@ function Coaches() {
               Start Fast with Templates
             </h2>
             <p className="font-rajdhani text-lg text-synthwave-text-secondary max-w-2xl mx-auto leading-relaxed">
-              Need to get going quickly? Choose from pre-configured coaches designed for specific goals and experience levels. You can always customize them later.
+              Need to get going quickly? Choose from pre-configured coaches
+              designed for specific goals and experience levels. You can always
+              customize them later.
             </p>
           </div>
 
@@ -1137,100 +1439,124 @@ function Coaches() {
           {/* Templates Error State */}
           {agentState.templatesError && !agentState.templatesLoading && (
             <div className="text-center text-synthwave-neon-pink mb-8">
-              <p className="font-rajdhani text-lg">{agentState.templatesError}</p>
+              <p className="font-rajdhani text-lg">
+                {agentState.templatesError}
+              </p>
             </div>
           )}
 
           {/* Templates Grid */}
-          {!agentState.templatesLoading && agentState.templates && agentState.templates.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-fr">
-              {agentState.templates.map((template) => (
-                <div
-                  key={template.template_id}
-                  onClick={() => {
-                    if (userId && creatingTemplateId !== template.template_id) {
-                      handleCreateFromTemplate(template.template_id);
-                    }
-                  }}
-                  className={`${containerPatterns.templateCard} p-6 relative flex flex-col justify-between h-full ${
-                    userId && creatingTemplateId !== template.template_id ? 'cursor-pointer' : creatingTemplateId === template.template_id ? 'cursor-wait' : 'cursor-not-allowed'
-                  }`}
-                >
-                  <div className="flex-1">
-                    {/* New Badge */}
-                    {isNewTemplate(template.metadata?.created_date) && <NewBadge />}
-
-                    {/* Template Name */}
-                    <div className="flex items-start space-x-3 mb-3">
-                      <div className="w-3 h-3 bg-synthwave-neon-pink rounded-full flex-shrink-0 mt-2"></div>
-                      <h3 className="font-russo font-bold text-white text-lg uppercase">
-                        {template.template_name}
-                      </h3>
-                    </div>
-
-                    {/* Template Description */}
-                    <p className="font-rajdhani text-synthwave-text-secondary text-sm mb-4 leading-relaxed">
-                      {template.description}
-                    </p>
-
-                    {/* Template Details */}
-                    <div className="space-y-2 mb-6">
-                      {/* Target Audience */}
-                      <div className="flex items-center space-x-2 text-synthwave-text-secondary">
-                        <TargetIcon />
-                        <span className="font-rajdhani text-xs">
-                          {agentRef.current?.getTemplateAudienceDisplay(template.target_audience)}
-                        </span>
-                      </div>
-
-                      {/* Popularity */}
-                      <div className="flex items-center space-x-2 text-synthwave-text-secondary">
-                        <SparkleIcon />
-                        <span className="font-rajdhani text-xs">
-                          {template.metadata.popularity_score || 0} users
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Action Button */}
-                  <div className="text-center">
-                    <div
-                      className={`w-full space-x-2 ${userId
-                          ? creatingTemplateId === template.template_id
-                            ? buttonPatterns.primaryMediumLoading
-                            : buttonPatterns.primaryMedium
-                          : buttonPatterns.primaryMediumDisabled
-                        }`}
-                      tabIndex={userId && creatingTemplateId !== template.template_id ? 0 : -1}
-                      role="button"
-                    >
-                      {creatingTemplateId === template.template_id ? (
-                        <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
-                      ) : (
-                        userId && <PlusIcon />
+          {!agentState.templatesLoading &&
+            agentState.templates &&
+            agentState.templates.length > 0 && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-fr">
+                {agentState.templates.map((template) => (
+                  <div
+                    key={template.template_id}
+                    onClick={() => {
+                      if (
+                        userId &&
+                        creatingTemplateId !== template.template_id
+                      ) {
+                        handleCreateFromTemplate(template.template_id);
+                      }
+                    }}
+                    className={`${containerPatterns.templateCard} p-6 relative flex flex-col justify-between h-full ${
+                      userId && creatingTemplateId !== template.template_id
+                        ? "cursor-pointer"
+                        : creatingTemplateId === template.template_id
+                          ? "cursor-wait"
+                          : "cursor-not-allowed"
+                    }`}
+                  >
+                    <div className="flex-1">
+                      {/* New Badge */}
+                      {isNewTemplate(template.metadata?.created_date) && (
+                        <NewBadge />
                       )}
-                      <span>
-                        {creatingTemplateId === template.template_id
-                          ? 'Creating...'
-                          : userId
-                          ? 'Create Coach'
-                          : 'Login Required'
+
+                      {/* Template Name */}
+                      <div className="flex items-start space-x-3 mb-3">
+                        <div className="w-3 h-3 bg-synthwave-neon-pink rounded-full flex-shrink-0 mt-2"></div>
+                        <h3 className="font-russo font-bold text-white text-lg uppercase">
+                          {template.template_name}
+                        </h3>
+                      </div>
+
+                      {/* Template Description */}
+                      <p className="font-rajdhani text-synthwave-text-secondary text-sm mb-4 leading-relaxed">
+                        {template.description}
+                      </p>
+
+                      {/* Template Details */}
+                      <div className="space-y-2 mb-6">
+                        {/* Target Audience */}
+                        <div className="flex items-center space-x-2 text-synthwave-text-secondary">
+                          <TargetIcon />
+                          <span className="font-rajdhani text-xs">
+                            {agentRef.current?.getTemplateAudienceDisplay(
+                              template.target_audience,
+                            )}
+                          </span>
+                        </div>
+
+                        {/* Popularity */}
+                        <div className="flex items-center space-x-2 text-synthwave-text-secondary">
+                          <SparkleIcon />
+                          <span className="font-rajdhani text-xs">
+                            {template.metadata.popularity_score || 0} users
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Action Button */}
+                    <div className="text-center">
+                      <div
+                        className={`w-full space-x-2 ${
+                          userId
+                            ? creatingTemplateId === template.template_id
+                              ? buttonPatterns.primaryMediumLoading
+                              : buttonPatterns.primaryMedium
+                            : buttonPatterns.primaryMediumDisabled
+                        }`}
+                        tabIndex={
+                          userId && creatingTemplateId !== template.template_id
+                            ? 0
+                            : -1
                         }
-                      </span>
+                        role="button"
+                      >
+                        {creatingTemplateId === template.template_id ? (
+                          <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                        ) : (
+                          userId && <PlusIcon />
+                        )}
+                        <span>
+                          {creatingTemplateId === template.template_id
+                            ? "Creating..."
+                            : userId
+                              ? "Create Coach"
+                              : "Login Required"}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
 
           {/* No Templates Message */}
-          {!agentState.templatesLoading && agentState.templates && agentState.templates.length === 0 && !agentState.templatesError && (
-            <div className="text-center text-synthwave-text-secondary">
-              <p className="font-rajdhani text-lg">No templates available at this time.</p>
-            </div>
-          )}
+          {!agentState.templatesLoading &&
+            agentState.templates &&
+            agentState.templates.length === 0 &&
+            !agentState.templatesError && (
+              <div className="text-center text-synthwave-text-secondary">
+                <p className="font-rajdhani text-lg">
+                  No templates available at this time.
+                </p>
+              </div>
+            )}
         </div>
       </div>
 
@@ -1245,13 +1571,16 @@ function Coaches() {
             }
           }}
         >
-          <div className={`${containerPatterns.deleteModal} p-6 max-w-md w-full mx-4`}>
+          <div
+            className={`${containerPatterns.deleteModal} p-6 max-w-md w-full mx-4`}
+          >
             <div className="text-center">
               <h3 className="text-synthwave-neon-pink font-rajdhani text-xl font-bold mb-2">
                 Delete Coach Creator Session
               </h3>
               <p className="font-rajdhani text-base text-synthwave-text-secondary mb-6">
-                Are you sure you want to delete this coach creator session? This action cannot be undone.
+                Are you sure you want to delete this coach creator session? This
+                action cannot be undone.
               </p>
 
               <div className="flex space-x-4">
@@ -1296,13 +1625,19 @@ function Coaches() {
             }
           }}
         >
-          <div className={`${containerPatterns.deleteModal} p-6 max-w-md w-full mx-4`}>
+          <div
+            className={`${containerPatterns.deleteModal} p-6 max-w-md w-full mx-4`}
+          >
             <div className="text-center">
               <h3 className="text-synthwave-neon-pink font-rajdhani text-xl font-bold mb-2">
                 Delete Coach
               </h3>
               <p className="font-rajdhani text-base text-synthwave-text-secondary mb-6">
-                Are you sure you want to delete "<strong className="text-white">{agentRef.current?.formatCoachName(coachToDelete.coach_name)}</strong>"? This will remove the coach from your list.
+                Are you sure you want to delete "
+                <strong className="text-white">
+                  {agentRef.current?.formatCoachName(coachToDelete.coach_name)}
+                </strong>
+                "? This will remove the coach from your list.
               </p>
 
               <div className="flex space-x-4">

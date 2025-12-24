@@ -17,7 +17,7 @@ export const storeGenerationDebugData = async (
   type: "phase-structure" | "phase-workouts" | "success" | "error",
   context: {
     userId: string;
-    conversationId: string;
+    conversationId?: string; // Optional: Not used for program designer sessions
     coachId: string;
     programId: string;
     sessionId: string;
@@ -114,211 +114,98 @@ export const storeGenerationDebugData = async (
 };
 
 /**
- * Validate program completeness
- * Checks if program has all required fields and phases are valid
+ * Calculate program metrics from workout templates
+ * Shared by validation tool and result building
  */
-export function validateProgramCompleteness(
-  program: Program,
-  workoutTemplates: WorkoutTemplate[],
-): {
-  isComplete: boolean;
-  missingFields: string[];
-  issues: string[];
+export function calculateProgramMetrics(workoutTemplates: any[]): {
+  totalWorkoutTemplates: number;
+  uniqueTrainingDays: number;
+  averageSessionsPerDay: string;
 } {
-  const missingFields: string[] = [];
-  const issues: string[] = [];
-
-  // Check required program fields
-  if (!program.programId) missingFields.push("programId");
-  if (!program.name) missingFields.push("name");
-  if (!program.startDate) missingFields.push("startDate");
-  if (!program.endDate) missingFields.push("endDate");
-  if (!program.totalDays) missingFields.push("totalDays");
-  if (!program.phases || program.phases.length === 0) {
-    missingFields.push("phases");
-  }
-
-  // Check phase continuity
-  if (program.phases && program.phases.length > 0) {
-    const sortedPhases = [...program.phases].sort(
-      (a, b) => a.startDay - b.startDay,
-    );
-
-    // First phase should start at day 1
-    if (sortedPhases[0].startDay !== 1) {
-      issues.push(
-        `First phase starts at day ${sortedPhases[0].startDay}, should start at day 1`,
-      );
-    }
-
-    // Check for gaps between phases
-    for (let i = 0; i < sortedPhases.length - 1; i++) {
-      const currentPhase = sortedPhases[i];
-      const nextPhase = sortedPhases[i + 1];
-
-      if (currentPhase.endDay + 1 !== nextPhase.startDay) {
-        issues.push(
-          `Gap between phase "${currentPhase.name}" (ends day ${currentPhase.endDay}) and "${nextPhase.name}" (starts day ${nextPhase.startDay})`,
-        );
-      }
-    }
-
-    // Last phase should end at totalDays
-    const lastPhase = sortedPhases[sortedPhases.length - 1];
-    if (lastPhase.endDay !== program.totalDays) {
-      issues.push(
-        `Last phase ends at day ${lastPhase.endDay}, but program totalDays is ${program.totalDays}`,
-      );
-    }
-  }
-
-  // Check workout templates
-  if (!workoutTemplates || workoutTemplates.length === 0) {
-    issues.push("No workout templates generated");
-  } else {
-    // Check that all workout templates have required fields
-    workoutTemplates.forEach((template, index) => {
-      if (!template.templateId) {
-        issues.push(`Workout template ${index} missing templateId`);
-      }
-      if (!template.dayNumber) {
-        issues.push(`Workout template ${index} missing dayNumber`);
-      }
-      if (!template.description) {
-        issues.push(`Workout template ${index} missing description`);
-      }
-    });
-  }
+  const totalWorkoutTemplates = workoutTemplates.length;
+  const uniqueTrainingDays = new Set(
+    workoutTemplates.map((w: any) => w.dayNumber),
+  ).size;
+  const averageSessionsPerDay =
+    uniqueTrainingDays > 0
+      ? (totalWorkoutTemplates / uniqueTrainingDays).toFixed(1)
+      : "0.0";
 
   return {
-    isComplete: missingFields.length === 0 && issues.length === 0,
-    missingFields,
-    issues,
+    totalWorkoutTemplates,
+    uniqueTrainingDays,
+    averageSessionsPerDay,
   };
 }
 
 /**
- * Calculate program confidence score
- * Based on completeness, phase structure, and workout templates
- */
-export function calculateProgramConfidence(
-  program: Program,
-  workoutTemplates: WorkoutTemplate[],
-): number {
-  let score = 1.0;
-
-  // Validate program completeness
-  const validation = validateProgramCompleteness(program, workoutTemplates);
-
-  // Deduct for missing fields
-  score -= validation.missingFields.length * 0.1;
-
-  // Deduct for structural issues
-  score -= validation.issues.length * 0.05;
-
-  // Deduct if no workout templates
-  if (!workoutTemplates || workoutTemplates.length === 0) {
-    score -= 0.3;
-  }
-
-  // Deduct if workout count doesn't match program days * frequency
-  const expectedWorkouts = Math.floor(
-    (program.totalDays / 7) * program.trainingFrequency,
-  );
-  const actualWorkouts = workoutTemplates?.length || 0;
-  const workoutDifference = Math.abs(expectedWorkouts - actualWorkouts);
-
-  if (workoutDifference > expectedWorkouts * 0.2) {
-    // More than 20% off
-    score -= 0.2;
-  } else if (workoutDifference > expectedWorkouts * 0.1) {
-    // More than 10% off
-    score -= 0.1;
-  }
-
-  // Ensure score is between 0 and 1
-  return Math.max(0, Math.min(1, score));
-}
-
-/**
- * Enforce blocking decisions from validation
+ * Enforce all blocking decisions from validation and normalization
+ * Prevents save_program_to_database when validation or normalization failed
  *
- * Code-level enforcement that prevents normalize_program_data and
- * save_program_to_database from executing when validation returned
- * isValid: false. This ensures blocking decisions are AUTHORITATIVE,
+ * Code-level enforcement that ensures blocking decisions are AUTHORITATIVE,
  * not advisory.
  *
  * Returns error result if tool should be blocked, null if should proceed.
  */
-export const enforceValidationBlocking = (
+export const enforceAllBlocking = (
   toolId: string,
   validationResult: any,
+  normalizationResult: any,
 ): {
   error: boolean;
   blocked: boolean;
   reason: string;
   validationIssues?: string[];
+  normalizationIssues?: {
+    issuesFound: number;
+    correctionsMade: number;
+    remainingIssues: number;
+  };
 } | null => {
-  // No validation result yet, allow tool to proceed
-  if (!validationResult) {
+  // No results yet, allow tool to proceed
+  if (!validationResult && !normalizationResult) {
     return null;
-  }
-
-  // Validation passed, allow tool to proceed
-  if (validationResult.isValid !== false) {
-    return null;
-  }
-
-  // Block normalize_program_data if validation failed
-  if (toolId === "normalize_program_data") {
-    console.error(
-      "⛔ BLOCKING normalize_program_data: Validation returned isValid=false",
-      {
-        validationIssues: validationResult.validationIssues,
-        toolAttempted: toolId,
-      },
-    );
-
-    return {
-      error: true,
-      blocked: true,
-      reason: `Cannot normalize program - validation failed: ${validationResult.validationIssues?.join(", ") || "Unknown issues"}`,
-      validationIssues: validationResult.validationIssues,
-    };
   }
 
   // Block save_program_to_database if validation failed
   if (toolId === "save_program_to_database") {
-    console.error(
-      "⛔ BLOCKING save_program_to_database: Validation returned isValid=false",
-      {
+    // Check validation blocking
+    if (validationResult && validationResult.isValid === false) {
+      console.error("⛔ Blocking save: Validation failed", {
         validationIssues: validationResult.validationIssues,
-        toolAttempted: toolId,
-      },
-    );
+      });
 
-    return {
-      error: true,
-      blocked: true,
-      reason: `Cannot save program - validation failed: ${validationResult.validationIssues?.join(", ") || "Unknown issues"}`,
-      validationIssues: validationResult.validationIssues,
-    };
+      return {
+        error: true,
+        blocked: true,
+        reason: `Cannot save program - validation failed: ${validationResult.validationIssues?.join(", ") || "Unknown issues"}`,
+        validationIssues: validationResult.validationIssues,
+      };
+    }
+
+    // Check normalization blocking
+    if (normalizationResult && normalizationResult.isValid === false) {
+      console.warn("⛔ Blocking save: Normalization failed", {
+        issuesFound: normalizationResult.issuesFound,
+        correctionsMade: normalizationResult.correctionsMade,
+      });
+
+      return {
+        error: true,
+        blocked: true,
+        reason:
+          "Program normalization failed validation. Cannot save invalid program.",
+        normalizationIssues: {
+          issuesFound: normalizationResult.issuesFound,
+          correctionsMade: normalizationResult.correctionsMade,
+          remainingIssues:
+            normalizationResult.issuesFound -
+            normalizationResult.correctionsMade,
+        },
+      };
+    }
   }
 
   // Tool is not subject to blocking enforcement
   return null;
 };
-
-/**
- * Build context string from Pinecone results
- */
-export function buildPineconeContextString(pineconeMatches: any[]): string {
-  if (!pineconeMatches || pineconeMatches.length === 0) {
-    return "";
-  }
-
-  return pineconeMatches
-    .map((match) => match.content || "")
-    .filter((content) => content.length > 0)
-    .join("\n\n");
-}

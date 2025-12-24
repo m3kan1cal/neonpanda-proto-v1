@@ -12,7 +12,7 @@ import { themeClasses } from "../utils/synthwaveThemeClasses";
 import CoachHeader from "./shared/CoachHeader";
 import CompactCoachCard from "./shared/CompactCoachCard";
 import CommandPaletteButton from "./shared/CommandPaletteButton";
-import { useNavigationContext } from '../contexts/NavigationContext';
+import { useNavigationContext } from "../contexts/NavigationContext";
 import QuickStats from "./shared/QuickStats";
 import { isNewWorkout } from "../utils/dateUtils";
 import { NeonBorder, NewBadge } from "./themes/SynthwaveComponents";
@@ -21,7 +21,6 @@ import { useToast } from "../contexts/ToastContext";
 import { MemoryAgent } from "../utils/agents/MemoryAgent";
 import CoachAgent from "../utils/agents/CoachAgent";
 import { WorkoutAgent } from "../utils/agents/WorkoutAgent";
-import { FloatingMenuManager } from "./shared/FloatingMenuManager";
 import {
   CloseIcon,
   ConversationIcon,
@@ -161,7 +160,6 @@ function ManageMemories() {
 
   const { addToast, success, error, info } = useToast();
 
-
   // Initialize workout agent
   useEffect(() => {
     if (!userId) return;
@@ -189,7 +187,7 @@ function ManageMemories() {
         }
         const loadedCoachData = await coachAgentRef.current.loadCoachDetails(
           userId,
-          coachId
+          coachId,
         );
         setCoachData(loadedCoachData);
       } catch (error) {
@@ -263,13 +261,13 @@ function ManageMemories() {
 
   // Auto-scroll to top when page loads (with scroll restoration disabled)
   useEffect(() => {
-    if ('scrollRestoration' in window.history) {
-      window.history.scrollRestoration = 'manual';
+    if ("scrollRestoration" in window.history) {
+      window.history.scrollRestoration = "manual";
     }
     window.scrollTo(0, 0);
     return () => {
-      if ('scrollRestoration' in window.history) {
-        window.history.scrollRestoration = 'auto';
+      if ("scrollRestoration" in window.history) {
+        window.history.scrollRestoration = "auto";
       }
     };
   }, []);
@@ -303,7 +301,7 @@ function ManageMemories() {
     userId,
     coachId,
     setCoachData,
-    { success, error }
+    { success, error },
   );
 
   // Handle coach card click - navigate to training grounds
@@ -323,7 +321,7 @@ function ManageMemories() {
 
     try {
       const success = await memoryAgentRef.current.deleteMemory(
-        memoryToDelete.memoryId
+        memoryToDelete.memoryId,
       );
 
       if (success) {
@@ -351,7 +349,7 @@ function ManageMemories() {
     const isNew = isNewWorkout(memory.metadata?.createdAt || memory.createdAt);
 
     // Strip "tag: value" patterns from memory content for clean display
-    const cleanContent = memory.content.replace(/tag:\s*[^,]+/g, '').trim();
+    const cleanContent = memory.content.replace(/tag:\s*[^,]+/g, "").trim();
 
     return (
       <div
@@ -407,7 +405,7 @@ function ManageMemories() {
               }`}
             >
               {memoryAgentRef.current?.formatMemoryImportance(
-                memory.metadata?.importance
+                memory.metadata?.importance,
               ) || "Unknown"}{" "}
               Priority
             </div>
@@ -459,7 +457,7 @@ function ManageMemories() {
               <ClockIcon />
               <span>
                 {memoryAgentRef.current?.formatMemoryDate(
-                  memory.metadata?.createdAt || memory.createdAt
+                  memory.metadata?.createdAt || memory.createdAt,
                 ) || "Unknown"}
               </span>
             </div>
@@ -472,7 +470,7 @@ function ManageMemories() {
                   <span>
                     Last used{" "}
                     {memoryAgentRef.current?.formatMemoryDate(
-                      memory.metadata.lastUsed
+                      memory.metadata.lastUsed,
                     ) || "Unknown"}
                   </span>
                 </div>
@@ -512,7 +510,8 @@ function ManageMemories() {
             No Memories Found
           </div>
           <div className="font-rajdhani text-synthwave-text-muted text-sm mt-2">
-            You haven't stored any memories yet. Memories will appear here when you ask your coach to remember something.
+            You haven't stored any memories yet. Memories will appear here when
+            you ask your coach to remember something.
           </div>
         </div>
       );
@@ -568,14 +567,17 @@ function ManageMemories() {
           {/* Memory cards skeleton */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className={`${containerPatterns.contentCard} group relative`}>
+              <div
+                key={i}
+                className={`${containerPatterns.contentCard} group relative`}
+              >
                 {/* Delete button skeleton */}
                 <div className="absolute top-4 right-4 w-8 h-8 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
 
                 <div className="pr-12">
                   {/* Memory header with dot skeleton */}
                   <div className="flex items-start space-x-3 mb-3">
-                    <div className="w-3 h-3 bg-synthwave-text-muted/20 rounded-full flex-shrink-0 mt-2 animate-pulse"></div>
+                    <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full flex-shrink-0 mt-0.5 animate-pulse"></div>
                     <div className="flex-1 space-y-2">
                       <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
                       <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-5/6"></div>
@@ -669,7 +671,9 @@ function ManageMemories() {
 
             {/* Right section: Command Palette Button */}
             <div className="flex items-center gap-3">
-              <CommandPaletteButton onClick={() => setIsCommandPaletteOpen(true)} />
+              <CommandPaletteButton
+                onClick={() => setIsCommandPaletteOpen(true)}
+              />
             </div>
           </header>
 
@@ -680,46 +684,58 @@ function ManageMemories() {
                 icon: LightbulbIcon,
                 value: memoryAgentState.totalCount || 0,
                 tooltip: {
-                  title: 'Total Memories',
-                  description: 'All stored memories and preferences tracked by your coaches'
+                  title: "Total Memories",
+                  description:
+                    "All stored memories and preferences tracked by your coaches",
                 },
-                color: 'pink',
+                color: "pink",
                 isLoading: memoryAgentState.isLoading,
-                ariaLabel: `${memoryAgentState.totalCount || 0} total memories`
+                ariaLabel: `${memoryAgentState.totalCount || 0} total memories`,
               },
               {
                 icon: LightningIcon,
-                value: memoryAgentState.allMemories.filter((m) => m.metadata?.importance === "high").length || 0,
+                value:
+                  memoryAgentState.allMemories.filter(
+                    (m) => m.metadata?.importance === "high",
+                  ).length || 0,
                 tooltip: {
-                  title: 'High Priority',
-                  description: 'Critical memories that are frequently referenced by your coaches'
+                  title: "High Priority",
+                  description:
+                    "Critical memories that are frequently referenced by your coaches",
                 },
-                color: 'cyan',
+                color: "cyan",
                 isLoading: memoryAgentState.isLoading,
-                ariaLabel: `${memoryAgentState.allMemories.filter((m) => m.metadata?.importance === "high").length || 0} high priority memories`
+                ariaLabel: `${memoryAgentState.allMemories.filter((m) => m.metadata?.importance === "high").length || 0} high priority memories`,
               },
               {
                 icon: ReportIcon,
-                value: memoryAgentState.allMemories.filter((m) => m.metadata?.importance === "medium").length || 0,
+                value:
+                  memoryAgentState.allMemories.filter(
+                    (m) => m.metadata?.importance === "medium",
+                  ).length || 0,
                 tooltip: {
-                  title: 'Medium Priority',
-                  description: 'Important memories that provide context for your coaching sessions'
+                  title: "Medium Priority",
+                  description:
+                    "Important memories that provide context for your coaching sessions",
                 },
-                color: 'purple',
+                color: "purple",
                 isLoading: memoryAgentState.isLoading,
-                ariaLabel: `${memoryAgentState.allMemories.filter((m) => m.metadata?.importance === "medium").length || 0} medium priority memories`
+                ariaLabel: `${memoryAgentState.allMemories.filter((m) => m.metadata?.importance === "medium").length || 0} medium priority memories`,
               },
               {
                 icon: GlobeIcon,
-                value: memoryAgentState.allMemories.filter((m) => !m.coachId).length || 0,
+                value:
+                  memoryAgentState.allMemories.filter((m) => !m.coachId)
+                    .length || 0,
                 tooltip: {
-                  title: 'Global Memories',
-                  description: 'Memories shared across all your coaches and training sessions'
+                  title: "Global Memories",
+                  description:
+                    "Memories shared across all your coaches and training sessions",
                 },
-                color: 'pink',
+                color: "pink",
                 isLoading: memoryAgentState.isLoading,
-                ariaLabel: `${memoryAgentState.allMemories.filter((m) => !m.coachId).length || 0} global memories`
-              }
+                ariaLabel: `${memoryAgentState.allMemories.filter((m) => !m.coachId).length || 0} global memories`,
+              },
             ]}
           />
 
@@ -744,22 +760,12 @@ function ManageMemories() {
         </div>
       </div>
 
-      {/* Floating Menu Manager */}
-      <FloatingMenuManager
-        userId={userId}
-        coachId={coachId}
-        currentPage="manage-memories"
-        coachData={coachData}
-        onCommandPaletteToggle={(command) => {
-          setCommandPaletteCommand(command);
-          setIsCommandPaletteOpen(true);
-        }}
-      />
-
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[10000]">
-          <div className={`${containerPatterns.deleteModal} p-6 max-w-md w-full mx-4`}>
+          <div
+            className={`${containerPatterns.deleteModal} p-6 max-w-md w-full mx-4`}
+          >
             <div className="text-center">
               <h3 className="text-synthwave-neon-pink font-rajdhani text-xl font-bold mb-2">
                 Delete Memory

@@ -22,6 +22,7 @@ import CoachCreator from "./components/CoachCreator";
 import Coaches from "./components/Coaches";
 import TrainingGrounds from "./components/TrainingGrounds";
 import CoachConversations from "./components/CoachConversations";
+import ProgramDesigner from "./components/ProgramDesigner";
 import StreamingDebugTest from "./components/StreamingDebugTest";
 import WorkoutDetails from "./components/WorkoutDetails";
 import ManageWorkouts from "./components/ManageWorkouts";
@@ -78,12 +79,15 @@ function AppContent() {
   ];
   const isPublicPage =
     publicRoutes.includes(location.pathname) ||
-    publicRoutes.some(route => route !== "/" && location.pathname.startsWith(route));
+    publicRoutes.some(
+      (route) => route !== "/" && location.pathname.startsWith(route),
+    );
 
   // Check if we're on a chat page (hide bottom nav and FAB for focused conversation UX)
   const isChatPage =
     location.pathname.includes("/coach-conversations") ||
-    location.pathname.includes("/coach-creator");
+    location.pathname.includes("/coach-creator") ||
+    location.pathname.includes("/program-designer");
 
   // Workout agent for command palette
   const workoutAgentRef = useRef(null);
@@ -217,6 +221,14 @@ function AppContent() {
             }
           />
           <Route
+            path="/training-grounds/program-designer"
+            element={
+              <ProtectedRoute>
+                <ProgramDesigner />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/streaming-debug-test"
             element={
               <ProtectedRoute>
@@ -280,22 +292,22 @@ function AppContent() {
               </ProtectedRoute>
             }
           />
-        <Route
-          path="/training-grounds/programs/dashboard"
-          element={
-            <ProtectedRoute>
-              <ProgramDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/training-grounds/programs/workouts"
-          element={
-            <ProtectedRoute>
-              <ViewWorkouts />
-            </ProtectedRoute>
-          }
-        />
+          <Route
+            path="/training-grounds/programs/dashboard"
+            element={
+              <ProtectedRoute>
+                <ProgramDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/training-grounds/programs/workouts"
+            element={
+              <ProtectedRoute>
+                <ViewWorkouts />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/training-grounds/programs/:programId/day/:dayNumber"
             element={
@@ -324,7 +336,7 @@ function AppContent() {
         onNavigation={(type, data) => {
           if (type === "conversation-created" && data?.conversationId) {
             navigate(
-              `/training-grounds/coach-conversations?userId=${userId}&coachId=${coachId}&conversationId=${data.conversationId}`
+              `/training-grounds/coach-conversations?userId=${userId}&coachId=${coachId}&conversationId=${data.conversationId}`,
             );
           }
         }}

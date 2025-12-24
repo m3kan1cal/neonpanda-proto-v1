@@ -1,61 +1,33 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { Tooltip } from 'react-tooltip';
-import { useAuthorizeUser } from '../auth/hooks/useAuthorizeUser';
-import { AccessDenied, LoadingScreen } from './shared/AccessDenied';
-import { containerPatterns, layoutPatterns, tooltipPatterns } from '../utils/ui/uiPatterns';
-import { FullPageLoader, CenteredErrorState } from './shared/ErrorStates';
-import CoachHeader from './shared/CoachHeader';
-import CompactCoachCard from './shared/CompactCoachCard';
-import CommandPaletteButton from './shared/CommandPaletteButton';
-import { useNavigationContext } from '../contexts/NavigationContext';
+import { Tooltip } from "react-tooltip";
+import { useAuthorizeUser } from "../auth/hooks/useAuthorizeUser";
+import { AccessDenied } from "./shared/AccessDenied";
+import {
+  containerPatterns,
+  layoutPatterns,
+  tooltipPatterns,
+} from "../utils/ui/uiPatterns";
+import { CenteredErrorState } from "./shared/ErrorStates";
+import CompactCoachCard from "./shared/CompactCoachCard";
+import CommandPaletteButton from "./shared/CommandPaletteButton";
+import QuickStats from "./shared/QuickStats";
+import { useNavigationContext } from "../contexts/NavigationContext";
 import WeeklyReportViewer from "./WeeklyReportViewer";
 import ReportAgent from "../utils/agents/ReportAgent";
 import CoachAgent from "../utils/agents/CoachAgent";
 import { WorkoutAgent } from "../utils/agents/WorkoutAgent";
-import { FloatingMenuManager } from './shared/FloatingMenuManager';
-import WeeklyHeatMap from './WeeklyHeatMap';
-import { ChevronDownIcon } from './themes/SynthwaveComponents';
+import {
+  MetricsIcon,
+  CheckIcon,
+  TargetIcon,
+  ClockIcon,
+  TrophyIcon,
+  TrendingUpIcon,
+  HeartIcon,
+} from "./themes/SynthwaveComponents";
 
-// Icons for CollapsibleSection
-const CalendarHeatMapIcon = () => (
-  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-  </svg>
-);
-
-// Collapsible section component - matches WeeklyReportViewer pattern
-const CollapsibleSection = ({ title, icon, children, defaultOpen = false, className = "" }) => {
-  const [isOpen, setIsOpen] = useState(defaultOpen);
-
-  return (
-    <div className={`${containerPatterns.collapsibleSection} overflow-hidden ${className}`}>
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className={containerPatterns.collapsibleHeader}
-      >
-        <div className="flex items-center space-x-3">
-          <div className="text-synthwave-neon-cyan">
-            {icon}
-          </div>
-          <h3 className="font-russo font-bold text-white text-base uppercase">
-            {title}
-          </h3>
-        </div>
-        <div className={`text-synthwave-neon-cyan transition-transform duration-300 ${isOpen ? 'rotate-0' : '-rotate-90'}`}>
-          <ChevronDownIcon />
-        </div>
-      </button>
-      {isOpen && (
-        <div className={containerPatterns.collapsibleContent}>
-          {children}
-        </div>
-      )}
-    </div>
-  );
-};
-
-function Reports() {
+function WeeklyReports() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const userId = searchParams.get("userId");
@@ -63,7 +35,11 @@ function Reports() {
   const coachId = searchParams.get("coachId");
 
   // Authorize that URL userId matches authenticated user
-  const { isValidating: isValidatingUserId, isValid: isValidUserId, error: userIdError } = useAuthorizeUser(userId);
+  const {
+    isValidating: isValidatingUserId,
+    isValid: isValidUserId,
+    error: userIdError,
+  } = useAuthorizeUser(userId);
 
   const reportsAgentRef = useRef(null);
   const coachAgentRef = useRef(null);
@@ -76,12 +52,10 @@ function Reports() {
   const [viewMode, setViewMode] = useState("formatted");
 
   // Command palette state
-  // Global Command Palette state
   const { setIsCommandPaletteOpen } = useNavigationContext();
 
-  // Coach data state (for FloatingMenuManager)
+  // Coach data state
   const [coachData, setCoachData] = useState(null);
-
 
   // Initialize workout agent
   useEffect(() => {
@@ -111,7 +85,7 @@ function Reports() {
 
   useEffect(() => {
     reportsAgentRef.current = new ReportAgent(userId, (s) =>
-      setReportAgentState((prev) => ({ ...prev, ...s }))
+      setReportAgentState((prev) => ({ ...prev, ...s })),
     );
     return () => {
       reportsAgentRef.current?.destroy();
@@ -134,7 +108,7 @@ function Reports() {
     if (userId && weekId) load();
   }, [userId, weekId]);
 
-  // Load coach data for FloatingMenuManager
+  // Load coach data
   useEffect(() => {
     if (!userId || !coachId) return;
 
@@ -143,10 +117,13 @@ function Reports() {
         if (!coachAgentRef.current) {
           coachAgentRef.current = new CoachAgent();
         }
-        const loadedCoachData = await coachAgentRef.current.loadCoachDetails(userId, coachId);
+        const loadedCoachData = await coachAgentRef.current.loadCoachDetails(
+          userId,
+          coachId,
+        );
         setCoachData(loadedCoachData);
       } catch (error) {
-        console.error('Failed to load coach data:', error);
+        console.error("Failed to load coach data:", error);
       }
     };
 
@@ -161,13 +138,13 @@ function Reports() {
 
   // Auto-scroll to top when page loads (with scroll restoration disabled)
   useEffect(() => {
-    if ('scrollRestoration' in window.history) {
-      window.history.scrollRestoration = 'manual';
+    if ("scrollRestoration" in window.history) {
+      window.history.scrollRestoration = "manual";
     }
     window.scrollTo(0, 0);
     return () => {
-      if ('scrollRestoration' in window.history) {
-        window.history.scrollRestoration = 'auto';
+      if ("scrollRestoration" in window.history) {
+        window.history.scrollRestoration = "auto";
       }
     };
   }, []);
@@ -188,69 +165,140 @@ function Reports() {
     navigate(`/training-grounds?userId=${userId}&coachId=${coachId}`);
   };
 
-  // Create coach name handler using the agent's helper method (no toast for WeeklyReports)
-  const handleSaveCoachName = coachAgentRef.current?.createCoachNameHandler(
-    userId,
-    coachId,
-    setCoachData,
-    null // No toast notifications in WeeklyReports
-  );
+  // Calculate QuickStats metrics from report data
+  const getQuickStatsData = () => {
+    if (!report) return [];
+
+    const structured =
+      report.analyticsData?.structured_analytics ||
+      report.structured_analytics ||
+      {};
+    const weekMeta = structured.metadata || {};
+
+    // Extract metrics safely
+    const totalVolume =
+      structured.volume_breakdown?.working_sets?.total_tonnage || 0;
+    const sessionsCompleted = weekMeta.sessions_completed || 0;
+    const progressiveOverloadScore =
+      structured.weekly_progression?.progressive_overload_score || 0;
+
+    // Calculate average RPE from daily volume data
+    const dailyVolumeData = structured.raw_aggregations?.daily_volume || [];
+    const rpeValues = dailyVolumeData
+      .map((day) => day.avg_rpe)
+      .filter((rpe) => rpe && rpe > 0);
+    const avgRpe =
+      rpeValues.length > 0
+        ? (
+            rpeValues.reduce((sum, rpe) => sum + rpe, 0) / rpeValues.length
+          ).toFixed(1)
+        : 0;
+
+    const recoveryScore = structured.fatigue_management?.recovery_score || 0;
+
+    // Calculate total training time from session summaries
+    const sessionSummaries =
+      structured.raw_aggregations?.session_summaries || [];
+    const totalTimeMinutes = dailyVolumeData.reduce(
+      (sum, day) => sum + (day.duration || 0),
+      0,
+    );
+
+    const recordsSet = structured.performance_markers?.records_set?.length || 0;
+
+    return [
+      {
+        icon: MetricsIcon,
+        value: totalVolume ? totalVolume.toLocaleString() : 0,
+        tooltip: {
+          title: "Total Volume",
+          description: `${totalVolume ? totalVolume.toLocaleString() : 0} lbs moved this week`,
+        },
+        color: "pink",
+        isLoading: false,
+        ariaLabel: `${totalVolume ? totalVolume.toLocaleString() : 0} lbs total volume`,
+        id: "report-stat-volume",
+      },
+      {
+        icon: CheckIcon,
+        value: sessionsCompleted,
+        tooltip: {
+          title: "Sessions Completed",
+          description: `${sessionsCompleted} training sessions completed this week`,
+        },
+        color: "cyan",
+        isLoading: false,
+        ariaLabel: `${sessionsCompleted} sessions completed`,
+        id: "report-stat-sessions",
+      },
+      {
+        icon: TrendingUpIcon,
+        value: progressiveOverloadScore
+          ? `${progressiveOverloadScore}/10`
+          : "--",
+        tooltip: {
+          title: "Progressive Overload Score",
+          description: `${progressiveOverloadScore}/10 - Measure of training progression`,
+        },
+        color: "purple",
+        isLoading: false,
+        ariaLabel: `Progressive overload score ${progressiveOverloadScore} out of 10`,
+        id: "report-stat-overload",
+      },
+      {
+        icon: TargetIcon,
+        value: avgRpe || "--",
+        tooltip: {
+          title: "Average RPE",
+          description: `${avgRpe || 0} average rate of perceived exertion`,
+        },
+        color: "cyan",
+        isLoading: false,
+        ariaLabel: `Average RPE ${avgRpe}`,
+        id: "report-stat-rpe",
+      },
+      {
+        icon: HeartIcon,
+        value: recoveryScore ? `${recoveryScore}/10` : "--",
+        tooltip: {
+          title: "Recovery Score",
+          description: `${recoveryScore}/10 - Overall recovery and readiness`,
+        },
+        color: "pink",
+        isLoading: false,
+        ariaLabel: `Recovery score ${recoveryScore} out of 10`,
+        id: "report-stat-recovery",
+      },
+      {
+        icon: ClockIcon,
+        value: totalTimeMinutes ? `${totalTimeMinutes}m` : "--",
+        tooltip: {
+          title: "Total Training Time",
+          description: `${totalTimeMinutes} minutes of training this week`,
+        },
+        color: "purple",
+        isLoading: false,
+        ariaLabel: `${totalTimeMinutes} minutes total`,
+        id: "report-stat-time",
+      },
+      {
+        icon: TrophyIcon,
+        value: recordsSet,
+        tooltip: {
+          title: "Records Set",
+          description: `${recordsSet} personal records achieved this week`,
+        },
+        color: "cyan",
+        isLoading: false,
+        ariaLabel: `${recordsSet} records set`,
+        id: "report-stat-records",
+      },
+    ];
+  };
 
   // Show skeleton loading while validating userId or loading report
   if (isValidatingUserId || reportAgentState.isLoadingItem) {
-    return (
-      <div className={layoutPatterns.pageContainer}>
-        <div className={layoutPatterns.contentWrapper}>
-          {/* Compact Horizontal Header Skeleton */}
-          <header className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-6">
-            {/* Left: Title + Coach Card */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5">
-              {/* Title skeleton - compact size */}
-              <div className="h-8 md:h-9 bg-synthwave-text-muted/20 rounded animate-pulse w-64"></div>
-
-              {/* Compact coach card skeleton - horizontal pill */}
-              <div className="flex items-center gap-2.5 px-3 py-2 bg-synthwave-neon-cyan/5 border border-synthwave-neon-cyan/20 rounded-full">
-                <div className="w-6 h-6 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
-                <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
-              </div>
-            </div>
-
-            {/* Right: Command button skeleton */}
-            <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
-          </header>
-
-          {/* Main Content Area skeleton */}
-          <div className="flex-1">
-            <div className={`${containerPatterns.mainContent} h-full flex flex-col`}>
-              <div className="p-6 h-full overflow-y-auto space-y-6">
-                {/* Action buttons skeleton */}
-                <div className="flex justify-end space-x-2">
-                  <div className="w-12 h-12 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
-                </div>
-
-                {/* Report sections skeleton */}
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className={`${containerPatterns.cardMedium} p-6`}>
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-6 h-6 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
-                        <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
-                      </div>
-                      <div className="w-4 h-4 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
-                    </div>
-                    <div className="space-y-3">
-                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
-                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-3/4"></div>
-                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-1/2"></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+    return <ReportsSkeleton />;
   }
 
   // Handle userId validation errors
@@ -280,23 +328,32 @@ function Reports() {
   }
 
   return (
-    <div className={`${layoutPatterns.pageContainer} min-h-screen pb-8`}>
-      <div className={`${layoutPatterns.contentWrapper} min-h-[calc(100vh-5rem)] flex flex-col`}>
+    <div className={layoutPatterns.pageContainer}>
+      <div className={layoutPatterns.contentWrapper}>
         {/* Compact Horizontal Header */}
         <header
           className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-6"
           aria-label="Weekly Report Header"
         >
-          {/* Left section: Title + Coach Card */}
+          {/* Left section: Title + Beta Badge + Coach Card */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
-            {/* Page Title with Hover Tooltip */}
-            <h1
-              className="font-russo font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
-              data-tooltip-id="weekly-report-info"
-              data-tooltip-content="Comprehensive analysis of your weekly training performance including volume, progression, and insights."
-            >
-              Weekly Report
-            </h1>
+            {/* Page Title with Beta Badge */}
+            <div className="flex items-center gap-3">
+              <h1
+                className="font-russo font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
+                data-tooltip-id="weekly-report-info"
+                data-tooltip-content="Comprehensive analysis of your weekly training performance including volume, progression, and insights."
+              >
+                Weekly Report
+              </h1>
+              <div
+                className="px-2 py-1 bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 rounded text-synthwave-neon-purple font-rajdhani text-xs font-bold uppercase tracking-wider cursor-help"
+                data-tooltip-id="beta-badge"
+                data-tooltip-content="Weekly reports v2 are in beta. You may experience pre-release behavior. We appreciate your feedback!"
+              >
+                Beta
+              </div>
+            </div>
 
             {/* Compact Coach Card */}
             {coachData && (
@@ -304,70 +361,51 @@ function Reports() {
                 coachData={coachData}
                 isOnline={true}
                 onClick={handleCoachCardClick}
+                tooltipContent="Go to the Training Grounds"
               />
             )}
           </div>
 
           {/* Right section: Command Palette Button */}
           <div className="flex items-center gap-3">
-            <CommandPaletteButton onClick={() => setIsCommandPaletteOpen(true)} />
+            <CommandPaletteButton
+              onClick={() => setIsCommandPaletteOpen(true)}
+            />
           </div>
         </header>
 
+        {/* Quick Stats */}
+        {report && <QuickStats stats={getQuickStatsData()} />}
+
         {/* Main Content Area */}
         <div className="flex-1 flex justify-center">
-          <div className="w-full max-w-7xl">
-            <div className={`${containerPatterns.mainContent} h-full flex flex-col`}>
-              <div className="p-6 h-full overflow-y-auto custom-scrollbar space-y-6">
-                {report ? (
-                  <WeeklyReportViewer
-                    report={report}
-                    onToggleView={handleToggleView}
-                    viewMode={viewMode}
-                    heatMapComponent={
-                      <CollapsibleSection
-                        title="Weekly Training Intensity"
-                        icon={<CalendarHeatMapIcon />}
-                        defaultOpen={true}
-                      >
-                        <WeeklyHeatMap
-                          dailyVolumeData={report.analyticsData?.structured_analytics?.raw_aggregations?.daily_volume || []}
-                          weekStart={report.weekStart}
-                          weekEnd={report.weekEnd}
-                          userId={userId}
-                          coachId={coachId}
-                        />
-                      </CollapsibleSection>
-                    }
-                  />
-                ) : (
-                  <div className="flex items-center justify-center h-full">
-                    <div className="text-synthwave-text-secondary font-rajdhani text-lg">
-                      No report data available
-                    </div>
-                  </div>
-                )}
+          {report ? (
+            <WeeklyReportViewer
+              report={report}
+              onToggleView={handleToggleView}
+              viewMode={viewMode}
+              userId={userId}
+              coachId={coachId}
+            />
+          ) : (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-synthwave-text-secondary font-rajdhani text-lg">
+                No report data available
               </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
-
-      {/* Floating Menu Manager */}
-      <FloatingMenuManager
-        userId={userId}
-        coachId={coachId}
-        currentPage="weekly-report"
-        coachData={coachData}
-        onCommandPaletteToggle={(command) => {
-          setCommandPaletteCommand(command);
-          setIsCommandPaletteOpen(true);
-        }}
-      />
 
       {/* Tooltips */}
       <Tooltip
         id="weekly-report-info"
+        {...tooltipPatterns.standard}
+        place="bottom"
+        className="max-w-xs"
+      />
+      <Tooltip
+        id="beta-badge"
         {...tooltipPatterns.standard}
         place="bottom"
         className="max-w-xs"
@@ -386,4 +424,87 @@ function Reports() {
   );
 }
 
-export default Reports;
+// Skeleton loading component matching ProgramDashboard pattern
+function ReportsSkeleton() {
+  return (
+    <div className={layoutPatterns.pageContainer}>
+      <div className={layoutPatterns.contentWrapper}>
+        {/* Compact Horizontal Header Skeleton */}
+        <header className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-6">
+          {/* Left: Title + Coach Card */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5">
+            {/* Title skeleton - compact size */}
+            <div className="h-8 md:h-9 bg-synthwave-text-muted/20 rounded animate-pulse w-64"></div>
+
+            {/* Compact coach card skeleton - horizontal pill */}
+            <div className="flex items-center gap-2.5 px-3 py-2 bg-synthwave-neon-cyan/5 border border-synthwave-neon-cyan/20 rounded-full">
+              <div className="w-6 h-6 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
+              <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
+            </div>
+          </div>
+
+          {/* Right: Command button skeleton */}
+          <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
+        </header>
+
+        {/* Quick Stats skeleton */}
+        <QuickStats
+          stats={[1, 2, 3, 4, 5, 6, 7].map((i) => ({
+            icon: null,
+            value: 0,
+            tooltip: { title: "", description: "" },
+            color: "cyan",
+            isLoading: true,
+            id: `skeleton-stat-${i}`,
+          }))}
+        />
+
+        {/* Two-column layout skeleton */}
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+          {/* Left column - 60% */}
+          <div className="lg:col-span-3 space-y-6">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className={`${containerPatterns.cardMedium}`}>
+                <div className="flex items-center justify-between p-6">
+                  <div className="flex items-center gap-3 flex-1">
+                    <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full animate-pulse flex-shrink-0 mt-0.5"></div>
+                    <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
+                  </div>
+                  <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                </div>
+                <div className="px-6 pb-6 space-y-3">
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                    <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                    <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                    <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                    <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Right column - 40% */}
+          <div className="lg:col-span-2 space-y-6">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className={`${containerPatterns.cardMedium}`}>
+                <div className="flex items-center justify-between p-6">
+                  <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full animate-pulse flex-shrink-0 mt-0.5"></div>
+                    <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-40"></div>
+                  </div>
+                  <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                </div>
+                <div className="px-6 pb-6">
+                  <div className="h-16 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default WeeklyReports;

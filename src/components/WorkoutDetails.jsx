@@ -1,43 +1,78 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { Tooltip } from 'react-tooltip';
+import { Tooltip } from "react-tooltip";
 import { useAuthorizeUser } from "../auth/hooks/useAuthorizeUser";
-import { AccessDenied, LoadingScreen } from "./shared/AccessDenied";
-import { themeClasses } from "../utils/synthwaveThemeClasses";
-import { buttonPatterns, containerPatterns, layoutPatterns, tooltipPatterns } from "../utils/ui/uiPatterns";
-import { NeonBorder } from "./themes/SynthwaveComponents";
-import CoachHeader from "./shared/CoachHeader";
-import CompactCoachCard from './shared/CompactCoachCard';
-import CommandPaletteButton from './shared/CommandPaletteButton';
+import { AccessDenied } from "./shared/AccessDenied";
+import {
+  buttonPatterns,
+  containerPatterns,
+  layoutPatterns,
+  tooltipPatterns,
+  badgePatterns,
+} from "../utils/ui/uiPatterns";
+import CompactCoachCard from "./shared/CompactCoachCard";
+import CommandPaletteButton from "./shared/CommandPaletteButton";
+import QuickStats from "./shared/QuickStats";
 import WorkoutAgent from "../utils/agents/WorkoutAgent";
 import CoachAgent from "../utils/agents/CoachAgent";
 import { useToast } from "../contexts/ToastContext";
 import WorkoutViewer from "./WorkoutViewer";
-import { FloatingMenuManager } from "./shared/FloatingMenuManager";
-import IconButton from './shared/IconButton';
-import { useNavigationContext } from '../contexts/NavigationContext';
+import IconButton from "./shared/IconButton";
+import { useNavigationContext } from "../contexts/NavigationContext";
+import { CenteredErrorState, EmptyState } from "./shared/ErrorStates";
 import {
-  FullPageLoader,
-  CenteredErrorState,
-  EmptyState,
-} from "./shared/ErrorStates";
-import { CloseIcon, WorkoutIcon } from "./themes/SynthwaveComponents";
+  ClockIcon,
+  TargetIcon,
+  LightningIcon,
+  BarChartIcon,
+  SparkleIcon,
+} from "./themes/SynthwaveComponents";
 
 const JsonIcon = () => (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+  <svg
+    className="w-4 h-4"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
+    />
+  </svg>
+);
+
+const TrashIcon = () => (
+  <svg
+    className="w-4 h-4"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+    />
   </svg>
 );
 
 function WorkoutDetails() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const workoutId = searchParams.get("workoutId"); // Get workoutId from query params
+  const workoutId = searchParams.get("workoutId");
   const userId = searchParams.get("userId");
   const coachId = searchParams.get("coachId");
 
   // Authorize that URL userId matches authenticated user
-  const { isValidating: isValidatingUserId, isValid: isValidUserId, error: userIdError } = useAuthorizeUser(userId);
+  const {
+    isValidating: isValidatingUserId,
+    isValid: isValidUserId,
+    error: userIdError,
+  } = useAuthorizeUser(userId);
 
   // View state
   const [viewMode, setViewMode] = useState("formatted"); // 'formatted' or 'raw'
@@ -60,11 +95,11 @@ function WorkoutDetails() {
     currentWorkout: null,
     recentWorkouts: [],
     isLoadingRecentItems: false,
-    isLoadingItem: !!(userId && workoutId && coachId), // Start loading if we have required params
+    isLoadingItem: !!(userId && workoutId && coachId),
     error: null,
   });
 
-  // Coach data state (for FloatingMenuManager)
+  // Coach data state
   const [coachData, setCoachData] = useState(null);
 
   // Redirect if missing required parameters
@@ -81,21 +116,16 @@ function WorkoutDetails() {
 
     if (!workoutAgentRef.current) {
       workoutAgentRef.current = new WorkoutAgent(userId, (newState) => {
-        // Use the agent states directly
         setWorkoutAgentState((prevState) => ({
           ...prevState,
-          // Get loading states from agent
           isLoadingRecentItems: newState.isLoadingRecentItems || false,
           isLoadingItem: newState.isLoadingItem || false,
-          // Get data from agent
           recentWorkouts: newState.recentWorkouts || [],
           error: newState.error || null,
-          // Keep our current workout separate from the agent's state
           currentWorkout: prevState.currentWorkout,
         }));
       });
 
-      // Set up additional callbacks
       workoutAgentRef.current.onError = (error) => {
         console.error("Workout agent error:", error);
       };
@@ -103,7 +133,7 @@ function WorkoutDetails() {
       workoutAgentRef.current.onNewWorkout = (workout) => {
         const title = workoutAgentRef.current.formatWorkoutSummary(
           workout,
-          true
+          true,
         );
         success(`Workout logged: ${title}`);
       };
@@ -117,7 +147,7 @@ function WorkoutDetails() {
     };
   }, [userId, success]);
 
-  // Load coach data for FloatingMenuManager
+  // Load coach data
   useEffect(() => {
     if (!userId || !coachId) return;
 
@@ -126,10 +156,13 @@ function WorkoutDetails() {
         if (!coachAgentRef.current) {
           coachAgentRef.current = new CoachAgent();
         }
-        const coachData = await coachAgentRef.current.loadCoachDetails(userId, coachId);
+        const coachData = await coachAgentRef.current.loadCoachDetails(
+          userId,
+          coachId,
+        );
         setCoachData(coachData);
       } catch (error) {
-        console.error('Failed to load coach data:', error);
+        console.error("Failed to load coach data:", error);
       }
     };
 
@@ -142,15 +175,15 @@ function WorkoutDetails() {
     };
   }, [userId, coachId]);
 
-  // Auto-scroll to top when page loads (with scroll restoration disabled)
+  // Auto-scroll to top when page loads
   useEffect(() => {
-    if ('scrollRestoration' in window.history) {
-      window.history.scrollRestoration = 'manual';
+    if ("scrollRestoration" in window.history) {
+      window.history.scrollRestoration = "manual";
     }
     window.scrollTo(0, 0);
     return () => {
-      if ('scrollRestoration' in window.history) {
-        window.history.scrollRestoration = 'auto';
+      if ("scrollRestoration" in window.history) {
+        window.history.scrollRestoration = "auto";
       }
     };
   }, []);
@@ -168,7 +201,6 @@ function WorkoutDetails() {
 
     const loadWorkout = async () => {
       try {
-        // Clear any existing workout and set loading state
         setWorkoutAgentState((prevState) => ({
           ...prevState,
           currentWorkout: null,
@@ -176,8 +208,6 @@ function WorkoutDetails() {
           error: null,
         }));
 
-        // Use the workout agent to get the specific workout
-        // The agent will handle isLoadingItem state internally via state callback
         const workout = await workoutAgentRef.current.getWorkout(workoutId);
 
         setWorkoutAgentState((prevState) => ({
@@ -186,7 +216,6 @@ function WorkoutDetails() {
         }));
       } catch (error) {
         console.error("Error loading workout:", error);
-        // Error state is handled by the agent
       }
     };
 
@@ -202,14 +231,6 @@ function WorkoutDetails() {
     navigate(`/training-grounds?userId=${userId}&coachId=${coachId}`);
   };
 
-  // Create coach name handler using the agent's helper method
-  const handleSaveCoachName = coachAgentRef.current?.createCoachNameHandler(
-    userId,
-    coachId,
-    setCoachData,
-    { success, error }
-  );
-
   const formatDate = (dateString) => {
     if (!dateString) return "Unknown";
     const date = new Date(dateString);
@@ -224,7 +245,11 @@ function WorkoutDetails() {
 
   // Workout title editing handler
   const handleSaveWorkoutTitle = async (newTitle) => {
-    if (!newTitle.trim() || !workoutAgentRef.current || !workoutAgentState.currentWorkout) {
+    if (
+      !newTitle.trim() ||
+      !workoutAgentRef.current ||
+      !workoutAgentState.currentWorkout
+    ) {
       return false;
     }
 
@@ -236,10 +261,9 @@ function WorkoutDetails() {
           workoutData: {
             workout_name: newTitle.trim(),
           },
-        }
+        },
       );
 
-      // Update local state with the new title
       setWorkoutAgentState((prevState) => ({
         ...prevState,
         currentWorkout: {
@@ -273,19 +297,17 @@ function WorkoutDetails() {
     try {
       await workoutAgentRef.current.deleteWorkout(
         userId,
-        workoutToDelete.workoutId
+        workoutToDelete.workoutId,
       );
       success("Workout deleted successfully");
       setShowDeleteModal(false);
       setWorkoutToDelete(null);
-      // Navigate back to manage workouts after successful deletion
       navigate(
-        `/training-grounds/manage-workouts?userId=${userId}&coachId=${coachId}`
+        `/training-grounds/manage-workouts?userId=${userId}&coachId=${coachId}`,
       );
     } catch (error) {
       console.error("Error deleting workout:", error);
       error("Failed to delete workout");
-      // Close modal even on error so user can try again
       setShowDeleteModal(false);
       setWorkoutToDelete(null);
     } finally {
@@ -320,60 +342,7 @@ function WorkoutDetails() {
       (!workoutAgentState.currentWorkout ||
         workoutAgentState.currentWorkout.workoutId !== workoutId))
   ) {
-    return (
-      <div className={layoutPatterns.pageContainer}>
-        <div className={layoutPatterns.contentWrapper}>
-          {/* Compact Horizontal Header Skeleton */}
-          <header className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-6">
-            {/* Left: Title + Coach Card */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5">
-              {/* Title skeleton - compact size */}
-              <div className="h-8 md:h-9 bg-synthwave-text-muted/20 rounded animate-pulse w-72"></div>
-
-              {/* Compact coach card skeleton - horizontal pill */}
-              <div className="flex items-center gap-2.5 px-3 py-2 bg-synthwave-neon-cyan/5 border border-synthwave-neon-cyan/20 rounded-full">
-                <div className="w-6 h-6 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
-                <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
-              </div>
-            </div>
-
-            {/* Right: Command button skeleton */}
-            <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
-          </header>
-
-          {/* Main Content Area skeleton */}
-          <div className="flex-1">
-            <div className={`${containerPatterns.mainContent} h-full flex flex-col`}>
-              <div className="p-6 h-full overflow-y-auto space-y-6">
-                {/* Action buttons skeleton */}
-                <div className="flex justify-end space-x-2">
-                  <div className="w-12 h-12 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
-                  <div className="w-12 h-12 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
-                </div>
-
-                {/* Workout sections skeleton */}
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className={`${containerPatterns.cardMedium} p-6`}>
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-6 h-6 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
-                        <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
-                      </div>
-                      <div className="w-4 h-4 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
-                    </div>
-                    <div className="space-y-3">
-                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
-                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-3/4"></div>
-                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-1/2"></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+    return <WorkoutDetailsSkeleton />;
   }
 
   // Handle userId validation errors
@@ -402,9 +371,27 @@ function WorkoutDetails() {
 
   const workout = workoutAgentState.currentWorkout;
 
+  // Extract workout metrics for QuickStats
+  const workoutMetrics = workout
+    ? {
+        intensity: workout.workoutData?.performance_metrics?.intensity || 0,
+        rpe: workout.workoutData?.performance_metrics?.perceived_exertion || 0,
+        duration: workout.workoutData?.duration
+          ? Math.round(workout.workoutData.duration / 60)
+          : 0,
+        calories:
+          workout.workoutData?.performance_metrics?.calories_burned || 0,
+        confidence:
+          workout.extractionMetadata?.confidence ||
+          workout.workoutData?.metadata?.data_confidence ||
+          0,
+        discipline: workout.workoutData?.discipline || "fitness",
+      }
+    : null;
+
   return (
-    <div className={`${layoutPatterns.pageContainer} min-h-screen pb-8`}>
-      <div className={`${layoutPatterns.contentWrapper} min-h-[calc(100vh-5rem)] flex flex-col`}>
+    <div className={layoutPatterns.pageContainer}>
+      <div className={layoutPatterns.contentWrapper}>
         {/* Compact Horizontal Header */}
         <header
           className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-6"
@@ -412,7 +399,7 @@ function WorkoutDetails() {
         >
           {/* Left section: Title + Coach Card */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5 w-full sm:w-auto">
-            {/* Page Title with Hover Tooltip */}
+            {/* Page Title */}
             <h1
               className="font-russo font-bold text-2xl md:text-3xl text-white uppercase tracking-wider cursor-help"
               data-tooltip-id="workout-details-info"
@@ -427,57 +414,110 @@ function WorkoutDetails() {
                 coachData={coachData}
                 isOnline={true}
                 onClick={handleCoachCardClick}
+                tooltipContent="Go to the Training Grounds"
               />
             )}
           </div>
 
           {/* Right section: Command Palette Button */}
           <div className="flex items-center gap-3">
-            <CommandPaletteButton onClick={() => setIsCommandPaletteOpen(true)} />
+            <CommandPaletteButton
+              onClick={() => setIsCommandPaletteOpen(true)}
+            />
           </div>
         </header>
 
-        {/* Main Content Area */}
-        <div className="flex-1 flex justify-center">
-          <div className="w-full max-w-7xl">
-            <div className={`${containerPatterns.mainContent} h-full flex flex-col`}>
-              <div className="p-6 h-full overflow-y-auto custom-scrollbar">
-                {workout ? (
-                  <WorkoutViewer
-                    workout={workout}
-                    onToggleView={handleToggleView}
-                    onDeleteWorkout={handleDeleteClick}
-                    viewMode={viewMode}
-                    onSaveWorkoutTitle={handleSaveWorkoutTitle}
-                    formatDate={formatDate}
-                  />
-                ) : (
-                  <div className="flex items-center justify-center h-full">
-                    <EmptyState title="No workout data available" size="large" />
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+        {/* Quick Stats */}
+        {workoutMetrics && (
+          <QuickStats
+            stats={[
+              {
+                icon: LightningIcon,
+                value: workoutMetrics.intensity || "--",
+                tooltip: {
+                  title: "Intensity",
+                  description: "Overall workout intensity (1-10 scale)",
+                },
+                color: "pink",
+                isLoading: false,
+                ariaLabel: `Intensity ${workoutMetrics.intensity} out of 10`,
+                id: "workout-stat-intensity",
+              },
+              {
+                icon: TargetIcon,
+                value: workoutMetrics.rpe || "--",
+                tooltip: {
+                  title: "RPE",
+                  description: "Rate of Perceived Exertion (1-10 scale)",
+                },
+                color: "cyan",
+                isLoading: false,
+                ariaLabel: `RPE ${workoutMetrics.rpe} out of 10`,
+                id: "workout-stat-rpe",
+              },
+              {
+                icon: ClockIcon,
+                value: workoutMetrics.duration || "--",
+                tooltip: {
+                  title: "Duration",
+                  description: "Total workout duration in minutes",
+                },
+                color: "purple",
+                isLoading: false,
+                ariaLabel: `${workoutMetrics.duration} minutes`,
+                id: "workout-stat-duration",
+              },
+              {
+                icon: BarChartIcon,
+                value: workoutMetrics.calories || "--",
+                tooltip: {
+                  title: "Calories",
+                  description: "Estimated calories burned",
+                },
+                color: "cyan",
+                isLoading: false,
+                ariaLabel: `${workoutMetrics.calories} calories`,
+                id: "workout-stat-calories",
+              },
+              {
+                icon: SparkleIcon,
+                value: `${Math.round(workoutMetrics.confidence * 100)}%`,
+                tooltip: {
+                  title: "AI Confidence",
+                  description: "AI extraction confidence score",
+                },
+                color: "pink",
+                isLoading: false,
+                ariaLabel: `${Math.round(workoutMetrics.confidence * 100)}% confidence`,
+                id: "workout-stat-confidence",
+              },
+            ]}
+          />
+        )}
 
-      {/* Floating Menu Manager */}
-      <FloatingMenuManager
-        userId={userId}
-        coachId={coachId}
-        currentPage="workouts"
-        coachData={coachData}
-        onCommandPaletteToggle={(command) => {
-          setCommandPaletteCommand(command);
-          setIsCommandPaletteOpen(true);
-        }}
-      />
+        {/* Main Content Area */}
+        {workout ? (
+          <WorkoutViewer
+            workout={workout}
+            onToggleView={handleToggleView}
+            onDeleteWorkout={handleDeleteClick}
+            viewMode={viewMode}
+            onSaveWorkoutTitle={handleSaveWorkoutTitle}
+            formatDate={formatDate}
+          />
+        ) : (
+          <div className="flex items-center justify-center h-full">
+            <EmptyState title="No workout data available" size="large" />
+          </div>
+        )}
+      </div>
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && workoutToDelete && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[10000]">
-          <div className={`${containerPatterns.deleteModal} p-6 max-w-md w-full mx-4`}>
+          <div
+            className={`${containerPatterns.deleteModal} p-6 max-w-md w-full mx-4`}
+          >
             <div className="text-center">
               <h3 className="text-synthwave-neon-pink font-rajdhani text-xl font-bold mb-2">
                 Delete Workout
@@ -486,7 +526,7 @@ function WorkoutDetails() {
                 Are you sure you want to delete "
                 {workoutAgentRef.current?.formatWorkoutSummary(
                   workoutToDelete,
-                  true
+                  true,
                 ) || "this workout"}
                 "? This action cannot be undone.
               </p>
@@ -511,19 +551,7 @@ function WorkoutDetails() {
                     </>
                   ) : (
                     <>
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                        />
-                      </svg>
+                      <TrashIcon />
                       <span>Delete</span>
                     </>
                   )}
@@ -555,5 +583,164 @@ function WorkoutDetails() {
   );
 }
 
-export default WorkoutDetails;
+// Skeleton loading component matching ProgramDashboard pattern
+function WorkoutDetailsSkeleton() {
+  return (
+    <div className={layoutPatterns.pageContainer}>
+      <div className={layoutPatterns.contentWrapper}>
+        {/* Compact Horizontal Header Skeleton */}
+        <header className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-6">
+          {/* Left: Title + Coach Card */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5">
+            <div className="h-8 md:h-9 bg-synthwave-text-muted/20 rounded animate-pulse w-72"></div>
+            <div className="flex items-center gap-2.5 px-3 py-2 bg-synthwave-neon-cyan/5 border border-synthwave-neon-cyan/20 rounded-full">
+              <div className="w-6 h-6 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
+              <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
+            </div>
+          </div>
+          <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
+        </header>
 
+        {/* Quick Stats skeleton */}
+        <QuickStats
+          stats={[1, 2, 3, 4, 5].map((i) => ({
+            icon: null,
+            value: 0,
+            tooltip: { title: "", description: "" },
+            color: "cyan",
+            isLoading: true,
+            id: `skeleton-stat-${i}`,
+          }))}
+        />
+
+        {/* Main Content Area skeleton - Two-column layout matching V2 */}
+        <div className="space-y-6">
+          {/* Two-column layout: 60/40 split */}
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+            {/* Left column - 60% (3 of 5 columns) */}
+            <div className="lg:col-span-3 space-y-6">
+              {/* Session Stats skeleton */}
+              <div className={`${containerPatterns.cardMedium}`}>
+                <div className="flex items-center justify-between p-6">
+                  <div className="flex items-center gap-3 flex-1">
+                    <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full animate-pulse flex-shrink-0 mt-0.5"></div>
+                    <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
+                  </div>
+                  <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                </div>
+                <div className="px-6 pb-6 space-y-3">
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                    <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                    <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                    <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                    <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Subjective Feedback skeleton */}
+              <div className={`${containerPatterns.cardMedium}`}>
+                <div className="flex items-center justify-between p-6">
+                  <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full animate-pulse flex-shrink-0 mt-0.5"></div>
+                    <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-56"></div>
+                  </div>
+                  <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                </div>
+                <div className="px-6 pb-6 space-y-3">
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-3">
+                    <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                    <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                    <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Discipline-specific skeleton */}
+              <div className={`${containerPatterns.cardMedium}`}>
+                <div className="flex items-center justify-between p-6">
+                  <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full animate-pulse flex-shrink-0 mt-0.5"></div>
+                    <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-40"></div>
+                  </div>
+                  <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                </div>
+                <div className="px-6 pb-6 space-y-4">
+                  <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-3/4"></div>
+                  <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-1/2"></div>
+                  <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-2/3"></div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right column - 40% (2 of 5 columns) */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Personal Insights skeleton */}
+              <div className={`${containerPatterns.cardMedium}`}>
+                <div className="flex items-center justify-between p-6">
+                  <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full animate-pulse flex-shrink-0 mt-0.5"></div>
+                    <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-44"></div>
+                  </div>
+                  <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                </div>
+                <div className="px-6 pb-6 space-y-3">
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                    <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                    <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                  </div>
+                </div>
+              </div>
+
+              {/* PR Achievements skeleton */}
+              <div className={`${containerPatterns.cardMedium}`}>
+                <div className="flex items-center justify-between p-6">
+                  <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full animate-pulse flex-shrink-0 mt-0.5"></div>
+                    <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-40"></div>
+                  </div>
+                  <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                </div>
+                <div className="px-6 pb-6">
+                  <div className="h-16 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                </div>
+              </div>
+
+              {/* Coach Notes skeleton */}
+              <div className={`${containerPatterns.cardMedium}`}>
+                <div className="flex items-center justify-between p-6">
+                  <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full animate-pulse flex-shrink-0 mt-0.5"></div>
+                    <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-36"></div>
+                  </div>
+                  <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                </div>
+                <div className="px-6 pb-6 space-y-2">
+                  <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                  <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-5/6"></div>
+                </div>
+              </div>
+
+              {/* Extraction Notes skeleton */}
+              <div className={`${containerPatterns.cardMedium}`}>
+                <div className="flex items-center justify-between p-6">
+                  <div className="flex items-center gap-3">
+                    <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full animate-pulse flex-shrink-0 mt-0.5"></div>
+                    <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-44"></div>
+                  </div>
+                  <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                </div>
+                <div className="px-6 pb-6 space-y-2">
+                  <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-3/4"></div>
+                  <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-1/2"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default WorkoutDetails;
