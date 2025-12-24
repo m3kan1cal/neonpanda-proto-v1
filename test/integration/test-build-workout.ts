@@ -1,9 +1,9 @@
 #!/usr/bin/env tsx
 
 /**
- * Build Workout V2 Testing Script
+ * Build Workout Testing Script
  *
- * Tests the build-workout-v2 Lambda with various payloads and validates results.
+ * Tests the build-workout Lambda with various payloads and validates results.
  * Retrieves CloudWatch logs for each execution and compares with expected outcomes.
  * Fetches saved workouts from DynamoDB to validate end-to-end data integrity.
  *
@@ -16,12 +16,12 @@
  *   - Exercise-level validation (sets, reps, weights)
  *
  * Usage:
- *   tsx test/integration/test-build-workout-v2.ts [options]
+ *   tsx test/integration/test-build-workout.ts [options]
  *   OR
- *   node --loader tsx test/integration/test-build-workout-v2.ts [options]
+ *   node --loader tsx test/integration/test-build-workout.ts [options]
  *
  * Options:
- *   --function=NAME     Lambda function name (default: build-workout-v2)
+ *   --function=NAME     Lambda function name (default: build-workout)
  *   --test=NAME         Run specific test (default: all)
  *   --output=DIR        Save results to directory (creates timestamped files)
  *   --verbose           Show full CloudWatch logs and workout data
@@ -31,10 +31,10 @@
  *   DYNAMODB_TABLE_NAME   DynamoDB table name (default: NeonPandaProtoV1-DataTable-Sandbox)
  *
  * Examples:
- *   tsx test/integration/test-build-workout-v2.ts
- *   tsx test/integration/test-build-workout-v2.ts --test=simple-slash-command --verbose
- *   tsx test/integration/test-build-workout-v2.ts --output=test/fixtures/results --verbose
- *   DYNAMODB_TABLE_NAME=CustomTable tsx test/integration/test-build-workout-v2.ts
+ *   tsx test/integration/test-build-workout.ts
+ *   tsx test/integration/test-build-workout.ts --test=simple-slash-command --verbose
+ *   tsx test/integration/test-build-workout.ts --output=test/fixtures/results --verbose
+ *   DYNAMODB_TABLE_NAME=CustomTable tsx test/integration/test-build-workout.ts
  */
 
 import { LambdaClient, InvokeCommand } from "@aws-sdk/client-lambda";
@@ -62,12 +62,12 @@ import type {
 } from "./types.ts";
 
 // Note: Using fsSync for synchronous operations in output saving
-// to match the pattern from test-build-program-v2.ts
+// to match the pattern from test-build-program.ts
 
 // Configuration
 const DEFAULT_REGION = "us-west-2";
 const DEFAULT_FUNCTION =
-  "amplify-neonpandaprotov1--buildworkoutv2lambda12DD-7moX1OMrHTVC";
+  "amplify-neonpandaprotov1--buildworkoutlambda23D1E4-EyMhp5RrlgG2";
 const LOG_WAIT_TIME = 20000; // Wait 20s for logs to propagate (agents can take 60-90s)
 const DYNAMODB_TABLE_NAME =
   process.env.DYNAMODB_TABLE_NAME || "NeonPandaProtoV1-DataTable-Sandbox";
@@ -269,6 +269,19 @@ const BASE_COACH_CONFIG = {
 
 /**
  * Test payloads with expected outcomes
+ *
+ * IMPORTANT: Discipline Detection Integration
+ * -----------------------------------------
+ * Discipline detection happens in the `stream-coach-conversation` Lambda
+ * (during workout detection phase), NOT in the `build-workout` Lambda.
+ * The detected discipline is passed to `build-workout` via the
+ * `BuildWorkoutEvent.detectedDiscipline` field.
+ *
+ * Therefore:
+ * - Tool counts in these tests remain the same as before (no discipline detection tool)
+ * - The discipline is already known when build-workout starts
+ * - Tests validate that the correct discipline is used for extraction
+ * - Discipline accuracy tracking measures end-to-end classification quality
  */
 const TEST_CASES = {
   "simple-slash-command": {
@@ -606,9 +619,12 @@ const TEST_CASES = {
     expected: {
       success: true,
       shouldHave: ["workoutId", "discipline", "confidence"],
-      discipline: "powerlifting", // Correct: back squats + bench press + accessories = powerlifting
+      // Note: AI may classify as bodybuilding (due to 5x8, 3x10, 3x15 rep ranges and accessory focus)
+      // or powerlifting (due to squat + bench being Big 3 movements). Both are valid interpretations.
+      disciplineOptions: ["bodybuilding", "powerlifting"], // Accept either - both are reasonable
       minConfidence: 0.65, // Lowered - bare-bones data from progressive Q&A
       toolsUsed: [
+        "detect_discipline", // Agent now always calls detect_discipline first
         "extract_workout_data",
         "validate_workout_completeness",
         // normalize_workout_data is conditional - only if completeness < 0.65
@@ -627,13 +643,9 @@ const TEST_CASES = {
           "date",
           "performance_metrics.intensity",
           "performance_metrics.perceived_exertion",
-          "discipline_specific.powerlifting.exercises",
         ],
-        fieldValues: {
-          discipline: "powerlifting",
-          // Just validate discipline - AI can infer all other values appropriately
-        },
-        disciplineSpecificPath: "discipline_specific.powerlifting.exercises",
+        // Don't specify fieldValues.discipline or disciplineSpecificPath
+        // since we accept multiple disciplines - validator will handle this
         minExerciseCount: 4, // Back squats + bench press + pull-ups + dips
       },
     },
@@ -681,6 +693,435 @@ const TEST_CASES = {
         fieldValues: {
           discipline: "running",
           // Just validate discipline - AI can infer workout_type and other details
+        },
+      },
+    },
+  },
+
+  "bodybuilding-push-day": {
+    description:
+      "Bodybuilding/Hypertrophy Push Day workout with tempo work, drop sets, and volume focus",
+    payload: {
+      userId: "63gocaz-j-AYRsb0094ik",
+      coachId: "user_63gocaz-j-AYRsb0094ik_coach_1756078034317",
+      conversationId: "conv_1764512884381_4amplrhdd",
+      userMessage: `/log-workout Push Day at the gym today - felt the pump!
+
+**CHEST:**
+Flat Barbell Bench Press: 4 sets x 8-10 reps at 185lbs, 185lbs, 205lbs, 205lbs with 90s rest
+Incline Dumbbell Press: 4 sets x 10-12 reps at 70lbs each hand with 60s rest, tempo 3-1-1-0
+Cable Flyes: 3 sets x 15 reps at 30lbs per side, 25lbs (drop set), superset with push-ups to failure
+
+**SHOULDERS:**
+Seated Overhead Press: 4 sets x 8-10 reps at 115lbs, 115lbs, 135lbs, 135lbs
+Lateral Raises: 4 sets x 12-15 reps at 25lbs each hand, used strict form
+Face Pulls: 3 sets x 20 reps at 60lbs
+
+**TRICEPS:**
+Rope Pushdowns: 3 sets x 12-15 reps at 70lbs with 45s rest
+Overhead Dumbbell Extension: 3 sets x 12 reps at 50lbs
+Diamond Push-ups: 2 sets to failure (got 18, 14)
+
+**PERFORMANCE DATA:**
+- Intensity: 7/10 (hypertrophy focused, not max effort)
+- RPE: 7/10
+- Session duration: 75 minutes (10 min warmup, 60 min workout, 5 min stretch)
+- Workout duration: 60 minutes
+- Calories: ~420
+
+**SUBJECTIVE:**
+- Pre-workout energy: 8/10
+- Post-workout energy: 6/10
+- Enjoyment: 9/10 - love push days
+- Difficulty: 7/10
+- Form quality: 9/10 - really focused on mind-muscle connection
+- Pump: 10/10 chest and shoulder pump was insane
+- Used pre-workout (200mg caffeine) 30min before
+- Time under tension was priority today, controlled negatives`,
+      coachConfig: BASE_COACH_CONFIG,
+      isSlashCommand: true,
+      slashCommand: "log-workout",
+      messageTimestamp: new Date().toISOString(),
+      userTimezone: "America/Los_Angeles",
+    },
+    expected: {
+      success: true,
+      shouldHave: ["workoutId", "discipline", "confidence"],
+      discipline: "bodybuilding",
+      minConfidence: 0.85,
+      toolsUsed: [
+        "extract_workout_data",
+        "validate_workout_completeness",
+        "generate_workout_summary",
+        "save_workout_to_database",
+      ],
+      workoutValidation: {
+        shouldExist: true,
+        requiredFields: [
+          "workout_id",
+          "user_id",
+          "discipline",
+          "workout_type",
+          "workout_name",
+          "date",
+          "performance_metrics.intensity",
+          "performance_metrics.perceived_exertion",
+          "duration",
+        ],
+        fieldValues: {
+          discipline: "bodybuilding",
+          // Just validate discipline - AI can structure exercises as appropriate
+        },
+      },
+    },
+  },
+
+  "hyrox-training": {
+    description:
+      "Hyrox training session with the classic 8 stations and running intervals",
+    payload: {
+      userId: "63gocaz-j-AYRsb0094ik",
+      coachId: "user_63gocaz-j-AYRsb0094ik_coach_1756078034317",
+      conversationId: "conv_1764512884381_4amplrhdd",
+      userMessage: `/log-workout Hyrox simulation today - training for the race next month!
+
+**STATION 1: SkiErg**
+1000m in 4:12 (target pace ~2:06/500m)
+- Felt strong, good pull rhythm
+
+**RUN 1:** 1km run in 5:15
+
+**STATION 2: Sled Push**
+50m x 2 lengths at 102kg (225lbs)
+- Completed in 1:45, legs burning
+
+**RUN 2:** 1km run in 5:32 (feeling the sled)
+
+**STATION 3: Sled Pull**
+50m x 2 lengths at 78kg (172lbs)
+- Completed in 2:15, grip starting to fatigue
+
+**RUN 3:** 1km run in 5:28
+
+**STATION 4: Burpee Broad Jumps**
+80m total in 3:45
+- Paced them well, stayed consistent
+
+**RUN 4:** 1km run in 5:40 (heart rate high)
+
+**STATION 5: Rowing**
+1000m in 3:52 (1:56/500m pace)
+- Matched target pace perfectly
+
+**RUN 5:** 1km run in 5:35
+
+**STATION 6: Farmers Carry**
+200m with 2x24kg (53lbs) kettlebells
+- Completed in 2:10, only dropped once
+
+**RUN 6:** 1km run in 5:38
+
+**STATION 7: Sandbag Lunges**
+100m with 20kg (44lbs) sandbag
+- Completed in 4:20, quads on fire
+
+**RUN 7:** 1km run in 5:45 (really digging deep)
+
+**STATION 8: Wall Balls**
+100 reps at 9kg (20lbs) to 10ft target
+- Completed in 6:15, broke into sets of 25-20-20-18-17
+
+**FINAL RUN:** 1km run in 5:50 (gave everything left)
+
+**TOTAL TIME:** 1:12:45
+
+**PERFORMANCE DATA:**
+- Overall intensity: 9/10 (race simulation)
+- Overall RPE: 9/10
+- Average HR: 162 bpm
+- Max HR: 185 bpm
+- Session duration: 85 minutes (including warmup/cooldown)
+- Workout duration: 73 minutes
+- Calories: ~875
+
+**SUBJECTIVE:**
+- Pre-workout energy: 8/10
+- Post-workout energy: 2/10 (completely gassed)
+- Enjoyment: 8/10 - love the challenge
+- Difficulty: 9/10
+- Form quality: 7/10 - started breaking down on later stations
+- Mental state: determined, had to dig deep
+- This was a full race simulation, paced it like the real thing
+- Goal for race: sub 1:10:00`,
+      coachConfig: BASE_COACH_CONFIG,
+      isSlashCommand: true,
+      slashCommand: "log-workout",
+      messageTimestamp: new Date().toISOString(),
+      userTimezone: "America/Los_Angeles",
+    },
+    expected: {
+      success: true,
+      shouldHave: ["workoutId", "discipline", "confidence"],
+      discipline: "hyrox",
+      minConfidence: 0.9,
+      toolsUsed: [
+        "extract_workout_data",
+        "validate_workout_completeness",
+        "generate_workout_summary",
+        "save_workout_to_database",
+      ],
+      workoutValidation: {
+        shouldExist: true,
+        requiredFields: [
+          "workout_id",
+          "user_id",
+          "discipline",
+          "workout_type",
+          "workout_name",
+          "date",
+          "performance_metrics.intensity",
+          "performance_metrics.perceived_exertion",
+          "duration",
+        ],
+        fieldValues: {
+          discipline: "hyrox",
+          // Just validate discipline - AI can structure the 8 stations + runs as appropriate
+        },
+      },
+    },
+  },
+
+  "olympic-weightlifting-session": {
+    description:
+      "Olympic Weightlifting session with snatch work and accessory lifts",
+    payload: {
+      userId: "63gocaz-j-AYRsb0094ik",
+      coachId: "user_63gocaz-j-AYRsb0094ik_coach_1756078034317",
+      conversationId: "conv_1764512884381_4amplrhdd",
+      userMessage: `/log-workout Olympic lifting session today - worked on snatch technique!
+
+**MAIN LIFTS:**
+Power Snatch - worked up to heavy single
+- Warmup: 45kg x 3, 60kg x 2, 70kg x 1
+- Working: 75kg x 1, 80kg x 1 (PR!), 85kg x 1 (missed)
+- Drop sets: 70kg x 2, 70kg x 2
+
+Snatch Balance - 3x3 at 60kg
+- Focusing on speed and positioning
+
+**ACCESSORY WORK:**
+Overhead Squats: 4x3 at 65kg
+- Working on mobility and stability
+
+Snatch Pulls: 3x5 at 85kg
+- Focus on extension and hip drive
+
+**PERFORMANCE DATA:**
+- Intensity: 8/10
+- RPE: 8/10
+- Session duration: 90 minutes (15 min warmup, 60 min lifting, 15 min cooldown)
+- Workout duration: 60 minutes
+
+**SUBJECTIVE:**
+- Pre-workout energy: 8/10
+- Post-workout energy: 6/10
+- Enjoyment: 9/10 - hit a PR!
+- Difficulty: 8/10
+- Form quality: 8/10 - technique felt solid today
+- The 80kg snatch felt smooth, missed 85kg forward`,
+      coachConfig: BASE_COACH_CONFIG,
+      isSlashCommand: true,
+      slashCommand: "log-workout",
+      messageTimestamp: new Date().toISOString(),
+      userTimezone: "America/Los_Angeles",
+    },
+    expected: {
+      success: true,
+      shouldHave: ["workoutId", "discipline", "confidence"],
+      discipline: "olympic_weightlifting",
+      minConfidence: 0.85,
+      toolsUsed: [
+        "extract_workout_data",
+        "validate_workout_completeness",
+        "generate_workout_summary",
+        "save_workout_to_database",
+      ],
+      workoutValidation: {
+        shouldExist: true,
+        requiredFields: [
+          "workout_id",
+          "user_id",
+          "discipline",
+          "workout_type",
+          "workout_name",
+          "date",
+          "performance_metrics.intensity",
+          "performance_metrics.perceived_exertion",
+          "duration",
+        ],
+        fieldValues: {
+          discipline: "olympic_weightlifting",
+        },
+      },
+    },
+  },
+
+  "functional-bodybuilding-emom": {
+    description:
+      "Functional Bodybuilding EMOM session with tempo work and quality focus",
+    payload: {
+      userId: "63gocaz-j-AYRsb0094ik",
+      coachId: "user_63gocaz-j-AYRsb0094ik_coach_1756078034317",
+      conversationId: "conv_1764512884381_4amplrhdd",
+      userMessage: `/log-workout Functional Bodybuilding session - Marcus Filly Persist style!
+
+**EMOM 16 (alternating):**
+Odd Minutes: 8 DB Rows (tempo 3-1-1-0) at 70# each hand
+Even Minutes: 6 Ring Dips (strict, tempo 3-0-1-0)
+
+Completed all 8 rounds, maintained perfect form throughout. Really focused on the eccentric portion and mind-muscle connection.
+
+**SUPERSET FINISHER (3 rounds):**
+A1: 10 Goblet Squats at 70# (slow and controlled)
+A2: 15 Banded Pull-Aparts (moderate resistance)
+A3: 20 Hollow Rocks
+
+Rest 90 seconds between rounds
+
+**CORE FINISHER:**
+3 rounds:
+- 30 second L-sit hold (parallettes)
+- 45 second plank hold
+- 15 Dead Bugs per side
+
+**PERFORMANCE DATA:**
+- Intensity: 7/10 (quality over intensity)
+- RPE: 7/10
+- Session duration: 55 minutes (10 min warmup, 40 min workout, 5 min stretch)
+- Workout duration: 40 minutes
+
+**SUBJECTIVE:**
+- Pre-workout energy: 8/10
+- Post-workout energy: 7/10
+- Enjoyment: 9/10 - love the tempo work
+- Difficulty: 7/10
+- Form quality: 10/10 - this is the goal!
+- Movement quality was the priority today, felt great
+- Really emphasized time under tension and control`,
+      coachConfig: BASE_COACH_CONFIG,
+      isSlashCommand: true,
+      slashCommand: "log-workout",
+      messageTimestamp: new Date().toISOString(),
+      userTimezone: "America/Los_Angeles",
+    },
+    expected: {
+      success: true,
+      shouldHave: ["workoutId", "discipline", "confidence"],
+      discipline: "functional_bodybuilding",
+      minConfidence: 0.85,
+      toolsUsed: [
+        "extract_workout_data",
+        "validate_workout_completeness",
+        "generate_workout_summary",
+        "save_workout_to_database",
+      ],
+      workoutValidation: {
+        shouldExist: true,
+        requiredFields: [
+          "workout_id",
+          "user_id",
+          "discipline",
+          "workout_type",
+          "workout_name",
+          "date",
+          "performance_metrics.intensity",
+          "performance_metrics.perceived_exertion",
+          "duration",
+        ],
+        fieldValues: {
+          discipline: "functional_bodybuilding",
+        },
+      },
+    },
+  },
+
+  "calisthenics-skill-work": {
+    description:
+      "Calisthenics skill development session focusing on handstands and pull-ups",
+    payload: {
+      userId: "63gocaz-j-AYRsb0094ik",
+      coachId: "user_63gocaz-j-AYRsb0094ik_coach_1756078034317",
+      conversationId: "conv_1764512884381_4amplrhdd",
+      userMessage: `/log-workout Calisthenics skill session at the park!
+
+**HANDSTAND PRACTICE (20 minutes):**
+- Wall-assisted handstand holds: 5 sets x 30 seconds
+- Freestanding handstand attempts: 10 sets (best hold: 12 seconds!)
+- Handstand shoulder taps against wall: 3 sets x 8 taps per side
+
+**PULL-UP PROGRESSION (15 minutes):**
+- Strict Pull-ups: 5, 4, 4, 3, 3 (reps per set)
+- Chest-to-Bar attempts: 3 sets x 3 reps
+- Archer Pull-ups: 3 sets x 5 per side
+- Negative One-Arm Pull-ups: 4 sets x 3 per side (8 second negatives)
+
+**L-SIT PROGRESSION (10 minutes):**
+- L-sit holds on parallettes: 4 sets (got 25s, 20s, 18s, 15s)
+- Tuck L-sit holds: 3 sets x 30 seconds
+- L-sit to support transitions: 3 sets x 5 reps
+
+**PUSH WORK (15 minutes):**
+- Ring Push-ups: 4 sets x 12 reps (rings close to ground)
+- Pseudo Planche Leans: 4 sets x 20 seconds
+- Pike Push-ups: 3 sets x 10 reps
+
+**PERFORMANCE DATA:**
+- Intensity: 7/10 (skill work, not max effort)
+- RPE: 7/10
+- Session duration: 75 minutes (10 min warmup, 60 min skill work, 5 min stretch)
+- Workout duration: 60 minutes
+
+**SUBJECTIVE:**
+- Pre-workout energy: 9/10
+- Post-workout energy: 7/10
+- Enjoyment: 10/10 - love training outside
+- Difficulty: 7/10
+- Form quality: 9/10 - focused on perfect technique
+- Hit a 12 second freestanding handstand PR!
+- Archer pull-ups are getting stronger
+- Weather was perfect today, 72°F and sunny`,
+      coachConfig: BASE_COACH_CONFIG,
+      isSlashCommand: true,
+      slashCommand: "log-workout",
+      messageTimestamp: new Date().toISOString(),
+      userTimezone: "America/Los_Angeles",
+    },
+    expected: {
+      success: true,
+      shouldHave: ["workoutId", "discipline", "confidence"],
+      discipline: "calisthenics",
+      minConfidence: 0.85,
+      toolsUsed: [
+        "extract_workout_data",
+        "validate_workout_completeness",
+        "generate_workout_summary",
+        "save_workout_to_database",
+      ],
+      workoutValidation: {
+        shouldExist: true,
+        requiredFields: [
+          "workout_id",
+          "user_id",
+          "discipline",
+          "workout_type",
+          "workout_name",
+          "date",
+          "performance_metrics.intensity",
+          "performance_metrics.perceived_exertion",
+          "duration",
+        ],
+        fieldValues: {
+          discipline: "calisthenics",
         },
       },
     },
@@ -926,6 +1367,153 @@ Completed in 6:52. Maintained steady pace, kept rowing at 1:50-1:55/500m. DB cle
     },
   },
 
+  "mixed-modality-strength-conditioning": {
+    description:
+      "Mixed-modality workout (strength + conditioning) - should be classified as CrossFit, NOT hybrid",
+    payload: {
+      userId: "63gocaz-j-AYRsb0094ik",
+      coachId: "user_63gocaz-j-AYRsb0094ik_coach_1756078034317",
+      conversationId: "conv_1764512884381_4amplrhdd",
+      userMessage: `/log-workout Mixed training session today!
+
+**STRENGTH PHASE:**
+Back Squat - 5 sets x 5 reps
+- Warmup: 135x5, 185x3
+- Working sets: 225x5, 225x5, 245x5, 245x5, 265x5
+All working sets felt strong, RPE around 7-8
+
+**CONDITIONING PHASE:**
+15-minute AMRAP:
+- 10 KB Swings (53#)
+- 15 Push-ups
+- 20 Air Squats
+
+Completed 8 full rounds. Heart rate stayed around 160-165 bpm.
+
+Overall intensity: 8/10
+Overall RPE: 8/10
+Duration: About 45 minutes total (25min strength, 15min conditioning, 5min transition)`,
+      coachConfig: BASE_COACH_CONFIG,
+      isSlashCommand: true,
+      slashCommand: "log-workout",
+      messageTimestamp: new Date().toISOString(),
+      userTimezone: "America/Los_Angeles",
+    },
+    expected: {
+      success: true,
+      shouldHave: ["workoutId", "discipline", "confidence"],
+      discipline: "crossfit", // ✅ UPDATED: Was "hybrid", now "crossfit"
+      minConfidence: 0.8,
+      toolsUsed: [
+        "extract_workout_data",
+        "validate_workout_completeness",
+        "generate_workout_summary",
+        "save_workout_to_database",
+      ],
+      workoutValidation: {
+        shouldExist: true,
+        requiredFields: [
+          "workout_id",
+          "user_id",
+          "discipline",
+          "workout_name",
+          "date",
+          "performance_metrics.intensity",
+          "performance_metrics.perceived_exertion",
+          "discipline_specific.crossfit.rounds", // ✅ Uses CrossFit schema
+        ],
+        fieldValues: {
+          discipline: "crossfit", // ✅ Verify it's CrossFit, not hybrid
+        },
+        disciplineSpecificPath: "discipline_specific.crossfit.rounds",
+        minRoundCount: 1, // At least the AMRAP rounds
+      },
+    },
+  },
+
+  "crossfit-chipper-with-image": {
+    description:
+      "CrossFit chipper workout from whiteboard image (multimodal extraction test)",
+    payload: {
+      userId: "63gocaz-j-AYRsb0094ik",
+      coachId: "user_63gocaz-j-AYRsb0094ik_coach_1756078034317",
+      conversationId: "conv_1764512884381_4amplrhdd",
+      userMessage: "Just finished this workout from the board!",
+      imageS3Keys: ["user-uploads/63gocaz-j-AYRsb0094ik/IMG_9431.jpg"],
+      coachConfig: BASE_COACH_CONFIG,
+      isSlashCommand: false,
+      messageTimestamp: new Date().toISOString(),
+      userTimezone: "America/Los_Angeles",
+    },
+    expected: {
+      success: true,
+      shouldHave: ["workoutId", "discipline", "confidence"],
+      discipline: "crossfit",
+      minConfidence: 0.7, // Image extraction might be slightly lower confidence
+      toolsUsed: [
+        "detect_discipline", // Now uses multimodal API with images
+        "extract_workout_data", // Also uses multimodal API with images
+        "validate_workout_completeness",
+        "generate_workout_summary",
+        "save_workout_to_database",
+      ],
+      imageProcessing: {
+        imagesUsed: true,
+        expectedImageCount: 1,
+        minMultimodalApiCalls: 1, // Agent processes image once at conversation start, then passes text to tools
+      },
+      workoutValidation: {
+        shouldExist: true,
+        requiredFields: [
+          "workout_id",
+          "user_id",
+          "discipline",
+          "workout_type",
+          "workout_name",
+          "date",
+          "performance_metrics.intensity",
+          "performance_metrics.perceived_exertion",
+          "discipline_specific.crossfit.rounds",
+        ],
+        fieldValues: {
+          discipline: "crossfit",
+        },
+        disciplineSpecificPath: "discipline_specific.crossfit.rounds",
+        minRoundCount: 1, // Chipper-style workout
+      },
+    },
+  },
+
+  "crossfit-chipper-text-only": {
+    description:
+      "Same minimal workout message WITHOUT image (negative test - should fail or have very low confidence)",
+    payload: {
+      userId: "63gocaz-j-AYRsb0094ik",
+      coachId: "user_63gocaz-j-AYRsb0094ik_coach_1756078034317",
+      conversationId: "conv_1764512884381_4amplrhdd",
+      userMessage: "Just finished this workout from the board!",
+      // NO imageS3Keys - text-only
+      coachConfig: BASE_COACH_CONFIG,
+      isSlashCommand: false,
+      messageTimestamp: new Date().toISOString(),
+      userTimezone: "America/Los_Angeles",
+    },
+    expected: {
+      success: false, // Should fail - insufficient information without image
+      skipped: true,
+      shouldHave: ["reason"],
+      shouldNotUseTool: "save_workout_to_database",
+      imageProcessing: {
+        imagesUsed: false, // Verify NO images were processed
+        expectedImageCount: 0,
+        minMultimodalApiCalls: 0,
+      },
+      workoutValidation: {
+        shouldExist: false, // Workout should NOT be saved
+      },
+    },
+  },
+
   "gold-standard-comprehensive": {
     description:
       "Gold standard CompTrain-style workout with strength + conditioning, complete metadata, and rich performance data",
@@ -1051,26 +1639,29 @@ function parseArgs(): TestOptions {
   for (const arg of args) {
     if (arg === "--help" || arg === "-h") {
       console.info(`
-Build Workout V2 Testing Script
+Build Workout Testing Script
 
 Usage:
-  tsx test/integration/test-build-workout-v2.ts [options]
+  tsx test/integration/test-build-workout.ts [options]
 
 Options:
   --function=NAME     Lambda function name (default: ${DEFAULT_FUNCTION})
   --test=NAME         Run specific test(s) (default: all)
                       Can be comma-separated list: test1,test2,test3
-                      Available: ${Object.keys(TEST_CASES).join(", ")}
+                      Available tests: ${Object.keys(TEST_CASES).length} total
+                      Disciplines covered: crossfit, powerlifting, running,
+                                          bodybuilding, hyrox, olympic_weightlifting,
+                                          functional_bodybuilding, calisthenics
   --output=DIR        Save results to directory (creates timestamped files)
   --verbose           Show full CloudWatch logs
   --region=REGION     AWS region (default: ${DEFAULT_REGION})
   --help, -h          Show this help message
 
 Examples:
-  tsx test/integration/test-build-workout-v2.ts
-  tsx test/integration/test-build-workout-v2.ts --test=simple-slash-command --verbose
-  tsx test/integration/test-build-workout-v2.ts --test=simple-slash-command,crossfit-fran,running-10k
-  tsx test/integration/test-build-workout-v2.ts --output=test/fixtures/results --verbose
+  tsx test/integration/test-build-workout.ts
+  tsx test/integration/test-build-workout.ts --test=simple-slash-command --verbose
+  tsx test/integration/test-build-workout.ts --test=simple-slash-command,crossfit-fran,running-10k
+  tsx test/integration/test-build-workout.ts --output=test/fixtures/results --verbose
 `);
       process.exit(0);
     }
@@ -1458,9 +2049,11 @@ function validateWorkoutData(
 
   // Minimum exercise count (discipline-specific)
   if (expected.minExerciseCount) {
+    // If disciplineOptions is used, dynamically determine path from actual discipline
+    const discipline = workout.discipline;
     const exercisePath =
       expected.disciplineSpecificPath ||
-      "discipline_specific.powerlifting.exercises";
+      `discipline_specific.${discipline}.exercises`;
     const exercises = getNestedField(workout, exercisePath);
 
     if (exercises && Array.isArray(exercises)) {
@@ -1569,6 +2162,9 @@ async function getCloudWatchLogs(
       warnings: [],
       agentResponse: null,
       fullLogs: [],
+      imagesProcessed: false,
+      imageCount: 0,
+      multimodalApiCalls: 0,
     };
 
     for (const event of response.events || []) {
@@ -1602,6 +2198,33 @@ async function getCloudWatchLogs(
       if (message.includes("Agent response received")) {
         logs.agentResponse = message;
       }
+
+      // Track image processing
+      if (
+        message.includes("🖼️") ||
+        message.includes("Processing workout extraction with images") ||
+        message.includes("Processing discipline detection with images")
+      ) {
+        logs.imagesProcessed = true;
+      }
+
+      // Extract image count
+      const imageCountMatch = message.match(/imageCount[:\s]+(\d+)/);
+      if (imageCountMatch) {
+        const count = parseInt(imageCountMatch[1]);
+        if (count > 0) {
+          logs.imageCount = Math.max(logs.imageCount || 0, count);
+        }
+      }
+
+      // Track multimodal API calls
+      if (
+        message.includes("BEDROCK MULTIMODAL API CALL START") ||
+        message.includes("callBedrockApiMultimodal") ||
+        message.includes("buildWorkoutExtractionMessage")
+      ) {
+        logs.multimodalApiCalls = (logs.multimodalApiCalls || 0) + 1;
+      }
     }
 
     console.info(`✅ Retrieved ${response.events?.length || 0} log events`);
@@ -1609,6 +2232,11 @@ async function getCloudWatchLogs(
     console.info(`   Iterations: ${logs.iterations}`);
     console.info(`   Errors: ${logs.errors.length}`);
     console.info(`   Warnings: ${logs.warnings.length}`);
+    if (logs.imagesProcessed) {
+      console.info(
+        `   Images: ${logs.imageCount} processed, ${logs.multimodalApiCalls} multimodal API calls`,
+      );
+    }
 
     return logs;
   } catch (error) {
@@ -1680,16 +2308,28 @@ function validateResult(
     }
   }
 
-  // Check specific field values
-  if (expected.discipline) {
-    const check = {
-      name: "Discipline",
-      expected: expected.discipline,
+  // Check specific field values (discipline detection validation)
+  if (expected.discipline || expected.disciplineOptions) {
+    const expectedDisciplines = expected.disciplineOptions || [
+      expected.discipline,
+    ];
+
+    console.info("🎯 Validating discipline detection integration:", {
+      returnedDiscipline: result.body.discipline,
+      expectedDisciplines: expectedDisciplines,
+    });
+
+    const disciplineCheck = {
+      name: "Discipline classification",
+      expected:
+        expectedDisciplines.length > 1
+          ? `One of: ${expectedDisciplines.join(", ")}`
+          : expectedDisciplines[0],
       actual: result.body.discipline,
-      passed: result.body.discipline === expected.discipline,
+      passed: expectedDisciplines.includes(result.body.discipline),
     };
-    validation.checks.push(check);
-    if (!check.passed) validation.passed = false;
+    validation.checks.push(disciplineCheck);
+    if (!disciplineCheck.passed) validation.passed = false;
   }
 
   if (expected.workoutName) {
@@ -1769,6 +2409,58 @@ function validateResult(
     };
     validation.checks.push(check);
     validation.passed = false;
+  }
+
+  // Check image processing (if expected)
+  if (expected.imageProcessing) {
+    console.info("🖼️ Validating image processing:", {
+      imagesProcessed: logs.imagesProcessed,
+      imageCount: logs.imageCount,
+      multimodalApiCalls: logs.multimodalApiCalls,
+    });
+
+    // Check if images were processed
+    const imagesUsedCheck = {
+      name: "Images processed by Lambda",
+      expected: expected.imageProcessing.imagesUsed,
+      actual: logs.imagesProcessed || false,
+      passed:
+        (logs.imagesProcessed || false) === expected.imageProcessing.imagesUsed,
+    };
+    validation.checks.push(imagesUsedCheck);
+    if (!imagesUsedCheck.passed) validation.passed = false;
+
+    // Check image count (if specified)
+    if (
+      expected.imageProcessing.expectedImageCount !== undefined &&
+      logs.imageCount !== undefined
+    ) {
+      const imageCountCheck = {
+        name: "Image count",
+        expected: expected.imageProcessing.expectedImageCount,
+        actual: logs.imageCount,
+        passed: logs.imageCount === expected.imageProcessing.expectedImageCount,
+      };
+      validation.checks.push(imageCountCheck);
+      if (!imageCountCheck.passed) validation.passed = false;
+    }
+
+    // Check multimodal API calls (if specified)
+    if (
+      expected.imageProcessing.minMultimodalApiCalls !== undefined &&
+      logs.multimodalApiCalls !== undefined
+    ) {
+      const apiCallsCheck = {
+        name: "Minimum multimodal API calls",
+        expected: `>= ${expected.imageProcessing.minMultimodalApiCalls}`,
+        actual: logs.multimodalApiCalls,
+        passed:
+          logs.multimodalApiCalls >=
+          expected.imageProcessing.minMultimodalApiCalls,
+      };
+      validation.checks.push(apiCallsCheck);
+      if (!apiCallsCheck.passed) validation.passed = false;
+    }
   }
 
   // Display results
@@ -1990,7 +2682,7 @@ async function main(): Promise<void> {
     }
   }
 
-  console.info("🧪 Build Workout V2 Testing Script");
+  console.info("🧪 Build Workout Testing Script");
   console.info("═".repeat(80));
   console.info(`Function: ${options.functionName}`);
   console.info(`Region: ${options.region}`);
@@ -2173,6 +2865,32 @@ async function main(): Promise<void> {
 
   console.info(`\n📊 Overall: ${passed}/${total} tests passed`);
 
+  // Calculate discipline detection accuracy
+  const disciplineTests = results.filter(
+    (r) =>
+      r.result?.discipline &&
+      (TEST_CASES[r.testName]?.expected?.discipline ||
+        TEST_CASES[r.testName]?.expected?.disciplineOptions) &&
+      r.result.success,
+  );
+  const disciplineCorrect = disciplineTests.filter((r) => {
+    const testCase = TEST_CASES[r.testName]?.expected;
+    const expectedDisciplines = testCase?.disciplineOptions || [
+      testCase?.discipline,
+    ];
+    return expectedDisciplines.includes(r.result?.discipline);
+  }).length;
+  const disciplineAccuracy =
+    disciplineTests.length > 0
+      ? ((disciplineCorrect / disciplineTests.length) * 100).toFixed(1)
+      : "N/A";
+
+  if (disciplineTests.length > 0) {
+    console.info(
+      `🎯 Discipline Detection Accuracy: ${disciplineAccuracy}% (${disciplineCorrect}/${disciplineTests.length} correct)`,
+    );
+  }
+
   // Save summary to file if requested
   if (options.outputFile) {
     const outputDir = options.outputFile; // Using as directory
@@ -2194,13 +2912,39 @@ async function main(): Promise<void> {
           passed,
           failed: total - passed,
           passRate: ((passed / total) * 100).toFixed(2) + "%",
+          disciplineDetection: {
+            totalTests: disciplineTests.length,
+            correct: disciplineCorrect,
+            accuracy:
+              disciplineTests.length > 0 ? disciplineAccuracy + "%" : "N/A",
+          },
         },
-        results: results.map((r) => ({
-          testName: r.testName,
-          passed: r.validation?.passed || false,
-          duration: r.duration,
-          error: r.error,
-        })),
+        results: results.map((r) => {
+          const testCase = TEST_CASES[r.testName]?.expected;
+          const expectedDisciplines = testCase?.disciplineOptions
+            ? testCase.disciplineOptions
+            : testCase?.discipline
+              ? [testCase.discipline]
+              : null;
+
+          return {
+            testName: r.testName,
+            passed: r.validation?.passed || false,
+            duration: r.duration,
+            error: r.error,
+            discipline: {
+              expected: expectedDisciplines
+                ? expectedDisciplines.length > 1
+                  ? expectedDisciplines
+                  : expectedDisciplines[0]
+                : null,
+              actual: r.result?.discipline || null,
+              correct: expectedDisciplines
+                ? expectedDisciplines.includes(r.result?.discipline)
+                : false,
+            },
+          };
+        }),
         config: {
           region: options.region,
           function: options.functionName,

@@ -577,7 +577,7 @@ function ManageMemories() {
                 <div className="pr-12">
                   {/* Memory header with dot skeleton */}
                   <div className="flex items-start space-x-3 mb-3">
-                    <div className="w-3 h-3 bg-synthwave-text-muted/20 rounded-full flex-shrink-0 mt-2 animate-pulse"></div>
+                    <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full flex-shrink-0 mt-0.5 animate-pulse"></div>
                     <div className="flex-1 space-y-2">
                       <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
                       <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-5/6"></div>

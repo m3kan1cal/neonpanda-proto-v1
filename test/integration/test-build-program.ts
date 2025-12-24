@@ -1,17 +1,17 @@
 #!/usr/bin/env tsx
 
 /**
- * Build Program V2 Testing Script (Agent-Based)
+ * Build Program Testing Script (Agent-Based)
  *
  * ⚠️ ARCHITECTURE CLARIFICATION ⚠️
  * =================================
- * The build-program-v2 Lambda is NOT INTERACTIVE. It does not ask questions
+ * The build-program Lambda is NOT INTERACTIVE. It does not ask questions
  * during execution. Here's how it works:
  *
  * CONVERSATION PHASE (Separate from Lambda):
  * 1. User ←→ Coach conversation in "program designer" mode
  * 2. Coach asks questions and builds a complete todoList
- * 3. Once todoList is complete, coach invokes build-program-v2
+ * 3. Once todoList is complete, coach invokes build-program
  *
  * LAMBDA EXECUTION PHASE (Fire-and-Forget):
  * 1. Lambda receives complete todoList + context
@@ -32,14 +32,14 @@
  * - Validate the result and saved data
  * - Six diverse pre-defined test scenarios covering different use cases
  *
- * Build Program V2 Testing Script
+ * Build Program Testing Script
  *
- * Tests the build-program-v2 Lambda (agent-based) with various payloads.
+ * Tests the build-program Lambda (agent-based) with various payloads.
  * Validates that the ProgramDesigner agent correctly uses tools to design programs.
  *
  * IMPORTANT ARCHITECTURE NOTE:
  * ============================
- * The build-program-v2 agent is FIRE-AND-FORGET (non-interactive):
+ * The build-program agent is FIRE-AND-FORGET (non-interactive):
  * 1. It receives a COMPLETE todoList (from prior program designer conversation)
  * 2. It runs to completion using internal tools (load, generate, validate, save)
  * 3. It does NOT ask the user questions during execution
@@ -60,19 +60,19 @@
  *   - Six diverse pre-defined test scenarios
  *
  * Usage:
- *   tsx test/integration/test-build-program-v2.ts [options]
+ *   tsx test/integration/test-build-program.ts [options]
  *
  * Options:
- *   --function=NAME     Lambda function name (default: build-program-v2)
+ *   --function=NAME     Lambda function name (default: build-program)
  *   --test=NAME         Run specific test (default: all)
  *   --output=DIR        Save results to directory (creates timestamped files)
  *   --verbose           Show detailed logging
  *   --region=REGION     AWS region (default: us-west-2)
  *
  * Examples:
- *   tsx test/integration/test-build-program-v2.ts
- *   tsx test/integration/test-build-program-v2.ts --test=simple-4week --verbose
- *   tsx test/integration/test-build-program-v2.ts --output=test/fixtures/results --verbose
+ *   tsx test/integration/test-build-program.ts
+ *   tsx test/integration/test-build-program.ts --test=simple-4week --verbose
+ *   tsx test/integration/test-build-program.ts --output=test/fixtures/results --verbose
  */
 
 import { LambdaClient, InvokeCommand } from "@aws-sdk/client-lambda";
@@ -118,7 +118,7 @@ const SANITY_BOUNDS = {
 // Configuration
 const DEFAULT_REGION = "us-west-2";
 const DEFAULT_FUNCTION =
-  "amplify-neonpandaprotov1--buildprogramv2lambda0742-AWf995qaAG0h";
+  "amplify-neonpandaprotov1--buildprogramlambda205E00-1arOjN3G11Sh";
 const LOG_WAIT_TIME = 30000; // Wait 30s for logs (program generation takes time)
 const DYNAMODB_TABLE_NAME =
   process.env.DYNAMODB_TABLE_NAME || "NeonPandaProtoV1-DataTable-Sandbox";
@@ -465,8 +465,8 @@ const TEST_CASES = [
  * Main test execution
  */
 async function runTests() {
-  console.log("🏋️ Build Program V2 Integration Tests");
-  console.log("=====================================\n");
+  console.log("🏋️ Build Program Integration Tests");
+  console.log("===================================\n");
 
   // Parse command line arguments
   const verbose = process.argv.includes("--verbose");

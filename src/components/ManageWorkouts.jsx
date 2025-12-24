@@ -753,10 +753,10 @@ function ManageWorkouts() {
               {[1, 2, 3, 4, 5, 6].map((i) => (
                 <div
                   key={i}
-                  className={`${containerPatterns.cardMedium} p-5 flex flex-col h-80`}
+                  className={`${containerPatterns.cardMedium} p-5 flex flex-col h-64`}
                 >
                   <div className="flex items-start space-x-2 mb-3">
-                    <div className="w-2.5 h-2.5 bg-synthwave-text-muted/20 rounded-full flex-shrink-0 mt-1.5 animate-pulse"></div>
+                    <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full flex-shrink-0 mt-0.5 animate-pulse"></div>
                     <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-32"></div>
                   </div>
                   <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-24 mb-3"></div>
@@ -894,7 +894,7 @@ function ManageWorkouts() {
                   description: "All workouts logged in your training history",
                 },
                 color: "pink",
-                isLoading: workoutAgentState.isLoading,
+                isLoading: workoutAgentState.isLoadingAllItems,
                 ariaLabel: `${workoutAgentState.totalCount || workoutAgentState.allWorkouts.length || 0} total workouts`,
               },
               {
@@ -913,7 +913,7 @@ function ManageWorkouts() {
                   description: "Workouts completed in the last 30 days",
                 },
                 color: "cyan",
-                isLoading: workoutAgentState.isLoading,
+                isLoading: workoutAgentState.isLoadingAllItems,
                 ariaLabel: `${
                   workoutAgentState.allWorkouts.filter((w) => {
                     const workoutDate = new Date(w.completedAt || w.date);
@@ -941,7 +941,7 @@ function ManageWorkouts() {
                   description: "Workouts completed in the last 7 days",
                 },
                 color: "purple",
-                isLoading: workoutAgentState.isLoading,
+                isLoading: workoutAgentState.isLoadingAllItems,
                 ariaLabel: `${
                   workoutAgentState.allWorkouts.filter((w) => {
                     const workoutDate = new Date(w.completedAt || w.date);
@@ -964,7 +964,7 @@ function ManageWorkouts() {
                   description: "Workouts completed in the last 24 hours",
                 },
                 color: "pink",
-                isLoading: workoutAgentState.isLoading,
+                isLoading: workoutAgentState.isLoadingAllItems,
                 ariaLabel: `${workoutAgentState.allWorkouts.filter((w) => isNewWorkout(w.completedAt)).length || 0} recent workouts`,
               },
             ]}

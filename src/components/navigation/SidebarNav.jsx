@@ -1,14 +1,26 @@
 // SidebarNav.jsx - Desktop Left Sidebar Navigation
 // Persistent vertical navigation for desktop devices (≥ 768px)
 
-import React, { useState, useRef } from 'react';
-import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { Popover } from '@headlessui/react';
-import { useFloating, flip, shift, offset, autoUpdate, size, limitShift } from '@floating-ui/react';
-import { useAuth } from '../../auth';
-import { useNavigationContext } from '../../contexts/NavigationContext';
-import { navigationPatterns, tooltipPatterns, badgePatterns } from '../../utils/ui/uiPatterns';
-import UserAvatar from '../shared/UserAvatar';
+import React, { useState, useRef } from "react";
+import { useNavigate, useLocation, Link } from "react-router-dom";
+import { Popover } from "@headlessui/react";
+import {
+  useFloating,
+  flip,
+  shift,
+  offset,
+  autoUpdate,
+  size,
+  limitShift,
+} from "@floating-ui/react";
+import { useAuth } from "../../auth";
+import { useNavigationContext } from "../../contexts/NavigationContext";
+import {
+  navigationPatterns,
+  tooltipPatterns,
+  badgePatterns,
+} from "../../utils/ui/uiPatterns";
+import UserAvatar from "../shared/UserAvatar";
 import {
   navigationItems,
   isItemVisible,
@@ -17,15 +29,22 @@ import {
   getItemColorClasses,
   isRouteActive,
   getItemAriaLabel,
-} from '../../utils/navigation';
-import { Tooltip } from 'react-tooltip';
-import QuickAccessPopover from './QuickAccessPopover';
+} from "../../utils/navigation";
+import { Tooltip } from "react-tooltip";
+import QuickAccessPopover from "./QuickAccessPopover";
 
 // Utility Popover Component with Floating UI positioning
-const UtilityPopover = ({ utilityItems, isSidebarCollapsed, navigate, context, getItemRoute, getItemColorClasses }) => {
+const UtilityPopover = ({
+  utilityItems,
+  isSidebarCollapsed,
+  navigate,
+  context,
+  getItemRoute,
+  getItemColorClasses,
+}) => {
   // Create a custom boundary function that excludes the chat input area
   const getBoundary = () => {
-    const chatInput = document.querySelector('[data-chat-input-container]');
+    const chatInput = document.querySelector("[data-chat-input-container]");
     if (!chatInput) {
       return {
         top: 0,
@@ -55,11 +74,11 @@ const UtilityPopover = ({ utilityItems, isSidebarCollapsed, navigate, context, g
   };
 
   const { refs, floatingStyles } = useFloating({
-    placement: 'right-start',
+    placement: "right-start",
     middleware: [
       offset(0), // No gap between button and popover
       flip({
-        fallbackPlacements: ['right-end', 'right', 'left-start', 'left-end'],
+        fallbackPlacements: ["right-end", "right", "left-start", "left-end"],
         boundary: getBoundary(),
       }),
       shift({
@@ -73,7 +92,7 @@ const UtilityPopover = ({ utilityItems, isSidebarCollapsed, navigate, context, g
           // Apply max height and enable scrolling
           Object.assign(elements.floating.style, {
             maxHeight: `${Math.max(200, availableHeight)}px`,
-            overflowY: 'auto',
+            overflowY: "auto",
           });
         },
         padding: 8,
@@ -85,9 +104,9 @@ const UtilityPopover = ({ utilityItems, isSidebarCollapsed, navigate, context, g
   return (
     <Popover className={navigationPatterns.sectionSpacing.both}>
       {({ open }) => {
-        const colorClasses = getItemColorClasses('default', false);
+        const colorClasses = getItemColorClasses("default", false);
         const getHoverClasses = () => {
-          return 'hover:border-synthwave-neon-cyan/50 hover:bg-synthwave-bg-primary/20 focus:ring-2 focus:ring-synthwave-neon-cyan/50';
+          return "hover:border-synthwave-neon-cyan/50 hover:bg-synthwave-bg-primary/20 focus:ring-2 focus:ring-synthwave-neon-cyan/50";
         };
 
         return (
@@ -104,26 +123,33 @@ const UtilityPopover = ({ utilityItems, isSidebarCollapsed, navigate, context, g
               ref={refs.setReference}
               className={`
                 ${navigationPatterns.desktop.navItem}
-                ${isSidebarCollapsed ? navigationPatterns.desktop.navItemCollapsed : ''}
-                ${open ? 'text-synthwave-neon-cyan' : colorClasses.inactive}
-                ${open
-                  ? 'border-t-synthwave-neon-cyan/50 border-b-synthwave-neon-cyan/50 bg-synthwave-bg-primary/20'
-                  : getHoverClasses()
+                ${isSidebarCollapsed ? navigationPatterns.desktop.navItemCollapsed : ""}
+                ${open ? "text-synthwave-neon-cyan" : colorClasses.inactive}
+                ${
+                  open
+                    ? "border-t-synthwave-neon-cyan/50 border-b-synthwave-neon-cyan/50 bg-synthwave-bg-primary/20"
+                    : getHoverClasses()
                 }
                 focus:outline-none
                 active:outline-none
               `}
-              style={{ WebKitTapHighlightColor: 'transparent' }}
+              style={{ WebKitTapHighlightColor: "transparent" }}
               aria-label="More resources"
-              title={isSidebarCollapsed ? 'More Resources' : undefined}
-              data-tooltip-id={isSidebarCollapsed ? 'sidebar-nav-tooltip' : undefined}
-              data-tooltip-content={isSidebarCollapsed ? 'More Resources' : undefined}
+              title={isSidebarCollapsed ? "More Resources" : undefined}
+              data-tooltip-id={
+                isSidebarCollapsed ? "sidebar-nav-tooltip" : undefined
+              }
+              data-tooltip-content={
+                isSidebarCollapsed ? "More Resources" : undefined
+              }
             >
               {/* Icon */}
-              <div className={`
+              <div
+                className={`
                 ${isSidebarCollapsed ? navigationPatterns.desktop.navItemIconCollapsed : navigationPatterns.desktop.navItemIcon}
                 flex items-center justify-center
-              `}>
+              `}
+              >
                 <svg
                   className={isSidebarCollapsed ? "w-6 h-6" : "w-5 h-5"}
                   fill="none"
@@ -140,10 +166,12 @@ const UtilityPopover = ({ utilityItems, isSidebarCollapsed, navigate, context, g
               </div>
 
               {/* Label */}
-              <span className={`
+              <span
+                className={`
                 ${navigationPatterns.desktop.navItemLabel}
-                ${isSidebarCollapsed ? navigationPatterns.desktop.navItemLabelCollapsed : ''}
-              `}>
+                ${isSidebarCollapsed ? navigationPatterns.desktop.navItemLabelCollapsed : ""}
+              `}
+              >
                 More Resources
               </span>
             </Popover.Button>
@@ -157,23 +185,30 @@ const UtilityPopover = ({ utilityItems, isSidebarCollapsed, navigate, context, g
                 <div className={navigationPatterns.utilityFlyout.container}>
                   {/* Header Section */}
                   <div className={navigationPatterns.utilityFlyout.header}>
-                    <h3 className={navigationPatterns.utilityFlyout.headerTitle}>
+                    <h3
+                      className={navigationPatterns.utilityFlyout.headerTitle}
+                    >
                       More Resources
                     </h3>
                   </div>
 
                   {/* Menu Items */}
-                  <div className={navigationPatterns.utilityFlyout.itemsContainer}>
+                  <div
+                    className={navigationPatterns.utilityFlyout.itemsContainer}
+                  >
                     {utilityItems.map((item) => {
                       const Icon = item.icon;
-                      const itemColorClasses = getItemColorClasses(item.color || 'default', false);
+                      const itemColorClasses = getItemColorClasses(
+                        item.color || "default",
+                        false,
+                      );
 
                       return (
                         <button
                           key={item.id}
                           onClick={() => {
                             const route = getItemRoute(item, context);
-                            if (route && route !== '#') {
+                            if (route && route !== "#") {
                               navigate(route);
                               close();
                             }
@@ -188,17 +223,21 @@ const UtilityPopover = ({ utilityItems, isSidebarCollapsed, navigate, context, g
                             active:outline-none
                             w-full
                           `}
-                          style={{ WebKitTapHighlightColor: 'transparent' }}
+                          style={{ WebKitTapHighlightColor: "transparent" }}
                         >
                           {/* Icon */}
                           {Icon && (
-                            <div className={navigationPatterns.desktop.navItemIcon}>
+                            <div
+                              className={navigationPatterns.desktop.navItemIcon}
+                            >
                               <Icon className="w-5 h-5" />
                             </div>
                           )}
 
                           {/* Label */}
-                          <span className={navigationPatterns.desktop.navItemLabel}>
+                          <span
+                            className={navigationPatterns.desktop.navItemLabel}
+                          >
                             {item.label}
                           </span>
                         </button>
@@ -235,7 +274,9 @@ const SidebarNav = () => {
   const handleItemClick = (item) => {
     // Handle Quick Access items (open popovers)
     if (item.popoverType) {
-      setActivePopover(activePopover === item.popoverType ? null : item.popoverType);
+      setActivePopover(
+        activePopover === item.popoverType ? null : item.popoverType,
+      );
       return;
     }
 
@@ -243,15 +284,17 @@ const SidebarNav = () => {
     if (item.action) {
       // Map action to command palette commands
       const commandMap = {
-        'log-workout': '/log-workout ',
-        'start-conversation': '/start-conversation ',
-        'save-memory': '/save-memory ',
+        "log-workout": "/log-workout ",
+        "start-conversation": "/start-conversation ",
+        "save-memory": "/save-memory ",
       };
 
       if (context.onCommandPaletteToggle && commandMap[item.action]) {
         context.onCommandPaletteToggle(commandMap[item.action]);
       } else {
-        console.info(`Quick action clicked: ${item.action} - Command palette not available`);
+        console.info(
+          `Quick action clicked: ${item.action} - Command palette not available`,
+        );
       }
       return;
     }
@@ -264,7 +307,7 @@ const SidebarNav = () => {
 
     // Handle navigation
     const route = getItemRoute(item, context);
-    if (route === '#') return; // Disabled item
+    if (route === "#") return; // Disabled item
     navigate(route);
   };
 
@@ -275,45 +318,60 @@ const SidebarNav = () => {
   };
 
   // Get visible items by section
-  const primaryItems = navigationItems.primary?.filter((item) =>
-    isItemVisible(item, context)
-  ) || [];
+  const primaryItems =
+    navigationItems.primary?.filter((item) => isItemVisible(item, context)) ||
+    [];
 
-  const contextualItems = navigationItems.contextual?.filter((item) =>
-    isItemVisible(item, context)
-  ) || [];
+  const contextualItems =
+    navigationItems.contextual?.filter((item) =>
+      isItemVisible(item, context),
+    ) || [];
 
-  const quickAccessItems = navigationItems.quickAccess?.filter((item) =>
-    isItemVisible(item, context)
-  ) || [];
+  const quickAccessItems =
+    navigationItems.quickAccess?.filter((item) =>
+      isItemVisible(item, context),
+    ) || [];
 
-  const accountItems = navigationItems.account?.filter((item) =>
-    isItemVisible(item, context)
-  ) || [];
+  const accountItems =
+    navigationItems.account?.filter((item) => isItemVisible(item, context)) ||
+    [];
 
-  const utilityItems = navigationItems.utility?.filter((item) =>
-    isItemVisible(item, context)
-  ) || [];
+  const utilityItems =
+    navigationItems.utility?.filter((item) => isItemVisible(item, context)) ||
+    [];
 
   // Get display name from userProfile or fallback to email
   const getDisplayName = () => {
-    return userProfile?.displayName || user?.attributes?.preferred_username || user?.attributes?.email || user?.email || 'User';
+    return (
+      userProfile?.displayName ||
+      user?.attributes?.preferred_username ||
+      user?.attributes?.email ||
+      user?.email ||
+      "User"
+    );
   };
 
   // Get username for settings route
   const getUsername = () => {
-    return user?.attributes?.preferred_username || user?.email?.split('@')[0] || 'user';
+    return (
+      user?.attributes?.preferred_username ||
+      user?.email?.split("@")[0] ||
+      "user"
+    );
   };
 
   // Render navigation item
   const renderNavItem = (item) => {
     const badge = getItemBadge(item, context);
-    const active = item.popoverType ? (activePopover === item.popoverType) : isActive(item);
+    const active = item.popoverType
+      ? activePopover === item.popoverType
+      : isActive(item);
     const colorClasses = getItemColorClasses(item.color, active);
     const Icon = item.icon;
     const ariaLabel = getItemAriaLabel(item, context);
     const route = getItemRoute(item, context);
-    const isDisabled = !item.onClick && !item.popoverType && !item.action && route === '#';
+    const isDisabled =
+      !item.onClick && !item.popoverType && !item.action && route === "#";
 
     // Create ref for Quick Access items (for popover positioning)
     if (item.popoverType && !popoverRefs.current[item.id]) {
@@ -322,26 +380,26 @@ const SidebarNav = () => {
 
     // Get color-specific classes for active state (only top/bottom borders)
     const getActiveClasses = () => {
-      if (item.color === 'pink') {
-        return 'bg-synthwave-bg-primary/30 border-t-synthwave-neon-pink/30 border-b-synthwave-neon-pink/30';
-      } else if (item.color === 'cyan') {
-        return 'bg-synthwave-bg-primary/30 border-t-synthwave-neon-cyan/30 border-b-synthwave-neon-cyan/30';
-      } else if (item.color === 'purple') {
-        return 'bg-synthwave-bg-primary/30 border-t-synthwave-neon-purple/30 border-b-synthwave-neon-purple/30';
+      if (item.color === "pink") {
+        return "bg-synthwave-bg-primary/30 border-t-synthwave-neon-pink/30 border-b-synthwave-neon-pink/30";
+      } else if (item.color === "cyan") {
+        return "bg-synthwave-bg-primary/30 border-t-synthwave-neon-cyan/30 border-b-synthwave-neon-cyan/30";
+      } else if (item.color === "purple") {
+        return "bg-synthwave-bg-primary/30 border-t-synthwave-neon-purple/30 border-b-synthwave-neon-purple/30";
       }
-      return '';
+      return "";
     };
 
     // Get color-specific hover classes for inactive state (FloatingMenu-inspired)
     const getHoverClasses = () => {
-      if (item.color === 'pink') {
-        return 'hover:border-synthwave-neon-pink/50 hover:bg-synthwave-bg-primary/20 focus:ring-2 focus:ring-synthwave-neon-pink/50';
-      } else if (item.color === 'cyan') {
-        return 'hover:border-synthwave-neon-cyan/50 hover:bg-synthwave-bg-primary/20 focus:ring-2 focus:ring-synthwave-neon-cyan/50';
-      } else if (item.color === 'purple') {
-        return 'hover:border-synthwave-neon-purple/50 hover:bg-synthwave-bg-primary/20 focus:ring-2 focus:ring-synthwave-neon-purple/50';
+      if (item.color === "pink") {
+        return "hover:border-synthwave-neon-pink/50 hover:bg-synthwave-bg-primary/20 focus:ring-2 focus:ring-synthwave-neon-pink/50";
+      } else if (item.color === "cyan") {
+        return "hover:border-synthwave-neon-cyan/50 hover:bg-synthwave-bg-primary/20 focus:ring-2 focus:ring-synthwave-neon-cyan/50";
+      } else if (item.color === "purple") {
+        return "hover:border-synthwave-neon-purple/50 hover:bg-synthwave-bg-primary/20 focus:ring-2 focus:ring-synthwave-neon-purple/50";
       }
-      return '';
+      return "";
     };
 
     return (
@@ -352,51 +410,60 @@ const SidebarNav = () => {
         disabled={isDisabled}
         className={`
           ${navigationPatterns.desktop.navItem}
-          ${isSidebarCollapsed ? navigationPatterns.desktop.navItemCollapsed : ''}
-          ${isDisabled
-            ? 'opacity-50 cursor-not-allowed'
-            : active
-              ? `${colorClasses.active} ${getActiveClasses()} focus:outline-none active:outline-none`
-              : `${colorClasses.inactive} ${getHoverClasses()} focus:outline-none active:outline-none`
+          ${isSidebarCollapsed ? navigationPatterns.desktop.navItemCollapsed : ""}
+          ${
+            isDisabled
+              ? "opacity-50 cursor-not-allowed"
+              : active
+                ? `${colorClasses.active} ${getActiveClasses()} focus:outline-none active:outline-none`
+                : `${colorClasses.inactive} ${getHoverClasses()} focus:outline-none active:outline-none`
           }
         `}
-        style={{ WebKitTapHighlightColor: 'transparent' }}
+        style={{ WebKitTapHighlightColor: "transparent" }}
         aria-label={ariaLabel}
-        aria-current={active ? 'page' : undefined}
+        aria-current={active ? "page" : undefined}
         title={isSidebarCollapsed ? item.label : undefined}
-        data-tooltip-id={isSidebarCollapsed ? 'sidebar-nav-tooltip' : undefined}
+        data-tooltip-id={isSidebarCollapsed ? "sidebar-nav-tooltip" : undefined}
         data-tooltip-content={isSidebarCollapsed ? item.label : undefined}
       >
         {/* Icon */}
-        <div className={`
+        <div
+          className={`
           ${isSidebarCollapsed ? navigationPatterns.desktop.navItemIconCollapsed : navigationPatterns.desktop.navItemIcon}
-          ${active ? colorClasses.glow : ''}
-          ${item.icon.name === 'WorkoutIconTiny' || item.icon.name === 'NetworkIconTiny' || item.icon.name === 'ChatIconSmall' || item.icon.name === 'CoachIconSmall' || item.icon.name === 'MemoryIconTiny' || item.icon.name === 'ProgramIconTiny' || item.icon.name === 'MenuIcon' ? 'flex items-center justify-center' : ''} // Center icons that need alignment
-        `}>
-          <Icon className={
-            isSidebarCollapsed
-              ? "w-6 h-6" // All icons w-6 h-6 when collapsed
-              : "w-5 h-5"
-          } />
+          ${active ? colorClasses.glow : ""}
+          ${item.icon.name === "WorkoutIconTiny" || item.icon.name === "NetworkIconTiny" || item.icon.name === "ChatIconSmall" || item.icon.name === "CoachIconSmall" || item.icon.name === "MemoryIconTiny" || item.icon.name === "ProgramIconTiny" || item.icon.name === "MenuIcon" ? "flex items-center justify-center" : ""} // Center icons that need alignment
+        `}
+        >
+          <Icon
+            className={
+              isSidebarCollapsed
+                ? "w-6 h-6" // All icons w-6 h-6 when collapsed
+                : "w-5 h-5"
+            }
+          />
         </div>
 
         {/* Label */}
-        <span className={`
+        <span
+          className={`
           ${navigationPatterns.desktop.navItemLabel}
-          ${isSidebarCollapsed ? navigationPatterns.desktop.navItemLabelCollapsed : ''}
-        `}>
+          ${isSidebarCollapsed ? navigationPatterns.desktop.navItemLabelCollapsed : ""}
+        `}
+        >
           {item.label}
         </span>
 
         {/* Badge indicator - QuickStats style with Rajdhani font - Only show when expanded */}
         {badge !== null && badge !== undefined && !isSidebarCollapsed && (
-          <div className={`
+          <div
+            className={`
             ml-auto ${badgePatterns.countBase}
-            ${item.color === 'pink' ? badgePatterns.countPink : ''}
-            ${item.color === 'cyan' ? badgePatterns.countCyan : ''}
-            ${item.color === 'purple' ? badgePatterns.countPurple : ''}
-          `}>
-            {badge > 99 ? '99+' : badge}
+            ${item.color === "pink" ? badgePatterns.countPink : ""}
+            ${item.color === "cyan" ? badgePatterns.countCyan : ""}
+            ${item.color === "purple" ? badgePatterns.countPurple : ""}
+          `}
+          >
+            {badge}
           </div>
         )}
       </button>
@@ -416,14 +483,14 @@ const SidebarNav = () => {
 
         {/* Show divider above Quick Actions - gradient fade effect */}
         {isQuickAccess && (
-          <div className={`${navigationPatterns.sectionSpacing.bottom} ${navigationPatterns.dividers.gradientCyan}`} />
+          <div
+            className={`${navigationPatterns.sectionSpacing.bottom} ${navigationPatterns.dividers.gradientCyan}`}
+          />
         )}
 
         {title && !isSidebarCollapsed && (
           <div className={navigationPatterns.desktop.sectionHeader}>
-            <h3 className={navigationPatterns.desktop.sectionTitle}>
-              {title}
-            </h3>
+            <h3 className={navigationPatterns.desktop.sectionTitle}>{title}</h3>
           </div>
         )}
         <div className={navigationPatterns.sectionSpacing.bottom}>
@@ -432,7 +499,9 @@ const SidebarNav = () => {
 
         {/* Show divider below Quick Actions - gradient fade effect */}
         {isQuickAccess && (
-          <div className={`${navigationPatterns.sectionSpacing.top} ${navigationPatterns.dividers.gradientCyan}`} />
+          <div
+            className={`${navigationPatterns.sectionSpacing.top} ${navigationPatterns.dividers.gradientCyan}`}
+          />
         )}
       </div>
     );
@@ -452,14 +521,16 @@ const SidebarNav = () => {
         <button
           onClick={toggleCollapse}
           className={`${navigationPatterns.desktop.collapseButton} pointer-events-auto`}
-          aria-label={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          title={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          style={{ pointerEvents: 'auto' }}
+          aria-label={
+            isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"
+          }
+          title={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          style={{ pointerEvents: "auto" }}
         >
           <svg
             className={`
               ${navigationPatterns.desktop.collapseIcon}
-              ${isSidebarCollapsed ? navigationPatterns.desktop.collapseIconRotated : ''}
+              ${isSidebarCollapsed ? navigationPatterns.desktop.collapseIconRotated : ""}
             `}
             fill="none"
             stroke="currentColor"
@@ -479,7 +550,7 @@ const SidebarNav = () => {
           to="/"
           className={`
             ${navigationPatterns.desktop.brandSection}
-            ${isSidebarCollapsed ? navigationPatterns.desktop.brandSectionCollapsed : ''}
+            ${isSidebarCollapsed ? navigationPatterns.desktop.brandSectionCollapsed : ""}
             hover:opacity-80 transition-opacity duration-200 cursor-pointer
           `}
           title="Go to NeonPanda home"
@@ -508,25 +579,29 @@ const SidebarNav = () => {
 
           {/* Divider before Your Training */}
           {contextualItems.length > 0 && (
-            <div className={`${navigationPatterns.sectionSpacing.both} ${navigationPatterns.dividers.gradientCyan}`} />
+            <div
+              className={`${navigationPatterns.sectionSpacing.both} ${navigationPatterns.dividers.gradientCyan}`}
+            />
           )}
 
           {/* Coach-Specific Navigation */}
-          {renderSection(contextualItems, 'Your Training')}
+          {renderSection(contextualItems, "Your Training")}
 
           {/* Quick Actions */}
-          {renderSection(quickAccessItems, 'Quick Actions', true)}
+          {renderSection(quickAccessItems, "Quick Actions", true)}
 
           {/* Account Navigation (Settings, Sign Out) */}
           {accountItems.length > 0 && (
             <div className={navigationPatterns.sectionSpacing.top}>
-              {renderSection(accountItems, 'Account & Settings')}
+              {renderSection(accountItems, "Account & Settings")}
             </div>
           )}
 
           {/* Divider before More Resources */}
           {utilityItems.length > 0 && (
-            <div className={`${navigationPatterns.sectionSpacing.top} ${navigationPatterns.dividers.gradientCyan}`} />
+            <div
+              className={`${navigationPatterns.sectionSpacing.top} ${navigationPatterns.dividers.gradientCyan}`}
+            />
           )}
 
           {/* Help & Info - Single button that opens popover */}
@@ -548,20 +623,23 @@ const SidebarNav = () => {
             <button
               className={`
                 ${navigationPatterns.desktop.profileButton}
-                ${isSidebarCollapsed ? navigationPatterns.desktop.profileButtonCollapsed : ''}
+                ${isSidebarCollapsed ? navigationPatterns.desktop.profileButtonCollapsed : ""}
               `}
               onClick={() => {
-                const userId = user?.attributes?.['custom:user_id'] || context.userId;
-                navigate(userId ? `/settings?userId=${userId}` : '/settings');
+                const userId =
+                  user?.attributes?.["custom:user_id"] || context.userId;
+                navigate(userId ? `/settings?userId=${userId}` : "/settings");
               }}
               aria-label="User settings"
               title={isSidebarCollapsed ? getDisplayName() : undefined}
             >
               {/* Avatar - using UserAvatar component */}
-              <div className={`
+              <div
+                className={`
                 flex-shrink-0
-                ${isSidebarCollapsed ? 'w-8 h-8' : 'w-10 h-10'}
-              `}>
+                ${isSidebarCollapsed ? "w-8 h-8" : "w-10 h-10"}
+              `}
+              >
                 <UserAvatar
                   email={user?.attributes?.email || user?.email}
                   username={getDisplayName()}
@@ -570,10 +648,12 @@ const SidebarNav = () => {
               </div>
 
               {/* User Info */}
-              <div className={`
+              <div
+                className={`
                 ${navigationPatterns.desktop.profileInfo}
-                ${isSidebarCollapsed ? navigationPatterns.desktop.profileInfoCollapsed : ''}
-              `}>
+                ${isSidebarCollapsed ? navigationPatterns.desktop.profileInfoCollapsed : ""}
+              `}
+              >
                 <div className={navigationPatterns.desktop.profileName}>
                   {getDisplayName()}
                 </div>
@@ -586,7 +666,7 @@ const SidebarNav = () => {
               <svg
                 className={`
                   ${navigationPatterns.desktop.profileChevron}
-                  ${isSidebarCollapsed ? navigationPatterns.desktop.profileChevronCollapsed : ''}
+                  ${isSidebarCollapsed ? navigationPatterns.desktop.profileChevronCollapsed : ""}
                 `}
                 fill="none"
                 stroke="currentColor"

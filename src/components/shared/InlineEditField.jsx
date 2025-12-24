@@ -66,7 +66,9 @@ const CancelIcon = ({ className = "w-4 h-4" }) => (
  * @param {boolean} options.showCharacterCount - Whether to show character counter
  * @param {Function} options.validate - Custom validation function
  * @param {string} options.size - Size variant: 'small' | 'medium' | 'large'
- * @param {string} options.displayClassName - Custom class for display mode
+ * @param {string} options.displayClassName - Custom class for display mode text
+ * @param {string} options.containerClassName - Custom class for display mode container (overrides internal padding/spacing)
+ * @param {string} options.buttonClassName - Custom class for edit button (overrides size-based button styling)
  * @param {string} options.inputClassName - Custom class for input field
  * @param {boolean} options.disabled - Whether editing is disabled
  * @param {string} options.tooltipPrefix - Prefix for tooltip IDs (to avoid conflicts)
@@ -85,6 +87,8 @@ export function InlineEditField({
   validate,
   size = "medium",
   displayClassName = "",
+  containerClassName = "",
+  buttonClassName = "",
   inputClassName = "",
   disabled = false,
   tooltipPrefix = "inline-edit",
@@ -150,7 +154,9 @@ export function InlineEditField({
   // Display mode
   if (!isEditing) {
     return (
-      <div className={inlineEditPatterns.displayContainer}>
+      <div
+        className={containerClassName || inlineEditPatterns.displayContainer}
+      >
         {renderDisplay ? (
           renderDisplay(value)
         ) : (
@@ -166,8 +172,11 @@ export function InlineEditField({
         {!disabled && (
           <>
             <button
-              onClick={handleEdit}
-              className={styles.button}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleEdit();
+              }}
+              className={buttonClassName || styles.button}
               data-tooltip-id={editTooltipId}
               data-tooltip-content="Edit"
               aria-label="Edit"
@@ -193,7 +202,11 @@ export function InlineEditField({
 
   // Edit mode
   return (
-    <div className="flex flex-col space-y-1 w-full">
+    <div
+      className="flex flex-col space-y-1 w-full"
+      onClick={(e) => e.stopPropagation()}
+      onKeyDown={(e) => e.stopPropagation()}
+    >
       <div className={inlineEditPatterns.editContainer}>
         <input
           type="text"
@@ -209,7 +222,10 @@ export function InlineEditField({
         />
 
         <button
-          onClick={handleSave}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleSave();
+          }}
           disabled={isSaving || !isValid}
           className={inlineEditPatterns.saveButton[size]}
           data-tooltip-id={saveTooltipId}
@@ -218,7 +234,9 @@ export function InlineEditField({
           aria-label="Save"
         >
           {isSaving ? (
-            <div className={`${styles.actionIcon} flex items-center justify-center`}>
+            <div
+              className={`${styles.actionIcon} flex items-center justify-center`}
+            >
               <div className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin"></div>
             </div>
           ) : (
@@ -227,7 +245,10 @@ export function InlineEditField({
         </button>
 
         <button
-          onClick={handleCancel}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleCancel();
+          }}
           disabled={isSaving}
           className={inlineEditPatterns.cancelButton[size]}
           data-tooltip-id={cancelTooltipId}

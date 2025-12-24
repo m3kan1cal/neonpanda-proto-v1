@@ -24,9 +24,13 @@ import {
   getHistoricalMonthRange,
   getUserTimezoneOrDefault,
   convertUtcToUserDate,
+  parseCompletedAt,
 } from "./date-utils";
 import { Workout } from "../workout/types";
-import { CoachConversation, CoachConversationSummary } from "../coach-conversation/types";
+import {
+  CoachConversation,
+  CoachConversationSummary,
+} from "../coach-conversation/types";
 import { UserProfile } from "../user/types";
 import { UserMemory } from "../memory/types";
 import { DynamoDBItem } from "../coach-creator/types";
@@ -48,25 +52,21 @@ export const fetchWorkoutSummaries = async (
   startDate: Date,
   endDate: Date,
   periodLabel: string,
-  userTimezone?: string
+  userTimezone?: string,
 ): Promise<WorkoutSummary[]> => {
   console.info(
     `Fetching workout summaries for user ${userId} for ${periodLabel}`,
     {
-      dateRange: `${startDate.toISOString().split('T')[0]} to ${endDate.toISOString().split('T')[0]}`
-    }
+      dateRange: `${startDate.toISOString().split("T")[0]} to ${endDate.toISOString().split("T")[0]}`,
+    },
   );
 
   try {
     // Use specialized query that only fetches summary fields (much more efficient)
-    const workoutList = await queryWorkoutSummaries(
-      userId,
-      startDate,
-      endDate
-    );
+    const workoutList = await queryWorkoutSummaries(userId, startDate, endDate);
 
     console.info(
-      `Found ${workoutList.length} workout summaries for user ${userId} in ${periodLabel}`
+      `Found ${workoutList.length} workout summaries for user ${userId} in ${periodLabel}`,
     );
 
     if (workoutList.length === 0) {
@@ -82,7 +82,10 @@ export const fetchWorkoutSummaries = async (
       // Only include workouts that have summaries
       if (workout.summary && workout.summary.length > 50) {
         workoutSummaries.push({
-          date: workout.completedAt,
+          date: parseCompletedAt(
+            workout.completedAt,
+            "fetchCurrentWeekWorkoutSummaries",
+          ),
           workoutId: workout.workoutId,
           workoutName: workout.workoutName,
           discipline: workout.discipline,
@@ -91,23 +94,23 @@ export const fetchWorkoutSummaries = async (
         });
 
         console.info(
-          `Workout summary ${i + 1}/${workoutList.length}: ${workout.workoutName || workout.workoutId} (${workout.summary.length} chars)`
+          `Workout summary ${i + 1}/${workoutList.length}: ${workout.workoutName || workout.workoutId} (${workout.summary.length} chars)`,
         );
       } else {
         console.warn(
-          `Workout ${i + 1}/${workoutList.length}: ${workout.workoutId} - no summary available, skipping`
+          `Workout ${i + 1}/${workoutList.length}: ${workout.workoutId} - no summary available, skipping`,
         );
       }
     }
 
     console.info(
-      `Successfully extracted ${workoutSummaries.length} workout summaries for user ${userId} in ${periodLabel}`
+      `Successfully extracted ${workoutSummaries.length} workout summaries for user ${userId} in ${periodLabel}`,
     );
     return workoutSummaries;
   } catch (error) {
     console.error(
       `Error fetching workout summaries for user ${userId} in ${periodLabel}:`,
-      error
+      error,
     );
     return [];
   }
@@ -120,14 +123,10 @@ export const fetchWorkoutSummaries = async (
 const extractCoachIdsFromSummaries = async (
   userId: string,
   startDate: Date,
-  endDate: Date
+  endDate: Date,
 ): Promise<string[]> => {
   // Use specialized query that only fetches needed fields
-  const workoutList = await queryWorkoutSummaries(
-    userId,
-    startDate,
-    endDate
-  );
+  const workoutList = await queryWorkoutSummaries(userId, startDate, endDate);
 
   const coachIds = new Set<string>();
 
@@ -139,7 +138,7 @@ const extractCoachIdsFromSummaries = async (
 
   const uniqueCoachIds = Array.from(coachIds);
   console.info(
-    `Extracted ${uniqueCoachIds.length} unique coach IDs: [${uniqueCoachIds.join(", ")}]`
+    `Extracted ${uniqueCoachIds.length} unique coach IDs: [${uniqueCoachIds.join(", ")}]`,
   );
 
   return uniqueCoachIds;
@@ -154,16 +153,16 @@ export const fetchCoachConversationSummaries = async (
   coachIds: string[],
   startDate: Date,
   endDate: Date,
-  periodLabel: string
+  periodLabel: string,
 ): Promise<CoachConversationSummary[]> => {
   console.info(
-    `Fetching conversation summaries for user ${userId}, coaches [${coachIds.join(", ")}] for ${periodLabel}`
+    `Fetching conversation summaries for user ${userId}, coaches [${coachIds.join(", ")}] for ${periodLabel}`,
   );
 
   try {
     if (coachIds.length === 0) {
       console.info(
-        `No coaches found for user ${userId}, skipping conversation summaries`
+        `No coaches found for user ${userId}, skipping conversation summaries`,
       );
       return [];
     }
@@ -173,9 +172,12 @@ export const fetchCoachConversationSummaries = async (
     for (const coachId of coachIds) {
       try {
         // Query conversation summaries for this coach
-        const summaries = await queryCoachConversationSummaries(userId, coachId);
+        const summaries = await queryCoachConversationSummaries(
+          userId,
+          coachId,
+        );
         console.info(
-          `Found ${summaries.length} conversation summaries for user ${userId} and coach ${coachId}`
+          `Found ${summaries.length} conversation summaries for user ${userId} and coach ${coachId}`,
         );
 
         if (summaries.length === 0) {
@@ -191,27 +193,27 @@ export const fetchCoachConversationSummaries = async (
           .map((summaryItem) => summaryItem); // Extract attributes from DynamoDBItem
 
         console.info(
-          `Filtered to ${filteredSummaries.length} conversation summaries in date range for coach ${coachId}`
+          `Filtered to ${filteredSummaries.length} conversation summaries in date range for coach ${coachId}`,
         );
 
         allSummaries.push(...filteredSummaries);
       } catch (error) {
         console.error(
           `Failed to fetch conversation summaries for user ${userId} and coach ${coachId}:`,
-          error
+          error,
         );
         // Continue with other coaches
       }
     }
 
     console.info(
-      `Successfully fetched ${allSummaries.length} conversation summaries for user ${userId} across ${coachIds.length} coaches in ${periodLabel}`
+      `Successfully fetched ${allSummaries.length} conversation summaries for user ${userId} across ${coachIds.length} coaches in ${periodLabel}`,
     );
     return allSummaries;
   } catch (error) {
     console.error(
       `Error fetching conversation summaries for user ${userId} in ${periodLabel}:`,
-      error
+      error,
     );
     return [];
   }
@@ -232,7 +234,7 @@ const extractCoachIds = (workouts: Workout[]): string[] => {
 
   const uniqueCoachIds = Array.from(coachIds);
   console.info(
-    `Extracted ${uniqueCoachIds.length} unique coach IDs: [${uniqueCoachIds.join(", ")}]`
+    `Extracted ${uniqueCoachIds.length} unique coach IDs: [${uniqueCoachIds.join(", ")}]`,
   );
 
   return uniqueCoachIds;
@@ -242,12 +244,12 @@ const extractCoachIds = (workouts: Workout[]): string[] => {
  * Step 4: Fetch current week workout data for a user
  */
 export const fetchCurrentWeekWorkouts = async (
-  userId: string
+  userId: string,
 ): Promise<Workout[]> => {
   const weekRange = getCurrentWeekRange();
 
   console.info(
-    `Fetching workouts for user ${userId} for week: ${getWeekDescription(weekRange)}`
+    `Fetching workouts for user ${userId} for week: ${getWeekDescription(weekRange)}`,
   );
 
   try {
@@ -260,7 +262,7 @@ export const fetchCurrentWeekWorkouts = async (
     });
 
     console.info(
-      `Found ${workoutList.length} workouts for user ${userId} in current week`
+      `Found ${workoutList.length} workouts for user ${userId} in current week`,
     );
 
     if (workoutList.length === 0) {
@@ -274,27 +276,24 @@ export const fetchCurrentWeekWorkouts = async (
       const workoutSummary = workoutList[i];
       try {
         console.info(
-          `Loading workout ${i + 1}/${workoutList.length}: ${workoutSummary.workoutId} (${workoutSummary.workoutData?.workout_name || "Unnamed Workout"})`
+          `Loading workout ${i + 1}/${workoutList.length}: ${workoutSummary.workoutId} (${workoutSummary.workoutData?.workout_name || "Unnamed Workout"})`,
         );
 
-        const fullWorkout = await getWorkout(
-          userId,
-          workoutSummary.workoutId
-        );
+        const fullWorkout = await getWorkout(userId, workoutSummary.workoutId);
         if (fullWorkout) {
           fullWorkouts.push(fullWorkout);
         }
       } catch (error) {
         console.error(
           `❌ Failed to fetch workout ${i + 1}/${workoutList.length} (${workoutSummary.workoutId}) for user ${userId}:`,
-          error
+          error,
         );
         // Continue with other workouts
       }
     }
 
     console.info(
-      `Successfully fetched ${fullWorkouts.length} full workouts for user ${userId}`
+      `Successfully fetched ${fullWorkouts.length} full workouts for user ${userId}`,
     );
     return fullWorkouts;
   } catch (error) {
@@ -307,12 +306,12 @@ export const fetchCurrentWeekWorkouts = async (
  * Step 5: Fetch historical workout summaries (4 weeks before current week)
  */
 export const fetchHistoricalWorkoutSummaries = async (
-  userId: string
+  userId: string,
 ): Promise<HistoricalWorkoutSummary[]> => {
   const historicalRange = getHistoricalWorkoutRange();
 
   console.info(
-    `Fetching historical workout summaries for user ${userId} for period: ${getWeekDescription(historicalRange)}`
+    `Fetching historical workout summaries for user ${userId} for period: ${getWeekDescription(historicalRange)}`,
   );
 
   try {
@@ -325,7 +324,7 @@ export const fetchHistoricalWorkoutSummaries = async (
     });
 
     console.info(
-      `Found ${historicalWorkouts.length} historical workouts for user ${userId}`
+      `Found ${historicalWorkouts.length} historical workouts for user ${userId}`,
     );
 
     if (historicalWorkouts.length === 0) {
@@ -339,12 +338,12 @@ export const fetchHistoricalWorkoutSummaries = async (
       const workout = historicalWorkouts[i];
 
       // Only include workouts that have substantial summaries
-      if (
-        workout.summary &&
-        workout.summary.length > 50
-      ) {
+      if (workout.summary && workout.summary.length > 50) {
         workoutSummaries.push({
-          date: new Date(workout.completedAt),
+          date: parseCompletedAt(
+            workout.completedAt,
+            "fetchHistoricalWorkoutSummaries",
+          ),
           workoutId: workout.workoutId,
           workoutName: workout.workoutData?.workout_name,
           discipline: workout.workoutData?.discipline,
@@ -352,23 +351,23 @@ export const fetchHistoricalWorkoutSummaries = async (
         });
 
         console.info(
-          `Loaded workout (historical) ${i + 1}: ${workout.workoutData?.workout_name || workout.workoutId} loaded (${workout.summary.length} chars)`
+          `Loaded workout (historical) ${i + 1}: ${workout.workoutData?.workout_name || workout.workoutId} loaded (${workout.summary.length} chars)`,
         );
       } else {
         console.info(
-          `Skipped workout (historical) ${i + 1}: ${workout.workoutId} (no substantial summary)`
+          `Skipped workout (historical) ${i + 1}: ${workout.workoutId} (no substantial summary)`,
         );
       }
     }
 
     console.info(
-      `Successfully extracted ${workoutSummaries.length} historical workout summaries for user ${userId}`
+      `Successfully extracted ${workoutSummaries.length} historical workout summaries for user ${userId}`,
     );
     return workoutSummaries;
   } catch (error) {
     console.error(
       `Error fetching historical workout summaries for user ${userId}:`,
-      error
+      error,
     );
     return [];
   }
@@ -379,18 +378,18 @@ export const fetchHistoricalWorkoutSummaries = async (
  */
 export const fetchCoachingContext = async (
   userId: string,
-  coachIds: string[]
+  coachIds: string[],
 ): Promise<CoachConversation[]> => {
   const twoWeeksRange = getLastNWeeksRange(2);
 
   console.info(
-    `Fetching coaching context for user ${userId}, coaches [${coachIds.join(", ")}] for period: ${getWeekDescription(twoWeeksRange)}`
+    `Fetching coaching context for user ${userId}, coaches [${coachIds.join(", ")}] for period: ${getWeekDescription(twoWeeksRange)}`,
   );
 
   try {
     if (coachIds.length === 0) {
       console.info(
-        `No coaches found in workouts for user ${userId}, skipping coaching context`
+        `No coaches found in workouts for user ${userId}, skipping coaching context`,
       );
       return [];
     }
@@ -402,7 +401,7 @@ export const fetchCoachingContext = async (
       try {
         const conversationList = await queryCoachConversations(userId, coachId);
         console.info(
-          `Found ${conversationList.length} total conversations for user ${userId} and coach ${coachId} (will filter to last 2 weeks)`
+          `Found ${conversationList.length} total conversations for user ${userId} and coach ${coachId} (will filter to last 2 weeks)`,
         );
 
         if (conversationList.length === 0) {
@@ -414,25 +413,26 @@ export const fetchCoachingContext = async (
           const conversationSummary = conversationList[j];
           try {
             console.info(
-              `Loading conversation ${j + 1}/${conversationList.length} for coach ${coachId}: ${conversationSummary.conversationId}`
+              `Loading conversation ${j + 1}/${conversationList.length} for coach ${coachId}: ${conversationSummary.conversationId}`,
             );
 
             const fullConversation = await getCoachConversation(
               userId,
               coachId,
-              conversationSummary.conversationId
+              conversationSummary.conversationId,
             );
 
             if (fullConversation) {
               // Filter messages to last 2 weeks
-              const filteredMessages =
-                fullConversation.messages.filter((message) => {
+              const filteredMessages = fullConversation.messages.filter(
+                (message) => {
                   const messageDate = new Date(message.timestamp);
                   return (
                     messageDate >= twoWeeksRange.weekStart &&
                     messageDate <= twoWeeksRange.weekEnd
                   );
-                });
+                },
+              );
 
               if (filteredMessages.length > 0) {
                 // Create a copy with filtered messages
@@ -445,18 +445,18 @@ export const fetchCoachingContext = async (
                 };
                 allConversations.push(filteredConversation);
                 console.info(
-                  `Conversation (historical) ${j + 1} included: ${filteredMessages.length} messages in last 2 weeks`
+                  `Conversation (historical) ${j + 1} included: ${filteredMessages.length} messages in last 2 weeks`,
                 );
               } else {
                 console.info(
-                  `Conversation (historical) ${j + 1} skipped: no messages in last 2 weeks`
+                  `Conversation (historical) ${j + 1} skipped: no messages in last 2 weeks`,
                 );
               }
             }
           } catch (error) {
             console.error(
               `Failed to fetch full conversation ${conversationSummary.conversationId} for user ${userId} and coach ${coachId}:`,
-              error
+              error,
             );
             // Continue with other conversations
           }
@@ -464,14 +464,14 @@ export const fetchCoachingContext = async (
       } catch (error) {
         console.error(
           `Failed to fetch conversations for user ${userId} and coach ${coachId}:`,
-          error
+          error,
         );
         // Continue with other coaches
       }
     }
 
     console.info(
-      `Successfully fetched ${allConversations.length} conversations with recent messages for user ${userId} across ${coachIds.length} coaches`
+      `Successfully fetched ${allConversations.length} conversations with recent messages for user ${userId} across ${coachIds.length} coaches`,
     );
     return allConversations;
   } catch (error) {
@@ -484,7 +484,7 @@ export const fetchCoachingContext = async (
  * Step 7: Fetch user context (memories, goals, constraints)
  */
 export const fetchUserContext = async (
-  userId: string
+  userId: string,
 ): Promise<UserMemory[]> => {
   console.info(`Fetching user context for user ${userId}`);
 
@@ -495,7 +495,7 @@ export const fetchUserContext = async (
     });
 
     console.info(
-      `Successfully fetched ${memories.length} memories for user ${userId}`
+      `Successfully fetched ${memories.length} memories for user ${userId}`,
     );
     return memories;
   } catch (error) {
@@ -508,7 +508,7 @@ export const fetchUserContext = async (
  * Aggregate all data for a single user (weekly, using summaries)
  */
 export const fetchUserWeeklyData = async (
-  user: UserProfile
+  user: UserProfile,
 ): Promise<UserWeeklyData> => {
   const userId = user.userId;
   const weekRange = getCurrentWeekRange();
@@ -517,37 +517,50 @@ export const fetchUserWeeklyData = async (
   // Get user's timezone preference (defaults to Pacific if not set)
   const userTimezone = getUserTimezoneOrDefault(user.preferences?.timezone);
 
-  console.info(`📊 Fetching complete weekly data (summary-based) for user ${userId}`, {
-    timezone: userTimezone
-  });
+  console.info(
+    `📊 Fetching complete weekly data (summary-based) for user ${userId}`,
+    {
+      timezone: userTimezone,
+    },
+  );
 
   // Step 1: Extract coach IDs from current week workouts
   const coachIds = await extractCoachIdsFromSummaries(
     userId,
     weekRange.weekStart,
-    weekRange.weekEnd
+    weekRange.weekEnd,
   );
 
   // Step 2: Fetch all data in parallel (passing timezone for proper date conversion)
-  const [currentWeekSummaries, historicalSummaries, conversationSummaries, memories] =
-    await Promise.all([
-      fetchWorkoutSummaries(userId, weekRange.weekStart, weekRange.weekEnd, "current week", userTimezone),
-      fetchWorkoutSummaries(
-        userId,
-        historicalRange.weekStart,
-        historicalRange.weekEnd,
-        "historical (4 weeks)",
-        userTimezone
-      ),
-      fetchCoachConversationSummaries(
-        userId,
-        coachIds,
-        getLastNWeeksRange(2).weekStart, // Last 2 weeks of conversations
-        weekRange.weekEnd,
-        "last 2 weeks"
-      ),
-      fetchUserContext(userId),
-    ]);
+  const [
+    currentWeekSummaries,
+    historicalSummaries,
+    conversationSummaries,
+    memories,
+  ] = await Promise.all([
+    fetchWorkoutSummaries(
+      userId,
+      weekRange.weekStart,
+      weekRange.weekEnd,
+      "current week",
+      userTimezone,
+    ),
+    fetchWorkoutSummaries(
+      userId,
+      historicalRange.weekStart,
+      historicalRange.weekEnd,
+      "historical (4 weeks)",
+      userTimezone,
+    ),
+    fetchCoachConversationSummaries(
+      userId,
+      coachIds,
+      getLastNWeeksRange(2).weekStart, // Last 2 weeks of conversations
+      weekRange.weekEnd,
+      "last 2 weeks",
+    ),
+    fetchUserContext(userId),
+  ]);
 
   const userData: UserWeeklyData = {
     userId,
@@ -587,11 +600,12 @@ export const fetchUserWeeklyData = async (
 const buildAnalyticsPrompt = (
   weeklyData: UserWeeklyData | UserMonthlyData,
   userProfile?: any,
-  criticalTrainingDirective?: { content: string; enabled: boolean }
+  criticalTrainingDirective?: { content: string; enabled: boolean },
 ): string => {
   // Build directive section if enabled
-  const directiveSection = criticalTrainingDirective?.enabled && criticalTrainingDirective?.content
-    ? `🚨 CRITICAL TRAINING DIRECTIVE - ABSOLUTE PRIORITY:
+  const directiveSection =
+    criticalTrainingDirective?.enabled && criticalTrainingDirective?.content
+      ? `🚨 CRITICAL TRAINING DIRECTIVE - ABSOLUTE PRIORITY:
 
 ${criticalTrainingDirective.content}
 
@@ -600,7 +614,7 @@ This directive takes precedence over all other instructions except safety constr
 ---
 
 `
-    : '';
+      : "";
 
   // Build comprehensive athlete profile from AI profile + memories
   let athleteProfile = "";
@@ -624,32 +638,28 @@ This directive takes precedence over all other instructions except safety constr
   }
 
   // Determine period type for labels
-  const isPeriodWeekly = 'weekRange' in weeklyData;
+  const isPeriodWeekly = "weekRange" in weeklyData;
   const periodLabel = isPeriodWeekly ? "THIS WEEK'S" : "THIS MONTH'S";
   const historicalLabel = isPeriodWeekly ? "PREVIOUS WEEKS" : "PREVIOUS MONTHS";
 
   // Format current period workout summaries (convert to user's timezone)
   const currentPeriodWorkouts = weeklyData.workouts.summaries
-    .map(
-      (summary) => {
-        // Convert UTC timestamp to user's timezone date
-        const userTimezone = summary.userTimezone || 'America/Los_Angeles';
-        const localDate = convertUtcToUserDate(summary.date, userTimezone);
-        return `${localDate} - ${summary.workoutName || "Workout"} (${summary.discipline || "Unknown"}) [workout_id: ${summary.workoutId}]\n${summary.summary}`;
-      }
-    )
+    .map((summary) => {
+      // Convert UTC timestamp to user's timezone date
+      const userTimezone = summary.userTimezone || "America/Los_Angeles";
+      const localDate = convertUtcToUserDate(summary.date, userTimezone);
+      return `${localDate} - ${summary.workoutName || "Workout"} (${summary.discipline || "Unknown"}) [workout_id: ${summary.workoutId}]\n${summary.summary}`;
+    })
     .join("\n\n");
 
   // Format historical workout summaries chronologically (convert to user's timezone)
   const historicalSummaries = weeklyData.historical.workoutSummaries
-    .map(
-      (summary) => {
-        // Convert UTC timestamp to user's timezone date
-        const userTimezone = summary.userTimezone || 'America/Los_Angeles';
-        const localDate = convertUtcToUserDate(summary.date, userTimezone);
-        return `${localDate} - ${summary.workoutName || "Workout"}: ${summary.summary}`;
-      }
-    )
+    .map((summary) => {
+      // Convert UTC timestamp to user's timezone date
+      const userTimezone = summary.userTimezone || "America/Los_Angeles";
+      const localDate = convertUtcToUserDate(summary.date, userTimezone);
+      return `${localDate} - ${summary.workoutName || "Workout"}: ${summary.summary}`;
+    })
     .join("\n\n");
 
   // Format coaching conversation summaries
@@ -814,12 +824,12 @@ CRITICAL: Return ONLY valid JSON in the exact format above. No markdown, no expl
  */
 export const generateAnalytics = async (
   weeklyData: UserWeeklyData | UserMonthlyData,
-  userProfile?: any
+  userProfile?: any,
 ): Promise<any> => {
   const userId = weeklyData.userId;
 
   console.info(
-    `🧠 Generating analytics for user ${userId} using Claude Sonnet 4 with thinking`
+    `🧠 Generating analytics for user ${userId} using Claude Sonnet 4 with thinking`,
   );
 
   try {
@@ -827,23 +837,23 @@ export const generateAnalytics = async (
     const analyticsPrompt = buildAnalyticsPrompt(
       weeklyData,
       userProfile,
-      userProfile?.criticalTrainingDirective
+      userProfile?.criticalTrainingDirective,
     );
 
     console.info(
-      `📝 Analytics prompt built: ${analyticsPrompt.length} characters`
+      `📝 Analytics prompt built: ${analyticsPrompt.length} characters`,
     );
 
     // Call Claude with thinking enabled
-    const analyticsResponse = await callBedrockApi(
+    const analyticsResponse = (await callBedrockApi(
       analyticsPrompt,
       "analytics_generation",
       MODEL_IDS.CLAUDE_SONNET_4_FULL, // Use default model (Sonnet 4)
-      { enableThinking: true } // Enable thinking
-    ) as string; // No tools used, always returns string
+      { enableThinking: true }, // Enable thinking
+    )) as string; // No tools used, always returns string
 
     console.info(
-      `🔍 Raw analytics response received: ${analyticsResponse.length} characters`
+      `🔍 Raw analytics response received: ${analyticsResponse.length} characters`,
     );
 
     // Parse JSON response with cleaning and fixing (handles markdown-wrapped JSON and common issues)
@@ -863,7 +873,7 @@ export const generateAnalytics = async (
         analyticsData,
         weeklyData,
         userId,
-        true // Enable thinking for analytics normalization
+        true, // Enable thinking for analytics normalization
       );
       normalizationSummary = generateNormalizationSummary(normalizationResult);
 
@@ -885,12 +895,12 @@ export const generateAnalytics = async (
         console.info(`✅ Using normalized analytics data for user ${userId}`);
       } else {
         console.warn(
-          `⚠️  Analytics normalization failed, using original data for user ${userId}`
+          `⚠️  Analytics normalization failed, using original data for user ${userId}`,
         );
       }
     } else {
       console.info(
-        `✅ Analytics normalization skipped for user ${userId}: no critical issues detected`
+        `✅ Analytics normalization skipped for user ${userId}: no critical issues detected`,
       );
     }
 
@@ -905,7 +915,7 @@ export const generateAnalytics = async (
  * Aggregate all data for a single user (monthly version, using summaries)
  */
 export const fetchUserMonthlyData = async (
-  user: UserProfile
+  user: UserProfile,
 ): Promise<UserMonthlyData> => {
   const userId = user.userId;
   const monthRange = getCurrentMonthRange();
@@ -914,37 +924,50 @@ export const fetchUserMonthlyData = async (
   // Get user's timezone preference (defaults to Pacific if not set)
   const userTimezone = getUserTimezoneOrDefault(user.preferences?.timezone);
 
-  console.info(`📊 Fetching complete monthly data (summary-based) for user ${userId}`, {
-    timezone: userTimezone
-  });
+  console.info(
+    `📊 Fetching complete monthly data (summary-based) for user ${userId}`,
+    {
+      timezone: userTimezone,
+    },
+  );
 
   // Step 1: Extract coach IDs from current month workouts
   const coachIds = await extractCoachIdsFromSummaries(
     userId,
     monthRange.monthStart,
-    monthRange.monthEnd
+    monthRange.monthEnd,
   );
 
   // Step 2: Fetch all data in parallel (passing timezone for proper date conversion)
-  const [currentMonthSummaries, historicalSummaries, conversationSummaries, memories] =
-    await Promise.all([
-      fetchWorkoutSummaries(userId, monthRange.monthStart, monthRange.monthEnd, "current month", userTimezone),
-      fetchWorkoutSummaries(
-        userId,
-        historicalRange.monthStart,
-        historicalRange.monthEnd,
-        "historical (3 months)",
-        userTimezone
-      ),
-      fetchCoachConversationSummaries(
-        userId,
-        coachIds,
-        monthRange.monthStart,
-        monthRange.monthEnd,
-        "current month"
-      ),
-      fetchUserContext(userId),
-    ]);
+  const [
+    currentMonthSummaries,
+    historicalSummaries,
+    conversationSummaries,
+    memories,
+  ] = await Promise.all([
+    fetchWorkoutSummaries(
+      userId,
+      monthRange.monthStart,
+      monthRange.monthEnd,
+      "current month",
+      userTimezone,
+    ),
+    fetchWorkoutSummaries(
+      userId,
+      historicalRange.monthStart,
+      historicalRange.monthEnd,
+      "historical (3 months)",
+      userTimezone,
+    ),
+    fetchCoachConversationSummaries(
+      userId,
+      coachIds,
+      monthRange.monthStart,
+      monthRange.monthEnd,
+      "current month",
+    ),
+    fetchUserContext(userId),
+  ]);
 
   const userData: UserMonthlyData = {
     userId,

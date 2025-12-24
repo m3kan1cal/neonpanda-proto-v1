@@ -8,6 +8,7 @@
 import { Agent } from "../core/agent";
 import type { WorkoutLoggerContext, WorkoutLogResult } from "./types";
 import {
+  detectDisciplineTool,
   extractWorkoutDataTool,
   validateWorkoutCompletenessTool,
   normalizeWorkoutDataTool,
@@ -45,6 +46,7 @@ export class WorkoutLoggerAgent extends Agent<WorkoutLoggerContext> {
       systemPrompt: fullPrompt,
 
       tools: [
+        detectDisciplineTool,
         extractWorkoutDataTool,
         validateWorkoutCompletenessTool,
         normalizeWorkoutDataTool,
