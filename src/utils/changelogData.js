@@ -10,6 +10,58 @@
 
 export const changelogEntries = [
   {
+    version: "Release v1.0.20251231-beta",
+    date: "2025-12-31",
+    changes: {
+      added: [
+        "Stripe subscription alerts system with SNS email notifications for critical business events",
+        "createStripeAlertsTopic() SNS topic function with branch-aware naming and email subscription to businessadmins@neonpanda.ai",
+        "publishStripeAlertNotification() helper function with emoji-enhanced subjects and formatted message bodies for Stripe events",
+        "formatEventType() and formatStripeEventMessage() utilities for consistent Stripe alert formatting",
+        "StripeSubscriptionEventData TypeScript interface for type-safe Stripe alert notifications",
+        "SNS alert integration for new subscriptions (customer.subscription.created) with subscriber email, subscription ID, and amount",
+        "SNS alert integration for subscription cancellations (customer.subscription.updated with cancel_at_period_end detection) with new cancellation validation",
+        "SNS alert integration for subscription deletions (customer.subscription.deleted) when subscription ends",
+        "SNS alert integration for recurring payment success (invoice.payment_succeeded with subscription_cycle billing_reason)",
+        "SNS alert integration for payment failures (invoice.payment_failed) with attempt count and invoice details",
+        "Emoji-based subject lines for Stripe alerts (🎉 new subscriber, ⚠️ canceled, ❌ deleted, ✅ payment succeeded, 🚨 payment failed)",
+        "Comprehensive Stripe event metadata in email notifications (user ID, customer email, subscription ID, invoice ID, amount, timestamp)",
+        "OnboardingPrompt and UpgradePrompt modal system for contextual subscription upgrade nudges with ElectricPanda tier promotion",
+        "WelcomePage post-checkout success page with subscription status polling, exponential backoff, and ElectricPanda benefits display",
+        "useUpgradePrompts React hook for centralized upgrade prompt logic with trigger conditions (coach count, workout count, message count, days since signup)",
+        "Subscription tier display system with getTierDisplayInfo() utility returning name, price, and feature lists for EarlyPanda and ElectricPanda tiers",
+        "Stripe Customer Portal integration for subscription management with userId-aware return URL",
+      ],
+      changed: [
+        "Stripe webhook handler (process-stripe-webhook) now publishes SNS alerts for all 5 subscription lifecycle events",
+        "Subscription created event now sends immediate notification with new subscriber celebration message",
+        "Subscription updated event now detects NEW cancellations (checking previous_attributes) to avoid duplicate alerts",
+        "Payment success notifications only sent for recurring payments (billing_reason: 'subscription_cycle') to avoid first-payment noise",
+        "Payment failure notifications include attempt count and amount due for immediate business context",
+        "SNS alert messages formatted with user ID, customer email, subscription/invoice IDs, and ISO timestamps for tracking",
+        "Backend SNS permissions granted to processStripeWebhook Lambda via stripeAlertsTopic.topic.grantPublish()",
+        "STRIPE_ALERTS_TOPIC_ARN environment variable added to processStripeWebhook Lambda for runtime SNS access",
+        "Stripe subscription current_period_start and current_period_end now correctly accessed from subscription.items.data[0] for API version 2025-12-15.clover",
+        "Stripe Customer Portal return_url updated to include userId query parameter for proper Settings page navigation",
+        "localStorage keys standardized to camelCase (npOnboardingShown, npUserSignupDate, npUpgradePromptLast, npUpgradeTriggerTimes, npUpgradeSessionPrompted)",
+        "STORAGE_KEYS constants consolidated from UpgradePrompt.jsx into useUpgradePrompts.js and exported for DRY code",
+        "Upgrade prompt trigger priority order updated: messages count → coach count → workout count → days since signup",
+        "OnboardingModal.jsx renamed to OnboardingPrompt.jsx for consistent modal/prompt terminology",
+        "Settings page ElectricPanda plan container styling updated to match WelcomePage and OnboardingPrompt (purple border and shadow)",
+      ],
+      fixed: [
+        "Critical bug where subscription period properties accessed from wrong Stripe object (subscription.items.data[0].current_period_start/end don't exist in new API, should be subscription.current_period_start/end)",
+        "Stripe Customer Portal redirect missing userId causing navigation to /settings without user context",
+        "Snake_case localStorage keys (np_onboarding_shown_, np_user_signup_date_) violating project camelCase style guidelines",
+        "Duplicate STORAGE_KEYS definitions in useUpgradePrompts.js and UpgradePrompt.jsx causing maintenance burden",
+        "OnboardingPrompt and UpgradePrompt showing simultaneously on Coaches page during login flow",
+      ],
+      removed: [
+        "Positive Feedback upgrade prompt trigger (hasPositiveFeedback) as it was never actually wired up or triggered",
+      ],
+    },
+  },
+  {
     version: "Release v1.0.20251230-beta",
     date: "2025-12-30",
     changes: {
