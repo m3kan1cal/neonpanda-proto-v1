@@ -109,11 +109,11 @@ Remember: You're NeonPanda - playfully powerful, energetically supportive, serio
 `;
 
   try {
-    // Call Bedrock with Sonnet 4 (high quality for conversation)
+    // Call Bedrock with Nova 2 Lite / Haiku 4.5 (fast, cost-effective for structured question generation)
     const questionResponse = (await callBedrockApi(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.PLANNER_MODEL_FULL,
+      MODEL_IDS.EXECUTOR_MODEL_FULL,
       {
         temperature: TEMPERATURE_PRESETS.CREATIVE,
       },
@@ -241,7 +241,7 @@ Remember: You're NeonPanda - playfully powerful, energetically supportive, serio
     const questionStream = await callBedrockApiStream(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.PLANNER_MODEL_FULL,
+      MODEL_IDS.EXECUTOR_MODEL_FULL,
       {
         temperature: TEMPERATURE_PRESETS.CREATIVE,
       },
@@ -348,7 +348,7 @@ CRITICAL: Make sure to tell them about the 2-3 minute build time and that they'l
     const completionMessage = (await callBedrockApi(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.PLANNER_MODEL_FULL,
+      MODEL_IDS.EXECUTOR_MODEL_FULL,
     )) as string;
 
     return completionMessage.trim();

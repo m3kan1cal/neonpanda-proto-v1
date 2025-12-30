@@ -99,11 +99,11 @@ Remember: You're helping them create a training program that will actually work 
 `;
 
   try {
-    // Call Bedrock with Sonnet 4 (high quality for conversation)
+    // Call Bedrock with Nova 2 Lite / Haiku 4.5 (fast, cost-effective for structured question generation)
     const questionResponse = (await callBedrockApi(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.PLANNER_MODEL_FULL,
+      MODEL_IDS.EXECUTOR_MODEL_FULL,
       {
         temperature: TEMPERATURE_PRESETS.CREATIVE,
       },
@@ -222,7 +222,7 @@ Remember: You're helping them create a training program that will actually work 
     const questionStream = await callBedrockApiStream(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.PLANNER_MODEL_FULL,
+      MODEL_IDS.EXECUTOR_MODEL_FULL,
       {
         temperature: TEMPERATURE_PRESETS.CREATIVE,
       },
@@ -331,7 +331,7 @@ CRITICAL: Make sure to tell them about the 3-5 minute build time, progress updat
     const completionMessage = (await callBedrockApi(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.PLANNER_MODEL_FULL,
+      MODEL_IDS.EXECUTOR_MODEL_FULL,
     )) as string;
 
     return completionMessage.trim();

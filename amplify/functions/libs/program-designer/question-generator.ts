@@ -427,7 +427,7 @@ Generate the completion message now:
     const stream = await callBedrockApiStream(
       systemPrompt,
       completionPrompt,
-      MODEL_IDS.PLANNER_MODEL_FULL,
+      MODEL_IDS.EXECUTOR_MODEL_FULL,
     );
 
     for await (const chunk of stream) {
