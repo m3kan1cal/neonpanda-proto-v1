@@ -22,9 +22,11 @@ export interface Subscription {
     foundingMember: boolean;
     priceLocked: boolean;
   };
-  createdAt: number;
-  updatedAt: number;
   entityType: "subscription";
+  // Note: createdAt/updatedAt stored at DynamoDB item root level, not in attributes
+  // Added back when retrieved via getSubscription()
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface SubscriptionStatusResponse {
@@ -34,5 +36,5 @@ export interface SubscriptionStatusResponse {
   currentPeriodEnd?: number;
   cancelAtPeriodEnd?: boolean;
   canceledAt?: number;
-  stripeCustomerId?: string;
+  // stripeCustomerId intentionally excluded - only needed server-side
 }

@@ -3555,8 +3555,10 @@ export async function queryProgramsCount(
 // ===========================
 
 /**
- * Save or update a subscription in DynamoDB
+ * Save a new subscription to DynamoDB
+ * Used for initial subscription creation (customer.subscription.created)
  * Uses lowercase pk/sk and entityType for consistency
+ * Note: createdAt/updatedAt stored at root level only, not in attributes
  */
 export async function saveSubscription(
   subscriptionData: Omit<
@@ -3564,24 +3566,23 @@ export async function saveSubscription(
     "entityType" | "createdAt" | "updatedAt"
   >,
 ): Promise<DynamoDBSaveResult> {
-  const now = Date.now();
+  const timestamp = new Date().toISOString();
+
   const item: DynamoDBItem<Subscription> = {
     pk: `user#${subscriptionData.userId}`,
     sk: "subscription",
     attributes: {
       ...subscriptionData,
-      createdAt: now,
-      updatedAt: now,
       entityType: "subscription",
     },
     entityType: "subscription",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    createdAt: timestamp,
+    updatedAt: timestamp,
   };
 
   const result = await saveToDynamoDB(item);
 
-  console.info("Subscription saved successfully:", {
+  console.info("Subscription created successfully:", {
     userId: subscriptionData.userId,
     tier: subscriptionData.tier,
     status: subscriptionData.status,
@@ -3592,8 +3593,60 @@ export async function saveSubscription(
 }
 
 /**
+ * Update an existing subscription in DynamoDB
+ * Used for subscription updates (customer.subscription.updated, cancellations, etc.)
+ * Preserves original createdAt timestamp while updating other fields
+ * Note: createdAt/updatedAt stored at root level only, not in attributes
+ */
+export async function updateSubscription(
+  subscriptionData: Omit<
+    Subscription,
+    "entityType" | "createdAt" | "updatedAt"
+  >,
+): Promise<DynamoDBSaveResult> {
+  // Load existing subscription to preserve createdAt
+  const existingItem = await loadFromDynamoDB<Subscription>(
+    `user#${subscriptionData.userId}`,
+    "subscription",
+    "subscription",
+  );
+
+  if (!existingItem) {
+    throw new Error(
+      `Subscription not found for update: ${subscriptionData.userId}`,
+    );
+  }
+
+  const timestamp = new Date().toISOString();
+
+  // Preserve original createdAt at root level, update everything else
+  const updatedItem: DynamoDBItem<Subscription> = {
+    ...existingItem,
+    attributes: {
+      ...subscriptionData,
+      entityType: "subscription",
+    },
+    updatedAt: timestamp, // Update timestamp at root level
+    // createdAt preserved from existingItem (not modified)
+  };
+
+  const result = await saveToDynamoDB(updatedItem, true /* requireExists */);
+
+  console.info("Subscription updated successfully:", {
+    userId: subscriptionData.userId,
+    tier: subscriptionData.tier,
+    status: subscriptionData.status,
+    stripeSubscriptionId: subscriptionData.stripeSubscriptionId,
+    originalCreatedAt: existingItem.createdAt,
+  });
+
+  return result;
+}
+
+/**
  * Get subscription by userId
  * Returns null if no subscription exists (user is on free tier)
+ * Adds createdAt/updatedAt from root level to attributes
  */
 export async function getSubscription(
   userId: string,
@@ -3608,7 +3661,12 @@ export async function getSubscription(
     return null;
   }
 
-  return item.attributes;
+  // Add timestamps from root level (stored as ISO strings, returned as Date objects)
+  return {
+    ...item.attributes,
+    createdAt: new Date(item.createdAt),
+    updatedAt: new Date(item.updatedAt),
+  };
 }
 
 /**

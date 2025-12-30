@@ -3,6 +3,8 @@ import Stripe from "stripe";
 import { createOkResponse, createErrorResponse } from "../libs/api-helpers";
 import {
   saveSubscription,
+  updateSubscription,
+  getSubscription,
   deleteSubscription,
 } from "../../dynamodb/operations";
 import { mapStripePriceToTier } from "../libs/subscription/stripe-helpers";
@@ -129,10 +131,27 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
           tier,
         );
 
-        await saveSubscription(subscriptionData);
-
-        // Send SNS alert for new subscription
+        // For Payment Links: customer.subscription.created fires first without userId,
+        // then customer.subscription.updated fires after checkout with userId.
+        // So .updated might be creating the record for the first time.
+        let isNewSubscription = false;
         if (stripeEvent.type === "customer.subscription.created") {
+          await saveSubscription(subscriptionData);
+          isNewSubscription = true;
+        } else {
+          // Check if subscription exists to determine save vs update
+          const existingSubscription = await getSubscription(userId);
+          if (existingSubscription) {
+            await updateSubscription(subscriptionData);
+          } else {
+            // First time seeing this subscription with userId (Payment Link flow)
+            await saveSubscription(subscriptionData);
+            isNewSubscription = true;
+          }
+        }
+
+        // Send SNS alert for new subscription (both direct checkout and Payment Link flows)
+        if (isNewSubscription) {
           await publishStripeAlertNotification({
             eventType: "subscription_created",
             userId,
