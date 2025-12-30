@@ -7,6 +7,12 @@ import {
 } from "../../dynamodb/operations";
 import { mapStripePriceToTier } from "../libs/subscription/stripe-helpers";
 import { publishStripeAlertNotification } from "../libs/sns-helpers";
+import {
+  getUserIdFromSubscription,
+  buildSubscriptionData,
+  isNewCancellation,
+  retrieveSubscriptionAndAlert,
+} from "./helpers";
 
 /**
  * Process Stripe webhook events
@@ -108,7 +114,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
       case "customer.subscription.created":
       case "customer.subscription.updated": {
         const subscription = stripeEvent.data.object as Stripe.Subscription;
-        const userId = subscription.metadata?.userId;
+        const userId = getUserIdFromSubscription(subscription);
 
         if (!userId) {
           // Expected for Payment Links: subscription.created fires before checkout.session.completed
@@ -117,31 +123,13 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
         }
 
         const tier = mapStripePriceToTier(subscription.items.data[0].price.id);
-
-        // Handle both cancellation methods:
-        // 1. cancel_at_period_end (legacy API)
-        // 2. cancel_at (modern Customer Portal - sets timestamp instead of boolean)
-        const isCanceledAtPeriodEnd =
-          subscription.cancel_at_period_end || subscription.cancel_at !== null;
-
-        await saveSubscription({
+        const subscriptionData = buildSubscriptionData(
+          subscription,
           userId,
-          stripeSubscriptionId: subscription.id,
-          stripeCustomerId: subscription.customer as string,
-          stripePriceId: subscription.items.data[0].price.id,
           tier,
-          status: subscription.status as any,
-          currentPeriodStart: (subscription.items.data[0] as any)
-            .current_period_start,
-          currentPeriodEnd: (subscription.items.data[0] as any)
-            .current_period_end,
-          cancelAtPeriodEnd: isCanceledAtPeriodEnd,
-          canceledAt: subscription.canceled_at || undefined,
-          metadata: {
-            foundingMember: tier === "electric",
-            priceLocked: tier === "electric",
-          },
-        });
+        );
+
+        await saveSubscription(subscriptionData);
 
         // Send SNS alert for new subscription
         if (stripeEvent.type === "customer.subscription.created") {
@@ -155,27 +143,18 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
           });
         }
 
-        // Check if subscription was canceled (for subscription.updated event)
+        // Send SNS alert for NEW cancellations only
         if (
           stripeEvent.type === "customer.subscription.updated" &&
-          isCanceledAtPeriodEnd
+          isNewCancellation(stripeEvent, subscription)
         ) {
-          // Only alert if this is a NEW cancellation (check previous_attributes)
-          const previousAttributes = (stripeEvent.data as any)
-            .previous_attributes;
-          const wasPreviouslyCanceled =
-            previousAttributes?.cancel_at_period_end === true ||
-            previousAttributes?.cancel_at !== undefined;
-
-          if (!wasPreviouslyCanceled) {
-            await publishStripeAlertNotification({
-              eventType: "subscription_canceled",
-              userId,
-              customerEmail: (subscription.customer as any)?.email || undefined,
-              subscriptionId: subscription.id,
-              timestamp: new Date().toISOString(),
-            });
-          }
+          await publishStripeAlertNotification({
+            eventType: "subscription_canceled",
+            userId,
+            customerEmail: (subscription.customer as any)?.email || undefined,
+            subscriptionId: subscription.id,
+            timestamp: new Date().toISOString(),
+          });
         }
 
         console.info(`Subscription ${stripeEvent.type.split(".")[2]}:`, {
@@ -189,63 +168,43 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
 
       case "customer.subscription.deleted": {
         const subscription = stripeEvent.data.object as Stripe.Subscription;
-        const userId = subscription.metadata?.userId;
+        const userId = getUserIdFromSubscription(subscription);
 
-        if (userId) {
-          await deleteSubscription(userId);
-
-          // Send SNS alert for deleted subscription
-          await publishStripeAlertNotification({
-            eventType: "subscription_deleted",
-            userId,
-            subscriptionId: subscription.id,
-            timestamp: new Date().toISOString(),
-          });
-
-          console.info("Subscription deleted:", {
-            subscriptionId: subscription.id,
-            userId,
-          });
-        } else {
+        if (!userId) {
           console.warn("Cannot delete subscription - no userId in metadata:", {
             subscriptionId: subscription.id,
           });
+          break;
         }
+
+        await deleteSubscription(userId);
+
+        await publishStripeAlertNotification({
+          eventType: "subscription_deleted",
+          userId,
+          subscriptionId: subscription.id,
+          timestamp: new Date().toISOString(),
+        });
+
+        console.info("Subscription deleted:", {
+          subscriptionId: subscription.id,
+          userId,
+        });
         break;
       }
 
       case "invoice.payment_succeeded": {
         const invoice = stripeEvent.data.object as Stripe.Invoice;
-        // Get subscription ID from invoice (may be string or expandable object)
         const subscriptionId = (invoice as any).subscription as string | null;
-
-        // Check if this is a recurring payment (not first payment)
         const isRecurring = invoice.billing_reason === "subscription_cycle";
 
         if (isRecurring && subscriptionId) {
-          // Get subscription to extract userId from metadata
-          try {
-            const subscription =
-              await stripe.subscriptions.retrieve(subscriptionId);
-            const userId = subscription.metadata?.userId;
-
-            if (userId) {
-              await publishStripeAlertNotification({
-                eventType: "payment_succeeded",
-                userId,
-                customerEmail: invoice.customer_email || undefined,
-                subscriptionId,
-                invoiceId: invoice.id,
-                amount: invoice.amount_paid,
-                timestamp: new Date().toISOString(),
-              });
-            }
-          } catch (error) {
-            console.error(
-              "Failed to retrieve subscription for payment success alert:",
-              error,
-            );
-          }
+          await retrieveSubscriptionAndAlert(
+            stripe,
+            subscriptionId,
+            "payment_succeeded",
+            invoice,
+          );
         }
 
         console.info("Invoice payment succeeded:", {
@@ -259,34 +218,16 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
 
       case "invoice.payment_failed": {
         const invoice = stripeEvent.data.object as Stripe.Invoice;
-        // Get subscription ID from invoice (may be string or expandable object)
         const subscriptionId = (invoice as any).subscription as string | null;
 
-        // Get subscription to extract userId from metadata
         if (subscriptionId) {
-          try {
-            const subscription =
-              await stripe.subscriptions.retrieve(subscriptionId);
-            const userId = subscription.metadata?.userId;
-
-            if (userId) {
-              await publishStripeAlertNotification({
-                eventType: "payment_failed",
-                userId,
-                customerEmail: invoice.customer_email || undefined,
-                subscriptionId,
-                invoiceId: invoice.id,
-                amount: invoice.amount_due,
-                attemptCount: invoice.attempt_count,
-                timestamp: new Date().toISOString(),
-              });
-            }
-          } catch (error) {
-            console.error(
-              "Failed to retrieve subscription for payment failure alert:",
-              error,
-            );
-          }
+          await retrieveSubscriptionAndAlert(
+            stripe,
+            subscriptionId,
+            "payment_failed",
+            invoice,
+            invoice.amount_due,
+          );
         }
 
         console.warn("Invoice payment failed:", {
