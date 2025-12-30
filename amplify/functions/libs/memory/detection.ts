@@ -2,13 +2,13 @@
  * Memory detection logic using AI analysis
  */
 
-import { callBedrockApi, MODEL_IDS } from "../api-helpers";
-import { JSON_FORMATTING_INSTRUCTIONS_STANDARD } from "../prompt-helpers";
+import { callBedrockApi, MODEL_IDS, TEMPERATURE_PRESETS } from "../api-helpers";
 import {
   MEMORY_REQUEST_DETECTION_SCHEMA,
   CONSOLIDATED_MEMORY_ANALYSIS_SCHEMA,
   MEMORY_CHARACTERISTICS_SCHEMA,
 } from "../schemas/memory-detection-schemas";
+import { SEMANTIC_RETRIEVAL_SCHEMA } from "../schemas/router-schemas";
 import {
   MemoryDetectionEvent,
   MemoryDetectionResult,
@@ -53,16 +53,6 @@ CONTEXT TYPES:
 - context: Personal background, lifestyle factors, emotional patterns
 - motivational: Past emotional states, motivation patterns, support strategies
 
-${JSON_FORMATTING_INSTRUCTIONS_STANDARD}
-
-RESPONSE SCHEMA:
-{
-  "needsSemanticRetrieval": boolean,
-  "confidence": number (0.0 to 1.0),
-  "contextTypes": ["preference", "goal", "constraint", "instruction", "context", "motivational"],
-  "reasoning": "brief explanation why semantic memory retrieval would/wouldn't help"
-}
-
 GUIDELINES:
 - CRITICAL: Any message asking "do you remember" or similar memory queries should ALWAYS trigger semantic retrieval
 - Consider if knowing the user's past preferences, goals, or constraints would improve the coaching response
@@ -72,16 +62,31 @@ GUIDELINES:
 
   const userPrompt = `${messageContext ? `CONVERSATION CONTEXT:\n${messageContext}\n\n` : ""}USER MESSAGE TO ANALYZE:\n"${userMessage}"
 
-Analyze this message and determine if retrieving stored memories would enhance the coaching response.`;
+Use the analyze_semantic_retrieval tool to provide your analysis of whether retrieving stored memories would enhance the coaching response.`;
 
   try {
-    const response = (await callBedrockApi(
+    const response = await callBedrockApi(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.CLAUDE_HAIKU_4_FULL,
-      { prefillResponse: "{" }, // Force JSON output format
-    )) as string; // No tools used, always returns string
-    const result = parseJsonWithFallbacks(response);
+      MODEL_IDS.EXECUTOR_MODEL_FULL,
+      {
+        temperature: TEMPERATURE_PRESETS.STRUCTURED,
+        tools: {
+          name: "analyze_semantic_retrieval",
+          description:
+            "Analyze if semantic memory retrieval would enhance the coaching response",
+          inputSchema: SEMANTIC_RETRIEVAL_SCHEMA,
+        },
+        expectedToolName: "analyze_semantic_retrieval",
+      },
+    );
+
+    // Tool use returns structured data directly
+    if (typeof response === "string") {
+      throw new Error("Expected tool use but received text response");
+    }
+
+    const result = response.input as MemoryRetrievalNeedResult;
 
     return result;
   } catch (error) {
@@ -158,8 +163,9 @@ Analyze this message and use the detect_memory_request tool to provide your anal
     const response = await callBedrockApi(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.CLAUDE_HAIKU_4_FULL,
+      MODEL_IDS.EXECUTOR_MODEL_FULL,
       {
+        temperature: TEMPERATURE_PRESETS.STRUCTURED,
         tools: {
           name: "detect_memory_request",
           description:
@@ -351,8 +357,9 @@ Use the detect_memory_characteristics tool to analyze this memory.`;
     const response = await callBedrockApi(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.CLAUDE_HAIKU_4_FULL,
+      MODEL_IDS.EXECUTOR_MODEL_FULL,
       {
+        temperature: TEMPERATURE_PRESETS.STRUCTURED,
         tools: {
           name: "detect_memory_characteristics",
           description:
@@ -503,8 +510,9 @@ Use the analyze_memory_needs tool to provide comprehensive memory analysis follo
     const response = await callBedrockApi(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.CLAUDE_HAIKU_4_FULL, // Reliable for critical memory analysis
+      MODEL_IDS.EXECUTOR_MODEL_FULL, // Reliable for critical memory analysis
       {
+        temperature: TEMPERATURE_PRESETS.STRUCTURED,
         tools: {
           name: "analyze_memory_needs",
           description:

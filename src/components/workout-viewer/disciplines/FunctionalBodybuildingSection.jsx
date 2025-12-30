@@ -1,5 +1,6 @@
 import React from "react";
 import { BadgeLegend } from "../BadgeLegend";
+import { badgePatterns } from "../../../utils/ui/uiPatterns";
 
 export const FunctionalBodybuildingSection = ({
   functionalBodybuildingData,
@@ -68,18 +69,18 @@ export const FunctionalBodybuildingSection = ({
                           )}
                         {exercise.movement_pattern && (
                           <span
-                            className={`text-xs font-rajdhani uppercase px-2 py-0.5 rounded ${
+                            className={`${badgePatterns.workoutBadgeBase} ${
                               exercise.movement_pattern === "push" ||
                               exercise.movement_pattern === "pull" ||
                               exercise.movement_pattern === "squat" ||
                               exercise.movement_pattern === "hinge"
-                                ? "bg-synthwave-neon-pink/20 text-synthwave-neon-pink"
+                                ? badgePatterns.workoutBadgePink
                                 : exercise.movement_pattern === "accessory" ||
                                     exercise.movement_pattern === "carry"
-                                  ? "bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan"
+                                  ? badgePatterns.workoutBadgeCyan
                                   : exercise.movement_pattern === "core"
-                                    ? "bg-synthwave-neon-purple/20 text-synthwave-neon-purple"
-                                    : "bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan"
+                                    ? badgePatterns.workoutBadgePurple
+                                    : badgePatterns.workoutBadgeCyan
                             }`}
                           >
                             {exercise.movement_pattern}

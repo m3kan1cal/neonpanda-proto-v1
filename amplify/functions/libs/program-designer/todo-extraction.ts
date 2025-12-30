@@ -9,6 +9,7 @@ import {
   callBedrockApi,
   callBedrockApiMultimodal,
   MODEL_IDS,
+  TEMPERATURE_PRESETS,
 } from "../api-helpers";
 import { parseJsonWithFallbacks } from "../response-utils";
 import { buildMultimodalContent } from "../streaming/multimodal-helpers";
@@ -115,8 +116,9 @@ Return ONLY the fields you found information for using the tool. If no informati
       extractionResponse = await callBedrockApiMultimodal(
         systemPrompt,
         converseMessages,
-        MODEL_IDS.CLAUDE_HAIKU_4_FULL,
+        MODEL_IDS.EXECUTOR_MODEL_FULL,
         {
+          temperature: TEMPERATURE_PRESETS.STRUCTURED,
           tools: {
             name: "extract_program_info",
             description:
@@ -131,8 +133,9 @@ Return ONLY the fields you found information for using the tool. If no informati
       extractionResponse = await callBedrockApi(
         systemPrompt,
         userPrompt,
-        MODEL_IDS.CLAUDE_HAIKU_4_FULL,
+        MODEL_IDS.EXECUTOR_MODEL_FULL,
         {
+          temperature: TEMPERATURE_PRESETS.STRUCTURED,
           tools: {
             name: "extract_program_info",
             description:

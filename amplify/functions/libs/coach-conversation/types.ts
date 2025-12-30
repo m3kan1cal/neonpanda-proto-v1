@@ -142,6 +142,9 @@ export interface CoachConversationListItem {
   // DynamoDB timestamps (populated from database metadata)
   createdAt?: Date;
   updatedAt?: Date;
+  // Optional first messages (included when includeFirstMessages option is true)
+  firstUserMessage?: string;
+  firstAiMessage?: string;
 }
 
 /**

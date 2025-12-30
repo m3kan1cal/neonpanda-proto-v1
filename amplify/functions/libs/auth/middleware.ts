@@ -12,8 +12,7 @@ import {
   JWTClaims,
 } from "./jwt-utils";
 
-export interface AuthenticatedEvent
-  extends APIGatewayProxyEventV2WithJWTAuthorizer {
+export interface AuthenticatedEvent extends APIGatewayProxyEventV2WithJWTAuthorizer {
   user: {
     userId: string;
     username: string;
@@ -22,15 +21,15 @@ export interface AuthenticatedEvent
 }
 
 export type AuthenticatedHandler = (
-  event: AuthenticatedEvent
+  event: AuthenticatedEvent,
 ) => Promise<APIGatewayProxyResultV2>;
 
 export const withAuth = (
   handler: AuthenticatedHandler,
-  options: { allowInternalCalls?: boolean } = {}
+  options: { allowInternalCalls?: boolean } = {},
 ) => {
   return async (
-    event: APIGatewayProxyEventV2WithJWTAuthorizer
+    event: APIGatewayProxyEventV2WithJWTAuthorizer,
   ): Promise<APIGatewayProxyResultV2> => {
     // DEBUG: Log the raw event structure
     console.info("🔍 withAuth received event:", {
@@ -60,7 +59,7 @@ export const withAuth = (
       };
       console.info(
         "🔓 Dev mode bypass activated for user:",
-        authenticatedEvent.user.userId
+        authenticatedEvent.user.userId,
       );
       return handler(authenticatedEvent);
     }
@@ -113,17 +112,19 @@ export const withAuth = (
     if (!userId) {
       return createErrorResponse(
         400,
-        "Custom userId not found. Please contact support."
+        "Custom userId not found. Please contact support.",
       );
     }
 
-    if (userId !== requestedUserId) {
+    // Only validate userId match if there's a userId in the path parameters
+    // Some endpoints (like /stripe/portal-session) don't have userId in path
+    if (requestedUserId && userId !== requestedUserId) {
       console.warn(
-        `🚫 Access denied: ${userId} tried to access ${requestedUserId}`
+        `🚫 Access denied: ${userId} tried to access ${requestedUserId}`,
       );
       return createErrorResponse(
         403,
-        "Access denied: can only access your own data"
+        "Access denied: can only access your own data",
       );
     }
 
@@ -149,15 +150,14 @@ export interface AuthenticatedUser {
   email: string;
 }
 
-export interface AuthenticatedLambdaFunctionURLEvent
-  extends LambdaFunctionURLEvent {
+export interface AuthenticatedLambdaFunctionURLEvent extends LambdaFunctionURLEvent {
   user: AuthenticatedUser;
 }
 
 export type StreamingHandler = (
   event: AuthenticatedLambdaFunctionURLEvent,
   responseStream: any,
-  context: Context
+  context: Context,
 ) => Promise<void>;
 
 export interface StreamingAuthOptions {
@@ -173,16 +173,16 @@ export interface StreamingAuthOptions {
  */
 export function withStreamingAuth(
   handler: StreamingHandler,
-  options: StreamingAuthOptions = {}
+  options: StreamingAuthOptions = {},
 ): (
   event: LambdaFunctionURLEvent,
   responseStream: any,
-  context: Context
+  context: Context,
 ) => Promise<void> {
   return async (
     event: LambdaFunctionURLEvent,
     responseStream: any,
-    context: Context
+    context: Context,
   ) => {
     console.info("🔍 withStreamingAuth received event:", {
       rawPath: event.rawPath,
@@ -196,7 +196,7 @@ export function withStreamingAuth(
       const { extractPathParameters } = await import("../streaming/path-utils");
       const pathParams = extractPathParameters(
         event.rawPath,
-        options.routePattern
+        options.routePattern,
       );
       const { userId: pathUserId } = pathParams;
 
@@ -215,7 +215,7 @@ export function withStreamingAuth(
 
         console.info(
           "🔓 Dev mode bypass activated for streaming user:",
-          authenticatedEvent.user.userId
+          authenticatedEvent.user.userId,
         );
         return handler(authenticatedEvent, responseStream, context);
       }
@@ -265,7 +265,7 @@ export function withStreamingAuth(
         authenticatedUserId !== pathUserId
       ) {
         console.warn(
-          `🚫 Streaming access denied: ${authenticatedUserId} tried to access ${pathUserId}`
+          `🚫 Streaming access denied: ${authenticatedUserId} tried to access ${pathUserId}`,
         );
         throw new Error("Access denied: can only access your own data");
       }

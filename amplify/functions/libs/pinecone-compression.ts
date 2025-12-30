@@ -6,7 +6,7 @@
  * while preserving semantic meaning and searchability.
  */
 
-import { callBedrockApi, MODEL_IDS } from "./api-helpers";
+import { callBedrockApi, MODEL_IDS, TEMPERATURE_PRESETS } from "./api-helpers";
 
 /**
  * Pinecone metadata size limit (40KB)
@@ -234,7 +234,10 @@ Return ONLY the compressed content, no explanations or meta-commentary.`;
       const compressedContent = (await callBedrockApi(
         compressionPrompt,
         "", // No user content, it's in the prompt
-        MODEL_IDS.CLAUDE_SONNET_4_FULL, // Sonnet 4.5
+        MODEL_IDS.PLANNER_MODEL_FULL, // Sonnet 4.5
+        {
+          temperature: TEMPERATURE_PRESETS.BALANCED,
+        },
       )) as string;
 
       const finalSize = Buffer.byteLength(compressedContent, "utf8");

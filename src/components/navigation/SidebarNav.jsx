@@ -280,13 +280,15 @@ const SidebarNav = () => {
       return;
     }
 
-    // Handle Quick Actions items (log workout, start conversation, save memory)
+    // Handle Quick Actions items (log workout, start conversation, save memory, create coach, design program)
     if (item.action) {
       // Map action to command palette commands
       const commandMap = {
         "log-workout": "/log-workout ",
         "start-conversation": "/start-conversation ",
         "save-memory": "/save-memory ",
+        "create-coach": "/create-coach",
+        "design-program": "/design-program",
       };
 
       if (context.onCommandPaletteToggle && commandMap[item.action]) {

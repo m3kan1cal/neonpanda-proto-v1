@@ -1,5 +1,6 @@
 import React from "react";
 import { BadgeLegend } from "../BadgeLegend";
+import { badgePatterns } from "../../../utils/ui/uiPatterns";
 
 export const BodybuildingSection = ({
   bodybuildingData,
@@ -61,13 +62,13 @@ export const BodybuildingSection = ({
                       </span>
                       {exercise.movement_category && (
                         <span
-                          className={`text-xs font-rajdhani uppercase px-2 py-0.5 rounded ${
+                          className={`${badgePatterns.workoutBadgeBase} ${
                             exercise.movement_category === "compound"
-                              ? "bg-synthwave-neon-pink/20 text-synthwave-neon-pink"
+                              ? badgePatterns.workoutBadgePink
                               : exercise.movement_category === "isolation" ||
                                   exercise.movement_category === "accessory"
-                                ? "bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan"
-                                : "bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan"
+                                ? badgePatterns.workoutBadgeCyan
+                                : badgePatterns.workoutBadgeCyan
                           }`}
                         >
                           {exercise.movement_category}
@@ -127,15 +128,15 @@ export const BodybuildingSection = ({
                               )}
                               {set.set_type && (
                                 <span
-                                  className={`text-xs uppercase px-2 py-0.5 rounded ml-auto ${
+                                  className={`${badgePatterns.workoutBadgeBase} ml-auto ${
                                     set.set_type === "working"
-                                      ? "bg-synthwave-neon-pink/20 text-synthwave-neon-pink"
+                                      ? badgePatterns.workoutBadgePink
                                       : set.set_type === "warmup" ||
                                           set.set_type === "drop"
-                                        ? "bg-synthwave-neon-purple/20 text-synthwave-neon-purple"
+                                        ? badgePatterns.workoutBadgePurple
                                         : set.set_type === "accessory"
-                                          ? "bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan"
-                                          : "bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan"
+                                          ? badgePatterns.workoutBadgeCyan
+                                          : badgePatterns.workoutBadgeCyan
                                   }`}
                                 >
                                   {set.set_type}

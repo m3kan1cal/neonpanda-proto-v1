@@ -7,7 +7,7 @@ import {
   queryCoachConversationSummaries,
   queryWorkoutSummaries,
 } from "../../../dynamodb/operations";
-import { callBedrockApi, MODEL_IDS } from "../api-helpers";
+import { callBedrockApi, MODEL_IDS, TEMPERATURE_PRESETS } from "../api-helpers";
 import { JSON_FORMATTING_INSTRUCTIONS_STANDARD } from "../prompt-helpers";
 import { parseJsonWithFallbacks } from "../response-utils";
 import {
@@ -848,8 +848,11 @@ export const generateAnalytics = async (
     const analyticsResponse = (await callBedrockApi(
       analyticsPrompt,
       "analytics_generation",
-      MODEL_IDS.CLAUDE_SONNET_4_FULL, // Use default model (Sonnet 4)
-      { enableThinking: true }, // Enable thinking
+      MODEL_IDS.PLANNER_MODEL_FULL, // Use default model (Sonnet 4)
+      {
+        temperature: TEMPERATURE_PRESETS.STRUCTURED,
+        enableThinking: true,
+      }, // Enable thinking
     )) as string; // No tools used, always returns string
 
     console.info(

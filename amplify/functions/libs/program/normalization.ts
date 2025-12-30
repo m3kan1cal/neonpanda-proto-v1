@@ -6,7 +6,7 @@
  */
 
 import { ProgramGenerationData } from "./types";
-import { callBedrockApi, MODEL_IDS } from "../api-helpers";
+import { callBedrockApi, MODEL_IDS, TEMPERATURE_PRESETS } from "../api-helpers";
 import { parseJsonWithFallbacks } from "../response-utils";
 import { getCondensedSchema } from "../object-utils";
 import { PROGRAM_SCHEMA } from "../schemas/program-schema";
@@ -255,8 +255,8 @@ const performNormalization = async (
     const extractionConfidence = programData.metadata?.data_confidence || 0;
     const useHaiku = extractionConfidence >= 0.8;
     const selectedModel = useHaiku
-      ? MODEL_IDS.CLAUDE_HAIKU_4_FULL
-      : MODEL_IDS.CLAUDE_SONNET_4_FULL;
+      ? MODEL_IDS.EXECUTOR_MODEL_FULL
+      : MODEL_IDS.PLANNER_MODEL_FULL;
 
     console.info("🔀 Two-tier normalization model selection:", {
       extractionConfidence,
@@ -290,6 +290,7 @@ const performNormalization = async (
         "program_normalization",
         selectedModel, // Use tier-selected model
         {
+          temperature: TEMPERATURE_PRESETS.STRUCTURED,
           enableThinking,
           tools: {
             name: "normalize_program",
@@ -326,7 +327,10 @@ ${JSON.stringify(getCondensedSchema(NORMALIZATION_RESPONSE_SCHEMA), null, 2)}`;
         fallbackPrompt,
         "program_normalization_fallback",
         selectedModel, // Use same tier-selected model for fallback
-        { prefillResponse: "{" },
+        {
+          temperature: TEMPERATURE_PRESETS.STRUCTURED,
+          prefillResponse: "{",
+        },
       )) as string;
 
       normalizationResult = parseJsonWithFallbacks(fallbackResponse);

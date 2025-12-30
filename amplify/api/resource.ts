@@ -66,6 +66,9 @@ export function createCoreApi(
   skipWorkoutTemplateLambda: lambda.IFunction,
   getWorkoutTemplateLambda: lambda.IFunction,
   unsubscribeEmailLambda: lambda.IFunction,
+  getSubscriptionStatusLambda: lambda.IFunction,
+  createStripePortalSessionLambda: lambda.IFunction,
+  processStripeWebhookLambda: lambda.IFunction,
   userPoolAuthorizer: HttpUserPoolAuthorizer,
 ) {
   // Create branch-aware API name using utility
@@ -479,6 +482,25 @@ export function createCoreApi(
       unsubscribeEmailLambda,
     );
 
+  // Subscription integrations
+  const getSubscriptionStatusIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "GetSubscriptionStatusIntegration",
+      getSubscriptionStatusLambda,
+    );
+
+  const createStripePortalSessionIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "CreateStripePortalSessionIntegration",
+      createStripePortalSessionLambda,
+    );
+
+  const processStripeWebhookIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "ProcessStripeWebhookIntegration",
+      processStripeWebhookLambda,
+    );
+
   // Create integrations object for route configuration
   const integrations = {
     contactForm: contactFormIntegration,
@@ -536,6 +558,9 @@ export function createCoreApi(
     skipWorkoutTemplate: skipWorkoutTemplateIntegration,
     getWorkoutTemplate: getWorkoutTemplateIntegration,
     unsubscribeEmail: unsubscribeEmailIntegration,
+    getSubscriptionStatus: getSubscriptionStatusIntegration,
+    createStripePortalSession: createStripePortalSessionIntegration,
+    processStripeWebhook: processStripeWebhookIntegration,
   };
 
   // *******************************************************
@@ -894,6 +919,30 @@ export function createCoreApi(
     methods: [apigatewayv2.HttpMethod.PUT],
     integration: integrations.updateUserProfile,
     authorizer: userPoolAuthorizer,
+  });
+
+  // Subscription Routes (PROTECTED - provider-agnostic)
+  httpApi.addRoutes({
+    path: "/users/{userId}/subscription",
+    methods: [apigatewayv2.HttpMethod.GET],
+    integration: integrations.getSubscriptionStatus,
+    authorizer: userPoolAuthorizer,
+  });
+
+  // Stripe Portal Session - PROTECTED (user-scoped)
+  httpApi.addRoutes({
+    path: "/users/{userId}/stripe/portal-session",
+    methods: [apigatewayv2.HttpMethod.POST],
+    integration: integrations.createStripePortalSession,
+    authorizer: userPoolAuthorizer,
+  });
+
+  // Webhook - PUBLIC (NO AUTH - validates via Stripe signature)
+  httpApi.addRoutes({
+    path: "/stripe/webhook",
+    methods: [apigatewayv2.HttpMethod.POST],
+    integration: integrations.processStripeWebhook,
+    // NO authorizer - Stripe validates via signature
   });
 
   // Image Upload Routes (PROTECTED)

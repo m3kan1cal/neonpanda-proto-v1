@@ -5,15 +5,15 @@
  * completed workouts in their coach conversations.
  */
 
-import { QuickWorkoutExtraction } from './types';
-import { callBedrockApi, MODEL_IDS } from '../api-helpers';
-import { JSON_FORMATTING_INSTRUCTIONS_STANDARD } from '../prompt-helpers';
-import { parseJsonWithFallbacks } from '../response-utils';
+import { QuickWorkoutExtraction } from "./types";
+import { callBedrockApi, MODEL_IDS, TEMPERATURE_PRESETS } from "../api-helpers";
+import { JSON_FORMATTING_INSTRUCTIONS_STANDARD } from "../prompt-helpers";
+import { parseJsonWithFallbacks } from "../response-utils";
 
 /**
  * Supported workout slash commands
  */
-export const WORKOUT_SLASH_COMMANDS = ['log-workout'] as const;
+export const WORKOUT_SLASH_COMMANDS = ["log-workout"] as const;
 
 /**
  * Slash command parsing result
@@ -40,18 +40,21 @@ export interface SlashCommandResult {
  * ```
  */
 export const parseSlashCommand = (message: string): SlashCommandResult => {
-  if (!message || typeof message !== 'string') {
-    console.info('🔍 parseSlashCommand: Invalid message input:', { message, type: typeof message });
+  if (!message || typeof message !== "string") {
+    console.info("🔍 parseSlashCommand: Invalid message input:", {
+      message,
+      type: typeof message,
+    });
     return { isSlashCommand: false };
   }
 
   const slashCommandRegex = /^\/([a-zA-Z0-9-]+)\s*([\s\S]*)$/;
   const match = message.match(slashCommandRegex);
 
-  console.info('🔍 parseSlashCommand: Regex match result:', {
+  console.info("🔍 parseSlashCommand: Regex match result:", {
     messageStart: message.substring(0, 50),
     hasMatch: !!match,
-    matchGroups: match ? match.length : 0
+    matchGroups: match ? match.length : 0,
   });
 
   if (!match) {
@@ -62,10 +65,10 @@ export const parseSlashCommand = (message: string): SlashCommandResult => {
   const result = {
     isSlashCommand: true,
     command: command.toLowerCase(),
-    content: content.trim()
+    content: content.trim(),
   };
 
-  console.info('🔍 parseSlashCommand: Parsed result:', result);
+  console.info("🔍 parseSlashCommand: Parsed result:", result);
   return result;
 };
 
@@ -84,17 +87,22 @@ export const parseSlashCommand = (message: string): SlashCommandResult => {
  * isWorkoutSlashCommand(result2); // Returns: false
  * ```
  */
-export const isWorkoutSlashCommand = (slashCommandResult: SlashCommandResult): boolean => {
-  const result = slashCommandResult.isSlashCommand &&
+export const isWorkoutSlashCommand = (
+  slashCommandResult: SlashCommandResult,
+): boolean => {
+  const result =
+    slashCommandResult.isSlashCommand &&
     slashCommandResult.command !== undefined &&
     WORKOUT_SLASH_COMMANDS.includes(slashCommandResult.command as any);
 
-  console.info('🔍 isWorkoutSlashCommand: Check result:', {
+  console.info("🔍 isWorkoutSlashCommand: Check result:", {
     isSlashCommand: slashCommandResult.isSlashCommand,
     command: slashCommandResult.command,
     supportedCommands: WORKOUT_SLASH_COMMANDS,
-    isSupported: slashCommandResult.command ? WORKOUT_SLASH_COMMANDS.includes(slashCommandResult.command as any) : false,
-    finalResult: result
+    isSupported: slashCommandResult.command
+      ? WORKOUT_SLASH_COMMANDS.includes(slashCommandResult.command as any)
+      : false,
+    finalResult: result,
   });
 
   return result;
@@ -146,29 +154,29 @@ export interface WorkoutContentValidation {
  */
 export const validateWorkoutContent = async (
   workoutContent: string,
-  imageS3Keys?: string[]
+  imageS3Keys?: string[],
 ): Promise<WorkoutContentValidation> => {
-  if (!workoutContent || typeof workoutContent !== 'string') {
+  if (!workoutContent || typeof workoutContent !== "string") {
     return {
       hasPerformanceData: false,
       hasLoggingIntent: false,
       confidence: 1.0,
-      reasoning: 'Empty or invalid workout content'
+      reasoning: "Empty or invalid workout content",
     };
   }
 
   // ✅ NEW: If images are attached, skip text-based performance validation
   // Images may contain workout data (whiteboard photos, workout logs, etc.)
   if (imageS3Keys && imageS3Keys.length > 0) {
-    console.info('✅ Images detected - skipping text performance validation:', {
+    console.info("✅ Images detected - skipping text performance validation:", {
       imageCount: imageS3Keys.length,
-      contentPreview: workoutContent.substring(0, 100)
+      contentPreview: workoutContent.substring(0, 100),
     });
     return {
       hasPerformanceData: true, // Assume images contain workout data
       hasLoggingIntent: true, // User is logging with images
       confidence: 0.95,
-      reasoning: `User provided ${imageS3Keys.length} image(s) which may contain workout performance data (whiteboard, workout log, etc.). Skipping text-based validation and allowing extraction to process images.`
+      reasoning: `User provided ${imageS3Keys.length} image(s) which may contain workout performance data (whiteboard, workout log, etc.). Skipping text-based validation and allowing extraction to process images.`,
     };
   }
 
@@ -246,51 +254,54 @@ CRITICAL: A valid workout log requires hasPerformanceData=true. The hasLoggingIn
 - Slash command content (performance=true, intent=false or true)
 - Incomplete attempts (performance=false, intent=true)`;
 
-    console.info('🔍 Starting workout content validation:', {
+    console.info("🔍 Starting workout content validation:", {
       contentLength: workoutContent.length,
-      contentPreview: workoutContent.substring(0, 100)
+      contentPreview: workoutContent.substring(0, 100),
     });
 
-    const response = await callBedrockApi(
+    const response = (await callBedrockApi(
       validationPrompt,
       workoutContent,
-      MODEL_IDS.CLAUDE_HAIKU_4_FULL,
-      { prefillResponse: "{" } // Force JSON output format
-    ) as string; // No tools used, always returns string
+      MODEL_IDS.EXECUTOR_MODEL_FULL,
+      {
+        temperature: TEMPERATURE_PRESETS.STRUCTURED,
+        prefillResponse: "{",
+      }, // Force JSON output format
+    )) as string; // No tools used, always returns string
 
-    console.info('🔍 Received validation response:', {
+    console.info("🔍 Received validation response:", {
       responseLength: response.length,
-      responsePreview: response.substring(0, 200)
+      responsePreview: response.substring(0, 200),
     });
 
     const result = parseJsonWithFallbacks(response);
 
-    console.info('🔍 Workout content validation result:', {
+    console.info("🔍 Workout content validation result:", {
       workoutContent: workoutContent.substring(0, 100),
       hasPerformanceData: result.hasPerformanceData,
       hasLoggingIntent: result.hasLoggingIntent,
       confidence: result.confidence,
-      reasoning: result.reasoning
+      reasoning: result.reasoning,
     });
 
     return {
       hasPerformanceData: result.hasPerformanceData && result.confidence > 0.5,
       hasLoggingIntent: result.hasLoggingIntent || false,
       confidence: result.confidence,
-      reasoning: result.reasoning
+      reasoning: result.reasoning,
     };
   } catch (error) {
-    console.error('❌ Error in validateWorkoutContent:', {
-      error: error instanceof Error ? error.message : 'Unknown error',
+    console.error("❌ Error in validateWorkoutContent:", {
+      error: error instanceof Error ? error.message : "Unknown error",
       contentLength: workoutContent.length,
-      contentPreview: workoutContent.substring(0, 100)
+      contentPreview: workoutContent.substring(0, 100),
     });
     // Return false on error to prevent blocking the conversation
     return {
       hasPerformanceData: false,
       hasLoggingIntent: false,
       confidence: 0.0,
-      reasoning: 'Validation error occurred'
+      reasoning: "Validation error occurred",
     };
   }
 };
@@ -302,7 +313,9 @@ CRITICAL: A valid workout log requires hasPerformanceData=true. The hasLoggingIn
  * @param message - The user's message to analyze
  * @returns Promise<QuickWorkoutExtraction> with extracted information
  */
-export const quickWorkoutExtraction = async (message: string): Promise<QuickWorkoutExtraction> => {
+export const quickWorkoutExtraction = async (
+  message: string,
+): Promise<QuickWorkoutExtraction> => {
   const extractionPrompt = `
 Extract key workout information from this message for immediate coach feedback.
 
@@ -345,24 +358,25 @@ Examples:
 - "Crushed 5 rounds of that brutal hotel workout" → roundsDetected: "5", intensityDetected: "brutal", locationContext: "hotel"
 - "Deadlifted 315 for 3 reps, new PR!" → discipline: "powerlifting", weightDetected: "315", repCountDetected: "3", intensityDetected: "PR"`;
 
-    const response = await callBedrockApi(
+  const response = (await callBedrockApi(
     extractionPrompt,
     message,
-    MODEL_IDS.CLAUDE_HAIKU_4_FULL,
-    { prefillResponse: "{" } // Force JSON output format
-  ) as string; // No tools used, always returns string
+    MODEL_IDS.EXECUTOR_MODEL_FULL,
+    {
+      temperature: TEMPERATURE_PRESETS.STRUCTURED,
+      prefillResponse: "{",
+    }, // Force JSON output format
+  )) as string; // No tools used, always returns string
   const result = parseJsonWithFallbacks(response);
 
-  console.info('AI quick workout extraction:', {
+  console.info("AI quick workout extraction:", {
     message: message.substring(0, 100),
     confidence: result.confidence,
-    summary: result.quickSummary
+    summary: result.quickSummary,
   });
 
   return result;
 };
-
-
 
 /**
  * Generates AI coach context for workout detection responses
@@ -382,70 +396,72 @@ Examples:
  * // Returns context for detected workout sharing
  * ```
  */
-export const generateWorkoutDetectionContext = (isSlashCommand: boolean): string[] => {
+export const generateWorkoutDetectionContext = (
+  isSlashCommand: boolean,
+): string[] => {
   const baseContext = isSlashCommand
     ? [
-        'The user has explicitly requested to log a workout using a slash command. Acknowledge this clearly and provide encouraging feedback.',
+        "The user has explicitly requested to log a workout using a slash command. Acknowledge this clearly and provide encouraging feedback.",
         'Since they used a command, you can be more direct about the logging: "Perfect! I\'ve logged that workout for you.." or "Great! Got that workout recorded.."',
-        'Focus on the specific workout content they provided and give coaching feedback about their performance, form, or progress.',
-        'You can mention they can view their workout history in the Training Grounds if it fits naturally in the conversation.'
+        "Focus on the specific workout content they provided and give coaching feedback about their performance, form, or progress.",
+        "You can mention they can view their workout history in the Training Grounds if it fits naturally in the conversation.",
       ]
     : [
-        'The user has just shared details about a completed workout. Respond naturally as their coach - be encouraging about their effort and performance.',
+        "The user has just shared details about a completed workout. Respond naturally as their coach - be encouraging about their effort and performance.",
         'You can casually mention that you\'re tracking their workout, but keep it brief and natural (e.g., "Great work! I\'m logging this for you.." or "Nice! Got this recorded.."). Don\'t be overly technical.',
-        'You can naturally let them know they can view their workout history by going back to the Training Grounds if it fits the conversation flow.',
-        'Focus primarily on coaching feedback about their workout performance, form, progress, or next steps rather than the tracking mechanics.'
+        "You can naturally let them know they can view their workout history by going back to the Training Grounds if it fits the conversation flow.",
+        "Focus primarily on coaching feedback about their workout performance, form, progress, or next steps rather than the tracking mechanics.",
       ];
 
   // Add critical workout analysis guidelines to prevent calculation errors
   const workoutAnalysisGuidelines = [
-    'CRITICAL WORKOUT ANALYSIS GUIDELINES:',
-    '• When calculating total reps, volume, or any workout metrics, be extremely careful with your math',
-    '• DOUBLE-CHECK ALL MATHEMATICAL CALCULATIONS before mentioning specific numbers',
-    '• For circuit/round-based workouts: Total reps = rounds × reps per round (e.g., 5 rounds × 5 reps = 25 total reps)',
-    '• For multi-exercise workouts: Calculate each exercise separately, do not combine different exercises',
-    '• For time-based workouts: Reference the actual time mentioned, do not estimate or guess',
-    '• For weight calculations: Use the exact weights mentioned, multiply by actual reps performed',
-    '• If you\'re unsure about any calculation, acknowledge the workout without specific numbers',
-    '• Focus on effort, consistency, and progress rather than just raw numbers when possible',
-    '',
-    'CRITICAL: EQUIPMENT TERMINOLOGY AND REP COUNTING:',
+    "CRITICAL WORKOUT ANALYSIS GUIDELINES:",
+    "• When calculating total reps, volume, or any workout metrics, be extremely careful with your math",
+    "• DOUBLE-CHECK ALL MATHEMATICAL CALCULATIONS before mentioning specific numbers",
+    "• For circuit/round-based workouts: Total reps = rounds × reps per round (e.g., 5 rounds × 5 reps = 25 total reps)",
+    "• For multi-exercise workouts: Calculate each exercise separately, do not combine different exercises",
+    "• For time-based workouts: Reference the actual time mentioned, do not estimate or guess",
+    "• For weight calculations: Use the exact weights mentioned, multiply by actual reps performed",
+    "• If you're unsure about any calculation, acknowledge the workout without specific numbers",
+    "• Focus on effort, consistency, and progress rather than just raw numbers when possible",
+    "",
+    "CRITICAL: EQUIPMENT TERMINOLOGY AND REP COUNTING:",
     '• "50# each hand" means 50 pounds PER DUMBBELL, NOT double the reps',
     '• "DB bench press 50# each hand" = normal reps with 50lb dumbbells in each hand',
     '• "Each hand" refers to WEIGHT PER HAND, not reps per hand',
-    '• Examples:',
+    "• Examples:",
     '  - "20 DB bench press 50# each hand" = 20 total reps using 50lb dumbbells',
     '  - "4 rounds of 20 reps" = 4 × 20 = 80 total reps, NOT 160',
     '  - "10 reps each arm" = 10 per arm = 20 total reps (this is different from weight notation)',
     '• NEVER double rep counts for dumbbell exercises unless explicitly stated "reps per arm"',
     '• Weight notation ("each hand", "per hand") describes equipment load, not repetition count',
     '• Rep notation ("each arm", "per arm") describes repetition count per limb',
-    '',
-    'CRITICAL: BILATERAL DUMBBELL TRAINING LOAD ANALYSIS:',
-    '• When analyzing training load for bilateral dumbbell movements, use TOTAL LOAD',
+    "",
+    "CRITICAL: BILATERAL DUMBBELL TRAINING LOAD ANALYSIS:",
+    "• When analyzing training load for bilateral dumbbell movements, use TOTAL LOAD",
     '• "50# each hand" = 100# total load for volume calculations',
-    '• Examples for coach analysis:',
+    "• Examples for coach analysis:",
     '  - "4 thrusters 50# each hand" = 4 reps × 100# = 400# volume',
     '  - "DB bench 30kg per hand" = 60kg total load per rep',
     '  - "Single-arm row 40#" = 40# load (unilateral, no doubling)',
     '• Always specify when referencing load: "100# total" or "50# per dumbbell"',
-    '• Focus on TOTAL TRAINING LOAD for progression tracking and volume analysis',
-    '',
-    'ADDITIONAL EQUIPMENT TERMINOLOGY:',
+    "• Focus on TOTAL TRAINING LOAD for progression tracking and volume analysis",
+    "",
+    "ADDITIONAL EQUIPMENT TERMINOLOGY:",
     '• "Dual DBs" or "dual dumbbells" means using TWO dumbbells simultaneously for ONE movement',
     '• Example: "30 reps dual DBs" = 30 total reps using two dumbbells at once, NOT 30 reps × 2 dumbbells',
     '• "Single DB" means using one dumbbell for the movement',
     '• "Alternating" means switching between arms/sides but count total reps, not per side',
     '• "Each side" means WEIGHT PER SIDE, not reps per side',
-    '• When in doubt about equipment terminology, count the TOTAL movement repetitions performed',
-    '',
-    'INTERVAL WORKOUT ANALYSIS:',
-    '• For interval workouts, analyze each segment separately - don\'t combine different movement patterns',
-    '• When counting rounds for specific exercises, only count rounds WHERE THAT EXERCISE APPEARS',
-    '• Example: 4 intervals with 2 AMRAP segments = count only the 2 AMRAP segments for that exercise',
+    "• When in doubt about equipment terminology, count the TOTAL movement repetitions performed",
+    "",
+    "INTERVAL WORKOUT ANALYSIS:",
+    "• For interval workouts, analyze each segment separately - don't combine different movement patterns",
+    "• When counting rounds for specific exercises, only count rounds WHERE THAT EXERCISE APPEARS",
+    "• Example: 4 intervals with 2 AMRAP segments = count only the 2 AMRAP segments for that exercise",
     '• Do not say "3+3+2+2" if there are only 2 AMRAP segments - say "3 rounds + 2 rounds = 5 total rounds"',
     '• Always specify what you\'re counting: "power clean rounds", "total workout rounds", "AMRAP segments"',
-    '• Compare like with like: AMRAP 1 vs AMRAP 2 performance, not interval 1 vs interval 3'
+    "• Compare like with like: AMRAP 1 vs AMRAP 2 performance, not interval 1 vs interval 3",
   ];
 
   return [...baseContext, ...workoutAnalysisGuidelines];
@@ -465,19 +481,21 @@ export const generateWorkoutDetectionContext = (isSlashCommand: boolean): string
  * // Returns context with accurate workout metrics for AI analysis
  * ```
  */
-export const generateStructuredWorkoutContext = (workoutData: any): string[] => {
+export const generateStructuredWorkoutContext = (
+  workoutData: any,
+): string[] => {
   const context = [
-    'STRUCTURED WORKOUT DATA AVAILABLE:',
-    'You have access to the structured workout data that was extracted and validated.',
-    'When analyzing this workout, reference the structured data for accurate calculations.',
-    'Do not recalculate metrics that are already provided in the structured data.'
+    "STRUCTURED WORKOUT DATA AVAILABLE:",
+    "You have access to the structured workout data that was extracted and validated.",
+    "When analyzing this workout, reference the structured data for accurate calculations.",
+    "Do not recalculate metrics that are already provided in the structured data.",
   ];
 
   // Add specific workout metrics if available
   if (workoutData.discipline_specific?.crossfit?.performance_data) {
     const perfData = workoutData.discipline_specific.crossfit.performance_data;
-    context.push('');
-    context.push('CROSSFIT PERFORMANCE DATA:');
+    context.push("");
+    context.push("CROSSFIT PERFORMANCE DATA:");
     if (perfData.total_reps) {
       context.push(`• Total reps in workout: ${perfData.total_reps}`);
     }
@@ -492,9 +510,11 @@ export const generateStructuredWorkoutContext = (workoutData: any): string[] => 
   // Add workout structure information
   if (workoutData.discipline_specific?.crossfit?.rounds) {
     const rounds = workoutData.discipline_specific.crossfit.rounds;
-    context.push('');
-    context.push('WORKOUT STRUCTURE:');
-    context.push(`• Workout consisted of ${rounds.length} total rounds (including all movements)`);
+    context.push("");
+    context.push("WORKOUT STRUCTURE:");
+    context.push(
+      `• Workout consisted of ${rounds.length} total rounds (including all movements)`,
+    );
 
     // Extract exercise information and analyze workout segments
     const exerciseInfo = new Map();
@@ -507,7 +527,12 @@ export const generateStructuredWorkoutContext = (workoutData: any): string[] => 
         const weight = exercise.weight?.value;
 
         if (!exerciseInfo.has(name)) {
-          exerciseInfo.set(name, { totalReps: 0, weight: weight, unit: exercise.weight?.unit, roundCount: 0 });
+          exerciseInfo.set(name, {
+            totalReps: 0,
+            weight: weight,
+            unit: exercise.weight?.unit,
+            roundCount: 0,
+          });
         }
         exerciseInfo.get(name).totalReps += reps || 0;
         exerciseInfo.get(name).roundCount += 1;
@@ -517,7 +542,9 @@ export const generateStructuredWorkoutContext = (workoutData: any): string[] => 
     // Analyze for interval patterns (look for repeated exercise sequences)
     const exerciseSequences = new Map();
     rounds.forEach((round: any, index: number) => {
-      const exerciseNames = round.exercises?.map((ex: any) => ex.exercise_name).join('+') || 'unknown';
+      const exerciseNames =
+        round.exercises?.map((ex: any) => ex.exercise_name).join("+") ||
+        "unknown";
       if (!exerciseSequences.has(exerciseNames)) {
         exerciseSequences.set(exerciseNames, []);
       }
@@ -526,47 +553,65 @@ export const generateStructuredWorkoutContext = (workoutData: any): string[] => 
 
     // Provide intelligent analysis for multi-segment workouts
     if (exerciseSequences.size > 1) {
-      context.push('');
-      context.push('SEGMENT ANALYSIS (for interval/multi-part workouts):');
+      context.push("");
+      context.push("SEGMENT ANALYSIS (for interval/multi-part workouts):");
       exerciseSequences.forEach((roundNumbers, exercisePattern) => {
-        if (roundNumbers.length > 1 && exercisePattern !== 'unknown') {
+        if (roundNumbers.length > 1 && exercisePattern !== "unknown") {
           const segmentCount = roundNumbers.length;
-          context.push(`• ${exercisePattern} pattern: ${segmentCount} rounds (rounds ${roundNumbers.join(', ')})`);
+          context.push(
+            `• ${exercisePattern} pattern: ${segmentCount} rounds (rounds ${roundNumbers.join(", ")})`,
+          );
         }
       });
     }
 
-    context.push('');
-    context.push('EXERCISE TOTALS:');
+    context.push("");
+    context.push("EXERCISE TOTALS:");
     exerciseInfo.forEach((info, exerciseName) => {
       if (info.weight) {
-        context.push(`• ${exerciseName}: ${info.totalReps} total reps across ${info.roundCount} rounds at ${info.weight} ${info.unit || 'lbs'}`);
+        context.push(
+          `• ${exerciseName}: ${info.totalReps} total reps across ${info.roundCount} rounds at ${info.weight} ${info.unit || "lbs"}`,
+        );
       } else {
-        context.push(`• ${exerciseName}: ${info.totalReps} total reps across ${info.roundCount} rounds`);
+        context.push(
+          `• ${exerciseName}: ${info.totalReps} total reps across ${info.roundCount} rounds`,
+        );
       }
     });
 
     // Add specific guidance for interval analysis
     if (exerciseSequences.size > 1) {
-      context.push('');
-      context.push('ANALYSIS GUIDANCE:');
-      context.push('• This appears to be an interval or multi-segment workout');
-      context.push('• When discussing exercise performance, count rounds only for that specific exercise');
-      context.push('• Compare performance between segments of the same exercise pattern');
-      context.push('• Do not combine different movement patterns when calculating rounds');
+      context.push("");
+      context.push("ANALYSIS GUIDANCE:");
+      context.push("• This appears to be an interval or multi-segment workout");
+      context.push(
+        "• When discussing exercise performance, count rounds only for that specific exercise",
+      );
+      context.push(
+        "• Compare performance between segments of the same exercise pattern",
+      );
+      context.push(
+        "• Do not combine different movement patterns when calculating rounds",
+      );
     }
   }
 
   // Add extraction metadata
   if (workoutData.metadata?.data_confidence) {
-    context.push('');
-    context.push('EXTRACTION METADATA:');
-    context.push(`• Data confidence: ${Math.round(workoutData.metadata.data_confidence * 100)}%`);
-    context.push(`• Extraction method: ${workoutData.metadata.extraction_method || 'AI analysis'}`);
+    context.push("");
+    context.push("EXTRACTION METADATA:");
+    context.push(
+      `• Data confidence: ${Math.round(workoutData.metadata.data_confidence * 100)}%`,
+    );
+    context.push(
+      `• Extraction method: ${workoutData.metadata.extraction_method || "AI analysis"}`,
+    );
   }
 
-  context.push('');
-  context.push('IMPORTANT: Use these structured data points for accurate analysis rather than recalculating from the natural language description.');
+  context.push("");
+  context.push(
+    "IMPORTANT: Use these structured data points for accurate analysis rather than recalculating from the natural language description.",
+  );
 
   return context;
 };

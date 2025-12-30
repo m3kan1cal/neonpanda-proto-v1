@@ -429,7 +429,7 @@ export async function generateProgramV2(
       },
       {
         generatedBy: coachId,
-        aiModel: MODEL_IDS.CLAUDE_SONNET_4_FULL,
+        aiModel: MODEL_IDS.PLANNER_MODEL_FULL,
         confidence: 0.9,
       },
     );

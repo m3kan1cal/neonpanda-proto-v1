@@ -36,6 +36,7 @@ import ProgramDashboard from "./components/programs/ProgramDashboard";
 import Changelog from "./components/Changelog";
 import Settings from "./components/Settings";
 import Theme from "./components/Theme";
+import { WelcomePage } from "./components/subscription";
 import {
   NavigationProvider,
   useNavigationContext,
@@ -76,6 +77,7 @@ function AppContent() {
     "/contact",
     "/template/synthwave",
     "/auth", // Includes all auth child routes (signin, signup, etc.)
+    "/welcome", // Post-checkout welcome page
   ];
   const isPublicPage =
     publicRoutes.includes(location.pathname) ||
@@ -178,6 +180,16 @@ function AppContent() {
 
           {/* Authentication route */}
           <Route path="/auth" element={<AuthRouter />} />
+
+          {/* Welcome page - Post-checkout success (protected, uses public theming) */}
+          <Route
+            path="/welcome"
+            element={
+              <ProtectedRoute>
+                <WelcomePage />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Protected routes */}
           <Route
@@ -336,7 +348,15 @@ function AppContent() {
         onNavigation={(type, data) => {
           if (type === "conversation-created" && data?.conversationId) {
             navigate(
-              `/training-grounds/coach-conversations?userId=${userId}&coachId=${coachId}&conversationId=${data.conversationId}`,
+              `/training-grounds/coach-conversations?userId=${data.userId || userId}&coachId=${data.coachId || coachId}&conversationId=${data.conversationId}`,
+            );
+          } else if (type === "coach-creator" && data?.sessionId) {
+            navigate(
+              `/coach-creator?userId=${data.userId || userId}&coachCreatorSessionId=${data.sessionId}`,
+            );
+          } else if (type === "program-designer" && data?.sessionId) {
+            navigate(
+              `/training-grounds/program-designer?userId=${data.userId || userId}&coachId=${data.coachId}&programDesignerSessionId=${data.sessionId}`,
             );
           }
         }}

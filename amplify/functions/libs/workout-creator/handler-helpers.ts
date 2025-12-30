@@ -5,14 +5,30 @@
  * These functions manage the workout session lifecycle and orchestrate the conversation flow.
  */
 
-import { CoachMessage, MESSAGE_TYPES, CoachConversation, CONVERSATION_MODES } from '../coach-conversation/types';
-import { MODEL_IDS, invokeAsyncLambda } from '../api-helpers';
-import { sendCoachConversationMessage, saveCoachConversation } from '../../../dynamodb/operations';
-import { formatChunkEvent, formatCompleteEvent, formatMetadataEvent } from '../streaming';
-import type { BusinessLogicParams, ConversationData } from '../streaming';
-import { handleTodoListConversation as handleWorkoutTodoListConversation } from './conversation-handler';
-import { createEmptyWorkoutTodoList, getCollectedDataSummary, getTodoProgress } from './todo-list-utils';
-import { WorkoutCreatorSession, REQUIRED_WORKOUT_FIELDS } from './types';
+import {
+  CoachMessage,
+  MESSAGE_TYPES,
+  CoachConversation,
+  CONVERSATION_MODES,
+} from "../coach-conversation/types";
+import { MODEL_IDS, invokeAsyncLambda } from "../api-helpers";
+import {
+  sendCoachConversationMessage,
+  saveCoachConversation,
+} from "../../../dynamodb/operations";
+import {
+  formatChunkEvent,
+  formatCompleteEvent,
+  formatMetadataEvent,
+} from "../streaming";
+import type { BusinessLogicParams, ConversationData } from "../streaming";
+import { handleTodoListConversation as handleWorkoutTodoListConversation } from "./conversation-handler";
+import {
+  createEmptyWorkoutTodoList,
+  getCollectedDataSummary,
+  getTodoProgress,
+} from "./todo-list-utils";
+import { WorkoutCreatorSession, REQUIRED_WORKOUT_FIELDS } from "./types";
 
 /**
  * Start a new workout collection session when insufficient data is detected
@@ -20,9 +36,9 @@ import { WorkoutCreatorSession, REQUIRED_WORKOUT_FIELDS } from './types';
  */
 export async function* startWorkoutCollection(
   params: BusinessLogicParams,
-  conversationData: ConversationData
+  conversationData: ConversationData,
 ): AsyncGenerator<string, void, unknown> {
-  console.info('🏋️ Starting new workout collection session');
+  console.info("🏋️ Starting new workout collection session");
 
   try {
     // Create new workout creator session (this will be modified by reference in the handler)
@@ -40,7 +56,7 @@ export async function* startWorkoutCollection(
       imageS3Keys: params.imageS3Keys || [],
     };
 
-    console.info('🆕 NEW WORKOUT SESSION CREATED:', {
+    console.info("🆕 NEW WORKOUT SESSION CREATED:", {
       sessionId: fullWorkoutSession.sessionId,
       userId: fullWorkoutSession.userId,
       conversationId: fullWorkoutSession.conversationId,
@@ -49,7 +65,7 @@ export async function* startWorkoutCollection(
 
     // Yield metadata event to inform UI we're in workout_log mode
     yield formatMetadataEvent({ mode: CONVERSATION_MODES.WORKOUT_LOG });
-    console.info('📋 Metadata event sent: mode=workout_log (session start)');
+    console.info("📋 Metadata event sent: mode=workout_log (session start)");
 
     // Prepare user context from conversation data
     const userContext = {
@@ -66,7 +82,7 @@ export async function* startWorkoutCollection(
       fullWorkoutSession, // Pass the SAME session object
       params.imageS3Keys,
       conversationData.coachConfig,
-      userContext // Pass user context for smarter extraction and questions
+      userContext, // Pass user context for smarter extraction and questions
     );
 
     // Iterate through the generator to yield chunks and capture the return value
@@ -83,7 +99,7 @@ export async function* startWorkoutCollection(
     if (processedResponse) {
       // 🐛 DEBUG: Log session state after handler completes
       const progress = getTodoProgress(fullWorkoutSession.todoList);
-      console.info('📊 SESSION STATE AFTER HANDLER (startWorkoutCollection):', {
+      console.info("📊 SESSION STATE AFTER HANDLER (startWorkoutCollection):", {
         sessionId: fullWorkoutSession.sessionId,
         turnCount: fullWorkoutSession.turnCount,
         isComplete: processedResponse.isComplete,
@@ -106,37 +122,42 @@ export async function* startWorkoutCollection(
       };
 
       // Set mode to WORKOUT_LOG (artifact-focused: creating a workout log artifact)
-      conversationData.existingConversation.mode = CONVERSATION_MODES.WORKOUT_LOG;
+      conversationData.existingConversation.mode =
+        CONVERSATION_MODES.WORKOUT_LOG;
 
       // Create messages
       const newUserMessage: CoachMessage = {
         id: `msg_${Date.now()}_user`,
-        role: 'user',
+        role: "user",
         content: params.userResponse,
         timestamp: new Date(),
         ...(params.imageS3Keys && params.imageS3Keys.length > 0
           ? {
               imageS3Keys: params.imageS3Keys,
-              messageType: MESSAGE_TYPES.TEXT_WITH_IMAGES
+              messageType: MESSAGE_TYPES.TEXT_WITH_IMAGES,
             }
           : {}),
       };
 
       const newAiMessage: CoachMessage = {
         id: `msg_${Date.now()}_assistant`,
-        role: 'assistant',
+        role: "assistant",
         content: processedResponse.cleanedResponse,
         timestamp: new Date(),
         metadata: {
-          model: MODEL_IDS.CLAUDE_HAIKU_4_DISPLAY,
+          model: MODEL_IDS.EXECUTOR_MODEL_DISPLAY,
           mode: CONVERSATION_MODES.WORKOUT_LOG, // Track that this message was created during workout log artifact creation
         },
       };
 
       // Add messages to conversation
-      conversationData.existingConversation.messages.push(newUserMessage, newAiMessage);
+      conversationData.existingConversation.messages.push(
+        newUserMessage,
+        newAiMessage,
+      );
       conversationData.existingConversation.metadata.lastActivity = new Date();
-      conversationData.existingConversation.metadata.totalMessages = conversationData.existingConversation.messages.length;
+      conversationData.existingConversation.metadata.totalMessages =
+        conversationData.existingConversation.messages.length;
 
       // Save full conversation (including messages AND session)
       await saveCoachConversation(conversationData.existingConversation);
@@ -145,23 +166,26 @@ export async function* startWorkoutCollection(
       yield formatCompleteEvent({
         messageId: newAiMessage.id,
         aiMessage: newAiMessage, // Include the full AI message with its metadata
-        type: 'complete',
+        type: "complete",
         fullMessage: processedResponse.cleanedResponse,
         aiResponse: processedResponse.cleanedResponse,
         isComplete: processedResponse.isComplete,
         progressDetails: processedResponse.progressDetails,
         mode: conversationData.existingConversation.mode, // Send mode to frontend for UI
-        workoutCreatorSession: conversationData.existingConversation.workoutCreatorSession, // Track session for frontend badge
+        workoutCreatorSession:
+          conversationData.existingConversation.workoutCreatorSession, // Track session for frontend badge
         metadata: {
           workoutCollectionStarted: true,
         },
       });
 
-      console.info('✅ Workout collection session started');
+      console.info("✅ Workout collection session started");
     }
   } catch (error) {
-    console.error('❌ Error starting workout collection:', error);
-    yield formatChunkEvent("I'd love to help you log that workout! Can you tell me a bit more about what you did?");
+    console.error("❌ Error starting workout collection:", error);
+    yield formatChunkEvent(
+      "I'd love to help you log that workout! Can you tell me a bit more about what you did?",
+    );
   }
 }
 
@@ -172,9 +196,9 @@ export async function* startWorkoutCollection(
 export async function* handleWorkoutCreatorFlow(
   params: BusinessLogicParams,
   conversationData: ConversationData,
-  workoutSession: NonNullable<CoachConversation['workoutCreatorSession']>
+  workoutSession: NonNullable<CoachConversation["workoutCreatorSession"]>,
 ): AsyncGenerator<string, void, unknown> {
-  console.info('🏋️ Continuing workout collection session');
+  console.info("🏋️ Continuing workout collection session");
 
   try {
     // Create full session object from the simplified workoutSession
@@ -194,7 +218,7 @@ export async function* handleWorkoutCreatorFlow(
 
     // 🐛 DEBUG: Log existing session state before handler
     const initialProgress = getTodoProgress(fullWorkoutSession.todoList);
-    console.info('🔄 CONTINUING WORKOUT SESSION:', {
+    console.info("🔄 CONTINUING WORKOUT SESSION:", {
       sessionId: fullWorkoutSession.sessionId,
       userId: fullWorkoutSession.userId,
       conversationId: fullWorkoutSession.conversationId,
@@ -210,7 +234,7 @@ export async function* handleWorkoutCreatorFlow(
 
     // Yield metadata event to inform UI we're still in workout_log mode
     yield formatMetadataEvent({ mode: CONVERSATION_MODES.WORKOUT_LOG });
-    console.info('📋 Metadata event sent: mode=workout_log (session continue)');
+    console.info("📋 Metadata event sent: mode=workout_log (session continue)");
 
     // Prepare user context from conversation data
     const userContext = {
@@ -227,7 +251,7 @@ export async function* handleWorkoutCreatorFlow(
       fullWorkoutSession, // Pass the SAME session object
       params.imageS3Keys,
       conversationData.coachConfig,
-      userContext // Pass user context for smarter extraction and questions
+      userContext, // Pass user context for smarter extraction and questions
     );
 
     // Iterate through the generator
@@ -244,41 +268,49 @@ export async function* handleWorkoutCreatorFlow(
     if (processedResponse) {
       // 🐛 DEBUG: Log session state after handler completes
       const finalProgress = getTodoProgress(fullWorkoutSession.todoList);
-      console.info('📊 SESSION STATE AFTER HANDLER (handleWorkoutCreatorFlow):', {
-        sessionId: fullWorkoutSession.sessionId,
-        turnCount: fullWorkoutSession.turnCount,
-        isComplete: processedResponse.isComplete,
-        progressAfter: {
-          required: `${finalProgress.requiredCompleted}/${finalProgress.requiredTotal} (${finalProgress.requiredPercentage}%)`,
-          highPriority: `${finalProgress.highPriorityCompleted}/${finalProgress.highPriorityTotal} (${finalProgress.highPriorityPercentage}%)`,
-          lowPriority: `${finalProgress.lowPriorityCompleted}/${finalProgress.lowPriorityTotal} (${finalProgress.lowPriorityPercentage}%)`,
+      console.info(
+        "📊 SESSION STATE AFTER HANDLER (handleWorkoutCreatorFlow):",
+        {
+          sessionId: fullWorkoutSession.sessionId,
+          turnCount: fullWorkoutSession.turnCount,
+          isComplete: processedResponse.isComplete,
+          progressAfter: {
+            required: `${finalProgress.requiredCompleted}/${finalProgress.requiredTotal} (${finalProgress.requiredPercentage}%)`,
+            highPriority: `${finalProgress.highPriorityCompleted}/${finalProgress.highPriorityTotal} (${finalProgress.highPriorityPercentage}%)`,
+            lowPriority: `${finalProgress.lowPriorityCompleted}/${finalProgress.lowPriorityTotal} (${finalProgress.lowPriorityPercentage}%)`,
+          },
+          collectedDataAfter: getCollectedDataSummary(
+            fullWorkoutSession.todoList,
+          ),
         },
-        collectedDataAfter: getCollectedDataSummary(fullWorkoutSession.todoList),
-      });
+      );
 
       // Update the workoutSession with the modified data from fullWorkoutSession
       workoutSession.todoList = fullWorkoutSession.todoList; // Updated by handler!
-      workoutSession.conversationHistory = fullWorkoutSession.conversationHistory; // Updated by handler!
+      workoutSession.conversationHistory =
+        fullWorkoutSession.conversationHistory; // Updated by handler!
       workoutSession.lastActivity = new Date();
       workoutSession.turnCount = fullWorkoutSession.turnCount; // Persist turn count
 
       // Create messages
       const newUserMessage: CoachMessage = {
         id: `msg_${Date.now()}_user`,
-        role: 'user',
+        role: "user",
         content: params.userResponse,
         timestamp: new Date(),
         ...(params.imageS3Keys && params.imageS3Keys.length > 0
           ? {
               imageS3Keys: params.imageS3Keys,
-              messageType: MESSAGE_TYPES.TEXT_WITH_IMAGES
+              messageType: MESSAGE_TYPES.TEXT_WITH_IMAGES,
             }
           : {}),
       };
 
       // Check if session was cancelled (topic change detected)
       if (processedResponse.sessionCancelled) {
-        console.info('🔀 Topic change detected - clearing workout session and re-processing message');
+        console.info(
+          "🔀 Topic change detected - clearing workout session and re-processing message",
+        );
 
         // Clear the workout session and reset mode back to CHAT
         delete conversationData.existingConversation.workoutCreatorSession;
@@ -290,43 +322,47 @@ export async function* handleWorkoutCreatorFlow(
         // Yield a special event indicating session was cancelled
         yield formatCompleteEvent({
           messageId: `msg_${Date.now()}_cancelled`,
-          type: 'session_cancelled',
-          fullMessage: '',
-          aiResponse: '',
+          type: "session_cancelled",
+          fullMessage: "",
+          aiResponse: "",
           isComplete: false,
           mode: CONVERSATION_MODES.CHAT, // Reset mode back to CHAT (no artifact)
           workoutCreatorSession: null, // Clear session on frontend
           metadata: {
             sessionCancelled: true,
-            reason: 'topic_change',
+            reason: "topic_change",
           },
         });
 
-        console.info('✅ Workout session cancelled - message will be re-processed as normal conversation');
+        console.info(
+          "✅ Workout session cancelled - message will be re-processed as normal conversation",
+        );
         return;
       }
 
       const newAiMessage: CoachMessage = {
         id: `msg_${Date.now()}_assistant`,
-        role: 'assistant',
+        role: "assistant",
         content: processedResponse.cleanedResponse,
         timestamp: new Date(),
         metadata: {
-          model: MODEL_IDS.CLAUDE_HAIKU_4_DISPLAY,
+          model: MODEL_IDS.EXECUTOR_MODEL_DISPLAY,
           mode: CONVERSATION_MODES.WORKOUT_LOG, // Track that this message was created during workout log artifact creation
         },
       };
 
       // If complete, trigger workout creation and clear session
       if (processedResponse.isComplete) {
-        console.info('🎉 Workout collection complete - triggering build-workout');
+        console.info(
+          "🎉 Workout collection complete - triggering build-workout",
+        );
 
         // Collect all workout data
         const workoutData = getCollectedDataSummary(workoutSession.todoList);
         const fullUserMessage = workoutSession.conversationHistory
-          .filter((m: any) => m.role === 'user')
+          .filter((m: any) => m.role === "user")
           .map((m: any) => m.content)
-          .join(' ');
+          .join(" ");
 
         // Trigger async workout building
         const buildWorkoutFunction = process.env.BUILD_WORKOUT_FUNCTION_NAME;
@@ -343,16 +379,17 @@ export async function* handleWorkoutCreatorFlow(
                 imageS3Keys: workoutSession.imageS3Keys || [],
                 // Optional fields that may help extraction
                 userTimezone: conversationData.userProfile?.timezone,
-                criticalTrainingDirective: conversationData.userProfile?.critical_training_directive,
+                criticalTrainingDirective:
+                  conversationData.userProfile?.critical_training_directive,
               },
-              "multi-turn workout creation"
+              "multi-turn workout creation",
             );
-            console.info('✅ Triggered async workout creation');
+            console.info("✅ Triggered async workout creation");
           } catch (error) {
-            console.error('❌ Failed to trigger workout creation:', error);
+            console.error("❌ Failed to trigger workout creation:", error);
           }
         } else {
-          console.warn('⚠️ BUILD_WORKOUT_FUNCTION_NAME not set');
+          console.warn("⚠️ BUILD_WORKOUT_FUNCTION_NAME not set");
         }
 
         // Clear session from conversation and reset mode back to CHAT
@@ -361,9 +398,13 @@ export async function* handleWorkoutCreatorFlow(
       }
 
       // Add messages to conversation
-      conversationData.existingConversation.messages.push(newUserMessage, newAiMessage);
+      conversationData.existingConversation.messages.push(
+        newUserMessage,
+        newAiMessage,
+      );
       conversationData.existingConversation.metadata.lastActivity = new Date();
-      conversationData.existingConversation.metadata.totalMessages = conversationData.existingConversation.messages.length;
+      conversationData.existingConversation.metadata.totalMessages =
+        conversationData.existingConversation.messages.length;
 
       // Save full conversation (including messages AND session state)
       await saveCoachConversation(conversationData.existingConversation);
@@ -372,24 +413,27 @@ export async function* handleWorkoutCreatorFlow(
       yield formatCompleteEvent({
         messageId: newAiMessage.id,
         aiMessage: newAiMessage, // Include the full AI message with its metadata
-        type: 'complete',
+        type: "complete",
         fullMessage: processedResponse.cleanedResponse,
         aiResponse: processedResponse.cleanedResponse,
         isComplete: processedResponse.isComplete,
         progressDetails: processedResponse.progressDetails,
         mode: conversationData.existingConversation.mode, // Send mode to frontend (WORKOUT_LOG if continuing, CHAT if complete)
-        workoutCreatorSession: conversationData.existingConversation.workoutCreatorSession, // Track session for frontend badge (will be undefined if completed)
+        workoutCreatorSession:
+          conversationData.existingConversation.workoutCreatorSession, // Track session for frontend badge (will be undefined if completed)
         metadata: {
           workoutCollectionInProgress: !processedResponse.isComplete,
           workoutGenerationTriggered: processedResponse.isComplete,
         },
       });
 
-      console.info('✅ Workout collection flow completed');
+      console.info("✅ Workout collection flow completed");
     }
   } catch (error) {
-    console.error('❌ Error in workout collection flow:', error);
-    yield formatChunkEvent("I'm having trouble with that. Can you try rephrasing?");
+    console.error("❌ Error in workout collection flow:", error);
+    yield formatChunkEvent(
+      "I'm having trouble with that. Can you try rephrasing?",
+    );
   }
 }
 
@@ -400,12 +444,12 @@ export async function clearWorkoutSession(
   userId: string,
   coachId: string,
   conversationId: string,
-  conversation: CoachConversation
+  conversation: CoachConversation,
 ): Promise<void> {
-  console.info('🧹 Clearing workout collection session');
+  console.info("🧹 Clearing workout collection session");
   delete conversation.workoutCreatorSession;
 
   // Save conversation without session
   await saveCoachConversation(conversation);
-  console.info('✅ Workout session cleared');
+  console.info("✅ Workout session cleared");
 }

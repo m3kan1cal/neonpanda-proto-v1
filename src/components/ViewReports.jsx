@@ -5,6 +5,7 @@ import { useAuthorizeUser } from "../auth/hooks/useAuthorizeUser";
 import { AccessDenied } from "./shared/AccessDenied";
 import {
   containerPatterns,
+  badgePatterns,
   buttonPatterns,
   layoutPatterns,
   tooltipPatterns,
@@ -32,50 +33,6 @@ import {
 } from "./themes/SynthwaveComponents";
 
 // Icons
-const EyeIcon = () => (
-  <svg
-    className="w-5 h-5"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-    />
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-    />
-  </svg>
-);
-
-const PreviewIcon = () => (
-  <svg
-    className="w-5 h-5"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-    />
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-    />
-  </svg>
-);
-
 const BarChartIcon = () => (
   <svg
     className="w-5 h-5"
@@ -120,8 +77,6 @@ function ViewReports() {
     isValid: isValidUserId,
     error: userIdError,
   } = useAuthorizeUser(userId);
-  const [activeTooltip, setActiveTooltip] = useState(null);
-  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
 
   // Command palette state
   // Global Command Palette state
@@ -193,6 +148,23 @@ function ViewReports() {
 
   // Tab state
   const [activeTab, setActiveTab] = useState("weekly"); // 'weekly' or 'monthly'
+
+  // Initialize collapsed summaries when reports load (collapsed by default)
+  useEffect(() => {
+    if (reportAgentState.allReports.length > 0) {
+      setCollapsedWeeklySummaries(
+        new Set(reportAgentState.allReports.map((r) => r.weekId)),
+      );
+    }
+  }, [reportAgentState.allReports.length]);
+
+  useEffect(() => {
+    if (reportAgentState.allMonthlyReports.length > 0) {
+      setCollapsedMonthlySummaries(
+        new Set(reportAgentState.allMonthlyReports.map((r) => r.monthId)),
+      );
+    }
+  }, [reportAgentState.allMonthlyReports.length]);
 
   // Redirect if missing required parameters
   useEffect(() => {
@@ -335,6 +307,24 @@ function ViewReports() {
     };
   };
 
+  // Collapsed summary state for monthly reports
+  const [collapsedMonthlySummaries, setCollapsedMonthlySummaries] = useState(
+    new Set(),
+  );
+
+  // Toggle monthly summary collapse
+  const toggleMonthlySummaryCollapse = (monthId) => {
+    setCollapsedMonthlySummaries((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(monthId)) {
+        newSet.delete(monthId);
+      } else {
+        newSet.add(monthId);
+      }
+      return newSet;
+    });
+  };
+
   // Render monthly report card
   const renderMonthlyReportCard = (report) => {
     // Use AI's actual session count (deduped) instead of raw workout count from DB
@@ -349,11 +339,8 @@ function ViewReports() {
     const dataCompleteness = Math.round(
       (report.metadata?.dataCompleteness || 0.5) * 100,
     );
+    const isSummaryCollapsed = collapsedMonthlySummaries.has(report.monthId);
 
-    // Extract top priority insight from structured analytics
-    const topPriority =
-      report.analyticsData?.structured_analytics?.actionable_insights
-        ?.top_priority?.insight;
     const humanSummary = report.analyticsData?.human_summary;
 
     // Get a preview of the human summary
@@ -396,7 +383,7 @@ function ViewReports() {
       <div
         key={report.monthId}
         data-report-card
-        className={`${containerPatterns.cardMedium} p-5 group transition-all duration-300 hover:border-synthwave-neon-purple/40 hover:bg-synthwave-bg-card/40 relative cursor-pointer flex flex-col h-full`}
+        className={`${containerPatterns.cardMedium} p-6 group transition-all duration-300 hover:border-synthwave-neon-purple/40 hover:bg-synthwave-bg-card/40 relative cursor-pointer mb-6`}
         onClick={() =>
           navigate(
             `/training-grounds/reports/monthly?userId=${userId}&monthId=${report.monthId}&coachId=${coachId || "default"}`,
@@ -406,170 +393,118 @@ function ViewReports() {
         {/* NEW badge for current month reports */}
         {isCurrentMonth && <NewBadge />}
 
-        {/* Action buttons - always visible */}
-        <div className="absolute top-4 right-4 flex space-x-2">
-          {/* Preview button */}
-          {topPriority && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-
-                if (activeTooltip === report.monthId) {
-                  setActiveTooltip(null);
-                } else {
-                  const reportCard = e.target.closest("[data-report-card]");
-                  if (reportCard) {
-                    const rect = reportCard.getBoundingClientRect();
-                    setTooltipPosition({
-                      x: rect.left + rect.width / 2,
-                      y: rect.bottom + 10,
-                    });
-                  }
-                  setActiveTooltip(report.monthId);
-                }
-              }}
-              className="p-2 bg-synthwave-neon-purple/10 text-synthwave-neon-purple hover:bg-synthwave-neon-purple/20 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-purple/50"
-              title="Preview top insight"
-            >
-              <EyeIcon className="w-4 h-4" />
-            </button>
-          )}
-        </div>
-
-        {/* Card header with colored dot */}
-        <div className="flex items-start space-x-3 mb-4 pr-16">
-          <div className="w-3 h-3 bg-synthwave-neon-purple rounded-full flex-shrink-0 mt-2"></div>
-          <h3 className="font-russo text-lg text-white uppercase">
+        {/* Header with purple dot */}
+        <div className="flex items-start gap-3 mb-2">
+          <div className="w-3 h-3 bg-synthwave-neon-purple rounded-full flex-shrink-0 mt-2" />
+          <h3 className="font-russo font-bold text-white text-lg uppercase">
             {formattedMonth}
           </h3>
         </div>
 
-        {/* Tags Section */}
-        <div className="flex flex-wrap items-center gap-2 mb-4">
-          {/* Month Period Tag */}
-          <div className="bg-synthwave-neon-purple/20 text-synthwave-neon-purple px-2 py-0.5 rounded text-xs font-rajdhani font-medium">
-            Monthly Report
+        {/* Metadata Row */}
+        <div className="flex items-center flex-wrap gap-3 mb-3">
+          <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+            <span className="text-synthwave-text-muted">Period:</span>
+            <span className="text-synthwave-neon-cyan font-medium">
+              Monthly Report
+            </span>
           </div>
-
-          {/* Memory Count Tag */}
-          {memoryCount > 0 && (
-            <div className="bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan px-2 py-0.5 rounded text-xs font-rajdhani font-medium">
-              {memoryCount} memories
-            </div>
-          )}
-
-          {/* Conversation Count Tag */}
-          {conversationCount > 0 && (
-            <div className="bg-synthwave-neon-pink/20 text-synthwave-neon-pink px-2 py-0.5 rounded text-xs font-rajdhani font-medium">
-              {conversationCount} conversations
-            </div>
-          )}
-
-          {/* Minimum threshold indicator */}
-          {workoutCount >= 4 && (
-            <div className="bg-green-500/20 text-green-400 px-2 py-0.5 rounded text-xs font-rajdhani font-medium">
-              ✓ 4+ workouts
-            </div>
-          )}
-        </div>
-
-        {/* Performance Stats Grid - 3 Center Sections */}
-        <div className="grid grid-cols-3 gap-3 mb-4">
-          {/* Workout Count */}
-          <div className="text-center p-2 bg-synthwave-bg-primary/30 rounded-lg">
-            <div className="text-lg font-russo font-bold text-white mb-1">
-              {workoutCount}
-            </div>
-            <div className="text-xs text-synthwave-text-muted font-rajdhani flex items-center justify-center gap-1">
-              <svg
-                className="w-3 h-3"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 10V3L4 14h7v7l9-11h-7z"
-                />
-              </svg>
-              {workoutCount === 1 ? "Workout" : "Workouts"}
-            </div>
-          </div>
-
-          {/* AI Confidence */}
-          <div className="text-center p-2 bg-synthwave-bg-primary/30 rounded-lg">
-            <div className="text-lg font-russo font-bold text-white mb-1">
+          <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+            <span className="text-synthwave-text-muted">Confidence:</span>
+            <span className="text-synthwave-neon-cyan font-medium">
               {analysisConfidence === "high"
                 ? "High"
                 : analysisConfidence === "medium"
                   ? "Med"
                   : "Low"}
-            </div>
-            <div className="text-xs text-synthwave-text-muted font-rajdhani flex items-center justify-center gap-1">
-              <svg
-                className="w-3 h-3"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
-                />
-              </svg>
-              AI Confidence
-            </div>
+            </span>
           </div>
-
-          {/* Data Completeness */}
-          <div className="text-center p-2 bg-synthwave-bg-primary/30 rounded-lg">
-            <div className="text-lg font-russo font-bold text-white mb-1">
-              {dataCompleteness}%
-            </div>
-            <div className="text-xs text-synthwave-text-muted font-rajdhani flex items-center justify-center gap-1">
-              <svg
-                className="w-3 h-3"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                />
-              </svg>
-              Complete
-            </div>
+          <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+            <span className="text-synthwave-text-muted">Generated:</span>
+            <span className="text-synthwave-neon-cyan font-medium">
+              {createdAt}
+            </span>
           </div>
         </div>
 
-        {/* Report summary - Flexible content area in sub-container */}
-        <div className="flex-1 mb-3">
-          {summaryPreview && (
-            <div className="p-3 bg-synthwave-bg-primary/30 rounded-lg">
-              <p className="font-rajdhani text-synthwave-text-secondary text-sm leading-relaxed line-clamp-4">
-                {summaryPreview}
-              </p>
-            </div>
+        {/* Collapsible Report Summary */}
+        {summaryPreview && (
+          <div onClick={(e) => e.stopPropagation()}>
+            <button
+              onClick={() => toggleMonthlySummaryCollapse(report.monthId)}
+              className="w-full flex items-center justify-between font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2 hover:text-synthwave-neon-cyan transition-colors duration-200 cursor-pointer"
+            >
+              <span>Report Summary</span>
+              <svg
+                className={`w-4 h-4 transition-transform duration-200 ${
+                  isSummaryCollapsed ? "rotate-180" : ""
+                }`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </button>
+            {!isSummaryCollapsed && (
+              <div className="bg-synthwave-bg-primary/30 rounded-lg p-3 mb-3 animate-fadeIn">
+                <p className="font-rajdhani text-synthwave-text-secondary text-sm leading-relaxed">
+                  {humanSummary || summaryPreview}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Badge Row - at bottom like conversation cards */}
+        <div className="flex flex-wrap items-center gap-2 mt-3">
+          <span className={badgePatterns.workoutDetail}>
+            {workoutCount} {workoutCount === 1 ? "workout" : "workouts"}
+          </span>
+          {memoryCount > 0 && (
+            <span className={badgePatterns.workoutDetail}>
+              {memoryCount} memories
+            </span>
           )}
-        </div>
-
-        {/* Bottom Metadata Section - Created Date Only */}
-        <div className="mt-auto">
-          {/* Created Date Line */}
-          <div className="flex items-center space-x-1 text-xs text-synthwave-text-secondary font-rajdhani">
-            <CalendarIcon />
-            <span>Generated {createdAt}</span>
-          </div>
+          {conversationCount > 0 && (
+            <span className={badgePatterns.workoutDetail}>
+              {conversationCount} conversations
+            </span>
+          )}
+          <span className={badgePatterns.workoutDetail}>
+            {dataCompleteness}% complete
+          </span>
+          {workoutCount >= 4 && (
+            <span className="bg-green-500/20 text-green-400 px-2 py-1 rounded text-xs font-rajdhani font-medium">
+              ✓ Qualified
+            </span>
+          )}
         </div>
       </div>
     );
+  };
+
+  // Collapsed summary state for weekly reports
+  const [collapsedWeeklySummaries, setCollapsedWeeklySummaries] = useState(
+    new Set(),
+  );
+
+  // Toggle weekly summary collapse
+  const toggleWeeklySummaryCollapse = (weekId) => {
+    setCollapsedWeeklySummaries((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(weekId)) {
+        newSet.delete(weekId);
+      } else {
+        newSet.add(weekId);
+      }
+      return newSet;
+    });
   };
 
   // Render report card
@@ -588,11 +523,8 @@ function ViewReports() {
       (report.metadata?.dataCompleteness || 0.5) * 100,
     );
     const isNew = isCurrentWeekReport(report.weekId);
+    const isSummaryCollapsed = collapsedWeeklySummaries.has(report.weekId);
 
-    // Extract top priority insight from structured analytics
-    const topPriority =
-      report.analyticsData?.structured_analytics?.actionable_insights
-        ?.top_priority?.insight;
     const humanSummary = report.analyticsData?.human_summary;
 
     // Get a preview of the human summary
@@ -619,7 +551,7 @@ function ViewReports() {
       <div
         key={report.weekId}
         data-report-card
-        className={`${containerPatterns.cardMedium} p-5 group transition-all duration-300 hover:border-synthwave-neon-cyan/40 hover:bg-synthwave-bg-card/40 relative cursor-pointer flex flex-col h-full`}
+        className={`${containerPatterns.cardMedium} p-6 group transition-all duration-300 hover:border-synthwave-neon-cyan/40 hover:bg-synthwave-bg-card/40 relative cursor-pointer mb-6`}
         onClick={() =>
           navigate(
             `/training-grounds/reports/weekly?userId=${userId}&weekId=${report.weekId}&coachId=${coachId || "default"}`,
@@ -629,161 +561,92 @@ function ViewReports() {
         {/* NEW badge for current week reports */}
         {isNew && <NewBadge />}
 
-        {/* Action buttons - always visible */}
-        <div className="absolute top-4 right-4 flex space-x-2">
-          {/* Preview button */}
-          {topPriority && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-
-                if (activeTooltip === report.weekId) {
-                  setActiveTooltip(null);
-                } else {
-                  // Get the report card element (the parent with relative positioning)
-                  const reportCard = e.target.closest("[data-report-card]");
-                  if (reportCard) {
-                    const rect = reportCard.getBoundingClientRect();
-                    setTooltipPosition({
-                      x: rect.left + rect.width / 2, // Center horizontally on the card
-                      y: rect.bottom + 10, // Position below the card with some spacing
-                    });
-                  }
-                  setActiveTooltip(report.weekId);
-                }
-              }}
-              className="p-2 bg-synthwave-neon-cyan/10 text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/20 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50"
-              title="Preview top insight"
-            >
-              <EyeIcon className="w-4 h-4" />
-            </button>
-          )}
-        </div>
-
-        {/* Card header with colored dot */}
-        <div className="flex items-start space-x-3 mb-4 pr-16">
-          <div className="w-3 h-3 bg-synthwave-neon-pink rounded-full flex-shrink-0 mt-2"></div>
-          <h3 className="font-russo text-lg text-white uppercase">
+        {/* Header with pink dot */}
+        <div className="flex items-start gap-3 mb-2">
+          <div className="w-3 h-3 bg-synthwave-neon-pink rounded-full flex-shrink-0 mt-2" />
+          <h3 className="font-russo font-bold text-white text-lg uppercase">
             Weekly Report: Week {report.weekId}
           </h3>
         </div>
 
-        {/* Tags Section - Moved above sub-containers */}
-        <div className="flex flex-wrap items-center gap-2 mb-4">
-          {/* Week Period Tag */}
-          <div className="bg-synthwave-neon-pink/20 text-synthwave-neon-pink px-2 py-0.5 rounded text-xs font-rajdhani font-medium">
-            {weekStart} - {weekEnd}
+        {/* Metadata Row */}
+        <div className="flex items-center flex-wrap gap-3 mb-3">
+          <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+            <span className="text-synthwave-text-muted">Period:</span>
+            <span className="text-synthwave-neon-cyan font-medium">
+              {weekStart} - {weekEnd}
+            </span>
           </div>
-
-          {/* Memory Count Tag */}
-          {memoryCount > 0 && (
-            <div className="bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan px-2 py-0.5 rounded text-xs font-rajdhani font-medium">
-              {memoryCount} memories
-            </div>
-          )}
-
-          {/* Conversation Count Tag */}
-          {conversationCount > 0 && (
-            <div className="bg-synthwave-neon-purple/20 text-synthwave-neon-purple px-2 py-0.5 rounded text-xs font-rajdhani font-medium">
-              {conversationCount} conversations
-            </div>
-          )}
-        </div>
-
-        {/* Performance Stats Grid - 3 Center Sections */}
-        <div className="grid grid-cols-3 gap-3 mb-4">
-          {/* Workout Count */}
-          <div className="text-center p-2 bg-synthwave-bg-primary/30 rounded-lg">
-            <div className="text-lg font-russo font-bold text-white mb-1">
-              {workoutCount}
-            </div>
-            <div className="text-xs text-synthwave-text-muted font-rajdhani flex items-center justify-center gap-1">
-              <svg
-                className="w-3 h-3"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 10V3L4 14h7v7l9-11h-7z"
-                />
-              </svg>
-              {workoutCount === 1 ? "Workout" : "Workouts"}
-            </div>
-          </div>
-
-          {/* AI Confidence */}
-          <div className="text-center p-2 bg-synthwave-bg-primary/30 rounded-lg">
-            <div className="text-lg font-russo font-bold text-white mb-1">
+          <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+            <span className="text-synthwave-text-muted">Confidence:</span>
+            <span className="text-synthwave-neon-cyan font-medium">
               {analysisConfidence === "high"
                 ? "High"
                 : analysisConfidence === "medium"
                   ? "Med"
                   : "Low"}
-            </div>
-            <div className="text-xs text-synthwave-text-muted font-rajdhani flex items-center justify-center gap-1">
-              <svg
-                className="w-3 h-3"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
-                />
-              </svg>
-              AI Confidence
-            </div>
+            </span>
           </div>
-
-          {/* Data Completeness */}
-          <div className="text-center p-2 bg-synthwave-bg-primary/30 rounded-lg">
-            <div className="text-lg font-russo font-bold text-white mb-1">
-              {dataCompleteness}%
-            </div>
-            <div className="text-xs text-synthwave-text-muted font-rajdhani flex items-center justify-center gap-1">
-              <svg
-                className="w-3 h-3"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                />
-              </svg>
-              Complete
-            </div>
+          <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+            <span className="text-synthwave-text-muted">Generated:</span>
+            <span className="text-synthwave-neon-cyan font-medium">
+              {createdAt}
+            </span>
           </div>
         </div>
 
-        {/* Report summary - Flexible content area in sub-container */}
-        <div className="flex-1 mb-3">
-          {summaryPreview && (
-            <div className="p-3 bg-synthwave-bg-primary/30 rounded-lg">
-              <p className="font-rajdhani text-synthwave-text-secondary text-sm leading-relaxed line-clamp-4">
-                {summaryPreview}
-              </p>
-            </div>
+        {/* Collapsible Report Summary */}
+        {summaryPreview && (
+          <div onClick={(e) => e.stopPropagation()}>
+            <button
+              onClick={() => toggleWeeklySummaryCollapse(report.weekId)}
+              className="w-full flex items-center justify-between font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2 hover:text-synthwave-neon-cyan transition-colors duration-200 cursor-pointer"
+            >
+              <span>Report Summary</span>
+              <svg
+                className={`w-4 h-4 transition-transform duration-200 ${
+                  isSummaryCollapsed ? "rotate-180" : ""
+                }`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </button>
+            {!isSummaryCollapsed && (
+              <div className="bg-synthwave-bg-primary/30 rounded-lg p-3 mb-3 animate-fadeIn">
+                <p className="font-rajdhani text-synthwave-text-secondary text-sm leading-relaxed">
+                  {humanSummary || summaryPreview}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Badge Row - at bottom like conversation cards */}
+        <div className="flex flex-wrap items-center gap-2 mt-3">
+          <span className={badgePatterns.workoutDetail}>
+            {workoutCount} {workoutCount === 1 ? "workout" : "workouts"}
+          </span>
+          {memoryCount > 0 && (
+            <span className={badgePatterns.workoutDetail}>
+              {memoryCount} memories
+            </span>
           )}
-        </div>
-
-        {/* Bottom Metadata Section - Created Date Only */}
-        <div className="mt-auto">
-          {/* Created Date Line */}
-          <div className="flex items-center space-x-1 text-xs text-synthwave-text-secondary font-rajdhani">
-            <CalendarIcon />
-            <span>Generated {createdAt}</span>
-          </div>
+          {conversationCount > 0 && (
+            <span className={badgePatterns.workoutDetail}>
+              {conversationCount} conversations
+            </span>
+          )}
+          <span className={badgePatterns.workoutDetail}>
+            {dataCompleteness}% complete
+          </span>
         </div>
       </div>
     );
@@ -804,31 +667,6 @@ function ViewReports() {
       error: (msg) => addToast(msg, "error"),
     },
   );
-
-  // Close tooltip when clicking outside or pressing escape
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (activeTooltip && !event.target.closest("[data-tooltip-content]")) {
-        setActiveTooltip(null);
-      }
-    };
-
-    const handleKeyDown = (event) => {
-      if (event.key === "Escape") {
-        if (activeTooltip) {
-          setActiveTooltip(null);
-        }
-      }
-    };
-
-    document.addEventListener("click", handleClickOutside);
-    document.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      document.removeEventListener("click", handleClickOutside);
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [activeTooltip]);
 
   // Show loading while validating userId or loading reports
   if (
@@ -877,55 +715,122 @@ function ViewReports() {
 
           {/* Report cards skeleton */}
           <div className="mb-8">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Mobile: Single column */}
+            <div className="lg:hidden">
               {[1, 2, 3, 4, 5, 6].map((i) => (
                 <div
                   key={i}
-                  className={`${containerPatterns.cardMedium} p-5 flex flex-col h-72`}
+                  className={`${containerPatterns.cardMedium} p-6 mb-6`}
                 >
-                  {/* Action button skeleton */}
-                  <div className="absolute top-4 right-4 w-8 h-8 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
-
                   {/* Header with dot skeleton */}
-                  <div className="flex items-start space-x-3 mb-4 pr-16">
+                  <div className="flex items-start gap-3 mb-2">
                     <div className="w-3 h-3 bg-synthwave-text-muted/20 rounded-full flex-shrink-0 mt-2 animate-pulse"></div>
                     <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
                   </div>
 
-                  {/* Performance stats grid skeleton */}
-                  <div className="grid grid-cols-3 gap-3 mb-4">
-                    {[1, 2, 3].map((j) => (
-                      <div
-                        key={j}
-                        className="text-center p-2 bg-synthwave-bg-primary/30 rounded-lg"
-                      >
-                        <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-8 mx-auto mb-1"></div>
-                        <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-12 mx-auto"></div>
-                      </div>
-                    ))}
+                  {/* Metadata row skeleton */}
+                  <div className="flex flex-wrap gap-4 mb-3">
+                    <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-24"></div>
+                    <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
+                    <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-28"></div>
                   </div>
 
                   {/* Summary skeleton */}
-                  <div className="flex-1 mb-3">
-                    <div className="p-3 bg-synthwave-bg-primary/30 rounded-lg">
-                      <div className="space-y-2">
-                        <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
-                        <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-4/5"></div>
-                      </div>
+                  <div className="bg-synthwave-bg-primary/30 rounded-lg p-3 mb-3">
+                    <div className="space-y-2">
+                      <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                      <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-5/6"></div>
+                      <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-4/5"></div>
                     </div>
                   </div>
 
-                  {/* Tags and metadata skeleton */}
-                  <div className="mt-auto space-y-2">
-                    <div className="flex flex-wrap gap-2">
-                      <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
-                      <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-16"></div>
-                      <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-24"></div>
-                    </div>
-                    <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-32"></div>
+                  {/* Badge row skeleton */}
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
+                    <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-24"></div>
+                    <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-16"></div>
                   </div>
                 </div>
               ))}
+            </div>
+            {/* Desktop: Two columns with alternating distribution */}
+            <div className="hidden lg:grid lg:grid-cols-2 lg:gap-x-6 lg:items-start">
+              {/* Left Column - even indices (0, 2, 4) */}
+              <div>
+                {[0, 2, 4].map((i) => (
+                  <div
+                    key={i}
+                    className={`${containerPatterns.cardMedium} p-6 mb-6`}
+                  >
+                    {/* Header with dot skeleton */}
+                    <div className="flex items-start gap-3 mb-2">
+                      <div className="w-3 h-3 bg-synthwave-text-muted/20 rounded-full flex-shrink-0 mt-2 animate-pulse"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
+                    </div>
+
+                    {/* Metadata row skeleton */}
+                    <div className="flex flex-wrap gap-4 mb-3">
+                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-24"></div>
+                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
+                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-28"></div>
+                    </div>
+
+                    {/* Summary skeleton */}
+                    <div className="bg-synthwave-bg-primary/30 rounded-lg p-3 mb-3">
+                      <div className="space-y-2">
+                        <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                        <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-5/6"></div>
+                        <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-4/5"></div>
+                      </div>
+                    </div>
+
+                    {/* Badge row skeleton */}
+                    <div className="flex flex-wrap gap-2 mt-3">
+                      <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-24"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-16"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {/* Right Column - odd indices (1, 3, 5) */}
+              <div>
+                {[1, 3, 5].map((i) => (
+                  <div
+                    key={i}
+                    className={`${containerPatterns.cardMedium} p-6 mb-6`}
+                  >
+                    {/* Header with dot skeleton */}
+                    <div className="flex items-start gap-3 mb-2">
+                      <div className="w-3 h-3 bg-synthwave-text-muted/20 rounded-full flex-shrink-0 mt-2 animate-pulse"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
+                    </div>
+
+                    {/* Metadata row skeleton */}
+                    <div className="flex flex-wrap gap-4 mb-3">
+                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-24"></div>
+                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
+                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-28"></div>
+                    </div>
+
+                    {/* Summary skeleton */}
+                    <div className="bg-synthwave-bg-primary/30 rounded-lg p-3 mb-3">
+                      <div className="space-y-2">
+                        <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                        <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-5/6"></div>
+                        <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-4/5"></div>
+                      </div>
+                    </div>
+
+                    {/* Badge row skeleton */}
+                    <div className="flex flex-wrap gap-2 mt-3">
+                      <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-24"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-16"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -942,65 +847,8 @@ function ViewReports() {
     );
   }
 
-  // Find the active report for tooltip display (works for both weekly and monthly)
-  const activeReport =
-    activeTab === "weekly"
-      ? reportAgentState.allReports.find((r) => r.weekId === activeTooltip)
-      : reportAgentState.allMonthlyReports.find(
-          (r) => r.monthId === activeTooltip,
-        );
-
   return (
     <>
-      {/* Global tooltip - rendered outside all containers */}
-      {activeTooltip &&
-        activeReport &&
-        activeReport.analyticsData?.structured_analytics?.actionable_insights
-          ?.top_priority && (
-          <div
-            className="fixed w-[32rem] max-w-screen-md opacity-100 transition-opacity duration-300 z-[9999] transform -translate-x-1/2"
-            style={{
-              left: `${tooltipPosition.x}px`,
-              top: `${tooltipPosition.y}px`,
-            }}
-          >
-            <div
-              className="bg-synthwave-bg-card/95 backdrop-blur-md border-2 border-synthwave-neon-cyan/30 rounded-lg shadow-2xl shadow-synthwave-neon-cyan/20 p-4"
-              data-tooltip-content
-            >
-              <div className="flex justify-between items-center mb-2">
-                <div className="text-synthwave-neon-cyan font-rajdhani font-bold text-sm uppercase">
-                  Top Priority Insight
-                </div>
-                <button
-                  onClick={() => setActiveTooltip(null)}
-                  className="text-synthwave-text-secondary hover:text-synthwave-neon-cyan transition-colors duration-200"
-                >
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
-              </div>
-              <div className="text-synthwave-text-primary font-rajdhani text-sm leading-relaxed">
-                {
-                  activeReport.analyticsData.structured_analytics
-                    .actionable_insights.top_priority.insight
-                }
-              </div>
-            </div>
-          </div>
-        )}
-
       <div className={layoutPatterns.pageContainer}>
         <div className={layoutPatterns.contentWrapper}>
           {/* Compact Horizontal Header */}
@@ -1280,8 +1128,34 @@ function ViewReports() {
             activeTab === "weekly" &&
             reportAgentState.allReports.length > 0 && (
               <div className="mb-8">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {reportAgentState.allReports.map(renderReportCard)}
+                {/* Mobile: Single column */}
+                <div className="lg:hidden">
+                  {reportAgentState.allReports.map((report) => (
+                    <div key={report.weekId}>{renderReportCard(report)}</div>
+                  ))}
+                </div>
+                {/* Desktop: Two columns with alternating distribution */}
+                <div className="hidden lg:grid lg:grid-cols-2 lg:gap-x-6 lg:items-start">
+                  {/* Left Column - even indices (0, 2, 4, ...) */}
+                  <div>
+                    {reportAgentState.allReports
+                      .filter((_, index) => index % 2 === 0)
+                      .map((report) => (
+                        <div key={report.weekId}>
+                          {renderReportCard(report)}
+                        </div>
+                      ))}
+                  </div>
+                  {/* Right Column - odd indices (1, 3, 5, ...) */}
+                  <div>
+                    {reportAgentState.allReports
+                      .filter((_, index) => index % 2 === 1)
+                      .map((report) => (
+                        <div key={report.weekId}>
+                          {renderReportCard(report)}
+                        </div>
+                      ))}
+                  </div>
                 </div>
               </div>
             )}
@@ -1292,10 +1166,36 @@ function ViewReports() {
             activeTab === "monthly" &&
             reportAgentState.allMonthlyReports.length > 0 && (
               <div className="mb-8">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {reportAgentState.allMonthlyReports.map(
-                    renderMonthlyReportCard,
-                  )}
+                {/* Mobile: Single column */}
+                <div className="lg:hidden">
+                  {reportAgentState.allMonthlyReports.map((report) => (
+                    <div key={report.monthId}>
+                      {renderMonthlyReportCard(report)}
+                    </div>
+                  ))}
+                </div>
+                {/* Desktop: Two columns with alternating distribution */}
+                <div className="hidden lg:grid lg:grid-cols-2 lg:gap-x-6 lg:items-start">
+                  {/* Left Column - even indices (0, 2, 4, ...) */}
+                  <div>
+                    {reportAgentState.allMonthlyReports
+                      .filter((_, index) => index % 2 === 0)
+                      .map((report) => (
+                        <div key={report.monthId}>
+                          {renderMonthlyReportCard(report)}
+                        </div>
+                      ))}
+                  </div>
+                  {/* Right Column - odd indices (1, 3, 5, ...) */}
+                  <div>
+                    {reportAgentState.allMonthlyReports
+                      .filter((_, index) => index % 2 === 1)
+                      .map((report) => (
+                        <div key={report.monthId}>
+                          {renderMonthlyReportCard(report)}
+                        </div>
+                      ))}
+                  </div>
                 </div>
               </div>
             )}

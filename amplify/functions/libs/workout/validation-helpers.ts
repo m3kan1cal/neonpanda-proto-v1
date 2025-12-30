@@ -6,7 +6,7 @@
  */
 
 import type { UniversalWorkoutSchema } from "./types";
-import { callBedrockApi, MODEL_IDS } from "../api-helpers";
+import { callBedrockApi, MODEL_IDS, TEMPERATURE_PRESETS } from "../api-helpers";
 import { parseJsonWithFallbacks } from "../response-utils";
 
 /**
@@ -274,7 +274,10 @@ RESPOND WITH JSON:
   const response = (await callBedrockApi(
     prompt,
     "Validate exercise structure",
-    MODEL_IDS.CLAUDE_HAIKU_4_FULL,
+    MODEL_IDS.EXECUTOR_MODEL_FULL,
+    {
+      temperature: TEMPERATURE_PRESETS.STRUCTURED,
+    },
   )) as string;
 
   let result;

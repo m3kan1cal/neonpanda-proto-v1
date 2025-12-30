@@ -29,7 +29,9 @@ export const DISCIPLINE_COMPONENTS = {
   functional_bodybuilding: FunctionalBodybuildingSection,
   calisthenics: CalisthenicsSection,
   running: RunningSection,
-  // Note: "hybrid" and "functional_fitness" map to crossfit component
+  // Legacy discipline mappings - use CrossFit component for these
+  hybrid: CrossFitSection,
+  functional_fitness: CrossFitSection,
 };
 
 /**

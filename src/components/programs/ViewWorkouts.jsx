@@ -826,8 +826,8 @@ Calories: `;
                     onClick={() => toggleCardCollapse(template.templateId)}
                   >
                     <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="w-3 h-3 rounded-full bg-synthwave-neon-cyan flex-shrink-0" />
+                      <div className="flex items-start gap-3 mb-2">
+                        <div className="w-3 h-3 rounded-full bg-synthwave-neon-cyan flex-shrink-0 mt-2" />
                         <h3 className="font-russo text-lg font-bold uppercase text-white">
                           {template.name}
                         </h3>

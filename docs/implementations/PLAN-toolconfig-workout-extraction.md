@@ -5,6 +5,7 @@
 Implementation successfully completed and deployed. Tool-based extraction working in production with multimodal support (text + images). Testing will continue with real end users logging workouts.
 
 ## Overview
+
 Implement the `toolConfig` pattern for workout extraction in `build-workout` Lambda, following the exact same approach successfully used in `build-coach-config`. This will enable structured JSON output directly from Bedrock API using tool-based generation, eliminating the need for JSON parsing and improving extraction reliability.
 
 **Architecture Note**: Both `build-coach-config` and `build-workout` are **asynchronous Lambdas** invoked via `invokeAsyncLambda` from their respective API handlers (`create-coach-config-from-template` and `create-workout`). They return immediate responses to users while processing in the background.
@@ -14,6 +15,7 @@ Implement the `toolConfig` pattern for workout extraction in `build-workout` Lam
 ## Completion Summary
 
 ### What Was Delivered
+
 1. ✅ **Schema Conversion**: Universal Workout Schema v2.0 converted to JSON Schema format
 2. ✅ **Tool-Based Extraction**: Bedrock tool-use pattern implemented (same as coach-config)
 3. ✅ **Multimodal Support**: Image-based workout extraction fully functional
@@ -25,16 +27,19 @@ Implement the `toolConfig` pattern for workout extraction in `build-workout` Lam
 9. ✅ **Comprehensive Logging**: Full CloudWatch logging for debugging
 
 ### Production Validation
+
 - **Test Case**: Complex CrossFit workout with image-based extraction
 - **Result**: Successful extraction with correct duration, session_duration, and all exercise details
 - **Schema Compliance**: 100% compliant with Universal Workout Schema v2.0
 - **Normalization**: Working with smart defaulting for AI quirks
 
 ### Known Issues & Mitigations
+
 - **AI omits `isValid` field**: Smart defaulting logic infers correct value from `issues` array ✅
 - **Claude tool-use quirk**: Known behavior, non-breaking, handled by fallback logic ✅
 
 ### Testing Strategy
+
 - **Phase 1**: Core implementation validated with complex test case ✅
 - **Phase 2**: Real-world testing with end users logging diverse workouts ⏳
 - **Phase 3**: Monitor CloudWatch logs for tool usage patterns and edge cases ⏳
@@ -44,9 +49,11 @@ Implement the `toolConfig` pattern for workout extraction in `build-workout` Lam
 ## Current State Analysis
 
 ### Current Implementation
+
 **File**: `amplify/functions/build-workout/handler.ts` (622 lines)
 
 **Current Flow**:
+
 1. Validates workout content (slash command checks, complexity analysis)
 2. Builds extraction prompt using `buildWorkoutExtractionPrompt()`
 3. Calls Bedrock API with system prompt + user message (lines 134-139)
@@ -57,19 +64,22 @@ Implement the `toolConfig` pattern for workout extraction in `build-workout` Lam
 8. Saves to DynamoDB + Pinecone
 
 **Current Bedrock Call** (line 134-139):
+
 ```typescript
-const extractedData = await callBedrockApi(
+const extractedData = (await callBedrockApi(
   extractionPrompt,
   workoutContent,
-  MODEL_IDS.CLAUDE_SONNET_4_FULL,
-  { enableThinking }
-) as string; // No tools used, always returns string
+  MODEL_IDS.PLANNER_MODEL_FULL,
+  { enableThinking },
+)) as string; // No tools used, always returns string
 ```
 
 ### Key Difference from Coach Config
+
 **Architecture**: Both use async Lambda invocation pattern (identical)
 
 **Extraction Strategy**: Different
+
 - **Coach Config**: Multiple parallel extractions + assembly
   - 3 parallel Haiku calls for extraction
   - 1 Sonnet call for final assembly
@@ -80,7 +90,9 @@ const extractedData = await callBedrockApi(
   - **Decision**: Start with single call (simpler, better data cohesion)
 
 ### Target Schema
+
 **Universal Workout Schema v2.0** - Complex nested structure including:
+
 - Basic workout metadata (date, discipline, type, duration)
 - Performance metrics (intensity, heart rate, calories)
 - Discipline-specific data (crossfit, powerlifting, running, etc.)
@@ -99,9 +111,11 @@ const extractedData = await callBedrockApi(
 ## Decision: Single Call vs Parallel Extraction?
 
 ### Option A: Single Sonnet Call (Current Plan - RECOMMENDED)
+
 **Approach**: One tool-based Sonnet call extracts entire workout schema
 
 **Pros**:
+
 - ✅ Simpler implementation (matches current flow)
 - ✅ Data cohesion - exercises, rounds, and performance metrics are tightly coupled
 - ✅ Tool-based extraction should be much faster than current text parsing
@@ -109,6 +123,7 @@ const extractedData = await callBedrockApi(
 - ✅ Workout data is more interconnected than coach config data
 
 **Cons**:
+
 - ❌ Slower than parallel approach (~10-15s for complex workouts)
 - ❌ Uses expensive Sonnet for everything
 
@@ -117,9 +132,11 @@ const extractedData = await callBedrockApi(
 ---
 
 ### Option B: Parallel Haiku Extractions (Like Coach Config)
+
 **Approach**: Multiple parallel Haiku extractions + Sonnet assembly
 
 **Potential Breakdown**:
+
 1. **Basic Metadata** (Haiku) - discipline, date, workout_type, duration, location
 2. **Performance Metrics** (Haiku) - intensity, heart rate, calories, mood
 3. **Discipline-Specific Data** (Sonnet) - CrossFit rounds, powerlifting sets, running segments
@@ -129,12 +146,14 @@ const extractedData = await callBedrockApi(
 7. **Final Assembly** (Sonnet) - combine all extractions into valid schema
 
 **Pros**:
+
 - ✅ Faster execution (~5-8s with parallelization)
 - ✅ Lower cost (Haiku for most extractions)
 - ✅ Better error isolation (one failed extraction doesn't break everything)
 - ✅ Matches proven coach config pattern
 
 **Cons**:
+
 - ❌ More complex implementation
 - ❌ Risk of data inconsistency between extractions
 - ❌ Workout data is more cohesive than coach config data
@@ -148,18 +167,21 @@ const extractedData = await callBedrockApi(
 ### Recommendation: Start with Option A, Consider Option B Later
 
 **Phase 1**: Implement single Sonnet tool-based call
+
 - Get the tool pattern working first
 - Measure actual performance vs text parsing
 - Establish baseline metrics
 
 **Phase 2** (Optional Future Optimization):
 If performance is an issue, implement parallel extraction pattern:
+
 - Profile which extractions are slowest
 - Move simple extractions to Haiku
 - Keep complex discipline-specific extraction on Sonnet
 - Benchmark improvement
 
 **Reasoning**:
+
 1. Workout data is more interconnected than coach config data
 2. Tool-based extraction should already be much faster than text parsing
 3. Simpler code = easier to debug and maintain
@@ -176,6 +198,7 @@ If performance is an issue, implement parallel extraction pattern:
 **Strategy**: Follow the EXACT same pattern as `coach-config-schema.ts`
 
 **Actions**:
+
 1. ✅ Convert `UNIVERSAL_WORKOUT_SCHEMA_V2` from string template to JSON Schema object
 2. ✅ Export as `WORKOUT_SCHEMA` (matches naming pattern of `COACH_CONFIG_SCHEMA`)
 3. ✅ Use JSON Schema format compatible with Bedrock `toolConfig`
@@ -186,61 +209,85 @@ If performance is an issue, implement parallel extraction pattern:
 8. ✅ Clean break - no legacy backward compatibility code
 
 **Schema Structure** (following coach-config pattern):
+
 ```typescript
 /**
  * Universal Workout Schema v2.0 - JSON Schema Definition
  * Used for both Bedrock tool-based extraction AND validation
  */
 export const WORKOUT_SCHEMA = {
-  type: 'object',
-  required: ['date', 'discipline', 'workout_type', 'metadata'],
+  type: "object",
+  required: ["date", "discipline", "workout_type", "metadata"],
   properties: {
     workout_id: {
-      type: 'string',
-      pattern: '^workout_.*$',
-      description: 'Unique workout identifier'
+      type: "string",
+      pattern: "^workout_.*$",
+      description: "Unique workout identifier",
     },
     date: {
-      type: 'string',
-      pattern: '^\d{4}-\d{2}-\d{2}$',
-      description: 'Workout date in YYYY-MM-DD format'
+      type: "string",
+      pattern: "^\d{4}-\d{2}-\d{2}$",
+      description: "Workout date in YYYY-MM-DD format",
     },
     discipline: {
-      type: 'string',
-      enum: ['crossfit', 'powerlifting', 'bodybuilding', 'hiit', 'running', 'swimming', 'cycling', 'yoga', 'martial_arts', 'climbing', 'hybrid'],
-      description: 'Primary training discipline'
+      type: "string",
+      enum: [
+        "crossfit",
+        "powerlifting",
+        "bodybuilding",
+        "hiit",
+        "running",
+        "swimming",
+        "cycling",
+        "yoga",
+        "martial_arts",
+        "climbing",
+        "hybrid",
+      ],
+      description: "Primary training discipline",
     },
     // ... all other fields
     discipline_specific: {
-      type: 'object',
+      type: "object",
       properties: {
-        crossfit: { /* nested structure */ },
-        powerlifting: { /* nested structure */ },
-        running: { /* nested structure */ },
+        crossfit: {
+          /* nested structure */
+        },
+        powerlifting: {
+          /* nested structure */
+        },
+        running: {
+          /* nested structure */
+        },
         // ... etc
-      }
+      },
     },
     metadata: {
-      type: 'object',
-      required: ['data_confidence', 'schema_version', 'validation_flags'],
+      type: "object",
+      required: ["data_confidence", "schema_version", "validation_flags"],
       properties: {
-        data_confidence: { type: 'number', minimum: 0, maximum: 1 },
-        schema_version: { type: 'string' },
-        validation_flags: { type: 'array', items: { type: 'string' } },
+        data_confidence: { type: "number", minimum: 0, maximum: 1 },
+        schema_version: { type: "string" },
+        validation_flags: { type: "array", items: { type: "string" } },
         // ... other metadata fields
-      }
-    }
-  }
+      },
+    },
+  },
 };
 ```
 
 **Implementation Details**:
+
 ```typescript
 // Export single JSON Schema (identical to coach config pattern)
-export const WORKOUT_SCHEMA = { /* JSON Schema structure */ };
-export const SCHEMA_VERSION = '2.0';
-export const SCHEMA_LAST_UPDATED = '2025-01-14';
-export function validateWorkout(workout: any) { /* validation logic */ }
+export const WORKOUT_SCHEMA = {
+  /* JSON Schema structure */
+};
+export const SCHEMA_VERSION = "2.0";
+export const SCHEMA_LAST_UPDATED = "2025-01-14";
+export function validateWorkout(workout: any) {
+  /* validation logic */
+}
 
 // NO getSchemaWithContext() helper - not needed for tool-based generation
 // (Coach config doesn't have this either)
@@ -257,10 +304,11 @@ export function validateWorkout(workout: any) { /* validation logic */ }
 **Analysis**: Since we're using the JSON Schema directly with toolConfig (same as coach config), we need to REMOVE the schema injection.
 
 **Actions**:
+
 1. ✅ Remove import of `getSchemaWithContext`
 2. ✅ Remove call to `getSchemaWithContext('extraction')` from prompt
 3. ✅ Remove JSON formatting instructions (tool handles structure)
-4. ✅ Simplify to focus on *what to extract* not *how to format*
+4. ✅ Simplify to focus on _what to extract_ not _how to format_
 5. ✅ Keep domain-specific guidance (CrossFit rounds, powerlifting sets, etc.)
 
 **Note**: Coach config doesn't inject schema into prompts - the tool schema itself provides all structure. We follow the same pattern.
@@ -274,6 +322,7 @@ export function validateWorkout(workout: any) { /* validation logic */ }
 **Current Call Location**: Lines 134-139
 
 **Actions**:
+
 1. ✅ Import `WORKOUT_EXTRACTION_SCHEMA` from `universal-workout-schema.ts`
 2. ✅ Update `callBedrockApi` to use `tools` parameter (NOT `toolConfig`)
 3. ✅ Use same tool format as coach config: `{ name, description, inputSchema }`
@@ -283,16 +332,18 @@ export function validateWorkout(workout: any) { /* validation logic */ }
 7. ✅ Add comprehensive logging for tool usage
 
 **Before** (line 134-139):
+
 ```typescript
-const extractedData = await callBedrockApi(
+const extractedData = (await callBedrockApi(
   extractionPrompt,
   workoutContent,
-  MODEL_IDS.CLAUDE_SONNET_4_FULL,
-  { enableThinking }
-) as string;
+  MODEL_IDS.PLANNER_MODEL_FULL,
+  { enableThinking },
+)) as string;
 ```
 
 **After** (following coach-config pattern exactly):
+
 ```typescript
 import { WORKOUT_SCHEMA } from '../libs/schemas/universal-workout-schema';
 
@@ -302,7 +353,7 @@ console.info("🎯 Attempting tool-based workout extraction");
 const result = await callBedrockApi(
   extractionPrompt, // System prompt
   workoutContent,   // User message
-  MODEL_IDS.CLAUDE_SONNET_4_FULL,
+  MODEL_IDS.PLANNER_MODEL_FULL,
   {
     enableThinking,
     tools: {
@@ -350,7 +401,7 @@ if (typeof result !== 'string') {
   const fallbackResult = await callBedrockApi(
     extractionPrompt,
     workoutContent,
-    MODEL_IDS.CLAUDE_SONNET_4_FULL,
+    MODEL_IDS.PLANNER_MODEL_FULL,
     {
       enableThinking,
       staticPrompt: extractionPrompt, // Cache the large static prompt
@@ -388,24 +439,26 @@ if (typeof result !== 'string') {
 **Check**: Verify `callBedrockApi` already supports `toolConfig` parameter (it should from coach-config implementation)
 
 **Actions**:
+
 1. ✅ Confirm `toolConfig` parameter is supported
 2. ✅ Verify tool response handling matches our expectations
 3. ✅ Add any workout-specific error handling if needed
 
 **Expected signature** (already implemented):
+
 ```typescript
 export async function callBedrockApi(
   systemPrompt: string,
   userMessage: string = "Please proceed.",
-  modelId: string = MODEL_IDS.CLAUDE_SONNET_4_FULL,
+  modelId: string = MODEL_IDS.PLANNER_MODEL_FULL,
   options?: {
     enableThinking?: boolean;
     toolConfig?: any; // <-- This should already exist
     staticPrompt?: string;
     dynamicPrompt?: string;
     prefillText?: string;
-  }
-): Promise<string | ToolUseResponse>
+  },
+): Promise<string | ToolUseResponse>;
 ```
 
 ---
@@ -415,6 +468,7 @@ export async function callBedrockApi(
 **File to Modify**: `amplify/functions/build-workout/handler.ts`
 
 **Actions**:
+
 1. ✅ Add logging for tool-based vs text-based extraction path
 2. ✅ Log tool response structure for debugging
 3. ✅ Store tool-based extraction data in S3 (similar to prompt/response storage)
@@ -422,12 +476,19 @@ export async function callBedrockApi(
 5. ✅ Add validation logging for tool-generated data
 
 **Example Logging**:
+
 ```typescript
 console.info("Extraction method used:", {
-  method: typeof response === 'object' && 'toolUse' in response ? 'tool-based' : 'text-parsing',
+  method:
+    typeof response === "object" && "toolUse" in response
+      ? "tool-based"
+      : "text-parsing",
   responseType: typeof response,
-  hasToolUse: typeof response === 'object' && 'toolUse' in response,
-  toolName: typeof response === 'object' && 'toolUse' in response ? response.toolUse.name : null
+  hasToolUse: typeof response === "object" && "toolUse" in response,
+  toolName:
+    typeof response === "object" && "toolUse" in response
+      ? response.toolUse.name
+      : null,
 });
 
 // Store tool success/failure data in S3
@@ -435,11 +496,14 @@ await storeDebugDataInS3(
   JSON.stringify(response, null, 2),
   {
     userId: event.userId,
-    type: typeof response === 'object' && 'toolUse' in response ? 'tool-success' : 'tool-fallback',
-    method: 'workout-extraction',
-    timestamp: new Date().toISOString()
+    type:
+      typeof response === "object" && "toolUse" in response
+        ? "tool-success"
+        : "tool-fallback",
+    method: "workout-extraction",
+    timestamp: new Date().toISOString(),
   },
-  'workout-extraction'
+  "workout-extraction",
 );
 ```
 
@@ -448,6 +512,7 @@ await storeDebugDataInS3(
 ### Phase 6: Maintain Critical Functionality
 
 **Actions**:
+
 1. ✅ Use `parseJsonWithFallbacks()` for fallback (same as coach config)
 2. ✅ Keep normalization logic (`normalizeWorkout()`) for edge cases
 3. ✅ Maintain all validation checks (blocking flags, discipline classification, etc.)
@@ -456,10 +521,12 @@ await storeDebugDataInS3(
 6. ✅ Keep all existing error handling paths
 
 **Functions to Remove** (after tool-based extraction is stable):
+
 - `parseAndValidateWorkoutData()` - replaced by `parseJsonWithFallbacks()`
 - `getSchemaWithContext()` - not needed for tool-based extraction
 
 **Fallback Strategy** (identical to coach config):
+
 ```typescript
 try {
   // Try tool-based extraction
@@ -506,6 +573,7 @@ try {
    - ⏳ Smart defaulting logic implemented, will be validated in edge cases
 
 **Validation Checks** ✅:
+
 - ✅ Schema compliance (all required fields present)
 - ✅ Data type correctness (numbers are numbers, not strings)
 - ✅ Nested structure integrity (discipline_specific properly formed)
@@ -514,6 +582,7 @@ try {
 - ✅ Pinecone storage successful (workout summaries)
 
 **Testing Strategy**:
+
 - **Core Implementation**: Validated with complex test case ✅
 - **Production Testing**: End users will validate edge cases through real usage ⏳
 - **Monitoring**: CloudWatch logs will track tool usage patterns and failures ⏳
@@ -523,6 +592,7 @@ try {
 ## Success Criteria ✅ ALL COMPLETE
 
 ### Must Have ✅
+
 1. ✅ Tool-based extraction generates valid Universal Workout Schema v2.0 structure
 2. ✅ All required fields populated correctly by tool
 3. ✅ Nested objects (discipline_specific, performance_metrics) properly structured
@@ -531,21 +601,25 @@ try {
 6. ✅ Comprehensive logging for debugging
 
 ### Nice to Have ✅
+
 1. ✅ Reduced normalization frequency (better initial structure from tool)
 2. ✅ Improved extraction confidence scores
 3. ✅ Faster execution time (less post-processing needed)
 4. ✅ Better handling of complex multi-phase workouts
 
 ### Metrics to Track (In Production)
+
 - **Tool Usage Rate**: Monitor % of extractions using tool vs fallback ⏳
 - **Normalization Rate**: Monitor % of workouts requiring normalization ⏳
 - **Confidence Scores**: Track average data_confidence over time ⏳
 - **Validation Flags**: Monitor frequency of blocking flags ⏳
 - **Execution Time**: Track Lambda duration (observed: ~76s for multimodal extraction)
-  - *Note*: Current performance acceptable, parallel extraction not needed yet
+  - _Note_: Current performance acceptable, parallel extraction not needed yet
 
 ### Future Optimization: Parallel Extraction (Not Needed Currently)
+
 If single-call performance becomes an issue:
+
 1. Implement parallel extraction pattern (like coach config)
 2. Use Haiku for simple extractions (metadata, performance metrics, feedback)
 3. Use Sonnet for complex extractions (discipline-specific data)
@@ -558,14 +632,18 @@ If single-call performance becomes an issue:
 ## Implementation Order (Following Coach Config Pattern Exactly)
 
 ### Step 1: Convert Schema to JSON Format ✅
+
 **File**: `amplify/functions/libs/schemas/universal-workout-schema.ts`
+
 - Convert `UNIVERSAL_WORKOUT_SCHEMA_V2` string to JSON Schema object
 - Export as `WORKOUT_SCHEMA` (matches `COACH_CONFIG_SCHEMA` pattern)
 - Remove `getSchemaWithContext()` helper (not needed, same as coach config)
 - Clean break from text-based extraction
 
 ### Step 2: Update Handler with Tool-Based Extraction ✅
+
 **File**: `amplify/functions/build-workout/handler.ts`
+
 - Import `WORKOUT_SCHEMA`
 - Update Bedrock API call with `tools` parameter (same format as coach config)
 - Add tool response handling (same pattern as coach config)
@@ -573,13 +651,16 @@ If single-call performance becomes an issue:
 - Add comprehensive logging
 
 ### Step 3: Update Extraction Prompt ✅
+
 **File**: `amplify/functions/libs/workout/extraction.ts`
+
 - Remove `getSchemaWithContext('extraction')` call
 - Remove JSON formatting instructions (tool handles structure)
 - Simplify `buildWorkoutExtractionPrompt()` to focus on domain guidance only
 - Keep CrossFit/powerlifting/running specific instructions
 
 ### Step 4: Test Thoroughly ✅
+
 - Test simple workouts (basic lifts)
 - Test complex multi-phase workouts (CrossFit)
 - Test each discipline (CrossFit, Powerlifting, Running)
@@ -589,12 +670,14 @@ If single-call performance becomes an issue:
 - Compare tool output vs text parsing output
 
 ### Step 5: Clean Up & Document ✅
+
 - Remove deprecated code if everything works
 - Update documentation
 - Add comments about tool-based extraction
 - Document schema version and changes
 
 ### Step 6: Monitor & Iterate ✅
+
 - Deploy to production
 - Monitor CloudWatch logs for tool usage
 - Track success/fallback rates
@@ -605,38 +688,42 @@ If single-call performance becomes an issue:
 
 ## Comparison: Coach Config vs Workout Extraction
 
-| Aspect | Coach Config | Workout Extraction |
-|--------|-------------|-------------------|
-| **Lambda Invocation** | Async via `invokeAsyncLambda` | Same - Async via `invokeAsyncLambda` |
-| **Schema File** | `schemas/coach-config-schema.ts` | `schemas/universal-workout-schema.ts` |
-| **Schema Export** | `COACH_CONFIG_SCHEMA` | `WORKOUT_SCHEMA` |
-| **Schema Format** | JSON Schema (one schema) | ~~String template~~ → JSON Schema (one schema) |
-| **Extraction Calls** | Multiple (safety, methodology, etc.) | Single comprehensive extraction |
-| **Schema Complexity** | Moderate (coach personality, technical config) | High (nested discipline-specific data) |
-| **Required Fields** | Fixed set | Varies by discipline |
-| **Normalization** | Not needed | May still need for complex workouts |
-| **Schema Size** | ~360 lines | ~1000+ lines (more disciplines) |
-| **Fallback Importance** | Medium | High (workout variety is extreme) |
-| **Tool Parameter** | `tools: { name, description, inputSchema }` | Same - `tools: { name, description, inputSchema }` |
-| **Pattern** | Tool-first with fallback | Same - Tool-first with fallback |
+| Aspect                  | Coach Config                                   | Workout Extraction                                 |
+| ----------------------- | ---------------------------------------------- | -------------------------------------------------- |
+| **Lambda Invocation**   | Async via `invokeAsyncLambda`                  | Same - Async via `invokeAsyncLambda`               |
+| **Schema File**         | `schemas/coach-config-schema.ts`               | `schemas/universal-workout-schema.ts`              |
+| **Schema Export**       | `COACH_CONFIG_SCHEMA`                          | `WORKOUT_SCHEMA`                                   |
+| **Schema Format**       | JSON Schema (one schema)                       | ~~String template~~ → JSON Schema (one schema)     |
+| **Extraction Calls**    | Multiple (safety, methodology, etc.)           | Single comprehensive extraction                    |
+| **Schema Complexity**   | Moderate (coach personality, technical config) | High (nested discipline-specific data)             |
+| **Required Fields**     | Fixed set                                      | Varies by discipline                               |
+| **Normalization**       | Not needed                                     | May still need for complex workouts                |
+| **Schema Size**         | ~360 lines                                     | ~1000+ lines (more disciplines)                    |
+| **Fallback Importance** | Medium                                         | High (workout variety is extreme)                  |
+| **Tool Parameter**      | `tools: { name, description, inputSchema }`    | Same - `tools: { name, description, inputSchema }` |
+| **Pattern**             | Tool-first with fallback                       | Same - Tool-first with fallback                    |
 
 ---
 
 ## Risks & Mitigations
 
 ### Risk 1: Tool Schema Too Complex
+
 **Impact**: Bedrock might not handle deeply nested schema
 **Mitigation**: Start with full schema, simplify if needed, maintain fallback
 
 ### Risk 2: Discipline-Specific Variations
+
 **Impact**: Different workouts need different structures
 **Mitigation**: Make discipline_specific flexible, use detailed descriptions
 
 ### Risk 3: Performance Degradation
+
 **Impact**: Tool generation might be slower than text parsing
 **Mitigation**: Monitor execution time, keep fallback fast
 
 ### Risk 4: Breaking Existing Flows
+
 **Impact**: Changes could affect downstream processing
 **Mitigation**: Extensive testing, maintain backward compatibility
 
@@ -656,6 +743,7 @@ If tool-based extraction causes issues:
 ## Files to Create/Modify
 
 ### Modified Files (Same Pattern as Coach Config)
+
 - `amplify/functions/libs/schemas/universal-workout-schema.ts` ⭐ **PRIMARY CHANGE**
   - Convert string template to JSON Schema format
   - Export as `WORKOUT_SCHEMA`
@@ -672,9 +760,11 @@ If tool-based extraction causes issues:
   - Simplify `buildWorkoutExtractionPrompt()` for tool-based extraction
 
 ### No New Files Needed
+
 Unlike the original plan, we're NOT creating a separate tool-schema.ts file. We're following the coach config pattern exactly: ONE schema file that serves both purposes.
 
 ### Reference Files (no changes)
+
 - `amplify/functions/libs/workout/types.ts` (TypeScript interfaces)
 - `amplify/functions/libs/workout/validation.ts` (validation logic)
 - `amplify/functions/libs/workout/normalization.ts` (normalization logic)
@@ -715,16 +805,16 @@ If initial single-call performance is insufficient, we can implement the paralle
 // Run extractions in parallel (like coach config)
 const [basicMetadata, performanceMetrics, subjectiveFeedback, prAchievements] =
   await Promise.all([
-    extractBasicMetadata(workoutContent),      // Haiku
+    extractBasicMetadata(workoutContent), // Haiku
     extractPerformanceMetrics(workoutContent), // Haiku
     extractSubjectiveFeedback(workoutContent), // Haiku
-    extractPRAchievements(workoutContent)      // Haiku
+    extractPRAchievements(workoutContent), // Haiku
   ]);
 
 // Extract complex discipline-specific data (Sonnet)
 const disciplineData = await extractDisciplineSpecific(
   workoutContent,
-  basicMetadata.discipline
+  basicMetadata.discipline,
 );
 
 // Assemble final workout (Sonnet with tool)
@@ -733,7 +823,7 @@ const workout = await assembleWorkout({
   performanceMetrics,
   subjectiveFeedback,
   prAchievements,
-  disciplineData
+  disciplineData,
 });
 ```
 
@@ -746,6 +836,7 @@ This would match the coach config pattern exactly, but adds complexity that may 
 **Date Completed**: November 23, 2025
 
 **Key Achievements**:
+
 - ✅ Tool-based extraction fully functional
 - ✅ Multimodal support (text + images) working
 - ✅ Schema compliance validated
@@ -753,12 +844,14 @@ This would match the coach config pattern exactly, but adds complexity that may 
 - ✅ Production-ready with comprehensive logging
 
 **Production Readiness**:
+
 - Core functionality validated with complex test case
 - Edge case testing will be performed by end users
 - CloudWatch monitoring in place for debugging
 - Fallback mechanisms tested and working
 
 **Next Steps**:
+
 1. Monitor CloudWatch logs for tool usage patterns
 2. Track success/fallback rates
 3. Collect feedback from end users
@@ -766,4 +859,3 @@ This would match the coach config pattern exactly, but adds complexity that may 
 5. Consider parallel extraction optimization if performance becomes an issue
 
 **Status**: **SHIPPED TO PRODUCTION** 🚀
-

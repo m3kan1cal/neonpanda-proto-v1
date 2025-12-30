@@ -5,32 +5,7 @@
  * reusability, and maintainability.
  */
 
-import { buildMultimodalContent } from "../../streaming/multimodal-helpers";
-import { MESSAGE_TYPES } from "../../coach-conversation/types";
 import { storeDebugDataInS3 } from "../../api-helpers";
-
-/**
- * Build multimodal message for workout extraction
- *
- * Constructs a properly formatted message for Bedrock multimodal API
- * with optional images.
- */
-export const buildWorkoutExtractionMessage = async (
-  userMessage: string,
-  imageS3Keys?: string[],
-  idSuffix: string = "user",
-) => {
-  const currentMessage = {
-    id: `msg_${Date.now()}_${idSuffix}`,
-    role: "user" as const,
-    content: userMessage,
-    timestamp: new Date(),
-    messageType: MESSAGE_TYPES.TEXT_WITH_IMAGES,
-    imageS3Keys: imageS3Keys,
-  };
-
-  return await buildMultimodalContent([currentMessage]);
-};
 
 /**
  * Enforce blocking decisions from validation

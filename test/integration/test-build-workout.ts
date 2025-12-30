@@ -1460,7 +1460,8 @@ Duration: About 45 minutes total (25min strength, 15min conditioning, 5min trans
       imageProcessing: {
         imagesUsed: true,
         expectedImageCount: 1,
-        minMultimodalApiCalls: 1, // Agent processes image once at conversation start, then passes text to tools
+        // Note: multimodal API calls are now only at agent level (not tools)
+        // Successful workout extraction validates image processing worked
       },
       workoutValidation: {
         shouldExist: true,

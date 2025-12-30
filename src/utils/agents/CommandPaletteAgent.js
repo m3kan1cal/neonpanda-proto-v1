@@ -1,5 +1,7 @@
 import { MemoryAgent } from "./MemoryAgent.js";
 import { CoachConversationAgent } from "./CoachConversationAgent.js";
+import { createCoachCreatorSession } from "../apis/coachCreatorApi.js";
+import { createProgramDesignerSession } from "../apis/programDesignerApi.js";
 
 /**
  * CommandPaletteAgent - Handles command execution and state management
@@ -26,7 +28,7 @@ export class CommandPaletteAgent {
     if (this.onStateChange && typeof this.onStateChange !== "function") {
       console.error(
         "CommandPaletteAgent: onStateChange must be a function, got:",
-        typeof this.onStateChange
+        typeof this.onStateChange,
       );
       this.onStateChange = null;
     }
@@ -59,7 +61,7 @@ export class CommandPaletteAgent {
       } catch (error) {
         console.error(
           "CommandPaletteAgent._updateState: Error in state change callback:",
-          error
+          error,
         );
       }
     }
@@ -93,9 +95,13 @@ export class CommandPaletteAgent {
     const allowsEmptyContent = command && command.requiresInput === false;
     const hasContent = content && content.trim().length > 0;
 
-    if (!command || (!allowsEmptyContent && !hasContent) || this.state.isExecuting) {
+    if (
+      !command ||
+      (!allowsEmptyContent && !hasContent) ||
+      this.state.isExecuting
+    ) {
       console.warn(
-        "CommandPaletteAgent.executeCommand: Invalid parameters or already executing"
+        "CommandPaletteAgent.executeCommand: Invalid parameters or already executing",
       );
       return;
     }
@@ -113,7 +119,7 @@ export class CommandPaletteAgent {
 
     // Force a small delay to ensure React renders the spinner before we start the API call
     // This prevents React from batching the isExecuting: true and isExecuting: false updates
-    await new Promise(resolve => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 50));
 
     try {
       let result;
@@ -128,12 +134,23 @@ export class CommandPaletteAgent {
           break;
 
         case "start-conversation":
-          result = await this._executeStartConversation(normalizedContent, options);
+          result = await this._executeStartConversation(
+            normalizedContent,
+            options,
+          );
+          break;
+
+        case "create-coach":
+          result = await this._executeCreateCoach(normalizedContent, options);
+          break;
+
+        case "design-program":
+          result = await this._executeDesignProgram(normalizedContent, options);
           break;
 
         default:
           throw new Error(
-            `Command "${command.trigger}" is not yet implemented.`
+            `Command "${command.trigger}" is not yet implemented.`,
           );
       }
 
@@ -146,7 +163,10 @@ export class CommandPaletteAgent {
         },
       };
 
-      console.log("CommandPaletteAgent: Command executed successfully:", executionResult);
+      console.log(
+        "CommandPaletteAgent: Command executed successfully:",
+        executionResult,
+      );
 
       // Ensure minimum total display time for spinner (500ms) so users see feedback
       const executionTime = Date.now() - executionStartTime;
@@ -154,7 +174,7 @@ export class CommandPaletteAgent {
       const remainingTime = Math.max(0, minimumDisplayTime - executionTime);
 
       if (remainingTime > 0) {
-        await new Promise(resolve => setTimeout(resolve, remainingTime));
+        await new Promise((resolve) => setTimeout(resolve, remainingTime));
       }
 
       this._updateState({
@@ -173,7 +193,7 @@ export class CommandPaletteAgent {
       const remainingTime = Math.max(0, minimumDisplayTime - executionTime);
 
       if (remainingTime > 0) {
-        await new Promise(resolve => setTimeout(resolve, remainingTime));
+        await new Promise((resolve) => setTimeout(resolve, remainingTime));
       }
 
       this._updateState({
@@ -201,7 +221,9 @@ export class CommandPaletteAgent {
 
     // Check if the WorkoutAgent has a userId set, and try to set it if not
     if (!this.workoutAgent.userId) {
-      console.warn("CommandPaletteAgent: WorkoutAgent missing userId, attempting to set it");
+      console.warn(
+        "CommandPaletteAgent: WorkoutAgent missing userId, attempting to set it",
+      );
 
       // Try to set the userId on the WorkoutAgent
       if (this.userId && this.workoutAgent.setUserId) {
@@ -209,10 +231,14 @@ export class CommandPaletteAgent {
 
         // Double-check that it was set
         if (!this.workoutAgent.userId) {
-          throw new Error("WorkoutAgent is not ready yet - please try again in a moment");
+          throw new Error(
+            "WorkoutAgent is not ready yet - please try again in a moment",
+          );
         }
       } else {
-        throw new Error("WorkoutAgent is not ready yet - please try again in a moment");
+        throw new Error(
+          "WorkoutAgent is not ready yet - please try again in a moment",
+        );
       }
     }
 
@@ -289,7 +315,7 @@ export class CommandPaletteAgent {
     const coachId = options.coachId;
     if (!coachId) {
       throw new Error(
-        "Please select a coach first. Navigate to a coach page and try again."
+        "Please select a coach first. Navigate to a coach page and try again.",
       );
     }
 
@@ -316,7 +342,7 @@ export class CommandPaletteAgent {
       this.userId,
       coachId,
       null, // title (auto-generated)
-      initialMessage
+      initialMessage,
     );
 
     const message = initialMessage
@@ -329,11 +355,80 @@ export class CommandPaletteAgent {
       message,
       details: result,
       // Pass navigation data so CommandPalette can trigger it after closing
-      navigationData: result.conversation ? {
+      navigationData: result.conversation
+        ? {
+            userId: this.userId,
+            coachId: coachId,
+            conversationId: result.conversation.conversationId,
+          }
+        : null,
+    };
+  }
+
+  /**
+   * Execute create-coach command
+   * Creates a new coach creator session and navigates to the coach creator page
+   */
+  async _executeCreateCoach(content, options = {}) {
+    if (!this.userId) {
+      throw new Error("Unable to create coach - user not authenticated");
+    }
+
+    console.info("CommandPaletteAgent._executeCreateCoach:", {
+      userId: this.userId,
+      options,
+    });
+
+    // Create coach creator session via API
+    const result = await createCoachCreatorSession(this.userId);
+    const { sessionId } = result;
+
+    return {
+      message: "Creating new coach session...",
+      details: { sessionId },
+      navigationData: {
+        type: "coach-creator",
+        userId: this.userId,
+        sessionId: sessionId,
+      },
+    };
+  }
+
+  /**
+   * Execute design-program command
+   * Creates a new program designer session and navigates to the program designer page
+   */
+  async _executeDesignProgram(content, options = {}) {
+    if (!this.userId) {
+      throw new Error("Unable to design program - user not authenticated");
+    }
+
+    const coachId = options.coachId;
+    if (!coachId) {
+      throw new Error(
+        "Please select a coach first. Navigate to a coach page and try again.",
+      );
+    }
+
+    console.info("CommandPaletteAgent._executeDesignProgram:", {
+      userId: this.userId,
+      coachId: coachId,
+      options,
+    });
+
+    // Create program designer session via API
+    const result = await createProgramDesignerSession(this.userId, coachId);
+    const { sessionId } = result;
+
+    return {
+      message: "Starting program designer...",
+      details: { sessionId, coachId },
+      navigationData: {
+        type: "program-designer",
         userId: this.userId,
         coachId: coachId,
-        conversationId: result.conversation.conversationId,
-      } : null,
+        sessionId: sessionId,
+      },
     };
   }
 

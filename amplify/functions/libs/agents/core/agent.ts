@@ -36,7 +36,7 @@ export class Agent<TContext extends AgentContext = AgentContext> {
 
   constructor(config: AgentConfig<TContext>) {
     this.config = {
-      modelId: MODEL_IDS.CLAUDE_SONNET_4_FULL,
+      modelId: MODEL_IDS.PLANNER_MODEL_FULL,
       ...config,
     };
   }
@@ -172,7 +172,7 @@ export class Agent<TContext extends AgentContext = AgentContext> {
       systemPrompt,
       this.conversationHistory,
       tools,
-      this.config.modelId || MODEL_IDS.CLAUDE_SONNET_4_FULL,
+      this.config.modelId || MODEL_IDS.PLANNER_MODEL_FULL,
       options,
     );
     const duration = Date.now() - startTime;

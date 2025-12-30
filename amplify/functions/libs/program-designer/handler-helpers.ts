@@ -209,7 +209,7 @@ export async function* startProgramDesignCollection(
       content: processedResponse.cleanedResponse,
       timestamp: new Date(),
       metadata: {
-        model: MODEL_IDS.CLAUDE_SONNET_4_DISPLAY,
+        model: MODEL_IDS.PLANNER_MODEL_DISPLAY,
         mode: CONVERSATION_MODES.PROGRAM_DESIGN, // Track that this message was created during program design artifact creation
       },
     };

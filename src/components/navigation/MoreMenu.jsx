@@ -1,10 +1,10 @@
 // MoreMenu.jsx - Mobile Slide-Up Menu for Overflow Navigation
 // Bottom sheet style menu for secondary navigation items
 
-import React, { useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { useNavigationContext } from '../../contexts/NavigationContext';
-import { navigationPatterns } from '../../utils/ui/uiPatterns';
+import React, { useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigationContext } from "../../contexts/NavigationContext";
+import { navigationPatterns } from "../../utils/ui/uiPatterns";
 import {
   navigationItems,
   isItemVisible,
@@ -14,7 +14,7 @@ import {
   isRouteActive,
   triggerHaptic,
   getItemAriaLabel,
-} from '../../utils/navigation';
+} from "../../utils/navigation";
 
 const MoreMenu = () => {
   const navigate = useNavigate();
@@ -25,25 +25,25 @@ const MoreMenu = () => {
   // Close menu on escape key
   useEffect(() => {
     const handleEscape = (e) => {
-      if (e.key === 'Escape' && isMoreMenuOpen) {
+      if (e.key === "Escape" && isMoreMenuOpen) {
         setIsMoreMenuOpen(false);
       }
     };
 
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
   }, [isMoreMenuOpen, setIsMoreMenuOpen]);
 
   // Prevent body scroll when menu is open
   useEffect(() => {
     if (isMoreMenuOpen) {
-      document.body.style.overflow = 'hidden';
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = "unset";
     }
 
     return () => {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = "unset";
     };
   }, [isMoreMenuOpen]);
 
@@ -58,26 +58,30 @@ const MoreMenu = () => {
     triggerHaptic(10);
     setIsMoreMenuOpen(false);
 
-    // Handle Quick Actions items (log workout, start conversation, save memory)
+    // Handle Quick Actions items (log workout, start conversation, save memory, create coach, design program)
     if (item.action) {
       // Map action to command palette commands
       const commandMap = {
-        'log-workout': '/log-workout ',
-        'start-conversation': '/start-conversation ',
-        'save-memory': '/save-memory ',
+        "log-workout": "/log-workout ",
+        "start-conversation": "/start-conversation ",
+        "save-memory": "/save-memory ",
+        "create-coach": "/create-coach",
+        "design-program": "/design-program",
       };
 
       if (context.onCommandPaletteToggle && commandMap[item.action]) {
         context.onCommandPaletteToggle(commandMap[item.action]);
       } else {
-        console.info(`Quick action clicked: ${item.action} - Command palette not available`);
+        console.info(
+          `Quick action clicked: ${item.action} - Command palette not available`,
+        );
       }
       return;
     }
 
     // Handle Quick Access items with popovers (coach details)
     // Note: Popovers don't work well in mobile menu, so navigate to coaches page instead
-    if (item.popoverType === 'coach') {
+    if (item.popoverType === "coach") {
       navigate(`/coaches?userId=${context.userId}`);
       return;
     }
@@ -90,7 +94,7 @@ const MoreMenu = () => {
 
     // Handle navigation
     const route = getItemRoute(item, context);
-    if (route === '#') return; // Disabled item
+    if (route === "#") return; // Disabled item
     navigate(route);
   };
 
@@ -101,25 +105,27 @@ const MoreMenu = () => {
   };
 
   // Get all menu items (primary + contextual + quickAccess + account + utility)
-  const primaryItems = navigationItems.primary?.filter((item) =>
-    isItemVisible(item, context)
-  ) || [];
+  const primaryItems =
+    navigationItems.primary?.filter((item) => isItemVisible(item, context)) ||
+    [];
 
-  const contextualItems = navigationItems.contextual?.filter((item) =>
-    isItemVisible(item, context)
-  ) || [];
+  const contextualItems =
+    navigationItems.contextual?.filter((item) =>
+      isItemVisible(item, context),
+    ) || [];
 
-  const quickAccessItems = navigationItems.quickAccess?.filter((item) =>
-    isItemVisible(item, context)
-  ) || [];
+  const quickAccessItems =
+    navigationItems.quickAccess?.filter((item) =>
+      isItemVisible(item, context),
+    ) || [];
 
-  const accountItems = navigationItems.account?.filter((item) =>
-    isItemVisible(item, context)
-  ) || [];
+  const accountItems =
+    navigationItems.account?.filter((item) => isItemVisible(item, context)) ||
+    [];
 
-  const utilityItems = navigationItems.utility?.filter((item) =>
-    isItemVisible(item, context)
-  ) || [];
+  const utilityItems =
+    navigationItems.utility?.filter((item) => isItemVisible(item, context)) ||
+    [];
 
   // Render menu item
   const renderMenuItem = (item) => {
@@ -129,18 +135,19 @@ const MoreMenu = () => {
     const Icon = item.icon;
     const ariaLabel = getItemAriaLabel(item, context);
     const route = getItemRoute(item, context);
-    const isDisabled = !item.onClick && !item.action && !item.popoverType && route === '#';
+    const isDisabled =
+      !item.onClick && !item.action && !item.popoverType && route === "#";
 
     // Get color-specific classes for active state
     const getActiveClasses = () => {
-      if (item.color === 'pink') {
-        return 'bg-synthwave-neon-pink/10 border-t-2 border-b-2 border-synthwave-neon-pink/60';
-      } else if (item.color === 'cyan') {
-        return 'bg-synthwave-neon-cyan/10 border-t-2 border-b-2 border-synthwave-neon-cyan/60';
-      } else if (item.color === 'purple') {
-        return 'bg-synthwave-neon-purple/10 border-t-2 border-b-2 border-synthwave-neon-purple/60';
+      if (item.color === "pink") {
+        return "bg-synthwave-neon-pink/10 border-t-2 border-b-2 border-synthwave-neon-pink/60";
+      } else if (item.color === "cyan") {
+        return "bg-synthwave-neon-cyan/10 border-t-2 border-b-2 border-synthwave-neon-cyan/60";
+      } else if (item.color === "purple") {
+        return "bg-synthwave-neon-purple/10 border-t-2 border-b-2 border-synthwave-neon-purple/60";
       }
-      return '';
+      return "";
     };
 
     return (
@@ -150,20 +157,21 @@ const MoreMenu = () => {
         disabled={isDisabled}
         className={`
           ${navigationPatterns.moreMenu.item}
-          ${isDisabled
-            ? 'opacity-50 cursor-not-allowed'
-            : active
-              ? `${colorClasses.active} ${getActiveClasses()} focus:outline-none active:outline-none`
-              : `${colorClasses.inactive} hover:bg-synthwave-bg-card/40 focus:outline-none active:outline-none`
+          ${
+            isDisabled
+              ? "opacity-50 cursor-not-allowed"
+              : active
+                ? `${colorClasses.active} ${getActiveClasses()} focus:outline-none active:outline-none`
+                : `${colorClasses.inactive} hover:bg-synthwave-bg-card/40 focus:outline-none active:outline-none`
           }
-          ${active ? 'font-semibold' : 'font-medium'}
+          ${active ? "font-semibold" : "font-medium"}
         `}
-        style={{ WebkitTapHighlightColor: 'transparent' }}
+        style={{ WebkitTapHighlightColor: "transparent" }}
         aria-label={ariaLabel}
-        aria-current={active ? 'page' : undefined}
+        aria-current={active ? "page" : undefined}
       >
         {/* Icon */}
-        <div className={`${active ? colorClasses.glow : ''}`}>
+        <div className={`${active ? colorClasses.glow : ""}`}>
           <Icon className="w-6 h-6" />
         </div>
 
@@ -174,15 +182,17 @@ const MoreMenu = () => {
 
         {/* Badge indicator - QuickStats style with Rajdhani font - Show if badge exists (including 0) */}
         {badge !== null && badge !== undefined && (
-          <div className={`
+          <div
+            className={`
             ml-auto min-w-[32px] h-[32px] px-2 rounded-lg flex items-center justify-center
             font-rajdhani font-bold text-sm
             transition-all duration-150
-            ${item.color === 'pink' ? 'bg-synthwave-neon-pink/10 text-synthwave-neon-pink' : ''}
-            ${item.color === 'cyan' ? 'bg-synthwave-neon-cyan/10 text-synthwave-neon-cyan' : ''}
-            ${item.color === 'purple' ? 'bg-synthwave-neon-purple/10 text-synthwave-neon-purple' : ''}
-          `}>
-            {badge > 99 ? '99+' : badge}
+            ${item.color === "pink" ? "bg-synthwave-neon-pink/10 text-synthwave-neon-pink" : ""}
+            ${item.color === "cyan" ? "bg-synthwave-neon-cyan/10 text-synthwave-neon-cyan" : ""}
+            ${item.color === "purple" ? "bg-synthwave-neon-purple/10 text-synthwave-neon-purple" : ""}
+          `}
+          >
+            {badge > 99 ? "99+" : badge}
           </div>
         )}
 
@@ -260,65 +270,63 @@ const MoreMenu = () => {
         {/* Primary navigation (Coaches) */}
         {primaryItems.length > 0 && (
           <div className={navigationPatterns.moreMenu.sectionContainer}>
-            <div className="space-y-1">
-              {primaryItems.map((item) => renderMenuItem(item))}
-            </div>
+            <div>{primaryItems.map((item) => renderMenuItem(item))}</div>
           </div>
         )}
 
         {/* Coach-specific navigation */}
         {contextualItems.length > 0 && (
-          <div className={`${navigationPatterns.moreMenu.sectionContainer} ${primaryItems.length > 0 ? 'border-t border-synthwave-neon-cyan/10' : ''}`}>
+          <div
+            className={`${navigationPatterns.moreMenu.sectionContainer} ${primaryItems.length > 0 ? "border-t border-synthwave-neon-cyan/10" : ""}`}
+          >
             <div className={navigationPatterns.moreMenu.sectionHeader}>
-              <h3 className={navigationPatterns.moreMenu.sectionTitle}>
+              <h3 className="font-rajdhani text-base font-bold text-white uppercase tracking-wider">
                 Your Training
               </h3>
             </div>
-            <div className="space-y-1">
-              {contextualItems.map((item) => renderMenuItem(item))}
-            </div>
+            <div>{contextualItems.map((item) => renderMenuItem(item))}</div>
           </div>
         )}
 
         {/* Quick Actions */}
         {quickAccessItems.length > 0 && (
-          <div className={`${navigationPatterns.moreMenu.sectionContainer} border-t border-synthwave-neon-cyan/10`}>
+          <div
+            className={`${navigationPatterns.moreMenu.sectionContainer} border-t border-synthwave-neon-cyan/10`}
+          >
             <div className={navigationPatterns.moreMenu.sectionHeader}>
-              <h3 className={navigationPatterns.moreMenu.sectionTitle}>
+              <h3 className="font-rajdhani text-base font-bold text-white uppercase tracking-wider">
                 Quick Actions
               </h3>
             </div>
-            <div className="space-y-1">
-              {quickAccessItems.map((item) => renderMenuItem(item))}
-            </div>
+            <div>{quickAccessItems.map((item) => renderMenuItem(item))}</div>
           </div>
         )}
 
         {/* Account navigation */}
         {accountItems.length > 0 && (
-          <div className={`${navigationPatterns.moreMenu.sectionContainer} border-t border-synthwave-neon-cyan/10`}>
+          <div
+            className={`${navigationPatterns.moreMenu.sectionContainer} border-t border-synthwave-neon-cyan/10`}
+          >
             <div className={navigationPatterns.moreMenu.sectionHeader}>
-              <h3 className={navigationPatterns.moreMenu.sectionTitle}>
+              <h3 className="font-rajdhani text-base font-bold text-white uppercase tracking-wider">
                 Account & Settings
               </h3>
             </div>
-            <div className="space-y-1">
-              {accountItems.map((item) => renderMenuItem(item))}
-            </div>
+            <div>{accountItems.map((item) => renderMenuItem(item))}</div>
           </div>
         )}
 
         {/* Utility navigation */}
         {utilityItems.length > 0 && (
-          <div className={`${navigationPatterns.moreMenu.sectionContainer} border-t border-synthwave-neon-cyan/10`}>
+          <div
+            className={`${navigationPatterns.moreMenu.sectionContainer} border-t border-synthwave-neon-cyan/10`}
+          >
             <div className={navigationPatterns.moreMenu.sectionHeader}>
-              <h3 className={navigationPatterns.moreMenu.sectionTitle}>
+              <h3 className="font-rajdhani text-base font-bold text-white uppercase tracking-wider">
                 Help & Info
               </h3>
             </div>
-            <div className="space-y-1">
-              {utilityItems.map((item) => renderMenuItem(item))}
-            </div>
+            <div>{utilityItems.map((item) => renderMenuItem(item))}</div>
           </div>
         )}
 
@@ -359,4 +367,3 @@ const MoreMenu = () => {
 };
 
 export default MoreMenu;
-
