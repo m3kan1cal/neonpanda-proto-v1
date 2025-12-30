@@ -145,17 +145,17 @@ export const navigationItems = {
   // QUICK ACTIONS
   // Quick creation actions and coach details
   // Only show when coach context exists
-  // Pink buttons for creation, coach details for info
+  // All actions use pink accent for consistent styling
   // ==========================================
   quickAccess: [
     {
-      id: "quick-access-log-workout",
-      label: "Log Workout",
-      icon: WorkoutIconTiny,
+      id: "quick-access-create-coach",
+      label: "Create Coach",
+      icon: CoachIconTiny,
       requiresAuth: true,
-      requiresCoach: true,
+      requiresCoach: false, // Available even without coach context
       color: "pink",
-      action: "log-workout", // Special flag for command palette action
+      action: "create-coach", // Special flag for command palette action
     },
     {
       id: "quick-access-start-conversation",
@@ -167,6 +167,15 @@ export const navigationItems = {
       action: "start-conversation", // Special flag for command palette action
     },
     {
+      id: "quick-access-log-workout",
+      label: "Log Workout",
+      icon: WorkoutIconTiny,
+      requiresAuth: true,
+      requiresCoach: true,
+      color: "pink",
+      action: "log-workout", // Special flag for command palette action
+    },
+    {
       id: "quick-access-save-memory",
       label: "Save Memory",
       icon: MemoryIconTiny,
@@ -176,8 +185,17 @@ export const navigationItems = {
       action: "save-memory", // Special flag for command palette action
     },
     {
+      id: "quick-access-design-program",
+      label: "Design Program",
+      icon: ProgramIconTiny,
+      requiresAuth: true,
+      requiresCoach: true, // Requires coach context
+      color: "pink",
+      action: "design-program", // Special flag for command palette action
+    },
+    {
       id: "quick-access-coach",
-      label: "Coach Details",
+      label: "View Coach Details",
       icon: CoachIconSmall,
       requiresAuth: true,
       requiresCoach: true,

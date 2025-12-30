@@ -8,7 +8,7 @@
  * - Stream selection (text-only vs multimodal)
  */
 
-import { getObjectAsUint8Array } from '../s3-utils';
+import { getObjectAsUint8Array } from "../s3-utils";
 import {
   callBedrockApiStream,
   callBedrockApiMultimodalStream,
@@ -39,7 +39,9 @@ export interface MultimodalMessage {
 /**
  * Fetch image from S3 as buffer
  */
-export async function fetchImageFromS3(s3Key: string): Promise<Uint8Array | null> {
+export async function fetchImageFromS3(
+  s3Key: string,
+): Promise<Uint8Array | null> {
   try {
     return await getObjectAsUint8Array(s3Key);
   } catch (error) {
@@ -51,16 +53,16 @@ export async function fetchImageFromS3(s3Key: string): Promise<Uint8Array | null
 /**
  * Get image format from S3 key for Converse API
  */
-export function getImageFormat(s3Key: string): 'jpeg' | 'png' | 'gif' | 'webp' {
-  const extension = s3Key.split('.').pop()?.toLowerCase() || 'jpeg';
-  const formatMap: Record<string, 'jpeg' | 'png' | 'gif' | 'webp'> = {
-    jpg: 'jpeg',
-    jpeg: 'jpeg',
-    png: 'png',
-    gif: 'gif',
-    webp: 'webp',
+export function getImageFormat(s3Key: string): "jpeg" | "png" | "gif" | "webp" {
+  const extension = s3Key.split(".").pop()?.toLowerCase() || "jpeg";
+  const formatMap: Record<string, "jpeg" | "png" | "gif" | "webp"> = {
+    jpg: "jpeg",
+    jpeg: "jpeg",
+    png: "png",
+    gif: "gif",
+    webp: "webp",
   };
-  return formatMap[extension] || 'jpeg';
+  return formatMap[extension] || "jpeg";
 }
 
 /**
@@ -73,7 +75,7 @@ export function getImageFormat(s3Key: string): 'jpeg' | 'png' | 'gif' | 'webp' {
  * @returns Formatted messages for Bedrock Converse API
  */
 export async function buildMultimodalContent(
-  messages: MultimodalMessage[]
+  messages: MultimodalMessage[],
 ): Promise<any[]> {
   const converseMessages = [];
 
@@ -88,7 +90,11 @@ export async function buildMultimodalContent(
     }
 
     // Add images if this message has them
-    if (msg.messageType === 'text_with_images' && msg.imageS3Keys && msg.imageS3Keys.length > 0) {
+    if (
+      msg.messageType === "text_with_images" &&
+      msg.imageS3Keys &&
+      msg.imageS3Keys.length > 0
+    ) {
       for (const s3Key of msg.imageS3Keys) {
         const imageBytes = await fetchImageFromS3(s3Key);
 
@@ -113,7 +119,9 @@ export async function buildMultimodalContent(
     });
   }
 
-  console.info(`✅ Built multimodal content: ${converseMessages.length} messages, ${messages.filter(m => m.imageS3Keys?.length).length} with images`);
+  console.info(
+    `✅ Built multimodal content: ${converseMessages.length} messages, ${messages.filter((m) => m.imageS3Keys?.length).length} with images`,
+  );
 
   return converseMessages;
 }
@@ -122,9 +130,7 @@ export async function buildMultimodalContent(
  * Build a multimodal message object
  * Common structure used across streaming handlers
  */
-export function buildMultimodalMessage(
-  input: MultimodalMessageInput
-): any[] {
+export function buildMultimodalMessage(input: MultimodalMessageInput): any[] {
   return [
     {
       id: `msg_${Date.now()}_user`,
@@ -146,7 +152,7 @@ export function buildMultimodalMessage(
 export async function getAIResponseStream(
   prompt: string,
   input: MultimodalMessageInput,
-  options?: BedrockApiOptions
+  options?: BedrockApiOptions,
 ): Promise<AsyncGenerator<string, void, unknown>> {
   const { userResponse, imageS3Keys } = input;
 
@@ -166,16 +172,16 @@ export async function getAIResponseStream(
     return await callBedrockApiMultimodalStream(
       prompt,
       converseMessages,
-      MODEL_IDS.CLAUDE_SONNET_4_FULL,
-      options
+      MODEL_IDS.PLANNER_MODEL_FULL,
+      options,
     );
   } else {
     // Return regular text stream with caching support
     return await callBedrockApiStream(
       prompt,
       userResponse,
-      MODEL_IDS.CLAUDE_SONNET_4_FULL,
-      options
+      MODEL_IDS.PLANNER_MODEL_FULL,
+      options,
     );
   }
 }

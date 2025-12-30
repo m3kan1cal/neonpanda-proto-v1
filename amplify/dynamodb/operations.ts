@@ -32,6 +32,7 @@ import {
   MonthlyAnalytics,
 } from "../functions/libs/analytics/types";
 import { Program, ProgramSummary } from "../functions/libs/program/types";
+import { Subscription } from "../functions/libs/subscription/types";
 
 // DynamoDB client setup
 const dynamoDbClient = new DynamoDBClient({});
@@ -848,6 +849,7 @@ export async function getCoachConversation(
 export async function queryCoachConversations(
   userId: string,
   coachId: string,
+  options?: { includeFirstMessages?: boolean },
 ): Promise<CoachConversationListItem[]> {
   try {
     // Use the generic query function to get all coach conversations for the user + coach
@@ -857,9 +859,39 @@ export async function queryCoachConversations(
       "coachConversation",
     );
 
-    // Extract attributes and exclude messages array, keeping only summary properties
+    // Extract attributes and optionally include first messages
     return items.map((item) => {
       const { messages, ...summaryAttributes } = item.attributes;
+
+      // If includeFirstMessages is true, extract first user and AI messages
+      if (
+        options?.includeFirstMessages &&
+        messages &&
+        Array.isArray(messages)
+      ) {
+        const firstUserMessage = messages.find((m: any) => m.role === "user");
+        const firstAiMessage = messages.find(
+          (m: any) => m.role === "assistant",
+        );
+
+        // Truncate messages to first 250 characters
+        const truncateMessage = (content: string | undefined) => {
+          if (!content) return undefined;
+          return content.length > 250
+            ? content.substring(0, 250) + "..."
+            : content;
+        };
+
+        return {
+          ...summaryAttributes,
+          createdAt: new Date(item.createdAt),
+          updatedAt: new Date(item.updatedAt),
+          firstUserMessage: truncateMessage(firstUserMessage?.content),
+          firstAiMessage: truncateMessage(firstAiMessage?.content),
+        };
+      }
+
+      // Default behavior: exclude all messages
       return {
         ...summaryAttributes,
         createdAt: new Date(item.createdAt),
@@ -3514,6 +3546,88 @@ export async function queryProgramsCount(
       `Error counting training programs for user ${userId}:`,
       error,
     );
+    throw error;
+  }
+}
+
+// ===========================
+// SUBSCRIPTION OPERATIONS
+// ===========================
+
+/**
+ * Save or update a subscription in DynamoDB
+ * Uses lowercase pk/sk and entityType for consistency
+ */
+export async function saveSubscription(
+  subscriptionData: Omit<
+    Subscription,
+    "entityType" | "createdAt" | "updatedAt"
+  >,
+): Promise<DynamoDBSaveResult> {
+  const now = Date.now();
+  const item: DynamoDBItem<Subscription> = {
+    pk: `user#${subscriptionData.userId}`,
+    sk: "subscription",
+    attributes: {
+      ...subscriptionData,
+      createdAt: now,
+      updatedAt: now,
+      entityType: "subscription",
+    },
+    entityType: "subscription",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+
+  const result = await saveToDynamoDB(item);
+
+  console.info("Subscription saved successfully:", {
+    userId: subscriptionData.userId,
+    tier: subscriptionData.tier,
+    status: subscriptionData.status,
+    stripeSubscriptionId: subscriptionData.stripeSubscriptionId,
+  });
+
+  return result;
+}
+
+/**
+ * Get subscription by userId
+ * Returns null if no subscription exists (user is on free tier)
+ */
+export async function getSubscription(
+  userId: string,
+): Promise<Subscription | null> {
+  const item = await loadFromDynamoDB<Subscription>(
+    `user#${userId}`,
+    "subscription",
+    "subscription",
+  );
+
+  if (!item) {
+    return null;
+  }
+
+  return item.attributes;
+}
+
+/**
+ * Delete a subscription from DynamoDB
+ * Called when subscription is fully deleted (not just canceled)
+ */
+export async function deleteSubscription(userId: string): Promise<void> {
+  try {
+    await deleteFromDynamoDB(`user#${userId}`, "subscription", "subscription");
+    console.info("Subscription deleted successfully:", {
+      userId,
+    });
+  } catch (error: any) {
+    if (error instanceof Error && error.message.includes("not found")) {
+      console.warn(
+        `Subscription not found for user ${userId}, skipping delete`,
+      );
+      return; // Not an error - subscription might not exist
+    }
     throw error;
   }
 }

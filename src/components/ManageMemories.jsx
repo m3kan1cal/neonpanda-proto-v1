@@ -4,12 +4,11 @@ import { Tooltip } from "react-tooltip";
 import { useAuthorizeUser } from "../auth/hooks/useAuthorizeUser";
 import {
   containerPatterns,
+  badgePatterns,
   buttonPatterns,
   layoutPatterns,
   tooltipPatterns,
 } from "../utils/ui/uiPatterns";
-import { themeClasses } from "../utils/synthwaveThemeClasses";
-import CoachHeader from "./shared/CoachHeader";
 import CompactCoachCard from "./shared/CompactCoachCard";
 import CommandPaletteButton from "./shared/CommandPaletteButton";
 import { useNavigationContext } from "../contexts/NavigationContext";
@@ -22,82 +21,15 @@ import { MemoryAgent } from "../utils/agents/MemoryAgent";
 import CoachAgent from "../utils/agents/CoachAgent";
 import { WorkoutAgent } from "../utils/agents/WorkoutAgent";
 import {
-  CloseIcon,
-  ConversationIcon,
-  WorkoutIcon,
-  ReportIcon,
   LightningIcon,
+  ReportIcon,
   LightbulbIcon,
   GlobeIcon,
+  TrashIcon,
 } from "./themes/SynthwaveComponents";
 
 // Icons
-const TrashIcon = () => (
-  <svg
-    className="w-5 h-5"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-    />
-  </svg>
-);
-
-// ProgramIcon component (matching TrainingGrounds.jsx)
-const ProgramIcon = () => (
-  <svg
-    className="w-8 h-8"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-    strokeWidth={2}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-    />
-  </svg>
-);
-
-const MemoryIcon = () => (
-  <svg
-    className="w-8 h-8"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
-    />
-  </svg>
-);
-
-const TagIcon = () => (
-  <svg
-    className="w-4 h-4"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
-    />
-  </svg>
-);
-
-const ClockIcon = () => (
+const ClockIconSmall = () => (
   <svg
     className="w-4 h-4"
     fill="none"
@@ -109,22 +41,6 @@ const ClockIcon = () => (
       strokeLinejoin="round"
       strokeWidth={2}
       d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-    />
-  </svg>
-);
-
-const UserIcon = () => (
-  <svg
-    className="w-4 h-4"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
     />
   </svg>
 );
@@ -148,10 +64,10 @@ function ManageMemories() {
   const [isDeleting, setIsDeleting] = useState(false);
 
   // Command palette state
-  // Global Command Palette state
-  const { setIsCommandPaletteOpen } = useNavigationContext();
+  const { setIsCommandPaletteOpen, onCommandPaletteToggle } =
+    useNavigationContext();
 
-  // Coach data state (for FloatingMenuManager)
+  // Coach data state
   const [coachData, setCoachData] = useState(null);
 
   const memoryAgentRef = useRef(null);
@@ -176,7 +92,7 @@ function ManageMemories() {
     };
   }, [userId]);
 
-  // Load coach data for FloatingMenuManager
+  // Load coach data
   useEffect(() => {
     if (!userId || !coachId) return;
 
@@ -207,11 +123,59 @@ function ManageMemories() {
   // Memory state
   const [memoryAgentState, setMemoryAgentState] = useState({
     allMemories: [],
-    isLoadingAllItems: !!userId, // Start loading if we have userId
+    isLoadingAllItems: !!userId,
     isLoadingItem: false,
     error: null,
     totalCount: 0,
   });
+
+  // Collapsed memory descriptions - initialize with all memory IDs (collapsed by default)
+  const [collapsedDescriptions, setCollapsedDescriptions] = useState(() => {
+    return new Set(memoryAgentState.allMemories.map((m) => m.memoryId));
+  });
+
+  // Collapsed badges - initialize with all memory IDs (collapsed by default)
+  const [collapsedBadges, setCollapsedBadges] = useState(() => {
+    return new Set(memoryAgentState.allMemories.map((m) => m.memoryId));
+  });
+
+  // Update collapsed descriptions when memories load
+  useEffect(() => {
+    if (memoryAgentState.allMemories.length > 0) {
+      setCollapsedDescriptions(
+        new Set(memoryAgentState.allMemories.map((m) => m.memoryId)),
+      );
+      setCollapsedBadges(
+        new Set(memoryAgentState.allMemories.map((m) => m.memoryId)),
+      );
+    }
+  }, [memoryAgentState.allMemories.length]);
+
+  // Toggle memory description collapse
+  const toggleDescriptionCollapse = (memoryId) => {
+    setCollapsedDescriptions((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(memoryId)) {
+        newSet.delete(memoryId);
+      } else {
+        newSet.add(memoryId);
+      }
+      return newSet;
+    });
+  };
+
+  // Toggle badge collapse
+  const toggleBadgeCollapse = (memoryId) => {
+    setCollapsedBadges((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(memoryId)) {
+        newSet.delete(memoryId);
+      } else {
+        newSet.add(memoryId);
+      }
+      return newSet;
+    });
+  };
 
   // Redirect if missing required parameters
   useEffect(() => {
@@ -259,7 +223,7 @@ function ManageMemories() {
     };
   }, [userId]);
 
-  // Auto-scroll to top when page loads (with scroll restoration disabled)
+  // Auto-scroll to top when page loads
   useEffect(() => {
     if ("scrollRestoration" in window.history) {
       window.history.scrollRestoration = "manual";
@@ -296,15 +260,7 @@ function ManageMemories() {
     };
   }, [showDeleteModal]);
 
-  // Create coach name handler using the agent's helper method
-  const handleSaveCoachName = coachAgentRef.current?.createCoachNameHandler(
-    userId,
-    coachId,
-    setCoachData,
-    { success, error },
-  );
-
-  // Handle coach card click - navigate to training grounds
+  // Handle coach card click
   const handleCoachCardClick = () => {
     navigate(`/training-grounds?userId=${userId}&coachId=${coachId}`);
   };
@@ -344,22 +300,126 @@ function ManageMemories() {
     setMemoryToDelete(null);
   };
 
-  // Render memory card (content-focused without header)
+  // Handle creating a new memory - opens command palette with /save-memory
+  const handleSaveNewMemory = () => {
+    onCommandPaletteToggle("/save-memory ");
+  };
+
+  // Render the "Save New Memory" card
+  const renderCreateMemoryCard = () => {
+    return (
+      <div
+        key="create-memory-card"
+        onClick={handleSaveNewMemory}
+        className={`${containerPatterns.dashedCard} mb-6 group cursor-pointer`}
+      >
+        <div className="text-center flex flex-col justify-center items-center h-full min-h-[188px]">
+          {/* Plus Icon */}
+          <div className="text-synthwave-neon-pink/40 group-hover:text-synthwave-neon-pink/80 transition-colors duration-300 mb-3">
+            <svg
+              className="w-10 h-10"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+              />
+            </svg>
+          </div>
+
+          {/* Title */}
+          <h3 className="font-russo font-bold text-synthwave-neon-pink/60 group-hover:text-synthwave-neon-pink text-lg uppercase mb-2 transition-colors duration-300">
+            Save New Memory
+          </h3>
+
+          {/* Description */}
+          <p className="font-rajdhani text-synthwave-text-secondary/60 group-hover:text-synthwave-text-secondary text-sm transition-colors duration-300 text-center max-w-xs mx-auto">
+            Record important details for your coach to remember
+          </p>
+        </div>
+      </div>
+    );
+  };
+
+  // Render memory card with FULL content (no truncation)
   const renderMemoryCard = (memory) => {
     const isNew = isNewWorkout(memory.metadata?.createdAt || memory.createdAt);
 
     // Strip "tag: value" patterns from memory content for clean display
     const cleanContent = memory.content.replace(/tag:\s*[^,]+/g, "").trim();
 
+    // Use first ~35 characters of memory description for header
+    const headerText =
+      cleanContent.length > 35
+        ? cleanContent.substring(0, 35) + "..."
+        : cleanContent;
+
+    const isDescriptionCollapsed = collapsedDescriptions.has(memory.memoryId);
+    const isBadgesCollapsed = collapsedBadges.has(memory.memoryId);
+
+    // Calculate all badges
+    const allBadges = [];
+
+    // Memory type badge
+    allBadges.push({
+      key: "type",
+      label:
+        memoryAgentRef.current?.formatMemoryType(memory.memoryType) ||
+        "Unknown",
+    });
+
+    // Importance badge
+    allBadges.push({
+      key: "importance",
+      label: `${memoryAgentRef.current?.formatMemoryImportance(memory.metadata?.importance) || "Unknown"} Priority`,
+    });
+
+    // Scope badge
+    allBadges.push({
+      key: "scope",
+      label: memory.coachId ? "Coach Specific" : "Global",
+    });
+
+    // Tags (filter out scope-related tags)
+    if (memory.metadata?.tags) {
+      memory.metadata.tags
+        .filter((tag) => {
+          const lowerTag = tag.toLowerCase();
+          return (
+            !lowerTag.includes("coach specific") &&
+            !lowerTag.includes("global") &&
+            !lowerTag.includes("coach-specific") &&
+            !lowerTag.includes("coach_specific")
+          );
+        })
+        .forEach((tag, index) => {
+          allBadges.push({
+            key: `tag-${index}`,
+            label: tag,
+          });
+        });
+    }
+
+    const badgeLimit = 4;
+    const visibleBadges = isBadgesCollapsed
+      ? allBadges.slice(0, badgeLimit)
+      : allBadges;
+    const hasMoreBadges = allBadges.length > badgeLimit;
+
     return (
       <div
         key={memory.memoryId}
         data-memory-card
-        className={`${containerPatterns.contentCard} group relative`}
+        className={`${containerPatterns.cardMedium} p-6 relative mb-6`}
       >
         {/* NEW badge for memories created within 24 hours */}
         {isNew && <NewBadge />}
-        {/* Delete button - always visible at top right */}
+
+        {/* Delete button - top right */}
         <button
           onClick={(e) => {
             e.stopPropagation();
@@ -371,111 +431,101 @@ function ManageMemories() {
           <TrashIcon />
         </button>
 
-        {/* Memory content */}
-        <div className="pr-12">
-          {/* Memory card header with colored dot */}
-          <div className="flex items-start space-x-3 mb-3">
-            <div className="w-3 h-3 bg-synthwave-neon-pink rounded-full flex-shrink-0 mt-2"></div>
-            <div className="font-rajdhani text-synthwave-text-primary text-base leading-relaxed">
-              {cleanContent}
-            </div>
+        {/* Header with pink dot - using first ~35 chars of description */}
+        <div className="flex items-start gap-3 mb-2 pr-16">
+          <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink flex-shrink-0 mt-2" />
+          <h3 className="font-russo font-bold text-white text-lg uppercase">
+            {headerText}
+          </h3>
+        </div>
+
+        {/* Metadata Row */}
+        <div className="flex items-center flex-wrap gap-4 mb-4 pr-16">
+          {/* Created Date */}
+          <div className="flex items-center gap-1 text-synthwave-text-secondary font-rajdhani text-sm">
+            <ClockIconSmall />
+            <span>
+              {memoryAgentRef.current?.formatMemoryDate(
+                memory.metadata?.createdAt || memory.createdAt,
+              ) || "Unknown"}
+            </span>
           </div>
-
-          {/* Memory tags - positioned higher for better scanning */}
-          <div className="flex flex-wrap gap-2 mb-3">
-            {/* Memory type tag */}
-            <div className="bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan px-2 py-1 rounded text-xs font-rajdhani flex items-center space-x-1">
-              <TagIcon />
-              <span>
-                {memoryAgentRef.current?.formatMemoryType(memory.memoryType) ||
-                  "Unknown"}
-              </span>
-            </div>
-
-            {/* Importance tag */}
-            <div
-              className={`px-2 py-1 rounded text-xs font-rajdhani font-medium ${
-                memory.metadata?.importance === "high"
-                  ? "bg-synthwave-neon-pink/20 text-synthwave-neon-pink"
-                  : memory.metadata?.importance === "medium"
-                    ? "bg-synthwave-neon-purple/20 text-synthwave-neon-purple"
-                    : memory.metadata?.importance === "low"
-                      ? "bg-synthwave-text-secondary/20 text-synthwave-text-secondary"
-                      : "bg-synthwave-text-secondary/20 text-synthwave-text-secondary"
-              }`}
-            >
-              {memoryAgentRef.current?.formatMemoryImportance(
-                memory.metadata?.importance,
-              ) || "Unknown"}{" "}
-              Priority
-            </div>
-
-            {/* Coach scope tag */}
-            {memory.coachId ? (
-              <div className="bg-synthwave-neon-pink/20 text-synthwave-neon-pink px-2 py-1 rounded text-xs font-rajdhani">
-                <span>Coach Specific</span>
-              </div>
-            ) : (
-              <div className="bg-synthwave-neon-pink/20 text-synthwave-neon-pink px-2 py-1 rounded text-xs font-rajdhani">
-                <span>Global</span>
+          {/* Usage count */}
+          <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+            <span className="text-synthwave-text-muted">Used:</span>
+            <span className="text-synthwave-neon-cyan font-medium">
+              {memory.metadata?.usageCount || 0}x
+            </span>
+          </div>
+          {/* Last used */}
+          {memory.metadata?.lastUsed &&
+            (memory.metadata?.usageCount || 0) > 0 && (
+              <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                <span className="text-synthwave-text-muted">Last Used:</span>
+                <span className="text-synthwave-neon-cyan font-medium">
+                  {(memoryAgentRef.current?.formatMemoryDate(
+                    memory.metadata.lastUsed,
+                  ) || "Unknown").replace(/^Created\s+/i, "")}
+                </span>
               </div>
             )}
+        </div>
 
-            {/* Usage count tag */}
-            <div className="bg-synthwave-neon-purple/20 text-synthwave-neon-purple px-2 py-1 rounded text-xs font-rajdhani">
-              Used {memory.metadata?.usageCount || 0} time
-              {(memory.metadata?.usageCount || 0) !== 1 ? "s" : ""}
+        {/* Collapsible Memory Description Section */}
+        <div onClick={(e) => e.stopPropagation()}>
+          <button
+            onClick={() => toggleDescriptionCollapse(memory.memoryId)}
+            className="w-full flex items-center justify-between font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2 hover:text-synthwave-neon-cyan transition-colors duration-200 cursor-pointer"
+          >
+            <span>Memory Details</span>
+            <svg
+              className={`w-4 h-4 transition-transform duration-200 ${
+                isDescriptionCollapsed ? "rotate-180" : ""
+              }`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 9l-7 7-7-7"
+              />
+            </svg>
+          </button>
+          {!isDescriptionCollapsed && (
+            <div
+              className={`${containerPatterns.coachNotesSection} animate-fadeIn mb-4`}
+            >
+              <p className="font-rajdhani text-sm text-synthwave-text-secondary whitespace-pre-wrap">
+                {cleanContent}
+              </p>
             </div>
+          )}
+        </div>
 
-            {/* User tags - moved up with other tags */}
-            {memory.metadata?.tags &&
-              memory.metadata.tags
-                .filter((tag) => {
-                  // Filter out tags that duplicate scope information
-                  const lowerTag = tag.toLowerCase();
-                  return (
-                    !lowerTag.includes("coach specific") &&
-                    !lowerTag.includes("global") &&
-                    !lowerTag.includes("coach-specific") &&
-                    !lowerTag.includes("coach_specific")
-                  );
-                })
-                .map((tag, index) => (
-                  <span
-                    key={index}
-                    className="bg-synthwave-neon-pink/20 text-synthwave-neon-pink px-2 py-1 rounded text-xs font-rajdhani"
-                  >
-                    {tag}
-                  </span>
-                ))}
-          </div>
+        {/* Badge Row - styled like workout badges with expandable "more/less" */}
+        <div className="flex flex-wrap items-center gap-2 mt-4">
+          {visibleBadges.map((badge) => (
+            <span key={badge.key} className={badgePatterns.workoutDetail}>
+              {badge.label}
+            </span>
+          ))}
 
-          {/* Memory metadata - moved below tags */}
-          <div className="flex flex-wrap items-center gap-4 font-rajdhani text-synthwave-text-secondary text-sm">
-            {/* Created date */}
-            <div className="flex items-center space-x-1">
-              <ClockIcon />
-              <span>
-                {memoryAgentRef.current?.formatMemoryDate(
-                  memory.metadata?.createdAt || memory.createdAt,
-                ) || "Unknown"}
-              </span>
-            </div>
-
-            {/* Last used - only show if usage count > 0 */}
-            {memory.metadata?.lastUsed &&
-              (memory.metadata?.usageCount || 0) > 0 && (
-                <div className="flex items-center space-x-1">
-                  <ClockIcon />
-                  <span>
-                    Last used{" "}
-                    {memoryAgentRef.current?.formatMemoryDate(
-                      memory.metadata.lastUsed,
-                    ) || "Unknown"}
-                  </span>
-                </div>
-              )}
-          </div>
+          {hasMoreBadges && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleBadgeCollapse(memory.memoryId);
+              }}
+              className="text-synthwave-neon-cyan hover:text-synthwave-neon-pink text-xs font-rajdhani font-semibold uppercase transition-colors duration-200"
+            >
+              {isBadgesCollapsed
+                ? `+${allBadges.length - badgeLimit} more`
+                : "less"}
+            </button>
+          )}
         </div>
       </div>
     );
@@ -503,30 +553,73 @@ function ManageMemories() {
       );
     }
 
-    if (memoryAgentState.allMemories.length === 0) {
-      return (
-        <div className="text-center py-12">
-          <div className="font-rajdhani text-synthwave-neon-cyan text-base">
-            No Memories Found
-          </div>
-          <div className="font-rajdhani text-synthwave-text-muted text-sm mt-2">
-            You haven't stored any memories yet. Memories will appear here when
-            you ask your coach to remember something.
-          </div>
-        </div>
-      );
-    }
-
     // Sort memories by createdAt in descending order (newest first)
     const sortedMemories = [...memoryAgentState.allMemories].sort((a, b) => {
       const dateA = new Date(a.metadata?.createdAt || a.createdAt || 0);
       const dateB = new Date(b.metadata?.createdAt || b.createdAt || 0);
-      return dateB - dateA; // Descending order
+      return dateB - dateA;
     });
 
+    // Create an array of all items (create card first, then memories)
+    const allItems = [
+      { type: "create", key: "create-card" },
+      ...sortedMemories.map((memory) => ({
+        type: "memory",
+        data: memory,
+      })),
+    ];
+
+    // Render item based on type
+    const renderItem = (item) => {
+      if (item.type === "create") {
+        return renderCreateMemoryCard();
+      }
+      return renderMemoryCard(item.data);
+    };
+
     return (
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {sortedMemories.map(renderMemoryCard)}
+      <div className="mb-8">
+        {/* Mobile: Single column */}
+        <div className="lg:hidden">
+          {allItems.map((item, index) => (
+            <div
+              key={item.type === "create" ? "create-card" : item.data.memoryId}
+            >
+              {renderItem(item)}
+            </div>
+          ))}
+        </div>
+        {/* Desktop: Two columns with alternating distribution */}
+        <div className="hidden lg:grid lg:grid-cols-2 lg:gap-x-6 lg:items-start">
+          {/* Left Column - even indices (0, 2, 4, ...) */}
+          <div>
+            {allItems
+              .filter((_, index) => index % 2 === 0)
+              .map((item) => (
+                <div
+                  key={
+                    item.type === "create" ? "create-card" : item.data.memoryId
+                  }
+                >
+                  {renderItem(item)}
+                </div>
+              ))}
+          </div>
+          {/* Right Column - odd indices (1, 3, 5, ...) */}
+          <div>
+            {allItems
+              .filter((_, index) => index % 2 === 1)
+              .map((item) => (
+                <div
+                  key={
+                    item.type === "create" ? "create-card" : item.data.memoryId
+                  }
+                >
+                  {renderItem(item)}
+                </div>
+              ))}
+          </div>
+        </div>
       </div>
     );
   };
@@ -540,10 +633,7 @@ function ManageMemories() {
           <header className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-6">
             {/* Left section: Title + Coach Card skeleton */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5">
-              {/* Page title skeleton */}
               <div className="h-8 md:h-9 bg-synthwave-text-muted/20 rounded animate-pulse w-64"></div>
-
-              {/* Compact coach card skeleton */}
               <div className="flex items-center gap-2.5 px-3 py-2 bg-synthwave-neon-cyan/5 border border-synthwave-neon-cyan/20 rounded-full">
                 <div className="w-6 h-6 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
                 <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
@@ -565,44 +655,135 @@ function ManageMemories() {
           </div>
 
           {/* Memory cards skeleton */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
+          <div className="mb-8">
+            {/* Mobile: Single column */}
+            <div className="lg:hidden">
+              {/* Create Card Skeleton */}
               <div
-                key={i}
-                className={`${containerPatterns.contentCard} group relative`}
+                className={`${containerPatterns.dashedCard} p-6 mb-6 opacity-60 flex flex-col justify-center min-h-[166px]`}
               >
-                {/* Delete button skeleton */}
-                <div className="absolute top-4 right-4 w-8 h-8 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
-
-                <div className="pr-12">
-                  {/* Memory header with dot skeleton */}
-                  <div className="flex items-start space-x-3 mb-3">
-                    <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full flex-shrink-0 mt-0.5 animate-pulse"></div>
-                    <div className="flex-1 space-y-2">
-                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
-                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-5/6"></div>
-                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-4/5"></div>
-                    </div>
-                  </div>
-
-                  {/* Tags skeleton */}
-                  <div className="flex flex-wrap gap-2 mb-3">
-                    <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-28"></div>
-                    <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-24"></div>
-                    <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-32"></div>
-                    <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
-                    <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-26"></div>
-                  </div>
-
-                  {/* Metadata skeleton */}
-                  <div className="flex flex-wrap items-center gap-4">
-                    <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-32"></div>
-                    <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-28"></div>
-                    <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-24"></div>
-                  </div>
+                <div className="text-center flex flex-col items-center">
+                  <div className="w-10 h-10 bg-synthwave-neon-pink/20 rounded animate-pulse mb-3"></div>
+                  <div className="h-5 bg-synthwave-neon-pink/20 rounded animate-pulse w-48 mb-2"></div>
+                  <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-56"></div>
                 </div>
               </div>
-            ))}
+              {/* Memory Card Skeletons */}
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div
+                  key={i}
+                  className={`${containerPatterns.cardMedium} p-6 mb-6`}
+                >
+                  {/* Header with pink dot */}
+                  <div className="flex items-start space-x-3 mb-2">
+                    <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full flex-shrink-0 mt-2 animate-pulse"></div>
+                    <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
+                  </div>
+
+                  {/* Metadata Row */}
+                  <div className="flex flex-wrap gap-4 mb-4">
+                    <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-24"></div>
+                    <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-16"></div>
+                    <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
+                  </div>
+
+                  {/* Collapsible Description Section - Collapsed */}
+                  <div className="mb-4">
+                    <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-32"></div>
+                  </div>
+
+                  {/* Badge Row */}
+                  <div className="flex flex-wrap gap-2">
+                    <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
+                    <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-24"></div>
+                    <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-16"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {/* Desktop: Two columns with alternating distribution */}
+            <div className="hidden lg:grid lg:grid-cols-2 lg:gap-x-6 lg:items-start">
+              {/* Left Column */}
+              <div>
+                {/* Create Card Skeleton (first item, left column) */}
+                <div
+                  className={`${containerPatterns.dashedCard} p-6 mb-6 opacity-60 flex flex-col justify-center min-h-[166px]`}
+                >
+                  <div className="text-center flex flex-col items-center">
+                    <div className="w-10 h-10 bg-synthwave-neon-pink/20 rounded animate-pulse mb-3"></div>
+                    <div className="h-5 bg-synthwave-neon-pink/20 rounded animate-pulse w-48 mb-2"></div>
+                    <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-56"></div>
+                  </div>
+                </div>
+                {/* Memory Card Skeletons */}
+                {[1, 3].map((i) => (
+                  <div
+                    key={i}
+                    className={`${containerPatterns.cardMedium} p-6 mb-6`}
+                  >
+                    {/* Header with pink dot */}
+                    <div className="flex items-start space-x-3 mb-2">
+                      <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full flex-shrink-0 mt-2 animate-pulse"></div>
+                      <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
+                    </div>
+
+                    {/* Metadata Row */}
+                    <div className="flex flex-wrap gap-4 mb-4">
+                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-24"></div>
+                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-16"></div>
+                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
+                    </div>
+
+                    {/* Collapsible Description Section - Collapsed */}
+                    <div className="mb-4">
+                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-32"></div>
+                    </div>
+
+                    {/* Badge Row */}
+                    <div className="flex flex-wrap gap-2">
+                      <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-24"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-16"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {/* Right Column */}
+              <div>
+                {/* Memory Card Skeletons */}
+                {[2, 4].map((i) => (
+                  <div
+                    key={i}
+                    className={`${containerPatterns.cardMedium} p-6 mb-6`}
+                  >
+                    {/* Header with pink dot */}
+                    <div className="flex items-start space-x-3 mb-2">
+                      <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full flex-shrink-0 mt-2 animate-pulse"></div>
+                      <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
+                    </div>
+
+                    {/* Metadata Row */}
+                    <div className="flex flex-wrap gap-4 mb-4">
+                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-24"></div>
+                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-16"></div>
+                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
+                    </div>
+
+                    {/* Collapsible Description Section - Collapsed */}
+                    <div className="mb-4">
+                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-32"></div>
+                    </div>
+
+                    {/* Badge Row */}
+                    <div className="flex flex-wrap gap-2">
+                      <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-24"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-16"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>

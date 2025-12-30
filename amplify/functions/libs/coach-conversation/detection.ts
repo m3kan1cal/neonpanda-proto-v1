@@ -5,10 +5,28 @@
  * including complexity detection for conversation summarization.
  */
 
-import { invokeAsyncLambda, callBedrockApi, MODEL_IDS } from "../api-helpers";
-import { JSON_FORMATTING_INSTRUCTIONS_STANDARD } from "../prompt-helpers";
+import {
+  invokeAsyncLambda,
+  callBedrockApi,
+  MODEL_IDS,
+  TEMPERATURE_PRESETS,
+} from "../api-helpers";
+import {
+  SMART_ROUTER_ANALYSIS_SCHEMA,
+  CONVERSATION_COMPLEXITY_SCHEMA,
+} from "../schemas/router-schemas";
 import { SmartRequestRouter } from "../streaming/business-types";
 import { parseJsonWithFallbacks } from "../response-utils";
+
+/**
+ * Type for conversation complexity analysis result
+ */
+interface ConversationComplexityResult {
+  hasComplexity: boolean;
+  confidence: number;
+  complexityTypes: string[];
+  reasoning: string;
+}
 
 /**
  * @deprecated DEPRECATED: This function has been replaced by the Smart Request Router.
@@ -17,7 +35,7 @@ import { parseJsonWithFallbacks } from "../response-utils";
  * The smart router provides the same functionality via `routerResult.conversationComplexity.hasComplexity`
  * along with comprehensive analysis of all processing needs in a single AI call.
  *
- * This function will be removed in a future version.
+ * This function will be removed in a future version. It's only used for non-streaming conversations.
  *
  * @param userMessage - The user's message to analyze
  * @param messageContext - Optional context from the conversation
@@ -46,16 +64,6 @@ COMPLEXITY INDICATORS:
 - Competition/performance context ("competition", "event", "performance", "season")
 - Nutrition/lifestyle factors ("diet", "lifestyle", "habits", "body composition")
 
-${JSON_FORMATTING_INSTRUCTIONS_STANDARD}
-
-RESPONSE SCHEMA:
-{
-  "hasComplexity": boolean,
-  "confidence": number (0.0 to 1.0),
-  "complexityTypes": ["emotional", "goal", "achievement", "setback", "relationship", "lifestyle", "learning", "health"],
-  "reasoning": "brief explanation of complexity detected or why none found"
-}
-
 GUIDELINES:
 - Look for emotional intensity, significant changes, achievements, or relationship dynamics
 - Consider if the message indicates a meaningful shift in the user's journey
@@ -64,16 +72,31 @@ GUIDELINES:
 
   const userPrompt = `${messageContext ? `CONVERSATION CONTEXT:\n${messageContext}\n\n` : ""}USER MESSAGE TO ANALYZE:\n"${userMessage}"
 
-Analyze this message for complexity triggers that would warrant conversation summarization.`;
+Use the analyze_complexity tool to provide your analysis of complexity triggers that would warrant conversation summarization.`;
 
   try {
-    const response = (await callBedrockApi(
+    const response = await callBedrockApi(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.CLAUDE_HAIKU_4_FULL,
-      { prefillResponse: "{" }, // Force JSON output format
-    )) as string; // No tools used, always returns string
-    const result = parseJsonWithFallbacks(response);
+      MODEL_IDS.EXECUTOR_MODEL_FULL,
+      {
+        temperature: TEMPERATURE_PRESETS.STRUCTURED,
+        tools: {
+          name: "analyze_complexity",
+          description:
+            "Analyze message for complexity triggers warranting conversation summarization",
+          inputSchema: CONVERSATION_COMPLEXITY_SCHEMA,
+        },
+        expectedToolName: "analyze_complexity",
+      },
+    );
+
+    // Tool use returns structured data directly
+    if (typeof response === "string") {
+      throw new Error("Expected tool use but received text response");
+    }
+
+    const result = response.input as ConversationComplexityResult;
 
     return result.hasComplexity || false;
   } catch (error) {
@@ -503,82 +526,14 @@ Common patterns:
 - "8-week program", "3-month program", "program for the next 2 months"
 - "periodized program", "program with phases", "structured program"
 
-This is mainly for informational purposes - the AI will still help with program design in regular conversations.
-
-Program Design Detection Response:
-{
-  "isProgramDesignRequest": boolean,
-  "confidence": number (0.0 to 1.0),
-  "reasoning": "brief explanation of program design detection"
-}
-
-${JSON_FORMATTING_INSTRUCTIONS_STANDARD}
-
-REQUIRED JSON STRUCTURE:
-{
-  "userIntent": "workout_logging" | "memory_request" | "question" | "progress_check" | "acknowledgment" | "general",
-  "showContextualUpdates": boolean,
-  "workoutDetection": {
-    "isWorkoutLog": boolean,
-    "confidence": number (0.0 to 1.0),
-    "workoutType": "strength" | "cardio" | "flexibility" | "skill" | "competition" | "recovery" | "hybrid" | null,
-    "reasoning": "brief explanation of workout detection decision",
-    "isSlashCommand": boolean
-  },
-  "memoryProcessing": {
-    "needsRetrieval": boolean,
-    "isMemoryRequest": boolean,
-    "memoryCharacteristics": {
-      "type": "preference" | "goal" | "constraint" | "instruction",
-      "importance": "low" | "medium" | "high",
-      "isCoachSpecific": boolean,
-      "suggestedTags": ["tag1", "tag2"]
-    } | null,
-    "reasoning": "brief explanation of memory processing needs"
-  },
-  "contextNeeds": {
-    "needsPineconeSearch": boolean,
-    "searchTypes": ["methodology", "workouts", "progress", "techniques"],
-    "reasoning": "brief explanation of context search decision"
-  },
-  "conversationComplexity": {
-    "hasComplexity": boolean,
-    "complexityTypes": ["emotional", "goal", "achievement", "setback", "relationship", "lifestyle", "learning", "health", "program", "motivation", "social", "competition", "nutrition"],
-    "needsSummary": boolean,
-    "requiresDeepReasoning": boolean,
-    "confidence": number (0.0 to 1.0),
-    "reasoning": "brief explanation of complexity assessment"
-  },
-  "processingPriority": {
-    "workoutFirst": boolean,
-    "memoryFirst": boolean,
-    "contextFirst": boolean
-  },
-  "programDesignDetection": {
-    "isProgramDesignRequest": boolean,
-    "confidence": number (0.0 to 1.0),
-    "reasoning": "brief explanation of program design detection"
-  },
-  "routerMetadata": {
-    "confidence": number (0.0 to 1.0),
-    "processingTime": null,
-    "fallbackUsed": false
-  }
-}
-
-FIELD REQUIREMENTS:
-- workoutType: Set to null if isWorkoutLog is false, otherwise specify the workout type
-- memoryCharacteristics: Set to null if isMemoryRequest is false, otherwise provide the full object
-- All arrays can be empty [] but must be present
-- All confidence/number fields must be between 0.0 and 1.0
-- All reasoning fields must be brief (under 100 characters)`;
+This is mainly for informational purposes - the AI will still help with program design in regular conversations.`;
 
   const userPrompt = `ANALYZE THIS MESSAGE:
 Message: "${userMessage}"
 ${messageContext ? `Recent Context: "${messageContext}"` : ""}
 Conversation Length: ${conversationLength} messages
 
-Provide comprehensive analysis following the framework above.`;
+Use the analyze_request tool to provide comprehensive analysis following the framework above.`;
 
   try {
     console.info("🧠 Smart Router analyzing request capabilities:", {
@@ -590,14 +545,28 @@ Provide comprehensive analysis following the framework above.`;
       hasCriticalDirective: criticalTrainingDirective?.enabled || false,
     });
 
-    const response = (await callBedrockApi(
+    const response = await callBedrockApi(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.CLAUDE_HAIKU_4_FULL, // More accurate for complex routing decisions
-      { prefillResponse: "{" }, // Force JSON output format
-    )) as string; // No tools used, always returns string
+      MODEL_IDS.EXECUTOR_MODEL_FULL, // More accurate for complex routing decisions
+      {
+        temperature: TEMPERATURE_PRESETS.STRUCTURED,
+        tools: {
+          name: "analyze_request",
+          description:
+            "Comprehensive analysis of user message to determine all processing needs",
+          inputSchema: SMART_ROUTER_ANALYSIS_SCHEMA,
+        },
+        expectedToolName: "analyze_request",
+      },
+    );
 
-    const result: SmartRequestRouter = parseJsonWithFallbacks(response);
+    // Tool use returns structured data directly
+    if (typeof response === "string") {
+      throw new Error("Expected tool use but received text response");
+    }
+
+    const result = response.input as SmartRequestRouter;
 
     // Add processing time metadata
     result.routerMetadata.processingTime = Date.now() - startTime;

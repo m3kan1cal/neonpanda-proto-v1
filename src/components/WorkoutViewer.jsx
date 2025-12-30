@@ -217,14 +217,14 @@ const PowerliftingSetDisplay = ({ set, setIndex, dataPath }) => {
           Set {setIndex + 1}
         </h3>
         <span
-          className={`text-xs font-rajdhani uppercase px-2 py-1 rounded ml-auto ${
+          className={`${badgePatterns.workoutBadgeBase} ml-auto ${
             set.set_type === "working"
-              ? "bg-synthwave-neon-pink/20 text-synthwave-neon-pink"
+              ? badgePatterns.workoutBadgePink
               : set.set_type === "warmup"
-                ? "bg-synthwave-neon-purple/20 text-synthwave-neon-purple"
+                ? badgePatterns.workoutBadgePurple
                 : set.set_type === "accessory"
-                  ? "bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan"
-                  : "bg-synthwave-text-secondary/20 text-synthwave-text-secondary"
+                  ? badgePatterns.workoutBadgeCyan
+                  : badgePatterns.workoutBadgeMuted
           }`}
         >
           {set.set_type || "working"}
@@ -290,12 +290,12 @@ const PowerliftingExerciseDisplay = ({ exercise, exerciseIndex }) => {
           </h3>
           <div className="flex items-center gap-2 mt-1">
             <span
-              className={`text-xs font-rajdhani uppercase px-2 py-1 rounded ${
+              className={`${badgePatterns.workoutBadgeBase} ${
                 exercise.movement_category === "main_lift"
-                  ? "bg-synthwave-neon-pink/20 text-synthwave-neon-pink"
+                  ? badgePatterns.workoutBadgePink
                   : exercise.movement_category === "accessory"
-                    ? "bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan"
-                    : "bg-synthwave-text-secondary/20 text-synthwave-text-secondary"
+                    ? badgePatterns.workoutBadgeCyan
+                    : badgePatterns.workoutBadgeMuted
               }`}
             >
               {exercise.movement_category?.replace(/_/g, " ") || "main lift"}
@@ -868,14 +868,14 @@ const RunningSegmentDisplay = ({ segment, segmentIndex }) => {
 
         {segment.effort_level && (
           <span
-            className={`text-xs uppercase px-2 py-0.5 rounded ml-auto ${
+            className={`${badgePatterns.workoutBadgeBase} ml-auto ${
               segment.effort_level === "max"
-                ? "bg-synthwave-neon-pink/20 text-synthwave-neon-pink"
+                ? badgePatterns.workoutBadgePink
                 : segment.effort_level === "hard"
-                  ? "bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan"
+                  ? badgePatterns.workoutBadgeCyan
                   : segment.effort_level === "moderate"
-                    ? "bg-synthwave-neon-purple/20 text-synthwave-neon-purple"
-                    : "bg-synthwave-text-secondary/20 text-synthwave-text-secondary"
+                    ? badgePatterns.workoutBadgePurple
+                    : badgePatterns.workoutBadgeMuted
             }`}
           >
             {segment.effort_level}
@@ -1194,7 +1194,20 @@ const WorkoutViewer = ({
 
   const { workoutData } = workout;
   const discipline = workoutData.discipline; // e.g., "crossfit", "running", "powerlifting"
-  const disciplineData = workoutData.discipline_specific?.[discipline];
+
+  // Map legacy disciplines to their data location
+  const getDisciplineDataPath = (disciplineName) => {
+    if (
+      disciplineName === "hybrid" ||
+      disciplineName === "functional_fitness"
+    ) {
+      return "crossfit";
+    }
+    return disciplineName;
+  };
+
+  const disciplineDataPath = getDisciplineDataPath(discipline);
+  const disciplineData = workoutData.discipline_specific?.[disciplineDataPath];
   const DisciplineComponent = getDisciplineComponent(discipline);
 
   // Extract all discipline-specific data for Performance Metrics section
@@ -2235,7 +2248,19 @@ const WorkoutViewer = ({
                   toggleSubsection,
                   collapsedSubsections,
                 },
-                // hybrid removed - use crossfit for mixed-modality workouts
+                // Legacy discipline mappings - use CrossFit component
+                hybrid: {
+                  crossfitData: disciplineData,
+                  sectionId: 4,
+                  toggleSubsection,
+                  collapsedSubsections,
+                },
+                functional_fitness: {
+                  crossfitData: disciplineData,
+                  sectionId: 4,
+                  toggleSubsection,
+                  collapsedSubsections,
+                },
               };
 
               const specificProps = disciplineProps[discipline] || {};
@@ -2511,12 +2536,12 @@ const WorkoutViewer = ({
                             {pr.pr_type && `(${pr.pr_type.replace(/_/g, " ")})`}
                           </h4>
                           <span
-                            className={`text-xs font-rajdhani uppercase px-2 py-1 rounded ${
+                            className={`${badgePatterns.workoutBadgeBase} ${
                               pr.significance === "major"
-                                ? "bg-synthwave-neon-pink/20 text-synthwave-neon-pink"
+                                ? badgePatterns.workoutBadgePink
                                 : pr.significance === "moderate"
-                                  ? "bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan"
-                                  : "bg-synthwave-text-secondary/20 text-synthwave-text-secondary"
+                                  ? badgePatterns.workoutBadgeCyan
+                                  : badgePatterns.workoutBadgeMuted
                             }`}
                           >
                             {pr.significance}

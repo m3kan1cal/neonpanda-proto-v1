@@ -5,16 +5,16 @@ import { useAuthorizeUser } from "../auth/hooks/useAuthorizeUser";
 import { AccessDenied, LoadingScreen } from "./shared/AccessDenied";
 import {
   containerPatterns,
+  badgePatterns,
   buttonPatterns,
   layoutPatterns,
   tooltipPatterns,
 } from "../utils/ui/uiPatterns";
-import { themeClasses } from "../utils/synthwaveThemeClasses";
 import { getCoachConversations } from "../utils/apis/coachConversationApi";
-import CoachHeader from "./shared/CoachHeader";
 import CompactCoachCard from "./shared/CompactCoachCard";
 import CommandPaletteButton from "./shared/CommandPaletteButton";
 import { useNavigationContext } from "../contexts/NavigationContext";
+import { createCoachConversation } from "../utils/apis/coachConversationApi";
 import QuickStats from "./shared/QuickStats";
 import { isRecentConversation } from "../utils/dateUtils";
 import { NeonBorder, NewBadge } from "./themes/SynthwaveComponents";
@@ -23,73 +23,15 @@ import { CoachConversationAgent } from "../utils/agents/CoachConversationAgent";
 import CoachAgent from "../utils/agents/CoachAgent";
 import { WorkoutAgent } from "../utils/agents/WorkoutAgent";
 import {
-  CloseIcon,
-  ChatIconSmall,
   ConversationIcon,
-  WorkoutIcon,
-  ReportIcon,
   LightningIcon,
   MessagesIcon,
   CalendarMonthIcon,
+  TrashIcon,
 } from "./themes/SynthwaveComponents";
 
 // Icons
-const TrashIcon = () => (
-  <svg
-    className="w-5 h-5"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-    />
-  </svg>
-);
-
-// ProgramIcon component (matching TrainingGrounds.jsx)
-const ProgramIcon = () => (
-  <svg
-    className="w-8 h-8"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-    strokeWidth={2}
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-    />
-  </svg>
-);
-
-const EyeIcon = () => (
-  <svg
-    className="w-5 h-5"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-    />
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-    />
-  </svg>
-);
-
-const ClockIcon = () => (
+const ClockIconSmall = () => (
   <svg
     className="w-4 h-4"
     fill="none"
@@ -101,38 +43,6 @@ const ClockIcon = () => (
       strokeLinejoin="round"
       strokeWidth={2}
       d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-    />
-  </svg>
-);
-
-const MessageIcon = () => (
-  <svg
-    className="w-4 h-4"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"
-    />
-  </svg>
-);
-
-const UserIcon = () => (
-  <svg
-    className="w-4 h-4"
-    fill="none"
-    stroke="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
     />
   </svg>
 );
@@ -155,11 +65,13 @@ function ManageCoachConversations() {
   const [conversationToDelete, setConversationToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Create conversation state
+  const [isCreatingConversation, setIsCreatingConversation] = useState(false);
+
   // Command palette state
-  // Global Command Palette state
   const { setIsCommandPaletteOpen } = useNavigationContext();
 
-  // Coach data state (for FloatingMenuManager)
+  // Coach data state
   const [coachData, setCoachData] = useState(null);
 
   const conversationAgentRef = useRef(null);
@@ -183,7 +95,7 @@ function ManageCoachConversations() {
     };
   }, [userId]);
 
-  // Load coach data for FloatingMenuManager
+  // Load coach data
   useEffect(() => {
     if (!userId || !coachId) return;
 
@@ -214,12 +126,68 @@ function ManageCoachConversations() {
   // Conversation state - for specific coach conversations
   const [conversationAgentState, setConversationAgentState] = useState({
     allConversations: [],
-    isLoadingAllItems: !!(userId && coachId), // Start loading if we have both userId and coachId
+    isLoadingAllItems: !!(userId && coachId),
     isLoadingItem: false,
     error: null,
     totalCount: 0,
-    coaches: [], // Store coach data for display
+    coaches: [],
   });
+
+  // Collapsed badges - initialize with all conversation IDs (collapsed by default)
+  const [collapsedBadges, setCollapsedBadges] = useState(() => {
+    return new Set(
+      conversationAgentState.allConversations.map((c) => c.conversationId),
+    );
+  });
+
+  // Collapsed previews - initialize with all conversation IDs (collapsed by default)
+  const [collapsedPreviews, setCollapsedPreviews] = useState(() => {
+    return new Set(
+      conversationAgentState.allConversations.map((c) => c.conversationId),
+    );
+  });
+
+  // Update collapsed badges and previews when conversations load
+  useEffect(() => {
+    if (conversationAgentState.allConversations.length > 0) {
+      setCollapsedBadges(
+        new Set(
+          conversationAgentState.allConversations.map((c) => c.conversationId),
+        ),
+      );
+      setCollapsedPreviews(
+        new Set(
+          conversationAgentState.allConversations.map((c) => c.conversationId),
+        ),
+      );
+    }
+  }, [conversationAgentState.allConversations.length]);
+
+  // Toggle badge collapse
+  const toggleBadgeCollapse = (conversationId) => {
+    setCollapsedBadges((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(conversationId)) {
+        newSet.delete(conversationId);
+      } else {
+        newSet.add(conversationId);
+      }
+      return newSet;
+    });
+  };
+
+  // Toggle preview collapse
+  const togglePreviewCollapse = (conversationId) => {
+    setCollapsedPreviews((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(conversationId)) {
+        newSet.delete(conversationId);
+      } else {
+        newSet.add(conversationId);
+      }
+      return newSet;
+    });
+  };
 
   // Redirect if missing required parameters
   useEffect(() => {
@@ -241,7 +209,7 @@ function ManageCoachConversations() {
           error: null,
         }));
 
-        // Get the specific coach details using CoachAgent (same as TrainingGrounds.jsx)
+        // Get the specific coach details using CoachAgent
         if (!coachAgentRef.current) {
           coachAgentRef.current = new CoachAgent();
         }
@@ -259,8 +227,10 @@ function ManageCoachConversations() {
           return;
         }
 
-        // Load conversations for this specific coach
-        const result = await getCoachConversations(userId, coachId);
+        // Load conversations for this specific coach (include first messages for preview)
+        const result = await getCoachConversations(userId, coachId, {
+          includeFirstMessages: true,
+        });
         const conversations = (result.conversations || []).map((conv) => ({
           ...conv,
           coachName: coachData.name,
@@ -287,7 +257,7 @@ function ManageCoachConversations() {
     loadCoachConversations();
   }, [userId, coachId]);
 
-  // Auto-scroll to top when page loads (with scroll restoration disabled)
+  // Auto-scroll to top when page loads
   useEffect(() => {
     if ("scrollRestoration" in window.history) {
       window.history.scrollRestoration = "manual";
@@ -324,24 +294,10 @@ function ManageCoachConversations() {
     };
   }, [showDeleteModal]);
 
-  // Handle coach card click - navigate to training grounds
+  // Handle coach card click
   const handleCoachCardClick = () => {
     navigate(`/training-grounds?userId=${userId}&coachId=${coachId}`);
   };
-
-  // Create coach name handler using the agent's helper method
-  const handleSaveCoachName = coachAgentRef.current?.createCoachNameHandler(
-    userId,
-    coachId,
-    (newName) =>
-      setConversationAgentState((prevState) => ({
-        ...prevState,
-        coaches: prevState.coaches.map((coach) =>
-          coach.coachId === coachId ? { ...coach, name: newName } : coach,
-        ),
-      })),
-    { success, error },
-  );
 
   const handleDeleteClick = (conversation) => {
     setConversationToDelete(conversation);
@@ -401,6 +357,32 @@ function ManageCoachConversations() {
     setConversationToDelete(null);
   };
 
+  // Handle creating a new conversation
+  const handleCreateConversation = async () => {
+    if (isCreatingConversation || !userId || !coachId) return;
+
+    setIsCreatingConversation(true);
+
+    try {
+      // Create a new conversation via the API
+      const result = await createCoachConversation(userId, coachId, null, null);
+
+      if (result?.conversation?.conversationId) {
+        // Navigate to the new conversation
+        navigate(
+          `/training-grounds/coach-conversations?userId=${userId}&coachId=${coachId}&conversationId=${result.conversation.conversationId}`,
+        );
+      } else {
+        addToast("Failed to create conversation", "error");
+        setIsCreatingConversation(false);
+      }
+    } catch (error) {
+      console.error("Error creating conversation:", error);
+      addToast("Failed to create conversation", "error");
+      setIsCreatingConversation(false);
+    }
+  };
+
   const handleViewConversation = (conversation) => {
     navigate(
       `/training-grounds/coach-conversations?userId=${userId}&coachId=${conversation.coachId}&conversationId=${conversation.conversationId}`,
@@ -429,108 +411,237 @@ function ManageCoachConversations() {
       conversation.metadata?.lastActivity,
       conversation.createdAt,
     );
+
+    // Use first ~35 characters of conversation title for header
+    const conversationTitle = conversation.title || "Untitled Conversation";
+    const headerText =
+      conversationTitle.length > 35
+        ? conversationTitle.substring(0, 35) + "..."
+        : conversationTitle;
+
+    const isBadgesCollapsed = collapsedBadges.has(conversation.conversationId);
+    const isPreviewCollapsed = collapsedPreviews.has(
+      conversation.conversationId,
+    );
+
+    // Calculate all badges
+    const allBadges = [];
+
+    // Active status badge
+    allBadges.push({
+      key: "status",
+      label: conversation.metadata?.isActive !== false ? "Active" : "Archived",
+    });
+
+    // Tags (if available)
+    if (conversation.metadata?.tags && conversation.metadata.tags.length > 0) {
+      conversation.metadata.tags.forEach((tag, index) => {
+        allBadges.push({
+          key: `tag-${index}`,
+          label: tag,
+        });
+      });
+    } else if (conversation.tags && conversation.tags.length > 0) {
+      conversation.tags.forEach((tag, index) => {
+        allBadges.push({
+          key: `tag-${index}`,
+          label: tag,
+        });
+      });
+    }
+
+    const badgeLimit = 4;
+    const visibleBadges = isBadgesCollapsed
+      ? allBadges.slice(0, badgeLimit)
+      : allBadges;
+    const hasMoreBadges = allBadges.length > badgeLimit;
+
     return (
       <div
         key={`${conversation.coachId}-${conversation.conversationId}`}
         data-conversation-card
-        className={`${containerPatterns.cardMedium} p-6 group transition-all duration-300 hover:border-synthwave-neon-cyan/40 hover:bg-synthwave-bg-card/40 relative cursor-pointer`}
+        className={`${containerPatterns.cardMedium} p-6 relative cursor-pointer mb-6`}
         onClick={() => handleViewConversation(conversation)}
       >
         {/* NEW badge for conversations with recent activity */}
         {isRecent && <NewBadge />}
-        {/* Action buttons - always visible at top right */}
-        <div className="absolute top-4 right-4 flex space-x-2">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleViewConversation(conversation);
-            }}
-            className="p-2 bg-synthwave-neon-cyan/10 text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/20 hover:text-synthwave-neon-cyan rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50"
-            title="View conversation"
-          >
-            <EyeIcon />
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDeleteClick(conversation);
-            }}
-            className="p-2 bg-synthwave-neon-pink/10 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/20 hover:text-synthwave-neon-pink rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50"
-            title="Delete conversation"
-          >
-            <TrashIcon />
-          </button>
+
+        {/* Delete button - top right */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleDeleteClick(conversation);
+          }}
+          className="absolute top-4 right-4 p-2 bg-synthwave-neon-pink/10 text-synthwave-neon-pink hover:bg-synthwave-neon-pink/20 hover:text-synthwave-neon-pink rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50"
+          title="Delete conversation"
+        >
+          <TrashIcon />
+        </button>
+
+        {/* Header with pink dot */}
+        <div className="flex items-start gap-3 mb-2 pr-16">
+          <div className="w-3 h-3 rounded-full bg-synthwave-neon-pink flex-shrink-0 mt-2" />
+          <h3 className="font-russo font-bold text-white text-lg uppercase">
+            {headerText}
+          </h3>
         </div>
 
-        {/* Conversation content */}
-        <div className="pr-16">
-          <div className="flex items-start space-x-3 mb-4">
-            <div className="w-3 h-3 bg-synthwave-neon-pink rounded-full flex-shrink-0 mt-2"></div>
-            <h3 className="font-russo font-bold text-white text-lg uppercase">
-              {conversation.title || "Untitled Conversation"}
-            </h3>
-          </div>
-
-          {/* Conversation metadata */}
-          <div className="flex flex-wrap items-center gap-4 font-rajdhani text-synthwave-text-primary text-sm">
-            {/* Message count */}
-            <div className="bg-synthwave-neon-purple/20 text-synthwave-neon-purple px-2 py-1 rounded text-xs font-rajdhani flex items-center space-x-1">
-              <MessageIcon />
-              <span>{conversation.metadata?.totalMessages || 0} messages</span>
-            </div>
-
-            {/* Active status */}
-            <div
-              className={`px-2 py-1 rounded text-xs font-rajdhani font-medium ${
-                conversation.metadata?.isActive !== false
-                  ? "bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan"
-                  : "bg-synthwave-text-secondary/20 text-synthwave-text-secondary"
-              }`}
-            >
-              {conversation.metadata?.isActive !== false
-                ? "Active"
-                : "Archived"}
-            </div>
-
-            {/* Started date */}
-            {conversation.metadata?.startedAt && (
-              <div className="flex items-center space-x-1 text-synthwave-text-secondary">
-                <ClockIcon />
-                <span>
-                  Started: {formatDate(conversation.metadata.startedAt)}
-                </span>
-              </div>
-            )}
-
-            {/* Last activity */}
-            <div className="flex items-center space-x-1 text-synthwave-text-secondary">
-              <ClockIcon />
-              <span>
-                Last:{" "}
-                {formatDate(
-                  conversation.metadata?.lastActivity || conversation.createdAt,
-                )}
-              </span>
-            </div>
-          </div>
-
-          {/* Tags if available */}
-          {((conversation.metadata?.tags &&
-            conversation.metadata.tags.length > 0) ||
-            (conversation.tags && conversation.tags.length > 0)) && (
-            <div className="mt-3 flex flex-wrap gap-2">
-              {(conversation.metadata?.tags || conversation.tags || []).map(
-                (tag, index) => (
-                  <span
-                    key={index}
-                    className="bg-synthwave-neon-pink/20 text-synthwave-neon-pink px-2 py-1 rounded text-xs font-rajdhani"
-                  >
-                    {tag}
-                  </span>
-                ),
-              )}
+        {/* Metadata Row */}
+        <div className="flex items-center flex-wrap gap-4 mb-4">
+          {/* Started Date */}
+          {conversation.metadata?.startedAt && (
+            <div className="flex items-center gap-1 text-synthwave-text-secondary font-rajdhani text-sm">
+              <ClockIconSmall />
+              <span>{formatDate(conversation.metadata.startedAt)}</span>
             </div>
           )}
+          {/* Last Activity */}
+          <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+            <span className="text-synthwave-text-muted">Last Activity:</span>
+            <span className="text-synthwave-neon-cyan font-medium">
+              {formatDate(
+                conversation.metadata?.lastActivity || conversation.createdAt,
+              )}
+            </span>
+          </div>
+          {/* Message Count */}
+          <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+            <span className="text-synthwave-text-muted">Messages:</span>
+            <span className="text-synthwave-neon-cyan font-medium">
+              {conversation.metadata?.totalMessages || 0}
+            </span>
+          </div>
+        </div>
+
+        {/* Collapsible Conversation Preview Section */}
+        {(conversation.firstUserMessage || conversation.firstAiMessage) && (
+          <div onClick={(e) => e.stopPropagation()}>
+            <button
+              onClick={() => togglePreviewCollapse(conversation.conversationId)}
+              className="w-full flex items-center justify-between font-rajdhani text-sm text-synthwave-text-secondary uppercase font-semibold mb-2 hover:text-synthwave-neon-cyan transition-colors duration-200 cursor-pointer"
+            >
+              <span>Conversation Preview</span>
+              <svg
+                className={`w-4 h-4 transition-transform duration-200 ${
+                  isPreviewCollapsed ? "rotate-180" : ""
+                }`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </button>
+            {!isPreviewCollapsed && (
+              <div
+                className={`${containerPatterns.coachNotesSection} animate-fadeIn mb-4 space-y-3`}
+              >
+                {conversation.firstUserMessage && (
+                  <div>
+                    <div className="text-synthwave-neon-pink font-rajdhani text-xs uppercase font-semibold mb-1">
+                      You:
+                    </div>
+                    <p className="font-rajdhani text-sm text-synthwave-text-secondary">
+                      {conversation.firstUserMessage.length > 250
+                        ? conversation.firstUserMessage.substring(0, 250) +
+                          "..."
+                        : conversation.firstUserMessage}
+                    </p>
+                  </div>
+                )}
+                {conversation.firstAiMessage && (
+                  <div>
+                    <div className="text-synthwave-neon-cyan font-rajdhani text-xs uppercase font-semibold mb-1">
+                      Coach:
+                    </div>
+                    <p className="font-rajdhani text-sm text-synthwave-text-secondary">
+                      {conversation.firstAiMessage.length > 250
+                        ? conversation.firstAiMessage.substring(0, 250) + "..."
+                        : conversation.firstAiMessage}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Badge Row - collapsible like memory cards */}
+        <div className="flex flex-wrap items-center gap-2 mt-4">
+          {visibleBadges.map((badge) => (
+            <span key={badge.key} className={badgePatterns.workoutDetail}>
+              {badge.label}
+            </span>
+          ))}
+
+          {hasMoreBadges && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleBadgeCollapse(conversation.conversationId);
+              }}
+              className="text-synthwave-neon-cyan hover:text-synthwave-neon-pink text-xs font-rajdhani font-semibold uppercase transition-colors duration-200"
+            >
+              {isBadgesCollapsed
+                ? `+${allBadges.length - badgeLimit} more`
+                : "less"}
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  // Render the "Start New Conversation" card
+  const renderCreateConversationCard = () => {
+    return (
+      <div
+        key="create-conversation-card"
+        onClick={isCreatingConversation ? undefined : handleCreateConversation}
+        className={`${containerPatterns.dashedCard} mb-6 group ${
+          isCreatingConversation
+            ? "opacity-75 cursor-not-allowed"
+            : "cursor-pointer"
+        }`}
+      >
+        <div className="text-center flex flex-col justify-center items-center h-full min-h-[188px]">
+          {/* Plus Icon or Spinner */}
+          <div className="text-synthwave-neon-pink/40 group-hover:text-synthwave-neon-pink/80 transition-colors duration-300 mb-3">
+            {isCreatingConversation ? (
+              <div className="w-10 h-10 border-4 border-current border-t-transparent rounded-full animate-spin"></div>
+            ) : (
+              <svg
+                className="w-10 h-10"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                />
+              </svg>
+            )}
+          </div>
+
+          {/* Title */}
+          <h3 className="font-russo font-bold text-synthwave-neon-pink/60 group-hover:text-synthwave-neon-pink text-lg uppercase mb-2 transition-colors duration-300">
+            {isCreatingConversation ? "Creating..." : "Start New Conversation"}
+          </h3>
+
+          {/* Description */}
+          <p className="font-rajdhani text-synthwave-text-secondary/60 group-hover:text-synthwave-text-secondary text-sm transition-colors duration-300 text-center max-w-xs mx-auto">
+            {isCreatingConversation
+              ? "Setting up your new conversation"
+              : "Begin a fresh conversation with your coach"}
+          </p>
         </div>
       </div>
     );
@@ -567,32 +678,83 @@ function ManageCoachConversations() {
       );
     }
 
-    if (conversationAgentState.allConversations.length === 0) {
-      return (
-        <div className="text-center py-12">
-          <div className="font-rajdhani text-synthwave-neon-cyan text-base">
-            No Conversations Found
-          </div>
-          <div className="font-rajdhani text-synthwave-text-muted text-sm mt-2">
-            You haven't started any conversations yet. Create a coach and start
-            your first conversation to see it here.
-          </div>
-        </div>
-      );
-    }
-
-    // Sort conversations by last activity in descending order (most recent first)
+    // Sort conversations by last activity in descending order
     const sortedConversations = [
       ...conversationAgentState.allConversations,
     ].sort((a, b) => {
       const dateA = new Date(a.metadata?.lastActivity || a.createdAt || 0);
       const dateB = new Date(b.metadata?.lastActivity || b.createdAt || 0);
-      return dateB - dateA; // Descending order
+      return dateB - dateA;
     });
 
+    // Create an array of all items (create card first, then conversations)
+    const allItems = [
+      { type: "create", key: "create-card" },
+      ...sortedConversations.map((conv) => ({
+        type: "conversation",
+        data: conv,
+      })),
+    ];
+
+    // Render item based on type
+    const renderItem = (item) => {
+      if (item.type === "create") {
+        return renderCreateConversationCard();
+      }
+      return renderConversationCard(item.data);
+    };
+
     return (
-      <div className="space-y-4">
-        {sortedConversations.map(renderConversationCard)}
+      <div className="mb-8">
+        {/* Mobile: Single column */}
+        <div className="lg:hidden">
+          {allItems.map((item, index) => (
+            <div
+              key={
+                item.type === "create"
+                  ? "create-card"
+                  : `${item.data.coachId}-${item.data.conversationId}`
+              }
+            >
+              {renderItem(item)}
+            </div>
+          ))}
+        </div>
+        {/* Desktop: Two columns with alternating distribution */}
+        <div className="hidden lg:grid lg:grid-cols-2 lg:gap-x-6 lg:items-start">
+          {/* Left Column - even indices (0, 2, 4, ...) */}
+          <div>
+            {allItems
+              .filter((_, index) => index % 2 === 0)
+              .map((item) => (
+                <div
+                  key={
+                    item.type === "create"
+                      ? "create-card"
+                      : `${item.data.coachId}-${item.data.conversationId}`
+                  }
+                >
+                  {renderItem(item)}
+                </div>
+              ))}
+          </div>
+          {/* Right Column - odd indices (1, 3, 5, ...) */}
+          <div>
+            {allItems
+              .filter((_, index) => index % 2 === 1)
+              .map((item) => (
+                <div
+                  key={
+                    item.type === "create"
+                      ? "create-card"
+                      : `${item.data.coachId}-${item.data.conversationId}`
+                  }
+                >
+                  {renderItem(item)}
+                </div>
+              ))}
+          </div>
+        </div>
       </div>
     );
   };
@@ -604,53 +766,161 @@ function ManageCoachConversations() {
         <div className={layoutPatterns.contentWrapper}>
           {/* Compact Horizontal Header Skeleton */}
           <header className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-6">
-            {/* Left: Title + Coach Card */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-5">
-              {/* Title skeleton - compact size */}
               <div className="h-8 md:h-9 bg-synthwave-text-muted/20 rounded animate-pulse w-72"></div>
-
-              {/* Compact coach card skeleton - horizontal pill */}
               <div className="flex items-center gap-2.5 px-3 py-2 bg-synthwave-neon-cyan/5 border border-synthwave-neon-cyan/20 rounded-full">
                 <div className="w-6 h-6 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
                 <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
               </div>
             </div>
-
-            {/* Right: Command button skeleton */}
             <div className="h-10 w-20 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
           </header>
 
           {/* Quick Stats skeleton */}
-          <QuickStats
-            stats={[1, 2, 3, 4].map((i) => ({
-              icon: null,
-              value: 0,
-              tooltip: { title: "", description: "" },
-              color: "cyan",
-              isLoading: true,
-              id: `skeleton-stat-${i}`,
-            }))}
-          />
+          <div className="flex flex-wrap items-center gap-3 md:gap-4 mb-6 -mt-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="flex items-center gap-2">
+                <div className="w-7 h-7 bg-synthwave-text-muted/20 rounded-lg animate-pulse"></div>
+                <div className="h-6 w-8 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+              </div>
+            ))}
+          </div>
 
           {/* Conversation cards skeleton */}
-          <div className="space-y-4">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className={`${containerPatterns.cardMedium} p-6`}>
-                <div className="flex items-start space-x-3 mb-4">
-                  <div className="w-3 h-3 bg-synthwave-text-muted/20 rounded-full flex-shrink-0 mt-2"></div>
-                  <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
+          <div className="mb-8">
+            {/* Mobile: Single column */}
+            <div className="lg:hidden">
+              {/* Create Card Skeleton */}
+              <div
+                className={`${containerPatterns.dashedCard} p-6 mb-6 opacity-60 flex flex-col justify-center`}
+                style={{ minHeight: "188px" }}
+              >
+                <div className="text-center flex flex-col items-center">
+                  <div className="w-10 h-10 bg-synthwave-neon-pink/20 rounded animate-pulse mb-3"></div>
+                  <div className="h-5 bg-synthwave-neon-pink/20 rounded animate-pulse w-48 mb-2"></div>
+                  <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-56"></div>
                 </div>
-                <div className="space-y-3">
-                  <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
-                  <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-3/4"></div>
-                  <div className="flex flex-wrap gap-2 mt-3">
+              </div>
+              {/* Conversation Card Skeletons */}
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div
+                  key={i}
+                  className={`${containerPatterns.cardMedium} p-6 mb-6`}
+                  style={{ minHeight: "188px" }}
+                >
+                  {/* Header with pink dot */}
+                  <div className="flex items-start space-x-3 mb-2">
+                    <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full flex-shrink-0 mt-2 animate-pulse"></div>
+                    <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
+                  </div>
+
+                  {/* Metadata Row */}
+                  <div className="flex flex-wrap gap-4 mb-4">
+                    <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-24"></div>
+                    <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-28"></div>
+                    <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
+                  </div>
+
+                  {/* Collapsed Conversation Preview Header */}
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-36"></div>
+                    <div className="w-4 h-4 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                  </div>
+
+                  {/* Badge Row */}
+                  <div className="flex flex-wrap gap-2 mt-4">
                     <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-16"></div>
-                    <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-12"></div>
                     <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
                   </div>
                 </div>
+              ))}
+            </div>
+            {/* Desktop: Two columns with alternating distribution */}
+            <div className="hidden lg:grid lg:grid-cols-2 lg:gap-x-6 lg:items-start">
+              {/* Left Column */}
+              <div>
+                {/* Create Card Skeleton (first item, left column) */}
+                <div
+                  className={`${containerPatterns.dashedCard} p-6 mb-6 opacity-60 flex flex-col justify-center`}
+                  style={{ minHeight: "188px" }}
+                >
+                  <div className="text-center flex flex-col items-center">
+                    <div className="w-10 h-10 bg-synthwave-neon-pink/20 rounded animate-pulse mb-3"></div>
+                    <div className="h-5 bg-synthwave-neon-pink/20 rounded animate-pulse w-48 mb-2"></div>
+                    <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-56"></div>
+                  </div>
+                </div>
+                {/* Conversation Card Skeletons (indices 2, 4) */}
+                {[2, 4].map((i) => (
+                  <div
+                    key={i}
+                    className={`${containerPatterns.cardMedium} p-6 mb-6`}
+                    style={{ minHeight: "188px" }}
+                  >
+                    {/* Header with pink dot */}
+                    <div className="flex items-start space-x-3 mb-2">
+                      <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full flex-shrink-0 mt-2 animate-pulse"></div>
+                      <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
+                    </div>
+
+                    {/* Metadata Row */}
+                    <div className="flex flex-wrap gap-4 mb-4">
+                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-24"></div>
+                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-28"></div>
+                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
+                    </div>
+
+                    {/* Collapsed Conversation Preview Header */}
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-36"></div>
+                      <div className="w-4 h-4 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                    </div>
+
+                    {/* Badge Row */}
+                    <div className="flex flex-wrap gap-2 mt-4">
+                      <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-16"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
+              {/* Right Column */}
+              <div>
+                {/* Conversation Card Skeletons (indices 1, 3, 5) */}
+                {[1, 3, 5].map((i) => (
+                  <div
+                    key={i}
+                    className={`${containerPatterns.cardMedium} p-6 mb-6`}
+                    style={{ minHeight: "188px" }}
+                  >
+                    {/* Header with pink dot */}
+                    <div className="flex items-start space-x-3 mb-2">
+                      <div className="w-3 h-3 bg-synthwave-neon-pink/30 rounded-full flex-shrink-0 mt-2 animate-pulse"></div>
+                      <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-48"></div>
+                    </div>
+
+                    {/* Metadata Row */}
+                    <div className="flex flex-wrap gap-4 mb-4">
+                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-24"></div>
+                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-28"></div>
+                      <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
+                    </div>
+
+                    {/* Collapsed Conversation Preview Header */}
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-36"></div>
+                      <div className="w-4 h-4 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                    </div>
+
+                    {/* Badge Row */}
+                    <div className="flex flex-wrap gap-2 mt-4">
+                      <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-16"></div>
+                      <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-20"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>

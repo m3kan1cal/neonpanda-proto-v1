@@ -1,5 +1,6 @@
 import React from "react";
 import { BadgeLegend } from "../BadgeLegend";
+import { badgePatterns } from "../../../utils/ui/uiPatterns";
 
 export const OlympicWeightliftingSection = ({
   olympicWeightliftingData,
@@ -57,7 +58,9 @@ export const OlympicWeightliftingSection = ({
                         ({lift.sets?.length || 0} sets)
                       </span>
                       {lift.lift_category && (
-                        <span className="text-xs font-rajdhani uppercase px-2 py-0.5 rounded bg-synthwave-neon-pink/20 text-synthwave-neon-pink">
+                        <span
+                          className={`${badgePatterns.workoutBadgeBase} ${badgePatterns.workoutBadgePink}`}
+                        >
                           {lift.lift_category.replace(/_/g, " ")}
                         </span>
                       )}
@@ -108,12 +111,12 @@ export const OlympicWeightliftingSection = ({
                               )}
                               {set.set_type && (
                                 <span
-                                  className={`text-xs uppercase px-2 py-0.5 rounded ml-auto ${
+                                  className={`${badgePatterns.workoutBadgeBase} ml-auto ${
                                     set.set_type === "working"
-                                      ? "bg-synthwave-neon-pink/20 text-synthwave-neon-pink"
+                                      ? badgePatterns.workoutBadgePink
                                       : set.set_type === "warmup"
-                                        ? "bg-synthwave-neon-purple/20 text-synthwave-neon-purple"
-                                        : "bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan"
+                                        ? badgePatterns.workoutBadgePurple
+                                        : badgePatterns.workoutBadgeCyan
                                   }`}
                                 >
                                   {set.set_type}

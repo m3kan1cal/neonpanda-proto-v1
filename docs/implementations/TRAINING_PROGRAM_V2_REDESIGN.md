@@ -481,7 +481,7 @@ try {
     result = await callBedrockApiMultimodal(
       extractionPrompt,
       converseMessages,
-      MODEL_IDS.CLAUDE_SONNET_4_FULL,
+      MODEL_IDS.PLANNER_MODEL_FULL,
       {
         enableThinking,
         tools: {
@@ -874,7 +874,7 @@ async function generateProgram(
   userContext: UserContext,
 ): Promise<Program> {
   const response = await bedrock.converse({
-    modelId: MODEL_IDS.CLAUDE_SONNET_4_FULL,
+    modelId: MODEL_IDS.PLANNER_MODEL_FULL,
     messages: [
       {
         role: "user",
@@ -996,7 +996,7 @@ async function normalizeProgram(
   `;
 
   const response = await bedrock.converse({
-    modelId: MODEL_IDS.CLAUDE_SONNET_4_FULL,
+    modelId: MODEL_IDS.PLANNER_MODEL_FULL,
     messages: [
       {
         role: "user",
@@ -1945,7 +1945,7 @@ Generate the completion message now:
   const stream = await callBedrockApiStream(
     completionPrompt,
     "", // No additional context needed
-    MODEL_IDS.CLAUDE_SONNET_4_FULL,
+    MODEL_IDS.PLANNER_MODEL_FULL,
     { personality: coachConfig },
   );
 
@@ -3197,7 +3197,7 @@ export async function extractAndUpdateProgramTodoList(
     const result = await callBedrockApiMultimodal(
       extractionPrompt,
       converseMessages,
-      MODEL_IDS.CLAUDE_HAIKU_4_FULL,
+      MODEL_IDS.EXECUTOR_MODEL_FULL,
       {
         tools: {
           name: "extract_program_info",
@@ -3218,7 +3218,7 @@ export async function extractAndUpdateProgramTodoList(
     const result = await callBedrockApi(
       extractionPrompt,
       userResponse,
-      MODEL_IDS.CLAUDE_HAIKU_4_FULL,
+      MODEL_IDS.EXECUTOR_MODEL_FULL,
       {
         tools: {
           name: "extract_program_info",

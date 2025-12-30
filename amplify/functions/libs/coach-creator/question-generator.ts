@@ -7,6 +7,7 @@ import {
   callBedrockApi,
   callBedrockApiStream,
   MODEL_IDS,
+  TEMPERATURE_PRESETS,
 } from "../api-helpers";
 import { CoachCreatorTodoList, SophisticationLevel } from "./types";
 import { CoachMessage } from "../coach-conversation/types";
@@ -112,7 +113,10 @@ Remember: You're NeonPanda - playfully powerful, energetically supportive, serio
     const questionResponse = (await callBedrockApi(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.CLAUDE_SONNET_4_FULL,
+      MODEL_IDS.PLANNER_MODEL_FULL,
+      {
+        temperature: TEMPERATURE_PRESETS.CREATIVE,
+      },
     )) as string;
 
     console.info("✅ Generated next question");
@@ -237,7 +241,10 @@ Remember: You're NeonPanda - playfully powerful, energetically supportive, serio
     const questionStream = await callBedrockApiStream(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.CLAUDE_SONNET_4_FULL,
+      MODEL_IDS.PLANNER_MODEL_FULL,
+      {
+        temperature: TEMPERATURE_PRESETS.CREATIVE,
+      },
     );
 
     let fullResponse = "";
@@ -341,7 +348,7 @@ CRITICAL: Make sure to tell them about the 2-3 minute build time and that they'l
     const completionMessage = (await callBedrockApi(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.CLAUDE_SONNET_4_FULL,
+      MODEL_IDS.PLANNER_MODEL_FULL,
     )) as string;
 
     return completionMessage.trim();

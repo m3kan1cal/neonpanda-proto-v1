@@ -1,5 +1,6 @@
 import React from "react";
 import { BadgeLegend } from "../BadgeLegend";
+import { badgePatterns } from "../../../utils/ui/uiPatterns";
 
 // Value display component
 const ValueDisplay = ({ label, value, dataPath, className = "" }) => {
@@ -83,16 +84,16 @@ const RunningSegmentDisplay = ({ segment, segmentIndex }) => {
 
         {segment.effort_level && (
           <span
-            className={`text-xs uppercase px-2 py-0.5 rounded ml-auto ${
+            className={`${badgePatterns.workoutBadgeBase} ml-auto ${
               segment.effort_level === "max"
-                ? "bg-synthwave-neon-pink/20 text-synthwave-neon-pink"
+                ? badgePatterns.workoutBadgePink
                 : segment.effort_level === "hard"
-                  ? "bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan"
+                  ? badgePatterns.workoutBadgeCyan
                   : segment.effort_level === "moderate" ||
                       segment.effort_level === "easy" ||
                       segment.effort_level === "recovery"
-                    ? "bg-synthwave-neon-purple/20 text-synthwave-neon-purple"
-                    : "bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan"
+                    ? badgePatterns.workoutBadgePurple
+                    : badgePatterns.workoutBadgeCyan
             }`}
           >
             {segment.effort_level}

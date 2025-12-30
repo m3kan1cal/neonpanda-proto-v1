@@ -1,9 +1,4 @@
-import {
-  callBedrockApi,
-  callBedrockApiMultimodal,
-  MODEL_IDS,
-} from "../api-helpers";
-import { buildWorkoutExtractionMessage } from "../agents/workout-logger/helpers";
+import { callBedrockApi, MODEL_IDS, TEMPERATURE_PRESETS } from "../api-helpers";
 import { DISCIPLINE_DETECTION_SCHEMA } from "../schemas/discipline-detection-schema";
 
 export interface DisciplineDetectionResult {
@@ -122,30 +117,21 @@ Use the classify_discipline tool to return your analysis.`;
 
 export async function detectDiscipline(
   userMessage: string,
-  imageS3Keys?: string[],
 ): Promise<DisciplineDetectionResult> {
   try {
-    const hasImages = imageS3Keys && imageS3Keys.length > 0;
-
     console.info("🎯 Detecting workout discipline with AI:", {
       messageLength: userMessage.length,
-      hasImages,
-      imageCount: imageS3Keys?.length || 0,
     });
 
-    // Build multimodal message (handles both text-only and text+images)
-    const converseMessages = await buildWorkoutExtractionMessage(
-      userMessage,
-      imageS3Keys,
-      "discipline",
-    );
-
-    // Always use multimodal API (gracefully handles text-only when no images)
-    const result = await callBedrockApiMultimodal(
+    // Text-only discipline detection using tool-based approach
+    // Note: If user attached images, agent has already analyzed them and
+    // included workout details in userMessage parameter
+    const result = await callBedrockApi(
       DISCIPLINE_DETECTION_PROMPT,
-      converseMessages,
-      MODEL_IDS.CLAUDE_HAIKU_4_FULL,
+      userMessage,
+      MODEL_IDS.EXECUTOR_MODEL_FULL,
       {
+        temperature: TEMPERATURE_PRESETS.STRUCTURED,
         tools: {
           name: "classify_discipline",
           description:

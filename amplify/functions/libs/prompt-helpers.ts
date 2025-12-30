@@ -29,10 +29,12 @@
  * `;
  * ```
  */
-export function getJsonFormattingInstructions(options: {
-  minified?: boolean;
-  noMarkdown?: boolean;
-} = {}): string {
+export function getJsonFormattingInstructions(
+  options: {
+    minified?: boolean;
+    noMarkdown?: boolean;
+  } = {},
+): string {
   const { minified = false, noMarkdown = true } = options;
 
   const minificationSection = minified
@@ -40,14 +42,14 @@ export function getJsonFormattingInstructions(options: {
 - Remove all unnecessary spaces, tabs, and line breaks to minimize payload size
 - Example: {"key":"value","array":[1,2,3]} NOT { "key": "value", "array": [ 1, 2, 3 ] }
 `
-    : '';
+    : "";
 
   const markdownSection = noMarkdown
     ? `- Do not wrap the JSON in \`\`\`json blocks or any markdown formatting
 - CRITICAL: If your response starts with a backtick (\`) character, you have FAILED
 - CRITICAL: If your response contains the text \`\`\`json anywhere, you have FAILED
 `
-    : '';
+    : "";
 
   return `CRITICAL JSON FORMATTING RULES:
 - Return ONLY valid JSON. No markdown backticks, no explanations, no text outside JSON
@@ -57,6 +59,9 @@ export function getJsonFormattingInstructions(options: {
 - THE VERY LAST CHARACTER of your response must be } - nothing after it
 ${markdownSection}- NEVER include trailing commas before closing braces } or brackets ]
 - Use double quotes for all strings, never single quotes
+- CRITICAL: Use standard JSON with SINGLE double-quotes for property names and values
+- Example CORRECT: {"property": "value"} NOT {""property"": ""value""}
+- Do NOT escape quotes unnecessarily - use single double-quotes, not double double-quotes
 - Ensure all arrays and objects are properly closed
 - If unsure about a value, use null instead of omitting the field
 - Test JSON validity before responding
@@ -86,7 +91,8 @@ YOUR RESPONSE MUST START WITH { - BEGIN YOUR RESPONSE NOW WITH THE { CHARACTER.`
  * Use this variant for workouts with 20+ rounds or deeply nested data structures
  * where brace/bracket balance is critical.
  */
-export const JSON_FORMATTING_INSTRUCTIONS_COMPREHENSIVE = getJsonFormattingInstructions();
+export const JSON_FORMATTING_INSTRUCTIONS_COMPREHENSIVE =
+  getJsonFormattingInstructions();
 
 /**
  * Minified JSON formatting instructions for large payloads
@@ -94,7 +100,8 @@ export const JSON_FORMATTING_INSTRUCTIONS_COMPREHENSIVE = getJsonFormattingInstr
  * Use this variant when response size is a concern (e.g., workout extraction
  * with many rounds or large analytics payloads).
  */
-export const JSON_FORMATTING_INSTRUCTIONS_MINIFIED = getJsonFormattingInstructions({ minified: true });
+export const JSON_FORMATTING_INSTRUCTIONS_MINIFIED =
+  getJsonFormattingInstructions({ minified: true });
 
 /**
  * Standard JSON formatting instructions (most common use case)
@@ -102,5 +109,5 @@ export const JSON_FORMATTING_INSTRUCTIONS_MINIFIED = getJsonFormattingInstructio
  * Use this for most JSON generation scenarios where size and complexity
  * are moderate (e.g., coach configs, analytics, summaries).
  */
-export const JSON_FORMATTING_INSTRUCTIONS_STANDARD = getJsonFormattingInstructions();
-
+export const JSON_FORMATTING_INSTRUCTIONS_STANDARD =
+  getJsonFormattingInstructions();

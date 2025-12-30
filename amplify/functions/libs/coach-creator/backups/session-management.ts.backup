@@ -185,7 +185,7 @@ Does this user want to finish the coach creator and create their custom AI coach
   const response = await callBedrockApi(
     systemPrompt,
     userPrompt,
-    MODEL_IDS.CLAUDE_HAIKU_4_FULL,
+    MODEL_IDS.EXECUTOR_MODEL_FULL,
     false // No extended thinking needed for this classification
   );
 

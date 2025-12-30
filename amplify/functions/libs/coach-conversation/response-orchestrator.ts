@@ -2,6 +2,7 @@ import {
   callBedrockApiMultimodal,
   callBedrockApiMultimodalStream,
   MODEL_IDS,
+  TEMPERATURE_PRESETS,
   storeDebugDataInS3,
 } from "../api-helpers";
 import {
@@ -13,7 +14,12 @@ import { ConversationContextResult } from "./context";
 import { WorkoutDetectionResult } from "./workout-detection";
 import { MemoryRetrievalResult } from "./memory-processing";
 import { buildMultimodalContent } from "../streaming";
-import { CoachMessage, ConversationMode, CONVERSATION_MODES, MESSAGE_TYPES } from "./types";
+import {
+  CoachMessage,
+  ConversationMode,
+  CONVERSATION_MODES,
+  MESSAGE_TYPES,
+} from "./types";
 
 // Configuration constants
 const ENABLE_S3_DEBUG_LOGGING = true; // Always log system prompts to S3 for debugging and monitoring
@@ -29,14 +35,18 @@ const MIN_CACHE_THRESHOLD = 12; // Start caching when conversation has > 12 mess
  * @returns Model ID to use for this conversation
  */
 export function selectModelForConversation(
-  requiresDeepReasoning: boolean
+  requiresDeepReasoning: boolean,
 ): string {
   const modelToUse = requiresDeepReasoning
-    ? MODEL_IDS.CLAUDE_SONNET_4_FULL
-    : MODEL_IDS.CLAUDE_HAIKU_4_FULL;
+    ? MODEL_IDS.PLANNER_MODEL_FULL
+    : MODEL_IDS.EXECUTOR_MODEL_FULL;
+
+  const modelDisplay = requiresDeepReasoning
+    ? MODEL_IDS.PLANNER_MODEL_DISPLAY
+    : MODEL_IDS.EXECUTOR_MODEL_DISPLAY;
 
   console.info(
-    `🤖 Model selection: ${requiresDeepReasoning ? "SONNET 4.5" : "HAIKU 4.5"} (requiresDeepReasoning=${requiresDeepReasoning})`
+    `🤖 Model selection: ${modelDisplay} (requiresDeepReasoning=${requiresDeepReasoning})`,
   );
 
   return modelToUse;
@@ -64,7 +74,7 @@ function buildMessagesWithHistoryCaching(existingMessages: any[]): any[] {
   // Don't cache short conversations
   if (messageCount < MIN_CACHE_THRESHOLD) {
     console.info(
-      `📝 Short conversation (${messageCount} messages) - no history caching`
+      `📝 Short conversation (${messageCount} messages) - no history caching`,
     );
     return existingMessages.map((msg) => ({
       role: msg.role,
@@ -88,7 +98,7 @@ function buildMessagesWithHistoryCaching(existingMessages: any[]): any[] {
       stepSize: CACHE_STEP_SIZE,
       nextBoundary: cachedCount + CACHE_STEP_SIZE,
       minThreshold: MIN_CACHE_THRESHOLD,
-    }
+    },
   );
 
   // Build messages array with cache point
@@ -148,7 +158,7 @@ export async function generateAIResponse(
   userProfile?: any,
   imageS3Keys?: string[], // Image attachments
   requiresDeepReasoning?: boolean, // NEW: Smart model selection flag
-  conversationMode?: ConversationMode // NEW: Conversation mode for specialized prompts
+  conversationMode?: ConversationMode, // NEW: Conversation mode for specialized prompts
 ): Promise<ResponseGenerationResult> {
   let aiResponseContent: string;
   let promptMetadata: any = null;
@@ -186,8 +196,7 @@ export async function generateAIResponse(
       additionalConstraints: workoutResult.workoutDetectionContext, // Add workout context if detected
       workoutContext: context.recentWorkouts, // Add recent workout summaries for context
       userMemories: memoryResult.memories, // Add memories for personalization
-      criticalTrainingDirective:
-        userProfile?.criticalTrainingDirective, // Add critical training directive if set
+      criticalTrainingDirective: userProfile?.criticalTrainingDirective, // Add critical training directive if set
       userTimezone, // Pass user's timezone for temporal context
       existingMessages, // NEW: Pass messages for conversation history (now in prompt-generation)
       pineconeContext: context.pineconeContext, // NEW: Pass Pinecone context (now in prompt-generation)
@@ -261,11 +270,10 @@ export async function generateAIResponse(
             hasCriticalDirective:
               !!userProfile?.criticalTrainingDirective?.enabled,
             userTimezone:
-              userProfile?.preferences?.timezone ||
-              "America/Los_Angeles",
+              userProfile?.preferences?.timezone || "America/Los_Angeles",
             type: "coach-conversation-prompt-non-stream",
           },
-          "coach-conversation"
+          "coach-conversation",
         );
 
         console.info("✅ System prompt stored in S3 for debug/monitoring:", {
@@ -284,7 +292,7 @@ export async function generateAIResponse(
       } catch (s3Error) {
         console.warn(
           "⚠️ Failed to store system prompt in S3 (non-critical):",
-          s3Error
+          s3Error,
         );
       }
     }
@@ -292,7 +300,7 @@ export async function generateAIResponse(
     try {
       // Smart model selection based on router analysis
       const selectedModel = selectModelForConversation(
-        requiresDeepReasoning || false
+        requiresDeepReasoning || false,
       );
 
       // Check if this is a multimodal request (has images)
@@ -323,14 +331,18 @@ export async function generateAIResponse(
 
         // Use centralized multimodal helper from api-helpers
         // NEW: Pass static/dynamic prompts for caching optimization
-        aiResponseContent = await callBedrockApiMultimodal(
+        aiResponseContent = (await callBedrockApiMultimodal(
           systemPromptWithHistory,
           converseMessages,
           selectedModel,
           staticPrompt && dynamicPrompt
-            ? { staticPrompt, dynamicPrompt }
-            : undefined
-        ) as string; // No tools used, always returns string
+            ? {
+                temperature: TEMPERATURE_PRESETS.BALANCED,
+                staticPrompt,
+                dynamicPrompt,
+              }
+            : { temperature: TEMPERATURE_PRESETS.BALANCED },
+        )) as string; // No tools used, always returns string
       } else {
         // Text-only response with conversation history caching
         // Build messages array with history caching (if conversation is long enough)
@@ -350,14 +362,18 @@ export async function generateAIResponse(
         });
 
         // Use multimodal API (works for text-only too) with messages array
-        aiResponseContent = await callBedrockApiMultimodal(
+        aiResponseContent = (await callBedrockApiMultimodal(
           systemPromptWithHistory,
           messagesWithHistory,
           selectedModel,
           staticPrompt && dynamicPrompt
-            ? { staticPrompt, dynamicPrompt }
-            : undefined
-        ) as string; // No tools used, always returns string
+            ? {
+                temperature: TEMPERATURE_PRESETS.BALANCED,
+                staticPrompt,
+                dynamicPrompt,
+              }
+            : { temperature: TEMPERATURE_PRESETS.BALANCED },
+        )) as string; // No tools used, always returns string
       }
     } catch (error) {
       console.error("Claude API error:", error);
@@ -397,7 +413,7 @@ export async function generateAIResponseStream(
   userProfile?: any,
   imageS3Keys?: string[], // Image attachments
   requiresDeepReasoning?: boolean, // NEW: Smart model selection flag
-  conversationMode?: ConversationMode // NEW: Conversation mode for specialized prompts
+  conversationMode?: ConversationMode, // NEW: Conversation mode for specialized prompts
 ): Promise<ResponseGenerationStreamResult> {
   let promptMetadata: any = null;
 
@@ -434,8 +450,7 @@ export async function generateAIResponseStream(
       additionalConstraints: workoutResult.workoutDetectionContext, // Add workout context if detected
       workoutContext: context.recentWorkouts, // Add recent workout summaries for context
       userMemories: memoryResult.memories, // Add memories for personalization
-      criticalTrainingDirective:
-        userProfile?.criticalTrainingDirective, // Add critical training directive if set
+      criticalTrainingDirective: userProfile?.criticalTrainingDirective, // Add critical training directive if set
       userTimezone, // Pass user's timezone for temporal context
       existingMessages, // NEW: Pass messages for conversation history (now in prompt-generation)
       pineconeContext: context.pineconeContext, // NEW: Pass Pinecone context (now in prompt-generation)
@@ -511,7 +526,7 @@ export async function generateAIResponseStream(
             userTimezone: userTimezone || "America/Los_Angeles",
             type: "coach-conversation-prompt-stream",
           },
-          "coach-conversation"
+          "coach-conversation",
         );
 
         console.info("✅ System prompt stored in S3 for debug/monitoring:", {
@@ -530,7 +545,7 @@ export async function generateAIResponseStream(
       } catch (s3Error) {
         console.warn(
           "⚠️ Failed to store system prompt in S3 (non-critical):",
-          s3Error
+          s3Error,
         );
       }
     }
@@ -538,7 +553,7 @@ export async function generateAIResponseStream(
     try {
       // Smart model selection based on router analysis
       const selectedModel = selectModelForConversation(
-        requiresDeepReasoning || false
+        requiresDeepReasoning || false,
       );
 
       // Check if this is a multimodal request (has images)
@@ -574,8 +589,12 @@ export async function generateAIResponseStream(
           converseMessages,
           selectedModel,
           staticPrompt && dynamicPrompt
-            ? { staticPrompt, dynamicPrompt }
-            : undefined
+            ? {
+                temperature: TEMPERATURE_PRESETS.BALANCED,
+                staticPrompt,
+                dynamicPrompt,
+              }
+            : { temperature: TEMPERATURE_PRESETS.BALANCED },
         );
 
         return {
@@ -600,7 +619,7 @@ export async function generateAIResponseStream(
             totalMessages: messagesWithHistory.length,
             existingMessages: existingMessages.length,
             model: selectedModel,
-          }
+          },
         );
 
         // Use multimodal streaming API (works for text-only too) with messages array
@@ -609,8 +628,12 @@ export async function generateAIResponseStream(
           messagesWithHistory,
           selectedModel,
           staticPrompt && dynamicPrompt
-            ? { staticPrompt, dynamicPrompt }
-            : undefined
+            ? {
+                temperature: TEMPERATURE_PRESETS.BALANCED,
+                staticPrompt,
+                dynamicPrompt,
+              }
+            : { temperature: TEMPERATURE_PRESETS.BALANCED },
         );
 
         return {

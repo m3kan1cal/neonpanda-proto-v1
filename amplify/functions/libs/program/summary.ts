@@ -5,7 +5,7 @@
  * to provide concise, coach-friendly context for semantic search and conversations.
  */
 
-import { callBedrockApi } from "../api-helpers";
+import { callBedrockApi, TEMPERATURE_PRESETS } from "../api-helpers";
 import { Program } from "./types";
 
 /**
@@ -79,6 +79,7 @@ Write the summary now:`;
       dynamicPrompt,
       undefined, // Use default model
       {
+        temperature: TEMPERATURE_PRESETS.BALANCED,
         staticPrompt,
         dynamicPrompt,
         enableThinking,

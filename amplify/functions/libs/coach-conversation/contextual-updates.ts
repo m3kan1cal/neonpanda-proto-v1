@@ -17,7 +17,7 @@
  * This would optimize performance and provide more targeted responses.
  */
 
-import { callBedrockApi, MODEL_IDS } from "../api-helpers";
+import { callBedrockApi, MODEL_IDS, TEMPERATURE_PRESETS } from "../api-helpers";
 import { formatContextualEvent } from "../streaming";
 
 // Generate contextual updates using Amazon Nova Micro for fast, cost-effective progressive user feedback
@@ -25,15 +25,14 @@ export async function generateContextualUpdate(
   coachConfig: any,
   userResponse: string,
   updateType: string,
-  context: any
+  context: any,
 ): Promise<string> {
   try {
     const coachName = coachConfig.coach_name || "Coach";
     const personalityTraits = coachConfig.personality_traits || [];
     const coachingStyle = coachConfig.coaching_style || "supportive";
     const specialties = coachConfig.specialties || [];
-    const communicationStyle =
-      coachConfig.communication_style || "friendly";
+    const communicationStyle = coachConfig.communication_style || "friendly";
     const motivationalApproach =
       coachConfig.motivational_approach || "encouraging";
     const catchphrases = coachConfig.catchphrases || [];
@@ -168,19 +167,24 @@ Generate a brief processing update. One sentence, calm tone.`;
     }
 
     // Use Nova Micro for fast, cost-effective contextual updates
-    const update = await callBedrockApi(
+    const update = (await callBedrockApi(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.NOVA_MICRO
+      MODEL_IDS.CONTEXTUAL_MODEL_FULL,
+      {
+        temperature: TEMPERATURE_PRESETS.BALANCED,
+      },
       // No thinking needed for quick responses (default is false)
-    ) as string; // No tools used, always returns string
+    )) as string; // No tools used, always returns string
 
     // Clean up the response - remove any quotes that might have been added
     let cleanedUpdate = update.trim();
 
     // Remove leading and trailing quotes if present
-    if ((cleanedUpdate.startsWith('"') && cleanedUpdate.endsWith('"')) ||
-        (cleanedUpdate.startsWith("'") && cleanedUpdate.endsWith("'"))) {
+    if (
+      (cleanedUpdate.startsWith('"') && cleanedUpdate.endsWith('"')) ||
+      (cleanedUpdate.startsWith("'") && cleanedUpdate.endsWith("'"))
+    ) {
       cleanedUpdate = cleanedUpdate.slice(1, -1);
     }
 
@@ -212,7 +216,7 @@ Generate a brief processing update. One sentence, calm tone.`;
 export async function generateCoachCreatorContextualUpdate(
   userResponse: string,
   updateType: string,
-  context: any = {}
+  context: any = {},
 ): Promise<string> {
   try {
     const systemPrompt = `You are Vesper, the vibrant NeonPanda Coach Creator guide who helps athletes build their perfect AI coach.
@@ -268,7 +272,8 @@ Examples: Searching the training methodology database.. OR Looking up relevant t
 
       case "memory_check":
         const memoryCount = context.memoryCount || 0;
-        const memoryContext = memoryCount > 0 ? `Found ${memoryCount} memories. ` : "";
+        const memoryContext =
+          memoryCount > 0 ? `Found ${memoryCount} memories. ` : "";
         userPrompt = `User just responded: "${userResponse}"
 Context: ${memoryContext}
 
@@ -306,11 +311,14 @@ Generate a brief, energetic progress update. Be vibrant! Don't repeat patterns.
 Examples: Processing your message.. OR Working through this.. OR Analyzing what you shared.. OR Getting this ready.. OR Handling your request..`;
     }
 
-    const bedrockResponse = await callBedrockApi(
+    const bedrockResponse = (await callBedrockApi(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.NOVA_MICRO // Ultra-fast, very cost-effective for contextual updates
-    ) as string; // No tools used, always returns string
+      MODEL_IDS.CONTEXTUAL_MODEL_FULL, // Ultra-fast, very cost-effective for contextual updates
+      {
+        temperature: TEMPERATURE_PRESETS.BALANCED,
+      },
+    )) as string; // No tools used, always returns string
 
     // Extract and clean the response (callBedrockApi already returns the text string)
     let update = bedrockResponse.trim();
@@ -320,13 +328,16 @@ Examples: Processing your message.. OR Working through this.. OR Analyzing what 
 
     // CRITICAL: Remove ALL emojis and symbols (safety net)
     // This regex removes all emoji characters including symbols, pictographs, and emoticons
-    update = update.replace(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|[\u{1F000}-\u{1F02F}]|[\u{1F0A0}-\u{1F0FF}]|[\u{1F100}-\u{1F64F}]|[\u{1F680}-\u{1F6FF}]|[\u{1F910}-\u{1F96B}]|[\u{1F980}-\u{1F9E0}]/gu, '');
+    update = update.replace(
+      /[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|[\u{1F000}-\u{1F02F}]|[\u{1F0A0}-\u{1F0FF}]|[\u{1F100}-\u{1F64F}]|[\u{1F680}-\u{1F6FF}]|[\u{1F910}-\u{1F96B}]|[\u{1F980}-\u{1F9E0}]/gu,
+      "",
+    );
 
     // Also remove common symbol characters
-    update = update.replace(/[💪🔥🏋️‍♂️⚡️✨🎯🚀👊💯🎉🔥]/g, '');
+    update = update.replace(/[💪🔥🏋️‍♂️⚡️✨🎯🚀👊💯🎉🔥]/g, "");
 
     // Clean up any double spaces or trailing ellipses from emoji removal
-    update = update.replace(/\s+/g, ' ').trim();
+    update = update.replace(/\s+/g, " ").trim();
 
     // Ensure it's brief (max 150 chars)
     if (update.length > 150) {
@@ -334,46 +345,52 @@ Examples: Processing your message.. OR Working through this.. OR Analyzing what 
     }
 
     return update;
-
   } catch (error) {
-    console.error(`❌ Error generating ${updateType} update for Vesper:`, error);
+    console.error(
+      `❌ Error generating ${updateType} update for Vesper:`,
+      error,
+    );
 
     // Fallback messages in Vesper's energetic voice - with variety and specificity
     const fallbacks: Record<string, string[]> = {
       session_review: [
         `Reviewing what we've discussed..`,
         `Checking our conversation history..`,
-        `Looking back at what you've shared..`
+        `Looking back at what you've shared..`,
       ],
       methodology_search: [
         `Searching training methodologies..`,
         `Looking up training approaches..`,
-        `Checking the methodology database..`
+        `Checking the methodology database..`,
       ],
       memory_check: [
         `Checking your saved goals..`,
         `Looking up your preferences..`,
-        `Reviewing what matters to you..`
+        `Reviewing what matters to you..`,
       ],
       question_preparation: [
         `Getting the next question ready..`,
         `Preparing what to ask next..`,
-        `Loading up the next question..`
+        `Loading up the next question..`,
       ],
       response_crafting: [
         `Crafting your response..`,
         `Preparing my answer..`,
-        `Building your reply..`
+        `Building your reply..`,
       ],
       initial_greeting: [
         `Getting started on this..`,
         `Beginning to process..`,
-        `Starting to work on this..`
+        `Starting to work on this..`,
       ],
     };
 
     // Pick a random fallback from the array for variety
-    const fallbackArray = fallbacks[updateType] || [`Processing your message..`, `Working on this..`, `Handling your request..`];
+    const fallbackArray = fallbacks[updateType] || [
+      `Processing your message..`,
+      `Working on this..`,
+      `Handling your request..`,
+    ];
     const randomIndex = Math.floor(Math.random() * fallbackArray.length);
     return fallbackArray[randomIndex];
   }
@@ -385,112 +402,562 @@ export function categorizeUserMessage(userResponse: string): string {
 
   // Workout and exercise related
   const workoutKeywords = [
-    "workout", "exercise", "training", "lift", "lifting", "squat", "deadlift",
-    "bench", "press", "cardio", "running", "gym", "weight", "weights", "reps",
-    "sets", "form", "technique", "routine", "program", "schedule", "session",
-    "bicep", "tricep", "chest", "back", "legs", "shoulders", "abs", "core",
-    "curl", "row", "pullup", "pushup", "dip", "lunge", "plank", "burpee",
-    "hiit", "crossfit", "powerlifting", "bodybuilding", "strength", "endurance",
-    "muscle", "muscles", "pump", "burn", "sweat", "fatigue", "exhausted",
-    "pr", "personal record", "max", "1rm", "rep max", "failure", "drop set",
-    "superset", "circuit", "interval", "tempo", "rest", "break", "recovery",
-    "warm up", "cool down", "stretch", "mobility", "flexibility", "range of motion",
-    "barbell", "dumbbell", "kettlebell", "machine", "cable", "resistance band",
-    "treadmill", "bike", "elliptical", "rowing", "stairmaster", "yoga", "pilates"
+    "workout",
+    "exercise",
+    "training",
+    "lift",
+    "lifting",
+    "squat",
+    "deadlift",
+    "bench",
+    "press",
+    "cardio",
+    "running",
+    "gym",
+    "weight",
+    "weights",
+    "reps",
+    "sets",
+    "form",
+    "technique",
+    "routine",
+    "program",
+    "schedule",
+    "session",
+    "bicep",
+    "tricep",
+    "chest",
+    "back",
+    "legs",
+    "shoulders",
+    "abs",
+    "core",
+    "curl",
+    "row",
+    "pullup",
+    "pushup",
+    "dip",
+    "lunge",
+    "plank",
+    "burpee",
+    "hiit",
+    "crossfit",
+    "powerlifting",
+    "bodybuilding",
+    "strength",
+    "endurance",
+    "muscle",
+    "muscles",
+    "pump",
+    "burn",
+    "sweat",
+    "fatigue",
+    "exhausted",
+    "pr",
+    "personal record",
+    "max",
+    "1rm",
+    "rep max",
+    "failure",
+    "drop set",
+    "superset",
+    "circuit",
+    "interval",
+    "tempo",
+    "rest",
+    "break",
+    "recovery",
+    "warm up",
+    "cool down",
+    "stretch",
+    "mobility",
+    "flexibility",
+    "range of motion",
+    "barbell",
+    "dumbbell",
+    "kettlebell",
+    "machine",
+    "cable",
+    "resistance band",
+    "treadmill",
+    "bike",
+    "elliptical",
+    "rowing",
+    "stairmaster",
+    "yoga",
+    "pilates",
   ];
 
   // Nutrition and diet related
   const nutritionKeywords = [
-    "diet", "nutrition", "eating", "food", "meal", "protein", "carbs",
-    "calories", "macros", "supplement", "drink", "water", "hungry", "appetite",
-    "carbohydrates", "fat", "fats", "fiber", "sugar", "sodium", "vitamins",
-    "minerals", "creatine", "whey", "casein", "bcaa", "pre workout", "post workout",
-    "breakfast", "lunch", "dinner", "snack", "snacks", "portion", "serving",
-    "keto", "paleo", "vegan", "vegetarian", "intermittent fasting", "fasting",
-    "bulk", "bulking", "cut", "cutting", "deficit", "surplus", "maintenance",
-    "hydration", "dehydrated", "electrolytes", "caffeine", "alcohol", "cheat meal",
-    "meal prep", "cooking", "recipe", "grocery", "shopping", "organic", "processed",
-    "whole foods", "junk food", "fast food", "restaurant", "takeout", "delivery"
+    "diet",
+    "nutrition",
+    "eating",
+    "food",
+    "meal",
+    "protein",
+    "carbs",
+    "calories",
+    "macros",
+    "supplement",
+    "drink",
+    "water",
+    "hungry",
+    "appetite",
+    "carbohydrates",
+    "fat",
+    "fats",
+    "fiber",
+    "sugar",
+    "sodium",
+    "vitamins",
+    "minerals",
+    "creatine",
+    "whey",
+    "casein",
+    "bcaa",
+    "pre workout",
+    "post workout",
+    "breakfast",
+    "lunch",
+    "dinner",
+    "snack",
+    "snacks",
+    "portion",
+    "serving",
+    "keto",
+    "paleo",
+    "vegan",
+    "vegetarian",
+    "intermittent fasting",
+    "fasting",
+    "bulk",
+    "bulking",
+    "cut",
+    "cutting",
+    "deficit",
+    "surplus",
+    "maintenance",
+    "hydration",
+    "dehydrated",
+    "electrolytes",
+    "caffeine",
+    "alcohol",
+    "cheat meal",
+    "meal prep",
+    "cooking",
+    "recipe",
+    "grocery",
+    "shopping",
+    "organic",
+    "processed",
+    "whole foods",
+    "junk food",
+    "fast food",
+    "restaurant",
+    "takeout",
+    "delivery",
   ];
 
   // Goal setting and planning
   const goalKeywords = [
-    "goal", "goals", "target", "aim", "want to", "trying to", "hope to",
-    "plan to", "planning", "future", "next", "achieve", "reach", "build",
-    "lose", "gain", "improve", "better", "stronger", "faster", "leaner",
-    "objective", "ambition", "aspiration", "dream", "vision", "mission",
-    "resolution", "commitment", "challenge", "milestone", "deadline", "timeline",
-    "transform", "transformation", "change", "lifestyle", "habit", "habits",
-    "discipline", "consistency", "routine", "schedule", "priority", "priorities",
-    "focus", "motivation", "determination", "dedication", "perseverance",
-    "six pack", "abs", "tone", "toned", "shred", "shredded", "ripped", "jacked",
-    "bulk up", "mass", "size", "definition", "cut", "lean", "athletic", "fit",
-    "marathon", "5k", "10k", "half marathon", "triathlon", "competition", "contest"
+    "goal",
+    "goals",
+    "target",
+    "aim",
+    "want to",
+    "trying to",
+    "hope to",
+    "plan to",
+    "planning",
+    "future",
+    "next",
+    "achieve",
+    "reach",
+    "build",
+    "lose",
+    "gain",
+    "improve",
+    "better",
+    "stronger",
+    "faster",
+    "leaner",
+    "objective",
+    "ambition",
+    "aspiration",
+    "dream",
+    "vision",
+    "mission",
+    "resolution",
+    "commitment",
+    "challenge",
+    "milestone",
+    "deadline",
+    "timeline",
+    "transform",
+    "transformation",
+    "change",
+    "lifestyle",
+    "habit",
+    "habits",
+    "discipline",
+    "consistency",
+    "routine",
+    "schedule",
+    "priority",
+    "priorities",
+    "focus",
+    "motivation",
+    "determination",
+    "dedication",
+    "perseverance",
+    "six pack",
+    "abs",
+    "tone",
+    "toned",
+    "shred",
+    "shredded",
+    "ripped",
+    "jacked",
+    "bulk up",
+    "mass",
+    "size",
+    "definition",
+    "cut",
+    "lean",
+    "athletic",
+    "fit",
+    "marathon",
+    "5k",
+    "10k",
+    "half marathon",
+    "triathlon",
+    "competition",
+    "contest",
   ];
 
   // Progress and results
   const progressKeywords = [
-    "progress", "result", "results", "improvement", "better", "worse",
-    "stuck", "plateau", "gaining", "losing", "growing", "shrinking",
-    "stronger", "weaker", "faster", "slower", "measurement", "weight",
-    "size", "performance", "pr", "personal record", "max",
-    "breakthrough", "milestone", "achievement", "success", "failure", "setback",
-    "stalled", "stagnant", "regression", "decline", "backslide", "relapse",
-    "momentum", "streak", "consistency", "inconsistent", "sporadic", "irregular",
-    "before and after", "transformation", "body composition", "body fat",
-    "measurements", "scale", "weigh in", "photos", "pictures", "mirror",
-    "clothes fit", "tight", "loose", "smaller", "bigger", "inches", "pounds",
-    "strength gains", "endurance", "stamina", "energy", "vitality", "confidence",
-    "tracking", "log", "journal", "record", "data", "stats", "numbers", "metrics"
+    "progress",
+    "result",
+    "results",
+    "improvement",
+    "better",
+    "worse",
+    "stuck",
+    "plateau",
+    "gaining",
+    "losing",
+    "growing",
+    "shrinking",
+    "stronger",
+    "weaker",
+    "faster",
+    "slower",
+    "measurement",
+    "weight",
+    "size",
+    "performance",
+    "pr",
+    "personal record",
+    "max",
+    "breakthrough",
+    "milestone",
+    "achievement",
+    "success",
+    "failure",
+    "setback",
+    "stalled",
+    "stagnant",
+    "regression",
+    "decline",
+    "backslide",
+    "relapse",
+    "momentum",
+    "streak",
+    "consistency",
+    "inconsistent",
+    "sporadic",
+    "irregular",
+    "before and after",
+    "transformation",
+    "body composition",
+    "body fat",
+    "measurements",
+    "scale",
+    "weigh in",
+    "photos",
+    "pictures",
+    "mirror",
+    "clothes fit",
+    "tight",
+    "loose",
+    "smaller",
+    "bigger",
+    "inches",
+    "pounds",
+    "strength gains",
+    "endurance",
+    "stamina",
+    "energy",
+    "vitality",
+    "confidence",
+    "tracking",
+    "log",
+    "journal",
+    "record",
+    "data",
+    "stats",
+    "numbers",
+    "metrics",
   ];
 
   // Recovery and health
   const recoveryKeywords = [
-    "recovery", "rest", "sleep", "tired", "sore", "pain", "hurt", "injury",
-    "injured", "rehab", "stretch", "stretching", "massage", "foam roll",
-    "mobility", "flexibility", "stiff", "tight",
-    "ache", "aching", "tender", "bruised", "swollen", "inflammation", "strain",
-    "sprain", "pulled", "torn", "tweaked", "aggravated", "flare up", "chronic",
-    "acute", "sharp", "dull", "throbbing", "burning", "tingling", "numb",
-    "physical therapy", "pt", "chiropractor", "doctor", "medical", "x-ray", "mri",
-    "ice", "heat", "compression", "elevation", "rice", "anti-inflammatory",
-    "ibuprofen", "advil", "tylenol", "medication", "prescription", "treatment",
-    "healing", "recover", "rehabilitation", "therapy", "exercises", "stretches",
-    "rest day", "off day", "active recovery", "light activity", "walk", "walking",
-    "exhausted", "fatigued", "drained", "worn out", "beat", "wiped", "spent",
-    "overtraining", "burnout", "stress", "tension", "knot", "trigger point"
+    "recovery",
+    "rest",
+    "sleep",
+    "tired",
+    "sore",
+    "pain",
+    "hurt",
+    "injury",
+    "injured",
+    "rehab",
+    "stretch",
+    "stretching",
+    "massage",
+    "foam roll",
+    "mobility",
+    "flexibility",
+    "stiff",
+    "tight",
+    "ache",
+    "aching",
+    "tender",
+    "bruised",
+    "swollen",
+    "inflammation",
+    "strain",
+    "sprain",
+    "pulled",
+    "torn",
+    "tweaked",
+    "aggravated",
+    "flare up",
+    "chronic",
+    "acute",
+    "sharp",
+    "dull",
+    "throbbing",
+    "burning",
+    "tingling",
+    "numb",
+    "physical therapy",
+    "pt",
+    "chiropractor",
+    "doctor",
+    "medical",
+    "x-ray",
+    "mri",
+    "ice",
+    "heat",
+    "compression",
+    "elevation",
+    "rice",
+    "anti-inflammatory",
+    "ibuprofen",
+    "advil",
+    "tylenol",
+    "medication",
+    "prescription",
+    "treatment",
+    "healing",
+    "recover",
+    "rehabilitation",
+    "therapy",
+    "exercises",
+    "stretches",
+    "rest day",
+    "off day",
+    "active recovery",
+    "light activity",
+    "walk",
+    "walking",
+    "exhausted",
+    "fatigued",
+    "drained",
+    "worn out",
+    "beat",
+    "wiped",
+    "spent",
+    "overtraining",
+    "burnout",
+    "stress",
+    "tension",
+    "knot",
+    "trigger point",
   ];
 
   // Questions and help seeking
   const questionKeywords = [
-    "how", "what", "when", "where", "why", "which", "should i", "can i",
-    "help", "advice", "suggest", "recommend", "think", "opinion", "best",
-    "better", "explain", "understand", "confused", "unsure", "not sure",
-    "could i", "would i", "may i", "might i", "do i", "am i", "is it", "are you",
-    "will i", "shall i", "ought i", "need i", "must i", "have to", "supposed to",
-    "guidance", "direction", "instruction", "tutorial", "walkthrough", "demo",
-    "clarify", "clarification", "elaborate", "detail", "specify", "breakdown",
-    "lost", "stuck", "stumped", "puzzled", "baffled", "perplexed", "mystified",
-    "don't know", "no idea", "clueless", "uncertain", "doubtful", "skeptical",
-    "wondering", "curious", "interested", "concern", "worried", "anxious",
-    "question", "questions", "ask", "asking", "inquire", "inquiry", "query"
+    "how",
+    "what",
+    "when",
+    "where",
+    "why",
+    "which",
+    "should i",
+    "can i",
+    "help",
+    "advice",
+    "suggest",
+    "recommend",
+    "think",
+    "opinion",
+    "best",
+    "better",
+    "explain",
+    "understand",
+    "confused",
+    "unsure",
+    "not sure",
+    "could i",
+    "would i",
+    "may i",
+    "might i",
+    "do i",
+    "am i",
+    "is it",
+    "are you",
+    "will i",
+    "shall i",
+    "ought i",
+    "need i",
+    "must i",
+    "have to",
+    "supposed to",
+    "guidance",
+    "direction",
+    "instruction",
+    "tutorial",
+    "walkthrough",
+    "demo",
+    "clarify",
+    "clarification",
+    "elaborate",
+    "detail",
+    "specify",
+    "breakdown",
+    "lost",
+    "stuck",
+    "stumped",
+    "puzzled",
+    "baffled",
+    "perplexed",
+    "mystified",
+    "don't know",
+    "no idea",
+    "clueless",
+    "uncertain",
+    "doubtful",
+    "skeptical",
+    "wondering",
+    "curious",
+    "interested",
+    "concern",
+    "worried",
+    "anxious",
+    "question",
+    "questions",
+    "ask",
+    "asking",
+    "inquire",
+    "inquiry",
+    "query",
   ];
 
   // Motivation and mindset
   const motivationKeywords = [
-    "motivated", "motivation", "discouraged", "frustrated", "excited",
-    "confident", "nervous", "anxious", "stressed", "overwhelmed", "ready",
-    "committed", "dedicated", "lazy", "procrastinating", "giving up",
-    "inspired", "inspiration", "pumped", "psyched", "energized", "driven",
-    "determined", "focused", "disciplined", "willpower", "self-control",
-    "depressed", "sad", "down", "low", "blue", "defeated", "hopeless",
-    "optimistic", "positive", "negative", "pessimistic", "doubtful", "skeptical",
-    "proud", "ashamed", "embarrassed", "self-conscious", "insecure", "confident",
-    "fear", "scared", "afraid", "terrified", "intimidated", "worried", "concern",
-    "guilt", "guilty", "regret", "disappointed", "satisfaction", "satisfied",
-    "burnout", "burned out", "exhausted", "drained", "tired", "weary", "spent",
-    "momentum", "flow", "zone", "groove", "rhythm", "consistency", "routine",
-    "mindset", "attitude", "perspective", "outlook", "approach", "mentality"
+    "motivated",
+    "motivation",
+    "discouraged",
+    "frustrated",
+    "excited",
+    "confident",
+    "nervous",
+    "anxious",
+    "stressed",
+    "overwhelmed",
+    "ready",
+    "committed",
+    "dedicated",
+    "lazy",
+    "procrastinating",
+    "giving up",
+    "inspired",
+    "inspiration",
+    "pumped",
+    "psyched",
+    "energized",
+    "driven",
+    "determined",
+    "focused",
+    "disciplined",
+    "willpower",
+    "self-control",
+    "depressed",
+    "sad",
+    "down",
+    "low",
+    "blue",
+    "defeated",
+    "hopeless",
+    "optimistic",
+    "positive",
+    "negative",
+    "pessimistic",
+    "doubtful",
+    "skeptical",
+    "proud",
+    "ashamed",
+    "embarrassed",
+    "self-conscious",
+    "insecure",
+    "confident",
+    "fear",
+    "scared",
+    "afraid",
+    "terrified",
+    "intimidated",
+    "worried",
+    "concern",
+    "guilt",
+    "guilty",
+    "regret",
+    "disappointed",
+    "satisfaction",
+    "satisfied",
+    "burnout",
+    "burned out",
+    "exhausted",
+    "drained",
+    "tired",
+    "weary",
+    "spent",
+    "momentum",
+    "flow",
+    "zone",
+    "groove",
+    "rhythm",
+    "consistency",
+    "routine",
+    "mindset",
+    "attitude",
+    "perspective",
+    "outlook",
+    "approach",
+    "mentality",
   ];
 
   // Check each category with multiple keywords
@@ -560,12 +1027,12 @@ export function categorizeUserMessage(userResponse: string): string {
 // Determine if contextual updates are appropriate for this user message
 // Uses hybrid approach: thorough rule-based filtering + AI for edge cases
 export async function shouldShowContextualUpdates(
-  userResponse: string
+  userResponse: string,
 ): Promise<boolean> {
   const message = userResponse.toLowerCase().trim();
 
   console.info(
-    `🎯 Analyzing message intent: "${userResponse.substring(0, 50)}..."`
+    `🎯 Analyzing message intent: "${userResponse.substring(0, 50)}..."`,
   );
 
   // === PHASE 1: THOROUGH RULE-BASED FILTERING ===
@@ -631,7 +1098,7 @@ export async function shouldShowContextualUpdates(
       message === "thanks, " + shortResponse
     ) {
       console.info(
-        `🚫 Rule-based: SKIP updates (obvious short: "${shortResponse}")`
+        `🚫 Rule-based: SKIP updates (obvious short: "${shortResponse}")`,
       );
       return false;
     }
@@ -721,7 +1188,7 @@ export async function shouldShowContextualUpdates(
   for (const reaction of emotionalReactions) {
     if (message === reaction || message === reaction.replace("!", "")) {
       console.info(
-        `🚫 Rule-based: SKIP updates (emotional reaction: "${reaction}")`
+        `🚫 Rule-based: SKIP updates (emotional reaction: "${reaction}")`,
       );
       return false;
     }
@@ -779,7 +1246,7 @@ export async function shouldShowContextualUpdates(
   for (const confirmation of confirmations) {
     if (message.includes(confirmation)) {
       console.info(
-        `🚫 Rule-based: SKIP updates (confirmation: "${confirmation}")`
+        `🚫 Rule-based: SKIP updates (confirmation: "${confirmation}")`,
       );
       return false;
     }
@@ -858,7 +1325,7 @@ export async function shouldShowContextualUpdates(
   for (const needsHelp of obviousNeedsAnalysis) {
     if (message.includes(needsHelp)) {
       console.info(
-        `✅ Rule-based: SHOW updates (obvious question: "${needsHelp}")`
+        `✅ Rule-based: SHOW updates (obvious question: "${needsHelp}")`,
       );
       return true;
     }
@@ -866,19 +1333,108 @@ export async function shouldShowContextualUpdates(
 
   // Fitness-related keywords - YES to contextual updates (skip AI)
   const fitnessKeywords = [
-    "workout", "exercise", "training", "lift", "lifting", "squat", "deadlift",
-    "bench", "press", "cardio", "running", "gym", "weight", "weights", "muscle",
-    "strength", "progress", "goal", "goals", "plan", "program", "routine", "schedule",
-    "diet", "nutrition", "recovery", "rest", "sleep", "form", "technique", "reps", "sets",
-    "bicep", "tricep", "chest", "back", "legs", "shoulders", "abs", "core", "glutes",
-    "curl", "row", "pullup", "pushup", "dip", "lunge", "plank", "burpee", "hiit",
-    "crossfit", "powerlifting", "bodybuilding", "endurance", "stamina", "pump", "burn",
-    "pr", "personal record", "max", "1rm", "failure", "superset", "circuit", "interval",
-    "barbell", "dumbbell", "kettlebell", "machine", "cable", "treadmill", "bike",
-    "protein", "carbs", "calories", "macros", "supplement", "creatine", "whey",
-    "bulk", "bulking", "cut", "cutting", "deficit", "surplus", "keto", "paleo",
-    "sore", "pain", "injury", "injured", "strain", "rehab", "stretch", "mobility",
-    "tired", "exhausted", "fatigued", "overtraining", "plateau", "stuck", "frustrated"
+    "workout",
+    "exercise",
+    "training",
+    "lift",
+    "lifting",
+    "squat",
+    "deadlift",
+    "bench",
+    "press",
+    "cardio",
+    "running",
+    "gym",
+    "weight",
+    "weights",
+    "muscle",
+    "strength",
+    "progress",
+    "goal",
+    "goals",
+    "plan",
+    "program",
+    "routine",
+    "schedule",
+    "diet",
+    "nutrition",
+    "recovery",
+    "rest",
+    "sleep",
+    "form",
+    "technique",
+    "reps",
+    "sets",
+    "bicep",
+    "tricep",
+    "chest",
+    "back",
+    "legs",
+    "shoulders",
+    "abs",
+    "core",
+    "glutes",
+    "curl",
+    "row",
+    "pullup",
+    "pushup",
+    "dip",
+    "lunge",
+    "plank",
+    "burpee",
+    "hiit",
+    "crossfit",
+    "powerlifting",
+    "bodybuilding",
+    "endurance",
+    "stamina",
+    "pump",
+    "burn",
+    "pr",
+    "personal record",
+    "max",
+    "1rm",
+    "failure",
+    "superset",
+    "circuit",
+    "interval",
+    "barbell",
+    "dumbbell",
+    "kettlebell",
+    "machine",
+    "cable",
+    "treadmill",
+    "bike",
+    "protein",
+    "carbs",
+    "calories",
+    "macros",
+    "supplement",
+    "creatine",
+    "whey",
+    "bulk",
+    "bulking",
+    "cut",
+    "cutting",
+    "deficit",
+    "surplus",
+    "keto",
+    "paleo",
+    "sore",
+    "pain",
+    "injury",
+    "injured",
+    "strain",
+    "rehab",
+    "stretch",
+    "mobility",
+    "tired",
+    "exhausted",
+    "fatigued",
+    "overtraining",
+    "plateau",
+    "stuck",
+    "frustrated",
   ];
 
   let hasFitnessKeywords = false;
@@ -891,7 +1447,7 @@ export async function shouldShowContextualUpdates(
 
   if (hasFitnessKeywords && message.length > 15) {
     console.info(
-      `✅ Rule-based: SHOW updates (fitness keywords + length > 15)`
+      `✅ Rule-based: SHOW updates (fitness keywords + length > 15)`,
     );
     return true;
   }
@@ -899,7 +1455,7 @@ export async function shouldShowContextualUpdates(
   // Very short messages (under 8 characters) - likely simple responses
   if (message.length < 8) {
     console.info(
-      `🚫 Rule-based: SKIP updates (very short: ${message.length} chars)`
+      `🚫 Rule-based: SKIP updates (very short: ${message.length} chars)`,
     );
     return false;
   }
@@ -907,7 +1463,7 @@ export async function shouldShowContextualUpdates(
   // Very long messages (over 60 characters) - likely need analysis
   if (message.length > 60) {
     console.info(
-      `✅ Rule-based: SHOW updates (long message: ${message.length} chars)`
+      `✅ Rule-based: SHOW updates (long message: ${message.length} chars)`,
     );
     return true;
   }
@@ -915,19 +1471,19 @@ export async function shouldShowContextualUpdates(
   // === PHASE 2: AI-BASED INTENT DETECTION FOR EDGE CASES ===
 
   console.info(
-    `🤖 Using AI intent detection for ambiguous message (${message.length} chars)`
+    `🤖 Using AI intent detection for ambiguous message (${message.length} chars)`,
   );
 
   try {
     const response = await determineIntentWithAI(userResponse);
     console.info(
-      `🤖 AI decision: ${response ? "SHOW" : "SKIP"} contextual updates`
+      `🤖 AI decision: ${response ? "SHOW" : "SKIP"} contextual updates`,
     );
     return response;
   } catch (error) {
     console.warn(
       "⚠️ AI intent detection failed, defaulting to SHOW updates:",
-      error
+      error,
     );
     return true; // Default to showing updates if AI fails
   }
@@ -954,12 +1510,15 @@ Examples:
 
 Does this need detailed coach analysis (COMPLEX) or is it a simple response (SIMPLE)?`;
 
-  const response = await callBedrockApi(
+  const response = (await callBedrockApi(
     systemPrompt,
     userPrompt,
-    MODEL_IDS.NOVA_MICRO // Fastest, cheapest model for intent classification
+    MODEL_IDS.CONTEXTUAL_MODEL_FULL, // Fastest, cheapest model for intent classification
+    {
+      temperature: TEMPERATURE_PRESETS.STRUCTURED,
+    },
     // No thinking needed for simple classification (default is false)
-  ) as string; // No tools used, always returns string
+  )) as string; // No tools used, always returns string
 
   return response.trim().toUpperCase() === "COMPLEX";
 }
@@ -981,10 +1540,15 @@ export async function generateAndFormatUpdate(
   coachConfig: any,
   userResponse: string,
   updateType: string,
-  context: Record<string, any>
+  context: Record<string, any>,
 ): Promise<string | null> {
   try {
-    const update = await generateContextualUpdate(coachConfig, userResponse, updateType, context);
+    const update = await generateContextualUpdate(
+      coachConfig,
+      userResponse,
+      updateType,
+      context,
+    );
     return formatContextualEvent(update, updateType);
   } catch (err) {
     console.warn(`Contextual update ${updateType} failed (non-critical):`, err);

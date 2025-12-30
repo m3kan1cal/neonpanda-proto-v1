@@ -1,11 +1,17 @@
 // QuickActionsFAB.jsx - Floating Action Button for Mobile Quick Actions
 // Bottom-right FAB with speed dial menu for quick actions
 
-import React, { useState } from 'react';
-import { useNavigationContext } from '../../contexts/NavigationContext';
-import { navigationPatterns } from '../../utils/ui/uiPatterns';
-import { triggerHaptic } from '../../utils/navigation';
-import { WorkoutIconTiny, ChatIconSmall, MemoryIconTiny } from '../themes/SynthwaveComponents';
+import React, { useState } from "react";
+import { useNavigationContext } from "../../contexts/NavigationContext";
+import { navigationPatterns } from "../../utils/ui/uiPatterns";
+import { triggerHaptic } from "../../utils/navigation";
+import {
+  WorkoutIconTiny,
+  ChatIconSmall,
+  MemoryIconTiny,
+  CoachIconTiny,
+  ProgramIconTiny,
+} from "../themes/SynthwaveComponents";
 
 const QuickActionsFAB = () => {
   const context = useNavigationContext();
@@ -26,13 +32,13 @@ const QuickActionsFAB = () => {
   // Close menu on escape key
   React.useEffect(() => {
     const handleEscape = (e) => {
-      if (e.key === 'Escape' && isOpen) {
+      if (e.key === "Escape" && isOpen) {
         handleClose();
       }
     };
 
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
   }, [isOpen]);
 
   // Don't show FAB if no coach context or command palette handler not available
@@ -48,9 +54,11 @@ const QuickActionsFAB = () => {
 
     // Map action to command palette commands (matches SidebarNav.jsx)
     const commandMap = {
-      'log-workout': '/log-workout ',
-      'start-conversation': '/start-conversation ',
-      'save-memory': '/save-memory ',
+      "log-workout": "/log-workout ",
+      "start-conversation": "/start-conversation ",
+      "save-memory": "/save-memory ",
+      "create-coach": "/create-coach",
+      "design-program": "/design-program",
     };
 
     if (context.onCommandPaletteToggle && commandMap[action]) {
@@ -58,26 +66,34 @@ const QuickActionsFAB = () => {
     }
   };
 
-  // Quick actions configuration (matches navigationConfig.js quickAccess items)
+  // Quick actions configuration (matches navigationConfig.js quickAccess items order)
+  // All actions use pink accent for consistent styling
   const quickActions = [
     {
-      id: 'log-workout',
-      label: 'Log Workout',
-      icon: WorkoutIconTiny,
-      color: 'pink'
+      id: "create-coach",
+      label: "Create Coach",
+      icon: CoachIconTiny,
     },
     {
-      id: 'start-conversation',
-      label: 'Start Conversation',
+      id: "start-conversation",
+      label: "Start Conversation",
       icon: ChatIconSmall,
-      color: 'pink'
     },
     {
-      id: 'save-memory',
-      label: 'Save Memory',
+      id: "log-workout",
+      label: "Log Workout",
+      icon: WorkoutIconTiny,
+    },
+    {
+      id: "save-memory",
+      label: "Save Memory",
       icon: MemoryIconTiny,
-      color: 'pink'
-    }
+    },
+    {
+      id: "design-program",
+      label: "Design Program",
+      icon: ProgramIconTiny,
+    },
   ];
 
   return (
@@ -113,7 +129,7 @@ const QuickActionsFAB = () => {
                     {action.label}
                   </span>
 
-                  {/* Action Icon - clickable with hover effects */}
+                  {/* Action Icon */}
                   <span className={navigationPatterns.fab.speedDialButton}>
                     <Icon className={navigationPatterns.fab.speedDialIcon} />
                   </span>
@@ -127,18 +143,38 @@ const QuickActionsFAB = () => {
         <button
           onClick={handleToggle}
           className={navigationPatterns.fab.button}
-          aria-label={isOpen ? 'Close quick actions' : 'Open quick actions'}
+          aria-label={isOpen ? "Close quick actions" : "Open quick actions"}
           aria-expanded={isOpen}
         >
           {isOpen ? (
             // Close icon (X)
-            <svg className={navigationPatterns.fab.icon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <svg
+              className={navigationPatterns.fab.icon}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           ) : (
             // Plus icon
-            <svg className={navigationPatterns.fab.icon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            <svg
+              className={navigationPatterns.fab.icon}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+              />
             </svg>
           )}
         </button>
@@ -148,4 +184,3 @@ const QuickActionsFAB = () => {
 };
 
 export default QuickActionsFAB;
-

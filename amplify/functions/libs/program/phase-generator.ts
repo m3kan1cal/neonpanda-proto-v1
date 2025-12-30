@@ -8,7 +8,7 @@
  * Critical: Parallel execution required for MVP (15-min Lambda timeout)
  */
 
-import { callBedrockApi, MODEL_IDS } from "../api-helpers";
+import { callBedrockApi, MODEL_IDS, TEMPERATURE_PRESETS } from "../api-helpers";
 import { parseJsonWithFallbacks } from "../response-utils";
 import { getCondensedSchema } from "../object-utils";
 import {
@@ -370,8 +370,9 @@ Generate the phase structure using the tool.`;
     const result = await callBedrockApi(
       prompt,
       "phase_structure_generation",
-      MODEL_IDS.CLAUDE_SONNET_4_FULL,
+      MODEL_IDS.PLANNER_MODEL_FULL,
       {
+        temperature: TEMPERATURE_PRESETS.STRUCTURED,
         enableThinking: true,
         tools: {
           name: "generate_phase_structure",
@@ -436,8 +437,11 @@ ${JSON.stringify(getCondensedSchema(PHASE_STRUCTURE_SCHEMA), null, 2)}`;
     const fallbackResult = (await callBedrockApi(
       fallbackPrompt,
       "phase_structure_generation_fallback",
-      MODEL_IDS.CLAUDE_SONNET_4_FULL,
-      { prefillResponse: "{" },
+      MODEL_IDS.PLANNER_MODEL_FULL,
+      {
+        temperature: TEMPERATURE_PRESETS.STRUCTURED,
+        prefillResponse: "{",
+      },
     )) as string;
 
     const parsed = parseJsonWithFallbacks(fallbackResult);
@@ -768,8 +772,9 @@ Generate the complete phase with all workouts using the tool.`;
     const result = await callBedrockApi(
       prompt,
       `phase_${phase.phaseId}_generation`,
-      MODEL_IDS.CLAUDE_SONNET_4_FULL,
+      MODEL_IDS.PLANNER_MODEL_FULL,
       {
+        temperature: TEMPERATURE_PRESETS.STRUCTURED,
         enableThinking: true,
         tools: {
           name: "generate_program_phase",
@@ -863,8 +868,11 @@ ${JSON.stringify(getCondensedSchema(PHASE_SCHEMA), null, 2)}`;
     const fallbackResult = (await callBedrockApi(
       fallbackPrompt,
       `phase_${phase.phaseId}_generation_fallback`,
-      MODEL_IDS.CLAUDE_SONNET_4_FULL,
-      { prefillResponse: "{" },
+      MODEL_IDS.PLANNER_MODEL_FULL,
+      {
+        temperature: TEMPERATURE_PRESETS.STRUCTURED,
+        prefillResponse: "{",
+      },
     )) as string;
 
     const parsed = parseJsonWithFallbacks(fallbackResult);

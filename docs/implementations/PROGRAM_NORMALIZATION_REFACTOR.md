@@ -510,8 +510,8 @@ During comprehensive architecture analysis, discovered that program normalizatio
 const extractionConfidence = workoutData.metadata?.data_confidence || 0;
 const useHaiku = extractionConfidence >= 0.8;
 const selectedModel = useHaiku
-  ? MODEL_IDS.CLAUDE_HAIKU_4_FULL // Tier 1: Fast (≥0.80)
-  : MODEL_IDS.CLAUDE_SONNET_4_FULL; // Tier 2: Thorough (<0.80)
+  ? MODEL_IDS.EXECUTOR_MODEL_FULL // Tier 1: Fast (≥0.80)
+  : MODEL_IDS.PLANNER_MODEL_FULL; // Tier 2: Thorough (<0.80)
 ```
 
 ### Program Normalization (Before) ❌
@@ -533,8 +533,8 @@ const result = await callBedrockApi(
 const extractionConfidence = programData.metadata?.data_confidence || 0;
 const useHaiku = extractionConfidence >= 0.80;
 const selectedModel = useHaiku
-  ? MODEL_IDS.CLAUDE_HAIKU_4_FULL      // Tier 1: Fast (≥0.80)
-  : MODEL_IDS.CLAUDE_SONNET_4_FULL;    // Tier 2: Thorough (<0.80)
+  ? MODEL_IDS.EXECUTOR_MODEL_FULL      // Tier 1: Fast (≥0.80)
+  : MODEL_IDS.PLANNER_MODEL_FULL;    // Tier 2: Thorough (<0.80)
 
 const result = await callBedrockApi(
   normalizationPrompt,
@@ -579,8 +579,8 @@ const result = await callBedrockApi(
    const extractionConfidence = programData.metadata?.data_confidence || 0;
    const useHaiku = extractionConfidence >= 0.8;
    const selectedModel = useHaiku
-     ? MODEL_IDS.CLAUDE_HAIKU_4_FULL
-     : MODEL_IDS.CLAUDE_SONNET_4_FULL;
+     ? MODEL_IDS.EXECUTOR_MODEL_FULL
+     : MODEL_IDS.PLANNER_MODEL_FULL;
 
    console.info("🔀 Two-tier normalization model selection:", {
      extractionConfidence,

@@ -1,6 +1,10 @@
 import React, { useState, useRef, useEffect } from "react";
 import { themeClasses } from "../../utils/synthwaveThemeClasses";
-import { inputPatterns, scrollbarPatterns, injectScrollbarStyles } from "../../utils/ui/uiPatterns";
+import {
+  inputPatterns,
+  scrollbarPatterns,
+  injectScrollbarStyles,
+} from "../../utils/ui/uiPatterns";
 import CommandPaletteAgent from "../../utils/agents/CommandPaletteAgent";
 import { useToast } from "../../contexts/ToastContext";
 
@@ -18,6 +22,7 @@ const CommandPalette = ({
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef(null);
   const agentRef = useRef(null);
+  const selectedCommandRef = useRef(null);
 
   // Agent state
   const [agentState, setAgentState] = useState({
@@ -56,6 +61,24 @@ const CommandPalette = ({
       icon: "💬",
       requiresInput: false,
     },
+    {
+      id: "create-coach",
+      trigger: "/create-coach",
+      description: "Create a new AI coach",
+      example: "/create-coach",
+      category: "creation",
+      icon: "🤖",
+      requiresInput: false,
+    },
+    {
+      id: "design-program",
+      trigger: "/design-program",
+      description: "Design a new training program",
+      example: "/design-program",
+      category: "creation",
+      icon: "📋",
+      requiresInput: false,
+    },
   ];
 
   // Determine what to show based on input state
@@ -70,16 +93,20 @@ const CommandPalette = ({
       return {
         type: "command-list",
         commands: mockCommands.filter((cmd) =>
-          cmd.trigger.toLowerCase().includes(trimmedInput.toLowerCase())
+          cmd.trigger.toLowerCase().includes(trimmedInput.toLowerCase()),
         ),
       };
     }
 
     // Check for exact command match without content (like "/start-conversation")
-    const exactCommandMatch = mockCommands.find((cmd) => cmd.trigger === trimmedInput);
+    const exactCommandMatch = mockCommands.find(
+      (cmd) => cmd.trigger === trimmedInput,
+    );
     if (exactCommandMatch) {
       return {
-        type: exactCommandMatch.requiresInput ? "execution-preview" : "instant-command",
+        type: exactCommandMatch.requiresInput
+          ? "execution-preview"
+          : "instant-command",
         command: exactCommandMatch,
         content: "",
       };
@@ -93,7 +120,9 @@ const CommandPalette = ({
       const command = trimmedInput.substring(0, spaceIndex);
       const content = trimmedInput.substring(spaceIndex + 1); // Everything after first space
 
-      const matchedCommand = mockCommands.find((cmd) => cmd.trigger === command);
+      const matchedCommand = mockCommands.find(
+        (cmd) => cmd.trigger === command,
+      );
       if (matchedCommand) {
         if (matchedCommand.requiresInput && content) {
           return {
@@ -119,7 +148,7 @@ const CommandPalette = ({
       commands: mockCommands.filter(
         (cmd) =>
           cmd.trigger.toLowerCase().includes(trimmedInput.toLowerCase()) ||
-          cmd.description.toLowerCase().includes(trimmedInput.toLowerCase())
+          cmd.description.toLowerCase().includes(trimmedInput.toLowerCase()),
       ),
     };
   };
@@ -140,7 +169,7 @@ const CommandPalette = ({
         (newState) => {
           setAgentState(newState);
         },
-        onNavigation
+        onNavigation,
       );
     } else {
       // Update agent when dependencies change
@@ -179,7 +208,8 @@ const CommandPalette = ({
       }
 
       // Check if there's navigation data to trigger after closing
-      const navigationData = agentState.executionResult?.details?.navigationData;
+      const navigationData =
+        agentState.executionResult?.details?.navigationData;
 
       // Close modal after showing success message
       const timer = setTimeout(() => {
@@ -192,14 +222,23 @@ const CommandPalette = ({
         // Trigger navigation after modal is closed (if needed)
         if (navigationData && onNavigation) {
           setTimeout(() => {
-            onNavigation("conversation-created", navigationData);
+            // Use the navigation type from data, default to conversation-created for backwards compatibility
+            const eventType = navigationData.type || "conversation-created";
+            onNavigation(eventType, navigationData);
           }, 150); // Brief delay to ensure modal close animation completes
         }
       }, 1000); // 1 second - enough time to read success message
 
       return () => clearTimeout(timer);
     }
-  }, [agentState.executionResult?.success, agentState.executionResult?.message, agentState.executionResult?.details?.navigationData, onClose, onNavigation, showSuccess]);
+  }, [
+    agentState.executionResult?.success,
+    agentState.executionResult?.message,
+    agentState.executionResult?.details?.navigationData,
+    onClose,
+    onNavigation,
+    showSuccess,
+  ]);
 
   // Update input when prefilledCommand changes
   useEffect(() => {
@@ -270,13 +309,11 @@ const CommandPalette = ({
       if (e.key === "ArrowDown") {
         e.preventDefault();
         setSelectedIndex((prev) =>
-          prev < displayState.commands.length - 1 ? prev + 1 : 0
+          Math.min(prev + 1, displayState.commands.length - 1),
         );
       } else if (e.key === "ArrowUp") {
         e.preventDefault();
-        setSelectedIndex((prev) =>
-          prev > 0 ? prev - 1 : displayState.commands.length - 1
-        );
+        setSelectedIndex((prev) => Math.max(prev - 1, 0));
       } else if (e.key === "Enter") {
         e.preventDefault();
         const selectedCommand = displayState.commands[selectedIndex];
@@ -290,7 +327,7 @@ const CommandPalette = ({
               inputRef.current.focus();
               inputRef.current.setSelectionRange(
                 inputRef.current.value.length,
-                inputRef.current.value.length
+                inputRef.current.value.length,
               );
             }
           }, 0);
@@ -305,7 +342,7 @@ const CommandPalette = ({
         if (!displayState.command.requiresInput || displayState.content) {
           executeCommand(
             displayState.command,
-            displayState.command.requiresInput ? displayState.content : ""
+            displayState.command.requiresInput ? displayState.content : "",
           );
         }
       }
@@ -322,6 +359,16 @@ const CommandPalette = ({
   useEffect(() => {
     setSelectedIndex(0);
   }, [displayState.type, displayState.commands?.length]);
+
+  // Scroll selected command into view when selection changes
+  useEffect(() => {
+    if (selectedCommandRef.current) {
+      selectedCommandRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+      });
+    }
+  }, [selectedIndex]);
 
   if (!isOpen) return null;
 
@@ -384,14 +431,21 @@ const CommandPalette = ({
               </div>
 
               {/* Command list - dimmed during execution */}
-              <div className={`space-y-2 max-h-80 overflow-y-auto custom-scrollbar ${agentState.isExecuting || agentState.executionResult ? 'opacity-50 pointer-events-none mb-3' : ''}`}>
+              <div
+                className={`space-y-0 max-h-80 overflow-y-auto ${scrollbarPatterns.pink} ${agentState.isExecuting || agentState.executionResult ? "opacity-50 pointer-events-none mb-3" : ""}`}
+              >
                 {displayState.commands.map((command, index) => (
                   <div
                     key={command.id}
-                    className={`flex items-start space-x-3 py-2 px-3 rounded cursor-pointer transition-colors duration-200 border ${
+                    ref={index === selectedIndex ? selectedCommandRef : null}
+                    className={`flex items-start space-x-3 py-3 px-3 cursor-pointer transition-colors duration-200 ${
                       index === selectedIndex
-                        ? "bg-synthwave-bg-primary/30 border-synthwave-neon-pink/20"
-                        : "hover:bg-synthwave-bg-primary/30 border-transparent"
+                        ? "bg-synthwave-bg-primary/30 border-l-2 border-l-synthwave-neon-pink"
+                        : "hover:bg-synthwave-bg-primary/30 border-l-2 border-l-transparent"
+                    } ${
+                      index < displayState.commands.length - 1
+                        ? "border-b border-b-synthwave-neon-pink/10"
+                        : ""
                     }`}
                     onClick={() => {
                       if (command.requiresInput) {
@@ -401,7 +455,7 @@ const CommandPalette = ({
                             inputRef.current.focus();
                             inputRef.current.setSelectionRange(
                               inputRef.current.value.length,
-                              inputRef.current.value.length
+                              inputRef.current.value.length,
                             );
                           }
                         }, 0);
@@ -469,7 +523,9 @@ const CommandPalette = ({
                 <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
                   Content
                 </div>
-                <div className={`font-rajdhani text-sm text-white whitespace-pre-wrap max-h-40 overflow-y-auto ${scrollbarPatterns.cyan}`}>
+                <div
+                  className={`font-rajdhani text-sm text-white whitespace-pre-wrap max-h-40 overflow-y-auto ${scrollbarPatterns.cyan}`}
+                >
                   {displayState.content}
                 </div>
               </div>
@@ -547,7 +603,7 @@ const CommandPalette = ({
                   No commands found for "{input}"
                 </div>
                 <div className="text-synthwave-text-muted font-rajdhani text-sm mt-2">
-                  Try typing /log-workout or /save-memory
+                  Try /log-workout, /create-coach, or /design-program
                 </div>
               </div>
             </div>

@@ -21,12 +21,12 @@ export const createCoachConversation = async (
   coachId,
   title,
   initialMessage = null,
-  mode = CONVERSATION_MODES.CHAT
+  mode = CONVERSATION_MODES.CHAT,
 ) => {
   const url = `${getApiUrl("")}/users/${userId}/coaches/${coachId}/conversations`;
   const requestBody = {
     title,
-    mode // Always include mode (defaults to 'chat')
+    mode, // Always include mode (defaults to 'chat')
   };
 
   // Add initial message if provided
@@ -87,7 +87,7 @@ export const sendCoachConversationMessage = async (
   coachId,
   conversationId,
   userResponse,
-  imageS3Keys = []
+  imageS3Keys = [],
 ) => {
   // Create AbortController for timeout handling
   const controller = new AbortController();
@@ -121,7 +121,7 @@ export const sendCoachConversationMessage = async (
       }
       if (response.status === 503) {
         throw new Error(
-          "Service temporarily unavailable - request took too long"
+          "Service temporarily unavailable - request took too long",
         );
       }
       throw new Error(`API Error: ${response.status}`);
@@ -136,7 +136,7 @@ export const sendCoachConversationMessage = async (
     if (error.name === "AbortError") {
       console.error("❌ Request timed out after 45 seconds");
       throw new Error(
-        "Request timed out - the server is taking too long to respond"
+        "Request timed out - the server is taking too long to respond",
       );
     }
 
@@ -160,26 +160,26 @@ export async function* streamCoachConversation(
   coachId,
   conversationId,
   userResponse,
-  imageS3Keys = []
+  imageS3Keys = [],
 ) {
   // Try Lambda Function URL first if enabled
   if (isStreamingEnabled("coachConversation")) {
     try {
       console.info(
-        "🚀 Attempting Lambda Function URL streaming for coach conversation"
+        "🚀 Attempting Lambda Function URL streaming for coach conversation",
       );
       yield* streamCoachConversationLambda(
         userId,
         coachId,
         conversationId,
         userResponse,
-        imageS3Keys
+        imageS3Keys,
       );
       return; // Success - exit
     } catch (lambdaError) {
       console.error(
         "❌ Lambda Function URL streaming failed (fallback DISABLED for debugging):",
-        lambdaError
+        lambdaError,
       );
       // TEMPORARY: Disable fallback to isolate Lambda streaming issues
       throw new Error(`Lambda streaming failed: ${lambdaError.message}`);
@@ -189,7 +189,7 @@ export async function* streamCoachConversation(
   // FALLBACK DISABLED FOR DEBUGGING - this code won't execute while debugging Lambda streaming
   // Fallback to API Gateway streaming
   console.info(
-    "🔄 Using API Gateway fallback for coach conversation streaming"
+    "🔄 Using API Gateway fallback for coach conversation streaming",
   );
   const url = `${getApiUrl("")}/users/${userId}/coaches/${coachId}/conversations/${conversationId}/send-message?stream=true`;
   const requestBody = {
@@ -236,7 +236,7 @@ export const updateCoachConversation = async (
   userId,
   coachId,
   conversationId,
-  metadata
+  metadata,
 ) => {
   const url = `${getApiUrl("")}/users/${userId}/coaches/${coachId}/conversations/${conversationId}`;
   const response = await authenticatedFetch(url, {
@@ -263,8 +263,10 @@ export const updateCoachConversation = async (
  * @param {string} coachId - The coach ID
  * @returns {Promise<Object>} - The API response with conversations array
  */
-export const getCoachConversations = async (userId, coachId) => {
-  const url = `${getApiUrl("")}/users/${userId}/coaches/${coachId}/conversations`;
+export const getCoachConversations = async (userId, coachId, options = {}) => {
+  const { includeFirstMessages = false } = options;
+  const queryParams = includeFirstMessages ? "?includeFirstMessages=true" : "";
+  const url = `${getApiUrl("")}/users/${userId}/coaches/${coachId}/conversations${queryParams}`;
   const response = await authenticatedFetch(url, {
     method: "GET",
   });
@@ -324,7 +326,7 @@ export const getCoachConversationsCount = async (userId, coachId) => {
 export const deleteCoachConversation = async (
   userId,
   coachId,
-  conversationId
+  conversationId,
 ) => {
   const url = `${getApiUrl("")}/users/${userId}/coaches/${coachId}/conversations/${conversationId}`;
 

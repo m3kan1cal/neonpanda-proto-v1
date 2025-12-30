@@ -945,7 +945,7 @@ async function* processCoachConversationAsync(
     content: fullAiResponse,
     timestamp: new Date(),
     metadata: {
-      model: MODEL_IDS.CLAUDE_SONNET_4_DISPLAY,
+      model: MODEL_IDS.PLANNER_MODEL_DISPLAY,
       mode: messageMode, // Use the mode we determined earlier (same as metadata event)
       // Note: Training program generation is now async, so programId not available here
     },

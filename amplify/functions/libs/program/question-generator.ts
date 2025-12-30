@@ -9,6 +9,7 @@ import {
   callBedrockApi,
   callBedrockApiStream,
   MODEL_IDS,
+  TEMPERATURE_PRESETS,
 } from "../api-helpers";
 import { ConversationMessage } from "../todo-types";
 import { ProgramDesignerTodoList } from "./types";
@@ -102,7 +103,10 @@ Remember: You're helping them create a training program that will actually work 
     const questionResponse = (await callBedrockApi(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.CLAUDE_SONNET_4_FULL,
+      MODEL_IDS.PLANNER_MODEL_FULL,
+      {
+        temperature: TEMPERATURE_PRESETS.CREATIVE,
+      },
     )) as string;
 
     console.info("✅ Generated next training program question");
@@ -218,7 +222,10 @@ Remember: You're helping them create a training program that will actually work 
     const questionStream = await callBedrockApiStream(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.CLAUDE_SONNET_4_FULL,
+      MODEL_IDS.PLANNER_MODEL_FULL,
+      {
+        temperature: TEMPERATURE_PRESETS.CREATIVE,
+      },
     );
 
     let fullResponse = "";
@@ -324,7 +331,7 @@ CRITICAL: Make sure to tell them about the 3-5 minute build time, progress updat
     const completionMessage = (await callBedrockApi(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.CLAUDE_SONNET_4_FULL,
+      MODEL_IDS.PLANNER_MODEL_FULL,
     )) as string;
 
     return completionMessage.trim();

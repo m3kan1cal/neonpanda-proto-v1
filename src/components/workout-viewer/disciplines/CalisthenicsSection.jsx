@@ -1,5 +1,6 @@
 import React from "react";
 import { BadgeLegend } from "../BadgeLegend";
+import { badgePatterns } from "../../../utils/ui/uiPatterns";
 
 export const CalisthenicsSection = ({
   calisthenicsData,
@@ -63,17 +64,17 @@ export const CalisthenicsSection = ({
                       )}
                       {exercise.skill_category && (
                         <span
-                          className={`text-xs font-rajdhani uppercase px-2 py-0.5 rounded ${
+                          className={`${badgePatterns.workoutBadgeBase} ${
                             exercise.skill_category === "pull" ||
                             exercise.skill_category === "push" ||
                             exercise.skill_category === "dynamic_movement" ||
                             exercise.skill_category === "leg"
-                              ? "bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan"
+                              ? badgePatterns.workoutBadgeCyan
                               : exercise.skill_category === "static_hold" ||
                                   exercise.skill_category === "core" ||
                                   exercise.skill_category === "skill_transfer"
-                                ? "bg-synthwave-neon-purple/20 text-synthwave-neon-purple"
-                                : "bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan"
+                                ? badgePatterns.workoutBadgePurple
+                                : badgePatterns.workoutBadgeCyan
                           }`}
                         >
                           {exercise.skill_category.replace(/_/g, " ")}
@@ -132,15 +133,15 @@ export const CalisthenicsSection = ({
                               )}
                               {set.set_type && (
                                 <span
-                                  className={`text-xs uppercase px-2 py-0.5 rounded ml-auto ${
+                                  className={`${badgePatterns.workoutBadgeBase} ml-auto ${
                                     set.set_type === "max_effort" ||
                                     set.set_type === "working"
-                                      ? "bg-synthwave-neon-pink/20 text-synthwave-neon-pink"
+                                      ? badgePatterns.workoutBadgePink
                                       : set.set_type === "skill_practice" ||
                                           set.set_type === "warmup" ||
                                           set.set_type === "endurance"
-                                        ? "bg-synthwave-neon-purple/20 text-synthwave-neon-purple"
-                                        : "bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan"
+                                        ? badgePatterns.workoutBadgePurple
+                                        : badgePatterns.workoutBadgeCyan
                                   }`}
                                 >
                                   {set.set_type.replace(/_/g, " ")}

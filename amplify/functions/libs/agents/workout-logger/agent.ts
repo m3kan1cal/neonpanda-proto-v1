@@ -53,7 +53,7 @@ export class WorkoutLoggerAgent extends Agent<WorkoutLoggerContext> {
         generateWorkoutSummaryTool,
         saveWorkoutToDatabaseTool,
       ],
-      modelId: MODEL_IDS.CLAUDE_SONNET_4_FULL,
+      modelId: MODEL_IDS.PLANNER_MODEL_FULL,
       context,
     });
 

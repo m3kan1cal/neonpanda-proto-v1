@@ -64,6 +64,8 @@ const EditIcon = () => (
 import CoachAgent from "../utils/agents/CoachAgent";
 import CoachCreatorAgent from "../utils/agents/CoachCreatorAgent";
 import { useToast } from "../contexts/ToastContext";
+import { OnboardingPrompt, UpgradePrompt } from "./subscription";
+import { useUpgradePrompts } from "../hooks/useUpgradePrompts";
 
 // Vesper coach data - static coach for coach creator
 const vesperCoachData = {
@@ -167,6 +169,21 @@ function Coaches() {
   const [openMenuId, setOpenMenuId] = useState(null);
   const [editingCoachId, setEditingCoachId] = useState(null);
 
+  // Onboarding modal state
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  // Upgrade prompts hook - tracks user activity for contextual upgrade prompts
+  const {
+    isPromptOpen: showUpgradePrompt,
+    activeTrigger: upgradeTrigger,
+    closePrompt: closeUpgradePrompt,
+    shouldShowOnboarding,
+    markOnboardingShown,
+    isPremium,
+  } = useUpgradePrompts(userId, {
+    coachCount: agentState.coaches?.length || 0,
+  });
+
   // Command palette state
   // Global Command Palette state
   const { setIsCommandPaletteOpen } = useNavigationContext();
@@ -175,6 +192,17 @@ function Coaches() {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+
+  // Show onboarding modal on first login
+  useEffect(() => {
+    if (userId && shouldShowOnboarding && !agentState.isLoading) {
+      // Small delay to let the page render first
+      const timeoutId = setTimeout(() => {
+        setShowOnboarding(true);
+      }, 500);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [userId, shouldShowOnboarding, agentState.isLoading]);
 
   // Close menu when clicking outside or pressing Escape
   useEffect(() => {
@@ -510,6 +538,12 @@ function Coaches() {
   const handleCancelDeleteCoach = () => {
     setShowDeleteCoachModal(false);
     setCoachToDelete(null);
+  };
+
+  // Handle closing the onboarding modal
+  const handleCloseOnboarding = () => {
+    setShowOnboarding(false);
+    markOnboardingShown();
   };
 
   // Show skeleton loading while validating userId or loading coaches
@@ -1688,6 +1722,23 @@ function Coaches() {
         {...tooltipPatterns.standard}
         place="bottom"
       />
+
+      {/* Onboarding Prompt - shown on first login */}
+      <OnboardingPrompt
+        isOpen={showOnboarding}
+        onClose={handleCloseOnboarding}
+        userId={userId}
+      />
+
+      {/* Upgrade Prompt - shown based on smart triggers (not during onboarding) */}
+      {!isPremium && !showOnboarding && (
+        <UpgradePrompt
+          isOpen={showUpgradePrompt}
+          onClose={closeUpgradePrompt}
+          userId={userId}
+          trigger={upgradeTrigger}
+        />
+      )}
 
       {/* Custom animations */}
       <style>{`
