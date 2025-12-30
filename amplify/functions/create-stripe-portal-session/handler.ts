@@ -13,7 +13,7 @@ import { getAppUrl } from "../libs/domain-utils";
  */
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2025-08-27.basil",
+  apiVersion: "2025-12-15.clover",
 });
 
 const baseHandler: AuthenticatedHandler = async (event) => {

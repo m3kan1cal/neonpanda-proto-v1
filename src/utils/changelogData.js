@@ -212,7 +212,7 @@ export const changelogEntries = [
         "Legacy 'hybrid' discipline workouts now display under 'crossfit' discipline in WorkoutDetails and WorkoutViewer pages",
         "DisciplineRegistry explicitly maps 'hybrid' and 'functional_fitness' to CrossFitSection component",
         "App.jsx routes updated to remove V2 variants (-v2 suffix) after promotion to production",
-        "Stripe API version updated to '2025-08-27.basil' in create-stripe-portal-session and process-stripe-webhook handlers",
+        "Stripe API version updated to '2025-12-15.clover' in create-stripe-portal-session and process-stripe-webhook handlers",
         "Stripe subscription property access corrected to use subscription.items.data[0] for current_period_start, current_period_end, cancel_at_period_end, and canceled_at",
         "Workout badge styling refactored to use centralized badgePatterns.workoutBadgeBase and color variants from uiPatterns.js across all workout viewer components",
         "BadgeLegend component updated to use badgePatterns from uiPatterns.js for consistent vertical alignment with other badges",

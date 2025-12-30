@@ -131,8 +131,10 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
           stripePriceId: subscription.items.data[0].price.id,
           tier,
           status: subscription.status as any,
-          currentPeriodStart: subscription.items.data[0].current_period_start,
-          currentPeriodEnd: subscription.items.data[0].current_period_end,
+          currentPeriodStart: (subscription.items.data[0] as any)
+            .current_period_start,
+          currentPeriodEnd: (subscription.items.data[0] as any)
+            .current_period_end,
           cancelAtPeriodEnd: isCanceledAtPeriodEnd,
           canceledAt: subscription.canceled_at || undefined,
           metadata: {
