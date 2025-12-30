@@ -35,6 +35,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     }
 
     // Subscription exists - return full status
+    // Note: stripeCustomerId intentionally excluded - only needed server-side
     const response: SubscriptionStatusResponse = {
       hasSubscription: true,
       tier: subscription.tier,
@@ -42,7 +43,6 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       currentPeriodEnd: subscription.currentPeriodEnd,
       cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
       canceledAt: subscription.canceledAt,
-      stripeCustomerId: subscription.stripeCustomerId,
     };
 
     console.info("Subscription found:", {

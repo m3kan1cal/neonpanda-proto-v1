@@ -3,6 +3,7 @@ import Stripe from "stripe";
 import { createOkResponse, createErrorResponse } from "../libs/api-helpers";
 import {
   saveSubscription,
+  updateSubscription,
   deleteSubscription,
 } from "../../dynamodb/operations";
 import { mapStripePriceToTier } from "../libs/subscription/stripe-helpers";
@@ -129,7 +130,12 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
           tier,
         );
 
-        await saveSubscription(subscriptionData);
+        // Use appropriate function based on event type
+        if (stripeEvent.type === "customer.subscription.created") {
+          await saveSubscription(subscriptionData);
+        } else {
+          await updateSubscription(subscriptionData);
+        }
 
         // Send SNS alert for new subscription
         if (stripeEvent.type === "customer.subscription.created") {
