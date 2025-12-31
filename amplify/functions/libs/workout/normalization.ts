@@ -6,7 +6,12 @@
  */
 
 import { UniversalWorkoutSchema } from "./types";
-import { callBedrockApi, storeDebugDataInS3, MODEL_IDS } from "../api-helpers";
+import {
+  callBedrockApi,
+  storeDebugDataInS3,
+  MODEL_IDS,
+  TEMPERATURE_PRESETS,
+} from "../api-helpers";
 import { parseJsonWithFallbacks } from "../response-utils";
 import { getCondensedSchema } from "../object-utils";
 import { NORMALIZATION_RESPONSE_SCHEMA } from "../schemas/workout-normalization-schema";
@@ -129,8 +134,8 @@ const performNormalization = async (
     const extractionConfidence = workoutData.metadata?.data_confidence || 0;
     const useHaiku = extractionConfidence >= 0.8;
     const selectedModel = useHaiku
-      ? MODEL_IDS.CLAUDE_HAIKU_4_FULL
-      : MODEL_IDS.CLAUDE_SONNET_4_FULL;
+      ? MODEL_IDS.EXECUTOR_MODEL_FULL
+      : MODEL_IDS.PLANNER_MODEL_FULL;
 
     console.info("🔀 Two-tier normalization model selection:", {
       extractionConfidence,
@@ -163,6 +168,7 @@ const performNormalization = async (
         "workout_normalization",
         selectedModel, // Use tier-selected model
         {
+          temperature: TEMPERATURE_PRESETS.STRUCTURED,
           enableThinking,
           tools: {
             name: "normalize_workout",
@@ -193,7 +199,10 @@ const performNormalization = async (
         normalizationPrompt,
         "workout_normalization",
         selectedModel, // Use same tier-selected model for fallback
-        { enableThinking },
+        {
+          temperature: TEMPERATURE_PRESETS.STRUCTURED,
+          enableThinking,
+        },
       )) as string;
 
       // Store debug data for fallback cases
@@ -275,7 +284,7 @@ const performNormalization = async (
       const sonnetResult = await callBedrockApi(
         normalizationPrompt,
         "workout_normalization",
-        MODEL_IDS.CLAUDE_SONNET_4_FULL,
+        MODEL_IDS.PLANNER_MODEL_FULL,
         {
           enableThinking,
           tools: {

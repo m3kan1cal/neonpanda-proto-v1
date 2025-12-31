@@ -87,6 +87,9 @@ import {
   createInactiveUsersNotificationSchedule,
 } from "./functions/notify-inactive-users/resource";
 import { unsubscribeEmail } from "./functions/unsubscribe-email/resource";
+import { getSubscriptionStatus } from "./functions/get-subscription-status/resource";
+import { createStripePortalSession } from "./functions/create-stripe-portal-session/resource";
+import { processStripeWebhook } from "./functions/process-stripe-webhook/resource";
 import { apiGatewayv2 } from "./api/resource";
 import { dynamodbTable } from "./dynamodb/resource";
 import { createAppsBucket } from "./storage/resource";
@@ -94,6 +97,7 @@ import {
   createContactFormNotificationTopic,
   createErrorMonitoringTopic,
   createUserRegistrationTopic,
+  createStripeAlertsTopic,
 } from "./sns/resource";
 import { config } from "./functions/libs/configs";
 import { Effect, PolicyStatement, ServicePrincipal } from "aws-cdk-lib/aws-iam";
@@ -178,6 +182,9 @@ const backend = defineBackend({
   getWorkoutTemplate,
   notifyInactiveUsers,
   unsubscribeEmail,
+  getSubscriptionStatus,
+  createStripePortalSession,
+  processStripeWebhook,
 });
 
 // Disable retries for stateful async generation functions
@@ -262,6 +269,9 @@ const coreApi = apiGatewayv2.createCoreApi(
   backend.skipWorkoutTemplate.resources.lambda,
   backend.getWorkoutTemplate.resources.lambda,
   backend.unsubscribeEmail.resources.lambda,
+  backend.getSubscriptionStatus.resources.lambda,
+  backend.createStripePortalSession.resources.lambda,
+  backend.processStripeWebhook.resources.lambda,
   userPoolAuthorizer,
 );
 
@@ -280,6 +290,9 @@ const errorMonitoringTopic = createErrorMonitoringTopic(
 );
 const userRegistrationTopic = createUserRegistrationTopic(
   backend.postConfirmation.stack,
+);
+const stripeAlertsTopic = createStripeAlertsTopic(
+  backend.processStripeWebhook.stack,
 );
 
 // Get branch information for S3 policies
@@ -351,6 +364,15 @@ const sharedPolicies = new SharedPolicies(
   backend.logWorkoutTemplate,
   backend.skipWorkoutTemplate,
   // NOTE: postConfirmation excluded to avoid circular dependency with auth stack
+].forEach((func) => {
+  sharedPolicies.attachDynamoDbReadWrite(func.resources.lambda);
+});
+
+// Functions needing DynamoDB READ/WRITE for subscription management
+[
+  backend.getSubscriptionStatus,
+  backend.createStripePortalSession,
+  backend.processStripeWebhook,
 ].forEach((func) => {
   sharedPolicies.attachDynamoDbReadWrite(func.resources.lambda);
 });
@@ -528,6 +550,11 @@ errorMonitoringTopic.topic.grantPublish(
   backend.forwardLogsToSns.resources.lambda,
 );
 
+// Grant SNS publish permissions to Stripe webhook handler
+stripeAlertsTopic.topic.grantPublish(
+  backend.processStripeWebhook.resources.lambda,
+);
+
 // CRITICAL: Explicitly ensure forwardLogsToSns has NO managed policies
 // (in case CloudFormation hasn't cleaned up old ones from previous deployments)
 const forwardLogsRole = backend.forwardLogsToSns.resources.lambda.role;
@@ -700,6 +727,9 @@ const allFunctions = [
   backend.getWorkoutTemplate,
   backend.notifyInactiveUsers,
   backend.unsubscribeEmail,
+  backend.getSubscriptionStatus,
+  backend.createStripePortalSession,
+  backend.processStripeWebhook,
   // NOTE: forwardLogsToSns and syncLogSubscriptions excluded - they're utility functions that don't need app resources
 ];
 
@@ -799,6 +829,15 @@ backend.postConfirmation.addEnvironment(
   userRegistrationTopic.topicArn,
 );
 
+// Add DynamoDB table name to post-confirmation function (excluded from allFunctions due to circular dependency)
+// NOTE: Cannot pass coreTable.table.tableName directly as it would create circular dependency
+// Instead, pass base name and branch name - getTableName() will construct the full name
+backend.postConfirmation.addEnvironment(
+  "DYNAMODB_BASE_TABLE_NAME",
+  "NeonPanda-ProtoApi-AllItems-V2", // Base name - will be prefixed with branch/sandbox info
+);
+backend.postConfirmation.addEnvironment("BRANCH_NAME", branchName);
+
 // Add USER_POOL_ID to checkUserAvailability function
 backend.checkUserAvailability.addEnvironment(
   "USER_POOL_ID",
@@ -861,6 +900,37 @@ backend.createCoachConversation.addEnvironment(
 backend.logWorkoutTemplate.addEnvironment(
   "BUILD_WORKOUT_FUNCTION_NAME",
   backend.buildWorkout.resources.lambda.functionName,
+);
+
+// Stripe environment variables
+// NOTE: STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, ELECTRICPANDA_PRICE_ID, EARLYPANDA_PRICE_ID
+// should be set in AWS Amplify Console or .env for local development
+[backend.createStripePortalSession, backend.processStripeWebhook].forEach(
+  (func) => {
+    func.addEnvironment(
+      "STRIPE_SECRET_KEY",
+      process.env.STRIPE_SECRET_KEY || "",
+    );
+    func.addEnvironment(
+      "ELECTRICPANDA_PRICE_ID",
+      process.env.ELECTRICPANDA_PRICE_ID || "",
+    );
+    func.addEnvironment(
+      "EARLYPANDA_PRICE_ID",
+      process.env.EARLYPANDA_PRICE_ID || "",
+    );
+  },
+);
+
+backend.processStripeWebhook.addEnvironment(
+  "STRIPE_WEBHOOK_SECRET",
+  process.env.STRIPE_WEBHOOK_SECRET || "",
+);
+
+// Add SNS topic ARN to Stripe webhook function
+backend.processStripeWebhook.addEnvironment(
+  "STRIPE_ALERTS_TOPIC_ARN",
+  stripeAlertsTopic.topicArn,
 );
 
 // Add USER_POOL_ID environment variable to update-user-profile

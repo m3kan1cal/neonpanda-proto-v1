@@ -11,7 +11,12 @@ import {
   UniversalWorkoutSchema,
   DisciplineClassification,
 } from "./types";
-import { storeDebugDataInS3, callBedrockApi, MODEL_IDS } from "../api-helpers";
+import {
+  storeDebugDataInS3,
+  callBedrockApi,
+  MODEL_IDS,
+  TEMPERATURE_PRESETS,
+} from "../api-helpers";
 import { parseJsonWithFallbacks } from "../response-utils";
 import { JSON_FORMATTING_INSTRUCTIONS_STANDARD } from "../prompt-helpers";
 import { parseCompletedAt } from "../analytics/date-utils";
@@ -1145,8 +1150,11 @@ Examples:
     const response = (await callBedrockApi(
       timeExtractionPrompt,
       userMessage,
-      MODEL_IDS.CLAUDE_HAIKU_4_FULL,
-      { prefillResponse: "{" }, // Force JSON output format
+      MODEL_IDS.EXECUTOR_MODEL_FULL,
+      {
+        temperature: TEMPERATURE_PRESETS.STRUCTURED,
+        prefillResponse: "{",
+      }, // Force JSON output format
     )) as string; // No tools used, always returns string
 
     // Attempt to parse the response as JSON
@@ -1258,8 +1266,11 @@ SUMMARY:`;
     const response = (await callBedrockApi(
       summaryPrompt,
       originalMessage,
-      MODEL_IDS.CLAUDE_HAIKU_4_FULL, // Use Haiku 4.5 - faster and cheaper for structured → text summaries
-      { enableThinking },
+      MODEL_IDS.EXECUTOR_MODEL_FULL, // Use Haiku 4.5 - faster and cheaper for structured → text summaries
+      {
+        temperature: TEMPERATURE_PRESETS.BALANCED,
+        enableThinking,
+      },
     )) as string; // No tools used, always returns string
 
     // Clean up the response - remove any prefix like "SUMMARY:" and trim
@@ -1380,7 +1391,10 @@ Return confidence 0.8+ for clear classifications, 0.5-0.7 for moderate cases, <0
     const response = (await callBedrockApi(
       classificationPrompt,
       discipline,
-      MODEL_IDS.CLAUDE_HAIKU_4_FULL,
+      MODEL_IDS.EXECUTOR_MODEL_FULL,
+      {
+        temperature: TEMPERATURE_PRESETS.STRUCTURED,
+      },
     )) as string; // No tools used, always returns string
 
     // Store prompt and response in S3 for debugging

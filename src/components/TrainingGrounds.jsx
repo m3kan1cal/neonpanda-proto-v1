@@ -9,6 +9,7 @@ import {
   layoutPatterns,
   changelogListPatterns,
   tooltipPatterns,
+  badgePatterns,
 } from "../utils/ui/uiPatterns";
 import {
   isCurrentWeekReport,
@@ -56,6 +57,8 @@ import ReportAgent from "../utils/agents/ReportAgent";
 import { ProgramAgent } from "../utils/agents/ProgramAgent";
 import TodaysWorkoutCard from "./programs/TodaysWorkoutCard";
 import ActiveProgramSummary from "./programs/ActiveProgramSummary";
+import { useUpgradePrompts } from "../hooks/useUpgradePrompts";
+import { UpgradePrompt } from "./subscription";
 
 function TrainingGrounds() {
   const [searchParams] = useSearchParams();
@@ -124,6 +127,17 @@ function TrainingGrounds() {
     isLoadingPrograms: false,
     isLoadingTodaysWorkout: false,
     error: null,
+  });
+
+  // Upgrade prompts hook - tracks user activity for contextual upgrade prompts
+  const {
+    isPromptOpen: showUpgradePrompt,
+    activeTrigger: upgradeTrigger,
+    closePrompt: closeUpgradePrompt,
+    isPremium,
+  } = useUpgradePrompts(userId, {
+    messagesCount: conversationAgentState.totalMessages || 0,
+    workoutCount: workoutState.totalWorkoutCount || 0,
   });
 
   // Create stable callback reference with useCallback
@@ -418,11 +432,40 @@ function TrainingGrounds() {
           size="medium"
         />
       ) : workoutState.recentWorkouts.length === 0 ? (
-        <EmptyState
-          title="No workouts found"
-          message="Log your first workout using the command palette to start tracking progress"
-          size="medium"
-        />
+        <div className="text-center pb-4">
+          <div className="max-w-xs mx-auto">
+            <p className="font-rajdhani text-sm text-synthwave-text-muted mb-4 text-left">
+              You haven't logged any workouts yet. Start tracking your training
+              to monitor progress and build consistency.
+            </p>
+            <div className="space-y-2 text-left">
+              <div className="flex items-start gap-2">
+                <span className={badgePatterns.numberedCircle}>
+                  <span className={badgePatterns.numberedCircleText}>1</span>
+                </span>
+                <p className="font-rajdhani text-sm text-synthwave-text-muted flex-1 pt-0.5">
+                  Click "Log Workout" in Quick Actions
+                </p>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className={badgePatterns.numberedCircle}>
+                  <span className={badgePatterns.numberedCircleText}>2</span>
+                </span>
+                <p className="font-rajdhani text-sm text-synthwave-text-muted flex-1 pt-0.5">
+                  OR Use Command Palette (⌘+K) and select "/log-workout"
+                </p>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className={badgePatterns.numberedCircle}>
+                  <span className={badgePatterns.numberedCircleText}>3</span>
+                </span>
+                <p className="font-rajdhani text-sm text-synthwave-text-muted flex-1 pt-0.5">
+                  OR start a conversation and tell your coach about your workout
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
       ) : (
         <>
           <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
@@ -761,11 +804,49 @@ function TrainingGrounds() {
                 Structured training programs and workout plans designed by you
                 and your coach.
               </p>
-              <EmptyState
-                title="No programs found"
-                message="Start a conversation with your coach to create your first training program"
-                size="medium"
-              />
+              <div className="text-center pb-4">
+                <div className="max-w-xs mx-auto">
+                  <p className="font-rajdhani text-sm text-synthwave-text-muted mb-4 text-left">
+                    You haven't created any training programs yet. Design a
+                    structured program with your coach to optimize your
+                    training.
+                  </p>
+                  <div className="space-y-2 text-left">
+                    <div className="flex items-start gap-2">
+                      <span className={badgePatterns.numberedCircle}>
+                        <span className={badgePatterns.numberedCircleText}>
+                          1
+                        </span>
+                      </span>
+                      <p className="font-rajdhani text-sm text-synthwave-text-muted flex-1 pt-0.5">
+                        Click "Design Program" in Quick Actions
+                      </p>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className={badgePatterns.numberedCircle}>
+                        <span className={badgePatterns.numberedCircleText}>
+                          2
+                        </span>
+                      </span>
+                      <p className="font-rajdhani text-sm text-synthwave-text-muted flex-1 pt-0.5">
+                        OR Use Command Palette (⌘+K) and select
+                        "/design-program"
+                      </p>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className={badgePatterns.numberedCircle}>
+                        <span className={badgePatterns.numberedCircleText}>
+                          3
+                        </span>
+                      </span>
+                      <p className="font-rajdhani text-sm text-synthwave-text-muted flex-1 pt-0.5">
+                        OR go to "Programs" and click the "Design New Program"
+                        card
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 
@@ -778,7 +859,8 @@ function TrainingGrounds() {
               </h3>
             </div>
             <p className="font-rajdhani text-synthwave-text-secondary text-sm mb-6">
-              Chat with your coach for personalized guidance and support.
+              Chat with your coach for personalized guidance, workout logging,
+              accountability, and support.
             </p>
 
             {/* Recent Conversations List */}
@@ -837,11 +919,49 @@ function TrainingGrounds() {
                   )}
                 </>
               ) : (
-                <EmptyState
-                  title="No conversations yet"
-                  message="Click the command button above to start your first conversation"
-                  size="medium"
-                />
+                <div className="text-center pb-4">
+                  <div className="max-w-xs mx-auto">
+                    <p className="font-rajdhani text-sm text-synthwave-text-muted mb-4 text-left">
+                      You haven't created any conversations yet. Chat with your
+                      coach to set goals, log workouts, design training
+                      programs, and more.
+                    </p>
+                    <div className="space-y-2 text-left">
+                      <div className="flex items-start gap-2">
+                        <span className={badgePatterns.numberedCircle}>
+                          <span className={badgePatterns.numberedCircleText}>
+                            1
+                          </span>
+                        </span>
+                        <p className="font-rajdhani text-sm text-synthwave-text-muted flex-1 pt-0.5">
+                          Click "Start Conversation" in Quick Actions
+                        </p>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <span className={badgePatterns.numberedCircle}>
+                          <span className={badgePatterns.numberedCircleText}>
+                            2
+                          </span>
+                        </span>
+                        <p className="font-rajdhani text-sm text-synthwave-text-muted flex-1 pt-0.5">
+                          OR Use Command Palette (⌘+K) and select
+                          "/start-conversation"
+                        </p>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <span className={badgePatterns.numberedCircle}>
+                          <span className={badgePatterns.numberedCircleText}>
+                            3
+                          </span>
+                        </span>
+                        <p className="font-rajdhani text-sm text-synthwave-text-muted flex-1 pt-0.5">
+                          OR go to "Conversations" and click the "Start New
+                          Conversation" card
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               )}
             </div>
           </div>
@@ -890,11 +1010,47 @@ function TrainingGrounds() {
                   size="medium"
                 />
               ) : reportsState.recentReports.length === 0 ? (
-                <EmptyState
-                  title="No reports found"
-                  message="Reports generate automatically after you log workouts"
-                  size="medium"
-                />
+                <div className="text-center pb-4">
+                  <div className="max-w-xs mx-auto">
+                    <p className="font-rajdhani text-sm text-synthwave-text-muted mb-4 text-left">
+                      You don't have any reports yet. Reports automatically
+                      generate weekly to track your progress and provide
+                      insights.
+                    </p>
+                    <div className="space-y-2 text-left">
+                      <div className="flex items-start gap-2">
+                        <span className={badgePatterns.numberedCircle}>
+                          <span className={badgePatterns.numberedCircleText}>
+                            1
+                          </span>
+                        </span>
+                        <p className="font-rajdhani text-sm text-synthwave-text-muted flex-1 pt-0.5">
+                          Log workouts throughout the week
+                        </p>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <span className={badgePatterns.numberedCircle}>
+                          <span className={badgePatterns.numberedCircleText}>
+                            2
+                          </span>
+                        </span>
+                        <p className="font-rajdhani text-sm text-synthwave-text-muted flex-1 pt-0.5">
+                          Reports automatically generate each Sunday
+                        </p>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <span className={badgePatterns.numberedCircle}>
+                          <span className={badgePatterns.numberedCircleText}>
+                            3
+                          </span>
+                        </span>
+                        <p className="font-rajdhani text-sm text-synthwave-text-muted flex-1 pt-0.5">
+                          View reports in "Reports" or here on your dashboard
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               ) : (
                 <>
                   <div className="font-rajdhani text-xs text-synthwave-text-secondary uppercase tracking-wider mb-2">
@@ -1014,6 +1170,16 @@ function TrainingGrounds() {
           </div>
         </div>
       </div>
+
+      {/* Upgrade Prompt - shown based on smart triggers */}
+      {!isPremium && showUpgradePrompt && (
+        <UpgradePrompt
+          isOpen={showUpgradePrompt}
+          onClose={closeUpgradePrompt}
+          userId={userId}
+          trigger={upgradeTrigger}
+        />
+      )}
 
       {/* Tooltips */}
       <Tooltip

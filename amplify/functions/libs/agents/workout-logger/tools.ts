@@ -34,8 +34,8 @@ import {
 } from "../../workout/validation-helpers";
 import {
   callBedrockApi,
-  callBedrockApiMultimodal,
   MODEL_IDS,
+  TEMPERATURE_PRESETS,
 } from "../../api-helpers";
 import { parseJsonWithFallbacks } from "../../response-utils";
 import { WORKOUT_SCHEMA } from "../../schemas/workout-schema";
@@ -44,10 +44,7 @@ import { parseCompletedAt } from "../../analytics/date-utils";
 import { saveWorkout } from "../../../../dynamodb/operations";
 import { storeWorkoutSummaryInPinecone } from "../../workout/pinecone";
 import { linkWorkoutToTemplate } from "../../program/template-linking";
-import {
-  buildWorkoutExtractionMessage,
-  storeExtractionDebugData,
-} from "./helpers";
+import { storeExtractionDebugData } from "./helpers";
 import { detectDiscipline } from "../../workout/discipline-detector";
 
 /**
@@ -158,13 +155,8 @@ Returns: discipline, confidence (0-1), method ("ai_detection"), reasoning`,
     properties: {
       userMessage: {
         type: "string",
-        description: "The user message describing their workout",
-      },
-      imageS3Keys: {
-        type: "array",
-        items: { type: "string" },
         description:
-          "Optional S3 keys for workout images (whiteboard photos, screenshots)",
+          "The user message describing their workout. If user attached images, YOU must analyze them first and include ALL workout details from the images in this parameter.",
       },
     },
     required: ["userMessage"],
@@ -176,16 +168,14 @@ Returns: discipline, confidence (0-1), method ("ai_detection"), reasoning`,
   ): Promise<DisciplineDetectionResult> {
     console.info("🎯 Executing detect_discipline tool");
 
-    const { userMessage, imageS3Keys } = input;
+    const { userMessage } = input;
 
     console.info("🔍 Running AI discipline detection...", {
       messageLength: userMessage.length,
-      hasImages: !!(imageS3Keys && imageS3Keys.length > 0),
-      imageCount: imageS3Keys?.length || 0,
     });
 
     try {
-      const detection = await detectDiscipline(userMessage, imageS3Keys);
+      const detection = await detectDiscipline(userMessage);
 
       console.info("✅ Discipline detected:", {
         discipline: detection.discipline,
@@ -254,13 +244,8 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
       },
       userMessage: {
         type: "string",
-        description: "The user message describing their workout",
-      },
-      imageS3Keys: {
-        type: "array",
-        items: { type: "string" },
         description:
-          "Optional S3 keys for workout images (screenshots, photos)",
+          "The user message describing their workout. If user attached images, YOU must analyze them first and include ALL workout details from the images in this parameter.",
       },
       userTimezone: {
         type: "string",
@@ -298,7 +283,6 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
     const {
       discipline,
       userMessage,
-      imageS3Keys,
       userTimezone,
       messageTimestamp,
       isSlashCommand,
@@ -333,7 +317,6 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
       isComplexWorkout,
       enableThinking,
       workoutLength: userMessage.length,
-      hasImages: !!(imageS3Keys && imageS3Keys.length > 0),
     });
 
     // 4. Build targeted extraction prompt (BASE + ONE discipline guidance)
@@ -353,7 +336,6 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
     // 5. Extract workout data with AI using targeted schema
     let workoutData: UniversalWorkoutSchema;
     let generationMethod: "tool" | "fallback" = "tool";
-    const hasImages = imageS3Keys && imageS3Keys.length > 0;
 
     try {
       // PRIMARY: Tool-based generation with targeted schema enforcement
@@ -361,53 +343,24 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
         "🎯 Attempting tool-based workout extraction with targeted schema",
       );
 
-      let result;
-
-      if (hasImages) {
-        console.info("🖼️ Processing workout extraction with images:", {
-          imageCount: imageS3Keys!.length,
-          imageKeys: imageS3Keys,
-        });
-
-        // Build multimodal message
-        const converseMessages = await buildWorkoutExtractionMessage(
-          userMessage,
-          imageS3Keys,
-          "user",
-        );
-
-        // Call multimodal API with targeted schema (BASE + ONE discipline)
-        result = await callBedrockApiMultimodal(
-          extractionPrompt,
-          converseMessages,
-          MODEL_IDS.CLAUDE_SONNET_4_FULL,
-          {
-            enableThinking,
-            tools: {
-              name: "generate_workout",
-              description: `Generate structured workout data for ${discipline} using the Universal Workout Schema v2.0`,
-              inputSchema: targetedSchema, // ONLY BASE + ONE DISCIPLINE
-            },
-            expectedToolName: "generate_workout",
+      // Text-only extraction with targeted schema (BASE + ONE discipline)
+      // Note: If user attached images, agent has already analyzed them and
+      // included workout details in userMessage parameter
+      const result = await callBedrockApi(
+        extractionPrompt,
+        userMessage,
+        MODEL_IDS.PLANNER_MODEL_FULL,
+        {
+          temperature: TEMPERATURE_PRESETS.STRUCTURED,
+          enableThinking,
+          tools: {
+            name: "generate_workout",
+            description: `Generate structured workout data for ${discipline} using the Universal Workout Schema v2.0`,
+            inputSchema: targetedSchema, // ONLY BASE + ONE DISCIPLINE
           },
-        );
-      } else {
-        // Text-only extraction with targeted schema (BASE + ONE discipline)
-        result = await callBedrockApi(
-          extractionPrompt,
-          userMessage,
-          MODEL_IDS.CLAUDE_SONNET_4_FULL,
-          {
-            enableThinking,
-            tools: {
-              name: "generate_workout",
-              description: `Generate structured workout data for ${discipline} using the Universal Workout Schema v2.0`,
-              inputSchema: targetedSchema, // ONLY BASE + ONE DISCIPLINE
-            },
-            expectedToolName: "generate_workout",
-          },
-        );
-      }
+          expectedToolName: "generate_workout",
+        },
+      );
 
       // Extract workout data from tool use result
       if (typeof result !== "string") {
@@ -434,7 +387,7 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
           {
             workoutData,
             method: "tool",
-            hasImages,
+            hasImages: false, // Images processed by agent, not tools
             enableThinking,
             discipline: workoutData.discipline,
             isComplexWorkout,
@@ -453,40 +406,19 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
 
       console.info("🔄 Falling back to prompt-based extraction");
 
-      let fallbackResult: string;
-
-      if (hasImages) {
-        console.info("🖼️ Fallback extraction with images");
-
-        const converseMessages = await buildWorkoutExtractionMessage(
-          userMessage,
-          imageS3Keys,
-          "user_fallback",
-        );
-
-        fallbackResult = (await callBedrockApiMultimodal(
-          extractionPrompt,
-          converseMessages,
-          MODEL_IDS.CLAUDE_SONNET_4_FULL,
-          {
-            enableThinking,
-            staticPrompt: extractionPrompt,
-            dynamicPrompt: "",
-          },
-        )) as string;
-      } else {
-        // Text-only fallback
-        fallbackResult = (await callBedrockApi(
-          extractionPrompt,
-          userMessage,
-          MODEL_IDS.CLAUDE_SONNET_4_FULL,
-          {
-            enableThinking,
-            staticPrompt: extractionPrompt,
-            dynamicPrompt: "",
-          },
-        )) as string;
-      }
+      // Text-only fallback extraction
+      // Note: If user attached images, agent has already analyzed them
+      const fallbackResult = (await callBedrockApi(
+        extractionPrompt,
+        userMessage,
+        MODEL_IDS.PLANNER_MODEL_FULL,
+        {
+          temperature: TEMPERATURE_PRESETS.STRUCTURED,
+          enableThinking,
+          staticPrompt: extractionPrompt,
+          dynamicPrompt: "",
+        },
+      )) as string;
 
       console.info("✅ Fallback extraction completed");
 
@@ -513,7 +445,7 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
         {
           workoutData,
           method: "fallback",
-          hasImages,
+          hasImages: false, // Images processed by agent, not tools
           enableThinking,
           isComplexWorkout,
           toolError:
@@ -611,7 +543,8 @@ Returns: validation result with shouldSave, shouldNormalize, confidence, complet
     properties: {
       workoutData: {
         type: "object",
-        description: "The extracted workout data to validate",
+        description:
+          "The extracted workout data to validate. CRITICAL: Pass this as an OBJECT directly from extract_workout_data result - DO NOT stringify to JSON. The tool expects the raw object structure.",
       },
       completedAt: {
         type: "string",
@@ -665,10 +598,16 @@ Returns: validation result with shouldSave, shouldNormalize, confidence, complet
     });
 
     // Update metadata with scores (ensure metadata always exists with proper structure)
-    if (!workoutData.metadata) {
+    // Handle cases where metadata is undefined, null, or not an object (e.g., from malformed JSON)
+    if (
+      !workoutData.metadata ||
+      typeof workoutData.metadata !== "object" ||
+      Array.isArray(workoutData.metadata)
+    ) {
       workoutData.metadata = {};
     }
-    if (!workoutData.metadata.validation_flags) {
+    // Ensure validation_flags is always an array
+    if (!Array.isArray(workoutData.metadata.validation_flags)) {
       workoutData.metadata.validation_flags = [];
     }
     workoutData.metadata.data_confidence = confidence;
@@ -840,7 +779,8 @@ Returns: normalizedData, isValid, issuesFound, issuesCorrected, normalizationSum
     properties: {
       workoutData: {
         type: "object",
-        description: "The workout data to normalize",
+        description:
+          "The workout data to normalize. CRITICAL: Pass this as an OBJECT directly from validate_workout_completeness or extract_workout_data - DO NOT stringify to JSON. The tool expects the raw object structure.",
       },
       enableThinking: {
         type: "boolean",
@@ -893,10 +833,15 @@ Returns: normalizedData, isValid, issuesFound, issuesCorrected, normalizationSum
       finalData = normalizationResult.normalizedData;
 
       // Ensure metadata exists with proper structure before accessing
-      if (!finalData.metadata) {
+      // Handle cases where metadata is undefined, null, or not an object
+      if (
+        !finalData.metadata ||
+        typeof finalData.metadata !== "object" ||
+        Array.isArray(finalData.metadata)
+      ) {
         finalData.metadata = {};
       }
-      if (!finalData.metadata.validation_flags) {
+      if (!Array.isArray(finalData.metadata.validation_flags)) {
         finalData.metadata.validation_flags = [];
       }
 
@@ -910,10 +855,15 @@ Returns: normalizedData, isValid, issuesFound, issuesCorrected, normalizationSum
     }
 
     // Add normalization flags to metadata (ensure metadata structure exists)
-    if (!finalData.metadata) {
+    // Handle cases where metadata is undefined, null, or not an object
+    if (
+      !finalData.metadata ||
+      typeof finalData.metadata !== "object" ||
+      Array.isArray(finalData.metadata)
+    ) {
       finalData.metadata = {};
     }
-    if (!finalData.metadata.validation_flags) {
+    if (!Array.isArray(finalData.metadata.validation_flags)) {
       finalData.metadata.validation_flags = [];
     }
     normalizationResult.issues.forEach((issue) => {
@@ -969,7 +919,8 @@ Returns: summary (string)`,
     properties: {
       workoutData: {
         type: "object",
-        description: "The finalized workout data",
+        description:
+          "The finalized workout data. CRITICAL: Pass this as an OBJECT directly from previous tools - DO NOT stringify to JSON. The tool expects the raw object structure.",
       },
       originalMessage: {
         type: "string",
@@ -1043,7 +994,8 @@ Returns: workoutId, success, pineconeStored, pineconeRecordId, templateLinked`,
     properties: {
       workoutData: {
         type: "object",
-        description: "The finalized workout data",
+        description:
+          "The finalized workout data. CRITICAL: Pass this as an OBJECT directly from previous tools - DO NOT stringify to JSON. The tool expects the raw object structure.",
       },
       summary: {
         type: "string",
@@ -1084,6 +1036,23 @@ Returns: workoutId, success, pineconeStored, pineconeRecordId, templateLinked`,
       confidence,
       normalizationSummary,
     } = input;
+
+    // Validate required fields before attempting to save
+    // This prevents saving workouts with undefined critical fields
+    if (!workoutData?.workout_id) {
+      throw new Error(
+        "Cannot save workout: workout_id is required. Ensure extract_workout_data was called first and returned valid data.",
+      );
+    }
+    if (!workoutData?.discipline) {
+      throw new Error(
+        "Cannot save workout: discipline is required. Ensure extract_workout_data was called first and returned valid data.",
+      );
+    }
+    if (!workoutData?.user_id) {
+      // Set user_id from context if missing (common issue with malformed data)
+      workoutData.user_id = context.userId;
+    }
 
     // Validate and convert completedAt to Date object using centralized utility
     const completedAtDate = parseCompletedAt(

@@ -6,7 +6,7 @@
  */
 
 import { UniversalWorkoutSchema } from "./types";
-import { callBedrockApi } from "../api-helpers";
+import { callBedrockApi, TEMPERATURE_PRESETS } from "../api-helpers";
 import { parseJsonWithFallbacks } from "../response-utils";
 import { WORKOUT_SCHEMA } from "../schemas/workout-schema";
 
@@ -105,7 +105,7 @@ Transform this workout data to conform to the Universal Workout Schema v2.0 and 
  */
 export const normalizeWorkout = async (
   workoutData: any,
-  userId: string
+  userId: string,
 ): Promise<NormalizationResult> => {
   try {
     console.info("🔧 Starting workout normalization:", {
@@ -142,14 +142,18 @@ export const normalizeWorkout = async (
  */
 const performNormalization = async (
   workoutData: any,
-  userId: string
+  userId: string,
 ): Promise<NormalizationResult> => {
   try {
     const normalizationPrompt = buildNormalizationPrompt(workoutData);
-    const normalizationResponse = await callBedrockApi(
+    const normalizationResponse = (await callBedrockApi(
       normalizationPrompt,
-      "workout_normalization"
-    ) as string; // No tools used, always returns string
+      "workout_normalization",
+      undefined,
+      {
+        temperature: TEMPERATURE_PRESETS.STRUCTURED,
+      },
+    )) as string; // No tools used, always returns string
 
     // Parse JSON with cleaning and fixing (handles markdown-wrapped JSON and common issues)
     const normalizationResult = parseJsonWithFallbacks(normalizationResponse);
@@ -164,7 +168,7 @@ const performNormalization = async (
       !normalizationResult.hasOwnProperty("normalizedData")
     ) {
       throw new Error(
-        "Response missing required fields (isValid, normalizedData)"
+        "Response missing required fields (isValid, normalizedData)",
       );
     }
 
@@ -172,11 +176,11 @@ const performNormalization = async (
     if (normalizationResult.normalizedData?.metadata?.validation_flags) {
       if (
         !normalizationResult.normalizedData.metadata.validation_flags.includes(
-          "normalized"
+          "normalized",
         )
       ) {
         normalizationResult.normalizedData.metadata.validation_flags.push(
-          "normalized"
+          "normalized",
         );
       }
     }
@@ -215,7 +219,7 @@ const performNormalization = async (
  */
 export const shouldNormalizeWorkout = (
   workoutData: any,
-  extractionConfidence: number
+  extractionConfidence: number,
 ): boolean => {
   // Always normalize low confidence extractions
   if (extractionConfidence < 0.7) {
@@ -245,7 +249,9 @@ export const shouldNormalizeWorkout = (
 /**
  * Generates a human-readable summary of normalization results for logging
  */
-export const generateNormalizationSummary = (result: NormalizationResult): string => {
+export const generateNormalizationSummary = (
+  result: NormalizationResult,
+): string => {
   const { isValid, issues, confidence, normalizationMethod } = result;
 
   let summary = `Normalization ${isValid ? "PASSED" : "FAILED"} (confidence: ${confidence.toFixed(2)})`;

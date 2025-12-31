@@ -1,4 +1,5 @@
 # Coach Creator Question Flow Redesign
+
 **Date**: 2025-11-16
 **Status**: ✅ APPROVED - Implementation in Progress
 **Approach**: To-Do List Based Conversational Flow
@@ -9,11 +10,13 @@
 ## Executive Summary
 
 The current coach creator uses a **rigid scripted question array** with **hardcoded question appending**, causing three interrelated problems:
+
 1. **AI cannot skip questions** when user has already provided the information
 2. **Mechanical conversation flow** - system overrides AI's natural responses
 3. **Q&A pairing mismatches** - initial greeting not stored correctly
 
 This document proposes a **To-Do List based conversational flow** that:
+
 - ✅ Stores a to-do list in DynamoDB that tracks what info is collected
 - ✅ AI updates the to-do list after each user response
 - ✅ AI decides what to ask next based on the to-do list
@@ -27,6 +30,7 @@ This document proposes a **To-Do List based conversational flow** that:
 ### Problem #1: Hardcoded Question Appending (Root Cause)
 
 **Current Flow** (`stream-coach-creator-session/handler.ts` lines 416-420):
+
 ```typescript
 nextQuestion: processedResponse.nextQuestion
   ? processedResponse.nextQuestion.versions[sophisticationLevel] || ...
@@ -34,12 +38,14 @@ nextQuestion: processedResponse.nextQuestion
 ```
 
 **What happens**:
+
 1. AI generates response based on user's answer
 2. **System unconditionally appends** the next scripted question (overriding AI)
 3. Frontend displays: AI response + scripted question
 4. User sees repetitive/mechanical responses
 
 **Why it's flawed**:
+
 - AI has no control over what question comes next
 - System ignores whether user already answered
 - Creates "two questions at once" effect (Issue #3)
@@ -48,6 +54,7 @@ nextQuestion: processedResponse.nextQuestion
 ### Problem #2: Initial Message Pairing Mismatch
 
 **Current Flow**:
+
 - `create-coach-creator-session` returns initial greeting but doesn't store it
 - Frontend displays: "What are your fitness goals?"
 - User responds: "I want to build strength..."
@@ -55,6 +62,7 @@ nextQuestion: processedResponse.nextQuestion
 - When extraction functions look for Q1 response, they get Q0's answer ❌
 
 **Impact**:
+
 - All Q&A pairs are off by 1
 - Extraction functions pull wrong data
 - On page refresh, conversation looks broken
@@ -62,6 +70,7 @@ nextQuestion: processedResponse.nextQuestion
 ### Problem #3: Question Array Rigidity
 
 **Current Structure** (`question-management.ts`):
+
 ```typescript
 const COACH_CREATOR_QUESTIONS = [
   { id: 1, category: "coach_gender_preference", ... },
@@ -72,6 +81,7 @@ const COACH_CREATOR_QUESTIONS = [
 ```
 
 **Limitations**:
+
 - Every user gets the exact same 11 questions in the exact same order
 - AI cannot adapt based on user's responses
 - Cannot skip redundant questions when user volunteers information
@@ -107,6 +117,7 @@ const COACH_CREATOR_QUESTIONS = [
 ### Architecture Overview
 
 Replace **scripted question array** with **AI-driven conversational agent** using a **To-Do List**:
+
 1. **To-Do List** stored in DynamoDB tracks what info is collected vs. needed
 2. **AI updates** the to-do list after each user response
 3. **AI generates** next question based on what's still pending in the list
@@ -167,9 +178,9 @@ interface CoachCreatorTodoList {
 }
 
 interface TodoItem {
-  status: 'pending' | 'in_progress' | 'complete';
+  status: "pending" | "in_progress" | "complete";
   value: any | null;
-  confidence?: 'high' | 'medium' | 'low';
+  confidence?: "high" | "medium" | "low";
   notes?: string;
   extractedFrom?: string; // Which message was this extracted from
 }
@@ -188,7 +199,7 @@ interface CoachCreatorSession {
   // Session metadata
   userId: string;
   sessionId: string;
-  status: 'in_progress' | 'ready_to_generate' | 'generating' | 'completed';
+  status: "in_progress" | "ready_to_generate" | "generating" | "completed";
   sophisticationLevel: SophisticationLevel;
 
   // THE TO-DO LIST (core of new approach)
@@ -196,7 +207,7 @@ interface CoachCreatorSession {
 
   // Conversation history
   conversationHistory: Array<{
-    role: 'ai' | 'user';
+    role: "ai" | "user";
     content: string;
     timestamp: string;
   }>;
@@ -212,7 +223,9 @@ interface CoachCreatorSession {
 AI-powered question generator that considers context:
 
 ```typescript
-async function generateNextQuestion(context: ConversationContext): Promise<string | null> {
+async function generateNextQuestion(
+  context: ConversationContext,
+): Promise<string | null> {
   // Check what's missing
   const missingRequired = getMissingRequirements(context.collectedData);
 
@@ -226,13 +239,13 @@ async function generateNextQuestion(context: ConversationContext): Promise<strin
   You are a fitness coach conducting an intake conversation.
 
   CONVERSATION SO FAR:
-  ${context.messages.map(m => `${m.role}: ${m.content}`).join('\n')}
+  ${context.messages.map((m) => `${m.role}: ${m.content}`).join("\n")}
 
   INFORMATION COLLECTED:
   ${JSON.stringify(context.collectedData, null, 2)}
 
   STILL NEEDED:
-  ${missingRequired.join(', ')}
+  ${missingRequired.join(", ")}
 
   INSTRUCTIONS:
   1. Review the conversation - has the user already mentioned any of the missing info?
@@ -244,7 +257,11 @@ async function generateNextQuestion(context: ConversationContext): Promise<strin
   Generate your next response (acknowledgment + question OR just question):
   `;
 
-  const aiResponse = await callBedrockApi(prompt, '', MODEL_IDS.CLAUDE_SONNET_4_FULL);
+  const aiResponse = await callBedrockApi(
+    prompt,
+    "",
+    MODEL_IDS.PLANNER_MODEL_FULL,
+  );
   return aiResponse;
 }
 ```
@@ -257,7 +274,7 @@ After each user response, extract structured data:
 async function extractInformationFromResponse(
   userResponse: string,
   conversationHistory: Message[],
-  missingRequirements: string[]
+  missingRequirements: string[],
 ): Promise<ExtractedInfo> {
   const prompt = `
   Analyze this user response and extract any fitness coach intake information:
@@ -266,10 +283,13 @@ async function extractInformationFromResponse(
   "${userResponse}"
 
   CONTEXT (previous messages):
-  ${conversationHistory.slice(-3).map(m => `${m.role}: ${m.content}`).join('\n')}
+  ${conversationHistory
+    .slice(-3)
+    .map((m) => `${m.role}: ${m.content}`)
+    .join("\n")}
 
   WHAT WE'RE LOOKING FOR:
-  ${missingRequirements.join(', ')}
+  ${missingRequirements.join(", ")}
 
   Return JSON with any information found:
   {
@@ -284,7 +304,11 @@ async function extractInformationFromResponse(
   }
   `;
 
-  const extracted = await callBedrockApi(prompt, '', MODEL_IDS.CLAUDE_HAIKU_4_FULL);
+  const extracted = await callBedrockApi(
+    prompt,
+    "",
+    MODEL_IDS.EXECUTOR_MODEL_FULL,
+  );
   return parseJsonWithFallbacks(extracted);
 }
 ```
@@ -302,16 +326,16 @@ async function handleUserResponse(userId, sessionId, userResponse) {
   // 2. Store user message
   context.messages.push({
     id: context.messages.length + 1,
-    role: 'user',
+    role: "user",
     content: userResponse,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 
   // 3. Extract information from user response
   const extracted = await extractInformationFromResponse(
     userResponse,
     context.messages,
-    getMissingRequirements(context.collectedData)
+    getMissingRequirements(context.collectedData),
   );
 
   // 4. Update collected data
@@ -326,21 +350,21 @@ async function handleUserResponse(userId, sessionId, userResponse) {
 
     context.messages.push({
       id: context.messages.length + 1,
-      role: 'ai',
+      role: "ai",
       content: completionMessage,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
 
-    context.completionStatus = 'ready_to_generate';
+    context.completionStatus = "ready_to_generate";
   } else {
     // 6. Generate next question
     const nextQuestion = await generateNextQuestion(context);
 
     context.messages.push({
       id: context.messages.length + 1,
-      role: 'ai',
+      role: "ai",
       content: nextQuestion,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 
@@ -348,7 +372,9 @@ async function handleUserResponse(userId, sessionId, userResponse) {
   await updateCoachCreatorSession(userId, sessionId, context);
 
   // 8. Stream the AI response to user
-  return streamAiResponse(context.messages[context.messages.length - 1].content);
+  return streamAiResponse(
+    context.messages[context.messages.length - 1].content,
+  );
 }
 ```
 
@@ -378,11 +404,13 @@ nextQuestion: shouldAskNext ? getNextQuestion(...) : null
 ```
 
 **Benefits**:
+
 - Low risk - existing flow still works
 - Can test AI decision quality
 - Easy rollback if needed
 
 **Drawbacks**:
+
 - Doesn't solve Q&A pairing issue
 - Still somewhat mechanical
 - Extra AI call overhead
@@ -435,6 +463,7 @@ Replace question array entirely with context-aware conversation:
 ### Current Problem
 
 Initial greeting is returned but not stored in `questionHistory`:
+
 ```typescript
 // create-coach-creator-session returns this but doesn't store it
 const initialMessage = "Hi! I'm here to help...";
@@ -446,18 +475,21 @@ User's response to initial greeting gets stored as Q1, but Q1 should be the gend
 
 ```typescript
 // In create-coach-creator-session/handler.ts
-const initialMessage = "Hi! I'm here to help create your perfect AI coach. Let's start with the basics - what are your primary fitness goals?";
+const initialMessage =
+  "Hi! I'm here to help create your perfect AI coach. Let's start with the basics - what are your primary fitness goals?";
 
 const conversationContext = {
-  messages: [{
-    id: 0,
-    role: 'ai',
-    content: initialMessage,
-    timestamp: new Date().toISOString()
-  }],
+  messages: [
+    {
+      id: 0,
+      role: "ai",
+      content: initialMessage,
+      timestamp: new Date().toISOString(),
+    },
+  ],
   collectedData: {},
-  sophisticationLevel: 'UNKNOWN',
-  completionStatus: 'in_progress'
+  sophisticationLevel: "UNKNOWN",
+  completionStatus: "in_progress",
 };
 
 // When user responds, their message becomes id: 1
@@ -485,6 +517,7 @@ messages: [{
 ```
 
 When user responds:
+
 ```typescript
 // Update questionHistory[0]
 questionHistory[0].userResponse = userResponse;
@@ -492,9 +525,9 @@ questionHistory[0].userResponse = userResponse;
 // Add to messages
 messages.push({
   id: 1,
-  role: 'user',
+  role: "user",
   content: userResponse,
-  timestamp: new Date().toISOString()
+  timestamp: new Date().toISOString(),
 });
 ```
 
@@ -507,9 +540,11 @@ messages.push({
 ### Current Approach (Question ID Based)
 
 ```typescript
-export const extractGenderPreference = (questionHistory: QuestionHistoryEntry[]): string => {
-  const entry = questionHistory.find(e => e.questionId === 1);
-  return entry?.userResponse || 'neutral';
+export const extractGenderPreference = (
+  questionHistory: QuestionHistoryEntry[],
+): string => {
+  const entry = questionHistory.find((e) => e.questionId === 1);
+  return entry?.userResponse || "neutral";
 };
 ```
 
@@ -518,16 +553,21 @@ export const extractGenderPreference = (questionHistory: QuestionHistoryEntry[])
 ### New Approach (Requirement Based)
 
 ```typescript
-export const extractGenderPreference = (context: ConversationContext): string => {
+export const extractGenderPreference = (
+  context: ConversationContext,
+): string => {
   // Option 1: Use structured data if available
   if (context.collectedData.coach_gender_preference) {
     return context.collectedData.coach_gender_preference;
   }
 
   // Option 2: Fallback to conversation parsing
-  const genderMessage = context.messages.find(m =>
-    m.role === 'user' &&
-    (m.content.includes('male') || m.content.includes('female') || m.content.includes('neutral'))
+  const genderMessage = context.messages.find(
+    (m) =>
+      m.role === "user" &&
+      (m.content.includes("male") ||
+        m.content.includes("female") ||
+        m.content.includes("neutral")),
   );
 
   if (genderMessage) {
@@ -535,11 +575,12 @@ export const extractGenderPreference = (context: ConversationContext): string =>
     return parseGenderFromText(genderMessage.content);
   }
 
-  return 'neutral'; // Default
+  return "neutral"; // Default
 };
 ```
 
 **Benefits**:
+
 - Works regardless of question order
 - More robust parsing
 - Can extract from ANY message in conversation
@@ -576,14 +617,17 @@ try {
 
 ```typescript
 // Before allowing coach generation, validate we have everything
-function canGenerateCoach(context: ConversationContext): {valid: boolean, missing: string[]} {
+function canGenerateCoach(context: ConversationContext): {
+  valid: boolean;
+  missing: string[];
+} {
   const missing = getMissingRequirements(context.collectedData);
 
   if (missing.length > 0) {
     return {
       valid: false,
       missing,
-      message: `Still need: ${missing.join(', ')}. Please answer a few more questions.`
+      message: `Still need: ${missing.join(", ")}. Please answer a few more questions.`,
     };
   }
 
@@ -601,6 +645,7 @@ function canGenerateCoach(context: ConversationContext): {valid: boolean, missin
 **New**: 2-3 AI calls per question (sophistication + extraction + next question)
 
 **Optimization**:
+
 1. **Batch Operations**: Combine extraction + next question generation in one call
 2. **Use Haiku for Extraction**: Cheaper, faster model for structured extraction
 3. **Cache Common Patterns**: Store extraction patterns for common responses
@@ -609,11 +654,13 @@ function canGenerateCoach(context: ConversationContext): {valid: boolean, missin
 ### Cost Estimate
 
 **Current Flow** (11 questions):
+
 - 11 sophistication checks (Haiku) = ~$0.01
 - 11 response generations (Sonnet) = ~$0.05
 - **Total**: ~$0.06 per session
 
 **New Flow** (8-10 dynamic questions):
+
 - 8-10 sophistication checks (Haiku) = ~$0.01
 - 8-10 extractions (Haiku) = ~$0.01
 - 8-10 question generations (Sonnet) = ~$0.04
@@ -639,6 +686,7 @@ function canGenerateCoach(context: ConversationContext): {valid: boolean, missin
 ### A/B Testing (Production)
 
 **Metrics to Track**:
+
 - Completion rate (% users who finish vs. abandon)
 - Time to complete (average minutes)
 - Coach quality scores (user satisfaction)
@@ -646,6 +694,7 @@ function canGenerateCoach(context: ConversationContext): {valid: boolean, missin
 - Data completeness (% of required fields populated)
 
 **Success Criteria**:
+
 - Completion rate ≥ current (or +10%)
 - Time to complete ≤ current (or -20%)
 - Zero repetition incidents
@@ -657,26 +706,31 @@ function canGenerateCoach(context: ConversationContext): {valid: boolean, missin
 ## Rollout Plan
 
 ### Week 1: Foundation
+
 - Implement new data model
 - Build extraction functions
 - Write unit tests
 
 ### Week 2: Core Logic
+
 - Build question generator
 - Update handlers
 - Write integration tests
 
 ### Week 3: Migration
+
 - Deploy with feature flag (10% of users)
 - Monitor metrics
 - Iterate on prompts
 
 ### Week 4: Rollout
+
 - Increase to 50% of users
 - Continue monitoring
 - Address edge cases
 
 ### Week 5: Completion
+
 - Full rollout (100% of users)
 - Deprecate old question array
 - Update documentation
@@ -688,6 +742,7 @@ function canGenerateCoach(context: ConversationContext): {valid: boolean, missin
 ### Risk: AI generates poor questions
 
 **Mitigation**:
+
 - Use Claude Sonnet 4 (high quality)
 - Provide extensive prompt engineering
 - Fallback to scripted questions
@@ -696,6 +751,7 @@ function canGenerateCoach(context: ConversationContext): {valid: boolean, missin
 ### Risk: Extraction misses information
 
 **Mitigation**:
+
 - Use Haiku + Sonnet validation layer
 - Fallback to regex parsing for critical fields
 - Ask clarifying questions if confidence low
@@ -704,6 +760,7 @@ function canGenerateCoach(context: ConversationContext): {valid: boolean, missin
 ### Risk: Performance degradation
 
 **Mitigation**:
+
 - Use prompt caching aggressively
 - Batch AI calls where possible
 - Monitor latency metrics
@@ -712,6 +769,7 @@ function canGenerateCoach(context: ConversationContext): {valid: boolean, missin
 ### Risk: Backwards compatibility breaks
 
 **Mitigation**:
+
 - Keep old extraction functions as fallback
 - Migrate sessions gradually
 - Support both data formats during transition
@@ -732,6 +790,7 @@ function canGenerateCoach(context: ConversationContext): {valid: boolean, missin
 ## Approval Required
 
 Please review and provide feedback on:
+
 1. ✅ Overall approach (dynamic flow vs. hybrid)
 2. ✅ Migration strategy (Phase 1 vs. Phase 2)
 3. ✅ Timeline (5 weeks realistic?)
@@ -755,14 +814,18 @@ Once approved, I can begin implementation with Phase 1 or Phase 2.
 ### Phase 1: Backend Foundation (Week 1)
 
 #### Step 1.1: Update Types & Schema
+
 **Files**: `amplify/functions/libs/coach-creator/types.ts`
+
 - [ ] Add `TodoItem` interface
 - [ ] Add `CoachCreatorTodoList` interface
 - [ ] Update `CoachCreatorSession` to include `todoList` and `conversationHistory`
 - [ ] Keep `questionHistory` for backwards compatibility (mark as deprecated)
 
 #### Step 1.2: Create To-Do List Utilities
+
 **Files**: `amplify/functions/libs/coach-creator/todo-list-utils.ts` (NEW)
+
 - [ ] `createEmptyTodoList()` - Initialize all items as 'pending'
 - [ ] `getTodoProgress()` - Count completed/pending items, return percentage
 - [ ] `getPendingItems()` - Get list of incomplete items
@@ -770,14 +833,18 @@ Once approved, I can begin implementation with Phase 1 or Phase 2.
 - [ ] `isSessionComplete()` - Check if all required items are complete
 
 #### Step 1.3: Create AI Extraction Function
+
 **Files**: `amplify/functions/libs/coach-creator/todo-extraction.ts` (NEW)
+
 - [ ] `extractAndUpdateTodoList()` - AI analyzes user response and updates to-do list
 - [ ] Uses Claude Haiku 4.5 for fast, cheap extraction
 - [ ] Returns updated todo list + confidence scores
 - [ ] Validates extraction quality
 
 #### Step 1.4: Create AI Question Generator
+
 **Files**: `amplify/functions/libs/coach-creator/question-generator.ts` (NEW)
+
 - [ ] `generateNextQuestion()` - AI generates next question based on todo list
 - [ ] Uses Claude Sonnet 4 for high-quality conversational responses
 - [ ] Considers conversation history + todo list
@@ -786,14 +853,18 @@ Once approved, I can begin implementation with Phase 1 or Phase 2.
 ### Phase 2: Handler Updates (Week 1-2)
 
 #### Step 2.1: Update Create Session Handler
+
 **Files**: `amplify/functions/create-coach-creator-session/handler.ts`
+
 - [ ] Initialize `todoList` with all items as 'pending'
 - [ ] Initialize `conversationHistory` with initial AI greeting
 - [ ] Store initial message in conversation history (fixes Issue #5)
 - [ ] Remove old `questionHistory` initialization (keep for migration)
 
 #### Step 2.2: Refactor Stream Handler
+
 **Files**: `amplify/functions/stream-coach-creator-session/handler.ts`
+
 - [ ] Remove hardcoded `nextQuestion` appending logic
 - [ ] Add user message to `conversationHistory`
 - [ ] Call `extractAndUpdateTodoList()` after each user response
@@ -806,14 +877,18 @@ Once approved, I can begin implementation with Phase 1 or Phase 2.
 - [ ] Save updated session to DynamoDB
 
 #### Step 2.3: Update or Deprecate Update Handler
+
 **Files**: `amplify/functions/update-coach-creator-session/handler.ts`
+
 - [ ] Apply same logic as stream handler
 - [ ] Or deprecate if only using streaming flow
 
 ### Phase 3: Data Extraction Updates (Week 2)
 
 #### Step 3.1: Update Extraction Functions
+
 **Files**: `amplify/functions/libs/coach-creator/data-extraction.ts`
+
 - [ ] Update all extraction functions to work with `todoList` instead of `questionHistory`
 - [ ] `extractGenderPreference()` → read from `todoList.coach_gender_preference.value`
 - [ ] `extractSafetyProfile()` → read from injury/limitation todo items
@@ -822,7 +897,9 @@ Once approved, I can begin implementation with Phase 1 or Phase 2.
 - [ ] Maintain backwards compatibility with old sessions
 
 #### Step 3.2: Update Coach Generation
+
 **Files**: `amplify/functions/libs/coach-creator/coach-generation.ts`
+
 - [ ] Update `generateCoachConfig()` to accept session with `todoList`
 - [ ] Use todo list values for coach config generation
 - [ ] Fallback to old extraction if todo list incomplete
@@ -830,14 +907,18 @@ Once approved, I can begin implementation with Phase 1 or Phase 2.
 ### Phase 4: Frontend Updates (Week 2)
 
 #### Step 4.1: Update Coach Creator Agent
+
 **Files**: `src/utils/agents/CoachCreatorAgent.js`
+
 - [ ] Remove expectation of `nextQuestion` field in API response
 - [ ] Display conversation naturally (just AI + user messages)
 - [ ] Calculate progress from `todoList` completion percentage
 - [ ] Update `loadExistingSession()` to use `conversationHistory`
 
 #### Step 4.2: Update Coach Creator UI
+
 **Files**: `src/components/CoachCreator.jsx`
+
 - [ ] Update progress display: "75% complete" instead of "8 of 11 questions"
 - [ ] Remove any hardcoded question display logic
 - [ ] Show natural conversation flow
@@ -845,12 +926,14 @@ Once approved, I can begin implementation with Phase 1 or Phase 2.
 ### Phase 5: Testing & Migration (Week 3)
 
 #### Step 5.1: Data Migration
+
 - [ ] Create migration utility for in-progress sessions
 - [ ] Convert `questionHistory` to `conversationHistory` + partial `todoList`
 - [ ] Run migration on staging
 - [ ] Verify migrated sessions work correctly
 
 #### Step 5.2: Testing
+
 - [ ] Unit tests for to-do list utilities
 - [ ] Unit tests for extraction function
 - [ ] Unit tests for question generator
@@ -859,6 +942,7 @@ Once approved, I can begin implementation with Phase 1 or Phase 2.
 - [ ] Compare metrics: completion rate, time, quality
 
 #### Step 5.3: Rollout
+
 - [ ] Deploy with feature flag (10% traffic)
 - [ ] Monitor CloudWatch logs
 - [ ] Check DynamoDB for correct todo list updates
@@ -868,6 +952,7 @@ Once approved, I can begin implementation with Phase 1 or Phase 2.
 ### Phase 6: Cleanup (Week 4)
 
 #### Step 6.1: Deprecation
+
 - [ ] Mark `questionHistory` as deprecated
 - [ ] Update documentation
 - [ ] Remove fallback logic after 30 days
@@ -878,6 +963,7 @@ Once approved, I can begin implementation with Phase 1 or Phase 2.
 ## Implementation Checklist
 
 ### Backend
+
 - [x] `types.ts` - Add TodoItem, CoachCreatorTodoList, update Session ✅
 - [x] `todo-list-utils.ts` (NEW) - Utility functions ✅
 - [x] `todo-extraction.ts` (NEW) - AI extraction function ✅
@@ -888,16 +974,19 @@ Once approved, I can begin implementation with Phase 1 or Phase 2.
 - [x] `coach-generation.ts` - Update to use todoList ✅
 
 ### Frontend
+
 - [x] `CoachCreatorAgent.js` - Already compatible (handles optional nextQuestion) ✅
 - [x] `CoachCreator.jsx` - Already compatible (uses progress from API) ✅
 
 ### Testing
+
 - [ ] Unit tests for utilities ⏳
 - [ ] Integration tests for flow ⏳
 - [ ] Manual testing with real users ⏳
 - [ ] Migration testing ⏳
 
 ### Documentation
+
 - [x] Update this document with implementation notes ✅
 - [ ] Update `COACH_CREATOR_IMPROVEMENT_PLAN.md` with completion status ⏳
 - [ ] Create migration guide ⏳
@@ -909,29 +998,35 @@ Once approved, I can begin implementation with Phase 1 or Phase 2.
 ### Code Removed: ~900 Lines
 
 **data-extraction.ts**: 895 → 391 lines (-504 lines)
+
 - Removed all keyword-based extraction functions
 - Replaced with AI-powered extraction using Claude Haiku 4.5
 - All `*FromSession()` functions now use AI for robust parsing
 
 **types.ts**: 394 → 307 lines (-87 lines)
+
 - Removed `UserContext`, `Question`, `QuestionHistoryEntry` interfaces
 - Made `todoList`, `conversationHistory`, `sophisticationLevel` required (not optional)
 - Cleaned up legacy deprecated fields
 
 **stream-coach-creator-session/handler.ts**: 982 → 699 lines (-283 lines)
+
 - Removed entire legacy question-based flow
 - Single clean to-do list approach only
 - Simplified branching logic
 
 **session-management.ts**: 398 → 237 lines (-161 lines)
+
 - Removed `createCoachCreatorSession()`, `getProgress()`, `checkUserWantsToFinish()`, `updateSessionContext()`
 - Simplified `generateCoachCreatorSessionSummary()` to use conversation history
 
 **create-coach-creator-session/handler.ts**: 51 → 51 lines (refactored, no net change)
+
 - Removed dependency on `createCoachCreatorSession()`
 - Now creates session inline with to-do list approach
 
 **coach-generation.ts**: Updated function calls to use async extraction
+
 - All `extractX` calls now `await extractXFromSession()`
 - `buildCoachConfigPrompts()` is now async
 
@@ -948,29 +1043,34 @@ Once approved, I can begin implementation with Phase 1 or Phase 2.
 ### What Was Built
 
 **Core Architecture:**
+
 1. ✅ **To-Do List System** - 22 fields tracking all required information
 2. ✅ **AI Extraction** - Automatic extraction from user responses
 3. ✅ **AI Question Generator** - Dynamic, context-aware question generation
 4. ✅ **Backwards Compatibility** - Both old and new systems work simultaneously
 
 **Files Created:**
+
 - `types.ts` - Added `TodoItem`, `CoachCreatorTodoList`, `ConversationMessage`
 - `todo-list-utils.ts` - Progress tracking, completion detection
 - `todo-extraction.ts` - AI-powered information extraction
 - `question-generator.ts` - AI-driven question generation
 
 **Files Updated:**
+
 - `create-coach-creator-session/handler.ts` - Initialize to-do list
 - `stream-coach-creator-session/handler.ts` - New conversational flow
 - `data-extraction.ts` - Session-based extraction (supports both approaches)
 - `coach-generation.ts` - Uses new extraction functions
 
 **Frontend:**
+
 - No changes needed - already compatible! ✨
 
 ### How It Works
 
 **New Session Flow:**
+
 1. User creates session → to-do list initialized (all items = 'pending')
 2. AI greeting stored in `conversationHistory`
 3. User responds → AI extracts info → updates to-do list
@@ -979,6 +1079,7 @@ Once approved, I can begin implementation with Phase 1 or Phase 2.
 6. AI generates completion message → coach created
 
 **Backwards Compatibility:**
+
 - Old sessions: Use `questionHistory` + hardcoded questions (legacy flow)
 - New sessions: Use `todoList` + `conversationHistory` (new flow)
 - Detection: `if (session.todoList)` determines which path
@@ -1007,18 +1108,21 @@ Once approved, I can begin implementation with Phase 1 or Phase 2.
 ### ✅ CLEAN BREAK DECISION (2025-11-16)
 
 **Decision**: Remove all legacy question history code
+
 - **Why**: Early beta phase, few active users
 - **Impact**: Old incomplete sessions will no longer work
 - **Mitigation**: Users will be notified to restart coach creation
 - **Benefits**: Cleaner codebase, faster iteration, no dual-path complexity
 
 **What Was Removed:**
+
 - Legacy extraction functions (question ID based)
 - Question history storage and management
 - Backwards compatibility code in handlers
 - Dual-path logic in stream handler
 
 **What Remains:**
+
 - ✅ To-do list approach only
 - ✅ Conversation history only
 - ✅ Cleaner, maintainable codebase
@@ -1031,4 +1135,3 @@ Once approved, I can begin implementation with Phase 1 or Phase 2.
 - Add progress visualization showing specific items collected
 - Store to-do list updates in Pinecone for pattern analysis
 - Update tone to match NeonPanda brand voice (playful, electric)
-

@@ -2,10 +2,18 @@
  * Pinecone utility functions for semantic search and context formatting
  */
 
-import { callBedrockApi, MODEL_IDS, getPineconeClient } from './api-helpers';
-import { JSON_FORMATTING_INSTRUCTIONS_STANDARD } from './prompt-helpers';
-import { MethodologyIntent, EnhancedMethodologyOptions } from './coach-conversation/types';
-import { parseJsonWithFallbacks } from './response-utils';
+import {
+  callBedrockApi,
+  MODEL_IDS,
+  getPineconeClient,
+  TEMPERATURE_PRESETS,
+} from "./api-helpers";
+import { JSON_FORMATTING_INSTRUCTIONS_STANDARD } from "./prompt-helpers";
+import {
+  MethodologyIntent,
+  EnhancedMethodologyOptions,
+} from "./coach-conversation/types";
+import { parseJsonWithFallbacks } from "./response-utils";
 
 // Configuration
 const PINECONE_QUERY_ENABLED = true;
@@ -25,7 +33,7 @@ const PINECONE_QUERY_ENABLED = true;
  */
 export async function shouldUsePineconeSearch(
   userMessage: string,
-  messageContext?: string
+  messageContext?: string,
 ): Promise<boolean> {
   if (!PINECONE_QUERY_ENABLED) return false;
 
@@ -68,19 +76,22 @@ GUIDELINES:
 Analyze this message and determine if semantic search would enhance the coaching response.`;
 
   try {
-    const response = await callBedrockApi(
+    const response = (await callBedrockApi(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.CLAUDE_HAIKU_4_FULL,
-      { prefillResponse: "{" } // Force JSON output format
-    ) as string; // No tools used, always returns string
+      MODEL_IDS.EXECUTOR_MODEL_FULL,
+      {
+        temperature: TEMPERATURE_PRESETS.STRUCTURED,
+        prefillResponse: "{",
+      }, // Force JSON output format
+    )) as string; // No tools used, always returns string
     const result = parseJsonWithFallbacks(response);
 
     return result.shouldUseSemanticSearch || false;
   } catch (error) {
     console.error("Error in Pinecone search decision:", error);
     // Conservative fallback - use semantic search for complex questions
-    const isComplexQuery = userMessage.length > 50 && userMessage.includes('?');
+    const isComplexQuery = userMessage.length > 50 && userMessage.includes("?");
     return isComplexQuery;
   }
 }
@@ -88,7 +99,9 @@ Analyze this message and determine if semantic search would enhance the coaching
 /**
  * Analyzes user message to determine methodology-related intent using AI
  */
-const analyzeMethodologyIntent = async (userMessage: string): Promise<MethodologyIntent> => {
+const analyzeMethodologyIntent = async (
+  userMessage: string,
+): Promise<MethodologyIntent> => {
   const analysisPrompt = `
 Analyze this user message about fitness methodologies and return a JSON response.
 
@@ -117,21 +130,24 @@ Examples:
 - "What's better, 5/3/1 or Starting Strength?" → {"isComparison": true, "isImplementationQuestion": false, "isPrincipleQuestion": false, "methodologies": ["5/3/1", "starting_strength"], "primaryMethodology": "5/3/1"}`;
 
   try {
-    const response = await callBedrockApi(
+    const response = (await callBedrockApi(
       analysisPrompt,
       userMessage,
-      MODEL_IDS.CLAUDE_HAIKU_4_FULL,
-      { prefillResponse: "{" } // Force JSON output format
-    ) as string; // No tools used, always returns string
+      MODEL_IDS.EXECUTOR_MODEL_FULL,
+      {
+        temperature: TEMPERATURE_PRESETS.STRUCTURED,
+        prefillResponse: "{",
+      }, // Force JSON output format
+    )) as string; // No tools used, always returns string
     return parseJsonWithFallbacks(response);
   } catch (error) {
-    console.error('Failed to analyze methodology intent:', error);
+    console.error("Failed to analyze methodology intent:", error);
     return {
       isComparison: false,
       isImplementationQuestion: false,
       isPrincipleQuestion: false,
       methodologies: [],
-      primaryMethodology: null
+      primaryMethodology: null,
     };
   }
 };
@@ -142,7 +158,7 @@ Examples:
 export const getEnhancedMethodologyContext = async (
   userMessage: string,
   userId: string,
-  options: EnhancedMethodologyOptions = {}
+  options: EnhancedMethodologyOptions = {},
 ): Promise<any[]> => {
   const { topK = 6 } = options;
 
@@ -152,19 +168,34 @@ export const getEnhancedMethodologyContext = async (
   const queries = [userMessage]; // Always include the original query
 
   // Add targeted queries based on AI analysis
-  if (messageAnalysis.isComparison && messageAnalysis.methodologies.length > 1) {
-    queries.push(`${messageAnalysis.methodologies.join(' vs ')} comparison benefits drawbacks`);
+  if (
+    messageAnalysis.isComparison &&
+    messageAnalysis.methodologies.length > 1
+  ) {
+    queries.push(
+      `${messageAnalysis.methodologies.join(" vs ")} comparison benefits drawbacks`,
+    );
   }
 
-  if (messageAnalysis.isImplementationQuestion && messageAnalysis.primaryMethodology) {
-    queries.push(`${messageAnalysis.primaryMethodology} programming implementation weekly structure`);
+  if (
+    messageAnalysis.isImplementationQuestion &&
+    messageAnalysis.primaryMethodology
+  ) {
+    queries.push(
+      `${messageAnalysis.primaryMethodology} programming implementation weekly structure`,
+    );
   }
 
-  if (messageAnalysis.isPrincipleQuestion && messageAnalysis.primaryMethodology) {
-    queries.push(`${messageAnalysis.primaryMethodology} philosophy principles approach`);
+  if (
+    messageAnalysis.isPrincipleQuestion &&
+    messageAnalysis.primaryMethodology
+  ) {
+    queries.push(
+      `${messageAnalysis.primaryMethodology} philosophy principles approach`,
+    );
   }
 
-    // Get Pinecone client
+  // Get Pinecone client
   const { index } = await getPineconeClient();
 
   // Run multiple targeted queries and combine results
@@ -175,18 +206,20 @@ export const getEnhancedMethodologyContext = async (
       const searchQuery = {
         query: {
           inputs: { text: query },
-          topK: Math.ceil(topK / queries.length)
-        }
+          topK: Math.ceil(topK / queries.length),
+        },
       };
 
-      const response = await index.namespace('methodology').searchRecords(searchQuery);
+      const response = await index
+        .namespace("methodology")
+        .searchRecords(searchQuery);
       const matches = response.result.hits.map((match: any) => ({
         ...match,
         metadata: {
           ...match.metadata,
-          recordType: 'methodology',
-          queryType: getQueryType(messageAnalysis, query === userMessage)
-        }
+          recordType: "methodology",
+          queryType: getQueryType(messageAnalysis, query === userMessage),
+        },
       }));
 
       allResults.push(...matches);
@@ -197,18 +230,23 @@ export const getEnhancedMethodologyContext = async (
 
   // Remove duplicates and sort by score
   const uniqueResults = removeDuplicateResults(allResults);
-  return uniqueResults.sort((a, b) => (b.score || 0) - (a.score || 0)).slice(0, topK);
+  return uniqueResults
+    .sort((a, b) => (b.score || 0) - (a.score || 0))
+    .slice(0, topK);
 };
 
 /**
  * Determines query type based on AI analysis
  */
-const getQueryType = (analysis: MethodologyIntent, isOriginal: boolean): string => {
-  if (isOriginal) return 'original';
-  if (analysis.isComparison) return 'comparison';
-  if (analysis.isImplementationQuestion) return 'implementation';
-  if (analysis.isPrincipleQuestion) return 'principles';
-  return 'enhanced';
+const getQueryType = (
+  analysis: MethodologyIntent,
+  isOriginal: boolean,
+): string => {
+  if (isOriginal) return "original";
+  if (analysis.isComparison) return "comparison";
+  if (analysis.isImplementationQuestion) return "implementation";
+  if (analysis.isPrincipleQuestion) return "principles";
+  return "enhanced";
 };
 
 /**
@@ -216,7 +254,7 @@ const getQueryType = (analysis: MethodologyIntent, isOriginal: boolean): string 
  */
 const removeDuplicateResults = (results: any[]): any[] => {
   const seen = new Set();
-  return results.filter(result => {
+  return results.filter((result) => {
     const key = result.metadata?.title || result.id;
     if (seen.has(key)) return false;
     seen.add(key);
@@ -227,32 +265,42 @@ const removeDuplicateResults = (results: any[]): any[] => {
 /**
  * Enhanced formatting for methodology context with categorization
  */
-export function formatEnhancedMethodologyContext(methodologyMatches: any[]): string {
-  if (methodologyMatches.length === 0) return '';
+export function formatEnhancedMethodologyContext(
+  methodologyMatches: any[],
+): string {
+  if (methodologyMatches.length === 0) return "";
 
   const contextByType = {
-    principles: methodologyMatches.filter(m => m.metadata?.queryType === 'principles'),
-    implementation: methodologyMatches.filter(m => m.metadata?.queryType === 'implementation'),
-    comparison: methodologyMatches.filter(m => m.metadata?.queryType === 'comparison'),
-    general: methodologyMatches.filter(m => !m.metadata?.queryType || m.metadata.queryType === 'original')
+    principles: methodologyMatches.filter(
+      (m) => m.metadata?.queryType === "principles",
+    ),
+    implementation: methodologyMatches.filter(
+      (m) => m.metadata?.queryType === "implementation",
+    ),
+    comparison: methodologyMatches.filter(
+      (m) => m.metadata?.queryType === "comparison",
+    ),
+    general: methodologyMatches.filter(
+      (m) => !m.metadata?.queryType || m.metadata.queryType === "original",
+    ),
   };
 
-  let contextString = '';
+  let contextString = "";
 
   if (contextByType.principles.length > 0) {
-    contextString += `\nMETHODOLOGY PRINCIPLES & PHILOSOPHY:\n${contextByType.principles.map(formatMethodologyMatch).join('\n')}`;
+    contextString += `\nMETHODOLOGY PRINCIPLES & PHILOSOPHY:\n${contextByType.principles.map(formatMethodologyMatch).join("\n")}`;
   }
 
   if (contextByType.implementation.length > 0) {
-    contextString += `\nPROGRAMMING & IMPLEMENTATION:\n${contextByType.implementation.map(formatMethodologyMatch).join('\n')}`;
+    contextString += `\nPROGRAMMING & IMPLEMENTATION:\n${contextByType.implementation.map(formatMethodologyMatch).join("\n")}`;
   }
 
   if (contextByType.comparison.length > 0) {
-    contextString += `\nMETHODOLOGY COMPARISONS:\n${contextByType.comparison.map(formatMethodologyMatch).join('\n')}`;
+    contextString += `\nMETHODOLOGY COMPARISONS:\n${contextByType.comparison.map(formatMethodologyMatch).join("\n")}`;
   }
 
   if (contextByType.general.length > 0) {
-    contextString += `\nRELEVANT METHODOLOGY KNOWLEDGE:\n${contextByType.general.map(formatMethodologyMatch).join('\n')}`;
+    contextString += `\nRELEVANT METHODOLOGY KNOWLEDGE:\n${contextByType.general.map(formatMethodologyMatch).join("\n")}`;
   }
 
   return contextString;
@@ -262,19 +310,23 @@ export function formatEnhancedMethodologyContext(methodologyMatches: any[]): str
  * Formats individual methodology match
  */
 const formatMethodologyMatch = (match: any): string => {
-  const title = match.metadata?.title || 'Methodology';
-  const source = match.metadata?.source || '';
-  const discipline = match.metadata?.discipline || '';
+  const title = match.metadata?.title || "Methodology";
+  const source = match.metadata?.source || "";
+  const discipline = match.metadata?.discipline || "";
 
-  const truncatedContent = match.content.length > 200
-    ? match.content.substring(0, 200) + '...'
-    : match.content;
+  const truncatedContent =
+    match.content.length > 200
+      ? match.content.substring(0, 200) + "..."
+      : match.content;
 
-  const sourceInfo = source && discipline
-    ? ` (${source} - ${discipline})`
-    : source ? ` (${source})`
-    : discipline ? ` (${discipline})`
-    : '';
+  const sourceInfo =
+    source && discipline
+      ? ` (${source} - ${discipline})`
+      : source
+        ? ` (${source})`
+        : discipline
+          ? ` (${discipline})`
+          : "";
 
   return `- **${title}${sourceInfo}**: ${truncatedContent} (Score: ${match.score.toFixed(2)})`;
 };
@@ -285,13 +337,17 @@ const formatMethodologyMatch = (match: any): string => {
  * @returns formatted context string
  */
 export function formatPineconeContext(pineconeMatches: any[]): string {
-  if (pineconeMatches.length === 0) return '';
+  if (pineconeMatches.length === 0) return "";
 
   // Separate methodology matches for enhanced formatting
-  const methodologyMatches = pineconeMatches.filter(match => match.recordType === 'methodology');
-  const otherMatches = pineconeMatches.filter(match => match.recordType !== 'methodology');
+  const methodologyMatches = pineconeMatches.filter(
+    (match) => match.recordType === "methodology",
+  );
+  const otherMatches = pineconeMatches.filter(
+    (match) => match.recordType !== "methodology",
+  );
 
-  let contextString = '';
+  let contextString = "";
 
   // Use enhanced formatting for methodology context
   if (methodologyMatches.length > 0) {
@@ -300,19 +356,19 @@ export function formatPineconeContext(pineconeMatches: any[]): string {
 
   // Keep existing formatting for other context types
   const workoutContext = otherMatches
-    .filter(match => match.recordType === 'workout_summary')
-    .map(match => `- ${match.content} (Score: ${match.score.toFixed(2)})`)
-    .join('\n');
+    .filter((match) => match.recordType === "workout_summary")
+    .map((match) => `- ${match.content} (Score: ${match.score.toFixed(2)})`)
+    .join("\n");
 
   const coachCreatorContext = otherMatches
-    .filter(match => match.recordType === 'coach_creator_summary')
-    .map(match => `- ${match.content} (Score: ${match.score.toFixed(2)})`)
-    .join('\n');
+    .filter((match) => match.recordType === "coach_creator_summary")
+    .map((match) => `- ${match.content} (Score: ${match.score.toFixed(2)})`)
+    .join("\n");
 
   const conversationContext = otherMatches
-    .filter(match => match.recordType === 'conversation_summary')
-    .map(match => `- ${match.content} (Score: ${match.score.toFixed(2)})`)
-    .join('\n');
+    .filter((match) => match.recordType === "conversation_summary")
+    .map((match) => `- ${match.content} (Score: ${match.score.toFixed(2)})`)
+    .join("\n");
 
   if (workoutContext) {
     contextString += `\nRELEVANT WORKOUT HISTORY:\n${workoutContext}`;

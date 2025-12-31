@@ -9,6 +9,7 @@ import {
   callBedrockApi,
   callBedrockApiStream,
   MODEL_IDS,
+  TEMPERATURE_PRESETS,
 } from "../api-helpers";
 import { ConversationMessage } from "../todo-types";
 import { ProgramDesignerTodoList } from "./types";
@@ -98,11 +99,14 @@ Remember: You're helping them create a training program that will actually work 
 `;
 
   try {
-    // Call Bedrock with Sonnet 4 (high quality for conversation)
+    // Call Bedrock with Nova 2 Lite / Haiku 4.5 (fast, cost-effective for structured question generation)
     const questionResponse = (await callBedrockApi(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.CLAUDE_SONNET_4_FULL,
+      MODEL_IDS.EXECUTOR_MODEL_FULL,
+      {
+        temperature: TEMPERATURE_PRESETS.CREATIVE,
+      },
     )) as string;
 
     console.info("✅ Generated next training program question");
@@ -218,7 +222,10 @@ Remember: You're helping them create a training program that will actually work 
     const questionStream = await callBedrockApiStream(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.CLAUDE_SONNET_4_FULL,
+      MODEL_IDS.EXECUTOR_MODEL_FULL,
+      {
+        temperature: TEMPERATURE_PRESETS.CREATIVE,
+      },
     );
 
     let fullResponse = "";
@@ -324,7 +331,7 @@ CRITICAL: Make sure to tell them about the 3-5 minute build time, progress updat
     const completionMessage = (await callBedrockApi(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.CLAUDE_SONNET_4_FULL,
+      MODEL_IDS.EXECUTOR_MODEL_FULL,
     )) as string;
 
     return completionMessage.trim();

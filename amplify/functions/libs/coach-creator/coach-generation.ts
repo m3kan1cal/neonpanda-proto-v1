@@ -8,7 +8,12 @@ import {
   CoachConfig,
 } from "./types";
 import { CoachMessage } from "../coach-conversation/types";
-import { callBedrockApi, storeDebugDataInS3 } from "../api-helpers";
+import {
+  callBedrockApi,
+  storeDebugDataInS3,
+  TEMPERATURE_PRESETS,
+  MODEL_IDS,
+} from "../api-helpers";
 import { JSON_FORMATTING_INSTRUCTIONS_STANDARD } from "../prompt-helpers";
 import { parseJsonWithFallbacks } from "../response-utils";
 import {
@@ -1107,8 +1112,9 @@ export const generateCoachConfig = async (
     const result = await callBedrockApi(
       systemPrompt,
       userPrompt,
-      undefined, // Use default model (Claude Sonnet 4)
+      MODEL_IDS.PLANNER_MODEL_FULL, // Claude Sonnet 4.5 for complex orchestration
       {
+        temperature: TEMPERATURE_PRESETS.BALANCED,
         tools: {
           name: "generate_coach_config",
           description:
@@ -1155,8 +1161,9 @@ export const generateCoachConfig = async (
     const fallbackResult = (await callBedrockApi(
       systemPrompt,
       userPrompt,
-      undefined, // Use default model (Claude Sonnet 4)
+      MODEL_IDS.PLANNER_MODEL_FULL, // Claude Sonnet 4.5 for complex orchestration
       {
+        temperature: TEMPERATURE_PRESETS.BALANCED,
         staticPrompt: systemPrompt, // Cache the large static prompt
         dynamicPrompt: "", // No dynamic content
       },

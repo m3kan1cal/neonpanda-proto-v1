@@ -11,7 +11,7 @@ import {
   NormalizationResult,
   NormalizationIssue,
 } from "./types";
-import { callBedrockApi } from "../api-helpers";
+import { callBedrockApi, TEMPERATURE_PRESETS } from "../api-helpers";
 import { parseJsonWithFallbacks } from "../response-utils";
 import { getAnalyticsSchemaWithContext } from "../schemas/universal-analytics-schema";
 
@@ -21,12 +21,18 @@ import { getAnalyticsSchemaWithContext } from "../schemas/universal-analytics-sc
  */
 export const buildNormalizationPrompt = (
   analyticsData: any,
-  weeklyData: UserWeeklyData | UserMonthlyData
+  weeklyData: UserWeeklyData | UserMonthlyData,
 ): string => {
   // Handle both weekRange and monthRange
-  const rangeStart = 'weekRange' in weeklyData ? weeklyData.weekRange.weekStart : weeklyData.monthRange.monthStart;
-  const rangeEnd = 'weekRange' in weeklyData ? weeklyData.weekRange.weekEnd : weeklyData.monthRange.monthEnd;
-  const periodType = 'weekRange' in weeklyData ? 'Week' : 'Month';
+  const rangeStart =
+    "weekRange" in weeklyData
+      ? weeklyData.weekRange.weekStart
+      : weeklyData.monthRange.monthStart;
+  const rangeEnd =
+    "weekRange" in weeklyData
+      ? weeklyData.weekRange.weekEnd
+      : weeklyData.monthRange.monthEnd;
+  const periodType = "weekRange" in weeklyData ? "Week" : "Month";
 
   const rangeStartStr = rangeStart.toISOString().split("T")[0];
   const rangeEndStr = rangeEnd.toISOString().split("T")[0];
@@ -89,17 +95,23 @@ export const normalizeAnalytics = async (
   analyticsData: any,
   weeklyData: UserWeeklyData | UserMonthlyData,
   userId: string,
-  enableThinking: boolean = false
+  enableThinking: boolean = false,
 ): Promise<NormalizationResult> => {
   try {
     const normalizationPrompt = buildNormalizationPrompt(
       analyticsData,
-      weeklyData
+      weeklyData,
     );
 
     // Handle both weekRange and monthRange
-    const rangeStart = 'weekRange' in weeklyData ? weeklyData.weekRange.weekStart : weeklyData.monthRange.monthStart;
-    const rangeEnd = 'weekRange' in weeklyData ? weeklyData.weekRange.weekEnd : weeklyData.monthRange.monthEnd;
+    const rangeStart =
+      "weekRange" in weeklyData
+        ? weeklyData.weekRange.weekStart
+        : weeklyData.monthRange.monthStart;
+    const rangeEnd =
+      "weekRange" in weeklyData
+        ? weeklyData.weekRange.weekEnd
+        : weeklyData.monthRange.monthEnd;
 
     console.info("Analytics normalization call configuration:", {
       enableThinking,
@@ -108,12 +120,15 @@ export const normalizeAnalytics = async (
       range: `${rangeStart.toISOString().split("T")[0]} to ${rangeEnd.toISOString().split("T")[0]}`,
     });
 
-    const normalizationResponse = await callBedrockApi(
+    const normalizationResponse = (await callBedrockApi(
       normalizationPrompt,
       "analytics_normalization",
       undefined, // Use default model
-      { enableThinking }
-    ) as string; // No tools used, always returns string
+      {
+        temperature: TEMPERATURE_PRESETS.STRUCTURED,
+        enableThinking,
+      },
+    )) as string; // No tools used, always returns string
 
     // Parse JSON with cleaning and fixing (handles markdown-wrapped JSON and common issues)
     const normalizationResult = parseJsonWithFallbacks(normalizationResponse);
@@ -128,14 +143,13 @@ export const normalizeAnalytics = async (
       !normalizationResult.hasOwnProperty("normalizedData")
     ) {
       throw new Error(
-        "Response missing required fields (isValid, normalizedData)"
+        "Response missing required fields (isValid, normalizedData)",
       );
     }
 
     // Add normalized flag to metadata if it exists
     if (normalizationResult.normalizedData?.structured_analytics?.metadata) {
-      normalizationResult.normalizedData.structured_analytics.metadata.normalization_applied =
-        true;
+      normalizationResult.normalizedData.structured_analytics.metadata.normalization_applied = true;
       normalizationResult.normalizedData.structured_analytics.metadata.normalization_timestamp =
         new Date().toISOString();
     }
@@ -176,7 +190,7 @@ export const normalizeAnalytics = async (
  */
 export const shouldNormalizeAnalytics = (
   analyticsData: any,
-  weeklyData: UserWeeklyData | UserMonthlyData
+  weeklyData: UserWeeklyData | UserMonthlyData,
 ): boolean => {
   const issues: NormalizationIssue[] = [];
 
@@ -234,8 +248,14 @@ export const shouldNormalizeAnalytics = (
     // 3. Validate date consistency in raw_aggregations
     if (analyticsData.structured_analytics.raw_aggregations?.daily_volume) {
       // Handle both weekRange and monthRange
-      const rangeStart = 'weekRange' in weeklyData ? weeklyData.weekRange.weekStart : weeklyData.monthRange.monthStart;
-      const rangeEnd = 'weekRange' in weeklyData ? weeklyData.weekRange.weekEnd : weeklyData.monthRange.monthEnd;
+      const rangeStart =
+        "weekRange" in weeklyData
+          ? weeklyData.weekRange.weekStart
+          : weeklyData.monthRange.monthStart;
+      const rangeEnd =
+        "weekRange" in weeklyData
+          ? weeklyData.weekRange.weekEnd
+          : weeklyData.monthRange.monthEnd;
 
       analyticsData.structured_analytics.raw_aggregations.daily_volume.forEach(
         (entry: any, index: number) => {
@@ -252,7 +272,7 @@ export const shouldNormalizeAnalytics = (
               });
             }
           }
-        }
+        },
       );
     }
 
@@ -343,25 +363,25 @@ export const shouldNormalizeAnalytics = (
       ) {
         const calculatedTonnage = vb.by_movement_detail.reduce(
           (sum: number, movement: any) => sum + (movement.tonnage || 0),
-          0
+          0,
         );
         const calculatedReps = vb.by_movement_detail.reduce(
           (sum: number, movement: any) => sum + (movement.reps || 0),
-          0
+          0,
         );
         const calculatedSets = vb.by_movement_detail.reduce(
           (sum: number, movement: any) => sum + (movement.sets || 0),
-          0
+          0,
         );
 
         const tonnageDiff = Math.abs(
-          calculatedTonnage - (vb.working_sets.total_tonnage || 0)
+          calculatedTonnage - (vb.working_sets.total_tonnage || 0),
         );
         const repsDiff = Math.abs(
-          calculatedReps - (vb.working_sets.total_reps || 0)
+          calculatedReps - (vb.working_sets.total_reps || 0),
         );
         const setsDiff = Math.abs(
-          calculatedSets - (vb.working_sets.total_sets || 0)
+          calculatedSets - (vb.working_sets.total_sets || 0),
         );
 
         if (tonnageDiff > calculatedTonnage * 0.1) {
@@ -480,7 +500,7 @@ export const shouldNormalizeAnalytics = (
     (issue) =>
       issue.type === "structural" ||
       issue.type === "data_consistency" ||
-      issue.type === "cross_validation"
+      issue.type === "cross_validation",
   );
 
   console.info("🔍 Normalization decision analysis:", {
@@ -526,7 +546,7 @@ export const shouldNormalizeAnalytics = (
  * Generates a human-readable summary of normalization results for logging
  */
 export const generateNormalizationSummary = (
-  result: NormalizationResult
+  result: NormalizationResult,
 ): string => {
   const { isValid, issues, confidence, normalizationMethod } = result;
 

@@ -1,5 +1,6 @@
 import React from "react";
 import { BadgeLegend } from "../BadgeLegend";
+import { badgePatterns } from "../../../utils/ui/uiPatterns";
 
 export const PowerliftingSection = ({
   powerliftingData,
@@ -58,12 +59,12 @@ export const PowerliftingSection = ({
                     </span>
                     {exercise.movement_category && (
                       <span
-                        className={`text-xs font-rajdhani uppercase px-2 py-0.5 rounded ${
+                        className={`${badgePatterns.workoutBadgeBase} ${
                           exercise.movement_category === "main_lift"
-                            ? "bg-synthwave-neon-pink/20 text-synthwave-neon-pink"
+                            ? badgePatterns.workoutBadgePink
                             : exercise.movement_category === "accessory"
-                              ? "bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan"
-                              : "bg-synthwave-text-secondary/20 text-synthwave-text-secondary"
+                              ? badgePatterns.workoutBadgeCyan
+                              : badgePatterns.workoutBadgeMuted
                         }`}
                       >
                         {exercise.movement_category?.replace(/_/g, " ") ||
@@ -131,14 +132,14 @@ export const PowerliftingSection = ({
                             )}
                             {set.set_type && (
                               <span
-                                className={`text-xs uppercase px-2 py-0.5 rounded ml-auto ${
+                                className={`${badgePatterns.workoutBadgeBase} ml-auto ${
                                   set.set_type === "working"
-                                    ? "bg-synthwave-neon-pink/20 text-synthwave-neon-pink"
+                                    ? badgePatterns.workoutBadgePink
                                     : set.set_type === "warmup"
-                                      ? "bg-synthwave-neon-purple/20 text-synthwave-neon-purple"
+                                      ? badgePatterns.workoutBadgePurple
                                       : set.set_type === "accessory"
-                                        ? "bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan"
-                                        : "bg-synthwave-text-secondary/20 text-synthwave-text-secondary"
+                                        ? badgePatterns.workoutBadgeCyan
+                                        : badgePatterns.workoutBadgeMuted
                                 }`}
                               >
                                 {set.set_type}

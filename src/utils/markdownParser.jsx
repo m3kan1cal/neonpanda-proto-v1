@@ -27,7 +27,7 @@ export const parseMarkdown = (text) => {
 
       // Render headers as strong uppercase text instead of header elements
       elements.push(
-        <div key={elementKey++} className="mb-3 mt-4">
+        <div key={elementKey++} className="mb-2 mt-2">
           <strong className="font-bold text-synthwave-neon-cyan uppercase">
             {parseInlineFormatting(headerText)}
           </strong>

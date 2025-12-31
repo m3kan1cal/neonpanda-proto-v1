@@ -35,7 +35,8 @@
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "react-router-dom": "^7.11.0",
-    "react-tooltip": "^5.30.0"
+    "react-tooltip": "^5.30.0",
+    "stripe": "^18.5.0"
   },
   "devDependencies": {
     "@aws-amplify/backend": "^1.19.0",

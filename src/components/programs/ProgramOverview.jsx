@@ -158,7 +158,7 @@ export default function ProgramOverview({
   return (
     <div className={`${containerPatterns.cardMedium} p-6`}>
       {/* Section Header */}
-      <div className="flex items-start space-x-3 mb-4">
+      <div className="flex items-start gap-3 mb-4">
         <div
           className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotPink} flex-shrink-0 mt-2`}
         ></div>

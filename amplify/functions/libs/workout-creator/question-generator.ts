@@ -7,9 +7,14 @@
  * Pattern: Similar to coach-creator/question-generator.ts
  */
 
-import { callBedrockApi, callBedrockApiStream, MODEL_IDS } from '../api-helpers';
-import { ConversationMessage } from '../todo-types';
-import { WorkoutCreatorTodoList } from './types';
+import {
+  callBedrockApi,
+  callBedrockApiStream,
+  MODEL_IDS,
+  TEMPERATURE_PRESETS,
+} from "../api-helpers";
+import { ConversationMessage } from "../todo-types";
+import { WorkoutCreatorTodoList } from "./types";
 import {
   getMissingFieldsSummary,
   getCollectedDataSummary,
@@ -20,7 +25,7 @@ import {
   formatFieldName,
   shouldPromptHighPriorityRecommendedFields,
   shouldPromptLowPriorityRecommendedFields,
-} from './todo-list-utils';
+} from "./todo-list-utils";
 
 /**
  * Generate the next question or completion message based on workout creator progress
@@ -36,20 +41,32 @@ export async function* generateNextQuestionStream(
     userProfile?: any;
     activeProgram?: any;
   },
-  turnCount?: number
+  turnCount?: number,
 ): AsyncGenerator<string, string, unknown> {
-  console.info('🎯 Generating next workout creator question (streaming)', { turnCount });
+  console.info("🎯 Generating next workout creator question (streaming)", {
+    turnCount,
+  });
 
-  const systemPrompt = buildQuestionGeneratorPrompt(todoList, coachPersonality, userContext, turnCount);
+  const systemPrompt = buildQuestionGeneratorPrompt(
+    todoList,
+    coachPersonality,
+    userContext,
+    turnCount,
+  );
   const userPrompt = buildConversationContext(conversationHistory);
 
   // Check if we should generate completion message:
   // - Required fields must be done
   // - No high or low priority recommended fields pending
   const requiredComplete = isSessionComplete(todoList);
-  const highPriorityRecommendedPending = shouldPromptHighPriorityRecommendedFields(todoList);
-  const lowPriorityRecommendedPending = shouldPromptLowPriorityRecommendedFields(todoList);
-  const complete = requiredComplete && !highPriorityRecommendedPending && !lowPriorityRecommendedPending;
+  const highPriorityRecommendedPending =
+    shouldPromptHighPriorityRecommendedFields(todoList);
+  const lowPriorityRecommendedPending =
+    shouldPromptLowPriorityRecommendedFields(todoList);
+  const complete =
+    requiredComplete &&
+    !highPriorityRecommendedPending &&
+    !lowPriorityRecommendedPending;
 
   try {
     // Use Haiku 4.5 for fast, cost-effective question generation
@@ -57,19 +74,22 @@ export async function* generateNextQuestionStream(
     const responseStream = await callBedrockApiStream(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.CLAUDE_HAIKU_4_FULL
+      MODEL_IDS.EXECUTOR_MODEL_FULL,
+      {
+        temperature: TEMPERATURE_PRESETS.CREATIVE,
+      },
     );
 
-    let fullResponse = '';
+    let fullResponse = "";
     for await (const chunk of responseStream) {
       fullResponse += chunk;
       yield chunk;
     }
 
-    console.info('✅ Question generation streaming complete');
+    console.info("✅ Question generation streaming complete");
     return fullResponse;
   } catch (error) {
-    console.error('❌ Error generating question stream:', error);
+    console.error("❌ Error generating question stream:", error);
 
     // Fallback: return a simple question
     const pendingFields = getPendingRequiredFields(todoList);
@@ -96,46 +116,55 @@ function buildQuestionGeneratorPrompt(
     userProfile?: any;
     activeProgram?: any;
   },
-  turnCount?: number
+  turnCount?: number,
 ): string {
   // Check completion: required + no high/low priority recommended pending
   const requiredComplete = isSessionComplete(todoList);
-  const highPriorityRecommendedPending = shouldPromptHighPriorityRecommendedFields(todoList);
-  const lowPriorityRecommendedPending = shouldPromptLowPriorityRecommendedFields(todoList);
-  const complete = requiredComplete && !highPriorityRecommendedPending && !lowPriorityRecommendedPending;
+  const highPriorityRecommendedPending =
+    shouldPromptHighPriorityRecommendedFields(todoList);
+  const lowPriorityRecommendedPending =
+    shouldPromptLowPriorityRecommendedFields(todoList);
+  const complete =
+    requiredComplete &&
+    !highPriorityRecommendedPending &&
+    !lowPriorityRecommendedPending;
 
   const collectedData = getCollectedDataSummary(todoList);
   const missingSummary = getMissingFieldsSummary(todoList);
 
   const personalitySection = coachPersonality
     ? `COACH PERSONALITY:\n${coachPersonality}\n\n`
-    : '';
+    : "";
 
   // Build context section for smarter questions
-  let contextSection = '';
+  let contextSection = "";
   if (userContext) {
     if (userContext.activeProgram) {
-      contextSection += `\nUSER'S ACTIVE PROGRAM: ${userContext.activeProgram.name || 'Unknown'} - ${userContext.activeProgram.goal || userContext.activeProgram.trainingGoals || 'fitness'}`;
+      contextSection += `\nUSER'S ACTIVE PROGRAM: ${userContext.activeProgram.name || "Unknown"} - ${userContext.activeProgram.goal || userContext.activeProgram.trainingGoals || "fitness"}`;
     }
-    if (userContext.pineconeMemories && userContext.pineconeMemories.length > 0) {
+    if (
+      userContext.pineconeMemories &&
+      userContext.pineconeMemories.length > 0
+    ) {
       const relevantMemories = userContext.pineconeMemories.slice(0, 2);
-      contextSection += `\nRELEVANT USER INFO:\n${relevantMemories.map((m: any) => `- ${m.text || m.content}`).join('\n')}`;
+      contextSection += `\nRELEVANT USER INFO:\n${relevantMemories.map((m: any) => `- ${m.text || m.content}`).join("\n")}`;
     }
     if (userContext.recentWorkouts && userContext.recentWorkouts.length > 0) {
       const recent = userContext.recentWorkouts[0];
-      contextSection += `\nTYPICAL WORKOUT PATTERNS: ${recent.discipline || 'various'} at ${recent.location || 'usual location'}`;
+      contextSection += `\nTYPICAL WORKOUT PATTERNS: ${recent.discipline || "various"} at ${recent.location || "usual location"}`;
     }
   }
 
   // Add turn count warning if approaching limit
-  const turnWarning = turnCount && turnCount >= 5
-    ? `\n⚠️ CONVERSATION LENGTH: This is turn ${turnCount}/7. If approaching 7 turns, wrap up and log what you have.`
-    : '';
+  const turnWarning =
+    turnCount && turnCount >= 5
+      ? `\n⚠️ CONVERSATION LENGTH: This is turn ${turnCount}/7. If approaching 7 turns, wrap up and log what you have.`
+      : "";
 
   if (complete) {
     return `You are an AI coach helping a user log their workout. They've provided all the essential details you need.
 
-${personalitySection}${contextSection ? `${contextSection}\n\n` : ''}COLLECTED INFORMATION:
+${personalitySection}${contextSection ? `${contextSection}\n\n` : ""}COLLECTED INFORMATION:
 ${JSON.stringify(collectedData, null, 2)}
 
 YOUR TASK:
@@ -160,13 +189,14 @@ Example tone:
 
   // Check if we're at the recommended fields phase
   const atHighPriorityPhase = highPriorityRecommendedPending;
-  const atLowPriorityPhase = !highPriorityRecommendedPending && lowPriorityRecommendedPending;
+  const atLowPriorityPhase =
+    !highPriorityRecommendedPending && lowPriorityRecommendedPending;
   const pendingHighPriority = getPendingHighPriorityFields(todoList);
   const pendingLowPriority = getPendingLowPriorityFields(todoList);
 
   return `You are an AI coach helping a user log their workout through a natural conversation.
 
-${personalitySection}${contextSection ? `${contextSection}\n\n` : ''}WHAT WE'VE COLLECTED SO FAR:
+${personalitySection}${contextSection ? `${contextSection}\n\n` : ""}WHAT WE'VE COLLECTED SO FAR:
 ${JSON.stringify(collectedData, null, 2)}
 
 WHAT WE STILL NEED:
@@ -174,10 +204,12 @@ ${missingSummary}${turnWarning}
 
 ⚠️ CRITICAL RULE: DO NOT say "You're all logged!", "I'll log this now", "Logging that for you", or similar completion phrases. You are STILL COLLECTING DATA. Only ask for the next piece of information. The system will tell you when it's time to complete.
 
-${atHighPriorityPhase ? `
+${
+  atHighPriorityPhase
+    ? `
 ⚠️ IMPORTANT - HIGH-PRIORITY OPTIONAL FIELDS:
 All REQUIRED fields are complete. You're now asking for HIGH-VALUE optional metrics that unlock deeper training insights:
-${pendingHighPriority.map(formatFieldName).join(', ')}
+${pendingHighPriority.map(formatFieldName).join(", ")}
 
 WHY THESE FIELDS MATTER (emphasize the value):
 - **Weights**: Track strength progression over time, identify plateaus, compare similar workouts accurately (e.g., "same workout but 10lbs heavier")
@@ -197,10 +229,12 @@ Example approaches (with value propositions):
 - "What type of workout was this (AMRAP, For Time, EMOM)? Helps me see which formats you excel at and where there's room to grow."
 - "Any weights on those movements? This helps me track your strength progression over time. Or was it bodyweight?"
 - "Where did you work out? I'm tracking if location affects your performance - sometimes home vs. gym makes a difference!"
-` : atLowPriorityPhase ? `
+`
+    : atLowPriorityPhase
+      ? `
 ⚠️ OPTIONAL - LOW-PRIORITY FIELDS (Still Valuable!):
 Required and high-priority fields are complete. These additional metrics help reveal hidden patterns:
-${pendingLowPriority.map(formatFieldName).join(', ')}
+${pendingLowPriority.map(formatFieldName).join(", ")}
 
 WHY THESE STILL MATTER (frame the value):
 - **Session Duration**: See the full picture - warmup/cooldown time affects recovery planning
@@ -216,7 +250,8 @@ Ask in a casual but VALUE-FOCUSED way:
 - "Quick one - how many hours of sleep did you get? I'm tracking if there's a correlation with your performance."
 - Always emphasize: "These help me coach you better" or "unlock better insights"
 - Make it VERY clear they can skip: "or we can log it as-is - you've already given me the key stuff"
-` : `
+`
+      : `
 YOUR TASK:
 Ask a natural, conversational follow-up question to collect ONE or TWO of the missing REQUIRED pieces of information.
 
@@ -225,7 +260,8 @@ These are the minimum needed to create a meaningful workout log that you can ana
 
 EFFICIENCY TIP:
 If two required fields are related (e.g., sets + reps, or date + duration), ask them together in one natural sentence. This speeds up data collection without overwhelming the user.
-`}
+`
+}
 
 GUIDELINES:
 - Ask for ONE or TWO related things at a time to speed up data collection (don't ask more than 2)
@@ -233,7 +269,7 @@ GUIDELINES:
 - Reference what they've already shared to show you're listening
 - Keep it brief (1-3 sentences max)
 - When asking 2 questions, make them related or in natural sequence (e.g., sets + reps, or intensity + RPE)
-${(atHighPriorityPhase || atLowPriorityPhase) ? '- Make it VERY CLEAR these fields are optional BUT emphasize the SPECIFIC VALUE/INSIGHT they provide\n- Frame it as "helps me coach you better" not just "more data to collect"\n- Lead with the benefit/insight, then ask the question' : '- Focus on required fields (exercises, sets/rounds, reps/time, when completed, discipline, duration)'}
+${atHighPriorityPhase || atLowPriorityPhase ? '- Make it VERY CLEAR these fields are optional BUT emphasize the SPECIFIC VALUE/INSIGHT they provide\n- Frame it as "helps me coach you better" not just "more data to collect"\n- Lead with the benefit/insight, then ask the question' : "- Focus on required fields (exercises, sets/rounds, reps/time, when completed, discipline, duration)"}
 
 Example approaches for required fields (1-2 questions):
 - "Got it! How many sets/rounds did you do, and what was the rep scheme?"
@@ -257,7 +293,9 @@ AVOID:
 /**
  * Build conversation context from history
  */
-function buildConversationContext(conversationHistory: ConversationMessage[]): string {
+function buildConversationContext(
+  conversationHistory: ConversationMessage[],
+): string {
   if (conversationHistory.length === 0) {
     return "Generate the first question to start collecting workout information.";
   }
@@ -265,6 +303,6 @@ function buildConversationContext(conversationHistory: ConversationMessage[]): s
   // Include FULL conversation history so AI doesn't repeat questions
   // This matches the extraction function which also uses full history
   return conversationHistory
-    .map(m => `${m.role.toUpperCase()}: ${m.content}`)
-    .join('\n\n');
+    .map((m) => `${m.role.toUpperCase()}: ${m.content}`)
+    .join("\n\n");
 }

@@ -5,13 +5,18 @@
  * Pattern: Same structure as coach-creator/todo-extraction.ts and program/todo-extraction.ts
  */
 
-import { callBedrockApi, callBedrockApiMultimodal, MODEL_IDS } from '../api-helpers';
-import { parseJsonWithFallbacks } from '../response-utils';
-import { buildMultimodalContent } from '../streaming/multimodal-helpers';
-import { MESSAGE_TYPES } from '../coach-conversation/types';
-import { TodoItem, ConversationMessage } from '../todo-types';
-import { WorkoutCreatorTodoList } from './types';
-import { WORKOUT_CREATOR_TODO_SCHEMA } from '../schemas/workout-creator-todo-schema';
+import {
+  callBedrockApi,
+  callBedrockApiMultimodal,
+  MODEL_IDS,
+  TEMPERATURE_PRESETS,
+} from "../api-helpers";
+import { parseJsonWithFallbacks } from "../response-utils";
+import { buildMultimodalContent } from "../streaming/multimodal-helpers";
+import { MESSAGE_TYPES } from "../coach-conversation/types";
+import { TodoItem, ConversationMessage } from "../todo-types";
+import { WorkoutCreatorTodoList } from "./types";
+import { WORKOUT_CREATOR_TODO_SCHEMA } from "../schemas/workout-creator-todo-schema";
 
 /**
  * Result of AI extraction from user's workout logging message
@@ -38,15 +43,15 @@ export async function extractAndUpdateTodoList(
     pineconeMemories?: any[];
     userProfile?: any;
     activeProgram?: any;
-  }
+  },
 ): Promise<WorkoutExtractionResult> {
-  console.info('🔍 Extracting workout information from user response');
+  console.info("🔍 Extracting workout information from user response");
 
   // Check if images are present
   const hasImages = imageS3Keys && imageS3Keys.length > 0;
 
   if (hasImages) {
-    console.info('🖼️ Processing with images:', {
+    console.info("🖼️ Processing with images:", {
       imageCount: imageS3Keys!.length,
       imageKeys: imageS3Keys,
     });
@@ -54,18 +59,21 @@ export async function extractAndUpdateTodoList(
 
   // Include FULL conversation history for better context
   const conversationContext = conversationHistory
-    .map(m => `${m.role.toUpperCase()}: ${m.content}`)
-    .join('\n');
+    .map((m) => `${m.role.toUpperCase()}: ${m.content}`)
+    .join("\n");
 
   // Build context summary for smarter extraction
-  let contextSummary = '';
+  let contextSummary = "";
   if (userContext) {
     if (userContext.activeProgram) {
-      contextSummary += `\nACTIVE TRAINING PROGRAM: ${userContext.activeProgram.name || 'Unknown'} - ${userContext.activeProgram.goal || userContext.activeProgram.trainingGoals || 'No goal specified'}`;
+      contextSummary += `\nACTIVE TRAINING PROGRAM: ${userContext.activeProgram.name || "Unknown"} - ${userContext.activeProgram.goal || userContext.activeProgram.trainingGoals || "No goal specified"}`;
     }
-    if (userContext.pineconeMemories && userContext.pineconeMemories.length > 0) {
+    if (
+      userContext.pineconeMemories &&
+      userContext.pineconeMemories.length > 0
+    ) {
       const relevantMemories = userContext.pineconeMemories.slice(0, 3);
-      contextSummary += `\n\nRELEVANT USER CONTEXT:\n${relevantMemories.map((m: any) => `- ${m.text || m.content}`).join('\n')}`;
+      contextSummary += `\n\nRELEVANT USER CONTEXT:\n${relevantMemories.map((m: any) => `- ${m.text || m.content}`).join("\n")}`;
     }
     if (userContext.userProfile?.preferences?.timezone) {
       contextSummary += `\n\nUSER TIMEZONE: ${userContext.userProfile.preferences.timezone}`;
@@ -77,7 +85,7 @@ export async function extractAndUpdateTodoList(
   const userPrompt = `
 FULL CONVERSATION HISTORY:
 ${conversationContext}
-${contextSummary ? `\n${contextSummary}` : ''}
+${contextSummary ? `\n${contextSummary}` : ""}
 
 CURRENT USER RESPONSE:
 "${userResponse}"
@@ -122,53 +130,58 @@ Return JSON with ONLY the fields you found information for:
       extractionResponse = await callBedrockApiMultimodal(
         systemPrompt,
         converseMessages,
-        MODEL_IDS.CLAUDE_HAIKU_4_FULL,
+        MODEL_IDS.EXECUTOR_MODEL_FULL,
         {
+          temperature: TEMPERATURE_PRESETS.STRUCTURED,
           tools: {
-            name: 'extract_workout_info',
-            description: 'Extract workout information from user response with optional images',
-            inputSchema: WORKOUT_CREATOR_TODO_SCHEMA
+            name: "extract_workout_info",
+            description:
+              "Extract workout information from user response with optional images",
+            inputSchema: WORKOUT_CREATOR_TODO_SCHEMA,
           },
-          expectedToolName: 'extract_workout_info'
-        }
+          expectedToolName: "extract_workout_info",
+        },
       );
     } else {
       // Text-only extraction
       extractionResponse = await callBedrockApi(
         systemPrompt,
         userPrompt,
-        MODEL_IDS.CLAUDE_HAIKU_4_FULL,
+        MODEL_IDS.EXECUTOR_MODEL_FULL,
         {
+          temperature: TEMPERATURE_PRESETS.STRUCTURED,
           tools: {
-            name: 'extract_workout_info',
-            description: 'Extract workout information from user response',
-            inputSchema: WORKOUT_CREATOR_TODO_SCHEMA
+            name: "extract_workout_info",
+            description: "Extract workout information from user response",
+            inputSchema: WORKOUT_CREATOR_TODO_SCHEMA,
           },
-          expectedToolName: 'extract_workout_info'
-        }
+          expectedToolName: "extract_workout_info",
+        },
       );
     }
 
-    console.info('✅ Received extraction response');
+    console.info("✅ Received extraction response");
 
     // Handle tool response
     let extracted: any;
-    if (typeof extractionResponse !== 'string') {
+    if (typeof extractionResponse !== "string") {
       // Tool was used - extract the input
       extracted = extractionResponse.input;
-      console.info('✅ Tool-based extraction successful');
+      console.info("✅ Tool-based extraction successful");
     } else {
       // Fallback to parsing (shouldn't happen with tool enforcement)
-      console.warn('⚠️ Received string response, parsing as JSON fallback');
+      console.warn("⚠️ Received string response, parsing as JSON fallback");
       extracted = parseJsonWithFallbacks(extractionResponse);
     }
 
-    if (!extracted || typeof extracted !== 'object') {
-      console.warn('⚠️ Failed to parse extraction response, returning current todo list');
+    if (!extracted || typeof extracted !== "object") {
+      console.warn(
+        "⚠️ Failed to parse extraction response, returning current todo list",
+      );
       return {
         todoList: currentTodoList,
         userWantsToFinish: false,
-        userChangedTopic: false
+        userChangedTopic: false,
       };
     }
 
@@ -181,26 +194,34 @@ Return JSON with ONLY the fields you found information for:
     const userChangedTopic = extracted.userChangedTopic === true;
 
     if (userWantsToFinish) {
-      console.info('⏭️ AI detected user wants to finish logging and skip remaining fields');
+      console.info(
+        "⏭️ AI detected user wants to finish logging and skip remaining fields",
+      );
     }
     if (userChangedTopic) {
-      console.info('🔀 AI detected user changed topics - abandoning workout logging session');
+      console.info(
+        "🔀 AI detected user changed topics - abandoning workout logging session",
+      );
     }
 
     for (const [key, extractedItem] of Object.entries(extracted)) {
       // Skip intent detection fields (not todo items)
-      if (key === 'userWantsToFinish' || key === 'userChangedTopic') continue;
+      if (key === "userWantsToFinish" || key === "userChangedTopic") continue;
 
-      if (key in updatedTodoList && extractedItem && typeof extractedItem === 'object') {
+      if (
+        key in updatedTodoList &&
+        extractedItem &&
+        typeof extractedItem === "object"
+      ) {
         const item = extractedItem as Partial<TodoItem>;
 
         // Only update if we have a value
         if (item.value !== null && item.value !== undefined) {
           // Build the todo item, conditionally including imageRefs only if present
           const todoItem: any = {
-            status: 'complete',
+            status: "complete",
             value: item.value,
-            confidence: item.confidence || 'medium',
+            confidence: item.confidence || "medium",
             notes: item.notes,
             extractedFrom: `message_${messageIndex}`,
           };
@@ -212,28 +233,31 @@ Return JSON with ONLY the fields you found information for:
 
           updatedTodoList[key as keyof WorkoutCreatorTodoList] = todoItem;
 
-          console.info(`✅ Extracted ${key}: ${JSON.stringify(item.value).substring(0, 50)}`);
+          console.info(
+            `✅ Extracted ${key}: ${JSON.stringify(item.value).substring(0, 50)}`,
+          );
         }
       }
     }
 
     // Log extraction summary
-    const extractedCount = Object.keys(extracted).filter(k => k !== 'userWantsToFinish' && k !== 'userChangedTopic').length;
+    const extractedCount = Object.keys(extracted).filter(
+      (k) => k !== "userWantsToFinish" && k !== "userChangedTopic",
+    ).length;
     console.info(`✅ Extraction complete: ${extractedCount} fields updated`);
 
     return {
       todoList: updatedTodoList,
       userWantsToFinish,
-      userChangedTopic
+      userChangedTopic,
     };
-
   } catch (error) {
-    console.error('❌ Error during extraction:', error);
-    console.error('Returning current todo list unchanged');
+    console.error("❌ Error during extraction:", error);
+    console.error("Returning current todo list unchanged");
     return {
       todoList: currentTodoList,
       userWantsToFinish: false,
-      userChangedTopic: false
+      userChangedTopic: false,
     };
   }
 }
@@ -243,12 +267,9 @@ Return JSON with ONLY the fields you found information for:
  */
 function shouldStoreImageRef(fieldKey: string): boolean {
   // Fields that commonly benefit from image context
-  return [
-    'exercises',
-    'weights',
-    'performanceNotes',
-    'location'
-  ].includes(fieldKey);
+  return ["exercises", "weights", "performanceNotes", "location"].includes(
+    fieldKey,
+  );
 }
 
 /**
@@ -261,14 +282,14 @@ function buildExtractionPrompt(
     pineconeMemories?: any[];
     userProfile?: any;
     activeProgram?: any;
-  }
+  },
 ): string {
   // Build a summary of what's already been collected
   const collectedFields: string[] = [];
   const pendingFields: string[] = [];
 
   for (const [key, item] of Object.entries(currentTodoList)) {
-    if (item.status === 'complete') {
+    if (item.status === "complete") {
       collectedFields.push(key);
     } else {
       pendingFields.push(key);
@@ -276,11 +297,11 @@ function buildExtractionPrompt(
   }
 
   // Build context hints for smarter extraction
-  let contextHints = '';
+  let contextHints = "";
   if (userContext) {
     if (userContext.recentWorkouts && userContext.recentWorkouts.length > 0) {
       const recentWorkout = userContext.recentWorkouts[0];
-      contextHints += `\n- User's recent workouts typically include: ${recentWorkout.discipline || 'various disciplines'}`;
+      contextHints += `\n- User's recent workouts typically include: ${recentWorkout.discipline || "various disciplines"}`;
       if (recentWorkout.location) {
         contextHints += `\n- Typical location: ${recentWorkout.location}`;
       }
@@ -289,18 +310,18 @@ function buildExtractionPrompt(
       }
     }
     if (userContext.activeProgram) {
-      contextHints += `\n- Currently following: ${userContext.activeProgram.name || 'a training program'} focused on ${userContext.activeProgram.goal || userContext.activeProgram.trainingGoals || 'fitness'}`;
+      contextHints += `\n- Currently following: ${userContext.activeProgram.name || "a training program"} focused on ${userContext.activeProgram.goal || userContext.activeProgram.trainingGoals || "fitness"}`;
     }
   }
 
   return `You are an expert at extracting structured workout information from conversational responses, including images.
 
 WHAT WE'VE ALREADY COLLECTED:
-${collectedFields.length > 0 ? collectedFields.join(', ') : 'Nothing yet'}
+${collectedFields.length > 0 ? collectedFields.join(", ") : "Nothing yet"}
 
 WHAT WE STILL NEED:
-${pendingFields.join(', ')}
-${contextHints ? `\nUSER CONTEXT (use to make informed inferences):${contextHints}` : ''}
+${pendingFields.join(", ")}
+${contextHints ? `\nUSER CONTEXT (use to make informed inferences):${contextHints}` : ""}
 
 YOUR TASK:
 Analyze the user's response (text and/or images) and extract any workout logging information. Use the user context to make reasonable inferences when appropriate. Return a JSON object with ONLY the fields you found.

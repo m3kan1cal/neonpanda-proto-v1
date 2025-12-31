@@ -9,6 +9,7 @@ import {
   callBedrockApi,
   callBedrockApiStream,
   MODEL_IDS,
+  TEMPERATURE_PRESETS,
 } from "../api-helpers";
 import { CoachMessage } from "../coach-conversation/types";
 import { ProgramDesignerTodoList } from "./types";
@@ -134,7 +135,10 @@ Remember: You're helping them create a training program that will actually work 
     const questionResponse = (await callBedrockApi(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.CLAUDE_HAIKU_4_FULL,
+      MODEL_IDS.EXECUTOR_MODEL_FULL,
+      {
+        temperature: TEMPERATURE_PRESETS.CREATIVE,
+      },
     )) as string;
 
     console.info("✅ Generated next program question");
@@ -327,7 +331,10 @@ Remember: You're helping them create a training program that will actually work 
     const questionStream = await callBedrockApiStream(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.CLAUDE_HAIKU_4_FULL,
+      MODEL_IDS.EXECUTOR_MODEL_FULL,
+      {
+        temperature: TEMPERATURE_PRESETS.CREATIVE,
+      },
     );
 
     let fullResponse = "";
@@ -420,7 +427,7 @@ Generate the completion message now:
     const stream = await callBedrockApiStream(
       systemPrompt,
       completionPrompt,
-      MODEL_IDS.CLAUDE_SONNET_4_FULL,
+      MODEL_IDS.EXECUTOR_MODEL_FULL,
     );
 
     for await (const chunk of stream) {

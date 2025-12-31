@@ -20,21 +20,49 @@ import { parseJsonWithFallbacks } from "./response-utils";
 
 // Amazon Bedrock Converse API configuration
 const CLAUDE_SONNET_4_MODEL_ID = "us.anthropic.claude-sonnet-4-5-20250929-v1:0";
-const CLAUDE_HAIKU_4_MODEL_ID = "us.anthropic.claude-haiku-4-5-20251001-v1:0"; // Updated to Claude 3.5 Haiku
+const CLAUDE_SONNET_4_DISPLAY = "claude-sonnet-4.5";
+
+const CLAUDE_HAIKU_4_MODEL_ID = "us.anthropic.claude-haiku-4-5-20251001-v1:0";
+const CLAUDE_HAIKU_4_DISPLAY = "claude-4.5-haiku";
+
 const NOVA_MICRO_MODEL_ID = "us.amazon.nova-micro-v1:0";
+const NOVA_MICRO_DISPLAY = "nova-micro";
+
+const MISTRAL_LARGE_3_MODEL_ID = "mistral.mistral-large-3-675b-instruct";
+const MISTRAL_LARGE_3_DISPLAY = "mistral-large-3";
+
+const NOVA_PRO_MODEL_ID = "us.amazon.nova-pro-v1:0";
+const NOVA_PRO_DISPLAY = "nova-pro";
+
+const NOVA_2_LITE_MODEL_ID = "us.amazon.nova-2-lite-v1:0";
+const NOVA_2_LITE_DISPLAY = "nova-2-lite";
 
 // Increased for complex workout extractions with many rounds (Claude 4 supports much higher limits)
 const MAX_TOKENS = 32768;
-const TEMPERATURE = 0.7;
+
+// Temperature presets for different AI task types
+export const TEMPERATURE_PRESETS = {
+  STRUCTURED: 0.2, // JSON extraction, data parsing, structured data generation
+  BALANCED: 0.7, // Default for most tasks, general purpose
+  CREATIVE: 1.0, // Brainstorming, varied content, creative generation
+} as const;
 
 // Model constants for external use
+// MODEL_IDS.PLANNER_MODEL_DISPLAY
 export const MODEL_IDS = {
-  CLAUDE_SONNET_4_FULL: CLAUDE_SONNET_4_MODEL_ID,
-  CLAUDE_SONNET_4_DISPLAY: "claude-sonnet-4.5",
-  CLAUDE_HAIKU_4_FULL: CLAUDE_HAIKU_4_MODEL_ID,
-  CLAUDE_HAIKU_4_DISPLAY: "claude-4.5-haiku",
-  NOVA_MICRO: NOVA_MICRO_MODEL_ID,
-  NOVA_MICRO_DISPLAY: "nova-micro",
+  // The Contextual Model. It is used for contextual updates and intent classification.
+  CONTEXTUAL_MODEL_FULL: NOVA_MICRO_MODEL_ID,
+  CONTEXTUAL_MODEL_DISPLAY: NOVA_MICRO_DISPLAY,
+
+  // The Executor. It is used as a sub-agent to carry out those discrete instructions in parallel,
+  // benefiting from its speed and near-frontier coding accuracy.
+  EXECUTOR_MODEL_FULL: NOVA_2_LITE_MODEL_ID,
+  EXECUTOR_MODEL_DISPLAY: NOVA_2_LITE_DISPLAY,
+
+  // The Planner. It is used for orchestration—breaking down complex, multi-file problems
+  // into a set of discrete instructions.
+  PLANNER_MODEL_FULL: CLAUDE_SONNET_4_MODEL_ID,
+  PLANNER_MODEL_DISPLAY: CLAUDE_SONNET_4_DISPLAY,
 } as const;
 
 // AI error fallback message for streaming handlers
@@ -279,6 +307,145 @@ const getMaxTokensForModel = (modelId: string): number => {
 };
 
 /**
+ * Check if the model is a Nova model that supports native reasoning
+ * Nova 2 and Nova Pro use native reasoningConfig instead of prompt-based thinking
+ */
+const isNovaModel = (modelId: string): boolean => {
+  return modelId.includes("nova-2") || modelId.includes("nova-pro");
+};
+
+/**
+ * Build additional model request fields for Nova native reasoning
+ * Centralizes reasoning configuration for all Bedrock API functions
+ */
+const buildNativeReasoningFields = (
+  useNativeReasoning: boolean,
+): Record<string, any> | undefined => {
+  if (!useNativeReasoning) return undefined;
+  return {
+    additionalModelRequestFields: {
+      reasoningConfig: {
+        type: "enabled",
+        maxReasoningEffort: "medium", // "low" | "medium" | "high"
+      },
+    },
+  };
+};
+
+/**
+ * Log AWS-specific error details for Bedrock API failures
+ * Centralizes error logging pattern across all Bedrock functions
+ */
+const logAwsError = (error: any, context: string): void => {
+  console.error(`=== ${context} FAILED ===`);
+  console.error("Error type:", typeof error);
+  console.error("Error constructor:", error.constructor?.name);
+  console.error("Error message:", error.message);
+  console.error("Error stack:", error.stack);
+
+  if (error.$fault) console.error("AWS Fault:", error.$fault);
+  if (error.$service) console.error("AWS Service:", error.$service);
+  if (error.$metadata) console.error("AWS Metadata:", error.$metadata);
+  if (error.Code) console.error("AWS Error Code:", error.Code);
+};
+
+/**
+ * Log Bedrock API call start with common details
+ * Centralizes start logging pattern across all Bedrock functions
+ */
+interface BedrockCallLogDetails {
+  modelId: string;
+  temperature: number;
+  systemPromptLength: number;
+  enableThinking: boolean;
+  useNativeReasoning: boolean;
+  userMessageLength?: number;
+  messagesCount?: number;
+  hasImages?: boolean;
+  toolsCount?: number;
+}
+
+const logBedrockCallStart = (
+  context: string,
+  details: BedrockCallLogDetails,
+): void => {
+  console.info(`=== ${context} START ===`);
+  console.info("AWS Region:", process.env.AWS_REGION || "us-west-2");
+  console.info("Model ID:", details.modelId);
+  console.info("Temperature:", details.temperature);
+  console.info("System prompt length:", details.systemPromptLength);
+
+  if (details.userMessageLength !== undefined) {
+    console.info("User message length:", details.userMessageLength);
+  }
+  if (details.messagesCount !== undefined) {
+    console.info("Messages count:", details.messagesCount);
+  }
+  if (details.toolsCount !== undefined) {
+    console.info("Tools count:", details.toolsCount);
+  }
+
+  console.info("Thinking enabled:", details.enableThinking);
+  console.info("Use native reasoning (Nova):", details.useNativeReasoning);
+
+  if (details.hasImages !== undefined) {
+    console.info("Has images:", details.hasImages);
+  }
+};
+
+/**
+ * Log Nova reasoning content if present in the response
+ * Nova models return reasoning in a separate content block with reasoningContent
+ */
+const logNativeReasoningContent = (
+  response: any,
+  useNativeReasoning: boolean,
+): void => {
+  if (!useNativeReasoning || !response.output?.message?.content) return;
+
+  const reasoningBlock = response.output.message.content.find(
+    (c: any) => c.reasoningContent,
+  );
+
+  if (reasoningBlock) {
+    const reasoningText = reasoningBlock.reasoningContent?.reasoningText?.text;
+    const reasoningLength = reasoningText?.length ?? 0;
+    console.info("🧠 Nova reasoning extracted:", {
+      reasoningLength,
+      reasoningPreview:
+        reasoningText?.substring(0, 200) + (reasoningLength > 200 ? "..." : ""),
+    });
+  }
+};
+
+/**
+ * Extract text content from Bedrock response, handling Nova reasoning blocks
+ * For Nova models with native reasoning, finds the text block (not reasoning block)
+ * @returns The content item containing text, or undefined if not found
+ */
+const findTextContentItem = (
+  response: any,
+  useNativeReasoning: boolean,
+): any => {
+  if (!response.output?.message?.content?.[0]) {
+    return undefined;
+  }
+
+  if (useNativeReasoning && response.output?.message?.content) {
+    // Nova: find the text content block, skip reasoning blocks
+    const textBlock = response.output.message.content.find(
+      (c: any) => c.text !== undefined,
+    );
+    if (textBlock) {
+      return textBlock;
+    }
+  }
+
+  // Default: return first content item
+  return response.output.message.content[0];
+};
+
+/**
  * Enhances a prompt to enable Claude's thinking capabilities
  */
 const enhancePromptForThinking = (systemPrompt: string): string => {
@@ -368,6 +535,9 @@ export interface BedrockApiOptions {
 
   /** Optional: validate which tool was used (throws error if mismatch) */
   expectedToolName?: string;
+
+  /** Temperature for response generation (defaults to TEMPERATURE constant if not provided) */
+  temperature?: number;
 }
 
 /**
@@ -450,13 +620,24 @@ function extractToolUseResult(
  *
  * @param systemPrompt - Base system prompt
  * @param options - Optional BedrockApiOptions with caching and thinking flags
- * @returns Object with systemParams array and enableThinking flag
+ * @param modelId - Optional model ID to determine thinking strategy (Nova uses native reasoning)
+ * @returns Object with systemParams array, enableThinking flag, and useNativeReasoning flag
  */
 function buildSystemParams(
   systemPrompt: string,
   options?: BedrockApiOptions,
-): { systemParams: any[]; enableThinking: boolean } {
+  modelId?: string,
+): {
+  systemParams: any[];
+  enableThinking: boolean;
+  useNativeReasoning: boolean;
+} {
   const enableThinking = options?.enableThinking || false;
+  // Nova models use native reasoningConfig instead of prompt-based thinking tags
+  const useNativeReasoning =
+    enableThinking && modelId ? isNovaModel(modelId) : false;
+  // Only apply prompt-based thinking for non-Nova models
+  const applyPromptThinking = enableThinking && !useNativeReasoning;
 
   // Handle empty system prompt (Bedrock requires non-empty text)
   if (!systemPrompt || systemPrompt.trim() === "") {
@@ -464,6 +645,7 @@ function buildSystemParams(
     return {
       systemParams: [],
       enableThinking: false, // No thinking without system context
+      useNativeReasoning: false,
     };
   }
 
@@ -483,15 +665,15 @@ function buildSystemParams(
       "KB",
     );
 
-    // Apply thinking to static prompt if enabled
-    const baseStaticPrompt = enableThinking
+    // Apply prompt-based thinking to static prompt only for non-Nova models
+    const baseStaticPrompt = applyPromptThinking
       ? enhancePromptForThinking(options.staticPrompt)
       : options.staticPrompt;
 
     return {
       systemParams: [
         {
-          text: baseStaticPrompt, // Static content (with thinking if enabled)
+          text: baseStaticPrompt, // Static content (with thinking if enabled for Claude)
         },
         {
           cachePoint: { type: "default" }, // Cache marker (separate object)
@@ -501,6 +683,7 @@ function buildSystemParams(
         },
       ],
       enableThinking,
+      useNativeReasoning,
     };
   }
 
@@ -508,12 +691,13 @@ function buildSystemParams(
   return {
     systemParams: [
       {
-        text: enableThinking
+        text: applyPromptThinking
           ? enhancePromptForThinking(systemPrompt)
           : systemPrompt,
       },
     ],
     enableThinking,
+    useNativeReasoning,
   };
 }
 
@@ -568,32 +752,27 @@ function logCachePerformance(usage: any, context: string = "API call") {
 export const callBedrockApi = async (
   systemPrompt: string,
   userMessage: string = "Please proceed.",
-  modelId: string = CLAUDE_SONNET_4_MODEL_ID,
+  modelId: string = MODEL_IDS.EXECUTOR_MODEL_FULL,
   options?: BedrockApiOptions,
 ): Promise<BedrockApiResult> => {
   try {
     // Build system parameters with cache control and thinking support
-    const { systemParams, enableThinking } = buildSystemParams(
-      systemPrompt,
-      options,
-    );
+    const { systemParams, enableThinking, useNativeReasoning } =
+      buildSystemParams(systemPrompt, options, modelId);
 
     // Use default message if empty string provided
     const effectiveUserMessage = userMessage.trim() || "Please proceed.";
 
-    console.info("=== BEDROCK API CALL START ===");
-    console.info("AWS Region:", process.env.AWS_REGION || "us-west-2");
-    console.info("Model ID:", modelId);
-    console.info("System prompt length:", systemPrompt.length);
-    console.info("User message length:", effectiveUserMessage.length);
-    console.info("Thinking enabled:", enableThinking);
-    console.info("Bedrock client config:", {
-      region: (await bedrockClient.config.region?.()) || "unknown",
-    });
-    console.info("Environment variables:", {
-      AWS_REGION: process.env.AWS_REGION,
-      AWS_DEFAULT_REGION: process.env.AWS_DEFAULT_REGION,
-      AWS_LAMBDA_FUNCTION_NAME: process.env.AWS_LAMBDA_FUNCTION_NAME,
+    const finalTemperature =
+      options?.temperature ?? TEMPERATURE_PRESETS.BALANCED;
+
+    logBedrockCallStart("BEDROCK API CALL", {
+      modelId,
+      temperature: finalTemperature,
+      systemPromptLength: systemPrompt.length,
+      userMessageLength: effectiveUserMessage.length,
+      enableThinking,
+      useNativeReasoning,
     });
 
     // Build messages array with optional response prefilling
@@ -630,8 +809,9 @@ export const callBedrockApi = async (
       }), // Add toolConfig with strict enforcement
       inferenceConfig: {
         maxTokens: getMaxTokensForModel(modelId),
-        temperature: TEMPERATURE,
+        temperature: finalTemperature,
       },
+      ...buildNativeReasoningFields(useNativeReasoning),
     });
 
     console.info("Converse command created successfully..");
@@ -683,6 +863,9 @@ export const callBedrockApi = async (
       textType: typeof response.output?.message?.content?.[0]?.text,
       contentFirstItem: response.output?.message?.content?.[0], // Log full first item
     });
+
+    // Log Nova reasoning content if present
+    logNativeReasoningContent(response, useNativeReasoning);
 
     if (!response.output?.message?.content?.[0]) {
       console.error(
@@ -741,13 +924,14 @@ export const callBedrockApi = async (
     }
 
     // Extract the raw response text - handle both direct text and nested structures
-    const contentItem = response.output.message.content[0];
+    // For Nova models with reasoning, find the text content block (not the reasoning block)
+    const contentItem = findTextContentItem(response, useNativeReasoning);
     let rawResponseText: any;
 
     // Check if text is nested or direct
     if (typeof contentItem === "string") {
       rawResponseText = contentItem;
-    } else if (contentItem.text !== undefined) {
+    } else if (contentItem?.text !== undefined) {
       rawResponseText = contentItem.text;
 
       // Verify contentItem.text is actually a string
@@ -839,29 +1023,10 @@ export const callBedrockApi = async (
     // Return text response
     return responseText;
   } catch (error: any) {
-    console.error("=== BEDROCK API CALL FAILED ===");
-    console.error("Error type:", typeof error);
-    console.error("Error constructor:", error.constructor?.name);
-    console.error("Error message:", error.message);
-    console.error("Error stack:", error.stack);
-
-    // Log additional AWS-specific error details
-    if (error.$fault) {
-      console.error("AWS Fault:", error.$fault);
-    }
-    if (error.$service) {
-      console.error("AWS Service:", error.$service);
-    }
-    if (error.$metadata) {
-      console.error("AWS Metadata:", error.$metadata);
-    }
-    if (error.Code) {
-      console.error("AWS Error Code:", error.Code);
-    }
-
+    logAwsError(error, "BEDROCK API CALL");
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";
-    throw new Error(`Claude API failed: ${errorMessage}`);
+    throw new Error(`Bedrock API failed: ${errorMessage}`);
   }
 };
 
@@ -869,22 +1034,25 @@ export const callBedrockApi = async (
 export const callBedrockApiStream = async (
   systemPrompt: string,
   userMessage: string,
-  modelId: string = CLAUDE_SONNET_4_MODEL_ID,
+  modelId: string = MODEL_IDS.EXECUTOR_MODEL_FULL,
   options?: BedrockApiOptions,
 ): Promise<AsyncGenerator<string, void, unknown>> => {
   try {
     // Build system parameters with cache control and thinking support
-    const { systemParams, enableThinking } = buildSystemParams(
-      systemPrompt,
-      options,
-    );
+    const { systemParams, enableThinking, useNativeReasoning } =
+      buildSystemParams(systemPrompt, options, modelId);
 
-    console.info("=== BEDROCK STREAMING API CALL START ===");
-    console.info("AWS Region:", process.env.AWS_REGION || "us-west-2");
-    console.info("Model ID:", modelId);
-    console.info("System prompt length:", systemPrompt.length);
-    console.info("User message length:", userMessage.length);
-    console.info("Thinking enabled:", enableThinking);
+    const finalTemperature =
+      options?.temperature ?? TEMPERATURE_PRESETS.BALANCED;
+
+    logBedrockCallStart("BEDROCK STREAMING API CALL", {
+      modelId,
+      temperature: finalTemperature,
+      systemPromptLength: systemPrompt.length,
+      userMessageLength: userMessage.length,
+      enableThinking,
+      useNativeReasoning,
+    });
 
     const command = new ConverseStreamCommand({
       modelId: modelId,
@@ -904,8 +1072,9 @@ export const callBedrockApiStream = async (
       }), // Add toolConfig with strict enforcement
       inferenceConfig: {
         maxTokens: getMaxTokensForModel(modelId),
-        temperature: TEMPERATURE,
+        temperature: finalTemperature,
       },
+      ...buildNativeReasoningFields(useNativeReasoning),
     });
 
     console.info("Converse stream command created successfully..");
@@ -922,8 +1091,21 @@ export const callBedrockApiStream = async (
     return (async function* streamGenerator() {
       try {
         let fullResponse = "";
+        let reasoningLength = 0;
 
         for await (const chunk of response.stream!) {
+          // Handle Nova reasoning content (log but don't yield to user)
+          if (
+            useNativeReasoning &&
+            (chunk as any).contentBlockDelta?.delta?.reasoningContent
+          ) {
+            const reasoningText = (chunk as any).contentBlockDelta.delta
+              .reasoningContent?.text;
+            if (reasoningText) {
+              reasoningLength += reasoningText.length;
+            }
+          }
+
           if (chunk.contentBlockDelta?.delta?.text) {
             const deltaText = chunk.contentBlockDelta.delta.text;
             fullResponse += deltaText;
@@ -937,6 +1119,12 @@ export const callBedrockApiStream = async (
               "Stream complete. Total response length:",
               fullResponse.length,
             );
+            if (useNativeReasoning && reasoningLength > 0) {
+              console.info(
+                "🧠 Nova reasoning received during stream, length:",
+                reasoningLength,
+              );
+            }
 
             // If thinking was enabled, we need to handle the thinking tags in the full response
             // For streaming, we'll yield the raw content and let the client handle thinking tag removal if needed
@@ -949,26 +1137,10 @@ export const callBedrockApiStream = async (
       }
     })();
   } catch (error: any) {
-    console.error("=== BEDROCK STREAMING API CALL FAILED ===");
-    console.error("Error type:", typeof error);
-    console.error("Error constructor:", error.constructor?.name);
-    console.error("Error message:", error.message);
-    console.error("Error stack:", error.stack);
-
-    // Log additional AWS-specific error details
-    if (error.$fault) {
-      console.error("AWS Fault:", error.$fault);
-    }
-    if (error.$service) {
-      console.error("AWS Service:", error.$service);
-    }
-    if (error.$metadata) {
-      console.error("AWS Metadata:", error.$metadata);
-    }
-
+    logAwsError(error, "BEDROCK STREAMING API CALL");
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";
-    throw new Error(`Claude Streaming API failed: ${errorMessage}`);
+    throw new Error(`Bedrock Streaming API failed: ${errorMessage}`);
   }
 };
 
@@ -985,26 +1157,30 @@ export const callBedrockApiStream = async (
 export const callBedrockApiMultimodal = async (
   systemPrompt: string,
   messages: any[], // Full Converse API messages array with images
-  modelId: string = CLAUDE_SONNET_4_MODEL_ID,
+  modelId: string = MODEL_IDS.EXECUTOR_MODEL_FULL,
   options?: BedrockApiOptions,
 ): Promise<BedrockApiResult> => {
   try {
     // Build system parameters with cache control and thinking support
-    const { systemParams, enableThinking } = buildSystemParams(
-      systemPrompt,
-      options,
+    const { systemParams, enableThinking, useNativeReasoning } =
+      buildSystemParams(systemPrompt, options, modelId);
+
+    const finalTemperature =
+      options?.temperature ?? TEMPERATURE_PRESETS.BALANCED;
+
+    const hasImages = messages.some((m) =>
+      m.content?.some((c: any) => c.image),
     );
 
-    console.info("=== BEDROCK MULTIMODAL API CALL START ===");
-    console.info("AWS Region:", process.env.AWS_REGION || "us-west-2");
-    console.info("Model ID:", modelId);
-    console.info("System prompt length:", systemPrompt.length);
-    console.info("Messages count:", messages.length);
-    console.info("Thinking enabled:", enableThinking);
-    console.info(
-      "Has images:",
-      messages.some((m) => m.content?.some((c: any) => c.image)),
-    );
+    logBedrockCallStart("BEDROCK MULTIMODAL API CALL", {
+      modelId,
+      temperature: finalTemperature,
+      systemPromptLength: systemPrompt.length,
+      messagesCount: messages.length,
+      enableThinking,
+      useNativeReasoning,
+      hasImages,
+    });
 
     const command = new ConverseCommand({
       modelId: modelId,
@@ -1015,8 +1191,9 @@ export const callBedrockApiMultimodal = async (
       }), // Add toolConfig with strict enforcement
       inferenceConfig: {
         maxTokens: getMaxTokensForModel(modelId),
-        temperature: TEMPERATURE,
+        temperature: finalTemperature,
       },
+      ...buildNativeReasoningFields(useNativeReasoning),
     });
 
     console.info("Multimodal converse command created successfully..");
@@ -1030,6 +1207,9 @@ export const callBedrockApiMultimodal = async (
     if (response.usage) {
       logCachePerformance(response.usage, "Multimodal API");
     }
+
+    // Log Nova reasoning content if present
+    logNativeReasoningContent(response, useNativeReasoning);
 
     // If tools were provided, extract tool use result FIRST (before trying to extract text)
     // Tool responses have a different structure than text responses
@@ -1046,7 +1226,9 @@ export const callBedrockApiMultimodal = async (
         console.warn(
           "⚠️ Tool was requested but model returned text response (multimodal), attempting to parse as JSON",
         );
-        const textContent = response.output?.message?.content?.[0]?.text;
+        const contentItem = findTextContentItem(response, useNativeReasoning);
+        const textContent =
+          typeof contentItem === "string" ? contentItem : contentItem?.text;
 
         if (textContent) {
           // Try to parse the text as JSON with graceful error handling
@@ -1083,16 +1265,26 @@ export const callBedrockApiMultimodal = async (
       }
     }
 
-    // Otherwise extract text as usual
-    if (!response.output?.message?.content?.[0]?.text) {
+    // Otherwise extract text as usual (handling Nova reasoning blocks)
+    const contentItem = findTextContentItem(response, useNativeReasoning);
+    if (!contentItem) {
       console.error(
-        "Invalid response structure:",
+        "Invalid response structure - no content found:",
         JSON.stringify(response, null, 2),
       );
       throw new Error("Invalid response format from Bedrock");
     }
 
-    const responseText = response.output.message.content[0].text;
+    const responseText =
+      typeof contentItem === "string" ? contentItem : contentItem.text;
+
+    if (!responseText) {
+      console.error(
+        "Invalid response structure - no text in content:",
+        JSON.stringify(response, null, 2),
+      );
+      throw new Error("Invalid response format from Bedrock - no text");
+    }
 
     console.info(
       "Successfully extracted response text, length:",
@@ -1102,18 +1294,10 @@ export const callBedrockApiMultimodal = async (
 
     return responseText;
   } catch (error: any) {
-    console.error("=== BEDROCK MULTIMODAL API CALL FAILED ===");
-    console.error("Error type:", typeof error);
-    console.error("Error message:", error.message);
-    console.error("Error stack:", error.stack);
-
-    if (error.$metadata) {
-      console.error("AWS Metadata:", error.$metadata);
-    }
-
+    logAwsError(error, "BEDROCK MULTIMODAL API CALL");
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";
-    throw new Error(`Claude Multimodal API failed: ${errorMessage}`);
+    throw new Error(`Bedrock Multimodal API failed: ${errorMessage}`);
   }
 };
 
@@ -1138,23 +1322,35 @@ export const callBedrockApiForAgent = async (
   systemPrompt: string,
   messages: any[],
   tools: BedrockToolConfig[],
-  modelId: string = CLAUDE_SONNET_4_MODEL_ID,
+  modelId: string = MODEL_IDS.EXECUTOR_MODEL_FULL,
   options?: {
     staticPrompt?: string;
     dynamicPrompt?: string;
     enableThinking?: boolean;
   },
 ): Promise<any> => {
-  console.info("=== BEDROCK AGENT API CALL START ===");
-  console.info("Model ID:", modelId);
-  console.info("Messages count:", messages.length);
-  console.info("Tools count:", tools.length);
+  const finalTemperature =
+    (options as any)?.temperature ?? TEMPERATURE_PRESETS.BALANCED;
+
+  // Build system parameters with caching support
+  const { systemParams, useNativeReasoning } = buildSystemParams(
+    systemPrompt,
+    options,
+    modelId,
+  );
+
+  logBedrockCallStart("BEDROCK AGENT API CALL", {
+    modelId,
+    temperature: finalTemperature,
+    systemPromptLength: systemPrompt.length,
+    messagesCount: messages.length,
+    toolsCount: tools.length,
+    enableThinking: options?.enableThinking ?? false,
+    useNativeReasoning,
+  });
 
   const useCaching = !!(options?.staticPrompt && options?.dynamicPrompt);
   console.info("Caching enabled:", useCaching);
-
-  // Build system parameters with caching support
-  const { systemParams } = buildSystemParams(systemPrompt, options);
 
   // Build tool config with cache point
   const toolSpecs = tools.map((t) => ({
@@ -1186,11 +1382,10 @@ export const callBedrockApiForAgent = async (
     toolConfig: toolConfig as any, // Type assertion needed for cache point support
     inferenceConfig: {
       maxTokens: getMaxTokensForModel(modelId),
-      temperature: TEMPERATURE,
-      ...(options?.enableThinking && {
-        thinkingConfig: { type: "enabled" },
-      }),
+      temperature: finalTemperature,
+      // Note: Claude uses prompt-based thinking via buildSystemParams/enhancePromptForThinking
     },
+    ...buildNativeReasoningFields(useNativeReasoning),
   });
 
   const response = await bedrockClient.send(command);
@@ -1199,6 +1394,9 @@ export const callBedrockApiForAgent = async (
   if (response.usage) {
     logCachePerformance(response.usage, "Agent API");
   }
+
+  // Log Nova reasoning content if present (for observability, caller handles extraction)
+  logNativeReasoningContent(response, useNativeReasoning);
 
   console.info("=== BEDROCK AGENT API CALL SUCCESS ===");
   console.info("Stop reason:", response.stopReason);
@@ -1221,26 +1419,30 @@ export const callBedrockApiForAgent = async (
 export const callBedrockApiMultimodalStream = async (
   systemPrompt: string,
   messages: any[], // Full Converse API messages array with images
-  modelId: string = CLAUDE_SONNET_4_MODEL_ID,
+  modelId: string = MODEL_IDS.EXECUTOR_MODEL_FULL,
   options?: BedrockApiOptions,
 ): Promise<AsyncGenerator<string, void, unknown>> => {
   try {
     // Build system parameters with cache control and thinking support
-    const { systemParams, enableThinking } = buildSystemParams(
-      systemPrompt,
-      options,
+    const { systemParams, enableThinking, useNativeReasoning } =
+      buildSystemParams(systemPrompt, options, modelId);
+
+    const finalTemperature =
+      options?.temperature ?? TEMPERATURE_PRESETS.BALANCED;
+
+    const hasImages = messages.some((m) =>
+      m.content?.some((c: any) => c.image),
     );
 
-    console.info("=== BEDROCK MULTIMODAL STREAMING API CALL START ===");
-    console.info("AWS Region:", process.env.AWS_REGION || "us-west-2");
-    console.info("Model ID:", modelId);
-    console.info("System prompt length:", systemPrompt.length);
-    console.info("Messages count:", messages.length);
-    console.info("Thinking enabled:", enableThinking);
-    console.info(
-      "Has images:",
-      messages.some((m) => m.content?.some((c: any) => c.image)),
-    );
+    logBedrockCallStart("BEDROCK MULTIMODAL STREAMING API CALL", {
+      modelId,
+      temperature: finalTemperature,
+      systemPromptLength: systemPrompt.length,
+      messagesCount: messages.length,
+      enableThinking,
+      useNativeReasoning,
+      hasImages,
+    });
 
     const command = new ConverseStreamCommand({
       modelId: modelId,
@@ -1251,8 +1453,9 @@ export const callBedrockApiMultimodalStream = async (
       }), // Add toolConfig with strict enforcement
       inferenceConfig: {
         maxTokens: getMaxTokensForModel(modelId),
-        temperature: TEMPERATURE,
+        temperature: finalTemperature,
       },
+      ...buildNativeReasoningFields(useNativeReasoning),
     });
 
     console.info("Multimodal converse stream command created successfully..");
@@ -1270,8 +1473,21 @@ export const callBedrockApiMultimodalStream = async (
       try {
         let fullResponse = "";
         let streamEnded = false;
+        let reasoningLength = 0;
 
         for await (const chunk of response.stream!) {
+          // Handle Nova reasoning content (log but don't yield to user)
+          if (
+            useNativeReasoning &&
+            (chunk as any).contentBlockDelta?.delta?.reasoningContent
+          ) {
+            const reasoningText = (chunk as any).contentBlockDelta.delta
+              .reasoningContent?.text;
+            if (reasoningText) {
+              reasoningLength += reasoningText.length;
+            }
+          }
+
           if (chunk.contentBlockDelta?.delta?.text) {
             const deltaText = chunk.contentBlockDelta.delta.text;
             fullResponse += deltaText;
@@ -1287,6 +1503,12 @@ export const callBedrockApiMultimodalStream = async (
               "Stream complete. Total response length:",
               fullResponse.length,
             );
+            if (useNativeReasoning && reasoningLength > 0) {
+              console.info(
+                "🧠 Nova reasoning received during stream, length:",
+                reasoningLength,
+              );
+            }
             streamEnded = true;
             // DON'T break yet - metadata event comes after messageStop
           }
@@ -1317,18 +1539,10 @@ export const callBedrockApiMultimodalStream = async (
       }
     })();
   } catch (error: any) {
-    console.error("=== BEDROCK MULTIMODAL STREAMING API CALL FAILED ===");
-    console.error("Error type:", typeof error);
-    console.error("Error message:", error.message);
-    console.error("Error stack:", error.stack);
-
-    if (error.$metadata) {
-      console.error("AWS Metadata:", error.$metadata);
-    }
-
+    logAwsError(error, "BEDROCK MULTIMODAL STREAMING API CALL");
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";
-    throw new Error(`Claude Multimodal Streaming API failed: ${errorMessage}`);
+    throw new Error(`Bedrock Multimodal Streaming API failed: ${errorMessage}`);
   }
 };
 

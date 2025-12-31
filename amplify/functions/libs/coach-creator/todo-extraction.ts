@@ -3,7 +3,7 @@
  * Updates the to-do list based on what the user has shared
  */
 
-import { callBedrockApi, MODEL_IDS } from "../api-helpers";
+import { callBedrockApi, MODEL_IDS, TEMPERATURE_PRESETS } from "../api-helpers";
 import { parseJsonWithFallbacks } from "../response-utils";
 import { CoachCreatorTodoList, TodoItem, CoachMessage } from "./types";
 import { COACH_CREATOR_TODO_SCHEMA } from "../schemas/coach-creator-todo-schema";
@@ -58,8 +58,9 @@ Return JSON with ONLY the fields you found information for:
     const extractionResponse = await callBedrockApi(
       systemPrompt,
       userPrompt,
-      MODEL_IDS.CLAUDE_HAIKU_4_FULL,
+      MODEL_IDS.EXECUTOR_MODEL_FULL,
       {
+        temperature: TEMPERATURE_PRESETS.STRUCTURED,
         tools: [
           {
             name: "extract_intake_info",
