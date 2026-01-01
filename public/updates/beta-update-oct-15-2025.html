@@ -1,224 +1,362 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>NeonPanda UI Polish Update - October 2025</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
     <style>
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
-            line-height: 1.6;
-            color: #333;
-            margin: 0;
-            padding: 0;
-            background-color: #f9f9f9;
-        }
-        .email-wrapper {
-            width: 100%;
-            background-color: #f9f9f9;
-            padding: 20px 0;
-        }
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            background-color: #ffffff;
-            border-radius: 8px;
-            padding: 30px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-        .logo-header {
-            background-color: #0a0a0a;
-            padding: 10px;
-            margin: -30px -30px 30px -30px;
-            border-radius: 8px 8px 0 0;
-            text-align: center;
-        }
-        .logo-header img {
-            max-width: 400px;
-            height: auto;
-        }
-        h1 {
-            color: #00ffff;
-            font-size: 28px;
-            margin-bottom: 10px;
-            margin-top: 0;
-        }
-        h2 {
-            color: #ff0080;
-            font-size: 20px;
-            margin-top: 30px;
-            margin-bottom: 15px;
-        }
-        .subtitle {
-            color: #666;
-            font-size: 16px;
-            margin-bottom: 25px;
-        }
-        ul {
-            padding-left: 20px;
-            margin-bottom: 20px;
-        }
-        li {
-            margin-bottom: 10px;
-        }
-        .highlight {
-            background-color: #f0f9ff;
-            border-left: 4px solid #00ffff;
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 4px;
-        }
-        .feature-box {
-            background-color: #fff5f8;
-            border-left: 4px solid #ff0080;
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 4px;
-        }
-        .cta {
-            background-color: #00ffff;
-            color: #0A0A0A;
-            padding: 12px 24px;
-            text-decoration: none;
-            border-radius: 6px;
-            display: inline-block;
-            margin: 10px 10px 10px 0;
-            font-weight: 600;
-        }
-        .cta-secondary {
-            background-color: #ff0080;
-            color: #ffffff;
-        }
-        .footer {
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #e0e0e0;
-            font-size: 14px;
-            color: #666;
-        }
-        a {
-            color: #00ffff;
-        }
-        .signature {
-            margin-top: 30px;
-            font-style: italic;
-            color: #666;
-        }
-        .section-badge {
-            display: inline-block;
-            background-color: #00ffff;
-            color: #0a0a0a;
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            margin-bottom: 10px;
-        }
-        .emoji {
-            font-size: 20px;
-            margin-right: 8px;
-        }
+      body {
+        font-family:
+          "Inter",
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          "Roboto",
+          "Oxygen",
+          "Ubuntu",
+          "Cantarell",
+          sans-serif;
+        line-height: 1.6;
+        color: #333;
+        margin: 0;
+        padding: 0;
+        background-color: #f9f9f9;
+      }
+      .email-wrapper {
+        width: 100%;
+        background-color: #f9f9f9;
+        padding: 20px 0;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        background-color: #ffffff;
+        border-radius: 8px;
+        padding: 30px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+      .logo-header {
+        background-color: #0a0a0a;
+        padding: 10px;
+        margin: -30px -30px 30px -30px;
+        border-radius: 8px 8px 0 0;
+        text-align: center;
+      }
+      .logo-header img {
+        max-width: 400px;
+        height: auto;
+      }
+      h1 {
+        color: #00ffff;
+        font-size: 28px;
+        margin-bottom: 10px;
+        margin-top: 0;
+      }
+      h2 {
+        color: #ff0080;
+        font-size: 20px;
+        margin-top: 30px;
+        margin-bottom: 15px;
+      }
+      .subtitle {
+        color: #666;
+        font-size: 16px;
+        margin-bottom: 25px;
+      }
+      ul {
+        padding-left: 20px;
+        margin-bottom: 20px;
+      }
+      li {
+        margin-bottom: 10px;
+      }
+      .highlight {
+        background-color: #f0f9ff;
+        border-left: 4px solid #00ffff;
+        padding: 15px;
+        margin: 20px 0;
+        border-radius: 4px;
+      }
+      .feature-box {
+        background-color: #fff5f8;
+        border-left: 4px solid #ff0080;
+        padding: 15px;
+        margin: 20px 0;
+        border-radius: 4px;
+      }
+      .cta {
+        background-color: #00ffff;
+        color: #0a0a0a;
+        padding: 12px 24px;
+        text-decoration: none;
+        border-radius: 6px;
+        display: inline-block;
+        margin: 10px 10px 10px 0;
+        font-weight: 600;
+      }
+      .cta-secondary {
+        background-color: #ff0080;
+        color: #ffffff;
+      }
+      .footer {
+        margin-top: 40px;
+        padding-top: 20px;
+        border-top: 1px solid #e0e0e0;
+        font-size: 14px;
+        color: #666;
+      }
+      a {
+        color: #00ffff;
+      }
+      .signature {
+        margin-top: 30px;
+        font-style: italic;
+        color: #666;
+      }
+      .section-badge {
+        display: inline-block;
+        background-color: #00ffff;
+        color: #0a0a0a;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        margin-bottom: 10px;
+      }
+      .emoji {
+        font-size: 20px;
+        margin-right: 8px;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="email-wrapper">
-        <div class="container">
+      <div class="container">
         <div class="logo-header">
-            <img src="https://neonpanda.ai/images/logo-light-sm.png" alt="NeonPanda Logo">
+          <img
+            src="https://neonpanda.ai/images/logo-dark-sm.webp"
+            alt="NeonPanda Logo"
+          />
         </div>
         <h1>Monthly Reports & UI Polish 🎨📊</h1>
-        <p class="subtitle">Bigger picture analytics, cleaner interface, and faster everything</p>
+        <p class="subtitle">
+          Bigger picture analytics, cleaner interface, and faster everything
+        </p>
 
-        <p>We've been shipping fast. Monthly reports are live, the entire UI got a polish pass, and we squeezed even more performance out of the platform. Here's what you need to know.</p>
+        <p>
+          We've been shipping fast. Monthly reports are live, the entire UI got
+          a polish pass, and we squeezed even more performance out of the
+          platform. Here's what you need to know.
+        </p>
 
         <div class="feature-box">
-            <span class="section-badge">NEW FEATURE</span>
-            <h2 style="margin-top: 10px; color: #ff0080;">📊 Monthly Reports Are Here</h2>
-            <p>You asked for the bigger picture. We built it.</p>
-            <ul style="margin-top: 10px;">
-                <li><strong>Automatic Generation:</strong> Hit 4+ workouts in a month and get a comprehensive monthly analysis. Zero extra effort on your end.</li>
-                <li><strong>Long-Term Trends:</strong> See patterns you can't catch week-to-week. Progression curves, consistency metrics, performance evolution.</li>
-                <li><strong>Dual View:</strong> Flip between Weekly and Monthly with one click. Both perspectives, always available.</li>
-                <li><strong>AI-Powered Summaries:</strong> Top priority insights surfaced immediately. Know what to focus on without digging.</li>
-                <li><strong>Progress Tracking:</strong> Workout volume, conversation depth, memory formation – all tracked month-over-month.</li>
-            </ul>
-            <p style="margin-top: 15px;"><em>Weekly reports keep you sharp on the details. Monthly reports show you where you're actually going.</em></p>
+          <span class="section-badge">NEW FEATURE</span>
+          <h2 style="margin-top: 10px; color: #ff0080">
+            📊 Monthly Reports Are Here
+          </h2>
+          <p>You asked for the bigger picture. We built it.</p>
+          <ul style="margin-top: 10px">
+            <li>
+              <strong>Automatic Generation:</strong> Hit 4+ workouts in a month
+              and get a comprehensive monthly analysis. Zero extra effort on
+              your end.
+            </li>
+            <li>
+              <strong>Long-Term Trends:</strong> See patterns you can't catch
+              week-to-week. Progression curves, consistency metrics, performance
+              evolution.
+            </li>
+            <li>
+              <strong>Dual View:</strong> Flip between Weekly and Monthly with
+              one click. Both perspectives, always available.
+            </li>
+            <li>
+              <strong>AI-Powered Summaries:</strong> Top priority insights
+              surfaced immediately. Know what to focus on without digging.
+            </li>
+            <li>
+              <strong>Progress Tracking:</strong> Workout volume, conversation
+              depth, memory formation – all tracked month-over-month.
+            </li>
+          </ul>
+          <p style="margin-top: 15px">
+            <em
+              >Weekly reports keep you sharp on the details. Monthly reports
+              show you where you're actually going.</em
+            >
+          </p>
         </div>
 
         <h2>✨ UI Got Cleaner</h2>
         <p>We removed everything that wasn't earning its space:</p>
         <ul>
-            <li><strong>Minimal Empty States:</strong> Killed the decorative borders and buttons. Just clear text telling you what's up.</li>
-            <li><strong>Dual-Key Shortcuts:</strong> Keyboard shortcuts now display as separate keys (⌘ + K) instead of mashed together. Small change, way more readable.</li>
-            <li><strong>Cyan Tab Buttons:</strong> Report tabs updated to match the cyan theme. More consistent, easier to scan.</li>
-            <li><strong>Shorter Tooltips:</strong> Trimmed the verbose explainers down to 2-4 words. Less reading, faster decisions.</li>
+          <li>
+            <strong>Minimal Empty States:</strong> Killed the decorative borders
+            and buttons. Just clear text telling you what's up.
+          </li>
+          <li>
+            <strong>Dual-Key Shortcuts:</strong> Keyboard shortcuts now display
+            as separate keys (⌘ + K) instead of mashed together. Small change,
+            way more readable.
+          </li>
+          <li>
+            <strong>Cyan Tab Buttons:</strong> Report tabs updated to match the
+            cyan theme. More consistent, easier to scan.
+          </li>
+          <li>
+            <strong>Shorter Tooltips:</strong> Trimmed the verbose explainers
+            down to 2-4 words. Less reading, faster decisions.
+          </li>
         </ul>
 
         <h2>🎯 Compact Headers Everywhere</h2>
         <p>Redesigned every page header from the ground up:</p>
         <ul>
-            <li><strong>Unified Layout:</strong> All 10 pages now share the same compact horizontal header. Coach card, page title, command palette button. That's it.</li>
-            <li><strong>Smart Coach Pills:</strong> Click your coach avatar anywhere → instant jump to training grounds or coach dashboard.</li>
-            <li><strong>⌘K Access:</strong> Command palette button visible on every page. No more hunting for it.</li>
-            <li><strong>Contextual Tooltips:</strong> Hover over any page title to see what it does. No guessing.</li>
+          <li>
+            <strong>Unified Layout:</strong> All 10 pages now share the same
+            compact horizontal header. Coach card, page title, command palette
+            button. That's it.
+          </li>
+          <li>
+            <strong>Smart Coach Pills:</strong> Click your coach avatar anywhere
+            → instant jump to training grounds or coach dashboard.
+          </li>
+          <li>
+            <strong>⌘K Access:</strong> Command palette button visible on every
+            page. No more hunting for it.
+          </li>
+          <li>
+            <strong>Contextual Tooltips:</strong> Hover over any page title to
+            see what it does. No guessing.
+          </li>
         </ul>
 
         <div class="highlight">
-            <strong>Why this matters:</strong> Less scrolling, faster navigation, zero mental overhead switching between sections. You asked for speed. This is speed.
+          <strong>Why this matters:</strong> Less scrolling, faster navigation,
+          zero mental overhead switching between sections. You asked for speed.
+          This is speed.
         </div>
 
         <h2>⚡ Performance Upgrades</h2>
         <p>Behind-the-scenes improvements you'll feel immediately:</p>
         <ul>
-            <li><strong>90% Cost Reduction:</strong> Bedrock Prompt Caching now live. 100% cache hit rates, 90-135% cost savings per request. Cheaper = faster = more features.</li>
-            <li><strong>3x Faster Loading:</strong> Coach conversations load in 5-6 seconds (down from 15+). Parallel data loading instead of sequential.</li>
-            <li><strong>Smarter Context Retrieval:</strong> AI only pulls memories and history when it actually needs them. Simple messages = instant responses.</li>
-            <li><strong>Fixed Pinecone Bug:</strong> Critical reranking issue that was filtering out relevant training context. Your coach now sees your full history.</li>
+          <li>
+            <strong>90% Cost Reduction:</strong> Bedrock Prompt Caching now
+            live. 100% cache hit rates, 90-135% cost savings per request.
+            Cheaper = faster = more features.
+          </li>
+          <li>
+            <strong>3x Faster Loading:</strong> Coach conversations load in 5-6
+            seconds (down from 15+). Parallel data loading instead of
+            sequential.
+          </li>
+          <li>
+            <strong>Smarter Context Retrieval:</strong> AI only pulls memories
+            and history when it actually needs them. Simple messages = instant
+            responses.
+          </li>
+          <li>
+            <strong>Fixed Pinecone Bug:</strong> Critical reranking issue that
+            was filtering out relevant training context. Your coach now sees
+            your full history.
+          </li>
         </ul>
 
         <div class="feature-box">
-            <span class="section-badge">INFRASTRUCTURE</span>
-            <p><strong>Changelog Integration:</strong> Training Grounds now displays the last 5 platform updates. Click any version to jump straight to full release notes. Transparency by default.</p>
+          <span class="section-badge">INFRASTRUCTURE</span>
+          <p>
+            <strong>Changelog Integration:</strong> Training Grounds now
+            displays the last 5 platform updates. Click any version to jump
+            straight to full release notes. Transparency by default.
+          </p>
         </div>
 
         <h2>🤖 Under the Hood</h2>
         <p>Technical wins that compound over time:</p>
         <ul>
-            <li><strong>AI Model Swap:</strong> Migrated 11 critical decision tasks from Nova Micro to Claude Haiku. Result: way more reliable workout detection, memory analysis, and intent understanding.</li>
-            <li><strong>JSON Standardization:</strong> Centralized formatting instructions across all AI functions. Fewer parsing errors, more consistent responses.</li>
-            <li><strong>Natural Language Detection:</strong> Coach creator now uses AI to detect when you're done instead of keyword matching. It understands "yep" and "sounds good" like a human would.</li>
-            <li><strong>Metadata Cleanup:</strong> Standardized all Pinecone field naming. Better context retrieval, fewer edge cases.</li>
+          <li>
+            <strong>AI Model Swap:</strong> Migrated 11 critical decision tasks
+            from Nova Micro to Claude Haiku. Result: way more reliable workout
+            detection, memory analysis, and intent understanding.
+          </li>
+          <li>
+            <strong>JSON Standardization:</strong> Centralized formatting
+            instructions across all AI functions. Fewer parsing errors, more
+            consistent responses.
+          </li>
+          <li>
+            <strong>Natural Language Detection:</strong> Coach creator now uses
+            AI to detect when you're done instead of keyword matching. It
+            understands "yep" and "sounds good" like a human would.
+          </li>
+          <li>
+            <strong>Metadata Cleanup:</strong> Standardized all Pinecone field
+            naming. Better context retrieval, fewer edge cases.
+          </li>
         </ul>
 
         <h2>What's Next?</h2>
         <p>We're doubling down on:</p>
         <ul>
-            <li><span class="emoji">📊</span> <strong>Custom Training Programs:</strong> Your coach will build complete multi-week training plans tailored to your goals, equipment, and schedule. Think structured periodization with built-in progression, intelligent adaptation based on your performance, and calendar accountability that keeps you on track. No more asking "what should I do today?" – you'll have a complete roadmap with your coach adjusting the plan as you progress. This is the difference between random workouts and real programming.</li>
-            <li><span class="emoji">📈</span> Exercise and movement progression tracking that shows your strength gains, skill improvements, and PRs over time – see exactly how you're getting better</li>
-            <li><span class="emoji">🎙️</span> Voice communication with your coaches – talk to them like you would a real person, hands-free during workouts</li>
-            <li><span class="emoji">💪</span> Advanced form analysis and injury prevention features</li>
+          <li>
+            <span class="emoji">📊</span>
+            <strong>Custom Training Programs:</strong> Your coach will build
+            complete multi-week training plans tailored to your goals,
+            equipment, and schedule. Think structured periodization with
+            built-in progression, intelligent adaptation based on your
+            performance, and calendar accountability that keeps you on track. No
+            more asking "what should I do today?" – you'll have a complete
+            roadmap with your coach adjusting the plan as you progress. This is
+            the difference between random workouts and real programming.
+          </li>
+          <li>
+            <span class="emoji">📈</span> Exercise and movement progression
+            tracking that shows your strength gains, skill improvements, and PRs
+            over time – see exactly how you're getting better
+          </li>
+          <li>
+            <span class="emoji">🎙️</span> Voice communication with your coaches
+            – talk to them like you would a real person, hands-free during
+            workouts
+          </li>
+          <li>
+            <span class="emoji">💪</span> Advanced form analysis and injury
+            prevention features
+          </li>
         </ul>
 
         <div class="signature">
-            <p>Your feedback drives everything we build. Keep it raw and honest in the <strong>#beta-users</strong> Discord channel.</p>
-            <p>More coming soon. Let's go. 💥</p>
+          <p>
+            Your feedback drives everything we build. Keep it raw and honest in
+            the <strong>#beta-users</strong> Discord channel.
+          </p>
+          <p>More coming soon. Let's go. 💥</p>
         </div>
 
         <div class="footer">
-            <p><strong>NeonPanda</strong> – Where electric intelligence meets approachable excellence.</p>
-            <p>Questions? Reply to this email or find us in Discord.</p>
-            <p style="margin-top: 15px;">
-                <a href="https://neonpanda.ai" style="margin-right: 15px;">Visit NeonPanda</a>
-                <a href="https://discord.gg/AmbuFTrU" style="margin-right: 15px;">Join Discord</a>
-                <a href="https://neonpanda.ai/changelog">View Full Changelog</a>
-            </p>
+          <p>
+            <strong>NeonPanda</strong> – Where electric intelligence meets
+            approachable excellence.
+          </p>
+          <p>Questions? Reply to this email or find us in Discord.</p>
+          <p style="margin-top: 15px">
+            <a href="https://neonpanda.ai" style="margin-right: 15px"
+              >Visit NeonPanda</a
+            >
+            <a href="https://discord.gg/AmbuFTrU" style="margin-right: 15px"
+              >Join Discord</a
+            >
+            <a href="https://neonpanda.ai/changelog">View Full Changelog</a>
+          </p>
         </div>
+      </div>
     </div>
-    </div>
-</body>
+  </body>
 </html>
-

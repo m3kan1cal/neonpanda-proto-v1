@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { avatarPatterns, iconButtonPatterns, containerPatterns } from '../../utils/ui/uiPatterns';
-import { useAuth } from '../../auth/contexts/AuthContext';
-import UserAvatar from './UserAvatar';
+import {
+  avatarPatterns,
+  iconButtonPatterns,
+  containerPatterns,
+} from "../../utils/ui/uiPatterns";
+import { useAuth } from "../../auth/contexts/AuthContext";
+import UserAvatar from "./UserAvatar";
 import {
   HomeIconTiny,
   FAQIconTiny,
@@ -17,8 +21,8 @@ import {
   AboutIconTiny,
   TechnologyIconTiny,
   SupportIconTiny,
-  SettingsIconTiny
-} from '../themes/SynthwaveComponents';
+  SettingsIconTiny,
+} from "../themes/SynthwaveComponents";
 
 function Navigation({ user, signOut }) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -26,7 +30,7 @@ function Navigation({ user, signOut }) {
   const { isAuthenticated, user: authUser, userProfile, loading } = useAuth();
 
   // Get authenticated user's real userId (no fallback needed)
-  const authenticatedUserId = authUser?.attributes?.['custom:user_id'];
+  const authenticatedUserId = authUser?.attributes?.["custom:user_id"];
 
   // Extract coachId from current URL's query parameters
   const searchParams = new URLSearchParams(location.search);
@@ -55,7 +59,7 @@ function Navigation({ user, signOut }) {
       if (isDropdownOpen) {
         // Check if the click is outside the dropdown container
         const dropdownContainer = document.querySelector(
-          "[data-dropdown-container]"
+          "[data-dropdown-container]",
         );
         if (dropdownContainer && !dropdownContainer.contains(event.target)) {
           closeDropdown();
@@ -85,7 +89,7 @@ function Navigation({ user, signOut }) {
           className="hover:opacity-80 transition-opacity duration-300"
         >
           <img
-            src="/images/logo-light-sm.png"
+            src="/images/logo-dark-sm.webp"
             alt="NeonPanda"
             className="h-8 w-auto"
           />
@@ -112,12 +116,18 @@ function Navigation({ user, signOut }) {
               >
                 <UserAvatar
                   email={user.attributes.email}
-                  username={userProfile?.displayName || user.attributes.preferred_username || user.attributes.email}
+                  username={
+                    userProfile?.displayName ||
+                    user.attributes.preferred_username ||
+                    user.attributes.email
+                  }
                   size={32}
                 />
               </Link>
               <span className="text-synthwave-neon-pink font-medium">
-                {userProfile?.displayName || user.attributes.preferred_username || user.attributes.email}
+                {userProfile?.displayName ||
+                  user.attributes.preferred_username ||
+                  user.attributes.email}
               </span>
             </div>
           )}
@@ -126,209 +136,213 @@ function Navigation({ user, signOut }) {
           <div className="relative" data-dropdown-container>
             <button
               onClick={toggleDropdown}
-              className={`${iconButtonPatterns.bordered.replace('text-synthwave-neon-cyan', 'text-synthwave-neon-pink').replace('border-synthwave-neon-cyan', 'border-synthwave-neon-pink').replace('hover:border-synthwave-neon-cyan', 'hover:border-synthwave-neon-pink').replace('focus:ring-synthwave-neon-cyan', 'focus:ring-synthwave-neon-pink').replace('hover:bg-synthwave-neon-cyan', 'hover:bg-synthwave-neon-pink').replace('p-3', 'p-2.5')}`}
-          >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+              className={`${iconButtonPatterns.bordered.replace("text-synthwave-neon-cyan", "text-synthwave-neon-pink").replace("border-synthwave-neon-cyan", "border-synthwave-neon-pink").replace("hover:border-synthwave-neon-cyan", "hover:border-synthwave-neon-pink").replace("focus:ring-synthwave-neon-cyan", "focus:ring-synthwave-neon-pink").replace("hover:bg-synthwave-neon-cyan", "hover:bg-synthwave-neon-pink").replace("p-3", "p-2.5")}`}
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 6h16M4 12h16M4 18h16"
-              />
-            </svg>
-          </button>
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
+              </svg>
+            </button>
 
-          {/* Dropdown Menu */}
-          {isDropdownOpen && (
-            <div className={`absolute right-0 mt-2 w-64 z-[10002] ${containerPatterns.cardMediumOpaque}`}>
-              <div className="py-2">
-                {/* Public Pages Section */}
-                <Link
-                  to="/"
-                  onClick={closeDropdown}
-                  className={`flex items-center space-x-3 px-4 py-1.5 font-rajdhani font-medium transition-all duration-150 ${
-                    location.pathname === "/"
-                      ? "text-synthwave-neon-cyan bg-synthwave-neon-cyan/10"
-                      : "text-synthwave-text-primary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10"
-                  }`}
-                >
+            {/* Dropdown Menu */}
+            {isDropdownOpen && (
+              <div
+                className={`absolute right-0 mt-2 w-64 z-[10002] ${containerPatterns.cardMediumOpaque}`}
+              >
+                <div className="py-2">
+                  {/* Public Pages Section */}
+                  <Link
+                    to="/"
+                    onClick={closeDropdown}
+                    className={`flex items-center space-x-3 px-4 py-1.5 font-rajdhani font-medium transition-all duration-150 ${
+                      location.pathname === "/"
+                        ? "text-synthwave-neon-cyan bg-synthwave-neon-cyan/10"
+                        : "text-synthwave-text-primary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10"
+                    }`}
+                  >
                     <HomeIconTiny />
-                  <span>Home</span>
-                </Link>
-                <Link
-                  to="/faqs"
-                  onClick={closeDropdown}
-                  className={`flex items-center space-x-3 px-4 py-1.5 font-rajdhani font-medium transition-all duration-150 ${
-                    location.pathname === "/faqs"
-                      ? "text-synthwave-neon-cyan bg-synthwave-neon-cyan/10"
-                      : "text-synthwave-text-primary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10"
-                  }`}
-                >
-                  <FAQIconTiny />
-                  <span>FAQs</span>
-                </Link>
-                <Link
-                  to="/about"
-                  onClick={closeDropdown}
-                  className={`flex items-center space-x-3 px-4 py-1.5 font-rajdhani font-medium transition-all duration-150 ${
-                    location.pathname === "/about"
-                      ? "text-synthwave-neon-cyan bg-synthwave-neon-cyan/10"
-                      : "text-synthwave-text-primary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10"
-                  }`}
-                >
-                  <AboutIconTiny />
-                  <span>About Us</span>
-                </Link>
-                <Link
-                  to="/technology"
-                  onClick={closeDropdown}
-                  className={`flex items-center space-x-3 px-4 py-1.5 font-rajdhani font-medium transition-all duration-150 ${
-                    location.pathname === "/technology"
-                      ? "text-synthwave-neon-cyan bg-synthwave-neon-cyan/10"
-                      : "text-synthwave-text-primary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10"
-                  }`}
-                >
-                  <TechnologyIconTiny />
-                  <span>Technology</span>
-                </Link>
-                <Link
-                  to="/changelog"
-                  onClick={closeDropdown}
-                  className={`flex items-center space-x-3 px-4 py-1.5 font-rajdhani font-medium transition-all duration-150 ${
-                    location.pathname === "/changelog"
-                      ? "text-synthwave-neon-cyan bg-synthwave-neon-cyan/10"
-                      : "text-synthwave-text-primary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10"
-                  }`}
-                >
-                  <ChangelogIconTiny />
-                  <span>Changelog</span>
-                </Link>
+                    <span>Home</span>
+                  </Link>
+                  <Link
+                    to="/faqs"
+                    onClick={closeDropdown}
+                    className={`flex items-center space-x-3 px-4 py-1.5 font-rajdhani font-medium transition-all duration-150 ${
+                      location.pathname === "/faqs"
+                        ? "text-synthwave-neon-cyan bg-synthwave-neon-cyan/10"
+                        : "text-synthwave-text-primary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10"
+                    }`}
+                  >
+                    <FAQIconTiny />
+                    <span>FAQs</span>
+                  </Link>
+                  <Link
+                    to="/about"
+                    onClick={closeDropdown}
+                    className={`flex items-center space-x-3 px-4 py-1.5 font-rajdhani font-medium transition-all duration-150 ${
+                      location.pathname === "/about"
+                        ? "text-synthwave-neon-cyan bg-synthwave-neon-cyan/10"
+                        : "text-synthwave-text-primary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10"
+                    }`}
+                  >
+                    <AboutIconTiny />
+                    <span>About Us</span>
+                  </Link>
+                  <Link
+                    to="/technology"
+                    onClick={closeDropdown}
+                    className={`flex items-center space-x-3 px-4 py-1.5 font-rajdhani font-medium transition-all duration-150 ${
+                      location.pathname === "/technology"
+                        ? "text-synthwave-neon-cyan bg-synthwave-neon-cyan/10"
+                        : "text-synthwave-text-primary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10"
+                    }`}
+                  >
+                    <TechnologyIconTiny />
+                    <span>Technology</span>
+                  </Link>
+                  <Link
+                    to="/changelog"
+                    onClick={closeDropdown}
+                    className={`flex items-center space-x-3 px-4 py-1.5 font-rajdhani font-medium transition-all duration-150 ${
+                      location.pathname === "/changelog"
+                        ? "text-synthwave-neon-cyan bg-synthwave-neon-cyan/10"
+                        : "text-synthwave-text-primary hover:text-synthwave-neon-cyan hover:bg-synthwave-neon-cyan/10"
+                    }`}
+                  >
+                    <ChangelogIconTiny />
+                    <span>Changelog</span>
+                  </Link>
 
-                {/* User Account Section - only show when authenticated */}
-                {isAuthenticated && authenticatedUserId && (
-                  <>
-                    <div className="border-t border-synthwave-neon-purple/20 my-2"></div>
-                    <Link
-                      to={`/coaches?userId=${authenticatedUserId}`}
-                      onClick={closeDropdown}
-                      className={`flex items-center space-x-3 px-4 py-1.5 font-rajdhani font-medium transition-all duration-150 ${
-                        location.pathname === "/coaches"
-                          ? "text-synthwave-neon-pink bg-synthwave-neon-pink/10"
-                          : "text-synthwave-text-primary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10"
-                      }`}
-                    >
-                      <CoachesIconTiny />
-                      <span>Your Coaches</span>
-                    </Link>
-                    <Link
-                      to={`/settings?userId=${authenticatedUserId}`}
-                      onClick={closeDropdown}
-                      className={`flex items-center space-x-3 px-4 py-1.5 font-rajdhani font-medium transition-all duration-150 ${
-                        location.pathname === "/settings"
-                          ? "text-synthwave-neon-pink bg-synthwave-neon-pink/10"
-                          : "text-synthwave-text-primary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10"
-                      }`}
-                    >
-                      <SettingsIconTiny />
-                      <span>Your Settings</span>
-                    </Link>
-                  </>
-                )}
+                  {/* User Account Section - only show when authenticated */}
+                  {isAuthenticated && authenticatedUserId && (
+                    <>
+                      <div className="border-t border-synthwave-neon-purple/20 my-2"></div>
+                      <Link
+                        to={`/coaches?userId=${authenticatedUserId}`}
+                        onClick={closeDropdown}
+                        className={`flex items-center space-x-3 px-4 py-1.5 font-rajdhani font-medium transition-all duration-150 ${
+                          location.pathname === "/coaches"
+                            ? "text-synthwave-neon-pink bg-synthwave-neon-pink/10"
+                            : "text-synthwave-text-primary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10"
+                        }`}
+                      >
+                        <CoachesIconTiny />
+                        <span>Your Coaches</span>
+                      </Link>
+                      <Link
+                        to={`/settings?userId=${authenticatedUserId}`}
+                        onClick={closeDropdown}
+                        className={`flex items-center space-x-3 px-4 py-1.5 font-rajdhani font-medium transition-all duration-150 ${
+                          location.pathname === "/settings"
+                            ? "text-synthwave-neon-pink bg-synthwave-neon-pink/10"
+                            : "text-synthwave-text-primary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10"
+                        }`}
+                      >
+                        <SettingsIconTiny />
+                        <span>Your Settings</span>
+                      </Link>
+                    </>
+                  )}
 
-                {/* Coach-Specific Training Section - only show when coach context exists */}
-                {hasCoachContext && (
-                  <>
-                    <div className="border-t border-synthwave-neon-purple/20 my-2"></div>
-                    <Link
-                      to={`/training-grounds/manage-workouts?userId=${authenticatedUserId}&coachId=${currentCoachId}`}
-                      onClick={closeDropdown}
-                      className={`flex items-center space-x-3 px-4 py-1.5 font-rajdhani font-medium transition-all duration-150 ${
-                        location.pathname === "/training-grounds/manage-workouts"
-                          ? "text-synthwave-neon-pink bg-synthwave-neon-pink/10"
-                          : "text-synthwave-text-primary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10"
-                      }`}
-                    >
-                      <WorkoutIconTiny />
-                      <span>Your Workouts</span>
-                    </Link>
-                    <Link
-                      to={`/training-grounds/manage-memories?userId=${authenticatedUserId}&coachId=${currentCoachId}`}
-                      onClick={closeDropdown}
-                      className={`flex items-center space-x-3 px-4 py-1.5 font-rajdhani font-medium transition-all duration-150 ${
-                        location.pathname === "/training-grounds/manage-memories"
-                          ? "text-synthwave-neon-pink bg-synthwave-neon-pink/10"
-                          : "text-synthwave-text-primary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10"
-                      }`}
-                    >
-                      <MemoryIconTiny />
-                      <span>Your Memories</span>
-                    </Link>
-                    <Link
-                      to={`/training-grounds/reports?userId=${authenticatedUserId}&coachId=${currentCoachId}`}
-                      onClick={closeDropdown}
-                      className={`flex items-center space-x-3 px-4 py-1.5 font-rajdhani font-medium transition-all duration-150 ${
-                        location.pathname === "/training-grounds/reports"
-                          ? "text-synthwave-neon-pink bg-synthwave-neon-pink/10"
-                          : "text-synthwave-text-primary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10"
-                      }`}
-                    >
-                      <ReportsIconTiny />
-                      <span>Your Reports</span>
-                    </Link>
-                  </>
-                )}
+                  {/* Coach-Specific Training Section - only show when coach context exists */}
+                  {hasCoachContext && (
+                    <>
+                      <div className="border-t border-synthwave-neon-purple/20 my-2"></div>
+                      <Link
+                        to={`/training-grounds/manage-workouts?userId=${authenticatedUserId}&coachId=${currentCoachId}`}
+                        onClick={closeDropdown}
+                        className={`flex items-center space-x-3 px-4 py-1.5 font-rajdhani font-medium transition-all duration-150 ${
+                          location.pathname ===
+                          "/training-grounds/manage-workouts"
+                            ? "text-synthwave-neon-pink bg-synthwave-neon-pink/10"
+                            : "text-synthwave-text-primary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10"
+                        }`}
+                      >
+                        <WorkoutIconTiny />
+                        <span>Your Workouts</span>
+                      </Link>
+                      <Link
+                        to={`/training-grounds/manage-memories?userId=${authenticatedUserId}&coachId=${currentCoachId}`}
+                        onClick={closeDropdown}
+                        className={`flex items-center space-x-3 px-4 py-1.5 font-rajdhani font-medium transition-all duration-150 ${
+                          location.pathname ===
+                          "/training-grounds/manage-memories"
+                            ? "text-synthwave-neon-pink bg-synthwave-neon-pink/10"
+                            : "text-synthwave-text-primary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10"
+                        }`}
+                      >
+                        <MemoryIconTiny />
+                        <span>Your Memories</span>
+                      </Link>
+                      <Link
+                        to={`/training-grounds/reports?userId=${authenticatedUserId}&coachId=${currentCoachId}`}
+                        onClick={closeDropdown}
+                        className={`flex items-center space-x-3 px-4 py-1.5 font-rajdhani font-medium transition-all duration-150 ${
+                          location.pathname === "/training-grounds/reports"
+                            ? "text-synthwave-neon-pink bg-synthwave-neon-pink/10"
+                            : "text-synthwave-text-primary hover:text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10"
+                        }`}
+                      >
+                        <ReportsIconTiny />
+                        <span>Your Reports</span>
+                      </Link>
+                    </>
+                  )}
 
-                {/* Help & Community Section */}
-                <div className="border-t border-synthwave-neon-purple/20 my-2"></div>
-                <Link
-                  to="/contact?type=waitlist"
-                  onClick={closeDropdown}
-                  className="flex items-center space-x-3 px-4 py-1.5 font-rajdhani font-medium text-synthwave-text-primary hover:text-synthwave-neon-purple hover:bg-synthwave-neon-purple/10 transition-all duration-150"
-                >
-                  <WaitlistIconTiny />
-                  <span>Get Early Access</span>
-                </Link>
-                <Link
-                  to="/contact?type=support"
-                  onClick={closeDropdown}
-                  className="flex items-center space-x-3 px-4 py-1.5 font-rajdhani font-medium text-synthwave-text-primary hover:text-synthwave-neon-purple hover:bg-synthwave-neon-purple/10 transition-all duration-150"
-                >
-                  <SupportIconTiny />
-                  <span>Support</span>
-                </Link>
-                <Link
-                  to="/contact?type=collaborate"
-                  onClick={closeDropdown}
-                  className="flex items-center space-x-3 px-4 py-1.5 font-rajdhani font-medium text-synthwave-text-primary hover:text-synthwave-neon-purple hover:bg-synthwave-neon-purple/10 transition-all duration-150"
-                >
-                  <CollaborateIconTiny />
-                  <span>Collaborate</span>
-                </Link>
+                  {/* Help & Community Section */}
+                  <div className="border-t border-synthwave-neon-purple/20 my-2"></div>
+                  <Link
+                    to="/contact?type=waitlist"
+                    onClick={closeDropdown}
+                    className="flex items-center space-x-3 px-4 py-1.5 font-rajdhani font-medium text-synthwave-text-primary hover:text-synthwave-neon-purple hover:bg-synthwave-neon-purple/10 transition-all duration-150"
+                  >
+                    <WaitlistIconTiny />
+                    <span>Get Early Access</span>
+                  </Link>
+                  <Link
+                    to="/contact?type=support"
+                    onClick={closeDropdown}
+                    className="flex items-center space-x-3 px-4 py-1.5 font-rajdhani font-medium text-synthwave-text-primary hover:text-synthwave-neon-purple hover:bg-synthwave-neon-purple/10 transition-all duration-150"
+                  >
+                    <SupportIconTiny />
+                    <span>Support</span>
+                  </Link>
+                  <Link
+                    to="/contact?type=collaborate"
+                    onClick={closeDropdown}
+                    className="flex items-center space-x-3 px-4 py-1.5 font-rajdhani font-medium text-synthwave-text-primary hover:text-synthwave-neon-purple hover:bg-synthwave-neon-purple/10 transition-all duration-150"
+                  >
+                    <CollaborateIconTiny />
+                    <span>Collaborate</span>
+                  </Link>
 
-                {/* Sign Out Section - only show when authenticated */}
-                {isAuthenticated && (
-                  <>
-                    <div className="border-t border-synthwave-neon-purple/20 my-2"></div>
-                    <button
-                      onClick={() => {
-                        signOut();
-                        closeDropdown();
-                      }}
-                      className="flex items-center space-x-3 px-4 py-1.5 font-rajdhani font-medium text-synthwave-text-primary hover:text-synthwave-neon-purple hover:bg-synthwave-neon-purple/10 transition-all duration-150 w-full text-left"
-                    >
-                      <SignOutIconTiny />
-                      <span>Sign Out</span>
-                    </button>
-                  </>
-                )}
+                  {/* Sign Out Section - only show when authenticated */}
+                  {isAuthenticated && (
+                    <>
+                      <div className="border-t border-synthwave-neon-purple/20 my-2"></div>
+                      <button
+                        onClick={() => {
+                          signOut();
+                          closeDropdown();
+                        }}
+                        className="flex items-center space-x-3 px-4 py-1.5 font-rajdhani font-medium text-synthwave-text-primary hover:text-synthwave-neon-purple hover:bg-synthwave-neon-purple/10 transition-all duration-150 w-full text-left"
+                      >
+                        <SignOutIconTiny />
+                        <span>Sign Out</span>
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
-            </div>
-                      )}
+            )}
           </div>
         </div>
       </div>

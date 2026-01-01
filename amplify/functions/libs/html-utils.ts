@@ -5,7 +5,7 @@
  * (unsubscribe, email verification, password reset, error pages, etc.)
  */
 
-import { getAppUrl } from './domain-utils';
+import { getAppUrl } from "./domain-utils";
 
 /**
  * HTML response structure
@@ -13,7 +13,7 @@ import { getAppUrl } from './domain-utils';
 export interface HtmlResponse {
   statusCode: number;
   headers: {
-    'Content-Type': string;
+    "Content-Type": string;
   };
   body: string;
 }
@@ -29,7 +29,7 @@ export interface HtmlResponse {
 export function createHtmlResponse(
   statusCode: number,
   title: string,
-  body: string
+  body: string,
 ): HtmlResponse {
   const appUrl = getAppUrl();
 
@@ -128,7 +128,7 @@ export function createHtmlResponse(
   <div class="email-wrapper">
     <div class="container">
       <div class="logo-header">
-        <img src="https://neonpanda.ai/images/logo-light-sm.png" alt="NeonPanda Logo">
+        <img src="https://neonpanda.ai/images/logo-dark-sm.webp" alt="NeonPanda Logo">
       </div>
       <h1>${title}</h1>
       ${body}
@@ -148,7 +148,7 @@ export function createHtmlResponse(
   return {
     statusCode,
     headers: {
-      'Content-Type': 'text/html; charset=utf-8',
+      "Content-Type": "text/html; charset=utf-8",
     },
     body: html,
   };
@@ -165,11 +165,11 @@ export function createHtmlResponse(
 export function createSuccessHtmlResponse(
   title: string,
   message: string,
-  additionalContent?: string
+  additionalContent?: string,
 ): HtmlResponse {
   const body = `
     <p style="font-size: 18px; margin-bottom: 20px;">${message}</p>
-    ${additionalContent || ''}
+    ${additionalContent || ""}
   `;
   return createHtmlResponse(200, title, body);
 }
@@ -185,11 +185,11 @@ export function createSuccessHtmlResponse(
 export function createErrorHtmlResponse(
   title: string,
   message: string,
-  additionalContent?: string
+  additionalContent?: string,
 ): HtmlResponse {
   const body = `
     <p style="font-size: 18px; margin-bottom: 20px;">${message}</p>
-    ${additionalContent || ''}
+    ${additionalContent || ""}
   `;
   return createHtmlResponse(500, title, body);
 }
@@ -203,7 +203,7 @@ export function createErrorHtmlResponse(
  */
 export function createNotFoundHtmlResponse(
   title: string,
-  message: string
+  message: string,
 ): HtmlResponse {
   const body = `
     <p style="color: #f59e0b; font-weight: 600; font-size: 18px; margin-bottom: 20px;">⚠ ${message}</p>
@@ -220,11 +220,10 @@ export function createNotFoundHtmlResponse(
  */
 export function createBadRequestHtmlResponse(
   title: string,
-  message: string
+  message: string,
 ): HtmlResponse {
   const body = `
     <p style="font-size: 18px; margin-bottom: 20px;">${message}</p>
   `;
   return createHtmlResponse(400, title, body);
 }
-

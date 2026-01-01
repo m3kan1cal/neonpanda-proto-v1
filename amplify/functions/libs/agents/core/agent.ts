@@ -191,6 +191,96 @@ export class Agent<TContext extends AgentContext = AgentContext> {
   }
 
   /**
+   * Optional blocking enforcement hook for subclasses
+   *
+   * Override this method to implement validation-based blocking.
+   * Called before each tool execution to check if the tool should be blocked.
+   *
+   * Pattern used by agents to enforce validation decisions (e.g., prevent save
+   * when validation failed). Provides "defense in depth" - blocking decisions
+   * are enforced at code level, not just prompt level.
+   *
+   * @param toolId - The ID of the tool about to be executed
+   * @param toolInput - The input parameters for the tool
+   * @returns Error result if tool should be blocked, null if should proceed
+   *
+   * @example
+   * ```typescript
+   * protected enforceToolBlocking(toolId: string, toolInput: any) {
+   *   const validation = this.toolResults.get("validate_workout_completeness");
+   *
+   *   if (toolId === "save_workout_to_database" && validation?.shouldSave === false) {
+   *     return {
+   *       error: true,
+   *       blocked: true,
+   *       reason: `Cannot save - validation blocked: ${validation.reason}`,
+   *       blockingFlags: validation.blockingFlags,
+   *     };
+   *   }
+   *
+   *   return null; // Allow tool to proceed
+   * }
+   * ```
+   */
+  protected enforceToolBlocking(
+    toolId: string,
+    toolInput: any,
+  ): {
+    error: boolean;
+    blocked: boolean;
+    reason: string;
+    [key: string]: any;
+  } | null {
+    return null; // Default: no blocking
+  }
+
+  /**
+   * Optional retry logic hook for subclasses
+   *
+   * Override this method to implement custom retry behavior when AI doesn't
+   * use tools or workflow is incomplete. This is useful for "fire-and-forget"
+   * systems where the AI might ask clarifying questions but the user won't see them.
+   *
+   * Default implementation: No retry (returns null)
+   *
+   * @param result - The result object from the agent workflow
+   * @param aiResponse - The text response from the AI
+   * @returns Object with shouldRetry flag and optional retryPrompt, or null to skip retry
+   *
+   * @example
+   * ```typescript
+   * protected shouldRetryWorkflow(result: any, aiResponse: string) {
+   *   // Don't retry if successful
+   *   if (result.success) return null;
+   *
+   *   // Retry if no tools were called and response looks like a question
+   *   const noToolsCalled = this.toolResults.size === 0;
+   *   const looksLikeQuestion = aiResponse.includes("?");
+   *
+   *   if (noToolsCalled && looksLikeQuestion) {
+   *     return {
+   *       shouldRetry: true,
+   *       retryPrompt: "CRITICAL: You must use your tools to complete the task...",
+   *       logMessage: "AI asked question instead of using tools",
+   *     };
+   *   }
+   *
+   *   return null; // Don't retry
+   * }
+   * ```
+   */
+  protected shouldRetryWorkflow(
+    result: any,
+    aiResponse: string,
+  ): {
+    shouldRetry: boolean;
+    retryPrompt: string;
+    logMessage: string;
+  } | null {
+    return null; // Default: no retry
+  }
+
+  /**
    * Handle tool use by executing tools and adding results to conversation
    * Can be overridden by subclasses for custom execution strategies (e.g., parallel execution)
    */
@@ -234,8 +324,33 @@ export class Agent<TContext extends AgentContext = AgentContext> {
         continue;
       }
 
-      console.info(`⚙️ Executing tool: ${tool.id}`, {
-        input: this.truncateForLog(toolUse.input),
+      // Check if tool execution should be blocked (subclass hook)
+      const blockingResult = this.enforceToolBlocking(tool.id, toolUse.input);
+      if (blockingResult) {
+        // Structured logging: Tool blocked
+        this.logToolExecution({
+          phase: "blocked",
+          toolId: tool.id,
+          toolUseId: toolUse.toolUseId,
+          blockReason: blockingResult.reason,
+        });
+
+        toolResults.push({
+          toolResult: {
+            toolUseId: toolUse.toolUseId,
+            content: [{ json: blockingResult }],
+            status: "error",
+          },
+        });
+        continue;
+      }
+
+      // Structured logging: Tool execution start
+      this.logToolExecution({
+        phase: "start",
+        toolId: tool.id,
+        toolUseId: toolUse.toolUseId,
+        inputPreview: this.truncateForLog(toolUse.input),
       });
 
       try {
@@ -243,8 +358,14 @@ export class Agent<TContext extends AgentContext = AgentContext> {
         const result = await tool.execute(toolUse.input, this.config.context);
         const duration = Date.now() - startTime;
 
-        console.info(`✅ Tool ${tool.id} completed in ${duration}ms`, {
+        // Structured logging: Tool execution success
+        this.logToolExecution({
+          phase: "success",
+          toolId: tool.id,
+          toolUseId: toolUse.toolUseId,
+          duration,
           resultPreview: this.truncateForLog(result),
+          resultSize: JSON.stringify(result).length,
         });
 
         // Add successful result
@@ -256,7 +377,15 @@ export class Agent<TContext extends AgentContext = AgentContext> {
           },
         });
       } catch (error) {
-        console.error(`❌ Tool ${tool.id} failed:`, error);
+        // Structured logging: Tool execution error
+        this.logToolExecution({
+          phase: "error",
+          toolId: tool.id,
+          toolUseId: toolUse.toolUseId,
+          error: error instanceof Error ? error.message : String(error),
+          errorType:
+            error instanceof Error ? error.constructor.name : "Unknown",
+        });
 
         // Add error result
         toolResults.push({
@@ -333,6 +462,62 @@ export class Agent<TContext extends AgentContext = AgentContext> {
   private truncateForLog(obj: any, maxLength: number = 200): string {
     const str = JSON.stringify(obj);
     return str.length > maxLength ? str.substring(0, maxLength) + "..." : str;
+  }
+
+  /**
+   * Structured logging for tool execution
+   * Provides consistent, detailed logging across all agents
+   */
+  private logToolExecution(log: {
+    phase: "start" | "success" | "error" | "blocked";
+    toolId: string;
+    toolUseId: string;
+    inputPreview?: string;
+    duration?: number;
+    resultPreview?: string;
+    resultSize?: number;
+    error?: string;
+    errorType?: string;
+    blockReason?: string;
+  }): void {
+    const baseLog = {
+      toolId: log.toolId,
+      toolUseId: log.toolUseId,
+      timestamp: new Date().toISOString(),
+    };
+
+    switch (log.phase) {
+      case "start":
+        console.info(`⚙️ [TOOL_START] ${log.toolId}`, {
+          ...baseLog,
+          inputPreview: log.inputPreview,
+        });
+        break;
+
+      case "success":
+        console.info(`✅ [TOOL_SUCCESS] ${log.toolId}`, {
+          ...baseLog,
+          duration: `${log.duration}ms`,
+          resultPreview: log.resultPreview,
+          resultSize: `${log.resultSize} bytes`,
+        });
+        break;
+
+      case "error":
+        console.error(`❌ [TOOL_ERROR] ${log.toolId}`, {
+          ...baseLog,
+          error: log.error,
+          errorType: log.errorType,
+        });
+        break;
+
+      case "blocked":
+        console.warn(`⛔ [TOOL_BLOCKED] ${log.toolId}`, {
+          ...baseLog,
+          blockReason: log.blockReason,
+        });
+        break;
+    }
   }
 
   /**

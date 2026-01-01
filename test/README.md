@@ -7,7 +7,10 @@ This directory contains integration tests for the NeonPanda Proto V1 application
 ```
 test/
 ├── integration/          # Integration tests (Lambda, DynamoDB, S3, Bedrock)
-│   └── test-build-workout.ts
+│   ├── test-build-workout.ts
+│   ├── test-build-program.ts
+│   ├── test-build-coach-config.ts
+│   └── types.ts
 ├── fixtures/            # Test data, expected outputs, and test results
 │   └── test-workouts-20251206/
 └── unit/               # Unit tests (future)
@@ -15,9 +18,16 @@ test/
 
 ## Integration Tests
 
-### Build Workout V2 Test Suite
+All three test scripts follow the same NeonPanda AI Agent pattern and validate:
 
-Comprehensive testing for the `build-workout` Lambda function.
+- Lambda invocation and response
+- DynamoDB data storage
+- CloudWatch logs and tool execution
+- Agent workflow completion
+
+### Build Workout Test Suite
+
+Comprehensive testing for the `build-workout` Lambda function (WorkoutLoggerAgent).
 
 **Features:**
 
@@ -62,6 +72,83 @@ export AWS_PROFILE="midgard-sandbox"
 - `planning-question` - Should be blocked from saving
 - `complex-multiphase` - Strength + metcon workout
 - `emom-workout` - EMOM structure validation
+- `bodybuilding-push-day` - Hypertrophy training
+- `hyrox-training` - Hyrox race simulation
+- `gold-standard-comprehensive` - Complete workout with all metadata
+
+### Build Program Test Suite
+
+Comprehensive testing for the `build-program` Lambda function (ProgramDesignerAgent).
+
+**Features:**
+
+- Program structure validation (phases, workouts, continuity)
+- S3 workout template validation
+- DynamoDB program metadata validation
+- Phase continuity checks (no gaps/overlaps)
+- Workout distribution and frequency validation
+
+**Usage:**
+
+```bash
+# Run all tests
+tsx test/integration/test-build-program.ts
+
+# Run specific test
+tsx test/integration/test-build-program.ts --test=simple-4week --verbose
+
+# Save results
+tsx test/integration/test-build-program.ts --output=test/fixtures/results
+```
+
+**Available Tests:**
+
+- `simple-4week` - Basic 4-week strength program
+- `complex-8week` - Hybrid CrossFit preparation
+- `beginner-hypertrophy` - 6-week muscle building
+- `powerlifting-prep` - 12-week competition prep
+- `hyrox-competition-prep` - 10-week Hyrox preparation
+- `body-recomposition` - 12-week fat loss + muscle building
+- Error handling tests (missing IDs, invalid inputs)
+
+### Build Coach Config Test Suite
+
+Comprehensive testing for the `build-coach-config` Lambda function (CoachCreatorAgent).
+
+**Features:**
+
+- Coach config structure validation
+- Personality and methodology selection
+- Generated prompts validation
+- Safety profile integration
+- Gender preference validation
+- Session status updates (IN_PROGRESS → COMPLETE/FAILED)
+- Pinecone storage validation
+
+**Usage:**
+
+```bash
+# Run all tests (requires creating sessions first)
+tsx test/integration/test-build-coach-config.ts --create-sessions
+
+# Run specific test
+tsx test/integration/test-build-coach-config.ts --test=victoria-masters --verbose
+
+# Save results
+tsx test/integration/test-build-coach-config.ts --output=test/fixtures/results
+```
+
+**Available Tests:**
+
+- `victoria-masters-crossfit` - Competitive masters athlete
+- `marcus-beginner-strength` - Beginner strength training
+- `alex-powerlifting-prep` - Powerlifting competition prep
+- `sofia-busy-professional` - Time-efficient fitness
+- `multiple-constraints` - Complex injury management
+- `hyrox-competition` - Hyrox race preparation
+- Error handling tests (missing session, incomplete session)
+
+**Note:** This test requires creating coach creator sessions before invoking the Lambda. Use the `--create-sessions` flag to automatically create test sessions.
 
 ## Fixtures
 

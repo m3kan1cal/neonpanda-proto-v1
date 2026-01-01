@@ -116,12 +116,13 @@ export function createResponse(
 }
 
 // Helper function to create error responses
+// Always includes success: false for consistent response format across all endpoints
 export function createErrorResponse(
   statusCode: number,
   error: string,
   details?: any,
 ): APIGatewayProxyResultV2 {
-  const errorBody: any = { error };
+  const errorBody: any = { success: false, error };
   if (details) {
     errorBody.details = details;
   }
@@ -581,10 +582,25 @@ function buildToolConfig(
  * Helper to extract tool use result from Bedrock response
  * Returns BedrockToolUseResult or throws if tool wasn't used
  */
-function extractToolUseResult(
+export function extractToolUseResult(
   response: any,
   expectedToolName?: string,
 ): BedrockToolUseResult {
+  // Debug: Log the incoming response structure
+  const content = response.output?.message?.content;
+  console.info("🔍 extractToolUseResult DEBUG:", {
+    stopReason: response.stopReason,
+    hasOutput: !!response.output,
+    hasMessage: !!response.output?.message,
+    hasContent: !!content,
+    contentIsArray: Array.isArray(content),
+    contentLength: Array.isArray(content) ? content.length : "N/A",
+    contentTypes: Array.isArray(content)
+      ? content.map((c: any) => Object.keys(c || {}).join(","))
+      : "N/A",
+    expectedToolName,
+  });
+
   if (response.stopReason !== "tool_use") {
     throw new Error(
       `Model did not use tool (stopReason: ${response.stopReason})`,
@@ -594,7 +610,21 @@ function extractToolUseResult(
   const toolUse = response.output?.message?.content?.find(
     (c: any) => c.toolUse,
   );
+
   if (!toolUse) {
+    // Enhanced debug logging when tool use not found
+    console.error("🔍 extractToolUseResult FAILURE DEBUG:", {
+      contentItems: Array.isArray(content)
+        ? content.map((c: any, i: number) => ({
+            index: i,
+            keys: Object.keys(c || {}),
+            hasToolUse: !!c?.toolUse,
+            hasText: !!c?.text,
+            textPreview: c?.text?.substring?.(0, 100),
+          }))
+        : "content is not an array",
+      rawContent: JSON.stringify(content)?.substring(0, 500),
+    });
     throw new Error("No tool use found in response");
   }
 
@@ -603,6 +633,11 @@ function extractToolUseResult(
     input: toolUse.toolUse.input,
     stopReason: response.stopReason,
   };
+
+  console.info("✅ extractToolUseResult SUCCESS:", {
+    toolName: result.toolName,
+    inputKeys: Object.keys(result.input || {}),
+  });
 
   // Optional validation
   if (expectedToolName && result.toolName !== expectedToolName) {

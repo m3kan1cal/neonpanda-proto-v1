@@ -21,6 +21,20 @@ import { MODEL_IDS } from "../../api-helpers";
 import { enforceAllBlocking, calculateProgramMetrics } from "./helpers";
 
 /**
+ * Semantic storage key mapping for tool results
+ * Maps tool IDs to shorter, meaningful keys for cleaner result storage
+ */
+const STORAGE_KEY_MAP: Record<string, string> = {
+  load_program_requirements: "requirements",
+  generate_phase_structure: "phase_structure",
+  generate_phase_workouts: "phase_workouts", // Note: individual phases use "phase_workouts:{phaseId}"
+  validate_program_structure: "validation",
+  normalize_program_data: "normalization",
+  generate_program_summary: "summary",
+  save_program_to_database: "save",
+};
+
+/**
  * Minimum number of tools that must be called for a complete program design workflow.
  * A complete workflow requires at minimum:
  * 1. load_program_requirements - Load user requirements and context
@@ -49,9 +63,9 @@ export class ProgramDesignerAgent extends Agent<ProgramDesignerContext> {
     result: any,
     uniqueKey?: string,
   ): void {
-    const storageKey = uniqueKey || toolId;
+    const storageKey = uniqueKey || STORAGE_KEY_MAP[toolId] || toolId;
     this.toolResults.set(storageKey, result);
-    console.info(`📦 Stored tool result for ${storageKey}`);
+    console.info(`📦 Stored tool result: ${toolId} → ${storageKey}`);
   }
 
   /**
@@ -106,13 +120,13 @@ export class ProgramDesignerAgent extends Agent<ProgramDesignerContext> {
    */
   private getStructuredToolResults() {
     return {
-      requirements: this.toolResults.get("load_program_requirements"),
-      phaseStructure: this.toolResults.get("generate_phase_structure"),
+      requirements: this.toolResults.get("requirements"),
+      phaseStructure: this.toolResults.get("phase_structure"),
       phaseWorkouts: this.getPhaseWorkoutResults(),
-      validation: this.toolResults.get("validate_program_structure"),
-      normalization: this.toolResults.get("normalize_program_data"),
-      summary: this.toolResults.get("generate_program_summary"),
-      save: this.toolResults.get("save_program_to_database"),
+      validation: this.toolResults.get("validation"),
+      normalization: this.toolResults.get("normalization"),
+      summary: this.toolResults.get("summary"),
+      save: this.toolResults.get("save"),
     };
   }
 
@@ -208,12 +222,8 @@ export class ProgramDesignerAgent extends Agent<ProgramDesignerContext> {
       const toolUse = block.toolUse;
 
       // Enforce blocking decisions (validation + normalization)
-      const validationResult = this.toolResults.get(
-        "validate_program_structure",
-      );
-      const normalizationResult = this.toolResults.get(
-        "normalize_program_data",
-      );
+      const validationResult = this.toolResults.get("validation");
+      const normalizationResult = this.toolResults.get("normalization");
 
       const blockingResult = enforceAllBlocking(
         tool.id,
@@ -237,23 +247,15 @@ export class ProgramDesignerAgent extends Agent<ProgramDesignerContext> {
         console.info(`✅ Tool ${tool.id} completed in ${duration}ms`);
 
         // Store results for retrieval by other tools
-        if (tool.id === "load_program_requirements") {
-          this.storeToolResult("requirements", result);
-        } else if (tool.id === "generate_phase_structure") {
-          this.storeToolResult("phase_structure", result);
-        } else if (tool.id === "generate_phase_workouts") {
-          // Store phase workout results with phase_workouts prefix
-          // This ensures single-phase programs work correctly
+        if (tool.id === "generate_phase_workouts") {
+          // Phase workouts need unique keys per phase
           const phaseId = result.phaseId || toolUse.input?.phase?.phaseId;
           if (phaseId) {
-            this.storeToolResult(`phase_workouts:${phaseId}`, result);
-            console.info(
-              `📦 Stored single-phase workout result for ${phaseId}`,
-            );
+            this.storeToolResult(tool.id, result, `phase_workouts:${phaseId}`);
           }
+        } else {
+          this.storeToolResult(tool.id, result);
         }
-
-        this.toolResults.set(tool.id, result);
 
         results.push(this.buildToolResult(toolUse, result, "success"));
       } catch (error) {
@@ -512,9 +514,7 @@ export class ProgramDesignerAgent extends Agent<ProgramDesignerContext> {
       aiResponse.includes("missing required fields");
 
     // Get the requirementsResult if it was stored
-    const requirementsResult = this.toolResults.get(
-      "load_program_requirements",
-    );
+    const requirementsResult = this.toolResults.get("requirements");
     const hasRequirements = !!requirementsResult;
 
     let contextGuidance = "";
@@ -687,12 +687,8 @@ Now design the complete program using your tools with CORRECT data passing.`;
    * Extract program name from tool results or generate default
    */
   private extractProgramName(): string {
-    const phaseStructureResult = this.toolResults.get(
-      "generate_phase_structure",
-    );
-    const requirementsResult = this.toolResults.get(
-      "load_program_requirements",
-    );
+    const phaseStructureResult = this.toolResults.get("phase_structure");
+    const requirementsResult = this.toolResults.get("requirements");
 
     // Try to extract from phase structure or requirements
     if (phaseStructureResult?.phases?.[0]?.name) {

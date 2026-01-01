@@ -91,7 +91,7 @@ function WelcomePage() {
           <div className="text-center mb-6">
             <div className="flex items-center justify-center mb-3">
               <img
-                src="/images/logo-light-sm.png"
+                src="/images/logo-dark-sm.webp"
                 alt="NeonPanda Logo"
                 className="h-12 w-auto"
               />

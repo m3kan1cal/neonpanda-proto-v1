@@ -560,14 +560,14 @@ const SidebarNav = () => {
           {isSidebarCollapsed ? (
             // Collapsed: Show just the panda head
             <img
-              src="/images/logo-light-sm-head.png"
+              src="/images/logo-dark-sm-head.webp"
               alt="NeonPanda"
               className={`${navigationPatterns.desktop.brandLogoCollapsed} object-contain`}
             />
           ) : (
             // Expanded: Show full logo (smaller size)
             <img
-              src="/images/logo-light-sm.png"
+              src="/images/logo-dark-sm.webp"
               alt="NeonPanda"
               className="h-8 w-auto object-contain"
             />

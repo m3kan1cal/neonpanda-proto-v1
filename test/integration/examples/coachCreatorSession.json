@@ -1,0 +1,422 @@
+{
+  "pk": "user#BDTzRYzoSKji5zZbNESv6",
+  "sk": "coachCreatorSession#coach_creator_BDTzRYzoSKji5zZbNESv6_1766962209197",
+  "attributes": {
+    "completedAt": "2025-12-28T23:22:26.751Z",
+    "configGeneration": {
+      "coachConfigId": "user_BDTzRYzoSKji5zZbNESv6_coach_1766964153329",
+      "completedAt": "2025-12-28T23:22:27.674Z",
+      "startedAt": "2025-12-28T23:22:26.751Z",
+      "status": "COMPLETE"
+    },
+    "conversationHistory": [
+      {
+        "content": "Hey! Welcome to NeonPanda - I'm stoked you're here! 🐼\n\nWe're about to build you a personalized AI coach that'll live right here on the platform, guiding your training, tracking your progress, and adapting to YOU. Think of it like having a coach in your pocket who actually gets your goals, your schedule, and your style. This'll take about 15-20 minutes of conversation - I'll adjust my questions based on your vibe, so just be real with me.\n\n**Let's start with the big one: What are your main fitness goals right now?**",
+        "id": "msg_1766962212739_BDTzRYzoSKji5zZbNESv6_assistant",
+        "metadata": {
+          "isQuestion": true,
+          "mode": "coach_creator"
+        },
+        "role": "assistant",
+        "timestamp": "2025-12-28T22:50:12.739Z"
+      },
+      {
+        "content": "Perfect. My primary fitness goals are to improve my strength and build muscle using non-traditional compound movements that challenge me in new ways. I'm completely replacing the traditional core lifts - back squat, bench press, deadlift, and push press - because I'm bored with them. I want to focus on exercises like Zercher squats alternating with Zercher lunges, trap bar deadlifts, weighted dips, Romanian deadlifts, Pendlay rows, front rack Bulgarian split squats, landmine press, axle bar press, thick bar curls with rope climbs for biceps, and ring push-ups or deficit ring push-ups. I also want to maintain and improve my general conditioning from a functional fitness standpoint.",
+        "id": "msg_1766963810497_BDTzRYzoSKji5zZbNESv6_user",
+        "messageType": "text",
+        "role": "user",
+        "timestamp": "2025-12-28T23:16:50.497Z"
+      },
+      {
+        "content": "Okay, I'm LOVING this energy - you clearly know your way around a barbell! Zercher squats, Pendlay rows, trap bar work... this is advanced athlete territory. You're not just training, you're crafting something specific here, and that's awesome.\n\nHere's what I need to know to match you with the right coaching style:\n\n**Would you prefer your AI coach to be male or female?** \n\n(This shapes everything from communication style to how they'll push you - some people vibe better with one or the other, no wrong answer!)",
+        "id": "msg_1766963817851_BDTzRYzoSKji5zZbNESv6_assistant",
+        "metadata": {
+          "isQuestion": true,
+          "mode": "coach_creator",
+          "progress": {
+            "completed": 3,
+            "percentage": 15,
+            "total": 20
+          }
+        },
+        "role": "assistant",
+        "timestamp": "2025-12-28T23:16:57.851Z"
+      },
+      {
+        "content": "Definitely female.",
+        "id": "msg_1766963827083_BDTzRYzoSKji5zZbNESv6_user",
+        "messageType": "text",
+        "role": "user",
+        "timestamp": "2025-12-28T23:17:07.083Z"
+      },
+      {
+        "content": "Perfect - you're getting a female coach who'll match your intensity and keep things fresh! 💪\n\nBased on everything you've shared, you're clearly an experienced lifter with a sophisticated training background. Before I nail down your coach's personality and approach, I need to understand:\n\n**What's your injury history looking like, and do you have any current movement limitations I should know about?**\n\n(Even advanced athletes have things to work around - old shoulder tweaks, cranky knees, whatever. This helps your coach program smart, not just hard.)",
+        "id": "msg_1766963834106_BDTzRYzoSKji5zZbNESv6_assistant",
+        "metadata": {
+          "isQuestion": true,
+          "mode": "coach_creator",
+          "progress": {
+            "completed": 4,
+            "percentage": 20,
+            "total": 20
+          }
+        },
+        "role": "assistant",
+        "timestamp": "2025-12-28T23:17:14.106Z"
+      },
+      {
+        "content": "I don't have any serious injuries. I've been training for a long time. I've been training in some form or another for 3+ decades. I've been doing Crossfit for 3 years, though I'm taking a break right now. I've done decades of barbell work and about 3 years of basic olympic lifting. I understand compound movements and concepts like RPE, percentage-based training, and am learning about advanced periodization. My only movement limitations are some stuff shoulders and stiff hip mobility.",
+        "id": "msg_1766963893247_BDTzRYzoSKji5zZbNESv6_user",
+        "messageType": "text",
+        "role": "user",
+        "timestamp": "2025-12-28T23:18:13.247Z"
+      },
+      {
+        "content": "Okay, now I'm REALLY excited - 3+ decades of training, CrossFit background, Oly lifting experience, you understand RPE and periodization... you're not just advanced, you're a seasoned athlete who knows how to move AND how to program. The stiff shoulders and hips make total sense given that volume of work over the years, and your coach will definitely build mobility work around those.\n\n**How many days per week are you looking to train?**\n\n(Given your background and the movement complexity you're after - Zerchers, Pendlay rows, deficit ring work - I'm guessing 4-5 days, but I want to hear what fits your life right now.)",
+        "id": "msg_1766963902734_BDTzRYzoSKji5zZbNESv6_assistant",
+        "metadata": {
+          "isQuestion": true,
+          "mode": "coach_creator",
+          "progress": {
+            "completed": 8,
+            "percentage": 40,
+            "total": 20
+          }
+        },
+        "role": "assistant",
+        "timestamp": "2025-12-28T23:18:22.734Z"
+      },
+      {
+        "content": "I can realistically commit to 5-6 days per week. I'm 52 years old and male in pretty good shape, but I do feel like my body would love some rest. So I would like to do at least 5 days at around 60 minutes each session. I wouldn't mind having a longer conditioning day on Saturday for the 6th day, but it's not mandatory.",
+        "id": "msg_1766963911794_BDTzRYzoSKji5zZbNESv6_user",
+        "messageType": "text",
+        "role": "user",
+        "timestamp": "2025-12-28T23:18:31.795Z"
+      },
+      {
+        "content": "Perfect - 5 days at 60 minutes is solid, and that optional 6th conditioning day on Saturday? Chef's kiss. That's the sweet spot for someone with your experience who's also smart enough to know recovery matters at 52. Your body will thank you for building in that flexibility.\n\n**What equipment do you have access to?**\n\n(I'm guessing you've got a pretty well-stocked setup given your training background - barbell, trap bar, rings, etc. - but I want to make sure your coach programs with what you've actually got available, whether that's a full gym or a garage setup.)",
+        "id": "msg_1766963918523_BDTzRYzoSKji5zZbNESv6_assistant",
+        "metadata": {
+          "isQuestion": true,
+          "mode": "coach_creator",
+          "progress": {
+            "completed": 12,
+            "percentage": 60,
+            "total": 20
+          }
+        },
+        "role": "assistant",
+        "timestamp": "2025-12-28T23:18:38.524Z"
+      },
+      {
+        "content": "I have a home garage gym with barbells, dumbbells, sandbag, pull-up bar, box, dip bar, bench, squat rack, pretty much the basics. I can run at home and jump rope for cardio. I also have a membership at a powerlifting & functional fitness gym that has everything except echo bike and ski-erg. I have access to everything that a Crossfit or commercial gym has, including rings, axle bars, landmine attachments, thick bars, sandbags, sleds, battle ropes, tire flips, medicine balls, and more.",
+        "id": "msg_1766963927043_BDTzRYzoSKji5zZbNESv6_user",
+        "messageType": "text",
+        "role": "user",
+        "timestamp": "2025-12-28T23:18:47.043Z"
+      },
+      {
+        "content": "Okay, you're basically set up like a professional athlete - home garage gym AND a full powerlifting/functional fitness facility? Your coach is going to have SO much fun programming for you. The variety of equipment means we can hit those movement patterns you want (Zerchers, Pendlay rows, deficit work) while keeping things interesting across the week.\n\n**How do you want your coach to motivate you?**\n\n(Some people want that \"let's go, one more rep!\" energy, others prefer calm technical cues and strategy. Some want tough love, others respond better to positive reinforcement. Given your decades of experience, you probably know what fires you up - what's your style?)",
+        "id": "msg_1766963936871_BDTzRYzoSKji5zZbNESv6_assistant",
+        "metadata": {
+          "isQuestion": true,
+          "mode": "coach_creator",
+          "progress": {
+            "completed": 14,
+            "percentage": 70,
+            "total": 20
+          }
+        },
+        "role": "assistant",
+        "timestamp": "2025-12-28T23:18:56.871Z"
+      },
+      {
+        "content": "I'm really more of a hybrid guy when it comes to coaching styles. I like to be held accountable and I want my coach to challenge me, but I also want them to be my number one hype fan.",
+        "id": "msg_1766963970470_BDTzRYzoSKji5zZbNESv6_user",
+        "messageType": "text",
+        "role": "user",
+        "timestamp": "2025-12-28T23:19:30.470Z"
+      },
+      {
+        "content": "Love that - \"challenge me but be my hype fan\" is the perfect balance for someone with your experience. You don't need hand-holding, but you DO want someone in your corner who believes in you AND pushes you when you've got more in the tank. Your coach will bring that energy: tough when it counts, your biggest cheerleader always.\n\n**What does success look like for you - how do you want to track whether this is actually working?**\n\n(Some people love hitting specific strength PRs, others care more about how they feel day-to-day, some want body composition changes, others focus on movement quality or consistency. Given your background, you probably have a clear picture of what \"winning\" looks like for you.)",
+        "id": "msg_1766963976922_BDTzRYzoSKji5zZbNESv6_assistant",
+        "metadata": {
+          "isQuestion": true,
+          "mode": "coach_creator",
+          "progress": {
+            "completed": 15,
+            "percentage": 75,
+            "total": 20
+          }
+        },
+        "role": "assistant",
+        "timestamp": "2025-12-28T23:19:36.922Z"
+      },
+      {
+        "content": "Honestly, I want to look good in the mirror and also improve overall on my strength by being able to lift more weight and run farther and do conditioning longer. I'm not really measuring heavy metrics or anything right now scientific, I just wanna see that I look better in the mirrorand that my strength is going up.",
+        "id": "msg_1766964026962_BDTzRYzoSKji5zZbNESv6_user",
+        "messageType": "text",
+        "role": "user",
+        "timestamp": "2025-12-28T23:20:26.962Z"
+      },
+      {
+        "content": "Perfect - so we're going for that classic \"look good, feel strong, perform better\" trifecta. No spreadsheets, no body fat calipers, just the mirror test and the bar test. Honestly? That's refreshingly honest and super clear for your coach to work with. If you're lifting more, running longer, and liking what you see - that's winning.\n\n**When do you typically train - are you a morning person, lunch warrior, or evening grinder?**\n\n(This helps your coach nail the programming vibe - morning sessions might need more warm-up and ramp, evening sessions can be when you're fully fired up and ready to throw weight around. Plus, knowing when you train helps with energy system work and recovery timing.)",
+        "id": "msg_1766964034555_BDTzRYzoSKji5zZbNESv6_assistant",
+        "metadata": {
+          "isQuestion": true,
+          "mode": "coach_creator",
+          "progress": {
+            "completed": 17,
+            "percentage": 85,
+            "total": 20
+          }
+        },
+        "role": "assistant",
+        "timestamp": "2025-12-28T23:20:34.555Z"
+      },
+      {
+        "content": "Right now I'm an evening grinder.",
+        "id": "msg_1766964042755_BDTzRYzoSKji5zZbNESv6_user",
+        "messageType": "text",
+        "role": "user",
+        "timestamp": "2025-12-28T23:20:42.755Z"
+      },
+      {
+        "content": "Got it - evening sessions when you're done with the day and ready to unleash. That's prime time for heavy work and high-intensity stuff since you're fully fueled and mentally switched on.\n\n**How soon are you looking to see real progress - are we talking a 12-week sprint to get dialed in, a 6-month build, or more of a sustainable long-term approach?**\n\n(This helps your coach structure the programming intensity and progression. A shorter timeline means we're aggressive and focused, longer runway means we can be strategic about building phases and really developing those movement patterns you want.)",
+        "id": "msg_1766964048552_BDTzRYzoSKji5zZbNESv6_assistant",
+        "metadata": {
+          "isQuestion": true,
+          "mode": "coach_creator",
+          "progress": {
+            "completed": 18,
+            "percentage": 90,
+            "total": 20
+          }
+        },
+        "role": "assistant",
+        "timestamp": "2025-12-28T23:20:48.552Z"
+      },
+      {
+        "content": "I'm thinking more like 6 to 12 week phase.",
+        "id": "msg_1766964064212_BDTzRYzoSKji5zZbNESv6_user",
+        "messageType": "text",
+        "role": "user",
+        "timestamp": "2025-12-28T23:21:04.212Z"
+      },
+      {
+        "content": "Perfect - a 6-12 week phase is that sweet spot where you can see real, tangible changes without it feeling like forever. Your coach can program aggressive progression knowing we've got enough runway to build momentum but keeping that urgency that makes every session count.\n\n**Last thing: what coaching style actually gets the best out of you? Are you someone who thrives on technical precision and detailed cues, or do you respond better to hype, competition, and being pushed past where you'd stop yourself?**\n\n(Some people need \"elbow 3 degrees higher, feel the lat engage here\" - others need \"YOU'VE GOT TWO MORE, LET'S GO!\" Both work, just gotta know which one fires YOU up.)",
+        "id": "msg_1766964070887_BDTzRYzoSKji5zZbNESv6_assistant",
+        "metadata": {
+          "isQuestion": true,
+          "mode": "coach_creator",
+          "progress": {
+            "completed": 19,
+            "percentage": 95,
+            "total": 20
+          }
+        },
+        "role": "assistant",
+        "timestamp": "2025-12-28T23:21:10.887Z"
+      },
+      {
+        "content": "I want to receive precision and cues definitely, but nonstop isn't really for me. I like it when there's one or two for me to focus on and then for the coach to be a bit more of a hype person to help push myself. I definitely do like the scientific degree higher approach. So I would say a hybrid between the two you mentioned.",
+        "id": "msg_1766964139490_BDTzRYzoSKji5zZbNESv6_user",
+        "messageType": "text",
+        "role": "user",
+        "timestamp": "2025-12-28T23:22:19.490Z"
+      },
+      {
+        "content": "Wow, you just gave me the COMPLETE picture - and I'm absolutely fired up about what we're building for you! 🚀 From your training preferences and movement style to your goals and the exact environment you're working with, this coach is going to be dialed in perfectly for YOUR journey. \n\n**Your personalized AI coach is being built RIGHT NOW - this takes about 2-3 minutes as the AI crafts every detail.** You'll see live progress updates as it analyzes your profile, designs your training approach, and creates a coaching personality that vibes with you perfectly. \n\nGet ready - something incredible is about to drop, and it's going to feel like this coach was made JUST for you (because it literally is)! 💪✨",
+        "id": "msg_1766964146751_BDTzRYzoSKji5zZbNESv6_assistant",
+        "metadata": {
+          "isQuestion": false,
+          "mode": "coach_creator",
+          "progress": {
+            "completed": 20,
+            "percentage": 100,
+            "total": 20
+          }
+        },
+        "role": "assistant",
+        "timestamp": "2025-12-28T23:22:26.751Z"
+      }
+    ],
+    "isComplete": true,
+    "isDeleted": true,
+    "lastActivity": "2025-12-28T23:22:27.674Z",
+    "sessionId": "coach_creator_BDTzRYzoSKji5zZbNESv6_1766962209197",
+    "sophisticationLevel": "UNKNOWN",
+    "startedAt": "2025-12-28T22:50:12.739Z",
+    "todoList": {
+      "age": {
+        "confidence": "high",
+        "extractedFrom": "message_8",
+        "notes": "User explicitly stated '52 years old'",
+        "status": "complete",
+        "value": 52
+      },
+      "coachGenderPreference": {
+        "confidence": "high",
+        "extractedFrom": "message_6",
+        "notes": "User explicitly stated 'Definitely female'",
+        "status": "complete",
+        "value": "female"
+      },
+      "coachingStylePreference": {
+        "confidence": "high",
+        "extractedFrom": "message_20",
+        "notes": "User explicitly stated they want precision and cues but not nonstop, prefer 1-2 focus points then hype, like the scientific approach, and want a hybrid between technical precision and motivational pushing",
+        "status": "complete",
+        "value": "Hybrid approach: precise technical cues (1-2 focus points per set) combined with hype and motivation to push beyond self-imposed limits. Scientific, detailed coaching style with emphasis on form and technique, but delivered in a way that's motivating rather than constant instruction."
+      },
+      "competitionGoals": {
+        "status": "pending",
+        "value": null
+      },
+      "competitionTimeline": {
+        "status": "pending",
+        "value": null
+      },
+      "equipmentAccess": {
+        "confidence": "high",
+        "extractedFrom": "message_10",
+        "notes": "User has access to both home garage gym and powerlifting/functional fitness gym membership. Explicitly listed all equipment available.",
+        "status": "complete",
+        "value": [
+          "barbell",
+          "dumbbells",
+          "sandbag",
+          "pull-up bar",
+          "box",
+          "dip bar",
+          "bench",
+          "squat rack",
+          "rings",
+          "axle bars",
+          "landmine attachments",
+          "thick bars",
+          "sleds",
+          "battle ropes",
+          "tire flips",
+          "medicine balls"
+        ]
+      },
+      "experienceLevel": {
+        "confidence": "high",
+        "extractedFrom": "message_6",
+        "notes": "3+ decades of training, decades of barbell work, 3 years CrossFit, 3 years Olympic lifting, understands RPE, percentage-based training, and advanced periodization",
+        "status": "complete",
+        "value": "advanced"
+      },
+      "goalTimeline": {
+        "confidence": "high",
+        "extractedFrom": "message_18",
+        "notes": "User explicitly stated they're thinking of a 6 to 12 week phase for seeing real progress",
+        "status": "complete",
+        "value": "6 to 12 weeks"
+      },
+      "injuryConsiderations": {
+        "confidence": "high",
+        "extractedFrom": "message_6",
+        "notes": "User explicitly stated 'I don't have any serious injuries'",
+        "status": "complete",
+        "value": "none"
+      },
+      "lifeStageContext": {
+        "confidence": "high",
+        "extractedFrom": "message_8",
+        "notes": "User mentioned age, current fitness level, and recovery considerations",
+        "status": "complete",
+        "value": "52-year-old male in good shape, body appreciates rest, balancing training intensity with recovery"
+      },
+      "motivationStyle": {
+        "confidence": "high",
+        "extractedFrom": "message_12",
+        "notes": "User explicitly stated they like accountability and challenge combined with enthusiastic support and hype",
+        "status": "complete",
+        "value": "Hybrid approach: wants to be held accountable and challenged, but also wants coach to be their number one hype fan and provide positive reinforcement"
+      },
+      "movementDislikes": {
+        "confidence": "high",
+        "extractedFrom": "message_2",
+        "notes": "User explicitly stated they are 'completely replacing' these lifts because they're 'bored with them'",
+        "status": "complete",
+        "value": "Traditional core lifts: back squat, bench press, deadlift, push press"
+      },
+      "movementLimitations": {
+        "confidence": "high",
+        "extractedFrom": "message_6",
+        "notes": "User explicitly stated these as their only movement limitations",
+        "status": "complete",
+        "value": "Stiff shoulders and stiff hip mobility"
+      },
+      "movementPreferences": {
+        "confidence": "high",
+        "extractedFrom": "message_2",
+        "notes": "User explicitly listed all preferred exercises and movement types",
+        "status": "complete",
+        "value": "Zercher squats, Zercher lunges, trap bar deadlifts, weighted dips, Romanian deadlifts, Pendlay rows, front rack Bulgarian split squats, landmine press, axle bar press, thick bar curls with rope climbs, ring push-ups, deficit ring push-ups, functional fitness conditioning"
+      },
+      "primaryGoals": {
+        "confidence": "high",
+        "extractedFrom": "message_6",
+        "notes": "User provided detailed, explicit description of goals",
+        "status": "complete",
+        "value": "Improve strength and build muscle using non-traditional compound movements (Zercher squats, trap bar deadlifts, weighted dips, Romanian deadlifts, Pendlay rows, front rack Bulgarian split squats, landmine press, axle bar press, thick bar curls with rope climbs, ring push-ups). Maintain and improve general conditioning from a functional fitness standpoint."
+      },
+      "progressTrackingPreferences": {
+        "confidence": "high",
+        "extractedFrom": "message_14",
+        "notes": "User explicitly stated they're not measuring heavy metrics scientifically, just tracking how they look and feel stronger",
+        "status": "complete",
+        "value": "Visual appearance in mirror and subjective strength/conditioning improvements - not using scientific metrics"
+      },
+      "sessionDuration": {
+        "confidence": "high",
+        "extractedFrom": "message_8",
+        "notes": "User explicitly stated 'around 60 minutes each session'",
+        "status": "complete",
+        "value": "60 minutes"
+      },
+      "successMetrics": {
+        "confidence": "high",
+        "extractedFrom": "message_14",
+        "notes": "User explicitly stated they want to see visual improvements and increased strength/endurance without heavy scientific metrics",
+        "status": "complete",
+        "value": "Look better in the mirror, improve overall strength by lifting more weight, run farther, and do conditioning longer"
+      },
+      "timeOfDayPreference": {
+        "confidence": "high",
+        "extractedFrom": "message_16",
+        "notes": "User explicitly stated 'Right now I'm an evening grinder'",
+        "status": "complete",
+        "value": "evening"
+      },
+      "trainingEnvironment": {
+        "confidence": "high",
+        "extractedFrom": "message_10",
+        "notes": "User has dual training environment - home garage gym for basics and gym membership for specialized equipment",
+        "status": "complete",
+        "value": "Home garage gym and powerlifting & functional fitness gym membership"
+      },
+      "trainingFrequency": {
+        "confidence": "high",
+        "extractedFrom": "message_8",
+        "notes": "User stated 'at least 5 days at around 60 minutes each session' with optional 6th day. Primary commitment is 5 days.",
+        "status": "complete",
+        "value": 5
+      },
+      "trainingHistory": {
+        "confidence": "high",
+        "extractedFrom": "message_6",
+        "notes": "User provided comprehensive training background",
+        "status": "complete",
+        "value": "3+ decades of training in various forms. Decades of barbell work, 3 years of basic Olympic lifting, 3 years of CrossFit (currently on break). Understands compound movements, RPE, percentage-based training, and is learning advanced periodization."
+      }
+    },
+    "userId": "BDTzRYzoSKji5zZbNESv6"
+  },
+  "createdAt": "2025-12-28T23:22:27.674Z",
+  "entityType": "coachCreatorSession",
+  "updatedAt": "2025-12-28T23:22:27.674Z"
+}

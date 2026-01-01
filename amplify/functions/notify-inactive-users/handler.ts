@@ -1,8 +1,17 @@
-import { UserProfile } from '../libs/user/types';
-import { queryAllUsers, queryWorkoutsCount, updateUserProfile } from '../../dynamodb/operations';
-import { withHeartbeat } from '../libs/heartbeat';
-import { createOkResponse, createErrorResponse } from '../libs/api-helpers';
-import { sendEmail, buildEmailFooterHtml, buildEmailFooterText, getAppUrl } from '../libs/email-utils';
+import { UserProfile } from "../libs/user/types";
+import {
+  queryAllUsers,
+  queryWorkoutsCount,
+  updateUserProfile,
+} from "../../dynamodb/operations";
+import { withHeartbeat } from "../libs/heartbeat";
+import { createOkResponse, createErrorResponse } from "../libs/api-helpers";
+import {
+  sendEmail,
+  buildEmailFooterHtml,
+  buildEmailFooterText,
+  getAppUrl,
+} from "../libs/email-utils";
 
 const INACTIVITY_PERIOD_DAYS = 14; // 2 weeks
 const MIN_DAYS_BETWEEN_REMINDERS = 28; // Don't send more than once per month
@@ -25,8 +34,8 @@ interface InactivityStats {
  * Triggered every 2 weeks
  */
 export const handler = async () => {
-  return withHeartbeat('Inactive User Notification Check', async () => {
-    console.info('📧 Starting inactive user notification check', {
+  return withHeartbeat("Inactive User Notification Check", async () => {
+    console.info("📧 Starting inactive user notification check", {
       timestamp: new Date().toISOString(),
       inactivityPeriodDays: INACTIVITY_PERIOD_DAYS,
       minDaysBetweenReminders: MIN_DAYS_BETWEEN_REMINDERS,
@@ -55,7 +64,9 @@ export const handler = async () => {
         const result = await queryAllUsers(50, lastEvaluatedKey); // Process 50 users at a time
         const users = result.users;
 
-        console.info(`📦 Processing batch ${batchNumber} with ${users.length} users`);
+        console.info(
+          `📦 Processing batch ${batchNumber} with ${users.length} users`,
+        );
         stats.totalUsers += users.length;
 
         // Process each user in the batch
@@ -71,27 +82,30 @@ export const handler = async () => {
         lastEvaluatedKey = result.lastEvaluatedKey;
       } while (lastEvaluatedKey);
 
-      console.info('✅ Inactive user notification check completed successfully', {
-        ...stats,
-        completedAt: new Date().toISOString(),
-      });
+      console.info(
+        "✅ Inactive user notification check completed successfully",
+        {
+          ...stats,
+          completedAt: new Date().toISOString(),
+        },
+      );
 
       return createOkResponse({
-        message: 'Inactive user notification check completed successfully',
+        message: "Inactive user notification check completed successfully",
         stats,
         timestamp: new Date().toISOString(),
       });
     } catch (error) {
-      console.error('❌ Fatal error in inactive user notification:', error);
+      console.error("❌ Fatal error in inactive user notification:", error);
 
       return createErrorResponse(
         500,
-        error instanceof Error ? error.message : 'Unknown error occurred',
+        error instanceof Error ? error.message : "Unknown error occurred",
         {
           error: error instanceof Error ? error.stack : String(error),
           stats,
           timestamp: new Date().toISOString(),
-        }
+        },
       );
     }
   }); // 10 second default heartbeat interval
@@ -100,9 +114,13 @@ export const handler = async () => {
 /**
  * Process a single user: check activity and send email if needed
  */
-async function processUser(user: UserProfile, stats: InactivityStats): Promise<void> {
+async function processUser(
+  user: UserProfile,
+  stats: InactivityStats,
+): Promise<void> {
   // Skip if user has opted out of coach check-ins
-  const emailNotificationsEnabled = user.preferences?.emailNotifications?.coachCheckIns ?? true;
+  const emailNotificationsEnabled =
+    user.preferences?.emailNotifications?.coachCheckIns ?? true;
   if (!emailNotificationsEnabled) {
     console.info(`⏭️  User ${user.userId} has opted out of coach check-ins`);
     stats.emailsSkipped.optedOut++;
@@ -120,11 +138,12 @@ async function processUser(user: UserProfile, stats: InactivityStats): Promise<v
   const lastReminderSent = user.preferences?.lastSent?.coachCheckIns;
   if (lastReminderSent) {
     const daysSinceLastReminder = Math.floor(
-      (Date.now() - new Date(lastReminderSent).getTime()) / (1000 * 60 * 60 * 24)
+      (Date.now() - new Date(lastReminderSent).getTime()) /
+        (1000 * 60 * 60 * 24),
     );
     if (daysSinceLastReminder < MIN_DAYS_BETWEEN_REMINDERS) {
       console.info(
-        `⏭️ User ${user.userId} received reminder ${daysSinceLastReminder} days ago, skipping`
+        `⏭️ User ${user.userId} received reminder ${daysSinceLastReminder} days ago, skipping`,
       );
       stats.emailsSkipped.recentReminder++;
       return;
@@ -133,17 +152,23 @@ async function processUser(user: UserProfile, stats: InactivityStats): Promise<v
 
   // Check workout activity
   const workoutCount = await queryWorkoutsCount(user.userId, {
-    fromDate: new Date(Date.now() - INACTIVITY_PERIOD_DAYS * 24 * 60 * 60 * 1000),
+    fromDate: new Date(
+      Date.now() - INACTIVITY_PERIOD_DAYS * 24 * 60 * 60 * 1000,
+    ),
   });
 
   if (workoutCount > 0) {
-    console.info(`✅ User ${user.userId} has logged ${workoutCount} workouts, active`);
+    console.info(
+      `✅ User ${user.userId} has logged ${workoutCount} workouts, active`,
+    );
     stats.activeUsers++;
     return;
   }
 
   // User is inactive, send reminder email
-  console.info(`📧 User ${user.userId} is inactive, sending reminder email to ${user.email}`);
+  console.info(
+    `📧 User ${user.userId} is inactive, sending reminder email to ${user.email}`,
+  );
   stats.inactiveUsers++;
 
   await sendInactivityReminderEmail(user);
@@ -251,7 +276,7 @@ async function sendInactivityReminderEmail(user: UserProfile): Promise<void> {
   <div class="email-wrapper">
     <div class="container">
       <div class="logo-header">
-        <img src="https://neonpanda.ai/images/logo-light-sm.png" alt="NeonPanda Logo">
+        <img src="https://neonpanda.ai/images/logo-dark-sm.webp" alt="NeonPanda Logo">
       </div>
 
       <h1>Hey ${firstName}! 👋</h1>
@@ -269,7 +294,7 @@ async function sendInactivityReminderEmail(user: UserProfile): Promise<void> {
 
       <p style="margin-top: 30px; font-style: italic; color: #333;">– The NeonPanda Team</p>
 
-${buildEmailFooterHtml(user.email, 'coach-checkins', user.userId)}
+${buildEmailFooterHtml(user.email, "coach-checkins", user.userId)}
     </div>
   </div>
 </body>
@@ -292,7 +317,7 @@ If now's not the time, that's okay too. But whenever you're ready – your NeonP
 – The NeonPanda Team
 
 Visit NeonPanda: ${getAppUrl()}
-${buildEmailFooterText(user.email, 'coach-checkins', user.userId)}
+${buildEmailFooterText(user.email, "coach-checkins", user.userId)}
   `.trim();
 
   const result = await sendEmail({

@@ -1,11 +1,15 @@
 // PublicHeader.jsx - Simple header for marketing/public pages
 // Minimal navigation focused on conversion and information access
 
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../auth';
-import { containerPatterns, iconButtonPatterns, buttonPatterns } from '../../utils/ui/uiPatterns';
-import UserAvatar from './UserAvatar';
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../../auth";
+import {
+  containerPatterns,
+  iconButtonPatterns,
+  buttonPatterns,
+} from "../../utils/ui/uiPatterns";
+import UserAvatar from "./UserAvatar";
 import {
   HomeIconTiny,
   FAQIconTiny,
@@ -17,7 +21,7 @@ import {
   WaitlistIconTiny,
   SignOutIconTiny,
   SettingsIconTiny,
-} from '../themes/SynthwaveComponents';
+} from "../themes/SynthwaveComponents";
 
 const PublicHeader = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -33,19 +37,19 @@ const PublicHeader = () => {
   };
 
   // Get authenticated user's userId
-  const userId = user?.attributes?.['custom:user_id'];
+  const userId = user?.attributes?.["custom:user_id"];
 
   // Close menu on escape key
   useEffect(() => {
     const handleEscape = (event) => {
-      if (event.key === 'Escape' && isMenuOpen) {
+      if (event.key === "Escape" && isMenuOpen) {
         closeMenu();
       }
     };
 
     const handleClickOutside = (event) => {
       if (isMenuOpen) {
-        const menuContainer = document.querySelector('[data-public-menu]');
+        const menuContainer = document.querySelector("[data-public-menu]");
         if (menuContainer && !menuContainer.contains(event.target)) {
           closeMenu();
         }
@@ -53,26 +57,51 @@ const PublicHeader = () => {
     };
 
     if (isMenuOpen) {
-      document.addEventListener('keydown', handleEscape);
-      document.addEventListener('click', handleClickOutside, true);
+      document.addEventListener("keydown", handleEscape);
+      document.addEventListener("click", handleClickOutside, true);
     }
 
     return () => {
-      document.removeEventListener('keydown', handleEscape);
-      document.removeEventListener('click', handleClickOutside, true);
+      document.removeEventListener("keydown", handleEscape);
+      document.removeEventListener("click", handleClickOutside, true);
     };
   }, [isMenuOpen]);
 
   // Public navigation links (matches SidebarNav utility section)
   const publicLinks = [
-    { id: 'home', label: 'Home', path: '/', icon: HomeIconTiny },
-    { id: 'faqs', label: 'FAQs', path: '/faqs', icon: FAQIconTiny },
-    { id: 'about', label: 'About', path: '/about', icon: AboutIconTiny },
-    { id: 'technology', label: 'Technology', path: '/technology', icon: TechnologyIconTiny },
-    { id: 'changelog', label: 'Changelog', path: '/changelog', icon: ChangelogIconTiny },
-    { id: 'waitlist', label: 'Get Early Access', path: '/contact?type=waitlist', icon: WaitlistIconTiny },
-    { id: 'support', label: 'Support', path: '/contact?type=support', icon: SupportIconTiny },
-    { id: 'collaborate', label: 'Collaborate', path: '/contact?type=collaborate', icon: CollaborateIconTiny },
+    { id: "home", label: "Home", path: "/", icon: HomeIconTiny },
+    { id: "faqs", label: "FAQs", path: "/faqs", icon: FAQIconTiny },
+    { id: "about", label: "About", path: "/about", icon: AboutIconTiny },
+    {
+      id: "technology",
+      label: "Technology",
+      path: "/technology",
+      icon: TechnologyIconTiny,
+    },
+    {
+      id: "changelog",
+      label: "Changelog",
+      path: "/changelog",
+      icon: ChangelogIconTiny,
+    },
+    {
+      id: "waitlist",
+      label: "Get Early Access",
+      path: "/contact?type=waitlist",
+      icon: WaitlistIconTiny,
+    },
+    {
+      id: "support",
+      label: "Support",
+      path: "/contact?type=support",
+      icon: SupportIconTiny,
+    },
+    {
+      id: "collaborate",
+      label: "Collaborate",
+      path: "/contact?type=collaborate",
+      icon: CollaborateIconTiny,
+    },
   ];
 
   return (
@@ -84,9 +113,9 @@ const PublicHeader = () => {
           className="hover:opacity-80 transition-opacity duration-300"
         >
           <img
-            src="/images/logo-light-sm.png"
+            src="/images/logo-dark-sm.webp"
             alt="NeonPanda"
-            className="h-8 w-auto"
+            className="h-10 w-auto"
           />
         </Link>
 
@@ -107,23 +136,31 @@ const PublicHeader = () => {
             <div className="flex items-center space-x-3">
               {/* User Avatar - links to settings */}
               <Link
-                to={userId ? `/settings?userId=${userId}` : '/settings'}
+                to={userId ? `/settings?userId=${userId}` : "/settings"}
                 className="hover:opacity-80 transition-opacity duration-200"
                 title="Settings"
               >
                 <UserAvatar
                   email={user.attributes?.email || user.email}
-                  username={userProfile?.displayName || user.attributes?.preferred_username || user.attributes?.email || user.email}
+                  username={
+                    userProfile?.displayName ||
+                    user.attributes?.preferred_username ||
+                    user.attributes?.email ||
+                    user.email
+                  }
                   size={32}
                 />
               </Link>
               {/* Username - also links to settings */}
               <Link
-                to={userId ? `/settings?userId=${userId}` : '/settings'}
+                to={userId ? `/settings?userId=${userId}` : "/settings"}
                 className="hidden sm:inline-block text-synthwave-neon-pink font-rajdhani font-medium hover:opacity-80 transition-opacity duration-200"
                 title="Settings"
               >
-                {userProfile?.displayName || user.attributes?.preferred_username || user.attributes?.email || user.email}
+                {userProfile?.displayName ||
+                  user.attributes?.preferred_username ||
+                  user.attributes?.email ||
+                  user.email}
               </Link>
             </div>
           )}
@@ -131,7 +168,7 @@ const PublicHeader = () => {
           {/* Sign In Button (unauthenticated only) */}
           {!loading && !isAuthenticated && (
             <button
-              onClick={() => navigate('/auth')}
+              onClick={() => navigate("/auth")}
               className="px-3 py-1.5 bg-synthwave-neon-pink text-synthwave-bg-primary font-rajdhani font-medium text-sm uppercase tracking-wide rounded-md transition-all duration-200 hover:bg-synthwave-neon-pink/90 hover:shadow-md hover:shadow-synthwave-neon-pink/30"
             >
               Sign In
@@ -162,7 +199,9 @@ const PublicHeader = () => {
 
             {/* Dropdown Menu */}
             {isMenuOpen && (
-              <div className={`absolute right-0 mt-2 w-64 ${containerPatterns.cardMediumOpaque} animate-fade-in`}>
+              <div
+                className={`absolute right-0 mt-2 w-64 ${containerPatterns.cardMediumOpaque} animate-fade-in`}
+              >
                 <div className="py-2">
                   {/* Authenticated: Go to App + Settings */}
                   {isAuthenticated && userId && (
@@ -172,8 +211,18 @@ const PublicHeader = () => {
                         onClick={closeMenu}
                         className="flex items-center space-x-3 px-4 py-2.5 font-rajdhani font-medium text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-200"
                       >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        <svg
+                          className="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M13 10V3L4 14h7v7l9-11h-7z"
+                          />
                         </svg>
                         <span>Go to App</span>
                       </Link>
@@ -252,4 +301,3 @@ const PublicHeader = () => {
 };
 
 export default PublicHeader;
-

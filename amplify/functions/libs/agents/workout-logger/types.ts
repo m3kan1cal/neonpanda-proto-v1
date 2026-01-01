@@ -49,3 +49,72 @@ export interface WorkoutLogResult {
   reason?: string;
   blockingFlags?: string[];
 }
+
+/**
+ * Tool-specific result types
+ * (Exported for type safety and reusability)
+ */
+
+/**
+ * Result from detect_discipline tool
+ */
+export interface DisciplineDetectionResult {
+  discipline: string;
+  confidence: number;
+  method: "ai_detection";
+  reasoning: string;
+}
+
+/**
+ * Result from extract_workout_data tool
+ */
+export interface WorkoutExtractionResult {
+  workoutData: any; // UniversalWorkoutSchema
+  completedAt: Date;
+  generationMethod: "tool" | "fallback";
+}
+
+/**
+ * Result from validate_workout_completeness tool
+ */
+export interface WorkoutValidationResult {
+  isValid: boolean;
+  shouldNormalize: boolean;
+  shouldSave: boolean;
+  confidence: number;
+  completeness: number;
+  validationFlags: string[];
+  blockingFlags: string[];
+  disciplineClassification: any; // DisciplineClassification
+  reason?: string;
+}
+
+/**
+ * Result from normalize_workout_data tool
+ */
+export interface WorkoutNormalizationResult {
+  normalizedData: any; // UniversalWorkoutSchema
+  isValid: boolean;
+  issuesFound: number;
+  issuesCorrected: number;
+  normalizationSummary: string;
+  normalizationConfidence: number;
+}
+
+/**
+ * Result from generate_workout_summary tool
+ */
+export interface WorkoutSummaryResult {
+  summary: string;
+}
+
+/**
+ * Result from save_workout_to_database tool
+ */
+export interface WorkoutSaveResult {
+  workoutId: string;
+  success: boolean;
+  pineconeStored: boolean;
+  pineconeRecordId: string | null;
+  templateLinked: boolean;
+}

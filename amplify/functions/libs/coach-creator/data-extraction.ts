@@ -7,7 +7,12 @@
 
 import { SophisticationLevel, CoachCreatorSession } from "./types";
 import { callBedrockApi, MODEL_IDS, TEMPERATURE_PRESETS } from "../api-helpers";
-import { parseJsonWithFallbacks } from "../response-utils";
+import type { BedrockToolUseResult } from "../api-helpers";
+import {
+  SAFETY_PROFILE_EXTRACTION_SCHEMA,
+  METHODOLOGY_PREFERENCES_EXTRACTION_SCHEMA,
+  SPECIALIZATIONS_EXTRACTION_SCHEMA,
+} from "../schemas/coach-creator-extraction-schemas";
 
 // ============================================================================
 // SOPHISTICATION LEVEL DETECTION
@@ -242,53 +247,49 @@ export const extractSafetyProfileFromSession = async (
 
     // If we have to-do list data, use AI to analyze it properly
     if (injuries || limitations || equipment) {
-      const prompt = `Analyze this fitness safety information and return a structured JSON profile:
+      const prompt = `Analyze this fitness safety information and return a structured profile:
 
 INJURIES: ${injuries || "none"}
 LIMITATIONS: ${limitations || "none"}
 EQUIPMENT: ${Array.isArray(equipment) ? equipment.join(", ") : equipment || "basic"}
 
-Return JSON with this structure:
-{
-  "injuries": ["specific injury 1", "specific injury 2"],
-  "contraindications": ["exercise 1 to avoid", "exercise 2 to avoid"],
-  "equipment": ["barbell", "dumbbells", "pull-up bar"],
-  "modifications": ["modification 1", "modification 2"],
-  "recoveryNeeds": ["recovery need 1", "recovery need 2"]
-}
-
+Extract specific injuries, contraindications, equipment, modifications, and recovery needs.
 If "none" or empty, use empty arrays. Be specific and helpful.`;
 
       try {
         const response = (await callBedrockApi(
           prompt,
-          "", // Empty string will default to "Please proceed."
+          "Extract safety profile",
           MODEL_IDS.EXECUTOR_MODEL_FULL,
           {
             temperature: TEMPERATURE_PRESETS.STRUCTURED,
-            prefillResponse: "{",
+            tools: SAFETY_PROFILE_EXTRACTION_SCHEMA,
           },
-        )) as string;
+        )) as BedrockToolUseResult;
 
-        const profile = parseJsonWithFallbacks(response);
-        if (profile && typeof profile === "object") {
-          return {
-            injuries: profile.injuries || [],
-            contraindications: profile.contraindications || [],
-            equipment: profile.equipment || [],
-            modifications: profile.modifications || [],
-            recoveryNeeds: profile.recoveryNeeds || [],
-          };
-        }
+        // When tools are provided, callBedrockApi returns an already-extracted result
+        // with shape: { toolName, input, stopReason }
+        const profile = response.input;
+
+        return {
+          injuries: profile.injuries || [],
+          contraindications: profile.contraindications || [],
+          equipment: profile.equipment || [],
+          modifications: profile.modifications || [],
+          recoveryNeeds: profile.recoveryNeeds || [],
+        };
       } catch (error) {
-        console.warn(
-          "AI safety profile extraction failed, using simple default",
-        );
+        console.error("❌ AI safety profile extraction failed:", {
+          message: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined,
+          errorType:
+            error instanceof Error ? error.constructor.name : typeof error,
+        });
       }
     }
   }
 
-  // Simple default
+  console.info("⚠️ Safety profile extraction: using fallback defaults");
   return {
     injuries: [],
     contraindications: [],
@@ -321,43 +322,42 @@ MOVEMENT PREFERENCES: ${movementPrefs || "varied"}
 MOVEMENT DISLIKES: ${movementDislikes || "none"}
 EXPERIENCE: ${experience || "intermediate"}
 
-Return JSON with this structure:
-{
-  "focus": ["primary focus 1", "primary focus 2"],
-  "preferences": ["preference 1", "preference 2"],
-  "avoidances": ["thing to avoid 1"],
-  "experience": "beginner|intermediate|advanced"
-}
-
-Focus should be training goals like "strength", "conditioning", "olympic lifting", etc.`;
+Extract focus areas (training goals like "strength", "conditioning", "olympic lifting"),
+preferences, avoidances, and experience level.`;
 
       try {
         const response = (await callBedrockApi(
           prompt,
-          "", // Empty string will default to "Please proceed."
+          "Extract methodology preferences",
           MODEL_IDS.EXECUTOR_MODEL_FULL,
           {
             temperature: TEMPERATURE_PRESETS.STRUCTURED,
-            prefillResponse: "{",
+            tools: METHODOLOGY_PREFERENCES_EXTRACTION_SCHEMA,
           },
-        )) as string;
+        )) as BedrockToolUseResult;
 
-        const prefs = parseJsonWithFallbacks(response);
-        if (prefs && typeof prefs === "object") {
-          return {
-            focus: prefs.focus || ["strength", "conditioning"],
-            preferences: prefs.preferences || [],
-            avoidances: prefs.avoidances || [],
-            experience: prefs.experience || experience || "intermediate",
-          };
-        }
+        // When tools are provided, callBedrockApi returns an already-extracted result
+        // with shape: { toolName, input, stopReason }
+        const prefs = response.input;
+
+        return {
+          focus: prefs.focus || ["strength", "conditioning"],
+          preferences: prefs.preferences || [],
+          avoidances: prefs.avoidances || [],
+          experience: prefs.experience || experience || "intermediate",
+        };
       } catch (error) {
-        console.warn("AI methodology extraction failed, using simple default");
+        console.error("❌ AI methodology extraction failed:", {
+          message: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined,
+          errorType:
+            error instanceof Error ? error.constructor.name : typeof error,
+        });
       }
     }
   }
 
-  // Simple default
+  console.info("⚠️ Methodology extraction: using fallback defaults");
   return {
     focus: ["strength", "conditioning"],
     preferences: [],
@@ -394,30 +394,35 @@ Common specializations:
 - CrossFit
 - Bodybuilding
 
-Return ONLY a JSON array of relevant specializations. Example: ["Olympic Weightlifting", "Gymnastics"]
-If none apply, return an empty array: []`;
+Identify relevant specializations. If none apply, return an empty array.`;
 
       try {
         const response = (await callBedrockApi(
           prompt,
-          "", // Empty string will default to "Please proceed."
+          "Identify specializations",
           MODEL_IDS.EXECUTOR_MODEL_FULL,
           {
             temperature: TEMPERATURE_PRESETS.STRUCTURED,
-            prefillResponse: "[",
+            tools: SPECIALIZATIONS_EXTRACTION_SCHEMA,
           },
-        )) as string;
+        )) as BedrockToolUseResult;
 
-        const specializations = parseJsonWithFallbacks(response);
-        if (Array.isArray(specializations)) {
-          return specializations;
-        }
+        // When tools are provided, callBedrockApi returns an already-extracted result
+        // with shape: { toolName, input, stopReason }
+        const result = response.input;
+        return result.specializations || [];
       } catch (error) {
-        console.warn("AI specialization extraction failed, using default");
+        console.error("❌ AI specialization extraction failed:", {
+          message: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined,
+          errorType:
+            error instanceof Error ? error.constructor.name : typeof error,
+        });
       }
     }
   }
 
+  console.info("⚠️ Specialization extraction: using fallback defaults");
   return []; // No specializations
 };
 
