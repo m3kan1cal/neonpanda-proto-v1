@@ -541,9 +541,10 @@ export class ProgramDesignerAgent extends Agent<ProgramDesignerContext> {
       aiResponse.includes("coachConfig") ||
       aiResponse.includes("missing required fields");
 
-    // Get the requirementsResult if it was stored
+    // Get the requirementsResult if it was stored (exclude error results)
     const requirementsResult = this.toolResults.get("requirements");
-    const hasRequirements = !!requirementsResult;
+    const hasRequirements =
+      requirementsResult && !("error" in requirementsResult);
 
     let contextGuidance = "";
     if (hasProgramContextError && hasRequirements) {
