@@ -453,8 +453,9 @@ export class CoachCreatorAgent extends Agent<CoachCreatorContext> {
     // Count only successful tool results (exclude error results)
     // Error results are stored for blocking enforcement but shouldn't count toward progress
     // Check for property existence rather than truthiness to handle empty error messages
+    // Null check prevents TypeError if a tool returns null/undefined
     const successfulToolCount = Array.from(this.toolResults.values()).filter(
-      (result) => !("error" in result),
+      (result) => result && !("error" in result),
     ).length;
 
     // Retry if no tools succeeded or minimal tools succeeded
