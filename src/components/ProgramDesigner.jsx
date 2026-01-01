@@ -1376,7 +1376,7 @@ function ProgramDesigner() {
           context="program-design"
           showDeleteButton={true}
           onDeleteClick={handleDeleteClick}
-          enableRecording={true}
+          enableRecording={false}
           enableSlashCommands={false}
           availableSlashCommands={availableSlashCommands}
           showTipsButton={true}

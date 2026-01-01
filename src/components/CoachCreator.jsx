@@ -29,7 +29,7 @@ import ProgressIndicator from "./shared/ProgressIndicator";
 import UserAvatar from "./shared/UserAvatar";
 import CompactCoachCard from "./shared/CompactCoachCard";
 import CommandPaletteButton from "./shared/CommandPaletteButton";
-import { useNavigationContext } from '../contexts/NavigationContext';
+import { useNavigationContext } from "../contexts/NavigationContext";
 import { parseMarkdown } from "../utils/markdownParser.jsx";
 import CoachCreatorAgent from "../utils/agents/CoachCreatorAgent";
 import { useToast } from "../contexts/ToastContext";
@@ -168,7 +168,7 @@ const MessageItem = memo(
                 message.type === "user"
                   ? "bg-gradient-to-br from-synthwave-neon-pink/80 to-synthwave-neon-pink/60 text-white border-0 rounded-br-md shadow-xl shadow-synthwave-neon-pink/30"
                   : containerPatterns.aiChatBubble
-              }`
+              }`,
             )}
           >
             <div className="font-rajdhani text-base leading-relaxed">
@@ -227,7 +227,7 @@ const MessageItem = memo(
     // Return true if props are equal (no re-render needed)
     // Return false if props changed (re-render needed)
     return !shouldRerender;
-  }
+  },
 );
 
 // Add display name for debugging
@@ -287,7 +287,6 @@ function CoachCreator() {
 
   // Add flag to prevent double execution from React StrictMode
   const isSendingMessage = useRef(false);
-
 
   // Agent state (managed by CoachCreatorAgent)
   const [agentState, setAgentState] = useState({
@@ -350,14 +349,14 @@ function CoachCreator() {
           try {
             await agentRef.current.loadExistingSession(
               userId,
-              coachCreatorSessionId
+              coachCreatorSessionId,
             );
           } catch (error) {
             console.error("Error loading existing session:", error);
             // Set session load error for display
             if (error.message === "Session not found or expired") {
               setSessionLoadError(
-                "Coach creator session not found or has expired."
+                "Coach creator session not found or has expired.",
               );
             } else {
               setSessionLoadError("Failed to load coach creator session.");
@@ -374,7 +373,6 @@ function CoachCreator() {
       }
     };
   }, [userId, coachCreatorSessionId, navigate]);
-
 
   // Quick suggestions for coach creator
   const quickSuggestions = [
@@ -420,7 +418,6 @@ function CoachCreator() {
     ],
   };
 
-
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, []);
@@ -432,7 +429,7 @@ function CoachCreator() {
     agentState.isTyping,
     agentState.contextualUpdate,
     agentState.streamingMessage, // Added to scroll during streaming
-    scrollToBottom
+    scrollToBottom,
   ]);
 
   // Handle message submission
@@ -452,7 +449,7 @@ function CoachCreator() {
           onStreamingError: (error) => {
             handleStreamingError(error, { error: showError });
           },
-        }
+        },
       );
     } catch (error) {
       console.error("Error sending message:", error);
@@ -519,7 +516,7 @@ function CoachCreator() {
     try {
       await CoachCreatorAgent.deleteCoachCreatorSession(
         userId,
-        coachCreatorSessionId
+        coachCreatorSessionId,
       );
       // Redirect to coaches page after successful deletion
       navigate(`/coaches?userId=${userId}`);
@@ -764,11 +761,23 @@ function CoachCreator() {
       {agentState.isComplete ? (
         <div className="fixed bottom-0 left-0 right-0 bg-synthwave-bg-card/95 backdrop-blur-lg border-t-2 border-synthwave-neon-cyan/30 shadow-lg shadow-synthwave-neon-cyan/20 z-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-8 py-6 flex justify-center">
-            <div className={`${containerPatterns.coachNotesSection} flex items-center justify-between w-full max-w-[75%]`}>
+            <div
+              className={`${containerPatterns.coachNotesSection} flex items-center justify-between w-full max-w-[75%]`}
+            >
               <div className="flex items-center gap-4">
                 <div className="w-10 h-10 rounded-full bg-synthwave-neon-cyan/10 border-2 border-synthwave-neon-cyan flex items-center justify-center flex-shrink-0">
-                  <svg className="w-5 h-5 text-synthwave-neon-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  <svg
+                    className="w-5 h-5 text-synthwave-neon-cyan"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
+                    />
                   </svg>
                 </div>
                 <div>
@@ -776,7 +785,8 @@ function CoachCreator() {
                     Session Complete
                   </h3>
                   <p className="font-rajdhani text-sm text-synthwave-text-secondary mt-0.5">
-                    Your coach is being built (2-3 minutes). You can close this page or navigate to your coaches.
+                    Your coach is being built (2-3 minutes). You can close this
+                    page or navigate to your coaches.
                   </p>
                 </div>
               </div>
@@ -802,7 +812,7 @@ function CoachCreator() {
           context="creation"
           showDeleteButton={true}
           onDeleteClick={handleDeleteClick}
-          enableRecording={true}
+          enableRecording={false}
           showTipsButton={true}
           tipsContent={coachCreatorTips}
           tipsTitle="Coach creation tips"

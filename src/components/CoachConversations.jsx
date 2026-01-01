@@ -1503,7 +1503,7 @@ function CoachConversations() {
         context="coaching"
         showDeleteButton={true}
         onDeleteClick={handleDeleteClick}
-        enableRecording={true}
+        enableRecording={false}
         enableSlashCommands={true}
         availableSlashCommands={availableSlashCommands}
         showTipsButton={true}
