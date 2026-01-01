@@ -448,10 +448,16 @@ export class CoachCreatorAgent extends Agent<CoachCreatorContext> {
       return null;
     }
 
-    // Retry if no tools were called and response looks incomplete
-    const noToolsCalled = this.toolResults.size === 0;
+    // Count only successful tool results (exclude error results)
+    // Error results are stored for blocking enforcement but shouldn't count toward progress
+    const successfulToolCount = Array.from(this.toolResults.values()).filter(
+      (result) => !result.error,
+    ).length;
+
+    // Retry if no tools succeeded or minimal tools succeeded
+    const noToolsCalled = successfulToolCount === 0;
     const minimalToolsCalled =
-      this.toolResults.size < MIN_REQUIRED_TOOLS_FOR_COMPLETE_WORKFLOW;
+      successfulToolCount < MIN_REQUIRED_TOOLS_FOR_COMPLETE_WORKFLOW;
 
     const looksIncomplete =
       response.includes("?") ||
