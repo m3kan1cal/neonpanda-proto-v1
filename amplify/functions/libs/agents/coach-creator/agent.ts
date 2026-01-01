@@ -235,11 +235,12 @@ export class CoachCreatorAgent extends Agent<CoachCreatorContext> {
           console.error(`❌ Tool ${tool.id} failed:`, error);
           const errorMessage =
             error instanceof Error ? error.message : String(error);
-          return this.buildToolResult(
-            toolUse,
-            { error: errorMessage },
-            "error",
-          );
+          const errorResult = { error: errorMessage };
+
+          // Store error result for later retrieval (important for blocking enforcement)
+          this.storeToolResult(tool.id, errorResult);
+
+          return this.buildToolResult(toolUse, errorResult, "error");
         }
       }),
     );
@@ -297,9 +298,13 @@ export class CoachCreatorAgent extends Agent<CoachCreatorContext> {
         console.error(`❌ Tool ${tool.id} failed:`, error);
         const errorMessage =
           error instanceof Error ? error.message : String(error);
-        toolResults.push(
-          this.buildToolResult(toolUse, { error: errorMessage }, "error"),
-        );
+        const errorResult = { error: errorMessage };
+
+        // Store error result for later retrieval (important for blocking enforcement)
+        // If validate_coach_config throws, we need to store the error so save tool gets blocked
+        this.storeToolResult(tool.id, errorResult);
+
+        toolResults.push(this.buildToolResult(toolUse, errorResult, "error"));
       }
     }
 

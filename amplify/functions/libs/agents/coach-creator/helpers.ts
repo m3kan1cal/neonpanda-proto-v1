@@ -18,8 +18,8 @@ import { generateCoachName } from "../../coach-creator/tool-generation";
  * Enforce blocking decisions from validation
  *
  * Code-level enforcement that prevents save_coach_config_to_database from
- * executing when validation returned isValid: false. This ensures blocking
- * decisions are AUTHORITATIVE, not advisory.
+ * executing when validation returned isValid: false or threw an error.
+ * This ensures blocking decisions are AUTHORITATIVE, not advisory.
  *
  * Returns error result if tool should be blocked, null if should proceed.
  */
@@ -32,18 +32,36 @@ export const enforceValidationBlocking = (
   reason: string;
   validationIssues?: string[];
 } | null => {
-  // No validation result yet, allow tool to proceed
+  // Only enforce blocking for save tool
+  if (toolId !== "save_coach_config_to_database") {
+    return null;
+  }
+
+  // No validation result yet - this is OK for tools that run before validation
+  // But for save_coach_config_to_database, this should never happen in a valid workflow
   if (!validationResult) {
     return null;
   }
 
-  // Validation passed, allow tool to proceed
-  if (validationResult.isValid !== false) {
-    return null;
+  // CASE 1: Validation threw an exception (has error field instead of isValid)
+  if (validationResult.error) {
+    console.error(
+      "⛔ BLOCKING save_coach_config_to_database: Validation threw exception",
+      {
+        error: validationResult.error,
+        toolAttempted: toolId,
+      },
+    );
+
+    return {
+      error: true,
+      blocked: true,
+      reason: `Cannot save coach config - validation failed with error: ${validationResult.error}`,
+    };
   }
 
-  // Block save_coach_config_to_database if validation failed
-  if (toolId === "save_coach_config_to_database") {
+  // CASE 2: Validation returned isValid: false
+  if (validationResult.isValid === false) {
     console.error(
       "⛔ BLOCKING save_coach_config_to_database: Validation returned isValid=false",
       {
@@ -61,7 +79,7 @@ export const enforceValidationBlocking = (
     };
   }
 
-  // Tool is not subject to blocking enforcement
+  // Validation passed, allow tool to proceed
   return null;
 };
 
