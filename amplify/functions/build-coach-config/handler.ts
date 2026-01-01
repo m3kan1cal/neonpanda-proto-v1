@@ -28,6 +28,7 @@ export const handler: Handler<CoachConfigEvent> = async (
   return withHeartbeat("Coach Creator Agent", async () => {
     const { userId, sessionId } = event;
     let session: any = null;
+    let updatedSession: any = null;
 
     try {
       console.info("🎨 Starting Coach Creator Agent:", {
@@ -61,7 +62,7 @@ export const handler: Handler<CoachConfigEvent> = async (
 
       // Step 3: Update session to indicate config generation is in progress
       console.info("🔄 Step 3: Marking session as IN_PROGRESS");
-      const updatedSession = {
+      updatedSession = {
         ...session,
         configGeneration: {
           status: "IN_PROGRESS" as const,
@@ -124,9 +125,9 @@ export const handler: Handler<CoachConfigEvent> = async (
 
         try {
           const failedSession = {
-            ...session,
+            ...updatedSession,
             configGeneration: {
-              ...session.configGeneration,
+              ...updatedSession.configGeneration,
               status: "FAILED" as const,
               failedAt: new Date(),
               error:
@@ -156,12 +157,14 @@ export const handler: Handler<CoachConfigEvent> = async (
       console.error("❌ Error in coach creator agent:", error);
 
       // Update session to indicate failure
-      if (event.userId && event.sessionId && session) {
+      // Use updatedSession if available (has startedAt), otherwise fall back to session
+      const sessionToUpdate = updatedSession || session;
+      if (event.userId && event.sessionId && sessionToUpdate) {
         try {
           const failedSession = {
-            ...session,
+            ...sessionToUpdate,
             configGeneration: {
-              ...session.configGeneration,
+              ...sessionToUpdate.configGeneration,
               status: "FAILED" as const,
               failedAt: new Date(),
               error: error instanceof Error ? error.message : "Unknown error",

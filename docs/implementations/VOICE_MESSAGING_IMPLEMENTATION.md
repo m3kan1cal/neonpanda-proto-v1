@@ -1,12 +1,90 @@
 # Voice Messaging - Simple & Future-Proof Implementation
+
 **Project**: NeonPanda AI Fitness Coaches
 **Feature**: Voice-to-Coach Communication
 **Timeline**: 5-7 days
-**Status**: Planning Phase
+**Status**: On Hold (Voice Button Disabled)
+
+---
+
+## Current State Assessment (January 2026)
+
+### Voice Button Status: DISABLED
+
+The voice/mic button in `ChatInput.jsx` has been **temporarily disabled** pending full implementation. The button previously existed as a non-functional placeholder that could confuse users.
+
+**What was removed:**
+
+- The mic button no longer appears in the chat input
+- Instead, a standard send button is shown (enabled when there's text/images to send)
+
+**Components updated:**
+
+- `src/components/CoachConversations.jsx` - `enableRecording={false}`
+- `src/components/CoachCreator.jsx` - `enableRecording={false}`
+- `src/components/ProgramDesigner.jsx` - `enableRecording={false}`
+
+### What Existed (Placeholder Only)
+
+The previous implementation included UI elements that appeared functional but did nothing:
+
+```javascript
+// These functions only toggled UI state - no actual recording occurred
+const handleStartRecording = () => {
+  setIsRecording(true);
+  setRecordingTime(0);
+};
+
+const handleStopRecording = () => {
+  setIsRecording(false);
+  setRecordingTime(0);
+};
+```
+
+**Problems with the placeholder:**
+
+- Users could press and hold the mic button
+- A "Recording" indicator with timer would appear
+- No audio was actually captured
+- Nothing was sent to the backend
+- This created a broken/confusing UX
+
+### What's Ready vs. What's Missing
+
+| Component                        | Status     | Notes                                               |
+| -------------------------------- | ---------- | --------------------------------------------------- |
+| **ChatInput UI**                 | ✅ Ready   | Mic button, recording indicator, timer all styled   |
+| **Backend Types**                | ✅ Ready   | `MESSAGE_TYPES.VOICE` already defined in `types.ts` |
+| **useVoiceRecording hook**       | ❌ Missing | Need MediaRecorder API integration                  |
+| **Voice message API**            | ❌ Missing | Need `src/services/voiceMessageApi.js`              |
+| **process-voice-message Lambda** | ❌ Missing | Core backend processing                             |
+| **S3 voice bucket**              | ❌ Missing | Audio storage with lifecycle policy                 |
+| **Transcribe vocabulary**        | ❌ Missing | Fitness-specific terms                              |
+| **Voice message display**        | ❌ Missing | Waveform/playback UI in messages                    |
+
+### Estimated Implementation Effort
+
+- **Backend infrastructure**: 2-3 days (S3, Lambda, Transcribe)
+- **Frontend integration**: 2 days (hooks, API, ChatInput)
+- **Testing & refinement**: 2 days (cross-browser, mobile)
+- **Total**: 5-7 days as originally estimated
+
+### Cost Considerations
+
+Voice messaging adds approximately **$2.50/user/month** at scale (primarily Amazon Transcribe costs). This should be validated against business priorities before implementation.
+
+### Re-enabling Voice
+
+When ready to implement, follow the plan below. The UI scaffolding is already in place - the main work is:
+
+1. Create the `useVoiceRecording` hook with actual MediaRecorder API
+2. Build the backend Lambda with S3/Transcribe integration
+3. Set `enableRecording={true}` in the chat components
 
 ---
 
 ## Table of Contents
+
 1. [Overview](#overview)
 2. [Architecture](#architecture)
 3. [Implementation](#implementation)
@@ -19,24 +97,30 @@
 ## Overview
 
 ### Problem Statement
+
 Users want to communicate with their AI coaches using voice, especially for:
+
 - Logging workouts post-training (hands sweaty, tired)
 - Asking quick questions during gym sessions
 - Natural conversation while warming up or cooling down
 
 ### Solution: Minimal Viable Voice
+
 The simplest production-ready approach:
+
 1. **Frontend**: MediaRecorder API → audio blob
 2. **Backend**: Lambda → S3 → Transcribe → existing Bedrock flow
 3. **Display**: Simple play button + transcription text (no fancy waveforms)
 
 **Why this is future-proof**:
+
 - S3 stores original audio (can generate waveforms later if needed)
 - Clean separation of concerns (transcription → conversation → response)
 - Follows your existing patterns (DynamoDB, Lambda, Bedrock)
 - Easy to enhance later without breaking changes
 
 ### Key Benefits
+
 - **Fast to ship**: Single sprint (5-7 days)
 - **Low complexity**: Minimal new dependencies
 - **Scalable**: AWS-native services handle growth
@@ -47,6 +131,7 @@ The simplest production-ready approach:
 ## Architecture
 
 ### Simple Data Flow
+
 ```
 User holds mic button
     ↓
@@ -72,6 +157,7 @@ Display: Simple audio player + transcription text
 ```
 
 ### Technology Stack
+
 - **Frontend**: React + MediaRecorder API (native browser)
 - **Audio Format**: WebM with Opus codec (best compatibility)
 - **Storage**: S3 (audio files with 30-day lifecycle)
@@ -82,6 +168,7 @@ Display: Simple audio player + transcription text
 ### Key Design Decisions
 
 **✅ Why this approach wins:**
+
 1. **No new frontend dependencies** - Native browser APIs only
 2. **Reuses existing code** - Your coach conversation system works as-is
 3. **Future-proof** - Audio stored in S3 means you can add waveforms/features later
@@ -89,6 +176,7 @@ Display: Simple audio player + transcription text
 5. **Fast** - Direct Lambda integration, no complex processing
 
 **❌ What we're NOT building (can add later if needed):**
+
 - Real-time waveform visualization (use simple recording indicator instead)
 - WaveSurfer.js or fancy audio players (use native HTML5 audio)
 - Speed controls, download buttons (can add if users request)
@@ -97,47 +185,57 @@ Display: Simple audio player + transcription text
 ---
 
 ## Implementation
+
 **Timeline**: 5-7 days total
 **Goal**: Production-ready voice messaging with minimal complexity
 
 ### Backend Infrastructure
 
 #### S3 Bucket Configuration
+
 **File**: `amplify/storage/resource.ts`
 
 ```typescript
-import { defineStorage } from '@aws-amplify/backend';
+import { defineStorage } from "@aws-amplify/backend";
 
 export const voiceMessaging = defineStorage({
-  name: 'voiceMessages',
+  name: "voiceMessages",
   access: (allow) => ({
-    'voice-messages/{userId}/*': [
-      allow.authenticated.to(['read', 'write'])
-    ],
-    'waveform-data/{userId}/*': [
-      allow.authenticated.to(['read', 'write'])
-    ]
-  })
+    "voice-messages/{userId}/*": [allow.authenticated.to(["read", "write"])],
+    "waveform-data/{userId}/*": [allow.authenticated.to(["read", "write"])],
+  }),
 });
 ```
 
 **Actions**:
+
 - [ ] Create S3 bucket with lifecycle policy (delete audio after 30 days)
 - [ ] Configure CORS for direct uploads
 - [ ] Set up CloudFront distribution for audio playback
 - [ ] Test bucket permissions and access patterns
 
 #### Lambda Function: process-voice-message
+
 **File**: `amplify/functions/process-voice-message/index.ts`
 
 ```typescript
-import { TranscribeClient, StartTranscriptionJobCommand, GetTranscriptionJobCommand } from "@aws-sdk/client-transcribe";
+import {
+  TranscribeClient,
+  StartTranscriptionJobCommand,
+  GetTranscriptionJobCommand,
+} from "@aws-sdk/client-transcribe";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-import { BedrockRuntimeClient, ConverseCommand } from "@aws-sdk/client-bedrock-runtime";
-import { storeConversationMessage, getConversationHistory } from '../libs/coach-conversation/operations.js';
-import { buildSystemPrompt } from '../libs/coach-conversation/prompts.js';
-import { getCoachConfig } from '../libs/coach-config/operations.js';
-import { nanoid } from 'nanoid';
+import {
+  BedrockRuntimeClient,
+  ConverseCommand,
+} from "@aws-sdk/client-bedrock-runtime";
+import {
+  storeConversationMessage,
+  getConversationHistory,
+} from "../libs/coach-conversation/operations.js";
+import { buildSystemPrompt } from "../libs/coach-conversation/prompts.js";
+import { getCoachConfig } from "../libs/coach-config/operations.js";
+import { nanoid } from "nanoid";
 
 const s3 = new S3Client({});
 const transcribe = new TranscribeClient({});
@@ -147,96 +245,104 @@ export async function handler(event: any) {
   try {
     const { userId, coachId } = event.pathParameters;
     const audioBuffer = extractAudioFromMultipart(event.body);
-    const conversationId = event.queryStringParameters?.conversationId || `${userId}-${coachId}-${Date.now()}`;
+    const conversationId =
+      event.queryStringParameters?.conversationId ||
+      `${userId}-${coachId}-${Date.now()}`;
 
     // 1. Upload audio to S3
     const audioKey = `voice-messages/${userId}/${nanoid()}.webm`;
     console.info(`Uploading audio to S3: ${audioKey}`);
 
-    await s3.send(new PutObjectCommand({
-      Bucket: process.env.VOICE_MESSAGES_BUCKET!,
-      Key: audioKey,
-      Body: audioBuffer,
-      ContentType: 'audio/webm',
-      Metadata: {
-        userId,
-        coachId,
-        conversationId,
-        timestamp: new Date().toISOString()
-      }
-    }));
+    await s3.send(
+      new PutObjectCommand({
+        Bucket: process.env.VOICE_MESSAGES_BUCKET!,
+        Key: audioKey,
+        Body: audioBuffer,
+        ContentType: "audio/webm",
+        Metadata: {
+          userId,
+          coachId,
+          conversationId,
+          timestamp: new Date().toISOString(),
+        },
+      }),
+    );
 
     // 2. Transcribe audio
-    console.info('Starting transcription...');
+    console.info("Starting transcription...");
     const transcription = await transcribeAudio(audioKey);
     console.info(`Transcription: "${transcription}"`);
 
     // 3. Store user voice message
     await storeConversationMessage(conversationId, {
-      role: 'user',
+      role: "user",
       content: transcription,
-      messageType: 'voice',
+      messageType: "voice",
       audioS3Key: audioKey,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
 
     // 4. Get coach config and history
     const coachConfig = await getCoachConfig(userId, coachId);
-    const conversationHistory = await getConversationHistory(conversationId, 20);
+    const conversationHistory = await getConversationHistory(
+      conversationId,
+      20,
+    );
 
     // 5. Build voice-aware system prompt
     const systemPrompt = buildSystemPrompt(coachConfig, {
       includeVoiceContext: true,
-      lastInputMethod: 'voice'
+      lastInputMethod: "voice",
     });
 
     // 6. Generate coach response (existing Bedrock flow)
-    console.info('Generating coach response...');
-    const response = await bedrock.send(new ConverseCommand({
-      modelId: 'anthropic.claude-3-sonnet-20240229-v1:0',
-      messages: conversationHistory.map(msg => ({
-        role: msg.role,
-        content: [{ text: msg.content }]
-      })),
-      system: [{ text: systemPrompt }],
-      inferenceConfig: {
-        maxTokens: 1000,
-        temperature: 0.7
-      }
-    }));
+    console.info("Generating coach response...");
+    const response = await bedrock.send(
+      new ConverseCommand({
+        modelId: "anthropic.claude-3-sonnet-20240229-v1:0",
+        messages: conversationHistory.map((msg) => ({
+          role: msg.role,
+          content: [{ text: msg.content }],
+        })),
+        system: [{ text: systemPrompt }],
+        inferenceConfig: {
+          maxTokens: 1000,
+          temperature: 0.7,
+        },
+      }),
+    );
 
     const coachResponse = response.output!.message.content[0].text;
 
     // 7. Store coach response
     await storeConversationMessage(conversationId, {
-      role: 'assistant',
+      role: "assistant",
       content: coachResponse,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
 
     return {
       statusCode: 200,
       headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
       },
       body: JSON.stringify({
         success: true,
         conversationId,
         transcription,
         coachResponse,
-        audioUrl: `${process.env.CLOUDFRONT_URL}/${audioKey}`
-      })
+        audioUrl: `${process.env.CLOUDFRONT_URL}/${audioKey}`,
+      }),
     };
-
   } catch (error) {
-    console.error('Voice message processing failed:', error);
+    console.error("Voice message processing failed:", error);
     return {
       statusCode: 500,
       body: JSON.stringify({
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
-      })
+        error: error instanceof Error ? error.message : "Unknown error",
+      }),
     };
   }
 }
@@ -245,60 +351,68 @@ export async function handler(event: any) {
 async function transcribeAudio(s3Key: string): Promise<string> {
   const jobName = `transcribe-${nanoid()}`;
 
-  await transcribe.send(new StartTranscriptionJobCommand({
-    TranscriptionJobName: jobName,
-    Media: { MediaFileUri: `s3://${process.env.VOICE_MESSAGES_BUCKET}/${s3Key}` },
-    MediaFormat: 'webm',
-    LanguageCode: 'en-US',
-    Settings: {
-      VocabularyName: process.env.FITNESS_VOCABULARY_NAME,
-      ShowSpeakerLabels: false
-    }
-  }));
+  await transcribe.send(
+    new StartTranscriptionJobCommand({
+      TranscriptionJobName: jobName,
+      Media: {
+        MediaFileUri: `s3://${process.env.VOICE_MESSAGES_BUCKET}/${s3Key}`,
+      },
+      MediaFormat: "webm",
+      LanguageCode: "en-US",
+      Settings: {
+        VocabularyName: process.env.FITNESS_VOCABULARY_NAME,
+        ShowSpeakerLabels: false,
+      },
+    }),
+  );
 
   // Poll for completion (max 30 seconds)
   for (let i = 0; i < 15; i++) {
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 2000));
 
-    const result = await transcribe.send(new GetTranscriptionJobCommand({
-      TranscriptionJobName: jobName
-    }));
+    const result = await transcribe.send(
+      new GetTranscriptionJobCommand({
+        TranscriptionJobName: jobName,
+      }),
+    );
 
     const status = result.TranscriptionJob!.TranscriptionJobStatus;
 
-    if (status === 'COMPLETED') {
-      const transcriptUri = result.TranscriptionJob!.Transcript!.TranscriptFileUri!;
+    if (status === "COMPLETED") {
+      const transcriptUri =
+        result.TranscriptionJob!.Transcript!.TranscriptFileUri!;
       const transcriptResponse = await fetch(transcriptUri);
       const transcript = await transcriptResponse.json();
       return transcript.results.transcripts[0].transcript;
     }
 
-    if (status === 'FAILED') {
-      throw new Error('Transcription failed');
+    if (status === "FAILED") {
+      throw new Error("Transcription failed");
     }
   }
 
-  throw new Error('Transcription timeout');
+  throw new Error("Transcription timeout");
 }
 
 // Extract audio from multipart form
 function extractAudioFromMultipart(body: string): Buffer {
-  const boundary = body.split('\r\n')[0];
+  const boundary = body.split("\r\n")[0];
   const parts = body.split(boundary);
 
   for (const part of parts) {
-    if (part.includes('Content-Type: audio/webm')) {
-      const audioStart = part.indexOf('\r\n\r\n') + 4;
-      const audioEnd = part.lastIndexOf('\r\n');
-      return Buffer.from(part.substring(audioStart, audioEnd), 'binary');
+    if (part.includes("Content-Type: audio/webm")) {
+      const audioStart = part.indexOf("\r\n\r\n") + 4;
+      const audioEnd = part.lastIndexOf("\r\n");
+      return Buffer.from(part.substring(audioStart, audioEnd), "binary");
     }
   }
 
-  throw new Error('No audio data found');
+  throw new Error("No audio data found");
 }
 ```
 
 **Actions**:
+
 - [ ] Create Lambda function with S3, Transcribe, Bedrock permissions
 - [ ] Configure environment variables (bucket name, CloudFront URL)
 - [ ] Set timeout to 60 seconds
@@ -306,56 +420,107 @@ function extractAudioFromMultipart(body: string): Buffer {
 - [ ] Deploy to AWS
 
 #### Custom Transcribe Vocabulary
+
 **File**: `amplify/custom/transcribe-vocabulary.ts`
 
 ```typescript
-import { TranscribeClient, CreateVocabularyCommand } from "@aws-sdk/client-transcribe";
+import {
+  TranscribeClient,
+  CreateVocabularyCommand,
+} from "@aws-sdk/client-transcribe";
 
 const FITNESS_TERMS = [
   // CrossFit
-  'WOD', 'AMRAP', 'EMOM', 'METCON', 'Tabata', 'Fran', 'Murph', 'Grace',
-  'box-jumps', 'wall-balls', 'thruster', 'burpees', 'double-unders',
-  'kipping', 'butterfly', 'muscle-ups',
+  "WOD",
+  "AMRAP",
+  "EMOM",
+  "METCON",
+  "Tabata",
+  "Fran",
+  "Murph",
+  "Grace",
+  "box-jumps",
+  "wall-balls",
+  "thruster",
+  "burpees",
+  "double-unders",
+  "kipping",
+  "butterfly",
+  "muscle-ups",
 
   // Lifts
-  'deadlift', 'squat', 'bench-press', 'overhead-press', 'snatch',
-  'clean-and-jerk', 'front-squat', 'back-squat', 'sumo-deadlift',
+  "deadlift",
+  "squat",
+  "bench-press",
+  "overhead-press",
+  "snatch",
+  "clean-and-jerk",
+  "front-squat",
+  "back-squat",
+  "sumo-deadlift",
 
   // Equipment
-  'kettlebell', 'dumbbell', 'barbell', 'bumper-plates', 'weight-plates',
-  'pull-up-bar', 'assault-bike', 'rowing-machine', 'ski-erg',
+  "kettlebell",
+  "dumbbell",
+  "barbell",
+  "bumper-plates",
+  "weight-plates",
+  "pull-up-bar",
+  "assault-bike",
+  "rowing-machine",
+  "ski-erg",
 
   // Measurements
-  'reps', 'sets', 'one-rep-max', 'PR', 'personal-record',
-  'RX', 'scaled', 'kilos', 'pounds',
+  "reps",
+  "sets",
+  "one-rep-max",
+  "PR",
+  "personal-record",
+  "RX",
+  "scaled",
+  "kilos",
+  "pounds",
 
   // Body parts
-  'hamstrings', 'quads', 'glutes', 'lats', 'delts', 'traps',
+  "hamstrings",
+  "quads",
+  "glutes",
+  "lats",
+  "delts",
+  "traps",
 
   // Common phrases
-  'no-rep', 'good-rep', 'time-cap', 'buy-in', 'cash-out'
+  "no-rep",
+  "good-rep",
+  "time-cap",
+  "buy-in",
+  "cash-out",
 ];
 
 export async function createFitnessVocabulary() {
   const transcribe = new TranscribeClient({});
 
-  await transcribe.send(new CreateVocabularyCommand({
-    VocabularyName: 'FitnessTerms',
-    LanguageCode: 'en-US',
-    Phrases: FITNESS_TERMS
-  }));
+  await transcribe.send(
+    new CreateVocabularyCommand({
+      VocabularyName: "FitnessTerms",
+      LanguageCode: "en-US",
+      Phrases: FITNESS_TERMS,
+    }),
+  );
 
-  console.info('Fitness vocabulary created successfully');
+  console.info("Fitness vocabulary created successfully");
 }
 ```
 
 **Actions**:
+
 - [ ] Deploy custom vocabulary to Transcribe
 - [ ] Test with sample fitness audio
 - [ ] Add more terms based on user feedback
 - [ ] Create update mechanism for vocabulary
 
 #### DynamoDB Schema Extension
+
 **File**: `amplify/functions/libs/coach-conversation/types.ts`
 
 ```typescript
@@ -363,22 +528,24 @@ export async function createFitnessVocabulary() {
 export interface ConversationMessage {
   conversationId: string;
   messageId: string;
-  role: 'user' | 'assistant';
+  role: "user" | "assistant";
   content: string;
   timestamp: Date;
 
   // Voice message fields (optional)
-  messageType?: 'text' | 'voice';
-  audioS3Key?: string;  // Only field needed - can add more later
+  messageType?: "text" | "voice";
+  audioS3Key?: string; // Only field needed - can add more later
 }
 ```
 
 **Why this is future-proof**:
+
 - Audio stored in S3 means you can generate waveforms later
 - Minimal schema changes reduce migration risk
 - Easy to add fields later without breaking existing data
 
 **Actions**:
+
 - [ ] Update TypeScript types
 - [ ] Backward compatible with existing messages
 - [ ] No DynamoDB indexes needed (queries still work)
@@ -387,10 +554,11 @@ export interface ConversationMessage {
 ### Frontend Implementation
 
 #### Update Existing Voice Recording Hook
+
 **File**: `src/hooks/useVoiceRecording.js` (enhance existing or create new)
 
 ```javascript
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback } from "react";
 
 export const useVoiceRecording = () => {
   const [isRecording, setIsRecording] = useState(false);
@@ -408,19 +576,19 @@ export const useVoiceRecording = () => {
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
-          autoGainControl: true
-        }
+          autoGainControl: true,
+        },
       });
 
       streamRef.current = stream;
 
-      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-        ? 'audio/webm;codecs=opus'
-        : 'audio/webm';
+      const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+        ? "audio/webm;codecs=opus"
+        : "audio/webm";
 
       const mediaRecorder = new MediaRecorder(stream, {
         mimeType,
-        audioBitsPerSecond: 128000
+        audioBitsPerSecond: 128000,
       });
 
       audioChunksRef.current = [];
@@ -434,7 +602,7 @@ export const useVoiceRecording = () => {
       mediaRecorder.onstop = () => {
         const blob = new Blob(audioChunksRef.current, { type: mimeType });
         setAudioBlob(blob);
-        stream.getTracks().forEach(track => track.stop());
+        stream.getTracks().forEach((track) => track.stop());
       };
 
       mediaRecorderRef.current = mediaRecorder;
@@ -443,12 +611,11 @@ export const useVoiceRecording = () => {
 
       // Start timer
       timerRef.current = setInterval(() => {
-        setRecordingTime(prev => prev + 1);
+        setRecordingTime((prev) => prev + 1);
       }, 1000);
-
     } catch (error) {
-      console.error('Failed to start recording:', error);
-      alert('Unable to access microphone. Please check permissions.');
+      console.error("Failed to start recording:", error);
+      alert("Unable to access microphone. Please check permissions.");
     }
   }, []);
 
@@ -477,15 +644,17 @@ export const useVoiceRecording = () => {
     startRecording,
     stopRecording,
     resetRecording,
-    stream: streamRef.current
+    stream: streamRef.current,
   };
 };
 ```
 
 #### Enhance Existing ChatInput Component
+
 **File**: `src/components/shared/ChatInput.jsx` (modify existing)
 
 **Current state** - The component already has:
+
 - ✅ Mic button with hold-to-record
 - ✅ Recording indicator with timer
 - ✅ `handleStartRecording` and `handleStopRecording` functions
@@ -493,13 +662,14 @@ export const useVoiceRecording = () => {
 - ✅ `recordingTime` state
 
 **What we need to add:**
+
 1. Actual audio capture using useVoiceRecording hook
 2. Send voice message after recording stops
 3. Show preview before sending
 
 ```jsx
 // At the top of ChatInput.jsx, add:
-import { useVoiceRecording } from '../../hooks/useVoiceRecording';
+import { useVoiceRecording } from "../../hooks/useVoiceRecording";
 
 // Inside the component, replace the placeholder recording functions:
 export default function ChatInput({
@@ -516,7 +686,7 @@ export default function ChatInput({
     audioBlob,
     startRecording,
     stopRecording,
-    resetRecording
+    resetRecording,
   } = useVoiceRecording();
 
   // NEW: Handle voice message send
@@ -527,7 +697,7 @@ export default function ChatInput({
       await onSendVoiceMessage(audioBlob);
       resetRecording();
     } catch (error) {
-      console.error('Voice send failed:', error);
+      console.error("Voice send failed:", error);
     }
   };
 
@@ -543,39 +713,44 @@ export default function ChatInput({
   // NEW: Add voice message preview after recording
   // Insert this BEFORE the existing form, inside the main container:
 
-  {/* Voice message preview (after recording) */}
-  {audioBlob && !isRecording && (
-    <div className="mb-3 flex items-center justify-between p-3 bg-synthwave-neon-cyan/10 rounded-lg border border-synthwave-neon-cyan/30">
-      <div className="flex items-center gap-3">
-        <div className="w-8 h-8 rounded-full bg-synthwave-neon-cyan/20 flex items-center justify-center">
-          <MicIcon className="w-4 h-4 text-synthwave-neon-cyan" />
+  {
+    /* Voice message preview (after recording) */
+  }
+  {
+    audioBlob && !isRecording && (
+      <div className="mb-3 flex items-center justify-between p-3 bg-synthwave-neon-cyan/10 rounded-lg border border-synthwave-neon-cyan/30">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-synthwave-neon-cyan/20 flex items-center justify-center">
+            <MicIcon className="w-4 h-4 text-synthwave-neon-cyan" />
+          </div>
+          <span className="text-synthwave-text-primary font-rajdhani">
+            Voice message ready ({formatRecordingTime(recordingTime)})
+          </span>
         </div>
-        <span className="text-synthwave-text-primary font-rajdhani">
-          Voice message ready ({formatRecordingTime(recordingTime)})
-        </span>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={resetRecording}
+            className="px-3 py-1 text-synthwave-text-muted hover:text-white text-sm font-rajdhani"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSendVoiceMessage}
+            className="px-4 py-2 bg-gradient-to-r from-synthwave-neon-purple to-synthwave-neon-pink text-white rounded-full font-rajdhani font-bold"
+          >
+            Send
+          </button>
+        </div>
       </div>
-      <div className="flex items-center gap-2">
-        <button
-          onClick={resetRecording}
-          className="px-3 py-1 text-synthwave-text-muted hover:text-white text-sm font-rajdhani"
-        >
-          Cancel
-        </button>
-        <button
-          onClick={handleSendVoiceMessage}
-          className="px-4 py-2 bg-gradient-to-r from-synthwave-neon-purple to-synthwave-neon-pink text-white rounded-full font-rajdhani font-bold"
-        >
-          Send
-        </button>
-      </div>
-    </div>
-  )}
+    );
+  }
 
   // Keep all existing form JSX exactly as is - the mic button already works!
 }
 ```
 
 **Actions**:
+
 - [ ] Create useVoiceRecording hook with actual MediaRecorder API
 - [ ] Import hook into existing ChatInput.jsx
 - [ ] Replace placeholder recording functions with actual recording
@@ -584,28 +759,34 @@ export default function ChatInput({
 - [ ] Keep all existing UI/buttons/styling exactly as is
 
 #### API Integration
+
 **File**: `src/services/voiceMessageApi.js`
 
 ```javascript
-import { Amplify } from 'aws-amplify';
-import outputs from '../../amplify_outputs.json';
+import { Amplify } from "aws-amplify";
+import outputs from "../../amplify_outputs.json";
 
 Amplify.configure(outputs);
 
-export async function sendVoiceMessage(userId, coachId, audioBlob, conversationId) {
+export async function sendVoiceMessage(
+  userId,
+  coachId,
+  audioBlob,
+  conversationId,
+) {
   const formData = new FormData();
-  formData.append('audio', audioBlob, `voice-${Date.now()}.webm`);
-  formData.append('conversationId', conversationId);
+  formData.append("audio", audioBlob, `voice-${Date.now()}.webm`);
+  formData.append("conversationId", conversationId);
 
   const apiEndpoint = `${process.env.VITE_API_URL}/users/${userId}/coaches/${coachId}/voice-message`;
 
   try {
     const response = await fetch(apiEndpoint, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Authorization': `Bearer ${await getAuthToken()}`,
+        Authorization: `Bearer ${await getAuthToken()}`,
       },
-      body: formData
+      body: formData,
     });
 
     if (!response.ok) {
@@ -614,9 +795,8 @@ export async function sendVoiceMessage(userId, coachId, audioBlob, conversationI
 
     const data = await response.json();
     return data;
-
   } catch (error) {
-    console.error('Voice message API error:', error);
+    console.error("Voice message API error:", error);
     throw error;
   }
 }
@@ -628,6 +808,7 @@ async function getAuthToken() {
 ```
 
 **Actions**:
+
 - [ ] Create API service module
 - [ ] Add retry logic for network failures
 - [ ] Implement request cancellation
@@ -640,7 +821,7 @@ async function getAuthToken() {
 ```typescript
 export function buildSystemPrompt(
   coachConfig: CoachConfig,
-  context: ConversationContext = {}
+  context: ConversationContext = {},
 ): string {
   const basePrompt = `You are ${coachConfig.name}, a ${coachConfig.specialty} coach...`;
 
@@ -698,6 +879,7 @@ Remember: Voice messages show trust and openness. Match their energy and be pres
 ```
 
 **Actions**:
+
 - [ ] Add voice context to prompt builder
 - [ ] Test prompts with sample voice transcriptions
 - [ ] Refine based on coach responses
@@ -709,7 +891,9 @@ Remember: Voice messages show trust and openness. Match their energy and be pres
 ```jsx
 // Generate fake but realistic-looking waveform
 const generateFakeWaveform = (messageId, barCount = 50) => {
-  const seed = messageId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const seed = messageId
+    .split("")
+    .reduce((acc, char) => acc + char.charCodeAt(0), 0);
   let random = seed;
   const waveform = [];
   let prevHeight = 0.5;
@@ -735,7 +919,10 @@ const generateFakeWaveform = (messageId, barCount = 50) => {
 const VoiceMessageDisplay = ({ message, audioUrl }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef(null);
-  const waveform = useMemo(() => generateFakeWaveform(message.messageId), [message.messageId]);
+  const waveform = useMemo(
+    () => generateFakeWaveform(message.messageId),
+    [message.messageId],
+  );
 
   const handlePlayPause = () => {
     if (audioRef.current) {
@@ -755,7 +942,7 @@ const VoiceMessageDisplay = ({ message, audioUrl }) => {
           onClick={handlePlayPause}
           className="w-10 h-10 rounded-full bg-synthwave-neon-cyan text-synthwave-bg-primary flex items-center justify-center hover:bg-synthwave-neon-cyan/80 transition-all flex-shrink-0"
         >
-          {isPlaying ? '⏸️' : '▶️'}
+          {isPlaying ? "⏸️" : "▶️"}
         </button>
 
         {/* Mirrored parabolic waveform */}
@@ -765,9 +952,9 @@ const VoiceMessageDisplay = ({ message, audioUrl }) => {
               key={index}
               className="bg-synthwave-neon-cyan rounded-full transition-opacity"
               style={{
-                width: '3px',
+                width: "3px",
                 height: `${amplitude * 48}px`, // Height relative to container
-                opacity: isPlaying ? 0.8 : 0.5
+                opacity: isPlaying ? 0.8 : 0.5,
               }}
             />
           ))}
@@ -798,11 +985,13 @@ const VoiceMessageDisplay = ({ message, audioUrl }) => {
 
 // Add voice message rendering
 const renderMessage = (message) => {
-  const isUserMessage = message.role === 'user';
+  const isUserMessage = message.role === "user";
 
-  if (message.messageType === 'voice') {
+  if (message.messageType === "voice") {
     return (
-      <div className={`flex ${isUserMessage ? 'justify-end' : 'justify-start'} mb-4`}>
+      <div
+        className={`flex ${isUserMessage ? "justify-end" : "justify-start"} mb-4`}
+      >
         <VoiceMessageDisplay
           message={message}
           audioUrl={`${process.env.VITE_AUDIO_CDN_URL}/${message.audioS3Key}`}
@@ -817,6 +1006,7 @@ const renderMessage = (message) => {
 ```
 
 **Why fake waveforms work perfectly:**
+
 - **Zero backend processing** - no audio analysis needed
 - **Instant rendering** - no loading time
 - **Consistent** - same message always shows same waveform (seeded random)
@@ -825,6 +1015,7 @@ const renderMessage = (message) => {
 - **Mirrored/parabolic** - bars extend from center both up and down for modern look
 
 **Visual result** (mirrored waveform):
+
 ```
      ▂▃▅▆▅▃▂      ← Top half
   ━━━━━━━━━━━━━   ← Center line (implicit)
@@ -838,6 +1029,7 @@ The bars are centered vertically and extend equally in both directions, creating
 ## Testing Strategy
 
 ### Critical Test Cases
+
 - [ ] Record 5-second message on iPhone Safari
 - [ ] Record 30-second message on Android Chrome
 - [ ] Record message on desktop Chrome
@@ -848,6 +1040,7 @@ The bars are centered vertically and extend equally in both directions, creating
 - [ ] Verify audio playback works across devices
 
 ### Manual Testing Workflow
+
 1. Record voice message: "Just finished Fran in 6 minutes 42 seconds"
 2. Verify transcription captures workout name and time
 3. Check coach response acknowledges voice context
@@ -859,6 +1052,7 @@ The bars are centered vertically and extend equally in both directions, creating
 ## Deployment
 
 ### Pre-Deployment Checklist
+
 - [ ] All tests passing
 - [ ] S3 bucket created with lifecycle policy (30 days)
 - [ ] CloudFront distribution configured
@@ -868,6 +1062,7 @@ The bars are centered vertically and extend equally in both directions, creating
 - [ ] Frontend environment variables configured
 
 ### Deployment Steps
+
 1. Deploy S3 bucket: `amplify/storage/voice-messages`
 2. Deploy Transcribe vocabulary: Fitness terms
 3. Deploy Lambda function: `process-voice-message`
@@ -878,6 +1073,7 @@ The bars are centered vertically and extend equally in both directions, creating
 8. Full rollout
 
 ### Monitoring
+
 - CloudWatch logs for Lambda errors
 - Track voice message count and duration
 - Monitor transcription failure rate
@@ -889,9 +1085,11 @@ The bars are centered vertically and extend equally in both directions, creating
 ## Cost Analysis
 
 ### Per-User Monthly Cost
+
 **Assumptions**: 10 voice messages per day, 20 seconds average
 
 **Daily costs per 1,000 users**:
+
 - **Transcribe**: 10 msgs × 20s × 1000 = 200,000s / 60 = 3,333 min × $0.024 = **$80/day**
 - **S3 Storage**: 10 msgs × 100KB × 1000 = 1GB × $0.023 = **$0.02/day**
 - **S3 Requests**: 20,000 requests × $0.005/1000 = **$0.10/day**
@@ -901,6 +1099,7 @@ The bars are centered vertically and extend equally in both directions, creating
 **Total: ~$80.32/day = $2,410/month for 1,000 users = $2.41/user/month**
 
 ### Cost Optimization
+
 1. **S3 Lifecycle**: Delete audio after 30 days (saves ~50% storage long-term)
 2. **Compression**: WebM/Opus already efficient (~50KB for 20s)
 3. **Batch Processing**: Not applicable for real-time use case
@@ -913,16 +1112,18 @@ The bars are centered vertically and extend equally in both directions, creating
 ## Success Metrics
 
 ### Week 1 Goals
+
 - [ ] 20% of beta users try voice messaging
 - [ ] <5 second average latency for 20s messages
-- [ ] >90% transcription accuracy
+- [ ] > 90% transcription accuracy
 - [ ] <2% error rate
 - [ ] Positive qualitative feedback
 
 ### Month 1 Goals
+
 - [ ] 40% of active users use voice regularly (3+ times/week)
 - [ ] Voice users have 20% higher retention than text-only
-- [ ] >95% transcription accuracy with fitness vocabulary
+- [ ] > 95% transcription accuracy with fitness vocabulary
 - [ ] Voice messages correlate with higher workout logging
 
 ---
@@ -930,6 +1131,7 @@ The bars are centered vertically and extend equally in both directions, creating
 ## Future Enhancements (Not in Scope)
 
 If users love voice messaging, consider adding later:
+
 - **Real-time streaming**: Transcribe while speaking (lower latency)
 - **Waveform visualization**: Canvas or WaveSurfer.js
 - **Voice commands**: "Log workout", "Show my week"
@@ -943,6 +1145,7 @@ But ship the simple version first and see if people use it!
 ## Quick Reference
 
 ### Key Files to Create/Modify
+
 ```
 Backend:
 ├── amplify/storage/voice-messages/resource.ts (new)
@@ -960,6 +1163,7 @@ Frontend:
 ```
 
 ### Environment Variables Needed
+
 ```bash
 # Backend
 VOICE_MESSAGES_BUCKET=neonpanda-voice-messages
@@ -972,6 +1176,7 @@ VITE_AUDIO_CDN_URL=https://d1234567890.cloudfront.net
 ```
 
 ### Total Implementation Time
+
 - **Day 1-2**: Backend (S3, Lambda, Transcribe vocabulary)
 - **Day 3-4**: Frontend (recording hook, ChatInput, API)
 - **Day 5**: Integration testing and bug fixes
@@ -983,16 +1188,17 @@ VITE_AUDIO_CDN_URL=https://d1234567890.cloudfront.net
 
 ## Troubleshooting
 
-| Problem | Solution |
-|---------|----------|
-| Mic not working | Check browser permissions, use HTTPS |
-| Audio not uploading | Verify S3 CORS, check Lambda logs |
-| Transcription timeout | Increase Lambda timeout to 60s |
-| Poor accuracy | Add more terms to custom vocabulary |
-| Audio won't play | Verify CloudFront URL, check S3 permissions |
+| Problem               | Solution                                    |
+| --------------------- | ------------------------------------------- |
+| Mic not working       | Check browser permissions, use HTTPS        |
+| Audio not uploading   | Verify S3 CORS, check Lambda logs           |
+| Transcription timeout | Increase Lambda timeout to 60s              |
+| Poor accuracy         | Add more terms to custom vocabulary         |
+| Audio won't play      | Verify CloudFront URL, check S3 permissions |
 
 ---
 
-**Last Updated**: January 2025
-**Status**: Ready to implement
-**Next Step**: Create S3 bucket and start backend infrastructure
+**Last Updated**: January 2026
+**Status**: On Hold - Voice button disabled in UI
+**Previous Status**: Ready to implement (plan complete, awaiting prioritization)
+**Next Step**: When prioritized, create S3 bucket and start backend infrastructure
