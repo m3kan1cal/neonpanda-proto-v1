@@ -1162,6 +1162,7 @@ Returns: success, coachConfigId, coachName, pineconeStored, pineconeRecordId`,
     const completedSession = {
       ...session,
       configGeneration: {
+        ...session.configGeneration, // Preserve existing fields like startedAt
         status: "COMPLETE" as const,
         completedAt: new Date(creationTimestamp),
         coachConfigId: coachConfig.coach_id,

@@ -372,8 +372,10 @@ export class CoachCreatorAgent extends Agent<CoachCreatorContext> {
       if (retryDecision?.shouldRetry) {
         console.warn(`🔄 ${retryDecision.logMessage}`);
 
-        // Clear tool results after building retry prompt
-        this.toolResults.clear();
+        // NOTE: We do NOT clear tool results here. Tools marked as "(✓ ALREADY DONE)" in the
+        // retry prompt may be skipped by the AI, and if so, they need their results to still
+        // be available for dependent tools to retrieve via getToolResult().
+        // If the AI re-runs a tool, it will simply overwrite the existing result.
 
         const retryResponse = await this.converse(retryDecision.retryPrompt);
 
@@ -478,6 +480,8 @@ export class CoachCreatorAgent extends Agent<CoachCreatorContext> {
     const hasRequirements = !!this.toolResults.get("requirements");
     const hasPersonality = !!this.toolResults.get("personality_selection");
     const hasMethodology = !!this.toolResults.get("methodology_selection");
+    const hasPrompts = !!this.toolResults.get("coach_prompts");
+    const hasAssembled = !!this.toolResults.get("assembled_config");
 
     return `CRITICAL OVERRIDE: You did not complete the coach creation workflow.
 
@@ -487,10 +491,11 @@ You MUST now complete the workflow by calling ALL required tools:
 1. load_session_requirements ${hasRequirements ? "(✓ ALREADY DONE)" : ""}
 2. select_personality_template ${hasPersonality ? "(✓ ALREADY DONE)" : ""}
 3. select_methodology_template ${hasMethodology ? "(✓ ALREADY DONE)" : ""}
-4. generate_coach_prompts
-5. validate_coach_config
-6. normalize_coach_config (if needed)
-7. save_coach_config_to_database
+4. generate_coach_prompts ${hasPrompts ? "(✓ ALREADY DONE)" : ""}
+5. assemble_coach_config ${hasAssembled ? "(✓ ALREADY DONE)" : ""}
+6. validate_coach_config
+7. normalize_coach_config (if needed)
+8. save_coach_config_to_database
 
 CRITICAL INSTRUCTIONS:
 - DO NOT ask any questions
