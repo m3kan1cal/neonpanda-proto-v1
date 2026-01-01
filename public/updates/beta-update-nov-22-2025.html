@@ -1,349 +1,596 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Workout Logging Gets Smarter - November 2025</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
     <style>
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
-            line-height: 1.6;
-            color: #333;
-            margin: 0;
-            padding: 0;
-            background-color: #f9f9f9;
-        }
-        .email-wrapper {
-            width: 100%;
-            background-color: #f9f9f9;
-            padding: 20px 0;
-        }
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            background-color: #ffffff;
-            border-radius: 8px;
-            padding: 30px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-        .logo-header {
-            background-color: #0a0a0a;
-            padding: 10px;
-            margin: -30px -30px 30px -30px;
-            border-radius: 8px 8px 0 0;
-            text-align: center;
-        }
-        .logo-header img {
-            max-width: 400px;
-            height: auto;
-        }
-        h1 {
-            color: #00ffff;
-            font-size: 28px;
-            margin-bottom: 10px;
-            margin-top: 0;
-        }
-        h2 {
-            color: #FF10F0;
-            font-size: 20px;
-            margin-top: 30px;
-            margin-bottom: 15px;
-        }
-        .subtitle {
-            color: #666;
-            font-size: 16px;
-            margin-bottom: 25px;
-        }
-        ul {
-            padding-left: 20px;
-            margin-bottom: 20px;
-        }
-        li {
-            margin-bottom: 10px;
-        }
-        .highlight {
-            background-color: #f0f9ff;
-            border-left: 4px solid #00ffff;
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 4px;
-        }
-        .feature-box {
-            background-color: #fff5f8;
-            border-left: 4px solid #FF10F0;
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 4px;
-        }
-        .cta {
-            background-color: #00ffff;
-            color: #0A0A0A;
-            padding: 12px 24px;
-            text-decoration: none;
-            border-radius: 6px;
-            display: inline-block;
-            margin: 10px 10px 10px 0;
-            font-weight: 600;
-        }
-        .cta-secondary {
-            background-color: #FF10F0;
-            color: #ffffff;
-        }
-        .footer {
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #e0e0e0;
-            font-size: 14px;
-            color: #666;
-        }
-        a {
-            color: #00ffff;
-        }
-        .signature {
-            margin-top: 30px;
-            font-style: italic;
-            color: #666;
-        }
-        .section-badge {
-            display: inline-block;
-            background-color: #00ffff;
-            color: #0a0a0a;
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            margin-bottom: 10px;
-        }
-        .section-badge-pink {
-            background-color: #FF10F0;
-            color: #ffffff;
-        }
-        .emoji {
-            font-size: 20px;
-            margin-right: 8px;
-        }
-        .callout {
-            background: linear-gradient(135deg, #f0f9ff 0%, #fff5f8 100%);
-            border: 2px solid #00ffff;
-            border-radius: 8px;
-            padding: 20px;
-            margin: 25px 0;
-        }
-        .callout h3 {
-            color: #FF10F0;
-            margin-top: 0;
-            font-size: 18px;
-        }
-        .callout-hero {
-            background: linear-gradient(135deg, rgba(255, 110, 199, 0.35) 0%, rgba(255, 16, 240, 0.25) 50%, rgba(0, 255, 255, 0.35) 100%);
-            border: 3px solid rgba(255, 110, 199, 0.8);
-            border-radius: 8px;
-            padding: 20px;
-            margin: 25px 0;
-        }
-        .callout-hero h3 {
-            color: #FF10F0;
-            margin-top: 0;
-            font-size: 18px;
-            font-weight: 700;
-        }
-        .callout-hero p {
-            color: #1a1a1a;
-        }
-        .callout-hero strong {
-            color: #0a0a0a;
-        }
-        .highlight-pink {
-            background-color: #fff5f8;
-            border-left: 4px solid #FF10F0;
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 4px;
-        }
-        .visual-box {
-            background: #0a0a0a;
-            border: 2px solid #00ffff;
-            border-radius: 8px;
-            padding: 20px;
-            margin: 25px 0;
-            color: #ffffff;
-        }
-        .visual-box h3 {
-            color: #00ffff;
-            margin-top: 0;
-            font-size: 18px;
-        }
-        .visual-box p {
-            color: #e0e0e0;
-        }
+      body {
+        font-family:
+          "Inter",
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          "Roboto",
+          "Oxygen",
+          "Ubuntu",
+          "Cantarell",
+          sans-serif;
+        line-height: 1.6;
+        color: #333;
+        margin: 0;
+        padding: 0;
+        background-color: #f9f9f9;
+      }
+      .email-wrapper {
+        width: 100%;
+        background-color: #f9f9f9;
+        padding: 20px 0;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        background-color: #ffffff;
+        border-radius: 8px;
+        padding: 30px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+      .logo-header {
+        background-color: #0a0a0a;
+        padding: 10px;
+        margin: -30px -30px 30px -30px;
+        border-radius: 8px 8px 0 0;
+        text-align: center;
+      }
+      .logo-header img {
+        max-width: 400px;
+        height: auto;
+      }
+      h1 {
+        color: #00ffff;
+        font-size: 28px;
+        margin-bottom: 10px;
+        margin-top: 0;
+      }
+      h2 {
+        color: #ff10f0;
+        font-size: 20px;
+        margin-top: 30px;
+        margin-bottom: 15px;
+      }
+      .subtitle {
+        color: #666;
+        font-size: 16px;
+        margin-bottom: 25px;
+      }
+      ul {
+        padding-left: 20px;
+        margin-bottom: 20px;
+      }
+      li {
+        margin-bottom: 10px;
+      }
+      .highlight {
+        background-color: #f0f9ff;
+        border-left: 4px solid #00ffff;
+        padding: 15px;
+        margin: 20px 0;
+        border-radius: 4px;
+      }
+      .feature-box {
+        background-color: #fff5f8;
+        border-left: 4px solid #ff10f0;
+        padding: 15px;
+        margin: 20px 0;
+        border-radius: 4px;
+      }
+      .cta {
+        background-color: #00ffff;
+        color: #0a0a0a;
+        padding: 12px 24px;
+        text-decoration: none;
+        border-radius: 6px;
+        display: inline-block;
+        margin: 10px 10px 10px 0;
+        font-weight: 600;
+      }
+      .cta-secondary {
+        background-color: #ff10f0;
+        color: #ffffff;
+      }
+      .footer {
+        margin-top: 40px;
+        padding-top: 20px;
+        border-top: 1px solid #e0e0e0;
+        font-size: 14px;
+        color: #666;
+      }
+      a {
+        color: #00ffff;
+      }
+      .signature {
+        margin-top: 30px;
+        font-style: italic;
+        color: #666;
+      }
+      .section-badge {
+        display: inline-block;
+        background-color: #00ffff;
+        color: #0a0a0a;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        margin-bottom: 10px;
+      }
+      .section-badge-pink {
+        background-color: #ff10f0;
+        color: #ffffff;
+      }
+      .emoji {
+        font-size: 20px;
+        margin-right: 8px;
+      }
+      .callout {
+        background: linear-gradient(135deg, #f0f9ff 0%, #fff5f8 100%);
+        border: 2px solid #00ffff;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 25px 0;
+      }
+      .callout h3 {
+        color: #ff10f0;
+        margin-top: 0;
+        font-size: 18px;
+      }
+      .callout-hero {
+        background: linear-gradient(
+          135deg,
+          rgba(255, 110, 199, 0.35) 0%,
+          rgba(255, 16, 240, 0.25) 50%,
+          rgba(0, 255, 255, 0.35) 100%
+        );
+        border: 3px solid rgba(255, 110, 199, 0.8);
+        border-radius: 8px;
+        padding: 20px;
+        margin: 25px 0;
+      }
+      .callout-hero h3 {
+        color: #ff10f0;
+        margin-top: 0;
+        font-size: 18px;
+        font-weight: 700;
+      }
+      .callout-hero p {
+        color: #1a1a1a;
+      }
+      .callout-hero strong {
+        color: #0a0a0a;
+      }
+      .highlight-pink {
+        background-color: #fff5f8;
+        border-left: 4px solid #ff10f0;
+        padding: 15px;
+        margin: 20px 0;
+        border-radius: 4px;
+      }
+      .visual-box {
+        background: #0a0a0a;
+        border: 2px solid #00ffff;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 25px 0;
+        color: #ffffff;
+      }
+      .visual-box h3 {
+        color: #00ffff;
+        margin-top: 0;
+        font-size: 18px;
+      }
+      .visual-box p {
+        color: #e0e0e0;
+      }
+      .feature-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin: 20px 0;
+      }
+      .feature-card {
+        background-color: #f9f9f9;
+        border: 1px solid #e0e0e0;
+        border-radius: 6px;
+        padding: 15px;
+      }
+      .feature-card h4 {
+        color: #ff10f0;
+        margin-top: 0;
+        margin-bottom: 8px;
+        font-size: 16px;
+      }
+      .feature-card p {
+        margin: 0;
+        font-size: 14px;
+        color: #666;
+      }
+      @media (max-width: 600px) {
         .feature-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin: 20px 0;
+          grid-template-columns: 1fr;
         }
-        .feature-card {
-            background-color: #f9f9f9;
-            border: 1px solid #e0e0e0;
-            border-radius: 6px;
-            padding: 15px;
-        }
-        .feature-card h4 {
-            color: #FF10F0;
-            margin-top: 0;
-            margin-bottom: 8px;
-            font-size: 16px;
-        }
-        .feature-card p {
-            margin: 0;
-            font-size: 14px;
-            color: #666;
-        }
-        @media (max-width: 600px) {
-            .feature-grid {
-                grid-template-columns: 1fr;
-            }
-        }
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="email-wrapper">
-        <div class="container">
+      <div class="container">
         <div class="logo-header">
-            <img src="https://neonpanda.ai/images/logo-light-sm.png" alt="NeonPanda Logo">
+          <img
+            src="https://neonpanda.ai/images/logo-dark-sm.webp"
+            alt="NeonPanda Logo"
+          />
         </div>
         <h1>🧠 We Rebuilt the Brain (Because You Showed Us How)</h1>
-        <p class="subtitle">Coach Creator and Workout Logging redesigned from the ground up based on watching how you actually use the system.</p>
+        <p class="subtitle">
+          Coach Creator and Workout Logging redesigned from the ground up based
+          on watching how you actually use the system.
+        </p>
 
         <div class="callout-hero">
-            <h3>🙏 Thank You for Breaking Things</h3>
-            <p style="margin-bottom: 10px;">Seriously. Every edge case you found, every weird workout format you logged, every time the coach creator asked the same question twice – you showed us exactly where the system needed to evolve.</p>
-            <p style="margin-top: 10px; margin-bottom: 0;">This release is the result of <strong>watching real usage patterns</strong> and rebuilding core systems to match how you actually train, coach, and think. Thank you for pushing the platform hard and giving us brutally honest feedback. We're listening. We're learning. We're building.</p>
+          <h3>🙏 Thank You for Breaking Things</h3>
+          <p style="margin-bottom: 10px">
+            Seriously. Every edge case you found, every weird workout format you
+            logged, every time the coach creator asked the same question twice –
+            you showed us exactly where the system needed to evolve.
+          </p>
+          <p style="margin-top: 10px; margin-bottom: 0">
+            This release is the result of
+            <strong>watching real usage patterns</strong> and rebuilding core
+            systems to match how you actually train, coach, and think. Thank you
+            for pushing the platform hard and giving us brutally honest
+            feedback. We're listening. We're learning. We're building.
+          </p>
         </div>
 
-        <p>Two weeks ago, coach creation and workout logging <em>worked</em>. You could create coaches. You could log workouts. The AI extracted data. Everything functioned.</p>
+        <p>
+          Two weeks ago, coach creation and workout logging <em>worked</em>. You
+          could create coaches. You could log workouts. The AI extracted data.
+          Everything functioned.
+        </p>
 
-        <p>But "functional" isn't the same as "intelligent." We watched how you used these flows in production and realized we'd built them too rigidly. Too sequential. Too fragile when you did something unexpected (which you do constantly, and we love that).</p>
+        <p>
+          But "functional" isn't the same as "intelligent." We watched how you
+          used these flows in production and realized we'd built them too
+          rigidly. Too sequential. Too fragile when you did something unexpected
+          (which you do constantly, and we love that).
+        </p>
 
         <p><strong>So we tore them down and rebuilt them smarter.</strong></p>
 
         <div class="feature-box">
-            <span class="section-badge-pink">REDESIGNED</span>
-            <h2 style="margin-top: 10px; color: #FF10F0;">💬 Coach Creator: From Goldfish Memory to Agentic Memory</h2>
-            <p>The old flow had <strong>goldfish memory</strong>. You'd tell it "I train at a CrossFit gym with full equipment" in question 2, and it would ask about your equipment again in question 5. Frustrating. Robotic. Made you repeat yourself constantly.</p>
-            <p style="margin-top: 15px;"><strong>The new flow has agentic memory.</strong> It remembers everything you've said across the entire conversation.</p>
-            <ul style="margin-top: 10px;">
-                <li><strong>Persistent context tracking:</strong> Mention equipment once? It's remembered. Won't ask again.</li>
-                <li><strong>Natural conversation flow:</strong> Questions adapt based on what you've already volunteered, not a rigid script</li>
-                <li><strong>Semantic storage:</strong> Not just keyword matching – actual understanding of what you meant</li>
-                <li><strong>Richer coach intelligence:</strong> Your coach gets built from deeper context because the system remembers nuance</li>
-                <li><strong>Adaptive pacing:</strong> Clear and direct? Finishes fast. Want to elaborate? It adapts.</li>
-            </ul>
-            <p style="margin-top: 15px;"><em>We watched dozens of coach creation sessions. Every time someone said "I already told you that" – that was goldfish memory. We replaced it with agentic memory. Problem solved.</em></p>
+          <span class="section-badge-pink">REDESIGNED</span>
+          <h2 style="margin-top: 10px; color: #ff10f0">
+            💬 Coach Creator: From Goldfish Memory to Agentic Memory
+          </h2>
+          <p>
+            The old flow had <strong>goldfish memory</strong>. You'd tell it "I
+            train at a CrossFit gym with full equipment" in question 2, and it
+            would ask about your equipment again in question 5. Frustrating.
+            Robotic. Made you repeat yourself constantly.
+          </p>
+          <p style="margin-top: 15px">
+            <strong>The new flow has agentic memory.</strong> It remembers
+            everything you've said across the entire conversation.
+          </p>
+          <ul style="margin-top: 10px">
+            <li>
+              <strong>Persistent context tracking:</strong> Mention equipment
+              once? It's remembered. Won't ask again.
+            </li>
+            <li>
+              <strong>Natural conversation flow:</strong> Questions adapt based
+              on what you've already volunteered, not a rigid script
+            </li>
+            <li>
+              <strong>Semantic storage:</strong> Not just keyword matching –
+              actual understanding of what you meant
+            </li>
+            <li>
+              <strong>Richer coach intelligence:</strong> Your coach gets built
+              from deeper context because the system remembers nuance
+            </li>
+            <li>
+              <strong>Adaptive pacing:</strong> Clear and direct? Finishes fast.
+              Want to elaborate? It adapts.
+            </li>
+          </ul>
+          <p style="margin-top: 15px">
+            <em
+              >We watched dozens of coach creation sessions. Every time someone
+              said "I already told you that" – that was goldfish memory. We
+              replaced it with agentic memory. Problem solved.</em
+            >
+          </p>
         </div>
 
         <div class="feature-box">
-            <span class="section-badge-pink">REDESIGNED</span>
-            <h2 style="margin-top: 10px; color: #FF10F0;">🏋️ Workout Logging: Complex Workouts, Simple Process</h2>
-            <p>The old extraction struggled with multi-phase workouts. Strength session followed by a metcon? It got confused about total duration. Image attached but AI only read text? Data loss. AMRAP with weird timing? Wrong calculations.</p>
-            <p style="margin-top: 15px;"><strong>The new system handles real workouts.</strong></p>
-            <ul style="margin-top: 10px;">
-                <li><strong>Image-based logging:</strong> Snap a whiteboard photo. AI reads it. Done. Works with messy handwriting and CrossFit notation.</li>
-                <li><strong>Multi-phase workouts:</strong> Back squat session + AMRAP finisher? AI correctly sums components and tracks both workout duration and total gym time.</li>
-                <li><strong>Session vs workout duration:</strong> New <code>session_duration</code> field captures total gym time while <code>duration</code> tracks pure work time.</li>
-                <li><strong>AMRAP duration fixed:</strong> 10-minute AMRAP now correctly shows 10 minutes, not some calculated average.</li>
-                <li><strong>Better validation:</strong> AI gets the actual schema as reference when normalizing data – fewer mistakes, better accuracy.</li>
-            </ul>
-            <p style="margin-top: 15px;"><em>If you can log it on a whiteboard, we can extract it from an image. That's the goal. We're getting closer.</em></p>
+          <span class="section-badge-pink">REDESIGNED</span>
+          <h2 style="margin-top: 10px; color: #ff10f0">
+            🏋️ Workout Logging: Complex Workouts, Simple Process
+          </h2>
+          <p>
+            The old extraction struggled with multi-phase workouts. Strength
+            session followed by a metcon? It got confused about total duration.
+            Image attached but AI only read text? Data loss. AMRAP with weird
+            timing? Wrong calculations.
+          </p>
+          <p style="margin-top: 15px">
+            <strong>The new system handles real workouts.</strong>
+          </p>
+          <ul style="margin-top: 10px">
+            <li>
+              <strong>Image-based logging:</strong> Snap a whiteboard photo. AI
+              reads it. Done. Works with messy handwriting and CrossFit
+              notation.
+            </li>
+            <li>
+              <strong>Multi-phase workouts:</strong> Back squat session + AMRAP
+              finisher? AI correctly sums components and tracks both workout
+              duration and total gym time.
+            </li>
+            <li>
+              <strong>Session vs workout duration:</strong> New
+              <code>session_duration</code> field captures total gym time while
+              <code>duration</code> tracks pure work time.
+            </li>
+            <li>
+              <strong>AMRAP duration fixed:</strong> 10-minute AMRAP now
+              correctly shows 10 minutes, not some calculated average.
+            </li>
+            <li>
+              <strong>Better validation:</strong> AI gets the actual schema as
+              reference when normalizing data – fewer mistakes, better accuracy.
+            </li>
+          </ul>
+          <p style="margin-top: 15px">
+            <em
+              >If you can log it on a whiteboard, we can extract it from an
+              image. That's the goal. We're getting closer.</em
+            >
+          </p>
         </div>
 
         <div class="visual-box">
-            <h3>🏗️ The Architecture Story (This Is the Foundation)</h3>
-            <p style="margin-bottom: 15px;">We've always used multiple AI patterns (never just one giant AI call). But we introduced <strong>several new smart agentic patterns</strong> that dynamically activate based on what needs to be done:</p>
-            <p style="margin-top: 15px; margin-bottom: 15px;"><strong>Orchestrator/synthesizer patterns:</strong> Specialized agents now handle detection, extraction, validation, and storage independently. Each agent focuses on what it's best at.</p>
-            <p style="margin-top: 15px; margin-bottom: 15px;"><strong>Evaluator/optimizer patterns:</strong> Validate data quality before storage. If the AI makes a mistake, the evaluator catches it. If a field is missing, the optimizer infers it. Resilient by design.</p>
-            <p style="margin-top: 15px; margin-bottom: 15px;"><strong>Parallel processing:</strong> Router analysis + data loading + config fetching now happen simultaneously. 2-3x faster when it matters.</p>
-            <p style="margin-top: 15px; margin-bottom: 15px;"><strong>Tool-based generation:</strong> Using Bedrock's tool-use APIs lays the foundation for future MCP server integrations. This is how we'll connect to SugarWOD, Push Press, Apple Health, and other platforms. We're building the plumbing now so those integrations are fast later.</p>
-            <p style="margin-top: 15px; margin-bottom: 0;"><strong>Runtime upgrade:</strong> All cloud functions upgraded to Node.js 22 runtime via centralized configuration. Better performance, improved security, and simplified runtime management across the entire backend infrastructure.</p>
+          <h3>🏗️ The Architecture Story (This Is the Foundation)</h3>
+          <p style="margin-bottom: 15px">
+            We've always used multiple AI patterns (never just one giant AI
+            call). But we introduced
+            <strong>several new smart agentic patterns</strong> that dynamically
+            activate based on what needs to be done:
+          </p>
+          <p style="margin-top: 15px; margin-bottom: 15px">
+            <strong>Orchestrator/synthesizer patterns:</strong> Specialized
+            agents now handle detection, extraction, validation, and storage
+            independently. Each agent focuses on what it's best at.
+          </p>
+          <p style="margin-top: 15px; margin-bottom: 15px">
+            <strong>Evaluator/optimizer patterns:</strong> Validate data quality
+            before storage. If the AI makes a mistake, the evaluator catches it.
+            If a field is missing, the optimizer infers it. Resilient by design.
+          </p>
+          <p style="margin-top: 15px; margin-bottom: 15px">
+            <strong>Parallel processing:</strong> Router analysis + data loading
+            + config fetching now happen simultaneously. 2-3x faster when it
+            matters.
+          </p>
+          <p style="margin-top: 15px; margin-bottom: 15px">
+            <strong>Tool-based generation:</strong> Using Bedrock's tool-use
+            APIs lays the foundation for future MCP server integrations. This is
+            how we'll connect to SugarWOD, Push Press, Apple Health, and other
+            platforms. We're building the plumbing now so those integrations are
+            fast later.
+          </p>
+          <p style="margin-top: 15px; margin-bottom: 0">
+            <strong>Runtime upgrade:</strong> All cloud functions upgraded to
+            Node.js 22 runtime via centralized configuration. Better
+            performance, improved security, and simplified runtime management
+            across the entire backend infrastructure.
+          </p>
         </div>
 
         <h2>🐛 The Fixes You'll Actually Notice</h2>
-        <p>These aren't minor tweaks. These are "why was this broken?" level fixes:</p>
+        <p>
+          These aren't minor tweaks. These are "why was this broken?" level
+          fixes:
+        </p>
 
         <div class="feature-grid">
-            <div class="feature-card">
-                <h4>🔄 Coach Repetition</h4>
-                <p>Coach creator no longer asks about equipment after you mentioned your gym setup in question 2. Context retention works now.</p>
-            </div>
-            <div class="feature-card">
-                <h4>⏱️ Workout Duration</h4>
-                <p>30-minute workouts no longer show as "1 minute". AMRAP durations fixed. Multi-phase workouts calculate correctly. All duration bugs crushed.</p>
-            </div>
-            <div class="feature-card">
-                <h4>📸 Image Processing</h4>
-                <p>Image-based workout logging was completely broken (multimodal API wasn't even being called). Now it works. Tested. Validated. Shipped.</p>
-            </div>
-            <div class="feature-card">
-                <h4>✅ Normalization False Positives</h4>
-                <p>AI reporting "Normalization FAILED" when it succeeded? Fixed. Smart defaulting logic infers correct values when AI omits fields.</p>
-            </div>
+          <div class="feature-card">
+            <h4>🔄 Coach Repetition</h4>
+            <p>
+              Coach creator no longer asks about equipment after you mentioned
+              your gym setup in question 2. Context retention works now.
+            </p>
+          </div>
+          <div class="feature-card">
+            <h4>⏱️ Workout Duration</h4>
+            <p>
+              30-minute workouts no longer show as "1 minute". AMRAP durations
+              fixed. Multi-phase workouts calculate correctly. All duration bugs
+              crushed.
+            </p>
+          </div>
+          <div class="feature-card">
+            <h4>📸 Image Processing</h4>
+            <p>
+              Image-based workout logging was completely broken (multimodal API
+              wasn't even being called). Now it works. Tested. Validated.
+              Shipped.
+            </p>
+          </div>
+          <div class="feature-card">
+            <h4>✅ Normalization False Positives</h4>
+            <p>
+              AI reporting "Normalization FAILED" when it succeeded? Fixed.
+              Smart defaulting logic infers correct values when AI omits fields.
+            </p>
+          </div>
         </div>
 
         <div class="highlight">
-            <h2 style="margin-top: 10px; color: #00ffff;">Why This Release Matters</h2>
-            <p style="margin-bottom: 10px;">We didn't add flashy features this cycle. We made the systems that power everything <strong>fundamentally smarter and more resilient</strong>.</p>
-            <p style="margin-top: 10px;">Coach creator went from <strong>goldfish memory to agentic memory</strong> – it actually remembers context across the entire conversation instead of forgetting what you said three questions ago. Workout logging handles real-world complexity because we watched how you actually train.</p>
-            <p style="margin-top: 15px; margin-bottom: 10px;"><strong>Backend resilience was the real focus:</strong></p>
-            <ul style="margin-top: 0;">
-                <li><strong>Error recovery:</strong> Single failures no longer cascade. One bad API call doesn't kill the entire request.</li>
-                <li><strong>Smart fallbacks:</strong> If tool-based generation fails, we fall back to prompt-based with intelligent parsing. You never see the failure.</li>
-                <li><strong>Schema provisioning:</strong> AI now gets the actual schema to validate against instead of guessing structure.</li>
-                <li><strong>Data validation:</strong> Strengthened validation logic across both flows based on every weird edge case you found.</li>
-            </ul>
-            <p style="margin-top: 10px; margin-bottom: 0;">This is infrastructure work. It's invisible when it works (which is the point). But it's the foundation for everything we're building next. <em>You shouldn't have to think about backend resilience. That's our job.</em></p>
+          <h2 style="margin-top: 10px; color: #00ffff">
+            Why This Release Matters
+          </h2>
+          <p style="margin-bottom: 10px">
+            We didn't add flashy features this cycle. We made the systems that
+            power everything
+            <strong>fundamentally smarter and more resilient</strong>.
+          </p>
+          <p style="margin-top: 10px">
+            Coach creator went from
+            <strong>goldfish memory to agentic memory</strong> – it actually
+            remembers context across the entire conversation instead of
+            forgetting what you said three questions ago. Workout logging
+            handles real-world complexity because we watched how you actually
+            train.
+          </p>
+          <p style="margin-top: 15px; margin-bottom: 10px">
+            <strong>Backend resilience was the real focus:</strong>
+          </p>
+          <ul style="margin-top: 0">
+            <li>
+              <strong>Error recovery:</strong> Single failures no longer
+              cascade. One bad API call doesn't kill the entire request.
+            </li>
+            <li>
+              <strong>Smart fallbacks:</strong> If tool-based generation fails,
+              we fall back to prompt-based with intelligent parsing. You never
+              see the failure.
+            </li>
+            <li>
+              <strong>Schema provisioning:</strong> AI now gets the actual
+              schema to validate against instead of guessing structure.
+            </li>
+            <li>
+              <strong>Data validation:</strong> Strengthened validation logic
+              across both flows based on every weird edge case you found.
+            </li>
+          </ul>
+          <p style="margin-top: 10px; margin-bottom: 0">
+            This is infrastructure work. It's invisible when it works (which is
+            the point). But it's the foundation for everything we're building
+            next.
+            <em
+              >You shouldn't have to think about backend resilience. That's our
+              job.</em
+            >
+          </p>
         </div>
 
         <div class="highlight-pink">
-            <h2 style="margin-top: 10px; color: #FF10F0;">💪 Test the New Flows</h2>
-            <p style="margin-bottom: 10px;"><strong>Coach Creator:</strong> Build a new coach. Notice how it flows naturally. See if it asks redundant questions (it shouldn't). Tell us if it does.</p>
-            <p style="margin-top: 10px; margin-bottom: 10px;"><strong>Workout Logging:</strong> Log your next workout with a whiteboard photo. Type a complex multi-phase session. See if duration calculations make sense. Push the system hard.</p>
-            <p style="margin-top: 15px; margin-bottom: 0;"><strong>Then give us feedback.</strong> What broke? What worked better? What still feels clunky? Your real-world usage shapes what we prioritize next.</p>
-            <p style="margin-top: 15px; margin-bottom: 0;"><em>We're building this <strong>with you</strong>, not just for you. Keep pushing. Keep breaking things. Keep telling us what needs to improve.</em></p>
+          <h2 style="margin-top: 10px; color: #ff10f0">
+            💪 Test the New Flows
+          </h2>
+          <p style="margin-bottom: 10px">
+            <strong>Coach Creator:</strong> Build a new coach. Notice how it
+            flows naturally. See if it asks redundant questions (it shouldn't).
+            Tell us if it does.
+          </p>
+          <p style="margin-top: 10px; margin-bottom: 10px">
+            <strong>Workout Logging:</strong> Log your next workout with a
+            whiteboard photo. Type a complex multi-phase session. See if
+            duration calculations make sense. Push the system hard.
+          </p>
+          <p style="margin-top: 15px; margin-bottom: 0">
+            <strong>Then give us feedback.</strong> What broke? What worked
+            better? What still feels clunky? Your real-world usage shapes what
+            we prioritize next.
+          </p>
+          <p style="margin-top: 15px; margin-bottom: 0">
+            <em
+              >We're building this <strong>with you</strong>, not just for you.
+              Keep pushing. Keep breaking things. Keep telling us what needs to
+              improve.</em
+            >
+          </p>
         </div>
 
         <div class="callout">
-            <h3>🚀 What's Coming Next</h3>
-            <p style="margin-bottom: 10px;">We're shifting focus from backend architecture to user-facing features:</p>
-            <ul style="margin: 10px 0;">
-                <li><strong>UI Polish Everywhere:</strong> Tighter layouts, smoother animations, better mobile experience. <span style="color: #FF10F0; font-weight: 600;">Now is the time to send in UI annoyances – what feels clunky, what looks dated, what slows you down. We're listening.</span></li>
-                <li><strong>Training Program Enhancements:</strong> Calendar improvements, better progression tracking, smarter adaptation logic</li>
-                <li><strong>Visual Exercise Progressions:</strong> See your strength gains over time. Track PRs across workouts. Visualize progress patterns.</li>
-            </ul>
-            <p style="margin-top: 15px; margin-bottom: 0;">The foundation is solid now. Time to build beautiful things on top of it.</p>
+          <h3>🚀 What's Coming Next</h3>
+          <p style="margin-bottom: 10px">
+            We're shifting focus from backend architecture to user-facing
+            features:
+          </p>
+          <ul style="margin: 10px 0">
+            <li>
+              <strong>UI Polish Everywhere:</strong> Tighter layouts, smoother
+              animations, better mobile experience.
+              <span style="color: #ff10f0; font-weight: 600"
+                >Now is the time to send in UI annoyances – what feels clunky,
+                what looks dated, what slows you down. We're listening.</span
+              >
+            </li>
+            <li>
+              <strong>Training Program Enhancements:</strong> Calendar
+              improvements, better progression tracking, smarter adaptation
+              logic
+            </li>
+            <li>
+              <strong>Visual Exercise Progressions:</strong> See your strength
+              gains over time. Track PRs across workouts. Visualize progress
+              patterns.
+            </li>
+          </ul>
+          <p style="margin-top: 15px; margin-bottom: 0">
+            The foundation is solid now. Time to build beautiful things on top
+            of it.
+          </p>
         </div>
 
         <div class="signature">
-            <p>This release is proof that we're listening. Every "I already told you that" complaint about goldfish memory – we replaced it with agentic memory. Every duration bug, every failed image upload – you reported it, we fixed it.</p>
-            <p>We're not building in a vacuum. We're building <em>with you</em>. Your feedback drives every decision. Your usage patterns shape every redesign.</p>
-            <p style="margin-top: 20px;">Keep training. Keep coaching. Keep pushing the system. 💪</p>
-            <p style="margin-top: 15px;">– The NeonPanda Team</p>
+          <p>
+            This release is proof that we're listening. Every "I already told
+            you that" complaint about goldfish memory – we replaced it with
+            agentic memory. Every duration bug, every failed image upload – you
+            reported it, we fixed it.
+          </p>
+          <p>
+            We're not building in a vacuum. We're building <em>with you</em>.
+            Your feedback drives every decision. Your usage patterns shape every
+            redesign.
+          </p>
+          <p style="margin-top: 20px">
+            Keep training. Keep coaching. Keep pushing the system. 💪
+          </p>
+          <p style="margin-top: 15px">– The NeonPanda Team</p>
         </div>
 
         <div class="footer">
-            <p><strong>NeonPanda</strong> – Where electric intelligence meets approachable excellence.</p>
-            <p>Questions? Reply to this email or find us in Discord. We read everything.</p>
-            <p style="margin-top: 15px;">
-                <a href="https://neonpanda.ai" style="margin-right: 15px;">Visit NeonPanda</a>
-                <a href="https://discord.gg/AmbuFTrU" style="margin-right: 15px;">Join Discord</a>
-                <a href="https://neonpanda.ai/changelog">View Full Changelog</a>
-            </p>
+          <p>
+            <strong>NeonPanda</strong> – Where electric intelligence meets
+            approachable excellence.
+          </p>
+          <p>
+            Questions? Reply to this email or find us in Discord. We read
+            everything.
+          </p>
+          <p style="margin-top: 15px">
+            <a href="https://neonpanda.ai" style="margin-right: 15px"
+              >Visit NeonPanda</a
+            >
+            <a href="https://discord.gg/AmbuFTrU" style="margin-right: 15px"
+              >Join Discord</a
+            >
+            <a href="https://neonpanda.ai/changelog">View Full Changelog</a>
+          </p>
         </div>
+      </div>
     </div>
-    </div>
-</body>
+  </body>
 </html>
-

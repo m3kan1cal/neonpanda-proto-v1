@@ -62,7 +62,7 @@ Think: Electric energy meets approachable excellence. Serious results, refreshin
   // 2. Available tools and workflow
   sections.push(`## YOUR TOOLS AND WORKFLOW
 
-You have 7 tools at your disposal. Here's the REQUIRED workflow:
+You have 8 tools at your disposal. Here's the REQUIRED workflow:
 
 ### 1. load_session_requirements (CALL FIRST)
 - Loads the coach creator session from DynamoDB
@@ -77,12 +77,14 @@ You have 7 tools at your disposal. Here's the REQUIRED workflow:
 - Analyzes user sophistication, goals, preferences
 - Available templates: emma (encouraging), marcus (technical), diana (competitive), alex (balanced)
 - **Returns: primaryTemplate, secondaryInfluences, selectionReasoning, blendingWeights**
+- **⚡ EFFICIENCY TIP: You can call this AND select_methodology_template together in parallel**
 
 ### 3. select_methodology_template (CALL THIRD)
 - AI-powered selection of optimal training methodology
 - Considers goals, experience, equipment, time constraints
 - Available methodologies: comptrain_strength, mayhem_conditioning, hwpo_training, invictus_fitness, etc.
 - **Returns: primaryMethodology, methodologyReasoning, programmingEmphasis, periodizationApproach**
+- **⚡ EFFICIENCY TIP: You can call this AND select_personality_template together in parallel**
 
 ### 4. generate_coach_prompts (CALL FOURTH)
 - Generates all 7 personality prompts for the coach
@@ -90,17 +92,23 @@ You have 7 tools at your disposal. Here's the REQUIRED workflow:
 - Prompts: personality, safety, motivation, methodology, communication, learning, gender_tone
 - **Returns: All 7 prompts as strings**
 
-### 5. validate_coach_config (CALL FIFTH)
+### 5. assemble_coach_config (CALL FIFTH)
+- Automatically assembles the complete coach configuration
+- Uses all previous tool results (requirements, personality, methodology, prompts)
+- **You DO NOT manually construct the config - this tool does it automatically**
+- **Returns: coachConfig (complete structure ready for validation)**
+
+### 6. validate_coach_config (CALL SIXTH)
 - Validates the assembled coach configuration
 - Checks schema compliance, safety integration, personality coherence
 - **Returns: isValid, shouldNormalize, confidence, validationIssues**
 
-### 6. normalize_coach_config (CONDITIONAL)
+### 7. normalize_coach_config (CONDITIONAL)
 - Only call if validate_coach_config returns shouldNormalize: true
 - Fixes minor issues and fills missing optional fields
 - **Skip if validation passed without issues**
 
-### 7. save_coach_config_to_database (FINAL STEP)
+### 8. save_coach_config_to_database (FINAL STEP)
 - Saves to DynamoDB and Pinecone
 - Updates session status to COMPLETE
 - **ONLY call after all previous steps complete successfully**`);
@@ -108,26 +116,30 @@ You have 7 tools at your disposal. Here's the REQUIRED workflow:
   // 3. Available templates reference
   sections.push(`## AVAILABLE PERSONALITY TEMPLATES
 
-${COACH_PERSONALITY_TEMPLATES.map((template) => `### ${template.id.toUpperCase()}: ${template.name}
+${COACH_PERSONALITY_TEMPLATES.map(
+  (template) => `### ${template.id.toUpperCase()}: ${template.name}
 - Description: ${template.description}
 - Best for: ${template.bestFor.join(", ")}
 - Communication: ${template.communicationStyle}
 - Programming: ${template.programmingApproach}
-- Motivation: ${template.motivationStyle}`).join("\n\n")}
+- Motivation: ${template.motivationStyle}`,
+).join("\n\n")}
 
 ## AVAILABLE METHODOLOGY TEMPLATES
 
-${METHODOLOGY_TEMPLATES.map((method) => `### ${method.id.toUpperCase()}: ${method.name}
+${METHODOLOGY_TEMPLATES.map(
+  (method) => `### ${method.id.toUpperCase()}: ${method.name}
 - Description: ${method.description}
 - Best for: ${method.bestFor.join(", ")}
 - Strength bias: ${method.strengthBias}
-- Conditioning: ${method.conditioningApproach}`).join("\n\n")}`);
+- Conditioning: ${method.conditioningApproach}`,
+).join("\n\n")}`);
 
   // 4. Critical rules
   sections.push(`## CRITICAL RULES
 
 1. **ALWAYS call tools in the correct order**:
-   - load_session_requirements → select_personality_template → select_methodology_template → generate_coach_prompts → validate_coach_config → [normalize if needed] → save_coach_config_to_database
+   - load_session_requirements → select_personality_template → select_methodology_template → generate_coach_prompts → assemble_coach_config → validate_coach_config → [normalize if needed] → save_coach_config_to_database
 
 2. **VALIDATION DECISIONS ARE AUTHORITATIVE (NOT ADVISORY)**:
    - ⛔ **CRITICAL**: If validate_coach_config returns isValid: false
@@ -171,83 +183,63 @@ ${METHODOLOGY_TEMPLATES.map((method) => `### ${method.id.toUpperCase()}: ${metho
   sections.push(`## CRITICAL SAFETY RULES TO INTEGRATE
 
 ${SAFETY_RULES.filter((rule) => rule.severity === "critical")
-    .map((rule) => `- ${rule.rule} (${rule.category})`)
-    .join("\n")}
+  .map((rule) => `- ${rule.rule} (${rule.category})`)
+  .join("\n")}
 
 All safety considerations from the user's profile must be integrated into:
 - technical_config.injury_considerations
 - technical_config.safety_constraints
 - generated_prompts.safety_integrated_prompt`);
 
-  // 7. Coach config assembly guide
-  sections.push(`## COACH CONFIG ASSEMBLY
+  // 7. Coach config assembly (automatic)
+  sections.push(`## COACH CONFIG ASSEMBLY (AUTOMATIC)
 
-After gathering all selections and prompts, assemble the coach config with this structure:
+**IMPORTANT**: You do NOT need to manually construct the coach configuration.
 
-\`\`\`json
-{
-  "coach_id": "user_{userId}_coach_{timestamp}",
-  "coach_name": "Creative_Playful_Name",
-  "coach_description": "3-5 word specialty description",
-  "gender_preference": "male|female|neutral",
-  "selected_personality": {
-    "primary_template": "emma|marcus|diana|alex",
-    "secondary_influences": ["template_id"],
-    "selection_reasoning": "Explanation...",
-    "blending_weights": { "primary": 0.7, "secondary": 0.3 }
-  },
-  "selected_methodology": {
-    "primary_methodology": "methodology_id",
-    "methodology_reasoning": "Explanation...",
-    "programming_emphasis": "strength|conditioning|balanced",
-    "periodization_approach": "linear|conjugate|block|daily_undulating",
-    "creativity_emphasis": "high_variety|medium_variety|low_variety",
-    "workout_innovation": "enabled|disabled"
-  },
-  "technical_config": { /* From session requirements */ },
-  "generated_prompts": { /* From generate_coach_prompts */ },
-  "modification_capabilities": { /* Standard capabilities */ },
-  "metadata": { /* Version, dates, profiles */ }
-}
-\`\`\`
+The \`assemble_coach_config\` tool automatically builds the complete structure using:
+- All data from load_session_requirements
+- Selected personality template
+- Selected methodology template
+- Generated prompts
 
-COACH NAME GUIDELINES:
-- Incorporate the selected personality template name
-- Reflect user's primary goals
-- Match gender preference
-- Fun and memorable but professional
-- Under 25 characters with underscores
-- Examples: "Marcus_the_Form_Master", "Emma_Your_Foundation"`);
+Simply call \`assemble_coach_config\` with the creation timestamp, and it will:
+- Generate a creative coach name (e.g., "Marcus_the_Form_Master", "Emma_Your_Foundation")
+- Build the complete nested structure
+- Set all metadata fields
+- Integrate safety constraints
+- Configure modification capabilities
+
+The tool returns a complete \`coachConfig\` object ready for validation.`);
 
   // 8. Common scenarios
   sections.push(`## COMMON SCENARIOS
 
 ### Scenario 1: Standard coach creation (complete session data)
 1. load_session_requirements → Get all context
-2. select_personality_template → Choose best personality
-3. select_methodology_template → Choose best methodology
+2-3. ⚡ select_personality_template + select_methodology_template → Choose both in parallel
 4. generate_coach_prompts → Create all prompts
-5. validate_coach_config → Check quality (should pass)
-6. save_coach_config_to_database → Save to DB
+5. assemble_coach_config → Build complete config structure
+6. validate_coach_config → Check quality (should pass)
+7. save_coach_config_to_database → Save to DB
 Response: "Coach created successfully! ID: user_xxx_coach_xxx"
 
 ### Scenario 2: Minor validation issues (shouldNormalize: true)
 1. load_session_requirements → Get context
-2. select_personality_template → Choose personality
-3. select_methodology_template → Choose methodology
+2-3. ⚡ select_personality_template + select_methodology_template → Choose both in parallel
 4. generate_coach_prompts → Create prompts
-5. validate_coach_config → shouldNormalize: true
-6. normalize_coach_config → Fix minor issues
-7. save_coach_config_to_database → Save to DB
+5. assemble_coach_config → Build config
+6. validate_coach_config → shouldNormalize: true
+7. normalize_coach_config → Fix minor issues
+8. save_coach_config_to_database → Save to DB
 Response: "Coach created with normalized data. ID: user_xxx_coach_xxx"
 
 ### Scenario 3: Validation fails (BLOCKED - DO NOT SAVE)
 1. load_session_requirements → Get context
-2. select_personality_template → Choose personality
-3. select_methodology_template → Choose methodology
+2-3. ⚡ select_personality_template + select_methodology_template → Choose both in parallel
 4. generate_coach_prompts → Create prompts
-5. validate_coach_config → isValid: false, validationIssues: [...]
-6. ⛔ **STOP - DO NOT call save_coach_config_to_database**
+5. assemble_coach_config → Build config
+6. validate_coach_config → isValid: false, validationIssues: [...]
+7. ⛔ **STOP - DO NOT call save_coach_config_to_database**
 Response: "Coach creation failed: [validation issues]. Cannot save invalid config."
 
 **CRITICAL**: When validation returns isValid: false, the workflow ENDS.`);

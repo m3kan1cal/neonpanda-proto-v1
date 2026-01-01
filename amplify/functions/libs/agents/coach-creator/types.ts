@@ -28,7 +28,8 @@ export interface BuildCoachConfigEvent {
  * Contains all data needed for coach creator tools.
  * Based on BuildCoachConfigEvent with additional loaded data.
  */
-export interface CoachCreatorContext extends AgentContext, BuildCoachConfigEvent {
+export interface CoachCreatorContext
+  extends AgentContext, BuildCoachConfigEvent {
   // Inherits from AgentContext:
   // - userId (required)
   // Inherits from BuildCoachConfigEvent:
@@ -157,6 +158,12 @@ export interface CoachConfigValidationResult {
   personalityCoherence: {
     consistencyScore: number;
     conflictingTraits: string[];
+  };
+  aiValidation?: {
+    genderConsistency: number;
+    safetyLanguageQuality: number;
+    brandVoiceScore: number;
+    promptCoherence: number;
   };
 }
 

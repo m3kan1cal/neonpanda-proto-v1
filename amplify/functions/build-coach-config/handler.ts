@@ -52,7 +52,9 @@ export const handler: Handler<CoachConfigEvent> = async (
       }
 
       // Step 2: Generate consistent timestamp for all operations
-      console.info("⏰ Step 2: Generating consistent timestamp for config creation");
+      console.info(
+        "⏰ Step 2: Generating consistent timestamp for config creation",
+      );
       const creationTimestamp = new Date().toISOString();
       const creationDate = new Date(creationTimestamp);
       console.info("Timestamp generated:", creationTimestamp);
@@ -76,7 +78,9 @@ export const handler: Handler<CoachConfigEvent> = async (
       };
 
       // Step 5: Create CoachCreator agent and run workflow
-      console.info("🤖 Step 5: Creating CoachCreator agent and starting workflow");
+      console.info(
+        "🤖 Step 5: Creating CoachCreator agent and starting workflow",
+      );
       const agent = new CoachCreatorAgent(agentContext);
       const result = await agent.createCoach();
 
@@ -125,7 +129,8 @@ export const handler: Handler<CoachConfigEvent> = async (
               ...session.configGeneration,
               status: "FAILED" as const,
               failedAt: new Date(),
-              error: result.reason || "Coach creation was skipped or incomplete",
+              error:
+                result.reason || "Coach creation was skipped or incomplete",
             },
             lastActivity: new Date(),
           };

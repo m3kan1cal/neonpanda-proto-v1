@@ -6,7 +6,15 @@
  */
 
 import type { Tool } from "../core/types";
-import type { WorkoutLoggerContext } from "./types";
+import type {
+  WorkoutLoggerContext,
+  DisciplineDetectionResult,
+  WorkoutExtractionResult,
+  WorkoutValidationResult,
+  WorkoutNormalizationResult,
+  WorkoutSummaryResult,
+  WorkoutSaveResult,
+} from "./types";
 import {
   checkWorkoutComplexity,
   buildWorkoutExtractionPrompt,
@@ -46,80 +54,6 @@ import { storeWorkoutSummaryInPinecone } from "../../workout/pinecone";
 import { linkWorkoutToTemplate } from "../../program/template-linking";
 import { storeExtractionDebugData } from "./helpers";
 import { detectDiscipline } from "../../workout/discipline-detector";
-
-/**
- * Tool-specific result types
- * (Internal to tools.ts, not exported from types.ts)
- */
-
-/**
- * Result from extract_workout_data tool
- */
-interface WorkoutExtractionResult {
-  workoutData: UniversalWorkoutSchema;
-  completedAt: Date;
-  generationMethod: "tool" | "fallback";
-}
-
-/**
- * Result from validate_workout_completeness tool
- */
-interface WorkoutValidationResult {
-  isValid: boolean;
-  shouldNormalize: boolean;
-  shouldSave: boolean;
-  confidence: number;
-  completeness: number;
-  validationFlags: string[];
-  blockingFlags: string[];
-  disciplineClassification: DisciplineClassification;
-  reason?: string;
-}
-
-/**
- * Result from normalize_workout_data tool
- */
-interface WorkoutNormalizationResult {
-  normalizedData: UniversalWorkoutSchema;
-  isValid: boolean;
-  issuesFound: number;
-  issuesCorrected: number;
-  normalizationSummary: string;
-  normalizationConfidence: number;
-}
-
-/**
- * Result from generate_workout_summary tool
- */
-interface WorkoutSummaryResult {
-  summary: string;
-}
-
-/**
- * Result from save_workout_to_database tool
- */
-interface WorkoutSaveResult {
-  workoutId: string;
-  success: boolean;
-  pineconeStored: boolean;
-  pineconeRecordId: string | null;
-  templateLinked: boolean;
-}
-
-/**
- * Recursively sanitize date fields in an object
- * Converts invalid date strings to null and normalizes date formats to prevent DynamoDB serialization errors
- */
-
-/**
- * Result from detect_discipline tool
- */
-interface DisciplineDetectionResult {
-  discipline: string;
-  confidence: number;
-  method: "ai_detection";
-  reasoning: string;
-}
 
 /**
  * Tool 1: Detect Workout Discipline

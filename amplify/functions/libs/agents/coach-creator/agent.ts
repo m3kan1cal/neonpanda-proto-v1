@@ -12,13 +12,14 @@ import {
   selectPersonalityTemplateTool,
   selectMethodologyTemplateTool,
   generateCoachPromptsTool,
+  assembleCoachConfigTool,
   validateCoachConfigTool,
   normalizeCoachConfigTool,
   saveCoachConfigToDatabaseTool,
 } from "./tools";
 import { buildCoachCreatorPrompt } from "./prompts";
 import { MODEL_IDS } from "../../api-helpers";
-import { enforceValidationBlocking, assembleCoachConfig } from "./helpers";
+import { enforceValidationBlocking } from "./helpers";
 
 /**
  * Minimum number of tools that must be called for a complete coach creation workflow.
@@ -27,27 +28,44 @@ import { enforceValidationBlocking, assembleCoachConfig } from "./helpers";
  * 2. select_personality_template - Choose personality
  * 3. select_methodology_template - Choose methodology
  * 4. generate_coach_prompts - Create all prompts
+ * 5. assemble_coach_config - Assemble complete coach configuration
  *
  * Note: This is used to detect incomplete agent responses that should trigger a retry.
  */
-const MIN_REQUIRED_TOOLS_FOR_COMPLETE_WORKFLOW = 4;
+const MIN_REQUIRED_TOOLS_FOR_COMPLETE_WORKFLOW = 5;
 
 /**
  * Coach Creator Agent
  *
  * Coordinates coach creation using tool-based workflow.
- * Claude decides when to load requirements, select templates, generate prompts, validate, and save.
+ * Claude decides when to load requirements, select templates, generate prompts, assemble, validate, and save.
  */
+/**
+ * Mapping from tool IDs to semantic storage keys
+ * Following program-designer pattern for consistent data retrieval
+ */
+const STORAGE_KEY_MAP: Record<string, string> = {
+  load_session_requirements: "requirements",
+  select_personality_template: "personality_selection",
+  select_methodology_template: "methodology_selection",
+  generate_coach_prompts: "coach_prompts",
+  assemble_coach_config: "assembled_config",
+  validate_coach_config: "validation",
+  normalize_coach_config: "normalization",
+  save_coach_config_to_database: "save",
+};
+
 export class CoachCreatorAgent extends Agent<CoachCreatorContext> {
   private toolResults: Map<string, any> = new Map(); // Track tool results
 
   /**
-   * Store tool result with unique key for later retrieval
-   * Prevents Claude from needing to echo large objects
+   * Store tool result with semantic key for later retrieval
+   * Maps tool IDs to semantic keys (like program-designer pattern)
    */
   private storeToolResult(toolId: string, result: any): void {
-    this.toolResults.set(toolId, result);
-    console.info(`📦 Stored tool result for ${toolId}`);
+    const storageKey = STORAGE_KEY_MAP[toolId] || toolId;
+    this.toolResults.set(storageKey, result);
+    console.info(`📦 Stored tool result: ${toolId} → ${storageKey}`);
   }
 
   /**
@@ -89,23 +107,49 @@ export class CoachCreatorAgent extends Agent<CoachCreatorContext> {
 
   /**
    * Retrieve all tool results in structured format
-   * Typed for better IntelliSense and error detection
+   * Uses semantic keys for consistent access
    */
   private getStructuredToolResults() {
     return {
-      requirements: this.toolResults.get("load_session_requirements"),
-      personalitySelection: this.toolResults.get("select_personality_template"),
-      methodologySelection: this.toolResults.get("select_methodology_template"),
-      coachPrompts: this.toolResults.get("generate_coach_prompts"),
-      validation: this.toolResults.get("validate_coach_config"),
-      normalization: this.toolResults.get("normalize_coach_config"),
-      save: this.toolResults.get("save_coach_config_to_database"),
+      requirements: this.toolResults.get("requirements"),
+      personalitySelection: this.toolResults.get("personality_selection"),
+      methodologySelection: this.toolResults.get("methodology_selection"),
+      coachPrompts: this.toolResults.get("coach_prompts"),
+      assembledConfig: this.toolResults.get("assembled_config"),
+      validation: this.toolResults.get("validation"),
+      normalization: this.toolResults.get("normalization"),
+      save: this.toolResults.get("save"),
     };
   }
 
   /**
-   * Override handleToolUse to implement blocking enforcement
-   * Prevents save when validation failed
+   * Override enforceToolBlocking to implement validation-based blocking
+   * Prevents save when validation failed (defense in depth)
+   */
+  protected enforceToolBlocking(
+    toolId: string,
+    toolInput: any,
+  ): {
+    error: boolean;
+    blocked: boolean;
+    reason: string;
+    validationIssues?: string[];
+  } | null {
+    // Get validation result from stored tool results using semantic key
+    const validationResult = this.toolResults.get("validation");
+
+    // Delegate to helper function for blocking logic
+    return enforceValidationBlocking(toolId, validationResult);
+  }
+
+  /**
+   * Override handleToolUse to implement augmented context, blocking enforcement, and parallel execution
+   *
+   * Coach Creator needs custom execution for:
+   * - Augmented context with getToolResult accessor
+   * - Tool result storage for cross-tool data passing
+   * - Blocking enforcement from validation
+   * - Parallel execution of independent tools (personality + methodology)
    */
   protected async handleToolUse(response: any): Promise<void> {
     const conversationHistory = this.getConversationHistory();
@@ -122,9 +166,93 @@ export class CoachCreatorAgent extends Agent<CoachCreatorContext> {
 
     console.info(`🔧 Executing ${toolUses.length} tool(s)`);
 
-    // Execute tools sequentially with blocking enforcement
-    const toolResults: any[] = [];
+    // Check if we can parallelize personality and methodology selection
+    const hasPersonalityTool = toolUses.some(
+      (b: any) => b.toolUse.name === "select_personality_template",
+    );
+    const hasMethodologyTool = toolUses.some(
+      (b: any) => b.toolUse.name === "select_methodology_template",
+    );
+
+    const canParallelize =
+      hasPersonalityTool && hasMethodologyTool && toolUses.length === 2;
+
+    let toolResults: any[] = [];
+
+    if (canParallelize) {
+      console.info(
+        "🚀 Executing personality and methodology selection in parallel",
+      );
+      toolResults = await this.executeToolsInParallel(toolUses);
+    } else {
+      // Execute sequentially (default behavior)
+      toolResults = await this.executeToolsSequentially(toolUses);
+    }
+
+    // Add tool results back to conversation
+    conversationHistory.push({
+      role: "user",
+      content: toolResults,
+    });
+
+    console.info("📥 Tool results added to conversation history");
+  }
+
+  /**
+   * Execute tools in parallel (for independent tools like personality + methodology)
+   */
+  private async executeToolsInParallel(toolUses: any[]): Promise<any[]> {
     const augmentedContext = this.createAugmentedContext();
+
+    const results = await Promise.all(
+      toolUses.map(async (block: any) => {
+        const toolUse = block.toolUse;
+        const tool = this.config.tools.find((t) => t.id === toolUse.name);
+
+        if (!tool) {
+          console.warn(`⚠️ Tool not found: ${toolUse.name}`);
+          return this.buildToolResult(
+            toolUse,
+            { error: `Tool '${toolUse.name}' not found` },
+            "error",
+          );
+        }
+
+        console.info(`⚙️ Executing tool: ${tool.id} (parallel)`);
+
+        try {
+          const startTime = Date.now();
+          const result = await tool.execute(toolUse.input, augmentedContext);
+          const duration = Date.now() - startTime;
+
+          console.info(`✅ Tool ${tool.id} completed in ${duration}ms`);
+
+          // Store result for later retrieval
+          this.storeToolResult(tool.id, result);
+
+          return this.buildToolResult(toolUse, result, "success");
+        } catch (error) {
+          console.error(`❌ Tool ${tool.id} failed:`, error);
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
+          return this.buildToolResult(
+            toolUse,
+            { error: errorMessage },
+            "error",
+          );
+        }
+      }),
+    );
+
+    return results;
+  }
+
+  /**
+   * Execute tools sequentially (default behavior with blocking checks)
+   */
+  private async executeToolsSequentially(toolUses: any[]): Promise<any[]> {
+    const augmentedContext = this.createAugmentedContext();
+    const toolResults: any[] = [];
 
     for (const block of toolUses) {
       const toolUse = block.toolUse;
@@ -142,13 +270,13 @@ export class CoachCreatorAgent extends Agent<CoachCreatorContext> {
         continue;
       }
 
-      // Enforce blocking decisions from validation
-      const validationResult = this.toolResults.get("validate_coach_config");
-      const blockingResult = enforceValidationBlocking(tool.id, validationResult);
-
+      // Use base class blocking enforcement hook
+      const blockingResult = this.enforceToolBlocking(tool.id, toolUse.input);
       if (blockingResult) {
         console.warn(`⛔ Blocking tool execution: ${tool.id}`);
-        toolResults.push(this.buildToolResult(toolUse, blockingResult, "error"));
+        toolResults.push(
+          this.buildToolResult(toolUse, blockingResult, "error"),
+        );
         continue;
       }
 
@@ -175,13 +303,7 @@ export class CoachCreatorAgent extends Agent<CoachCreatorContext> {
       }
     }
 
-    // Add tool results back to conversation
-    conversationHistory.push({
-      role: "user",
-      content: toolResults,
-    });
-
-    console.info("📥 Tool results added to conversation history");
+    return toolResults;
   }
 
   constructor(context: CoachCreatorContext) {
@@ -207,6 +329,7 @@ export class CoachCreatorAgent extends Agent<CoachCreatorContext> {
         selectPersonalityTemplateTool,
         selectMethodologyTemplateTool,
         generateCoachPromptsTool,
+        assembleCoachConfigTool,
         validateCoachConfigTool,
         normalizeCoachConfigTool,
         saveCoachConfigToDatabaseTool,
@@ -244,18 +367,15 @@ export class CoachCreatorAgent extends Agent<CoachCreatorContext> {
 
       const result = this.buildResultFromToolData(response);
 
-      // RETRY LOGIC: If AI didn't use enough tools (incomplete workflow),
-      // retry with a stronger prompt forcing it to proceed
-      if (this.shouldRetryWithStrongerPrompt(result, response)) {
-        console.warn(
-          "🔄 AI incomplete workflow - RETRYING with stronger prompt to force tool execution",
-        );
+      // RETRY LOGIC: Use base class hook to determine if retry is needed
+      const retryDecision = this.shouldRetryWorkflow(result, response);
+      if (retryDecision?.shouldRetry) {
+        console.warn(`🔄 ${retryDecision.logMessage}`);
 
-        // Clear tool results and retry with explicit instruction
+        // Clear tool results after building retry prompt
         this.toolResults.clear();
 
-        const retryPrompt = this.buildRetryPrompt(response, creationTimestamp);
-        const retryResponse = await this.converse(retryPrompt);
+        const retryResponse = await this.converse(retryDecision.retryPrompt);
 
         console.info("Retry response received:", {
           responseLength: retryResponse.length,
@@ -296,16 +416,21 @@ export class CoachCreatorAgent extends Agent<CoachCreatorContext> {
   }
 
   /**
-   * Determine if we should retry with a stronger prompt
-   * This happens when AI doesn't use tools or workflow is incomplete
+   * Override base class retry hook to implement coach-creator-specific retry logic
+   *
+   * Determines if we should retry when AI doesn't use enough tools or workflow is incomplete.
    */
-  private shouldRetryWithStrongerPrompt(
+  protected shouldRetryWorkflow(
     result: CoachCreatorResult,
     response: string,
-  ): boolean {
+  ): {
+    shouldRetry: boolean;
+    retryPrompt: string;
+    logMessage: string;
+  } | null {
     // Don't retry if it was successful
     if (result.success) {
-      return false;
+      return null;
     }
 
     // Don't retry if validation explicitly failed
@@ -313,7 +438,7 @@ export class CoachCreatorAgent extends Agent<CoachCreatorContext> {
       result.reason &&
       result.reason.toLowerCase().includes("validation failed")
     ) {
-      return false;
+      return null;
     }
 
     // Retry if no tools were called and response looks incomplete
@@ -328,17 +453,31 @@ export class CoachCreatorAgent extends Agent<CoachCreatorContext> {
       response.toLowerCase().includes("would you like") ||
       response.toLowerCase().includes("can you confirm");
 
-    return (noToolsCalled || minimalToolsCalled) && looksIncomplete;
+    if ((noToolsCalled || minimalToolsCalled) && looksIncomplete) {
+      const creationTimestamp = new Date().toISOString();
+
+      return {
+        shouldRetry: true,
+        retryPrompt: this.buildRetryPrompt(response, creationTimestamp),
+        logMessage:
+          "AI incomplete workflow - RETRYING with stronger prompt to force tool execution",
+      };
+    }
+
+    return null; // Don't retry
   }
 
   /**
    * Build a stronger retry prompt that forces tool execution
    */
-  private buildRetryPrompt(aiResponse: string, creationTimestamp: string): string {
-    // Get any partial results
-    const hasRequirements = !!this.toolResults.get("load_session_requirements");
-    const hasPersonality = !!this.toolResults.get("select_personality_template");
-    const hasMethodology = !!this.toolResults.get("select_methodology_template");
+  private buildRetryPrompt(
+    aiResponse: string,
+    creationTimestamp: string,
+  ): string {
+    // Get any partial results using semantic keys
+    const hasRequirements = !!this.toolResults.get("requirements");
+    const hasPersonality = !!this.toolResults.get("personality_selection");
+    const hasMethodology = !!this.toolResults.get("methodology_selection");
 
     return `CRITICAL OVERRIDE: You did not complete the coach creation workflow.
 

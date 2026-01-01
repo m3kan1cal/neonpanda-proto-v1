@@ -20,6 +20,19 @@ import { MODEL_IDS } from "../../api-helpers";
 import { enforceValidationBlocking } from "./helpers";
 
 /**
+ * Semantic storage key mapping for tool results
+ * Maps tool IDs to shorter, meaningful keys for cleaner result storage
+ */
+const STORAGE_KEY_MAP: Record<string, string> = {
+  detect_discipline: "discipline",
+  extract_workout_data: "extraction",
+  validate_workout_completeness: "validation",
+  normalize_workout_data: "normalization",
+  generate_workout_summary: "summary",
+  save_workout_to_database: "save",
+};
+
+/**
  * Workout Logger Agent
  *
  * Coordinates workout extraction and storage using tool-based workflow.
@@ -92,9 +105,7 @@ export class WorkoutLoggerAgent extends Agent<WorkoutLoggerContext> {
           // guidance, ensuring blocking decisions are AUTHORITATIVE.
           // ============================================================
 
-          const validationResult = this.toolResults.get(
-            "validate_workout_completeness",
-          );
+          const validationResult = this.toolResults.get("validation");
 
           // Check if tool execution should be blocked
           const blockingResult = enforceValidationBlocking(
@@ -107,8 +118,9 @@ export class WorkoutLoggerAgent extends Agent<WorkoutLoggerContext> {
 
           // Execute tool normally if not blocked
           const result = await tool.execute(input, context);
-          this.toolResults.set(tool.id, result); // Store result
-          console.info(`📦 Stored tool result for ${tool.id}`);
+          const storageKey = STORAGE_KEY_MAP[tool.id] || tool.id;
+          this.toolResults.set(storageKey, result);
+          console.info(`📦 Stored tool result: ${tool.id} → ${storageKey}`);
           return result;
         },
       }));
@@ -123,18 +135,15 @@ export class WorkoutLoggerAgent extends Agent<WorkoutLoggerContext> {
 
       const result = this.buildResultFromToolData(response);
 
-      // RETRY LOGIC: If AI asked a clarifying question (no tools called),
-      // retry with a stronger prompt forcing it to make assumptions
-      if (this.shouldRetryWithStrongerPrompt(result, response)) {
-        console.warn(
-          "🔄 AI asked clarifying question - RETRYING with stronger prompt to force extraction",
-        );
+      // RETRY LOGIC: Use base class hook to determine if retry is needed
+      const retryDecision = this.shouldRetryWorkflow(result, response);
+      if (retryDecision?.shouldRetry) {
+        console.warn(`🔄 ${retryDecision.logMessage}`);
 
         // Clear tool results and retry with explicit instruction
         this.toolResults.clear();
 
-        const retryPrompt = this.buildRetryPrompt(userMessage, response);
-        const retryResponse = await this.converse(retryPrompt);
+        const retryResponse = await this.converse(retryDecision.retryPrompt);
 
         console.info("Retry response received:", {
           responseLength: retryResponse.length,
@@ -177,19 +186,24 @@ export class WorkoutLoggerAgent extends Agent<WorkoutLoggerContext> {
   }
 
   /**
-   * Determine if we should retry with a stronger prompt
-   * This happens when AI asks a clarifying question instead of processing
+   * Override base class retry hook to implement workout-specific retry logic
+   *
+   * Determines if we should retry when AI asks a clarifying question instead of processing.
    *
    * NOTE: While stream-coach-conversation does initial detection, this provides
    * defense-in-depth to prevent retry logic from overriding correct blocking decisions.
    */
-  private shouldRetryWithStrongerPrompt(
+  protected shouldRetryWorkflow(
     result: WorkoutLogResult,
     response: string,
-  ): boolean {
+  ): {
+    shouldRetry: boolean;
+    retryPrompt: string;
+    logMessage: string;
+  } | null {
     // Don't retry if it was successful
     if (result.success) {
-      return false;
+      return null;
     }
 
     // Don't retry if AI correctly detected non-workout content
@@ -262,7 +276,7 @@ export class WorkoutLoggerAgent extends Agent<WorkoutLoggerContext> {
             reasonPreview: result.reason.substring(0, 100),
           },
         );
-        return false;
+        return null;
       }
     }
 
@@ -276,7 +290,24 @@ export class WorkoutLoggerAgent extends Agent<WorkoutLoggerContext> {
       response.toLowerCase().includes("could you") ||
       response.toLowerCase().includes("can you provide");
 
-    return noToolsCalled && looksLikeQuestion;
+    if (noToolsCalled && looksLikeQuestion) {
+      // Get the original user message from context for retry
+      const userMessage = this.getConversationHistory().find(
+        (msg) => msg.role === "user",
+      )?.content;
+      const originalMessage = Array.isArray(userMessage)
+        ? userMessage.find((block: any) => block.text)?.text || ""
+        : "";
+
+      return {
+        shouldRetry: true,
+        retryPrompt: this.buildRetryPrompt(originalMessage, response),
+        logMessage:
+          "AI asked clarifying question - RETRYING with stronger prompt to force extraction",
+      };
+    }
+
+    return null; // Don't retry
   }
 
   /**
@@ -309,12 +340,10 @@ Now extract and save this workout using your tools. Make assumptions where neede
    * Handles clarifying questions and text responses appropriately.
    */
   private buildResultFromToolData(agentResponse: string): WorkoutLogResult {
-    const extractionResult = this.toolResults.get("extract_workout_data");
-    const validationResult = this.toolResults.get(
-      "validate_workout_completeness",
-    );
-    const normalizationResult = this.toolResults.get("normalize_workout_data");
-    const saveResult = this.toolResults.get("save_workout_to_database");
+    const extractionResult = this.toolResults.get("extraction");
+    const validationResult = this.toolResults.get("validation");
+    const normalizationResult = this.toolResults.get("normalization");
+    const saveResult = this.toolResults.get("save");
 
     console.info("Tool results available:", {
       hasExtraction: !!extractionResult,

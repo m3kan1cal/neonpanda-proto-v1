@@ -414,7 +414,11 @@ function fixDoubleEncodedJson(jsonString: string): string {
  *
  * Use this AFTER JSON.parse() to fix property-level double-encoding
  */
-export function fixDoubleEncodedProperties(data: any): any {
+export function fixDoubleEncodedProperties(
+  data: any,
+  path: string = "root",
+  problematicKeys: string[] = [],
+): any {
   // If data is a string that looks like JSON, parse it
   if (
     typeof data === "string" &&
@@ -422,10 +426,16 @@ export function fixDoubleEncodedProperties(data: any): any {
   ) {
     try {
       const parsed = JSON.parse(data);
+      problematicKeys.push(path);
       console.warn(
         "⚠️ Fixed double-encoded property - value was JSON string instead of object",
+        {
+          path,
+          stringLength: data.length,
+          stringPreview: data.substring(0, 100),
+        },
       );
-      return fixDoubleEncodedProperties(parsed); // Recursively check the parsed result
+      return fixDoubleEncodedProperties(parsed, path, problematicKeys); // Recursively check the parsed result
     } catch (e) {
       // If parsing fails, return as-is
       return data;
@@ -435,18 +445,27 @@ export function fixDoubleEncodedProperties(data: any): any {
   // If data is an object, recursively check all properties
   if (typeof data === "object" && data !== null && !Array.isArray(data)) {
     const fixed: any = {};
-    let hadDoubleEncoding = false;
+    const doubleEncodedKeys: string[] = [];
 
     for (const [key, value] of Object.entries(data)) {
-      const fixedValue = fixDoubleEncodedProperties(value);
+      const childPath = path === "root" ? key : `${path}.${key}`;
+      const fixedValue = fixDoubleEncodedProperties(
+        value,
+        childPath,
+        problematicKeys,
+      );
       fixed[key] = fixedValue;
       if (fixedValue !== value) {
-        hadDoubleEncoding = true;
+        doubleEncodedKeys.push(key);
       }
     }
 
-    if (hadDoubleEncoding) {
-      console.warn("⚠️ Fixed double-encoded properties in object");
+    if (doubleEncodedKeys.length > 0 && path === "root") {
+      console.warn("⚠️ Fixed double-encoded properties in object", {
+        affectedKeys: doubleEncodedKeys,
+        fullPaths: problematicKeys,
+        objectKeys: Object.keys(data),
+      });
     }
 
     return fixed;
@@ -454,7 +473,9 @@ export function fixDoubleEncodedProperties(data: any): any {
 
   // If data is an array, recursively check all elements
   if (Array.isArray(data)) {
-    return data.map((item) => fixDoubleEncodedProperties(item));
+    return data.map((item, index) =>
+      fixDoubleEncodedProperties(item, `${path}[${index}]`, problematicKeys),
+    );
   }
 
   return data;
@@ -471,12 +492,31 @@ export function fixDoubleEncodedProperties(data: any): any {
  * 4. fixDoubleEncodedJson - unwraps double-encoded JSON strings
  * 5. JSON.parse - final parse
  * 6. fixDoubleEncodedProperties - fixes property-level double-encoding (after parse)
+ *
+ * @param response - The AI-generated response string
+ * @param context - Optional context for debugging (e.g., model name, tool name)
  */
-export const parseJsonWithFallbacks = (response: string): any => {
+export const parseJsonWithFallbacks = (
+  response: string,
+  context?: { model?: string; tool?: string; purpose?: string },
+): any => {
   const strippedResponse = stripNonJson(response);
   const cleanedResponse = cleanResponse(strippedResponse);
   const fixedResponse = fixMalformedJson(cleanedResponse);
   const unquotedResponse = fixDoubleEncodedJson(fixedResponse);
   const parsed = JSON.parse(unquotedResponse);
-  return fixDoubleEncodedProperties(parsed);
+  const result = fixDoubleEncodedProperties(parsed);
+
+  // If we had double-encoding and context was provided, log the context
+  if (result !== parsed && context) {
+    console.warn("🔍 DOUBLE-ENCODING DEBUG:", {
+      model: context.model || "unknown",
+      tool: context.tool || "unknown",
+      purpose: context.purpose || "JSON parsing",
+      responseLength: response.length,
+      responseStart: response.substring(0, 150),
+    });
+  }
+
+  return result;
 };

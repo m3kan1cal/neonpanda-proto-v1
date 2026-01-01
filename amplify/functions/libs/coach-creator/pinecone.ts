@@ -81,7 +81,8 @@ export const storeCoachCreatorSummaryInPinecone = async (
       sessionDurationMinutes:
         session.completedAt && session.startedAt
           ? Math.round(
-              (session.completedAt.getTime() - session.startedAt.getTime()) /
+              (new Date(session.completedAt).getTime() -
+                new Date(session.startedAt).getTime()) /
                 (1000 * 60),
             )
           : null,

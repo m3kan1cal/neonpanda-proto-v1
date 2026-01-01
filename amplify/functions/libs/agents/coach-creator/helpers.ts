@@ -12,6 +12,7 @@ import {
   SAFETY_RULES,
   COACH_MODIFICATION_OPTIONS,
 } from "../../coach-creator/coach-generation";
+import { generateCoachName } from "../../coach-creator/tool-generation";
 
 /**
  * Enforce blocking decisions from validation
@@ -124,14 +125,14 @@ export const storeGenerationDebugData = async (
  * Combines all tool results into a complete CoachConfig object.
  * Used by the agent to build the final configuration for validation and saving.
  */
-export function assembleCoachConfig(
+export async function assembleCoachConfig(
   userId: string,
   sessionRequirements: any,
   personalitySelection: any,
   methodologySelection: any,
   coachPrompts: any,
   creationTimestamp: string,
-): CoachConfig {
+): Promise<CoachConfig> {
   const {
     session,
     safetyProfile,
@@ -147,15 +148,25 @@ export function assembleCoachConfig(
   // Generate coach ID
   const coachId = `user_${userId}_coach_${Date.now()}`;
 
-  // Generate creative coach name based on personality and goals
-  const personalityName = personalitySelection.primaryTemplate;
-  const nameVariants: Record<string, string[]> = {
-    emma: ["Emma_Your_Guide", "Emma_Foundation", "Emma_the_Encourager"],
-    marcus: ["Marcus_the_Master", "Marcus_Form_Expert", "Marcus_Technical"],
-    diana: ["Diana_the_Champion", "Diana_PR_Crusher", "Diana_Elite"],
-    alex: ["Alex_Balance_Pro", "Alex_Lifestyle", "Alex_the_Practical"],
-  };
-  const coachName = nameVariants[personalityName]?.[0] || `${personalityName}_Coach`;
+  // Generate creative, contextual coach name using AI
+  console.info("🎨 Generating creative coach name via AI...");
+  const nameResult = await generateCoachName({
+    personalityTemplate: personalitySelection.primaryTemplate,
+    personalityReasoning: personalitySelection.selectionReasoning,
+    methodologyTemplate: methodologySelection.primaryMethodology,
+    methodologyReasoning: methodologySelection.methodologyReasoning,
+    genderPreference,
+    primaryGoals:
+      session.primaryGoals ||
+      methodologyPreferences.focus?.join(", ") ||
+      "fitness",
+    specializations: specializations || [],
+    userAge: session.age,
+    experienceLevel: session.sophisticationLevel,
+  });
+
+  const coachName = nameResult.coachName;
+  const coachDescription = nameResult.coachDescription;
 
   // Build time constraints
   const timeConstraints = {
@@ -173,9 +184,9 @@ export function assembleCoachConfig(
     contraindicated_exercises: safetyProfile.contraindications || [],
     required_modifications: safetyProfile.modifications || [],
     recovery_requirements: safetyProfile.recoveryNeeds || [],
-    safety_monitoring: SAFETY_RULES.filter((rule) => rule.severity === "critical").map(
-      (rule) => rule.id,
-    ),
+    safety_monitoring: SAFETY_RULES.filter(
+      (rule) => rule.severity === "critical",
+    ).map((rule) => rule.id),
   };
 
   // Build modification capabilities
@@ -183,19 +194,21 @@ export function assembleCoachConfig(
     enabled_modifications: Object.keys(COACH_MODIFICATION_OPTIONS),
     personality_flexibility: "medium" as const,
     programming_adaptability: "medium" as const,
-    creative_programming: methodologySelection.creativityEmphasis === "high_variety"
-      ? "high" as const
-      : "medium" as const,
-    workout_variety_emphasis: methodologySelection.creativityEmphasis === "high_variety"
-      ? "high" as const
-      : "medium" as const,
+    creative_programming:
+      methodologySelection.creativityEmphasis === "high_variety"
+        ? ("high" as const)
+        : ("medium" as const),
+    workout_variety_emphasis:
+      methodologySelection.creativityEmphasis === "high_variety"
+        ? ("high" as const)
+        : ("medium" as const),
     safety_override_level: "limited" as const,
   };
 
   const coachConfig: CoachConfig = {
     coach_id: coachId,
     coach_name: coachName,
-    coach_description: `${methodologyPreferences.focus?.[0] || "Fitness"} Coach`,
+    coach_description: coachDescription,
     status: "active",
     gender_preference: genderPreference,
     selected_personality: {
@@ -217,11 +230,12 @@ export function assembleCoachConfig(
     },
     technical_config: {
       methodology: methodologySelection.primaryMethodology,
-      programming_focus: methodologyPreferences.focus || ["strength", "conditioning"],
-      experience_level: (session.sophisticationLevel?.toLowerCase() || "intermediate") as
-        | "beginner"
-        | "intermediate"
-        | "advanced",
+      programming_focus: methodologyPreferences.focus || [
+        "strength",
+        "conditioning",
+      ],
+      experience_level: (session.sophisticationLevel?.toLowerCase() ||
+        "intermediate") as "beginner" | "intermediate" | "advanced",
       training_frequency: trainingFrequency,
       specializations: specializations || [],
       injury_considerations: safetyProfile.injuries || [],
@@ -260,45 +274,6 @@ export function assembleCoachConfig(
   };
 
   return coachConfig;
-}
-
-/**
- * Generate creative coach name based on personality and user goals
- */
-export function generateCoachName(
-  personalityTemplate: string,
-  genderPreference: string,
-  primaryGoal?: string,
-): string {
-  const namesByPersonalityAndGender: Record<string, Record<string, string[]>> = {
-    emma: {
-      female: ["Emma_Your_Guide", "Emma_Foundation_Pro", "Emma_the_Encourager"],
-      male: ["Ethan_Your_Guide", "Evan_Foundation_Pro", "Eric_the_Encourager"],
-      neutral: ["Em_Your_Guide", "E_Foundation_Pro", "E_the_Encourager"],
-    },
-    marcus: {
-      male: ["Marcus_Form_Master", "Marcus_Technical", "Marcus_the_Expert"],
-      female: ["Maria_Form_Master", "Mara_Technical", "Maya_the_Expert"],
-      neutral: ["Max_Form_Master", "M_Technical", "M_the_Expert"],
-    },
-    diana: {
-      female: ["Diana_PR_Crusher", "Diana_Champion", "Diana_Elite_Coach"],
-      male: ["Derek_PR_Crusher", "Dylan_Champion", "Drake_Elite_Coach"],
-      neutral: ["D_PR_Crusher", "D_Champion", "D_Elite_Coach"],
-    },
-    alex: {
-      neutral: ["Alex_Balance_Pro", "Alex_Lifestyle", "Alex_Practical"],
-      male: ["Alex_Balance_Pro", "Alex_Lifestyle", "Alex_Practical"],
-      female: ["Alexa_Balance_Pro", "Allie_Lifestyle", "Ali_Practical"],
-    },
-  };
-
-  const gender = genderPreference || "neutral";
-  const names = namesByPersonalityAndGender[personalityTemplate]?.[gender] ||
-    namesByPersonalityAndGender[personalityTemplate]?.["neutral"] ||
-    ["Custom_Coach"];
-
-  return names[0];
 }
 
 /**

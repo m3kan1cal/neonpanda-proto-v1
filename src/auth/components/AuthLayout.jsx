@@ -1,5 +1,5 @@
-import React from 'react';
-import { containerPatterns, layoutPatterns } from '../../utils/ui/uiPatterns';
+import React from "react";
+import { containerPatterns, layoutPatterns } from "../../utils/ui/uiPatterns";
 
 const AuthLayout = ({ children, title, subtitle }) => {
   return (
@@ -10,37 +10,35 @@ const AuthLayout = ({ children, title, subtitle }) => {
       {/* Auth form container */}
       <div className="relative min-h-full flex items-start md:items-center justify-center p-4 pt-12 md:pt-4 pb-8">
         <div className="relative w-full max-w-md z-10">
-        {/* Header */}
-        <div className="text-center mb-6">
-          <div className="flex items-center justify-center mb-3">
-            <img
-              src="/images/logo-light-sm.png"
-              alt="NeonPanda Logo"
-              className="h-12 w-auto"
-            />
+          {/* Header */}
+          <div className="text-center mb-6">
+            <div className="flex items-center justify-center mb-3">
+              <img
+                src="/images/logo-dark-sm.webp"
+                alt="NeonPanda Logo"
+                className="h-12 w-auto"
+              />
+            </div>
+
+            {/* Always show tagline under logo */}
+            <p className="font-rajdhani text-synthwave-text-secondary mb-3">
+              Where intelligent coaching meets grit, sweat, dreams, and science
+            </p>
+
+            {title && (
+              <h1 className="font-rajdhani font-bold text-2xl text-white mb-2 uppercase">
+                {title}
+              </h1>
+            )}
+            {subtitle && (
+              <p className="font-rajdhani text-synthwave-text-secondary mb-2">
+                {subtitle}
+              </p>
+            )}
           </div>
 
-          {/* Always show tagline under logo */}
-          <p className="font-rajdhani text-synthwave-text-secondary mb-3">
-            Where intelligent coaching meets grit, sweat, dreams, and science
-          </p>
-
-          {title && (
-            <h1 className="font-rajdhani font-bold text-2xl text-white mb-2 uppercase">
-              {title}
-            </h1>
-          )}
-          {subtitle && (
-            <p className="font-rajdhani text-synthwave-text-secondary mb-2">
-              {subtitle}
-            </p>
-          )}
-        </div>
-
-        {/* Auth Form Container - using uiPatterns authForm */}
-        <div className={`${containerPatterns.authForm} p-8`}>
-          {children}
-        </div>
+          {/* Auth Form Container - using uiPatterns authForm */}
+          <div className={`${containerPatterns.authForm} p-8`}>{children}</div>
         </div>
       </div>
     </div>

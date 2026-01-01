@@ -118,8 +118,8 @@ export const normalizeWorkout = async (
 /**
  * Perform normalization of workout data with two-tier model selection
  *
- * Tier 1 (Haiku 4): Fast structural validation for high-confidence extractions (>= 0.80)
- * Tier 2 (Sonnet 4): Thorough validation for low-confidence or complex cases (< 0.80)
+ * Tier 1 (Executor): Fast structural validation for high-confidence extractions (>= 0.80)
+ * Tier 2 (Planner): Thorough validation for low-confidence or complex cases (< 0.80)
  */
 const performNormalization = async (
   workoutData: any,
@@ -131,20 +131,22 @@ const performNormalization = async (
     const promptSizeKB = (normalizationPrompt.length / 1024).toFixed(1);
 
     // Determine which model to use based on extraction confidence
+    // High confidence (>= 0.8): Use fast executor model for structural validation
+    // Low confidence (< 0.8): Use thorough planner model for deep reasoning
     const extractionConfidence = workoutData.metadata?.data_confidence || 0;
-    const useHaiku = extractionConfidence >= 0.8;
-    const selectedModel = useHaiku
+    const useExecutorModel = extractionConfidence >= 0.8;
+    const selectedModel = useExecutorModel
       ? MODEL_IDS.EXECUTOR_MODEL_FULL
       : MODEL_IDS.PLANNER_MODEL_FULL;
 
     console.info("🔀 Two-tier normalization model selection:", {
       extractionConfidence,
       threshold: 0.8,
-      selectedTier: useHaiku
-        ? "Tier 1 (Haiku 4 - Fast)"
-        : "Tier 2 (Sonnet 4 - Thorough)",
+      selectedTier: useExecutorModel
+        ? "Tier 1 (Executor - Fast)"
+        : "Tier 2 (Planner - Thorough)",
       selectedModel,
-      reasoning: useHaiku
+      reasoning: useExecutorModel
         ? "High confidence extraction - use fast structural validation"
         : "Low confidence extraction - use thorough validation with deep reasoning",
     });
@@ -153,7 +155,7 @@ const performNormalization = async (
       enableThinking,
       promptLength: normalizationPrompt.length,
       promptSizeKB: `${promptSizeKB}KB`,
-      model: useHaiku ? "Haiku 4" : "Sonnet 4",
+      modelTier: useExecutorModel ? "executor" : "planner",
     });
 
     let normalizationResult: any;
@@ -182,7 +184,8 @@ const performNormalization = async (
 
       if (typeof result === "object" && result !== null) {
         console.info("✅ Tool-based normalization succeeded");
-        normalizationResult = result;
+        // Extract the input from tool use result (callBedrockApi returns { toolName, input, stopReason })
+        normalizationResult = result.input || result;
         normalizationMethod = "tool";
       } else {
         throw new Error("Tool did not return structured data");
@@ -270,18 +273,18 @@ const performNormalization = async (
 
     const resultConfidence = normalizationResult.confidence || 0.8;
 
-    // AUTO-ESCALATION: If Haiku produced low confidence result, re-run with Sonnet
-    if (useHaiku && resultConfidence < 0.6) {
+    // AUTO-ESCALATION: If executor model produced low confidence result, re-run with planner model
+    if (useExecutorModel && resultConfidence < 0.6) {
       console.warn(
-        "⚠️ Haiku normalization confidence too low, escalating to Sonnet:",
+        "⚠️ Executor model normalization confidence too low, escalating to planner model:",
         {
-          haikuConfidence: resultConfidence,
+          executorConfidence: resultConfidence,
           escalationThreshold: 0.6,
         },
       );
 
-      // Re-run with Sonnet
-      const sonnetResult = await callBedrockApi(
+      // Re-run with planner model
+      const plannerResult = await callBedrockApi(
         normalizationPrompt,
         "workout_normalization",
         MODEL_IDS.PLANNER_MODEL_FULL,
@@ -297,9 +300,10 @@ const performNormalization = async (
         },
       );
 
-      if (typeof sonnetResult === "object" && sonnetResult !== null) {
-        console.info("✅ Escalated to Sonnet - normalization succeeded");
-        normalizationResult = sonnetResult;
+      if (typeof plannerResult === "object" && plannerResult !== null) {
+        console.info("✅ Escalated to planner model - normalization succeeded");
+        // Extract the input from tool use result
+        normalizationResult = plannerResult.input || plannerResult;
         normalizationMethod = "tool";
       }
     }
@@ -315,8 +319,8 @@ const performNormalization = async (
 
     // Log final normalization result with tier info
     console.info("✅ Normalization complete:", {
-      tier: useHaiku ? "Haiku 4" : "Sonnet 4",
-      escalated: useHaiku && resultConfidence < 0.6,
+      tier: useExecutorModel ? "executor" : "planner",
+      escalated: useExecutorModel && resultConfidence < 0.6,
       confidence: finalResult.confidence,
       isValid: finalResult.isValid,
       issuesFound: finalResult.issues.length,
