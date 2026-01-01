@@ -116,12 +116,26 @@ export class WorkoutLoggerAgent extends Agent<WorkoutLoggerContext> {
             return blockingResult; // Return error result to Claude
           }
 
-          // Execute tool normally if not blocked
-          const result = await tool.execute(input, context);
-          const storageKey = STORAGE_KEY_MAP[tool.id] || tool.id;
-          this.toolResults.set(storageKey, result);
-          console.info(`📦 Stored tool result: ${tool.id} → ${storageKey}`);
-          return result;
+          // Execute tool with error handling
+          try {
+            const result = await tool.execute(input, context);
+            const storageKey = STORAGE_KEY_MAP[tool.id] || tool.id;
+            this.toolResults.set(storageKey, result);
+            console.info(`📦 Stored tool result: ${tool.id} → ${storageKey}`);
+            return result;
+          } catch (error) {
+            console.error(`❌ Tool ${tool.id} failed:`, error);
+            const errorMessage =
+              error instanceof Error ? error.message : String(error);
+            const errorResult = { error: errorMessage || "Unknown error" };
+
+            // Store error result for later retrieval (important for blocking enforcement)
+            const storageKey = STORAGE_KEY_MAP[tool.id] || tool.id;
+            this.toolResults.set(storageKey, errorResult);
+            console.info(`📦 Stored error result: ${tool.id} → ${storageKey}`);
+
+            return errorResult;
+          }
         },
       }));
 
@@ -140,8 +154,9 @@ export class WorkoutLoggerAgent extends Agent<WorkoutLoggerContext> {
       if (retryDecision?.shouldRetry) {
         console.warn(`🔄 ${retryDecision.logMessage}`);
 
-        // Clear tool results and retry with explicit instruction
-        this.toolResults.clear();
+        // NOTE: We do NOT clear tool results here. If the retry prompt references
+        // already-completed tools, those results need to remain available for dependent
+        // tools to retrieve. If the AI re-runs a tool, it will overwrite the result.
 
         const retryResponse = await this.converse(retryDecision.retryPrompt);
 
@@ -282,7 +297,11 @@ export class WorkoutLoggerAgent extends Agent<WorkoutLoggerContext> {
 
     // Only retry if no tools were called and response looks like a genuine clarifying question
     // (e.g., AI needs more info about an actual workout being logged)
-    const noToolsCalled = this.toolResults.size === 0;
+    // Count only successful tool results (exclude error results)
+    const successfulToolCount = Array.from(this.toolResults.values()).filter(
+      (result) => result && !("error" in result),
+    ).length;
+    const noToolsCalled = successfulToolCount === 0;
     const looksLikeQuestion =
       response.includes("?") ||
       response.toLowerCase().includes("confirm") ||
