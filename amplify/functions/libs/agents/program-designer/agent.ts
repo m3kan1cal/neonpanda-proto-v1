@@ -189,7 +189,12 @@ export class ProgramDesignerAgent extends Agent<ProgramDesignerContext> {
           // Store result by phaseId for later retrieval
           const phaseId = result.phaseId || toolUse.input?.phase?.phaseId;
           if (phaseId) {
-            this.storeToolResult(`phase_workouts:${phaseId}`, result);
+            this.storeToolResult(tool.id, result, `phase_workouts:${phaseId}`);
+          } else {
+            // Fallback: store with tool.id if phaseId is missing
+            console.warn(
+              `⚠️ Phase workout result missing phaseId - storing with tool.id fallback`,
+            );
           }
           this.toolResults.set(tool.id, result);
 
@@ -198,11 +203,12 @@ export class ProgramDesignerAgent extends Agent<ProgramDesignerContext> {
           console.error(`❌ Tool ${tool.id} failed:`, error);
           const errorMessage =
             error instanceof Error ? error.message : String(error);
-          return this.buildToolResult(
-            toolUse,
-            { error: errorMessage },
-            "error",
-          );
+          const errorResult = { error: errorMessage };
+
+          // Store error result for later retrieval (important for blocking enforcement)
+          this.toolResults.set(tool.id, errorResult);
+
+          return this.buildToolResult(toolUse, errorResult, "error");
         }
       }),
     );
@@ -252,6 +258,13 @@ export class ProgramDesignerAgent extends Agent<ProgramDesignerContext> {
           const phaseId = result.phaseId || toolUse.input?.phase?.phaseId;
           if (phaseId) {
             this.storeToolResult(tool.id, result, `phase_workouts:${phaseId}`);
+          } else {
+            // Fallback: store with tool.id if phaseId is missing
+            // This prevents silent data loss and maintains consistency with parallel execution
+            console.warn(
+              `⚠️ Phase workout result missing phaseId - storing with tool.id fallback`,
+            );
+            this.toolResults.set(tool.id, result);
           }
         } else {
           this.storeToolResult(tool.id, result);
@@ -262,9 +275,12 @@ export class ProgramDesignerAgent extends Agent<ProgramDesignerContext> {
         console.error(`❌ Tool ${tool.id} failed:`, error);
         const errorMessage =
           error instanceof Error ? error.message : String(error);
-        results.push(
-          this.buildToolResult(toolUse, { error: errorMessage }, "error"),
-        );
+        const errorResult = { error: errorMessage };
+
+        // Store error result for later retrieval (important for blocking enforcement)
+        this.toolResults.set(tool.id, errorResult);
+
+        results.push(this.buildToolResult(toolUse, errorResult, "error"));
       }
     }
 
