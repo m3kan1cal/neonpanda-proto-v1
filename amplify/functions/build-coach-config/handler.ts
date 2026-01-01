@@ -1,16 +1,19 @@
+/**
+ * Build Coach Config Lambda Handler
+ *
+ * Uses CoachCreatorAgent to create, validate, and save coach configurations.
+ * Maintains same interface as original build-coach-config but uses agent pattern internally.
+ */
+
 import { Context, Handler } from "aws-lambda";
 import { createOkResponse, createErrorResponse } from "../libs/api-helpers";
+import { withHeartbeat } from "../libs/heartbeat";
 import {
-  generateCoachConfig,
-  storeCoachCreatorSummaryInPinecone,
-  generateCoachCreatorSessionSummary,
-} from "../libs/coach-creator";
-import {
-  saveCoachConfig,
   getCoachCreatorSession,
   saveCoachCreatorSession,
 } from "../../dynamodb/operations";
-import { withHeartbeat } from "../libs/heartbeat";
+import { CoachCreatorAgent } from "../libs/agents/coach-creator/agent";
+import type { CoachCreatorContext } from "../libs/agents/coach-creator/types";
 
 // Interface for the event payload
 interface CoachConfigEvent {
@@ -20,153 +23,175 @@ interface CoachConfigEvent {
 
 export const handler: Handler<CoachConfigEvent> = async (
   event: CoachConfigEvent,
-  context: Context
+  context: Context,
 ) => {
-  return withHeartbeat(
-    "Coach Config Generation",
-    async () => {
-      const { userId, sessionId } = event;
-      let session: any = null;
+  return withHeartbeat("Coach Creator Agent", async () => {
+    const { userId, sessionId } = event;
+    let session: any = null;
+    let updatedSession: any = null;
 
-      try {
-        console.info("🚀 Starting async coach config generation:", {
-          userId,
-          sessionId,
-          timestamp: new Date().toISOString(),
-        });
+    try {
+      console.info("🎨 Starting Coach Creator Agent:", {
+        userId,
+        sessionId,
+        timestamp: new Date().toISOString(),
+      });
 
-        if (!userId || !sessionId) {
-          throw new Error("Missing required fields: userId, sessionId");
-        }
+      if (!userId || !sessionId) {
+        throw new Error("Missing required fields: userId, sessionId");
+      }
 
-        // Step 1: Load the completed session
-        console.info("📂 Step 1: Loading coach creator session");
-        session = await getCoachCreatorSession(userId, sessionId);
-        if (!session) {
-          throw new Error("Session not found or expired");
-        }
+      // Step 1: Load and validate session
+      console.info("📂 Step 1: Loading coach creator session");
+      session = await getCoachCreatorSession(userId, sessionId);
+      if (!session) {
+        throw new Error("Session not found or expired");
+      }
 
-        if (!session.isComplete) {
-          throw new Error("Session is not complete");
-        }
+      if (!session.isComplete) {
+        throw new Error("Session is not complete");
+      }
 
-        // Step 2: Generate consistent timestamp for all operations (FIX 2.3)
-        console.info(
-          "⏰ Step 2: Generating consistent timestamp for config creation"
-        );
-        const creationTimestamp = new Date().toISOString();
-        const creationDate = new Date(creationTimestamp);
-        console.info("Timestamp generated:", creationTimestamp);
+      // Step 2: Generate consistent timestamp for all operations
+      console.info(
+        "⏰ Step 2: Generating consistent timestamp for config creation",
+      );
+      const creationTimestamp = new Date().toISOString();
+      const creationDate = new Date(creationTimestamp);
+      console.info("Timestamp generated:", creationTimestamp);
 
-        // Step 3: Update session to indicate config generation is in progress
-        console.info("🔄 Step 3: Marking session as IN_PROGRESS");
-        const updatedSession = {
-          ...session,
-          configGeneration: {
-            status: "IN_PROGRESS" as const,
-            startedAt: creationDate,
-          },
-          lastActivity: creationDate,
-        };
-        await saveCoachCreatorSession(updatedSession);
+      // Step 3: Update session to indicate config generation is in progress
+      console.info("🔄 Step 3: Marking session as IN_PROGRESS");
+      updatedSession = {
+        ...session,
+        configGeneration: {
+          status: "IN_PROGRESS" as const,
+          startedAt: creationDate,
+        },
+        lastActivity: creationDate,
+      };
+      await saveCoachCreatorSession(updatedSession);
 
-        // Step 4: Generate the coach config (this is the long-running process)
-        console.info(
-          "🧠 Step 4: Generating coach configuration with AI (this may take 60-120s)"
-        );
-        const coachConfig = await generateCoachConfig(
-          session,
-          creationTimestamp
-        );
+      // Step 4: Build agent context
+      const agentContext: CoachCreatorContext = {
+        userId,
+        sessionId,
+      };
 
-        // Step 6: Save the coach config with consistent timestamp
-        console.info("💾 Step 6: Saving coach configuration to DynamoDB");
-        await saveCoachConfig(userId, coachConfig, creationTimestamp);
+      // Step 5: Create CoachCreator agent and run workflow
+      console.info(
+        "🤖 Step 5: Creating CoachCreator agent and starting workflow",
+      );
+      const agent = new CoachCreatorAgent(agentContext);
+      const result = await agent.createCoach();
 
-        // Step 7: Store coach creator summary in Pinecone for future analysis
-        console.info("📝 Step 7: Storing coach creator summary in Pinecone");
-        const conversationSummary = generateCoachCreatorSessionSummary(session);
-        const pineconeResult = await storeCoachCreatorSummaryInPinecone(
-          userId,
-          conversationSummary,
-          session,
-          coachConfig
-        );
+      console.info("✅ Agent workflow completed:", {
+        success: result.success,
+        coachConfigId: result.coachConfigId,
+        skipped: result.skipped,
+      });
 
-        // Step 8: Update session to indicate completion and soft delete
-        console.info("✅ Step 8: Marking session as COMPLETE");
-        const completedSession = {
-          ...session,
-          configGeneration: {
-            ...session.configGeneration,
-            status: "COMPLETE" as const,
-            completedAt: creationDate,
-            coachConfigId: coachConfig.coach_id,
-          },
-          isDeleted: true, // Soft delete - session data preserved for history
-          lastActivity: creationDate,
-        };
-        await saveCoachCreatorSession(completedSession);
-
+      // Return response based on result
+      if (result.success) {
         console.info("✅ Coach config generation completed successfully:", {
-          coachConfigId: coachConfig.coach_id,
-          coachName: coachConfig.coach_name,
+          coachConfigId: result.coachConfigId,
+          coachName: result.coachName,
+          primaryPersonality: result.primaryPersonality,
+          primaryMethodology: result.primaryMethodology,
+          genderPreference: result.genderPreference,
           userId,
           sessionId,
           creationTimestamp,
-          pineconeStored: pineconeResult.success,
-          pineconeRecordId:
-            pineconeResult.success && "recordId" in pineconeResult
-              ? pineconeResult.recordId
-              : null,
+          pineconeStored: result.pineconeStored,
+          pineconeRecordId: result.pineconeRecordId,
+          generationMethod: result.generationMethod,
         });
 
         return createOkResponse({
           success: true,
-          coachConfigId: coachConfig.coach_id,
-          coachName: coachConfig.coach_name,
+          coachConfigId: result.coachConfigId,
+          coachName: result.coachName,
           userId,
           sessionId,
           message: "Coach configuration generated successfully",
+          generationMethod: result.generationMethod,
         });
-      } catch (error) {
-        console.error("❌ Error generating coach config:", error);
-
+      } else {
         // Update session to indicate failure
-        if (event.userId && event.sessionId && session) {
-          try {
-            const failedSession = {
-              ...session,
-              configGeneration: {
-                ...session.configGeneration,
-                status: "FAILED" as const,
-                failedAt: new Date(),
-                error: error instanceof Error ? error.message : "Unknown error",
-              },
-              lastActivity: new Date(),
-            };
-            await saveCoachCreatorSession(failedSession);
-          } catch (updateError) {
-            console.error(
-              "Failed to update session with error status:",
-              updateError
-            );
-          }
+        console.warn("⚠️ Coach creation skipped or failed:", {
+          reason: result.reason,
+          validationIssues: result.validationIssues,
+        });
+
+        try {
+          const failedSession = {
+            ...updatedSession,
+            configGeneration: {
+              ...updatedSession.configGeneration,
+              status: "FAILED" as const,
+              failedAt: new Date(),
+              error:
+                result.reason || "Coach creation was skipped or incomplete",
+            },
+            lastActivity: new Date(),
+          };
+          await saveCoachCreatorSession(failedSession);
+          console.info("✅ Session updated to FAILED status");
+        } catch (updateError) {
+          console.error(
+            "⚠️ Failed to update session to FAILED (non-blocking):",
+            updateError,
+          );
         }
 
-        // Return error response instead of throwing (for consistency with other Lambda functions)
-        return createErrorResponse(
-          500,
-          error instanceof Error
-            ? error.message
-            : "Failed to generate coach configuration",
-          {
-            userId: event.userId,
-            sessionId: event.sessionId,
-            error: error instanceof Error ? error.message : "Unknown error",
-          }
-        );
+        return createOkResponse({
+          success: false,
+          skipped: true,
+          reason: result.reason,
+          validationIssues: result.validationIssues,
+          userId,
+          sessionId,
+        });
       }
+    } catch (error) {
+      console.error("❌ Error in coach creator agent:", error);
+
+      // Update session to indicate failure
+      // Use updatedSession if available (has startedAt), otherwise fall back to session
+      const sessionToUpdate = updatedSession || session;
+      if (event.userId && event.sessionId && sessionToUpdate) {
+        try {
+          const failedSession = {
+            ...sessionToUpdate,
+            configGeneration: {
+              ...sessionToUpdate.configGeneration,
+              status: "FAILED" as const,
+              failedAt: new Date(),
+              error: error instanceof Error ? error.message : "Unknown error",
+            },
+            lastActivity: new Date(),
+          };
+          await saveCoachCreatorSession(failedSession);
+        } catch (updateError) {
+          console.error(
+            "Failed to update session with error status:",
+            updateError,
+          );
+        }
+      }
+
+      // Return error response instead of throwing (for consistency with other Lambda functions)
+      return createErrorResponse(
+        500,
+        error instanceof Error
+          ? error.message
+          : "Failed to generate coach configuration",
+        {
+          userId: event.userId,
+          sessionId: event.sessionId,
+          error: error instanceof Error ? error.message : "Unknown error",
+        },
+      );
     }
-  ); // 10 second default heartbeat interval
+  }); // 10 second default heartbeat interval
 };

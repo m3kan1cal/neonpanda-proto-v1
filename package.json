@@ -21,7 +21,7 @@
     "@aws-sdk/client-sns": "^3.958.0",
     "@aws-sdk/lib-dynamodb": "^3.958.0",
     "@aws-sdk/s3-request-presigner": "^3.958.0",
-    "@dotenvx/dotenvx": "^1.51.2",
+    "@dotenvx/dotenvx": "^1.51.4",
     "@floating-ui/react": "^0.27.16",
     "@headlessui/react": "^2.2.9",
     "@pinecone-database/pinecone": "^6.1.3",

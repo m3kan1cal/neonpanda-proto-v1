@@ -662,8 +662,27 @@ export const validateCoachConfigSafety = async (
   const issues = [];
   let safetyScore = 10;
 
+  // Defensive checks: ensure required structures exist
+  if (!coachConfig.technical_config) {
+    issues.push("Technical config is missing");
+    return {
+      approved: false,
+      issues,
+      safetyScore: 0,
+    };
+  }
+
+  if (!safetyProfile) {
+    issues.push("Safety profile is missing");
+    return {
+      approved: false,
+      issues,
+      safetyScore: 0,
+    };
+  }
+
   // Check if injury considerations are properly integrated
-  if (safetyProfile.injuries.length > 0) {
+  if (safetyProfile.injuries?.length > 0) {
     if (
       !coachConfig.technical_config.injury_considerations ||
       coachConfig.technical_config.injury_considerations.length === 0
@@ -674,7 +693,7 @@ export const validateCoachConfigSafety = async (
   }
 
   // Check if contraindicated exercises are handled
-  if (safetyProfile.contraindications.length > 0) {
+  if (safetyProfile.contraindications?.length > 0) {
     if (
       !coachConfig.technical_config.safety_constraints
         ?.contraindicated_exercises ||

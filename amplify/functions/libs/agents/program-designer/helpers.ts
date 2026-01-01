@@ -169,7 +169,20 @@ export const enforceAllBlocking = (
 
   // Block save_program_to_database if validation failed
   if (toolId === "save_program_to_database") {
-    // Check validation blocking
+    // CASE 1: Validation threw an exception (has error field instead of isValid)
+    if (validationResult && validationResult.error) {
+      console.error("⛔ Blocking save: Validation threw exception", {
+        error: validationResult.error,
+      });
+
+      return {
+        error: true,
+        blocked: true,
+        reason: `Cannot save program - validation failed with error: ${validationResult.error}`,
+      };
+    }
+
+    // CASE 2: Validation returned isValid: false
     if (validationResult && validationResult.isValid === false) {
       console.error("⛔ Blocking save: Validation failed", {
         validationIssues: validationResult.validationIssues,
@@ -183,7 +196,20 @@ export const enforceAllBlocking = (
       };
     }
 
-    // Check normalization blocking
+    // CASE 3: Normalization threw an exception (has error field)
+    if (normalizationResult && normalizationResult.error) {
+      console.error("⛔ Blocking save: Normalization threw exception", {
+        error: normalizationResult.error,
+      });
+
+      return {
+        error: true,
+        blocked: true,
+        reason: `Cannot save program - normalization failed with error: ${normalizationResult.error}`,
+      };
+    }
+
+    // CASE 4: Normalization returned isValid: false
     if (normalizationResult && normalizationResult.isValid === false) {
       console.warn("⛔ Blocking save: Normalization failed", {
         issuesFound: normalizationResult.issuesFound,

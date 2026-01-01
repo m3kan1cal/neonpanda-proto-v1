@@ -60,7 +60,7 @@ function OnboardingPrompt({ isOpen, onClose, userId }) {
         {/* Logo */}
         <div className="flex items-center justify-center mb-4">
           <img
-            src="/images/logo-light-sm.png"
+            src="/images/logo-dark-sm.webp"
             alt="NeonPanda Logo"
             className="h-12 w-auto"
           />

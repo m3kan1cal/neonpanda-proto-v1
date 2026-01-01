@@ -1012,7 +1012,7 @@ export const typographyPatterns = {
   subheadingInter: "font-inter font-semibold text-lg text-white",
 
   // Body text
-  heroSubtitle: "font-rajdhani text-3xl text-synthwave-text-secondary mb-6",
+  heroSubtitle: "font-rajdhani text-2xl text-synthwave-text-secondary mb-6",
   description:
     "font-rajdhani text-lg text-synthwave-text-secondary leading-relaxed",
   cardText: "font-rajdhani text-synthwave-text-secondary leading-relaxed",

@@ -31,47 +31,64 @@ export const enforceValidationBlocking = (
     return null;
   }
 
-  // Validation passed, allow tool to proceed
-  if (validationResult.shouldSave !== false) {
-    return null;
+  // CASE 1: Validation threw an exception (has error field)
+  if (validationResult.error) {
+    if (
+      toolId === "normalize_workout_data" ||
+      toolId === "save_workout_to_database"
+    ) {
+      console.error(`⛔ BLOCKING ${toolId}: Validation threw exception`, {
+        error: validationResult.error,
+        toolAttempted: toolId,
+      });
+
+      return {
+        error: true,
+        blocked: true,
+        reason: `Cannot ${toolId === "normalize_workout_data" ? "normalize" : "save"} workout - validation failed with error: ${validationResult.error}`,
+      };
+    }
   }
 
-  // Block normalize_workout_data if validation said don't save
-  if (toolId === "normalize_workout_data") {
-    console.error(
-      "⛔ BLOCKING normalize_workout_data: Validation returned shouldSave=false",
-      {
+  // CASE 2: Validation returned shouldSave: false
+  if (validationResult.shouldSave === false) {
+    // Block normalize_workout_data if validation said don't save
+    if (toolId === "normalize_workout_data") {
+      console.error(
+        "⛔ BLOCKING normalize_workout_data: Validation returned shouldSave=false",
+        {
+          blockingFlags: validationResult.blockingFlags,
+          reason: validationResult.reason,
+          toolAttempted: toolId,
+        },
+      );
+
+      return {
+        error: true,
+        blocked: true,
+        reason: `Cannot normalize workout - validation blocked save: ${validationResult.reason}`,
         blockingFlags: validationResult.blockingFlags,
-        reason: validationResult.reason,
-        toolAttempted: toolId,
-      },
-    );
+      };
+    }
 
-    return {
-      error: true,
-      blocked: true,
-      reason: `Cannot normalize workout - validation blocked save: ${validationResult.reason}`,
-      blockingFlags: validationResult.blockingFlags,
-    };
-  }
+    // Block save_workout_to_database if validation said don't save
+    if (toolId === "save_workout_to_database") {
+      console.error(
+        "⛔ BLOCKING save_workout_to_database: Validation returned shouldSave=false",
+        {
+          blockingFlags: validationResult.blockingFlags,
+          reason: validationResult.reason,
+          toolAttempted: toolId,
+        },
+      );
 
-  // Block save_workout_to_database if validation said don't save
-  if (toolId === "save_workout_to_database") {
-    console.error(
-      "⛔ BLOCKING save_workout_to_database: Validation returned shouldSave=false",
-      {
+      return {
+        error: true,
+        blocked: true,
+        reason: `Cannot save workout - validation blocked save: ${validationResult.reason}`,
         blockingFlags: validationResult.blockingFlags,
-        reason: validationResult.reason,
-        toolAttempted: toolId,
-      },
-    );
-
-    return {
-      error: true,
-      blocked: true,
-      reason: `Cannot save workout - validation blocked save: ${validationResult.reason}`,
-      blockingFlags: validationResult.blockingFlags,
-    };
+      };
+    }
   }
 
   // Tool is not subject to blocking enforcement

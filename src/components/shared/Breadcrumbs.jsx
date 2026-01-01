@@ -73,7 +73,7 @@ function Breadcrumbs() {
             data-tooltip-content="Go to Home"
           >
             <img
-              src="/images/logo-light-sm-head.png"
+              src="/images/logo-dark-sm-head.webp"
               alt="NeonPanda"
               className="w-8 h-8 object-contain hover:opacity-80 transition-opacity duration-200"
             />

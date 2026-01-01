@@ -1,156 +1,222 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>NeonPanda Beta Update - October 2025</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
     <style>
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
-            line-height: 1.6;
-            color: #333;
-            margin: 0;
-            padding: 0;
-            background-color: #f9f9f9;
-        }
-        .email-wrapper {
-            width: 100%;
-            background-color: #f9f9f9;
-            padding: 20px 0;
-        }
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            background-color: #ffffff;
-            border-radius: 8px;
-            padding: 30px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-        .logo-header {
-            background-color: #0a0a0a;
-            padding: 10px;
-            margin: -30px -30px 30px -30px;
-            border-radius: 8px 8px 0 0;
-            text-align: center;
-        }
-        .logo-header img {
-            max-width: 400px;
-            height: auto;
-        }
-        h1 {
-            color: #00ffff;
-            font-size: 28px;
-            margin-bottom: 10px;
-            margin-top: 0;
-        }
-        h2 {
-            color: #ff0080;
-            font-size: 20px;
-            margin-top: 30px;
-            margin-bottom: 15px;
-        }
-        .subtitle {
-            color: #666;
-            font-size: 16px;
-            margin-bottom: 25px;
-        }
-        ul {
-            padding-left: 20px;
-            margin-bottom: 20px;
-        }
-        li {
-            margin-bottom: 8px;
-        }
-        .highlight {
-            background-color: #f0f9ff;
-            border-left: 4px solid #00ffff;
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 4px;
-        }
-        .cta {
-            background-color: #00ffff;
-            color: #0A0A0A;
-            padding: 12px 24px;
-            text-decoration: none;
-            border-radius: 6px;
-            display: inline-block;
-            margin: 10px 10px 10px 0;
-            font-weight: 600;
-        }
-        .cta-secondary {
-            background-color: #ff0080;
-            color: #ffffff;
-        }
-        .footer {
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #e0e0e0;
-            font-size: 14px;
-            color: #666;
-        }
-        a {
-            color: #00ffff;
-        }
-        .signature {
-            margin-top: 30px;
-            font-style: italic;
-            color: #666;
-        }
+      body {
+        font-family:
+          "Inter",
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          "Roboto",
+          "Oxygen",
+          "Ubuntu",
+          "Cantarell",
+          sans-serif;
+        line-height: 1.6;
+        color: #333;
+        margin: 0;
+        padding: 0;
+        background-color: #f9f9f9;
+      }
+      .email-wrapper {
+        width: 100%;
+        background-color: #f9f9f9;
+        padding: 20px 0;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        background-color: #ffffff;
+        border-radius: 8px;
+        padding: 30px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+      .logo-header {
+        background-color: #0a0a0a;
+        padding: 10px;
+        margin: -30px -30px 30px -30px;
+        border-radius: 8px 8px 0 0;
+        text-align: center;
+      }
+      .logo-header img {
+        max-width: 400px;
+        height: auto;
+      }
+      h1 {
+        color: #00ffff;
+        font-size: 28px;
+        margin-bottom: 10px;
+        margin-top: 0;
+      }
+      h2 {
+        color: #ff0080;
+        font-size: 20px;
+        margin-top: 30px;
+        margin-bottom: 15px;
+      }
+      .subtitle {
+        color: #666;
+        font-size: 16px;
+        margin-bottom: 25px;
+      }
+      ul {
+        padding-left: 20px;
+        margin-bottom: 20px;
+      }
+      li {
+        margin-bottom: 8px;
+      }
+      .highlight {
+        background-color: #f0f9ff;
+        border-left: 4px solid #00ffff;
+        padding: 15px;
+        margin: 20px 0;
+        border-radius: 4px;
+      }
+      .cta {
+        background-color: #00ffff;
+        color: #0a0a0a;
+        padding: 12px 24px;
+        text-decoration: none;
+        border-radius: 6px;
+        display: inline-block;
+        margin: 10px 10px 10px 0;
+        font-weight: 600;
+      }
+      .cta-secondary {
+        background-color: #ff0080;
+        color: #ffffff;
+      }
+      .footer {
+        margin-top: 40px;
+        padding-top: 20px;
+        border-top: 1px solid #e0e0e0;
+        font-size: 14px;
+        color: #666;
+      }
+      a {
+        color: #00ffff;
+      }
+      .signature {
+        margin-top: 30px;
+        font-style: italic;
+        color: #666;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="email-wrapper">
-        <div class="container">
+      <div class="container">
         <div class="logo-header">
-            <img src="https://neonpanda.ai/images/logo-light-sm.png" alt="NeonPanda Logo">
+          <img
+            src="https://neonpanda.ai/images/logo-dark-sm.webp"
+            alt="NeonPanda Logo"
+          />
         </div>
         <h1>Hey Beta Pandas 🐼</h1>
         <p class="subtitle">Quick update from the NeonPanda labs...</p>
 
-        <p>Hope you've been crushing it! Just wanted to share what we've been building over the past couple weeks and what's coming next.</p>
+        <p>
+          Hope you've been crushing it! Just wanted to share what we've been
+          building over the past couple weeks and what's coming next.
+        </p>
 
         <h2>What's New</h2>
         <ul>
-            <li><strong>Image Upload:</strong> You can now paste or drag-and-drop images directly into your coach conversations! Your AI coach can see what you see – perfect for form checks, meal prep, or showing off those PRs. Take a picture of a workout on a whiteboard and your coach will understand it and convert it to a stored workout.</li>
-            <li><strong>Emoji Power:</strong> Chat just got more expressive with a full emoji picker. Because sometimes 💪 says it better than words.</li>
-            <li><strong>Streaming Chat Improvements:</strong> Conversations flow faster now with real-time streaming and smarter memory integration. Your coach remembers more and responds more intelligently.</li>
-            <li><strong>User Settings:</strong> You can now customize your profile, change your display name, and manage your preferences all in one place. Plus, set your Critical Training Directive – a personal instruction that acts as your AI coach's prime directive for all interactions.</li>
-            <li><strong>Coach Creator Upgrades:</strong> Building custom coaches is smoother with retry functionality, AI-powered intent detection, and much shorter question sessions (almost 50% fewer questions).</li>
+          <li>
+            <strong>Image Upload:</strong> You can now paste or drag-and-drop
+            images directly into your coach conversations! Your AI coach can see
+            what you see – perfect for form checks, meal prep, or showing off
+            those PRs. Take a picture of a workout on a whiteboard and your
+            coach will understand it and convert it to a stored workout.
+          </li>
+          <li>
+            <strong>Emoji Power:</strong> Chat just got more expressive with a
+            full emoji picker. Because sometimes 💪 says it better than words.
+          </li>
+          <li>
+            <strong>Streaming Chat Improvements:</strong> Conversations flow
+            faster now with real-time streaming and smarter memory integration.
+            Your coach remembers more and responds more intelligently.
+          </li>
+          <li>
+            <strong>User Settings:</strong> You can now customize your profile,
+            change your display name, and manage your preferences all in one
+            place. Plus, set your Critical Training Directive – a personal
+            instruction that acts as your AI coach's prime directive for all
+            interactions.
+          </li>
+          <li>
+            <strong>Coach Creator Upgrades:</strong> Building custom coaches is
+            smoother with retry functionality, AI-powered intent detection, and
+            much shorter question sessions (almost 50% fewer questions).
+          </li>
         </ul>
 
         <div class="highlight">
-            <strong>Coming Next:</strong> We're laser-focused on speeding up coach conversations even more and implementing custom training programs. Think personalized periodization that actually adapts to your life. 🎯
+          <strong>Coming Next:</strong> We're laser-focused on speeding up coach
+          conversations even more and implementing custom training programs.
+          Think personalized periodization that actually adapts to your life. 🎯
         </div>
 
         <h2>Quick Asks</h2>
         <p>If you haven't already, would love your help with a few things:</p>
 
-        <p><strong>🚀 Get early access:</strong> Help us beta test by joining the early access program:<br>
-        <a href="https://neonpanda.ai/contact?type=waitlist" class="cta">Get Early Access</a></p>
+        <p>
+          <strong>🚀 Get early access:</strong> Help us beta test by joining the
+          early access program:<br />
+          <a href="https://neonpanda.ai/contact?type=waitlist" class="cta"
+            >Get Early Access</a
+          >
+        </p>
 
-        <p><strong>🤖 Create a coach:</strong> Try building your own custom coach and see what happens:<br>
-        <a href="https://neonpanda.ai/coaches/" class="cta cta-secondary">Create Custom Coach</a></p>
+        <p>
+          <strong>🤖 Create a coach:</strong> Try building your own custom coach
+          and see what happens:<br />
+          <a href="https://neonpanda.ai/coaches/" class="cta cta-secondary"
+            >Create Custom Coach</a
+          >
+        </p>
 
-        <p><strong>💬 Join Discord:</strong> Come hang with the community – this is where the magic happens:<br>
-        <a href="https://discord.gg/AmbuFTrU" class="cta">Join Discord</a></p>
+        <p>
+          <strong>💬 Join Discord:</strong> Come hang with the community – this
+          is where the magic happens:<br />
+          <a href="https://discord.gg/AmbuFTrU" class="cta">Join Discord</a>
+        </p>
 
-        <p><strong>🎤 Share Feedback:</strong> Your thoughts on the coach creator experience (or anything else) are gold. Drop them in the Discord <strong>#beta-users</strong> channel. Seriously, we read everything.</p>
+        <p>
+          <strong>🎤 Share Feedback:</strong> Your thoughts on the coach creator
+          experience (or anything else) are gold. Drop them in the Discord
+          <strong>#beta-users</strong> channel. Seriously, we read everything.
+        </p>
 
         <div class="signature">
-            <p>Thanks for being part of this journey. You're helping build something that didn't exist before – AI coaching that actually feels human.</p>
-            <p>Let's go. 💥</p>
+          <p>
+            Thanks for being part of this journey. You're helping build
+            something that didn't exist before – AI coaching that actually feels
+            human.
+          </p>
+          <p>Let's go. 💥</p>
         </div>
 
         <div class="footer">
-            <p><strong>NeonPanda</strong> – Where electric intelligence meets approachable excellence.</p>
-            <p>Questions? Just reply to this email or hit us up in Discord.</p>
+          <p>
+            <strong>NeonPanda</strong> – Where electric intelligence meets
+            approachable excellence.
+          </p>
+          <p>Questions? Just reply to this email or hit us up in Discord.</p>
         </div>
+      </div>
     </div>
-    </div>
-</body>
+  </body>
 </html>
-

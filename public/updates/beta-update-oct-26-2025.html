@@ -1,236 +1,405 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Training Programs Are Here - October 2025</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
     <style>
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
-            line-height: 1.6;
-            color: #333;
-            margin: 0;
-            padding: 0;
-            background-color: #f9f9f9;
-        }
-        .email-wrapper {
-            width: 100%;
-            background-color: #f9f9f9;
-            padding: 20px 0;
-        }
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            background-color: #ffffff;
-            border-radius: 8px;
-            padding: 30px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-        .logo-header {
-            background-color: #0a0a0a;
-            padding: 10px;
-            margin: -30px -30px 30px -30px;
-            border-radius: 8px 8px 0 0;
-            text-align: center;
-        }
-        .logo-header img {
-            max-width: 400px;
-            height: auto;
-        }
-        h1 {
-            color: #BF00FF;
-            font-size: 28px;
-            margin-bottom: 10px;
-            margin-top: 0;
-        }
-        h2 {
-            color: #BF00FF;
-            font-size: 20px;
-            margin-top: 30px;
-            margin-bottom: 15px;
-        }
-        .subtitle {
-            color: #666;
-            font-size: 16px;
-            margin-bottom: 25px;
-        }
-        ul {
-            padding-left: 20px;
-            margin-bottom: 20px;
-        }
-        li {
-            margin-bottom: 10px;
-        }
-        .highlight {
-            background-color: #f5f0ff;
-            border-left: 4px solid #BF00FF;
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 4px;
-        }
-        .feature-box {
-            background-color: #f0f9ff;
-            border-left: 4px solid #00ffff;
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 4px;
-        }
-        .cta {
-            background-color: #00ffff;
-            color: #0A0A0A;
-            padding: 12px 24px;
-            text-decoration: none;
-            border-radius: 6px;
-            display: inline-block;
-            margin: 10px 10px 10px 0;
-            font-weight: 600;
-        }
-        .cta-secondary {
-            background-color: #BF00FF;
-            color: #ffffff;
-        }
-        .footer {
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #e0e0e0;
-            font-size: 14px;
-            color: #666;
-        }
-        a {
-            color: #00ffff;
-        }
-        .signature {
-            margin-top: 30px;
-            font-style: italic;
-            color: #666;
-        }
-        .section-badge {
-            display: inline-block;
-            background-color: #BF00FF;
-            color: #ffffff;
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            margin-bottom: 10px;
-        }
-        .emoji {
-            font-size: 20px;
-            margin-right: 8px;
-        }
-        .callout {
-            background: linear-gradient(135deg, #f0f9ff 0%, #f5f0ff 100%);
-            border: 2px solid #00ffff;
-            border-radius: 8px;
-            padding: 20px;
-            margin: 25px 0;
-        }
-        .callout h3 {
-            color: #BF00FF;
-            margin-top: 0;
-            font-size: 18px;
-        }
+      body {
+        font-family:
+          "Inter",
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          "Roboto",
+          "Oxygen",
+          "Ubuntu",
+          "Cantarell",
+          sans-serif;
+        line-height: 1.6;
+        color: #333;
+        margin: 0;
+        padding: 0;
+        background-color: #f9f9f9;
+      }
+      .email-wrapper {
+        width: 100%;
+        background-color: #f9f9f9;
+        padding: 20px 0;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        background-color: #ffffff;
+        border-radius: 8px;
+        padding: 30px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+      .logo-header {
+        background-color: #0a0a0a;
+        padding: 10px;
+        margin: -30px -30px 30px -30px;
+        border-radius: 8px 8px 0 0;
+        text-align: center;
+      }
+      .logo-header img {
+        max-width: 400px;
+        height: auto;
+      }
+      h1 {
+        color: #bf00ff;
+        font-size: 28px;
+        margin-bottom: 10px;
+        margin-top: 0;
+      }
+      h2 {
+        color: #bf00ff;
+        font-size: 20px;
+        margin-top: 30px;
+        margin-bottom: 15px;
+      }
+      .subtitle {
+        color: #666;
+        font-size: 16px;
+        margin-bottom: 25px;
+      }
+      ul {
+        padding-left: 20px;
+        margin-bottom: 20px;
+      }
+      li {
+        margin-bottom: 10px;
+      }
+      .highlight {
+        background-color: #f5f0ff;
+        border-left: 4px solid #bf00ff;
+        padding: 15px;
+        margin: 20px 0;
+        border-radius: 4px;
+      }
+      .feature-box {
+        background-color: #f0f9ff;
+        border-left: 4px solid #00ffff;
+        padding: 15px;
+        margin: 20px 0;
+        border-radius: 4px;
+      }
+      .cta {
+        background-color: #00ffff;
+        color: #0a0a0a;
+        padding: 12px 24px;
+        text-decoration: none;
+        border-radius: 6px;
+        display: inline-block;
+        margin: 10px 10px 10px 0;
+        font-weight: 600;
+      }
+      .cta-secondary {
+        background-color: #bf00ff;
+        color: #ffffff;
+      }
+      .footer {
+        margin-top: 40px;
+        padding-top: 20px;
+        border-top: 1px solid #e0e0e0;
+        font-size: 14px;
+        color: #666;
+      }
+      a {
+        color: #00ffff;
+      }
+      .signature {
+        margin-top: 30px;
+        font-style: italic;
+        color: #666;
+      }
+      .section-badge {
+        display: inline-block;
+        background-color: #bf00ff;
+        color: #ffffff;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        margin-bottom: 10px;
+      }
+      .emoji {
+        font-size: 20px;
+        margin-right: 8px;
+      }
+      .callout {
+        background: linear-gradient(135deg, #f0f9ff 0%, #f5f0ff 100%);
+        border: 2px solid #00ffff;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 25px 0;
+      }
+      .callout h3 {
+        color: #bf00ff;
+        margin-top: 0;
+        font-size: 18px;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="email-wrapper">
-        <div class="container">
+      <div class="container">
         <div class="logo-header">
-            <img src="https://neonpanda.ai/images/logo-light-sm.png" alt="NeonPanda Logo">
+          <img
+            src="https://neonpanda.ai/images/logo-dark-sm.webp"
+            alt="NeonPanda Logo"
+          />
         </div>
         <h1>📅 Training Programs Are Here</h1>
-        <p class="subtitle">Your coach can now build complete multi-week training plans – when you need them.</p>
+        <p class="subtitle">
+          Your coach can now build complete multi-week training plans – when you
+          need them.
+        </p>
 
-        <p>Some of you follow a box program. Some work with a personal trainer and just want to log workouts for accountability. Some are training for a Spartan race or 5K. Some train intuitively. Some just want a coach to talk to about today's workout. That's all perfect – NeonPanda works however you train.</p>
+        <p>
+          Some of you follow a box program. Some work with a personal trainer
+          and just want to log workouts for accountability. Some are training
+          for a Spartan race or 5K. Some train intuitively. Some just want a
+          coach to talk to about today's workout. That's all perfect – NeonPanda
+          works however you train.
+        </p>
 
-        <p>But for those times when you need a structured plan – getting ready for the 2026 CrossFit Open, prepping for a powerlifting meet, building a strength cycle, training for an endurance event – your coaches can now build complete programs through conversation. No other AI coaching platform can do this.</p>
+        <p>
+          But for those times when you need a structured plan – getting ready
+          for the 2026 CrossFit Open, prepping for a powerlifting meet, building
+          a strength cycle, training for an endurance event – your coaches can
+          now build complete programs through conversation. No other AI coaching
+          platform can do this.
+        </p>
 
         <div class="callout">
-            <h3>🎯 When You Need Structure, It's There</h3>
-            <p style="margin-bottom: 10px;">Training Programs are <strong>intelligent systems</strong> for when you want:</p>
-            <ul style="margin-top: 0; margin-bottom: 0;">
-                <li>Multi-week progression toward a specific goal (competition prep, strength cycles, etc.)</li>
-                <li>Phase-based periodization with strategic progression and deloads</li>
-                <li>A coach who knows where you're headed long-term, not just what you're doing today</li>
-                <li>Calendar-based accountability that adapts when life gets chaotic</li>
-            </ul>
-            <p style="margin-top: 10px; margin-bottom: 0;"><em>But if you don't need this? Keep logging workouts and chatting with your coach like always. Both approaches work beautifully.</em></p>
+          <h3>🎯 When You Need Structure, It's There</h3>
+          <p style="margin-bottom: 10px">
+            Training Programs are <strong>intelligent systems</strong> for when
+            you want:
+          </p>
+          <ul style="margin-top: 0; margin-bottom: 0">
+            <li>
+              Multi-week progression toward a specific goal (competition prep,
+              strength cycles, etc.)
+            </li>
+            <li>
+              Phase-based periodization with strategic progression and deloads
+            </li>
+            <li>
+              A coach who knows where you're headed long-term, not just what
+              you're doing today
+            </li>
+            <li>
+              Calendar-based accountability that adapts when life gets chaotic
+            </li>
+          </ul>
+          <p style="margin-top: 10px; margin-bottom: 0">
+            <em
+              >But if you don't need this? Keep logging workouts and chatting
+              with your coach like always. Both approaches work beautifully.</em
+            >
+          </p>
         </div>
 
         <div class="feature-box">
-            <span class="section-badge">NEW FEATURE</span>
-            <h2 style="margin-top: 10px; color: #00ffff;">💬 Build Mode - Talk Your Way to a Program</h2>
-            <p>Forget forms. Forget templates. Just <strong>talk to your coach about what you want to achieve</strong>, and they'll build a complete training program through conversation.</p>
-            <p style="margin-top: 15px;">Here's how it works:</p>
-            <ul style="margin-top: 10px;">
-                <li><strong>Switch to Build Mode</strong> in any conversation with the new purple toggle</li>
-                <li><strong>Tell your coach your goal:</strong> "I want to build strength for the next 8 weeks" or "Need a program to prep for my first powerlifting meet"</li>
-                <li><strong>Answer their questions naturally:</strong> They'll ask about your schedule, equipment, experience, constraints – just like a real coach would</li>
-                <li><strong>Get a complete program:</strong> Your coach generates a structured plan with phases, progression, and daily workout templates written in plain English</li>
-            </ul>
-            <p style="margin-top: 15px;"><em>No forms. No dropdowns. Just conversation. That's the NeonPanda way.</em></p>
+          <span class="section-badge">NEW FEATURE</span>
+          <h2 style="margin-top: 10px; color: #00ffff">
+            💬 Build Mode - Talk Your Way to a Program
+          </h2>
+          <p>
+            Forget forms. Forget templates. Just
+            <strong>talk to your coach about what you want to achieve</strong>,
+            and they'll build a complete training program through conversation.
+          </p>
+          <p style="margin-top: 15px">Here's how it works:</p>
+          <ul style="margin-top: 10px">
+            <li>
+              <strong>Switch to Build Mode</strong> in any conversation with the
+              new purple toggle
+            </li>
+            <li>
+              <strong>Tell your coach your goal:</strong> "I want to build
+              strength for the next 8 weeks" or "Need a program to prep for my
+              first powerlifting meet"
+            </li>
+            <li>
+              <strong>Answer their questions naturally:</strong> They'll ask
+              about your schedule, equipment, experience, constraints – just
+              like a real coach would
+            </li>
+            <li>
+              <strong>Get a complete program:</strong> Your coach generates a
+              structured plan with phases, progression, and daily workout
+              templates written in plain English
+            </li>
+          </ul>
+          <p style="margin-top: 15px">
+            <em
+              >No forms. No dropdowns. Just conversation. That's the NeonPanda
+              way.</em
+            >
+          </p>
         </div>
 
         <div class="highlight">
-            <span class="section-badge">PHASE 1: FOUNDATION</span>
-            <h2 style="margin-top: 10px; color: #BF00FF;">⚡ What Shipped This Week</h2>
-            <p>This release is <strong>Phase 1</strong> – the infrastructure and ability to create training programs through conversation. You can build complete programs with your coach right now. Phase 2 (viewing your program calendar, tracking adherence, logging from templates) ships next.</p>
-            <p style="margin-top: 15px;">Behind the scenes, we built:</p>
-            <ul style="margin-top: 10px;">
-                <li><strong>Smart calendar generation:</strong> Your program knows "today's workout" based on YOUR timezone, not server time. Handles rest days, pauses, and real-world schedule chaos.</li>
-                <li><strong>Phase-aware AI:</strong> Your coach understands where you are in the program and what comes next. They can intelligently adapt workouts based on your current phase goals.</li>
-                <li><strong>Semantic search integration:</strong> Training programs get stored in Pinecone so your coach can reference past programs, learn from what worked, and avoid what didn't.</li>
-                <li><strong>Async generation:</strong> Program building happens in the background while your coach keeps you updated with real-time progress messages. No waiting around.</li>
-            </ul>
-            <p style="margin-top: 15px;"><em>You just see a smooth conversation. We see hundreds of hours of engineering that made it feel effortless.</em></p>
+          <span class="section-badge">PHASE 1: FOUNDATION</span>
+          <h2 style="margin-top: 10px; color: #bf00ff">
+            ⚡ What Shipped This Week
+          </h2>
+          <p>
+            This release is <strong>Phase 1</strong> – the infrastructure and
+            ability to create training programs through conversation. You can
+            build complete programs with your coach right now. Phase 2 (viewing
+            your program calendar, tracking adherence, logging from templates)
+            ships next.
+          </p>
+          <p style="margin-top: 15px">Behind the scenes, we built:</p>
+          <ul style="margin-top: 10px">
+            <li>
+              <strong>Smart calendar generation:</strong> Your program knows
+              "today's workout" based on YOUR timezone, not server time. Handles
+              rest days, pauses, and real-world schedule chaos.
+            </li>
+            <li>
+              <strong>Phase-aware AI:</strong> Your coach understands where you
+              are in the program and what comes next. They can intelligently
+              adapt workouts based on your current phase goals.
+            </li>
+            <li>
+              <strong>Semantic search integration:</strong> Training programs
+              get stored in Pinecone so your coach can reference past programs,
+              learn from what worked, and avoid what didn't.
+            </li>
+            <li>
+              <strong>Async generation:</strong> Program building happens in the
+              background while your coach keeps you updated with real-time
+              progress messages. No waiting around.
+            </li>
+          </ul>
+          <p style="margin-top: 15px">
+            <em
+              >You just see a smooth conversation. We see hundreds of hours of
+              engineering that made it feel effortless.</em
+            >
+          </p>
         </div>
 
         <h2>🔧 UI Polish & Navigation Upgrades</h2>
         <p>Because good infrastructure deserves a good interface:</p>
         <ul>
-            <li><strong>Redesigned sidebar navigation</strong> with hover-based flyout menu for utility items – way cleaner on desktop</li>
-            <li><strong>Mode toggle component</strong> that's perfectly aligned, properly styled, and feels buttery smooth to click</li>
-            <li><strong>Consistent icon sizing</strong> across all navigation items in collapsed sidebar view</li>
-            <li><strong>Centralized UI patterns</strong> for dividers, spacing, and containers – making future features ship faster</li>
+          <li>
+            <strong>Redesigned sidebar navigation</strong> with hover-based
+            flyout menu for utility items – way cleaner on desktop
+          </li>
+          <li>
+            <strong>Mode toggle component</strong> that's perfectly aligned,
+            properly styled, and feels buttery smooth to click
+          </li>
+          <li>
+            <strong>Consistent icon sizing</strong> across all navigation items
+            in collapsed sidebar view
+          </li>
+          <li>
+            <strong>Centralized UI patterns</strong> for dividers, spacing, and
+            containers – making future features ship faster
+          </li>
         </ul>
 
         <h2>What's Next?</h2>
         <p>We're shipping fast. Here's what's coming:</p>
         <ul>
-            <li><span class="emoji">📊</span> <strong>Training Programs Phase 2:</strong> Program dashboard showing your current phase, today's prescribed workout, adherence tracking, and calendar view with one-tap logging from templates</li>
-            <li><span class="emoji">🔄</span> <strong>Adaptation Intelligence:</strong> Your coach automatically adjusts programs when life happens and you miss workouts – keeping you on track toward your goal</li>
-            <li><span class="emoji">⚡</span> <strong>Faster Workout Logging:</strong> Voice logging, quick-capture templates, and smarter AI parsing to make logging workouts feel instant instead of tedious</li>
-            <li><span class="emoji">🧠</span> <strong>Coach Evolution System:</strong> Your coaches learn new specialties (CrossFit, Endurance, Olympic Lifting) based on your training. The more you work together, the more specialized they become in what you actually do</li>
-            <li><span class="emoji">📈</span> <strong>Exercise Progression Tracking:</strong> See your strength gains over time – how your 5RM squat has improved, your running pace trends, skill progressions. Works whether you're on a program or logging individually</li>
-            <li><span class="emoji">🎙️</span> <strong>Voice Conversations:</strong> Talk to your coach hands-free while you're warming up – for programs, workouts, or just chatting about training</li>
+          <li>
+            <span class="emoji">📊</span>
+            <strong>Training Programs Phase 2:</strong> Program dashboard
+            showing your current phase, today's prescribed workout, adherence
+            tracking, and calendar view with one-tap logging from templates
+          </li>
+          <li>
+            <span class="emoji">🔄</span>
+            <strong>Adaptation Intelligence:</strong> Your coach automatically
+            adjusts programs when life happens and you miss workouts – keeping
+            you on track toward your goal
+          </li>
+          <li>
+            <span class="emoji">⚡</span>
+            <strong>Faster Workout Logging:</strong> Voice logging,
+            quick-capture templates, and smarter AI parsing to make logging
+            workouts feel instant instead of tedious
+          </li>
+          <li>
+            <span class="emoji">🧠</span>
+            <strong>Coach Evolution System:</strong> Your coaches learn new
+            specialties (CrossFit, Endurance, Olympic Lifting) based on your
+            training. The more you work together, the more specialized they
+            become in what you actually do
+          </li>
+          <li>
+            <span class="emoji">📈</span>
+            <strong>Exercise Progression Tracking:</strong> See your strength
+            gains over time – how your 5RM squat has improved, your running pace
+            trends, skill progressions. Works whether you're on a program or
+            logging individually
+          </li>
+          <li>
+            <span class="emoji">🎙️</span>
+            <strong>Voice Conversations:</strong> Talk to your coach hands-free
+            while you're warming up – for programs, workouts, or just chatting
+            about training
+          </li>
         </ul>
 
         <div class="highlight">
-            <p style="margin-bottom: 5px;"><strong>Try It If You're Curious:</strong></p>
-            <p style="margin-top: 5px; margin-bottom: 0;">Training Programs just shipped. If you've been thinking about building a structured plan for a specific goal, this is your chance to test something no other AI coaching platform has. If you're happy with your current training approach, that's perfect too – we're building features for <em>every</em> way people train. Feedback either way helps us improve. <strong>Find us in Discord.</strong></p>
+          <p style="margin-bottom: 5px">
+            <strong>Try It If You're Curious:</strong>
+          </p>
+          <p style="margin-top: 5px; margin-bottom: 0">
+            Training Programs just shipped. If you've been thinking about
+            building a structured plan for a specific goal, this is your chance
+            to test something no other AI coaching platform has. If you're happy
+            with your current training approach, that's perfect too – we're
+            building features for <em>every</em> way people train. Feedback
+            either way helps us improve. <strong>Find us in Discord.</strong>
+          </p>
         </div>
 
         <div class="signature">
-            <p>We're building something special here. Whether you use Training Programs or just log individual workouts, NeonPanda adapts to how <em>you</em> train.</p>
-            <p>Give the new features a spin. Tell us what works and what doesn't. 💪</p>
-            <p style="margin-top: 15px;">– The NeonPanda Team</p>
+          <p>
+            We're building something special here. Whether you use Training
+            Programs or just log individual workouts, NeonPanda adapts to how
+            <em>you</em> train.
+          </p>
+          <p>
+            Give the new features a spin. Tell us what works and what doesn't.
+            💪
+          </p>
+          <p style="margin-top: 15px">– The NeonPanda Team</p>
         </div>
 
         <div class="footer">
-            <p><strong>NeonPanda</strong> – Where electric intelligence meets approachable excellence.</p>
-            <p>Questions? Reply to this email or find us in Discord.</p>
-            <p style="margin-top: 15px;">
-                <a href="https://neonpanda.ai" style="margin-right: 15px;">Visit NeonPanda</a>
-                <a href="https://discord.gg/AmbuFTrU" style="margin-right: 15px;">Join Discord</a>
-                <a href="https://neonpanda.ai/changelog">View Full Changelog</a>
-            </p>
+          <p>
+            <strong>NeonPanda</strong> – Where electric intelligence meets
+            approachable excellence.
+          </p>
+          <p>Questions? Reply to this email or find us in Discord.</p>
+          <p style="margin-top: 15px">
+            <a href="https://neonpanda.ai" style="margin-right: 15px"
+              >Visit NeonPanda</a
+            >
+            <a href="https://discord.gg/AmbuFTrU" style="margin-right: 15px"
+              >Join Discord</a
+            >
+            <a href="https://neonpanda.ai/changelog">View Full Changelog</a>
+          </p>
         </div>
+      </div>
     </div>
-    </div>
-</body>
+  </body>
 </html>
-
