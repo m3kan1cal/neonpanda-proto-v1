@@ -491,12 +491,21 @@ export class CoachCreatorAgent extends Agent<CoachCreatorContext> {
     aiResponse: string,
     creationTimestamp: string,
   ): string {
-    // Get any partial results using semantic keys
-    const hasRequirements = !!this.toolResults.get("requirements");
-    const hasPersonality = !!this.toolResults.get("personality_selection");
-    const hasMethodology = !!this.toolResults.get("methodology_selection");
-    const hasPrompts = !!this.toolResults.get("coach_prompts");
-    const hasAssembled = !!this.toolResults.get("assembled_config");
+    // Get any partial SUCCESSFUL results using semantic keys (exclude error results)
+    const requirements = this.toolResults.get("requirements");
+    const hasRequirements = requirements && !("error" in requirements);
+
+    const personality = this.toolResults.get("personality_selection");
+    const hasPersonality = personality && !("error" in personality);
+
+    const methodology = this.toolResults.get("methodology_selection");
+    const hasMethodology = methodology && !("error" in methodology);
+
+    const prompts = this.toolResults.get("coach_prompts");
+    const hasPrompts = prompts && !("error" in prompts);
+
+    const assembled = this.toolResults.get("assembled_config");
+    const hasAssembled = assembled && !("error" in assembled);
 
     return `CRITICAL OVERRIDE: You did not complete the coach creation workflow.
 
