@@ -203,10 +203,11 @@ export class ProgramDesignerAgent extends Agent<ProgramDesignerContext> {
           console.error(`❌ Tool ${tool.id} failed:`, error);
           const errorMessage =
             error instanceof Error ? error.message : String(error);
-          const errorResult = { error: errorMessage };
+          const errorResult = { error: errorMessage || "Unknown error" };
 
-          // Store error result for later retrieval (important for blocking enforcement)
-          this.toolResults.set(tool.id, errorResult);
+          // Store error result using semantic key mapping (same as success results)
+          // This ensures blocking enforcement can find error results
+          this.storeToolResult(tool.id, errorResult);
 
           return this.buildToolResult(toolUse, errorResult, "error");
         }
@@ -275,10 +276,11 @@ export class ProgramDesignerAgent extends Agent<ProgramDesignerContext> {
         console.error(`❌ Tool ${tool.id} failed:`, error);
         const errorMessage =
           error instanceof Error ? error.message : String(error);
-        const errorResult = { error: errorMessage };
+        const errorResult = { error: errorMessage || "Unknown error" };
 
-        // Store error result for later retrieval (important for blocking enforcement)
-        this.toolResults.set(tool.id, errorResult);
+        // Store error result using semantic key mapping (same as success results)
+        // This ensures blocking enforcement can find error results
+        this.storeToolResult(tool.id, errorResult);
 
         results.push(this.buildToolResult(toolUse, errorResult, "error"));
       }
@@ -495,8 +497,9 @@ export class ProgramDesignerAgent extends Agent<ProgramDesignerContext> {
 
     // Count only successful tool results (exclude error results)
     // Error results are stored for blocking enforcement but shouldn't count toward progress
+    // Check for property existence rather than truthiness to handle empty error messages
     const successfulToolCount = Array.from(this.toolResults.values()).filter(
-      (result) => !result.error,
+      (result) => !("error" in result),
     ).length;
 
     // Retry if no tools succeeded or minimal tools succeeded
