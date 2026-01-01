@@ -235,9 +235,10 @@ export class CoachCreatorAgent extends Agent<CoachCreatorContext> {
           console.error(`❌ Tool ${tool.id} failed:`, error);
           const errorMessage =
             error instanceof Error ? error.message : String(error);
-          const errorResult = { error: errorMessage };
+          const errorResult = { error: errorMessage || "Unknown error" };
 
           // Store error result for later retrieval (important for blocking enforcement)
+          // Uses storeToolResult() to apply semantic key mapping
           this.storeToolResult(tool.id, errorResult);
 
           return this.buildToolResult(toolUse, errorResult, "error");
@@ -298,10 +299,11 @@ export class CoachCreatorAgent extends Agent<CoachCreatorContext> {
         console.error(`❌ Tool ${tool.id} failed:`, error);
         const errorMessage =
           error instanceof Error ? error.message : String(error);
-        const errorResult = { error: errorMessage };
+        const errorResult = { error: errorMessage || "Unknown error" };
 
         // Store error result for later retrieval (important for blocking enforcement)
         // If validate_coach_config throws, we need to store the error so save tool gets blocked
+        // Uses storeToolResult() to apply semantic key mapping
         this.storeToolResult(tool.id, errorResult);
 
         toolResults.push(this.buildToolResult(toolUse, errorResult, "error"));
@@ -448,10 +450,18 @@ export class CoachCreatorAgent extends Agent<CoachCreatorContext> {
       return null;
     }
 
-    // Retry if no tools were called and response looks incomplete
-    const noToolsCalled = this.toolResults.size === 0;
+    // Count only successful tool results (exclude error results)
+    // Error results are stored for blocking enforcement but shouldn't count toward progress
+    // Check for property existence rather than truthiness to handle empty error messages
+    // Null check prevents TypeError if a tool returns null/undefined
+    const successfulToolCount = Array.from(this.toolResults.values()).filter(
+      (result) => result && !("error" in result),
+    ).length;
+
+    // Retry if no tools succeeded or minimal tools succeeded
+    const noToolsCalled = successfulToolCount === 0;
     const minimalToolsCalled =
-      this.toolResults.size < MIN_REQUIRED_TOOLS_FOR_COMPLETE_WORKFLOW;
+      successfulToolCount < MIN_REQUIRED_TOOLS_FOR_COMPLETE_WORKFLOW;
 
     const looksIncomplete =
       response.includes("?") ||

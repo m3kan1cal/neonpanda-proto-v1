@@ -189,7 +189,12 @@ export class ProgramDesignerAgent extends Agent<ProgramDesignerContext> {
           // Store result by phaseId for later retrieval
           const phaseId = result.phaseId || toolUse.input?.phase?.phaseId;
           if (phaseId) {
-            this.storeToolResult(`phase_workouts:${phaseId}`, result);
+            this.storeToolResult(tool.id, result, `phase_workouts:${phaseId}`);
+          } else {
+            // Fallback: store with tool.id if phaseId is missing
+            console.warn(
+              `⚠️ Phase workout result missing phaseId - storing with tool.id fallback`,
+            );
           }
           this.toolResults.set(tool.id, result);
 
@@ -198,11 +203,13 @@ export class ProgramDesignerAgent extends Agent<ProgramDesignerContext> {
           console.error(`❌ Tool ${tool.id} failed:`, error);
           const errorMessage =
             error instanceof Error ? error.message : String(error);
-          return this.buildToolResult(
-            toolUse,
-            { error: errorMessage },
-            "error",
-          );
+          const errorResult = { error: errorMessage || "Unknown error" };
+
+          // Store error result using semantic key mapping (same as success results)
+          // This ensures blocking enforcement can find error results
+          this.storeToolResult(tool.id, errorResult);
+
+          return this.buildToolResult(toolUse, errorResult, "error");
         }
       }),
     );
@@ -252,7 +259,14 @@ export class ProgramDesignerAgent extends Agent<ProgramDesignerContext> {
           const phaseId = result.phaseId || toolUse.input?.phase?.phaseId;
           if (phaseId) {
             this.storeToolResult(tool.id, result, `phase_workouts:${phaseId}`);
+          } else {
+            // Warning if phaseId is unexpectedly missing
+            console.warn(
+              `⚠️ Phase workout result missing phaseId - storing with tool.id fallback`,
+            );
           }
+          // Always store at tool.id (matches parallel execution behavior)
+          this.toolResults.set(tool.id, result);
         } else {
           this.storeToolResult(tool.id, result);
         }
@@ -262,9 +276,13 @@ export class ProgramDesignerAgent extends Agent<ProgramDesignerContext> {
         console.error(`❌ Tool ${tool.id} failed:`, error);
         const errorMessage =
           error instanceof Error ? error.message : String(error);
-        results.push(
-          this.buildToolResult(toolUse, { error: errorMessage }, "error"),
-        );
+        const errorResult = { error: errorMessage || "Unknown error" };
+
+        // Store error result using semantic key mapping (same as success results)
+        // This ensures blocking enforcement can find error results
+        this.storeToolResult(tool.id, errorResult);
+
+        results.push(this.buildToolResult(toolUse, errorResult, "error"));
       }
     }
 
@@ -477,10 +495,20 @@ export class ProgramDesignerAgent extends Agent<ProgramDesignerContext> {
       return false;
     }
 
-    // Retry if no tools were called and response looks incomplete
-    const noToolsCalled = this.toolResults.size === 0;
+    // Count only successful tool results (exclude error results and duplicates)
+    // Error results are stored for blocking enforcement but shouldn't count toward progress
+    // Exclude duplicate phase workout entry stored at raw tool.id to prevent count inflation
+    // Check for property existence rather than truthiness to handle empty error messages
+    // Null check prevents TypeError if a tool returns null/undefined
+    const successfulToolCount = Array.from(this.toolResults.entries()).filter(
+      ([key, result]) =>
+        result && !("error" in result) && key !== "generate_phase_workouts", // Exclude duplicate raw tool ID
+    ).length;
+
+    // Retry if no tools succeeded or minimal tools succeeded
+    const noToolsCalled = successfulToolCount === 0;
     const minimalToolsCalled =
-      this.toolResults.size < MIN_REQUIRED_TOOLS_FOR_COMPLETE_WORKFLOW;
+      successfulToolCount < MIN_REQUIRED_TOOLS_FOR_COMPLETE_WORKFLOW;
 
     const looksIncomplete =
       response.includes("?") ||
