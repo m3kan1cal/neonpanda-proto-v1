@@ -259,13 +259,13 @@ export class ProgramDesignerAgent extends Agent<ProgramDesignerContext> {
           if (phaseId) {
             this.storeToolResult(tool.id, result, `phase_workouts:${phaseId}`);
           } else {
-            // Fallback: store with tool.id if phaseId is missing
-            // This prevents silent data loss and maintains consistency with parallel execution
+            // Warning if phaseId is unexpectedly missing
             console.warn(
               `⚠️ Phase workout result missing phaseId - storing with tool.id fallback`,
             );
-            this.toolResults.set(tool.id, result);
           }
+          // Always store at tool.id (matches parallel execution behavior)
+          this.toolResults.set(tool.id, result);
         } else {
           this.storeToolResult(tool.id, result);
         }
