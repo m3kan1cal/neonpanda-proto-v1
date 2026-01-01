@@ -233,10 +233,17 @@ Returns: primaryTemplate, secondaryInfluences, selectionReasoning, blendingWeigh
       sessionSummary,
     });
 
-    // Get full template data
+    // Get full template data with validation
     const templateData = COACH_PERSONALITY_TEMPLATES.find(
       (t) => t.id === result.primaryTemplate,
-    )!;
+    );
+
+    if (!templateData) {
+      throw new Error(
+        `Invalid personality template ID returned by AI: "${result.primaryTemplate}". ` +
+          `Valid IDs are: ${COACH_PERSONALITY_TEMPLATES.map((t) => t.id).join(", ")}`,
+      );
+    }
 
     console.info("✅ Personality template selected:", {
       primary: result.primaryTemplate,
@@ -328,10 +335,17 @@ Returns: primaryMethodology, methodologyReasoning, programmingEmphasis, periodiz
       sessionSummary,
     });
 
-    // Get full template data
+    // Get full template data with validation
     const templateData = METHODOLOGY_TEMPLATES.find(
       (m) => m.id === result.primaryMethodology,
-    )!;
+    );
+
+    if (!templateData) {
+      throw new Error(
+        `Invalid methodology template ID returned by AI: "${result.primaryMethodology}". ` +
+          `Valid IDs are: ${METHODOLOGY_TEMPLATES.map((m) => m.id).join(", ")}`,
+      );
+    }
 
     console.info("✅ Methodology template selected:", {
       methodology: result.primaryMethodology,
