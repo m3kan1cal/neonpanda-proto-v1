@@ -5,12 +5,12 @@
  * user queries, and user-related operations.
  */
 
-export {
-  UserProfile,
-} from './types';
+export { UserProfile } from "./types";
 
 export {
   validateCriticalTrainingDirective,
   normalizeCriticalTrainingDirective,
   DirectiveValidationResult,
-} from './validation';
+} from "./validation";
+
+export { extractUserName } from "./utils";
