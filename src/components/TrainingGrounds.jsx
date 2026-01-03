@@ -417,7 +417,7 @@ function TrainingGrounds() {
   };
 
   const renderWorkoutList = () => (
-    <div className="space-y-2">
+    <div className="space-y-2 mb-2">
       {workoutState.isLoadingRecentItems ? (
         <div className="space-y-3">
           <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
@@ -864,7 +864,7 @@ function TrainingGrounds() {
             </p>
 
             {/* Recent Conversations List */}
-            <div className="space-y-2 mb-6">
+            <div className="space-y-2 mb-2">
               {conversationAgentState.isLoadingRecentItems ? (
                 <div className="space-y-3">
                   <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
@@ -980,7 +980,7 @@ function TrainingGrounds() {
             </p>
 
             {/* Workout List */}
-            <div>{renderWorkoutList()}</div>
+            {renderWorkoutList()}
           </div>
 
           {/* Reports & Insights Section */}

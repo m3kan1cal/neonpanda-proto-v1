@@ -26,6 +26,10 @@ import {
   assembleProgram,
 } from "../../program/phase-generator";
 import {
+  validateParsedProgramDuration,
+  validateParsedTrainingFrequency,
+} from "../../program/validation-helpers";
+import {
   normalizeProgram,
   shouldNormalizeProgram,
   generateNormalizationSummary,
@@ -281,11 +285,20 @@ Returns: coachConfig, userProfile, pineconeContext, programDuration (days), trai
         typeof programDurationRaw === "number" ? programDurationRaw : 56;
     }
 
+    // Validate parsed program duration
+    validateParsedProgramDuration(programDuration, programDurationRaw);
+
     // 4. Parse training frequency
     const trainingFrequency =
       typeof todoList.trainingFrequency?.value === "number"
         ? todoList.trainingFrequency.value
         : parseInt(todoList.trainingFrequency?.value || "4", 10);
+
+    // Validate parsed training frequency
+    validateParsedTrainingFrequency(
+      trainingFrequency,
+      todoList.trainingFrequency?.value,
+    );
 
     // 5. Extract training goals (split comma-separated values into array)
     const trainingGoalsRaw = todoList.trainingGoals?.value || "";

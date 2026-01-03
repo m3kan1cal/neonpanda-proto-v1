@@ -33,23 +33,27 @@ The Juggernaut Method was first introduced in Smith's book "The Juggernaut Metho
 ## Programming Structure
 
 **16-Week Periodized Program**:
+
 - Mesocycle 1 (Weeks 1-4): Accumulation Phase - 5-8 reps
 - Mesocycle 2 (Weeks 5-8): Intensification Phase - 3-5 reps
 - Mesocycle 3 (Weeks 9-12): Realization Phase - 1-3 reps
 - Mesocycle 4 (Weeks 13-16): Peaking Phase - Competition preparation
 
 **Weekly Structure**:
+
 - 4 training days per week
 - Each main lift trained once per week
 - Systematic progression through rep ranges
 
 **Training Split**:
+
 - Day 1: Squat + Assistance
 - Day 2: Bench Press + Assistance
 - Day 3: Deadlift + Assistance
 - Day 4: Overhead Press + Assistance
 
 **Progression Model**:
+
 - Week 1: Base sets + AMRAP (As Many Reps As Possible)
 - Week 2: Increased intensity + AMRAP
 - Week 3: Peak intensity + AMRAP
@@ -71,9 +75,10 @@ The Juggernaut Method was first introduced in Smith's book "The Juggernaut Metho
 
 **Coaches**: Trainers working with athletes who need systematic programming approaches.
 
-## Pros & Cons
+## Advantages and Disadvantages
 
 **Pros**:
+
 - Comprehensive 16-week periodized approach
 - Proven track record with various athletes
 - Balances strength and athletic performance
@@ -84,6 +89,7 @@ The Juggernaut Method was first introduced in Smith's book "The Juggernaut Metho
 - Flexible assistance work selection
 
 **Cons**:
+
 - Long commitment period (16 weeks)
 - May be too structured for some individuals
 - Requires understanding of periodization principles
@@ -93,7 +99,7 @@ The Juggernaut Method was first introduced in Smith's book "The Juggernaut Metho
 - Can be mentally demanding over full cycle
 - May not suit all recovery patterns
 
-## Implementation
+## Implementation Guidelines
 
 **Step 1: Assess Training Level**: Ensure you have intermediate or advanced experience with proper technique.
 
@@ -111,7 +117,7 @@ The Juggernaut Method was first introduced in Smith's book "The Juggernaut Metho
 
 **Step 8: Assess and Plan**: Evaluate results and plan your next training cycle.
 
-## Variations
+## Variations and Specializations
 
 **Juggernaut Method 2.0**: Updated version with refined programming and additional options.
 
@@ -145,7 +151,7 @@ The Juggernaut Method is grounded in established exercise science principles:
 
 **Work Capacity**: Research supports the importance of developing the ability to handle increasing training volumes.
 
-## Common Mistakes
+## Common Mistakes and Solutions
 
 **Inadequate Preparation**: Starting the program without sufficient training background or technique proficiency.
 
@@ -163,7 +169,7 @@ The Juggernaut Method is grounded in established exercise science principles:
 
 **Ignoring AMRAP Performance**: Not using the autoregulation component to adjust training loads.
 
-## Integration
+## Integration Applications
 
 **With Competition Preparation**: Designed specifically for systematic peaking toward competition or testing.
 
@@ -180,3 +186,197 @@ The Juggernaut Method is grounded in established exercise science principles:
 **With Team Training**: Adaptable for team sport environments with proper coaching supervision.
 
 **Periodization Integration**: Serves as a complete macrocycle within larger annual training plans.
+
+---
+
+## WORKOUT TEMPLATES
+
+**Programming Structure & Ratios:**
+
+- **16-Week Macrocycle**: 4 mesocycles x 4 weeks each
+- **Session Structure**: Main lift + assistance work (60% main, 40% assistance)
+- **Weekly Frequency**: 4 days per week, each main lift once
+- **Progression Model**: AMRAP-driven with percentage base
+
+**Movement Patterns & Exercise Preferences:**
+
+- **Primary Lifts**: Squat, bench press, deadlift, overhead press
+- **Assistance Categories**: Push, pull, single-leg, core
+- **Movement Hierarchy**:
+  1. Main lift (prescribed sets + AMRAP)
+  2. Secondary compound movement
+  3. Targeted accessory work
+- **Assistance Selection**: Based on individual weaknesses and competition goals
+
+**Time Domains & Workout Formats:**
+
+- **Session Duration**: 60-90 minutes
+- **Main Lift Time**: 25-35 minutes including warm-up
+- **Assistance Work**: 25-40 minutes
+- **Rest Periods**: 3-5 minutes for main lifts, 90-120 seconds for assistance
+
+**Scaling Approaches & Progression Methods:**
+
+- **Training Max**: Use 90% of true 1RM as training max
+- **AMRAP Autoregulation**: Final set determines next cycle's starting point
+- **Phase Progression**: Decrease reps, increase intensity each mesocycle
+- **Deload Weeks**: Week 4 of each mesocycle is deload
+- **TM Updates**: Based on AMRAP performance + provided formula
+
+**Weekly Programming Pattern:**
+
+- **Philosophy**: Wave loading with AMRAP-based autoregulation
+- **Daily Structure**: One main lift per day + targeted assistance
+- **Rest Days**: 3 rest days per week (flexible placement)
+- **Volume**: Decreases as intensity increases through phases
+- **Intensity**: Increases from ~60% to ~90% across 16 weeks
+
+**16-Week Program Overview:**
+
+```
+Phase 1 - 10s Wave (Weeks 1-4): Accumulation
+- Rep Target: 10s (10-8-6-deload pattern)
+- Intensity: ~60-67.5%
+- Focus: Work capacity, muscle building
+
+Phase 2 - 8s Wave (Weeks 5-8): Accumulation+
+- Rep Target: 8s (8-6-4-deload pattern)
+- Intensity: ~65-72.5%
+- Focus: Continued volume, strength building
+
+Phase 3 - 5s Wave (Weeks 9-12): Intensification
+- Rep Target: 5s (5-3-1-deload pattern)
+- Intensity: ~70-85%
+- Focus: Strength, neural adaptation
+
+Phase 4 - 3s Wave (Weeks 13-16): Realization
+- Rep Target: 3s (3-2-1-deload)
+- Intensity: ~75-95%
+- Focus: Peaking, competition prep
+```
+
+**Example Weekly Schedule (10s Wave - Week 1):**
+
+```
+Monday - Squat Day
+Main Movement:
+- Squat: Work up to 60% x 10, then AMRAP @ 60%
+  Example: 135x5, 185x5, 225x3, 275x3, 315x10, 315xAMRAP
+Assistance:
+- Romanian Deadlift: 3 x 10
+- Leg Press: 3 x 15
+- Walking Lunges: 2 x 12 each leg
+- Hanging Leg Raises: 3 x 15
+Total time: 75 minutes
+
+Tuesday - Bench Day
+Main Movement:
+- Bench Press: Work up to 60% x 10, then AMRAP @ 60%
+  Example: 95x5, 135x5, 185x3, 225x10, 225xAMRAP
+Assistance:
+- Incline Dumbbell Press: 3 x 12
+- Barbell Rows: 4 x 10
+- Dips: 3 x 12
+- Face Pulls: 3 x 15
+Total time: 70 minutes
+
+Thursday - Deadlift Day
+Main Movement:
+- Deadlift: Work up to 60% x 10, then AMRAP @ 60%
+  Example: 135x5, 225x5, 315x3, 405x10, 405xAMRAP
+Assistance:
+- Front Squats: 3 x 8
+- Good Mornings: 3 x 10
+- Lat Pulldowns: 3 x 12
+- Ab Wheel: 3 x 10
+Total time: 70 minutes
+
+Friday - Overhead Press Day
+Main Movement:
+- Overhead Press: Work up to 60% x 10, then AMRAP @ 60%
+  Example: 45x5, 95x5, 135x10, 135xAMRAP
+Assistance:
+- Close-Grip Bench: 3 x 10
+- Pull-ups: 4 x 8
+- Lateral Raises: 3 x 15
+- Tricep Pushdowns: 3 x 15
+Total time: 65 minutes
+```
+
+**Week-by-Week Progression (Each Phase):**
+
+```
+10s Wave Example (Training Max = 400 lb squat):
+Week 1: 60% x 5 sets + AMRAP (240 lbs)
+  - Sets: 10-10-10-10-10+ (AMRAP)
+Week 2: 62.5% x 3 sets + AMRAP (250 lbs)
+  - Sets: 8-8-8+ (AMRAP)
+Week 3: 65% x 2 sets + AMRAP (260 lbs)
+  - Sets: 5-5-5+ (AMRAP)
+Week 4: Deload (40-50-60% x 5 each)
+
+8s Wave Example:
+Week 5: 65% x 5 sets + AMRAP
+Week 6: 67.5% x 3 sets + AMRAP
+Week 7: 70% x 2 sets + AMRAP
+Week 8: Deload
+
+5s Wave Example:
+Week 9: 70% x 5 sets + AMRAP
+Week 10: 75% x 3 sets + AMRAP
+Week 11: 80% x 2 sets + AMRAP
+Week 12: Deload
+
+3s Wave Example:
+Week 13: 75% x 5 sets + AMRAP
+Week 14: 82.5% x 3 sets + AMRAP
+Week 15: 90% x 1 set + AMRAP
+Week 16: Test or Compete
+```
+
+**AMRAP Performance Guide:**
+
+```
+AMRAP Result    | TM Adjustment
+----------------|---------------
+< Target reps   | Reduce TM 5-10%
+= Target reps   | Keep TM same
++1-2 over target| Increase TM 5 lbs
++3-5 over target| Increase TM 10 lbs
++6+ over target | Increase TM 15-20 lbs
+```
+
+**Deload Week Template:**
+
+```
+Each Main Lift:
+Set 1: 40% x 5
+Set 2: 50% x 5
+Set 3: 60% x 5
+
+Assistance: Reduce to 2 sets per exercise
+Focus: Recovery, technique refinement, mobility
+```
+
+**Assistance Work Templates:**
+
+- **Squat Day**: Hip hinge (RDL, good morning), quad (leg press, lunges), core
+- **Bench Day**: Horizontal push (incline, dips), horizontal pull (rows), triceps
+- **Deadlift Day**: Squat variation (front squat), upper back (lat work), core
+- **OHP Day**: Vertical push (close-grip), vertical pull (pull-ups), shoulders
+
+**Competition Peaking Modifications (Final 3 Weeks):**
+
+```
+Week 14: 82.5% x 3 + AMRAP (as normal)
+Week 15: Singles at 90-95% (3-5 singles)
+Week 16: Opener practice only (1 x 1 @ 85-88%)
+Competition: Execute!
+```
+
+**Athletic Adaptation:**
+
+- Reduce to 3 days per week
+- Emphasize power/speed work in warm-ups
+- Reduce AMRAP intensity to RPE 8 vs failure
+- Add sport-specific conditioning on non-lift days

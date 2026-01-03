@@ -91,7 +91,7 @@
       },
       "metadata": {
         "coach_creator_session_summary": "Masters/Comeback Athlete template designed for former athletes or previously active individuals (40+) returning to fitness after breaks or injuries. Goals: Safe return to fitness while respecting age and injury limitations. Focus on functional improvement, pain management, and leveraging past experience. Training 3-4 days/week, 50-minute sessions including extended warm-up and recovery. Emphasizes modified movements, conservative progression, and injury prevention. Coaching style: Patient, health-focused, experience-respecting. Equipment: Basic gym with mobility tools and resistance bands. Methodology: Functional Movement Screen with corrective strategies. Safety emphasis: Maximum priority on injury prevention and modification strategies.",
-        "created_date": "2025-08-23T00:00:00.000Z",
+        "created_date": "2026-01-02T00:00:00.000Z",
         "methodology_profile": {
           "experience": ["returning_athlete", "masters_athlete"],
           "focus": ["mobility", "strength_building", "injury_prevention", "functional_movement"],
@@ -158,12 +158,12 @@
       }
     },
     "metadata": {
-      "created_date": "2025-08-23T00:00:00.000Z",
+      "created_date": "2026-01-02T00:00:00.000Z",
       "version": "1.0",
       "popularity_score": 0,
       "is_active": true
     }
   },
-  "createdAt": "2025-08-23T00:00:00.000Z",
-  "updatedAt": "2025-08-23T00:00:00.000Z"
+  "createdAt": "2026-01-02T00:00:00.000Z",
+  "updatedAt": "2026-01-02T00:00:00.000Z"
 }

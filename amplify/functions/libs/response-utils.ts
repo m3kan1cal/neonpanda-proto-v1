@@ -418,7 +418,20 @@ export function fixDoubleEncodedProperties(
   data: any,
   path: string = "root",
   problematicKeys: string[] = [],
+  _debugDepth: number = 0,
 ): any {
+  const debugPrefix = "  ".repeat(_debugDepth);
+
+  // Debug: Log entry for root call only
+  if (path === "root") {
+    console.info("🔍 fixDoubleEncodedProperties ENTRY:", {
+      dataType: typeof data,
+      isArray: Array.isArray(data),
+      topLevelKeys:
+        typeof data === "object" && data !== null ? Object.keys(data) : null,
+    });
+  }
+
   // If data is a string that looks like JSON, parse it
   if (
     typeof data === "string" &&
@@ -427,15 +440,19 @@ export function fixDoubleEncodedProperties(
     try {
       const parsed = JSON.parse(data);
       problematicKeys.push(path);
-      console.warn(
-        "⚠️ Fixed double-encoded property - value was JSON string instead of object",
-        {
-          path,
-          stringLength: data.length,
-          stringPreview: data.substring(0, 100),
-        },
-      );
-      return fixDoubleEncodedProperties(parsed, path, problematicKeys); // Recursively check the parsed result
+      console.warn(`🔧 ACTUAL FIX: String→Object conversion at "${path}"`, {
+        path,
+        stringLength: data.length,
+        stringPreview: data.substring(0, 150),
+        parsedType: typeof parsed,
+        parsedIsArray: Array.isArray(parsed),
+      });
+      return fixDoubleEncodedProperties(
+        parsed,
+        path,
+        problematicKeys,
+        _debugDepth,
+      ); // Recursively check the parsed result
     } catch (e) {
       // If parsing fails, return as-is
       return data;
@@ -445,27 +462,40 @@ export function fixDoubleEncodedProperties(
   // If data is an object, recursively check all properties
   if (typeof data === "object" && data !== null && !Array.isArray(data)) {
     const fixed: any = {};
-    const doubleEncodedKeys: string[] = [];
+    const actuallyFixedKeys: string[] = [];
 
     for (const [key, value] of Object.entries(data)) {
       const childPath = path === "root" ? key : `${path}.${key}`;
+      const originalProblematicCount = problematicKeys.length;
+
       const fixedValue = fixDoubleEncodedProperties(
         value,
         childPath,
         problematicKeys,
+        _debugDepth + 1,
       );
       fixed[key] = fixedValue;
-      if (fixedValue !== value) {
-        doubleEncodedKeys.push(key);
+
+      // Only mark as fixed if problematicKeys grew (meaning actual string→object conversion happened)
+      if (problematicKeys.length > originalProblematicCount) {
+        actuallyFixedKeys.push(key);
       }
     }
 
-    if (doubleEncodedKeys.length > 0 && path === "root") {
-      console.warn("⚠️ Fixed double-encoded properties in object", {
-        affectedKeys: doubleEncodedKeys,
-        fullPaths: problematicKeys,
-        objectKeys: Object.keys(data),
-      });
+    if (path === "root") {
+      if (problematicKeys.length > 0) {
+        console.warn("⚠️ Fixed double-encoded properties in object", {
+          affectedKeys: actuallyFixedKeys,
+          fullPaths: problematicKeys,
+          objectKeys: Object.keys(data),
+          totalFixesApplied: problematicKeys.length,
+        });
+      } else {
+        console.info("✅ fixDoubleEncodedProperties: No fixes needed", {
+          objectKeys: Object.keys(data),
+          note: "All properties were already proper types",
+        });
+      }
     }
 
     return fixed;
@@ -474,7 +504,12 @@ export function fixDoubleEncodedProperties(
   // If data is an array, recursively check all elements
   if (Array.isArray(data)) {
     return data.map((item, index) =>
-      fixDoubleEncodedProperties(item, `${path}[${index}]`, problematicKeys),
+      fixDoubleEncodedProperties(
+        item,
+        `${path}[${index}]`,
+        problematicKeys,
+        _debugDepth + 1,
+      ),
     );
   }
 

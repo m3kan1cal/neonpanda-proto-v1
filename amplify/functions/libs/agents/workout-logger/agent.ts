@@ -2,7 +2,12 @@
  * Workout Logger Agent
  *
  * Agent that orchestrates workout extraction, validation, and storage.
- * Uses 5 specialized tools to accomplish the task with Claude making decisions.
+ * Uses 6 specialized tools to accomplish the task with Claude making decisions.
+ *
+ * Architecture follows Coach Creator pattern:
+ * - Tools retrieve previous results via context.getToolResult()
+ * - No large objects passed as Claude inputs (prevents double-encoding)
+ * - handleToolUse() override for augmented context injection
  */
 
 import { Agent } from "../core/agent";
@@ -22,6 +27,7 @@ import { enforceValidationBlocking } from "./helpers";
 /**
  * Semantic storage key mapping for tool results
  * Maps tool IDs to shorter, meaningful keys for cleaner result storage
+ * Following Coach Creator pattern for consistent data retrieval
  */
 const STORAGE_KEY_MAP: Record<string, string> = {
   detect_discipline: "discipline",
@@ -40,6 +46,251 @@ const STORAGE_KEY_MAP: Record<string, string> = {
  */
 export class WorkoutLoggerAgent extends Agent<WorkoutLoggerContext> {
   private toolResults: Map<string, any> = new Map(); // Track tool results
+
+  /**
+   * Store tool result with semantic key for later retrieval
+   * Maps tool IDs to semantic keys (Coach Creator pattern)
+   */
+  private storeToolResult(toolId: string, result: any): void {
+    const storageKey = STORAGE_KEY_MAP[toolId] || toolId;
+
+    // Debug: Deep inspection if nested objects are double-encoded at storage time
+    if (storageKey === "extraction" && result?.workoutData) {
+      const workoutData = result.workoutData;
+      const nestedFieldTypes: Record<string, string> = {};
+      const doubleEncodedFields: string[] = [];
+      const deeperInspection: Record<string, Record<string, string>> = {};
+
+      for (const key of [
+        "discipline_specific",
+        "performance_metrics",
+        "subjective_feedback",
+        "metadata",
+        "coach_notes",
+      ]) {
+        if (workoutData[key] !== undefined) {
+          const value = workoutData[key];
+          const valueType = typeof value;
+          nestedFieldTypes[key] = valueType;
+
+          // Check if it's a string that looks like JSON (top level)
+          if (
+            valueType === "string" &&
+            (value.startsWith("{") || value.startsWith("["))
+          ) {
+            doubleEncodedFields.push(key);
+          }
+
+          // Deeper inspection: check properties INSIDE these objects
+          if (valueType === "object" && value !== null) {
+            deeperInspection[key] = {};
+            for (const [subKey, subValue] of Object.entries(value)) {
+              const subType = typeof subValue;
+              deeperInspection[key][subKey] = subType;
+
+              // Check for double-encoding at the nested level
+              if (
+                subType === "string" &&
+                typeof subValue === "string" &&
+                (subValue.startsWith("{") || subValue.startsWith("["))
+              ) {
+                doubleEncodedFields.push(`${key}.${subKey}`);
+                console.warn(
+                  `🔴 NESTED DOUBLE-ENCODING AT STORAGE: ${key}.${subKey}`,
+                  {
+                    type: subType,
+                    preview: subValue.substring(0, 150),
+                  },
+                );
+              }
+            }
+          }
+        }
+      }
+
+      if (doubleEncodedFields.length > 0) {
+        console.warn("⚠️ DOUBLE-ENCODING DETECTED AT STORAGE TIME:", {
+          toolId,
+          storageKey,
+          nestedFieldTypes,
+          doubleEncodedFields,
+          deeperInspection,
+          note: "Data is ALREADY double-encoded when arriving at storeToolResult",
+        });
+      } else {
+        console.info("✅ Storage check: Nested fields are proper objects", {
+          toolId,
+          storageKey,
+          nestedFieldTypes,
+          deeperInspection,
+        });
+      }
+    }
+
+    this.toolResults.set(storageKey, result);
+    console.info(`📦 Stored tool result: ${toolId} → ${storageKey}`);
+  }
+
+  /**
+   * Retrieve stored tool result by key
+   */
+  private getToolResult(key: string): any {
+    return this.toolResults.get(key);
+  }
+
+  /**
+   * Create augmented context with getToolResult accessor
+   * Used by all tool executions for data retrieval
+   */
+  private createAugmentedContext(): WorkoutLoggerContext & {
+    getToolResult: (key: string) => any;
+  } {
+    return {
+      ...this.config.context,
+      getToolResult: this.getToolResult.bind(this),
+    };
+  }
+
+  /**
+   * Build standardized tool result structure for Bedrock conversation
+   */
+  private buildToolResult(
+    toolUse: any,
+    result: any,
+    status: "success" | "error",
+  ): any {
+    return {
+      toolResult: {
+        toolUseId: toolUse.toolUseId,
+        content: [{ json: result }],
+        status,
+      },
+    };
+  }
+
+  /**
+   * Retrieve all tool results in structured format
+   * Uses semantic keys for consistent access
+   */
+  private getStructuredToolResults() {
+    return {
+      discipline: this.toolResults.get("discipline"),
+      extraction: this.toolResults.get("extraction"),
+      validation: this.toolResults.get("validation"),
+      normalization: this.toolResults.get("normalization"),
+      summary: this.toolResults.get("summary"),
+      save: this.toolResults.get("save"),
+    };
+  }
+
+  /**
+   * Override enforceToolBlocking to implement validation-based blocking
+   * Prevents save/normalize when validation failed (defense in depth)
+   */
+  protected enforceToolBlocking(
+    toolId: string,
+    _toolInput: any,
+  ): {
+    error: boolean;
+    blocked: boolean;
+    reason: string;
+  } | null {
+    // Get validation result from stored tool results using semantic key
+    const validationResult = this.toolResults.get("validation");
+
+    // Delegate to helper function for blocking logic
+    return enforceValidationBlocking(toolId, validationResult);
+  }
+
+  /**
+   * Override handleToolUse to implement augmented context and blocking enforcement
+   *
+   * Workout Logger needs custom execution for:
+   * - Augmented context with getToolResult accessor
+   * - Tool result storage for cross-tool data passing
+   * - Blocking enforcement from validation
+   * - Defensive sanitization before storage
+   */
+  protected async handleToolUse(response: any): Promise<void> {
+    const conversationHistory = this.getConversationHistory();
+    const contentBlocks = response.output?.message?.content || [];
+
+    // Add Claude's tool use message to history
+    conversationHistory.push({
+      role: "assistant",
+      content: contentBlocks,
+    });
+
+    // Extract tool uses
+    const toolUses = contentBlocks.filter((block: any) => block.toolUse);
+
+    console.info(`🔧 Executing ${toolUses.length} tool(s)`);
+
+    const toolResults: any[] = [];
+    const augmentedContext = this.createAugmentedContext();
+
+    // Execute tools sequentially (workout logging has dependencies)
+    for (const block of toolUses) {
+      const toolUse = block.toolUse;
+      const tool = this.config.tools.find((t) => t.id === toolUse.name);
+
+      if (!tool) {
+        console.warn(`⚠️ Tool not found: ${toolUse.name}`);
+        toolResults.push(
+          this.buildToolResult(
+            toolUse,
+            { error: `Tool '${toolUse.name}' not found` },
+            "error",
+          ),
+        );
+        continue;
+      }
+
+      // Use base class blocking enforcement hook
+      const blockingResult = this.enforceToolBlocking(tool.id, toolUse.input);
+      if (blockingResult) {
+        console.warn(`⛔ Blocking tool execution: ${tool.id}`);
+        toolResults.push(
+          this.buildToolResult(toolUse, blockingResult, "error"),
+        );
+        continue;
+      }
+
+      console.info(`⚙️ Executing tool: ${tool.id}`);
+
+      try {
+        const startTime = Date.now();
+        const result = await tool.execute(toolUse.input, augmentedContext);
+        const duration = Date.now() - startTime;
+
+        console.info(`✅ Tool ${tool.id} completed in ${duration}ms`);
+
+        // Store result for later retrieval (with sanitization)
+        this.storeToolResult(tool.id, result);
+
+        toolResults.push(this.buildToolResult(toolUse, result, "success"));
+      } catch (error) {
+        console.error(`❌ Tool ${tool.id} failed:`, error);
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        const errorResult = { error: errorMessage || "Unknown error" };
+
+        // Store error result for later retrieval (important for blocking enforcement)
+        // Uses storeToolResult() to apply semantic key mapping
+        this.storeToolResult(tool.id, errorResult);
+
+        toolResults.push(this.buildToolResult(toolUse, errorResult, "error"));
+      }
+    }
+
+    // Add tool results back to conversation
+    conversationHistory.push({
+      role: "user",
+      content: toolResults,
+    });
+
+    console.info("📥 Tool results added to conversation history");
+  }
 
   constructor(context: WorkoutLoggerContext) {
     const fullPrompt = buildWorkoutLoggerPrompt(context);
@@ -89,56 +340,8 @@ export class WorkoutLoggerAgent extends Agent<WorkoutLoggerContext> {
     });
 
     try {
-      // Override tool execute to track results AND enforce blocking decisions
-      const originalTools = this.config.tools;
-      this.config.tools = originalTools.map((tool) => ({
-        ...tool,
-        execute: async (input: any, context: any) => {
-          // ============================================================
-          // CRITICAL: ENFORCE BLOCKING DECISIONS (Defense in Depth)
-          // ============================================================
-          // If validate_workout_completeness returned shouldSave: false,
-          // prevent normalize_workout_data and save_workout_to_database
-          // from executing, even if Claude tries to call them.
-          //
-          // This is a code-level enforcement in addition to prompt-level
-          // guidance, ensuring blocking decisions are AUTHORITATIVE.
-          // ============================================================
-
-          const validationResult = this.toolResults.get("validation");
-
-          // Check if tool execution should be blocked
-          const blockingResult = enforceValidationBlocking(
-            tool.id,
-            validationResult,
-          );
-          if (blockingResult) {
-            return blockingResult; // Return error result to Claude
-          }
-
-          // Execute tool with error handling
-          try {
-            const result = await tool.execute(input, context);
-            const storageKey = STORAGE_KEY_MAP[tool.id] || tool.id;
-            this.toolResults.set(storageKey, result);
-            console.info(`📦 Stored tool result: ${tool.id} → ${storageKey}`);
-            return result;
-          } catch (error) {
-            console.error(`❌ Tool ${tool.id} failed:`, error);
-            const errorMessage =
-              error instanceof Error ? error.message : String(error);
-            const errorResult = { error: errorMessage || "Unknown error" };
-
-            // Store error result for later retrieval (important for blocking enforcement)
-            const storageKey = STORAGE_KEY_MAP[tool.id] || tool.id;
-            this.toolResults.set(storageKey, errorResult);
-            console.info(`📦 Stored error result: ${tool.id} → ${storageKey}`);
-
-            return errorResult;
-          }
-        },
-      }));
-
+      // handleToolUse override handles tool execution, storage, and blocking
+      // No tool wrapping needed here - the override pattern handles everything
       const response = await this.converse(userMessage, imageS3Keys);
 
       console.info("Agent response received:", {
@@ -204,9 +407,7 @@ export class WorkoutLoggerAgent extends Agent<WorkoutLoggerContext> {
    * Override base class retry hook to implement workout-specific retry logic
    *
    * Determines if we should retry when AI asks a clarifying question instead of processing.
-   *
-   * NOTE: While stream-coach-conversation does initial detection, this provides
-   * defense-in-depth to prevent retry logic from overriding correct blocking decisions.
+   * Follows Coach Creator pattern: trusts validation tool's AI-based blocking decisions.
    */
   protected shouldRetryWorkflow(
     result: WorkoutLogResult,
@@ -221,95 +422,36 @@ export class WorkoutLoggerAgent extends Agent<WorkoutLoggerContext> {
       return null;
     }
 
-    // Don't retry if AI correctly detected non-workout content
-    // This is CRITICAL: If AI blocked something, trust that decision and don't override it
-    if (result.reason) {
-      const reasonLower = result.reason.toLowerCase();
-
-      // Past workout reflections (retrospective content)
-      const isPastWorkout =
-        reasonLower.includes("past workout") ||
-        reasonLower.includes("yesterday") ||
-        reasonLower.includes("retrospective") ||
-        reasonLower.includes("reflection") ||
-        reasonLower.includes("previous workout") ||
-        reasonLower.includes("last week") ||
-        reasonLower.includes("earlier today") ||
-        reasonLower.includes("already completed");
-
-      // Future/planning content
-      const isPlanning =
-        reasonLower.includes("planning") ||
-        reasonLower.includes("future workout") ||
-        reasonLower.includes("going to") ||
-        reasonLower.includes("will do") ||
-        reasonLower.includes("tomorrow") ||
-        reasonLower.includes("next week") ||
-        reasonLower.includes("thinking about") ||
-        reasonLower.includes("considering");
-
-      // Not a completed workout
-      const isNotCompleted =
-        reasonLower.includes("not a completed workout") ||
-        reasonLower.includes("no workout") ||
-        reasonLower.includes("didn't work out") ||
-        reasonLower.includes("did not work out") ||
-        reasonLower.includes("skipped");
-
-      // Questions/advice seeking
-      const isQuestion =
-        reasonLower.includes("asking") ||
-        reasonLower.includes("question") ||
-        reasonLower.includes("advice") ||
-        reasonLower.includes("should i") ||
-        reasonLower.includes("how do i") ||
-        reasonLower.includes("what should");
-
-      // General discussion/context
-      const isDiscussion =
-        reasonLower.includes("discussion") ||
-        reasonLower.includes("general") ||
-        reasonLower.includes("context") ||
-        reasonLower.includes("background");
-
-      // If ANY of these patterns match, don't retry
-      if (
-        isPastWorkout ||
-        isPlanning ||
-        isNotCompleted ||
-        isQuestion ||
-        isDiscussion
-      ) {
-        console.info(
-          "✋ Blocking retry - AI correctly detected non-workout content:",
-          {
-            isPastWorkout,
-            isPlanning,
-            isNotCompleted,
-            isQuestion,
-            isDiscussion,
-            reasonPreview: result.reason.substring(0, 100),
-          },
-        );
-        return null;
-      }
+    // Don't retry if validation explicitly blocked (trust AI validation decision)
+    // Validation tool uses AI to determine blocking flags (planning, advice-seeking, etc.)
+    if (result.blockingFlags && result.blockingFlags.length > 0) {
+      console.info("✋ Not retrying - validation blocked with flags:", {
+        blockingFlags: result.blockingFlags,
+        reason: result.reason,
+      });
+      return null;
     }
 
-    // Only retry if no tools were called and response looks like a genuine clarifying question
-    // (e.g., AI needs more info about an actual workout being logged)
     // Count only successful tool results (exclude error results)
+    // Error results are stored for blocking enforcement but shouldn't count toward progress
     const successfulToolCount = Array.from(this.toolResults.values()).filter(
       (result) => result && !("error" in result),
     ).length;
-    const noToolsCalled = successfulToolCount === 0;
-    const looksLikeQuestion =
-      response.includes("?") ||
-      response.toLowerCase().includes("confirm") ||
-      response.toLowerCase().includes("verify") ||
-      response.toLowerCase().includes("could you") ||
-      response.toLowerCase().includes("can you provide");
 
-    if (noToolsCalled && looksLikeQuestion) {
+    // Check if Claude's response is a valid blocking response
+    // If Claude correctly identifies non-workout content, it will respond with blocking
+    // phrases WITHOUT calling tools - this is CORRECT behavior, not a retry case
+    if (this.isValidBlockingResponse(response)) {
+      console.info(
+        "✅ Valid blocking response detected - Claude correctly blocked non-workout content",
+      );
+      return null; // Don't retry
+    }
+
+    // Retry if no tools were called and response looks incomplete
+    const noToolsCalled = successfulToolCount === 0;
+
+    if (noToolsCalled && this.isIncompleteWorkflow(response)) {
       // Get the original user message from context for retry
       const userMessage = this.getConversationHistory().find(
         (msg) => msg.role === "user",
@@ -322,7 +464,7 @@ export class WorkoutLoggerAgent extends Agent<WorkoutLoggerContext> {
         shouldRetry: true,
         retryPrompt: this.buildRetryPrompt(originalMessage, response),
         logMessage:
-          "AI asked clarifying question - RETRYING with stronger prompt to force extraction",
+          "AI incomplete workflow - RETRYING with stronger prompt to force tool execution",
       };
     }
 
@@ -330,26 +472,225 @@ export class WorkoutLoggerAgent extends Agent<WorkoutLoggerContext> {
   }
 
   /**
-   * Build a stronger retry prompt that forces extraction with assumptions
+   * Detect if Claude's response is a valid blocking response
+   *
+   * Claude may correctly identify non-workout content and respond with a blocking
+   * message WITHOUT calling tools. This is correct behavior that shouldn't trigger retry.
+   *
+   * Detection uses pattern matching rather than exact phrase matching for robustness:
+   * 1. Warning indicator (⚠️) with workout context
+   * 2. Negation patterns ("unable to", "cannot", "not a", etc.)
+   * 3. Non-workout content types ("planning", "reflection", "advice", etc.)
+   * 4. Explicit blocking statements
+   */
+  private isValidBlockingResponse(response: string): boolean {
+    const responseLower = response.toLowerCase();
+
+    // Pattern 1: Warning emoji with workout-related content (strongest signal)
+    const hasWarningEmoji = response.includes("⚠️");
+    const hasWorkoutContext =
+      responseLower.includes("workout") ||
+      responseLower.includes("log") ||
+      responseLower.includes("exercise") ||
+      responseLower.includes("training");
+    if (hasWarningEmoji && hasWorkoutContext) {
+      return true;
+    }
+
+    // Pattern 2: Negation patterns indicating blocking
+    const negationPatterns = [
+      // Unable/cannot variations
+      /unable to (log|save|record|process|extract|complete)/i,
+      /cannot (log|save|record|process|extract|complete)/i,
+      /can'?t (log|save|record|process|extract|complete)/i,
+      /couldn'?t (log|save|record|process|extract|complete)/i,
+      /won'?t be able to (log|save|record|process)/i,
+      // Not a workout variations
+      /not a (workout|completed workout|valid workout|loggable workout)/i,
+      /this is(n't| not) a (workout|completed workout|valid workout)/i,
+      /doesn'?t (appear|seem|look) (to be |like )?(a )?workout/i,
+      // Missing data variations
+      /no (workout|performance|exercise|training) data/i,
+      /no (actionable|loggable|extractable) (data|information)/i,
+      /insufficient (data|information|details|context)/i,
+      /missing (data|information|details|required|key|essential)/i,
+      /lack(s|ing)? (sufficient |enough |the )?(data|information|details)/i,
+      // Cannot extract variations
+      /nothing to (log|save|record|extract)/i,
+      /no (data|information|details) to (log|save|extract)/i,
+    ];
+    if (negationPatterns.some((pattern) => pattern.test(response))) {
+      return true;
+    }
+
+    // Pattern 3: Non-workout content type identification
+    const nonWorkoutTypes = [
+      // Planning/future content
+      /this is (a |an )?(planning|reflection|advice|question|inquiry)/i,
+      /(planning|future|upcoming) (question|request|inquiry|workout|session)/i,
+      /workout.*(you'?re |you are )?(planning|going to|will|intend)/i,
+      /plan(ning)? to (do|complete|perform)/i,
+      // Advice/question content
+      /(asking|seeking|looking) (for )?(advice|help|guidance|recommendations)/i,
+      /question about (workout|training|exercise|fitness)/i,
+      /advice (on|about|regarding|for)/i,
+      // Reflection/past without data
+      /reflect(ion|ing) (on|about)/i,
+      /thinking (about|back on)/i,
+      /remember(ing)? (when|that|my)/i,
+      // Not completed
+      /not (a )?(completed|finished|done) workout/i,
+      /workout.*(not|hasn'?t|wasn'?t).*(completed|finished|done)/i,
+      /haven'?t (yet )?(completed|finished|done)/i,
+      // Future intention
+      /future (workout|training|intention|plan)/i,
+      /(tomorrow|next|later|upcoming).*(workout|training|session)/i,
+      /going to (do|complete|perform|try)/i,
+      /will (do|complete|perform|try)/i,
+      /intend(ing)? to/i,
+    ];
+    if (nonWorkoutTypes.some((pattern) => pattern.test(response))) {
+      return true;
+    }
+
+    // Pattern 4: Explicit blocking statements
+    const explicitBlocking = [
+      /i (can'?t|cannot|won'?t|am unable to) (log|save|record) this/i,
+      /this (message|request|input) (is|isn'?t|does|doesn'?t)/i,
+      /not (a )?valid (workout )?log/i,
+      /no (valid |actual )?(workout|exercise) (was )?(performed|completed|done)/i,
+      /only (log|save|record) (completed|actual|real) workouts/i,
+    ];
+    if (explicitBlocking.some((pattern) => pattern.test(response))) {
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Detect if Claude's response looks like an incomplete workflow
+   *
+   * When Claude doesn't call tools and asks clarifying questions instead,
+   * we may want to retry with a stronger prompt. This detects those cases.
+   *
+   * Detection patterns:
+   * 1. Direct questions (contains "?")
+   * 2. Request phrases ("could you", "can you provide", etc.)
+   * 3. Confirmation requests ("confirm", "verify", etc.)
+   * 4. Incomplete action phrases ("need to", "should I", etc.)
+   * 5. Waiting for input indicators
+   * 6. Conditional statements requiring user response
+   */
+  private isIncompleteWorkflow(response: string): boolean {
+    // Pattern 1: Contains question marks (direct questions)
+    if (response.includes("?")) {
+      return true;
+    }
+
+    // Pattern 2: Request/clarification phrases
+    const requestPatterns = [
+      // Could/can you variations
+      /could you (please )?(provide|share|tell|give|clarify|specify|confirm)/i,
+      /can you (please )?(provide|share|tell|give|clarify|specify|confirm)/i,
+      /would you (please )?(provide|share|tell|give|clarify|specify|confirm)/i,
+      /will you (please )?(provide|share|tell|give|clarify|specify|confirm)/i,
+      // Please variations
+      /please (provide|share|confirm|clarify|tell|specify|give|let me know)/i,
+      // More info requests
+      /need (more |additional )?(information|details|data|context|specifics)/i,
+      /require (more |additional )?(information|details|data|context)/i,
+      /looking for (more |additional )?(information|details|data|specifics)/i,
+    ];
+    if (requestPatterns.some((pattern) => pattern.test(response))) {
+      return true;
+    }
+
+    // Pattern 3: Confirmation requests
+    const confirmationPatterns = [
+      // Direct confirmation
+      /(can|could|would|will) you (please )?confirm/i,
+      /please (confirm|verify|validate|check)/i,
+      /(confirm|verify|validate) (that|this|the|if|whether)/i,
+      // Let me know variations
+      /let me know (if|when|what|which|whether|about)/i,
+      /get back to me/i,
+      /respond (with|when|if)/i,
+      // Awaiting response
+      /await(ing)? (your|a|the) (response|reply|confirmation|answer)/i,
+      /waiting (for|on) (your|a|the)/i,
+    ];
+    if (confirmationPatterns.some((pattern) => pattern.test(response))) {
+      return true;
+    }
+
+    // Pattern 4: Incomplete action indicators
+    const incompletePatterns = [
+      // I need variations
+      /i (need|require|would need|will need) (to|more|additional)/i,
+      /i'?d need (to|more|additional)/i,
+      // Should I variations
+      /should i (proceed|continue|assume|go ahead|start|begin)/i,
+      /shall i (proceed|continue|assume|go ahead|start|begin)/i,
+      /do you want me to (proceed|continue|assume|go ahead)/i,
+      // Before I can variations
+      /before i (can|could|am able to|proceed|continue)/i,
+      /in order to (log|save|process|extract|complete)/i,
+      /to (proceed|continue|complete), i (need|require|would need)/i,
+      // Once you variations
+      /once you (provide|share|confirm|tell|give|specify)/i,
+      /when you (provide|share|confirm|tell|give|specify)/i,
+      /after you (provide|share|confirm|tell|give|specify)/i,
+      /if you (provide|share|confirm|tell|give|specify)/i,
+    ];
+    if (incompletePatterns.some((pattern) => pattern.test(response))) {
+      return true;
+    }
+
+    // Pattern 5: Conditional/dependent statements
+    const conditionalPatterns = [
+      /if (you |this |the |that )/i,
+      /assuming (you |this |the |that )/i,
+      /depending on/i,
+      /based on (your|the|what)/i,
+      /without (more |additional |further |this |the )/i,
+    ];
+    // Only match conditionals that also suggest waiting for input
+    const hasConditional = conditionalPatterns.some((pattern) =>
+      pattern.test(response),
+    );
+    const suggestsWaiting =
+      /then i (can|could|will|would)/i.test(response) ||
+      /i (can|could|will|would) (then|proceed|continue)/i.test(response);
+    if (hasConditional && suggestsWaiting) {
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Build a stronger retry prompt that forces tool execution
+   * Following Coach Creator pattern
    */
   private buildRetryPrompt(
     originalMessage: string,
-    aiQuestion: string,
+    aiResponse: string,
   ): string {
-    return `CRITICAL OVERRIDE: You just asked a clarifying question, but this is a FIRE-AND-FORGET system where the user CANNOT respond.
+    return `CRITICAL OVERRIDE: You did not complete the workflow. This is a FIRE-AND-FORGET system where the user CANNOT respond to questions.
 
-Your question was: "${aiQuestion.substring(0, 200)}..."
+Your incomplete response was: "${aiResponse.substring(0, 200)}..."
 
-You MUST now process the original message by making reasonable assumptions:
-- Extract what you can from the available data
-- Use sensible defaults for missing information (intensity: 5/10, time: current time, etc.)
-- CALL YOUR TOOLS to extract, validate, normalize, and save the workout
-- Do NOT ask any more questions
+You MUST now complete the workflow by:
+- Using your tools to extract, validate, normalize, and save the workout
+- Making reasonable assumptions for missing information (intensity: 5/10, time: current time, etc.)
+- NOT asking questions or requesting clarification
+- Proceeding with the data available in the original message
 
 Original message to process:
 "${originalMessage}"
 
-Now extract and save this workout using your tools. Make assumptions where needed.`;
+Complete the workout logging workflow now using your tools.`;
   }
 
   /**
@@ -359,59 +700,59 @@ Now extract and save this workout using your tools. Make assumptions where neede
    * Handles clarifying questions and text responses appropriately.
    */
   private buildResultFromToolData(agentResponse: string): WorkoutLogResult {
-    const extractionResult = this.toolResults.get("extraction");
-    const validationResult = this.toolResults.get("validation");
-    const normalizationResult = this.toolResults.get("normalization");
-    const saveResult = this.toolResults.get("save");
+    // Use structured access helper for typed results
+    const results = this.getStructuredToolResults();
 
     console.info("Tool results available:", {
-      hasExtraction: !!extractionResult,
-      hasValidation: !!validationResult,
-      hasNormalization: !!normalizationResult,
-      hasSave: !!saveResult,
+      hasDiscipline: !!results.discipline,
+      hasExtraction: !!results.extraction,
+      hasValidation: !!results.validation,
+      hasNormalization: !!results.normalization,
+      hasSummary: !!results.summary,
+      hasSave: !!results.save,
     });
 
     // If save tool was called successfully, we have a complete workout
-    if (saveResult?.success && saveResult?.workoutId) {
+    if (results.save?.success && results.save?.workoutId) {
       console.info("✅ Building success result from save tool");
 
       return {
         success: true,
-        workoutId: saveResult.workoutId,
-        discipline: extractionResult?.workoutData?.discipline,
-        workoutName: extractionResult?.workoutData?.workout_name,
+        workoutId: results.save.workoutId,
+        discipline: results.extraction?.workoutData?.discipline,
+        workoutName: results.extraction?.workoutData?.workout_name,
         confidence:
-          validationResult?.confidence ||
-          extractionResult?.workoutData?.metadata?.data_confidence,
-        completeness: validationResult?.completeness,
+          results.validation?.confidence ||
+          results.extraction?.workoutData?.metadata?.data_confidence,
+        completeness: results.validation?.completeness,
         extractionMetadata: {
-          generationMethod: extractionResult?.generationMethod,
-          confidence: validationResult?.confidence,
+          generationMethod: results.extraction?.generationMethod,
+          confidence: results.validation?.confidence,
         },
-        normalizationSummary: normalizationResult?.normalizationSummary,
+        normalizationSummary: results.normalization?.normalizationSummary,
       };
     }
 
     // If validation blocked save, return structured failure
-    if (validationResult && !validationResult.shouldSave) {
+    if (results.validation && !results.validation.shouldSave) {
       console.info("⚠️ Building failure result from validation");
 
       return {
         success: false,
         skipped: true,
-        reason: validationResult.reason || agentResponse,
-        blockingFlags: validationResult.blockingFlags,
-        confidence: validationResult.confidence,
+        reason: results.validation.reason || agentResponse,
+        blockingFlags: results.validation.blockingFlags,
+        confidence: results.validation.confidence,
       };
     }
 
     // If no tools were called, agent is likely asking a clarifying question
     // This is EXPECTED behavior, not a failure
     if (
-      !extractionResult &&
-      !validationResult &&
-      !normalizationResult &&
-      !saveResult
+      !results.extraction &&
+      !results.validation &&
+      !results.normalization &&
+      !results.save
     ) {
       console.info(
         "💬 Agent asking clarifying question (no tools called - this is expected)",
@@ -446,9 +787,9 @@ Now extract and save this workout using your tools. Make assumptions where neede
       return {
         success: true,
         workoutId: workoutIdMatch[0],
-        discipline: extractionResult?.workoutData?.discipline,
-        workoutName: extractionResult?.workoutData?.workout_name,
-        confidence: validationResult?.confidence,
+        discipline: results.extraction?.workoutData?.discipline,
+        workoutName: results.extraction?.workoutData?.workout_name,
+        confidence: results.validation?.confidence,
       };
     }
 

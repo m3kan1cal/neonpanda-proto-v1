@@ -33,27 +33,33 @@ Matveyev's work was influenced by observations of successful Soviet athletes and
 ## Programming Structure
 
 **Macrocycle Structure (Annual Plan)**:
+
 - Preparatory Phase (4-6 months)
 - Competitive Phase (2-4 months)
 - Transition Phase (1-2 months)
 
 **Preparatory Phase**:
+
 - **General Preparation**: High volume, low intensity, general fitness development
 - **Specific Preparation**: Moderate volume, moderate intensity, sport-specific skill development
 
 **Competitive Phase**:
+
 - **Pre-Competition**: Low volume, high intensity, competition preparation
 - **Main Competition**: Maintenance volume, peak intensity, competition performance
 
 **Transition Phase**:
+
 - **Active Recovery**: Low volume, low intensity, recovery and regeneration
 
 **Mesocycle Organization**:
+
 - 3-6 week blocks within each phase
 - Systematic progression of training variables
 - Built-in recovery periods
 
 **Training Variable Manipulation**:
+
 - Volume: Decreases as intensity increases
 - Intensity: Increases as volume decreases
 - Specificity: Increases toward competition
@@ -72,9 +78,10 @@ Matveyev's work was influenced by observations of successful Soviet athletes and
 
 **General Population**: Individuals seeking structured fitness development with clear goals.
 
-## Pros & Cons
+## Advantages and Disadvantages
 
 **Pros**:
+
 - Simple, logical progression that's easy to understand
 - Proven effectiveness across numerous sports and populations
 - Systematic approach to long-term development
@@ -85,6 +92,7 @@ Matveyev's work was influenced by observations of successful Soviet athletes and
 - Provides structure for annual training planning
 
 **Cons**:
+
 - May not suit sports with multiple competitive seasons
 - Can be too rigid for some athletes and sports
 - May not optimize performance for frequent competitions
@@ -94,7 +102,7 @@ Matveyev's work was influenced by observations of successful Soviet athletes and
 - Requires accurate prediction of competition dates
 - Can be monotonous over long periods
 
-## Implementation
+## Implementation Guidelines
 
 **Step 1: Identify Competition Schedule**: Determine the most important competitions and their timing.
 
@@ -112,7 +120,7 @@ Matveyev's work was influenced by observations of successful Soviet athletes and
 
 **Step 8: Implement Transition**: Allow for recovery and preparation for the next cycle.
 
-## Variations
+## Variations and Specializations
 
 **Modified Linear Periodization**: Adaptations for sports with multiple competitive seasons.
 
@@ -146,7 +154,7 @@ Linear Periodization is supported by extensive research and theoretical foundati
 
 **Physiological Adaptations**: Knowledge of how different training stimuli affect various body systems.
 
-## Common Mistakes
+## Common Mistakes and Solutions
 
 **Poor Phase Planning**: Not properly organizing training phases or setting inappropriate durations.
 
@@ -164,7 +172,7 @@ Linear Periodization is supported by extensive research and theoretical foundati
 
 **Inadequate Monitoring**: Not tracking progress and adjusting the plan accordingly.
 
-## Integration
+## Integration Applications
 
 **With Annual Planning**: Designed specifically for long-term annual training organization.
 
@@ -181,3 +189,252 @@ Linear Periodization is supported by extensive research and theoretical foundati
 **With Psychological Preparation**: Includes mental training components appropriate to each phase.
 
 **Educational Integration**: Serves as the foundation for teaching periodization principles to coaches and athletes.
+
+---
+
+## WORKOUT TEMPLATES
+
+**Programming Structure & Ratios:**
+
+- **Phase-Based Structure**: Preparatory (4-6 months), Competition (2-4 months), Transition (1-2 months)
+- **Volume/Intensity Relationship**: Inverse - as one increases, other decreases
+- **Session Distribution**: Varies by phase - high volume early, high intensity late
+- **Mesocycle Length**: 3-6 weeks per sub-phase
+
+**Movement Patterns & Exercise Preferences:**
+
+- **General Preparation**: Broad exercise selection, foundational patterns
+- **Specific Preparation**: Sport-related exercises, movement specificity increases
+- **Competition Phase**: Competition movements, limited exercise variety
+- **Exercise Progression**: General → Specific → Competition-specific
+
+**Time Domains & Workout Formats:**
+
+- **General Prep Sessions**: 60-90 minutes, higher volume
+- **Specific Prep Sessions**: 45-75 minutes, quality-focused
+- **Competition Sessions**: 30-60 minutes, intensity-focused
+- **Rest Periods**: Increase as intensity increases through phases
+
+**Scaling Approaches & Progression Methods:**
+
+- **Phase Progression**: Systematic movement from base to peak
+- **Volume Reduction**: Typically 30-50% reduction from base to peak
+- **Intensity Increase**: From 60-70% in general prep to 90-100% at peak
+- **Deload Integration**: Built into phase transitions and pre-competition
+
+**Weekly Programming Pattern:**
+
+- **Philosophy**: Sequential development of fitness qualities in predetermined order
+- **Daily Structure**: Follows phase emphasis - volume or intensity focused
+- **Phase Duration**: Long enough for adaptation (minimum 3-4 weeks per phase)
+- **Peaking Strategy**: Plan backward from competition date
+
+**Example Annual Plan (Strength Sport - Single Peak):**
+
+```
+GENERAL PREPARATION PHASE (12 weeks)
+Goal: Build work capacity, muscle mass, movement quality
+Volume: HIGH (70-100% of max training volume)
+Intensity: MODERATE (60-75% of 1RM)
+
+Weeks 1-6: Hypertrophy Focus
+Day 1 - Lower Body
+- Back Squat: 4x10 @ 60%
+- Romanian Deadlift: 4x10
+- Leg Press: 3x12
+- Leg Curl: 3x12
+- Calf Raises: 4x15
+- Core work: 3x15
+
+Day 2 - Upper Push
+- Bench Press: 4x10 @ 60%
+- Overhead Press: 4x10
+- Incline DB Press: 3x12
+- Dips: 3x12
+- Tricep work: 3x15
+- Lateral raises: 3x15
+
+Day 3 - Lower Body
+- Deadlift: 4x8 @ 60%
+- Front Squat: 3x10
+- Walking Lunges: 3x12 each
+- Leg Curl: 3x12
+- Core work: 3x15
+
+Day 4 - Upper Pull
+- Barbell Row: 4x10
+- Pull-ups: 4x8-10
+- Seated Row: 3x12
+- Face Pulls: 3x15
+- Bicep work: 3x12
+- Rear Delts: 3x15
+
+Weeks 7-12: Increase intensity to 65-72%, reduce sets by 1
+
+---
+
+SPECIFIC PREPARATION PHASE (8 weeks)
+Goal: Develop maximal strength, refine competition movements
+Volume: MODERATE (50-70% of max training volume)
+Intensity: HIGH (75-88% of 1RM)
+
+Weeks 13-16: Strength Development
+Day 1 - Squat Primary
+- Back Squat: 5x5 @ 78%
+- Pause Squat: 3x5 @ 72%
+- Romanian Deadlift: 3x8
+- Leg Curl: 3x10
+
+Day 2 - Bench Primary
+- Bench Press: 5x5 @ 78%
+- Close-Grip Bench: 3x6
+- DB Row: 4x8
+- Tricep work: 3x10
+
+Day 3 - Deadlift Primary
+- Deadlift: 5x3 @ 80%
+- Deficit Deadlift: 3x4 @ 72%
+- Front Squat: 3x6
+- Core work: 3x12
+
+Day 4 - Secondary Upper
+- Overhead Press: 4x5 @ 78%
+- Incline Bench: 3x8
+- Pull-ups: 4x6 weighted
+- Accessory work: 20 min
+
+Weeks 17-20: Increase to 82-88%, reduce to 4x4 or 4x3
+
+---
+
+COMPETITION PHASE (4 weeks)
+Goal: Peak strength, competition preparation
+Volume: LOW (30-50% of max training volume)
+Intensity: VERY HIGH (88-100% of 1RM)
+
+Weeks 21-22: Peaking
+Day 1 - Squat
+- Back Squat: 3x2 @ 90%
+- Light pause work: 2x3 @ 70%
+
+Day 2 - Bench
+- Bench Press: 3x2 @ 90%
+- Light tricep work
+
+Day 3 - Deadlift
+- Deadlift: 2x2 @ 92%
+- Light back work
+
+Day 4 - Light Movement/Recovery
+
+Weeks 23-24: Taper
+Week 23: Singles at 95%, very low volume
+Week 24: Openers only (85%), rest, competition
+
+---
+
+TRANSITION PHASE (4 weeks)
+Goal: Recovery, regeneration, active rest
+Volume: VERY LOW
+Intensity: LOW (50-65%)
+
+- Reduced training frequency (2-3x/week)
+- General activity, sport variety
+- Address injuries, mobility work
+- Mental recovery
+```
+
+**Phase Characteristics Summary:**
+
+```
+Phase          | Duration    | Volume  | Intensity | Specificity
+---------------|-------------|---------|-----------|------------
+General Prep   | 3-6 months  | HIGH    | LOW-MOD   | LOW
+Specific Prep  | 2-3 months  | MODERATE| HIGH      | MODERATE
+Pre-Competition| 3-6 weeks   | LOW     | VERY HIGH | HIGH
+Competition    | 1-4 weeks   | MINIMAL | PEAK      | MAXIMUM
+Transition     | 2-6 weeks   | VERY LOW| LOW       | LOW
+```
+
+**Weekly Structure by Phase:**
+
+```
+GENERAL PREPARATION (Example):
+Mon: Upper Hypertrophy - 4-5 exercises, 3-4 sets x 10-12 reps
+Tue: Lower Hypertrophy - 4-5 exercises, 3-4 sets x 10-12 reps
+Wed: Conditioning/Recovery
+Thu: Upper Hypertrophy - 4-5 exercises, 3-4 sets x 10-12 reps
+Fri: Lower Hypertrophy - 4-5 exercises, 3-4 sets x 10-12 reps
+Sat: Conditioning/Active Recovery
+Sun: Rest
+
+SPECIFIC PREPARATION (Example):
+Mon: Primary Lift 1 - Strength focus, 4-5 sets x 3-5 reps
+Tue: Primary Lift 2 - Strength focus, 4-5 sets x 3-5 reps
+Wed: Light/Recovery
+Thu: Primary Lift 3 - Strength focus, 4-5 sets x 3-5 reps
+Fri: Accessory/Weak Points
+Sat: Light Conditioning
+Sun: Rest
+
+COMPETITION PHASE (Example):
+Mon: Heavy Primary Lift - 2-3 sets x 1-2 reps @ 90%+
+Wed: Moderate Secondary - Technique maintenance
+Fri: Heavy Primary Lift - 2-3 sets x 1-2 reps @ 90%+
+All other days: Recovery, mobility, mental prep
+```
+
+**Endurance Sport Application:**
+
+```
+GENERAL PREPARATION (Base Phase) - 12-16 weeks
+- Weekly Volume: 80-100% of annual max
+- Intensity: 70-80% in Zone 1-2
+- Focus: Aerobic base, technique, strength maintenance
+- Sessions: 5-8 per week
+
+SPECIFIC PREPARATION (Build Phase) - 8-12 weeks
+- Weekly Volume: 60-80% of annual max
+- Intensity: 60% Zone 1-2, 30% Zone 3, 10% Zone 4-5
+- Focus: Threshold development, race-specific work
+- Sessions: 5-7 per week
+
+COMPETITION (Peak Phase) - 2-4 weeks
+- Weekly Volume: 40-60% of annual max
+- Intensity: Race pace and above
+- Focus: Sharpening, race simulation, confidence
+- Sessions: 4-6 per week
+
+TRANSITION (Recovery) - 2-4 weeks
+- Active recovery, cross-training, mental break
+```
+
+**Team Sport Application:**
+
+```
+Off-Season (General Prep): 8-12 weeks
+- High training volume, general strength and conditioning
+- Skill development in low-pressure environment
+- Build work capacity base
+
+Pre-Season (Specific Prep): 4-8 weeks
+- Sport-specific conditioning increases
+- Tactical and team preparation
+- Maintain strength while adding sport demands
+
+In-Season (Competition): Season length
+- Maintain fitness, manage fatigue
+- Tactical adjustments, competition focus
+- Reduced training volume
+
+Post-Season (Transition): 2-4 weeks
+- Active recovery, address injuries
+- Mental break from sport
+```
+
+**Monitoring & Adjustment:**
+
+- **Weekly Check**: Training load compliance, RPE trends
+- **Phase Transition**: Performance testing, readiness assessment
+- **Mid-Phase**: Adjust volume/intensity based on response
+- **Pre-Competition**: Taper adjustments based on individual response
