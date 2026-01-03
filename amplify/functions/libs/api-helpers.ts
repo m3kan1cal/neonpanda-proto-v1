@@ -66,9 +66,9 @@ export const MODEL_IDS = {
 } as const;
 
 /**
- * Check if a model ID is a Claude 4.5 model (supports guaranteed JSON with strict mode)
+ * Check if a model ID is a strict schema model (supports guaranteed JSON with strict mode)
  * @param modelId - The model ID to check
- * @returns true if the model is Claude 4.5 Sonnet or Haiku
+ * @returns true if the model is Claude 4.5 Sonnet or Haiku or Nova 2 Lite
  */
 export function isStrictCapableModel(modelId: string): boolean {
   return (
