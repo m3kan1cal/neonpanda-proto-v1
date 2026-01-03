@@ -7,7 +7,12 @@
     "template_name": "Beginner Strength Builder (v1.0)",
     "persona_category": "persona_1",
     "description": "Perfect for newcomers to weightlifting and CrossFit who want to build foundational strength safely and systematically. This coach focuses on teaching proper movement patterns, fundamental exercises, progressive overload principles, and injury prevention strategies. Emphasizes form over weight with patient, educational guidance that builds confidence, creates sustainable training habits, and establishes a solid foundation for long-term fitness success.",
-    "target_audience": ["beginners", "new_to_weightlifting", "safety_focused", "learning_focused"],
+    "target_audience": [
+      "beginners",
+      "new_to_weightlifting",
+      "safety_focused",
+      "learning_focused"
+    ],
     "base_config": {
       "coach_id": "template_placeholder",
       "coach_name": "Emma_The_Foundation_Builder",
@@ -52,7 +57,11 @@
         "injury_considerations": [],
         "methodology": "starting_strength",
         "preferred_intensity": "low_to_moderate",
-        "programming_focus": ["strength", "movement_quality", "habit_formation"],
+        "programming_focus": [
+          "strength",
+          "movement_quality",
+          "habit_formation"
+        ],
         "safety_constraints": {
           "contraindicated_exercises": [],
           "recovery_requirements": [
@@ -88,7 +97,7 @@
       },
       "metadata": {
         "coach_creator_session_summary": "Beginner Strength Builder template designed for newcomers to weightlifting and CrossFit (0-6 months experience). Goals: Build foundational strength safely while learning proper movement patterns. Focus on form over weight with patient, educational guidance. Training 3 days/week, 45-minute sessions. Emphasizes progressive overload with conservative advancement, fundamental movement patterns, and habit formation. Coaching style: Patient, encouraging, celebrates small wins, educational approach. Equipment: Basic gym equipment including barbell, dumbbells, rack, bench. Methodology: Starting Strength with linear progression. Safety emphasis: Maximum priority on proper form, extended warm-ups, pain-free movement.",
-        "created_date": "2025-08-23T00:00:00.000Z",
+        "created_date": "2026-01-02T00:00:00.000Z",
         "methodology_profile": {
           "experience": ["beginner", "new_to_weightlifting"],
           "focus": ["strength", "movement_quality", "habit_formation"],
@@ -152,12 +161,12 @@
       }
     },
     "metadata": {
-      "created_date": "2025-08-23T00:00:00.000Z",
+      "created_date": "2026-01-02T00:00:00.000Z",
       "version": "1.0",
       "popularity_score": 0,
       "is_active": true
     }
   },
-  "createdAt": "2025-08-23T00:00:00.000Z",
-  "updatedAt": "2025-08-23T00:00:00.000Z"
+  "createdAt": "2026-01-02T00:00:00.000Z",
+  "updatedAt": "2026-01-02T00:00:00.000Z"
 }

@@ -101,7 +101,7 @@
       },
       "metadata": {
         "coach_creator_session_summary": "Functional Fitness Competitor template designed for intermediate to advanced multi-discipline athletes (25-40 years old) competing in CrossFit, Hyrox, Spartan races, DekaFit, and other functional competitions. Goals: Compete and excel across multiple functional fitness disciplines through sport-specific skills, high-intensity conditioning, and systematic progression. Training 6 days/week, 75-minute sessions with multi-discipline periodization. Emphasizes performance-driven coaching, data-focused feedback, technique refinement, and weakness identification across varied competition formats. Coaching style: Analytical, direct, competitive, pushes boundaries safely. Equipment: Functional fitness gym with CrossFit, Hyrox, obstacle course, and specialty equipment. Methodology: Multi-discipline functional fitness competition with block periodization. Focus: Competition preparation across multiple sports, skill mastery, benchmark improvements, competitive rankings.",
-        "created_date": "2025-08-23T00:00:00.000Z",
+        "created_date": "2026-01-02T00:00:00.000Z",
         "methodology_profile": {
           "experience": ["functional_fitness_intermediate_advanced", "multi_discipline_competition_focused"],
           "focus": ["multi_discipline_competition_prep", "skill_development", "conditioning", "obstacle_training", "endurance_pacing"],
@@ -173,12 +173,12 @@
       }
     },
     "metadata": {
-      "created_date": "2025-08-23T00:00:00.000Z",
+      "created_date": "2026-01-02T00:00:00.000Z",
       "version": "1.0",
       "popularity_score": 0,
       "is_active": true
     }
   },
-  "createdAt": "2025-08-23T00:00:00.000Z",
-  "updatedAt": "2025-08-23T00:00:00.000Z"
+  "createdAt": "2026-01-02T00:00:00.000Z",
+  "updatedAt": "2026-01-02T00:00:00.000Z"
 }

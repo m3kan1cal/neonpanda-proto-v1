@@ -65,6 +65,19 @@ export const MODEL_IDS = {
   PLANNER_MODEL_DISPLAY: CLAUDE_SONNET_4_DISPLAY,
 } as const;
 
+/**
+ * Check if a model ID is a strict schema model (supports guaranteed JSON with strict mode)
+ * @param modelId - The model ID to check
+ * @returns true if the model is Claude 4.5 Sonnet or Haiku or Nova 2 Lite
+ */
+export function isStrictCapableModel(modelId: string): boolean {
+  return (
+    modelId === CLAUDE_SONNET_4_MODEL_ID ||
+    modelId === CLAUDE_HAIKU_4_MODEL_ID ||
+    modelId === NOVA_2_LITE_MODEL_ID
+  );
+}
+
 // AI error fallback message for streaming handlers
 export const AI_ERROR_FALLBACK_MESSAGE =
   "I apologize, but I'm having trouble generating a response right now. Your message has been saved and I'll be back to help you soon!";
@@ -539,6 +552,19 @@ export interface BedrockApiOptions {
 
   /** Temperature for response generation (defaults to TEMPERATURE constant if not provided) */
   temperature?: number;
+
+  /**
+   * Enable strict JSON schema enforcement (guaranteed JSON output)
+   * Defaults to true for Claude 4.5 models when tools are provided
+   * Set to false to disable strict mode for Claude 4.5 models
+   */
+  strictSchema?: boolean;
+
+  /**
+   * Beta features to enable for advanced schema handling
+   * Example: ['tool-use-examples-2025-10-29'] for improved complex nested object accuracy
+   */
+  anthropicBeta?: string[];
 }
 
 /**
@@ -547,10 +573,12 @@ export interface BedrockApiOptions {
  *
  * @param tools - Single tool or array of tools
  * @param enforceToolUse - If true and single tool provided, enforce its use with toolChoice
+ * @param strictSchema - If true, enable guaranteed JSON mode (strict schema enforcement)
  */
 function buildToolConfig(
   tools: BedrockToolConfig | BedrockToolConfig[],
   enforceToolUse: boolean = true,
+  strictSchema: boolean = false,
 ): any {
   const toolsArray = Array.isArray(tools) ? tools : [tools];
 
@@ -562,6 +590,8 @@ function buildToolConfig(
         inputSchema: { json: t.inputSchema },
       },
     })),
+    // Enable strict mode for guaranteed JSON output (Claude 4.5+)
+    ...(strictSchema && { strict: true }),
   };
 
   // If enforcing tool use and exactly one tool provided, add toolChoice to force its use
@@ -572,7 +602,9 @@ function buildToolConfig(
         name: toolsArray[0].name,
       },
     };
-    console.info(`🔒 Enforcing strict tool use: ${toolsArray[0].name}`);
+    console.info(
+      `🔒 Enforcing strict tool use: ${toolsArray[0].name}${strictSchema ? " (guaranteed JSON)" : ""}`,
+    );
   }
 
   return config;
@@ -634,9 +666,53 @@ export function extractToolUseResult(
     stopReason: response.stopReason,
   };
 
+  // Detect double-encoding at the source (before any processing)
+  // This helps identify if Bedrock is returning stringified objects
+  const inputAnalysis = Object.entries(result.input || {}).reduce(
+    (acc, [key, value]) => {
+      if (
+        typeof value === "string" &&
+        (value.startsWith("{") || value.startsWith("["))
+      ) {
+        acc.stringifiedFields.push(key);
+        if (!acc.sampleStringifiedValue && value.length > 0) {
+          acc.sampleStringifiedValue = {
+            key,
+            preview: value.substring(0, 150),
+          };
+        }
+      } else if (typeof value === "object" && value !== null) {
+        acc.objectFields.push(key);
+      }
+      return acc;
+    },
+    {
+      stringifiedFields: [] as string[],
+      objectFields: [] as string[],
+      sampleStringifiedValue: null as { key: string; preview: string } | null,
+    },
+  );
+
+  if (inputAnalysis.stringifiedFields.length > 0) {
+    console.warn("⚠️ DOUBLE-ENCODING DETECTED IN BEDROCK RESPONSE:", {
+      toolName: result.toolName,
+      stringifiedFields: inputAnalysis.stringifiedFields,
+      objectFields: inputAnalysis.objectFields,
+      sampleStringifiedValue: inputAnalysis.sampleStringifiedValue,
+      note: "These fields were returned as JSON strings instead of objects by Bedrock",
+    });
+  }
+
   console.info("✅ extractToolUseResult SUCCESS:", {
     toolName: result.toolName,
     inputKeys: Object.keys(result.input || {}),
+    inputTypes: Object.entries(result.input || {}).reduce(
+      (acc, [k, v]) => {
+        acc[k] = Array.isArray(v) ? "array" : typeof v;
+        return acc;
+      },
+      {} as Record<string, string>,
+    ),
   });
 
   // Optional validation
@@ -835,18 +911,33 @@ export const callBedrockApi = async (
       console.info("🎯 Response prefilling enabled:", options.prefillResponse);
     }
 
+    // Determine strict schema mode: explicit setting > auto-enable for Claude 4.5 with tools
+    const useStrictSchema =
+      options?.strictSchema ??
+      (!!options?.tools && isStrictCapableModel(modelId));
+
+    if (useStrictSchema && options?.tools) {
+      console.info("🔐 Guaranteed JSON mode enabled (strict schema)");
+    }
+
     const command = new ConverseCommand({
       modelId: modelId,
       messages: messages,
       ...(systemParams.length > 0 && { system: systemParams }), // Only include if not empty
       ...(options?.tools && {
-        toolConfig: buildToolConfig(options.tools, true),
-      }), // Add toolConfig with strict enforcement
+        toolConfig: buildToolConfig(options.tools, true, useStrictSchema),
+      }), // Add toolConfig with strict enforcement and optional guaranteed JSON
       inferenceConfig: {
         maxTokens: getMaxTokensForModel(modelId),
         temperature: finalTemperature,
       },
       ...buildNativeReasoningFields(useNativeReasoning),
+      // Add beta headers for advanced schema features if specified
+      ...(options?.anthropicBeta && {
+        additionalModelRequestFields: {
+          anthropic_beta: options.anthropicBeta,
+        },
+      }),
     });
 
     console.info("Converse command created successfully..");
@@ -1089,6 +1180,17 @@ export const callBedrockApiStream = async (
       useNativeReasoning,
     });
 
+    // Determine strict schema mode: explicit setting > auto-enable for Claude 4.5 with tools
+    const useStrictSchema =
+      options?.strictSchema ??
+      (!!options?.tools && isStrictCapableModel(modelId));
+
+    if (useStrictSchema && options?.tools) {
+      console.info(
+        "🔐 Guaranteed JSON mode enabled (strict schema) - streaming",
+      );
+    }
+
     const command = new ConverseStreamCommand({
       modelId: modelId,
       messages: [
@@ -1103,13 +1205,19 @@ export const callBedrockApiStream = async (
       ],
       system: systemParams,
       ...(options?.tools && {
-        toolConfig: buildToolConfig(options.tools, true),
-      }), // Add toolConfig with strict enforcement
+        toolConfig: buildToolConfig(options.tools, true, useStrictSchema),
+      }), // Add toolConfig with strict enforcement and optional guaranteed JSON
       inferenceConfig: {
         maxTokens: getMaxTokensForModel(modelId),
         temperature: finalTemperature,
       },
       ...buildNativeReasoningFields(useNativeReasoning),
+      // Add beta headers for advanced schema features if specified
+      ...(options?.anthropicBeta && {
+        additionalModelRequestFields: {
+          anthropic_beta: options.anthropicBeta,
+        },
+      }),
     });
 
     console.info("Converse stream command created successfully..");
@@ -1217,18 +1325,35 @@ export const callBedrockApiMultimodal = async (
       hasImages,
     });
 
+    // Determine strict schema mode: explicit setting > auto-enable for Claude 4.5 with tools
+    const useStrictSchema =
+      options?.strictSchema ??
+      (!!options?.tools && isStrictCapableModel(modelId));
+
+    if (useStrictSchema && options?.tools) {
+      console.info(
+        "🔐 Guaranteed JSON mode enabled (strict schema) - multimodal",
+      );
+    }
+
     const command = new ConverseCommand({
       modelId: modelId,
       messages: messages,
       system: systemParams,
       ...(options?.tools && {
-        toolConfig: buildToolConfig(options.tools, true),
-      }), // Add toolConfig with strict enforcement
+        toolConfig: buildToolConfig(options.tools, true, useStrictSchema),
+      }), // Add toolConfig with strict enforcement and optional guaranteed JSON
       inferenceConfig: {
         maxTokens: getMaxTokensForModel(modelId),
         temperature: finalTemperature,
       },
       ...buildNativeReasoningFields(useNativeReasoning),
+      // Add beta headers for advanced schema features if specified
+      ...(options?.anthropicBeta && {
+        additionalModelRequestFields: {
+          anthropic_beta: options.anthropicBeta,
+        },
+      }),
     });
 
     console.info("Multimodal converse command created successfully..");
@@ -1362,6 +1487,8 @@ export const callBedrockApiForAgent = async (
     staticPrompt?: string;
     dynamicPrompt?: string;
     enableThinking?: boolean;
+    strictSchema?: boolean;
+    anthropicBeta?: string[];
   },
 ): Promise<any> => {
   const finalTemperature =
@@ -1387,6 +1514,15 @@ export const callBedrockApiForAgent = async (
   const useCaching = !!(options?.staticPrompt && options?.dynamicPrompt);
   console.info("Caching enabled:", useCaching);
 
+  // Determine strict schema mode: explicit setting > auto-enable for Claude 4.5 with tools
+  const useStrictSchema =
+    options?.strictSchema ??
+    (tools.length > 0 && isStrictCapableModel(modelId));
+
+  if (useStrictSchema) {
+    console.info("🔐 Guaranteed JSON mode enabled (strict schema) - agent");
+  }
+
   // Build tool config with cache point
   const toolSpecs = tools.map((t) => ({
     toolSpec: {
@@ -1400,15 +1536,19 @@ export const callBedrockApiForAgent = async (
     console.info("🔥 AGENT CACHE OPTIMIZATION: Adding cache point after tools");
   }
 
-  // Add cache point after tools if caching is enabled
+  // Add cache point after tools if caching is enabled, plus strict mode for guaranteed JSON
   const toolConfig = useCaching
     ? {
         tools: [
           ...toolSpecs,
           { cachePoint: { type: "default" } } as any, // Cache tools (AWS SDK types not updated)
         ],
+        ...(useStrictSchema && { strict: true }),
       }
-    : { tools: toolSpecs };
+    : {
+        tools: toolSpecs,
+        ...(useStrictSchema && { strict: true }),
+      };
 
   const command = new ConverseCommand({
     modelId: modelId,
@@ -1421,6 +1561,12 @@ export const callBedrockApiForAgent = async (
       // Note: Claude uses prompt-based thinking via buildSystemParams/enhancePromptForThinking
     },
     ...buildNativeReasoningFields(useNativeReasoning),
+    // Add beta headers for advanced schema features if specified
+    ...(options?.anthropicBeta && {
+      additionalModelRequestFields: {
+        anthropic_beta: options.anthropicBeta,
+      },
+    }),
   });
 
   const response = await bedrockClient.send(command);
@@ -1479,18 +1625,35 @@ export const callBedrockApiMultimodalStream = async (
       hasImages,
     });
 
+    // Determine strict schema mode: explicit setting > auto-enable for Claude 4.5 with tools
+    const useStrictSchema =
+      options?.strictSchema ??
+      (!!options?.tools && isStrictCapableModel(modelId));
+
+    if (useStrictSchema && options?.tools) {
+      console.info(
+        "🔐 Guaranteed JSON mode enabled (strict schema) - multimodal streaming",
+      );
+    }
+
     const command = new ConverseStreamCommand({
       modelId: modelId,
       messages: messages,
       system: systemParams,
       ...(options?.tools && {
-        toolConfig: buildToolConfig(options.tools, true),
-      }), // Add toolConfig with strict enforcement
+        toolConfig: buildToolConfig(options.tools, true, useStrictSchema),
+      }), // Add toolConfig with strict enforcement and optional guaranteed JSON
       inferenceConfig: {
         maxTokens: getMaxTokensForModel(modelId),
         temperature: finalTemperature,
       },
       ...buildNativeReasoningFields(useNativeReasoning),
+      // Add beta headers for advanced schema features if specified
+      ...(options?.anthropicBeta && {
+        additionalModelRequestFields: {
+          anthropic_beta: options.anthropicBeta,
+        },
+      }),
     });
 
     console.info("Multimodal converse stream command created successfully..");

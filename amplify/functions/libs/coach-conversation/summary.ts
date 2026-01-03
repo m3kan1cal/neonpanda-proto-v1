@@ -234,7 +234,8 @@ export function parseCoachConversationSummary(
     };
 
     const summary: CoachConversationSummary = {
-      summaryId: `conversation_summary_${event.userId}_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
+      // Use conversationId as stable ID to enable proper Pinecone upsert (no duplicates)
+      summaryId: `conversation_summary_${event.conversationId}`,
       userId: event.userId,
       coachId: event.coachId,
       conversationId: event.conversationId,

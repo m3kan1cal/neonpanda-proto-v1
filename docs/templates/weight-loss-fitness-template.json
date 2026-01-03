@@ -91,7 +91,7 @@
       },
       "metadata": {
         "coach_creator_session_summary": "Weight Loss + Fitness template designed for individuals with some fitness experience focused on body composition changes (typically 30-50 years old). Goals: Lose weight while building/maintaining muscle and improving overall fitness through sustainable lifestyle changes. Training 4-5 days/week, 45-minute sessions with flexible scheduling for home and gym options. Emphasizes conditioning with strength maintenance, metabolic work, and strong nutrition integration. Coaching style: Motivational, holistic, habit-focused, supportive through plateaus, celebrates non-scale victories. Equipment: Flexible options including dumbbells, kettlebells, resistance bands, bodyweight, home and commercial gym access. Methodology: Hybrid conditioning with daily undulating periodization. Focus: Process-oriented with celebration of consistency and sustainable habit formation.",
-        "created_date": "2025-08-23T00:00:00.000Z",
+        "created_date": "2026-01-02T00:00:00.000Z",
         "methodology_profile": {
           "experience": ["some_fitness_experience", "body_composition_focused"],
           "focus": ["conditioning", "strength", "weight_loss"],
@@ -158,12 +158,12 @@
       }
     },
     "metadata": {
-      "created_date": "2025-08-23T00:00:00.000Z",
+      "created_date": "2026-01-02T00:00:00.000Z",
       "version": "1.0",
       "popularity_score": 0,
       "is_active": true
     }
   },
-  "createdAt": "2025-08-23T00:00:00.000Z",
-  "updatedAt": "2025-08-23T00:00:00.000Z"
+  "createdAt": "2026-01-02T00:00:00.000Z",
+  "updatedAt": "2026-01-02T00:00:00.000Z"
 }

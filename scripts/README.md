@@ -61,6 +61,59 @@ node scripts/cleanup-test-workouts.js 63gocaz-j-AYRsb0094ik \
 - Detailed error reporting
 - Progress tracking
 
+### delete-user-dynamodb.js
+
+Completely deletes all DynamoDB records for a user by removing all items with partition key `pk="user#${userId}"`. Useful for resetting a user's data to a clean state.
+
+**Usage:**
+
+```bash
+# Dry run to see what would be deleted
+node scripts/delete-user-dynamodb.js <userId> --table=MyTable --dry-run
+
+# List record types before deletion
+node scripts/delete-user-dynamodb.js 63gocaz-j-AYRsb0094ik --table=MyTable --list-types
+
+# Delete all user records (with confirmation)
+node scripts/delete-user-dynamodb.js 63gocaz-j-AYRsb0094ik --table=MyTable
+
+# Auto-confirm deletion (skip prompt)
+node scripts/delete-user-dynamodb.js 63gocaz-j-AYRsb0094ik --table=MyTable --auto-confirm --verbose
+```
+
+**Options:**
+
+- `--table=NAME` - DynamoDB table name (required, or set `DYNAMODB_TABLE_NAME` env var)
+- `--region=REGION` - AWS region (default: us-west-2)
+- `--dry-run` - Show what would be deleted without actually deleting
+- `--auto-confirm` - Skip confirmation prompt
+- `--verbose` - Show detailed progress and responses
+- `--list-types` - List record types before deletion
+
+**Environment variables:**
+
+- `DYNAMODB_TABLE_NAME` - DynamoDB table name (alternative to --table flag)
+- AWS credentials must be configured (via AWS CLI, environment variables, or IAM role)
+
+**What it does:**
+
+1. Queries all records for the user (pk="user#${userId}")
+2. Groups records by `entityType` to show what will be deleted
+3. Optionally lists record types with counts and sample sort keys
+4. Displays summary of records to be deleted
+5. Asks for confirmation (unless `--auto-confirm` is used)
+6. Deletes all records for the user
+7. Optionally verifies deletion by querying again
+
+**Safety features:**
+
+- Dry-run mode to preview deletions
+- User confirmation prompt with record count
+- Groups records by entity type for visibility
+- Detailed error reporting
+- Progress tracking
+- Verification step (with --verbose)
+
 ### cleanup-duplicate-memories.js
 
 Finds and removes duplicate memory records in Pinecone where the same memory_id has multiple records.
@@ -81,6 +134,56 @@ node scripts/cleanup-duplicate-memories.js user_63gocaz-j-AYRsb0094ik --auto-con
 **Environment variables:**
 
 - `PINECONE_API_KEY` - Required for Pinecone operations
+
+### cleanup-test-namespaces.js
+
+Deletes all namespaces from a Pinecone index that match a given prefix. Useful for bulk cleanup of test user data.
+
+**Usage:**
+
+```bash
+# Dry run to see what would be deleted
+node scripts/cleanup-test-namespaces.js --dry-run
+
+# Delete namespaces with default prefix (user_test_)
+node scripts/cleanup-test-namespaces.js
+
+# Delete namespaces with custom prefix
+node scripts/cleanup-test-namespaces.js --prefix=user_test_
+
+# Specify custom index
+node scripts/cleanup-test-namespaces.js --index=my-index --prefix=test_
+
+# Auto-confirm (skip prompt) with verbose output
+node scripts/cleanup-test-namespaces.js --auto-confirm --verbose
+```
+
+**Options:**
+
+- `--index=NAME` - Pinecone index name (default: coach-creator-proto-v1-dev)
+- `--prefix=PREFIX` - Namespace prefix to filter (default: user*test*)
+- `--dry-run` - Show what would be deleted without actually deleting
+- `--auto-confirm` - Skip confirmation prompt
+- `--verbose` - Show detailed progress and responses
+
+**Environment variables:**
+
+- `PINECONE_API_KEY` - Required for Pinecone operations
+
+**What it does:**
+
+1. Lists all namespaces in the specified Pinecone index
+2. Filters namespaces by the given prefix
+3. Displays a summary of namespaces to be deleted with vector counts
+4. Asks for confirmation (unless `--auto-confirm` is used)
+5. Deletes all vectors in each matching namespace
+
+**Safety features:**
+
+- Dry-run mode to preview deletions
+- User confirmation prompt with warning
+- Detailed error reporting
+- Progress tracking
 
 ## Data Management Scripts
 
@@ -123,6 +226,95 @@ node scripts/inspect-pinecone-namespace.js <namespace>
 **Environment variables:**
 
 - `PINECONE_API_KEY` - Required
+
+### list-namespace-record-types.js
+
+Lists all record types found in a Pinecone namespace, along with counts and sample record IDs for each type. Useful for understanding what data exists before resetting or cleaning a namespace.
+
+**Usage:**
+
+```bash
+# List record types with default settings
+node scripts/list-namespace-record-types.js user_63gocaz-j-AYRsb0094ik
+
+# Show more sample IDs per type
+node scripts/list-namespace-record-types.js user_63gocaz-j-AYRsb0094ik --samples=10
+
+# Save results to JSON file
+node scripts/list-namespace-record-types.js user_63gocaz-j-AYRsb0094ik --output=types.json
+
+# Increase query limit for large namespaces
+node scripts/list-namespace-record-types.js user_63gocaz-j-AYRsb0094ik --limit=2000
+```
+
+**Options:**
+
+- `--index=NAME` - Pinecone index name (default: coach-creator-proto-v1-dev)
+- `--limit=N` - Max records to fetch per query (default: 1000)
+- `--samples=N` - Number of sample IDs to show per type (default: 5)
+- `--output=FILE` - Save results to JSON file
+
+**Environment variables:**
+
+- `PINECONE_API_KEY` - Required
+
+**What it does:**
+
+1. Queries the namespace using multiple broad semantic searches to get comprehensive coverage
+2. Groups records by `recordType` field
+3. Displays counts, percentages, and sample IDs for each record type
+4. Shows field names present in each record type
+5. Optionally saves results to JSON for further analysis
+
+**Note:** This script uses multiple semantic queries to try to capture all record types. For very large namespaces, you may need to increase the `--limit` parameter.
+
+### delete-namespace.js
+
+Completely deletes a Pinecone namespace by removing all records. In Pinecone, deleting all records effectively removes the namespace (empty namespaces don't exist). Useful for resetting a user namespace to a clean state.
+
+**Usage:**
+
+```bash
+# Dry run to see what would be deleted
+node scripts/delete-namespace.js user_63gocaz-j-AYRsb0094ik --dry-run
+
+# List record types before deletion
+node scripts/delete-namespace.js user_63gocaz-j-AYRsb0094ik --list-types
+
+# Delete namespace (with confirmation)
+node scripts/delete-namespace.js user_63gocaz-j-AYRsb0094ik
+
+# Auto-confirm deletion (skip prompt)
+node scripts/delete-namespace.js user_63gocaz-j-AYRsb0094ik --auto-confirm --verbose
+```
+
+**Options:**
+
+- `--index=NAME` - Pinecone index name (default: coach-creator-proto-v1-dev)
+- `--dry-run` - Show what would be deleted without actually deleting
+- `--auto-confirm` - Skip confirmation prompt
+- `--verbose` - Show detailed progress and responses
+- `--list-types` - List record types before deletion
+
+**Environment variables:**
+
+- `PINECONE_API_KEY` - Required
+
+**What it does:**
+
+1. Gets namespace statistics to show what will be deleted
+2. Optionally lists record types (if `--list-types` is used)
+3. Displays namespace information (record count, record types)
+4. Asks for confirmation (unless `--auto-confirm` is used)
+5. Deletes all records using `deleteAll()`
+6. Verifies namespace is gone by checking stats
+
+**Safety features:**
+
+- Dry-run mode to preview deletion
+- User confirmation prompt with record count
+- Verification after deletion to ensure namespace is gone
+- Detailed error reporting
 
 ### migrate-pinecone-ids.js
 
