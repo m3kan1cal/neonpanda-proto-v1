@@ -481,8 +481,7 @@ export class WorkoutLoggerAgent extends Agent<WorkoutLoggerContext> {
    * 1. Warning indicator (⚠️) with workout context
    * 2. Negation patterns ("unable to", "cannot", "not a", etc.)
    * 3. Non-workout content types ("planning", "reflection", "advice", etc.)
-   * 4. Temporal blocking (future/past without actionable data)
-   * 5. Content type mismatches
+   * 4. Explicit blocking statements
    */
   private isValidBlockingResponse(response: string): boolean {
     const responseLower = response.toLowerCase();
@@ -563,28 +562,6 @@ export class WorkoutLoggerAgent extends Agent<WorkoutLoggerContext> {
       /only (log|save|record) (completed|actual|real) workouts/i,
     ];
     if (explicitBlocking.some((pattern) => pattern.test(response))) {
-      return true;
-    }
-
-    // Pattern 5: Simple temporal keyword checks (catch past/future references)
-    // These keywords indicate the user is asking about past workouts or planning future ones
-    // Simple substring checks catch them anywhere in the text, not just in specific phrases
-    const temporalKeywords = [
-      "yesterday",
-      "last week",
-      "last month",
-      "earlier today",
-      "earlier this week",
-      "previous workout",
-      "past workout",
-      "earlier workout",
-      "planning",
-      "plan to",
-      "going to",
-      "will do",
-      "intend to",
-    ];
-    if (temporalKeywords.some((keyword) => responseLower.includes(keyword))) {
       return true;
     }
 
