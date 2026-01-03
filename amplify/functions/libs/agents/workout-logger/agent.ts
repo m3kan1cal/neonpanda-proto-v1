@@ -95,10 +95,13 @@ export class WorkoutLoggerAgent extends Agent<WorkoutLoggerContext> {
                 (subValue.startsWith("{") || subValue.startsWith("["))
               ) {
                 doubleEncodedFields.push(`${key}.${subKey}`);
-                console.warn(`🔴 NESTED DOUBLE-ENCODING AT STORAGE: ${key}.${subKey}`, {
-                  type: subType,
-                  preview: subValue.substring(0, 150),
-                });
+                console.warn(
+                  `🔴 NESTED DOUBLE-ENCODING AT STORAGE: ${key}.${subKey}`,
+                  {
+                    type: subType,
+                    preview: subValue.substring(0, 150),
+                  },
+                );
               }
             }
           }
@@ -560,6 +563,28 @@ export class WorkoutLoggerAgent extends Agent<WorkoutLoggerContext> {
       /only (log|save|record) (completed|actual|real) workouts/i,
     ];
     if (explicitBlocking.some((pattern) => pattern.test(response))) {
+      return true;
+    }
+
+    // Pattern 5: Simple temporal keyword checks (catch past/future references)
+    // These keywords indicate the user is asking about past workouts or planning future ones
+    // Simple substring checks catch them anywhere in the text, not just in specific phrases
+    const temporalKeywords = [
+      "yesterday",
+      "last week",
+      "last month",
+      "earlier today",
+      "earlier this week",
+      "previous workout",
+      "past workout",
+      "earlier workout",
+      "planning",
+      "plan to",
+      "going to",
+      "will do",
+      "intend to",
+    ];
+    if (temporalKeywords.some((keyword) => responseLower.includes(keyword))) {
       return true;
     }
 
