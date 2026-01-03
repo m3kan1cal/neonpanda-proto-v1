@@ -17,6 +17,10 @@ import {
 } from "../../dynamodb/operations";
 import { generateProgramDesignerSessionSummary } from "../libs/program-designer/session-management";
 import { storeProgramDesignerSessionSummaryInPinecone } from "../libs/program-designer/pinecone";
+import {
+  validateProgramDurationInput,
+  validateTrainingFrequencyInput,
+} from "../libs/program/validation-helpers";
 
 // Duration calculation constants
 const DEFAULT_DURATION_FALLBACK_MS = 600000; // 10 minutes in milliseconds
@@ -80,6 +84,36 @@ export const handler = async (event: BuildProgramEvent) => {
               (k) => todoList[k]?.value,
             ),
           },
+        });
+      }
+
+      // Validate programDuration value type
+      const durationValidation = validateProgramDurationInput(
+        todoList.programDuration?.value,
+      );
+      if (!durationValidation.isValid) {
+        console.error("❌ Invalid program duration type:", {
+          providedValue: durationValidation.providedValue,
+          error: durationValidation.error,
+        });
+        return createErrorResponse(400, durationValidation.error!, {
+          invalidField: durationValidation.field,
+          providedValue: durationValidation.providedValue,
+        });
+      }
+
+      // Validate trainingFrequency value type
+      const frequencyValidation = validateTrainingFrequencyInput(
+        todoList.trainingFrequency?.value,
+      );
+      if (!frequencyValidation.isValid) {
+        console.error("❌ Invalid training frequency:", {
+          providedValue: frequencyValidation.providedValue,
+          error: frequencyValidation.error,
+        });
+        return createErrorResponse(400, frequencyValidation.error!, {
+          invalidField: frequencyValidation.field,
+          providedValue: frequencyValidation.providedValue,
         });
       }
 

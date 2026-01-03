@@ -30,10 +30,8 @@ export const storeProgramDesignerSessionSummaryInPinecone = async (
   program: Program,
 ) => {
   try {
-    // Generate structured summary_id (consistent with coach_creator_summary pattern)
-    const timestamp = Date.now();
-    const shortId = Math.random().toString(36).substring(2, 11);
-    const summary_id = `program_designer_summary_${userId}_${timestamp}_${shortId}`;
+    // Use sessionId as stable ID to enable proper Pinecone upsert (no duplicates)
+    const summary_id = `program_designer_summary_${session.sessionId}`;
 
     // Prepare program designer specific metadata for Pinecone
     const sessionMetadata = {

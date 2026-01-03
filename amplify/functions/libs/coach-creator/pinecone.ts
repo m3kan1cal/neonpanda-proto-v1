@@ -26,10 +26,8 @@ export const storeCoachCreatorSummaryInPinecone = async (
   coachConfig: CoachConfig,
 ) => {
   try {
-    // Generate structured summary_id (consistent with conversation summaries)
-    const timestamp = Date.now();
-    const shortId = Math.random().toString(36).substring(2, 11);
-    const summary_id = `coach_creator_summary_${userId}_${timestamp}_${shortId}`;
+    // Use sessionId as stable ID to enable proper Pinecone upsert (no duplicates)
+    const summary_id = `coach_creator_summary_${session.sessionId}`;
 
     // Prepare coach creator specific metadata for Pinecone
     const baseMetadata = {

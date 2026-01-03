@@ -33,21 +33,25 @@ The program was first published in Rippetoe's book "Starting Strength: Basic Bar
 ## Programming Structure
 
 **Basic Program Structure**:
+
 - 3 days per week (Monday, Wednesday, Friday)
 - Alternating A and B workouts
 - 45-60 minutes per session
 
 **Workout A**:
+
 - Squat: 3 sets of 5 reps
 - Bench Press: 3 sets of 5 reps
 - Deadlift: 1 set of 5 reps (alternating with power clean)
 
 **Workout B**:
+
 - Squat: 3 sets of 5 reps
 - Overhead Press: 3 sets of 5 reps
 - Power Clean: 5 sets of 3 reps (or deadlift)
 
 **Progression Protocol**:
+
 - Squat: +5 lbs every session
 - Bench Press: +5 lbs every session
 - Overhead Press: +5 lbs every session
@@ -55,6 +59,7 @@ The program was first published in Rippetoe's book "Starting Strength: Basic Bar
 - Power Clean: +5 lbs every session
 
 **Advanced Novice Modifications**:
+
 - Reduce squat frequency to every other session
 - Add chin-ups and back extensions
 - Implement microloading for upper body lifts
@@ -73,9 +78,10 @@ The program was first published in Rippetoe's book "Starting Strength: Basic Bar
 
 **Novice Powerlifters**: Beginning competitive lifters who need to develop proficiency in the competition lifts.
 
-## Pros & Cons
+## Advantages and Disadvantages
 
 **Pros**:
+
 - Simple, easy-to-follow progression system
 - Rapid strength gains for beginners
 - Focuses on fundamental movement patterns
@@ -86,6 +92,7 @@ The program was first published in Rippetoe's book "Starting Strength: Basic Bar
 - Comprehensive technique instruction available
 
 **Cons**:
+
 - Limited exercise variety can become monotonous
 - Linear progression eventually stalls for all lifters
 - May not adequately address muscle imbalances
@@ -95,7 +102,7 @@ The program was first published in Rippetoe's book "Starting Strength: Basic Bar
 - May not suit all body types equally well
 - Limited upper body volume for some individuals
 
-## Implementation
+## Implementation Guidelines
 
 **Step 1: Learn the Movements**: Study proper technique for all five lifts through the Starting Strength book, videos, or qualified instruction.
 
@@ -113,7 +120,7 @@ The program was first published in Rippetoe's book "Starting Strength: Basic Bar
 
 **Step 8: Prepare for Transition**: Recognize when novice gains are exhausted and prepare to move to intermediate programming.
 
-## Variations
+## Variations and Specializations
 
 **Starting Strength with Power Cleans**: The original program including power cleans for explosive power development.
 
@@ -145,7 +152,7 @@ The Starting Strength methodology is grounded in several established exercise sc
 
 **Recovery and Adaptation**: Research supports the importance of adequate rest and nutrition for training adaptations.
 
-## Common Mistakes
+## Common Mistakes and Solutions
 
 **Starting Too Heavy**: Beginning with weights that are too challenging, leading to form breakdown and slower progress.
 
@@ -163,7 +170,7 @@ The Starting Strength methodology is grounded in several established exercise sc
 
 **Neglecting Mobility**: Ignoring flexibility and mobility work that supports proper movement patterns.
 
-## Integration
+## Integration Applications
 
 **With Sport Training**: Can serve as an off-season strength foundation for athletes in various sports.
 
@@ -180,3 +187,169 @@ The Starting Strength methodology is grounded in several established exercise sc
 **With Functional Training**: Provides strength base that supports more complex functional movement patterns.
 
 **Periodization Integration**: Serves as the initial phase in long-term athletic development and periodized training plans.
+
+---
+
+## WORKOUT TEMPLATES
+
+**Programming Structure & Ratios:**
+
+- **3-Day Split**: Alternating A/B workouts (Mon/Wed/Fri or similar)
+- **Session Distribution**: 100% compound barbell movements, no isolation work
+- **Weekly Structure**: 3 non-consecutive training days with 48+ hours between sessions
+- **Progression**: Add weight every single session (linear progression)
+
+**Movement Patterns & Exercise Preferences:**
+
+- **Primary Lifts**: Squat (every session), alternating press/bench, alternating deadlift/power clean
+- **Compound Focus**: Multi-joint barbell movements exclusively
+- **Movement Hierarchy**:
+  1. Squat (trained every session, highest priority)
+  2. Press/Bench Press (alternating)
+  3. Deadlift/Power Clean (alternating)
+- **No Accessory Work**: Original program has no curls, extensions, or machine work
+
+**Time Domains & Workout Formats:**
+
+- **Session Duration**: 45-60 minutes maximum
+- **Set Structure**: 3 work sets of 5 reps (except deadlift: 1x5)
+- **Warm-up Protocol**: Empty bar + progressive jumps to work weight
+- **Rest Periods**: 3-5 minutes between work sets, more if needed
+
+**Scaling Approaches & Progression Methods:**
+
+- **Linear Progression**: Add weight every session without exception
+- **Weight Increments**: 5 lbs upper body, 10 lbs lower body (initially)
+- **Microloading**: 2.5 lb jumps for upper body when 5 lb jumps stall
+- **Reset Protocol**: If you miss reps, deload 10% and work back up
+- **Deload Trigger**: 3 failed sessions at same weight = reset
+
+**Weekly Programming Pattern:**
+
+- **Philosophy**: Simple linear progression exploiting novice adaptation potential
+- **Daily Structure**: Squat → Press or Bench → Deadlift or Power Clean
+- **Rest Days**: Minimum 48 hours between sessions for recovery
+- **Volume**: Low volume (3x5), maximum intensity effort each set
+- **Intensity**: Work sets are hard but should be completable every session
+
+**Example Weekly Schedule (Phase 1):**
+
+```
+Week 1:
+Monday - Workout A
+- Squat: 3x5 (start with empty bar or conservative weight)
+- Bench Press: 3x5
+- Deadlift: 1x5
+Total time: 45-60 minutes
+
+Wednesday - Workout B
+- Squat: 3x5 (+5-10 lbs from Monday)
+- Overhead Press: 3x5
+- Deadlift: 1x5 (+10 lbs from Monday)
+Total time: 45-60 minutes
+
+Friday - Workout A
+- Squat: 3x5 (+5-10 lbs from Wednesday)
+- Bench Press: 3x5 (+5 lbs from Monday)
+- Deadlift: 1x5 (+10 lbs from Wednesday)
+Total time: 45-60 minutes
+
+Week 2:
+Monday - Workout B
+- Squat: 3x5 (+5-10 lbs)
+- Overhead Press: 3x5 (+5 lbs)
+- Deadlift: 1x5 (+10 lbs)
+
+Wednesday - Workout A
+- Squat: 3x5 (+5-10 lbs)
+- Bench Press: 3x5 (+5 lbs)
+- Deadlift: 1x5 (+10 lbs)
+
+Friday - Workout B
+- Continue pattern...
+```
+
+**Phase 2 (After 2-3 Weeks) - Add Power Cleans:**
+
+```
+Workout A:
+- Squat: 3x5
+- Bench Press: 3x5
+- Deadlift: 1x5
+
+Workout B:
+- Squat: 3x5
+- Overhead Press: 3x5
+- Power Clean: 5x3
+```
+
+**Phase 3 (Advanced Novice) - Add Chin-ups and Back Extensions:**
+
+```
+Workout A:
+- Squat: 3x5
+- Bench Press: 3x5
+- Deadlift: 1x5
+- Chin-ups: 3xFailure (or weighted if can do 10+)
+
+Workout B:
+- Squat: 3x5
+- Overhead Press: 3x5
+- Power Clean: 5x3
+- Back Extensions: 3x10-15
+```
+
+**Warm-Up Protocol Template:**
+
+```
+Example for 225 lb work weight squat:
+- Empty bar (45 lbs): 2x5
+- 95 lbs: 1x5
+- 135 lbs: 1x3
+- 185 lbs: 1x2
+- 205 lbs: 1x1
+- 225 lbs: 3x5 (work sets)
+
+Jumps should be roughly equal, covering the distance from bar to work weight
+```
+
+**Progression Rate Examples:**
+
+- **Squat**: +10 lbs/session initially, dropping to +5 lbs after 2-4 weeks
+- **Deadlift**: +10-15 lbs/session initially, dropping to +5-10 lbs
+- **Bench Press**: +5 lbs/session, may need 2.5 lb plates after 4-6 weeks
+- **Overhead Press**: +5 lbs/session, first to stall, use microloading early
+- **Power Clean**: +5 lbs/session, technique-dependent progression
+
+**Reset Protocol:**
+
+```
+If you fail to complete 3x5 at a weight for 3 sessions:
+1. Reduce the weight by 10%
+2. Resume linear progression from new weight
+3. Example: Failed at 200 lbs three times
+   - Reset to 180 lbs
+   - Progress: 180 → 185 → 190 → 195 → 200 → 205...
+```
+
+**Stall Management Templates:**
+
+- **First Stall**: Reset 10%, continue linear progression
+- **Second Stall**: Reset 10%, switch to 3x5 then 1x5 AMRAP
+- **Third Stall**: Consider transitioning to intermediate programming (Texas Method, etc.)
+- **Microloading**: Use 1.25 lb plates for 2.5 lb jumps on pressing movements
+
+**Common Modifications:**
+
+- **Without Power Clean**: Replace with barbell rows or additional deadlift work
+- **Older Lifters**: Smaller jumps (2.5-5 lbs), longer recovery between sessions
+- **Female Lifters**: Start with 5 lb jumps on all lifts, 2.5 lb microloading sooner
+- **Underweight Lifters**: Emphasize eating in surplus, may progress faster
+- **Athletes**: Reduce conditioning work to preserve recovery for lifting
+
+**Transition to Intermediate Programming:**
+
+- **When**: Linear progression exhausted (typically 3-9 months)
+- **Signs**: Multiple resets on multiple lifts, recovery issues despite eating/sleeping
+- **Options**: Texas Method, 5/3/1, Heavy-Light-Medium, Starr Model
+- **Key Principle**: Move from session-to-session to week-to-week progression

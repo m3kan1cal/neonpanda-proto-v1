@@ -3,6 +3,11 @@
  *
  * Tools that wrap existing workout extraction, validation, and storage functions.
  * Each tool is a discrete capability that Claude can use to log workouts.
+ *
+ * Architecture follows Coach Creator pattern:
+ * - First 1-2 tools receive inputs from Claude (user data)
+ * - Subsequent tools retrieve previous results via context.getToolResult()
+ * - No large objects passed as Claude inputs (prevents double-encoding)
  */
 
 import type { Tool } from "../core/types";
@@ -46,7 +51,6 @@ import {
   TEMPERATURE_PRESETS,
 } from "../../api-helpers";
 import { parseJsonWithFallbacks } from "../../response-utils";
-import { WORKOUT_SCHEMA } from "../../schemas/workout-schema";
 import { composeWorkoutSchema } from "../../schemas/schema-composer";
 import { parseCompletedAt } from "../../analytics/date-utils";
 import { saveWorkout } from "../../../../dynamodb/operations";
@@ -56,10 +60,20 @@ import { storeExtractionDebugData } from "./helpers";
 import { detectDiscipline } from "../../workout/discipline-detector";
 
 /**
+ * Augmented context type that includes getToolResult accessor
+ * Used by tools that retrieve previous results instead of receiving from Claude
+ */
+type AugmentedWorkoutLoggerContext = WorkoutLoggerContext & {
+  getToolResult?: (key: string) => any;
+};
+
+/**
  * Tool 1: Detect Workout Discipline
  *
  * Detects the primary training discipline of the workout using AI analysis.
  * This should be called FIRST before extraction to enable targeted extraction.
+ *
+ * INPUT FROM CLAUDE: userMessage (first tool - needs user data)
  */
 export const detectDisciplineTool: Tool<WorkoutLoggerContext> = {
   id: "detect_discipline",
@@ -98,7 +112,7 @@ Returns: discipline, confidence (0-1), method ("ai_detection"), reasoning`,
 
   async execute(
     input: any,
-    context: WorkoutLoggerContext,
+    _context: WorkoutLoggerContext,
   ): Promise<DisciplineDetectionResult> {
     console.info("🎯 Executing detect_discipline tool");
 
@@ -140,6 +154,9 @@ Returns: discipline, confidence (0-1), method ("ai_detection"), reasoning`,
  *
  * Extracts structured workout information from user's message and images.
  * Handles both text and multimodal input, determines completion time.
+ *
+ * INPUT FROM CLAUDE: discipline, userMessage, userTimezone, messageTimestamp, isSlashCommand
+ * (needs user data - cannot retrieve from context)
  */
 export const extractWorkoutDataTool: Tool<WorkoutLoggerContext> = {
   id: "extract_workout_data",
@@ -154,17 +171,9 @@ This tool:
 - Automatically determines when the workout was completed (date/time)
 - Classifies discipline (CrossFit, powerlifting, running, etc.)
 - Supports complex multi-phase workouts (strength + metcon)
-- Handles named workouts (Fran, Murph) and generates Latin/Roman-inspired names for unnamed workouts (e.g., "Fortis Vigor", "Gladiator Complex")
+- Handles named workouts (Fran, Murph) and generates Latin/Roman-inspired names for unnamed workouts
 - Extracts performance metrics (time, rounds, weights, reps)
 - Defaults intensity and RPE to 5/10 (moderate) when not specified
-
-CRITICAL EXTRACTION CAPABILITIES:
-- Partner workouts: Distinguishes alternating (half volume per person) vs synchronized (full volume) formats
-- Bilateral dumbbells: "50# each hand" = 100# total load for bilateral movements
-- Descending rep schemes: "21-15-9" creates 3 separate rounds, not one
-- EMOM structure: Creates separate round objects for each completed round
-- Duration handling: Distinguishes workout duration (work time) from session duration (total gym time)
-- Blocking flags: Identifies planning/advice questions that shouldn't be logged as workouts
 
 Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod ('tool' or 'fallback')`,
 
@@ -235,7 +244,7 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
       source: "detect_discipline_tool",
     });
 
-    // 2. Compose targeted schema (BASE + ONE discipline plugin)
+    // Compose targeted schema (BASE + ONE discipline plugin)
     const targetedSchema = composeWorkoutSchema(discipline);
 
     console.info("📋 Composed targeted schema:", {
@@ -243,7 +252,7 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
       schemaSize: JSON.stringify(targetedSchema).length,
     });
 
-    // 3. Check workout complexity (determines if thinking should be enabled)
+    // Check workout complexity (determines if thinking should be enabled)
     const isComplexWorkout = checkWorkoutComplexity(userMessage);
     const enableThinking = isComplexWorkout;
 
@@ -253,13 +262,13 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
       workoutLength: userMessage.length,
     });
 
-    // 4. Build targeted extraction prompt (BASE + ONE discipline guidance)
+    // Build targeted extraction prompt (BASE + ONE discipline guidance)
     const extractionPrompt = buildWorkoutExtractionPrompt(
       userMessage,
       context.coachConfig,
       context.criticalTrainingDirective,
       userTimezone,
-      discipline, // NEW: Pass discipline for targeted guidance
+      discipline,
     );
 
     console.info("📝 Built targeted extraction prompt:", {
@@ -267,7 +276,7 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
       discipline,
     });
 
-    // 5. Extract workout data with AI using targeted schema
+    // Extract workout data with AI using targeted schema
     let workoutData: UniversalWorkoutSchema;
     let generationMethod: "tool" | "fallback" = "tool";
 
@@ -277,9 +286,6 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
         "🎯 Attempting tool-based workout extraction with targeted schema",
       );
 
-      // Text-only extraction with targeted schema (BASE + ONE discipline)
-      // Note: If user attached images, agent has already analyzed them and
-      // included workout details in userMessage parameter
       const result = await callBedrockApi(
         extractionPrompt,
         userMessage,
@@ -290,7 +296,7 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
           tools: {
             name: "generate_workout",
             description: `Generate structured workout data for ${discipline} using the Universal Workout Schema v2.0`,
-            inputSchema: targetedSchema, // ONLY BASE + ONE DISCIPLINE
+            inputSchema: targetedSchema,
           },
           expectedToolName: "generate_workout",
         },
@@ -300,6 +306,51 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
       if (typeof result !== "string") {
         workoutData = result.input as UniversalWorkoutSchema;
         console.info("✅ Tool-based extraction succeeded with targeted schema");
+
+        // Debug: Check nested field types RIGHT AFTER extracting from Bedrock response
+        const bedrockNestedTypes: Record<string, string> = {};
+        const bedrockDoubleEncoded: string[] = [];
+        const workoutDataAny = workoutData as any; // Cast for dynamic access
+
+        for (const key of [
+          "discipline_specific",
+          "performance_metrics",
+          "subjective_feedback",
+          "metadata",
+          "coach_notes",
+        ]) {
+          if (workoutDataAny[key] !== undefined) {
+            const value = workoutDataAny[key];
+            const valueType = typeof value;
+            bedrockNestedTypes[key] = valueType;
+
+            if (
+              valueType === "string" &&
+              (value.startsWith("{") || value.startsWith("["))
+            ) {
+              bedrockDoubleEncoded.push(key);
+            }
+          }
+        }
+
+        if (bedrockDoubleEncoded.length > 0) {
+          console.warn("⚠️ DOUBLE-ENCODING FROM BEDROCK RESPONSE:", {
+            bedrockNestedTypes,
+            bedrockDoubleEncoded,
+            sampleValue: {
+              field: bedrockDoubleEncoded[0],
+              preview: String(
+                workoutDataAny[bedrockDoubleEncoded[0]],
+              ).substring(0, 150),
+            },
+            note: "result.input already has double-encoded fields from callBedrockApi",
+          });
+        } else {
+          console.info(
+            "✅ Bedrock response check: Nested fields are proper objects",
+            { bedrockNestedTypes },
+          );
+        }
 
         // Set system-generated fields
         const shortId = Math.random().toString(36).substring(2, 11);
@@ -321,7 +372,7 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
           {
             workoutData,
             method: "tool",
-            hasImages: false, // Images processed by agent, not tools
+            hasImages: false,
             enableThinking,
             discipline: workoutData.discipline,
             isComplexWorkout,
@@ -340,8 +391,6 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
 
       console.info("🔄 Falling back to prompt-based extraction");
 
-      // Text-only fallback extraction
-      // Note: If user attached images, agent has already analyzed them
       const fallbackResult = (await callBedrockApi(
         extractionPrompt,
         userMessage,
@@ -379,7 +428,7 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
         {
           workoutData,
           method: "fallback",
-          hasImages: false, // Images processed by agent, not tools
+          hasImages: false,
           enableThinking,
           isComplexWorkout,
           toolError:
@@ -388,7 +437,7 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
       );
     }
 
-    // 4. Add generation metadata
+    // Add generation metadata
     if (!workoutData.metadata) {
       workoutData.metadata = {} as any;
     }
@@ -412,7 +461,7 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
       workoutName: workoutData.workout_name,
     });
 
-    // 5. Extract completion time using AI
+    // Extract completion time using AI
     const extractedTime = await extractCompletedAtTime(
       userMessage,
       messageTimestamp,
@@ -430,6 +479,62 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
       workoutDate: workoutData.date,
     });
 
+    // Debug: Check nested field types BEFORE returning from tool
+    const returnNestedFieldTypes: Record<string, string> = {};
+    const returnDoubleEncodedFields: string[] = [];
+    const returnWorkoutDataAny = workoutData as any; // Cast for dynamic access
+
+    for (const key of [
+      "discipline_specific",
+      "performance_metrics",
+      "subjective_feedback",
+      "metadata",
+      "coach_notes",
+    ]) {
+      if (returnWorkoutDataAny[key] !== undefined) {
+        const value = returnWorkoutDataAny[key];
+        const valueType = typeof value;
+        returnNestedFieldTypes[key] = valueType;
+
+        // Check if it's a string that looks like JSON
+        if (
+          valueType === "string" &&
+          (value.startsWith("{") || value.startsWith("["))
+        ) {
+          returnDoubleEncodedFields.push(key);
+        }
+      }
+    }
+
+    if (returnDoubleEncodedFields.length > 0) {
+      console.warn(
+        "⚠️ DOUBLE-ENCODING DETECTED IN extract_workout_data BEFORE RETURN:",
+        {
+          nestedFieldTypes: returnNestedFieldTypes,
+          doubleEncodedFields: returnDoubleEncodedFields,
+          sampleValue:
+            returnDoubleEncodedFields.length > 0
+              ? {
+                  field: returnDoubleEncodedFields[0],
+                  preview: String(
+                    returnWorkoutDataAny[returnDoubleEncodedFields[0]],
+                  ).substring(0, 100),
+                }
+              : null,
+          generationMethod,
+          note: "Data is already double-encoded in extract_workout_data before returning",
+        },
+      );
+    } else {
+      console.info(
+        "✅ extract_workout_data return check: Nested fields are proper objects",
+        {
+          nestedFieldTypes: returnNestedFieldTypes,
+          generationMethod,
+        },
+      );
+    }
+
     return {
       workoutData,
       completedAt,
@@ -439,27 +544,29 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
 };
 
 /**
- * Tool 2: Validate Workout Completeness
+ * Tool 3: Validate Workout Completeness
  *
  * Checks if extracted workout data meets minimum requirements.
  * Validates dates, calculates confidence scores, determines blocking issues.
+ *
+ * RETRIEVES FROM CONTEXT: extraction result (workoutData, completedAt)
+ * INPUT FROM CLAUDE: isSlashCommand only
  */
 export const validateWorkoutCompletenessTool: Tool<WorkoutLoggerContext> = {
   id: "validate_workout_completeness",
   description: `Validate extracted workout data quality and determine next steps.
 
-ALWAYS CALL THIS SECOND after extract_workout_data.
+ALWAYS CALL THIS after extract_workout_data.
+
+This tool automatically retrieves the extraction result from previous tool execution.
+You only need to pass isSlashCommand.
 
 This tool checks:
 - Data completeness (0-1 score based on required fields)
 - Confidence score (0-1 based on data quality and specificity)
 - Date validation (corrects wrong years, validates against completedAt)
 - Discipline classification (qualitative vs quantitative)
-- Blocking validation flags that prevent saving:
-  * planning_inquiry: User asking about future workouts or planning
-  * advice_seeking: User asking for tips or general fitness advice
-  * future_planning: User discussing future workout plans
-  * no_performance_data: No actual performance metrics found
+- Blocking validation flags that prevent saving
 
 CRITICAL DECISIONS RETURNED:
 - shouldSave (boolean): Whether workout should be saved to database
@@ -467,62 +574,119 @@ CRITICAL DECISIONS RETURNED:
 - reason (string): Explanation if shouldSave is false
 - blockingFlags (array): List of flags preventing save
 
-For slash commands: More lenient validation (explicit logging intent)
-For natural language: Stricter validation to avoid logging planning questions
-
 Returns: validation result with shouldSave, shouldNormalize, confidence, completeness, blockingFlags, reason`,
 
   inputSchema: {
     type: "object",
     properties: {
-      workoutData: {
-        type: "object",
-        description:
-          "The extracted workout data to validate. CRITICAL: Pass this as an OBJECT directly from extract_workout_data result - DO NOT stringify to JSON. The tool expects the raw object structure.",
-      },
-      completedAt: {
-        type: "string",
-        description: "ISO timestamp when workout was completed",
-      },
       isSlashCommand: {
         type: "boolean",
         description: "Whether this was triggered by a slash command",
       },
     },
-    required: ["workoutData", "completedAt", "isSlashCommand"],
+    required: ["isSlashCommand"],
   },
 
   async execute(
     input: any,
-    context: WorkoutLoggerContext,
+    context: AugmentedWorkoutLoggerContext,
   ): Promise<WorkoutValidationResult> {
     console.info("✅ Executing validate_workout_completeness tool");
 
-    let { workoutData, completedAt, isSlashCommand } = input;
+    const { isSlashCommand } = input;
 
-    // Defensive parsing: Handle case where workoutData is serialized as string
-    if (typeof workoutData === "string") {
-      console.warn(
-        "⚠️ workoutData received as JSON string instead of object, parsing...",
+    // Retrieve extraction result from stored tool results (Coach Creator pattern)
+    const extraction = context.getToolResult?.("extraction");
+    if (!extraction) {
+      throw new Error(
+        "Extraction not completed - call extract_workout_data first",
       );
-      try {
-        // Use parseJsonWithFallbacks for robust JSON parsing
-        workoutData = parseJsonWithFallbacks(workoutData);
-        console.info("✅ Successfully parsed workoutData string to object");
-      } catch (error) {
-        console.error("❌ Failed to parse workoutData string:", error);
-        throw new Error(
-          "Invalid workoutData format: received string but failed to parse as JSON",
-        );
+    }
+
+    let { workoutData, completedAt } = extraction;
+
+    // Debug: Deep inspection of nested field types BEFORE fixDoubleEncodedProperties
+    const nestedFieldTypes: Record<string, string> = {};
+    const doubleEncodedFields: string[] = [];
+    const deeperInspection: Record<string, Record<string, string>> = {};
+    const workoutDataAny = workoutData as any; // Cast for dynamic access
+
+    for (const key of [
+      "discipline_specific",
+      "performance_metrics",
+      "subjective_feedback",
+      "metadata",
+      "coach_notes",
+    ]) {
+      if (workoutDataAny[key] !== undefined) {
+        const value = workoutDataAny[key];
+        const valueType = typeof value;
+        nestedFieldTypes[key] = valueType;
+
+        // Check if it's a string that looks like JSON (top level)
+        if (
+          valueType === "string" &&
+          (value.startsWith("{") || value.startsWith("["))
+        ) {
+          doubleEncodedFields.push(key);
+        }
+
+        // Deeper inspection: check types of properties INSIDE these objects
+        if (valueType === "object" && value !== null) {
+          deeperInspection[key] = {};
+          for (const [subKey, subValue] of Object.entries(value)) {
+            const subType = typeof subValue;
+            deeperInspection[key][subKey] = subType;
+
+            // Check for double-encoding at the nested level
+            if (
+              subType === "string" &&
+              typeof subValue === "string" &&
+              (subValue.startsWith("{") || subValue.startsWith("["))
+            ) {
+              doubleEncodedFields.push(`${key}.${subKey}`);
+              console.warn(`🔴 NESTED DOUBLE-ENCODING: ${key}.${subKey}`, {
+                type: subType,
+                preview: subValue.substring(0, 150),
+              });
+            }
+          }
+        }
       }
     }
+
+    if (doubleEncodedFields.length > 0) {
+      console.warn("⚠️ DOUBLE-ENCODING DETECTED AT RETRIEVAL TIME:", {
+        nestedFieldTypes,
+        doubleEncodedFields,
+        deeperInspection,
+        sampleValue:
+          doubleEncodedFields.length > 0
+            ? {
+                field: doubleEncodedFields[0],
+                preview: String(
+                  workoutDataAny[doubleEncodedFields[0].split(".")[0]],
+                ).substring(0, 150),
+              }
+            : null,
+        note: "Data is double-encoded when retrieved from context.getToolResult",
+      });
+    } else {
+      console.info("✅ Retrieval check: Nested fields are proper objects", {
+        nestedFieldTypes,
+        deeperInspection,
+      });
+    }
+
+    // Fix any double-encoded properties
+    workoutData = fixDoubleEncodedProperties(workoutData);
 
     const completedAtDate = parseCompletedAt(
       completedAt,
       "validate_workout_completeness",
     );
 
-    // 1. Calculate confidence and completeness scores
+    // Calculate confidence and completeness scores
     const confidence = calculateConfidence(workoutData);
     const completeness = calculateCompleteness(workoutData);
 
@@ -531,8 +695,7 @@ Returns: validation result with shouldSave, shouldNormalize, confidence, complet
       completeness,
     });
 
-    // Update metadata with scores (ensure metadata always exists with proper structure)
-    // Handle cases where metadata is undefined, null, or not an object (e.g., from malformed JSON)
+    // Update metadata with scores
     if (
       !workoutData.metadata ||
       typeof workoutData.metadata !== "object" ||
@@ -540,17 +703,16 @@ Returns: validation result with shouldSave, shouldNormalize, confidence, complet
     ) {
       workoutData.metadata = {};
     }
-    // Ensure validation_flags is always an array
     if (!Array.isArray(workoutData.metadata.validation_flags)) {
       workoutData.metadata.validation_flags = [];
     }
     workoutData.metadata.data_confidence = confidence;
     workoutData.metadata.data_completeness = completeness;
 
-    // 2. Date validation and correction
+    // Date validation and correction
     validateAndCorrectWorkoutDate(workoutData, completedAtDate);
 
-    // 3. Classify discipline (determines validation strictness)
+    // Classify discipline (determines validation strictness)
     let disciplineClassification: DisciplineClassification;
     let isQualitativeDiscipline = false;
 
@@ -578,16 +740,14 @@ Returns: validation result with shouldSave, shouldNormalize, confidence, complet
       };
     }
 
-    // 4. Determine blocking validation flags
-    const { blockingFlags, hasBlockingFlag, detectedBlockingFlags } =
-      determineBlockingFlags(
-        workoutData,
-        isSlashCommand,
-        isQualitativeDiscipline,
-      );
+    // Determine blocking validation flags
+    const { hasBlockingFlag, detectedBlockingFlags } = determineBlockingFlags(
+      workoutData,
+      isSlashCommand,
+      isQualitativeDiscipline,
+    );
 
-    // 5. Additional validation: Check for extremely low completeness
-    // This catches reflections/comments without actual workout data
+    // Check for extremely low completeness
     if (completeness < 0.2) {
       console.warn(
         "🚫 Blocking workout due to extremely low completeness (<20%):",
@@ -612,9 +772,7 @@ Returns: validation result with shouldSave, shouldNormalize, confidence, complet
       };
     }
 
-    // 6. Additional validation: Check for missing exercise structure
-    // Even if other fields are present, workouts MUST have exercises/rounds
-    // Uses hybrid approach: property checks (fast) + AI validation (semantic)
+    // Check for missing exercise structure
     const exerciseValidation = await validateExerciseStructure(workoutData);
 
     if (!exerciseValidation.hasExercises) {
@@ -644,14 +802,14 @@ Returns: validation result with shouldSave, shouldNormalize, confidence, complet
       };
     }
 
-    // 7. Determine if normalization should run
+    // Determine if normalization should run
     const shouldNormalize = shouldNormalizeWorkout(
       workoutData,
       confidence,
       completeness,
     );
 
-    // 8. Build validation result
+    // Build validation result
     const reason = hasBlockingFlag
       ? buildBlockingReason(
           detectedBlockingFlags,
@@ -670,26 +828,40 @@ Returns: validation result with shouldSave, shouldNormalize, confidence, complet
       blockingFlags: detectedBlockingFlags || [],
       disciplineClassification,
       reason,
+      // Include workoutData for downstream tools
+      workoutData,
+      completedAt,
     };
 
-    console.info("Validation result:", validationResult);
+    console.info("Validation result:", {
+      isValid: validationResult.isValid,
+      shouldNormalize: validationResult.shouldNormalize,
+      shouldSave: validationResult.shouldSave,
+      confidence: validationResult.confidence,
+      completeness: validationResult.completeness,
+    });
 
     return validationResult;
   },
 };
 
 /**
- * Tool 3: Normalize Workout Data
+ * Tool 4: Normalize Workout Data
  *
  * Normalizes and fixes structural issues in workout data.
  * Should only be called if validation recommends normalization.
+ *
+ * RETRIEVES FROM CONTEXT: extraction or validation result
+ * NO INPUT FROM CLAUDE - retrieves all data from context
  */
 export const normalizeWorkoutDataTool: Tool<WorkoutLoggerContext> = {
   id: "normalize_workout_data",
   description: `Normalize and fix structural issues in workout data using AI.
 
 ONLY CALL THIS IF validate_workout_completeness returns shouldNormalize: true.
-Typically needed when confidence < 0.7 or structural issues detected.
+
+This tool automatically retrieves workout data from previous tool execution.
+No inputs needed - it retrieves all data from context.
 
 This tool:
 - Uses AI to fix schema violations and data inconsistencies
@@ -697,46 +869,47 @@ This tool:
 - Adds missing required fields where possible
 - Validates against Universal Workout Schema
 - Improves confidence score (modest boost: +0.1)
-- Adds validation flags for corrected fields
-
-Common issues fixed:
-- Missing or incorrect field types
-- Inconsistent round structures
-- Invalid time formats
-- Missing performance_data fields
-- Incomplete exercise objects
 
 Returns: normalizedData, isValid, issuesFound, issuesCorrected, normalizationSummary, normalizationConfidence`,
 
   inputSchema: {
     type: "object",
     properties: {
-      workoutData: {
-        type: "object",
-        description:
-          "The workout data to normalize. CRITICAL: Pass this as an OBJECT directly from validate_workout_completeness or extract_workout_data - DO NOT stringify to JSON. The tool expects the raw object structure.",
-      },
-      enableThinking: {
-        type: "boolean",
-        description: "Whether to enable extended thinking for normalization",
-      },
+      // No inputs needed - retrieves from stored results
     },
-    required: ["workoutData", "enableThinking"],
+    required: [],
   },
 
   async execute(
-    input: any,
-    context: WorkoutLoggerContext,
+    _input: any,
+    context: AugmentedWorkoutLoggerContext,
   ): Promise<WorkoutNormalizationResult> {
     console.info("🔧 Executing normalize_workout_data tool");
 
-    let { workoutData, enableThinking } = input;
+    // Retrieve workout data from validation or extraction result
+    const validation = context.getToolResult?.("validation");
+    const extraction = context.getToolResult?.("extraction");
+
+    // Prefer validation result (has updated workoutData), fallback to extraction
+    const sourceResult = validation || extraction;
+    if (!sourceResult) {
+      throw new Error(
+        "No workout data available - call extract_workout_data first",
+      );
+    }
+
+    let workoutData = sourceResult.workoutData;
+    if (!workoutData) {
+      throw new Error("workoutData not found in previous tool results");
+    }
 
     // Fix double-encoded JSON if AI returned stringified properties
-    // This handles cases where the AI properly returns an object but some properties are JSON strings
     workoutData = fixDoubleEncodedProperties(workoutData);
 
     const originalConfidence = workoutData.metadata?.data_confidence || 0;
+
+    // Determine if extended thinking should be enabled
+    const enableThinking = originalConfidence < 0.5;
 
     // Run normalization
     console.info("Running normalization on workout data..");
@@ -766,8 +939,7 @@ Returns: normalizedData, isValid, issuesFound, issuesCorrected, normalizationSum
     ) {
       finalData = normalizationResult.normalizedData;
 
-      // Ensure metadata exists with proper structure before accessing
-      // Handle cases where metadata is undefined, null, or not an object
+      // Ensure metadata exists with proper structure
       if (
         !finalData.metadata ||
         typeof finalData.metadata !== "object" ||
@@ -782,14 +954,13 @@ Returns: normalizedData, isValid, issuesFound, issuesCorrected, normalizationSum
       // Update confidence if normalization improved the data
       if (normalizationResult.confidence > originalConfidence) {
         finalData.metadata.data_confidence = Math.min(
-          originalConfidence + 0.1, // Modest confidence boost
+          originalConfidence + 0.1,
           normalizationResult.confidence,
         );
       }
     }
 
-    // Add normalization flags to metadata (ensure metadata structure exists)
-    // Handle cases where metadata is undefined, null, or not an object
+    // Add normalization flags to metadata
     if (
       !finalData.metadata ||
       typeof finalData.metadata !== "object" ||
@@ -819,9 +990,12 @@ Returns: normalizedData, isValid, issuesFound, issuesCorrected, normalizationSum
 };
 
 /**
- * Tool 4: Generate Workout Summary
+ * Tool 5: Generate Workout Summary
  *
  * Generates AI summary of workout for coach context and UI display.
+ *
+ * RETRIEVES FROM CONTEXT: normalization or extraction result
+ * INPUT FROM CLAUDE: originalMessage only
  */
 export const generateWorkoutSummaryTool: Tool<WorkoutLoggerContext> = {
   id: "generate_workout_summary",
@@ -830,47 +1004,55 @@ export const generateWorkoutSummaryTool: Tool<WorkoutLoggerContext> = {
 CALL THIS after data is finalized (post-normalization if needed).
 Required before save_workout_to_database.
 
-This tool creates a 2-3 sentence summary including:
-- Workout type and discipline
-- Key performance metrics (time, rounds, weights)
-- Notable achievements or variations
-- Overall intensity and volume
+This tool automatically retrieves workout data from previous tool execution.
+You only need to pass the original user message.
 
 The summary is used for:
 - Semantic search in Pinecone vector database
 - Coach conversation context
 - UI display in workout history
-- Quick performance comparison
-
-Example: "Completed Fran in 8:57 with 95lb thrusters and chest-to-bar pull-ups.
-Strong performance with good pacing through the 21-15-9 rep scheme.
-Maintained strict form despite high heart rate."
 
 Returns: summary (string)`,
 
   inputSchema: {
     type: "object",
     properties: {
-      workoutData: {
-        type: "object",
-        description:
-          "The finalized workout data. CRITICAL: Pass this as an OBJECT directly from previous tools - DO NOT stringify to JSON. The tool expects the raw object structure.",
-      },
       originalMessage: {
         type: "string",
         description: "The original user message",
       },
     },
-    required: ["workoutData", "originalMessage"],
+    required: ["originalMessage"],
   },
 
   async execute(
     input: any,
-    context: WorkoutLoggerContext,
+    context: AugmentedWorkoutLoggerContext,
   ): Promise<WorkoutSummaryResult> {
     console.info("📝 Executing generate_workout_summary tool");
 
-    const { workoutData, originalMessage } = input;
+    const { originalMessage } = input;
+
+    // Retrieve workout data from normalization, validation, or extraction
+    const normalization = context.getToolResult?.("normalization");
+    const validation = context.getToolResult?.("validation");
+    const extraction = context.getToolResult?.("extraction");
+
+    // Prefer normalized data, then validation, then extraction
+    let workoutData;
+    if (normalization?.normalizedData) {
+      workoutData = normalization.normalizedData;
+    } else if (validation?.workoutData) {
+      workoutData = validation.workoutData;
+    } else if (extraction?.workoutData) {
+      workoutData = extraction.workoutData;
+    }
+
+    if (!workoutData) {
+      throw new Error(
+        "No workout data available - call extract_workout_data first",
+      );
+    }
 
     // Generate AI summary with extended thinking enabled
     console.info("Generating workout summary..");
@@ -889,10 +1071,13 @@ Returns: summary (string)`,
 };
 
 /**
- * Tool 5: Save Workout to Database
+ * Tool 6: Save Workout to Database
  *
  * Saves finalized workout to DynamoDB and Pinecone.
  * Handles template linking for program-based workouts.
+ *
+ * RETRIEVES FROM CONTEXT: All previous tool results
+ * NO INPUT FROM CLAUDE - retrieves all data from context
  */
 export const saveWorkoutToDatabaseTool: Tool<WorkoutLoggerContext> = {
   id: "save_workout_to_database",
@@ -900,79 +1085,72 @@ export const saveWorkoutToDatabaseTool: Tool<WorkoutLoggerContext> = {
 
 ⚠️ ONLY CALL THIS IF validate_workout_completeness returns shouldSave: true ⚠️
 
-This is the FINAL STEP after:
-1. extract_workout_data (complete)
-2. validate_workout_completeness (shouldSave: true)
-3. normalize_workout_data (if shouldNormalize was true)
-4. generate_workout_summary (complete)
+This is the FINAL STEP. The tool automatically retrieves all data from previous tool executions.
+No inputs needed - it retrieves all data from context.
 
 This tool:
 - Saves workout to DynamoDB with full metadata
 - Stores workout summary in Pinecone for semantic search
 - Links workout to program template if from training program
 - Tracks coach attribution and extraction confidence
-- Generates unique workout ID
 
-DO NOT call this if:
-- Validation found blocking flags (planning_inquiry, advice_seeking, etc.)
-- shouldSave is false
-- User was asking questions rather than logging a workout
-
-If you skip saving, provide a clear explanation to the user about WHY
-(e.g., "This appears to be a planning question rather than a completed workout log").
+DO NOT call this if validation returned shouldSave: false.
 
 Returns: workoutId, success, pineconeStored, pineconeRecordId, templateLinked`,
 
   inputSchema: {
     type: "object",
     properties: {
-      workoutData: {
-        type: "object",
-        description:
-          "The finalized workout data. CRITICAL: Pass this as an OBJECT directly from previous tools - DO NOT stringify to JSON. The tool expects the raw object structure.",
-      },
-      summary: {
-        type: "string",
-        description: "The AI-generated workout summary",
-      },
-      completedAt: {
-        type: "string",
-        description: "ISO timestamp when workout was completed",
-      },
-      confidence: {
-        type: "number",
-        description: "Final confidence score (0-1)",
-      },
-      normalizationSummary: {
-        type: "string",
-        description: "Summary of normalization process",
-      },
+      // No inputs needed - retrieves from stored results
     },
-    required: [
-      "workoutData",
-      "summary",
-      "completedAt",
-      "confidence",
-      "normalizationSummary",
-    ],
+    required: [],
   },
 
   async execute(
-    input: any,
-    context: WorkoutLoggerContext,
+    _input: any,
+    context: AugmentedWorkoutLoggerContext,
   ): Promise<WorkoutSaveResult> {
     console.info("💾 Executing save_workout_to_database tool");
 
-    const {
-      workoutData,
-      summary,
-      completedAt,
-      confidence,
-      normalizationSummary,
-    } = input;
+    // Retrieve all required data from context
+    const extraction = context.getToolResult?.("extraction");
+    const validation = context.getToolResult?.("validation");
+    const normalization = context.getToolResult?.("normalization");
+    const summaryResult = context.getToolResult?.("summary");
+
+    if (!extraction) {
+      throw new Error(
+        "Extraction not completed - call extract_workout_data first",
+      );
+    }
+    if (!validation) {
+      throw new Error(
+        "Validation not completed - call validate_workout_completeness first",
+      );
+    }
+    if (!summaryResult) {
+      throw new Error(
+        "Summary not generated - call generate_workout_summary first",
+      );
+    }
+
+    // Get the best available workout data (normalized > validated > extracted)
+    let workoutData;
+    if (normalization?.normalizedData) {
+      workoutData = normalization.normalizedData;
+    } else if (validation?.workoutData) {
+      workoutData = validation.workoutData;
+    } else {
+      workoutData = extraction.workoutData;
+    }
+
+    const { completedAt } = extraction;
+    const { summary } = summaryResult;
+    const confidence = validation.confidence;
+    const normalizationSummary =
+      normalization?.normalizationSummary || "No normalization performed";
 
     // Validate required fields before attempting to save
-    // This prevents saving workouts with undefined critical fields
     if (!workoutData?.workout_id) {
       throw new Error(
         "Cannot save workout: workout_id is required. Ensure extract_workout_data was called first and returned valid data.",
@@ -984,18 +1162,16 @@ Returns: workoutId, success, pineconeStored, pineconeRecordId, templateLinked`,
       );
     }
     if (!workoutData?.user_id) {
-      // Set user_id from context if missing (common issue with malformed data)
       workoutData.user_id = context.userId;
     }
 
-    // Validate and convert completedAt to Date object using centralized utility
+    // Validate and convert completedAt to Date object
     const completedAtDate = parseCompletedAt(
       completedAt,
       "save_workout_to_database",
     );
 
-    // 1. Build workout object
-    // Note: Date serialization is handled by DynamoDB's serializeForDynamoDB() in operations.ts
+    // Build workout object
     const workout = {
       workoutId: workoutData.workout_id,
       userId: context.userId,
@@ -1028,11 +1204,11 @@ Returns: workoutId, success, pineconeStored, pineconeRecordId, templateLinked`,
       confidence,
     });
 
-    // 2. Save to DynamoDB
+    // Save to DynamoDB
     await saveWorkout(workout);
     console.info("✅ Workout saved to DynamoDB");
 
-    // 3. Store workout summary in Pinecone (fire-and-forget, non-blocking)
+    // Store workout summary in Pinecone (fire-and-forget, non-blocking)
     console.info("📝 Storing workout summary in Pinecone (async)..");
     storeWorkoutSummaryInPinecone(
       context.userId,
@@ -1044,10 +1220,9 @@ Returns: workoutId, success, pineconeStored, pineconeRecordId, templateLinked`,
         "⚠️ Failed to store workout in Pinecone (non-blocking):",
         error,
       );
-      // Don't throw - this is fire-and-forget
     });
 
-    // 4. Update template linkedWorkoutId if from program
+    // Update template linkedWorkoutId if from program
     const templateLinked = context.templateContext
       ? await linkWorkoutToTemplate(
           context.userId,
@@ -1063,7 +1238,7 @@ Returns: workoutId, success, pineconeStored, pineconeRecordId, templateLinked`,
       workoutId: workout.workoutId,
       success: true,
       pineconeStored: false, // Fire-and-forget (async), status unknown at return time
-      pineconeRecordId: null, // Not available in fire-and-forget mode
+      pineconeRecordId: null,
       templateLinked,
     };
   },

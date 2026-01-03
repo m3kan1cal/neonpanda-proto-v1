@@ -35,21 +35,25 @@ Sheiko's approach was influenced by Russian sports science and the Soviet traini
 **Training Frequency**: Typically 3-4 sessions per week with each competition lift trained 2-3 times weekly.
 
 **Program Phases**:
+
 - Preparation Phase (4-6 weeks): High volume, moderate intensity
 - Intensification Phase (3-4 weeks): Moderate volume, high intensity
 - Realization Phase (1-2 weeks): Low volume, peak intensity
 
 **Typical Session Structure**:
+
 - Competition lift practice (multiple sets with varying percentages)
 - Accessory exercises (2-4 exercises targeting weaknesses)
 - Volume typically 100-200+ reps per session
 
 **Volume Characteristics**:
+
 - Bench Press: 60-120 reps per session
 - Squat: 40-80 reps per session
 - Deadlift: 20-40 reps per session
 
 **Intensity Distribution**:
+
 - 50-70%: High volume work
 - 70-85%: Moderate volume work
 - 85-100%: Low volume work
@@ -70,9 +74,10 @@ Sheiko's approach was influenced by Russian sports science and the Soviet traini
 
 **Strength Specialists**: Athletes in strength sports who can benefit from the systematic approach to maximal strength development.
 
-## Pros & Cons
+## Advantages and Disadvantages
 
 **Pros**:
+
 - Proven track record with world-class athletes
 - Systematic approach to competition preparation
 - Excellent for technique development
@@ -83,6 +88,7 @@ Sheiko's approach was influenced by Russian sports science and the Soviet traini
 - Strong emphasis on competition lift practice
 
 **Cons**:
+
 - Extremely high volume may be overwhelming
 - Requires significant time commitment (2-3 hours per session)
 - May not suit all recovery capacities
@@ -92,7 +98,7 @@ Sheiko's approach was influenced by Russian sports science and the Soviet traini
 - Risk of overuse injuries with high frequency
 - Not suitable for beginners or intermediate lifters
 
-## Implementation
+## Implementation Guidelines
 
 **Step 1: Assess Readiness**: Ensure you have advanced training experience and can handle high training volumes.
 
@@ -110,7 +116,7 @@ Sheiko's approach was influenced by Russian sports science and the Soviet traini
 
 **Step 8: Complete Full Cycle**: Finish the entire program cycle before making any major changes or assessments.
 
-## Variations
+## Variations and Specializations
 
 **Sheiko #29, #30, #31**: Classic preparatory programs with varying volume and intensity distributions.
 
@@ -142,7 +148,7 @@ The Sheiko Method is supported by several training science principles:
 
 **Recovery and Supercompensation**: The program structure allows for adaptation periods between high-stress training blocks.
 
-## Common Mistakes
+## Common Mistakes and Solutions
 
 **Inappropriate Experience Level**: Attempting Sheiko programs without adequate training background or work capacity.
 
@@ -160,7 +166,7 @@ The Sheiko Method is supported by several training science principles:
 
 **Incomplete Cycles**: Not finishing full program cycles before making assessments or changes.
 
-## Integration
+## Integration Applications
 
 **With Competition Preparation**: Designed specifically for powerlifting competition preparation with systematic peaking.
 
@@ -177,3 +183,178 @@ The Sheiko Method is supported by several training science principles:
 **With Supplementation**: Often combined with recovery and performance supplements to support training demands.
 
 **Team Training Integration**: Can be adapted for team training environments with proper coaching supervision.
+
+---
+
+## WORKOUT TEMPLATES
+
+**Programming Structure & Ratios:**
+
+- **Training Frequency**: 3-4 sessions per week, each lift trained 2-3x weekly
+- **Volume Focus**: Extremely high volume (100-200+ reps per session across all movements)
+- **Intensity Distribution**: 50-70% (high volume), 70-85% (moderate), 85-100% (low volume)
+- **Session Distribution**: 60% competition lifts, 30% assistance, 10% warm-up/mobility
+
+**Movement Patterns & Exercise Preferences:**
+
+- **Primary Focus**: Competition squat, bench press, and deadlift variations
+- **Variation Types**: Pause reps, tempo, different stances, deficit, boards
+- **Movement Hierarchy**:
+  1. Competition lift (primary)
+  2. Competition lift variation (secondary)
+  3. Targeted accessory work
+  4. General strength work
+- **Accessory Philosophy**: Address specific weaknesses identified in competition lifts
+
+**Time Domains & Workout Formats:**
+
+- **Session Duration**: 2-3 hours typical
+- **Rest Periods**: 2-5 minutes between main lift sets, 1-2 minutes for accessories
+- **Set Structure**: Multiple sets with varying percentages (pyramid, waves)
+- **Work Density**: High density with multiple exercises per session
+
+**Scaling Approaches & Progression Methods:**
+
+- **Percentage-Based**: All loads calculated from current competition max
+- **Volume Progression**: Increase volume in preparatory phases
+- **Intensity Progression**: Peak intensity in realization phase
+- **Program Selection**: Choose program based on experience level (Sheiko #29, #30, #31, #32, etc.)
+- **Max Updates**: Update training maxes only after testing or competition
+
+**Weekly Programming Pattern:**
+
+- **Philosophy**: High frequency, high volume, submaximal loading
+- **Daily Structure**: Multiple competition lifts per session with specific accessory work
+- **Rest Days**: 1-2 complete rest days, active recovery encouraged
+- **Volume Distribution**: Squat highest volume, bench second, deadlift lowest
+- **Intensity Zones**: Varies by phase - prep phase lower, peaking phase higher
+
+**Example Weekly Schedule (Sheiko #29 - Preparatory Phase):**
+
+```
+Monday: Squat + Bench Focus (2.5-3 hours)
+Squat:
+- 50% x 5, 60% x 4, 70% x 3, 70% x 3, 75% x 3, 75% x 3
+- 80% x 3, 80% x 3, 80% x 3, 80% x 3
+(Total: ~35 reps)
+
+Bench Press:
+- 50% x 5, 60% x 4, 70% x 3, 70% x 3, 75% x 3, 75% x 3
+- 80% x 3, 80% x 3, 80% x 3, 80% x 3, 80% x 3, 80% x 3
+(Total: ~40 reps)
+
+Accessories:
+- Good Mornings: 4 x 6
+- Dumbbell Flyes: 4 x 8
+- Tricep Extensions: 3 x 10
+
+---
+
+Wednesday: Deadlift + Bench Focus (2-2.5 hours)
+Deadlift:
+- 50% x 4, 60% x 4, 70% x 3, 70% x 3, 75% x 3, 75% x 3
+- 80% x 2, 80% x 2, 80% x 2
+(Total: ~25 reps)
+
+Bench Press (second session):
+- 50% x 5, 60% x 4, 70% x 3, 70% x 3, 75% x 2, 75% x 2
+- 80% x 2, 80% x 2, 80% x 2, 80% x 2
+(Total: ~30 reps)
+
+Accessories:
+- Block Pulls: 3 x 4
+- Lat Pulldowns: 4 x 8
+- Dumbbell Rows: 3 x 10
+
+---
+
+Friday: Squat + Bench Focus (2.5-3 hours)
+Squat (second session):
+- 50% x 5, 60% x 4, 70% x 3, 70% x 3, 75% x 3
+- 80% x 2, 80% x 2, 80% x 2, 80% x 2
+(Total: ~30 reps)
+
+Bench Press (third session):
+- 50% x 5, 60% x 4, 70% x 3, 75% x 3, 80% x 2, 80% x 2
+- 85% x 2, 85% x 2, 85% x 2
+(Total: ~30 reps)
+
+Accessories:
+- Pause Squats: 3 x 4 @ 70%
+- Close-Grip Bench: 3 x 6
+- Face Pulls: 3 x 12
+
+---
+
+Saturday (Optional): Assistance Focus (1.5 hours)
+- Leg Press: 4 x 10
+- Romanian Deadlift: 3 x 8
+- Dumbbell Press: 4 x 10
+- Tricep Pushdowns: 4 x 12
+- Ab Work: 4 x 15
+```
+
+**Weekly Volume Summary (Typical):**
+
+```
+Lift          | Weekly Reps | Frequency
+--------------|-------------|----------
+Squat         | 60-80       | 2x/week
+Bench Press   | 90-120      | 3x/week
+Deadlift      | 25-40       | 1-2x/week
+Accessories   | 150-200     | Various
+```
+
+**Phase-Specific Templates:**
+
+**Preparatory Phase (Weeks 1-6):**
+
+- Volume: Maximum (100% of program volume)
+- Intensity: 70-85% primarily
+- Focus: Work capacity, technique practice, muscle building
+- Accessory Volume: High
+
+**Intensification Phase (Weeks 7-10):**
+
+- Volume: Reduced to 70-80%
+- Intensity: 80-92% primarily
+- Focus: Building maximal strength, neural efficiency
+- Accessory Volume: Moderate
+
+**Realization Phase (Weeks 11-12):**
+
+- Volume: Minimum (50-60%)
+- Intensity: 90-100%+
+- Focus: Peaking, competition simulation
+- Accessory Volume: Minimal
+
+**Competition Week Template:**
+
+```
+Monday (7 days out): Light technique work
+- Squat: 50% x 3 x 3
+- Bench: 50% x 3 x 3
+- Deadlift: 50% x 2 x 2
+
+Wednesday (5 days out): Opener rehearsal
+- Squat opener: 1 x 1
+- Bench opener: 1 x 1
+- Deadlift opener: 1 x 1
+
+Friday (3 days out): Complete rest
+Saturday: Competition
+```
+
+**Accessory Exercise Categories:**
+
+- **Squat Support**: Pause squats, leg press, lunges, good mornings, GHR
+- **Bench Support**: Close-grip, dumbbell press, flyes, tricep extensions, dips
+- **Deadlift Support**: Block pulls, deficit pulls, Romanian deadlifts, rows, lat work
+- **General**: Ab work, back raises, face pulls, rear delt work
+
+**Recovery Integration:**
+
+- Sleep: 8-9 hours minimum
+- Nutrition: High protein (1.5-2g/lb), moderate surplus
+- Soft tissue: Daily foam rolling, weekly massage recommended
+- Light movement: Walking on rest days encouraged

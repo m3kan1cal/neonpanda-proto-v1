@@ -33,30 +33,35 @@ The method was heavily influenced by the Bulgarian weightlifting system and Sovi
 ## Programming Structure
 
 **4-Day Training Split**:
+
 - Monday: Max Effort Upper Body
 - Tuesday: Max Effort Lower Body
 - Thursday: Dynamic Effort Upper Body
 - Friday: Dynamic Effort Lower Body
 
 **Max Effort Days**:
+
 - Work up to 1RM in a competition lift variation
 - Change exercise every 1-3 weeks
 - Follow with repetition method accessory work
 - Focus on breaking through sticking points
 
 **Dynamic Effort Days**:
+
 - 8-10 sets of 3 reps at 50-60% + bands/chains
 - Emphasis on maximum bar speed
 - 45-60 second rest periods
 - Develop explosive strength and technique
 
 **Wave Periodization**:
+
 - 3-week waves for dynamic effort work
 - Week 1: 50% + accommodating resistance
 - Week 2: 55% + accommodating resistance
 - Week 3: 60% + accommodating resistance
 
 **Accessory Work Structure**:
+
 - 2-4 exercises per session
 - Target specific weaknesses
 - Use repetition method (high volume, moderate intensity)
@@ -76,9 +81,10 @@ The method was heavily influenced by the Bulgarian weightlifting system and Sovi
 
 **Westside Barbell Members**: Originally designed for the specific population training at Westside Barbell under direct supervision.
 
-## Pros & Cons
+## Advantages and Disadvantages
 
 **Pros**:
+
 - Prevents accommodation through constant variation
 - Develops multiple strength qualities simultaneously
 - Highly effective for advanced powerlifters
@@ -89,6 +95,7 @@ The method was heavily influenced by the Bulgarian weightlifting system and Sovi
 - Proven track record with elite athletes
 
 **Cons**:
+
 - Extremely complex and requires deep understanding
 - Not suitable for beginners or intermediate lifters
 - Requires extensive equipment (bands, chains, specialty bars)
@@ -98,7 +105,7 @@ The method was heavily influenced by the Bulgarian weightlifting system and Sovi
 - Requires constant exercise variation and planning
 - Success highly dependent on coaching expertise
 
-## Implementation
+## Implementation Guidelines
 
 **Step 1: Assess Current Level**: Ensure you have advanced training experience and understand basic periodization principles.
 
@@ -116,7 +123,7 @@ The method was heavily influenced by the Bulgarian weightlifting system and Sovi
 
 **Step 8: Monitor and Adjust**: Constantly assess progress and adjust exercise selection, percentages, and volume based on response.
 
-## Variations
+## Variations and Specializations
 
 **Westside for Skinny Bastards**: A modified version for athletes and general population focusing on size and strength development.
 
@@ -148,7 +155,7 @@ The Westside Conjugate Method is grounded in several scientific principles:
 
 **Accommodating Resistance**: Studies show bands and chains can improve power development and strength throughout the range of motion.
 
-## Common Mistakes
+## Common Mistakes and Solutions
 
 **Inappropriate Population**: Attempting to use the system with beginners or intermediate lifters who lack the necessary foundation.
 
@@ -166,7 +173,7 @@ The Westside Conjugate Method is grounded in several scientific principles:
 
 **Inadequate Supervision**: Attempting the system without proper coaching or understanding of the methodology.
 
-## Integration
+## Integration Applications
 
 **With Competition Preparation**: The system maintains year-round readiness but can be modified for specific competition peaks.
 
@@ -183,3 +190,131 @@ The Westside Conjugate Method is grounded in several scientific principles:
 **With Technology**: Modern implementations often incorporate velocity-based training and other technologies to optimize the system.
 
 **Periodization Integration**: Can serve as a complete training system or be incorporated into larger periodized plans for specific mesocycles.
+
+---
+
+## WORKOUT TEMPLATES
+
+**Programming Structure & Ratios:**
+
+- **4-Day Split**: Max Effort Upper, Max Effort Lower, Dynamic Effort Upper, Dynamic Effort Lower
+- **Session Distribution**: 50% Main Lift Work, 30% Accessory/Repetition Method, 20% Recovery/GPP
+- **Weekly Structure**: ME Upper (Mon), ME Lower (Tue/Wed), DE Upper (Thu), DE Lower (Fri/Sat)
+- **Intensity Distribution**: Max Effort 90-100%, Dynamic Effort 50-60% + accommodating resistance
+
+**Movement Patterns & Exercise Preferences:**
+
+- **Primary Patterns**: Squat, bench press, deadlift variations with frequent rotation
+- **Max Effort Rotation**: Change exercise every 1-3 weeks to prevent accommodation
+- **Movement Hierarchy**:
+  1. Competition lift variations (close stance, wide stance, board press, etc.)
+  2. Specialty bar variations (safety squat bar, cambered bar, football bar)
+  3. Deficit/elevated variations
+  4. Pause and tempo variations
+- **Accessory Focus**: Posterior chain, triceps, lats, upper back, core
+
+**Time Domains & Workout Formats:**
+
+- **Max Effort Sessions**: 45-75 minutes total
+- **Dynamic Effort Sessions**: 30-45 minutes for main work, 20-30 minutes accessories
+- **Rest Periods**: ME work 3-5+ minutes, DE work 45-60 seconds between sets
+- **Speed Work Emphasis**: Bar speed is primary metric on DE days
+
+**Scaling Approaches & Progression Methods:**
+
+- **Max Effort Progression**: Work to daily max, rotate exercises to continue PRs
+- **Dynamic Effort Waves**: 3-week waves (50%, 55%, 60% + bands/chains)
+- **Accommodating Resistance**: Add 25-40% band/chain tension at top
+- **Accessory Scaling**: Higher reps (8-15) for hypertrophy and work capacity
+- **Deload Strategy**: Reduce band tension or skip ME week every 4th week
+
+**Weekly Programming Pattern:**
+
+- **Philosophy**: Concurrent development of multiple strength qualities year-round
+- **Daily Structure**: Main lift (30-40 min) → Accessory work (30-40 min) → GPP/Recovery
+- **Rest Days**: Wed/Sun typically, but flexible based on recovery
+- **Volume**: Moderate main lift volume, higher accessory volume
+- **Intensity**: Varies by method - max effort vs dynamic effort rotation
+
+**Example Weekly Schedule:**
+
+```
+Monday: Max Effort Upper
+Main Movement (rotate weekly):
+- Floor Press: Work up to 1RM
+- Example: 135x3, 185x3, 225x2, 275x1, 315x1, 345x1, 365x1 (PR attempt)
+Accessory Work:
+- Tricep extensions: 4x12-15
+- Lat pulldowns: 4x10-12
+- Face pulls: 3x15-20
+- Dumbbell rows: 3x10-12 each arm
+Total time: 60-75 minutes
+
+Tuesday/Wednesday: Max Effort Lower
+Main Movement (rotate weekly):
+- Good Mornings: Work up to 3RM
+- Example: 135x5, 185x3, 225x3, 275x3, 315x3 (PR attempt)
+Accessory Work:
+- Glute-ham raises: 4x8-12
+- Reverse hypers: 4x15-20
+- Belt squats: 3x12-15
+- Ab wheel: 3x10-15
+Total time: 60-75 minutes
+
+Thursday: Dynamic Effort Upper
+Speed Bench (3-week wave):
+- Week 1: 9x3 @ 50% + mini bands, 45 sec rest
+- Week 2: 9x3 @ 55% + mini bands, 45 sec rest
+- Week 3: 9x3 @ 60% + mini bands, 45 sec rest
+Accessory Work:
+- JM Press: 4x8-10
+- Dumbbell rows: 4x10-12
+- Rear delt raises: 3x15-20
+- Tricep pushdowns: 3x15-20
+Total time: 45-60 minutes
+
+Friday/Saturday: Dynamic Effort Lower
+Speed Squats (box squat, 3-week wave):
+- Week 1: 12x2 @ 50% + light bands, 45 sec rest
+- Week 2: 12x2 @ 55% + light bands, 45 sec rest
+- Week 3: 12x2 @ 60% + light bands, 45 sec rest
+Speed Deadlifts:
+- 6x1 @ 60-70%, reset between reps
+Accessory Work:
+- Romanian deadlifts: 3x10
+- Leg curls: 4x12-15
+- Sled drags: 4 trips x 200ft
+- Weighted abs: 3x15
+Total time: 60-75 minutes
+
+Sunday: Rest or GPP
+Optional: Sled work, mobility, recovery
+```
+
+**Max Effort Exercise Rotation Templates:**
+
+- **Squat Variations**: Box squat, safety squat bar, front squat, cambered bar, pause squat, belt squat
+- **Bench Variations**: Floor press, board press (2-4 boards), close grip, wide grip, football bar, incline
+- **Deadlift Variations**: Conventional, sumo, deficit, block pull, Romanian, trap bar
+
+**Dynamic Effort Templates:**
+
+- **Speed Squat**: 12x2 @ 50-60% with box, accommodating resistance required
+- **Speed Bench**: 9x3 @ 50-60% with varied grips, accommodating resistance required
+- **Speed Deadlift**: 6-8x1 @ 60-70%, emphasis on bar speed off floor
+- **Wave Protocol**: 3 weeks increasing percentage, then reset with different band/chain setup
+
+**Accessory Exercise Categories:**
+
+- **Posterior Chain**: Glute-ham raise, reverse hyper, pull-throughs, good mornings
+- **Triceps**: JM press, rolling tricep extensions, band pushdowns, skull crushers
+- **Upper Back**: Lat pulldowns, rows, face pulls, band pull-aparts
+- **Core**: Ab wheel, weighted sit-ups, side bends, pallof press
+- **GPP**: Sled drags, prowler pushes, weighted carries, jump rope
+
+**Competition Preparation Modifications:**
+
+- **6 Weeks Out**: Begin including competition lifts in ME rotation
+- **3 Weeks Out**: Reduce band tension, focus on competition movement
+- **1 Week Out**: Opener work only, reduce volume significantly
+- **Meet Week**: Light movement, focus on recovery and mental preparation
