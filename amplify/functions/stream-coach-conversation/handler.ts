@@ -21,6 +21,7 @@ import {
   getCoachConfig,
   getUserProfile,
 } from "../../dynamodb/operations";
+import { extractUserName } from "../libs/user";
 import {
   CoachMessage,
   MESSAGE_TYPES,
@@ -122,6 +123,7 @@ async function processWorkoutDetection(
     sessionNumber:
       existingConversation.messages.filter((msg: any) => msg.role === "user")
         .length + 1,
+    userName: extractUserName(userProfile),
   };
 
   if (FEATURE_FLAGS.ENABLE_WORKOUT_DETECTION) {
@@ -858,6 +860,7 @@ async function* processCoachConversationAsync(
       conversationData.existingConversation.messages.filter(
         (msg: any) => msg.role === "user",
       ).length + 1,
+    userName: extractUserName(conversationData.userProfile),
   };
 
   // Step 6: Stream AI chunks in REAL-TIME
