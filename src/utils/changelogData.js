@@ -10,6 +10,21 @@
 
 export const changelogEntries = [
   {
+    version: "Release v1.0.20260103-beta",
+    date: "2026-01-03",
+    changes: {
+      added: [],
+      changed: [],
+      fixed: [
+        "Validation tool crash when extraction failed - added defensive guard checking if workoutData exists after destructuring from extraction result, matching pattern used in other workout logger tools",
+        "Temporal keyword check false positive blocking detection where Claude's legitimate responses containing phrases like 'going to', 'will do', 'planning' were incorrectly flagged as valid blocking responses, preventing retry logic and causing workouts to silently fail logging",
+      ],
+      removed: [
+        "Pattern 5 (temporal keyword check) from isValidBlockingResponse method - overly broad substring matching that caused false positives when Claude used normal phrases in legitimate responses",
+      ],
+    },
+  },
+  {
     version: "Release v1.0.20260102-beta",
     date: "2026-01-02",
     changes: {
