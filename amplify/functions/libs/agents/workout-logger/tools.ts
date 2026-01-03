@@ -605,6 +605,12 @@ Returns: validation result with shouldSave, shouldNormalize, confidence, complet
 
     let { workoutData, completedAt } = extraction;
 
+    if (!workoutData) {
+      throw new Error(
+        "workoutData not found in extraction result - extraction may have failed",
+      );
+    }
+
     // Debug: Deep inspection of nested field types BEFORE fixDoubleEncodedProperties
     const nestedFieldTypes: Record<string, string> = {};
     const doubleEncodedFields: string[] = [];
