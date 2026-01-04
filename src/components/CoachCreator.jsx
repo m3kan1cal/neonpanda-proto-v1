@@ -115,13 +115,13 @@ const TypingIndicator = () => (
 // Contextual update indicator - shows AI processing stages
 const ContextualUpdateIndicator = ({ content, stage }) => {
   return (
-    <div className="flex items-end gap-2 mb-1">
-      <div className={`flex-shrink-0 ${avatarPatterns.aiSmall}`}>V</div>
+    <div className="flex flex-col items-start mb-1">
       <div className="px-4 py-2">
         <span className="font-rajdhani text-base italic animate-pulse text-synthwave-text-secondary/70">
           {content}
         </span>
       </div>
+      <div className={`flex-shrink-0 mt-1 ml-1 ${avatarPatterns.aiSmall}`}>V</div>
     </div>
   );
 };
@@ -139,23 +139,10 @@ const MessageItem = memo(
   }) => {
     return (
       <div
-        className={`flex items-end gap-2 mb-1 group ${
-          message.type === "user" ? "flex-row-reverse" : "flex-row"
+        className={`flex flex-col mb-1 group ${
+          message.type === "user" ? "items-end" : "items-start"
         }`}
       >
-        {/* Avatar */}
-        <div className="flex-shrink-0">
-          {message.type === "user" ? (
-            <UserAvatar
-              email={userEmail}
-              username={userDisplayName}
-              size={32}
-            />
-          ) : (
-            <div className={avatarPatterns.aiSmall}>V</div>
-          )}
-        </div>
-
         {/* Message Bubble */}
         <div
           className={`max-w-[95%] md:max-w-[70%] ${message.type === "user" ? "items-end" : "items-start"} flex flex-col`}
@@ -176,6 +163,7 @@ const MessageItem = memo(
             </div>
           </div>
 
+          {/* Timestamp and status */}
           <div
             className={`flex items-center gap-1 px-2 mt-1 ${message.type === "user" ? "justify-end" : "justify-start"}`}
           >
@@ -195,6 +183,19 @@ const MessageItem = memo(
               </div>
             )}
           </div>
+        </div>
+
+        {/* Avatar - positioned underneath message bubble */}
+        <div className={`flex-shrink-0 mt-1 ${message.type === "user" ? "mr-1" : "ml-1"}`}>
+          {message.type === "user" ? (
+            <UserAvatar
+              email={userEmail}
+              username={userDisplayName}
+              size={32}
+            />
+          ) : (
+            <div className={avatarPatterns.aiSmall}>V</div>
+          )}
         </div>
       </div>
     );
@@ -735,14 +736,14 @@ function CoachCreator() {
                   return (
                     typingState.showTypingIndicator &&
                     !agentState.contextualUpdate && (
-                      <div className="flex items-end gap-2 mb-1">
-                        <div
-                          className={`flex-shrink-0 ${avatarPatterns.aiSmall}`}
-                        >
-                          V
-                        </div>
+                      <div className="flex flex-col items-start mb-1">
                         <div className={`${containerPatterns.aiChatBubble}`}>
                           <TypingIndicator />
+                        </div>
+                        <div
+                          className={`flex-shrink-0 mt-1 ml-1 ${avatarPatterns.aiSmall}`}
+                        >
+                          V
                         </div>
                       </div>
                     )
