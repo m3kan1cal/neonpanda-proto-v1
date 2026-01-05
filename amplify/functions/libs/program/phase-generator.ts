@@ -9,10 +9,7 @@
  */
 
 import { callBedrockApi, MODEL_IDS, TEMPERATURE_PRESETS } from "../api-helpers";
-import {
-  parseJsonWithFallbacks,
-  fixDoubleEncodedProperties,
-} from "../response-utils";
+import { parseJsonWithFallbacks } from "../response-utils";
 import { getCondensedSchema } from "../object-utils";
 import {
   PHASE_SCHEMA,
@@ -397,9 +394,7 @@ Generate the phase structure using the tool.`;
       result.input !== null &&
       "phases" in result.input
     ) {
-      // Fix any double-encoded properties from Bedrock response
-      const fixedInput = fixDoubleEncodedProperties(result.input);
-      const phases = (fixedInput as any).phases;
+      const phases = (result.input as any).phases;
       const duration = Date.now() - startTime;
 
       console.info("✅ Tool-based phase structure generation succeeded:", {
@@ -801,12 +796,10 @@ Generate the complete phase with all workouts using the tool.`;
       result.input !== null &&
       "workouts" in result.input
     ) {
-      // Fix any double-encoded properties from Bedrock response
-      const fixedInput = fixDoubleEncodedProperties(result.input);
       // Merge the phase structure with the generated workouts
       const phaseWithWorkouts: PhaseWithWorkouts = {
         ...phase,
-        ...(fixedInput as any),
+        ...(result.input as any),
       };
       const duration = Date.now() - startTime;
 

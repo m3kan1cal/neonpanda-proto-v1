@@ -1,30 +1,29 @@
 // Centralized route mapping for consistent naming across breadcrumbs and page titles
 export const routeMap = {
-  about: "About",
-  technology: "Technology",
-  privacy: "Privacy Policy",
-  terms: "Terms of Service",
-  faqs: "FAQs",
-  changelog: "Changelog",
-  contact: "Contact",
-  auth: "Authentication",
-  "coach-creator": "Coach Creator",
-  coaches: "Coaches",
-  "training-grounds": "Training Grounds",
-  "program-designer": "Program Designer",
-  "coach-conversations": "Coach Conversations",
-  workouts: "Workouts",
-  "manage-workouts": "Workouts",
+  'about': 'About',
+  'technology': 'Technology',
+  'privacy': 'Privacy Policy',
+  'terms': 'Terms of Service',
+  'faqs': 'FAQs',
+  'changelog': 'Changelog',
+  'contact': 'Contact',
+  'auth': 'Authentication',
+  'coach-creator': 'Coach Creator',
+  'coaches': 'Coaches',
+  'training-grounds': 'Training Grounds',
+  'coach-conversations': 'Coach Conversations',
+  'workouts': 'Workouts',
+  'manage-workouts': 'Workouts',
   // Workout details - shown when workoutId param is present
-  ":workoutId": "Workout Details",
-  "manage-memories": "Memories",
-  "manage-conversations": "Coach Conversations",
-  programs: "Training Programs",
-  ":programId": "Program Dashboard",
-  today: "View Workouts",
-  reports: "Reports",
-  weekly: "Weekly Reports",
-  "template/synthwave": "Synthwave Theme",
+  ':workoutId': 'Workout Details',
+  'manage-memories': 'Memories',
+  'manage-conversations': 'Coach Conversations',
+  'programs': 'Training Programs',
+  ':programId': 'Program Dashboard',
+  'today': 'View Workouts',
+  'reports': 'Reports',
+  'weekly': 'Weekly Reports',
+  'template/synthwave': 'Synthwave Theme'
 };
 
 /**
@@ -47,16 +46,16 @@ export const getRouteDisplayName = (segment) => {
  * @returns {string[]} - Array of display names (e.g., ['Training Grounds', 'Workouts'])
  */
 export const getRouteDisplayNames = (pathname) => {
-  if (pathname === "/") {
+  if (pathname === '/') {
     return [];
   }
 
-  const pathSegments = pathname.split("/").filter((x) => x);
+  const pathSegments = pathname.split('/').filter(x => x);
   const displayNames = [];
 
   // Handle special compound routes
-  if (pathname.includes("/template/synthwave")) {
-    return ["Synthwave Theme"];
+  if (pathname.includes('/template/synthwave')) {
+    return ['Synthwave Theme'];
   }
 
   // Process each path segment
@@ -74,20 +73,20 @@ export const getRouteDisplayNames = (pathname) => {
  */
 export const generatePageTitle = (pathname) => {
   // Home page gets the default title
-  if (pathname === "/") {
-    return "NeonPanda - Create Your Perfect Virtual Coach";
+  if (pathname === '/') {
+    return 'NeonPanda - Create Your Perfect Virtual Coach';
   }
 
   const displayNames = getRouteDisplayNames(pathname);
 
   // Build the title: "PageName - NeonPanda" or "Parent > Child - NeonPanda"
   if (displayNames.length === 0) {
-    return "NeonPanda - Create Your Perfect Virtual Coach";
+    return 'NeonPanda - Create Your Perfect Virtual Coach';
   } else if (displayNames.length === 1) {
     return `${displayNames[0]} - NeonPanda`;
   } else {
     // For nested routes, show hierarchy like "Training Grounds > Workouts - NeonPanda"
-    const hierarchy = displayNames.join(" > ");
+    const hierarchy = displayNames.join(' > ');
     return `${hierarchy} - NeonPanda`;
   }
 };
@@ -100,56 +99,50 @@ export const generatePageTitle = (pathname) => {
  * @returns {string} - The route with appropriate query parameters preserved
  */
 export const buildRouteWithParams = (pathSegments, routeName, searchParams) => {
-  const basePath = `/${pathSegments.join("/")}`;
+  const basePath = `/${pathSegments.join('/')}`;
 
   // Routes that should preserve userId and coachId
   const preserveUserCoachRoutes = [
-    "training-grounds",
-    "manage-workouts",
-    "manage-memories",
-    "manage-conversations",
-    "programs",
-    "today",
+    'training-grounds',
+    'manage-workouts',
+    'manage-memories',
+    'manage-conversations',
+    'programs',
+    'today'
   ];
 
-  if (
-    preserveUserCoachRoutes.includes(routeName) &&
-    searchParams.has("userId") &&
-    searchParams.has("coachId")
-  ) {
-    const userId = searchParams.get("userId");
-    const coachId = searchParams.get("coachId");
+  if (preserveUserCoachRoutes.includes(routeName) &&
+      searchParams.has('userId') &&
+      searchParams.has('coachId')) {
+    const userId = searchParams.get('userId');
+    const coachId = searchParams.get('coachId');
     return `${basePath}?userId=${userId}&coachId=${coachId}`;
   }
 
   // For Coaches, preserve userId if available
-  if (routeName === "coaches" && searchParams.has("userId")) {
-    const userId = searchParams.get("userId");
+  if (routeName === 'coaches' && searchParams.has('userId')) {
+    const userId = searchParams.get('userId');
     return `${basePath}?userId=${userId}`;
   }
 
   // For Coach Creator, preserve userId if available
-  if (routeName === "coach-creator" && searchParams.has("userId")) {
-    const userId = searchParams.get("userId");
+  if (routeName === 'coach-creator' && searchParams.has('userId')) {
+    const userId = searchParams.get('userId');
     return `${basePath}?userId=${userId}`;
   }
 
   // For View Reports, preserve userId and coachId if available
-  if (
-    routeName === "reports" &&
-    searchParams.has("userId") &&
-    searchParams.has("coachId")
-  ) {
-    const userId = searchParams.get("userId");
-    const coachId = searchParams.get("coachId");
+  if (routeName === 'reports' && searchParams.has('userId') && searchParams.has('coachId')) {
+    const userId = searchParams.get('userId');
+    const coachId = searchParams.get('coachId');
     return `${basePath}?userId=${userId}&coachId=${coachId}`;
   }
 
   // For Weekly Reports, preserve userId, weekId, and coachId if available
-  if (routeName === "weekly" && searchParams.has("userId")) {
-    const userId = searchParams.get("userId");
-    const weekId = searchParams.get("weekId");
-    const coachId = searchParams.get("coachId");
+  if (routeName === 'weekly' && searchParams.has('userId')) {
+    const userId = searchParams.get('userId');
+    const weekId = searchParams.get('weekId');
+    const coachId = searchParams.get('coachId');
 
     let params = `userId=${userId}`;
     if (weekId) params += `&weekId=${weekId}`;

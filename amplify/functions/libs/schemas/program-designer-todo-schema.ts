@@ -177,17 +177,6 @@ export const PROGRAM_TODO_SCHEMA = {
       },
       required: ["value", "confidence"],
     },
-    trainingMethodology: {
-      type: "object",
-      description:
-        'Preferred training methodology, style, or discipline. This is a REQUIRED field - extract it even from indirect mentions. Examples: "CrossFit", "Powerlifting", "Bodybuilding", "Strongman", "Olympic Weightlifting", "hybrid functional strength", "functional fitness", "hybrid training", "blend of powerlifting and functional fitness", "strength training principles with functional fitness elements". Be AGGRESSIVE about extracting this - if they describe HOW they train or what STYLE they prefer, extract it.',
-      properties: {
-        value: { type: "string" },
-        confidence: { type: "string", enum: ["high", "medium", "low"] },
-        notes: { type: "string" },
-      },
-      required: ["value", "confidence"],
-    },
     programFocus: {
       type: "object",
       description:

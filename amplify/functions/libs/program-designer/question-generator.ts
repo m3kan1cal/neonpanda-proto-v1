@@ -117,17 +117,6 @@ BEFORE asking about something, CHECK THE CONVERSATION HISTORY ABOVE.
 - If they repeat themselves or say "I already answered this", acknowledge it and move to the next question
 - The "STILL NEEDED" list shows what hasn't been extracted yet, but they may have already mentioned it
 
-🚨 SPECIAL CASE - USER FRUSTRATION:
-If the user says things like:
-- "I already answered that"
-- "I mentioned it above"
-- "Do you not see..."
-- "We already talked about..."
-- "I said earlier..."
-
-Then ACKNOWLEDGE their frustration, apologize briefly, and MOVE ON to a DIFFERENT question or conclude if enough info is collected.
-DO NOT ask the same question again even if it's in the "STILL NEEDED" list.
-
 Generate your next response:
 1. Acknowledge what they just shared (if appropriate) with genuine warmth
 2. Ask about the MOST IMPORTANT missing piece of information that HASN'T been mentioned yet
@@ -323,17 +312,6 @@ BEFORE asking about something, CHECK THE CONVERSATION HISTORY ABOVE.
 - Example: If they said "6 weeks" earlier, DON'T ask "How long do you want the program?"
 - If they repeat themselves or say "I already answered this", acknowledge it and move to the next question
 - The "STILL NEEDED" list shows what hasn't been extracted yet, but they may have already mentioned it
-
-🚨 SPECIAL CASE - USER FRUSTRATION:
-If the user says things like:
-- "I already answered that"
-- "I mentioned it above"
-- "Do you not see..."
-- "We already talked about..."
-- "I said earlier..."
-
-Then ACKNOWLEDGE their frustration, apologize briefly, and MOVE ON to a DIFFERENT question or conclude if enough info is collected.
-DO NOT ask the same question again even if it's in the "STILL NEEDED" list.
 
 Generate your next response:
 1. Acknowledge what they just shared (if appropriate) with genuine warmth

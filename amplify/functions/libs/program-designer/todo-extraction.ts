@@ -18,10 +18,6 @@ import { TodoItem } from "../todo-types";
 import { ProgramDesignerTodoList } from "./types";
 import { PROGRAM_TODO_SCHEMA } from "../schemas/program-designer-todo-schema";
 
-// Extraction configuration
-const EXTRACTION_MAX_RETRIES = 2;
-const EXTRACTION_TIMEOUT_MS = 45000; // 45 second timeout per attempt
-
 /**
  * Result of AI extraction from user's program design message
  * Includes both structured program data and user intent signals
@@ -101,120 +97,54 @@ Return ONLY the fields you found information for using the tool. If no informati
 
   try {
     let extractionResponse: any;
-    let lastError: Error | null = null;
 
-    // Retry loop with timeout for extraction
-    for (let attempt = 1; attempt <= EXTRACTION_MAX_RETRIES; attempt++) {
-      try {
-        console.info(
-          `🔄 Extraction attempt ${attempt}/${EXTRACTION_MAX_RETRIES}`,
-        );
-
-        // Create a timeout promise
-        const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => {
-            reject(
-              new Error(
-                `Extraction timed out after ${EXTRACTION_TIMEOUT_MS}ms`,
-              ),
-            );
-          }, EXTRACTION_TIMEOUT_MS);
-        });
-
-        // Create the extraction promise
-        const extractionPromise = hasImages
-          ? (async () => {
-              const currentMessage = {
-                id: `msg_${Date.now()}_user`,
-                role: "user" as const,
-                content: userPrompt,
-                timestamp: new Date(),
-                messageType: MESSAGE_TYPES.TEXT_WITH_IMAGES,
-                imageS3Keys: imageS3Keys,
-              };
-              const converseMessages = await buildMultimodalContent([
-                currentMessage,
-              ]);
-              return callBedrockApiMultimodal(
-                systemPrompt,
-                converseMessages,
-                MODEL_IDS.EXECUTOR_MODEL_FULL,
-                {
-                  temperature: TEMPERATURE_PRESETS.STRUCTURED,
-                  tools: {
-                    name: "extract_program_info",
-                    description:
-                      "Extract training program information from user response with optional images",
-                    inputSchema: PROGRAM_TODO_SCHEMA,
-                  },
-                  expectedToolName: "extract_program_info",
-                },
-              );
-            })()
-          : callBedrockApi(
-              systemPrompt,
-              userPrompt,
-              MODEL_IDS.EXECUTOR_MODEL_FULL,
-              {
-                temperature: TEMPERATURE_PRESETS.STRUCTURED,
-                tools: {
-                  name: "extract_program_info",
-                  description:
-                    "Extract training program information from user response",
-                  inputSchema: PROGRAM_TODO_SCHEMA,
-                },
-                expectedToolName: "extract_program_info",
-              },
-            );
-
-        // Race the extraction against the timeout
-        extractionResponse = await Promise.race([
-          extractionPromise,
-          timeoutPromise,
-        ]);
-        console.info(`✅ Extraction attempt ${attempt} succeeded`);
-        lastError = null;
-        break; // Success, exit retry loop
-      } catch (attemptError) {
-        lastError =
-          attemptError instanceof Error
-            ? attemptError
-            : new Error(String(attemptError));
-        console.warn(
-          `⚠️ Extraction attempt ${attempt} failed:`,
-          lastError.message,
-        );
-
-        // Check if it's a retryable error
-        const isRetryable =
-          lastError.message.includes("malformed_tool_use") ||
-          lastError.message.includes("timed out") ||
-          lastError.message.includes("did not use tool") ||
-          lastError.message.includes("no content");
-
-        if (!isRetryable || attempt === EXTRACTION_MAX_RETRIES) {
-          console.error(
-            `❌ Extraction failed after ${attempt} attempts, trying fallback`,
-          );
-          break;
-        }
-
-        // Brief delay before retry
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-      }
-    }
-
-    // If all retries failed, return unchanged todoList
-    if (lastError) {
-      console.error(
-        "❌ Extraction failed after all retries:",
-        lastError.message,
-      );
-      return {
-        todoList: currentTodoList,
-        userWantsToFinish: false,
-        userChangedTopic: false,
+    if (hasImages) {
+      // Multimodal extraction (text + images)
+      const currentMessage = {
+        id: `msg_${Date.now()}_user`,
+        role: "user" as const,
+        content: userPrompt,
+        timestamp: new Date(),
+        messageType: MESSAGE_TYPES.TEXT_WITH_IMAGES,
+        imageS3Keys: imageS3Keys,
       };
+
+      // Convert to Bedrock format
+      const converseMessages = await buildMultimodalContent([currentMessage]);
+
+      // Call with images
+      extractionResponse = await callBedrockApiMultimodal(
+        systemPrompt,
+        converseMessages,
+        MODEL_IDS.EXECUTOR_MODEL_FULL,
+        {
+          temperature: TEMPERATURE_PRESETS.STRUCTURED,
+          tools: {
+            name: "extract_program_info",
+            description:
+              "Extract training program information from user response with optional images",
+            inputSchema: PROGRAM_TODO_SCHEMA,
+          },
+          expectedToolName: "extract_program_info",
+        },
+      );
+    } else {
+      // Text-only extraction
+      extractionResponse = await callBedrockApi(
+        systemPrompt,
+        userPrompt,
+        MODEL_IDS.EXECUTOR_MODEL_FULL,
+        {
+          temperature: TEMPERATURE_PRESETS.STRUCTURED,
+          tools: {
+            name: "extract_program_info",
+            description:
+              "Extract training program information from user response",
+            inputSchema: PROGRAM_TODO_SCHEMA,
+          },
+          expectedToolName: "extract_program_info",
+        },
+      );
     }
 
     console.info("✅ Received extraction response");
@@ -431,14 +361,7 @@ AVAILABLE FIELDS (only include if you find information):
 - injuryConsiderations: description of injuries or "none"
 - movementPreferences: movements they enjoy
 - movementDislikes: movements they dislike
-- trainingMethodology: preferred training methodology, style, or discipline. This is a REQUIRED field - extract it even from indirect mentions. Examples:
-  * "CrossFit", "Powerlifting", "Bodybuilding", "Strongman", "Olympic Weightlifting"
-  * "hybrid functional strength", "functional fitness", "hybrid training"
-  * "blend of powerlifting and functional fitness"
-  * "powerlifting meets functional fitness"
-  * "strength training principles with functional fitness elements"
-  * ANY mention of their training approach, style, or methodology
-  Be AGGRESSIVE about extracting this - if they describe HOW they train or what STYLE they prefer, extract it. (REQUIRED)
+- trainingMethodology: preferred training methodology, style, or discipline (e.g., "CrossFit", "Powerlifting", "Bodybuilding", "Strongman", "Olympic Weightlifting", "Hybrid Training", "Endurance", "Calisthenics", "General Strength & Conditioning", "Sport-Specific"). Be flexible - accept any methodology the user mentions. Extract from phrases like "CrossFit style", "bodybuilding focus", "powerlifting methodology", "hybrid approach", "functional fitness". Store exactly as user describes it. (REQUIRED)
 - programFocus: main focus (e.g., "strength", "conditioning", "mixed", "Olympic lifting")
 - intensityPreference: "conservative" | "moderate" | "aggressive"
 - volumeTolerance: "low" | "moderate" | "high"

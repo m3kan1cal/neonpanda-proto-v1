@@ -17,7 +17,6 @@ import { NORMALIZATION_RESPONSE_SCHEMA } from "../schemas/workout-normalization-
 import { getCondensedSchema } from "../object-utils";
 import { WORKOUT_SCHEMA } from "../schemas/workout-schema";
 import type { UniversalWorkoutSchema } from "./types";
-import { fixDoubleEncodedProperties } from "../response-utils";
 
 /**
  * Result from normalization tool call
@@ -138,10 +137,8 @@ export async function generateNormalization(
 
   const duration = Date.now() - startTime;
 
-  // Fix any double-encoded properties from Bedrock response
-  // Nova 2 Lite sometimes returns nested objects as JSON strings despite strict schema
-  const fixedInput = fixDoubleEncodedProperties(result.input);
-  const toolInput = fixedInput as NormalizationToolResult;
+  // Direct access to tool result - no fallback parsing
+  const toolInput = result.input as NormalizationToolResult;
 
   // Validate required field: normalizedData
   if (!toolInput.normalizedData) {
@@ -275,9 +272,7 @@ Classify this workout into ONE discipline. If mixed or unclear, use "crossfit" a
 
   const duration = Date.now() - startTime;
 
-  // Fix any double-encoded properties from Bedrock response
-  const fixedInput = fixDoubleEncodedProperties(result.input);
-  const toolInput = fixedInput as DisciplineDetectionToolResult;
+  const toolInput = result.input as DisciplineDetectionToolResult;
 
   console.info("✅ Discipline detected:", {
     discipline: toolInput.discipline,
