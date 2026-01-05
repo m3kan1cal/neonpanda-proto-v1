@@ -15,7 +15,10 @@ import {
   MemoryRetrievalNeedResult,
   MemoryCharacteristicsResult,
 } from "./types";
-import { parseJsonWithFallbacks } from "../response-utils";
+import {
+  parseJsonWithFallbacks,
+  fixDoubleEncodedProperties,
+} from "../response-utils";
 
 /**
  * @deprecated DEPRECATED: This function has been replaced by the Smart Request Router.
@@ -86,7 +89,9 @@ Use the analyze_semantic_retrieval tool to provide your analysis of whether retr
       throw new Error("Expected tool use but received text response");
     }
 
-    const result = response.input as MemoryRetrievalNeedResult;
+    // Fix any double-encoded properties from Bedrock response
+    const fixedInput = fixDoubleEncodedProperties(response.input);
+    const result = fixedInput as MemoryRetrievalNeedResult;
 
     return result;
   } catch (error) {
@@ -181,7 +186,9 @@ Analyze this message and use the detect_memory_request tool to provide your anal
       throw new Error("Expected tool use but received text response");
     }
 
-    return response.input as MemoryDetectionResult;
+    // Fix any double-encoded properties from Bedrock response
+    const fixedInput = fixDoubleEncodedProperties(response.input);
+    return fixedInput as MemoryDetectionResult;
   } catch (error) {
     console.error("Error in memory request detection:", error);
 
@@ -375,7 +382,9 @@ Use the detect_memory_characteristics tool to analyze this memory.`;
       throw new Error("Expected tool use but received text response");
     }
 
-    return response.input as MemoryCharacteristicsResult;
+    // Fix any double-encoded properties from Bedrock response
+    const fixedInput = fixDoubleEncodedProperties(response.input);
+    return fixedInput as MemoryCharacteristicsResult;
   } catch (error) {
     console.error("Error in memory characteristics detection:", error);
 
@@ -528,7 +537,9 @@ Use the analyze_memory_needs tool to provide comprehensive memory analysis follo
       throw new Error("Expected tool use but received text response");
     }
 
-    const result = response.input as any;
+    // Fix any double-encoded properties from Bedrock response
+    const fixedInput = fixDoubleEncodedProperties(response.input);
+    const result = fixedInput as any;
     const processingTime = Date.now() - startTime;
 
     // Transform result to match expected interface
