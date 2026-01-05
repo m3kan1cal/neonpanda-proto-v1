@@ -16,7 +16,10 @@ import {
   CONVERSATION_COMPLEXITY_SCHEMA,
 } from "../schemas/router-schemas";
 import { SmartRequestRouter } from "../streaming/business-types";
-import { parseJsonWithFallbacks } from "../response-utils";
+import {
+  parseJsonWithFallbacks,
+  fixDoubleEncodedProperties,
+} from "../response-utils";
 
 /**
  * Type for conversation complexity analysis result
@@ -96,7 +99,9 @@ Use the analyze_complexity tool to provide your analysis of complexity triggers 
       throw new Error("Expected tool use but received text response");
     }
 
-    const result = response.input as ConversationComplexityResult;
+    // Fix any double-encoded properties from Bedrock response
+    const fixedInput = fixDoubleEncodedProperties(response.input);
+    const result = fixedInput as ConversationComplexityResult;
 
     return result.hasComplexity || false;
   } catch (error) {
@@ -566,7 +571,10 @@ Use the analyze_request tool to provide comprehensive analysis following the fra
       throw new Error("Expected tool use but received text response");
     }
 
-    const result = response.input as SmartRequestRouter;
+    // Fix any double-encoded properties from Bedrock response
+    // Nova 2 Lite sometimes returns nested objects as JSON strings despite strict schema
+    const fixedInput = fixDoubleEncodedProperties(response.input);
+    const result = fixedInput as SmartRequestRouter;
 
     // Add processing time metadata
     result.routerMetadata.processingTime = Date.now() - startTime;
