@@ -55,27 +55,27 @@ function OnboardingPrompt({ isOpen, onClose, userId }) {
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[10000]">
       <div
-        className={`${containerPatterns.successModal} p-6 max-w-lg w-full mx-4`}
+        className={`${containerPatterns.successModal} p-4 md:p-6 max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto`}
       >
         {/* Logo */}
-        <div className="flex items-center justify-center mb-4">
+        <div className="flex items-center justify-center mb-3 md:mb-4">
           <img
             src="/images/logo-dark-sm.webp"
             alt="NeonPanda Logo"
-            className="h-12 w-auto"
+            className="h-10 md:h-12 w-auto"
           />
         </div>
 
         {/* Header - left aligned like completion modal */}
-        <div className="mb-6">
+        <div className="mb-4 md:mb-6">
           <h1 className={`${typographyPatterns.cardTitle} mb-2`}>
             Ready to start your journey?
           </h1>
-          <p className="font-rajdhani text-synthwave-text-secondary text-base mb-4">
+          <p className="hidden md:block font-rajdhani text-synthwave-text-secondary text-base mb-4">
             You've unlocked the next frontier in fitness – where AI becomes your
             trusted training partner, evolving and learning with every workout.
           </p>
-          <p className="font-rajdhani text-synthwave-text-secondary text-base">
+          <p className="font-rajdhani text-synthwave-text-secondary text-sm md:text-base">
             You're starting as an{" "}
             <span className="text-synthwave-neon-cyan font-semibold">
               {freeInfo.displayName}
@@ -86,9 +86,9 @@ function OnboardingPrompt({ isOpen, onClose, userId }) {
         </div>
 
         {/* ElectricPanda upgrade option */}
-        <div className="bg-synthwave-bg-card/60 border border-synthwave-neon-purple/20 rounded-2xl p-6 shadow-xl shadow-synthwave-neon-purple/20 mb-6">
-          <div className="mb-3">
-            <p className="font-rajdhani text-synthwave-text-secondary text-sm mb-4">
+        <div className="bg-synthwave-bg-card/60 border border-synthwave-neon-purple/20 rounded-2xl p-4 md:p-6 shadow-xl shadow-synthwave-neon-purple/20 mb-4 md:mb-6">
+          <div className="mb-2 md:mb-3">
+            <p className="font-rajdhani text-synthwave-text-secondary text-xs md:text-sm mb-2 md:mb-4">
               Upgrade to{" "}
               <span className="text-synthwave-neon-pink font-semibold">
                 {electricInfo.displayName}
@@ -97,9 +97,14 @@ function OnboardingPrompt({ isOpen, onClose, userId }) {
               <span className="text-synthwave-neon-pink font-semibold">
                 {electricInfo.price}
               </span>{" "}
-              to support platform development and lock in founding member
-              pricing forever. Your rate stays the same as new features land.
-              This exclusive tier won't be available indefinitely.
+              <span className="hidden md:inline">
+                to support platform development and lock in founding member
+                pricing forever. Your rate stays the same as new features land.
+                This exclusive tier won't be available indefinitely.
+              </span>
+              <span className="md:hidden">
+                to lock in founding member pricing forever.
+              </span>
             </p>
           </div>
           <ul className="hidden md:block space-y-2 mb-4">
@@ -145,8 +150,8 @@ function OnboardingPrompt({ isOpen, onClose, userId }) {
           </button>
         </div>
 
-        {/* Divider - styled like Coaches page */}
-        <div className="flex items-center justify-center mb-6">
+        {/* Divider - styled like Coaches page, hidden on mobile */}
+        <div className="hidden md:flex items-center justify-center mb-6">
           <div className="flex-1 h-px bg-gradient-to-r from-transparent to-synthwave-neon-cyan/30"></div>
           <span className="font-russo text-synthwave-neon-cyan text-lg uppercase mx-6 tracking-wider">
             OR
@@ -154,8 +159,8 @@ function OnboardingPrompt({ isOpen, onClose, userId }) {
           <div className="flex-1 h-px bg-gradient-to-l from-transparent to-synthwave-neon-cyan/30"></div>
         </div>
 
-        {/* Getting started guidance */}
-        <div className="mb-4">
+        {/* Getting started guidance - hidden on mobile */}
+        <div className="hidden md:block mb-4">
           <p className="font-rajdhani text-synthwave-text-secondary text-sm">
             Want to get started? Create your first coach, start conversations,
             log workouts, and explore your Training Grounds to unlock the full

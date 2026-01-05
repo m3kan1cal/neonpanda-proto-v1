@@ -142,9 +142,9 @@ function UpgradePrompt({
         onClick={handleClose}
       />
 
-      {/* Prompt card - positioned at bottom on mobile, centered on desktop */}
-      <div className="fixed inset-x-0 bottom-0 z-50 p-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-md animate-slide-up md:animate-fade-in">
-        <div className={`${containerPatterns.cardMediumOpaque} p-6 relative`}>
+      {/* Prompt card - centered on both mobile and desktop */}
+      <div className="fixed inset-0 z-50 p-4 flex items-center justify-center animate-fade-in">
+        <div className={`${containerPatterns.cardMediumOpaque} p-6 relative w-full max-w-md`}>
           {/* Close button */}
           <button
             onClick={handleClose}

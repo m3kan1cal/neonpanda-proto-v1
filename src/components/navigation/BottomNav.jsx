@@ -36,10 +36,10 @@ const BottomNav = () => {
     bottomNavItems.push({ ...trainingItem, label: 'Training' }); // Shorten label for mobile
   }
 
-  // Show Progress (from contextual) - Remove badge for mobile
+  // Show Progress (from contextual) - Remove badge for mobile, shorten label
   const progressItem = navigationItems.contextual?.find((item) => item.id === 'progress');
   if (progressItem && isItemVisible(progressItem, context)) {
-    bottomNavItems.push({ ...progressItem, badge: undefined }); // Remove badge count for mobile
+    bottomNavItems.push({ ...progressItem, badge: undefined, label: 'Analytics' }); // Remove badge count and shorten label for mobile
   }
 
   const displayItems = bottomNavItems;
