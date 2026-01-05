@@ -31,6 +31,7 @@ import type {
   MethodologySelectionResult,
   CoachPromptsResult,
 } from "../agents/coach-creator/types";
+import { fixDoubleEncodedProperties } from "../response-utils";
 
 /**
  * Context for personality selection
@@ -152,8 +153,9 @@ Select the optimal personality template and provide reasoning using the tool.`;
 
   const duration = Date.now() - startTime;
 
-  // Extract result from tool response
-  const toolInput = result.input as {
+  // Fix any double-encoded properties from Bedrock response
+  const fixedInput = fixDoubleEncodedProperties(result.input);
+  const toolInput = fixedInput as {
     primaryTemplate: string;
     secondaryInfluences?: string[];
     selectionReasoning: string;
@@ -266,8 +268,9 @@ Select the optimal methodology and configuration using the tool.`;
 
   const duration = Date.now() - startTime;
 
-  // Extract result from tool response
-  const toolInput = result.input as {
+  // Fix any double-encoded properties from Bedrock response
+  const fixedInput = fixDoubleEncodedProperties(result.input);
+  const toolInput = fixedInput as {
     primaryMethodology: string;
     methodologyReasoning: string;
     programmingEmphasis: "strength" | "conditioning" | "balanced";
@@ -395,8 +398,9 @@ Generate all 7 prompts using the tool:
 
   const duration = Date.now() - startTime;
 
-  // Extract result from tool response
-  const toolInput = result.input as {
+  // Fix any double-encoded properties from Bedrock response
+  const fixedInput = fixDoubleEncodedProperties(result.input);
+  const toolInput = fixedInput as {
     personality_prompt: string;
     safety_integrated_prompt: string;
     motivation_prompt: string;
@@ -496,8 +500,9 @@ Provide validation scores and any issues found using the tool.`;
 
   const duration = Date.now() - startTime;
 
-  // Extract result from tool response
-  const toolInput = result.input as {
+  // Fix any double-encoded properties from Bedrock response
+  const fixedInput = fixDoubleEncodedProperties(result.input);
+  const toolInput = fixedInput as {
     gender_consistency: boolean;
     safety_language_quality: number;
     brand_voice_score: number;
@@ -643,7 +648,9 @@ Also provide a 3-5 word coach description of their specialty (e.g., "Technical E
     },
   )) as BedrockToolUseResult;
 
-  const toolInput = result.input as {
+  // Fix any double-encoded properties from Bedrock response
+  const fixedInput = fixDoubleEncodedProperties(result.input);
+  const toolInput = fixedInput as {
     coach_name: string;
     name_reasoning: string;
     coach_description: string;

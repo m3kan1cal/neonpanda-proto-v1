@@ -724,6 +724,7 @@ function CoachConversations() {
     }
   };
 
+  // Check if user is at bottom of scroll
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, []);
