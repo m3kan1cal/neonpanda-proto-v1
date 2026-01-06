@@ -33,6 +33,7 @@ import { InlineEditField } from "./shared/InlineEditField.jsx";
 import ChatInput from "./shared/ChatInput";
 import UserAvatar from "./shared/UserAvatar";
 import { getUserInitial as getInitialFromUsername } from "./shared/UserAvatar";
+import ScrollToBottomButton from "./shared/ScrollToBottomButton";
 import { parseMarkdown } from "../utils/markdownParser.jsx";
 import CoachConversationAgent from "../utils/agents/CoachConversationAgent";
 import CoachAgent from "../utils/agents/CoachAgent";
@@ -119,14 +120,16 @@ const TypingIndicator = () => (
 // Contextual update indicator - shows AI processing stages
 const ContextualUpdateIndicator = ({ content, stage, coachName }) => {
   return (
-    <div className="flex items-end gap-2 mb-1">
-      <div className={`flex-shrink-0 ${avatarPatterns.aiSmall}`}>
-        {coachName?.charAt(0) || "C"}
-      </div>
+    <div className="flex flex-col items-start mb-1">
       <div className="px-4 py-2">
         <span className="font-rajdhani text-base italic animate-pulse text-synthwave-text-secondary/70">
           {content}
         </span>
+      </div>
+      <div className="flex items-start gap-2 px-2 mt-2">
+        <div className={`flex-shrink-0 ${avatarPatterns.aiSmall}`}>
+          {coachName?.charAt(0) || "C"}
+        </div>
       </div>
     </div>
   );
@@ -147,28 +150,13 @@ const MessageItem = memo(
   }) => {
     return (
       <div
-        className={`flex items-end gap-2 mb-1 group ${
-          message.type === "user" ? "flex-row-reverse" : "flex-row"
+        className={`flex flex-col mb-1 group ${
+          message.type === "user" ? "items-end" : "items-start"
         }`}
       >
-        {/* Avatar */}
-        <div className="flex-shrink-0">
-          {message.type === "user" ? (
-            <UserAvatar
-              email={userEmail}
-              username={userDisplayName}
-              size={32}
-            />
-          ) : (
-            <div className={avatarPatterns.aiSmall}>
-              {coachName?.charAt(0) || "C"}
-            </div>
-          )}
-        </div>
-
         {/* Message Bubble */}
         <div
-          className={`max-w-[95%] md:max-w-[70%] ${message.type === "user" ? "items-end" : "items-start"} flex flex-col`}
+          className={`max-w-[95%] md:max-w-[80%] ${message.type === "user" ? "items-end" : "items-start"} flex flex-col`}
         >
           {/* Workout Log Indicator Badge (only for AI messages created during workout log artifact creation) */}
           {message.type === "ai" &&
@@ -192,9 +180,19 @@ const MessageItem = memo(
             </div>
           </div>
 
+          {/* Timestamp, status, and avatar on same line */}
           <div
-            className={`flex items-center gap-1 px-2 mt-1 ${message.type === "user" ? "justify-end" : "justify-start"}`}
+            className={`flex items-start gap-2 px-2 mt-2 ${message.type === "user" ? "justify-end" : "justify-start"}`}
           >
+            {/* Avatar for AI messages (left side) */}
+            {message.type === "ai" && (
+              <div className="flex-shrink-0">
+                <div className={avatarPatterns.aiSmall}>
+                  {coachName?.charAt(0) || "C"}
+                </div>
+              </div>
+            )}
+
             <span className="text-xs text-synthwave-text-secondary font-rajdhani">
               {formatTime(message.timestamp)}
             </span>
@@ -216,6 +214,17 @@ const MessageItem = memo(
                 <div
                   className={`${messagePatterns.statusDotPrimary} ${messagePatterns.statusDotCyan}`}
                 ></div>
+              </div>
+            )}
+
+            {/* Avatar for user messages (right side) */}
+            {message.type === "user" && (
+              <div className="flex-shrink-0">
+                <UserAvatar
+                  email={userEmail}
+                  username={userDisplayName}
+                  size={32}
+                />
               </div>
             )}
           </div>
@@ -302,6 +311,7 @@ function CoachConversations() {
   const [inputMessage, setInputMessage] = useState("");
   const [showNewConversation, setShowNewConversation] =
     useState(!conversationId);
+  const [showScrollButton, setShowScrollButton] = useState(false);
 
   // Slash command states moved to ChatInput component
 
@@ -321,6 +331,7 @@ function CoachConversations() {
   const isSendingMessage = useRef(false);
 
   const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
   const inputRef = useRef(null);
   const agentRef = useRef(null);
   const coachAgentRef = useRef(null);
@@ -673,6 +684,71 @@ function CoachConversations() {
     }
   }, [coachConversationAgentState.messages.length]);
 
+  // Check if user is at bottom of scroll
+  const scrollToBottom = useCallback((instant = false) => {
+    if (instant) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
+    } else {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, []);
+
+  // Handle scroll events to show/hide scroll button
+  const handleScroll = useCallback(() => {
+    if (!messagesContainerRef.current) return;
+
+    const { scrollTop, scrollHeight, clientHeight } =
+      messagesContainerRef.current;
+    const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
+    const isNearBottom = distanceFromBottom < 100;
+
+    // Only show button if there's actually content to scroll to
+    const hasScrollableContent = scrollHeight > clientHeight;
+
+    setShowScrollButton(hasScrollableContent && !isNearBottom);
+  }, []);
+
+  // Auto-scroll to bottom when new messages arrive (only if user is already at bottom)
+  useEffect(() => {
+    if (!showScrollButton) {
+      scrollToBottom();
+    }
+  }, [
+    coachConversationAgentState.messages,
+    coachConversationAgentState.isTyping,
+    coachConversationAgentState.contextualUpdate,
+    coachConversationAgentState.streamingMessage, // Added to scroll during streaming
+    showScrollButton,
+    scrollToBottom,
+  ]);
+
+  // Set up scroll event listener
+  useEffect(() => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    const checkScroll = () => {
+      handleScroll();
+    };
+
+    container.addEventListener("scroll", checkScroll);
+    // Check initial scroll position - use multiple timeouts to catch different render phases
+    const timeout1 = setTimeout(checkScroll, 100);
+    const timeout2 = setTimeout(checkScroll, 500);
+    const timeout3 = setTimeout(checkScroll, 1000);
+
+    return () => {
+      container.removeEventListener("scroll", checkScroll);
+      clearTimeout(timeout1);
+      clearTimeout(timeout2);
+      clearTimeout(timeout3);
+    };
+  }, [
+    handleScroll,
+    coachConversationAgentState.messages.length,
+    coachConversationAgentState.isLoadingItem,
+  ]);
+
   const autoResizeTextarea = (textarea) => {
     if (!textarea) return;
 
@@ -723,21 +799,6 @@ function CoachConversations() {
       textarea.style.overflowY = targetOverflow;
     }
   };
-
-  // Check if user is at bottom of scroll
-  const scrollToBottom = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, []);
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [
-    coachConversationAgentState.messages,
-    coachConversationAgentState.isTyping,
-    coachConversationAgentState.contextualUpdate,
-    coachConversationAgentState.streamingMessage, // Added to scroll during streaming
-    scrollToBottom,
-  ]);
 
   // Voice recording functions moved to ChatInput component
 
@@ -1073,7 +1134,7 @@ function CoachConversations() {
 
                       {/* Message bubble skeleton */}
                       <div
-                        className={`max-w-[95%] md:max-w-[70%] ${i % 2 === 1 ? "items-end" : "items-start"} flex flex-col`}
+                        className={`max-w-[95%] md:max-w-[80%] ${i % 2 === 1 ? "items-end" : "items-start"} flex flex-col`}
                       >
                         <div
                           className={`px-4 py-3 rounded-2xl ${i % 2 === 1 ? "rounded-br-md" : "rounded-bl-md"} bg-synthwave-text-muted/20 animate-pulse min-w-[min(65vw,600px)] min-h-[130px]`}
@@ -1205,291 +1266,309 @@ function CoachConversations() {
             {/* Removed mainContent container for immersive chat UX - messages flow edge-to-edge */}
             <div className="h-full flex flex-col">
               {/* Messages Area - with bottom padding for floating input */}
-              <div className="flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-6 pb-40 sm:pb-56 space-y-4">
-                {/* Empty State - Show tips when no messages */}
-                {coachConversationAgentState.messages.length === 0 &&
-                  !coachConversationAgentState.isTyping &&
-                  !coachConversationAgentState.isStreaming && (
-                    <div className="flex flex-col items-center justify-center min-h-[400px] space-y-6 px-4">
-                      {/* Welcome Header */}
-                      <div className="text-center space-y-2">
-                        <h2 className={typographyPatterns.emptyStateHeader}>
-                          Ready to Train?
-                        </h2>
-                        <p className={typographyPatterns.emptyStateDescription}>
-                          Let's get after it! Chat with me about anything
-                          fitness, or use these quick commands to dive right in.
-                        </p>
-                      </div>
-
-                      {/* Command Tips Grid */}
-                      <div className="flex flex-col gap-6 w-full max-w-2xl">
-                        {/* Slash Commands */}
-                        <div>
-                          <h4
-                            className={
-                              typographyPatterns.emptyStateSectionHeader
-                            }
+              <div
+                ref={messagesContainerRef}
+                className="flex-1 overflow-y-auto overflow-x-hidden px-4 sm:px-6 py-3 sm:py-6 pb-40 sm:pb-56 synthwave-scrollbar-cyan"
+              >
+                <div className="space-y-4">
+                  {/* Empty State - Show tips when no messages */}
+                  {coachConversationAgentState.messages.length === 0 &&
+                    !coachConversationAgentState.isTyping &&
+                    !coachConversationAgentState.isStreaming && (
+                      <div className="flex flex-col items-center justify-center min-h-[400px] space-y-6 px-4">
+                        {/* Welcome Header */}
+                        <div className="text-center space-y-2">
+                          <h2 className={typographyPatterns.emptyStateHeader}>
+                            Ready to Train?
+                          </h2>
+                          <p
+                            className={typographyPatterns.emptyStateDescription}
                           >
-                            Use Slash Commands
-                          </h4>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {/* Log Workout Command */}
-                            <div
-                              className={containerPatterns.emptyStateTipCard}
-                            >
-                              <h3
-                                className={
-                                  typographyPatterns.emptyStateCardTitle
-                                }
-                              >
-                                Log Your Wins
-                              </h3>
-                              <p
-                                className={
-                                  typographyPatterns.emptyStateCardTextWithMargin
-                                }
-                              >
-                                Drop your workout results so I can celebrate
-                                with you and track your gains
-                              </p>
-                              <code className={typographyPatterns.inlineCode}>
-                                /log-workout Fran 8:57
-                              </code>
-                            </div>
+                            Let's get after it! Chat with me about anything
+                            fitness, or use these quick commands to dive right
+                            in.
+                          </p>
+                        </div>
 
-                            {/* Save Memory Command */}
-                            <div
-                              className={containerPatterns.emptyStateTipCard}
+                        {/* Command Tips Grid */}
+                        <div className="flex flex-col gap-6 w-full max-w-2xl">
+                          {/* Slash Commands */}
+                          <div>
+                            <h4
+                              className={
+                                typographyPatterns.emptyStateSectionHeader
+                              }
                             >
-                              <h3
-                                className={
-                                  typographyPatterns.emptyStateCardTitle
-                                }
+                              Use Slash Commands
+                            </h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              {/* Log Workout Command */}
+                              <div
+                                className={containerPatterns.emptyStateTipCard}
                               >
-                                Store What Matters
-                              </h3>
-                              <p
-                                className={
-                                  typographyPatterns.emptyStateCardTextWithMargin
-                                }
+                                <h3
+                                  className={
+                                    typographyPatterns.emptyStateCardTitle
+                                  }
+                                >
+                                  Log Your Wins
+                                </h3>
+                                <p
+                                  className={
+                                    typographyPatterns.emptyStateCardTextWithMargin
+                                  }
+                                >
+                                  Drop your workout results so I can celebrate
+                                  with you and track your gains
+                                </p>
+                                <code className={typographyPatterns.inlineCode}>
+                                  /log-workout Fran 8:57
+                                </code>
+                              </div>
+
+                              {/* Save Memory Command */}
+                              <div
+                                className={containerPatterns.emptyStateTipCard}
                               >
-                                Save notes about what works for you—I'll
-                                remember so you don't have to
-                              </p>
-                              <code className={typographyPatterns.inlineCode}>
-                                /save-memory prefer morning workouts
-                              </code>
+                                <h3
+                                  className={
+                                    typographyPatterns.emptyStateCardTitle
+                                  }
+                                >
+                                  Store What Matters
+                                </h3>
+                                <p
+                                  className={
+                                    typographyPatterns.emptyStateCardTextWithMargin
+                                  }
+                                >
+                                  Save notes about what works for you—I'll
+                                  remember so you don't have to
+                                </p>
+                                <code className={typographyPatterns.inlineCode}>
+                                  /save-memory prefer morning workouts
+                                </code>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Chat & Build Features */}
+                          <div>
+                            <h4
+                              className={
+                                typographyPatterns.emptyStateSectionHeader
+                              }
+                            >
+                              Chat & Build
+                            </h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              {/* Ask Anything */}
+                              <div
+                                className={containerPatterns.emptyStateTipCard}
+                              >
+                                <h3
+                                  className={
+                                    typographyPatterns.emptyStateCardTitle
+                                  }
+                                >
+                                  Ask Me Anything
+                                </h3>
+                                <p
+                                  className={
+                                    typographyPatterns.emptyStateCardText
+                                  }
+                                >
+                                  Need form checks, programming help, guidance,
+                                  answers, or a pep talk? I'm here for all of it
+                                </p>
+                              </div>
+
+                              {/* Natural Language Workouts */}
+                              <div
+                                className={containerPatterns.emptyStateTipCard}
+                              >
+                                <h3
+                                  className={
+                                    typographyPatterns.emptyStateCardTitle
+                                  }
+                                >
+                                  Just Talk to Me
+                                </h3>
+                                <p
+                                  className={
+                                    typographyPatterns.emptyStateCardText
+                                  }
+                                >
+                                  Log your session naturally or tell me what you
+                                  want—I'll build the perfect workout for you
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Media & Quick Actions */}
+                          <div>
+                            <h4
+                              className={
+                                typographyPatterns.emptyStateSectionHeader
+                              }
+                            >
+                              Media & Quick Actions
+                            </h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              {/* Attach Photos */}
+                              <div
+                                className={containerPatterns.emptyStateTipCard}
+                              >
+                                <h3
+                                  className={
+                                    typographyPatterns.emptyStateCardTitle
+                                  }
+                                >
+                                  Show Me Your Work
+                                </h3>
+                                <p
+                                  className={
+                                    typographyPatterns.emptyStateCardText
+                                  }
+                                >
+                                  Hit the{" "}
+                                  <span className="inline-flex items-center scale-90 text-synthwave-neon-pink translate-y-1">
+                                    <CameraIcon />
+                                  </span>{" "}
+                                  to share form videos, progress pics, or that
+                                  whiteboard you just conquered
+                                </p>
+                              </div>
+
+                              {/* Quick Prompts */}
+                              <div
+                                className={containerPatterns.emptyStateTipCard}
+                              >
+                                <h3
+                                  className={
+                                    typographyPatterns.emptyStateCardTitle
+                                  }
+                                >
+                                  One-Tap Favorites
+                                </h3>
+                                <p
+                                  className={
+                                    typographyPatterns.emptyStateCardText
+                                  }
+                                >
+                                  Check out Quick Prompts for instant check-ins,
+                                  workout requests, and other handy shortcuts
+                                </p>
+                              </div>
                             </div>
                           </div>
                         </div>
 
-                        {/* Chat & Build Features */}
-                        <div>
-                          <h4
-                            className={
-                              typographyPatterns.emptyStateSectionHeader
-                            }
-                          >
-                            Chat & Build
-                          </h4>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {/* Ask Anything */}
-                            <div
-                              className={containerPatterns.emptyStateTipCard}
-                            >
-                              <h3
-                                className={
-                                  typographyPatterns.emptyStateCardTitle
-                                }
-                              >
-                                Ask Me Anything
-                              </h3>
-                              <p
-                                className={
-                                  typographyPatterns.emptyStateCardText
-                                }
-                              >
-                                Need form checks, programming help, guidance,
-                                answers, or a pep talk? I'm here for all of it
-                              </p>
-                            </div>
-
-                            {/* Natural Language Workouts */}
-                            <div
-                              className={containerPatterns.emptyStateTipCard}
-                            >
-                              <h3
-                                className={
-                                  typographyPatterns.emptyStateCardTitle
-                                }
-                              >
-                                Just Talk to Me
-                              </h3>
-                              <p
-                                className={
-                                  typographyPatterns.emptyStateCardText
-                                }
-                              >
-                                Log your session naturally or tell me what you
-                                want—I'll build the perfect workout for you
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Media & Quick Actions */}
-                        <div>
-                          <h4
-                            className={
-                              typographyPatterns.emptyStateSectionHeader
-                            }
-                          >
-                            Media & Quick Actions
-                          </h4>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {/* Attach Photos */}
-                            <div
-                              className={containerPatterns.emptyStateTipCard}
-                            >
-                              <h3
-                                className={
-                                  typographyPatterns.emptyStateCardTitle
-                                }
-                              >
-                                Show Me Your Work
-                              </h3>
-                              <p
-                                className={
-                                  typographyPatterns.emptyStateCardText
-                                }
-                              >
-                                Hit the{" "}
-                                <span className="inline-flex items-center scale-90 text-synthwave-neon-pink translate-y-1">
-                                  <CameraIcon />
-                                </span>{" "}
-                                to share form videos, progress pics, or that
-                                whiteboard you just conquered
-                              </p>
-                            </div>
-
-                            {/* Quick Prompts */}
-                            <div
-                              className={containerPatterns.emptyStateTipCard}
-                            >
-                              <h3
-                                className={
-                                  typographyPatterns.emptyStateCardTitle
-                                }
-                              >
-                                One-Tap Favorites
-                              </h3>
-                              <p
-                                className={
-                                  typographyPatterns.emptyStateCardText
-                                }
-                              >
-                                Check out Quick Prompts for instant check-ins,
-                                workout requests, and other handy shortcuts
-                              </p>
-                            </div>
-                          </div>
+                        {/* Pro Tip */}
+                        <div className="text-center">
+                          <p className={typographyPatterns.emptyStateProTip}>
+                            Pro tip: Hit{" "}
+                            <span className="text-synthwave-neon-cyan font-mono">
+                              /
+                            </span>{" "}
+                            anytime to see what I can do
+                          </p>
                         </div>
                       </div>
+                    )}
 
-                      {/* Pro Tip */}
-                      <div className="text-center">
-                        <p className={typographyPatterns.emptyStateProTip}>
-                          Pro tip: Hit{" "}
-                          <span className="text-synthwave-neon-cyan font-mono">
-                            /
-                          </span>{" "}
-                          anytime to see what I can do
-                        </p>
-                      </div>
-                    </div>
+                  {coachConversationAgentState.messages
+                    .sort(
+                      (a, b) => new Date(a.timestamp) - new Date(b.timestamp),
+                    ) // Ensure chronological order
+                    .filter((message) => {
+                      // Filter out empty streaming placeholder messages
+                      const streaming = isMessageStreaming(
+                        message,
+                        coachConversationAgentState,
+                      );
+                      const hasContent =
+                        message.content && message.content.trim().length > 0;
+                      const hasStreamingContent =
+                        coachConversationAgentState.streamingMessage &&
+                        coachConversationAgentState.streamingMessage.trim()
+                          .length > 0;
+
+                      // Show message if: (1) it has content, OR (2) it's streaming and has streaming content
+                      return hasContent || (streaming && hasStreamingContent);
+                    })
+                    .map((message, index) => (
+                      <React.Fragment key={message.id}>
+                        <MessageItem
+                          message={message}
+                          agentState={coachConversationAgentState}
+                          coachName={coachConversationAgentState.coach?.name}
+                          userEmail={userEmail}
+                          userDisplayName={userDisplayName}
+                          getUserInitial={getUserInitial}
+                          formatTime={formatTime}
+                          renderMessageContent={renderMessageContent}
+                          conversationMode={conversationMode}
+                        />
+                      </React.Fragment>
+                    ))}
+
+                  {/* Contextual Update Indicator - Shows AI processing stages (ephemeral) */}
+                  {coachConversationAgentState.contextualUpdate && (
+                    <ContextualUpdateIndicator
+                      content={
+                        coachConversationAgentState.contextualUpdate.content
+                      }
+                      stage={coachConversationAgentState.contextualUpdate.stage}
+                      coachName={coachConversationAgentState.coach?.name}
+                    />
                   )}
 
-                {coachConversationAgentState.messages
-                  .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp)) // Ensure chronological order
-                  .filter((message) => {
-                    // Filter out empty streaming placeholder messages
-                    const streaming = isMessageStreaming(
-                      message,
-                      coachConversationAgentState,
-                    );
-                    const hasContent =
-                      message.content && message.content.trim().length > 0;
-                    const hasStreamingContent =
-                      coachConversationAgentState.streamingMessage &&
-                      coachConversationAgentState.streamingMessage.trim()
-                        .length > 0;
-
-                    // Show message if: (1) it has content, OR (2) it's streaming and has streaming content
-                    return hasContent || (streaming && hasStreamingContent);
-                  })
-                  .map((message, index) => (
-                    <React.Fragment key={message.id}>
-                      <MessageItem
-                        message={message}
-                        agentState={coachConversationAgentState}
-                        coachName={coachConversationAgentState.coach?.name}
-                        userEmail={userEmail}
-                        userDisplayName={userDisplayName}
-                        getUserInitial={getUserInitial}
-                        formatTime={formatTime}
-                        renderMessageContent={renderMessageContent}
-                        conversationMode={conversationMode}
-                      />
-                    </React.Fragment>
-                  ))}
-
-                {/* Contextual Update Indicator - Shows AI processing stages (ephemeral) */}
-                {coachConversationAgentState.contextualUpdate && (
-                  <ContextualUpdateIndicator
-                    content={
-                      coachConversationAgentState.contextualUpdate.content
-                    }
-                    stage={coachConversationAgentState.contextualUpdate.stage}
-                    coachName={coachConversationAgentState.coach?.name}
-                  />
-                )}
-
-                {/* Typing Indicator - Show only when typing but not actively streaming content */}
-                {typingState.showTypingIndicator &&
-                  !coachConversationAgentState.contextualUpdate && (
-                    <div className="flex items-end gap-2 mb-1">
-                      <div
-                        className={`flex-shrink-0 ${avatarPatterns.aiSmall}`}
-                      >
-                        {coachConversationAgentState.coach?.name?.charAt(0) ||
-                          "C"}
-                      </div>
-                      <div
-                        className={`${containerPatterns.aiChatBubble} px-4 py-3`}
-                      >
-                        <div className="flex space-x-1">
-                          <div className="w-2 h-2 bg-synthwave-neon-cyan rounded-full animate-bounce"></div>
+                  {/* Typing Indicator - Show only when typing but not actively streaming content */}
+                  {typingState.showTypingIndicator &&
+                    !coachConversationAgentState.contextualUpdate && (
+                      <div className="flex flex-col items-start mb-1">
+                        <div
+                          className={`${containerPatterns.aiChatBubble} px-4 py-3`}
+                        >
+                          <div className="flex space-x-1">
+                            <div className="w-2 h-2 bg-synthwave-neon-cyan rounded-full animate-bounce"></div>
+                            <div
+                              className="w-2 h-2 bg-synthwave-neon-cyan rounded-full animate-bounce"
+                              style={{ animationDelay: "0.1s" }}
+                            ></div>
+                            <div
+                              className="w-2 h-2 bg-synthwave-neon-cyan rounded-full animate-bounce"
+                              style={{ animationDelay: "0.2s" }}
+                            ></div>
+                          </div>
+                        </div>
+                        <div className="flex items-start gap-2 px-2 mt-2">
                           <div
-                            className="w-2 h-2 bg-synthwave-neon-cyan rounded-full animate-bounce"
-                            style={{ animationDelay: "0.1s" }}
-                          ></div>
-                          <div
-                            className="w-2 h-2 bg-synthwave-neon-cyan rounded-full animate-bounce"
-                            style={{ animationDelay: "0.2s" }}
-                          ></div>
+                            className={`flex-shrink-0 ${avatarPatterns.aiSmall}`}
+                          >
+                            {coachConversationAgentState.coach?.name?.charAt(
+                              0,
+                            ) || "C"}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  )}
-
-                {/* Scroll anchor - always at the bottom */}
-                <div ref={messagesEndRef} />
+                    )}
+                  {/* Scroll anchor - always at the bottom */}
+                  <div ref={messagesEndRef} />
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Scroll to Bottom Button - FORCE SHOWING FOR DEBUG */}
+      <ScrollToBottomButton
+        onClick={() => scrollToBottom()}
+        show={showScrollButton}
+      />
 
       {/* Chat Input Component */}
       <ChatInput

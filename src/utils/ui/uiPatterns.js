@@ -1019,7 +1019,7 @@ export const typographyPatterns = {
   caption: "font-rajdhani text-sm text-synthwave-text-muted",
 
   // Empty state and tip card typography
-  emptyStateHeader: "font-russo text-2xl text-white uppercase tracking-wider",
+  emptyStateHeader: "font-russo text-xl md:text-2xl text-white uppercase tracking-wider",
   emptyStateDescription:
     "font-rajdhani text-base text-synthwave-text-secondary max-w-md",
   emptyStateSectionHeader:

@@ -14,6 +14,7 @@ html {
   background-color: #16213e !important;
   margin: 0;
   padding: 0;
+  overflow-x: hidden; /* Prevent horizontal scrollbar */
 }
 
 body {
@@ -22,6 +23,7 @@ body {
   padding: 0;
   min-height: 100%;
   min-height: -webkit-fill-available; /* iOS Safari fix */
+  overflow-x: hidden; /* Prevent horizontal scrollbar */
 }
 
 /* Control overscroll background without disabling behavior */
@@ -142,15 +144,13 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
     background: #00ffff40;
   }
 
-  /* Hide scrollbar on mobile for cleaner breadcrumb navigation */
-  @media (max-width: 768px) {
-    .scrollbar-hide-on-mobile::-webkit-scrollbar {
-      display: none;
-    }
-    .scrollbar-hide-on-mobile {
-      -ms-overflow-style: none; /* IE and Edge */
-      scrollbar-width: none; /* Firefox */
-    }
+  /* Hide scrollbar on all screen sizes for breadcrumb navigation */
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
   }
 }
 

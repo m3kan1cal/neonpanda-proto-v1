@@ -140,7 +140,7 @@ function AppContent() {
   }, [setIsCommandPaletteOpen, setCommandPaletteCommand]);
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen overflow-x-hidden">
       {/* Conditional Navigation: Public Header vs Full App Navigation */}
       {isPublicPage ? (
         // Public pages: Simple header only
