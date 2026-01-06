@@ -143,8 +143,14 @@ function UpgradePrompt({
       />
 
       {/* Prompt card - centered on both mobile and desktop */}
-      <div className="fixed inset-0 z-50 p-4 flex items-center justify-center animate-fade-in">
-        <div className={`${containerPatterns.cardMediumOpaque} p-6 relative w-full max-w-md`}>
+      <div
+        className="fixed inset-0 z-50 p-4 flex items-center justify-center animate-fade-in"
+        onClick={handleClose}
+      >
+        <div
+          className={`${containerPatterns.cardMediumOpaque} p-6 relative w-full max-w-md`}
+          onClick={(e) => e.stopPropagation()}
+        >
           {/* Close button */}
           <button
             onClick={handleClose}
