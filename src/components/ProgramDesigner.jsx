@@ -31,6 +31,7 @@ import { useNavigationContext } from "../contexts/NavigationContext";
 import ChatInput from "./shared/ChatInput";
 import UserAvatar from "./shared/UserAvatar";
 import { getUserInitial as getInitialFromUsername } from "./shared/UserAvatar";
+import ScrollToBottomButton from "./shared/ScrollToBottomButton";
 import { parseMarkdown } from "../utils/markdownParser.jsx";
 // No imports needed - session ID comes from URL
 import ProgramDesignerAgent from "../utils/agents/ProgramDesignerAgent";
@@ -106,14 +107,16 @@ const TypingIndicator = () => (
 // Contextual update indicator - shows AI processing stages
 const ContextualUpdateIndicator = ({ content, stage, coachName }) => {
   return (
-    <div className="flex items-end gap-2 mb-1">
-      <div className={`flex-shrink-0 ${avatarPatterns.aiSmall}`}>
-        {coachName?.charAt(0) || "C"}
-      </div>
+    <div className="flex flex-col items-start mb-1">
       <div className="px-4 py-2">
         <span className="font-rajdhani text-base italic animate-pulse text-synthwave-text-secondary/70">
           {content}
         </span>
+      </div>
+      <div className="flex items-start gap-2 px-2 mt-2">
+        <div className={`flex-shrink-0 ${avatarPatterns.aiSmall}`}>
+          {coachName?.charAt(0) || "C"}
+        </div>
       </div>
     </div>
   );
@@ -134,28 +137,13 @@ const MessageItem = memo(
   }) => {
     return (
       <div
-        className={`flex items-end gap-2 mb-1 group ${
-          message.type === "user" ? "flex-row-reverse" : "flex-row"
+        className={`flex flex-col mb-1 group ${
+          message.type === "user" ? "items-end" : "items-start"
         }`}
       >
-        {/* Avatar */}
-        <div className="flex-shrink-0">
-          {message.type === "user" ? (
-            <UserAvatar
-              email={userEmail}
-              username={userDisplayName}
-              size={32}
-            />
-          ) : (
-            <div className={avatarPatterns.aiSmall}>
-              {coachName?.charAt(0) || "C"}
-            </div>
-          )}
-        </div>
-
         {/* Message Bubble */}
         <div
-          className={`max-w-[95%] md:max-w-[70%] ${message.type === "user" ? "items-end" : "items-start"} flex flex-col`}
+          className={`max-w-[95%] md:max-w-[80%] ${message.type === "user" ? "items-end" : "items-start"} flex flex-col`}
         >
           {/* Workout Log Indicator Badge (only for AI messages created during workout log artifact creation) */}
           {message.type === "ai" &&
@@ -191,9 +179,19 @@ const MessageItem = memo(
             </div>
           </div>
 
+          {/* Timestamp, status, and avatar on same line */}
           <div
-            className={`flex items-center gap-1 px-2 mt-1 ${message.type === "user" ? "justify-end" : "justify-start"}`}
+            className={`flex items-start gap-2 px-2 mt-2 ${message.type === "user" ? "justify-end" : "justify-start"}`}
           >
+            {/* Avatar for AI messages (left side) */}
+            {message.type === "ai" && (
+              <div className="flex-shrink-0">
+                <div className={avatarPatterns.aiSmall}>
+                  {coachName?.charAt(0) || "C"}
+                </div>
+              </div>
+            )}
+
             <span className="text-xs text-synthwave-text-secondary font-rajdhani">
               {formatTime(message.timestamp)}
             </span>
@@ -223,6 +221,17 @@ const MessageItem = memo(
                       : messagePatterns.statusDotCyan
                   }`}
                 ></div>
+              </div>
+            )}
+
+            {/* Avatar for user messages (right side) */}
+            {message.type === "user" && (
+              <div className="flex-shrink-0">
+                <UserAvatar
+                  email={userEmail}
+                  username={userDisplayName}
+                  size={32}
+                />
               </div>
             )}
           </div>
@@ -307,6 +316,7 @@ function ProgramDesigner() {
 
   // UI-specific state
   const [inputMessage, setInputMessage] = useState("");
+  const [showScrollButton, setShowScrollButton] = useState(false);
 
   // Slash command states moved to ChatInput component
 
@@ -322,6 +332,7 @@ function ProgramDesigner() {
   const isSendingMessage = useRef(false);
 
   const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
   const inputRef = useRef(null);
   const agentRef = useRef(null);
   const coachAgentRef = useRef(null);
@@ -590,15 +601,57 @@ function ProgramDesigner() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, []);
 
+  // Handle scroll events to show/hide scroll button
+  const handleScroll = useCallback(() => {
+    if (!messagesContainerRef.current) return;
+
+    const { scrollTop, scrollHeight, clientHeight } =
+      messagesContainerRef.current;
+    const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
+    const isNearBottom = distanceFromBottom < 100;
+
+    // Only show button if there's actually content to scroll to
+    const hasScrollableContent = scrollHeight > clientHeight;
+
+    setShowScrollButton(hasScrollableContent && !isNearBottom);
+  }, []);
+
+  // Auto-scroll to bottom when new messages arrive (only if user is already at bottom)
   useEffect(() => {
-    scrollToBottom();
+    if (!showScrollButton) {
+      scrollToBottom();
+    }
   }, [
     agentState.messages,
     agentState.isTyping,
     agentState.contextualUpdate,
-    agentState.streamingMessage, // Added to scroll during streaming
+    agentState.streamingMessage,
+    showScrollButton,
     scrollToBottom,
   ]);
+
+  // Set up scroll event listener
+  useEffect(() => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    const checkScroll = () => {
+      handleScroll();
+    };
+
+    container.addEventListener("scroll", checkScroll);
+    // Check initial scroll position
+    const timeout1 = setTimeout(checkScroll, 100);
+    const timeout2 = setTimeout(checkScroll, 500);
+    const timeout3 = setTimeout(checkScroll, 1000);
+
+    return () => {
+      container.removeEventListener("scroll", checkScroll);
+      clearTimeout(timeout1);
+      clearTimeout(timeout2);
+      clearTimeout(timeout3);
+    };
+  }, [handleScroll, agentState.messages.length]);
 
   // Voice recording functions moved to ChatInput component
 
@@ -892,7 +945,7 @@ function ProgramDesigner() {
 
                       {/* Message bubble skeleton */}
                       <div
-                        className={`max-w-[95%] md:max-w-[70%] ${i % 2 === 1 ? "items-end" : "items-start"} flex flex-col`}
+                        className={`max-w-[95%] md:max-w-[80%] ${i % 2 === 1 ? "items-end" : "items-start"} flex flex-col`}
                       >
                         <div
                           className={`px-4 py-3 rounded-2xl ${i % 2 === 1 ? "rounded-br-md" : "rounded-bl-md"} bg-synthwave-text-muted/20 animate-pulse min-w-[min(65vw,600px)] min-h-[130px]`}
@@ -1024,7 +1077,10 @@ function ProgramDesigner() {
             {/* Removed mainContent container for immersive chat UX - messages flow edge-to-edge */}
             <div className="h-full flex flex-col">
               {/* Messages Area - with bottom padding for floating input */}
-              <div className="flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-6 pb-40 sm:pb-56 space-y-4">
+              <div
+                ref={messagesContainerRef}
+                className="flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-6 pb-40 sm:pb-56 space-y-4"
+              >
                 {/* Empty State - Show tips when no messages */}
                 {agentState.messages.length === 0 &&
                   !agentState.isTyping &&
@@ -1264,12 +1320,7 @@ function ProgramDesigner() {
                 {/* Typing Indicator - Show only when typing but not actively streaming content */}
                 {typingState.showTypingIndicator &&
                   !agentState.contextualUpdate && (
-                    <div className="flex items-end gap-2 mb-1">
-                      <div
-                        className={`flex-shrink-0 ${avatarPatterns.aiSmall}`}
-                      >
-                        {agentState.coach?.name?.charAt(0) || "C"}
-                      </div>
+                    <div className="flex flex-col items-start mb-1">
                       <div
                         className={
                           conversationMode === CONVERSATION_MODES.PROGRAM_DESIGN
@@ -1306,6 +1357,13 @@ function ProgramDesigner() {
                           ></div>
                         </div>
                       </div>
+                      <div className="flex items-start gap-2 px-2 mt-2">
+                        <div
+                          className={`flex-shrink-0 ${avatarPatterns.aiSmall}`}
+                        >
+                          {agentState.coach?.name?.charAt(0) || "C"}
+                        </div>
+                      </div>
                     </div>
                   )}
 
@@ -1316,6 +1374,12 @@ function ProgramDesigner() {
           </div>
         </div>
       </div>
+
+      {/* Scroll to Bottom Button - FORCE SHOWING FOR DEBUG */}
+      <ScrollToBottomButton
+        onClick={() => scrollToBottom()}
+        show={showScrollButton}
+      />
 
       {/* Chat Input Section - show completion banner when done, otherwise show input */}
       {agentState.isComplete ? (

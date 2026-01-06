@@ -60,10 +60,10 @@ function Breadcrumbs() {
 
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-30 pointer-events-none ${isSidebarCollapsed ? "md:ml-16" : "md:ml-64"}`}
+      className={`fixed top-0 right-0 z-30 pointer-events-none ${isSidebarCollapsed ? "left-0 md:left-16" : "left-0 md:left-64"}`}
     >
       <div className="px-4 py-2 bg-synthwave-gradient border-b border-synthwave-neon-cyan/10">
-        <div className="flex items-center space-x-2 text-sm font-rajdhani overflow-x-auto synthwave-scrollbar-cyan pb-2 -mb-2 scrollbar-hide-on-mobile pointer-events-auto">
+        <div className="flex items-center space-x-2 text-sm font-rajdhani overflow-x-auto scrollbar-hide pointer-events-auto">
           {/* Logo - Mobile only */}
           <Link
             to="/"
