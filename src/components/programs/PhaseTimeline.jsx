@@ -120,7 +120,7 @@ export default function PhaseTimeline({ program }) {
                 className="px-2"
               >
                 <div className="font-rajdhani font-bold text-sm uppercase tracking-wide text-synthwave-text-secondary">
-                  {getTimelinePhaseName(phase.name, index + 1)}
+                  {getTimelinePhaseName(phase.name, index)}
                 </div>
                 <div className="text-xs text-synthwave-text-muted font-rajdhani mt-0.5">
                   Days {phase.startDay}-{phase.endDay}

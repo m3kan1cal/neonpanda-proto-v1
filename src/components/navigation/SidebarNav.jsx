@@ -124,7 +124,7 @@ const QuickActionsPopover = ({
                 focus:outline-none
                 active:outline-none
               `}
-              style={{ WebKitTapHighlightColor: "transparent" }}
+              style={{ WebkitTapHighlightColor: "transparent" }}
               aria-label="Quick actions"
               title={isSidebarCollapsed ? "Quick Actions" : undefined}
               data-tooltip-id={
@@ -208,7 +208,7 @@ const QuickActionsPopover = ({
                           active:outline-none
                           w-full
                         `}
-                        style={{ WebKitTapHighlightColor: "transparent" }}
+                        style={{ WebkitTapHighlightColor: "transparent" }}
                       >
                         {/* Icon */}
                         {Icon && (
@@ -338,7 +338,7 @@ const UtilityPopover = ({
                 focus:outline-none
                 active:outline-none
               `}
-              style={{ WebKitTapHighlightColor: "transparent" }}
+              style={{ WebkitTapHighlightColor: "transparent" }}
               aria-label="More resources"
               title={isSidebarCollapsed ? "More Resources" : undefined}
               data-tooltip-id={
@@ -428,7 +428,7 @@ const UtilityPopover = ({
                             active:outline-none
                             w-full
                           `}
-                          style={{ WebKitTapHighlightColor: "transparent" }}
+                          style={{ WebkitTapHighlightColor: "transparent" }}
                         >
                           {/* Icon */}
                           {Icon && (
@@ -626,7 +626,7 @@ const SidebarNav = () => {
                 : `${colorClasses.inactive} ${getHoverClasses()} focus:outline-none active:outline-none`
           }
         `}
-        style={{ WebKitTapHighlightColor: "transparent" }}
+        style={{ WebkitTapHighlightColor: "transparent" }}
         aria-label={ariaLabel}
         aria-current={active ? "page" : undefined}
         title={isSidebarCollapsed ? item.label : undefined}
