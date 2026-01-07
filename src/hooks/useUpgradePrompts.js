@@ -163,18 +163,47 @@ export function useUpgradePrompts(userId, userData = {}) {
   const shouldShowOnboarding = useCallback(() => {
     if (!userId) return false;
 
-    const hasSeenOnboarding = localStorage.getItem(
+    const onboardingShown = localStorage.getItem(
       `${STORAGE_KEYS.ONBOARDING_SHOWN}_${userId}`,
     );
 
-    return !hasSeenOnboarding;
+    // Return false if onboarding was shown (either old "true" format or timestamp)
+    return !onboardingShown;
   }, [userId]);
 
-  // Mark onboarding as shown
+  // Check if onboarding was shown recently (within cooldown period)
+  const wasOnboardingShownRecently = useCallback(() => {
+    if (!userId) return false;
+
+    const onboardingShown = localStorage.getItem(
+      `${STORAGE_KEYS.ONBOARDING_SHOWN}_${userId}`,
+    );
+
+    if (!onboardingShown) return false;
+
+    // Handle old format ("true") - treat as shown recently if it exists
+    if (onboardingShown === "true") return true;
+
+    // Handle timestamp format - check if within cooldown period (24 hours)
+    const onboardingTimestamp = parseInt(onboardingShown, 10);
+    if (isNaN(onboardingTimestamp)) return false;
+
+    const hoursSinceOnboarding =
+      (Date.now() - onboardingTimestamp) / (1000 * 60 * 60);
+    const COOLDOWN_HOURS = 24; // Don't show upgrade prompt for 24 hours after onboarding
+
+    return hoursSinceOnboarding < COOLDOWN_HOURS;
+  }, [userId]);
+
+  // Mark onboarding as shown (stores timestamp for cooldown tracking)
   const markOnboardingShown = useCallback(() => {
     if (!userId) return;
 
-    localStorage.setItem(`${STORAGE_KEYS.ONBOARDING_SHOWN}_${userId}`, "true");
+    // Store timestamp instead of just "true" to track when onboarding was shown
+    localStorage.setItem(
+      `${STORAGE_KEYS.ONBOARDING_SHOWN}_${userId}`,
+      Date.now().toString(),
+    );
   }, [userId]);
 
   return {
@@ -192,10 +221,40 @@ export function useUpgradePrompts(userId, userData = {}) {
     // Onboarding state
     shouldShowOnboarding: shouldShowOnboarding(),
     markOnboardingShown,
+    wasOnboardingShownRecently: wasOnboardingShownRecently(),
 
     // Utilities
     UPGRADE_TRIGGERS,
   };
+}
+
+/**
+ * Check if onboarding was shown recently (within cooldown period)
+ * Exported for use in UpgradePrompt rate limiting
+ * @param {string} userId - The user ID
+ * @returns {boolean} - Whether onboarding was shown within the last 24 hours
+ */
+export function wasOnboardingShownRecently(userId) {
+  if (!userId) return false;
+
+  const onboardingShown = localStorage.getItem(
+    `${STORAGE_KEYS.ONBOARDING_SHOWN}_${userId}`,
+  );
+
+  if (!onboardingShown) return false;
+
+  // Handle old format ("true") - treat as shown recently if it exists
+  if (onboardingShown === "true") return true;
+
+  // Handle timestamp format - check if within cooldown period (24 hours)
+  const onboardingTimestamp = parseInt(onboardingShown, 10);
+  if (isNaN(onboardingTimestamp)) return false;
+
+  const hoursSinceOnboarding =
+    (Date.now() - onboardingTimestamp) / (1000 * 60 * 60);
+  const COOLDOWN_HOURS = 24; // Don't show upgrade prompt for 24 hours after onboarding
+
+  return hoursSinceOnboarding < COOLDOWN_HOURS;
 }
 
 export default useUpgradePrompts;

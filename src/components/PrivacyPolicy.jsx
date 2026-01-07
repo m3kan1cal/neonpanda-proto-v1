@@ -34,7 +34,7 @@ function PrivacyPolicy() {
         </div>
 
         {/* Main Content */}
-        <div className={`${containerPatterns.mainContent} p-8 md:p-12 space-y-16`}>
+        <div className="max-w-5xl mx-auto space-y-16">
 
           {/* Last Updated */}
           <section className="space-y-4">

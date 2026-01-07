@@ -33,6 +33,211 @@ import {
 import { Tooltip } from "react-tooltip";
 import QuickAccessPopover from "./QuickAccessPopover";
 
+// Quick Actions Popover Component with Floating UI positioning
+const QuickActionsPopover = ({
+  quickActionItems,
+  isSidebarCollapsed,
+  context,
+  handleItemClick,
+  getItemColorClasses,
+}) => {
+  // Create a custom boundary function that excludes the chat input area
+  const getBoundary = () => {
+    const chatInput = document.querySelector("[data-chat-input-container]");
+    if (!chatInput) {
+      return {
+        top: 0,
+        left: 0,
+        right: window.innerWidth,
+        bottom: window.innerHeight,
+        width: window.innerWidth,
+        height: window.innerHeight,
+        x: 0,
+        y: 0,
+      };
+    }
+
+    const chatInputRect = chatInput.getBoundingClientRect();
+
+    // Create a virtual boundary that ends where chat input begins
+    return {
+      top: 0,
+      left: 0,
+      right: window.innerWidth,
+      bottom: chatInputRect.top - 16, // Stop 16px above chat input
+      width: window.innerWidth,
+      height: chatInputRect.top - 16,
+      x: 0,
+      y: 0,
+    };
+  };
+
+  const { refs, floatingStyles } = useFloating({
+    placement: "right-start",
+    middleware: [
+      offset(0), // No gap between button and popover
+      flip({
+        fallbackPlacements: ["right-end", "right", "left-start", "left-end"],
+        boundary: getBoundary(),
+      }),
+      shift({
+        padding: 8,
+        boundary: getBoundary(),
+        limiter: limitShift(),
+      }),
+      size({
+        boundary: getBoundary(),
+        apply({ availableHeight, elements }) {
+          // Apply max height and enable scrolling
+          Object.assign(elements.floating.style, {
+            maxHeight: `${Math.max(200, availableHeight)}px`,
+            overflowY: "auto",
+          });
+        },
+        padding: 8,
+      }),
+    ],
+    whileElementsMounted: autoUpdate,
+  });
+
+  return (
+    <Popover>
+      {({ open, close }) => {
+        const colorClasses = getItemColorClasses("pink", false);
+        const getHoverClasses = () => {
+          return "hover:border-synthwave-neon-pink/50 hover:bg-synthwave-bg-primary/20 focus:ring-2 focus:ring-synthwave-neon-pink/50";
+        };
+
+        return (
+          <>
+            <Popover.Button
+              ref={refs.setReference}
+              className={`
+                ${navigationPatterns.desktop.navItem}
+                ${isSidebarCollapsed ? navigationPatterns.desktop.navItemCollapsed : ""}
+                ${open ? "text-synthwave-neon-pink" : colorClasses.inactive}
+                ${
+                  open
+                    ? "border-t-synthwave-neon-pink/50 border-b-synthwave-neon-pink/50 bg-synthwave-bg-primary/20"
+                    : getHoverClasses()
+                }
+                focus:outline-none
+                active:outline-none
+              `}
+              style={{ WebKitTapHighlightColor: "transparent" }}
+              aria-label="Quick actions"
+              title={isSidebarCollapsed ? "Quick Actions" : undefined}
+              data-tooltip-id={
+                isSidebarCollapsed ? "sidebar-nav-tooltip" : undefined
+              }
+              data-tooltip-content={
+                isSidebarCollapsed ? "Quick Actions" : undefined
+              }
+            >
+              {/* Icon */}
+              <div
+                className={`
+                ${isSidebarCollapsed ? navigationPatterns.desktop.navItemIconCollapsed : navigationPatterns.desktop.navItemIcon}
+                flex items-center justify-center
+              `}
+              >
+                <svg
+                  className={isSidebarCollapsed ? "w-6 h-6" : "w-5 h-5"}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 10V3L4 14h7v7l9-11h-7z"
+                  />
+                </svg>
+              </div>
+
+              {/* Label */}
+              <span
+                className={`
+                ${navigationPatterns.desktop.navItemLabel}
+                ${isSidebarCollapsed ? navigationPatterns.desktop.navItemLabelCollapsed : ""}
+              `}
+              >
+                Quick Actions
+              </span>
+            </Popover.Button>
+
+            <Popover.Panel
+              ref={refs.setFloating}
+              style={floatingStyles}
+              className="z-[60]"
+            >
+              <div className={navigationPatterns.utilityFlyout.container}>
+                {/* Header Section */}
+                <div className={navigationPatterns.utilityFlyout.header}>
+                  <h3 className={navigationPatterns.utilityFlyout.headerTitle}>
+                    Quick Actions
+                  </h3>
+                </div>
+
+                {/* Menu Items */}
+                <div
+                  className={navigationPatterns.utilityFlyout.itemsContainer}
+                >
+                  {quickActionItems.map((item) => {
+                    const Icon = item.icon;
+                    const itemColorClasses = getItemColorClasses(
+                      item.color || "pink",
+                      false,
+                    );
+
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => {
+                          handleItemClick(item);
+                          close();
+                        }}
+                        className={`
+                          ${navigationPatterns.desktop.navItem}
+                          ${itemColorClasses.inactive}
+                          hover:border-synthwave-neon-pink/50
+                          hover:bg-synthwave-bg-primary/20
+                          focus:ring-2 focus:ring-synthwave-neon-pink/50
+                          focus:outline-none
+                          active:outline-none
+                          w-full
+                        `}
+                        style={{ WebKitTapHighlightColor: "transparent" }}
+                      >
+                        {/* Icon */}
+                        {Icon && (
+                          <div
+                            className={navigationPatterns.desktop.navItemIcon}
+                          >
+                            <Icon className="w-5 h-5" />
+                          </div>
+                        )}
+
+                        {/* Label */}
+                        <span
+                          className={navigationPatterns.desktop.navItemLabel}
+                        >
+                          {item.label}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </Popover.Panel>
+          </>
+        );
+      }}
+    </Popover>
+  );
+};
+
 // Utility Popover Component with Floating UI positioning
 const UtilityPopover = ({
   utilityItems,
@@ -576,21 +781,55 @@ const SidebarNav = () => {
 
         {/* Navigation Section - Scrollable */}
         <nav className={navigationPatterns.desktop.navSection}>
-          {/* Primary Navigation */}
-          {renderSection(primaryItems, null)}
+          {/* Coaches and Quick Actions */}
+          <div className={navigationPatterns.sectionSpacing.bottom}>
+            {/* Coaches - Standalone (from primary navigation) */}
+            {primaryItems.length > 0 &&
+              primaryItems.find((item) => item.id === "coaches") &&
+              renderNavItem(primaryItems.find((item) => item.id === "coaches"))}
 
-          {/* Divider before Your Training */}
+            {/* Quick Actions - Standalone (directly under Coaches) */}
+            {quickAccessItems.length > 0 && (
+              <QuickActionsPopover
+                quickActionItems={quickAccessItems}
+                isSidebarCollapsed={isSidebarCollapsed}
+                context={context}
+                handleItemClick={handleItemClick}
+                getItemColorClasses={getItemColorClasses}
+              />
+            )}
+          </div>
+
+          {/* Divider before Your Training Section */}
           {contextualItems.length > 0 && (
             <div
               className={`${navigationPatterns.sectionSpacing.both} ${navigationPatterns.dividers.gradientCyan}`}
             />
           )}
 
-          {/* Coach-Specific Navigation */}
-          {renderSection(contextualItems, "Your Training")}
+          {/* Your Training Section (includes Training Grounds and all other contextual items) */}
+          {contextualItems.length > 0 && (
+            <>
+              {/* Section header */}
+              {!isSidebarCollapsed && (
+                <div className={navigationPatterns.desktop.sectionHeader}>
+                  <h3 className={navigationPatterns.desktop.sectionTitle}>
+                    Your Training
+                  </h3>
+                </div>
+              )}
 
-          {/* Quick Actions */}
-          {renderSection(quickAccessItems, "Quick Actions", true)}
+              {/* All Your Training items (including Training Grounds) */}
+              <div className={navigationPatterns.sectionSpacing.bottom}>
+                {contextualItems.map((item) => renderNavItem(item))}
+              </div>
+
+              {/* Divider after Your Training section */}
+              <div
+                className={`${navigationPatterns.sectionSpacing.top} ${navigationPatterns.dividers.gradientCyan}`}
+              />
+            </>
+          )}
 
           {/* Account Navigation (Settings, Sign Out) */}
           {accountItems.length > 0 && (

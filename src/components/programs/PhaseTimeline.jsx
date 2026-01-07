@@ -76,6 +76,22 @@ export default function PhaseTimeline({ program }) {
     }
   };
 
+  // Format phase name for timeline display (show "Phase X" or first 10 chars)
+  const getTimelinePhaseName = (phaseName, index) => {
+    if (!phaseName) {
+      return `Phase ${index + 1}`;
+    }
+
+    // Check if name matches "Phase X" pattern (case-insensitive)
+    const phaseMatch = phaseName.match(/^phase\s+(\d+)/i);
+    if (phaseMatch) {
+      return `Phase ${phaseMatch[1]}`;
+    }
+
+    // Otherwise, truncate to first 10 characters
+    return phaseName.length > 10 ? phaseName.substring(0, 10) : phaseName;
+  };
+
   return (
     <div className={`${containerPatterns.cardMedium} p-6`}>
       {/* Section Header */}
@@ -104,7 +120,7 @@ export default function PhaseTimeline({ program }) {
                 className="px-2"
               >
                 <div className="font-rajdhani font-bold text-sm uppercase tracking-wide text-synthwave-text-secondary">
-                  {phase.name || `Phase ${index + 1}`}
+                  {getTimelinePhaseName(phase.name, index + 1)}
                 </div>
                 <div className="text-xs text-synthwave-text-muted font-rajdhani mt-0.5">
                   Days {phase.startDay}-{phase.endDay}
