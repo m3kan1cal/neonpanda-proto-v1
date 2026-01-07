@@ -10,6 +10,45 @@
 
 export const changelogEntries = [
   {
+    version: "Release v1.0.20260106-beta",
+    date: "2026-01-06",
+    changes: {
+      added: [
+        "QuickActionsPopover component with Floating UI positioning for flyout menu matching More Resources pattern",
+        "Phase name truncation helper function (getTimelinePhaseName) in PhaseTimeline for shortened timeline display",
+        "24-hour cooldown period preventing UpgradePrompt from showing immediately after OnboardingPrompt (wasOnboardingShownRecently function)",
+        "Ref initialization for QuickActionsPopover items with popoverType to prevent runtime errors",
+      ],
+      changed: [
+        "Quick Actions converted from section to flyout menu pattern matching More Resources utility menu design",
+        "Quick Actions menu item hover border and pop-out menu items changed to neon pink instead of cyan for visual consistency",
+        "Quick Actions menu item repositioned directly under Coaches menu item (above divider, outside Your Training section)",
+        "Vertical spacing between Coaches and Quick Actions adjusted to match Your Training section item spacing",
+        "PhaseTimeline phase names in horizontal bar now display shortened names (Phase X pattern or first 10 characters) instead of full names",
+        "TermsOfService, PrivacyPolicy, and Changelog pages updated to use cleaner max-w-5xl mx-auto container styling matching AboutUs, Technology, and FAQs pages",
+        "Footer social media icons updated to include Instagram, TikTok, YouTube, Twitter (X), and Facebook with appropriate SVG icons and links opening in new tabs",
+        "markOnboardingShown now stores timestamp instead of boolean for cooldown tracking (backward compatible with old format)",
+        "shouldShowUpgradePrompt checks onboarding cooldown before other rate limits to prevent aggressive prompting",
+      ],
+      fixed: [
+        "Long phase names causing layout issues in PhaseTimeline horizontal bar when multiple phases present",
+        "Quick Actions section header appearing unnecessarily when item is standalone flyout menu",
+        "Training Grounds menu item properly included in Your Training section collection",
+        "Inconsistent page container styling across marketing pages (TermsOfService, PrivacyPolicy, Changelog now match AboutUs, Technology, FAQs)",
+        "Outdated social media icons in Footer component (replaced with current Instagram, TikTok, YouTube, Twitter, Facebook icons)",
+        "Off-by-one error in PhaseTimeline causing incorrect phase numbering (Phase 1 displayed as Phase 2 when no custom name)",
+        "Incorrect CSS property casing WebKitTapHighlightColor preventing tap highlight suppression on mobile Safari (changed to WebkitTapHighlightColor)",
+        "Missing ref setup for 'View Coach Details' item in QuickActionsPopover causing runtime TypeError when opening coach popover",
+        "UpgradePrompt showing immediately after OnboardingPrompt dismissed (added 24-hour cooldown period)",
+        "Old onboarding format permanently blocking upgrade prompts for existing users (changed to treat old format as expired cooldown)",
+      ],
+      removed: [
+        "Quick Actions section header from sidebar navigation (replaced with standalone flyout menu item)",
+        "Older cyan-bordered containerPatterns.mainContent styling from TermsOfService, PrivacyPolicy, and Changelog pages (replaced with cleaner max-w-5xl mx-auto layout)",
+      ],
+    },
+  },
+  {
     version: "Release v1.0.20260105-beta",
     date: "2026-01-05",
     changes: {
