@@ -7,7 +7,10 @@ import {
   SUBSCRIPTION_TIERS,
 } from "../../utils/apis/subscriptionApi";
 import { CloseIcon } from "../themes/SynthwaveComponents";
-import { STORAGE_KEYS } from "../../hooks/useUpgradePrompts";
+import {
+  STORAGE_KEYS,
+  wasOnboardingShownRecently,
+} from "../../hooks/useUpgradePrompts";
 
 /**
  * Upgrade trigger types for analytics and rate limiting
@@ -245,6 +248,11 @@ function UpgradePrompt({
  */
 export function shouldShowUpgradePrompt(trigger, userId) {
   if (!userId) return false;
+
+  // Check onboarding cooldown - don't show upgrade prompt if onboarding was shown recently
+  if (wasOnboardingShownRecently(userId)) {
+    return false;
+  }
 
   // Check session limit
   if (RATE_LIMITS.ONE_PER_SESSION) {

@@ -78,8 +78,8 @@ function Changelog() {
 
         {/* Main Content Area */}
         <div className="flex-1">
-          <div className={`${containerPatterns.mainContent} h-full overflow-hidden`}>
-            <div className="p-6 h-full overflow-y-auto custom-scrollbar space-y-6">
+          <div className="max-w-5xl mx-auto h-full">
+            <div className="h-full overflow-y-auto space-y-6">
               {changelogEntries.map((entry, index) => (
                 <CollapsibleSection
                   key={index}
