@@ -40,6 +40,7 @@ const QuickActionsPopover = ({
   context,
   handleItemClick,
   getItemColorClasses,
+  popoverRefs,
 }) => {
   // Create a custom boundary function that excludes the chat input area
   const getBoundary = () => {
@@ -194,6 +195,9 @@ const QuickActionsPopover = ({
                     return (
                       <button
                         key={item.id}
+                        ref={
+                          item.popoverType ? popoverRefs.current[item.id] : null
+                        }
                         onClick={() => {
                           handleItemClick(item);
                           close();
@@ -547,6 +551,14 @@ const SidebarNav = () => {
     navigationItems.utility?.filter((item) => isItemVisible(item, context)) ||
     [];
 
+  // Initialize refs for quick access items with popoverType
+  // This ensures refs exist even though these items are rendered in QuickActionsPopover
+  quickAccessItems.forEach((item) => {
+    if (item.popoverType && !popoverRefs.current[item.id]) {
+      popoverRefs.current[item.id] = React.createRef();
+    }
+  });
+
   // Get display name from userProfile or fallback to email
   const getDisplayName = () => {
     return (
@@ -796,6 +808,7 @@ const SidebarNav = () => {
                 context={context}
                 handleItemClick={handleItemClick}
                 getItemColorClasses={getItemColorClasses}
+                popoverRefs={popoverRefs}
               />
             )}
           </div>

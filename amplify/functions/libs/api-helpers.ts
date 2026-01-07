@@ -28,12 +28,6 @@ const CLAUDE_HAIKU_4_DISPLAY = "claude-4.5-haiku";
 const NOVA_MICRO_MODEL_ID = "us.amazon.nova-micro-v1:0";
 const NOVA_MICRO_DISPLAY = "nova-micro";
 
-const MISTRAL_LARGE_3_MODEL_ID = "mistral.mistral-large-3-675b-instruct";
-const MISTRAL_LARGE_3_DISPLAY = "mistral-large-3";
-
-const NOVA_PRO_MODEL_ID = "us.amazon.nova-pro-v1:0";
-const NOVA_PRO_DISPLAY = "nova-pro";
-
 const NOVA_2_LITE_MODEL_ID = "us.amazon.nova-2-lite-v1:0";
 const NOVA_2_LITE_DISPLAY = "nova-2-lite";
 
@@ -51,13 +45,13 @@ export const TEMPERATURE_PRESETS = {
 // MODEL_IDS.PLANNER_MODEL_DISPLAY
 export const MODEL_IDS = {
   // The Contextual Model. It is used for contextual updates and intent classification.
-  CONTEXTUAL_MODEL_FULL: NOVA_MICRO_MODEL_ID,
-  CONTEXTUAL_MODEL_DISPLAY: NOVA_MICRO_DISPLAY,
+  CONTEXTUAL_MODEL_FULL: NOVA_2_LITE_MODEL_ID,
+  CONTEXTUAL_MODEL_DISPLAY: NOVA_2_LITE_DISPLAY,
 
   // The Executor. It is used as a sub-agent to carry out those discrete instructions in parallel,
   // benefiting from its speed and near-frontier coding accuracy.
-  EXECUTOR_MODEL_FULL: NOVA_2_LITE_MODEL_ID,
-  EXECUTOR_MODEL_DISPLAY: NOVA_2_LITE_DISPLAY,
+  EXECUTOR_MODEL_FULL: CLAUDE_HAIKU_4_MODEL_ID,
+  EXECUTOR_MODEL_DISPLAY: CLAUDE_HAIKU_4_DISPLAY,
 
   // The Planner. It is used for orchestration—breaking down complex, multi-file problems
   // into a set of discrete instructions.
