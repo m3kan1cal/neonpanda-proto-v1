@@ -181,8 +181,9 @@ export function useUpgradePrompts(userId, userData = {}) {
 
     if (!onboardingShown) return false;
 
-    // Handle old format ("true") - treat as shown recently if it exists
-    if (onboardingShown === "true") return true;
+    // Handle old format ("true") - no timestamp, so treat cooldown as expired
+    // This allows upgrade prompts to show for existing users
+    if (onboardingShown === "true") return false;
 
     // Handle timestamp format - check if within cooldown period (24 hours)
     const onboardingTimestamp = parseInt(onboardingShown, 10);
@@ -243,8 +244,9 @@ export function wasOnboardingShownRecently(userId) {
 
   if (!onboardingShown) return false;
 
-  // Handle old format ("true") - treat as shown recently if it exists
-  if (onboardingShown === "true") return true;
+  // Handle old format ("true") - no timestamp, so treat cooldown as expired
+  // This allows upgrade prompts to show for existing users
+  if (onboardingShown === "true") return false;
 
   // Handle timestamp format - check if within cooldown period (24 hours)
   const onboardingTimestamp = parseInt(onboardingShown, 10);

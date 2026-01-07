@@ -40,6 +40,7 @@ export const changelogEntries = [
         "Incorrect CSS property casing WebKitTapHighlightColor preventing tap highlight suppression on mobile Safari (changed to WebkitTapHighlightColor)",
         "Missing ref setup for 'View Coach Details' item in QuickActionsPopover causing runtime TypeError when opening coach popover",
         "UpgradePrompt showing immediately after OnboardingPrompt dismissed (added 24-hour cooldown period)",
+        "Old onboarding format permanently blocking upgrade prompts for existing users (changed to treat old format as expired cooldown)",
       ],
       removed: [
         "Quick Actions section header from sidebar navigation (replaced with standalone flyout menu item)",
