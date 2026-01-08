@@ -605,7 +605,7 @@ Calories: `;
     phaseNumber,
     templates,
   } = workoutData || {
-    dayNumber: dayParam ? parseInt(dayParam) : null,
+    dayNumber: dayParam ? parseInt(dayParam) : program?.currentDay || null,
     phaseName: "Rest Day",
     phaseNumber: null,
     templates: [],
