@@ -510,7 +510,19 @@ export class ProgramAgent {
         }
       } catch (err) {
         console.error("Error polling for linkedWorkoutId:", err);
-        // Continue polling even if there's an error
+        // Stop polling if we've moved to a rest day (no templates found)
+        if (
+          err.message === "No templates found for today" ||
+          err.message?.includes("No templates found")
+        ) {
+          console.log(
+            "⏹️ Rest day detected - stopping polling for template:",
+            templateId,
+          );
+          clearInterval(pollInterval);
+          this.pollingIntervals.delete(templateId);
+        }
+        // Continue polling for other errors
       }
     }, 3000); // Poll every 3 seconds
 
