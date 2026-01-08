@@ -117,15 +117,29 @@ export default function ProgramDashboard() {
       }
 
       // Load today's workout
-      const todayData = await programAgentRef.current.loadWorkoutTemplates(
-        programId,
-        {
-          today: true,
-        },
-      );
+      try {
+        const todayData = await programAgentRef.current.loadWorkoutTemplates(
+          programId,
+          {
+            today: true,
+          },
+        );
 
-      if (todayData) {
-        setTodaysWorkout(todayData.todaysWorkoutTemplates || todayData);
+        if (todayData) {
+          setTodaysWorkout(todayData.todaysWorkoutTemplates || todayData);
+        }
+      } catch (workoutErr) {
+        // "No templates found for today" means it's a rest day - not an error
+        if (
+          workoutErr.message === "No templates found for today" ||
+          workoutErr.message?.includes("No templates found")
+        ) {
+          console.log("Rest day detected - no workout template for today");
+          setTodaysWorkout(null); // TodaysWorkoutCard will show rest day UI
+        } else {
+          // Re-throw actual errors
+          throw workoutErr;
+        }
       }
     } catch (err) {
       console.error("Error loading program dashboard:", err);

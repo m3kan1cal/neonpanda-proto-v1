@@ -128,27 +128,41 @@ function ViewWorkouts() {
       setProgram(programData.program);
 
       // Load workouts based on query params
-      if (isViewingToday) {
-        // Load today's workout
-        const todayData = await programAgentRef.current.loadWorkoutTemplates(
-          programId,
-          {
-            today: true,
-          },
-        );
-        if (todayData) {
-          setWorkoutData(todayData.todaysWorkoutTemplates || todayData);
+      try {
+        if (isViewingToday) {
+          // Load today's workout
+          const todayData = await programAgentRef.current.loadWorkoutTemplates(
+            programId,
+            {
+              today: true,
+            },
+          );
+          if (todayData) {
+            setWorkoutData(todayData.todaysWorkoutTemplates || todayData);
+          }
+        } else if (dayParam) {
+          // Load specific day's workout
+          const dayData = await programAgentRef.current.loadWorkoutTemplates(
+            programId,
+            {
+              day: parseInt(dayParam),
+            },
+          );
+          if (dayData) {
+            setWorkoutData(dayData);
+          }
         }
-      } else if (dayParam) {
-        // Load specific day's workout
-        const dayData = await programAgentRef.current.loadWorkoutTemplates(
-          programId,
-          {
-            day: parseInt(dayParam),
-          },
-        );
-        if (dayData) {
-          setWorkoutData(dayData);
+      } catch (workoutErr) {
+        // "No templates found for today" means it's a rest day - not an error
+        if (
+          workoutErr.message === "No templates found for today" ||
+          workoutErr.message?.includes("No templates found")
+        ) {
+          console.log("Rest day detected - no workout template for this day");
+          setWorkoutData(null); // Will trigger rest day UI
+        } else {
+          // Re-throw actual errors
+          throw workoutErr;
         }
       }
     } catch (err) {
@@ -657,9 +671,18 @@ Calories: `;
         {/* Program Context */}
         <div className="mb-4">
           <div className="flex items-center gap-3 mb-1">
-            <div className="font-rajdhani text-lg text-white">
+            <button
+              onClick={() =>
+                navigate(
+                  `/training-grounds/programs/dashboard?userId=${userId}&coachId=${coachId}&programId=${programId}`,
+                )
+              }
+              className="font-rajdhani text-lg text-white hover:text-synthwave-neon-cyan transition-colors cursor-pointer"
+              data-tooltip-id="program-name-link"
+              data-tooltip-content="View training program"
+            >
               {program.name}
-            </div>
+            </button>
             {/* Day Complete Badge - shown when all workouts are complete */}
             {!isRestDay &&
               templates &&
@@ -791,13 +814,13 @@ Calories: `;
                 <button
                   onClick={() =>
                     navigate(
-                      `/training-grounds?userId=${userId}&coachId=${coachId}`,
+                      `/training-grounds/programs/dashboard?userId=${userId}&coachId=${coachId}&programId=${programId}`,
                     )
                   }
                   className={`flex-1 ${buttonPatterns.secondaryMedium} space-x-2`}
                 >
                   <HomeIcon />
-                  <span>Back to Training Grounds</span>
+                  <span>Back to Training Program</span>
                 </button>
               </div>
             </div>
@@ -1433,6 +1456,11 @@ Calories: `;
       />
       <Tooltip
         id="command-palette-button"
+        {...tooltipPatterns.standard}
+        place="bottom"
+      />
+      <Tooltip
+        id="program-name-link"
         {...tooltipPatterns.standard}
         place="bottom"
       />
