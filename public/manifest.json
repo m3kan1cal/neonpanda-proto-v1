@@ -70,12 +70,6 @@
       "src": "/images/icons/generated/webp/icon-512.webp",
       "sizes": "512x512",
       "type": "image/webp"
-    },
-    {
-      "src": "/images/icons/generated/web/apple-touch-icon.png",
-      "sizes": "180x180",
-      "type": "image/png",
-      "purpose": "apple-touch-icon"
     }
   ],
   "categories": ["fitness", "health", "sports"],
