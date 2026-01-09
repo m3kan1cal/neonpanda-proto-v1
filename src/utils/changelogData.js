@@ -52,6 +52,7 @@ export const changelogEntries = [
         "Mixed uppercase/sentence case styling in blog post 'The Foundation' sub-container headers now consistently use sentence case with Rajdhani font",
         "Training program stuck on rest days - users can now explicitly complete rest days to advance to next day",
         "No user action available on rest days preventing program progression - Complete Rest Day button provides clear path forward",
+        "completedRestDays counter inflating on duplicate rest day completions - now only increments if day wasn't already marked complete",
       ],
       removed: [
         "complete-rest-day Lambda function (consolidated into skip-workout-template Lambda to reduce infrastructure complexity)",

@@ -98,6 +98,10 @@ const baseHandler: AuthenticatedHandler = async (event) => {
         program.dayCompletionStatus = {};
       }
 
+      // Check if this rest day was already completed
+      const wasAlreadyComplete =
+        program.dayCompletionStatus[targetDay]?.primaryComplete === true;
+
       // Mark day as complete (for rest days, we consider it "complete" when user acknowledges it)
       if (!program.dayCompletionStatus[targetDay]) {
         program.dayCompletionStatus[targetDay] = {
@@ -114,8 +118,12 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       const updates: any = {
         lastActivityAt: new Date(),
         dayCompletionStatus: program.dayCompletionStatus,
-        completedRestDays: (program.completedRestDays || 0) + 1, // Track rest day completion
       };
+
+      // Only increment completedRestDays if this is a new completion
+      if (!wasAlreadyComplete) {
+        updates.completedRestDays = (program.completedRestDays || 0) + 1;
+      }
 
       // Advance currentDay if we're completing the current day
       if (program.currentDay === targetDay) {
@@ -147,20 +155,26 @@ const baseHandler: AuthenticatedHandler = async (event) => {
         programId,
         completedDay: targetDay,
         newCurrentDay: updates.currentDay,
-        totalRestDaysCompleted: updates.completedRestDays,
+        totalRestDaysCompleted:
+          updates.completedRestDays || program.completedRestDays || 0,
+        wasAlreadyComplete,
       });
 
       return createOkResponse({
         success: true,
-        message: "Rest day completed successfully",
+        message: wasAlreadyComplete
+          ? "Rest day already completed"
+          : "Rest day completed successfully",
         restDay: {
           dayNumber: targetDay,
           notes: notes || "Rest day completed",
+          wasAlreadyComplete,
         },
         program: {
           programId: updatedProgram.programId,
           currentDay: updates.currentDay,
-          completedRestDays: updates.completedRestDays,
+          completedRestDays:
+            updates.completedRestDays || program.completedRestDays || 0,
           status: updates.status || program.status,
         },
       });
