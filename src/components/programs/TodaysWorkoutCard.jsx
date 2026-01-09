@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { containerPatterns } from "../../utils/ui/uiPatterns";
+import { containerPatterns, buttonPatterns } from "../../utils/ui/uiPatterns";
 import { WorkoutIconSmall } from "../themes/SynthwaveComponents";
 import { EmptyState, InlineError } from "../shared/ErrorStates";
 
@@ -16,6 +16,8 @@ function TodaysWorkoutCard({
   userId,
   coachId,
   onViewWorkout,
+  onCompleteRestDay,
+  showViewProgramButton = true, // Show button by default, but can be hidden when on program dashboard
 }) {
   const navigate = useNavigate();
 
@@ -101,7 +103,7 @@ function TodaysWorkoutCard({
               </svg>
             </div>
           </div>
-          <div className="font-russo text-white text-lg uppercase mb-2">
+          <div className="font-rajdhani text-white text-lg uppercase mb-2">
             Rest Day
           </div>
           <div className="font-rajdhani text-sm text-synthwave-text-secondary">
@@ -109,15 +111,25 @@ function TodaysWorkoutCard({
           </div>
         </div>
 
-        {/* View program button */}
-        {program && (
+        {/* Complete Rest Day button */}
+        {program && onCompleteRestDay && (
+          <button
+            onClick={() => onCompleteRestDay(program)}
+            className={`w-full mt-4 ${buttonPatterns.secondaryMedium}`}
+          >
+            Complete Rest Day
+          </button>
+        )}
+
+        {/* View program button - only show if showViewProgramButton is true */}
+        {program && showViewProgramButton && (
           <button
             onClick={() =>
               navigate(
                 `/training-grounds/programs/${program.programId}?userId=${userId}&coachId=${coachId}`,
               )
             }
-            className="w-full mt-4 bg-transparent border-2 border-synthwave-neon-cyan text-synthwave-neon-cyan px-3 py-1.5 rounded-md font-rajdhani font-medium text-sm uppercase tracking-wide cursor-pointer transition-all duration-200 hover:bg-synthwave-neon-cyan hover:text-synthwave-bg-primary hover:shadow-md hover:shadow-synthwave-neon-cyan/30 hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary min-h-[32px] flex items-center justify-center"
+            className={`w-full mt-4 ${buttonPatterns.secondaryMedium}`}
           >
             View Training Program
           </button>
@@ -182,7 +194,7 @@ function TodaysWorkoutCard({
               </svg>
             </div>
           </div>
-          <div className="font-russo text-white text-lg uppercase mb-2">
+          <div className="font-rajdhani text-white text-lg uppercase mb-2">
             Rest Day
           </div>
           <div className="font-rajdhani text-sm text-synthwave-text-secondary">
@@ -190,17 +202,29 @@ function TodaysWorkoutCard({
           </div>
         </div>
 
-        {/* View program button */}
-        <button
-          onClick={() =>
-            navigate(
-              `/training-grounds/programs/${program.programId}?userId=${userId}&coachId=${coachId}`,
-            )
-          }
-          className="w-full mt-4 bg-transparent border-2 border-synthwave-neon-cyan text-synthwave-neon-cyan px-3 py-1.5 rounded-md font-rajdhani font-medium text-sm uppercase tracking-wide cursor-pointer transition-all duration-200 hover:bg-synthwave-neon-cyan hover:text-synthwave-bg-primary hover:shadow-md hover:shadow-synthwave-neon-cyan/30 hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary min-h-[32px] flex items-center justify-center"
-        >
-          View Training Program
-        </button>
+        {/* Complete Rest Day button */}
+        {onCompleteRestDay && (
+          <button
+            onClick={() => onCompleteRestDay(program)}
+            className={`w-full mt-4 ${buttonPatterns.secondaryMedium}`}
+          >
+            Complete Rest Day
+          </button>
+        )}
+
+        {/* View program button - only show if showViewProgramButton is true */}
+        {showViewProgramButton && (
+          <button
+            onClick={() =>
+              navigate(
+                `/training-grounds/programs/${program.programId}?userId=${userId}&coachId=${coachId}`,
+              )
+            }
+            className={`w-full mt-4 ${buttonPatterns.secondaryMedium}`}
+          >
+            View Training Program
+          </button>
+        )}
       </div>
     );
   }
@@ -287,7 +311,7 @@ function TodaysWorkoutCard({
       {/* Action button */}
       <button
         onClick={handleViewWorkout}
-        className="w-full bg-transparent border-2 border-synthwave-neon-cyan text-synthwave-neon-cyan px-4 py-2 rounded-lg font-rajdhani font-semibold text-base uppercase tracking-wide cursor-pointer transition-all duration-200 hover:bg-synthwave-neon-cyan hover:text-synthwave-bg-primary hover:shadow-md hover:shadow-synthwave-neon-cyan/30 hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-cyan/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary min-h-[40px] flex items-center justify-center"
+        className={`w-full ${buttonPatterns.secondaryMedium}`}
       >
         {templates.length > 1 ? "View Workouts" : "View Workout"}
       </button>

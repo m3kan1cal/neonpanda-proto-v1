@@ -21,6 +21,7 @@ import {
   WaitlistIconTiny,
   SignOutIconTiny,
   SettingsIconTiny,
+  BlogIconTiny,
 } from "../themes/SynthwaveComponents";
 
 const PublicHeader = () => {
@@ -79,16 +80,16 @@ const PublicHeader = () => {
       icon: TechnologyIconTiny,
     },
     {
+      id: "blog",
+      label: "Blog",
+      path: "/blog",
+      icon: BlogIconTiny,
+    },
+    {
       id: "changelog",
       label: "Changelog",
       path: "/changelog",
       icon: ChangelogIconTiny,
-    },
-    {
-      id: "waitlist",
-      label: "Get Early Access",
-      path: "/contact?type=waitlist",
-      icon: WaitlistIconTiny,
     },
     {
       id: "support",
@@ -270,6 +271,21 @@ const PublicHeader = () => {
                         <SignOutIconTiny className="w-5 h-5" />
                         <span>Sign Out</span>
                       </button>
+                    </>
+                  )}
+
+                  {/* Unauthenticated: Sign Up */}
+                  {!isAuthenticated && (
+                    <>
+                      <div className="my-2 h-px bg-gradient-to-r from-transparent via-synthwave-neon-pink/30 to-transparent" />
+                      <Link
+                        to="/auth"
+                        onClick={closeMenu}
+                        className="flex items-center space-x-3 px-4 py-2.5 font-rajdhani font-medium text-synthwave-neon-pink hover:bg-synthwave-neon-pink/10 transition-all duration-200"
+                      >
+                        <WaitlistIconTiny className="w-5 h-5" />
+                        <span>Sign Up</span>
+                      </Link>
                     </>
                   )}
                 </div>

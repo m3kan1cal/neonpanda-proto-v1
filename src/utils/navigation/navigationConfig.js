@@ -267,10 +267,10 @@ export const navigationItems = {
       color: "cyan",
     },
     {
-      id: "waitlist",
-      label: "Get Early Access",
+      id: "signup",
+      label: "Sign Up",
       icon: WaitlistIconTiny,
-      route: "/contact?type=waitlist",
+      route: "/auth",
       alwaysVisible: true,
       color: "cyan",
     },

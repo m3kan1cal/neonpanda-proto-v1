@@ -182,7 +182,7 @@ function FAQs() {
     {
       question: "When can I start using NeonPanda?",
       answer:
-        "We're targeting public launch in Q2 2026, with early access and beta testing happening now. Join our waitlist for early access opportunities - we're actively onboarding users who want to help shape the platform. We're also seeking fitness enthusiasts and professionals across our 8 supported disciplines to help refine the coaching experience.",
+        "Right now! NeonPanda is live and actively onboarding users. Sign up today and start building your first AI coach. We're targeting full public launch in Q2 2026 and are actively seeking fitness enthusiasts across our 8 supported disciplines to help shape the platform.",
     },
     {
       question: "What training disciplines does NeonPanda support?",
@@ -196,7 +196,7 @@ function FAQs() {
   };
 
   const handleSignUp = () => {
-    navigate("/contact?type=waitlist"); // Goes to waitlist form like AboutUs.jsx
+    navigate("/auth");
   };
 
   const handleContactUs = () => {
@@ -295,7 +295,7 @@ function FAQs() {
               onClick={handleSignUp}
               className={`${buttonPatterns.heroCTA} min-w-48`}
             >
-              Get Early Access
+              Sign Up
             </button>
             <button
               onClick={handleContactUs}

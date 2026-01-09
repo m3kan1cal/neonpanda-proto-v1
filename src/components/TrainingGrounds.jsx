@@ -330,6 +330,7 @@ function TrainingGrounds() {
           }
         })
         .catch((error) => {
+          // ProgramAgent handles rest days internally, so any error here is a real error
           console.error("TrainingGrounds: Error loading program data:", error);
         });
     }
@@ -389,6 +390,23 @@ function TrainingGrounds() {
       console.error("Error updating coach name:", error);
       showError("Failed to update coach name");
       return false;
+    }
+  };
+
+  const handleCompleteRestDay = async (program) => {
+    if (!programAgentRef.current || !program) {
+      return;
+    }
+
+    try {
+      await programAgentRef.current.completeRestDay(program.programId, {
+        notes: "Rest day completed from Training Grounds",
+      });
+
+      showSuccess("Rest day completed! Moving to next day.");
+    } catch (error) {
+      console.error("Error completing rest day:", error);
+      showError("Failed to complete rest day");
     }
   };
 
@@ -769,6 +787,8 @@ function TrainingGrounds() {
                 error={programState.error}
                 userId={userId}
                 coachId={coachId}
+                onCompleteRestDay={handleCompleteRestDay}
+                showViewProgramButton={false} // Hide button since user can navigate via "Active Program Summary" card
               />
               {/* Active Program Summary */}
               <ActiveProgramSummary

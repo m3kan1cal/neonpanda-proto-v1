@@ -123,10 +123,10 @@ function Footer() {
               </li>
               <li>
                 <Link
-                  to="/contact?type=waitlist"
+                  to="/auth"
                   className="text-synthwave-text-secondary hover:text-synthwave-neon-pink transition-colors"
                 >
-                  Get Early Access
+                  Sign Up
                 </Link>
               </li>
               <li>

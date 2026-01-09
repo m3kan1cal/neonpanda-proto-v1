@@ -696,6 +696,15 @@ export function createCoreApi(
     authorizer: userPoolAuthorizer,
   });
 
+  // Complete rest day (mark rest day as complete, advance program)
+  // Routes to skip-workout-template Lambda which handles both workout skips and rest day completion
+  httpApi.addRoutes({
+    path: "/users/{userId}/coaches/{coachId}/programs/{programId}/rest-day/complete",
+    methods: [apigatewayv2.HttpMethod.POST],
+    integration: integrations.skipWorkoutTemplate,
+    authorizer: userPoolAuthorizer,
+  });
+
   // Get workout template(s) - supports query params: ?today=true, ?day=N
   httpApi.addRoutes({
     path: "/users/{userId}/coaches/{coachId}/programs/{programId}/templates",

@@ -1,4 +1,5 @@
 # Training Programs - Phase 4 Implementation Plan
+
 ## Adaptation Intelligence & User Engagement
 
 **Created:** January 2025
@@ -12,6 +13,7 @@
 Phase 4 transforms training programs from **static plans** into **intelligent, adaptive coaching systems** that learn from user behavior, provide contextual feedback, and automatically adjust to user performance patterns.
 
 ### Key Features
+
 1. **Dashboard Quick Wins** (2%) - Complete deferred items from Phase 3b
 2. **Adaptation Intelligence** (40%) - Auto-adjust programs based on user patterns
 3. **Check-in System** (30%) - Regular feedback loops and coach responses
@@ -19,12 +21,14 @@ Phase 4 transforms training programs from **static plans** into **intelligent, a
 5. **Polish & Testing** (8%) - Edge cases, performance, user testing
 
 ### Success Criteria
+
 - **Adaptation Trigger Rate**: 15-25% of programs trigger at least one adaptation
 - **Check-in Response Rate**: >60% of users complete weekly check-ins
 - **User Satisfaction**: >85% positive feedback on adapted programs
 - **Retention Impact**: Users with adapted programs have 1.5x retention vs. non-adapted
 
 ### Timeline
+
 **Estimated: 4-5 weeks** (can be broken into sprints)
 
 ---
@@ -32,6 +36,7 @@ Phase 4 transforms training programs from **static plans** into **intelligent, a
 ## Feature 1: Dashboard Quick Wins (2%)
 
 ### Priority: High (Ship with Phase 4 Week 1)
+
 ### Estimated Time: 1-2 days
 
 These are deferred items from `TRAINING_PROGRAM_DASHBOARD_IMPLEMENTATION.md` that complete the dashboard experience.
@@ -41,9 +46,11 @@ These are deferred items from `TRAINING_PROGRAM_DASHBOARD_IMPLEMENTATION.md` tha
 ### 1A. View Creation Conversation Link
 
 **User Story:**
+
 > "As a user, I want to view the Build mode conversation where my program was created, so I can remember what I told my coach and understand the program's origins."
 
 **UI Location:**
+
 - Program Dashboard → Actions Menu (⋮) → "View Creation Conversation"
 - Or: Program Overview section → "View how this was created" link
 
@@ -53,25 +60,29 @@ These are deferred items from `TRAINING_PROGRAM_DASHBOARD_IMPLEMENTATION.md` tha
 // src/components/programs/ProgramDashboard.jsx
 const handleViewConversation = () => {
   if (!program.creationConversationId) {
-    toast.error('Creation conversation not found');
+    toast.error("Creation conversation not found");
     return;
   }
 
   // Navigate to conversation with Build mode context
-  navigate(`/coach-conversations?userId=${userId}&coachId=${coachId}&conversationId=${program.creationConversationId}&mode=build`);
+  navigate(
+    `/coach-conversations?userId=${userId}&coachId=${coachId}&conversationId=${program.creationConversationId}&mode=build`,
+  );
 };
 
 // In Actions Menu
 <MenuItem onClick={handleViewConversation}>
   <ChatIcon />
   <span>View Creation Conversation</span>
-</MenuItem>
+</MenuItem>;
 ```
 
 **Backend:**
+
 - ✅ No new endpoint needed - `creationConversationId` already stored in program entity
 
 **Acceptance Criteria:**
+
 - [ ] Link appears in program actions menu
 - [ ] Clicking link navigates to Build mode conversation
 - [ ] Conversation history shows program creation dialogue
@@ -82,13 +93,16 @@ const handleViewConversation = () => {
 ### 1B. Regenerate Workout Feature
 
 **User Story:**
+
 > "As a user, I want to request modifications to upcoming workouts through conversation with my coach, so I can adapt the program to equipment changes, time constraints, or preference changes."
 
 **UI Location:**
+
 - ViewWorkouts page → Workout card → "Request Changes" button (for scheduled/pending workouts)
 - Or: "⋮" menu → "Modify This Workout"
 
 **User Flow:**
+
 1. User clicks "Request Changes" on Day 12 workout
 2. Opens Build mode conversation with coach
 3. Pre-populated context: "User wants to modify Day 12 workout of [Program Name]"
@@ -105,19 +119,23 @@ const handleRequestChanges = async (template) => {
   const contextMessage = `I'd like to modify Day ${template.dayNumber} of my "${program.name}" program. Here's the current workout:\n\n${template.description}`;
 
   // Open conversation in Build mode with pre-filled message
-  navigate(`/coach-conversations?userId=${userId}&coachId=${coachId}&mode=build&prefillMessage=${encodeURIComponent(contextMessage)}&programId=${programId}&templateId=${template.templateId}`);
+  navigate(
+    `/coach-conversations?userId=${userId}&coachId=${coachId}&mode=build&prefillMessage=${encodeURIComponent(contextMessage)}&programId=${programId}&templateId=${template.templateId}`,
+  );
 };
 
 // Add button to workout card (only for scheduled/pending workouts)
-{template.status === 'scheduled' && (
-  <button
-    onClick={() => handleRequestChanges(template)}
-    className={buttonPatterns.secondarySmall}
-  >
-    <EditIcon />
-    <span>Request Changes</span>
-  </button>
-)}
+{
+  template.status === "scheduled" && (
+    <button
+      onClick={() => handleRequestChanges(template)}
+      className={buttonPatterns.secondarySmall}
+    >
+      <EditIcon />
+      <span>Request Changes</span>
+    </button>
+  );
+}
 ```
 
 **Backend:**
@@ -133,16 +151,18 @@ export const handler = withAuth(async (event) => {
 
   // 1. Get current template
   const programDetails = await getProgramDetailsFromS3(program.s3DetailKey);
-  const template = programDetails.workoutTemplates.find(t => t.templateId === templateId);
+  const template = programDetails.workoutTemplates.find(
+    (t) => t.templateId === templateId,
+  );
 
   // 2. Store old version in adaptation history
   const adaptationEvent = {
     timestamp: new Date().toISOString(),
-    trigger: 'user_requested_modification',
+    trigger: "user_requested_modification",
     dayNumber: template.dayNumber,
     reason: regenerationReason,
     originalWorkout: template.description,
-    newWorkout: newWorkoutDescription
+    newWorkout: newWorkoutDescription,
   };
 
   // 3. Update template in S3
@@ -154,18 +174,19 @@ export const handler = withAuth(async (event) => {
 
   // 4. Update program entity with adaptation log
   await updateProgram(userId, coachId, programId, {
-    adaptationLog: [...(program.adaptationLog || []), adaptationEvent]
+    adaptationLog: [...(program.adaptationLog || []), adaptationEvent],
   });
 
   return createOkResponse({
     success: true,
     updatedTemplate: template,
-    adaptationEvent
+    adaptationEvent,
   });
 });
 ```
 
 **API Endpoint:**
+
 ```
 PUT /users/{userId}/coaches/{coachId}/programs/{programId}/templates/{templateId}/regenerate
 Body: {
@@ -200,6 +221,7 @@ After regeneration, output the new workout as natural language and confirm the c
 ```
 
 **Acceptance Criteria:**
+
 - [ ] "Request Changes" button appears on scheduled workouts
 - [ ] Clicking opens Build mode with workout context
 - [ ] Coach understands regeneration request
@@ -213,6 +235,7 @@ After regeneration, output the new workout as natural language and confirm the c
 ## Feature 2: Adaptation Intelligence System (40%)
 
 ### Priority: High
+
 ### Estimated Time: 2 weeks
 
 Transform programs from static to dynamic by automatically detecting patterns and adjusting future workouts.
@@ -224,6 +247,7 @@ Transform programs from static to dynamic by automatically detecting patterns an
 **Problem:** User consistently scales prescribed weights/movements, indicating baseline was set too high.
 
 **User Story:**
+
 > "As a user, when I consistently scale workouts, I want my coach to automatically adjust future prescriptions so the program matches my actual capacity."
 
 **Detection Logic:**
@@ -240,9 +264,14 @@ interface ScalingPattern {
   confidenceScore: number; // 0-100
 }
 
-async function detectScalingPatterns(userId: string, programId: string): Promise<ScalingPattern[]> {
+async function detectScalingPatterns(
+  userId: string,
+  programId: string,
+): Promise<ScalingPattern[]> {
   // 1. Get recent workout logs from this program
-  const recentWorkouts = await getRecentProgramWorkouts(userId, programId, { limit: 10 });
+  const recentWorkouts = await getRecentProgramWorkouts(userId, programId, {
+    limit: 10,
+  });
 
   // 2. Extract prescribed vs actual from workout logs
   const scalingEvents = [];
@@ -256,20 +285,22 @@ async function detectScalingPatterns(userId: string, programId: string): Promise
       scalingEvents.push({
         dayNumber: template.dayNumber,
         modifications: scalingAnalysis.modifications,
-        adherenceScore: scalingAnalysis.adherenceScore
+        adherenceScore: scalingAnalysis.adherenceScore,
       });
     }
   }
 
   // 3. Find patterns (same movement scaled 3+ times in a row)
-  const patterns = findConsecutivePatterns(scalingEvents, { minOccurrences: 3 });
+  const patterns = findConsecutivePatterns(scalingEvents, {
+    minOccurrences: 3,
+  });
 
   // 4. Calculate confidence score
-  patterns.forEach(pattern => {
+  patterns.forEach((pattern) => {
     pattern.confidenceScore = calculateConfidence(pattern);
   });
 
-  return patterns.filter(p => p.confidenceScore > 70);
+  return patterns.filter((p) => p.confidenceScore > 70);
 }
 ```
 
@@ -286,15 +317,16 @@ export const handler = async (event) => {
   const programDetails = await getProgramDetailsFromS3(program.s3DetailKey);
 
   // 2. Find future workouts that contain the scaled movement
-  const futureWorkouts = programDetails.workoutTemplates.filter(t =>
-    t.dayNumber > program.currentDay &&
-    t.status === 'scheduled'
+  const futureWorkouts = programDetails.workoutTemplates.filter(
+    (t) => t.dayNumber > program.currentDay && t.status === "scheduled",
   );
 
   // 3. For each pattern, adjust future workouts
   for (const pattern of patterns) {
-    const affectedWorkouts = futureWorkouts.filter(w =>
-      w.prescribedExercises.some(e => e.name.toLowerCase().includes(pattern.movement.toLowerCase()))
+    const affectedWorkouts = futureWorkouts.filter((w) =>
+      w.prescribedExercises.some((e) =>
+        e.name.toLowerCase().includes(pattern.movement.toLowerCase()),
+      ),
     );
 
     for (const workout of affectedWorkouts) {
@@ -302,27 +334,29 @@ export const handler = async (event) => {
       const adjustedWorkout = await adjustWorkoutForScaling(
         workout,
         pattern,
-        program.coachConfig
+        program.coachConfig,
       );
 
       // Update template
-      const templateIndex = programDetails.workoutTemplates.findIndex(t => t.templateId === workout.templateId);
+      const templateIndex = programDetails.workoutTemplates.findIndex(
+        (t) => t.templateId === workout.templateId,
+      );
       programDetails.workoutTemplates[templateIndex] = adjustedWorkout;
     }
 
     // 4. Store adaptation event
     const adaptationEvent = {
       timestamp: new Date().toISOString(),
-      trigger: 'consistent_scaling',
+      trigger: "consistent_scaling",
       pattern: {
         movement: pattern.movement,
         prescribedValue: pattern.prescribedValue,
         actualValue: pattern.actualValue,
-        frequency: pattern.frequency
+        frequency: pattern.frequency,
       },
       action: `Adjusted ${affectedWorkouts.length} future workouts for ${pattern.movement}`,
-      affectedDays: affectedWorkouts.map(w => w.dayNumber),
-      reasoning: `User consistently scaled ${pattern.movement} from ${pattern.prescribedValue} to ${pattern.actualValue} over ${pattern.frequency} workouts. Adjusting future prescriptions to match user's capacity.`
+      affectedDays: affectedWorkouts.map((w) => w.dayNumber),
+      reasoning: `User consistently scaled ${pattern.movement} from ${pattern.prescribedValue} to ${pattern.actualValue} over ${pattern.frequency} workouts. Adjusting future prescriptions to match user's capacity.`,
     };
 
     program.adaptationLog = program.adaptationLog || [];
@@ -332,13 +366,16 @@ export const handler = async (event) => {
   // 5. Save updates
   await saveProgramDetailsToS3(program.s3DetailKey, programDetails);
   await updateProgram(userId, coachId, programId, {
-    adaptationLog: program.adaptationLog
+    adaptationLog: program.adaptationLog,
   });
 
   return createOkResponse({
     success: true,
     patternsDetected: patterns.length,
-    workoutsAdjusted: patterns.reduce((sum, p) => sum + p.affectedDays.length, 0)
+    workoutsAdjusted: patterns.reduce(
+      (sum, p) => sum + p.affectedDays.length,
+      0,
+    ),
   });
 };
 ```
@@ -349,7 +386,7 @@ export const handler = async (event) => {
 async function adjustWorkoutForScaling(
   workout: WorkoutTemplate,
   pattern: ScalingPattern,
-  coachConfig: CoachConfig
+  coachConfig: CoachConfig,
 ): Promise<WorkoutTemplate> {
   const prompt = `
 You are ${coachConfig.coach_name}, adjusting a workout based on user performance data.
@@ -375,7 +412,7 @@ Output the adjusted workout as natural language.
   const adjustedDescription = await callBedrockApi(
     prompt,
     `Adjust Day ${workout.dayNumber} workout for scaling pattern.`,
-    MODEL_IDS.CLAUDE_SONNET_4FULL
+    MODEL_IDS.CLAUDE_SONNET_4FULL,
   );
 
   return {
@@ -385,11 +422,11 @@ Output the adjusted workout as natural language.
       ...(workout.adaptationHistory || []),
       {
         timestamp: new Date().toISOString(),
-        trigger: 'consistent_scaling',
+        trigger: "consistent_scaling",
         pattern: pattern,
-        originalDescription: workout.description
-      }
-    ]
+        originalDescription: workout.description,
+      },
+    ],
   };
 }
 ```
@@ -403,28 +440,37 @@ Run daily to check for patterns:
 
 export const handler = async (event) => {
   // 1. Get all active programs
-  const activePrograms = await queryProgramsByStatus('active');
+  const activePrograms = await queryProgramsByStatus("active");
 
   // 2. For each program, detect patterns
   const detectionResults = [];
   for (const program of activePrograms) {
-    const patterns = await detectScalingPatterns(program.userId, program.programId);
+    const patterns = await detectScalingPatterns(
+      program.userId,
+      program.programId,
+    );
 
     if (patterns.length > 0) {
       // Apply adaptations
       await applyScalingAdaptation(program.userId, program.programId, patterns);
 
       // Notify user via coach message
-      await sendAdaptationNotification(program.userId, program.coachId, patterns);
+      await sendAdaptationNotification(
+        program.userId,
+        program.coachId,
+        patterns,
+      );
 
       detectionResults.push({
         programId: program.programId,
-        patternsDetected: patterns.length
+        patternsDetected: patterns.length,
       });
     }
   }
 
-  console.log(`✅ Adaptation detection complete: ${detectionResults.length} programs adapted`);
+  console.info(
+    `✅ Adaptation detection complete: ${detectionResults.length} programs adapted`,
+  );
   return { statusCode: 200, body: JSON.stringify(detectionResults) };
 };
 ```
@@ -435,14 +481,14 @@ export const handler = async (event) => {
 async function sendAdaptationNotification(
   userId: string,
   coachId: string,
-  patterns: ScalingPattern[]
+  patterns: ScalingPattern[],
 ) {
   const conversationId = await getOrCreateConversation(userId, coachId);
 
   const message = `
 I noticed you've been consistently scaling some movements, so I've adjusted your upcoming workouts to better match your current capacity:
 
-${patterns.map(p => `• ${p.movement}: Adjusted from ${p.prescribedValue} to ${p.actualValue}`).join('\n')}
+${patterns.map((p) => `• ${p.movement}: Adjusted from ${p.prescribedValue} to ${p.actualValue}`).join("\n")}
 
 This should help you stay in the optimal training zone. Keep crushing it! 💪
 `;
@@ -462,7 +508,10 @@ export function AdaptationHistory({ program }) {
   if (adaptations.length === 0) {
     return (
       <div className={containerPatterns.emptyState}>
-        <p>No adaptations yet. Your program will adjust as we learn your patterns.</p>
+        <p>
+          No adaptations yet. Your program will adjust as we learn your
+          patterns.
+        </p>
       </div>
     );
   }
@@ -490,7 +539,7 @@ export function AdaptationHistory({ program }) {
                 {adaptation.affectedDays && (
                   <div className="flex items-center space-x-2 text-xs text-synthwave-text-muted">
                     <span>Affected workouts:</span>
-                    {adaptation.affectedDays.map(day => (
+                    {adaptation.affectedDays.map((day) => (
                       <span key={day} className={buttonPatterns.badgeSmall}>
                         Day {day}
                       </span>
@@ -508,6 +557,7 @@ export function AdaptationHistory({ program }) {
 ```
 
 **Acceptance Criteria:**
+
 - [ ] Detects consistent scaling patterns (3+ consecutive workouts)
 - [ ] Adjusts future workouts automatically
 - [ ] Stores adaptation reasoning in log
@@ -524,6 +574,7 @@ export function AdaptationHistory({ program }) {
 **Problem:** User skips multiple workouts, program should ease them back in.
 
 **User Story:**
+
 > "As a user, when I miss several workouts, I want my program to reduce volume/intensity so I can ease back in without injury or burnout."
 
 **Detection Logic:**
@@ -533,23 +584,29 @@ interface MissedWorkoutPattern {
   consecutiveSkips: number;
   skipsInLast7Days: number;
   lastCompletedDate: string;
-  confidence: 'high' | 'medium' | 'low';
+  confidence: "high" | "medium" | "low";
 }
 
 async function detectMissedWorkoutPattern(
   userId: string,
-  programId: string
+  programId: string,
 ): Promise<MissedWorkoutPattern | null> {
   const program = await getProgram(userId, coachId, programId);
   const programDetails = await getProgramDetailsFromS3(program.s3DetailKey);
 
   // Count recent skips
   const last7Workouts = programDetails.workoutTemplates
-    .filter(t => t.dayNumber <= program.currentDay && t.dayNumber > program.currentDay - 7)
+    .filter(
+      (t) =>
+        t.dayNumber <= program.currentDay &&
+        t.dayNumber > program.currentDay - 7,
+    )
     .sort((a, b) => b.dayNumber - a.dayNumber);
 
   const consecutiveSkips = countConsecutiveSkips(last7Workouts);
-  const skipsInLast7Days = last7Workouts.filter(w => w.status === 'skipped').length;
+  const skipsInLast7Days = last7Workouts.filter(
+    (w) => w.status === "skipped",
+  ).length;
 
   // Determine if adaptation needed
   const needsAdaptation = consecutiveSkips >= 2 || skipsInLast7Days >= 3;
@@ -560,7 +617,7 @@ async function detectMissedWorkoutPattern(
     consecutiveSkips,
     skipsInLast7Days,
     lastCompletedDate: findLastCompletedWorkout(last7Workouts)?.completedAt,
-    confidence: consecutiveSkips >= 3 ? 'high' : 'medium'
+    confidence: consecutiveSkips >= 3 ? "high" : "medium",
   };
 }
 ```
@@ -571,35 +628,45 @@ async function detectMissedWorkoutPattern(
 async function applyMissedWorkoutAdaptation(
   userId: string,
   programId: string,
-  pattern: MissedWorkoutPattern
+  pattern: MissedWorkoutPattern,
 ) {
   const program = await getProgram(userId, coachId, programId);
   const programDetails = await getProgramDetailsFromS3(program.s3DetailKey);
 
   // Get next 2-3 workouts
   const upcomingWorkouts = programDetails.workoutTemplates
-    .filter(t => t.dayNumber > program.currentDay && t.dayNumber <= program.currentDay + 3)
-    .filter(t => t.status === 'scheduled');
+    .filter(
+      (t) =>
+        t.dayNumber > program.currentDay &&
+        t.dayNumber <= program.currentDay + 3,
+    )
+    .filter((t) => t.status === "scheduled");
 
   // Reduce volume/intensity for each
   for (const workout of upcomingWorkouts) {
-    const easedWorkout = await easeWorkoutVolume(workout, pattern, program.coachConfig);
+    const easedWorkout = await easeWorkoutVolume(
+      workout,
+      pattern,
+      program.coachConfig,
+    );
 
-    const templateIndex = programDetails.workoutTemplates.findIndex(t => t.templateId === workout.templateId);
+    const templateIndex = programDetails.workoutTemplates.findIndex(
+      (t) => t.templateId === workout.templateId,
+    );
     programDetails.workoutTemplates[templateIndex] = easedWorkout;
   }
 
   // Store adaptation
   const adaptationEvent = {
     timestamp: new Date().toISOString(),
-    trigger: 'missed_workouts',
+    trigger: "missed_workouts",
     pattern: {
       consecutiveSkips: pattern.consecutiveSkips,
-      skipsInLast7Days: pattern.skipsInLast7Days
+      skipsInLast7Days: pattern.skipsInLast7Days,
     },
     action: `Reduced volume/intensity for next ${upcomingWorkouts.length} workouts`,
-    affectedDays: upcomingWorkouts.map(w => w.dayNumber),
-    reasoning: `User skipped ${pattern.skipsInLast7Days} workouts in the last 7 days. Easing back in with reduced volume to prevent injury and rebuild momentum.`
+    affectedDays: upcomingWorkouts.map((w) => w.dayNumber),
+    reasoning: `User skipped ${pattern.skipsInLast7Days} workouts in the last 7 days. Easing back in with reduced volume to prevent injury and rebuild momentum.`,
   };
 
   program.adaptationLog = program.adaptationLog || [];
@@ -607,11 +674,16 @@ async function applyMissedWorkoutAdaptation(
 
   await saveProgramDetailsToS3(program.s3DetailKey, programDetails);
   await updateProgram(userId, coachId, programId, {
-    adaptationLog: program.adaptationLog
+    adaptationLog: program.adaptationLog,
   });
 
   // Notify user
-  await sendMissedWorkoutNotification(userId, coachId, pattern, upcomingWorkouts.length);
+  await sendMissedWorkoutNotification(
+    userId,
+    coachId,
+    pattern,
+    upcomingWorkouts.length,
+  );
 }
 ```
 
@@ -621,9 +693,10 @@ async function applyMissedWorkoutAdaptation(
 async function easeWorkoutVolume(
   workout: WorkoutTemplate,
   pattern: MissedWorkoutPattern,
-  coachConfig: CoachConfig
+  coachConfig: CoachConfig,
 ): Promise<WorkoutTemplate> {
-  const reductionLevel = pattern.consecutiveSkips >= 3 ? 'significant' : 'moderate';
+  const reductionLevel =
+    pattern.consecutiveSkips >= 3 ? "significant" : "moderate";
 
   const prompt = `
 You are ${coachConfig.coach_name}, adjusting a workout for a user returning after missed sessions.
@@ -652,7 +725,7 @@ Output the adjusted workout as natural language.
   const adjustedDescription = await callBedrockApi(
     prompt,
     `Ease Day ${workout.dayNumber} workout for user returning from missed sessions.`,
-    MODEL_IDS.CLAUDE_SONNET_4FULL
+    MODEL_IDS.CLAUDE_SONNET_4FULL,
   );
 
   return {
@@ -662,16 +735,17 @@ Output the adjusted workout as natural language.
       ...(workout.adaptationHistory || []),
       {
         timestamp: new Date().toISOString(),
-        trigger: 'missed_workouts',
+        trigger: "missed_workouts",
         pattern: pattern,
-        originalDescription: workout.description
-      }
-    ]
+        originalDescription: workout.description,
+      },
+    ],
   };
 }
 ```
 
 **Acceptance Criteria:**
+
 - [ ] Detects 2+ consecutive skips OR 3+ skips in 7 days
 - [ ] Reduces volume for next 2-3 workouts
 - [ ] Sends encouraging coach message
@@ -686,6 +760,7 @@ Output the adjusted workout as natural language.
 **Problem:** User consistently rates workouts "too easy" or "too hard".
 
 **User Story:**
+
 > "As a user, when I provide feedback that workouts are too easy/hard, I want my program to adjust intensity for upcoming phases."
 
 **Implementation:**
@@ -696,7 +771,7 @@ async function analyzeWorkoutFeedback(
   userId: string,
   programId: string,
   workoutId: string,
-  feedback: WorkoutFeedback
+  feedback: WorkoutFeedback,
 ) {
   const program = await getProgram(userId, coachId, programId);
 
@@ -706,15 +781,25 @@ async function analyzeWorkoutFeedback(
   // Analyze sentiment
   const sentimentPattern = analyzeFeedbackPattern(recentFeedback);
 
-  if (sentimentPattern.trend === 'consistently_too_easy' && sentimentPattern.confidence > 70) {
+  if (
+    sentimentPattern.trend === "consistently_too_easy" &&
+    sentimentPattern.confidence > 70
+  ) {
     await increaseIntensity(userId, programId, sentimentPattern);
-  } else if (sentimentPattern.trend === 'consistently_too_hard' && sentimentPattern.confidence > 70) {
+  } else if (
+    sentimentPattern.trend === "consistently_too_hard" &&
+    sentimentPattern.confidence > 70
+  ) {
     await decreaseIntensity(userId, programId, sentimentPattern);
   }
 }
 
 interface FeedbackPattern {
-  trend: 'consistently_too_easy' | 'consistently_too_hard' | 'appropriate' | 'mixed';
+  trend:
+    | "consistently_too_easy"
+    | "consistently_too_hard"
+    | "appropriate"
+    | "mixed";
   confidence: number; // 0-100
   sampleSize: number;
   averageRating: number;
@@ -722,29 +807,38 @@ interface FeedbackPattern {
 
 function analyzeFeedbackPattern(feedback: WorkoutFeedback[]): FeedbackPattern {
   // Count sentiment
-  const tooEasy = feedback.filter(f => f.difficulty === 'too_easy' || f.rating <= 2).length;
-  const tooHard = feedback.filter(f => f.difficulty === 'too_hard' || f.rating >= 9).length;
-  const appropriate = feedback.filter(f => f.difficulty === 'appropriate' || (f.rating >= 3 && f.rating <= 8)).length;
+  const tooEasy = feedback.filter(
+    (f) => f.difficulty === "too_easy" || f.rating <= 2,
+  ).length;
+  const tooHard = feedback.filter(
+    (f) => f.difficulty === "too_hard" || f.rating >= 9,
+  ).length;
+  const appropriate = feedback.filter(
+    (f) => f.difficulty === "appropriate" || (f.rating >= 3 && f.rating <= 8),
+  ).length;
 
   // Determine trend
-  let trend: FeedbackPattern['trend'] = 'mixed';
-  if (tooEasy >= 4) trend = 'consistently_too_easy';
-  if (tooHard >= 4) trend = 'consistently_too_hard';
-  if (appropriate >= 4) trend = 'appropriate';
+  let trend: FeedbackPattern["trend"] = "mixed";
+  if (tooEasy >= 4) trend = "consistently_too_easy";
+  if (tooHard >= 4) trend = "consistently_too_hard";
+  if (appropriate >= 4) trend = "appropriate";
 
   // Calculate confidence
-  const confidence = Math.max(tooEasy, tooHard, appropriate) / feedback.length * 100;
+  const confidence =
+    (Math.max(tooEasy, tooHard, appropriate) / feedback.length) * 100;
 
   return {
     trend,
     confidence,
     sampleSize: feedback.length,
-    averageRating: feedback.reduce((sum, f) => sum + (f.rating || 5), 0) / feedback.length
+    averageRating:
+      feedback.reduce((sum, f) => sum + (f.rating || 5), 0) / feedback.length,
   };
 }
 ```
 
 **Acceptance Criteria:**
+
 - [ ] Collects feedback after workout completion
 - [ ] Analyzes last 5 workouts for patterns
 - [ ] Adjusts next phase if 4/5 workouts show same sentiment
@@ -757,6 +851,7 @@ function analyzeFeedbackPattern(feedback: WorkoutFeedback[]): FeedbackPattern {
 ## Feature 3: Check-in System (30%)
 
 ### Priority: Medium
+
 ### Estimated Time: 1.5 weeks
 
 Regular feedback loops between user and coach to maintain engagement and gather qualitative data.
@@ -766,9 +861,11 @@ Regular feedback loops between user and coach to maintain engagement and gather 
 ### 3A. Weekly Check-ins
 
 **User Story:**
+
 > "As a user, I want to provide weekly feedback to my coach about how the program is going, so they can make informed adjustments."
 
 **Check-in Trigger:**
+
 - Every 7 days from program start
 - After completing Week 1, Week 2, etc.
 - Optional: Mid-week pulse check
@@ -784,8 +881,8 @@ interface WeeklyCheckIn {
 
   // Quantitative
   overallRating: number; // 1-5 stars
-  energyLevels: 'low' | 'moderate' | 'high';
-  recoveryQuality: 'poor' | 'fair' | 'good' | 'excellent';
+  energyLevels: "low" | "moderate" | "high";
+  recoveryQuality: "poor" | "fair" | "good" | "excellent";
   adherence: number; // % of planned workouts completed
 
   // Qualitative
@@ -810,11 +907,11 @@ interface WeeklyCheckIn {
 export function WeeklyCheckIn({ program, onSubmit }) {
   const [checkIn, setCheckIn] = useState({
     overallRating: 0,
-    energyLevels: 'moderate',
-    recoveryQuality: 'good',
-    whatWentWell: '',
-    challenges: '',
-    adjustmentRequests: ''
+    energyLevels: "moderate",
+    recoveryQuality: "good",
+    whatWentWell: "",
+    challenges: "",
+    adjustmentRequests: "",
   });
 
   const handleSubmit = async () => {
@@ -822,7 +919,7 @@ export function WeeklyCheckIn({ program, onSubmit }) {
       ...checkIn,
       programId: program.programId,
       weekNumber: Math.ceil(program.currentDay / 7),
-      submittedAt: new Date().toISOString()
+      submittedAt: new Date().toISOString(),
     });
   };
 
@@ -840,7 +937,9 @@ export function WeeklyCheckIn({ program, onSubmit }) {
           </label>
           <StarRating
             value={checkIn.overallRating}
-            onChange={(rating) => setCheckIn({ ...checkIn, overallRating: rating })}
+            onChange={(rating) =>
+              setCheckIn({ ...checkIn, overallRating: rating })
+            }
           />
         </div>
 
@@ -849,7 +948,7 @@ export function WeeklyCheckIn({ program, onSubmit }) {
           <div>
             <label className={typographyPatterns.label}>Energy Levels</label>
             <SegmentedControl
-              options={['low', 'moderate', 'high']}
+              options={["low", "moderate", "high"]}
               value={checkIn.energyLevels}
               onChange={(val) => setCheckIn({ ...checkIn, energyLevels: val })}
             />
@@ -857,9 +956,11 @@ export function WeeklyCheckIn({ program, onSubmit }) {
           <div>
             <label className={typographyPatterns.label}>Recovery Quality</label>
             <SegmentedControl
-              options={['poor', 'fair', 'good', 'excellent']}
+              options={["poor", "fair", "good", "excellent"]}
               value={checkIn.recoveryQuality}
-              onChange={(val) => setCheckIn({ ...checkIn, recoveryQuality: val })}
+              onChange={(val) =>
+                setCheckIn({ ...checkIn, recoveryQuality: val })
+              }
             />
           </div>
         </div>
@@ -872,7 +973,9 @@ export function WeeklyCheckIn({ program, onSubmit }) {
           <textarea
             className={inputPatterns.textarea}
             value={checkIn.whatWentWell}
-            onChange={(e) => setCheckIn({ ...checkIn, whatWentWell: e.target.value })}
+            onChange={(e) =>
+              setCheckIn({ ...checkIn, whatWentWell: e.target.value })
+            }
             placeholder="E.g., Hit a new PR, felt strong on squats, good energy..."
           />
         </div>
@@ -884,7 +987,9 @@ export function WeeklyCheckIn({ program, onSubmit }) {
           <textarea
             className={inputPatterns.textarea}
             value={checkIn.challenges}
-            onChange={(e) => setCheckIn({ ...checkIn, challenges: e.target.value })}
+            onChange={(e) =>
+              setCheckIn({ ...checkIn, challenges: e.target.value })
+            }
             placeholder="E.g., Knee felt tweaky, struggled with volume, time constraints..."
           />
         </div>
@@ -896,7 +1001,9 @@ export function WeeklyCheckIn({ program, onSubmit }) {
           <textarea
             className={inputPatterns.textarea}
             value={checkIn.adjustmentRequests}
-            onChange={(e) => setCheckIn({ ...checkIn, adjustmentRequests: e.target.value })}
+            onChange={(e) =>
+              setCheckIn({ ...checkIn, adjustmentRequests: e.target.value })
+            }
             placeholder="E.g., More upper body, less running, lighter weights..."
           />
         </div>
@@ -908,10 +1015,7 @@ export function WeeklyCheckIn({ program, onSubmit }) {
           >
             Submit Check-in
           </button>
-          <button
-            onClick={onCancel}
-            className={buttonPatterns.secondaryLarge}
-          >
+          <button onClick={onCancel} className={buttonPatterns.secondaryLarge}>
             Skip This Week
           </button>
         </div>
@@ -954,7 +1058,7 @@ export const handler = withAuth(async (event) => {
   const checkIn: WeeklyCheckIn = {
     checkInId: generateId(),
     programId,
-    ...checkInData
+    ...checkInData,
   };
 
   const program = await getProgram(userId, coachId, programId);
@@ -965,26 +1069,26 @@ export const handler = withAuth(async (event) => {
   const coachResponse = await generateCheckInResponse(
     checkIn,
     program,
-    coachConfig
+    coachConfig,
   );
 
   checkIn.coachResponse = coachResponse;
 
   // 3. Update program
   await updateProgram(userId, coachId, programId, {
-    checkIns: program.checkIns
+    checkIns: program.checkIns,
   });
 
   // 4. Send coach response as conversation message
   await sendCoachMessage(
-    program.conversationId || await getOrCreateConversation(userId, coachId),
-    coachResponse.message
+    program.conversationId || (await getOrCreateConversation(userId, coachId)),
+    coachResponse.message,
   );
 
   return createOkResponse({
     success: true,
     checkIn,
-    coachResponse
+    coachResponse,
   });
 });
 ```
@@ -995,7 +1099,7 @@ export const handler = withAuth(async (event) => {
 async function generateCheckInResponse(
   checkIn: WeeklyCheckIn,
   program: Program,
-  coachConfig: CoachConfig
+  coachConfig: CoachConfig,
 ): Promise<CoachResponse> {
   const prompt = `
 You are ${coachConfig.coach_name}, responding to your client's Week ${checkIn.weekNumber} check-in for their "${program.name}" program.
@@ -1038,7 +1142,7 @@ Output as JSON:
     prompt,
     `Generate check-in response for Week ${checkIn.weekNumber}.`,
     MODEL_IDS.CLAUDE_SONNET_4FULL,
-    { prefillResponse: '{' }
+    { prefillResponse: "{" },
   );
 
   return parseJsonWithFallbacks(response);
@@ -1046,6 +1150,7 @@ Output as JSON:
 ```
 
 **API Endpoint:**
+
 ```
 POST /users/{userId}/coaches/{coachId}/programs/{programId}/check-ins
 Body: WeeklyCheckIn
@@ -1053,6 +1158,7 @@ Response: { checkIn, coachResponse }
 ```
 
 **Acceptance Criteria:**
+
 - [ ] Check-in prompt appears after completing 5 days of a week
 - [ ] User can submit qualitative + quantitative feedback
 - [ ] Coach generates personalized response via AI
@@ -1066,6 +1172,7 @@ Response: { checkIn, coachResponse }
 ## Feature 4: Metrics & Analytics (20%)
 
 ### Priority: Medium
+
 ### Estimated Time: 1 week
 
 Track and visualize program performance for users and platform insights.
@@ -1099,8 +1206,8 @@ export function EnhancedProgressOverview({ program, programDetails }) {
       <MetricCard
         label="Current Streak"
         value={`${metrics.currentStreak} days`}
-        color={metrics.currentStreak >= 7 ? 'green' : 'cyan'}
-        badge={metrics.currentStreak >= 7 ? '🔥' : null}
+        color={metrics.currentStreak >= 7 ? "green" : "cyan"}
+        badge={metrics.currentStreak >= 7 ? "🔥" : null}
       />
 
       {/* PRs This Program */}
@@ -1121,11 +1228,7 @@ export function EnhancedProgressOverview({ program, programDetails }) {
       {/* Volume Progression */}
       <div className="mt-6">
         <h4 className={typographyPatterns.subsectionHeader}>Volume Trend</h4>
-        <MiniLineChart
-          data={metrics.weeklyVolume}
-          color="cyan"
-          height={60}
-        />
+        <MiniLineChart data={metrics.weeklyVolume} color="cyan" height={60} />
       </div>
 
       {/* Adaptations */}
@@ -1134,7 +1237,7 @@ export function EnhancedProgressOverview({ program, programDetails }) {
           label="Program Adaptations"
           value={metrics.adaptationCount}
           color="purple"
-          onClick={() => navigate('/adaptations')}
+          onClick={() => navigate("/adaptations")}
           tooltip="Click to view adaptation history"
         />
       )}
@@ -1148,31 +1251,38 @@ export function EnhancedProgressOverview({ program, programDetails }) {
 ```typescript
 function calculateProgramMetrics(
   program: Program,
-  programDetails: ProgramDetails
+  programDetails: ProgramDetails,
 ) {
   // Adherence
   const adherenceRate = Math.round(
-    (program.completedWorkouts / program.currentDay) * 100
+    (program.completedWorkouts / program.currentDay) * 100,
   );
 
   // Adherence trend (last 7 days vs previous 7 days)
-  const last7Days = programDetails.workoutTemplates
-    .filter(t => t.dayNumber > program.currentDay - 7 && t.dayNumber <= program.currentDay);
-  const prev7Days = programDetails.workoutTemplates
-    .filter(t => t.dayNumber > program.currentDay - 14 && t.dayNumber <= program.currentDay - 7);
+  const last7Days = programDetails.workoutTemplates.filter(
+    (t) =>
+      t.dayNumber > program.currentDay - 7 && t.dayNumber <= program.currentDay,
+  );
+  const prev7Days = programDetails.workoutTemplates.filter(
+    (t) =>
+      t.dayNumber > program.currentDay - 14 &&
+      t.dayNumber <= program.currentDay - 7,
+  );
 
-  const last7Adherence = last7Days.filter(t => t.status === 'completed').length / last7Days.length;
-  const prev7Adherence = prev7Days.filter(t => t.status === 'completed').length / prev7Days.length;
-  const adherenceTrend = last7Adherence > prev7Adherence ? 'up' : 'down';
+  const last7Adherence =
+    last7Days.filter((t) => t.status === "completed").length / last7Days.length;
+  const prev7Adherence =
+    prev7Days.filter((t) => t.status === "completed").length / prev7Days.length;
+  const adherenceTrend = last7Adherence > prev7Adherence ? "up" : "down";
 
   // Current streak
   let currentStreak = 0;
   const recentWorkouts = programDetails.workoutTemplates
-    .filter(t => t.dayNumber <= program.currentDay)
+    .filter((t) => t.dayNumber <= program.currentDay)
     .sort((a, b) => b.dayNumber - a.dayNumber);
 
   for (const workout of recentWorkouts) {
-    if (workout.status === 'completed') {
+    if (workout.status === "completed") {
       currentStreak++;
     } else {
       break;
@@ -1180,14 +1290,22 @@ function calculateProgramMetrics(
   }
 
   // PRs (extract from workout logs)
-  const completedWorkouts = await getCompletedProgramWorkouts(program.programId);
-  const prsAchieved = completedWorkouts.filter(w => w.hasPR).length;
+  const completedWorkouts = await getCompletedProgramWorkouts(
+    program.programId,
+  );
+  const prsAchieved = completedWorkouts.filter((w) => w.hasPR).length;
 
   // Average rating
-  const workoutsWithFeedback = programDetails.workoutTemplates.filter(t => t.userFeedback?.rating);
-  const avgRating = workoutsWithFeedback.length > 0
-    ? workoutsWithFeedback.reduce((sum, t) => sum + t.userFeedback.rating, 0) / workoutsWithFeedback.length
-    : 0;
+  const workoutsWithFeedback = programDetails.workoutTemplates.filter(
+    (t) => t.userFeedback?.rating,
+  );
+  const avgRating =
+    workoutsWithFeedback.length > 0
+      ? workoutsWithFeedback.reduce(
+          (sum, t) => sum + t.userFeedback.rating,
+          0,
+        ) / workoutsWithFeedback.length
+      : 0;
 
   // Volume trend (by week)
   const weeklyVolume = calculateWeeklyVolume(programDetails);
@@ -1199,7 +1317,7 @@ function calculateProgramMetrics(
     prsAchieved,
     avgRating,
     weeklyVolume,
-    adaptationCount: program.adaptationLog?.length || 0
+    adaptationCount: program.adaptationLog?.length || 0,
   };
 }
 ```
@@ -1216,32 +1334,40 @@ function calculateProgramMetrics(
 export async function trackProgramMetric(
   metricName: string,
   value: number,
-  dimensions: Record<string, string>
+  dimensions: Record<string, string>,
 ) {
   await cloudwatch.putMetricData({
-    Namespace: 'NeonPanda/Programs',
-    MetricData: [{
-      MetricName: metricName,
-      Value: value,
-      Unit: 'Count',
-      Dimensions: Object.entries(dimensions).map(([key, val]) => ({
-        Name: key,
-        Value: val
-      }))
-    }]
+    Namespace: "NeonPanda/Programs",
+    MetricData: [
+      {
+        MetricName: metricName,
+        Value: value,
+        Unit: "Count",
+        Dimensions: Object.entries(dimensions).map(([key, val]) => ({
+          Name: key,
+          Value: val,
+        })),
+      },
+    ],
   });
 }
 
 // Usage examples:
-await trackProgramMetric('ProgramCreated', 1, { coachId, programType: 'strength' });
-await trackProgramMetric('WorkoutCompleted', 1, { programId, dayNumber: '5' });
-await trackProgramMetric('AdaptationTriggered', 1, { trigger: 'scaling_pattern' });
-await trackProgramMetric('CheckInSubmitted', 1, { weekNumber: '2' });
+await trackProgramMetric("ProgramCreated", 1, {
+  coachId,
+  programType: "strength",
+});
+await trackProgramMetric("WorkoutCompleted", 1, { programId, dayNumber: "5" });
+await trackProgramMetric("AdaptationTriggered", 1, {
+  trigger: "scaling_pattern",
+});
+await trackProgramMetric("CheckInSubmitted", 1, { weekNumber: "2" });
 ```
 
 **Metrics Dashboard (Internal):**
 
 Track these key metrics in CloudWatch:
+
 - **Program Creation Rate**: Programs created per day/week
 - **Active Programs**: Count of active programs
 - **Adherence Rate Distribution**: Histogram of adherence rates
@@ -1283,21 +1409,22 @@ export const handler = async (event) => {
 - Most Common Trigger: ${metrics.topAdaptationTrigger}
 
 ## Top Performing Programs
-${metrics.topPrograms.map(p => `- ${p.name}: ${p.adherence}% adherence`).join('\n')}
+${metrics.topPrograms.map((p) => `- ${p.name}: ${p.adherence}% adherence`).join("\n")}
 
 ## Issues & Opportunities
-${metrics.issues.map(i => `- ${i}`).join('\n')}
+${metrics.issues.map((i) => `- ${i}`).join("\n")}
 `;
 
   await sendEmail({
-    to: 'founder@neonpanda.ai',
-    subject: 'Training Programs Weekly Report',
-    body: report
+    to: "founder@neonpanda.ai",
+    subject: "Training Programs Weekly Report",
+    body: report,
   });
 };
 ```
 
 **Acceptance Criteria:**
+
 - [ ] CloudWatch metrics tracking all key events
 - [ ] Weekly report emailed to founder
 - [ ] User-facing metrics dashboard
@@ -1309,6 +1436,7 @@ ${metrics.issues.map(i => `- ${i}`).join('\n')}
 ## Feature 5: Polish & Testing (8%)
 
 ### Priority: High
+
 ### Estimated Time: 3-4 days
 
 ---
@@ -1346,7 +1474,7 @@ ${metrics.issues.map(i => `- ${i}`).join('\n')}
 
 ```typescript
 // Cache program details in memory for 5 minutes
-const programCache = new Map<string, { data: any, expiry: number }>();
+const programCache = new Map<string, { data: any; expiry: number }>();
 
 async function getCachedProgramDetails(programId: string) {
   const cached = programCache.get(programId);
@@ -1357,7 +1485,7 @@ async function getCachedProgramDetails(programId: string) {
   const data = await getProgramDetailsFromS3(programId);
   programCache.set(programId, {
     data,
-    expiry: Date.now() + 5 * 60 * 1000 // 5 minutes
+    expiry: Date.now() + 5 * 60 * 1000, // 5 minutes
   });
 
   return data;
@@ -1372,7 +1500,7 @@ export const handler = async (event) => {
   const programIds = event.programIds; // Batch of 10-20 programs
 
   const results = await Promise.all(
-    programIds.map(programId => detectAndApplyAdaptations(programId))
+    programIds.map((programId) => detectAndApplyAdaptations(programId)),
   );
 
   return { processed: results.length };
@@ -1390,29 +1518,30 @@ export const handler = async (event) => {
 try {
   await applyScalingAdaptation(userId, programId, patterns);
 } catch (error) {
-  console.error('❌ Adaptation failed:', error);
+  console.error("❌ Adaptation failed:", error);
 
   // Log to CloudWatch with structured data
-  await logError('adaptation_failed', {
+  await logError("adaptation_failed", {
     userId,
     programId,
-    trigger: 'scaling_pattern',
+    trigger: "scaling_pattern",
     error: error.message,
-    stack: error.stack
+    stack: error.stack,
   });
 
   // Alert founder if critical
   if (isCriticalError(error)) {
     await sendAlert({
-      title: 'Program Adaptation Failure',
-      severity: 'high',
-      details: error.message
+      title: "Program Adaptation Failure",
+      severity: "high",
+      details: error.message,
     });
   }
 
   // Don't fail silently - notify user
-  await sendCoachMessage(conversationId,
-    "I ran into an issue adjusting your program. No worries - I'll take another look and follow up with you soon!"
+  await sendCoachMessage(
+    conversationId,
+    "I ran into an issue adjusting your program. No worries - I'll take another look and follow up with you soon!",
   );
 }
 ```
@@ -1426,16 +1555,16 @@ export const handler = async () => {
     adaptationDetector: await testAdaptationDetector(),
     checkInReminders: await testCheckInReminders(),
     metricsTracking: await testMetricsTracking(),
-    s3Access: await testS3Access()
+    s3Access: await testS3Access(),
   };
 
   const failures = Object.entries(checks).filter(([_, passed]) => !passed);
 
   if (failures.length > 0) {
     await sendAlert({
-      title: 'Phase 4 Health Check Failed',
-      severity: 'medium',
-      details: `Failed checks: ${failures.map(([name]) => name).join(', ')}`
+      title: "Phase 4 Health Check Failed",
+      severity: "medium",
+      details: `Failed checks: ${failures.map(([name]) => name).join(", ")}`,
     });
   }
 
@@ -1450,12 +1579,14 @@ export const handler = async () => {
 ### Week 1: Dashboard Quick Wins + Scaling Detection
 
 **Days 1-2: Dashboard Quick Wins**
+
 - [ ] View Creation Conversation link
 - [ ] Regenerate Workout button & flow
 - [ ] Coach conversation integration
 - [ ] Testing
 
 **Days 3-5: Scaling Pattern Detection**
+
 - [ ] `detect-scaling-patterns` Lambda
 - [ ] `apply-scaling-adaptation` Lambda
 - [ ] AI adjustment prompts
@@ -1468,6 +1599,7 @@ export const handler = async () => {
 ### Week 2: Missed Workouts + Feedback Adaptation
 
 **Days 1-2: Missed Workout Detection**
+
 - [ ] Detection logic
 - [ ] Volume reduction AI prompts
 - [ ] Application Lambda
@@ -1475,12 +1607,14 @@ export const handler = async () => {
 - [ ] Testing edge cases
 
 **Days 3-4: Feedback-Based Adaptation**
+
 - [ ] Feedback pattern analysis
 - [ ] Intensity adjustment logic
 - [ ] Integration with workout logging
 - [ ] Testing
 
 **Day 5: Integration Testing**
+
 - [ ] Test all adaptation triggers
 - [ ] Verify no conflicts
 - [ ] Performance testing
@@ -1490,18 +1624,21 @@ export const handler = async () => {
 ### Week 3: Check-in System
 
 **Days 1-2: Check-in UI**
+
 - [ ] `WeeklyCheckIn.jsx` component
 - [ ] Check-in prompt logic
 - [ ] Modal/page design
 - [ ] Responsive layout
 
 **Days 3-4: Check-in Backend**
+
 - [ ] `submit-program-checkin` Lambda
 - [ ] AI coach response generation
 - [ ] Check-in storage
 - [ ] Reminder notifications
 
 **Day 5: Check-in History**
+
 - [ ] View past check-ins
 - [ ] Check-in timeline component
 - [ ] Testing
@@ -1511,18 +1648,21 @@ export const handler = async () => {
 ### Week 4: Metrics & Polish
 
 **Days 1-2: Metrics Dashboard**
+
 - [ ] Enhanced progress overview
 - [ ] Metrics calculation utilities
 - [ ] CloudWatch integration
 - [ ] Weekly report generation
 
 **Days 3-4: Testing & Edge Cases**
+
 - [ ] Edge case handling
 - [ ] Error scenarios
 - [ ] Performance optimization
 - [ ] Load testing
 
 **Day 5: Documentation & Launch Prep**
+
 - [ ] Update API docs
 - [ ] Component documentation
 - [ ] User guides (internal)
@@ -1533,12 +1673,14 @@ export const handler = async () => {
 ## Success Metrics
 
 ### Quantitative
+
 - **Adaptation Trigger Rate**: 15-25% of programs (on track)
 - **Check-in Response Rate**: >60% (good engagement)
 - **User Satisfaction**: >85% positive feedback on adaptations
 - **Retention Lift**: 1.5x for users with adapted programs vs. static
 
 ### Qualitative
+
 - Users feel program "learns" from them
 - Coaches (AI) feel more responsive and intelligent
 - Feedback loops feel natural, not forced
@@ -1592,6 +1734,7 @@ amplify/functions/
 ## Dependencies & Prerequisites
 
 ### Backend
+
 - ✅ Phase 3b complete (workout logging, program dashboard)
 - ✅ Scaling analysis in `log-workout-template` (already implemented)
 - ✅ S3 utilities for program details
@@ -1600,6 +1743,7 @@ amplify/functions/
 - 🔲 Email/notification system
 
 ### Frontend
+
 - ✅ Program dashboard components
 - ✅ ProgramAgent
 - 🔲 Adaptation history component
@@ -1613,16 +1757,19 @@ amplify/functions/
 ### Technical Risks
 
 **Risk 1: Adaptation Quality**
+
 - **Mitigation**: Extensive testing of AI prompts with real workout data
 - **Fallback**: Manual review flag for first 20 adaptations
 - **Monitoring**: Track user feedback on adapted workouts
 
 **Risk 2: Over-Adaptation**
+
 - **Mitigation**: Limit to 1 adaptation per week per program
 - **Fallback**: Allow users to revert adaptations
 - **Monitoring**: Track adaptation frequency, alert if >30% of programs adapted
 
 **Risk 3: Performance Impact**
+
 - **Mitigation**: Scheduled jobs run during low-traffic hours
 - **Fallback**: Batch processing, rate limiting
 - **Monitoring**: CloudWatch alarms on Lambda duration/errors
@@ -1632,6 +1779,7 @@ amplify/functions/
 ## Post-Phase 4: Future Enhancements
 
 **Phase 5 Ideas (3+ months out):**
+
 1. **Biometric Integration**: HRV, sleep, recovery data → Auto-adjust intensity
 2. **Social Features**: Share programs, leaderboards, accountability partners
 3. **Advanced Analytics**: Predictive modeling for program success
@@ -1647,14 +1795,17 @@ amplify/functions/
 Phase 4 completes the training program vision by adding **intelligence and adaptability**. Programs stop being static PDFs and become **living, breathing coaching relationships** that learn, adapt, and respond to user needs in real-time.
 
 ### Phase 3b Achievement Unlocked: 98% Complete ✅
+
 Ship it! Get real user data, learn from actual behavior, then return to build Phase 4 with confidence.
 
 ### Phase 4 Ready When You Are 🚀
+
 This plan is comprehensive, actionable, and ready for implementation when you have production usage data to inform the adaptation logic.
 
 ---
 
 **Next Steps:**
+
 1. ✅ Ship Phase 3b to production
 2. ✅ Monitor user behavior for 2-4 weeks
 3. ✅ Gather feedback on program experience
@@ -1665,7 +1816,6 @@ This plan is comprehensive, actionable, and ready for implementation when you ha
 
 ---
 
-*Document Version: 1.0*
-*Last Updated: January 2025*
-*Status: Ready for Implementation (Post-Phase 3b Launch)*
-
+_Document Version: 1.0_
+_Last Updated: January 2025_
+_Status: Ready for Implementation (Post-Phase 3b Launch)_

@@ -36,6 +36,8 @@ import ProgramDashboard from "./components/programs/ProgramDashboard";
 import Changelog from "./components/Changelog";
 import Settings from "./components/Settings";
 import Theme from "./components/Theme";
+import BlogIndex from "./components/blog/BlogIndex";
+import BlogPostRouter from "./components/blog/BlogPostRouter";
 import { WelcomePage } from "./components/subscription";
 import {
   NavigationProvider,
@@ -78,6 +80,7 @@ function AppContent() {
     "/template/synthwave",
     "/auth", // Includes all auth child routes (signin, signup, etc.)
     "/welcome", // Post-checkout welcome page
+    "/blog", // Blog index and all blog posts
   ];
   const isPublicPage =
     publicRoutes.includes(location.pathname) ||
@@ -177,6 +180,10 @@ function AppContent() {
           <Route path="/changelog" element={<Changelog />} />
           <Route path="/template/synthwave" element={<Theme />} />
           <Route path="/contact" element={<ContactForm />} />
+
+          {/* Blog routes */}
+          <Route path="/blog" element={<BlogIndex />} />
+          <Route path="/blog/:slug" element={<BlogPostRouter />} />
 
           {/* Authentication route */}
           <Route path="/auth" element={<AuthRouter />} />

@@ -1,9 +1,9 @@
-import { createOkResponse, createErrorResponse } from '../libs/api-helpers';
-import { saveProgram, getCoachConfig } from '../../dynamodb/operations';
-import { storeProgramDetailsInS3 } from '../libs/program/s3-utils';
-import { calculateEndDate } from '../libs/program/calendar-utils';
-import { Program, CreateProgramEvent } from '../libs/program/types';
-import { withAuth, AuthenticatedHandler } from '../libs/auth/middleware';
+import { createOkResponse, createErrorResponse } from "../libs/api-helpers";
+import { saveProgram, getCoachConfig } from "../../dynamodb/operations";
+import { storeProgramDetailsInS3 } from "../libs/program/s3-utils";
+import { calculateEndDate } from "../libs/program/calendar-utils";
+import { Program, CreateProgramEvent } from "../libs/program/types";
+import { withAuth, AuthenticatedHandler } from "../libs/auth/middleware";
 
 const baseHandler: AuthenticatedHandler = async (event) => {
   try {
@@ -12,22 +12,30 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     const coachId = event.pathParameters?.coachId;
 
     if (!coachId) {
-      return createErrorResponse(400, 'coachId is required');
+      return createErrorResponse(400, "coachId is required");
     }
 
     if (!event.body) {
-      return createErrorResponse(400, 'Request body is required');
+      return createErrorResponse(400, "Request body is required");
     }
 
     const body: CreateProgramEvent = JSON.parse(event.body);
 
     // Validate required fields
-    if (!body.name || !body.totalDays || !body.trainingFrequency || !body.startDate) {
-      return createErrorResponse(400, 'Missing required fields: name, totalDays, trainingFrequency, startDate');
+    if (
+      !body.name ||
+      !body.totalDays ||
+      !body.trainingFrequency ||
+      !body.startDate
+    ) {
+      return createErrorResponse(
+        400,
+        "Missing required fields: name, totalDays, trainingFrequency, startDate",
+      );
     }
 
     if (!body.phases || body.phases.length === 0) {
-      return createErrorResponse(400, 'At least one phase is required');
+      return createErrorResponse(400, "At least one phase is required");
     }
 
     // Fetch coach config to get coach name
@@ -35,7 +43,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     if (!coachConfig) {
       return createErrorResponse(404, `Coach not found: ${coachId}`);
     }
-    const coachName = coachConfig.coach_name || 'Unknown Coach';
+    const coachName = coachConfig.coach_name || "Unknown Coach";
 
     // Generate program ID (consistent with workout/conversation pattern)
     const shortId = Math.random().toString(36).substring(2, 11);
@@ -75,17 +83,20 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       [], // Empty workout templates - will be populated by AI in Phase 2
       {
         goals: body.trainingGoals || [],
-        purpose: body.description || `${body.trainingFrequency}x per week training program`,
+        purpose:
+          body.description ||
+          `${body.trainingFrequency}x per week training program`,
         successMetrics: [], // Will be defined during AI generation
         equipmentConstraints: body.equipmentConstraints || [],
         userContext: body.userContext,
       },
       {
-        generatedBy: 'user-manual-creation',
-        aiModel: 'n/a',
+        generatedBy: "user-manual-creation",
+        aiModel: "n/a",
         confidence: 1.0,
-        generationPrompt: 'User-created program structure awaiting AI workout generation',
-      }
+        generationPrompt:
+          "User-created program structure awaiting AI workout generation",
+      },
     );
 
     // Create training program entity
@@ -94,10 +105,10 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       userId,
       coachIds: [coachId], // Array of all coaches (initially just the creating coach)
       coachNames: [coachName], // Array of all coach names
-      creationConversationId: body.conversationId || '',
+      creationConversationId: body.conversationId || "",
       name: body.name,
       description: body.description,
-      status: 'active',
+      status: "active",
       startDate: body.startDate,
       endDate,
       totalDays: body.totalDays,
@@ -111,6 +122,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       totalWorkouts: 0, // Will be set when workouts are generated
       completedWorkouts: 0,
       skippedWorkouts: 0,
+      completedRestDays: 0,
       adherenceRate: 0,
       dayCompletionStatus: {},
       lastActivityAt: new Date(),
@@ -122,7 +134,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     // Store in DynamoDB
     await saveProgram(program);
 
-    console.info('Training program created successfully:', {
+    console.info("Training program created successfully:", {
       programId,
       userId,
       coachIds: [coachId],
@@ -136,11 +148,12 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       success: true,
       programId,
       program: program,
-      message: 'Training program created successfully. Daily workouts will be generated next.',
+      message:
+        "Training program created successfully. Daily workouts will be generated next.",
     });
   } catch (error) {
-    console.error('Error creating training program:', error);
-    return createErrorResponse(500, 'Failed to create training program', error);
+    console.error("Error creating training program:", error);
+    return createErrorResponse(500, "Failed to create training program", error);
   }
 };
 

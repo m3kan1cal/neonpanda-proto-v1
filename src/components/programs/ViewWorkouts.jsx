@@ -128,41 +128,34 @@ function ViewWorkouts() {
       setProgram(programData.program);
 
       // Load workouts based on query params
-      try {
-        if (isViewingToday) {
-          // Load today's workout
-          const todayData = await programAgentRef.current.loadWorkoutTemplates(
-            programId,
-            {
-              today: true,
-            },
-          );
-          if (todayData) {
-            setWorkoutData(todayData.todaysWorkoutTemplates || todayData);
-          }
-        } else if (dayParam) {
-          // Load specific day's workout
-          const dayData = await programAgentRef.current.loadWorkoutTemplates(
-            programId,
-            {
-              day: parseInt(dayParam),
-            },
-          );
-          if (dayData) {
-            setWorkoutData(dayData);
-          }
-        }
-      } catch (workoutErr) {
-        // "No templates found for today" means it's a rest day - not an error
-        if (
-          workoutErr.message === "No templates found for today" ||
-          workoutErr.message?.includes("No templates found")
-        ) {
-          console.log("Rest day detected - no workout template for this day");
-          setWorkoutData(null); // Will trigger rest day UI
+      // Note: ProgramAgent returns null for rest days (doesn't throw error)
+      if (isViewingToday) {
+        // Load today's workout
+        const todayData = await programAgentRef.current.loadWorkoutTemplates(
+          programId,
+          {
+            today: true,
+          },
+        );
+        if (todayData) {
+          setWorkoutData(todayData.todaysWorkoutTemplates || todayData);
         } else {
-          // Re-throw actual errors
-          throw workoutErr;
+          // null response means rest day
+          setWorkoutData(null);
+        }
+      } else if (dayParam) {
+        // Load specific day's workout
+        const dayData = await programAgentRef.current.loadWorkoutTemplates(
+          programId,
+          {
+            day: parseInt(dayParam),
+          },
+        );
+        if (dayData) {
+          setWorkoutData(dayData);
+        } else {
+          // null response means rest day
+          setWorkoutData(null);
         }
       }
     } catch (err) {
@@ -240,7 +233,7 @@ Calories: `;
 
     setProcessingWorkoutId(template.templateId);
     try {
-      console.log("📝 Submitting workout:", {
+      console.info("📝 Submitting workout:", {
         templateId: template.templateId,
         originalLength: template.description?.length,
         editedLength: editedPerformance?.length,
@@ -425,6 +418,37 @@ Calories: `;
     } catch (err) {
       console.error("Error unskipping workout:", err);
       showError(err.message || "Failed to unskip workout");
+    } finally {
+      setProcessingWorkoutId(null);
+    }
+  };
+
+  const handleCompleteRestDay = async () => {
+    if (processingWorkoutId || !programAgentRef.current) return;
+
+    setProcessingWorkoutId("rest-day");
+    try {
+      // Determine day number
+      const targetDay = dayParam
+        ? parseInt(dayParam)
+        : program?.currentDay || null;
+
+      // Call agent method - it handles API call and state updates
+      await programAgentRef.current.completeRestDay(programId, {
+        dayNumber: targetDay,
+        notes: "Rest day completed",
+      });
+
+      // Show success message
+      showSuccess("Rest day completed! Moving to next day.");
+
+      // Navigate to program dashboard since rest day is complete
+      navigate(
+        `/training-grounds/programs/dashboard?userId=${userId}&coachId=${coachId}&programId=${programId}`,
+      );
+    } catch (err) {
+      console.error("Error completing rest day:", err);
+      showError(err.message || "Failed to complete rest day");
     } finally {
       setProcessingWorkoutId(null);
     }
@@ -809,8 +833,20 @@ Calories: `;
                 </div>
               </div>
 
-              {/* Action Button */}
+              {/* Action Buttons */}
               <div className="flex gap-3">
+                <button
+                  onClick={handleCompleteRestDay}
+                  disabled={processingWorkoutId === "rest-day"}
+                  className={`flex-1 ${buttonPatterns.secondaryMedium} space-x-2 disabled:opacity-50 disabled:cursor-not-allowed`}
+                >
+                  {processingWorkoutId === "rest-day" ? (
+                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    <CheckIcon />
+                  )}
+                  <span>Complete Rest Day</span>
+                </button>
                 <button
                   onClick={() =>
                     navigate(
@@ -820,7 +856,7 @@ Calories: `;
                   className={`flex-1 ${buttonPatterns.secondaryMedium} space-x-2`}
                 >
                   <HomeIcon />
-                  <span>Back to Training Program</span>
+                  <span>Back to Program</span>
                 </button>
               </div>
             </div>
