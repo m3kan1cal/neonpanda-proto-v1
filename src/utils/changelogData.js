@@ -59,6 +59,7 @@ export const changelogEntries = [
         "ProgramDashboard and TrainingGrounds triggering full page reload after completing rest day instead of updating state smoothly",
         "Rest day completion API response returning undefined currentDay when completing non-current rest days - now uses fallback to program.currentDay",
         "Non-numeric dayNumber values bypassing validation and corrupting program.dayCompletionStatus - now validates and rejects invalid input",
+        "Rest day completion silently falling back to current day when dayNumber: 0 is explicitly passed - now properly rejects invalid day 0 with error",
       ],
       removed: [
         "complete-rest-day Lambda function (consolidated into skip-workout-template Lambda to reduce infrastructure complexity)",

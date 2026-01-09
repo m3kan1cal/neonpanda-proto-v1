@@ -88,7 +88,9 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       const program = programData;
 
       // Determine which day to complete (default to currentDay)
-      const targetDay = dayNumber || program.currentDay || 1;
+      // Use nullish coalescing (??) instead of logical OR (||) to preserve explicit 0 values
+      // so they can be properly rejected by validation
+      const targetDay = dayNumber ?? program.currentDay ?? 1;
 
       // Validate day number is within bounds
       if (targetDay < 1 || targetDay > program.totalDays) {
