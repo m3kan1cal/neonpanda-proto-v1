@@ -57,6 +57,8 @@ export const changelogEntries = [
         "completedRestDays counter inflating on duplicate rest day completions - now only increments if day wasn't already marked complete",
         "Complete Rest Day button missing loading feedback causing confusion about whether action was processing",
         "ProgramDashboard and TrainingGrounds triggering full page reload after completing rest day instead of updating state smoothly",
+        "Rest day completion API response returning undefined currentDay when completing non-current rest days - now uses fallback to program.currentDay",
+        "Non-numeric dayNumber values bypassing validation and corrupting program.dayCompletionStatus - now validates and rejects invalid input",
       ],
       removed: [
         "complete-rest-day Lambda function (consolidated into skip-workout-template Lambda to reduce infrastructure complexity)",

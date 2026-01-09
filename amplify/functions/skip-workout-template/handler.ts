@@ -56,7 +56,19 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       if (event.body) {
         try {
           const body = JSON.parse(event.body);
-          dayNumber = body.dayNumber || null;
+
+          // Parse and validate dayNumber if provided
+          if (body.dayNumber !== undefined && body.dayNumber !== null) {
+            const parsedDay = Number(body.dayNumber);
+            if (Number.isNaN(parsedDay) || !Number.isInteger(parsedDay)) {
+              return createErrorResponse(
+                400,
+                "dayNumber must be a valid integer",
+              );
+            }
+            dayNumber = parsedDay;
+          }
+
           notes = body.notes || null;
         } catch (error) {
           console.warn(
@@ -78,7 +90,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       // Determine which day to complete (default to currentDay)
       const targetDay = dayNumber || program.currentDay || 1;
 
-      // Validate day number
+      // Validate day number is within bounds
       if (targetDay < 1 || targetDay > program.totalDays) {
         return createErrorResponse(
           400,
@@ -154,9 +166,9 @@ const baseHandler: AuthenticatedHandler = async (event) => {
         userId,
         programId,
         completedDay: targetDay,
-        newCurrentDay: updates.currentDay,
+        newCurrentDay: updates.currentDay ?? program.currentDay,
         totalRestDaysCompleted:
-          updates.completedRestDays || program.completedRestDays || 0,
+          updates.completedRestDays ?? program.completedRestDays ?? 0,
         wasAlreadyComplete,
       });
 
@@ -172,9 +184,9 @@ const baseHandler: AuthenticatedHandler = async (event) => {
         },
         program: {
           programId: updatedProgram.programId,
-          currentDay: updates.currentDay,
+          currentDay: updates.currentDay ?? program.currentDay,
           completedRestDays:
-            updates.completedRestDays || program.completedRestDays || 0,
+            updates.completedRestDays ?? program.completedRestDays ?? 0,
           status: updates.status || program.status,
         },
       });
