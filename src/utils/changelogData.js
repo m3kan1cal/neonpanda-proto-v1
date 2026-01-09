@@ -60,6 +60,8 @@ export const changelogEntries = [
         "Rest day completion API response returning undefined currentDay when completing non-current rest days - now uses fallback to program.currentDay",
         "Non-numeric dayNumber values bypassing validation and corrupting program.dayCompletionStatus - now validates and rejects invalid input",
         "Rest day completion silently falling back to current day when dayNumber: 0 is explicitly passed - now properly rejects invalid day 0 with error",
+        "TrainingGrounds and ProgramDashboard making duplicate API calls after completing rest day - removed redundant loadPrograms/loadWorkoutTemplates calls",
+        "Rest day completion endpoint lacking validation for actual rest days - now checks S3 program details to ensure day has no scheduled workout templates before allowing completion",
       ],
       removed: [
         "complete-rest-day Lambda function (consolidated into skip-workout-template Lambda to reduce infrastructure complexity)",

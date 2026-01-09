@@ -100,6 +100,28 @@ const baseHandler: AuthenticatedHandler = async (event) => {
         );
       }
 
+      // Validate that this is actually a rest day (no workout templates scheduled)
+      if (!program.s3DetailKey) {
+        return createErrorResponse(404, "Program details not found");
+      }
+
+      const programDetails = await getProgramDetailsFromS3(program.s3DetailKey);
+      if (!programDetails) {
+        return createErrorResponse(404, "Program details not found in S3");
+      }
+
+      // Check if there are any workout templates for this day
+      const dayTemplates = programDetails.workoutTemplates.filter(
+        (t: WorkoutTemplate) => t.dayNumber === targetDay,
+      );
+
+      if (dayTemplates.length > 0) {
+        return createErrorResponse(
+          400,
+          `Cannot complete rest day for day ${targetDay}. This day has ${dayTemplates.length} scheduled workout(s). Please log or skip the workout(s) instead.`,
+        );
+      }
+
       console.info("✅ Completing rest day:", {
         userId,
         programId,

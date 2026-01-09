@@ -402,16 +402,10 @@ function TrainingGrounds() {
     try {
       setProgramState((prev) => ({ ...prev, isCompletingRestDay: true }));
 
+      // ProgramAgent.completeRestDay already reloads programs and today's workout internally
       await programAgentRef.current.completeRestDay(program.programId, {
         notes: "Rest day completed from Training Grounds",
       });
-
-      // Reload just the program and today's workout
-      await programAgentRef.current.loadPrograms();
-      const todayData = await programAgentRef.current.loadWorkoutTemplates(
-        program.programId,
-        { today: true },
-      );
 
       showSuccess("Rest day completed! Moving to next day.");
     } catch (error) {

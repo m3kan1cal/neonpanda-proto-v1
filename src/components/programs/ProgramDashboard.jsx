@@ -154,23 +154,20 @@ export default function ProgramDashboard() {
     try {
       setIsCompletingRestDay(true);
 
+      // ProgramAgent.completeRestDay already reloads programs and today's workout internally
       await programAgentRef.current.completeRestDay(program.programId, {
         notes: "Rest day completed from Program Dashboard",
       });
 
-      // ProgramAgent already updates its state, we just need to refresh from it
+      // Note: completeRestDay() calls loadPrograms() which updates activeProgram but not selectedProgram
+      // ProgramDashboard needs selectedProgram, so we explicitly reload it here
       const updatedProgram =
         await programAgentRef.current.loadProgram(programId);
       if (updatedProgram && updatedProgram.program) {
         setProgram(updatedProgram.program);
       }
 
-      // Load new today's workout (could be a workout or another rest day)
-      const todayData = await programAgentRef.current.loadWorkoutTemplates(
-        programId,
-        { today: true },
-      );
-      setTodaysWorkout(todayData?.todaysWorkoutTemplates || todayData || null);
+      // todaysWorkout is already updated via the agent callback (completeRestDay calls loadWorkoutTemplates internally)
     } catch (error) {
       console.error("Error completing rest day:", error);
       // Error is already shown by ProgramAgent
