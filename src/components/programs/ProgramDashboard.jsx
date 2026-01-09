@@ -44,6 +44,7 @@ export default function ProgramDashboard() {
   const [coachData, setCoachData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isCompletingRestDay, setIsCompletingRestDay] = useState(false);
 
   const programAgentRef = useRef(null);
   const coachAgentRef = useRef(null);
@@ -117,29 +118,19 @@ export default function ProgramDashboard() {
       }
 
       // Load today's workout
-      try {
-        const todayData = await programAgentRef.current.loadWorkoutTemplates(
-          programId,
-          {
-            today: true,
-          },
-        );
+      // Note: ProgramAgent returns null for rest days (doesn't throw error)
+      const todayData = await programAgentRef.current.loadWorkoutTemplates(
+        programId,
+        {
+          today: true,
+        },
+      );
 
-        if (todayData) {
-          setTodaysWorkout(todayData.todaysWorkoutTemplates || todayData);
-        }
-      } catch (workoutErr) {
-        // "No templates found for today" means it's a rest day - not an error
-        if (
-          workoutErr.message === "No templates found for today" ||
-          workoutErr.message?.includes("No templates found")
-        ) {
-          console.log("Rest day detected - no workout template for today");
-          setTodaysWorkout(null); // TodaysWorkoutCard will show rest day UI
-        } else {
-          // Re-throw actual errors
-          throw workoutErr;
-        }
+      if (todayData) {
+        setTodaysWorkout(todayData.todaysWorkoutTemplates || todayData);
+      } else {
+        // null response means rest day
+        setTodaysWorkout(null);
       }
     } catch (err) {
       console.error("Error loading program dashboard:", err);
@@ -153,6 +144,36 @@ export default function ProgramDashboard() {
   const handleProgramUpdate = (updatedProgram) => {
     // Just update the program state without reloading everything
     setProgram(updatedProgram);
+  };
+
+  const handleCompleteRestDay = async (program) => {
+    if (!programAgentRef.current || !program) {
+      return;
+    }
+
+    try {
+      setIsCompletingRestDay(true);
+
+      // ProgramAgent.completeRestDay already reloads programs and today's workout internally
+      await programAgentRef.current.completeRestDay(program.programId, {
+        notes: "Rest day completed from Program Dashboard",
+      });
+
+      // Note: completeRestDay() calls loadPrograms() which updates activeProgram but not selectedProgram
+      // ProgramDashboard needs selectedProgram, so we explicitly reload it here
+      const updatedProgram =
+        await programAgentRef.current.loadProgram(programId);
+      if (updatedProgram && updatedProgram.program) {
+        setProgram(updatedProgram.program);
+      }
+
+      // todaysWorkout is already updated via the agent callback (completeRestDay calls loadWorkoutTemplates internally)
+    } catch (error) {
+      console.error("Error completing rest day:", error);
+      // Error is already shown by ProgramAgent
+    } finally {
+      setIsCompletingRestDay(false);
+    }
   };
 
   if (isLoading) {
@@ -306,6 +327,18 @@ export default function ProgramDashboard() {
               id: "program-stat-skipped",
             },
             {
+              icon: CalendarIcon,
+              value: program.completedRestDays || 0,
+              tooltip: {
+                title: `${program.completedRestDays || 0} Rest Days`,
+                description: "Rest days you've completed in this program",
+              },
+              color: "purple",
+              isLoading: false,
+              ariaLabel: `${program.completedRestDays || 0} completed rest days`,
+              id: "program-stat-rest-days",
+            },
+            {
               icon: WorkoutIcon,
               value: program.totalWorkouts || 0,
               tooltip: {
@@ -344,6 +377,9 @@ export default function ProgramDashboard() {
               error={null}
               userId={userId}
               coachId={coachId}
+              onCompleteRestDay={handleCompleteRestDay}
+              isCompletingRestDay={isCompletingRestDay}
+              showViewProgramButton={false} // Hide button since user is already on program dashboard
             />
 
             {/* Calendar */}

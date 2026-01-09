@@ -403,6 +403,7 @@ export async function generateProgramV2(
       totalWorkouts,
       completedWorkouts: 0,
       skippedWorkouts: 0,
+      completedRestDays: 0,
       adherenceRate: 0,
       lastActivityAt: null,
       s3DetailKey: `programs/${userId}/${programId}/details.json`,

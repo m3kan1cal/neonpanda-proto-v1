@@ -109,12 +109,17 @@ export const getProgram = async (userId, coachId, programId) => {
  * @param {number} [options.day] - Get templates for specific day number
  * @returns {Promise<Object>} - The API response with workout templates
  */
-export const getWorkoutTemplates = async (userId, coachId, programId, options = {}) => {
+export const getWorkoutTemplates = async (
+  userId,
+  coachId,
+  programId,
+  options = {},
+) => {
   // Build query parameters
   const params = new URLSearchParams();
 
-  if (options.today) params.append('today', 'true');
-  if (options.day !== undefined) params.append('day', options.day.toString());
+  if (options.today) params.append("today", "true");
+  if (options.day !== undefined) params.append("day", options.day.toString());
 
   const queryString = params.toString();
   const url = `${getApiUrl("")}/users/${userId}/coaches/${coachId}/programs/${programId}/templates${queryString ? "?" + queryString : ""}`;
@@ -209,7 +214,13 @@ export const updateProgram = async (userId, coachId, programId, body) => {
  * @param {string} [workoutData.notes] - User's notes about the workout
  * @returns {Promise<Object>} - The API response with logged workout
  */
-export const logWorkout = async (userId, coachId, programId, templateId, workoutData) => {
+export const logWorkout = async (
+  userId,
+  coachId,
+  programId,
+  templateId,
+  workoutData,
+) => {
   const url = `${getApiUrl("")}/users/${userId}/coaches/${coachId}/programs/${programId}/templates/${templateId}/log`;
 
   try {
@@ -257,7 +268,13 @@ export const logWorkout = async (userId, coachId, programId, templateId, workout
  * @param {string} [data.skipReason] - Reason for skipping the workout
  * @returns {Promise<Object>} - The API response with skipped template
  */
-export const skipWorkout = async (userId, coachId, programId, templateId, data = {}) => {
+export const skipWorkout = async (
+  userId,
+  coachId,
+  programId,
+  templateId,
+  data = {},
+) => {
   const url = `${getApiUrl("")}/users/${userId}/coaches/${coachId}/programs/${programId}/templates/${templateId}/skip`;
 
   try {
@@ -291,6 +308,59 @@ export const skipWorkout = async (userId, coachId, programId, templateId, data =
     return result;
   } catch (error) {
     console.error("skipWorkout: Exception:", error);
+    throw error;
+  }
+};
+
+/**
+ * Complete a rest day in a training program (mark as acknowledged, advance program)
+ * @param {string} userId - The user ID
+ * @param {string} coachId - The coach ID
+ * @param {string} programId - The program ID
+ * @param {Object} [data] - Optional data
+ * @param {number} [data.dayNumber] - Specific day number (defaults to current day)
+ * @param {string} [data.notes] - Optional notes about the rest day
+ * @returns {Promise<Object>} - The API response with completed rest day info
+ */
+export const completeRestDay = async (
+  userId,
+  coachId,
+  programId,
+  data = {},
+) => {
+  const url = `${getApiUrl("")}/users/${userId}/coaches/${coachId}/programs/${programId}/rest-day/complete`;
+
+  try {
+    const response = await authenticatedFetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("completeRestDay: Error response:", errorText);
+
+      let errorMessage;
+      try {
+        const errorData = JSON.parse(errorText);
+        errorMessage =
+          errorData.error ||
+          errorData.message ||
+          `API Error: ${response.status}`;
+      } catch (parseError) {
+        errorMessage = `API Error: ${response.status}`;
+      }
+
+      throw new Error(errorMessage);
+    }
+
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error("completeRestDay: Exception:", error);
     throw error;
   }
 };

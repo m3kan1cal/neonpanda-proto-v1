@@ -1,4 +1,4 @@
-import { submitContactForm } from '../apis/contactApi';
+import { submitContactForm } from "../apis/contactApi";
 
 /**
  * ContactFormAgent - Handles business logic for Contact Form component
@@ -25,7 +25,7 @@ export class ContactFormAgent {
    */
   _updateState(newState) {
     this.state = { ...this.state, ...newState };
-    if (typeof this.onStateChange === 'function') {
+    if (typeof this.onStateChange === "function") {
       this.onStateChange(this.state);
     }
   }
@@ -37,45 +37,48 @@ export class ContactFormAgent {
     this._updateState({
       isSubmitting: true,
       error: null,
-      success: false
+      success: false,
     });
 
     try {
-      console.info('Submitting contact form:', formData);
+      console.info("Submitting contact form:", formData);
 
       // Make API call to the contact form endpoint
       const result = await submitContactForm(formData);
 
-      console.info('Form submitted successfully:', result);
+      console.info("Form submitted successfully:", result);
 
       this._updateState({
         isSubmitting: false,
-        success: true
+        success: true,
       });
 
       // Notify success
-      if (typeof this.onSuccess === 'function') {
-        this.onSuccess('Thank you for your message! We\'ll get back to you soon.');
+      if (typeof this.onSuccess === "function") {
+        this.onSuccess(
+          "Thank you for your message! We'll get back to you soon.",
+        );
       }
 
       return result;
     } catch (err) {
-      console.error('Submission error:', err);
+      console.error("Submission error:", err);
 
-      let errorMessage = 'There was an error submitting your message. Please try again.';
+      let errorMessage =
+        "There was an error submitting your message. Please try again.";
 
       // Handle validation errors specifically
-      if (err.message.includes('Validation failed')) {
+      if (err.message.includes("Validation failed")) {
         errorMessage = `Please check your form: ${err.message}`;
       }
 
       this._updateState({
         isSubmitting: false,
-        error: errorMessage
+        error: errorMessage,
       });
 
       // Notify error
-      if (typeof this.onError === 'function') {
+      if (typeof this.onError === "function") {
         this.onError(errorMessage);
       }
 
@@ -90,30 +93,30 @@ export class ContactFormAgent {
     const errors = {};
 
     if (!formData.firstName.trim()) {
-      errors.firstName = 'First name is required';
+      errors.firstName = "First name is required";
     }
 
     if (!formData.lastName.trim()) {
-      errors.lastName = 'Last name is required';
+      errors.lastName = "Last name is required";
     }
 
     if (!formData.email.trim()) {
-      errors.email = 'Email is required';
+      errors.email = "Email is required";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      errors.email = 'Please enter a valid email address';
+      errors.email = "Please enter a valid email address";
     }
 
     if (!formData.subject.trim()) {
-      errors.subject = 'Subject is required';
+      errors.subject = "Subject is required";
     }
 
     if (!formData.message.trim()) {
-      errors.message = 'Message is required';
+      errors.message = "Message is required";
     }
 
     return {
       isValid: Object.keys(errors).length === 0,
-      errors
+      errors,
     };
   }
 
@@ -121,30 +124,33 @@ export class ContactFormAgent {
    * Get default form data based on contact type
    */
   getDefaultFormData(contactType) {
-    let defaultSubject = '';
-    let defaultMessage = '';
+    let defaultSubject = "";
+    let defaultMessage = "";
 
     switch (contactType) {
-      case 'waitlist':
-        defaultSubject = 'Request for Early Access';
-        defaultMessage = "Hi there!\n\nI'm excited to get early access to NeonPanda and help shape the future of AI fitness coaching! I'd love to be among the first to experience the platform, provide feedback during development, and earn lifetime perks as an early adopter.\n\nLooking forward to being part of the journey!";
+      case "waitlist":
+        defaultSubject = "Sign Up for NeonPanda";
+        defaultMessage =
+          "Hi there!\n\nI'm excited to sign up for NeonPanda and start my AI fitness coaching journey! I'm ready to create my first coach and experience personalized training.\n\nLooking forward to getting started!";
         break;
-      case 'collaborate':
-        defaultSubject = 'Interest in Collaboration';
-        defaultMessage = "Hi!\n\nI'm interested in collaborating with NeonPanda and helping build the future of AI fitness coaching. I'd love to discuss how I can contribute to the project.\n\nPlease let me know more about collaboration opportunities!";
+      case "collaborate":
+        defaultSubject = "Interest in Collaboration";
+        defaultMessage =
+          "Hi!\n\nI'm interested in collaborating with NeonPanda and helping build the future of AI fitness coaching. I'd love to discuss how I can contribute to the project.\n\nPlease let me know more about collaboration opportunities!";
         break;
       default:
-        defaultSubject = 'General Inquiry';
-        defaultMessage = "Hi there!\n\nI have a question about NeonPanda and would love to learn more.\n\nThanks!";
+        defaultSubject = "General Inquiry";
+        defaultMessage =
+          "Hi there!\n\nI have a question about NeonPanda and would love to learn more.\n\nThanks!";
     }
 
     return {
-      firstName: '',
-      lastName: '',
-      email: '',
+      firstName: "",
+      lastName: "",
+      email: "",
       subject: defaultSubject,
       message: defaultMessage,
-      contactType: contactType
+      contactType: contactType,
     };
   }
 

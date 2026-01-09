@@ -72,68 +72,85 @@ function LandingPage() {
   }, []);
   const features = [
     {
-      title: "Multi-week training program design",
-      subtitle: "Intelligent programs that evolve with you",
+      heading: "Your coaches, your rules",
       description:
-        "Get complete multi-week training programs designed by your AI coach. From competition prep to strength cycles, your coach builds structured programs with intelligent periodization, progressive overload, and phase management. Every week builds logically toward your goals with proper deload timing and peak programming—not random workouts, but cohesive training blocks designed for real progress.",
-      imageAlt: "Multi-week training program interface",
+        "Create AI coaches designed around your exact goals, training style, and preferences—coaches built specifically for you and your unique fitness journey. Whether you need one coach or several for different goals, each one learns what makes you tick and adapts to support you across 8 supported disciplines. Your coaches belong only to you.",
+      imageAlt:
+        "Multiple AI coaches interface showing different coaching personalities",
+      imagePath: "/images/features/webp/your-coaches.webp",
       color: "pink",
     },
     {
-      title: "Purpose-built coaches across 8 disciplines",
-      subtitle: "Coaches built specifically for you",
+      heading: "Your fitness command center",
       description:
-        "Create AI coaches designed around your exact goals, training style, and preferences across 8 supported disciplines—CrossFit, Powerlifting, Olympic Weightlifting, Bodybuilding, Running, HYROX, Calisthenics, and Functional Bodybuilding. Every coach is custom-built to fit your needs perfectly, with more disciplines launching soon.",
-      imageAlt: "Coach personality customization interface",
+        "Access all your conversations, workouts, reports, analytics, memories, and preferences in one beautifully organized hub. The Training Grounds is your personal fitness headquarters where you can review your journey, track your progress, and manage your entire coaching experience. No more scattered data—everything you need is right at your fingertips.",
+      imageAlt: "Training Grounds dashboard showing centralized fitness hub",
+      imagePath: "/images/features/webp/training-grounds.webp",
       color: "cyan",
     },
     {
-      title: "Intelligent workout programming & planning",
-      subtitle: "Programming that actually makes sense",
+      heading: "Skip the setup, start training",
       description:
-        "Get workouts designed around your goals, available equipment, and current fitness level. Unlike generic fitness apps, your coach belongs only to you. No more wasting money on one-size-fits-all programs—your coach creates programming specifically for you that evolves with your progress.",
-      imageAlt: "Workout programming interface",
-      color: "cyan",
-    },
-    {
-      title: "Natural language workout logging",
-      subtitle: "Just tell your coach what you did",
-      description:
-        "No rigid forms, searching for exercises, or confusing menus. Describe your workout however feels natural - 'Did Fran in 8:45' or 'Ran 5K, felt great' or 'Bench felt heavy today, hit 225x5.' Your coach understands and learns your unique way of describing workouts, making logging effortless.",
-      imageAlt: "Natural language workout input interface",
+        "Don't want to build from scratch? No problem. Our library of proven coach templates covers CrossFit, powerlifting, running, HYROX, and more. Each one brings expert-level methodology right out of the box—just pick your style and you're off. Your coach already knows your sport.",
+      imageAlt: "Coach template library showing various coaching styles",
+      imagePath: "/images/features/webp/coach-templates.webp",
       color: "pink",
     },
     {
-      title: "Conversational coaching that evolves with you",
-      subtitle: "Your ideal coach, electrified and adaptive",
+      heading: "Programming that actually makes sense",
       description:
-        "Imagine your favorite coach or the perfect coach you've always wanted—now imagine an electric version that's available 24/7. Have real conversations with coaches who remember your preferences, celebrate your victories, and support you through tough days. Your coach tracks your wins, learns from your struggles, and adapts your programming automatically. Every rep, every PR, every conversation makes your coach smarter about what motivates you and how to help you succeed.",
-      imageAlt: "Conversational coaching and progress tracking interface",
+        "Get complete multi-week training programs designed by your AI coach. From competition prep to strength cycles, your coach builds structured programs with intelligent periodization, progressive overload, and proper phase management. Every week builds logically toward your goals with smart deload timing and peak programming—not random workouts, but cohesive training blocks designed for real progress.",
+      imageAlt: "Multi-week training program interface with periodization",
+      imagePath: "/images/features/webp/training-program.webp",
       color: "cyan",
     },
     {
-      title: "Intelligent workout analysis & insights",
-      subtitle: "Data-driven coaching that reveals patterns",
+      heading: "Built around your life, not the other way around",
+      description:
+        "Get workouts designed around your goals, available equipment, and current fitness level. Unlike generic fitness apps, your coach belongs only to you. No more one-size-fits-all programs—your coach creates programming specifically for you that evolves with your progress and adapts as you grow stronger.",
+      imageAlt: "Custom workout design interface",
+      imagePath: "/images/features/webp/custom-workouts.webp",
+      color: "pink",
+    },
+    {
+      heading: "Log workouts like you're texting a friend",
+      description:
+        'No rigid forms, searching for exercises, or confusing menus. Describe your workout however feels natural—"Did Fran in 8:45" or "Ran 5K, felt great" or "Bench felt heavy today, hit 225x5." Your coach understands and learns your unique way of describing workouts, making logging effortless.',
+      imageAlt: "Natural language workout logging conversation",
+      imagePath: "/images/features/webp/natural-log-workouts.webp",
+      color: "cyan",
+    },
+    {
+      heading: "Your coach never forgets",
+      description:
+        "Every conversation builds on the last. Your coach remembers your preferences, past discussions, and training history across all your sessions. Ask about last month's programming, reference something from weeks ago, or just pick up where you left off—your coach keeps the full picture so you don't have to.",
+      imageAlt: "Coach conversation history showing memory and context",
+      imagePath: "/images/features/webp/coach-conversations.webp",
+      color: "pink",
+    },
+    {
+      heading: "Way more than a chatbot",
+      description:
+        "This isn't a scripted FAQ bot. Your coach develops genuine understanding of who you are—your training style, what motivates you, how you like to communicate. The more you interact, the more your coach adapts. Real coaching chemistry, just... electric.",
+      imageAlt: "Natural coach conversation showing relationship building",
+      imagePath: "/images/features/webp/coach-relationships.webp",
+      color: "cyan",
+    },
+    {
+      heading: "Every rep, every PR, remembered",
+      description:
+        "Every workout you log becomes part of your permanent training record. Revisit past sessions, track your complete history, and watch your fitness story unfold over time. From your first logged workout to your latest PR—nothing gets lost. Your progress is always there when you need it.",
+      imageAlt: "Workout history interface showing logged sessions over time",
+      imagePath: "/images/features/webp/workout-history.webp",
+      color: "pink",
+    },
+    {
+      heading: "Spot the patterns you'd miss",
       description:
         "Your coach doesn't just log your workouts—it analyzes them for meaningful insights. Track trends in your performance, identify strengths and weaknesses, and get personalized reports that reveal patterns you'd never notice on your own. Turn your workout data into actionable coaching intelligence that drives real progress.",
-      imageAlt: "Workout analysis and insights dashboard",
-      color: "pink",
-    },
-    {
-      title: "Your Training Grounds - Everything in one place",
-      subtitle: "Your personal training grounds hub",
-      description:
-        "Access all your conversations, workouts, reports, analytics, memories, and preferences in one beautifully organized hub. The Training Grounds is your personal fitness headquarters where you can review your journey, track your progress, and manage your coaching experience. No more scattered data—everything you need is right at your fingertips.",
-      imageAlt: "Training Grounds dashboard interface",
+      imageAlt: "Workout insights dashboard showing training analysis",
+      imagePath: "/images/features/webp/workout-insights.webp",
       color: "cyan",
-    },
-    {
-      title: "Pre-built coach templates & multiple coaches",
-      subtitle: "Ready-made coaches for instant results",
-      description:
-        "Skip the setup and jump straight into training with our library of pre-built coach templates. Choose from proven coaching styles for CrossFit, powerlifting, running, HYROX, and more. Need different approaches for different goals? Create multiple coaches—one for strength training, another for cardio, and a third for competition prep. Mix and match coaching styles to fit your complete fitness journey.",
-      imageAlt: "Coach templates and multi-coach management interface",
-      color: "pink",
     },
   ];
 
@@ -214,11 +231,8 @@ function LandingPage() {
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-6 items-start w-full lg:w-2/3">
-              <Link
-                to="/contact?type=waitlist"
-                className={buttonPatterns.heroCTA}
-              >
-                Get Early Access
+              <Link to="/auth" className={buttonPatterns.heroCTA}>
+                Sign Up
               </Link>
               <Link
                 to="/contact?type=collaborate"
@@ -1141,11 +1155,8 @@ function LandingPage() {
               coaching?
             </p>
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-              <Link
-                to="/contact?type=waitlist"
-                className={buttonPatterns.heroCTA}
-              >
-                Get Early Access
+              <Link to="/auth" className={buttonPatterns.heroCTA}>
+                Sign Up
               </Link>
               <Link
                 to="/contact?type=collaborate"
@@ -1179,93 +1190,69 @@ function LandingPage() {
             </p>
           </div>
 
-          {features.map((feature, index) => (
-            <div
-              key={index}
-              className={`flex flex-col ${index % 2 === 0 ? "lg:flex-row" : "lg:flex-row-reverse"} items-center ${index === features.length - 1 ? "mb-24" : "mb-40"} gap-16 relative`}
-            >
-              {/* Content */}
-              <div className="flex-1">
-                <h3
-                  className={`font-inter font-bold text-3xl md:text-4xl lg:text-5xl mb-4 ${
-                    index % 2 === 0
-                      ? "text-synthwave-neon-pink"
-                      : "text-synthwave-neon-cyan"
-                  }`}
-                >
-                  {feature.subtitle}
-                </h3>
-                <p className={`${typographyPatterns.description} text-xl`}>
-                  {feature.description}
-                </p>
-              </div>
+          {features.map((feature, index) => {
+            // Get color classes based on feature color (alternating pink/cyan)
+            const colorClasses = {
+              pink: {
+                text: "text-synthwave-neon-pink",
+                glow: "bg-synthwave-neon-pink/15",
+              },
+              cyan: {
+                text: "text-synthwave-neon-cyan",
+                glow: "bg-synthwave-neon-cyan/15",
+              },
+            };
+            const colors = colorClasses[feature.color] || colorClasses.pink;
 
-              {/* Fading Vertical Line */}
-              <div className="hidden lg:block absolute left-1/2 -top-24 -bottom-24 w-px transform -translate-x-1/2">
-                <div className="h-full w-full bg-gradient-to-b from-transparent via-white to-transparent opacity-30"></div>
-              </div>
-
-              {/* Screenshot */}
-              <div className="flex-1 relative">
-                {/* Ethereal background glow */}
-                <div
-                  className={`absolute inset-0 -m-8 md:-m-16 ${
-                    index % 2 === 0
-                      ? "bg-synthwave-neon-pink/15"
-                      : "bg-synthwave-neon-cyan/15"
-                  } rounded-full blur-3xl`}
-                ></div>
-
+            return (
+              <div
+                key={index}
+                className={`flex flex-col ${index % 2 === 0 ? "lg:flex-row" : "lg:flex-row-reverse"} items-center ${index === features.length - 1 ? "mb-24" : "mb-40"} gap-16 relative`}
+              >
                 {/* Content */}
-                <div className="relative z-10 h-120 flex items-center justify-center">
-                  {index === 0 ||
-                  index === 1 ||
-                  index === 2 ||
-                  index === 3 ||
-                  index === 4 ||
-                  index === 5 ||
-                  index === 6 ? (
+                <div className="flex-1">
+                  <h3
+                    className={`font-inter font-bold text-3xl md:text-4xl lg:text-5xl mb-4 ${colors.text}`}
+                  >
+                    {feature.heading}
+                  </h3>
+                  <p className={`${typographyPatterns.description} text-xl`}>
+                    {feature.description}
+                  </p>
+                </div>
+
+                {/* Fading Vertical Line */}
+                <div className="hidden lg:block absolute left-1/2 -top-24 -bottom-24 w-px transform -translate-x-1/2">
+                  <div className="h-full w-full bg-gradient-to-b from-transparent via-white to-transparent opacity-30"></div>
+                </div>
+
+                {/* Screenshot */}
+                <div className="flex-1 relative">
+                  {/* Ethereal background glow */}
+                  <div
+                    className={`absolute inset-0 -m-8 md:-m-16 ${colors.glow} rounded-full blur-3xl`}
+                  ></div>
+
+                  {/* Content */}
+                  <div className="relative z-10 h-120 flex items-center justify-center">
                     <div className="w-full h-full flex items-center justify-center">
                       <img
-                        src={`/images/features/feature-${index + 1}.png`}
+                        src={feature.imagePath}
                         alt={feature.imageAlt}
                         className="max-w-full max-h-full object-contain rounded-xl shadow-2xl cursor-zoom-in hover:shadow-3xl transition-shadow duration-300"
                         onClick={() =>
                           setModalImage({
-                            src: `/images/features/feature-${index + 1}.png`,
+                            src: feature.imagePath,
                             alt: feature.imageAlt,
                           })
                         }
                       />
                     </div>
-                  ) : (
-                    <div className="text-center">
-                      <div
-                        className={`w-16 h-16 ${
-                          index % 2 === 0
-                            ? "bg-synthwave-neon-pink/20"
-                            : "bg-synthwave-neon-cyan/20"
-                        } rounded-xl mx-auto mb-4 flex items-center justify-center`}
-                      >
-                        <span
-                          className={`${
-                            index % 2 === 0
-                              ? "text-synthwave-neon-pink"
-                              : "text-synthwave-neon-cyan"
-                          } font-russo font-bold text-xl`}
-                        >
-                          NP
-                        </span>
-                      </div>
-                      <p className="font-rajdhani text-synthwave-text-muted font-medium">
-                        {feature.imageAlt}
-                      </p>
-                    </div>
-                  )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
 
@@ -1277,65 +1264,69 @@ function LandingPage() {
         <div className="max-w-5xl mx-auto relative z-10">
           <div className="text-center mb-16">
             <h2 className="font-inter font-bold text-5xl md:text-6xl lg:text-7xl text-white mb-6">
-              Get started in minutes
+              Your coaching journey
             </h2>
             <p className="font-rajdhani text-2xl text-white/90 max-w-4xl mx-auto leading-relaxed">
-              From signup to your first personalized workout in just a few
-              simple steps
+              From your first conversation to a coach that truly knows you
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
               {
-                step: 1,
-                title: "Sign up",
-                description: "Get early access in seconds with your email",
-                color: "pink",
-              },
-              {
-                step: 2,
-                title: "Create your coach",
-                description: "Build custom or choose from proven templates",
-                color: "cyan",
-              },
-              {
-                step: 3,
-                title: "Start conversations",
-                description: "Chat naturally with your AI coach about goals",
-                color: "pink",
-              },
-              {
-                step: 4,
-                title: "Save memories",
-                description: "Your coach learns your preferences and style",
-                color: "cyan",
-              },
-              {
-                step: 5,
-                title: "Log workouts",
+                step: "Day 1",
+                title: "Meet your coach",
                 description:
-                  "Track progress effortlessly with natural language",
+                  "Sign up, create your first AI coach, and start your first conversation",
                 color: "pink",
               },
               {
-                step: 6,
-                title: "Get smarter coaching",
-                description: "Watch your coach adapt and improve over time",
+                step: "Week 1",
+                title: "Build the relationship",
+                description:
+                  "Log workouts, share your goals, and watch your coach learn you",
+                color: "cyan",
+              },
+              {
+                step: "Month 1",
+                title: "See real progress",
+                description:
+                  "Get personalized programs and insights that evolve with you",
+                color: "pink",
+              },
+              {
+                step: "Month 3",
+                title: "Hit new milestones",
+                description:
+                  "Your coach knows your patterns and pushes you toward PRs",
+                color: "cyan",
+              },
+              {
+                step: "Month 6",
+                title: "Transform your training",
+                description:
+                  "Experience coaching that truly understands your unique journey",
+                color: "pink",
+              },
+              {
+                step: "Beyond",
+                title: "Continuous evolution",
+                description:
+                  "Your coach grows with you—new goals, new phases, same partnership",
                 color: "cyan",
               },
             ].map((item, index) => (
               <div key={index} className="text-center">
-                {/* Step Number Circle */}
+                {/* Step Badge */}
                 <div
-                  className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${
+                  className={`inline-block px-4 py-2 rounded-full mb-4 ${
                     item.color === "pink"
                       ? "bg-synthwave-neon-pink/20 border-2 border-synthwave-neon-pink"
                       : "bg-synthwave-neon-cyan/20 border-2 border-synthwave-neon-cyan"
                   }`}
                 >
                   <span
-                    className={`font-inter font-bold text-xl ${
+                    className={`font-inter font-bold text-sm uppercase tracking-wider ${
                       item.color === "pink"
                         ? "text-synthwave-neon-pink"
                         : "text-synthwave-neon-cyan"
@@ -1376,29 +1367,24 @@ function LandingPage() {
 
         <div className="max-w-4xl mx-auto text-center relative z-10">
           <h2 className="font-inter font-bold text-5xl md:text-6xl lg:text-7xl text-white mb-8">
-            Ready to meet your{" "}
-            <span className="text-synthwave-neon-pink">perfect coach</span>?
+            Ready to train{" "}
+            <span className="text-synthwave-neon-pink">electric</span>?
           </h2>
           <p className={`${typographyPatterns.description} text-xl mb-8`}>
-            NeonPanda is reshaping digital fitness coaching forever. Be among
-            the first to experience next-generation AI fitness coaching, help
-            shape the platform,and gain exclusive access to features before
-            they're available to the public.
+            NeonPanda is live and ready to transform how you train. Create your
+            first AI coach today and experience personalized fitness coaching
+            that actually gets you.
           </p>
 
           <p className={`${typographyPatterns.description} text-xl mb-8`}>
-            Join the OG community that's building the future of personalized
-            fitness coaching. Your feedback will directly influence how millions
-            of people train in the years to come. Ready to be part of the
-            fitness coaching revolution?
+            Join the community that's shaping the future of AI fitness coaching.
+            Your feedback directly influences what we build next. This is your
+            chance to be part of something different.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-            <Link
-              to="/contact?type=waitlist"
-              className={buttonPatterns.heroCTA}
-            >
-              Get Early Access
+            <Link to="/auth" className={buttonPatterns.heroCTA}>
+              Sign Up
             </Link>
             <Link
               to="/contact?type=collaborate"

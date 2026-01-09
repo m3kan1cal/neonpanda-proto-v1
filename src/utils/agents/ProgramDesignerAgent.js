@@ -427,7 +427,7 @@ export class ProgramDesignerAgent {
 
       // Debug: Log workout session on load
       if (actualConversation.workoutCreatorSession) {
-        console.log("🏋️ Loaded conversation with active workout session:", {
+        console.info("🏋️ Loaded conversation with active workout session:", {
           conversationId,
           turnCount: actualConversation.workoutCreatorSession.turnCount,
           progress: actualConversation.workoutCreatorSession.progressDetails,
