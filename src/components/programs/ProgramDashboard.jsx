@@ -44,6 +44,7 @@ export default function ProgramDashboard() {
   const [coachData, setCoachData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isCompletingRestDay, setIsCompletingRestDay] = useState(false);
 
   const programAgentRef = useRef(null);
   const coachAgentRef = useRef(null);
@@ -151,15 +152,30 @@ export default function ProgramDashboard() {
     }
 
     try {
+      setIsCompletingRestDay(true);
+
       await programAgentRef.current.completeRestDay(program.programId, {
         notes: "Rest day completed from Program Dashboard",
       });
 
-      // Reload program data to show updated currentDay and new today's workout
-      await loadData();
+      // ProgramAgent already updates its state, we just need to refresh from it
+      const updatedProgram =
+        await programAgentRef.current.loadProgram(programId);
+      if (updatedProgram && updatedProgram.program) {
+        setProgram(updatedProgram.program);
+      }
+
+      // Load new today's workout (could be a workout or another rest day)
+      const todayData = await programAgentRef.current.loadWorkoutTemplates(
+        programId,
+        { today: true },
+      );
+      setTodaysWorkout(todayData?.todaysWorkoutTemplates || todayData || null);
     } catch (error) {
       console.error("Error completing rest day:", error);
       // Error is already shown by ProgramAgent
+    } finally {
+      setIsCompletingRestDay(false);
     }
   };
 
@@ -365,6 +381,7 @@ export default function ProgramDashboard() {
               userId={userId}
               coachId={coachId}
               onCompleteRestDay={handleCompleteRestDay}
+              isCompletingRestDay={isCompletingRestDay}
               showViewProgramButton={false} // Hide button since user is already on program dashboard
             />
 

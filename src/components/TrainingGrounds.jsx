@@ -126,6 +126,7 @@ function TrainingGrounds() {
     todaysWorkout: null,
     isLoadingPrograms: false,
     isLoadingTodaysWorkout: false,
+    isCompletingRestDay: false,
     error: null,
   });
 
@@ -399,14 +400,25 @@ function TrainingGrounds() {
     }
 
     try {
+      setProgramState((prev) => ({ ...prev, isCompletingRestDay: true }));
+
       await programAgentRef.current.completeRestDay(program.programId, {
         notes: "Rest day completed from Training Grounds",
       });
+
+      // Reload just the program and today's workout
+      await programAgentRef.current.loadPrograms();
+      const todayData = await programAgentRef.current.loadWorkoutTemplates(
+        program.programId,
+        { today: true },
+      );
 
       showSuccess("Rest day completed! Moving to next day.");
     } catch (error) {
       console.error("Error completing rest day:", error);
       showError("Failed to complete rest day");
+    } finally {
+      setProgramState((prev) => ({ ...prev, isCompletingRestDay: false }));
     }
   };
 
@@ -788,6 +800,7 @@ function TrainingGrounds() {
                 userId={userId}
                 coachId={coachId}
                 onCompleteRestDay={handleCompleteRestDay}
+                isCompletingRestDay={programState.isCompletingRestDay}
                 showViewProgramButton={false} // Hide button since user can navigate via "Active Program Summary" card
               />
               {/* Active Program Summary */}

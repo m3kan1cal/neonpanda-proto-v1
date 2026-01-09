@@ -45,6 +45,8 @@ export const changelogEntries = [
         "Training program advancement now requires explicit user action on rest days rather than automatic progression",
         "skip-workout-template Lambda refactored to handle both workout skipping and rest day completion (consolidated logic to avoid micro-Lambdas)",
         "Rest day completion API endpoint now routes to skip-workout-template Lambda instead of separate dedicated Lambda",
+        "Complete Rest Day button now shows loading spinner and 'Completing...' text while processing for better user feedback",
+        "ProgramDashboard and TrainingGrounds now update state in place after completing rest day instead of full page reload for smoother UX",
       ],
       fixed: [
         "Inconsistent font styling in blog post 'The Foundation' where list items in 'Why Serverless?' section used different font than rest of content",
@@ -53,6 +55,8 @@ export const changelogEntries = [
         "Training program stuck on rest days - users can now explicitly complete rest days to advance to next day",
         "No user action available on rest days preventing program progression - Complete Rest Day button provides clear path forward",
         "completedRestDays counter inflating on duplicate rest day completions - now only increments if day wasn't already marked complete",
+        "Complete Rest Day button missing loading feedback causing confusion about whether action was processing",
+        "ProgramDashboard and TrainingGrounds triggering full page reload after completing rest day instead of updating state smoothly",
       ],
       removed: [
         "complete-rest-day Lambda function (consolidated into skip-workout-template Lambda to reduce infrastructure complexity)",
