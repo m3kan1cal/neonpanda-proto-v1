@@ -163,7 +163,7 @@ export class CommandPaletteAgent {
         },
       };
 
-      console.log(
+      console.info(
         "CommandPaletteAgent: Command executed successfully:",
         executionResult,
       );

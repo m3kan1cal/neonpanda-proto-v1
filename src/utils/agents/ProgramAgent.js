@@ -6,6 +6,7 @@ import {
   deleteProgram,
   logWorkout,
   skipWorkout,
+  completeRestDay,
 } from "../apis/programApi.js";
 import {
   getProgramDesignerSessions,
@@ -282,6 +283,26 @@ export class ProgramAgent {
       return response;
     } catch (error) {
       console.error("ProgramAgent.loadWorkoutTemplates: Error:", error);
+
+      // "No templates found" is not an error - it's a rest day
+      const isRestDay =
+        error.message === "No templates found for today" ||
+        error.message?.includes("No templates found");
+
+      if (isRestDay) {
+        console.info(
+          "ProgramAgent: Rest day detected - no workout template for today",
+        );
+        this._updateState({
+          todaysWorkout: null,
+          isLoadingTodaysWorkout: false,
+          error: null, // Clear any previous errors
+        });
+        // Don't throw - rest day is a valid state, not an error
+        return null;
+      }
+
+      // For actual errors, set error state and throw
       this._updateState({
         error: error.message,
         isLoadingTodaysWorkout: false,
@@ -472,7 +493,7 @@ export class ProgramAgent {
 
           // If linkedWorkoutId is now available, stop polling
           if (updatedTemplate && updatedTemplate.linkedWorkoutId) {
-            console.log(
+            console.info(
               "✅ linkedWorkoutId found:",
               updatedTemplate.linkedWorkoutId,
             );
@@ -490,7 +511,7 @@ export class ProgramAgent {
             );
 
           if (updatedTemplate && updatedTemplate.linkedWorkoutId) {
-            console.log(
+            console.info(
               "✅ linkedWorkoutId found:",
               updatedTemplate.linkedWorkoutId,
             );
@@ -515,7 +536,7 @@ export class ProgramAgent {
           err.message === "No templates found for today" ||
           err.message?.includes("No templates found")
         ) {
-          console.log(
+          console.info(
             "⏹️ Rest day detected - stopping polling for template:",
             templateId,
           );
@@ -661,6 +682,71 @@ export class ProgramAgent {
       return response;
     } catch (error) {
       console.error("ProgramAgent.unskipWorkoutTemplate: Error:", error);
+      this._updateState({
+        error: error.message,
+        isUpdating: false,
+      });
+
+      if (this.onError) {
+        this.onError(error);
+      }
+
+      throw error;
+    }
+  }
+
+  /**
+   * Complete a rest day (mark as acknowledged, advance program)
+   * @param {string} programId - The program ID
+   * @param {Object} options - Optional configuration
+   * @param {number} options.dayNumber - Specific day number (defaults to current day)
+   * @param {string} options.notes - Optional notes about the rest day
+   * @returns {Promise<Object>} - The API response
+   */
+  async completeRestDay(programId, options = {}) {
+    if (!this.userId || !this.coachId) {
+      console.error(
+        "ProgramAgent.completeRestDay: userId and coachId are required",
+      );
+      return;
+    }
+
+    if (!programId) {
+      console.error("ProgramAgent.completeRestDay: programId is required");
+      return;
+    }
+
+    this._updateState({
+      isUpdating: true,
+      error: null,
+    });
+
+    try {
+      const response = await completeRestDay(
+        this.userId,
+        this.coachId,
+        programId,
+        {
+          dayNumber: options.dayNumber,
+          notes: options.notes,
+        },
+      );
+
+      this._updateState({
+        isUpdating: false,
+      });
+
+      // Reload programs to reflect the updated currentDay
+      await this.loadPrograms();
+
+      // Also reload today's workout in case we advanced to a new day with a workout
+      if (this.hasActiveProgram()) {
+        await this.loadWorkoutTemplates(null, { today: true });
+      }
+
+      return response;
+    } catch (error) {
+      console.error("ProgramAgent.completeRestDay: Error:", error);
       this._updateState({
         error: error.message,
         isUpdating: false,

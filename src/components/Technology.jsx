@@ -46,8 +46,8 @@ function Technology() {
     setModalImage(null);
   };
 
-  const handleJoinWaitlist = () => {
-    navigate("/contact?type=waitlist");
+  const handleSignUp = () => {
+    navigate("/auth");
   };
 
   const handleContactUs = () => {
@@ -1467,10 +1467,10 @@ function Technology() {
 
               <div className="flex flex-col sm:flex-row gap-6 justify-center mt-12">
                 <button
-                  onClick={handleJoinWaitlist}
+                  onClick={handleSignUp}
                   className={`${buttonPatterns.heroCTA} min-w-48`}
                 >
-                  Get Early Access
+                  Sign Up
                 </button>
                 <button
                   onClick={handleContactUs}

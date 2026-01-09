@@ -42,6 +42,7 @@ export interface Program {
   totalWorkouts: number; // Scheduled workout count
   completedWorkouts: number;
   skippedWorkouts: number;
+  completedRestDays: number; // Count of rest days manually completed
   adherenceRate: number; // completedWorkouts / totalWorkouts
   lastActivityAt: Date | null;
 

@@ -126,6 +126,7 @@ function TrainingGrounds() {
     todaysWorkout: null,
     isLoadingPrograms: false,
     isLoadingTodaysWorkout: false,
+    isCompletingRestDay: false,
     error: null,
   });
 
@@ -330,6 +331,7 @@ function TrainingGrounds() {
           }
         })
         .catch((error) => {
+          // ProgramAgent handles rest days internally, so any error here is a real error
           console.error("TrainingGrounds: Error loading program data:", error);
         });
     }
@@ -389,6 +391,28 @@ function TrainingGrounds() {
       console.error("Error updating coach name:", error);
       showError("Failed to update coach name");
       return false;
+    }
+  };
+
+  const handleCompleteRestDay = async (program) => {
+    if (!programAgentRef.current || !program) {
+      return;
+    }
+
+    try {
+      setProgramState((prev) => ({ ...prev, isCompletingRestDay: true }));
+
+      // ProgramAgent.completeRestDay already reloads programs and today's workout internally
+      await programAgentRef.current.completeRestDay(program.programId, {
+        notes: "Rest day completed from Training Grounds",
+      });
+
+      showSuccess("Rest day completed! Moving to next day.");
+    } catch (error) {
+      console.error("Error completing rest day:", error);
+      showError("Failed to complete rest day");
+    } finally {
+      setProgramState((prev) => ({ ...prev, isCompletingRestDay: false }));
     }
   };
 
@@ -769,6 +793,9 @@ function TrainingGrounds() {
                 error={programState.error}
                 userId={userId}
                 coachId={coachId}
+                onCompleteRestDay={handleCompleteRestDay}
+                isCompletingRestDay={programState.isCompletingRestDay}
+                showViewProgramButton={false} // Hide button since user can navigate via "Active Program Summary" card
               />
               {/* Active Program Summary */}
               <ActiveProgramSummary

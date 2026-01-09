@@ -465,8 +465,8 @@ const TEST_CASES = [
  * Main test execution
  */
 async function runTests() {
-  console.log("🏋️ Build Program Integration Tests");
-  console.log("===================================\n");
+  console.info("🏋️ Build Program Integration Tests");
+  console.info("===================================\n");
 
   // Parse command line arguments
   const verbose = process.argv.includes("--verbose");
@@ -485,7 +485,7 @@ async function runTests() {
     try {
       if (!fs.existsSync(outputDir)) {
         fs.mkdirSync(outputDir, { recursive: true });
-        console.log(`📁 Created output directory: ${outputDir}\n`);
+        console.info(`📁 Created output directory: ${outputDir}\n`);
       }
     } catch (error) {
       console.warn(
@@ -497,31 +497,31 @@ async function runTests() {
   // Filter tests if --test flag provided
   if (testFilter) {
     testCases = testCases.filter((tc) => tc.name.includes(testFilter));
-    console.log(`🔍 Running filtered tests: ${testFilter}\n`);
+    console.info(`🔍 Running filtered tests: ${testFilter}\n`);
   }
 
   for (const testCase of testCases) {
-    console.log(`\n📋 Test: ${testCase.name}`);
-    console.log(`   ${testCase.description}`);
+    console.info(`\n📋 Test: ${testCase.name}`);
+    console.info(`   ${testCase.description}`);
 
     try {
       const result = await runTestCase(testCase, verbose);
       results.push(result);
 
       if (result.passed) {
-        console.log(`   ✅ PASSED`);
+        console.info(`   ✅ PASSED`);
       } else {
-        console.log(
+        console.info(
           `   ❌ FAILED: ${result.failures?.join(", ") || "Unknown failure"}`,
         );
       }
 
       // Show detailed validations in verbose mode
       if (verbose && result.validations) {
-        console.log(`\n   Validation Details:`);
+        console.info(`\n   Validation Details:`);
         result.validations.forEach((v) => {
           const icon = v.passed ? "✅" : "❌";
-          console.log(`     ${icon} ${v.name}`);
+          console.info(`     ${icon} ${v.name}`);
         });
       }
 
@@ -565,7 +565,7 @@ async function runTests() {
             individualFile,
             JSON.stringify(individualData, null, 2),
           );
-          console.log(
+          console.info(
             `   💾 Result saved to: ${path.basename(individualFile)}`,
           );
         } catch (error) {
@@ -588,10 +588,10 @@ async function runTests() {
   const passed = results.filter((r) => r.passed).length;
   const total = results.length;
 
-  console.log(`\n\n📊 Test Summary`);
-  console.log(`================`);
-  console.log(`Passed: ${passed}/${total}`);
-  console.log(`Failed: ${total - passed}/${total}`);
+  console.info(`\n\n📊 Test Summary`);
+  console.info(`================`);
+  console.info(`Passed: ${passed}/${total}`);
+  console.info(`Failed: ${total - passed}/${total}`);
 
   // Save summary results to file if --output flag provided
   if (outputDir) {
@@ -628,8 +628,8 @@ async function runTests() {
       };
 
       fs.writeFileSync(summaryFile, JSON.stringify(outputData, null, 2));
-      console.log(`\n💾 Summary saved to: ${path.basename(summaryFile)}`);
-      console.log(`   Individual test results also saved in: ${outputDir}/`);
+      console.info(`\n💾 Summary saved to: ${path.basename(summaryFile)}`);
+      console.info(`   Individual test results also saved in: ${outputDir}/`);
     } catch (error) {
       console.error(
         `\n⚠️  Failed to save summary: ${(error as Error).message}`,
@@ -638,10 +638,10 @@ async function runTests() {
   }
 
   if (passed === total) {
-    console.log(`\n✅ All tests passed!`);
+    console.info(`\n✅ All tests passed!`);
     process.exit(0);
   } else {
-    console.log(`\n❌ Some tests failed`);
+    console.info(`\n❌ Some tests failed`);
     process.exit(1);
   }
 }
@@ -659,7 +659,7 @@ async function runTestCase(
   );
 
   // 1. Invoke Lambda
-  console.log(`   Invoking Lambda...`);
+  console.info(`   Invoking Lambda...`);
   const invokeCommand = new InvokeCommand({
     FunctionName: DEFAULT_FUNCTION,
     InvocationType: "RequestResponse",
@@ -674,9 +674,9 @@ async function runTestCase(
     typeof payload.body === "string" ? JSON.parse(payload.body) : payload.body;
 
   if (verbose) {
-    console.log(`   Lambda full response:`, JSON.stringify(payload, null, 2));
+    console.info(`   Lambda full response:`, JSON.stringify(payload, null, 2));
   } else {
-    console.log(`   Lambda response:`, {
+    console.info(`   Lambda response:`, {
       success: body?.success,
       programId: body?.programId,
       phaseCount: body?.phaseCount,
@@ -686,7 +686,7 @@ async function runTestCase(
   }
 
   // Wait for logs
-  console.log(`   Waiting for logs...`);
+  console.info(`   Waiting for logs...`);
   await new Promise((resolve) => setTimeout(resolve, LOG_WAIT_TIME));
 
   // 2. Validate response
@@ -811,7 +811,7 @@ async function runTestCase(
           });
 
           if (!schemaValid && verbose) {
-            console.log(
+            console.info(
               "   📋 Schema validation errors:",
               JSON.stringify(validateProgram.errors, null, 2),
             );
@@ -927,7 +927,7 @@ async function runTestCase(
           });
         }
       } catch (dbError) {
-        console.log(`   ⚠️  DynamoDB fetch failed: ${dbError.message}`);
+        console.info(`   ⚠️  DynamoDB fetch failed: ${dbError.message}`);
       }
     }
   } else {
@@ -1010,7 +1010,7 @@ async function validateS3Content(
       name: "S3: Bucket name configured",
       passed: false,
     });
-    console.log("   ⚠️  S3_BUCKET_NAME not configured");
+    console.info("   ⚠️  S3_BUCKET_NAME not configured");
     return;
   }
 
@@ -1111,7 +1111,7 @@ async function validateS3Content(
       name: "S3: File retrieved successfully",
       passed: false,
     });
-    console.log(`   ⚠️  S3 fetch failed: ${s3Error.message}`);
+    console.info(`   ⚠️  S3 fetch failed: ${s3Error.message}`);
   }
 }
 
