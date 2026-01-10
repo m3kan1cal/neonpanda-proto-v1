@@ -118,17 +118,16 @@ function TrainingGrounds() {
     error: null,
   });
 
-  // Training Program state (managed by ProgramAgent)
-  const [programState, setProgramState] = useState({
-    programs: [],
-    activePrograms: [],
-    activeProgram: null,
-    todaysWorkout: null,
-    isLoadingPrograms: false,
-    isLoadingTodaysWorkout: false,
-    isCompletingRestDay: false,
-    error: null,
-  });
+  // Program data state (managed via ProgramAgent callbacks)
+  const [programs, setPrograms] = useState([]);
+  const [activeProgram, setActiveProgram] = useState(null);
+  const [todaysWorkout, setTodaysWorkout] = useState(null);
+  const [isLoadingPrograms, setIsLoadingPrograms] = useState(false);
+  const [isLoadingTodaysWorkout, setIsLoadingTodaysWorkout] = useState(false);
+  const [programError, setProgramError] = useState(null);
+
+  // Component-local UI state
+  const [isCompletingRestDay, setIsCompletingRestDay] = useState(false);
 
   // Upgrade prompts hook - tracks user activity for contextual upgrade prompts
   const {
@@ -288,7 +287,25 @@ function TrainingGrounds() {
         userId,
         coachId,
         (newState) => {
-          setProgramState(newState);
+          // Selective updates - only update what agent provides
+          if (newState.programs !== undefined) {
+            setPrograms(newState.programs);
+          }
+          if (newState.activeProgram !== undefined) {
+            setActiveProgram(newState.activeProgram);
+          }
+          if (newState.todaysWorkout !== undefined) {
+            setTodaysWorkout(newState.todaysWorkout);
+          }
+          if (newState.isLoadingPrograms !== undefined) {
+            setIsLoadingPrograms(newState.isLoadingPrograms);
+          }
+          if (newState.isLoadingTodaysWorkout !== undefined) {
+            setIsLoadingTodaysWorkout(newState.isLoadingTodaysWorkout);
+          }
+          if (newState.error !== undefined) {
+            setProgramError(newState.error);
+          }
         },
       );
     }
@@ -400,7 +417,7 @@ function TrainingGrounds() {
     }
 
     try {
-      setProgramState((prev) => ({ ...prev, isCompletingRestDay: true }));
+      setIsCompletingRestDay(true);
 
       // ProgramAgent.completeRestDay already reloads programs and today's workout internally
       await programAgentRef.current.completeRestDay(program.programId, {
@@ -412,7 +429,7 @@ function TrainingGrounds() {
       console.error("Error completing rest day:", error);
       showError("Failed to complete rest day");
     } finally {
-      setProgramState((prev) => ({ ...prev, isCompletingRestDay: false }));
+      setIsCompletingRestDay(false);
     }
   };
 
@@ -782,38 +799,38 @@ function TrainingGrounds() {
         {/* Main Sections Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {/* Training Programs Section - Dynamic based on program state */}
-          {programState.activeProgram ? (
+          {activeProgram ? (
             // User has active program
             <>
               {/* Today's Workout Card - shows workout or rest day */}
               <TodaysWorkoutCard
-                todaysWorkout={programState.todaysWorkout}
-                program={programState.activeProgram}
-                isLoading={programState.isLoadingTodaysWorkout}
-                error={programState.error}
+                todaysWorkout={todaysWorkout}
+                program={activeProgram}
+                isLoading={isLoadingTodaysWorkout}
+                error={programError}
                 userId={userId}
                 coachId={coachId}
                 onCompleteRestDay={handleCompleteRestDay}
-                isCompletingRestDay={programState.isCompletingRestDay}
+                isCompletingRestDay={isCompletingRestDay}
                 showViewProgramButton={false} // Hide button since user can navigate via "Active Program Summary" card
               />
               {/* Active Program Summary */}
               <ActiveProgramSummary
-                program={programState.activeProgram}
-                todaysWorkout={programState.todaysWorkout}
-                isLoading={programState.isLoadingPrograms}
+                program={activeProgram}
+                todaysWorkout={todaysWorkout}
+                isLoading={isLoadingPrograms}
                 userId={userId}
                 coachId={coachId}
               />
             </>
-          ) : programState.programs && programState.programs.length > 0 ? (
+          ) : programs && programs.length > 0 ? (
             // User has programs but none are active - show first program
             <>
               {/* Program Summary Card */}
               <ActiveProgramSummary
-                program={programState.programs[0]}
+                program={programs[0]}
                 todaysWorkout={null}
-                isLoading={programState.isLoadingPrograms}
+                isLoading={isLoadingPrograms}
                 userId={userId}
                 coachId={coachId}
               />
