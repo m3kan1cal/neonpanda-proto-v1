@@ -47,6 +47,7 @@ export const changelogEntries = [
         "Rest day completion API endpoint now routes to skip-workout-template Lambda instead of separate dedicated Lambda",
         "Complete Rest Day button now shows loading spinner and 'Completing...' text while processing for better user feedback",
         "ProgramDashboard and TrainingGrounds now update state in place after completing rest day instead of full page reload for smoother UX",
+        "TrainingGrounds program state management refactored from wholesale replacement to selective updates pattern for architectural consistency with ProgramDashboard",
       ],
       fixed: [
         "Inconsistent font styling in blog post 'The Foundation' where list items in 'Why Serverless?' section used different font than rest of content",
@@ -62,6 +63,7 @@ export const changelogEntries = [
         "Rest day completion silently falling back to current day when dayNumber: 0 is explicitly passed - now properly rejects invalid day 0 with error",
         "TrainingGrounds and ProgramDashboard making duplicate API calls after completing rest day - removed redundant loadPrograms/loadWorkoutTemplates calls",
         "Rest day completion endpoint lacking validation for actual rest days - now checks S3 program details to ensure day has no scheduled workout templates before allowing completion",
+        "Complete Rest Day button spinner not showing in TrainingGrounds due to state being overwritten by ProgramAgent callback - refactored to use selective state updates pattern matching ProgramDashboard architecture",
       ],
       removed: [
         "complete-rest-day Lambda function (consolidated into skip-workout-template Lambda to reduce infrastructure complexity)",
