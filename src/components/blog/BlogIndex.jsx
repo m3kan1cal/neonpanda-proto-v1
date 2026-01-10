@@ -134,7 +134,20 @@ function BlogIndex() {
   return (
     <div className={layoutPatterns.pageContainer}>
       {/* Hero Section */}
-      <section className={`${layoutPatterns.hero} relative`}>
+      <section className={`${layoutPatterns.hero} relative overflow-hidden`}>
+        {/* Background Image */}
+        <div
+          className="absolute inset-0 z-0"
+          style={{
+            backgroundImage: "url(/images/blog-posts/home-gym.jpg)",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            backgroundRepeat: "no-repeat",
+          }}
+        >
+          {/* Dark overlay for text readability */}
+          <div className="absolute inset-0 bg-gradient-to-b from-synthwave-bg-primary/70 via-synthwave-bg-primary/65 to-synthwave-bg-primary/80"></div>
+        </div>
         <div className="relative z-10 max-w-5xl mx-auto">
           <p className="font-rajdhani text-synthwave-neon-cyan uppercase tracking-widest text-sm mb-4">
             Technical Deep Dive Series

@@ -167,17 +167,32 @@ function BlogPost({ children }) {
       </div>
 
       {/* Hero Section */}
-      <section className={`${layoutPatterns.hero} relative pt-8`}>
+      <section
+        className={`${layoutPatterns.hero} relative pt-8 overflow-hidden`}
+      >
+        {/* Background Image */}
+        <div
+          className="absolute inset-0 z-0"
+          style={{
+            backgroundImage: "url(/images/blog-posts/chalk-hands.jpg)",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            backgroundRepeat: "no-repeat",
+          }}
+        >
+          {/* Dark overlay for text readability */}
+          <div className="absolute inset-0 bg-gradient-to-b from-synthwave-bg-primary/50 via-synthwave-bg-primary/60 to-synthwave-bg-primary"></div>
+        </div>
         <div className="relative z-10 max-w-4xl mx-auto">
           {/* Breadcrumb */}
-          <div className="flex items-center gap-2 text-sm font-rajdhani mb-6">
+          <div className="flex items-center gap-2 text-sm font-rajdhani mb-6 bg-synthwave-bg-primary/40 backdrop-blur-sm px-4 py-2 rounded-lg border border-synthwave-neon-pink/20 w-fit">
             <Link
               to="/blog"
-              className="text-synthwave-text-muted hover:text-synthwave-neon-cyan transition-colors"
+              className="text-white hover:text-synthwave-neon-cyan transition-colors font-semibold"
             >
               Blog
             </Link>
-            <span className="text-synthwave-text-muted">/</span>
+            <span className="text-white/70">/</span>
             <span className={colors.text}>Part {currentPost.id} of 5</span>
           </div>
 

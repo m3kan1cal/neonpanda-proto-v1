@@ -198,14 +198,20 @@ function ViewWorkouts() {
 
   // Start logging - opens the editable form
   const handleLogWorkout = (template) => {
-    // Copy prescribed description and append placeholders for performance data
+    // Copy prescribed description and append placeholders for performance data and athlete notes
     const prescribedWithPlaceholders = `${template.description}
 
 --- Performance Data ---
 RPE:
 Intensity:
 Duration:
-Calories: `;
+Calories:
+
+--- Athlete Notes ---
+How did you feel?
+Any PRs?
+Any discomfort or injuries?
+General thoughts: `;
 
     setEditingWorkoutId(template.templateId);
     setEditedPerformance(prescribedWithPlaceholders);
@@ -298,6 +304,14 @@ Calories: `;
 
           // Auto-hide celebration after animation (3 seconds)
           setTimeout(() => setShowCelebration(false), 3000);
+
+          // If viewing today and all workouts complete, reload data after celebration
+          // This handles the case where the program advances to a rest day
+          if (isViewingToday) {
+            setTimeout(() => {
+              loadData();
+            }, 3500); // Slightly after celebration ends
+          }
         }
 
         return {
@@ -307,7 +321,21 @@ Calories: `;
       });
     } catch (err) {
       console.error("Error logging workout:", err);
-      showError(err.message || "Failed to log workout");
+
+      // If error is due to "No templates found", it might be a rest day
+      // Reload all data to properly handle rest day state
+      if (
+        err.message &&
+        err.message.includes("No templates found") &&
+        isViewingToday
+      ) {
+        console.info(
+          "Detected rest day after workout logging - reloading all data",
+        );
+        await loadData();
+      } else {
+        showError(err.message || "Failed to log workout");
+      }
     } finally {
       setProcessingWorkoutId(null);
     }
@@ -1063,7 +1091,7 @@ Calories: `;
                               Edit above to record actual performance
                             </span>{" "}
                             - weights used, reps completed, RPE, intensity,
-                            movement substitutions, etc.
+                            movement substitutions, athlete notes, etc.
                           </div>
                         </div>
                       )}
