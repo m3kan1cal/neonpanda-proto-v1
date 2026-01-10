@@ -10,6 +10,38 @@
 
 export const changelogEntries = [
   {
+    version: "Release v1.0.20260110-beta",
+    date: "2026-01-10",
+    changes: {
+      added: [
+        "Scenario-based opening hook in blog post 'The Foundation' with 5:47 AM multi-user narrative illustrating concurrent AI coaching requests",
+        "'The Problem: AI Is Hungry' section in blog post 'The Foundation' framing technical challenges (bursty traffic, context requirements, model routing) before presenting solutions",
+        "Conversational asides throughout blog post 'The Foundation' injecting brand personality ('We like sleep. Sleep is good for gains.', 'We tried WebSockets. We have opinions.', 'Our accountant is thrilled.')",
+        "Human moments in blog post 'The Foundation' showing engineering iteration ('Real talk: we spent way too long debating database design...', 'Timezone handling is surprisingly tricky.')",
+        "Energized conclusion in blog post 'The Foundation' with teaser for next post ('Spoiler: it involves vector databases, semantic search, and some very clever prompt assembly.')",
+      ],
+      changed: [
+        "Blog post 'The Foundation' completely rewritten with NeonPanda brand personality following BRANDING_STRATEGY.md guidelines for playful power and intelligent approachability",
+        "Blog post 'The Foundation' narrative arc restructured from descriptive to story-driven: Hook → Problem → Philosophy → Solution → User Impact → Deep Dive → Teaser",
+        "Blog post 'The Foundation' section headers made more conversational ('The AWS-Native Stack' → 'The Stack (a.k.a. Our Favorite Legos)', 'Throughput Scaling' → 'Throughput Scaling (a.k.a. Don\\'t Drop Requests)')",
+        "Blog post 'The Foundation' introduction changed from generic mission statement to compelling scenario-based opening with simultaneous user requests",
+        "Blog post 'The Foundation' serverless philosophy section rewritten to frame challenges before solutions with 'What We Were Up Against' subsection",
+        "Blog post 'The Foundation' AWS service descriptions enhanced with personality ('We have ~50 Lambda functions, and we're not ashamed.', 'Yes, single-table design is a thing. Yes, it's worth learning.')",
+        "Blog post 'The Foundation' Training Grounds section rewritten with clearer value proposition and user impact focus",
+        "Blog post 'The Foundation' Smart Router section header changed from 'The Intelligent Orchestrator' to 'The Intelligent Traffic Controller' for clarity",
+        "Blog post 'The Foundation' 'Everything in One Place' section text size increased from text-sm to text-base for improved readability",
+        "Blog post 'The Foundation' 'Why This Stack Matters for AI' section bullet text size increased from text-sm to text-base for consistency",
+        "Blog post header background overlay lightened from 70%/75% opacity to 50%/60% opacity for better image visibility while maintaining text readability",
+      ],
+      fixed: [
+        "Blog post 'The Foundation' brand voice misalignment where technical content read like corporate whitepaper instead of NeonPanda's playful, approachable personality",
+        "Blog post 'The Foundation' missing narrative tension - now includes problem framing and 'what we learned' moments for technical storytelling",
+        "Blog post 'The Foundation' conclusion lacking energy - now includes teaser with anticipation for next post in series",
+      ],
+      removed: [],
+    },
+  },
+  {
     version: "Release v1.0.20260109-beta",
     date: "2026-01-09",
     changes: {
@@ -20,6 +52,7 @@ export const changelogEntries = [
         "Why This Stack Matters for AI section in blog post 'The Foundation' with detailed benefits for HTTP API, Lambda, Bedrock, and DynamoDB",
         "Visual flow diagram in blog post 'The Foundation' showing Smart Router decision architecture from user message to model selection",
         "Implementation code snippets in blog post 'The Foundation' demonstrating Promise.all parallel execution pattern and routing logic",
+        "Background images to blog headers for enhanced visual appeal (home-gym.jpg for blog index, chalk-hands.jpg for blog post)",
         "Complete Rest Day button to TodaysWorkoutCard component for explicit rest day acknowledgment and program advancement",
         "Complete Rest Day button to ViewWorkouts rest day card allowing users to advance program from rest days",
         "Rest day completion logic to skip-workout-template Lambda (consolidated from separate complete-rest-day Lambda)",
@@ -39,6 +72,8 @@ export const changelogEntries = [
         "Blog post 'The Foundation' perspective changed from second-person ('your', 'you') to neutral perspective ('the user', 'users', 'the coach') for professional tone",
         "Blog post 'The Foundation' AWS-Native Stack section expanded from 4 to 6 service cards including Bedrock and EventBridge",
         "Blog post 'The Foundation' section 'Your Training Grounds' renamed to 'The Training Grounds' for neutral perspective",
+        "Blog index hero section now displays home-gym.jpg background image with gradient overlay (70-80% opacity) for enhanced visual appeal",
+        "Blog post header section now displays chalk-hands.jpg background image with gradient overlay (70-75% opacity to full at bottom) for enhanced visual depth",
         "Rest day UI now includes action button (Complete Rest Day) to explicitly advance program to next day",
         "Rest day completion styled as secondary action (outline button) matching skip workout pattern since it acknowledges rest rather than active work",
         "TodaysWorkoutCard and ViewWorkouts refactored to use buttonPatterns.secondaryMedium from uiPatterns for consistent button styling across all rest day actions",

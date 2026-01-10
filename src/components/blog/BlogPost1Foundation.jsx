@@ -9,62 +9,144 @@ import {
 function BlogPost1Foundation() {
   return (
     <>
-      {/* Introduction */}
+      {/* Opening Hook */}
       <section className="mb-16">
+        <div className={`${containerPatterns.boldGradient} mb-8`}>
+          <p className="font-rajdhani text-xl text-white leading-relaxed italic">
+            "It's 5:47 AM. A user in Portland just crushed the first test of the
+            Crossfit Open and wants to log it before coffee. Another in Miami is
+            asking their coach about peaking for their first competition. A
+            third in London is halfway through a conversation about body
+            recomposition training and nutrition..."
+          </p>
+        </div>
+
         <p
           className={`${typographyPatterns.description} text-xl leading-relaxed mb-6`}
         >
-          When we set out to build NeonPanda, we had a clear philosophy: the
-          best technology should feel like magic, not work. We didn't just want
-          an AI chatbot—we wanted a complete fitness and analytics platform
-          engineered from the ground up to support the demanding requirements of
-          AI-powered coaching. A platform that could scale from zero users to
-          thousands without missing a beat, respond in under 2 seconds, and
-          maintain 99.9% uptime—all while feeling as natural as texting a
-          friend.
+          All of this is happening simultaneously. And somewhere in the AWS
+          cloud, a bunch of Lambda functions are spinning up, DynamoDB tables
+          are returning data in single-digit milliseconds, and multiple AI
+          models are reasoning about fitness in ways that would make a human
+          coach's head spin.
+        </p>
+        <p
+          className={`${typographyPatterns.description} text-xl leading-relaxed mb-6`}
+        >
+          The users don't see any of this. They just see a coach who responds
+          instantly, remembers everything, and somehow always knows the right
+          thing to say.
         </p>
         <p
           className={`${typographyPatterns.description} text-xl leading-relaxed`}
         >
-          This is the story of how we built that foundation. Serverless wasn't
-          just a convenient choice—it was essential for handling the
-          unpredictable, bursty nature of AI workloads. From AWS Lambda
-          functions that auto-scale effortlessly to DynamoDB tables with
-          single-digit millisecond response times, every architectural decision
-          was made to support one goal: creating AI coaching that feels
-          remarkably human while handling complex fitness analytics at scale.
+          <span className="text-synthwave-neon-pink font-semibold">
+            That's the magic we wanted to build.
+          </span>{" "}
+          This is the story of how we built the foundation that makes it
+          possible.
+        </p>
+      </section>
+
+      {/* The Problem We Were Solving */}
+      <section className="mb-16">
+        <h2
+          className={`${typographyPatterns.sectionTitle} text-synthwave-neon-pink mb-6`}
+        >
+          The Problem: AI Is Hungry
+        </h2>
+        <p className={`${typographyPatterns.description} mb-6`}>
+          Here's the thing about AI-powered coaching that nobody tells you: the
+          AI part is actually the easy part. Getting Claude to give good fitness
+          advice? Straightforward. Getting Claude to give good fitness advice{" "}
+          <em>
+            consistently, at scale, in under 2 seconds, without bankrupting us
+          </em>
+          ? That's where it gets interesting.
+        </p>
+
+        <div className={`${containerPatterns.mediumGlassPink} mb-8`}>
+          <h3 className="font-rajdhani font-semibold text-xl text-synthwave-neon-pink mb-4">
+            What We Were Up Against
+          </h3>
+          <ul className="space-y-4">
+            <li className="flex items-start gap-3">
+              <span className="text-synthwave-neon-pink mt-1">•</span>
+              <div className="font-rajdhani">
+                <strong className="text-synthwave-neon-pink font-semibold">
+                  Bursty traffic patterns:
+                </strong>{" "}
+                <span className="text-synthwave-text-secondary">
+                  Fitness people wake up early. Really early. Our traffic spikes
+                  look like the world's most aggressive morning alarm—5 AM to 7
+                  AM is chaos, then crickets until the after-work rush.
+                </span>
+              </div>
+            </li>
+            <li className="flex items-start gap-3">
+              <span className="text-synthwave-neon-pink mt-1">•</span>
+              <div className="font-rajdhani">
+                <strong className="text-synthwave-neon-pink font-semibold">
+                  Context is everything:
+                </strong>{" "}
+                <span className="text-synthwave-text-secondary">
+                  A good coach response requires knowing the user's workout
+                  history, their goals, their injuries, their training
+                  methodology preferences, and the personality of the coach
+                  they've created. That's a lot of data to fetch, fast.
+                </span>
+              </div>
+            </li>
+            <li className="flex items-start gap-3">
+              <span className="text-synthwave-neon-pink mt-1">•</span>
+              <div className="font-rajdhani">
+                <strong className="text-synthwave-neon-pink font-semibold">
+                  Not all requests are equal:
+                </strong>{" "}
+                <span className="text-synthwave-text-secondary">
+                  "What's my workout today?" should be instant. "Design me a
+                  16-week powerlifting program" needs serious AI horsepower. We
+                  needed to route intelligently.
+                </span>
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <p className={typographyPatterns.description}>
+          Traditional servers would have us paying for idle capacity at 2 AM and
+          melting down at 6 AM. We needed something smarter.
         </p>
       </section>
 
       {/* The Serverless Philosophy */}
       <section className="mb-16">
         <h2
-          className={`${typographyPatterns.sectionTitle} text-synthwave-neon-pink mb-6`}
+          className={`${typographyPatterns.sectionTitle} text-synthwave-neon-cyan mb-6`}
         >
-          The Serverless Philosophy
+          Why We Went All-In on Serverless
         </h2>
         <p className={`${typographyPatterns.description} mb-6`}>
-          Traditional server architectures require predicting traffic,
-          provisioning resources, and paying for idle capacity. For a fitness
-          coaching platform where usage spikes during early mornings and after
-          work hours, this model is wildly inefficient.
+          Serverless wasn't a trendy choice—it was the only choice that made
+          sense for AI workloads. Here's the pitch we gave ourselves:
         </p>
 
         <div className={`${containerPatterns.mediumGlass} mb-8`}>
           <h3 className="font-rajdhani font-semibold text-xl text-synthwave-neon-cyan mb-4">
-            Why Serverless?
+            The Serverless Promise
           </h3>
           <ul className="space-y-4">
             <li className="flex items-start gap-3">
               <span className="text-synthwave-neon-cyan mt-1">•</span>
               <div className="font-rajdhani">
                 <strong className="text-synthwave-neon-cyan font-semibold">
-                  Zero to Hero Scaling:
+                  Zero to hero scaling:
                 </strong>{" "}
                 <span className="text-synthwave-text-secondary">
-                  Lambda functions spin up instantly when a user messages their
+                  Lambda functions spin up instantly when someone messages their
                   coach at 5 AM, and scale down to zero during off-hours. We
-                  only pay for what we use.
+                  only pay for what we use—which is nothing at 3 AM when
+                  everyone's sleeping.
                 </span>
               </div>
             </li>
@@ -72,11 +154,12 @@ function BlogPost1Foundation() {
               <span className="text-synthwave-neon-cyan mt-1">•</span>
               <div className="font-rajdhani">
                 <strong className="text-synthwave-neon-cyan font-semibold">
-                  No Capacity Planning:
+                  No capacity planning headaches:
                 </strong>{" "}
                 <span className="text-synthwave-text-secondary">
                   Whether we have 10 users or 10,000, the architecture handles
                   it automatically. No 3 AM pager alerts about server overload.
+                  (We like sleep. Sleep is good for gains.)
                 </span>
               </div>
             </li>
@@ -84,12 +167,12 @@ function BlogPost1Foundation() {
               <span className="text-synthwave-neon-cyan mt-1">•</span>
               <div className="font-rajdhani">
                 <strong className="text-synthwave-neon-cyan font-semibold">
-                  Sub-2-Second Responses:
+                  Sub-2-second responses:
                 </strong>{" "}
                 <span className="text-synthwave-text-secondary">
                   Conversations flow naturally without awkward AI-thinking
-                  pauses. The coach responds as quickly as a knowledgeable
-                  friend.
+                  pauses. Your coach responds as quickly as a friend who happens
+                  to be really good at AWS.
                 </span>
               </div>
             </li>
@@ -107,10 +190,14 @@ function BlogPost1Foundation() {
       {/* The AWS-Native Stack */}
       <section className="mb-16">
         <h2
-          className={`${typographyPatterns.sectionTitle} text-synthwave-neon-cyan mb-6`}
+          className={`${typographyPatterns.sectionTitle} text-synthwave-neon-purple mb-6`}
         >
-          The AWS-Native Stack
+          The Stack (a.k.a. Our Favorite Legos)
         </h2>
+        <p className={`${typographyPatterns.description} mb-6`}>
+          Every piece of our architecture was chosen for a reason. Here's what's
+          under the hood and why we picked it:
+        </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           {/* Lambda */}
@@ -129,7 +216,7 @@ function BlogPost1Foundation() {
               TypeScript functions that handle everything from streaming coach
               conversations to building multi-week training programs. Async
               invocations for heavy processing, sync handlers for real-time
-              responses.
+              responses. We have ~50 Lambda functions, and we're not ashamed.
             </p>
           </div>
 
@@ -148,7 +235,8 @@ function BlogPost1Foundation() {
             <p className="text-synthwave-text-secondary font-rajdhani">
               HTTP APIs with Lambda function URLs for streaming responses.
               WebSocket-like experience for real-time coach conversations
-              without the WebSocket complexity.
+              without the WebSocket complexity. (We tried WebSockets. We have
+              opinions.)
             </p>
           </div>
 
@@ -167,7 +255,8 @@ function BlogPost1Foundation() {
             <p className="text-synthwave-text-secondary font-rajdhani">
               Foundation models from Anthropic (Claude Sonnet & Haiku) power our
               AI coaching. Multi-model orchestration with intelligent routing
-              between models based on task complexity.
+              between models based on task complexity. More on this later—it's
+              where things get really fun.
             </p>
           </div>
 
@@ -186,7 +275,8 @@ function BlogPost1Foundation() {
             <p className="text-synthwave-text-secondary font-rajdhani">
               Single-table design with composite keys for lightning-fast
               queries. Workout history, coach configurations, and real-time
-              metrics—all accessible in single-digit milliseconds.
+              metrics—all accessible in single-digit milliseconds. Yes,
+              single-table design is a thing. Yes, it's worth learning.
             </p>
           </div>
 
@@ -205,7 +295,8 @@ function BlogPost1Foundation() {
             <p className="text-synthwave-text-secondary font-rajdhani">
               Cost-optimized archival storage for conversation transcripts,
               detailed workout analyses, and rich media content. 90% storage
-              cost reduction compared to keeping everything in DynamoDB.
+              cost reduction compared to keeping everything in DynamoDB. Our
+              accountant is thrilled.
             </p>
           </div>
 
@@ -224,7 +315,8 @@ function BlogPost1Foundation() {
             <p className="text-synthwave-text-secondary font-rajdhani">
               Event-driven architecture for async workflows like weekly report
               generation, analytics processing, and background AI tasks. Loose
-              coupling enables independent scaling and evolution.
+              coupling enables independent scaling—each piece evolves without
+              breaking the others.
             </p>
           </div>
         </div>
@@ -233,15 +325,15 @@ function BlogPost1Foundation() {
       {/* Introducing the Training Grounds */}
       <section className="mb-16">
         <h2
-          className={`${typographyPatterns.sectionTitle} text-synthwave-neon-purple mb-6`}
+          className={`${typographyPatterns.sectionTitle} text-synthwave-neon-pink mb-6`}
         >
-          The Training Grounds
+          The Training Grounds: Where It All Comes Together
         </h2>
         <p className={`${typographyPatterns.description} mb-6`}>
-          The Training Grounds is the user's personal fitness headquarters—the
-          central hub where all coaching data comes together. It's where the
-          serverless architecture meets user experience, transforming raw data
-          into actionable insights.
+          All this infrastructure exists to serve one place: the Training
+          Grounds. It's each user's personal fitness headquarters—the central
+          hub where coaching data, workout history, and AI-powered insights
+          converge into something actually useful.
         </p>
 
         <div className={`${containerPatterns.boldGradient} mb-8`}>
@@ -253,41 +345,50 @@ function BlogPost1Foundation() {
               <h4 className="font-rajdhani font-semibold text-synthwave-neon-pink mb-2">
                 Workout History
               </h4>
-              <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+              <p className="text-synthwave-text-secondary font-rajdhani text-base">
                 Every workout logged through natural language, searchable and
                 analyzable. From "Did Fran in 8:45" to detailed powerlifting
-                sessions.
+                sessions with RPE tracking.
               </p>
             </div>
             <div>
               <h4 className="font-rajdhani font-semibold text-synthwave-neon-cyan mb-2">
                 Coach Conversations
               </h4>
-              <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+              <p className="text-synthwave-text-secondary font-rajdhani text-base">
                 The complete coaching relationship history. Every question,
                 every insight, every PR celebration preserved and searchable.
+                Your coach never forgets.
               </p>
             </div>
             <div>
               <h4 className="font-rajdhani font-semibold text-synthwave-neon-purple mb-2">
                 Training Programs
               </h4>
-              <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+              <p className="text-synthwave-text-secondary font-rajdhani text-base">
                 Multi-week programs with phase management, progression tracking,
-                and workout templates. A structured roadmap to fitness goals.
+                and workout templates. A structured roadmap that adapts to real
+                life.
               </p>
             </div>
             <div>
               <h4 className="font-rajdhani font-semibold text-synthwave-neon-pink mb-2">
                 Analytics & Reports
               </h4>
-              <p className="text-synthwave-text-secondary font-rajdhani text-sm">
+              <p className="text-synthwave-text-secondary font-rajdhani text-base">
                 Weekly and monthly insights generated by AI. Progress patterns,
-                strength trends, and personalized recommendations.
+                strength trends, and personalized recommendations—not generic
+                charts.
               </p>
             </div>
           </div>
         </div>
+
+        <p className={typographyPatterns.description}>
+          The Training Grounds is where the serverless architecture meets user
+          experience. All that data flying around at millisecond speeds? It
+          transforms into a simple, intuitive interface that just works.
+        </p>
       </section>
 
       {/* Agent Spotlight: Smart Request Router */}
@@ -302,44 +403,46 @@ function BlogPost1Foundation() {
             <h2
               className={`${typographyPatterns.sectionTitle} text-synthwave-neon-pink mb-0`}
             >
-              Agent Spotlight: Smart Request Router
+              Agent Spotlight: The Smart Request Router
             </h2>
             <p className="font-rajdhani text-synthwave-text-muted italic">
-              "The Intelligent Orchestrator"
+              "The Intelligent Traffic Controller"
             </p>
           </div>
         </div>
 
         <p className={`${typographyPatterns.description} mb-6`}>
-          Every message sent to a coach first passes through the Smart Request
-          Router—our intelligent traffic controller that ensures the user always
-          gets the right response from the right AI model.
+          Here's where things get interesting. Every single message to a coach
+          passes through the Smart Request Router—our AI-powered traffic
+          controller that ensures the right response comes from the right model,
+          with the right context, every time.
         </p>
 
-        <div className={`${containerPatterns.mediumGlassPink} mb-8`}>
-          <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-pink mb-4">
-            What It Does
+        <div className={`${containerPatterns.mediumGlassCyan} mb-8`}>
+          <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-cyan mb-4">
+            Why Not Just Send Everything to Claude?
           </h3>
           <p className="text-synthwave-text-secondary font-rajdhani mb-4">
-            The Router analyzes every user message to determine:
+            We could. It would work. But it would be slow and expensive.
+            Instead, the Router analyzes every message to determine:
           </p>
           <ul className="space-y-3">
             <li className="flex items-start gap-3">
-              <span className="text-synthwave-neon-pink mt-1">•</span>
+              <span className="text-synthwave-neon-cyan mt-1">•</span>
               <div className="font-rajdhani">
-                <strong className="text-synthwave-neon-pink font-semibold">
+                <strong className="text-synthwave-neon-cyan font-semibold">
                   Intent:
                 </strong>{" "}
                 <span className="text-synthwave-text-secondary">
-                  Is the user logging a workout, asking for advice, designing a
-                  program, or just chatting?
+                  Is this person logging a workout, asking for advice, designing
+                  a program, or just chatting?
                 </span>
               </div>
             </li>
             <li className="flex items-start gap-3">
-              <span className="text-synthwave-neon-pink mt-1">•</span>
+              <span className="text-synthwave-neon-cyan mt-1">•</span>
               <div className="font-rajdhani">
-                <strong className="text-synthwave-neon-pink font-semibold">
+                <strong className="text-synthwave-neon-cyan font-semibold">
                   Complexity:
                 </strong>{" "}
                 <span className="text-synthwave-text-secondary">
@@ -349,14 +452,14 @@ function BlogPost1Foundation() {
               </div>
             </li>
             <li className="flex items-start gap-3">
-              <span className="text-synthwave-neon-pink mt-1">•</span>
+              <span className="text-synthwave-neon-cyan mt-1">•</span>
               <div className="font-rajdhani">
-                <strong className="text-synthwave-neon-pink font-semibold">
-                  Context:
+                <strong className="text-synthwave-neon-cyan font-semibold">
+                  Context needs:
                 </strong>{" "}
                 <span className="text-synthwave-text-secondary">
-                  What additional data needs to be pulled—recent workouts,
-                  memories, methodology knowledge?
+                  What data do we need to fetch—recent workouts, memories,
+                  methodology knowledge, program history?
                 </span>
               </div>
             </li>
@@ -370,13 +473,13 @@ function BlogPost1Foundation() {
             <span className={badgePatterns.muted}>Agentic AI Pattern</span>
           </div>
           <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-cyan mb-4">
-            The Router Pattern
+            The Router Pattern in Action
           </h3>
           <p className="text-synthwave-text-secondary font-rajdhani mb-4">
-            The Router Pattern is a foundational agentic AI pattern that we
-            implement at the entry point of every user interaction. Instead of
-            sending all requests to a single model, the router intelligently
-            analyzes intent and routes to the optimal processing path.
+            The Router Pattern is a foundational agentic AI pattern. Instead of
+            sending all requests to a single model, we use AI to analyze intent
+            and route to the optimal processing path. It's AI deciding how to
+            use AI.
           </p>
           <div className="bg-synthwave-bg-primary/30 rounded-lg p-4 font-mono text-sm">
             <div className="text-synthwave-text-muted mb-2">
@@ -401,9 +504,10 @@ function BlogPost1Foundation() {
         </div>
 
         <p className={typographyPatterns.description}>
-          The magic is that users never notice the orchestration. Whether the
-          request needs deep program analysis or a quick motivational boost, the
-          right model responds instantly with the perfect level of intelligence.
+          The magic is that users never notice the orchestration. Whether they
+          need deep program analysis or a quick "you got this!" before a
+          workout, the right model responds instantly with exactly the right
+          level of intelligence.
         </p>
       </section>
 
@@ -412,12 +516,12 @@ function BlogPost1Foundation() {
         <h2
           className={`${typographyPatterns.sectionTitle} text-synthwave-neon-purple mb-6`}
         >
-          Smart Router: The Decision Engine
+          Inside the Router: The Decision Engine
         </h2>
         <p className={`${typographyPatterns.description} mb-6`}>
-          Our Smart Request Router is a true agentic AI component—it uses Claude
-          to make intelligent, context-aware decisions about how to process each
-          message. Here's how the decision tree works in practice:
+          Let's get technical. Our Smart Request Router isn't a simple if/else
+          chain—it's an AI-powered decision maker that considers multiple
+          dimensions simultaneously. Here's how decisions flow in practice:
         </p>
 
         {/* Decision Flow Diagram */}
@@ -543,7 +647,7 @@ function BlogPost1Foundation() {
           {/* Implementation Details */}
           <div className="bg-synthwave-bg-primary/30 rounded-lg p-4 font-mono text-sm">
             <div className="text-synthwave-text-muted mb-2">
-              // Smart Router implementation (from detection.ts)
+              // Actual implementation from detection.ts
             </div>
             <div className="text-synthwave-neon-cyan">
               {`const [routerAnalysis, conversation, config] = await Promise.all([`}
@@ -582,26 +686,25 @@ function BlogPost1Foundation() {
           </div>
         </div>
 
-        {/* Router Capabilities */}
+        {/* What Makes It Agentic */}
         <div className={`${containerPatterns.mediumGlassPink} mb-8`}>
           <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-pink mb-4">
-            What Makes It Agentic
+            What Makes This Actually Agentic
           </h3>
           <p className="text-synthwave-text-secondary font-rajdhani mb-4">
-            The Smart Router isn't just a simple if/else chain—it's an
-            AI-powered decision maker that considers multiple dimensions
-            simultaneously:
+            The Smart Router isn't just following rules—it's making intelligent
+            decisions. Here's what sets it apart from a simple switch statement:
           </p>
           <ul className="space-y-3">
             <li className="flex items-start gap-3">
               <span className="text-synthwave-neon-pink mt-1">•</span>
               <div className="font-rajdhani">
                 <strong className="text-synthwave-neon-pink font-semibold">
-                  Temporal Awareness:
+                  Temporal awareness:
                 </strong>{" "}
                 <span className="text-synthwave-text-secondary">
                   Understands "this morning" vs "yesterday" based on user
-                  timezone
+                  timezone. Timezone handling is surprisingly tricky.
                 </span>
               </div>
             </li>
@@ -609,11 +712,12 @@ function BlogPost1Foundation() {
               <span className="text-synthwave-neon-pink mt-1">•</span>
               <div className="font-rajdhani">
                 <strong className="text-synthwave-neon-pink font-semibold">
-                  Multi-Intent Detection:
+                  Multi-intent detection:
                 </strong>{" "}
                 <span className="text-synthwave-text-secondary">
-                  Detects workout logging, memory requests, and questions in
-                  single messages
+                  "I did Fran this morning, can you also remind me about my
+                  shoulder thing?" — that's a workout log AND a memory request
+                  in one message.
                 </span>
               </div>
             </li>
@@ -621,10 +725,11 @@ function BlogPost1Foundation() {
               <span className="text-synthwave-neon-pink mt-1">•</span>
               <div className="font-rajdhani">
                 <strong className="text-synthwave-neon-pink font-semibold">
-                  Context Optimization:
+                  Context optimization:
                 </strong>{" "}
                 <span className="text-synthwave-text-secondary">
-                  Only fetches data that's actually needed for the response
+                  Only fetches data that's actually needed for the response.
+                  Less data = faster responses = happy users.
                 </span>
               </div>
             </li>
@@ -632,11 +737,11 @@ function BlogPost1Foundation() {
               <span className="text-synthwave-neon-pink mt-1">•</span>
               <div className="font-rajdhani">
                 <strong className="text-synthwave-neon-pink font-semibold">
-                  Cost Efficiency:
+                  Cost efficiency:
                 </strong>{" "}
                 <span className="text-synthwave-text-secondary">
                   Routes simple questions to faster, cheaper models
-                  automatically
+                  automatically. "What's my workout today?" doesn't need Sonnet.
                 </span>
               </div>
             </li>
@@ -644,18 +749,17 @@ function BlogPost1Foundation() {
         </div>
       </section>
 
-      {/* Technical Deep Dive */}
+      {/* Technical Deep Dive: DynamoDB */}
       <section className="mb-16">
         <h2
           className={`${typographyPatterns.sectionTitle} text-synthwave-neon-cyan mb-6`}
         >
-          Technical Deep Dive: Single-Table DynamoDB Design
+          The Data Layer: Single-Table DynamoDB
         </h2>
         <p className={`${typographyPatterns.description} mb-6`}>
-          One of our key architectural decisions was adopting a single-table
-          design for DynamoDB. Instead of creating separate tables for users,
-          workouts, conversations, and programs, we use a unified table with
-          composite keys.
+          Real talk: we spent way too long debating database design. Multiple
+          tables? Single table? SQL? NoSQL? In the end, single-table DynamoDB
+          won, and here's why it matters for AI workloads:
         </p>
 
         <div className={`${containerPatterns.mediumGlass} mb-8`}>
@@ -670,7 +774,7 @@ function BlogPost1Foundation() {
           </div>
           <p className="text-synthwave-text-secondary font-rajdhani">
             This design enables powerful query patterns: get all workouts for a
-            user, all conversations with a specific coach, or all programs in a
+            user, all conversations with a specific coach, or all programs—in a
             single efficient query. Combined with Global Secondary Indexes
             (GSIs), we can access any data pattern in milliseconds.
           </p>
@@ -678,7 +782,7 @@ function BlogPost1Foundation() {
 
         <div className={`${containerPatterns.mediumGlassPink} mb-8`}>
           <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-pink mb-4">
-            Throughput Scaling
+            Throughput Scaling (a.k.a. "Don't Drop Requests")
           </h3>
           <p className="text-synthwave-text-secondary font-rajdhani">
             Every DynamoDB operation is wrapped in our{" "}
@@ -687,22 +791,21 @@ function BlogPost1Foundation() {
             </code>{" "}
             utility, ensuring graceful handling of capacity limits with
             automatic retries and exponential backoff. The coach never misses a
-            beat, even during traffic spikes.
+            beat, even during that 6 AM traffic spike.
           </p>
         </div>
       </section>
 
-      {/* Why This Stack Matters */}
+      {/* Why This Stack Matters for AI */}
       <section className="mb-16">
         <h2
-          className={`${typographyPatterns.sectionTitle} text-synthwave-neon-cyan mb-6`}
+          className={`${typographyPatterns.sectionTitle} text-synthwave-neon-purple mb-6`}
         >
           Why This Stack Matters for AI
         </h2>
         <p className={`${typographyPatterns.description} mb-8`}>
           Every architectural choice was made with AI workloads in mind. Here's
-          why our serverless, AWS-native approach is uniquely suited for
-          AI-powered fitness coaching:
+          why serverless + AWS-native is uniquely suited for AI coaching:
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -711,7 +814,7 @@ function BlogPost1Foundation() {
             <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-cyan mb-3">
               HTTP API with Lambda Function URLs
             </h3>
-            <ul className="space-y-2 font-rajdhani text-sm text-synthwave-text-secondary">
+            <ul className="space-y-2 font-rajdhani text-base text-synthwave-text-secondary">
               <li className="flex items-start gap-2">
                 <span className="text-synthwave-neon-cyan">→</span>
                 <span>
@@ -740,7 +843,7 @@ function BlogPost1Foundation() {
             <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-pink mb-3">
               Lambda for AI Workloads
             </h3>
-            <ul className="space-y-2 font-rajdhani text-sm text-synthwave-text-secondary">
+            <ul className="space-y-2 font-rajdhani text-base text-synthwave-text-secondary">
               <li className="flex items-start gap-2">
                 <span className="text-synthwave-neon-pink">→</span>
                 <span>
@@ -771,7 +874,7 @@ function BlogPost1Foundation() {
             <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-purple mb-3">
               Bedrock Multi-Model Strategy
             </h3>
-            <ul className="space-y-2 font-rajdhani text-sm text-synthwave-text-secondary">
+            <ul className="space-y-2 font-rajdhani text-base text-synthwave-text-secondary">
               <li className="flex items-start gap-2">
                 <span className="text-synthwave-neon-purple">→</span>
                 <span>
@@ -800,7 +903,7 @@ function BlogPost1Foundation() {
             <h3 className="font-rajdhani font-semibold text-lg text-synthwave-neon-cyan mb-3">
               DynamoDB for Real-Time AI Context
             </h3>
-            <ul className="space-y-2 font-rajdhani text-sm text-synthwave-text-secondary">
+            <ul className="space-y-2 font-rajdhani text-base text-synthwave-text-secondary">
               <li className="flex items-start gap-2">
                 <span className="text-synthwave-neon-cyan">→</span>
                 <span>
@@ -832,7 +935,7 @@ function BlogPost1Foundation() {
           <p className="text-synthwave-text-secondary font-rajdhani mb-4">
             By combining serverless compute, intelligent model routing, and
             optimized data access patterns, we achieve response times that feel
-            instantaneous. When a user messages their coach:
+            instantaneous. When someone messages their coach:
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
             <div>
@@ -868,14 +971,19 @@ function BlogPost1Foundation() {
         <h2
           className={`${typographyPatterns.sectionTitle} text-synthwave-neon-pink mb-6`}
         >
-          What's Next
+          What's Next: The Coach Creator
         </h2>
         <p className={`${typographyPatterns.description} mb-6`}>
-          With the serverless foundation in place, we're ready to explore how we
-          store and retrieve the rich context that makes AI coaching feel
-          personal. In the next post, we'll dive into the hybrid data
-          architecture and introduce the Coach Creator Agent—the AI that builds
-          each user's perfect coach.
+          With the serverless foundation in place, the real magic begins. In the
+          next post, we'll dive into how we store and retrieve the rich context
+          that makes AI coaching feel genuinely personal—and introduce the Coach
+          Creator Agent, the AI that helps users build their perfect coach.
+        </p>
+
+        <p className={`${typographyPatterns.description} mb-8`}>
+          Spoiler: it involves vector databases, semantic search, and some very
+          clever prompt assembly. The foundation you've seen here? It's about to
+          get a lot more interesting.
         </p>
 
         <div className={containerPatterns.cardLight}>

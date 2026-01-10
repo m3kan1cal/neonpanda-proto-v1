@@ -486,6 +486,17 @@ export class ProgramAgent {
         // Reload workout templates silently
         const freshData = await this.loadWorkoutTemplates(programId, options);
 
+        // If freshData is null, it's a rest day - stop polling
+        if (freshData === null) {
+          console.info(
+            "⏹️ Rest day detected after logging workout - stopping polling for template:",
+            templateId,
+          );
+          clearInterval(pollInterval);
+          this.pollingIntervals.delete(templateId);
+          return;
+        }
+
         if (freshData && freshData.templates) {
           const updatedTemplate = freshData.templates.find(
             (t) => t.templateId === templateId,
