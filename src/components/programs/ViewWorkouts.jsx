@@ -390,6 +390,14 @@ General thoughts: `;
 
           // Auto-hide celebration after animation (3 seconds)
           setTimeout(() => setShowCelebration(false), 3000);
+
+          // If viewing today and all workouts complete, reload data after celebration
+          // This handles the case where the program advances to a rest day
+          if (isViewingToday) {
+            setTimeout(() => {
+              loadData();
+            }, 3500); // Slightly after celebration ends
+          }
         }
 
         return {
@@ -399,7 +407,21 @@ General thoughts: `;
       });
     } catch (err) {
       console.error("Error skipping workout:", err);
-      showError(err.message || "Failed to skip workout");
+
+      // If error is due to "No templates found", it might be a rest day
+      // Reload all data to properly handle rest day state
+      if (
+        err.message &&
+        err.message.includes("No templates found") &&
+        isViewingToday
+      ) {
+        console.info(
+          "Detected rest day after workout skip - reloading all data",
+        );
+        await loadData();
+      } else {
+        showError(err.message || "Failed to skip workout");
+      }
     } finally {
       setProcessingWorkoutId(null);
     }
