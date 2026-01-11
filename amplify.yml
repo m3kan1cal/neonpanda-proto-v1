@@ -23,61 +23,67 @@ applications:
       artifacts:
         baseDirectory: dist
         files:
-          - '**/*'
+          - "**/*"
       cache:
         paths:
           - .npm/**/*
     customHeaders:
-      - pattern: '**'
+      - pattern: "**"
         headers:
-          - key: 'X-Frame-Options'
-            value: 'DENY'
-          - key: 'X-XSS-Protection'
-            value: '1; mode=block'
+          - key: "X-Frame-Options"
+            value: "DENY"
+          - key: "X-XSS-Protection"
+            value: "1; mode=block"
     redirects:
       # Public pages - strip trailing slashes
-      - source: '/about/'
-        target: '/about'
-        status: '301'
-      - source: '/technology/'
-        target: '/technology'
-        status: '301'
-      - source: '/privacy/'
-        target: '/privacy'
-        status: '301'
-      - source: '/terms/'
-        target: '/terms'
-        status: '301'
-      - source: '/faqs/'
-        target: '/faqs'
-        status: '301'
-      - source: '/changelog/'
-        target: '/changelog'
-        status: '301'
-      - source: '/contact/'
-        target: '/contact'
-        status: '301'
+      - source: "/about/"
+        target: "/about"
+        status: "301"
+      - source: "/technology/"
+        target: "/technology"
+        status: "301"
+      - source: "/privacy/"
+        target: "/privacy"
+        status: "301"
+      - source: "/terms/"
+        target: "/terms"
+        status: "301"
+      - source: "/faqs/"
+        target: "/faqs"
+        status: "301"
+      - source: "/changelog/"
+        target: "/changelog"
+        status: "301"
+      - source: "/contact/"
+        target: "/contact"
+        status: "301"
+      - source: "/blog/"
+        target: "/blog"
+        status: "301"
+      - source: "/welcome/"
+        target: "/welcome"
+        status: "301"
 
       # Protected pages - strip trailing slashes
-      - source: '/auth/'
-        target: '/auth'
-        status: '301'
-      - source: '/coach-creator/'
-        target: '/coach-creator'
-        status: '301'
-      - source: '/coaches/'
-        target: '/coaches'
-        status: '301'
-      - source: '/settings/'
-        target: '/settings'
-        status: '301'
-      - source: '/training-grounds/'
-        target: '/training-grounds'
-        status: '301'
+      - source: "/auth/"
+        target: "/auth"
+        status: "301"
+      - source: "/coach-creator/"
+        target: "/coach-creator"
+        status: "301"
+      - source: "/coaches/"
+        target: "/coaches"
+        status: "301"
+      - source: "/settings/"
+        target: "/settings"
+        status: "301"
+      - source: "/training-grounds/"
+        target: "/training-grounds"
+        status: "301"
 
       # SPA fallback - serve index.html for all other routes
-      - source: '/<*>'
-        target: '/index.html'
-        status: '200'
+      - source: "/<*>"
+        target: "/index.html"
+        status: "200"
 settings:
   nodeVersion: 22
