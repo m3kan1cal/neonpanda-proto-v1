@@ -8,6 +8,21 @@ Complete guide for migrating NeonPanda's Stripe integration from test mode to pr
 
 ---
 
+## 🎯 Current Progress
+
+**Status**: Phase 1 - Stripe Dashboard Setup (60% complete)
+
+**Completed**:
+
+- ✅ Business verification approved
+- ✅ Switched to Live mode
+- ✅ Products created (EarlyPanda & ElectricPanda)
+- ✅ Payment links configured
+
+**Next**: Retrieve API keys and configure webhooks (Steps 1.4-1.5)
+
+---
+
 ## Table of Contents
 
 1. [Quick Checklist](#quick-checklist)
@@ -27,33 +42,34 @@ Use this condensed checklist as you work through the migration:
 
 ### Before You Start
 
-- [ ] Complete Stripe business verification
-- [ ] Wait for Stripe approval
-- [ ] Ensure production environment is stable
+- [x] Complete Stripe business verification
+- [x] Wait for Stripe approval
+- [x] Ensure production environment is stable
 
 ### In Stripe Dashboard (Live Mode)
 
-- [ ] Create "EarlyPanda" product ($0/month) → Get `price_xxxxx`
-- [ ] Create "ElectricPanda" product ($20/month) → Get `price_xxxxx`
-- [ ] Create Payment Link for ElectricPanda → Get `https://buy.stripe.com/xxxxx`
+- [x] Create "EarlyPanda" product ($0/month) → Get `price_xxxxx`
+- [x] Create "ElectricPanda" product ($20/month) → Get `price_xxxxx`
+- [x] Create Payment Link for ElectricPanda → Get `https://buy.stripe.com/xxxxx`
   - Set redirect: `https://neonpanda.ai/welcome?session_id={CHECKOUT_SESSION_ID}`
-- [ ] Get Secret Key from API Keys → Get `sk_live_xxxxx`
-- [ ] Create Webhook endpoint: `https://api-prod.neonpanda.ai/stripe/webhook`
+- [x] Get Secret Key from API Keys → Get `sk_live_xxxxx`
+- [x] Create Webhook endpoint: `https://api-prod.neonpanda.ai/stripe/webhook`
   - Events: `customer.subscription.*`, `checkout.session.completed`, `invoice.payment_*`
   - Get webhook secret → Get `whsec_xxxxx`
 
 ### In AWS Amplify Console
 
-- [ ] Navigate to production branch environment variables
-- [ ] Set `STRIPE_SECRET_KEY` = live secret key
-- [ ] Set `STRIPE_WEBHOOK_SECRET` = webhook secret
-- [ ] Set `ELECTRICPANDA_PRICE_ID` = ElectricPanda price ID
-- [ ] Set `EARLYPANDA_PRICE_ID` = EarlyPanda price ID
-- [ ] Set `VITE_ELECTRIC_PANDA_PAYMENT_LINK` = payment link URL
-- [ ] Save and deploy
+- [x] Navigate to production branch environment variables
+- [x] Set `STRIPE_SECRET_KEY` = live secret key
+- [x] Set `STRIPE_WEBHOOK_SECRET` = webhook secret
+- [x] Set `ELECTRICPANDA_PRICE_ID` = ElectricPanda price ID
+- [x] Set `EARLYPANDA_PRICE_ID` = EarlyPanda price ID
+- [x] Set `VITE_ELECTRIC_PANDA_PAYMENT_LINK` = payment link URL
+- [x] Save and deploy
 
-### Testing (Test Mode First)
+### Testing (Test Mode First) **← YOU ARE HERE**
 
+- [ ] Wait for deployment to complete (check Amplify Console)
 - [ ] Test webhook with "Send test webhook" in Stripe
 - [ ] Test full signup flow with test card `4242 4242 4242 4242`
 - [ ] Verify subscription status updates
@@ -117,68 +133,70 @@ VITE_ELECTRIC_PANDA_PAYMENT_LINK_PROD=https://buy.stripe.com/
 
 ## Phase 1: Stripe Dashboard Preparation
 
-### Step 1.1: Complete Stripe Business Verification
+### Step 1.1: Complete Stripe Business Verification ✅ COMPLETED
 
-- [ ] Log into Stripe Dashboard
-- [ ] Navigate to **Settings → Business settings → Public details**
-- [ ] Ensure all required business information is complete:
+- [x] Log into Stripe Dashboard
+- [x] Navigate to **Settings → Business settings → Public details**
+- [x] Ensure all required business information is complete:
   - Business legal name
   - Business address
   - Business phone number
   - Tax ID (EIN)
   - Bank account information (for payouts)
-- [ ] Complete any outstanding verification requests from Stripe
-- [ ] Wait for Stripe approval (usually 1-3 business days)
+- [x] Complete any outstanding verification requests from Stripe
+- [x] Wait for Stripe approval (usually 1-3 business days)
 
-### Step 1.2: Create Production Products & Prices
+### Step 1.2: Create Production Products & Prices ✅ COMPLETED
 
 Navigate to **Products** in Stripe Dashboard (live mode):
 
-#### EarlyPanda Product (Free Tier)
+#### EarlyPanda Product (Free Tier) ✅
 
-- [ ] Click **"Add Product"**
-- [ ] Set name: `EarlyPanda`
-- [ ] Set description: `Free tier access to NeonPanda with all current features`
-- [ ] Create price:
+- [x] Click **"Add Product"**
+- [x] Set name: `EarlyPanda`
+- [x] Set description: `Free tier access to NeonPanda with all current features`
+- [x] Create price:
   - Type: `Recurring`
   - Price: `$0.00`
   - Billing period: `Monthly`
-- [ ] Click **"Save product"**
-- [ ] **Copy the Price ID** (format: `price_xxxxx`)
+- [x] Click **"Save product"**
+- [x] **Copy the Price ID** (format: `price_xxxxx`)
   - Save as: `EARLYPANDA_PRICE_ID_PROD`
 
-#### ElectricPanda Product (Paid Tier)
+#### ElectricPanda Product (Paid Tier) ✅
 
-- [ ] Click **"Add Product"**
-- [ ] Set name: `ElectricPanda`
-- [ ] Set description: `Premium access to NeonPanda with founding member benefits`
-- [ ] Create price:
+- [x] Click **"Add Product"**
+- [x] Set name: `ElectricPanda`
+- [x] Set description: `Premium access to NeonPanda with founding member benefits`
+- [x] Create price:
   - Type: `Recurring`
   - Price: `$20.00 USD`
   - Billing period: `Monthly`
-- [ ] Click **"Save product"**
-- [ ] **Copy the Price ID** (format: `price_xxxxx`)
+- [x] Click **"Save product"**
+- [x] **Copy the Price ID** (format: `price_xxxxx`)
   - Save as: `ELECTRICPANDA_PRICE_ID_PROD`
 
-### Step 1.3: Create Production Payment Links
+### Step 1.3: Create Production Payment Links ✅ COMPLETED
 
 Navigate to **Payment Links** in Stripe Dashboard (live mode):
 
-#### ElectricPanda Payment Link
+#### ElectricPanda Payment Link ✅
 
-- [ ] Click **"New"**
-- [ ] Select the ElectricPanda product created above
-- [ ] Configure settings:
+- [x] Click **"New"** (or copied from sandbox)
+- [x] Select the ElectricPanda product created above
+- [x] Configure settings:
   - Allow promotion codes: `Yes` (optional)
   - Collect billing address: `Yes` (recommended)
   - Collect shipping address: `No`
   - After payment, redirect customers to: `https://neonpanda.ai/welcome?session_id={CHECKOUT_SESSION_ID}`
   - Allow customers to update their quantity: `No`
-- [ ] Click **"Create link"**
-- [ ] **Copy the Payment Link URL** (format: `https://buy.stripe.com/xxxxx`)
+- [x] Click **"Create link"**
+- [x] **Copy the Payment Link URL** (format: `https://buy.stripe.com/xxxxx`)
   - Save as: `VITE_ELECTRIC_PANDA_PAYMENT_LINK_PROD`
 
-### Step 1.4: Retrieve Production API Keys
+**Note**: Payment links successfully copied from sandbox to live mode.
+
+### Step 1.4: Retrieve Production API Keys **← NEXT STEP**
 
 - [ ] Navigate to **Developers → API keys** in Stripe Dashboard
 - [ ] Ensure you are in **Live mode** (toggle in top-right)
@@ -188,6 +206,8 @@ Navigate to **Payment Links** in Stripe Dashboard (live mode):
 - [ ] **Copy the Secret key** (format: `sk_live_xxxxx`)
   - Save as: `STRIPE_SECRET_KEY_PROD`
   - ⚠️ **CRITICAL**: Treat this like a password - never commit to git
+
+**Action Required**: Copy these keys to a secure location (password manager) before proceeding.
 
 ### Step 1.5: Configure Production Webhooks
 
@@ -597,6 +617,21 @@ The `mapStripePriceToTier()` function should correctly map:
 
 ---
 
-**Last Updated**: [DATE]
-**Migration Status**: Not Started
-**Next Review**: After Phase 4 completion
+**Last Updated**: January 10, 2026
+**Migration Status**: Phase 4 - Testing & Verification
+
+**Completed**:
+
+- ✅ Phase 1: Stripe Dashboard Setup (100%)
+- ✅ Phase 2: AWS Amplify Configuration (100%)
+- ✅ Phase 3: Code Verification (no changes needed)
+- ⏳ Phase 4: Testing (IN PROGRESS)
+
+**Critical Next Steps** (MUST complete before going live):
+
+1. ⏳ Wait for AWS Amplify deployment to complete
+2. 🧪 Test webhook endpoint (Step 4.2)
+3. 🧪 Test full flow in test mode (Step 4.3)
+4. 🧪 Test with real payment and refund (Step 4.4)
+
+**DO NOT go live until all testing passes!**
