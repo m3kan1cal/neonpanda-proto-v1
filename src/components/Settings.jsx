@@ -550,9 +550,9 @@ function Settings() {
         >
           {/* Header Skeleton */}
           <div className="mb-12 text-center">
-            <div className="h-12 w-64 bg-synthwave-text-muted/10 rounded animate-pulse mx-auto mb-4"></div>
-            <div className="h-4 w-96 bg-synthwave-text-muted/10 rounded animate-pulse mx-auto mb-2"></div>
-            <div className="h-4 w-80 bg-synthwave-text-muted/10 rounded animate-pulse mx-auto"></div>
+            <div className="h-12 w-80 bg-synthwave-text-muted/10 rounded animate-pulse mx-auto mb-4"></div>
+            <div className="h-4 w-[32rem] bg-synthwave-text-muted/10 rounded animate-pulse mx-auto mb-2"></div>
+            <div className="h-4 w-[28rem] bg-synthwave-text-muted/10 rounded animate-pulse mx-auto"></div>
           </div>
 
           {/* Main Content Skeleton */}
