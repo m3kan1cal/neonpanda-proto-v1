@@ -10,16 +10,41 @@ Complete guide for migrating NeonPanda's Stripe integration from test mode to pr
 
 ## 🎯 Current Progress
 
-**Status**: Phase 1 - Stripe Dashboard Setup (60% complete)
+**Status**: Phase 4 - Testing (BLOCKED - Critical Issue)
 
 **Completed**:
 
-- ✅ Business verification approved
-- ✅ Switched to Live mode
-- ✅ Products created (EarlyPanda & ElectricPanda)
-- ✅ Payment links configured
+- ✅ Phase 1: Stripe Dashboard Setup (100%)
+  - Business verification approved
+  - Switched to Live mode
+  - Products created (EarlyPanda & ElectricPanda)
+  - Payment links configured
+  - API keys retrieved
+  - Webhooks configured
+- ✅ Phase 2: AWS Amplify Environment Variables (100%)
+  - All 5 environment variables set in Amplify Console
+  - Manual deployment triggered and completed
+- ✅ Phase 3: Code Verification (100%)
+  - No code changes required
 
-**Next**: Retrieve API keys and configure webhooks (Steps 1.4-1.5)
+**Current Issue** 🚨:
+
+Frontend environment variable `VITE_ELECTRIC_PANDA_PAYMENT_LINK` is not being picked up in production deployment.
+
+Error in browser console:
+
+```
+VITE_ELECTRIC_PANDA_PAYMENT_LINK is not configured
+```
+
+**Root Cause**: Environment variables may not have been set on the correct branch in AWS Amplify Console, or frontend build didn't pick them up during deployment.
+
+**Next Steps**:
+
+1. Verify which branch the env vars were added to in Amplify Console
+2. Confirm you're testing on that same branch's deployment URL
+3. Verify frontend build logs show env vars being loaded
+4. May need to redeploy frontend after confirming env var configuration
 
 ---
 
@@ -65,11 +90,13 @@ Use this condensed checklist as you work through the migration:
 - [x] Set `ELECTRICPANDA_PRICE_ID` = ElectricPanda price ID
 - [x] Set `EARLYPANDA_PRICE_ID` = EarlyPanda price ID
 - [x] Set `VITE_ELECTRIC_PANDA_PAYMENT_LINK` = payment link URL
-- [x] Save and deploy
+- [x] Save and manually trigger deploy
+- [x] Deployment completed
 
-### Testing (Test Mode First) **← YOU ARE HERE**
+### Testing (BLOCKED) **← YOU ARE HERE**
 
-- [ ] Wait for deployment to complete (check Amplify Console)
+- [x] Deployment completed (check Amplify Console)
+- [ ] ⚠️ **BLOCKED**: `VITE_ELECTRIC_PANDA_PAYMENT_LINK` not loading in frontend
 - [ ] Test webhook with "Send test webhook" in Stripe
 - [ ] Test full signup flow with test card `4242 4242 4242 4242`
 - [ ] Verify subscription status updates
@@ -196,54 +223,56 @@ Navigate to **Payment Links** in Stripe Dashboard (live mode):
 
 **Note**: Payment links successfully copied from sandbox to live mode.
 
-### Step 1.4: Retrieve Production API Keys **← NEXT STEP**
+### Step 1.4: Retrieve Production API Keys ✅ COMPLETED
 
-- [ ] Navigate to **Developers → API keys** in Stripe Dashboard
-- [ ] Ensure you are in **Live mode** (toggle in top-right)
-- [ ] **Copy the Publishable key** (format: `pk_live_xxxxx`)
+- [x] Navigate to **Developers → API keys** in Stripe Dashboard
+- [x] Ensure you are in **Live mode** (toggle in top-right)
+- [x] **Copy the Publishable key** (format: `pk_live_xxxxx`)
   - Save as: `STRIPE_PUBLISHABLE_KEY_PROD` (Note: Not currently used in backend, but keep for reference)
-- [ ] Click **"Reveal test key token"** for Secret key
-- [ ] **Copy the Secret key** (format: `sk_live_xxxxx`)
+- [x] Click **"Reveal test key token"** for Secret key
+- [x] **Copy the Secret key** (format: `sk_live_xxxxx`)
   - Save as: `STRIPE_SECRET_KEY_PROD`
   - ⚠️ **CRITICAL**: Treat this like a password - never commit to git
 
-**Action Required**: Copy these keys to a secure location (password manager) before proceeding.
+**Completed**: Keys securely stored
 
-### Step 1.5: Configure Production Webhooks
+### Step 1.5: Configure Production Webhooks ✅ COMPLETED
 
 Navigate to **Developers → Webhooks** in Stripe Dashboard (live mode):
 
 #### Production Webhook
 
-- [ ] Click **"Add endpoint"**
-- [ ] Endpoint URL: `https://api-prod.neonpanda.ai/stripe/webhook`
-- [ ] Description: `NeonPanda Production Webhook`
-- [ ] Select events to listen to:
-  - [ ] `customer.subscription.created`
-  - [ ] `customer.subscription.updated`
-  - [ ] `customer.subscription.deleted`
-  - [ ] `checkout.session.completed`
-  - [ ] `invoice.payment_succeeded`
-  - [ ] `invoice.payment_failed`
-- [ ] Click **"Add endpoint"**
-- [ ] Click on the newly created endpoint
-- [ ] Click **"Reveal"** under Signing secret
-- [ ] **Copy the webhook signing secret** (format: `whsec_xxxxx`)
+- [x] Click **"Add endpoint"**
+- [x] Endpoint URL: `https://api-prod.neonpanda.ai/stripe/webhook`
+- [x] Description: `NeonPanda Production Webhook`
+- [x] Select events to listen to:
+  - [x] `customer.subscription.created`
+  - [x] `customer.subscription.updated`
+  - [x] `customer.subscription.deleted`
+  - [x] `checkout.session.completed`
+  - [x] `invoice.payment_succeeded`
+  - [x] `invoice.payment_failed`
+- [x] Click **"Add endpoint"**
+- [x] Click on the newly created endpoint
+- [x] Click **"Reveal"** under Signing secret
+- [x] **Copy the webhook signing secret** (format: `whsec_xxxxx`)
   - Save as: `STRIPE_WEBHOOK_SECRET_PROD`
+
+**Completed**: Webhook endpoint configured with all required events
 
 ---
 
-## Phase 2: Environment Variable Configuration
+## Phase 2: Environment Variable Configuration ✅ COMPLETED
 
-### Step 2.1: Update AWS Amplify Console Environment Variables
+### Step 2.1: Update AWS Amplify Console Environment Variables ✅ COMPLETED
 
 #### For Production Branch
 
-- [ ] Log into AWS Amplify Console
-- [ ] Navigate to your NeonPanda app
-- [ ] Select the **production** branch (likely `main` or `prod`)
-- [ ] Click **Environment variables** in left sidebar
-- [ ] Add/Update the following variables:
+- [x] Log into AWS Amplify Console
+- [x] Navigate to your NeonPanda app
+- [x] Select the **production** branch (likely `main` or `prod`)
+- [x] Click **Environment variables** in left sidebar
+- [x] Add/Update the following variables:
 
 | Variable Name                      | Value                          | Source                        |
 | ---------------------------------- | ------------------------------ | ----------------------------- |
@@ -253,7 +282,11 @@ Navigate to **Developers → Webhooks** in Stripe Dashboard (live mode):
 | `EARLYPANDA_PRICE_ID`              | `price_xxxxx`                  | From Step 1.2 (EarlyPanda)    |
 | `VITE_ELECTRIC_PANDA_PAYMENT_LINK` | `https://buy.stripe.com/xxxxx` | From Step 1.3                 |
 
-- [ ] Click **"Save"** after adding all variables
+- [x] Click **"Save"** after adding all variables
+- [x] Manually triggered deployment (env vars didn't auto-trigger)
+- [x] Deployment completed successfully
+
+**Note**: Environment variable changes did NOT automatically trigger a new deployment. Manual deployment was required.
 
 ### Step 2.2: Update Local Development Environment (Optional)
 
@@ -265,42 +298,92 @@ If you want to test production keys locally (not recommended for regular develop
 
 ---
 
-## Phase 3: Code Verification
+## Phase 3: Code Verification ✅ COMPLETED
 
-### Step 3.1: Verify Backend Configuration
+### Step 3.1: Verify Backend Configuration ✅ COMPLETED
 
-No code changes needed, but verify these files are correct:
+No code changes needed, files verified:
 
-- [ ] Review `amplify/backend.ts` (lines 905-928)
+- [x] Review `amplify/backend.ts` (lines 905-928)
   - Confirms environment variables are passed to Lambda functions
-- [ ] Review `amplify/functions/process-stripe-webhook/handler.ts`
+- [x] Review `amplify/functions/process-stripe-webhook/handler.ts`
   - Confirms Stripe SDK initialization uses `process.env.STRIPE_SECRET_KEY`
-- [ ] Review `amplify/functions/create-stripe-portal-session/handler.ts`
+- [x] Review `amplify/functions/create-stripe-portal-session/handler.ts`
   - Confirms Stripe SDK initialization uses `process.env.STRIPE_SECRET_KEY`
-- [ ] Review `amplify/functions/libs/subscription/stripe-helpers.ts`
+- [x] Review `amplify/functions/libs/subscription/stripe-helpers.ts`
   - Confirms price ID mapping uses environment variables
 
-### Step 3.2: Verify Frontend Configuration
+**Result**: All backend code correctly uses environment variables - no changes required.
 
-No code changes needed, but verify:
+### Step 3.2: Verify Frontend Configuration ✅ COMPLETED
 
-- [ ] Review `src/utils/apis/subscriptionApi.js` (line 74)
+No code changes needed, files verified:
+
+- [x] Review `src/utils/apis/subscriptionApi.js` (line 74)
   - Confirms payment link uses `import.meta.env.VITE_ELECTRIC_PANDA_PAYMENT_LINK`
+
+**Result**: Frontend code correctly uses `VITE_ELECTRIC_PANDA_PAYMENT_LINK` - no changes required.
 
 ---
 
 ## Testing Procedures
 
-## Phase 4: Deployment & Testing
+## Phase 4: Deployment & Testing (IN PROGRESS - BLOCKED)
 
-### Step 4.1: Deploy to Production
+### Step 4.1: Deploy to Production ✅ COMPLETED
 
-- [ ] Commit any final changes (if any) to your production branch
-- [ ] Push to trigger Amplify deployment
-- [ ] Monitor deployment in Amplify Console
-- [ ] Wait for deployment to complete successfully
+- [x] Commit any final changes (if any) to your production branch
+- [x] Push to trigger Amplify deployment
+- [x] Monitor deployment in Amplify Console
+- [x] Wait for deployment to complete successfully
 
-### Step 4.2: Test Webhook Endpoint
+**Result**: Deployment completed successfully.
+
+### Step 4.1a: Troubleshoot Frontend Environment Variable Issue **← CURRENT BLOCKER**
+
+**Issue**: Browser console shows `VITE_ELECTRIC_PANDA_PAYMENT_LINK is not configured`
+
+**Possible Causes**:
+
+1. Environment variables were set on wrong branch in Amplify Console
+2. Frontend build didn't pick up `VITE_*` environment variables
+3. Testing on a branch/URL that doesn't have the env vars
+
+**Troubleshooting Steps**:
+
+- [ ] **Verify branch configuration**:
+  - In AWS Amplify Console, check which branch you added env vars to
+  - Confirm you're testing on that same branch's deployment URL
+  - If on `feature/blog-posts`, env vars must be on that branch
+  - If production is `main`, env vars must be on `main` branch
+
+- [ ] **Check build logs**:
+  - Navigate to AWS Amplify Console → [Your Branch] → Latest build
+  - Open build logs
+  - Look for "Build" phase
+  - Verify `VITE_ELECTRIC_PANDA_PAYMENT_LINK` appears in build environment
+  - Should see: `Using environment variables: VITE_ELECTRIC_PANDA_PAYMENT_LINK=https://...`
+
+- [ ] **Verify env var scope**:
+  - In Amplify Console → Environment variables
+  - Check if variables are set as "All branches" or specific branch
+  - For testing: Set to specific branch you're deploying to
+  - For production: Set to production branch only
+
+- [ ] **Force rebuild with env vars**:
+  - After confirming env vars are on correct branch
+  - Trigger new deployment: Amplify Console → Redeploy this version
+  - Wait for build to complete
+  - Test again in browser
+
+- [ ] **Verify in deployed app**:
+  - Open browser dev tools → Console
+  - Type: `import.meta.env.VITE_ELECTRIC_PANDA_PAYMENT_LINK`
+  - Should return: `https://buy.stripe.com/xxxxx` (not undefined)
+
+**Resolution**: Must complete before proceeding to Step 4.2
+
+### Step 4.2: Test Webhook Endpoint (PENDING)
 
 - [ ] Navigate to Stripe Dashboard → Developers → Webhooks
 - [ ] Click on your production webhook endpoint
@@ -309,6 +392,8 @@ No code changes needed, but verify:
 - [ ] Click **"Send test webhook"**
 - [ ] Verify response status is `200 OK`
 - [ ] Check CloudWatch logs for successful processing
+
+**Note**: Cannot test until Step 4.1a is resolved
 
 ### Step 4.3: Test Complete User Flow (Test Mode First)
 
@@ -617,21 +702,36 @@ The `mapStripePriceToTier()` function should correctly map:
 
 ---
 
-**Last Updated**: January 10, 2026
-**Migration Status**: Phase 4 - Testing & Verification
+**Last Updated**: January 11, 2026
+**Migration Status**: Phase 4 - Testing (BLOCKED)
 
 **Completed**:
 
 - ✅ Phase 1: Stripe Dashboard Setup (100%)
+  - Products, prices, payment links, API keys, webhooks all configured
 - ✅ Phase 2: AWS Amplify Configuration (100%)
-- ✅ Phase 3: Code Verification (no changes needed)
-- ⏳ Phase 4: Testing (IN PROGRESS)
+  - All 5 environment variables set in Amplify Console
+  - Deployment triggered and completed
+- ✅ Phase 3: Code Verification (100%)
+  - Backend and frontend code verified - no changes needed
+- ⏳ Phase 4: Testing (BLOCKED)
+  - Deployment completed successfully
+  - **BLOCKER**: Frontend env var `VITE_ELECTRIC_PANDA_PAYMENT_LINK` not loading
 
-**Critical Next Steps** (MUST complete before going live):
+**Critical Blocker** 🚨:
 
-1. ⏳ Wait for AWS Amplify deployment to complete
+Browser console error: `VITE_ELECTRIC_PANDA_PAYMENT_LINK is not configured`
+
+This indicates frontend environment variables are not being picked up in the deployed application. Must resolve before proceeding with testing.
+
+**Next Steps** (MUST complete before going live):
+
+1. 🔧 **RESOLVE BLOCKER**: Fix frontend environment variable configuration (Step 4.1a)
+   - Verify env vars set on correct branch in Amplify Console
+   - Check build logs to confirm VITE vars are included in build
+   - Force rebuild if necessary
 2. 🧪 Test webhook endpoint (Step 4.2)
 3. 🧪 Test full flow in test mode (Step 4.3)
 4. 🧪 Test with real payment and refund (Step 4.4)
 
-**DO NOT go live until all testing passes!**
+**DO NOT go live until blocker is resolved and all testing passes!**
