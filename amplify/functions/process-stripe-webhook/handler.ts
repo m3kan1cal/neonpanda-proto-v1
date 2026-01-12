@@ -49,16 +49,38 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
       return createErrorResponse(400, "Missing stripe-signature header");
     }
 
-    // Verify webhook signature
+    // Debug: Log body characteristics
+    console.info("Body analysis:", {
+      isBase64Encoded: event.isBase64Encoded,
+      bodyType: typeof event.body,
+      bodyLength: event.body?.length,
+      bodyPreview: event.body?.substring(0, 100),
+      firstChar: event.body?.charCodeAt(0),
+    });
+
+    // Get raw body for signature verification
+    // API Gateway v2 may base64-encode the body if it's treated as binary
+    let rawBody: string;
+    if (event.isBase64Encoded) {
+      // Decode base64 to get the raw string
+      rawBody = Buffer.from(event.body, "base64").toString("utf-8");
+      console.info("Decoded base64 body");
+    } else {
+      // Use body as-is (it should already be a string)
+      rawBody = event.body;
+    }
+
+    // Verify webhook signature with raw body
     let stripeEvent: Stripe.Event;
     try {
       stripeEvent = stripe.webhooks.constructEvent(
-        event.body,
+        rawBody,
         signature,
         process.env.STRIPE_WEBHOOK_SECRET!,
       );
     } catch (err) {
       console.error("Webhook signature verification failed:", err);
+      console.error("Debug - rawBody preview:", rawBody.substring(0, 200));
       return createErrorResponse(400, "Invalid signature");
     }
 
