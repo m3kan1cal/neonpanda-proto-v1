@@ -10,6 +10,33 @@
 
 export const changelogEntries = [
   {
+    version: "Release v1.0.20260111-beta",
+    date: "2026-01-11",
+    changes: {
+      added: [
+        "Stripe production mode live payment processing enabling real ElectricPanda ($20/month) and EarlyPanda (free) subscriptions",
+        "Live Stripe webhook endpoint configured at api-prod.neonpanda.ai/stripe/webhook processing checkout.session.completed, customer.subscription.created/updated/deleted, and invoice.payment_succeeded/failed events",
+        "Production Stripe API keys and environment variables deployed to AWS Amplify Console for backend Lambda functions (STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, ELECTRICPANDA_PRICE_ID, EARLYPANDA_PRICE_ID)",
+        "Production Stripe payment link environment variable (VITE_ELECTRIC_PANDA_PAYMENT_LINK) configured for frontend checkout flow",
+        "Real-time subscription tier mapping from Stripe price IDs to NeonPanda tiers (electric/free) with DynamoDB persistence",
+        "SNS alert notifications for production Stripe events (subscription_created, subscription_updated, subscription_deleted, payment_succeeded, payment_failed)",
+      ],
+      changed: [
+        "Settings page skeleton loading header width increased from w-64 to w-80 (256px → 320px) for better visual balance",
+        "Settings page skeleton loading description line 1 width increased from w-96 to w-[32rem] (384px → 512px) for improved proportions",
+        "Settings page skeleton loading description line 2 width increased from w-80 to w-[28rem] (320px → 448px) matching actual description width",
+        "Stripe integration switched from test/sandbox mode to live/production mode with real credit card payment processing",
+        "Stripe products and prices migrated from sandbox to production (EarlyPanda at $0/month, ElectricPanda at $20/month recurring)",
+        "Stripe webhook signature verification now using production webhook signing secret for enhanced security",
+      ],
+      fixed: [
+        "Settings page skeleton loading structure showing narrower header and description widths than actual content creating visual inconsistency during loading state",
+        "Frontend environment variable VITE_ELECTRIC_PANDA_PAYMENT_LINK not loading in production deployment preventing payment link generation",
+      ],
+      removed: [],
+    },
+  },
+  {
     version: "Release v1.0.20260110-beta",
     date: "2026-01-10",
     changes: {
