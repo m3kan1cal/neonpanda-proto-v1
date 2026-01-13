@@ -336,44 +336,52 @@ function extractRunningExercises(
 
   const exercises: ExtractedExercise[] = [];
 
-  // Main run as an exercise
-  const runTypeName = `${running.run_type}_run`;
-  const mainMetrics: ExerciseMetrics = {
-    distance: running.total_distance,
-    distanceUnit: running.distance_unit,
-    time: running.total_time,
-    pace: running.average_pace,
-    elevationGain: running.elevation_gain,
-    surface: running.surface,
-  };
+  // Main run as an exercise - validate run_type exists
+  if (running.run_type) {
+    const runTypeName = `${running.run_type}_run`;
+    const mainMetrics: ExerciseMetrics = {
+      distance: running.total_distance,
+      distanceUnit: running.distance_unit,
+      time: running.total_time,
+      pace: running.average_pace,
+      elevationGain: running.elevation_gain,
+      surface: running.surface,
+    };
 
-  exercises.push({
-    originalName: runTypeName,
-    discipline,
-    metrics: mainMetrics,
-  });
+    exercises.push({
+      originalName: runTypeName,
+      discipline,
+      metrics: mainMetrics,
+    });
+  } else {
+    console.warn("⚠️ Skipping Running exercise without run_type");
+  }
 
   // Also extract individual segments if they have different types
   if (running.segments) {
     for (const segment of running.segments) {
+      // Skip segments without type or main/working segments
       if (
-        segment.segment_type !== "main" &&
-        segment.segment_type !== "working"
+        !segment.segment_type ||
+        segment.segment_type === "main" ||
+        segment.segment_type === "working"
       ) {
-        const segmentMetrics: ExerciseMetrics = {
-          distance: segment.distance,
-          distanceUnit: running.distance_unit,
-          time: segment.time,
-          pace: segment.pace,
-        };
-
-        exercises.push({
-          originalName: `${segment.segment_type}_segment`,
-          discipline,
-          metrics: segmentMetrics,
-          sourceSegment: segment.segment_number,
-        });
+        continue;
       }
+
+      const segmentMetrics: ExerciseMetrics = {
+        distance: segment.distance,
+        distanceUnit: running.distance_unit,
+        time: segment.time,
+        pace: segment.pace,
+      };
+
+      exercises.push({
+        originalName: `${segment.segment_type}_segment`,
+        discipline,
+        metrics: segmentMetrics,
+        sourceSegment: segment.segment_number,
+      });
     }
   }
 
@@ -396,6 +404,12 @@ function extractHyroxExercises(
 
   // Extract stations
   for (const station of hyrox.stations || []) {
+    // Skip stations without names
+    if (!station.station_name) {
+      console.warn("⚠️ Skipping Hyrox station without station_name");
+      continue;
+    }
+
     const metrics: ExerciseMetrics = {
       stationNumber: station.station_number,
       distance: station.distance || undefined,
@@ -415,6 +429,12 @@ function extractHyroxExercises(
 
   // Extract runs
   for (const run of hyrox.runs || []) {
+    // Skip runs without run_number (use != null to allow 0)
+    if (run.run_number == null) {
+      console.warn("⚠️ Skipping Hyrox run without run_number");
+      continue;
+    }
+
     const metrics: ExerciseMetrics = {
       distance: run.distance,
       distanceUnit: "m",
