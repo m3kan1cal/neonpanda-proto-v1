@@ -36,6 +36,21 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 export const handler: APIGatewayProxyHandlerV2 = async (event) => {
   console.info("Stripe webhook received");
 
+  // COMPREHENSIVE DEBUG: Log everything about the request
+  console.info("Request debug:", {
+    httpMethod: event.requestContext?.http?.method,
+    sourceIp: event.requestContext?.http?.sourceIp,
+    contentType: event.headers["content-type"],
+    hasStripeSignature: !!event.headers["stripe-signature"],
+    isBase64Encoded: event.isBase64Encoded,
+    bodyType: typeof event.body,
+    bodyLength: event.body?.length,
+    bodyFirstChar: event.body?.charCodeAt(0),
+  });
+
+  // Log the entire raw body - this is the critical part for debugging
+  console.info("Complete raw body:", event.body);
+
   try {
     // Validate request has required fields
     if (!event.body) {
@@ -49,30 +64,26 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
       return createErrorResponse(400, "Missing stripe-signature header");
     }
 
-    // Debug: Log body characteristics
-    console.info("Body analysis:", {
-      isBase64Encoded: event.isBase64Encoded,
-      bodyType: typeof event.body,
-      bodyLength: event.body?.length,
-      bodyPreview: event.body?.substring(0, 100),
-      firstChar: event.body?.charCodeAt(0),
-    });
-
-    // Get raw body for signature verification
-    // API Gateway v2 may base64-encode the body if it's treated as binary
-    let rawBody: string;
-    if (event.isBase64Encoded) {
-      // Decode base64 to get the raw string
-      rawBody = Buffer.from(event.body, "base64").toString("utf-8");
-      console.info("Decoded base64 body");
-    } else {
-      // Use body as-is (it should already be a string)
-      rawBody = event.body;
-    }
-
-    // Verify webhook signature with raw body
+    // Verify webhook signature
+    // We use a Function URL to ensure we receive the exact raw body from Stripe
     let stripeEvent: Stripe.Event;
     try {
+      // Function URLs might base64 encode the body if content-type is binary-ish
+      // or pass it as a string. constructEvent handles both Buffer and string.
+      let rawBody: string | Buffer = event.body;
+
+      if (event.isBase64Encoded) {
+        rawBody = Buffer.from(event.body, "base64");
+        console.info("Decoded base64 body");
+      }
+
+      // Debug: Show exactly what we're passing to Stripe
+      const bodyPreview =
+        typeof rawBody === "string"
+          ? rawBody.substring(0, 200)
+          : rawBody.toString("utf-8").substring(0, 200);
+      console.info("Body being sent to Stripe for verification:", bodyPreview);
+
       stripeEvent = stripe.webhooks.constructEvent(
         rawBody,
         signature,
@@ -80,7 +91,11 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
       );
     } catch (err) {
       console.error("Webhook signature verification failed:", err);
-      console.error("Debug - rawBody preview:", rawBody.substring(0, 200));
+      console.error("Debug info:", {
+        isBase64Encoded: event.isBase64Encoded,
+        bodyType: typeof event.body,
+        bodyLength: event.body?.length,
+      });
       return createErrorResponse(400, "Invalid signature");
     }
 

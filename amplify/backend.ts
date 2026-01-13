@@ -90,6 +90,9 @@ import { unsubscribeEmail } from "./functions/unsubscribe-email/resource";
 import { getSubscriptionStatus } from "./functions/get-subscription-status/resource";
 import { createStripePortalSession } from "./functions/create-stripe-portal-session/resource";
 import { processStripeWebhook } from "./functions/process-stripe-webhook/resource";
+import { buildExercise } from "./functions/build-exercise/resource";
+import { getExercises } from "./functions/get-exercises/resource";
+import { getExerciseNames } from "./functions/get-exercise-names/resource";
 import { apiGatewayv2 } from "./api/resource";
 import { dynamodbTable } from "./dynamodb/resource";
 import { createAppsBucket } from "./storage/resource";
@@ -185,6 +188,9 @@ const backend = defineBackend({
   getSubscriptionStatus,
   createStripePortalSession,
   processStripeWebhook,
+  buildExercise,
+  getExercises,
+  getExerciseNames,
 });
 
 // Disable retries for stateful async generation functions
@@ -196,6 +202,9 @@ backend.buildWorkout.resources.lambda.configureAsyncInvoke({
   retryAttempts: 0,
 });
 backend.buildCoachConfig.resources.lambda.configureAsyncInvoke({
+  retryAttempts: 0,
+});
+backend.buildExercise.resources.lambda.configureAsyncInvoke({
   retryAttempts: 0,
 });
 backend.buildConversationSummary.resources.lambda.configureAsyncInvoke({
@@ -272,6 +281,8 @@ const coreApi = apiGatewayv2.createCoreApi(
   backend.getSubscriptionStatus.resources.lambda,
   backend.createStripePortalSession.resources.lambda,
   backend.processStripeWebhook.resources.lambda,
+  backend.getExercises.resources.lambda,
+  backend.getExerciseNames.resources.lambda,
   userPoolAuthorizer,
 );
 
@@ -363,6 +374,7 @@ const sharedPolicies = new SharedPolicies(
   backend.deleteProgram,
   backend.logWorkoutTemplate,
   backend.skipWorkoutTemplate,
+  backend.buildExercise,
   // NOTE: postConfirmation excluded to avoid circular dependency with auth stack
 ].forEach((func) => {
   sharedPolicies.attachDynamoDbReadWrite(func.resources.lambda);
@@ -398,6 +410,8 @@ const sharedPolicies = new SharedPolicies(
   backend.getProgram,
   backend.getPrograms,
   backend.getWorkoutTemplate,
+  backend.getExercises,
+  backend.getExerciseNames,
 ].forEach((func) => {
   sharedPolicies.attachDynamoDbReadOnly(func.resources.lambda);
 });
@@ -425,6 +439,7 @@ const sharedPolicies = new SharedPolicies(
   backend.buildMonthlyAnalytics,
   backend.createMemory,
   backend.logWorkoutTemplate, // Added: Needs Bedrock for scaling analysis (Haiku 4.5)
+  backend.buildExercise, // Added: Needs Bedrock for exercise name normalization (Haiku 4.5)
 ].forEach((func) => {
   sharedPolicies.attachBedrockAccess(func.resources.lambda);
 });
@@ -623,6 +638,11 @@ grantLambdaInvokePermissions(backend.createCoachConversation.resources.lambda, [
   backend.sendCoachConversationMessage.resources.lambda.functionArn,
 ]);
 
+// Grant permission to buildWorkout to invoke buildExercise (fire-and-forget exercise extraction)
+grantLambdaInvokePermissions(backend.buildWorkout.resources.lambda, [
+  backend.buildExercise.resources.lambda.functionArn,
+]);
+
 // ============================================================================
 // CLOUDWATCH LOGS PERMISSIONS
 // ============================================================================
@@ -730,6 +750,9 @@ const allFunctions = [
   backend.getSubscriptionStatus,
   backend.createStripePortalSession,
   backend.processStripeWebhook,
+  backend.buildExercise,
+  backend.getExercises,
+  backend.getExerciseNames,
   // NOTE: forwardLogsToSns and syncLogSubscriptions excluded - they're utility functions that don't need app resources
 ];
 
@@ -902,6 +925,11 @@ backend.logWorkoutTemplate.addEnvironment(
   backend.buildWorkout.resources.lambda.functionName,
 );
 
+backend.buildWorkout.addEnvironment(
+  "BUILD_EXERCISE_FUNCTION_NAME",
+  backend.buildExercise.resources.lambda.functionName,
+);
+
 // Stripe environment variables
 // NOTE: STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, ELECTRICPANDA_PRICE_ID, EARLYPANDA_PRICE_ID
 // should be set in AWS Amplify Console or .env for local development
@@ -1031,6 +1059,31 @@ new CfnPermission(
   },
 );
 
+// Add Function URL for Stripe webhook (preserves raw body for signature verification)
+// API Gateway HTTP API modifies JSON bodies which breaks Stripe's signature verification
+const stripeWebhookFunctionUrl =
+  backend.processStripeWebhook.resources.lambda.addFunctionUrl({
+    authType: FunctionUrlAuthType.NONE, // Stripe validates via webhook signature
+    cors: {
+      allowedOrigins: ["https://api.stripe.com"],
+      allowedMethods: [HttpMethod.POST],
+      allowedHeaders: ["Content-Type", "stripe-signature"],
+      maxAge: Duration.hours(1),
+    },
+    invokeMode: InvokeMode.BUFFERED,
+  });
+
+// Grant invoke permission for Stripe webhook function URL
+new CfnPermission(
+  backend.processStripeWebhook.stack,
+  "StripeWebhookFunctionUrlPermission",
+  {
+    action: "lambda:InvokeFunction",
+    functionName: backend.processStripeWebhook.resources.lambda.functionName,
+    principal: "*",
+  },
+);
+
 // ============================================================================
 // SCHEDULED TASKS
 // ============================================================================
@@ -1153,6 +1206,10 @@ backend.addOutput({
     programDesignerSessionStreamingApi: {
       functionUrl: streamingProgramDesignFunctionUrl.url,
       region: backend.streamProgramDesign.stack.region,
+    },
+    stripeWebhookApi: {
+      functionUrl: stripeWebhookFunctionUrl.url,
+      region: backend.processStripeWebhook.stack.region,
     },
   },
 });

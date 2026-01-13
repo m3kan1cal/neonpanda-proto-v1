@@ -49,6 +49,7 @@ import {
   callBedrockApi,
   MODEL_IDS,
   TEMPERATURE_PRESETS,
+  invokeAsyncLambda,
 } from "../../api-helpers";
 import { parseJsonWithFallbacks } from "../../response-utils";
 import { composeWorkoutSchema } from "../../schemas/schema-composer";
@@ -1227,6 +1228,27 @@ Returns: workoutId, success, pineconeStored, pineconeRecordId, templateLinked`,
         error,
       );
     });
+
+    // Fire-and-forget exercise log extraction (non-blocking)
+    const buildExerciseFunction = process.env.BUILD_EXERCISE_FUNCTION_NAME;
+    if (buildExerciseFunction) {
+      console.info("🏋️ Invoking exercise log extraction (async)..");
+      invokeAsyncLambda(
+        buildExerciseFunction,
+        {
+          userId: context.userId,
+          workoutId: workout.workoutId,
+          workoutData: workoutData,
+          completedAt: completedAtDate.toISOString(),
+        },
+        "exercise log extraction",
+      ).catch((error) => {
+        console.error(
+          "⚠️ Failed to invoke build-exercise (non-blocking):",
+          error,
+        );
+      });
+    }
 
     // Update template linkedWorkoutId if from program
     const templateLinked = context.templateContext
