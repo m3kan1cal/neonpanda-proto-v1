@@ -115,6 +115,15 @@ function extractCrossFitExercises(
 
   for (const round of crossfit.rounds) {
     for (const exercise of round.exercises || []) {
+      // Skip exercises without names
+      if (!exercise.exercise_name) {
+        console.warn(
+          "⚠️ Skipping CrossFit exercise without name in round",
+          round.round_number,
+        );
+        continue;
+      }
+
       const metrics = extractCrossFitMetrics(exercise);
 
       exercises.push({
@@ -183,6 +192,12 @@ function extractPowerliftingExercises(
   // Powerlifting structure varies - handle common patterns
   const exerciseList = (powerlifting as any).exercises || [];
   for (const exercise of exerciseList) {
+    // Skip exercises without names
+    if (!exercise.exercise_name) {
+      console.warn("⚠️ Skipping Powerlifting exercise without name");
+      continue;
+    }
+
     const sets = exercise.sets || [];
     let totalReps = 0;
     let maxWeight = 0;
@@ -249,6 +264,12 @@ function extractBodybuildingExercises(
   const exercises: ExtractedExercise[] = [];
 
   for (const exercise of bodybuilding.exercises) {
+    // Skip exercises without names
+    if (!exercise.exercise_name) {
+      console.warn("⚠️ Skipping Bodybuilding exercise without name");
+      continue;
+    }
+
     const metrics = extractBodybuildingMetrics(exercise);
 
     exercises.push({
@@ -427,6 +448,12 @@ function extractOlympicWeightliftingExercises(
   const exercises: ExtractedExercise[] = [];
 
   for (const lift of oly.lifts) {
+    // Skip lifts without names
+    if (!lift.lift_name) {
+      console.warn("⚠️ Skipping Olympic Weightlifting lift without name");
+      continue;
+    }
+
     const metrics = extractOlympicLiftMetrics(lift);
 
     exercises.push({
@@ -493,6 +520,12 @@ function extractFunctionalBodybuildingExercises(
   const exercises: ExtractedExercise[] = [];
 
   for (const exercise of fb.exercises) {
+    // Skip exercises without names
+    if (!exercise.exercise_name) {
+      console.warn("⚠️ Skipping Functional Bodybuilding exercise without name");
+      continue;
+    }
+
     const metrics = extractFunctionalBodybuildingMetrics(exercise);
 
     exercises.push({
@@ -560,6 +593,12 @@ function extractCalisthenicsExercises(
   const exercises: ExtractedExercise[] = [];
 
   for (const exercise of calisthenics.exercises) {
+    // Skip exercises without names
+    if (!exercise.exercise_name) {
+      console.warn("⚠️ Skipping Calisthenics exercise without name");
+      continue;
+    }
+
     const metrics = extractCalisthenicsMetrics(exercise);
 
     exercises.push({
