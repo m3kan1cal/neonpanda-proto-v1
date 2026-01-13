@@ -3799,17 +3799,29 @@ export async function saveExercises(
     });
 
     try {
-      await withThroughputScaling(async () => {
+      const result = await withThroughputScaling(async () => {
         const command = new BatchWriteCommand({
           RequestItems: {
             [tableName]: putRequests,
           },
         });
-        await docClient.send(command);
-        return { success: true };
+        const response = await docClient.send(command);
+        return response;
       }, `BatchWrite ${batch.length} exercises`);
 
-      successful += batch.length;
+      // Check for unprocessed items
+      const unprocessedCount =
+        result.UnprocessedItems?.[tableName]?.length ?? 0;
+
+      if (unprocessedCount > 0) {
+        console.warn(
+          `⚠️ Batch write partially succeeded: ${unprocessedCount} items unprocessed`,
+        );
+        successful += batch.length - unprocessedCount;
+        failed += unprocessedCount;
+      } else {
+        successful += batch.length;
+      }
     } catch (error) {
       console.error("Batch write failed for exercises:", error);
       failed += batch.length;

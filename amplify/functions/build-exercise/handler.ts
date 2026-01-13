@@ -33,16 +33,29 @@ export const handler = async (event: BuildExerciseEvent) => {
         });
 
         // Validate required fields
-        if (!event.userId || !event.workoutId || !event.workoutData) {
+        if (
+          !event.userId ||
+          !event.workoutId ||
+          !event.workoutData ||
+          !event.completedAt
+        ) {
           console.error("❌ Missing required fields:", {
             hasUserId: !!event.userId,
             hasWorkoutId: !!event.workoutId,
             hasWorkoutData: !!event.workoutData,
+            hasCompletedAt: !!event.completedAt,
           });
           return createErrorResponse(
             400,
-            "Missing required fields (userId, workoutId, workoutData)",
+            "Missing required fields (userId, workoutId, workoutData, completedAt)",
           );
+        }
+
+        // Validate completedAt is a valid date
+        const completedAtDate = new Date(event.completedAt);
+        if (isNaN(completedAtDate.getTime())) {
+          console.error("❌ Invalid completedAt date:", event.completedAt);
+          return createErrorResponse(400, "Invalid completedAt date format");
         }
 
         // Step 1: Extract exercises from workout data
