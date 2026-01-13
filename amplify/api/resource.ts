@@ -69,6 +69,8 @@ export function createCoreApi(
   getSubscriptionStatusLambda: lambda.IFunction,
   createStripePortalSessionLambda: lambda.IFunction,
   processStripeWebhookLambda: lambda.IFunction,
+  getExercisesLambda: lambda.IFunction,
+  getExerciseNamesLambda: lambda.IFunction,
   userPoolAuthorizer: HttpUserPoolAuthorizer,
 ) {
   // Create branch-aware API name using utility
@@ -501,6 +503,19 @@ export function createCoreApi(
       processStripeWebhookLambda,
     );
 
+  // Create Lambda integrations for exercise functions
+  const getExercisesIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "GetExercisesIntegration",
+      getExercisesLambda,
+    );
+
+  const getExerciseNamesIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "GetExerciseNamesIntegration",
+      getExerciseNamesLambda,
+    );
+
   // Create integrations object for route configuration
   const integrations = {
     contactForm: contactFormIntegration,
@@ -561,6 +576,8 @@ export function createCoreApi(
     getSubscriptionStatus: getSubscriptionStatusIntegration,
     createStripePortalSession: createStripePortalSessionIntegration,
     processStripeWebhook: processStripeWebhookIntegration,
+    getExercises: getExercisesIntegration,
+    getExerciseNames: getExerciseNamesIntegration,
   };
 
   // *******************************************************
@@ -641,6 +658,21 @@ export function createCoreApi(
     path: "/users/{userId}/workouts/count",
     methods: [apigatewayv2.HttpMethod.GET],
     integration: integrations.getWorkoutsCount,
+    authorizer: userPoolAuthorizer,
+  });
+
+  // Exercise Routes (PROTECTED)
+  httpApi.addRoutes({
+    path: "/users/{userId}/exercises",
+    methods: [apigatewayv2.HttpMethod.GET],
+    integration: integrations.getExercises,
+    authorizer: userPoolAuthorizer,
+  });
+
+  httpApi.addRoutes({
+    path: "/users/{userId}/exercise-names",
+    methods: [apigatewayv2.HttpMethod.GET],
+    integration: integrations.getExerciseNames,
     authorizer: userPoolAuthorizer,
   });
 
