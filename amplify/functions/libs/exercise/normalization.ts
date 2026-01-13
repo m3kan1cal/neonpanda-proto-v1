@@ -156,6 +156,12 @@ For each exercise name, determine the canonical normalized form and provide a co
  * Simple conversion to snake_case
  */
 function fallbackNormalize(name: string): string {
+  // Defensive: handle undefined/null/empty names
+  if (!name || typeof name !== "string") {
+    console.warn("⚠️ fallbackNormalize received invalid name:", name);
+    return "unknown_exercise";
+  }
+
   return name
     .toLowerCase()
     .trim()
