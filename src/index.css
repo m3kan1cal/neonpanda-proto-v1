@@ -46,7 +46,6 @@ body {
 #root {
   background-color: #16213e !important;
   min-height: 100vh;
-  min-height: 100dvh; /* Dynamic viewport height for mobile */
   min-height: -webkit-fill-available; /* iOS Safari fix */
   width: 100%;
   position: relative;
