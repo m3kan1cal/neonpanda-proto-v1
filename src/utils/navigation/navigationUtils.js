@@ -1,7 +1,7 @@
 // Navigation Utility Functions
 // Helper functions for navigation logic and UI
 
-import { navigationPatterns } from '../ui/uiPatterns';
+import { navigationPatterns } from "../ui/uiPatterns";
 
 /**
  * Check if navigation item should be visible based on context
@@ -43,7 +43,7 @@ export const getItemRoute = (item, context) => {
   }
 
   // Fallback
-  return '#';
+  return "#";
 };
 
 /**
@@ -56,11 +56,12 @@ export const getItemBadge = (item, context) => {
   if (!item.badge) return null;
 
   // Function badge (e.g., dynamic count from context)
-  if (typeof item.badge === 'function') {
+  if (typeof item.badge === "function") {
     return item.badge({
       newItemCounts: context.newItemCounts,
       hasCoachContext: context.hasCoachContext,
       coachesCount: context.coachesCount,
+      exercisesCount: context.exercisesCount,
     });
   }
 
@@ -80,7 +81,7 @@ export const isRouteActive = (itemRoute, currentPath, currentSearchParams) => {
   if (itemRoute === currentPath) return true;
 
   // For routes with query params, check if base path matches
-  const itemPath = itemRoute.split('?')[0];
+  const itemPath = itemRoute.split("?")[0];
   if (itemPath === currentPath) return true;
 
   return false;
@@ -105,7 +106,7 @@ export const getItemColorClasses = (color, isActive = false) => {
  * @param {number|Array} pattern - Vibration pattern (ms or array of [on, off, on, ...])
  */
 export const triggerHaptic = (pattern = 10) => {
-  if ('vibrate' in navigator) {
+  if ("vibrate" in navigator) {
     navigator.vibrate(pattern);
   }
 };
@@ -121,7 +122,7 @@ export const getItemAriaLabel = (item, context) => {
   const baseLabel = item.label;
 
   if (badge && badge > 0) {
-    return `${baseLabel}, ${badge} new item${badge > 1 ? 's' : ''}`;
+    return `${baseLabel}, ${badge} new item${badge > 1 ? "s" : ""}`;
   }
 
   return baseLabel;
@@ -157,7 +158,7 @@ export const groupItemsByVisibility = (items, context) => {
 export const getTotalBadgeCount = (items, context) => {
   return items.reduce((total, item) => {
     const badge = getItemBadge(item, context);
-    return total + (typeof badge === 'number' ? badge : 0);
+    return total + (typeof badge === "number" ? badge : 0);
   }, 0);
 };
 
@@ -171,8 +172,7 @@ export const formatRoute = (basePath, params = {}) => {
   const queryString = Object.entries(params)
     .filter(([_, value]) => value != null)
     .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
-    .join('&');
+    .join("&");
 
   return queryString ? `${basePath}?${queryString}` : basePath;
 };
-
