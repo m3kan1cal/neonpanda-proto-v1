@@ -895,7 +895,8 @@ General thoughts: `;
                   ) : (
                     <CheckIcon />
                   )}
-                  <span>Complete Rest Day</span>
+                  <span className="md:hidden">Complete</span>
+                  <span className="hidden md:inline">Complete Rest Day</span>
                 </button>
                 <button
                   onClick={() =>
@@ -906,7 +907,8 @@ General thoughts: `;
                   className={`flex-1 ${buttonPatterns.secondaryMedium} space-x-2`}
                 >
                   <HomeIcon />
-                  <span>Back to Program</span>
+                  <span className="md:hidden">Back</span>
+                  <span className="hidden md:inline">Back to Program</span>
                 </button>
               </div>
             </div>
@@ -1211,7 +1213,10 @@ General thoughts: `;
                               className={`flex-1 ${buttonPatterns.secondaryMedium} space-x-2`}
                             >
                               <CheckIcon />
-                              <span>View Workout</span>
+                              <span className="md:hidden">View</span>
+                              <span className="hidden md:inline">
+                                View Workout
+                              </span>
                             </button>
                           ) : (
                             // Show "Processing..." when workout is being built
@@ -1220,7 +1225,10 @@ General thoughts: `;
                               className={`flex-1 ${buttonPatterns.secondaryMedium} space-x-2 cursor-not-allowed`}
                             >
                               <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
-                              <span>Processing Workout...</span>
+                              <span className="md:hidden">Processing...</span>
+                              <span className="hidden md:inline">
+                                Processing Workout...
+                              </span>
                             </button>
                           )
                         ) : isSkipped ? (
@@ -1237,7 +1245,10 @@ General thoughts: `;
                             ) : (
                               <CheckIcon />
                             )}
-                            <span>Unskip Workout</span>
+                            <span className="md:hidden">Unskip</span>
+                            <span className="hidden md:inline">
+                              Unskip Workout
+                            </span>
                           </button>
                         ) : editingWorkoutId === template.templateId ? (
                           // Show Submit/Cancel buttons when editing
@@ -1264,7 +1275,10 @@ General thoughts: `;
                               ) : (
                                 <CheckIcon />
                               )}
-                              <span>Submit Workout</span>
+                              <span className="md:hidden">Submit</span>
+                              <span className="hidden md:inline">
+                                Submit Workout
+                              </span>
                             </button>
                           </>
                         ) : (
@@ -1282,7 +1296,10 @@ General thoughts: `;
                               ) : (
                                 <XIcon />
                               )}
-                              <span>Skip Workout</span>
+                              <span className="md:hidden">Skip</span>
+                              <span className="hidden md:inline">
+                                Skip Workout
+                              </span>
                             </button>
                             <button
                               onClick={() => handleLogWorkout(template)}
@@ -1292,7 +1309,10 @@ General thoughts: `;
                               className={`flex-1 ${buttonPatterns.primaryMedium} space-x-2 disabled:opacity-50 disabled:cursor-not-allowed`}
                             >
                               <CheckIcon />
-                              <span>Log Workout</span>
+                              <span className="md:hidden">Log</span>
+                              <span className="hidden md:inline">
+                                Log Workout
+                              </span>
                             </button>
                           </>
                         )}

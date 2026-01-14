@@ -729,9 +729,9 @@ export const navigationPatterns = {
 
   // Mobile Bottom Navigation - Thumb-friendly navigation bar (< 768px)
   mobile: {
-    // Bottom nav container - fixed at bottom with glassmorphism
+    // Bottom nav container - fixed at bottom with solid background (prevents iOS overscroll gap)
     container:
-      "fixed bottom-0 left-0 right-0 z-50 md:hidden bg-synthwave-bg-card/95 backdrop-blur-xl border-t border-synthwave-neon-cyan/20 shadow-[0_-4px_24px_rgba(0,255,255,0.1)]",
+      "fixed bottom-0 left-0 right-0 z-50 md:hidden bg-synthwave-bg-card backdrop-blur-xl border-t border-synthwave-neon-cyan/20 shadow-[0_-4px_24px_rgba(0,255,255,0.1)]",
 
     // Nav item container - flex wrapper for items
     itemsContainer: "flex items-center justify-around",
@@ -756,8 +756,8 @@ export const navigationPatterns = {
     activeBar:
       "absolute top-0 left-0 right-0 h-1 rounded-b-full bg-gradient-to-r",
 
-    // Safe area padding for iPhone notch
-    safeArea: "h-[env(safe-area-inset-bottom)]",
+    // Safe area padding for iPhone notch - extends background to prevent gap
+    safeArea: "h-[env(safe-area-inset-bottom)] bg-synthwave-bg-card",
   },
 
   // More Menu (Bottom Sheet) - Slide-up menu for overflow items
@@ -1019,7 +1019,8 @@ export const typographyPatterns = {
   caption: "font-rajdhani text-sm text-synthwave-text-muted",
 
   // Empty state and tip card typography
-  emptyStateHeader: "font-russo text-xl md:text-2xl text-white uppercase tracking-wider",
+  emptyStateHeader:
+    "font-russo text-xl md:text-2xl text-white uppercase tracking-wider",
   emptyStateDescription:
     "font-rajdhani text-base text-synthwave-text-secondary max-w-md",
   emptyStateSectionHeader:
