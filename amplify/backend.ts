@@ -93,6 +93,7 @@ import { processStripeWebhook } from "./functions/process-stripe-webhook/resourc
 import { buildExercise } from "./functions/build-exercise/resource";
 import { getExercises } from "./functions/get-exercises/resource";
 import { getExerciseNames } from "./functions/get-exercise-names/resource";
+import { getExercisesCount } from "./functions/get-exercises-count/resource";
 import { apiGatewayv2 } from "./api/resource";
 import { dynamodbTable } from "./dynamodb/resource";
 import { createAppsBucket } from "./storage/resource";
@@ -191,6 +192,7 @@ const backend = defineBackend({
   buildExercise,
   getExercises,
   getExerciseNames,
+  getExercisesCount,
 });
 
 // Disable retries for stateful async generation functions
@@ -283,6 +285,7 @@ const coreApi = apiGatewayv2.createCoreApi(
   backend.processStripeWebhook.resources.lambda,
   backend.getExercises.resources.lambda,
   backend.getExerciseNames.resources.lambda,
+  backend.getExercisesCount.resources.lambda,
   userPoolAuthorizer,
 );
 
@@ -412,6 +415,7 @@ const sharedPolicies = new SharedPolicies(
   backend.getWorkoutTemplate,
   backend.getExercises,
   backend.getExerciseNames,
+  backend.getExercisesCount,
 ].forEach((func) => {
   sharedPolicies.attachDynamoDbReadOnly(func.resources.lambda);
 });
@@ -753,6 +757,7 @@ const allFunctions = [
   backend.buildExercise,
   backend.getExercises,
   backend.getExerciseNames,
+  backend.getExercisesCount,
   // NOTE: forwardLogsToSns and syncLogSubscriptions excluded - they're utility functions that don't need app resources
 ];
 

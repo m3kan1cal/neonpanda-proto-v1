@@ -35,19 +35,21 @@ export const handler = async (event: BuildExerciseEvent) => {
         // Validate required fields
         if (
           !event.userId ||
+          !event.coachId ||
           !event.workoutId ||
           !event.workoutData ||
           !event.completedAt
         ) {
           console.error("❌ Missing required fields:", {
             hasUserId: !!event.userId,
+            hasCoachId: !!event.coachId,
             hasWorkoutId: !!event.workoutId,
             hasWorkoutData: !!event.workoutData,
             hasCompletedAt: !!event.completedAt,
           });
           return createErrorResponse(
             400,
-            "Missing required fields (userId, workoutId, workoutData, completedAt)",
+            "Missing required fields (userId, coachId, workoutId, workoutData, completedAt)",
           );
         }
 
@@ -114,6 +116,7 @@ export const handler = async (event: BuildExerciseEvent) => {
           const exercise: Exercise = {
             exerciseId,
             userId: event.userId,
+            coachId: event.coachId,
             workoutId: event.workoutId,
             exerciseName: normalization.normalizedName,
             originalName: extracted.originalName,

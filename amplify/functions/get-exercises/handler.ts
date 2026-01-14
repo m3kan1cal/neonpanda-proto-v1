@@ -81,6 +81,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       originalName: exercise.originalName,
       discipline: exercise.discipline,
       completedAt: exercise.completedAt,
+      coachId: exercise.coachId,
       workoutId: exercise.workoutId,
       sequence: exercise.sequence,
       metrics: exercise.metrics,

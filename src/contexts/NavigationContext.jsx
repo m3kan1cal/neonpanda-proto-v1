@@ -7,6 +7,7 @@ import { useAuth } from "../auth";
 import { formatRoute } from "../utils/navigation";
 import { getCoach, getCoachesCount } from "../utils/apis/coachApi";
 import { getWorkoutsCount } from "../utils/apis/workoutApi";
+import { getExercisesCount } from "../utils/apis/exerciseApi";
 import { getCoachConversationsCount } from "../utils/apis/coachConversationApi";
 import { getMemories } from "../utils/apis/memoryApi";
 import { getWeeklyReports } from "../utils/apis/reportApi";
@@ -28,6 +29,7 @@ export const NavigationProvider = ({ children }) => {
   const [currentCoachName, setCurrentCoachName] = useState("");
   const [coachData, setCoachData] = useState(null);
   const [coachesCount, setCoachesCount] = useState(0);
+  const [exercisesCount, setExercisesCount] = useState(0);
   const [newItemCounts, setNewItemCounts] = useState({
     workouts: 0,
     conversations: 0,
@@ -103,6 +105,29 @@ export const NavigationProvider = ({ children }) => {
     };
 
     fetchCoachesCount();
+  }, [userId, isAuthenticated]);
+
+  // Fetch exercises count when user is authenticated
+  useEffect(() => {
+    if (!isAuthenticated || !userId) {
+      setExercisesCount(0);
+      return;
+    }
+
+    const fetchExercisesCount = async () => {
+      try {
+        const data = await getExercisesCount(userId);
+        setExercisesCount(data.count || 0);
+      } catch (error) {
+        console.warn(
+          "NavigationContext: Failed to fetch exercises count:",
+          error,
+        );
+        setExercisesCount(0);
+      }
+    };
+
+    fetchExercisesCount();
   }, [userId, isAuthenticated]);
 
   // Fetch new item counts when coach context changes
@@ -253,6 +278,7 @@ export const NavigationProvider = ({ children }) => {
     coachData,
     hasCoachContext,
     coachesCount,
+    exercisesCount,
 
     // New item counts
     newItemCounts,

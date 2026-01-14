@@ -19,6 +19,7 @@ export const routeMap = {
   ":workoutId": "Workout Details",
   "manage-memories": "Memories",
   "manage-conversations": "Coach Conversations",
+  "manage-exercises": "Exercises",
   programs: "Training Programs",
   ":programId": "Program Dashboard",
   today: "View Workouts",
@@ -106,6 +107,7 @@ export const buildRouteWithParams = (pathSegments, routeName, searchParams) => {
   const preserveUserCoachRoutes = [
     "training-grounds",
     "manage-workouts",
+    "manage-exercises",
     "manage-memories",
     "manage-conversations",
     "programs",

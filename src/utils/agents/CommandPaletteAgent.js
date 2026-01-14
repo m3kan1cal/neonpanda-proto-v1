@@ -148,6 +148,10 @@ export class CommandPaletteAgent {
           result = await this._executeDesignProgram(normalizedContent, options);
           break;
 
+        case "exercises":
+          result = await this._executeViewExercises(options);
+          break;
+
         default:
           throw new Error(
             `Command "${command.trigger}" is not yet implemented.`,
@@ -428,6 +432,37 @@ export class CommandPaletteAgent {
         userId: this.userId,
         coachId: coachId,
         sessionId: sessionId,
+      },
+    };
+  }
+
+  /**
+   * Execute /exercises command - Navigate to exercises page
+   */
+  async _executeViewExercises(options = {}) {
+    if (!this.userId) {
+      throw new Error("Unable to view exercises - user not authenticated");
+    }
+
+    const coachId = options.coachId;
+    if (!coachId) {
+      throw new Error(
+        "Please select a coach first. Navigate to a coach page and try again.",
+      );
+    }
+
+    console.info("CommandPaletteAgent._executeViewExercises:", {
+      userId: this.userId,
+      coachId: coachId,
+    });
+
+    return {
+      message: "Opening exercises...",
+      details: { coachId },
+      navigationData: {
+        type: "exercises",
+        userId: this.userId,
+        coachId: coachId,
       },
     };
   }

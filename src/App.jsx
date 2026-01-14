@@ -26,6 +26,7 @@ import ProgramDesigner from "./components/ProgramDesigner";
 import StreamingDebugTest from "./components/StreamingDebugTest";
 import WorkoutDetails from "./components/WorkoutDetails";
 import ManageWorkouts from "./components/ManageWorkouts";
+import ManageExercises from "./components/ManageExercises";
 import ManageMemories from "./components/ManageMemories";
 import ManageCoachConversations from "./components/ManageCoachConversations";
 import ViewReports from "./components/ViewReports";
@@ -272,6 +273,14 @@ function AppContent() {
             }
           />
           <Route
+            path="/training-grounds/manage-exercises"
+            element={
+              <ProtectedRoute>
+                <ManageExercises />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/training-grounds/manage-memories"
             element={
               <ProtectedRoute>
@@ -364,6 +373,10 @@ function AppContent() {
           } else if (type === "program-designer" && data?.sessionId) {
             navigate(
               `/training-grounds/program-designer?userId=${data.userId || userId}&coachId=${data.coachId}&programDesignerSessionId=${data.sessionId}`,
+            );
+          } else if (type === "exercises") {
+            navigate(
+              `/training-grounds/manage-exercises?userId=${data.userId || userId}&coachId=${data.coachId || coachId}`,
             );
           }
         }}
