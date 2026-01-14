@@ -1017,6 +1017,24 @@ export const TargetIcon = () => (
   </svg>
 );
 
+export const TargetIconTiny = ({ className = "w-4 h-4" }) => (
+  <svg
+    className={className}
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 1.657-2.657 1.657-2.657A8 8 0 0117.657 18.657z"
+    />
+    <circle cx="12" cy="12" r="3" />
+    <circle cx="12" cy="12" r="8" />
+  </svg>
+);
+
 // Workout Viewer Icons
 export const MetricsIcon = () => (
   <svg
@@ -1440,6 +1458,42 @@ export const TrendingUpIcon = ({ className = "w-5 h-5" }) => (
       strokeLinejoin="round"
       strokeWidth={2}
       d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+    />
+  </svg>
+);
+
+export const TrendingUpIconTiny = ({ className = "w-4 h-4" }) => (
+  <svg
+    className={className}
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+    />
+  </svg>
+);
+
+export const WeightPlateIconTiny = ({ className = "w-4 h-4" }) => (
+  <svg
+    className={className}
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    {/* Outer plate circle */}
+    <circle cx="12" cy="12" r="10" strokeWidth={2} />
+    {/* Inner hole for barbell */}
+    <circle cx="12" cy="12" r="3" strokeWidth={2} />
+    {/* Grip notches */}
+    <path
+      strokeLinecap="round"
+      strokeWidth={2}
+      d="M12 2v3M12 19v3M2 12h3M19 12h3"
     />
   </svg>
 );

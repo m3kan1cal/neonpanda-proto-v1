@@ -79,6 +79,15 @@ const CommandPalette = ({
       icon: "📋",
       requiresInput: false,
     },
+    {
+      id: "exercises",
+      trigger: "/exercises",
+      description: "View your exercise history and progression",
+      example: "/exercises",
+      category: "navigation",
+      icon: "💪",
+      requiresInput: false,
+    },
   ];
 
   // Determine what to show based on input state

@@ -4057,6 +4057,54 @@ export async function queryExerciseNames(
 }
 
 /**
+ * Query exercises count for a user
+ * Returns count of unique exercise names, optionally filtered by discipline
+ */
+export async function queryExercisesCount(
+  userId: string,
+  options?: {
+    discipline?: ExerciseDiscipline;
+  },
+): Promise<number> {
+  try {
+    // Query all exercises for the user
+    const items = await queryFromDynamoDB<Exercise>(
+      `user#${userId}`,
+      "exercise#",
+      "exercise",
+    );
+
+    // Count unique exercise names
+    const exerciseNames = new Set<string>();
+
+    for (const item of items) {
+      const exercise = item.attributes;
+
+      // Filter by discipline if specified
+      if (options?.discipline && exercise.discipline !== options.discipline) {
+        continue;
+      }
+
+      exerciseNames.add(exercise.exerciseName);
+    }
+
+    const uniqueCount = exerciseNames.size;
+
+    console.info("Exercises counted successfully:", {
+      userId,
+      totalExercises: items.length,
+      uniqueExercises: uniqueCount,
+      filters: options,
+    });
+
+    return uniqueCount;
+  } catch (error) {
+    console.error(`Error counting exercises for user ${userId}:`, error);
+    throw error;
+  }
+}
+
+/**
  * Generate a human-readable display name from normalized snake_case name
  */
 function generateDisplayName(normalizedName: string): string {

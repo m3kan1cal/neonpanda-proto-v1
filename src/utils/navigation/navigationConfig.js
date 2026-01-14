@@ -2,19 +2,12 @@
 // Central route and navigation item definitions for NeonPanda
 
 import {
-  HomeIcon,
-  HomeIconTiny,
-  SparkleIconTiny,
   CoachIconTiny,
-  WorkoutIcon,
   WorkoutIconTiny,
-  ReportIcon,
   ReportsIconTiny,
   ChatIconSmall,
-  MemoryIcon,
   MemoryIconTiny,
   SettingsIconTiny,
-  CoachesIconTiny,
   FAQIconTiny,
   AboutIconTiny,
   TechnologyIconTiny,
@@ -24,10 +17,9 @@ import {
   CollaborateIconTiny,
   SignOutIconTiny,
   WaitlistIconTiny,
-  MenuIcon,
-  LightningIconSmall,
   CoachIconSmall,
   ProgramIconTiny,
+  WeightPlateIconTiny,
 } from "../../components/themes/SynthwaveComponents";
 
 /**
@@ -115,6 +107,17 @@ export const navigationItems = {
       requiresAuth: true,
       requiresCoach: true,
       badge: (ctx) => ctx.newItemCounts.workouts || 0, // Always show count
+      color: "pink",
+    },
+    {
+      id: "exercises",
+      label: "Exercises",
+      icon: WeightPlateIconTiny,
+      getRoute: (ctx) =>
+        `/training-grounds/manage-exercises?userId=${ctx.userId}&coachId=${ctx.coachId}`,
+      requiresAuth: true,
+      requiresCoach: true,
+      badge: (ctx) => ctx.exercisesCount || 0,
       color: "pink",
     },
     {

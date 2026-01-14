@@ -71,6 +71,7 @@ export function createCoreApi(
   processStripeWebhookLambda: lambda.IFunction,
   getExercisesLambda: lambda.IFunction,
   getExerciseNamesLambda: lambda.IFunction,
+  getExercisesCountLambda: lambda.IFunction,
   userPoolAuthorizer: HttpUserPoolAuthorizer,
 ) {
   // Create branch-aware API name using utility
@@ -516,6 +517,12 @@ export function createCoreApi(
       getExerciseNamesLambda,
     );
 
+  const getExercisesCountIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "GetExercisesCountIntegration",
+      getExercisesCountLambda,
+    );
+
   // Create integrations object for route configuration
   const integrations = {
     contactForm: contactFormIntegration,
@@ -578,6 +585,7 @@ export function createCoreApi(
     processStripeWebhook: processStripeWebhookIntegration,
     getExercises: getExercisesIntegration,
     getExerciseNames: getExerciseNamesIntegration,
+    getExercisesCount: getExercisesCountIntegration,
   };
 
   // *******************************************************
@@ -673,6 +681,13 @@ export function createCoreApi(
     path: "/users/{userId}/exercise-names",
     methods: [apigatewayv2.HttpMethod.GET],
     integration: integrations.getExerciseNames,
+    authorizer: userPoolAuthorizer,
+  });
+
+  httpApi.addRoutes({
+    path: "/users/{userId}/exercises/count",
+    methods: [apigatewayv2.HttpMethod.GET],
+    integration: integrations.getExercisesCount,
     authorizer: userPoolAuthorizer,
   });
 
