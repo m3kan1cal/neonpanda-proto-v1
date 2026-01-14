@@ -102,6 +102,7 @@ export interface ExerciseMetadata {
 export interface Exercise {
   exerciseId: string; // exercise_{userId}_{timestamp}_{shortId}
   userId: string;
+  coachId: string; // Coach context when workout was logged
   workoutId: string;
   exerciseName: string; // AI-normalized canonical name (e.g., "back_squat", "tempo_run")
   originalName: string; // Original name from workout (e.g., "Barbell Back Squat")
@@ -126,6 +127,7 @@ export interface Exercise {
  */
 export interface BuildExerciseEvent {
   userId: string;
+  coachId: string;
   workoutId: string;
   workoutData: UniversalWorkoutSchema;
   completedAt: string; // ISO date string

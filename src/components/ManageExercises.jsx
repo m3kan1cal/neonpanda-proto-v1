@@ -484,7 +484,7 @@ function ManageExercises() {
                       key={session.exerciseId || index}
                       onClick={() =>
                         navigate(
-                          `/training-grounds/workouts?workoutId=${session.workoutId}&userId=${userId}&coachId=${coachId || "default"}`,
+                          `/training-grounds/workouts?workoutId=${session.workoutId}&userId=${userId}&coachId=${session.coachId || coachId || "default"}`,
                         )
                       }
                       className="flex items-center justify-between py-2 px-3 bg-synthwave-bg-primary/30 rounded-lg cursor-pointer hover:bg-synthwave-bg-primary/50 transition-colors duration-200"

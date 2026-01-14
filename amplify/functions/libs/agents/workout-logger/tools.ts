@@ -1237,6 +1237,7 @@ Returns: workoutId, success, pineconeStored, pineconeRecordId, templateLinked`,
         buildExerciseFunction,
         {
           userId: context.userId,
+          coachId: context.coachId,
           workoutId: workout.workoutId,
           workoutData: workoutData,
           completedAt: completedAtDate.toISOString(),
