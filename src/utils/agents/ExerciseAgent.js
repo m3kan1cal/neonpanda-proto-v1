@@ -189,25 +189,75 @@ export class ExerciseAgent {
   /**
    * Formats metrics for display in exercise cards
    * @param {Object} metrics - The exercise metrics object
-   * @returns {string} - Formatted metrics string (e.g., "4x8 @ 275 lbs")
+   * @returns {string} - Formatted metrics string (e.g., "4x8 @ 275 lbs" or "4x6-12 @ 275 lbs")
    */
   formatMetrics(metrics) {
     if (!metrics) return "";
 
     const parts = [];
 
-    // Format sets x reps
+    // Format sets x reps with adaptive display for varying reps and weights
     if (metrics.sets && metrics.reps) {
-      parts.push(`${metrics.sets}x${metrics.reps}`);
-    } else if (metrics.reps) {
-      parts.push(`${metrics.reps} reps`);
-    }
+      const hasDetailedData =
+        metrics.repsPerSet &&
+        metrics.weightsPerSet &&
+        metrics.repsPerSet.length > 0 &&
+        metrics.repsPerSet.length === metrics.weightsPerSet.length;
 
-    // Format weight
-    if (metrics.weight) {
-      parts.push(`@ ${metrics.weight} lbs`);
-    } else if (metrics.maxWeight) {
-      parts.push(`@ ${metrics.maxWeight} lbs`);
+      const weightUnit = metrics.weightUnit || "lbs";
+
+      if (hasDetailedData) {
+        const allRepsSame = metrics.repsPerSet.every(
+          (r) => r === metrics.repsPerSet[0],
+        );
+        const allWeightsSame = metrics.weightsPerSet.every(
+          (w) => w === metrics.weightsPerSet[0],
+        );
+
+        if (allRepsSame && allWeightsSame) {
+          // Consistent reps and weight: "4x10 @ 135 lbs"
+          // Use actual data from repsPerSet (not averaged metrics.reps)
+          parts.push(`${metrics.repsPerSet.length}x${metrics.repsPerSet[0]}`);
+        } else if (allWeightsSame) {
+          // Varying reps, same weight: "4x12, 10, 8, 6 @ 135 lbs"
+          parts.push(
+            `${metrics.repsPerSet.length}x${metrics.repsPerSet.join(", ")}`,
+          );
+        } else {
+          // Varying reps and/or weights: "12@135, 10@155, 8@175, 6@185"
+          const setDetails = metrics.repsPerSet
+            .map((reps, i) => `${reps}@${metrics.weightsPerSet[i]}`)
+            .join(", ");
+          parts.push(setDetails);
+          // Weight unit will be added at end as suffix
+        }
+
+        // Add weight at end if all weights are the same
+        if (allWeightsSame && metrics.weightsPerSet[0] > 0) {
+          parts.push(`@ ${metrics.weightsPerSet[0]} ${weightUnit}`);
+        } else if (!allWeightsSame) {
+          // Add unit suffix for varying weights
+          parts.push(weightUnit);
+        }
+      } else {
+        // Fallback: no detailed data
+        parts.push(`${metrics.sets}x${metrics.reps}`);
+        // Add weight if available
+        if (metrics.weight) {
+          parts.push(`@ ${metrics.weight} ${weightUnit}`);
+        } else if (metrics.maxWeight) {
+          parts.push(`@ ${metrics.maxWeight} ${weightUnit}`);
+        }
+      }
+    } else if (metrics.reps) {
+      const weightUnit = metrics.weightUnit || "lbs";
+      parts.push(`${metrics.reps} reps`);
+      // Add weight for single-set exercises
+      if (metrics.weight) {
+        parts.push(`@ ${metrics.weight} ${weightUnit}`);
+      } else if (metrics.maxWeight) {
+        parts.push(`@ ${metrics.maxWeight} ${weightUnit}`);
+      }
     }
 
     // Format distance for running exercises
