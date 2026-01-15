@@ -34,10 +34,25 @@ export interface ExerciseMetrics {
   sets?: number;
   repsPerSet?: number[]; // Actual reps for each set [12, 10, 8, 6] (for detailed display)
   weightsPerSet?: number[]; // Actual weight for each set [135, 155, 175, 185] (for detailed display)
+  volumePerSet?: number[]; // Volume for each set [1620, 1550, 1400, 1110] (reps × weight)
   totalVolume?: number; // weight * reps * sets (calculated)
   maxWeight?: number; // heaviest set weight
+  estimated1RM?: number; // Estimated 1-rep max using Epley formula
   rpe?: number; // 1-10
   percentage1rm?: number;
+
+  // === Analytics metrics ===
+  bestSet?: {
+    setNumber: number; // 1-indexed set number
+    reps: number;
+    weight: number;
+    volume: number;
+    estimated1rm: number;
+  };
+  intensityMetrics?: {
+    averageIntensity: number; // average weight as % of max weight (0-1)
+    volumeLoad: number; // same as totalVolume, for backwards compat
+  };
 
   // === Powerlifting-specific ===
   barSpeed?: string; // "slow" | "moderate" | "fast" | "explosive"
