@@ -6,6 +6,17 @@
  * into the common ExtractedExercise format.
  */
 
+/**
+ * Calculate estimated 1-rep max using Epley formula
+ * Formula: weight × (1 + reps/30)
+ * Returns 0 for invalid inputs (0 weight or 0 reps)
+ */
+function calculateEstimated1RM(reps: number, weight: number): number {
+  if (reps <= 0 || weight <= 0) return 0;
+  if (reps === 1) return weight;
+  return Math.round(weight * (1 + reps / 30));
+}
+
 import type {
   UniversalWorkoutSchema,
   CrossFitWorkout,
@@ -202,22 +213,86 @@ function extractPowerliftingExercises(
     let totalReps = 0;
     let maxWeight = 0;
     let totalVolume = 0;
+    let totalWeightForAvg = 0;
+    let weightCount = 0;
+    const repsPerSet: number[] = [];
+    const weightsPerSet: number[] = [];
+    const volumePerSet: number[] = [];
 
-    for (const set of sets) {
+    let bestSetVolume = 0;
+    let bestSetIndex = -1;
+
+    for (let i = 0; i < sets.length; i++) {
+      const set = sets[i];
       const reps = set.reps || 0;
       const weight = set.weight || 0;
+      const volume = reps * weight;
+
       totalReps += reps;
-      totalVolume += reps * weight;
+      totalVolume += volume;
       if (weight > maxWeight) maxWeight = weight;
+
+      if (reps > 0) {
+        repsPerSet.push(reps);
+        weightsPerSet.push(weight);
+        volumePerSet.push(volume);
+
+        if (weight > 0) {
+          totalWeightForAvg += weight;
+          weightCount++;
+        }
+
+        // Track best set by volume
+        if (volume > bestSetVolume) {
+          bestSetVolume = volume;
+          bestSetIndex = i;
+        }
+      }
+    }
+
+    // Calculate average reps per set for consistent display
+    const avgRepsPerSet =
+      sets.length > 0 ? Math.round(totalReps / sets.length) : 0;
+
+    // Build best set data
+    let bestSet;
+    if (bestSetIndex >= 0) {
+      const bestSetData = sets[bestSetIndex];
+      const bestReps = bestSetData.reps || 0;
+      const bestWeight = bestSetData.weight || 0;
+      bestSet = {
+        setNumber: bestSetIndex + 1,
+        reps: bestReps,
+        weight: bestWeight,
+        volume: bestSetVolume,
+        estimated1rm: calculateEstimated1RM(bestReps, bestWeight),
+      };
+    }
+
+    // Calculate intensity metrics
+    let intensityMetrics;
+    if (maxWeight > 0 && weightCount > 0) {
+      const avgWeight = totalWeightForAvg / weightCount;
+      intensityMetrics = {
+        averageIntensity: avgWeight / maxWeight,
+        volumeLoad: totalVolume,
+      };
     }
 
     const metrics: ExerciseMetrics = {
       weight: maxWeight,
       weightUnit: sets[0]?.weight_unit || "lbs",
-      reps: totalReps,
+      reps: avgRepsPerSet, // Average reps per set for display (e.g., 4x10 not 4x40)
+      totalReps, // Total reps across all sets (for aggregations)
       sets: sets.length,
+      repsPerSet: repsPerSet.length > 0 ? repsPerSet : undefined,
+      weightsPerSet: weightsPerSet.length > 0 ? weightsPerSet : undefined,
+      volumePerSet: volumePerSet.length > 0 ? volumePerSet : undefined,
       totalVolume,
       maxWeight,
+      estimated1RM: bestSet?.estimated1rm,
+      bestSet,
+      intensityMetrics,
       rpe: exercise.rpe,
       movementCategory: exercise.movement_category || "main_lift",
       equipment: exercise.equipment,
@@ -292,23 +367,88 @@ function extractBodybuildingMetrics(
   let totalVolume = 0;
   let totalTut = 0;
   let hadFailure = false;
+  let totalWeightForAvg = 0;
+  let weightCount = 0;
+  const repsPerSet: number[] = [];
+  const weightsPerSet: number[] = [];
+  const volumePerSet: number[] = [];
 
-  for (const set of sets) {
-    totalReps += set.reps || 0;
+  let bestSetVolume = 0;
+  let bestSetIndex = -1;
+
+  for (let i = 0; i < sets.length; i++) {
+    const set = sets[i];
+    const reps = set.reps || 0;
     const weight = set.weight || 0;
-    totalVolume += (set.reps || 0) * weight;
+    const volume = reps * weight;
+
+    totalReps += reps;
+    totalVolume += volume;
     if (weight > maxWeight) maxWeight = weight;
     if (set.time_under_tension) totalTut += set.time_under_tension;
     if (set.failure) hadFailure = true;
+
+    if (reps > 0) {
+      repsPerSet.push(reps);
+      weightsPerSet.push(weight);
+      volumePerSet.push(volume);
+
+      if (weight > 0) {
+        totalWeightForAvg += weight;
+        weightCount++;
+      }
+
+      // Track best set by volume
+      if (volume > bestSetVolume) {
+        bestSetVolume = volume;
+        bestSetIndex = i;
+      }
+    }
+  }
+
+  // Calculate average reps per set for consistent display
+  const avgRepsPerSet =
+    sets.length > 0 ? Math.round(totalReps / sets.length) : 0;
+
+  // Build best set data
+  let bestSet;
+  if (bestSetIndex >= 0) {
+    const bestSetData = sets[bestSetIndex];
+    const bestReps = bestSetData.reps || 0;
+    const bestWeight = bestSetData.weight || 0;
+    bestSet = {
+      setNumber: bestSetIndex + 1,
+      reps: bestReps,
+      weight: bestWeight,
+      volume: bestSetVolume,
+      estimated1rm: calculateEstimated1RM(bestReps, bestWeight),
+    };
+  }
+
+  // Calculate intensity metrics
+  let intensityMetrics;
+  if (maxWeight > 0 && weightCount > 0) {
+    const avgWeight = totalWeightForAvg / weightCount;
+    intensityMetrics = {
+      averageIntensity: avgWeight / maxWeight,
+      volumeLoad: totalVolume,
+    };
   }
 
   const metrics: ExerciseMetrics = {
     weight: maxWeight,
     weightUnit: sets[0]?.weight_unit || "lbs",
-    reps: totalReps,
+    reps: avgRepsPerSet, // Average reps per set for display (e.g., 4x10 not 4x40)
+    totalReps, // Total reps across all sets (for aggregations)
     sets: sets.length,
+    repsPerSet: repsPerSet.length > 0 ? repsPerSet : undefined,
+    weightsPerSet: weightsPerSet.length > 0 ? weightsPerSet : undefined,
+    volumePerSet: volumePerSet.length > 0 ? volumePerSet : undefined,
     totalVolume,
     maxWeight,
+    estimated1RM: bestSet?.estimated1rm,
+    bestSet,
+    intensityMetrics,
     movementCategory: exercise.movement_category,
     targetMuscles: exercise.target_muscles,
     supersetWith: exercise.superset_with || undefined,
@@ -491,18 +631,87 @@ function extractOlympicLiftMetrics(lift: OlympicLift): ExerciseMetrics {
   const sets = lift.sets || [];
   let totalReps = 0;
   let maxWeight = 0;
+  let totalVolume = 0;
+  let totalWeightForAvg = 0;
+  let weightCount = 0;
+  const repsPerSet: number[] = [];
+  const weightsPerSet: number[] = [];
+  const volumePerSet: number[] = [];
 
-  for (const set of sets) {
-    totalReps += set.reps || 0;
-    if (set.weight > maxWeight) maxWeight = set.weight;
+  let bestSetVolume = 0;
+  let bestSetIndex = -1;
+
+  for (let i = 0; i < sets.length; i++) {
+    const set = sets[i];
+    const reps = set.reps || 0;
+    const weight = set.weight || 0;
+    const volume = reps * weight;
+
+    totalReps += reps;
+    totalVolume += volume;
+    if (weight > maxWeight) maxWeight = weight;
+
+    if (reps > 0) {
+      repsPerSet.push(reps);
+      weightsPerSet.push(weight);
+      volumePerSet.push(volume);
+
+      if (weight > 0) {
+        totalWeightForAvg += weight;
+        weightCount++;
+      }
+
+      // Track best set by volume
+      if (volume > bestSetVolume) {
+        bestSetVolume = volume;
+        bestSetIndex = i;
+      }
+    }
+  }
+
+  // Calculate average reps per set for consistent display
+  const avgRepsPerSet =
+    sets.length > 0 ? Math.round(totalReps / sets.length) : 0;
+
+  // Build best set data
+  let bestSet;
+  if (bestSetIndex >= 0) {
+    const bestSetData = sets[bestSetIndex];
+    const bestReps = bestSetData.reps || 0;
+    const bestWeight = bestSetData.weight || 0;
+    bestSet = {
+      setNumber: bestSetIndex + 1,
+      reps: bestReps,
+      weight: bestWeight,
+      volume: bestSetVolume,
+      estimated1rm: calculateEstimated1RM(bestReps, bestWeight),
+    };
+  }
+
+  // Calculate intensity metrics
+  let intensityMetrics;
+  if (maxWeight > 0 && weightCount > 0) {
+    const avgWeight = totalWeightForAvg / weightCount;
+    intensityMetrics = {
+      averageIntensity: avgWeight / maxWeight,
+      volumeLoad: totalVolume,
+    };
   }
 
   const metrics: ExerciseMetrics = {
     weight: maxWeight,
     weightUnit: sets[0]?.weight_unit || "kg",
-    reps: totalReps,
+    reps: avgRepsPerSet, // Average reps per set for display (e.g., 4x10 not 4x40)
+    totalReps, // Total reps across all sets (for aggregations)
     sets: sets.length,
+    repsPerSet: repsPerSet.length > 0 ? repsPerSet : undefined,
+    weightsPerSet: weightsPerSet.length > 0 ? weightsPerSet : undefined,
+    volumePerSet: volumePerSet.length > 0 ? volumePerSet : undefined,
+    totalVolume,
     maxWeight,
+    estimated1RM: bestSet?.estimated1rm,
+    bestSet,
+    intensityMetrics,
     movementCategory: lift.lift_category,
     variation: lift.variation || undefined,
   };
@@ -565,21 +774,86 @@ function extractFunctionalBodybuildingMetrics(
   let totalReps = 0;
   let maxWeight = 0;
   let totalVolume = 0;
+  let totalWeightForAvg = 0;
+  let weightCount = 0;
+  const repsPerSet: number[] = [];
+  const weightsPerSet: number[] = [];
+  const volumePerSet: number[] = [];
 
-  for (const set of sets) {
-    totalReps += set.reps || 0;
+  let bestSetVolume = 0;
+  let bestSetIndex = -1;
+
+  for (let i = 0; i < sets.length; i++) {
+    const set = sets[i];
+    const reps = set.reps || 0;
     const weight = set.weight || 0;
-    totalVolume += (set.reps || 0) * weight;
+    const volume = reps * weight;
+
+    totalReps += reps;
+    totalVolume += volume;
     if (weight > maxWeight) maxWeight = weight;
+
+    if (reps > 0) {
+      repsPerSet.push(reps);
+      weightsPerSet.push(weight);
+      volumePerSet.push(volume);
+
+      if (weight > 0) {
+        totalWeightForAvg += weight;
+        weightCount++;
+      }
+
+      // Track best set by volume
+      if (volume > bestSetVolume) {
+        bestSetVolume = volume;
+        bestSetIndex = i;
+      }
+    }
+  }
+
+  // Calculate average reps per set for consistent display
+  const avgRepsPerSet =
+    sets.length > 0 ? Math.round(totalReps / sets.length) : 0;
+
+  // Build best set data
+  let bestSet;
+  if (bestSetIndex >= 0) {
+    const bestSetData = sets[bestSetIndex];
+    const bestReps = bestSetData.reps || 0;
+    const bestWeight = bestSetData.weight || 0;
+    bestSet = {
+      setNumber: bestSetIndex + 1,
+      reps: bestReps,
+      weight: bestWeight,
+      volume: bestSetVolume,
+      estimated1rm: calculateEstimated1RM(bestReps, bestWeight),
+    };
+  }
+
+  // Calculate intensity metrics
+  let intensityMetrics;
+  if (maxWeight > 0 && weightCount > 0) {
+    const avgWeight = totalWeightForAvg / weightCount;
+    intensityMetrics = {
+      averageIntensity: avgWeight / maxWeight,
+      volumeLoad: totalVolume,
+    };
   }
 
   const metrics: ExerciseMetrics = {
     weight: maxWeight,
     weightUnit: sets[0]?.weight_unit || "lbs",
-    reps: totalReps,
+    reps: avgRepsPerSet, // Average reps per set for display (e.g., 4x10 not 4x40)
+    totalReps, // Total reps across all sets (for aggregations)
     sets: sets.length,
+    repsPerSet: repsPerSet.length > 0 ? repsPerSet : undefined,
+    weightsPerSet: weightsPerSet.length > 0 ? weightsPerSet : undefined,
+    volumePerSet: volumePerSet.length > 0 ? volumePerSet : undefined,
     totalVolume,
     maxWeight,
+    estimated1RM: bestSet?.estimated1rm,
+    bestSet,
+    intensityMetrics,
     movementType: exercise.movement_pattern,
     targetMuscles: exercise.target_muscles,
     supersetWith: exercise.superset_with || undefined,
@@ -639,9 +913,26 @@ function extractCalisthenicsMetrics(
   let totalHoldTime = 0;
   let avgQuality = 0;
   let qualityCount = 0;
+  const repsPerSet: number[] = [];
 
-  for (const set of sets) {
-    if (set.reps) totalReps += set.reps;
+  let bestSetReps = 0;
+  let bestSetIndex = -1;
+
+  for (let i = 0; i < sets.length; i++) {
+    const set = sets[i];
+    const reps = set.reps || 0;
+
+    if (reps > 0) {
+      totalReps += reps;
+      repsPerSet.push(reps);
+
+      // Track best set by reps (for bodyweight exercises)
+      if (reps > bestSetReps) {
+        bestSetReps = reps;
+        bestSetIndex = i;
+      }
+    }
+
     if (set.hold_time) totalHoldTime += set.hold_time;
     if (set.quality_rating) {
       avgQuality += set.quality_rating;
@@ -649,9 +940,28 @@ function extractCalisthenicsMetrics(
     }
   }
 
+  // Calculate average reps per set for consistent display
+  const avgRepsPerSet =
+    sets.length > 0 ? Math.round(totalReps / sets.length) : 0;
+
+  // Build best set data (for calisthenics, best = most reps)
+  let bestSet;
+  if (bestSetIndex >= 0 && bestSetReps > 0) {
+    bestSet = {
+      setNumber: bestSetIndex + 1,
+      reps: bestSetReps,
+      weight: 0, // bodyweight
+      volume: 0, // not applicable for bodyweight
+      estimated1rm: 0, // not applicable for bodyweight
+    };
+  }
+
   const metrics: ExerciseMetrics = {
-    reps: totalReps || undefined,
+    reps: avgRepsPerSet, // Average reps per set for display (e.g., 4x10 not 4x40)
+    totalReps: totalReps || undefined,
     sets: sets.length,
+    repsPerSet: repsPerSet.length > 0 ? repsPerSet : undefined,
+    bestSet,
     holdTime: totalHoldTime || undefined,
     qualityRating: qualityCount > 0 ? avgQuality / qualityCount : undefined,
     progressionLevel: exercise.progression_level || undefined,
