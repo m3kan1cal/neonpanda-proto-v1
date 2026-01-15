@@ -268,10 +268,18 @@ function ManageExercises() {
     });
   };
 
-  // Format metrics for display - use ExerciseAgent's formatting
+  // Format metrics for display - delegates to ExerciseAgent
   const formatMetrics = (metrics) => {
     if (!metrics) return "";
-    if (!exerciseAgentRef.current) return "";
+
+    // If agent ref isn't available, use basic fallback formatting
+    if (!exerciseAgentRef.current) {
+      if (metrics.sets && metrics.reps)
+        return `${metrics.sets}x${metrics.reps}`;
+      if (metrics.reps) return `${metrics.reps} reps`;
+      return "Metrics available"; // Better than showing "No metrics" when they exist
+    }
+
     return exerciseAgentRef.current.formatMetrics(metrics);
   };
 
@@ -456,7 +464,8 @@ function ManageExercises() {
             {recentSessions.length > 0 &&
               (recentSessions[0].metrics?.bestSet ||
                 recentSessions[0].metrics?.estimated1RM ||
-                recentSessions[0].metrics?.intensityMetrics) && (
+                recentSessions[0].metrics?.intensityMetrics
+                  ?.averageIntensity) && (
                 <div className={containerPatterns.coachNotesSection}>
                   <h4 className="font-rajdhani text-xs text-synthwave-text-muted uppercase font-semibold mb-3">
                     Last Session Stats
