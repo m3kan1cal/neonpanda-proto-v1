@@ -398,20 +398,6 @@ function ManageExercises() {
                 </h4>
 
                 <div className="flex items-center gap-4 flex-wrap">
-                  {/* Best Set from most recent session */}
-                  {recentSessions.length > 0 &&
-                    recentSessions[0].metrics?.bestSet && (
-                      <div className="flex items-center gap-2">
-                        <span className="font-rajdhani text-sm text-synthwave-text-muted">
-                          Best Set:
-                        </span>
-                        <span className="font-rajdhani text-sm text-synthwave-neon-cyan font-medium">
-                          {recentSessions[0].metrics.bestSet.reps}x
-                          {recentSessions[0].metrics.bestSet.weight}{" "}
-                          {recentSessions[0].metrics.weightUnit || "lbs"}
-                        </span>
-                      </div>
-                    )}
                   {aggregations.prWeight && (
                     <div className="flex items-center gap-2">
                       <span className="font-rajdhani text-sm text-synthwave-text-muted">
@@ -432,18 +418,6 @@ function ManageExercises() {
                       </span>
                     </div>
                   )}
-                  {recentSessions.length > 0 &&
-                    recentSessions[0].metrics?.estimated1RM && (
-                      <div className="flex items-center gap-2">
-                        <span className="font-rajdhani text-sm text-synthwave-text-muted">
-                          Est. 1RM:
-                        </span>
-                        <span className="font-rajdhani text-sm text-synthwave-neon-cyan font-medium">
-                          {recentSessions[0].metrics.estimated1RM}{" "}
-                          {recentSessions[0].metrics.weightUnit || "lbs"}
-                        </span>
-                      </div>
-                    )}
                   {aggregations.averageWeight && (
                     <div className="flex items-center gap-2">
                       <span className="font-rajdhani text-sm text-synthwave-text-muted">
@@ -464,8 +438,55 @@ function ManageExercises() {
                       </span>
                     </div>
                   )}
-                  {recentSessions.length > 0 &&
-                    recentSessions[0].metrics?.intensityMetrics
+                </div>
+                {aggregations.totalOccurrences && (
+                  <div className="mt-3 pt-3 border-t border-synthwave-neon-cyan/10">
+                    <span className="font-rajdhani text-sm text-synthwave-text-secondary">
+                      Total Sessions:{" "}
+                      <span className="text-base text-synthwave-neon-cyan font-bold">
+                        {aggregations.totalOccurrences}
+                      </span>
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Last Session Stats */}
+            {recentSessions.length > 0 &&
+              (recentSessions[0].metrics?.bestSet ||
+                recentSessions[0].metrics?.estimated1RM ||
+                recentSessions[0].metrics?.intensityMetrics) && (
+                <div className={containerPatterns.coachNotesSection}>
+                  <h4 className="font-rajdhani text-xs text-synthwave-text-muted uppercase font-semibold mb-3">
+                    Last Session Stats
+                  </h4>
+
+                  <div className="flex items-center gap-4 flex-wrap">
+                    {recentSessions[0].metrics?.bestSet && (
+                      <div className="flex items-center gap-2">
+                        <span className="font-rajdhani text-sm text-synthwave-text-muted">
+                          Best Set:
+                        </span>
+                        <span className="font-rajdhani text-sm text-synthwave-neon-cyan font-medium">
+                          {recentSessions[0].metrics.bestSet.reps}@
+                          {recentSessions[0].metrics.bestSet.weight}{" "}
+                          {recentSessions[0].metrics.weightUnit || "lbs"}
+                        </span>
+                      </div>
+                    )}
+                    {recentSessions[0].metrics?.estimated1RM && (
+                      <div className="flex items-center gap-2">
+                        <span className="font-rajdhani text-sm text-synthwave-text-muted">
+                          Est. 1RM:
+                        </span>
+                        <span className="font-rajdhani text-sm text-synthwave-neon-cyan font-medium">
+                          {recentSessions[0].metrics.estimated1RM}{" "}
+                          {recentSessions[0].metrics.weightUnit || "lbs"}
+                        </span>
+                      </div>
+                    )}
+                    {recentSessions[0].metrics?.intensityMetrics
                       ?.averageIntensity && (
                       <div className="flex items-center gap-2">
                         <span className="font-rajdhani text-sm text-synthwave-text-muted">
@@ -480,19 +501,9 @@ function ManageExercises() {
                         </span>
                       </div>
                     )}
-                </div>
-                {aggregations.totalOccurrences && (
-                  <div className="mt-3 pt-3 border-t border-synthwave-neon-cyan/10">
-                    <span className="font-rajdhani text-sm text-synthwave-text-secondary">
-                      Total Sessions:{" "}
-                      <span className="text-base text-synthwave-neon-cyan font-bold">
-                        {aggregations.totalOccurrences}
-                      </span>
-                    </span>
                   </div>
-                )}
-              </div>
-            )}
+                </div>
+              )}
 
             {/* Recent Sessions Section */}
             {recentSessions.length > 0 && (
