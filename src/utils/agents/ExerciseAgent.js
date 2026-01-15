@@ -204,6 +204,8 @@ export class ExerciseAgent {
         metrics.repsPerSet.length > 0 &&
         metrics.repsPerSet.length === metrics.weightsPerSet.length;
 
+      const weightUnit = metrics.weightUnit || "lbs";
+
       if (hasDetailedData) {
         const allRepsSame = metrics.repsPerSet.every(
           (r) => r === metrics.repsPerSet[0],
@@ -232,28 +234,29 @@ export class ExerciseAgent {
 
         // Add weight at end if all weights are the same
         if (allWeightsSame && metrics.weightsPerSet[0] > 0) {
-          parts.push(`@ ${metrics.weightsPerSet[0]} lbs`);
+          parts.push(`@ ${metrics.weightsPerSet[0]} ${weightUnit}`);
         } else if (!allWeightsSame) {
           // Add unit suffix for varying weights
-          parts.push("lbs");
+          parts.push(weightUnit);
         }
       } else {
         // Fallback: no detailed data
         parts.push(`${metrics.sets}x${metrics.reps}`);
         // Add weight if available
         if (metrics.weight) {
-          parts.push(`@ ${metrics.weight} lbs`);
+          parts.push(`@ ${metrics.weight} ${weightUnit}`);
         } else if (metrics.maxWeight) {
-          parts.push(`@ ${metrics.maxWeight} lbs`);
+          parts.push(`@ ${metrics.maxWeight} ${weightUnit}`);
         }
       }
     } else if (metrics.reps) {
+      const weightUnit = metrics.weightUnit || "lbs";
       parts.push(`${metrics.reps} reps`);
       // Add weight for single-set exercises
       if (metrics.weight) {
-        parts.push(`@ ${metrics.weight} lbs`);
+        parts.push(`@ ${metrics.weight} ${weightUnit}`);
       } else if (metrics.maxWeight) {
-        parts.push(`@ ${metrics.maxWeight} lbs`);
+        parts.push(`@ ${metrics.maxWeight} ${weightUnit}`);
       }
     }
 
