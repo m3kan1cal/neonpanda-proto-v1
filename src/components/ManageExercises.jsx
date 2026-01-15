@@ -268,94 +268,19 @@ function ManageExercises() {
     });
   };
 
-  // Format metrics for display - standalone implementation (no agent ref dependency)
+  // Format metrics for display - delegates to ExerciseAgent
   const formatMetrics = (metrics) => {
     if (!metrics) return "";
-    const parts = [];
 
-    // Check if we have detailed per-set data
-    const hasDetailedData =
-      metrics.repsPerSet &&
-      metrics.repsPerSet.length > 0 &&
-      metrics.weightsPerSet &&
-      metrics.weightsPerSet.length > 0;
-
-    if (hasDetailedData) {
-      // Check if all reps are the same (excluding 0s)
-      const nonZeroReps = metrics.repsPerSet.filter((r) => r > 0);
-      const allRepsSame =
-        nonZeroReps.length > 0 &&
-        nonZeroReps.every((r) => r === nonZeroReps[0]);
-
-      // Check if all weights are the same (excluding 0s)
-      const nonZeroWeights = metrics.weightsPerSet.filter((w) => w > 0);
-      const allWeightsSame =
-        nonZeroWeights.length > 0 &&
-        nonZeroWeights.every((w) => w === nonZeroWeights[0]);
-
-      const weightUnit = metrics.weightUnit || "lbs";
-
-      if (allRepsSame && allWeightsSame) {
-        // Consistent reps and weight: "4x10 @ 135 lbs"
-        // Use actual data from repsPerSet (not averaged metrics.reps)
-        parts.push(`${metrics.repsPerSet.length}x${metrics.repsPerSet[0]}`);
-        if (metrics.weightsPerSet[0] > 0) {
-          parts.push(`@ ${metrics.weightsPerSet[0]} ${weightUnit}`);
-        }
-      } else if (allRepsSame && !allWeightsSame) {
-        // Varying weights but same reps: "4x10 @ 135, 155, 175, 185 lbs"
-        const repsDisplay = `${metrics.repsPerSet.length}x${metrics.repsPerSet[0]}`;
-        const weightsDisplay = metrics.weightsPerSet
-          .filter((w) => w > 0)
-          .join(", ");
-        if (weightsDisplay) {
-          parts.push(`${repsDisplay} @ ${weightsDisplay} ${weightUnit}`);
-        } else {
-          parts.push(repsDisplay);
-        }
-      } else if (!allRepsSame && allWeightsSame) {
-        // Varying reps but same weight: "4x12, 10, 8, 6 @ 135 lbs"
-        const repsDisplay = `${metrics.repsPerSet.length}x${metrics.repsPerSet.join(", ")}`;
-        if (metrics.weightsPerSet[0] > 0) {
-          parts.push(
-            `${repsDisplay} @ ${metrics.weightsPerSet[0]} ${weightUnit}`,
-          );
-        } else {
-          parts.push(repsDisplay);
-        }
-      } else {
-        // Both varying: "12@135, 10@155, 8@175, 6@185 lbs"
-        const setDetails = metrics.repsPerSet
-          .map((reps, i) => `${reps}@${metrics.weightsPerSet[i]}`)
-          .join(", ");
-        parts.push(setDetails);
-        // Add unit suffix for varying weights
-        parts.push(weightUnit);
-      }
-    } else {
-      // Fallback to basic metrics
-      if (metrics.sets && metrics.reps) {
-        parts.push(`${metrics.sets}x${metrics.reps}`);
-      } else if (metrics.reps) {
-        parts.push(`${metrics.reps} reps`);
-      }
-
-      if (metrics.weight) {
-        parts.push(`@ ${metrics.weight} ${metrics.weightUnit || "lbs"}`);
-      } else if (metrics.maxWeight) {
-        parts.push(`@ ${metrics.maxWeight} ${metrics.weightUnit || "lbs"}`);
-      }
-
-      if (metrics.distance) {
-        const distanceStr =
-          metrics.distance >= 1000
-            ? `${(metrics.distance / 1000).toFixed(1)} km`
-            : `${metrics.distance} m`;
-        parts.push(distanceStr);
-      }
+    // If agent ref isn't available, use basic fallback formatting
+    if (!exerciseAgentRef.current) {
+      if (metrics.sets && metrics.reps)
+        return `${metrics.sets}x${metrics.reps}`;
+      if (metrics.reps) return `${metrics.reps} reps`;
+      return "Metrics available"; // Better than showing "No metrics" when they exist
     }
 
-    return parts.join(" ");
+    return exerciseAgentRef.current.formatMetrics(metrics);
   };
 
   // Capitalize first letter of a string
