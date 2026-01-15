@@ -521,7 +521,7 @@ function extractOlympicLiftMetrics(lift: OlympicLift): ExerciseMetrics {
 
   for (const set of sets) {
     const reps = set.reps || 0;
-    const weight = set.weight;
+    const weight = set.weight || 0;
     totalReps += reps;
     if (weight > maxWeight) maxWeight = weight;
     if (reps > 0) {

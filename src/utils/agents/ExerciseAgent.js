@@ -213,10 +213,13 @@ export class ExerciseAgent {
 
         if (allRepsSame && allWeightsSame) {
           // Consistent reps and weight: "4x10 @ 135 lbs"
-          parts.push(`${metrics.sets}x${metrics.reps}`);
+          // Use actual data from repsPerSet (not averaged metrics.reps)
+          parts.push(`${metrics.repsPerSet.length}x${metrics.repsPerSet[0]}`);
         } else if (allWeightsSame) {
           // Varying reps, same weight: "4x12, 10, 8, 6 @ 135 lbs"
-          parts.push(`${metrics.sets}x${metrics.repsPerSet.join(", ")}`);
+          parts.push(
+            `${metrics.repsPerSet.length}x${metrics.repsPerSet.join(", ")}`,
+          );
         } else {
           // Varying reps and/or weights: "12@135, 10@155, 8@175, 6@185"
           const setDetails = metrics.repsPerSet
