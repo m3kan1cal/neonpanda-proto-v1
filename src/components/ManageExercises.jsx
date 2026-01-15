@@ -462,7 +462,8 @@ function ManageExercises() {
 
             {/* Last Session Stats */}
             {recentSessions.length > 0 &&
-              (recentSessions[0].metrics?.bestSet ||
+              ((recentSessions[0].metrics?.bestSet?.reps !== undefined &&
+                recentSessions[0].metrics?.bestSet?.weight !== undefined) ||
                 recentSessions[0].metrics?.estimated1RM ||
                 recentSessions[0].metrics?.intensityMetrics
                   ?.averageIntensity) && (
