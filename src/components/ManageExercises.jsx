@@ -268,32 +268,11 @@ function ManageExercises() {
     });
   };
 
-  // Format metrics for display
+  // Format metrics for display - use ExerciseAgent's formatting
   const formatMetrics = (metrics) => {
     if (!metrics) return "";
-    const parts = [];
-
-    if (metrics.sets && metrics.reps) {
-      parts.push(`${metrics.sets}x${metrics.reps}`);
-    } else if (metrics.reps) {
-      parts.push(`${metrics.reps} reps`);
-    }
-
-    if (metrics.weight) {
-      parts.push(`@ ${metrics.weight} lbs`);
-    } else if (metrics.maxWeight) {
-      parts.push(`@ ${metrics.maxWeight} lbs`);
-    }
-
-    if (metrics.distance) {
-      const distanceStr =
-        metrics.distance >= 1000
-          ? `${(metrics.distance / 1000).toFixed(1)} km`
-          : `${metrics.distance} m`;
-      parts.push(distanceStr);
-    }
-
-    return parts.join(" ");
+    if (!exerciseAgentRef.current) return "";
+    return exerciseAgentRef.current.formatMetrics(metrics);
   };
 
   // Capitalize first letter of a string
@@ -417,47 +396,90 @@ function ManageExercises() {
                 <h4 className="font-rajdhani text-xs text-synthwave-text-muted uppercase font-semibold mb-3">
                   Personal Records
                 </h4>
+
                 <div className="flex items-center gap-4 flex-wrap">
+                  {/* Best Set from most recent session */}
+                  {recentSessions.length > 0 &&
+                    recentSessions[0].metrics?.bestSet && (
+                      <div className="flex items-center gap-2">
+                        <span className="font-rajdhani text-sm text-synthwave-text-muted">
+                          Best Set:
+                        </span>
+                        <span className="font-rajdhani text-sm text-synthwave-neon-cyan font-medium">
+                          {recentSessions[0].metrics.bestSet.reps}x
+                          {recentSessions[0].metrics.bestSet.weight}{" "}
+                          {recentSessions[0].metrics.weightUnit || "lbs"}
+                        </span>
+                      </div>
+                    )}
                   {aggregations.prWeight && (
                     <div className="flex items-center gap-2">
-                      <span className="font-rajdhani text-xs text-synthwave-text-muted">
+                      <span className="font-rajdhani text-sm text-synthwave-text-muted">
                         Max Weight:
                       </span>
-                      <span className="font-rajdhani text-base text-synthwave-neon-cyan font-bold">
+                      <span className="font-rajdhani text-sm text-synthwave-neon-cyan font-medium">
                         {aggregations.prWeight} lbs
                       </span>
                     </div>
                   )}
                   {aggregations.prReps && (
                     <div className="flex items-center gap-2">
-                      <span className="font-rajdhani text-xs text-synthwave-text-muted">
+                      <span className="font-rajdhani text-sm text-synthwave-text-muted">
                         Max Reps:
                       </span>
-                      <span className="font-rajdhani text-base text-synthwave-neon-cyan font-bold">
+                      <span className="font-rajdhani text-sm text-synthwave-neon-cyan font-medium">
                         {aggregations.prReps}
                       </span>
                     </div>
                   )}
+                  {recentSessions.length > 0 &&
+                    recentSessions[0].metrics?.estimated1RM && (
+                      <div className="flex items-center gap-2">
+                        <span className="font-rajdhani text-sm text-synthwave-text-muted">
+                          Est. 1RM:
+                        </span>
+                        <span className="font-rajdhani text-sm text-synthwave-neon-cyan font-medium">
+                          {recentSessions[0].metrics.estimated1RM}{" "}
+                          {recentSessions[0].metrics.weightUnit || "lbs"}
+                        </span>
+                      </div>
+                    )}
                   {aggregations.averageWeight && (
                     <div className="flex items-center gap-2">
-                      <span className="font-rajdhani text-xs text-synthwave-text-muted">
+                      <span className="font-rajdhani text-sm text-synthwave-text-muted">
                         Avg Weight:
                       </span>
-                      <span className="font-rajdhani text-base text-synthwave-neon-cyan font-bold">
+                      <span className="font-rajdhani text-sm text-synthwave-neon-cyan font-medium">
                         {Math.round(aggregations.averageWeight)} lbs
                       </span>
                     </div>
                   )}
                   {aggregations.averageReps && (
                     <div className="flex items-center gap-2">
-                      <span className="font-rajdhani text-xs text-synthwave-text-muted">
+                      <span className="font-rajdhani text-sm text-synthwave-text-muted">
                         Avg Reps:
                       </span>
-                      <span className="font-rajdhani text-base text-synthwave-neon-cyan font-bold">
+                      <span className="font-rajdhani text-sm text-synthwave-neon-cyan font-medium">
                         {Math.round(aggregations.averageReps)}
                       </span>
                     </div>
                   )}
+                  {recentSessions.length > 0 &&
+                    recentSessions[0].metrics?.intensityMetrics
+                      ?.averageIntensity && (
+                      <div className="flex items-center gap-2">
+                        <span className="font-rajdhani text-sm text-synthwave-text-muted">
+                          Intensity:
+                        </span>
+                        <span className="font-rajdhani text-sm text-synthwave-neon-cyan font-medium">
+                          {Math.round(
+                            recentSessions[0].metrics.intensityMetrics
+                              .averageIntensity * 100,
+                          )}
+                          %
+                        </span>
+                      </div>
+                    )}
                 </div>
                 {aggregations.totalOccurrences && (
                   <div className="mt-3 pt-3 border-t border-synthwave-neon-cyan/10">
