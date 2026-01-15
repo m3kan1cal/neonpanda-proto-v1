@@ -29,8 +29,10 @@ export interface ExerciseMetrics {
   // === Strength metrics ===
   weight?: number;
   weightUnit?: string; // "lbs" | "kg"
-  reps?: number;
+  reps?: number; // Average reps per set (for display: "4x10" not "4x40")
   sets?: number;
+  repsPerSet?: number[]; // Actual reps for each set [12, 10, 8, 6] (for detailed display)
+  weightsPerSet?: number[]; // Actual weight for each set [135, 155, 175, 185] (for detailed display)
   totalVolume?: number; // weight * reps * sets (calculated)
   maxWeight?: number; // heaviest set weight
   rpe?: number; // 1-10

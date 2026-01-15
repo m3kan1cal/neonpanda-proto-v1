@@ -113,6 +113,26 @@ export const handler = async (event: BuildExerciseEvent) => {
           const shortId = Math.random().toString(36).substring(2, 11);
           const exerciseId = `exercise_${event.userId}_${Date.now()}_${shortId}`;
 
+          // Build metadata object, only including defined optional fields
+          const metadata: any = {
+            extractedAt: new Date(),
+            normalizationConfidence: normalization.confidence,
+          };
+
+          // Only add optional fields if they're defined
+          if (extracted.sourceRound !== undefined) {
+            metadata.sourceRound = extracted.sourceRound;
+          }
+          if (extracted.sourceSet !== undefined) {
+            metadata.sourceSet = extracted.sourceSet;
+          }
+          if (extracted.sourceSegment !== undefined) {
+            metadata.sourceSegment = extracted.sourceSegment;
+          }
+          if (extracted.notes !== undefined) {
+            metadata.notes = extracted.notes;
+          }
+
           const exercise: Exercise = {
             exerciseId,
             userId: event.userId,
@@ -124,14 +144,7 @@ export const handler = async (event: BuildExerciseEvent) => {
             completedAt,
             sequence,
             metrics: extracted.metrics,
-            metadata: {
-              extractedAt: new Date(),
-              normalizationConfidence: normalization.confidence,
-              sourceRound: extracted.sourceRound,
-              sourceSet: extracted.sourceSet,
-              sourceSegment: extracted.sourceSegment,
-              notes: extracted.notes,
-            },
+            metadata,
           };
 
           exercises.push(exercise);
