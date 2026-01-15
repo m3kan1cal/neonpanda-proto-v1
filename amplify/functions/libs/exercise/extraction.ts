@@ -225,6 +225,7 @@ function extractPowerliftingExercises(
       weight: maxWeight,
       weightUnit: sets[0]?.weight_unit || "lbs",
       reps: avgRepsPerSet, // Average reps per set for display (e.g., 4x10 not 4x40)
+      totalReps, // Total reps across all sets (for aggregations)
       sets: sets.length,
       repsPerSet: repsPerSet.length > 0 ? repsPerSet : undefined,
       weightsPerSet: weightsPerSet.length > 0 ? weightsPerSet : undefined,
@@ -329,6 +330,7 @@ function extractBodybuildingMetrics(
     weight: maxWeight,
     weightUnit: sets[0]?.weight_unit || "lbs",
     reps: avgRepsPerSet, // Average reps per set for display (e.g., 4x10 not 4x40)
+    totalReps, // Total reps across all sets (for aggregations)
     sets: sets.length,
     repsPerSet: repsPerSet.length > 0 ? repsPerSet : undefined,
     weightsPerSet: weightsPerSet.length > 0 ? weightsPerSet : undefined,
@@ -538,6 +540,7 @@ function extractOlympicLiftMetrics(lift: OlympicLift): ExerciseMetrics {
     weight: maxWeight,
     weightUnit: sets[0]?.weight_unit || "kg",
     reps: avgRepsPerSet, // Average reps per set for display (e.g., 4x10 not 4x40)
+    totalReps, // Total reps across all sets (for aggregations)
     sets: sets.length,
     repsPerSet: repsPerSet.length > 0 ? repsPerSet : undefined,
     weightsPerSet: weightsPerSet.length > 0 ? weightsPerSet : undefined,
@@ -627,6 +630,7 @@ function extractFunctionalBodybuildingMetrics(
     weight: maxWeight,
     weightUnit: sets[0]?.weight_unit || "lbs",
     reps: avgRepsPerSet, // Average reps per set for display (e.g., 4x10 not 4x40)
+    totalReps, // Total reps across all sets (for aggregations)
     sets: sets.length,
     repsPerSet: repsPerSet.length > 0 ? repsPerSet : undefined,
     weightsPerSet: weightsPerSet.length > 0 ? weightsPerSet : undefined,

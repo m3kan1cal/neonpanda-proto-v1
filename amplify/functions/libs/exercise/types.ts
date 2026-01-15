@@ -30,6 +30,7 @@ export interface ExerciseMetrics {
   weight?: number;
   weightUnit?: string; // "lbs" | "kg"
   reps?: number; // Average reps per set (for display: "4x10" not "4x40")
+  totalReps?: number; // Total reps across all sets (for volume calculations & backwards compatibility)
   sets?: number;
   repsPerSet?: number[]; // Actual reps for each set [12, 10, 8, 6] (for detailed display)
   weightsPerSet?: number[]; // Actual weight for each set [135, 155, 175, 185] (for detailed display)

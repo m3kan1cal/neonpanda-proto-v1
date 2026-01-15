@@ -3948,9 +3948,16 @@ function calculateExerciseAggregations(exercises: Exercise[]) {
     if (metrics.maxWeight && metrics.maxWeight > prWeight) {
       prWeight = metrics.maxWeight;
     }
-    if (metrics.reps && metrics.reps > prReps) {
-      prReps = metrics.reps;
+
+    // For PR reps, use max from repsPerSet array if available, else use totalReps or reps (backwards compat)
+    const exerciseMaxReps =
+      metrics.repsPerSet && metrics.repsPerSet.length > 0
+        ? Math.max(...metrics.repsPerSet)
+        : metrics.totalReps || metrics.reps || 0;
+    if (exerciseMaxReps > prReps) {
+      prReps = exerciseMaxReps;
     }
+
     if (metrics.totalVolume && metrics.totalVolume > prVolume) {
       prVolume = metrics.totalVolume;
     }
@@ -3958,8 +3965,11 @@ function calculateExerciseAggregations(exercises: Exercise[]) {
       totalWeight += metrics.weight;
       weightCount++;
     }
-    if (metrics.reps) {
-      totalReps += metrics.reps;
+
+    // Use totalReps for averages (new data), fall back to reps for old data
+    const repsValue = metrics.totalReps || metrics.reps;
+    if (repsValue) {
+      totalReps += repsValue;
       repsCount++;
     }
   }

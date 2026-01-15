@@ -201,6 +201,7 @@ export class ExerciseAgent {
       const hasDetailedData =
         metrics.repsPerSet &&
         metrics.weightsPerSet &&
+        metrics.repsPerSet.length > 0 &&
         metrics.repsPerSet.length === metrics.weightsPerSet.length;
 
       if (hasDetailedData) {
