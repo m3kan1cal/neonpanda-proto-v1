@@ -462,7 +462,8 @@ function ManageExercises() {
 
             {/* Last Session Stats */}
             {recentSessions.length > 0 &&
-              (recentSessions[0].metrics?.bestSet ||
+              ((recentSessions[0].metrics?.bestSet?.reps !== undefined &&
+                recentSessions[0].metrics?.bestSet?.weight !== undefined) ||
                 recentSessions[0].metrics?.estimated1RM ||
                 recentSessions[0].metrics?.intensityMetrics
                   ?.averageIntensity) && (
@@ -472,18 +473,20 @@ function ManageExercises() {
                   </h4>
 
                   <div className="flex items-center gap-4 flex-wrap">
-                    {recentSessions[0].metrics?.bestSet && (
-                      <div className="flex items-center gap-2">
-                        <span className="font-rajdhani text-sm text-synthwave-text-muted">
-                          Best Set:
-                        </span>
-                        <span className="font-rajdhani text-sm text-synthwave-neon-cyan font-medium">
-                          {recentSessions[0].metrics.bestSet.reps}@
-                          {recentSessions[0].metrics.bestSet.weight}{" "}
-                          {recentSessions[0].metrics.weightUnit || "lbs"}
-                        </span>
-                      </div>
-                    )}
+                    {recentSessions[0].metrics?.bestSet?.reps !== undefined &&
+                      recentSessions[0].metrics?.bestSet?.weight !==
+                        undefined && (
+                        <div className="flex items-center gap-2">
+                          <span className="font-rajdhani text-sm text-synthwave-text-muted">
+                            Best Set:
+                          </span>
+                          <span className="font-rajdhani text-sm text-synthwave-neon-cyan font-medium">
+                            {recentSessions[0].metrics.bestSet.reps}@
+                            {recentSessions[0].metrics.bestSet.weight}{" "}
+                            {recentSessions[0].metrics.weightUnit || "lbs"}
+                          </span>
+                        </div>
+                      )}
                     {recentSessions[0].metrics?.estimated1RM && (
                       <div className="flex items-center gap-2">
                         <span className="font-rajdhani text-sm text-synthwave-text-muted">
