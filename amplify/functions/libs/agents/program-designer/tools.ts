@@ -1255,11 +1255,23 @@ Return an array of dayNumber values to REMOVE (not keep).`;
       })
       .filter((update: any) => update !== null);
 
+    // Return truthful count: only templates that will actually be saved (have phaseId)
+    // Note: validPrunedTemplates excludes templates without phaseId (they can't be saved)
+    const actualKeptCount = validPrunedTemplates.length;
+    const excludedCount = prunedWorkoutTemplates.length - actualKeptCount;
+
+    if (excludedCount > 0) {
+      console.warn(
+        `⚠️ ${excludedCount} template(s) excluded from save due to missing phaseId. ` +
+          `Reporting kept count as ${actualKeptCount} (templates that will actually be saved).`,
+      );
+    }
+
     // Return both the pruned templates AND the phase updates for storage
     return {
-      prunedWorkoutTemplates,
+      prunedWorkoutTemplates: validPrunedTemplates, // Only templates that can be saved
       removedCount,
-      keptCount: prunedWorkoutTemplates.length,
+      keptCount: actualKeptCount, // Truthful count of templates that will be saved
       removalReasoning: reasoning,
       phaseUpdates,
     };
