@@ -5,7 +5,10 @@
  */
 
 import { storeDebugDataInS3 } from "../../api-helpers";
-import type { CoachConfig } from "../../coach-creator/types";
+import type {
+  CoachConfig,
+  SophisticationLevel,
+} from "../../coach-creator/types";
 import {
   COACH_PERSONALITY_TEMPLATES,
   METHODOLOGY_TEMPLATES,
@@ -141,16 +144,17 @@ export const storeGenerationDebugData = async (
  * Extract the user's fitness experience level from session data
  *
  * Priority:
- * 1. todoList.experienceLevel.value (extracted from conversation)
- * 2. sophisticationLevel if it's a valid experience level
+ * 1. todoList.experienceLevel.value (explicitly extracted from conversation)
+ * 2. sophisticationLevel if it's a valid experience level (converted to lowercase)
  * 3. Default to "intermediate"
  */
-function getExperienceLevel(
-  session: any,
-): "beginner" | "intermediate" | "advanced" {
+function getExperienceLevel(session: {
+  sophisticationLevel?: SophisticationLevel;
+  todoList?: { experienceLevel?: { value?: string } };
+}): "beginner" | "intermediate" | "advanced" {
   const validLevels = ["beginner", "intermediate", "advanced"];
 
-  // First priority: todoList.experienceLevel.value (extracted from conversation)
+  // First priority: todoList.experienceLevel.value (explicitly extracted)
   const todoExperience =
     session.todoList?.experienceLevel?.value?.toLowerCase();
   if (todoExperience && validLevels.includes(todoExperience)) {
@@ -158,8 +162,14 @@ function getExperienceLevel(
   }
 
   // Second priority: sophisticationLevel if it's a valid value
+  // Note: session.sophisticationLevel is uppercase (BEGINNER/INTERMEDIATE/ADVANCED/UNKNOWN)
+  // Convert to lowercase and exclude UNKNOWN
   const sophistication = session.sophisticationLevel?.toLowerCase();
-  if (sophistication && validLevels.includes(sophistication)) {
+  if (
+    sophistication &&
+    sophistication !== "unknown" &&
+    validLevels.includes(sophistication)
+  ) {
     return sophistication as "beginner" | "intermediate" | "advanced";
   }
 

@@ -41,6 +41,7 @@ export const changelogEntries = [
       fixed: [
         "Critical bug where build-exercise Lambda logged 'Found many undefined values in DynamoDB serialization' warnings for optional metadata fields (sourceRound, sourceSet, sourceSegment, notes) now conditionally included only when defined",
         "Critical bug where exercises displayed total reps instead of reps per set (e.g., '40 reps for 4 sets' making it look like 4 sets of 40 reps instead of 4 sets of 10 reps)",
+        "Critical bug where coach creation failed with 'Invalid experience_level: unknown' error - getExperienceLevel helper now properly uses todoList.experienceLevel.value (explicitly extracted) as first priority, then falls back to sophisticationLevel (converted to lowercase, excluding UNKNOWN) before defaulting to intermediate",
         "Empty arrays causing '0xundefined' display in formatMetrics due to missing metrics.repsPerSet.length > 0 check in hasDetailedData condition",
         "Semantic change to reps field breaking aggregation calculations - totalReps field now preserves actual total for backwards compatibility while reps shows average per set",
         "Calisthenics extraction not updated to new reps pattern - now calculates avgRepsPerSet (rounded average), totalReps (sum), and populates repsPerSet array matching other set-based disciplines",
