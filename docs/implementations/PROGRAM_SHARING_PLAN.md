@@ -74,7 +74,7 @@ Friend shares their success... [loop continues]
 
 ```
 1. Clicks shared link (from social media, message, etc.)
-2. Lands on public preview page at neonpanda.com/shared/{id}
+2. Lands on public preview page at neonpanda.com/shared/programs/{id}
 3. Sees:
    - Program name and description
    - Attribution: "Program by @username"
@@ -370,7 +370,7 @@ POST /users/{userId}/programs/{programId}/share
 ```json
 {
   "sharedProgramId": "sharedProgram_abc123_1705312200000_x7k2m",
-  "shareUrl": "https://neonpanda.com/shared/sharedProgram_abc123_1705312200000_x7k2m",
+  "shareUrl": "https://neonpanda.com/shared/programs/sharedProgram_abc123_1705312200000_x7k2m",
   "createdAt": "2025-01-15T10:30:00Z"
 }
 ```
@@ -1209,10 +1209,10 @@ function SharedProgramPreview() {
   const handleAdapt = () => {
     if (!user) {
       // Redirect to signup with return URL
-      navigate(`/signup?redirect=/shared/${sharedProgramId}/adapt`);
+      navigate(`/signup?redirect=/shared/programs/${sharedProgramId}/adapt`);
     } else {
       // Go to adaptation flow
-      navigate(`/shared/${sharedProgramId}/adapt`);
+      navigate(`/shared/programs/${sharedProgramId}/adapt`);
     }
   };
 
@@ -1354,7 +1354,7 @@ function MySharedPrograms() {
   };
 
   const handleCopyLink = (sharedProgramId) => {
-    const shareUrl = `${window.location.origin}/shared/${sharedProgramId}`;
+    const shareUrl = `${window.location.origin}/shared/programs/${sharedProgramId}`;
     navigator.clipboard.writeText(shareUrl);
     // Show brief success notification
   };
@@ -1371,7 +1371,7 @@ function MySharedPrograms() {
   };
 
   const handleViewPreview = (sharedProgramId) => {
-    window.open(`/shared/${sharedProgramId}`, "_blank");
+    window.open(`/shared/programs/${sharedProgramId}`, "_blank");
   };
 
   if (loading) return <div>Loading...</div>;
@@ -1404,7 +1404,7 @@ function MySharedPrograms() {
               <div className="share-link-preview">
                 <input
                   type="text"
-                  value={`${window.location.origin}/shared/${shared.sharedProgramId}`}
+                  value={`${window.location.origin}/shared/programs/${shared.sharedProgramId}`}
                   readOnly
                   className="share-link-input"
                 />
@@ -1637,7 +1637,7 @@ if (programSession.adaptationMode && programSession.sourceProgramTemplate) {
 const handleAdapt = async () => {
   if (!user) {
     // Redirect to signup with return URL
-    navigate(`/signup?redirect=/shared/${sharedProgramId}/adapt`);
+    navigate(`/signup?redirect=/shared/programs/${sharedProgramId}/adapt`);
     return;
   }
 
@@ -1647,7 +1647,7 @@ const handleAdapt = async () => {
   if (coaches.length === 0) {
     // No coaches - redirect to coach creation with adaptation context
     navigate(
-      `/coach-creator?returnTo=/shared/${sharedProgramId}/adapt&context=adaptation`,
+      `/coach-creator?returnTo=/shared/programs/${sharedProgramId}/adapt&context=adaptation`,
     );
     return;
   }
@@ -1655,7 +1655,7 @@ const handleAdapt = async () => {
   if (coaches.length === 1) {
     // Single coach - skip selection, go directly to adaptation
     navigate(
-      `/shared/${sharedProgramId}/adapt?userId=${user.userId}&coachId=${coaches[0].coach_id}`,
+      `/shared/programs/${sharedProgramId}/adapt?userId=${user.userId}&coachId=${coaches[0].coach_id}`,
     );
     return;
   }
@@ -2149,11 +2149,14 @@ import AdaptProgramChat from "./components/shared-programs/AdaptProgramChat";
   {/* Existing routes... */}
 
   {/* Public route - no auth required */}
-  <Route path="/shared/:sharedProgramId" element={<SharedProgramPreview />} />
+  <Route
+    path="/shared/programs/:sharedProgramId"
+    element={<SharedProgramPreview />}
+  />
 
   {/* Protected routes */}
   <Route
-    path="/shared/:sharedProgramId/adapt"
+    path="/shared/programs/:sharedProgramId/adapt"
     element={
       <ProtectedRoute>
         <AdaptProgramChat />
@@ -2268,7 +2271,7 @@ success to inspire other athletes!"
 **Day 3: Public Preview**
 
 - [ ] Build `SharedProgramPreview.jsx` component
-- [ ] Add `/shared/:id` route to `App.jsx`
+- [ ] Add `/shared/programs/:sharedProgramId` route to `App.jsx`
 - [ ] Test public access (no auth)
 - [ ] Add social share buttons
 - [ ] Build `CoachSelectionModal.jsx` component

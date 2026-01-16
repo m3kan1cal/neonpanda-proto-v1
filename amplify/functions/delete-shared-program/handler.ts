@@ -40,9 +40,14 @@ const baseHandler: AuthenticatedHandler = async (event) => {
   } catch (error) {
     console.error("Error deactivating shared program:", error);
 
-    // Check if it's an authorization error
-    if (error instanceof Error && error.message.includes("Unauthorized")) {
-      return createErrorResponse(403, error.message);
+    // Handle specific error cases
+    if (error instanceof Error) {
+      if (error.message.includes("not found")) {
+        return createErrorResponse(404, error.message);
+      }
+      if (error.message.includes("Unauthorized")) {
+        return createErrorResponse(403, error.message);
+      }
     }
 
     return createErrorResponse(

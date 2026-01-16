@@ -33,6 +33,7 @@ import {
   MonthlyAnalytics,
 } from "../functions/libs/analytics/types";
 import { Program, ProgramSummary } from "../functions/libs/program/types";
+import { SharedProgram } from "../functions/libs/shared-program/types";
 import { Subscription } from "../functions/libs/subscription/types";
 import type {
   Exercise,
@@ -4122,4 +4123,174 @@ function generateDisplayName(normalizedName: string): string {
     .split("_")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
+}
+
+// ===========================
+// SHARED PROGRAM OPERATIONS
+// ===========================
+
+/**
+ * Save a shared program to DynamoDB
+ * Pattern: Follows saveProgram pattern
+ * Reference: Lines 3075-3111 (saveProgram)
+ */
+export async function saveSharedProgram(
+  sharedProgram: SharedProgram,
+): Promise<void> {
+  const item = createDynamoDBItem<SharedProgram>(
+    "sharedProgram",
+    `sharedProgram#${sharedProgram.sharedProgramId}`,
+    "metadata",
+    sharedProgram,
+    new Date().toISOString(),
+  );
+
+  // Add gsi1 keys for querying by creator
+  const itemWithGsi = {
+    ...item,
+    gsi1pk: `user#${sharedProgram.creatorUserId}`,
+    gsi1sk: `sharedProgram#${sharedProgram.sharedProgramId}`,
+  };
+
+  await saveToDynamoDB(itemWithGsi);
+
+  console.info("Shared program saved successfully:", {
+    sharedProgramId: sharedProgram.sharedProgramId,
+    creatorUserId: sharedProgram.creatorUserId,
+    originalProgramId: sharedProgram.originalProgramId,
+    programName: sharedProgram.programSnapshot.name,
+  });
+}
+
+/**
+ * Get a shared program by ID (public access - no userId required)
+ * Pattern: Follows getCoachTemplate pattern
+ * Reference: Lines 2754-2763 (getCoachTemplate)
+ */
+export async function getSharedProgram(
+  sharedProgramId: string,
+): Promise<SharedProgram | null> {
+  const item = await loadFromDynamoDB<SharedProgram>(
+    `sharedProgram#${sharedProgramId}`,
+    "metadata",
+    "sharedProgram",
+  );
+
+  if (!item) {
+    return null;
+  }
+
+  // Check if active before returning
+  if (!item.attributes.isActive) {
+    console.info("Shared program found but inactive:", { sharedProgramId });
+    return null;
+  }
+
+  return {
+    ...item.attributes,
+    createdAt: new Date(item.createdAt),
+    updatedAt: new Date(item.updatedAt),
+  };
+}
+
+/**
+ * Query all shared programs for a user
+ * Pattern: Follows queryPrograms using gsi1
+ * Reference: Lines 3261-3330 (queryPrograms)
+ */
+export async function querySharedPrograms(
+  userId: string,
+): Promise<SharedProgram[]> {
+  const tableName = getTableName();
+
+  const result = await withThroughputScaling(async () => {
+    const command = new QueryCommand({
+      TableName: tableName,
+      IndexName: "gsi1",
+      KeyConditionExpression:
+        "gsi1pk = :gsi1pk AND begins_with(gsi1sk, :gsi1sk_prefix)",
+      FilterExpression: "#entityType = :entityType",
+      ExpressionAttributeNames: {
+        "#entityType": "entityType",
+      },
+      ExpressionAttributeValues: {
+        ":gsi1pk": `user#${userId}`,
+        ":gsi1sk_prefix": "sharedProgram#",
+        ":entityType": "sharedProgram",
+      },
+    });
+
+    return docClient.send(command);
+  }, `Query shared programs for user ${userId}`);
+
+  const items = (result.Items || []) as DynamoDBItem<SharedProgram>[];
+
+  // Filter to only active shared programs and deserialize
+  const activePrograms = items
+    .filter((item) => item.attributes.isActive)
+    .map((item) => ({
+      ...item.attributes,
+      createdAt: new Date(item.createdAt),
+      updatedAt: new Date(item.updatedAt),
+    }));
+
+  console.info("User shared programs queried successfully:", {
+    userId,
+    totalFound: items.length,
+    activeCount: activePrograms.length,
+  });
+
+  return activePrograms;
+}
+
+/**
+ * Deactivate a shared program (soft delete)
+ * Pattern: Follows update pattern with requireExists
+ * Reference: Lines 2768-2846 (createCoachConfigFromTemplate - update section)
+ */
+export async function deactivateSharedProgram(
+  userId: string,
+  sharedProgramId: string,
+): Promise<void> {
+  // 1. Get the shared program
+  const sharedProgram = await getSharedProgram(sharedProgramId);
+  if (!sharedProgram) {
+    throw new Error(`Shared program not found: ${sharedProgramId}`);
+  }
+
+  // 2. Verify ownership
+  if (sharedProgram.creatorUserId !== userId) {
+    throw new Error("Unauthorized: You can only unshare your own programs");
+  }
+
+  // 3. Load the full DynamoDB item for update
+  const existingItem = await loadFromDynamoDB<SharedProgram>(
+    `sharedProgram#${sharedProgramId}`,
+    "metadata",
+    "sharedProgram",
+  );
+
+  if (!existingItem) {
+    throw new Error(`Shared program not found: ${sharedProgramId}`);
+  }
+
+  // 4. Update isActive to false
+  const updatedItem = {
+    ...existingItem,
+    attributes: {
+      ...existingItem.attributes,
+      isActive: false,
+    },
+    updatedAt: new Date().toISOString(),
+    // Preserve gsi keys
+    gsi1pk: `user#${userId}`,
+    gsi1sk: `sharedProgram#${sharedProgramId}`,
+  };
+
+  await saveToDynamoDB(updatedItem, true /* requireExists */);
+
+  console.info("Shared program deactivated successfully:", {
+    sharedProgramId,
+    userId,
+  });
 }
