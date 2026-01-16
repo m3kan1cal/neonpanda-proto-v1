@@ -139,6 +139,81 @@ export function calculateProgramMetrics(workoutTemplates: any[]): {
 }
 
 /**
+ * Check if training frequency exceeds user's request and pruning is needed
+ *
+ * Validates that the program doesn't have significantly more training days
+ * than the user requested. Allows for 20% variance tolerance.
+ *
+ * @param workoutTemplates - Array of workout templates to analyze
+ * @param programDurationDays - Total program duration in days
+ * @param trainingFrequency - User's requested training frequency (days/week)
+ * @returns Object with shouldPrune flag and metadata if pruning needed
+ */
+export function checkTrainingFrequencyCompliance(
+  workoutTemplates: WorkoutTemplate[],
+  programDurationDays: number,
+  trainingFrequency: number,
+): {
+  shouldPrune: boolean;
+  pruningMetadata?: {
+    currentTrainingDays: number;
+    expectedTrainingDays: number;
+    variance: number;
+    targetTrainingDays: number;
+  };
+} {
+  if (workoutTemplates.length === 0) {
+    return { shouldPrune: false };
+  }
+
+  // Calculate metrics using shared helper
+  const metrics = calculateProgramMetrics(workoutTemplates);
+  const expectedTrainingDays = Math.floor(
+    (programDurationDays / 7) * trainingFrequency,
+  );
+
+  const variance = expectedTrainingDays * 0.2; // 20% tolerance
+  const actualVariance = Math.abs(
+    metrics.uniqueTrainingDays - expectedTrainingDays,
+  );
+
+  console.info("🔍 Training frequency validation:", {
+    currentTrainingDays: metrics.uniqueTrainingDays,
+    expectedTrainingDays,
+    variance: actualVariance,
+    toleranceThreshold: variance,
+    exceedsThreshold: actualVariance > variance,
+  });
+
+  // Check if we have MORE training days than expected AND it exceeds tolerance
+  if (
+    metrics.uniqueTrainingDays > expectedTrainingDays &&
+    actualVariance > variance
+  ) {
+    const pruningMetadata = {
+      currentTrainingDays: metrics.uniqueTrainingDays,
+      expectedTrainingDays,
+      variance: actualVariance,
+      targetTrainingDays: expectedTrainingDays,
+    };
+
+    console.info("🔧 Pruning recommended:", {
+      currentDays: metrics.uniqueTrainingDays,
+      targetDays: expectedTrainingDays,
+      excessDays: metrics.uniqueTrainingDays - expectedTrainingDays,
+      variancePercent: `${Math.round((actualVariance / expectedTrainingDays) * 100)}%`,
+    });
+
+    return {
+      shouldPrune: true,
+      pruningMetadata,
+    };
+  }
+
+  return { shouldPrune: false };
+}
+
+/**
  * Enforce all blocking decisions from validation and normalization
  * Prevents save_program_to_database when validation or normalization failed
  *

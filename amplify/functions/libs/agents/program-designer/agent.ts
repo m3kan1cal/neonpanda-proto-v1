@@ -2,7 +2,7 @@
  * Program Designer Agent
  *
  * Agent that orchestrates training program design, validation, and storage.
- * Uses 7 specialized tools to accomplish the task with Claude making decisions.
+ * Uses 8 specialized tools to accomplish the task with Claude making decisions.
  */
 
 import { Agent } from "../core/agent";
@@ -12,6 +12,7 @@ import {
   generatePhaseStructureTool,
   generatePhaseWorkoutsTool,
   validateProgramStructureTool,
+  pruneExcessWorkoutsTool,
   normalizeProgramDataTool,
   generateProgramSummaryTool,
   saveProgramToDatabaseTool,
@@ -29,6 +30,7 @@ const STORAGE_KEY_MAP: Record<string, string> = {
   generate_phase_structure: "phase_structure",
   generate_phase_workouts: "phase_workouts", // Note: individual phases use "phase_workouts:{phaseId}"
   validate_program_structure: "validation",
+  prune_excess_workouts: "pruning",
   normalize_program_data: "normalization",
   generate_program_summary: "summary",
   save_program_to_database: "save",
@@ -267,6 +269,26 @@ export class ProgramDesignerAgent extends Agent<ProgramDesignerContext> {
           }
           // Always store at tool.id (matches parallel execution behavior)
           this.toolResults.set(tool.id, result);
+        } else if (tool.id === "prune_excess_workouts") {
+          // Store pruning result
+          this.storeToolResult(tool.id, result);
+
+          // CRITICAL: Apply phase updates to stored phase workout results
+          // This ensures save_program_to_database retrieves pruned templates
+          if (result.phaseUpdates && Array.isArray(result.phaseUpdates)) {
+            console.info(
+              `📝 Applying ${result.phaseUpdates.length} phase updates from pruning...`,
+            );
+            for (const update of result.phaseUpdates) {
+              this.toolResults.set(update.storageKey, update.updatedResult);
+              console.info(
+                `  ✓ Updated ${update.storageKey} with ${update.updatedResult.workoutTemplates.length} pruned templates`,
+              );
+            }
+            console.info(
+              "✅ All phase workout storage updated with pruned templates",
+            );
+          }
         } else {
           this.storeToolResult(tool.id, result);
         }
@@ -385,6 +407,7 @@ export class ProgramDesignerAgent extends Agent<ProgramDesignerContext> {
         generatePhaseStructureTool,
         generatePhaseWorkoutsTool,
         validateProgramStructureTool,
+        pruneExcessWorkoutsTool,
         normalizeProgramDataTool,
         generateProgramSummaryTool,
         saveProgramToDatabaseTool,

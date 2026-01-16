@@ -136,7 +136,7 @@ to avoid context limits. The tool ALWAYS retrieves the complete set from stored 
   // 3. Available tools and workflow
   sections.push(`## YOUR TOOLS AND WORKFLOW
 
-You have 7 tools at your disposal. Here's the REQUIRED workflow:
+You have 8 tools at your disposal. Here's the REQUIRED workflow:
 
 ### 1. load_program_requirements (CALL FIRST)
 - Loads coach config, user profile, and relevant training context
@@ -262,24 +262,33 @@ DO NOT wait for one phase to complete before calling the next. Make all calls in
 ### 4. validate_program_structure (CALL AFTER ALL PHASES GENERATED)
 - Validates program completeness and quality
 - Checks phase continuity (no gaps or overlaps)
-- Verifies workout distribution matches frequency
+- Verifies workout distribution matches training frequency
 - Calculates confidence score
-- **Returns critical decisions: isValid, shouldNormalize, validationIssues**
+- **Returns critical decisions: isValid, shouldNormalize, shouldPrune, validationIssues**
+- **If training days exceed user's frequency by >20%, sets shouldPrune: true**
 
-### 5. normalize_program_data (CONDITIONAL)
+### 5. prune_excess_workouts (CONDITIONAL - CALL IF shouldPrune: true)
+- **Only call if validate_program_structure returns shouldPrune: true**
+- Removes excess training days to match user's requested training frequency
+- Uses AI to intelligently select least essential days for removal
+- Preserves program progression and key workouts
+- **Example: User wants 3 days/week but program has 5 days/week → removes 2 days**
+- **Returns: prunedWorkoutTemplates to use instead of original templates**
+
+### 6. normalize_program_data (CONDITIONAL - CALL IF shouldNormalize: true)
 - Only call if validate_program_structure returns shouldNormalize: true
 - Fixes structural issues using AI normalization
 - **CRITICAL: Preserves s3DetailKey from original program**
 - Improves data quality while maintaining program structure
 - **Skip if confidence is already high (>0.9)**
 
-### 6. generate_program_summary (REQUIRED BEFORE SAVE)
+### 7. generate_program_summary (REQUIRED BEFORE SAVE)
 - Creates natural language summary for coach context
 - Used for semantic search and UI display
 - Summarizes program goals, structure, and progression
-- **Call this after program is finalized and validated**
+- **Call this after program is finalized, pruned (if needed), and validated**
 
-### 7. save_program_to_database (FINAL STEP)
+### 8. save_program_to_database (FINAL STEP)
 - Saves to DynamoDB, S3, and Pinecone vector database
 - Stores full program metadata and all workout templates
 - Generates debug data for troubleshooting
@@ -289,7 +298,26 @@ DO NOT wait for one phase to complete before calling the next. Make all calls in
   sections.push(`## CRITICAL RULES
 
 1. **ALWAYS call tools in the correct order**:
-   - load_program_requirements → generate_phase_structure → generate_phase_workouts (parallel) → validate_program_structure → [normalize if needed] → generate_program_summary → save_program_to_database
+
+   **REQUIRED WORKFLOW:**
+
+   Step 1: load_program_requirements
+   Step 2: generate_phase_structure
+   Step 3: generate_phase_workouts (call once per phase - in parallel)
+   Step 4: validate_program_structure
+
+   **CONDITIONAL STEPS (based on validation):**
+
+   IF shouldPrune = true:
+     → Step 5a: prune_excess_workouts
+
+   IF shouldNormalize = true:
+     → Step 5b: normalize_program_data
+
+   **FINAL STEPS (always required):**
+
+   Step 6: generate_program_summary
+   Step 7: save_program_to_database
 
 2. **PARALLELIZE phase generation**:
    - After getting phase structure, call generate_phase_workouts ONCE PER PHASE
@@ -301,6 +329,7 @@ DO NOT wait for one phase to complete before calling the next. Make all calls in
    - ⛔ **CRITICAL**: If validate_program_structure returns isValid: false
      * **DO NOT call save_program_to_database**
      * **STOP immediately** and explain the validation issues
+   - ✅ If shouldPrune is true → Call prune_excess_workouts to reduce training days
    - ✅ If shouldNormalize is true → Call normalize_program_data
    - ⛔ If validation fails → Explain issues and STOP
 
