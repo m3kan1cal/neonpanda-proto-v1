@@ -5,7 +5,10 @@
  */
 
 import { storeDebugDataInS3 } from "../../api-helpers";
-import type { CoachConfig } from "../../coach-creator/types";
+import type {
+  CoachConfig,
+  SophisticationLevel,
+} from "../../coach-creator/types";
 import {
   COACH_PERSONALITY_TEMPLATES,
   METHODOLOGY_TEMPLATES,
@@ -138,6 +141,43 @@ export const storeGenerationDebugData = async (
 };
 
 /**
+ * Extract the user's fitness experience level from session data
+ *
+ * Priority:
+ * 1. todoList.experienceLevel.value (explicitly extracted from conversation)
+ * 2. sophisticationLevel if it's a valid experience level (converted to lowercase)
+ * 3. Default to "intermediate"
+ */
+function getExperienceLevel(session: {
+  sophisticationLevel?: SophisticationLevel;
+  todoList?: { experienceLevel?: { value?: string } };
+}): "beginner" | "intermediate" | "advanced" {
+  const validLevels = ["beginner", "intermediate", "advanced"];
+
+  // First priority: todoList.experienceLevel.value (explicitly extracted)
+  const todoExperience =
+    session.todoList?.experienceLevel?.value?.toLowerCase();
+  if (todoExperience && validLevels.includes(todoExperience)) {
+    return todoExperience as "beginner" | "intermediate" | "advanced";
+  }
+
+  // Second priority: sophisticationLevel if it's a valid value
+  // Note: session.sophisticationLevel is uppercase (BEGINNER/INTERMEDIATE/ADVANCED/UNKNOWN)
+  // Convert to lowercase and exclude UNKNOWN
+  const sophistication = session.sophisticationLevel?.toLowerCase();
+  if (
+    sophistication &&
+    sophistication !== "unknown" &&
+    validLevels.includes(sophistication)
+  ) {
+    return sophistication as "beginner" | "intermediate" | "advanced";
+  }
+
+  // Default fallback
+  return "intermediate";
+}
+
+/**
  * Assemble complete coach config from tool results
  *
  * Combines all tool results into a complete CoachConfig object.
@@ -180,7 +220,7 @@ export async function assembleCoachConfig(
       "fitness",
     specializations: specializations || [],
     userAge: session.age,
-    experienceLevel: session.sophisticationLevel,
+    experienceLevel: getExperienceLevel(session),
   });
 
   const coachName = nameResult.coachName;
@@ -196,9 +236,10 @@ export async function assembleCoachConfig(
   };
 
   // Build safety constraints
+  const experienceLevel = getExperienceLevel(session);
   const safetyConstraints = {
     volume_progression_limit:
-      session.sophisticationLevel === "BEGINNER" ? "10%_weekly" : "5%_weekly",
+      experienceLevel === "beginner" ? "10%_weekly" : "5%_weekly",
     contraindicated_exercises: safetyProfile.contraindications || [],
     required_modifications: safetyProfile.modifications || [],
     recovery_requirements: safetyProfile.recoveryNeeds || [],
@@ -252,8 +293,7 @@ export async function assembleCoachConfig(
         "strength",
         "conditioning",
       ],
-      experience_level: (session.sophisticationLevel?.toLowerCase() ||
-        "intermediate") as "beginner" | "intermediate" | "advanced",
+      experience_level: experienceLevel,
       training_frequency: trainingFrequency,
       specializations: specializations || [],
       injury_considerations: safetyProfile.injuries || [],
