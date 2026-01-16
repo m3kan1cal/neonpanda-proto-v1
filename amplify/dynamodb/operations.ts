@@ -4195,52 +4195,69 @@ export async function getSharedProgram(
 
 /**
  * Query all shared programs for a user
- * Pattern: Follows queryPrograms using gsi1
- * Reference: Lines 3261-3330 (queryPrograms)
+ * Pattern: Follows queryPrograms using gsi1 with pagination
+ * Reference: Lines 3262-3341 (queryPrograms)
  */
 export async function querySharedPrograms(
   userId: string,
 ): Promise<SharedProgram[]> {
   const tableName = getTableName();
+  const operationName = `Query shared programs for user ${userId}`;
 
-  const result = await withThroughputScaling(async () => {
-    const command = new QueryCommand({
-      TableName: tableName,
-      IndexName: "gsi1",
-      KeyConditionExpression:
-        "gsi1pk = :gsi1pk AND begins_with(gsi1sk, :gsi1sk_prefix)",
-      FilterExpression: "#entityType = :entityType",
-      ExpressionAttributeNames: {
-        "#entityType": "entityType",
-      },
-      ExpressionAttributeValues: {
-        ":gsi1pk": `user#${userId}`,
-        ":gsi1sk_prefix": "sharedProgram#",
-        ":entityType": "sharedProgram",
-      },
+  return withThroughputScaling(async () => {
+    let allSharedProgramItems: DynamoDBItem<SharedProgram>[] = [];
+    let lastEvaluatedKey: any = undefined;
+    let pageCount = 0;
+
+    // Paginate through all results
+    do {
+      pageCount++;
+      const command = new QueryCommand({
+        TableName: tableName,
+        IndexName: "gsi1",
+        KeyConditionExpression:
+          "gsi1pk = :gsi1pk AND begins_with(gsi1sk, :gsi1sk_prefix)",
+        FilterExpression: "#entityType = :entityType",
+        ExpressionAttributeNames: {
+          "#entityType": "entityType",
+        },
+        ExpressionAttributeValues: {
+          ":gsi1pk": `user#${userId}`,
+          ":gsi1sk_prefix": "sharedProgram#",
+          ":entityType": "sharedProgram",
+        },
+        ExclusiveStartKey: lastEvaluatedKey,
+      });
+
+      const result = await docClient.send(command);
+      const pageItems = (result.Items || []) as DynamoDBItem<SharedProgram>[];
+
+      // Deserialize and add to collection
+      allSharedProgramItems = allSharedProgramItems.concat(
+        pageItems.map((item) => deserializeFromDynamoDB(item)),
+      );
+
+      lastEvaluatedKey = result.LastEvaluatedKey;
+    } while (lastEvaluatedKey);
+
+    // Filter to only active shared programs and include timestamps
+    const activePrograms = allSharedProgramItems
+      .filter((item) => item.attributes.isActive)
+      .map((item) => ({
+        ...item.attributes,
+        createdAt: new Date(item.createdAt),
+        updatedAt: new Date(item.updatedAt),
+      }));
+
+    console.info("User shared programs queried successfully:", {
+      userId,
+      totalFound: allSharedProgramItems.length,
+      activeCount: activePrograms.length,
+      pagesRead: pageCount,
     });
 
-    return docClient.send(command);
-  }, `Query shared programs for user ${userId}`);
-
-  const items = (result.Items || []) as DynamoDBItem<SharedProgram>[];
-
-  // Filter to only active shared programs and deserialize
-  const activePrograms = items
-    .filter((item) => item.attributes.isActive)
-    .map((item) => ({
-      ...item.attributes,
-      createdAt: new Date(item.createdAt),
-      updatedAt: new Date(item.updatedAt),
-    }));
-
-  console.info("User shared programs queried successfully:", {
-    userId,
-    totalFound: items.length,
-    activeCount: activePrograms.length,
-  });
-
-  return activePrograms;
+    return activePrograms;
+  }, operationName);
 }
 
 /**

@@ -1,9 +1,5 @@
 import { createOkResponse, createErrorResponse } from "../libs/api-helpers";
-import {
-  saveSharedProgram,
-  getProgram,
-  getCoachConfig,
-} from "../../dynamodb/operations";
+import { saveSharedProgram, getProgram } from "../../dynamodb/operations";
 import { getProgramDetailsFromS3 } from "../libs/program/s3-utils";
 import { storeSharedProgramDetailsInS3 } from "../libs/shared-program/s3-utils";
 import {
@@ -60,11 +56,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       return createErrorResponse(500, "Failed to load program details from S3");
     }
 
-    // 5. Get coach name for attribution
-    const coachConfig = await getCoachConfig(userId, coachId);
-    const coachName = coachConfig?.coach_name || "Unknown Coach";
-
-    // 6. Create program snapshot
+    // 5. Create program snapshot (preserve all coach names for multi-coach attribution)
     const programSnapshot: SharedProgramSnapshot = {
       name: program.name,
       description: program.description || "",
@@ -73,14 +65,14 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       phases: program.phases,
       trainingGoals: program.trainingGoals || [],
       equipmentConstraints: program.equipmentConstraints || [],
-      coachNames: [coachName],
+      coachNames: program.coachNames || [], // Use existing coach names from program
     };
 
-    // 7. Generate shared program ID
+    // 6. Generate shared program ID
     const shortId = Math.random().toString(36).substring(2, 11);
     const sharedProgramId = `sharedProgram_${userId}_${Date.now()}_${shortId}`;
 
-    // 8. Store full program details in S3
+    // 7. Store full program details in S3
     const s3DetailKey = await storeSharedProgramDetailsInS3(
       sharedProgramId,
       userId,
@@ -88,7 +80,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       programSnapshot,
     );
 
-    // 9. Create shared program entity
+    // 8. Create shared program entity
     const sharedProgram: SharedProgram = {
       sharedProgramId,
       originalProgramId: programId,
@@ -99,10 +91,10 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       isActive: true,
     };
 
-    // 10. Save to DynamoDB
+    // 9. Save to DynamoDB
     await saveSharedProgram(sharedProgram);
 
-    // 11. Generate share URL
+    // 10. Generate share URL
     const shareUrl = `${getAppUrl()}/shared/programs/${sharedProgramId}`;
 
     console.info("Shared program created successfully:", {
