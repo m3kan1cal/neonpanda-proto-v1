@@ -4264,34 +4264,42 @@ export async function querySharedPrograms(
  * Deactivate a shared program (soft delete)
  * Pattern: Follows update pattern with requireExists
  * Reference: Lines 2768-2846 (createCoachConfigFromTemplate - update section)
+ *
+ * Note: This operation is idempotent - deactivating an already-inactive
+ * program succeeds silently (no error).
  */
 export async function deactivateSharedProgram(
   userId: string,
   sharedProgramId: string,
 ): Promise<void> {
-  // 1. Get the shared program
-  const sharedProgram = await getSharedProgram(sharedProgramId);
-  if (!sharedProgram) {
-    throw new Error(`Shared program not found: ${sharedProgramId}`);
-  }
-
-  // 2. Verify ownership
-  if (sharedProgram.creatorUserId !== userId) {
-    throw new Error("Unauthorized: You can only unshare your own programs");
-  }
-
-  // 3. Load the full DynamoDB item for update
+  // 1. Load the shared program directly (including inactive programs)
+  // Don't use getSharedProgram() as it filters out inactive programs
   const existingItem = await loadFromDynamoDB<SharedProgram>(
     `sharedProgram#${sharedProgramId}`,
     "metadata",
     "sharedProgram",
   );
 
+  // 2. Check if program exists at all
   if (!existingItem) {
     throw new Error(`Shared program not found: ${sharedProgramId}`);
   }
 
-  // 4. Update isActive to false
+  // 3. Verify ownership
+  if (existingItem.attributes.creatorUserId !== userId) {
+    throw new Error("Unauthorized: You can only unshare your own programs");
+  }
+
+  // 4. If already inactive, return success (idempotent operation)
+  if (!existingItem.attributes.isActive) {
+    console.info("Shared program already inactive, no action needed:", {
+      sharedProgramId,
+      userId,
+    });
+    return;
+  }
+
+  // 5. Update isActive to false
   const updatedItem = {
     ...existingItem,
     attributes: {
