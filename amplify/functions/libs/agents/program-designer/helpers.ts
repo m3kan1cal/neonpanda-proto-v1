@@ -293,38 +293,30 @@ export const enforceAllBlocking = (
     }
 
     // CASE 3: Pruning was required but failed or wasn't executed
+    // NOTE: We DO NOT block save for pruning failures - we prioritize program delivery
+    // over perfect frequency adherence. Log warnings but allow save to proceed.
     if (validationResult && validationResult.shouldPrune === true) {
-      // Check if pruning was attempted
       if (!pruningResult) {
-        console.error("⛔ Blocking save: Pruning required but not executed", {
-          currentTrainingDays:
-            validationResult.pruningMetadata?.currentTrainingDays,
-          targetTrainingDays:
-            validationResult.pruningMetadata?.targetTrainingDays,
-        });
-
-        return {
-          error: true,
-          blocked: true,
-          reason:
-            "Cannot save program - pruning was required to match training frequency but was not executed. " +
-            `Program has ${validationResult.pruningMetadata?.currentTrainingDays || "unknown"} training days ` +
-            `but should have ${validationResult.pruningMetadata?.targetTrainingDays || "unknown"}.`,
-        };
+        console.warn(
+          "⚠️ Pruning was recommended but not executed - program will have excess training days",
+          {
+            currentTrainingDays:
+              validationResult.pruningMetadata?.currentTrainingDays,
+            targetTrainingDays:
+              validationResult.pruningMetadata?.targetTrainingDays,
+            willProceedWithSave: true,
+          },
+        );
+      } else if (pruningResult.error) {
+        console.warn(
+          "⚠️ Pruning failed - program will have excess training days",
+          {
+            error: pruningResult.error,
+            willProceedWithSave: true,
+          },
+        );
       }
-
-      // Check if pruning failed
-      if (pruningResult.error) {
-        console.error("⛔ Blocking save: Pruning failed", {
-          error: pruningResult.error,
-        });
-
-        return {
-          error: true,
-          blocked: true,
-          reason: `Cannot save program - pruning failed with error: ${pruningResult.error}`,
-        };
-      }
+      // Continue without blocking - pruning is best-effort
     }
 
     // CASE 4: Normalization threw an exception (has error field)

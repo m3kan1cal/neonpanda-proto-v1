@@ -1112,6 +1112,38 @@ Return an array of dayNumber values to REMOVE (not keep).`;
     });
 
     // ============================================================
+    // OBSERVABILITY: Log pruning effectiveness (non-blocking)
+    // We prioritize program delivery over perfect frequency adherence
+    // ============================================================
+    if (daysToRemove.length === 0) {
+      console.warn(
+        `⚠️ Pruning ineffective - AI did not select any days to remove. ` +
+          `Target was to remove ${excessDays} excess training days. ` +
+          `Program will be saved with excess days. ` +
+          `AI response: ${reasoning}`,
+      );
+    }
+
+    const pruningDeficit = excessDays - removedDays;
+    if (pruningDeficit > 1) {
+      console.warn(
+        `⚠️ Pruning incomplete - removed ${removedDays} days but needed to remove ${excessDays} days. ` +
+          `Deficit: ${pruningDeficit} days. Program will have more training days than requested. ` +
+          `AI selected ${daysToRemove.length} day numbers: ${daysToRemove.join(", ")}. ` +
+          `AI reasoning: ${reasoning}`,
+      );
+    } else if (removedDays > excessDays + 1) {
+      console.warn(
+        `⚠️ Pruning over-achieved - removed ${removedDays} days, target was ${excessDays}. ` +
+          `Program will have fewer training days than expected.`,
+      );
+    } else {
+      console.info(
+        `✅ Pruning achieved target - removed ${removedDays} days (target: ${excessDays})`,
+      );
+    }
+
+    // ============================================================
     // CRITICAL: Build phase updates with pruned templates
     // The agent will apply these updates to stored phase results,
     // ensuring save_program_to_database retrieves pruned templates
