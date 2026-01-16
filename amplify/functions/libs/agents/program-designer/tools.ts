@@ -1025,14 +1025,14 @@ ${JSON.stringify(workoutMetadata, null, 2)}
 Select ${excessDays} training days (dayNumber values) to REMOVE from the program.
 
 ## PRIORITIZATION FOR REMOVAL (remove these first):
-1. Days with templateType: "accessory" or "optional"
+1. Days with type: "accessory" or "optional"
 2. Extra conditioning/metcon days
 3. Days in later phases (preserve early foundation work)
 4. Days with longer estimated duration (easier to skip)
 5. Days that create clusters (remove to spread out rest days)
 
 ## PRESERVATION PRIORITIES (keep these):
-1. Days with templateType: "primary" or "strength"
+1. Days with type: "primary" or "strength"
 2. Early phase foundation work
 3. Skill development days
 4. Days with progressive overload markers
@@ -1143,11 +1143,20 @@ Return an array of dayNumber values to REMOVE (not keep).`;
       const originalPhaseResult = getToolResult(`phase_workouts:${phaseId}`);
       const prunedTemplatesForPhase = prunedByPhase[phaseId] || [];
 
-      if (originalPhaseResult) {
-        console.info(
-          `  Updated ${phaseId}: ${originalPhaseResult.workoutTemplates?.length || 0} → ${prunedTemplatesForPhase.length} templates`,
+      // Guard against missing phase results
+      if (!originalPhaseResult) {
+        console.error(
+          `⚠️ Phase result not found for ${phaseId}, cannot build update`,
+        );
+        throw new Error(
+          `Cannot build phase update for ${phaseId} - phase workout result not found in storage. ` +
+            `Ensure generate_phase_workouts completed successfully for this phase.`,
         );
       }
+
+      console.info(
+        `  Updated ${phaseId}: ${originalPhaseResult.workoutTemplates?.length || 0} → ${prunedTemplatesForPhase.length} templates`,
+      );
 
       return {
         phaseId,

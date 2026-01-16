@@ -230,14 +230,16 @@ export class ProgramDesignerAgent extends Agent<ProgramDesignerContext> {
     for (const { block, tool } of toolGroup) {
       const toolUse = block.toolUse;
 
-      // Enforce blocking decisions (validation + normalization)
+      // Enforce blocking decisions (validation + pruning + normalization)
       const validationResult = this.toolResults.get("validation");
       const normalizationResult = this.toolResults.get("normalization");
+      const pruningResult = this.toolResults.get("pruning");
 
       const blockingResult = enforceAllBlocking(
         tool.id,
         validationResult,
         normalizationResult,
+        pruningResult,
       );
 
       if (blockingResult) {

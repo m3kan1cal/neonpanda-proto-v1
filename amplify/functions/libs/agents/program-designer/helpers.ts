@@ -172,6 +172,20 @@ export function checkTrainingFrequencyCompliance(
     (programDurationDays / 7) * trainingFrequency,
   );
 
+  // Guard against edge case: expectedTrainingDays is 0 or too low
+  // This can happen with very short programs or invalid training frequency
+  if (expectedTrainingDays < 3) {
+    console.warn(
+      "⚠️ Expected training days is very low or zero, skipping pruning check:",
+      {
+        expectedTrainingDays,
+        programDurationDays,
+        trainingFrequency,
+      },
+    );
+    return { shouldPrune: false };
+  }
+
   const variance = expectedTrainingDays * 0.2; // 20% tolerance
   const actualVariance = Math.abs(
     metrics.uniqueTrainingDays - expectedTrainingDays,
@@ -197,11 +211,17 @@ export function checkTrainingFrequencyCompliance(
       targetTrainingDays: expectedTrainingDays,
     };
 
+    // Safe variance percent calculation (guard against division by zero)
+    const variancePercent =
+      expectedTrainingDays > 0
+        ? `${Math.round((actualVariance / expectedTrainingDays) * 100)}%`
+        : "N/A";
+
     console.info("🔧 Pruning recommended:", {
       currentDays: metrics.uniqueTrainingDays,
       targetDays: expectedTrainingDays,
       excessDays: metrics.uniqueTrainingDays - expectedTrainingDays,
-      variancePercent: `${Math.round((actualVariance / expectedTrainingDays) * 100)}%`,
+      variancePercent,
     });
 
     return {
@@ -214,8 +234,8 @@ export function checkTrainingFrequencyCompliance(
 }
 
 /**
- * Enforce all blocking decisions from validation and normalization
- * Prevents save_program_to_database when validation or normalization failed
+ * Enforce all blocking decisions from validation, pruning, and normalization
+ * Prevents save_program_to_database when validation, pruning, or normalization failed
  *
  * Code-level enforcement that ensures blocking decisions are AUTHORITATIVE,
  * not advisory.
@@ -226,6 +246,7 @@ export const enforceAllBlocking = (
   toolId: string,
   validationResult: any,
   normalizationResult: any,
+  pruningResult?: any,
 ): {
   error: boolean;
   blocked: boolean;
@@ -238,7 +259,7 @@ export const enforceAllBlocking = (
   };
 } | null => {
   // No results yet, allow tool to proceed
-  if (!validationResult && !normalizationResult) {
+  if (!validationResult && !normalizationResult && !pruningResult) {
     return null;
   }
 
@@ -271,7 +292,42 @@ export const enforceAllBlocking = (
       };
     }
 
-    // CASE 3: Normalization threw an exception (has error field)
+    // CASE 3: Pruning was required but failed or wasn't executed
+    if (validationResult && validationResult.shouldPrune === true) {
+      // Check if pruning was attempted
+      if (!pruningResult) {
+        console.error("⛔ Blocking save: Pruning required but not executed", {
+          currentTrainingDays:
+            validationResult.pruningMetadata?.currentTrainingDays,
+          targetTrainingDays:
+            validationResult.pruningMetadata?.targetTrainingDays,
+        });
+
+        return {
+          error: true,
+          blocked: true,
+          reason:
+            "Cannot save program - pruning was required to match training frequency but was not executed. " +
+            `Program has ${validationResult.pruningMetadata?.currentTrainingDays || "unknown"} training days ` +
+            `but should have ${validationResult.pruningMetadata?.targetTrainingDays || "unknown"}.`,
+        };
+      }
+
+      // Check if pruning failed
+      if (pruningResult.error) {
+        console.error("⛔ Blocking save: Pruning failed", {
+          error: pruningResult.error,
+        });
+
+        return {
+          error: true,
+          blocked: true,
+          reason: `Cannot save program - pruning failed with error: ${pruningResult.error}`,
+        };
+      }
+    }
+
+    // CASE 4: Normalization threw an exception (has error field)
     if (normalizationResult && normalizationResult.error) {
       console.error("⛔ Blocking save: Normalization threw exception", {
         error: normalizationResult.error,
@@ -284,7 +340,7 @@ export const enforceAllBlocking = (
       };
     }
 
-    // CASE 4: Normalization returned isValid: false
+    // CASE 5: Normalization returned isValid: false
     if (normalizationResult && normalizationResult.isValid === false) {
       console.warn("⛔ Blocking save: Normalization failed", {
         issuesFound: normalizationResult.issuesFound,
