@@ -1118,17 +1118,24 @@ Return an array of dayNumber values to REMOVE (not keep).`;
     // ============================================================
     console.info("📝 Building phase updates with pruned workout templates...");
 
+    // Validate all templates have phaseId before grouping
+    const templatesWithoutPhaseId = prunedWorkoutTemplates.filter(
+      (t: WorkoutTemplate) => !t.phaseId,
+    );
+    if (templatesWithoutPhaseId.length > 0) {
+      const templateIds = templatesWithoutPhaseId
+        .map((t: WorkoutTemplate) => t.templateId || "unknown")
+        .join(", ");
+      throw new Error(
+        `Cannot build phase updates - ${templatesWithoutPhaseId.length} pruned template(s) missing phaseId: ${templateIds}. ` +
+          `This indicates malformed workout data from generation. All templates must have phaseId.`,
+      );
+    }
+
     // Group pruned templates by phaseId
     const prunedByPhase = prunedWorkoutTemplates.reduce(
       (acc: Record<string, WorkoutTemplate[]>, template: WorkoutTemplate) => {
-        const phaseId = template.phaseId;
-        if (!phaseId) {
-          console.warn(
-            "⚠️ Pruned template missing phaseId, skipping:",
-            template.templateId,
-          );
-          return acc;
-        }
+        const phaseId = template.phaseId!; // Safe to use ! because validated above
         if (!acc[phaseId]) {
           acc[phaseId] = [];
         }
