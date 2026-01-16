@@ -1195,25 +1195,57 @@ Return an array of dayNumber values to REMOVE (not keep).`;
     // ============================================================
     console.info("📝 Building phase updates with pruned workout templates...");
 
-    // Filter out templates without phaseId (best-effort - keep what we can)
-    const templatesWithoutPhaseId = prunedWorkoutTemplates.filter(
-      (t: WorkoutTemplate) => !t.phaseId,
+    // ============================================================
+    // VALIDATION: Filter to only templates with phaseId (required for storage)
+    // Calculate counts based on VALID templates only for accuracy
+    // ============================================================
+
+    // First, filter allWorkoutTemplates to only valid ones
+    const validAllTemplates = allWorkoutTemplates.filter(
+      (t: WorkoutTemplate) => !!t.phaseId,
     );
-    if (templatesWithoutPhaseId.length > 0) {
-      const templateIds = templatesWithoutPhaseId
-        .map((t: WorkoutTemplate) => t.templateId || "unknown")
-        .join(", ");
+    const invalidTemplatesInOriginal =
+      allWorkoutTemplates.length - validAllTemplates.length;
+
+    if (invalidTemplatesInOriginal > 0) {
       console.warn(
-        `⚠️ Pruning found ${templatesWithoutPhaseId.length} template(s) missing phaseId: ${templateIds}. ` +
-          `These will be excluded from phase updates. This indicates malformed workout data. ` +
-          `Program will save with available pruned templates.`,
+        `⚠️ Found ${invalidTemplatesInOriginal} template(s) in original set missing phaseId. ` +
+          `These cannot be saved and will be excluded from counts.`,
       );
     }
 
-    // Group pruned templates by phaseId (only templates that have phaseId)
+    // Filter pruned templates to only those with phaseId
     const validPrunedTemplates = prunedWorkoutTemplates.filter(
       (t: WorkoutTemplate) => !!t.phaseId,
     );
+    const invalidTemplatesInPruned =
+      prunedWorkoutTemplates.length - validPrunedTemplates.length;
+
+    if (invalidTemplatesInPruned > 0) {
+      const templateIds = prunedWorkoutTemplates
+        .filter((t: WorkoutTemplate) => !t.phaseId)
+        .map((t: WorkoutTemplate) => t.templateId || "unknown")
+        .join(", ");
+      console.warn(
+        `⚠️ Pruning found ${invalidTemplatesInPruned} template(s) missing phaseId: ${templateIds}. ` +
+          `These will be excluded from save. This indicates malformed workout data.`,
+      );
+    }
+
+    // Recalculate removedCount based on VALID templates only
+    // This ensures: validRemoved + validKept = totalValid (math consistency)
+    const validRemovedCount =
+      validAllTemplates.length - validPrunedTemplates.length;
+
+    console.info("📊 Valid template counts:", {
+      originalValid: validAllTemplates.length,
+      prunedValid: validPrunedTemplates.length,
+      removedValid: validRemovedCount,
+      excluded: invalidTemplatesInOriginal,
+      mathCheck: `${validRemovedCount} removed + ${validPrunedTemplates.length} kept = ${validAllTemplates.length} total`,
+    });
+
+    // Group pruned templates by phaseId
     const prunedByPhase = validPrunedTemplates.reduce(
       (acc: Record<string, WorkoutTemplate[]>, template: WorkoutTemplate) => {
         const phaseId = template.phaseId!; // Safe - filtered above
@@ -1255,23 +1287,12 @@ Return an array of dayNumber values to REMOVE (not keep).`;
       })
       .filter((update: any) => update !== null);
 
-    // Return truthful count: only templates that will actually be saved (have phaseId)
-    // Note: validPrunedTemplates excludes templates without phaseId (they can't be saved)
-    const actualKeptCount = validPrunedTemplates.length;
-    const excludedCount = prunedWorkoutTemplates.length - actualKeptCount;
-
-    if (excludedCount > 0) {
-      console.warn(
-        `⚠️ ${excludedCount} template(s) excluded from save due to missing phaseId. ` +
-          `Reporting kept count as ${actualKeptCount} (templates that will actually be saved).`,
-      );
-    }
-
-    // Return both the pruned templates AND the phase updates for storage
+    // Return truthful counts based on VALID templates (those that can actually be saved)
+    // Ensures: removedCount + keptCount = originalValidCount (math consistency)
     return {
       prunedWorkoutTemplates: validPrunedTemplates, // Only templates that can be saved
-      removedCount,
-      keptCount: actualKeptCount, // Truthful count of templates that will be saved
+      removedCount: validRemovedCount, // Removed from valid templates
+      keptCount: validPrunedTemplates.length, // Valid templates kept
       removalReasoning: reasoning,
       phaseUpdates,
     };
