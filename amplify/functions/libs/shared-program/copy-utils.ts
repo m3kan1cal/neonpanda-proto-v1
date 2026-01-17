@@ -6,9 +6,9 @@
  */
 
 import {
-  getSharedProgram,
   getCoachConfig,
   saveProgram,
+  getSharedProgram,
 } from "../../../dynamodb/operations";
 import { getSharedProgramDetailsFromS3 } from "./s3-utils";
 import { storeProgramDetailsInS3 } from "../program/s3-utils";
@@ -48,11 +48,13 @@ export async function copySharedProgramToUser(
   sharedProgramId: string,
   coachId: string,
 ): Promise<CopySharedProgramResult> {
-  // 1. Get shared program metadata
-  const sharedProgram = await getSharedProgram(sharedProgramId);
+  // 1. Get shared program metadata (including inactive to distinguish "not found" from "inactive")
+  const sharedProgram = await getSharedProgram(sharedProgramId, true);
+
   if (!sharedProgram) {
     throw new Error("Shared program not found");
   }
+
   if (!sharedProgram.isActive) {
     throw new Error("Shared program is inactive");
   }
