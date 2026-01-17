@@ -706,6 +706,14 @@ export function createCoreApi(
     authorizer: userPoolAuthorizer,
   });
 
+  // Route for getting ALL programs for a user (no coach filter)
+  httpApi.addRoutes({
+    path: "/users/{userId}/programs",
+    methods: [apigatewayv2.HttpMethod.GET],
+    integration: integrations.getPrograms,
+    authorizer: userPoolAuthorizer,
+  });
+
   httpApi.addRoutes({
     path: "/users/{userId}/coaches/{coachId}/programs/{programId}",
     methods: [apigatewayv2.HttpMethod.GET],
