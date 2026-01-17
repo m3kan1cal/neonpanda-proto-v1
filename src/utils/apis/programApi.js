@@ -59,6 +59,60 @@ export const getPrograms = async (userId, coachId, options = {}) => {
 };
 
 /**
+ * Lists ALL training programs for a user (without coach filtering)
+ * Use this to get a complete view of all programs regardless of coach association.
+ * @param {string} userId - The user ID
+ * @param {Object} [options] - Optional query parameters
+ * @param {string} [options.status] - Filter by status (active, paused, completed, archived)
+ * @param {number} [options.limit] - Maximum number of results (default: 20)
+ * @param {string} [options.sortBy] - Sort by field (startDate, name)
+ * @param {string} [options.sortOrder] - Sort order: 'asc' or 'desc' (default: 'desc')
+ * @returns {Promise<Object>} - The API response with programs array
+ */
+export const getAllPrograms = async (userId, options = {}) => {
+  // Build query parameters
+  const params = new URLSearchParams();
+
+  if (options.status) params.append("status", options.status);
+  if (options.limit) params.append("limit", options.limit.toString());
+  if (options.sortBy) params.append("sortBy", options.sortBy);
+  if (options.sortOrder) params.append("sortOrder", options.sortOrder);
+
+  const queryString = params.toString();
+  const url = `${getApiUrl("")}/users/${userId}/programs${queryString ? "?" + queryString : ""}`;
+
+  try {
+    const response = await authenticatedFetch(url, {
+      method: "GET",
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("getAllPrograms: Error response:", errorText);
+
+      let errorMessage;
+      try {
+        const errorData = JSON.parse(errorText);
+        errorMessage =
+          errorData.error ||
+          errorData.message ||
+          `API Error: ${response.status}`;
+      } catch (parseError) {
+        errorMessage = `API Error: ${response.status}`;
+      }
+
+      throw new Error(errorMessage);
+    }
+
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error("getAllPrograms: Exception:", error);
+    throw error;
+  }
+};
+
+/**
  * Gets a specific training program by ID
  * @param {string} userId - The user ID
  * @param {string} coachId - The coach ID

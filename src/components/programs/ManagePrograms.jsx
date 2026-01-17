@@ -70,6 +70,7 @@ import CoachAgent from "../../utils/agents/CoachAgent";
 import { useToast } from "../../contexts/ToastContext";
 import { PROGRAM_STATUS } from "../../constants/conversationModes";
 import { createProgramDesignerSession } from "../../utils/apis/programDesignerApi";
+import { getAllPrograms } from "../../utils/apis/programApi";
 
 // Helper function to check if a program is new (created within last 7 days)
 const isNewProgram = (createdDate, programId) => {
@@ -313,7 +314,7 @@ function ManagePrograms() {
     loadCoach();
   }, [userId, coachId]);
 
-  // Initialize coach agent and fetch coaches
+  // Initialize coach agent and fetch coaches and ALL programs
   useEffect(() => {
     if (!userId) return;
 
@@ -330,56 +331,33 @@ function ManagePrograms() {
           coachAgentRef.current = new CoachAgent({ userId });
         }
 
-        // Fetch user's coaches
-        const coachesData = await coachAgentRef.current.loadCoaches();
+        // Fetch user's coaches and ALL programs in parallel
+        const [coachesData, programsResponse] = await Promise.all([
+          coachAgentRef.current.loadCoaches(),
+          getAllPrograms(userId),
+        ]);
+
         setCoaches(coachesData || []);
 
-        // If no coaches, set empty state
-        if (!coachesData || coachesData.length === 0) {
-          setProgramState({
-            programs: [],
-            activePrograms: [],
-            pausedPrograms: [],
-            completedPrograms: [],
-            isLoadingPrograms: false,
-            isLoadingCoaches: false,
-            isUpdating: false,
-            error: null,
-          });
-          return;
-        }
+        // Get all programs (this includes programs for ALL coaches, even deleted ones)
+        const allPrograms = programsResponse.programs || [];
 
-        // Fetch programs for each coach
-        const programPromises = coachesData.map(async (coach) => {
-          const coachId = coach.coach_id;
+        // Create program agents for each coach that has programs
+        // This is needed for program actions (pause, resume, etc.)
+        const uniqueCoachIds = new Set();
+        allPrograms.forEach((program) => {
+          (program.coachIds || []).forEach((id) => uniqueCoachIds.add(id));
+        });
 
-          // Create a program agent for this coach if it doesn't exist
-          if (!programAgentsRef.current[coachId]) {
-            programAgentsRef.current[coachId] = new ProgramAgent(
+        for (const programCoachId of uniqueCoachIds) {
+          if (!programAgentsRef.current[programCoachId]) {
+            programAgentsRef.current[programCoachId] = new ProgramAgent(
               userId,
-              coachId,
+              programCoachId,
               () => {},
             );
           }
-
-          try {
-            const response = await programAgentsRef.current[
-              coachId
-            ].loadPrograms({});
-            // Programs already have coachIds and coachNames arrays from the API
-            return response.programs || [];
-          } catch (error) {
-            console.error(
-              `Error loading programs for coach ${coachId}:`,
-              error,
-            );
-            return [];
-          }
-        });
-
-        // Wait for all program fetches to complete
-        const programArrays = await Promise.all(programPromises);
-        const allPrograms = programArrays.flat();
+        }
 
         // Categorize programs by status
         const activePrograms = allPrograms.filter(
