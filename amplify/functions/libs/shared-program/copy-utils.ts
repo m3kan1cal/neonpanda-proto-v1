@@ -15,6 +15,7 @@ import { storeProgramDetailsInS3 } from "../program/s3-utils";
 import { Program } from "../program/types";
 import { getUserTimezoneOrDefault } from "../analytics/date-utils";
 import { generateProgramId } from "../id-utils";
+import { calculateEndDate } from "../program/calendar-utils";
 
 /**
  * Result of copying a shared program
@@ -75,12 +76,10 @@ export async function copySharedProgramToUser(
   const userTimezone = getUserTimezoneOrDefault(userId);
   const today = new Date();
   const startDate = today.toISOString().split("T")[0];
-  const endDate = new Date(
-    today.getTime() +
-      sharedProgram.programSnapshot.totalDays * 24 * 60 * 60 * 1000,
-  )
-    .toISOString()
-    .split("T")[0];
+  const endDate = calculateEndDate(
+    startDate,
+    sharedProgram.programSnapshot.totalDays,
+  );
 
   // 6. Create new program with copy metadata
   const newProgram: Program = {
