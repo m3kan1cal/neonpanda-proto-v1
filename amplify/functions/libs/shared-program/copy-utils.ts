@@ -13,7 +13,6 @@ import {
 import { getSharedProgramDetailsFromS3 } from "./s3-utils";
 import { storeProgramDetailsInS3 } from "../program/s3-utils";
 import { Program } from "../program/types";
-import { getUserTimezoneOrDefault } from "../analytics/date-utils";
 import { generateProgramId } from "../id-utils";
 import { calculateEndDate } from "../program/calendar-utils";
 
@@ -73,7 +72,7 @@ export async function copySharedProgramToUser(
   const newProgramId = generateProgramId(userId);
 
   // 5. Calculate start/end dates
-  const userTimezone = getUserTimezoneOrDefault(userId);
+  // Note: Using UTC date for consistency. Frontend can adjust display based on user timezone.
   const today = new Date();
   const startDate = today.toISOString().split("T")[0];
   const endDate = calculateEndDate(
