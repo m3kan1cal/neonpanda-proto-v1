@@ -94,6 +94,11 @@ import { buildExercise } from "./functions/build-exercise/resource";
 import { getExercises } from "./functions/get-exercises/resource";
 import { getExerciseNames } from "./functions/get-exercise-names/resource";
 import { getExercisesCount } from "./functions/get-exercises-count/resource";
+import { createSharedProgram } from "./functions/create-shared-program/resource";
+import { getSharedProgram } from "./functions/get-shared-program/resource";
+import { getSharedPrograms } from "./functions/get-shared-programs/resource";
+import { deleteSharedProgram } from "./functions/delete-shared-program/resource";
+import { copySharedProgram } from "./functions/copy-shared-program/resource";
 import { apiGatewayv2 } from "./api/resource";
 import { dynamodbTable } from "./dynamodb/resource";
 import { createAppsBucket } from "./storage/resource";
@@ -193,6 +198,11 @@ const backend = defineBackend({
   getExercises,
   getExerciseNames,
   getExercisesCount,
+  createSharedProgram,
+  getSharedProgram,
+  getSharedPrograms,
+  deleteSharedProgram,
+  copySharedProgram,
 });
 
 // Disable retries for stateful async generation functions
@@ -286,6 +296,11 @@ const coreApi = apiGatewayv2.createCoreApi(
   backend.getExercises.resources.lambda,
   backend.getExerciseNames.resources.lambda,
   backend.getExercisesCount.resources.lambda,
+  backend.createSharedProgram.resources.lambda,
+  backend.getSharedProgram.resources.lambda,
+  backend.getSharedPrograms.resources.lambda,
+  backend.deleteSharedProgram.resources.lambda,
+  backend.copySharedProgram.resources.lambda,
   userPoolAuthorizer,
 );
 
@@ -378,6 +393,9 @@ const sharedPolicies = new SharedPolicies(
   backend.logWorkoutTemplate,
   backend.skipWorkoutTemplate,
   backend.buildExercise,
+  backend.createSharedProgram,
+  backend.deleteSharedProgram,
+  backend.copySharedProgram,
   // NOTE: postConfirmation excluded to avoid circular dependency with auth stack
 ].forEach((func) => {
   sharedPolicies.attachDynamoDbReadWrite(func.resources.lambda);
@@ -416,6 +434,8 @@ const sharedPolicies = new SharedPolicies(
   backend.getExercises,
   backend.getExerciseNames,
   backend.getExercisesCount,
+  backend.getSharedProgram,
+  backend.getSharedPrograms,
 ].forEach((func) => {
   sharedPolicies.attachDynamoDbReadOnly(func.resources.lambda);
 });
@@ -487,6 +507,9 @@ sharedPolicies.attachS3AnalyticsAccess(
   backend.logWorkoutTemplate,
   backend.skipWorkoutTemplate,
   backend.getWorkoutTemplate,
+  backend.createSharedProgram,
+  backend.getSharedProgram,
+  backend.copySharedProgram,
 ].forEach((func) => {
   sharedPolicies.attachS3AppsAccess(func.resources.lambda);
 });
@@ -758,6 +781,11 @@ const allFunctions = [
   backend.getExercises,
   backend.getExerciseNames,
   backend.getExercisesCount,
+  backend.createSharedProgram,
+  backend.getSharedProgram,
+  backend.getSharedPrograms,
+  backend.deleteSharedProgram,
+  backend.copySharedProgram,
   // NOTE: forwardLogsToSns and syncLogSubscriptions excluded - they're utility functions that don't need app resources
 ];
 
@@ -792,6 +820,9 @@ allFunctions.forEach((func) => {
   backend.getWorkoutTemplate,
   backend.logWorkoutTemplate,
   backend.skipWorkoutTemplate,
+  backend.createSharedProgram,
+  backend.getSharedProgram,
+  backend.copySharedProgram,
 ].forEach((func) => {
   func.addEnvironment("APPS_BUCKET_NAME", appsBucket.bucketName);
 });

@@ -4,7 +4,10 @@
  */
 
 import { callBedrockApi, MODEL_IDS, TEMPERATURE_PRESETS } from "../api-helpers";
-import { parseJsonWithFallbacks } from "../response-utils";
+import {
+  parseJsonWithFallbacks,
+  fixDoubleEncodedProperties,
+} from "../response-utils";
 import { CoachCreatorTodoList, TodoItem, CoachMessage } from "./types";
 import { COACH_CREATOR_TODO_SCHEMA } from "../schemas/coach-creator-todo-schema";
 
@@ -78,9 +81,11 @@ Return JSON with ONLY the fields you found information for:
     // Handle tool response
     let extracted: any;
     if (typeof extractionResponse !== "string") {
-      // Tool was used - extract the input
+      // Tool was used - extract the input and fix any double-encoding
       extracted = extractionResponse.input;
       console.info("✅ Tool-based extraction successful");
+      // Apply double-encoding fix to tool inputs (same as parseJsonWithFallbacks does)
+      extracted = fixDoubleEncodedProperties(extracted);
     } else {
       // Fallback to parsing (shouldn't happen with tool enforcement)
       console.warn("⚠️ Received string response, parsing as JSON fallback");

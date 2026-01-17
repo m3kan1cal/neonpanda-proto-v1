@@ -8,6 +8,7 @@
 import { SophisticationLevel, CoachCreatorSession } from "./types";
 import { callBedrockApi, MODEL_IDS, TEMPERATURE_PRESETS } from "../api-helpers";
 import type { BedrockToolUseResult } from "../api-helpers";
+import { fixDoubleEncodedProperties } from "../response-utils";
 import {
   SAFETY_PROFILE_EXTRACTION_SCHEMA,
   METHODOLOGY_PREFERENCES_EXTRACTION_SCHEMA,
@@ -269,7 +270,8 @@ If "none" or empty, use empty arrays. Be specific and helpful.`;
 
         // When tools are provided, callBedrockApi returns an already-extracted result
         // with shape: { toolName, input, stopReason }
-        const profile = response.input;
+        // Apply double-encoding fix to tool inputs
+        const profile = fixDoubleEncodedProperties(response.input);
 
         return {
           injuries: profile.injuries || [],
@@ -338,7 +340,8 @@ preferences, avoidances, and experience level.`;
 
         // When tools are provided, callBedrockApi returns an already-extracted result
         // with shape: { toolName, input, stopReason }
-        const prefs = response.input;
+        // Apply double-encoding fix to tool inputs
+        const prefs = fixDoubleEncodedProperties(response.input);
 
         return {
           focus: prefs.focus || ["strength", "conditioning"],
@@ -409,7 +412,8 @@ Identify relevant specializations. If none apply, return an empty array.`;
 
         // When tools are provided, callBedrockApi returns an already-extracted result
         // with shape: { toolName, input, stopReason }
-        const result = response.input;
+        // Apply double-encoding fix to tool inputs
+        const result = fixDoubleEncodedProperties(response.input);
         return result.specializations || [];
       } catch (error) {
         console.error("❌ AI specialization extraction failed:", {

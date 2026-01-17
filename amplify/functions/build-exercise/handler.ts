@@ -16,6 +16,7 @@ import type { BuildExerciseEvent, Exercise } from "../libs/exercise/types";
 import { extractExercisesFromWorkout } from "../libs/exercise/extraction";
 import { normalizeExerciseNamesBatch } from "../libs/exercise/normalization";
 import { saveExercises } from "../../dynamodb/operations";
+import { generateExerciseId } from "../libs/id-utils";
 
 export const handler = async (event: BuildExerciseEvent) => {
   return withHeartbeat(
@@ -110,8 +111,7 @@ export const handler = async (event: BuildExerciseEvent) => {
           sequenceMap.set(exerciseKey, sequence);
 
           // Generate unique ID
-          const shortId = Math.random().toString(36).substring(2, 11);
-          const exerciseId = `exercise_${event.userId}_${Date.now()}_${shortId}`;
+          const exerciseId = generateExerciseId(event.userId);
 
           // Build metadata object, only including defined optional fields
           const metadata: any = {

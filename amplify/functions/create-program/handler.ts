@@ -4,6 +4,7 @@ import { storeProgramDetailsInS3 } from "../libs/program/s3-utils";
 import { calculateEndDate } from "../libs/program/calendar-utils";
 import { Program, CreateProgramEvent } from "../libs/program/types";
 import { withAuth, AuthenticatedHandler } from "../libs/auth/middleware";
+import { generateProgramId } from "../libs/id-utils";
 
 const baseHandler: AuthenticatedHandler = async (event) => {
   try {
@@ -46,8 +47,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     const coachName = coachConfig.coach_name || "Unknown Coach";
 
     // Generate program ID (consistent with workout/conversation pattern)
-    const shortId = Math.random().toString(36).substring(2, 11);
-    const programId = `program_${userId}_${Date.now()}_${shortId}`;
+    const programId = generateProgramId(userId);
 
     // Calculate program dates
     const endDate = calculateEndDate(body.startDate, body.totalDays);

@@ -10,25 +10,28 @@ import {
 import { withAuth, AuthenticatedHandler } from "../libs/auth/middleware";
 import { getUserProfile } from "../../dynamodb/operations";
 import { getAppUrl } from "../libs/domain-utils";
+import { generateSharedProgramId } from "../libs/id-utils";
 
 const baseHandler: AuthenticatedHandler = async (event) => {
   try {
     // Auth handled by middleware - userId is already validated
     const userId = event.user.userId;
+    const programId = event.pathParameters?.programId;
+
+    if (!programId) {
+      return createErrorResponse(400, "programId is required");
+    }
 
     if (!event.body) {
       return createErrorResponse(400, "Request body is required");
     }
 
     const body: CreateSharedProgramRequest = JSON.parse(event.body);
-    const { programId, coachId } = body;
+    const { coachId } = body;
 
     // Validate required fields
-    if (!programId || !coachId) {
-      return createErrorResponse(
-        400,
-        "Missing required fields: programId, coachId",
-      );
+    if (!coachId) {
+      return createErrorResponse(400, "coachId is required");
     }
 
     // 1. Get the original program
@@ -69,8 +72,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     };
 
     // 6. Generate shared program ID
-    const shortId = Math.random().toString(36).substring(2, 11);
-    const sharedProgramId = `sharedProgram_${userId}_${Date.now()}_${shortId}`;
+    const sharedProgramId = generateSharedProgramId(userId);
 
     // 7. Store full program details in S3
     const s3DetailKey = await storeSharedProgramDetailsInS3(

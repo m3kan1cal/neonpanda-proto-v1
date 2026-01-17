@@ -7,7 +7,7 @@ import React from "react";
  * Features:
  * - Primary neon pink styling matching standard CTA buttons
  * - Rounded square shape (like ChatInput submit button)
- * - Responsive positioning for mobile/tablet/desktop
+ * - Responsive positioning that adapts to chat input height
  * - Hover, active, and focus states
  * - Prevents context menu and tap highlighting
  */
@@ -20,10 +20,12 @@ function ScrollToBottomButton({ onClick, show = true, className = "" }) {
   return (
     <button
       onClick={onClick}
-      className={`fixed bottom-32 sm:bottom-36 md:bottom-[186px] left-1/2 -translate-x-1/2 w-12 h-12 bg-synthwave-neon-pink text-synthwave-bg-primary rounded-2xl cursor-pointer transition-all duration-300 hover:bg-synthwave-neon-pink/90 hover:shadow-lg hover:shadow-synthwave-neon-pink/30 hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary flex items-center justify-center flex-shrink-0 z-[99999] ${className}`}
+      className={`fixed left-1/2 -translate-x-1/2 w-12 h-12 bg-synthwave-neon-pink text-synthwave-bg-primary rounded-2xl cursor-pointer transition-all duration-300 hover:bg-synthwave-neon-pink/90 hover:shadow-lg hover:shadow-synthwave-neon-pink/30 hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-synthwave-neon-pink/50 focus:ring-offset-2 focus:ring-offset-synthwave-bg-primary flex items-center justify-center flex-shrink-0 z-[99999] ${className}`}
       aria-label="Scroll to bottom"
       style={{
         WebkitTapHighlightColor: "transparent",
+        // Use CSS custom property set by ChatInput's ResizeObserver + 16px gap
+        bottom: "calc(var(--chat-input-height, 128px) + 16px)",
       }}
       onContextMenu={(e) => e.preventDefault()}
     >

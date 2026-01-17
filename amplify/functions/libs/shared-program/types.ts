@@ -79,6 +79,11 @@ export interface SharedProgramDetails {
   generationMetadata: {
     sharedAt: string; // ISO timestamp
     originalProgramId: string;
+    // Preserve original generation metadata for provenance tracking
+    originalGeneratedBy?: string; // Original coach ID
+    originalAiModel?: string; // Original AI model used
+    originalConfidence?: number; // Original confidence score
+    originalGenerationPrompt?: string; // Original generation prompt
   };
 }
 
@@ -86,8 +91,8 @@ export interface SharedProgramDetails {
  * API request body for creating a shared program
  */
 export interface CreateSharedProgramRequest {
-  programId: string;
   coachId: string;
+  // programId comes from path parameter, not body
 }
 
 /**

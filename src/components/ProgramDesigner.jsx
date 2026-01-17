@@ -1422,7 +1422,7 @@ function ProgramDesigner() {
                 }
                 className={`${buttonPatterns.secondarySmall} flex-shrink-0`}
               >
-                View Training Programs
+                View Programs
               </button>
             </div>
           </div>
@@ -1633,7 +1633,7 @@ function ProgramDesigner() {
                   }
                   className={`flex-1 ${buttonPatterns.primarySmall} text-base`}
                 >
-                  Go to Programs
+                  View Programs
                 </button>
               </div>
             </div>
