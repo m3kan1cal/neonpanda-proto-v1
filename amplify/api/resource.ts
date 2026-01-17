@@ -72,6 +72,11 @@ export function createCoreApi(
   getExercisesLambda: lambda.IFunction,
   getExerciseNamesLambda: lambda.IFunction,
   getExercisesCountLambda: lambda.IFunction,
+  createSharedProgramLambda: lambda.IFunction,
+  getSharedProgramLambda: lambda.IFunction,
+  getSharedProgramsLambda: lambda.IFunction,
+  deleteSharedProgramLambda: lambda.IFunction,
+  copySharedProgramLambda: lambda.IFunction,
   userPoolAuthorizer: HttpUserPoolAuthorizer,
 ) {
   // Create branch-aware API name using utility
@@ -523,6 +528,37 @@ export function createCoreApi(
       getExercisesCountLambda,
     );
 
+  // Create Lambda integrations for shared program functions
+  const createSharedProgramIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "CreateSharedProgramIntegration",
+      createSharedProgramLambda,
+    );
+
+  const getSharedProgramIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "GetSharedProgramIntegration",
+      getSharedProgramLambda,
+    );
+
+  const getSharedProgramsIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "GetSharedProgramsIntegration",
+      getSharedProgramsLambda,
+    );
+
+  const deleteSharedProgramIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "DeleteSharedProgramIntegration",
+      deleteSharedProgramLambda,
+    );
+
+  const copySharedProgramIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "CopySharedProgramIntegration",
+      copySharedProgramLambda,
+    );
+
   // Create integrations object for route configuration
   const integrations = {
     contactForm: contactFormIntegration,
@@ -586,6 +622,11 @@ export function createCoreApi(
     getExercises: getExercisesIntegration,
     getExerciseNames: getExerciseNamesIntegration,
     getExercisesCount: getExercisesCountIntegration,
+    createSharedProgram: createSharedProgramIntegration,
+    getSharedProgram: getSharedProgramIntegration,
+    getSharedPrograms: getSharedProgramsIntegration,
+    deleteSharedProgram: deleteSharedProgramIntegration,
+    copySharedProgram: copySharedProgramIntegration,
   };
 
   // *******************************************************
@@ -773,6 +814,49 @@ export function createCoreApi(
     path: "/users/{userId}/coaches/{coachId}/programs/{programId}/templates/{templateId}",
     methods: [apigatewayv2.HttpMethod.GET],
     integration: integrations.getWorkoutTemplate,
+    authorizer: userPoolAuthorizer,
+  });
+
+  // ===================================================================
+  // SHARED PROGRAM ROUTES
+  // ===================================================================
+
+  // PUBLIC: Get shared program preview (no auth required)
+  httpApi.addRoutes({
+    path: "/shared-programs/{sharedProgramId}",
+    methods: [apigatewayv2.HttpMethod.GET],
+    integration: integrations.getSharedProgram,
+  });
+
+  // PROTECTED: Create shared program from existing program
+  httpApi.addRoutes({
+    path: "/users/{userId}/programs/{programId}/share",
+    methods: [apigatewayv2.HttpMethod.POST],
+    integration: integrations.createSharedProgram,
+    authorizer: userPoolAuthorizer,
+  });
+
+  // PROTECTED: List all shared programs for a user
+  httpApi.addRoutes({
+    path: "/users/{userId}/shared-programs",
+    methods: [apigatewayv2.HttpMethod.GET],
+    integration: integrations.getSharedPrograms,
+    authorizer: userPoolAuthorizer,
+  });
+
+  // PROTECTED: Deactivate (unshare) a shared program
+  httpApi.addRoutes({
+    path: "/users/{userId}/shared-programs/{sharedProgramId}",
+    methods: [apigatewayv2.HttpMethod.DELETE],
+    integration: integrations.deleteSharedProgram,
+    authorizer: userPoolAuthorizer,
+  });
+
+  // PROTECTED: Copy shared program to user's account (instant copy)
+  httpApi.addRoutes({
+    path: "/users/{userId}/shared-programs/{sharedProgramId}/copy",
+    methods: [apigatewayv2.HttpMethod.POST],
+    integration: integrations.copySharedProgram,
     authorizer: userPoolAuthorizer,
   });
 

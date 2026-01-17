@@ -10,6 +10,7 @@ import {
 import { withAuth, AuthenticatedHandler } from "../libs/auth/middleware";
 import { getUserProfile } from "../../dynamodb/operations";
 import { getAppUrl } from "../libs/domain-utils";
+import { generateSharedProgramId } from "../libs/id-utils";
 
 const baseHandler: AuthenticatedHandler = async (event) => {
   try {
@@ -69,8 +70,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     };
 
     // 6. Generate shared program ID
-    const shortId = Math.random().toString(36).substring(2, 11);
-    const sharedProgramId = `sharedProgram_${userId}_${Date.now()}_${shortId}`;
+    const sharedProgramId = generateSharedProgramId(userId);
 
     // 7. Store full program details in S3
     const s3DetailKey = await storeSharedProgramDetailsInS3(

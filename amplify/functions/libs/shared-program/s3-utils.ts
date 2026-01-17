@@ -39,6 +39,14 @@ export async function storeSharedProgramDetailsInS3(
       generationMetadata: {
         sharedAt: new Date().toISOString(),
         originalProgramId: originalProgramDetails.programId,
+        // Preserve original generation metadata for provenance tracking
+        originalGeneratedBy:
+          originalProgramDetails.generationMetadata?.generatedBy,
+        originalAiModel: originalProgramDetails.generationMetadata?.aiModel,
+        originalConfidence:
+          originalProgramDetails.generationMetadata?.confidence,
+        originalGenerationPrompt:
+          originalProgramDetails.generationMetadata?.generationPrompt,
       },
     };
 

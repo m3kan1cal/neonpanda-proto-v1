@@ -79,6 +79,11 @@ export interface SharedProgramDetails {
   generationMetadata: {
     sharedAt: string; // ISO timestamp
     originalProgramId: string;
+    // Preserve original generation metadata for provenance tracking
+    originalGeneratedBy?: string; // Original coach ID
+    originalAiModel?: string; // Original AI model used
+    originalConfidence?: number; // Original confidence score
+    originalGenerationPrompt?: string; // Original generation prompt
   };
 }
 

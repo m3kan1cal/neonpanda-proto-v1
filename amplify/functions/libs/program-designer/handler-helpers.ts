@@ -28,6 +28,7 @@ import {
   isSessionComplete as isProgramTodoComplete,
   getTodoProgress,
 } from "./todo-list-utils";
+import { generateProgramId } from "../id-utils";
 import { saveSessionAndTriggerProgramGeneration } from "./session-management";
 import { BuildProgramEvent } from "../program/types";
 import { ProgramDesignerSession } from "./types";
@@ -445,7 +446,7 @@ export async function* handleProgramDesignerFlow(
           userId: params.userId,
           coachId: programSession.coachId,
           conversationId: "", // Not used in session-based flow
-          programId: `program_${params.userId}_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
+          programId: generateProgramId(params.userId),
           sessionId: programSession.sessionId,
           todoList: programSession.todoList,
           conversationContext,
