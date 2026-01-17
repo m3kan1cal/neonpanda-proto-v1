@@ -139,8 +139,103 @@ export function calculateProgramMetrics(workoutTemplates: any[]): {
 }
 
 /**
- * Enforce all blocking decisions from validation and normalization
- * Prevents save_program_to_database when validation or normalization failed
+ * Check if training frequency exceeds user's request and pruning is needed
+ *
+ * Validates that the program doesn't have significantly more training days
+ * than the user requested. Allows for 20% variance tolerance.
+ *
+ * @param workoutTemplates - Array of workout templates to analyze
+ * @param programDurationDays - Total program duration in days
+ * @param trainingFrequency - User's requested training frequency (days/week)
+ * @returns Object with shouldPrune flag and metadata if pruning needed
+ */
+export function checkTrainingFrequencyCompliance(
+  workoutTemplates: WorkoutTemplate[],
+  programDurationDays: number,
+  trainingFrequency: number,
+): {
+  shouldPrune: boolean;
+  pruningMetadata?: {
+    currentTrainingDays: number;
+    expectedTrainingDays: number;
+    variance: number;
+    targetTrainingDays: number;
+  };
+} {
+  if (workoutTemplates.length === 0) {
+    return { shouldPrune: false };
+  }
+
+  // Calculate metrics using shared helper
+  const metrics = calculateProgramMetrics(workoutTemplates);
+  const expectedTrainingDays = Math.floor(
+    (programDurationDays / 7) * trainingFrequency,
+  );
+
+  // Guard against edge case: expectedTrainingDays is 0 or too low
+  // This can happen with very short programs or invalid training frequency
+  if (expectedTrainingDays < 3) {
+    console.warn(
+      "⚠️ Expected training days is very low or zero, skipping pruning check:",
+      {
+        expectedTrainingDays,
+        programDurationDays,
+        trainingFrequency,
+      },
+    );
+    return { shouldPrune: false };
+  }
+
+  const variance = expectedTrainingDays * 0.2; // 20% tolerance
+  const actualVariance = Math.abs(
+    metrics.uniqueTrainingDays - expectedTrainingDays,
+  );
+
+  console.info("🔍 Training frequency validation:", {
+    currentTrainingDays: metrics.uniqueTrainingDays,
+    expectedTrainingDays,
+    variance: actualVariance,
+    toleranceThreshold: variance,
+    exceedsThreshold: actualVariance > variance,
+  });
+
+  // Check if we have MORE training days than expected AND it exceeds tolerance
+  if (
+    metrics.uniqueTrainingDays > expectedTrainingDays &&
+    actualVariance > variance
+  ) {
+    const pruningMetadata = {
+      currentTrainingDays: metrics.uniqueTrainingDays,
+      expectedTrainingDays,
+      variance: actualVariance,
+      targetTrainingDays: expectedTrainingDays,
+    };
+
+    // Safe variance percent calculation (guard against division by zero)
+    const variancePercent =
+      expectedTrainingDays > 0
+        ? `${Math.round((actualVariance / expectedTrainingDays) * 100)}%`
+        : "N/A";
+
+    console.info("🔧 Pruning recommended:", {
+      currentDays: metrics.uniqueTrainingDays,
+      targetDays: expectedTrainingDays,
+      excessDays: metrics.uniqueTrainingDays - expectedTrainingDays,
+      variancePercent,
+    });
+
+    return {
+      shouldPrune: true,
+      pruningMetadata,
+    };
+  }
+
+  return { shouldPrune: false };
+}
+
+/**
+ * Enforce all blocking decisions from validation, pruning, and normalization
+ * Prevents save_program_to_database when validation, pruning, or normalization failed
  *
  * Code-level enforcement that ensures blocking decisions are AUTHORITATIVE,
  * not advisory.
@@ -151,6 +246,7 @@ export const enforceAllBlocking = (
   toolId: string,
   validationResult: any,
   normalizationResult: any,
+  pruningResult?: any,
 ): {
   error: boolean;
   blocked: boolean;
@@ -163,7 +259,7 @@ export const enforceAllBlocking = (
   };
 } | null => {
   // No results yet, allow tool to proceed
-  if (!validationResult && !normalizationResult) {
+  if (!validationResult && !normalizationResult && !pruningResult) {
     return null;
   }
 
@@ -196,7 +292,34 @@ export const enforceAllBlocking = (
       };
     }
 
-    // CASE 3: Normalization threw an exception (has error field)
+    // CASE 3: Pruning was required but failed or wasn't executed
+    // NOTE: We DO NOT block save for pruning failures - we prioritize program delivery
+    // over perfect frequency adherence. Log warnings but allow save to proceed.
+    if (validationResult && validationResult.shouldPrune === true) {
+      if (!pruningResult) {
+        console.warn(
+          "⚠️ Pruning was recommended but not executed - program will have excess training days",
+          {
+            currentTrainingDays:
+              validationResult.pruningMetadata?.currentTrainingDays,
+            targetTrainingDays:
+              validationResult.pruningMetadata?.targetTrainingDays,
+            willProceedWithSave: true,
+          },
+        );
+      } else if (pruningResult.error) {
+        console.warn(
+          "⚠️ Pruning failed - program will have excess training days",
+          {
+            error: pruningResult.error,
+            willProceedWithSave: true,
+          },
+        );
+      }
+      // Continue without blocking - pruning is best-effort
+    }
+
+    // CASE 4: Normalization threw an exception (has error field)
     if (normalizationResult && normalizationResult.error) {
       console.error("⛔ Blocking save: Normalization threw exception", {
         error: normalizationResult.error,
@@ -209,7 +332,7 @@ export const enforceAllBlocking = (
       };
     }
 
-    // CASE 4: Normalization returned isValid: false
+    // CASE 5: Normalization returned isValid: false
     if (normalizationResult && normalizationResult.isValid === false) {
       console.warn("⛔ Blocking save: Normalization failed", {
         issuesFound: normalizationResult.issuesFound,

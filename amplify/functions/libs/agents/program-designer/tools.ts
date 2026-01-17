@@ -19,7 +19,12 @@ import {
   getUserProfile,
   saveProgram,
 } from "../../../../dynamodb/operations";
-import { queryPineconeContext } from "../../api-helpers";
+import {
+  queryPineconeContext,
+  MODEL_IDS,
+  callBedrockApi,
+  TEMPERATURE_PRESETS,
+} from "../../api-helpers";
 import {
   generatePhaseStructure,
   generateSinglePhaseWorkouts,
@@ -37,7 +42,11 @@ import {
 import { generateProgramSummary } from "../../program/summary";
 import { storeProgramSummaryInPinecone } from "../../program/pinecone";
 import { storeProgramDetailsInS3 } from "../../program/s3-utils";
-import { storeGenerationDebugData, calculateProgramMetrics } from "./helpers";
+import {
+  storeGenerationDebugData,
+  calculateProgramMetrics,
+  checkTrainingFrequencyCompliance,
+} from "./helpers";
 import { calculateEndDate } from "../../program/calendar-utils";
 
 /**
@@ -129,8 +138,37 @@ export interface PhaseWorkoutsResult {
 export interface ProgramValidationResult {
   isValid: boolean;
   shouldNormalize: boolean;
+  shouldPrune: boolean; // True if training days exceed frequency by >20%
   confidence: number;
   validationIssues: string[];
+  pruningMetadata?: {
+    // Only present if shouldPrune is true
+    currentTrainingDays: number;
+    expectedTrainingDays: number;
+    variance: number;
+    targetTrainingDays: number;
+  };
+}
+
+/**
+ * Result from prune_excess_workouts tool
+ * Contains pruned workout templates and storage updates
+ */
+export interface ProgramPruningResult {
+  prunedWorkoutTemplates: WorkoutTemplate[];
+  removedCount: number;
+  keptCount: number;
+  removalReasoning: string;
+  phaseUpdates: Array<{
+    phaseId: string;
+    storageKey: string;
+    updatedResult: {
+      phaseId: string;
+      phaseName: string;
+      workoutTemplates: WorkoutTemplate[];
+      debugData?: any;
+    };
+  }>;
 }
 
 /**
@@ -833,24 +871,436 @@ Returns: isValid, shouldNormalize, confidence, validationIssues`,
     // Determine if normalization is needed
     const shouldNormalize = shouldNormalizeProgram(program, confidence);
 
+    // Build result object
+    const result: ProgramValidationResult = {
+      isValid,
+      shouldNormalize,
+      shouldPrune: false,
+      confidence,
+      validationIssues,
+    };
+
+    // Validation: Check training day coverage and determine if pruning is needed
+    if (getToolResult) {
+      const requirementsResult = getToolResult("requirements");
+      if (requirementsResult && workoutTemplates.length > 0) {
+        const programDurationDays = requirementsResult.programDuration || 0;
+        const trainingFrequency = requirementsResult.trainingFrequency || 0;
+
+        const frequencyCheck = checkTrainingFrequencyCompliance(
+          workoutTemplates,
+          programDurationDays,
+          trainingFrequency,
+        );
+
+        if (frequencyCheck.shouldPrune) {
+          result.shouldPrune = true;
+          result.pruningMetadata = frequencyCheck.pruningMetadata;
+        }
+      }
+    }
+
     console.info("Validation results:", {
       isValid,
       confidence,
       shouldNormalize,
+      shouldPrune: result.shouldPrune,
       issueCount: validationIssues.length,
     });
 
+    return result;
+  },
+};
+
+/**
+ * Tool 5: Prune Excess Workouts
+ *
+ * Removes excess workout days when training frequency is exceeded.
+ * Only called if validation returns shouldPrune: true.
+ */
+export const pruneExcessWorkoutsTool: Tool<ProgramDesignerContext> = {
+  id: "prune_excess_workouts",
+  description: `Remove excess workout days to match user's requested training frequency.
+
+ONLY CALL THIS IF validate_program_structure returns shouldPrune: true.
+
+This tool uses AI to intelligently remove the least essential training days while:
+- Maintaining program progression and logic
+- Preserving key workouts (primary strength, skill work)
+- Keeping workouts evenly distributed across phases
+- Maintaining program coherence
+
+The AI will prioritize removal of:
+- Optional accessory work
+- Extra conditioning sessions
+- Redundant training days
+- Days that don't compromise phase goals
+
+CRITICAL: This tool automatically updates the stored phase workout results with pruned templates.
+Subsequent tools (like save_program_to_database) will retrieve the pruned versions, ensuring
+consistency between S3 storage and DynamoDB program structure.
+
+Returns: prunedWorkoutTemplates, removedCount, keptCount, removalReasoning, phaseUpdates`,
+
+  inputSchema: {
+    type: "object",
+    properties: {
+      phaseIds: {
+        type: "array",
+        description:
+          "Array of phaseIds - tool will retrieve full workout data from storage",
+        items: { type: "string" },
+      },
+      targetTrainingDays: {
+        type: "number",
+        description: "Target number of training days (from pruningMetadata)",
+      },
+      currentTrainingDays: {
+        type: "number",
+        description: "Current number of training days (from pruningMetadata)",
+      },
+    },
+    required: ["phaseIds", "targetTrainingDays", "currentTrainingDays"],
+  },
+
+  async execute(
+    input: any,
+    context: ProgramDesignerContext & { getToolResult?: (key: string) => any },
+  ): Promise<ProgramPruningResult> {
+    console.info("✂️ Executing prune_excess_workouts tool");
+
+    const { phaseIds, targetTrainingDays, currentTrainingDays } = input;
+    const excessDays = currentTrainingDays - targetTrainingDays;
+
+    console.info("Pruning parameters:", {
+      currentDays: currentTrainingDays,
+      targetDays: targetTrainingDays,
+      excessDays,
+      phaseCount: phaseIds.length,
+    });
+
+    // Retrieve all workout templates from stored phase results
+    const getToolResult = context.getToolResult;
+    if (!getToolResult) {
+      console.error(
+        "⚠️ Pruning cannot proceed - getToolResult not available in context. " +
+          "Returning empty result. Program will save with original workouts.",
+      );
+      return {
+        prunedWorkoutTemplates: [],
+        removedCount: 0,
+        keptCount: 0,
+        removalReasoning:
+          "Pruning skipped - tool context unavailable. Program saved with original workout count.",
+        phaseUpdates: [],
+      };
+    }
+
+    // Retrieve phase results (best-effort - work with what we have)
+    const phaseWorkoutResults: any[] = [];
+    const missingPhaseIds: string[] = [];
+
+    for (const phaseId of phaseIds) {
+      const result = getToolResult(`phase_workouts:${phaseId}`);
+      if (!result) {
+        missingPhaseIds.push(phaseId);
+      } else {
+        phaseWorkoutResults.push(result);
+      }
+    }
+
+    // Warn if any phase results are missing but continue with available phases
+    if (missingPhaseIds.length > 0) {
+      console.warn(
+        `⚠️ Pruning proceeding with incomplete data - ${missingPhaseIds.length} phase result(s) not found: ${missingPhaseIds.join(", ")}. ` +
+          `Will prune based on available ${phaseWorkoutResults.length} phase(s). ` +
+          `Program will save regardless of pruning outcome.`,
+      );
+
+      // If we have no phases at all, return early
+      if (phaseWorkoutResults.length === 0) {
+        console.error(
+          "⚠️ Pruning cannot proceed - no phase results available. " +
+            "Returning empty result. Program will save with original workouts.",
+        );
+        return {
+          prunedWorkoutTemplates: [],
+          removedCount: 0,
+          keptCount: 0,
+          removalReasoning:
+            "Pruning skipped - no phase workout data available. Program saved with original workout count.",
+          phaseUpdates: [],
+        };
+      }
+    }
+
+    const allWorkoutTemplates = phaseWorkoutResults.flatMap(
+      (result: any) => result.workoutTemplates || [],
+    );
+
+    console.info(
+      `📦 Retrieved ${allWorkoutTemplates.length} workout templates from ${phaseWorkoutResults.length} phases`,
+    );
+
+    // Build prompt for AI to select which workouts to remove
+    const workoutMetadata = allWorkoutTemplates.map((w: WorkoutTemplate) => ({
+      templateId: w.templateId,
+      dayNumber: w.dayNumber,
+      phaseId: w.phaseId,
+      name: w.name,
+      type: w.type,
+      estimatedDuration: w.estimatedDuration,
+    }));
+
+    const prompt = `You are a training program optimizer. You need to remove ${excessDays} training days from this program to match the user's requested training frequency.
+
+## CURRENT PROGRAM STRUCTURE
+
+Total workout templates: ${allWorkoutTemplates.length}
+Unique training days: ${currentTrainingDays}
+Target training days: ${targetTrainingDays}
+Days to remove: ${excessDays}
+
+## WORKOUT METADATA
+
+${JSON.stringify(workoutMetadata, null, 2)}
+
+## YOUR TASK
+
+Select ${excessDays} training days (dayNumber values) to REMOVE from the program.
+
+## PRIORITIZATION FOR REMOVAL (remove these first):
+1. Days with type: "accessory" or "optional"
+2. Extra conditioning/metcon days
+3. Days in later phases (preserve early foundation work)
+4. Days with longer estimated duration (easier to skip)
+5. Days that create clusters (remove to spread out rest days)
+
+## PRESERVATION PRIORITIES (keep these):
+1. Days with type: "primary" or "strength"
+2. Early phase foundation work
+3. Skill development days
+4. Days with progressive overload markers
+5. Workouts critical to program goals
+
+## CONSTRAINTS
+- Remove ENTIRE training days (all templates sharing the same dayNumber)
+- Maintain even distribution across the program
+- Don't create large gaps in training
+- Preserve program progression logic
+
+Return an array of dayNumber values to REMOVE (not keep).`;
+
+    const response = await callBedrockApi(
+      "", // systemPrompt
+      prompt, // userMessage
+      MODEL_IDS.PLANNER_MODEL_FULL, // Use Sonnet for nuanced reasoning
+      {
+        temperature: TEMPERATURE_PRESETS.STRUCTURED, // 0.2 for structured data generation
+        enableThinking: true,
+        tools: [
+          {
+            name: "select_days_to_remove",
+            description: "Select training days to remove from the program",
+            inputSchema: {
+              type: "object",
+              properties: {
+                daysToRemove: {
+                  type: "array",
+                  description:
+                    "Array of dayNumber values to remove from the program",
+                  items: { type: "number" },
+                },
+                reasoning: {
+                  type: "string",
+                  description:
+                    "Brief explanation of why these days were selected for removal",
+                },
+              },
+              required: ["daysToRemove", "reasoning"],
+            },
+          },
+        ],
+      },
+    );
+
+    // Extract tool result from response (response.input contains the tool arguments)
+    const toolResult = typeof response === "string" ? {} : response.input || {};
+    const daysToRemove: number[] = toolResult.daysToRemove || [];
+    const reasoning: string = toolResult.reasoning || "No reasoning provided";
+
+    console.info("🔍 AI selected days to remove:", {
+      daysToRemove,
+      count: daysToRemove.length,
+      reasoning,
+    });
+
+    // Filter out workouts for the selected days
+    const prunedWorkoutTemplates = allWorkoutTemplates.filter(
+      (w: WorkoutTemplate) => !daysToRemove.includes(w.dayNumber),
+    );
+
+    const removedCount =
+      allWorkoutTemplates.length - prunedWorkoutTemplates.length;
+    const removedDays = new Set(
+      allWorkoutTemplates
+        .filter((w: WorkoutTemplate) => daysToRemove.includes(w.dayNumber))
+        .map((w: WorkoutTemplate) => w.dayNumber),
+    ).size;
+
+    console.info("✅ Pruning complete:", {
+      originalTemplates: allWorkoutTemplates.length,
+      prunedTemplates: prunedWorkoutTemplates.length,
+      removedTemplates: removedCount,
+      removedDays,
+      targetRemovalDays: excessDays,
+    });
+
+    // ============================================================
+    // OBSERVABILITY: Log pruning effectiveness (non-blocking)
+    // We prioritize program delivery over perfect frequency adherence
+    // ============================================================
+    if (daysToRemove.length === 0) {
+      console.warn(
+        `⚠️ Pruning ineffective - AI did not select any days to remove. ` +
+          `Target was to remove ${excessDays} excess training days. ` +
+          `Program will be saved with excess days. ` +
+          `AI response: ${reasoning}`,
+      );
+    }
+
+    const pruningDeficit = excessDays - removedDays;
+    if (pruningDeficit > 1) {
+      console.warn(
+        `⚠️ Pruning incomplete - removed ${removedDays} days but needed to remove ${excessDays} days. ` +
+          `Deficit: ${pruningDeficit} days. Program will have more training days than requested. ` +
+          `AI selected ${daysToRemove.length} day numbers: ${daysToRemove.join(", ")}. ` +
+          `AI reasoning: ${reasoning}`,
+      );
+    } else if (removedDays > excessDays + 1) {
+      console.warn(
+        `⚠️ Pruning over-achieved - removed ${removedDays} days, target was ${excessDays}. ` +
+          `Program will have fewer training days than expected.`,
+      );
+    } else {
+      console.info(
+        `✅ Pruning achieved target - removed ${removedDays} days (target: ${excessDays})`,
+      );
+    }
+
+    // ============================================================
+    // CRITICAL: Build phase updates with pruned templates
+    // The agent will apply these updates to stored phase results,
+    // ensuring save_program_to_database retrieves pruned templates
+    // ============================================================
+    console.info("📝 Building phase updates with pruned workout templates...");
+
+    // ============================================================
+    // VALIDATION: Filter to only templates with phaseId (required for storage)
+    // Calculate counts based on VALID templates only for accuracy
+    // ============================================================
+
+    // First, filter allWorkoutTemplates to only valid ones
+    const validAllTemplates = allWorkoutTemplates.filter(
+      (t: WorkoutTemplate) => !!t.phaseId,
+    );
+    const invalidTemplatesInOriginal =
+      allWorkoutTemplates.length - validAllTemplates.length;
+
+    if (invalidTemplatesInOriginal > 0) {
+      console.warn(
+        `⚠️ Found ${invalidTemplatesInOriginal} template(s) in original set missing phaseId. ` +
+          `These cannot be saved and will be excluded from counts.`,
+      );
+    }
+
+    // Filter pruned templates to only those with phaseId
+    const validPrunedTemplates = prunedWorkoutTemplates.filter(
+      (t: WorkoutTemplate) => !!t.phaseId,
+    );
+    const invalidTemplatesInPruned =
+      prunedWorkoutTemplates.length - validPrunedTemplates.length;
+
+    if (invalidTemplatesInPruned > 0) {
+      const templateIds = prunedWorkoutTemplates
+        .filter((t: WorkoutTemplate) => !t.phaseId)
+        .map((t: WorkoutTemplate) => t.templateId || "unknown")
+        .join(", ");
+      console.warn(
+        `⚠️ Pruning found ${invalidTemplatesInPruned} template(s) missing phaseId: ${templateIds}. ` +
+          `These will be excluded from save. This indicates malformed workout data.`,
+      );
+    }
+
+    // Recalculate removedCount based on VALID templates only
+    // This ensures: validRemoved + validKept = totalValid (math consistency)
+    const validRemovedCount =
+      validAllTemplates.length - validPrunedTemplates.length;
+
+    console.info("📊 Valid template counts:", {
+      originalValid: validAllTemplates.length,
+      prunedValid: validPrunedTemplates.length,
+      removedValid: validRemovedCount,
+      excluded: invalidTemplatesInOriginal,
+      mathCheck: `${validRemovedCount} removed + ${validPrunedTemplates.length} kept = ${validAllTemplates.length} total`,
+    });
+
+    // Group pruned templates by phaseId
+    const prunedByPhase = validPrunedTemplates.reduce(
+      (acc: Record<string, WorkoutTemplate[]>, template: WorkoutTemplate) => {
+        const phaseId = template.phaseId!; // Safe - filtered above
+        if (!acc[phaseId]) {
+          acc[phaseId] = [];
+        }
+        acc[phaseId].push(template);
+        return acc;
+      },
+      {},
+    );
+
+    // Build phase updates for each phase (agent will apply to storage)
+    // Best-effort: only update phases that have both original results and pruned templates
+    const phaseUpdates = phaseIds
+      .map((phaseId: string) => {
+        const originalPhaseResult = getToolResult(`phase_workouts:${phaseId}`);
+        const prunedTemplatesForPhase = prunedByPhase[phaseId] || [];
+
+        if (!originalPhaseResult) {
+          console.warn(
+            `  ⚠️ Skipping update for ${phaseId} - original phase result not found`,
+          );
+          return null;
+        }
+
+        console.info(
+          `  Updated ${phaseId}: ${originalPhaseResult.workoutTemplates?.length || 0} → ${prunedTemplatesForPhase.length} templates`,
+        );
+
+        return {
+          phaseId,
+          storageKey: `phase_workouts:${phaseId}`,
+          updatedResult: {
+            ...originalPhaseResult,
+            workoutTemplates: prunedTemplatesForPhase,
+          },
+        };
+      })
+      .filter((update: any) => update !== null);
+
+    // Return truthful counts based on VALID templates (those that can actually be saved)
+    // Ensures: removedCount + keptCount = originalValidCount (math consistency)
     return {
-      isValid,
-      shouldNormalize,
-      confidence,
-      validationIssues,
+      prunedWorkoutTemplates: validPrunedTemplates, // Only templates that can be saved
+      removedCount: validRemovedCount, // Removed from valid templates
+      keptCount: validPrunedTemplates.length, // Valid templates kept
+      removalReasoning: reasoning,
+      phaseUpdates,
     };
   },
 };
 
 /**
- * Tool 5: Normalize Program Data
+ * Tool 6: Normalize Program Data
  *
  * Fixes structural issues using AI normalization.
  * Only called if validation recommends normalization.
@@ -941,7 +1391,7 @@ Returns: normalizedProgram, normalizationSummary, issuesFixed, confidence`,
 };
 
 /**
- * Tool 6: Generate Program Summary
+ * Tool 7: Generate Program Summary
  *
  * Creates AI-generated summary for Pinecone and UI.
  */
@@ -1000,7 +1450,7 @@ Returns: summary (string)`,
 };
 
 /**
- * Tool 7: Save Program to Database
+ * Tool 8: Save Program to Database
  *
  * Saves finalized program to DynamoDB, S3, and Pinecone.
  * Final step - only called after all previous steps complete successfully.
@@ -1063,6 +1513,9 @@ Returns: success, programId, s3Key, pineconeRecordId`,
     // ============================================================
     // CRITICAL: ALWAYS retrieve workouts from stored phase results
     // This is the SINGLE SOURCE OF TRUTH - never trust Claude's input
+    //
+    // NOTE: If prune_excess_workouts was called, the stored phase results
+    // will already contain pruned templates (updated by the agent after pruning).
     // ============================================================
     console.info(
       "📦 Retrieving workouts from stored phase results (single source of truth)...",
