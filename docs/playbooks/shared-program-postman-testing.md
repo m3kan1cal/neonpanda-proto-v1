@@ -704,22 +704,30 @@ Content-Type: application/json
 
 ---
 
-### Test E3: Preview Inactive Shared Program
+### Test E3: Copy Inactive Shared Program
 
 **Request:**
 
 ```http
-GET {{API_BASE_URL}}/shared-programs/{{SHARED_PROGRAM_ID}}
+POST {{API_BASE_URL}}/users/{{USER2_ID}}/shared-programs/{{SHARED_PROGRAM_ID}}/copy
+Authorization: Bearer {{USER2_TOKEN}}
+Content-Type: application/json
 # After running Step 7 (deactivate)
+
+{
+  "coachId": "{{USER2_COACH_ID}}"
+}
 ```
 
-**Expected Response (404 Not Found):**
+**Expected Response (400 Bad Request):**
 
 ```json
 {
-  "error": "Shared program not found"
+  "error": "Shared program is inactive"
 }
 ```
+
+**Note:** Preview endpoint (GET) will also return 404 for inactive programs since `getSharedProgram()` returns null.
 
 ---
 

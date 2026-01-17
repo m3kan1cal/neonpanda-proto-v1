@@ -75,15 +75,13 @@ const baseHandler: AuthenticatedHandler = async (event) => {
 
     // Handle specific error cases
     if (error instanceof Error) {
-      if (error.message.includes("not found")) {
-        return createErrorResponse(404, error.message);
+      // Check inactive BEFORE not found to avoid ambiguous error messages
+      if (error.message.includes("inactive")) {
+        return createErrorResponse(400, error.message);
       }
 
-      if (
-        error.message.includes("not active") ||
-        error.message.includes("inactive")
-      ) {
-        return createErrorResponse(400, error.message);
+      if (error.message.includes("not found")) {
+        return createErrorResponse(404, error.message);
       }
     }
 

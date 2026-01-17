@@ -50,8 +50,11 @@ export async function copySharedProgramToUser(
 ): Promise<CopySharedProgramResult> {
   // 1. Get shared program metadata
   const sharedProgram = await getSharedProgram(sharedProgramId);
-  if (!sharedProgram || !sharedProgram.isActive) {
-    throw new Error("Shared program not found or inactive");
+  if (!sharedProgram) {
+    throw new Error("Shared program not found");
+  }
+  if (!sharedProgram.isActive) {
+    throw new Error("Shared program is inactive");
   }
 
   // 2. Get shared program details from S3 (includes workout templates)
