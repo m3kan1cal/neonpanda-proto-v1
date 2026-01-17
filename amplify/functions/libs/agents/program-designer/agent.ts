@@ -126,6 +126,7 @@ export class ProgramDesignerAgent extends Agent<ProgramDesignerContext> {
       phaseStructure: this.toolResults.get("phase_structure"),
       phaseWorkouts: this.getPhaseWorkoutResults(),
       validation: this.toolResults.get("validation"),
+      pruning: this.toolResults.get("pruning"),
       normalization: this.toolResults.get("normalization"),
       summary: this.toolResults.get("summary"),
       save: this.toolResults.get("save"),
@@ -645,6 +646,7 @@ Now design the complete program using your tools with CORRECT data passing.`;
       hasPhaseStructure: !!results.phaseStructure,
       phaseWorkoutsCount: results.phaseWorkouts.length,
       hasValidation: !!results.validation,
+      hasPruning: !!results.pruning,
       hasNormalization: !!results.normalization,
       hasSummary: !!results.summary,
       hasSave: !!results.save,
@@ -686,6 +688,7 @@ Now design the complete program using your tools with CORRECT data passing.`;
         pineconeStored: !!results.save.pineconeRecordId,
         pineconeRecordId: results.save.pineconeRecordId,
         normalizationApplied: !!results.normalization,
+        pruningApplied: !!results.pruning,
         generationMethod: "agent_v2",
         s3DetailKey: results.save.s3Key,
       };
