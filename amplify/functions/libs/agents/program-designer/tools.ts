@@ -982,19 +982,64 @@ Returns: prunedWorkoutTemplates, removedCount, keptCount, removalReasoning, phas
     // Retrieve all workout templates from stored phase results
     const getToolResult = context.getToolResult;
     if (!getToolResult) {
-      throw new Error("getToolResult not available in context");
+      console.error(
+        "⚠️ Pruning cannot proceed - getToolResult not available in context. " +
+          "Returning empty result. Program will save with original workouts.",
+      );
+      return {
+        prunedWorkoutTemplates: [],
+        removedCount: 0,
+        keptCount: 0,
+        removalReasoning:
+          "Pruning skipped - tool context unavailable. Program saved with original workout count.",
+        phaseUpdates: [],
+      };
     }
 
-    const phaseWorkoutResults = phaseIds
-      .map((phaseId: string) => getToolResult(`phase_workouts:${phaseId}`))
-      .filter(Boolean);
+    // Retrieve phase results (best-effort - work with what we have)
+    const phaseWorkoutResults: any[] = [];
+    const missingPhaseIds: string[] = [];
+
+    for (const phaseId of phaseIds) {
+      const result = getToolResult(`phase_workouts:${phaseId}`);
+      if (!result) {
+        missingPhaseIds.push(phaseId);
+      } else {
+        phaseWorkoutResults.push(result);
+      }
+    }
+
+    // Warn if any phase results are missing but continue with available phases
+    if (missingPhaseIds.length > 0) {
+      console.warn(
+        `⚠️ Pruning proceeding with incomplete data - ${missingPhaseIds.length} phase result(s) not found: ${missingPhaseIds.join(", ")}. ` +
+          `Will prune based on available ${phaseWorkoutResults.length} phase(s). ` +
+          `Program will save regardless of pruning outcome.`,
+      );
+
+      // If we have no phases at all, return early
+      if (phaseWorkoutResults.length === 0) {
+        console.error(
+          "⚠️ Pruning cannot proceed - no phase results available. " +
+            "Returning empty result. Program will save with original workouts.",
+        );
+        return {
+          prunedWorkoutTemplates: [],
+          removedCount: 0,
+          keptCount: 0,
+          removalReasoning:
+            "Pruning skipped - no phase workout data available. Program saved with original workout count.",
+          phaseUpdates: [],
+        };
+      }
+    }
 
     const allWorkoutTemplates = phaseWorkoutResults.flatMap(
       (result: any) => result.workoutTemplates || [],
     );
 
     console.info(
-      `📦 Retrieved ${allWorkoutTemplates.length} workout templates to analyze`,
+      `📦 Retrieved ${allWorkoutTemplates.length} workout templates from ${phaseWorkoutResults.length} phases`,
     );
 
     // Build prompt for AI to select which workouts to remove
@@ -1150,24 +1195,60 @@ Return an array of dayNumber values to REMOVE (not keep).`;
     // ============================================================
     console.info("📝 Building phase updates with pruned workout templates...");
 
-    // Validate all templates have phaseId before grouping
-    const templatesWithoutPhaseId = prunedWorkoutTemplates.filter(
-      (t: WorkoutTemplate) => !t.phaseId,
+    // ============================================================
+    // VALIDATION: Filter to only templates with phaseId (required for storage)
+    // Calculate counts based on VALID templates only for accuracy
+    // ============================================================
+
+    // First, filter allWorkoutTemplates to only valid ones
+    const validAllTemplates = allWorkoutTemplates.filter(
+      (t: WorkoutTemplate) => !!t.phaseId,
     );
-    if (templatesWithoutPhaseId.length > 0) {
-      const templateIds = templatesWithoutPhaseId
-        .map((t: WorkoutTemplate) => t.templateId || "unknown")
-        .join(", ");
-      throw new Error(
-        `Cannot build phase updates - ${templatesWithoutPhaseId.length} pruned template(s) missing phaseId: ${templateIds}. ` +
-          `This indicates malformed workout data from generation. All templates must have phaseId.`,
+    const invalidTemplatesInOriginal =
+      allWorkoutTemplates.length - validAllTemplates.length;
+
+    if (invalidTemplatesInOriginal > 0) {
+      console.warn(
+        `⚠️ Found ${invalidTemplatesInOriginal} template(s) in original set missing phaseId. ` +
+          `These cannot be saved and will be excluded from counts.`,
       );
     }
 
+    // Filter pruned templates to only those with phaseId
+    const validPrunedTemplates = prunedWorkoutTemplates.filter(
+      (t: WorkoutTemplate) => !!t.phaseId,
+    );
+    const invalidTemplatesInPruned =
+      prunedWorkoutTemplates.length - validPrunedTemplates.length;
+
+    if (invalidTemplatesInPruned > 0) {
+      const templateIds = prunedWorkoutTemplates
+        .filter((t: WorkoutTemplate) => !t.phaseId)
+        .map((t: WorkoutTemplate) => t.templateId || "unknown")
+        .join(", ");
+      console.warn(
+        `⚠️ Pruning found ${invalidTemplatesInPruned} template(s) missing phaseId: ${templateIds}. ` +
+          `These will be excluded from save. This indicates malformed workout data.`,
+      );
+    }
+
+    // Recalculate removedCount based on VALID templates only
+    // This ensures: validRemoved + validKept = totalValid (math consistency)
+    const validRemovedCount =
+      validAllTemplates.length - validPrunedTemplates.length;
+
+    console.info("📊 Valid template counts:", {
+      originalValid: validAllTemplates.length,
+      prunedValid: validPrunedTemplates.length,
+      removedValid: validRemovedCount,
+      excluded: invalidTemplatesInOriginal,
+      mathCheck: `${validRemovedCount} removed + ${validPrunedTemplates.length} kept = ${validAllTemplates.length} total`,
+    });
+
     // Group pruned templates by phaseId
-    const prunedByPhase = prunedWorkoutTemplates.reduce(
+    const prunedByPhase = validPrunedTemplates.reduce(
       (acc: Record<string, WorkoutTemplate[]>, template: WorkoutTemplate) => {
-        const phaseId = template.phaseId!; // Safe to use ! because validated above
+        const phaseId = template.phaseId!; // Safe - filtered above
         if (!acc[phaseId]) {
           acc[phaseId] = [];
         }
@@ -1178,40 +1259,40 @@ Return an array of dayNumber values to REMOVE (not keep).`;
     );
 
     // Build phase updates for each phase (agent will apply to storage)
-    const phaseUpdates = phaseIds.map((phaseId: string) => {
-      const originalPhaseResult = getToolResult(`phase_workouts:${phaseId}`);
-      const prunedTemplatesForPhase = prunedByPhase[phaseId] || [];
+    // Best-effort: only update phases that have both original results and pruned templates
+    const phaseUpdates = phaseIds
+      .map((phaseId: string) => {
+        const originalPhaseResult = getToolResult(`phase_workouts:${phaseId}`);
+        const prunedTemplatesForPhase = prunedByPhase[phaseId] || [];
 
-      // Guard against missing phase results
-      if (!originalPhaseResult) {
-        console.error(
-          `⚠️ Phase result not found for ${phaseId}, cannot build update`,
+        if (!originalPhaseResult) {
+          console.warn(
+            `  ⚠️ Skipping update for ${phaseId} - original phase result not found`,
+          );
+          return null;
+        }
+
+        console.info(
+          `  Updated ${phaseId}: ${originalPhaseResult.workoutTemplates?.length || 0} → ${prunedTemplatesForPhase.length} templates`,
         );
-        throw new Error(
-          `Cannot build phase update for ${phaseId} - phase workout result not found in storage. ` +
-            `Ensure generate_phase_workouts completed successfully for this phase.`,
-        );
-      }
 
-      console.info(
-        `  Updated ${phaseId}: ${originalPhaseResult.workoutTemplates?.length || 0} → ${prunedTemplatesForPhase.length} templates`,
-      );
+        return {
+          phaseId,
+          storageKey: `phase_workouts:${phaseId}`,
+          updatedResult: {
+            ...originalPhaseResult,
+            workoutTemplates: prunedTemplatesForPhase,
+          },
+        };
+      })
+      .filter((update: any) => update !== null);
 
-      return {
-        phaseId,
-        storageKey: `phase_workouts:${phaseId}`,
-        updatedResult: {
-          ...originalPhaseResult,
-          workoutTemplates: prunedTemplatesForPhase,
-        },
-      };
-    });
-
-    // Return both the pruned templates AND the phase updates for storage
+    // Return truthful counts based on VALID templates (those that can actually be saved)
+    // Ensures: removedCount + keptCount = originalValidCount (math consistency)
     return {
-      prunedWorkoutTemplates,
-      removedCount,
-      keptCount: prunedWorkoutTemplates.length,
+      prunedWorkoutTemplates: validPrunedTemplates, // Only templates that can be saved
+      removedCount: validRemovedCount, // Removed from valid templates
+      keptCount: validPrunedTemplates.length, // Valid templates kept
       removalReasoning: reasoning,
       phaseUpdates,
     };
