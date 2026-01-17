@@ -33,6 +33,7 @@ Before starting, gather the following information:
 ### User 1 (Creator)
 
 - **User ID**: `user_abc123_1234567890_x7k2m` (example)
+- **Coach ID**: `user_abc123_coach_1704067200000` (example)
 - **Completed Program ID**: `program_abc123_1705312200000_x7k2m`
 - **Auth Token**: Get via Postman authentication
 
@@ -63,6 +64,7 @@ Create a new Postman environment named `NeonPanda - Shared Program Test` with th
 ```
 API_BASE_URL          = <from amplify_outputs.json>
 USER1_ID              = <creator user ID>
+USER1_COACH_ID        = <creator's coach ID>
 USER1_TOKEN           = <will be set by auth request>
 USER1_PROGRAM_ID      = <completed program ID>
 
@@ -188,9 +190,11 @@ Authorization: Bearer {{USER1_TOKEN}}
 Content-Type: application/json
 
 {
-  "includePersonalNotes": false
+  "coachId": "<user1_coach_id>"
 }
 ```
+
+**Note:** `programId` comes from the URL path parameter, `coachId` is required in the body.
 
 **Expected Response (201 Created):**
 
@@ -662,7 +666,7 @@ Authorization: Bearer {{USER1_TOKEN}}
 Content-Type: application/json
 
 {
-  "includePersonalNotes": false
+  "coachId": "{{USER1_COACH_ID}}"
 }
 ```
 

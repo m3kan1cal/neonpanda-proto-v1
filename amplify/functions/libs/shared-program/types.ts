@@ -91,8 +91,8 @@ export interface SharedProgramDetails {
  * API request body for creating a shared program
  */
 export interface CreateSharedProgramRequest {
-  programId: string;
   coachId: string;
+  // programId comes from path parameter, not body
 }
 
 /**

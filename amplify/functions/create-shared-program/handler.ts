@@ -16,20 +16,22 @@ const baseHandler: AuthenticatedHandler = async (event) => {
   try {
     // Auth handled by middleware - userId is already validated
     const userId = event.user.userId;
+    const programId = event.pathParameters?.programId;
+
+    if (!programId) {
+      return createErrorResponse(400, "programId is required");
+    }
 
     if (!event.body) {
       return createErrorResponse(400, "Request body is required");
     }
 
     const body: CreateSharedProgramRequest = JSON.parse(event.body);
-    const { programId, coachId } = body;
+    const { coachId } = body;
 
     // Validate required fields
-    if (!programId || !coachId) {
-      return createErrorResponse(
-        400,
-        "Missing required fields: programId, coachId",
-      );
+    if (!coachId) {
+      return createErrorResponse(400, "coachId is required");
     }
 
     // 1. Get the original program
