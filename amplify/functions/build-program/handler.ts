@@ -189,6 +189,7 @@ export const handler = async (event: BuildProgramEvent) => {
           // Method
           generationMethod: result.generationMethod || "agent_v2",
           normalizationApplied: result.normalizationApplied || false,
+          pruningApplied: result.pruningApplied || false,
         });
 
         // QA Check: Validate metrics consistency
@@ -371,6 +372,7 @@ export const handler = async (event: BuildProgramEvent) => {
           pineconeStored: result.pineconeStored,
           pineconeRecordId: result.pineconeRecordId,
           normalizationApplied: result.normalizationApplied,
+          pruningApplied: result.pruningApplied,
           generationMethod: result.generationMethod || "agent_v2",
         });
       } else {

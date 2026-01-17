@@ -51,6 +51,7 @@ export interface ProgramDesignResult {
   pineconeStored?: boolean;
   pineconeRecordId?: string | null;
   normalizationApplied?: boolean;
+  pruningApplied?: boolean; // True if prune_excess_workouts was called
   generationMethod?: string;
   s3DetailKey?: string;
 

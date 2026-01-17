@@ -778,6 +778,15 @@ async function runTestCase(
       passed: typeof body?.normalizationApplied === "boolean",
     });
 
+    // Note: Pruning may affect workout/day counts if frequency exceeded by >20%
+    // This is expected behavior - agent optimizes to match requested frequency
+    validations.push({
+      name: "Has pruningApplied flag (if present)",
+      passed:
+        body?.pruningApplied === undefined ||
+        typeof body?.pruningApplied === "boolean",
+    });
+
     // 3. Fetch from DynamoDB
     if (body?.programId) {
       try {
