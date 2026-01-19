@@ -3292,14 +3292,8 @@ export async function queryPrograms(
         ":entityType": "program",
       };
 
-      // Handle includeArchived (backward compatibility)
-      if (!includeArchived) {
-        filterExpression += " AND #attributes.#status <> :archivedStatus";
-        expressionAttributeValues[":archivedStatus"] = "archived";
-      }
-
       // Handle includeStatus array (positive filter - explicit about what to show)
-      // This is safer than excludeStatus as new statuses won't automatically appear
+      // This is the most explicit filter and takes precedence over other status filters
       if (options?.includeStatus && options.includeStatus.length > 0) {
         // Use IN operator for multiple statuses
         const statusPlaceholders = options.includeStatus
@@ -3310,11 +3304,17 @@ export async function queryPrograms(
           expressionAttributeValues[`:includeStatus${index}`] = status;
         });
       }
-
       // Handle specific status filter (single status - backward compatibility)
-      if (options?.status) {
+      // Only apply if includeStatus is not provided
+      else if (options?.status) {
         filterExpression += " AND #attributes.#status = :status";
         expressionAttributeValues[":status"] = options.status;
+      }
+      // Handle includeArchived (backward compatibility)
+      // Only apply if neither includeStatus nor status is provided
+      else if (!includeArchived) {
+        filterExpression += " AND #attributes.#status <> :archivedStatus";
+        expressionAttributeValues[":archivedStatus"] = "archived";
       }
 
       const command = new QueryCommand({
