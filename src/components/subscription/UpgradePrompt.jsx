@@ -151,7 +151,7 @@ function UpgradePrompt({
         onClick={handleClose}
       >
         <div
-          className={`${containerPatterns.cardMediumOpaque} p-6 relative w-full max-w-md`}
+          className={`${containerPatterns.successModal} p-6 relative w-full max-w-md`}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Close button */}

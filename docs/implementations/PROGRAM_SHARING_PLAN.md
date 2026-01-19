@@ -1,8 +1,12 @@
 # NeonPanda Program Sharing: Link-Based Viral Growth Plan
 
-**Status:** 🚧 Backend Complete (Day 2/7) - Ready for Deployment & Frontend Development
+**Status:** ⏸️ PAUSED - Core Flow Complete, Stabilizing Before Phase 2
 
-**Progress:** `████████░░░░░░░░░░░░` 30% Complete
+**Progress:** `████████████░░░░░░░░` 60% Complete
+
+**Last Updated:** January 19, 2026
+
+**Current State:** Core sharing flow is functional end-to-end. Backend complete and deployed. Frontend preview page, share modal, coach selection modal, and copy flow all working. Pausing to stabilize before building remaining features (MySharedPrograms management, ProgramAdaptationChat slide-out).
 
 ---
 
@@ -33,7 +37,20 @@
 ✅ **No Creator Economy** - Sharing is a user feature, not a business model
 ✅ **Lower Maintenance** - No moderation, curation, or quality control systems
 
-### Growth Loop
+### Growth Loops
+
+**Loop 1: Workout Partner (Active Program)**
+
+```
+User starts program →
+Wants accountability/workout partner →
+Shares active program: "Join me!" →
+Friend copies and starts same program →
+Both train together, mutual accountability →
+Both complete and share success... [loop continues]
+```
+
+**Loop 2: Proven Results (Completed Program)**
 
 ```
 User completes program with great results →
@@ -66,8 +83,9 @@ Friend shares their success... [loop continues]
 
 **Trigger Points:**
 
+- During an active program (user wants workout partner to join them)
 - After completing a program (coach celebrates + offers share)
-- From ManagePrograms page (share button on program card)
+- From ManagePrograms page (share button on active/completed program cards)
 - After hitting a major PR (achievement notification includes share option)
 
 **User Journey:**
@@ -195,6 +213,155 @@ Friend shares their success... [loop continues]
 ```
 
 **Note:** Deliberately minimal stats. No gamification, no leaderboards, no pressure.
+
+---
+
+## TrainingGrounds: Multiple Active Programs Design
+
+### Current Behavior (Single Program Focus)
+
+The `TrainingGrounds.jsx` component currently assumes a **single active program** per coach:
+
+```javascript
+// Current logic in TrainingGrounds.jsx
+if (activeProgram) {
+  // Show TodaysWorkoutCard + ActiveProgramSummary
+} else if (programs && programs.length > 0) {
+  // Show first program from list (already filtered to active/paused)
+} else {
+  // Show empty state
+}
+```
+
+### Future Design: Multiple Active Programs
+
+When users can have **multiple active training programs** (e.g., copying a shared program while already running one), the TrainingGrounds page needs to handle this gracefully.
+
+#### Scenario 1: User Has Multiple Active Programs
+
+**Display Strategy:**
+
+```
+Training Programs Section:
+┌─────────────────────────────────────────────────────────┐
+│ 🏋️ YOUR ACTIVE PROGRAMS (2)                             │
+├─────────────────────────────────────────────────────────┤
+│ ┌─────────────────────┐  ┌─────────────────────────────┐│
+│ │ Olympic Lifting     │  │ 5x5 Strength Builder       ││
+│ │ Day 12 of 56       │  │ Day 3 of 30                ││
+│ │ ━━━━━━━░░░░ 21%    │  │ ━░░░░░░░░░ 10%             ││
+│ │ Today: Back Squats │  │ Today: Rest Day            ││
+│ │ [View Program]     │  │ [View Program]             ││
+│ └─────────────────────┘  └─────────────────────────────┘│
+└─────────────────────────────────────────────────────────┘
+```
+
+**Implementation Approach:**
+
+1. **Primary Program Selection** - User designates one program as "primary" (shown prominently with Today's Workout)
+2. **Secondary Programs** - Other active programs shown as compact cards
+3. **Quick Switching** - Tap to switch primary program focus
+4. **Warning on Copy** - Alert user when copying a shared program while already running one
+
+#### Scenario 2: Today's Workout from Multiple Programs
+
+**Display Strategy Options:**
+
+**Option A: Primary Program Only** (Recommended for V1)
+
+- Only show today's workout from the primary/selected program
+- Other programs accessible via "View Program" links
+
+**Option B: Combined View** (Future Enhancement)
+
+- Show all today's workouts across programs
+- Risk: Information overload, confusion about which program to follow
+
+**Option C: Intelligent Merge** (Complex - Future)
+
+- AI suggests how to combine workouts when both have training days
+- "You have workouts in both programs today. Want me to combine them?"
+
+#### Scenario 3: Rest Day Handling with Multiple Programs
+
+If Program A has rest day but Program B has workout:
+
+- Show Program B's workout prominently
+- Note: "Program A: Rest Day"
+
+If both programs have rest days:
+
+- Show rest day celebration
+- Allow completing rest for either/both programs
+
+#### Implementation Plan
+
+**Phase 1 (Current):** Single program focus
+
+- `activeProgram` is the first active program found
+- Works well for most users
+
+**Phase 2 (After Sharing Stabilizes):** Multiple program awareness
+
+- Add "primary program" concept to user preferences or coach config
+- Update `TrainingGrounds` to show secondary programs in compact view
+- Add warning when copying shared program while program is active
+
+**Phase 3 (Future):** Smart program management
+
+- AI-assisted workout scheduling across programs
+- Conflict detection and resolution
+- Combined progress tracking
+
+#### API Changes Needed
+
+**New endpoint or parameter:**
+
+```
+GET /users/{userId}/coaches/{coachId}/programs?status=active&includeToday=true
+```
+
+Returns:
+
+```json
+{
+  "programs": [...],
+  "todaysWorkouts": [
+    { "programId": "...", "workout": {...} },
+    { "programId": "...", "isRestDay": true }
+  ]
+}
+```
+
+**ProgramAgent Changes:**
+
+- `loadPrograms()` already supports `includeStatus: ["active", "paused"]`
+- Need to extend to load today's workout for each active program
+- Consider batch API call for efficiency
+
+#### UI Copy for Multiple Programs
+
+**When copying shared program while program is active:**
+
+```
+"You already have an active program running. Copying this program will give
+you two active programs to manage. You can switch between them anytime.
+
+Continue? [Copy Program] [Cancel]"
+```
+
+**On TrainingGrounds with multiple programs:**
+
+```
+"You have 2 active programs. Tap a program to focus on it."
+```
+
+**When both programs have workouts today:**
+
+```
+"You have workouts scheduled in both programs today. Which would you like to
+focus on? (You can complete both if you're feeling ambitious!)"
+```
 
 ---
 
@@ -1008,10 +1175,10 @@ export async function createSharedProgram(
     throw new Error(`Program not found: ${programId}`);
   }
 
-  // 3. Verify program is completed (only completed programs can be shared)
-  if (program.status !== "completed") {
+  // 3. Verify program can be shared (active or completed only)
+  if (program.status === "archived") {
     throw new Error(
-      `Only completed programs can be shared. Current status: ${program.status}`,
+      `Cannot share an archived program. Only active or completed programs can be shared. Current status: ${program.status}`,
     );
   }
 
@@ -3008,11 +3175,11 @@ function ProgramOverview({
 
 **File:** `src/components/programs/ManagePrograms.jsx`
 
-Add share button to each completed program card:
+Add share button to each active or completed program card:
 
 ```jsx
 {
-  program.status === "completed" && (
+  (program.status === "active" || program.status === "completed") && (
     <button
       onClick={() => handleShareProgram(program)}
       className={buttonPatterns.secondary}
@@ -3144,22 +3311,24 @@ success to inspire other athletes!"
 
 ### Week 2: Frontend Core (2-3 days)
 
-**Day 3: Share Flow**
+**Day 3: Share Flow** ✅ COMPLETED
 
-- [ ] Build `ShareProgramModal.jsx` component
-- [ ] Add share button to `ManagePrograms.jsx` (completed programs only)
-- [ ] Create API wrapper functions in `sharedProgramApi.js`
-- [ ] Test share link generation flow
+- [x] Build `ShareProgramModal.jsx` component ✅
+- [x] Add share button to `ManagePrograms.jsx` and `ProgramOverview.jsx` ✅
+- [x] Create API wrapper functions in `sharedProgramApi.js` ✅
+- [x] Test share link generation flow ✅
 
-**Day 4: Preview & Copy Flow**
+**Day 4: Preview & Copy Flow** ✅ COMPLETED
 
-- [ ] Build `SharedProgramPreview.jsx` component (with instant copy CTA)
-- [ ] Build `CoachSelectionModal.jsx` component
-- [ ] Add `/shared/programs/:sharedProgramId` route to `App.jsx`
-- [ ] Test public preview access (no auth)
-- [ ] Test instant copy flow (single coach auto-select + multi-coach modal)
+- [x] Build `SharedProgramPreview.jsx` component (with instant copy CTA) ✅
+- [x] Build `SelectCoachModal.jsx` component (renamed from CoachSelectionModal) ✅
+- [x] Add `/shared/programs/:sharedProgramId` route to `App.jsx` ✅
+- [x] Test public preview access (no auth) ✅
+- [x] Test instant copy flow (single coach auto-select + multi-coach modal) ✅
+- [x] Add skeleton loading to SharedProgramPreview ✅
+- [x] Refactor shared program ID generation to use nanoid for privacy ✅
 
-**Day 5: Slide-out Adaptation Chat**
+**Day 5: Slide-out Adaptation Chat** ⏸️ NOT STARTED (Future Work)
 
 - [ ] Create `stream-program-conversation` Lambda handler (NEW dedicated handler)
 - [ ] Build `ProgramAdaptationChat.jsx` slide-out component
@@ -3170,7 +3339,7 @@ success to inspire other athletes!"
   - Manual trigger via "Customize with Coach" button
 - [ ] Add `onCustomize` prop to `ProgramOverview.jsx`
 
-### Week 3: Management & Polish (1 day)
+### Week 3: Management & Polish (1 day) ⏸️ NOT STARTED (Future Work)
 
 **Day 6: Share Management**
 
@@ -3187,7 +3356,7 @@ success to inspire other athletes!"
 - [ ] Test analytics events fire correctly at each step
 - [ ] Soft launch with beta users
 
-**Total Estimated Time: 6-7 days**
+**Total Estimated Time: 6-7 days** (4 days complete, ~3 days remaining)
 
 ### Implementation Order (Recommended)
 
@@ -3232,7 +3401,7 @@ success to inspire other athletes!"
 
 ### Target Goals (3 months post-launch)
 
-- 20% of completed programs get shared
+- 20% of active/completed programs get shared
 - 30% click-through rate on shared links
 - 15% conversion rate from preview to signup (non-members)
 - **80% of members who view preview copy the program** (higher than before due to instant copy)
@@ -3270,7 +3439,8 @@ success to inspire other athletes!"
 **Impact:** Users create junk programs just to share
 **Mitigation:**
 
-- Only completed programs can be shared (user finished it themselves)
+- Only active or completed programs can be shared (user is engaged with it)
+- Archived programs cannot be shared (prevents sharing abandoned programs)
 - Can deactivate/delete shares at any time
 - Platform can flag/remove abusive shares
 
@@ -3310,7 +3480,39 @@ These features are explicitly **out of scope** for initial launch but could be a
 
 ## Implementation Progress
 
-### Recent Updates (January 17, 2026)
+### Recent Updates (January 19, 2026) - PAUSED FOR STABILIZATION
+
+**Completed Days 3-4: Frontend Core Flow** 🎉
+
+- ✅ Built `ShareProgramModal.jsx` - Share link generation with copy to clipboard and social sharing
+- ✅ Built `SharedProgramPreview.jsx` - Public preview page with hero, program details, phases, and CTA
+- ✅ Built `SelectCoachModal.jsx` - Coach selection modal for users with multiple coaches
+- ✅ Created `sharedProgramApi.js` - API wrapper functions for all sharing endpoints
+- ✅ Added `/shared/programs/:sharedProgramId` route to `App.jsx`
+- ✅ Added share button to `ProgramOverview.jsx` (active/completed programs)
+- ✅ Implemented skeleton loading for `SharedProgramPreview.jsx`
+- ✅ Refactored `generateSharedProgramId()` to use `nanoid(21)` for privacy (removes userId from public URLs)
+- ✅ Tested instant copy flow with single coach (auto-select) and multiple coaches (modal selection)
+- ✅ Fixed coach ID field name mismatch (`coach_id` vs `coachId`)
+- ✅ Fixed program status filtering for sidebar badge count (includeStatus API pattern)
+
+**Current State:** Core sharing flow works end-to-end:
+
+1. User can share active/completed programs from ProgramOverview
+2. Share link is generated and can be copied or shared to social
+3. Public preview page shows program details without revealing workout specifics
+4. Logged-in users can copy program with coach selection (auto or modal)
+5. Program copies to user's account and redirects to ProgramDashboard
+
+**Pausing to stabilize before building:**
+
+- `MySharedPrograms.jsx` - Share management page
+- `ProgramAdaptationChat.jsx` - Slide-out chat for program customization
+- Analytics tracking integration
+
+---
+
+### Previous Updates (January 17, 2026)
 
 **Completed Day 2: Instant Copy Backend** 🎉
 
@@ -3321,8 +3523,8 @@ These features are explicitly **out of scope** for initial launch but could be a
 - ✅ Created `copy-utils.ts` for instant copy business logic
 - ✅ Refactored multiple handlers to use centralized ID utilities
 - ✅ Added API route for instant copy endpoint
-
-**Next:** Register `copy-shared-program` Lambda in `amplify/backend.ts` and deploy for testing.
+- ✅ Registered `copy-shared-program` Lambda in `amplify/backend.ts`
+- ✅ Deployed and tested end-to-end
 
 ---
 
@@ -3385,30 +3587,32 @@ These features are explicitly **out of scope** for initial launch but could be a
    - Preserves AI generation provenance
    - Created: January 2026
 
-### In Progress 🚧
+### Completed ✅ (Since Last Update)
 
-**Phase 1 - Backend Deployment & Testing:**
+**Phase 2 - Frontend Components (Core Flow):**
 
-- [ ] Register `copy-shared-program` Lambda in `amplify/backend.ts`
-- [ ] Deploy backend changes to AWS
-- [ ] Test instant copy flow end-to-end
+- [x] `ShareProgramModal.jsx` - Share link generation ✅
+- [x] `SharedProgramPreview.jsx` - Public preview + copy flow ✅
+- [x] `SelectCoachModal.jsx` - Coach selection for copy (modal with avatar styling) ✅
+- [x] `sharedProgramApi.js` - API wrapper functions ✅
+- [x] Share button on `ProgramOverview.jsx` ✅
+- [x] Route `/shared/programs/:sharedProgramId` in `App.jsx` ✅
+- [x] Privacy fix: `sharedProgramId` now uses `nanoid` (no userId exposure) ✅
 
-### Not Started ⏸️
+### Paused ⏸️ (Future Work - Next Week)
 
-**Phase 2 - Frontend Components:**
+**Phase 2 - Frontend Components (Remaining):**
 
-- [ ] `ShareProgramModal.jsx` - Share link generation
-- [ ] `SharedProgramPreview.jsx` - Public preview + copy flow
-- [ ] `CoachSelectionModal.jsx` - Coach selection for copy
-- [ ] `ProgramAdaptationChat.jsx` - Slide-out chat component
-- [ ] `MySharedPrograms.jsx` - Share management
+- [ ] `ProgramAdaptationChat.jsx` - Slide-out chat component for program customization
+- [ ] `MySharedPrograms.jsx` - User's share management page
 
 **Phase 3 - Integration & Polish:**
 
-- [ ] ProgramDashboard integration (auto-open slide-out)
+- [ ] `stream-program-conversation` Lambda handler (backend for slide-out chat)
+- [ ] ProgramDashboard integration (auto-open slide-out for copied programs)
 - [ ] ProgramOverview "Customize with Coach" button
-- [ ] Analytics tracking implementation
-- [ ] End-to-end testing
+- [ ] Analytics tracking implementation (`sharedProgramAnalytics.js`)
+- [ ] End-to-end testing with beta users
 
 ---
 
@@ -3451,22 +3655,30 @@ These features are explicitly **out of scope** for initial launch but could be a
 
 ### Frontend Files
 
-**New Files to Create:**
+**New Files Created ✅:**
 
-- `src/components/shared-programs/ShareProgramModal.jsx` - Share link generation modal
-- `src/components/shared-programs/SharedProgramPreview.jsx` - Public preview + instant copy
+- `src/components/shared-programs/ShareProgramModal.jsx` - Share link generation modal ✅
+- `src/components/shared-programs/SharedProgramPreview.jsx` - Public preview + instant copy ✅
+- `src/components/shared-programs/SelectCoachModal.jsx` - Coach selection modal (with avatar styling matching CoachHeader) ✅
+- `src/utils/apis/sharedProgramApi.js` - API wrapper functions ✅
+
+**New Files to Create (Future):**
+
 - `src/components/shared-programs/MySharedPrograms.jsx` - User's share management
-- `src/components/shared-programs/CoachSelectionModal.jsx` - Coach selection for copy
 - `src/components/shared-programs/ProgramAdaptationChat.jsx` - **Slide-out chat** (dual-purpose: adaptation + customization)
-- `src/utils/apis/sharedProgramApi.js` - API wrapper functions
-- `src/utils/apis/programConversationApi.js` - **NEW API wrapper for stream-program-conversation**
+- `src/utils/apis/programConversationApi.js` - **API wrapper for stream-program-conversation**
 - `src/utils/analytics/sharedProgramAnalytics.js` - Analytics event tracking
 
-**Existing Files to Modify:**
+**Existing Files Modified ✅:**
 
-- `src/App.jsx` - Add routes (`/shared/programs/:id`, `/programs/shared`)
+- `src/App.jsx` - Added route `/shared/programs/:sharedProgramId` ✅
+- `src/components/programs/ProgramOverview.jsx` - Added "Share This Program" button ✅
+- `amplify/functions/libs/id-utils.ts` - Refactored `generateSharedProgramId()` to use `nanoid` ✅
+
+**Existing Files to Modify (Future):**
+
+- `src/App.jsx` - Add route `/programs/shared` for MySharedPrograms
 - `src/utils/ui/uiPatterns.js` - Add `slideOutPatterns` for slide-out panel
-- `src/components/programs/ManagePrograms.jsx` - Add share button to completed programs
 - `src/components/programs/ProgramDashboard.jsx` - Integrate slide-out chat:
   - Auto-open for copied shared programs (`metadata.copiedFromSharedProgram`)
   - State management for slide-out visibility
@@ -3504,70 +3716,63 @@ These features are explicitly **out of scope** for initial launch but could be a
 
 ## Next Steps
 
-### Immediate (Complete Backend)
+### Current Status: PAUSED FOR STABILIZATION ⏸️
 
-1. **Register `copy-shared-program` Lambda** in `amplify/backend.ts`
-   - Add to appropriate policy groups (DynamoDB read/write, S3 access)
-   - Follow pattern from other sharing Lambdas
-   - File: `amplify/backend.ts`
+Core sharing flow is complete and functional. Pausing development to:
 
-2. **Deploy Backend Changes**
-   - Deploy to AWS environment
-   - Verify all API routes are accessible
-   - Test Lambda execution permissions
+1. Allow existing features to stabilize in production
+2. Gather user feedback on the share → preview → copy flow
+3. Plan remaining features with fresh perspective
 
-3. **End-to-End Backend Testing**
-   - Test share creation flow: `POST /users/{userId}/programs/{programId}/share`
-   - Test public preview: `GET /shared-programs/{sharedProgramId}`
-   - Test instant copy: `POST /users/{userId}/shared-programs/{sharedProgramId}/copy`
-   - Verify program metadata is correctly set
-   - Verify S3 storage and retrieval
-   - Verify DynamoDB operations
+---
 
-### Week 2 - Frontend Implementation (Days 3-5)
+### When Resuming (Estimated: Late January 2026)
 
-**Day 3: Share Flow**
+**Phase 2 Completion: Share Management (~1 day)**
 
-- Build `ShareProgramModal.jsx` component
-- Add share button to `ManagePrograms.jsx` (completed programs only)
-- Create API wrapper functions in `sharedProgramApi.js`
-- Test share link generation flow
+- Build `MySharedPrograms.jsx` component
+- Add `/programs/shared` route to `App.jsx`
+- Add unshare functionality
+- Test share management flow
 
-**Day 4: Preview & Copy Flow**
-
-- Build `SharedProgramPreview.jsx` component (with instant copy CTA)
-- Build `CoachSelectionModal.jsx` component
-- Add `/shared/programs/:sharedProgramId` route to `App.jsx`
-- Test public preview access (no auth)
-- Test instant copy flow (single coach auto-select + multi-coach modal)
-
-**Day 5: Slide-out Adaptation Chat**
+**Phase 3: Slide-out Adaptation Chat (~2 days)**
 
 - Create `stream-program-conversation` Lambda handler (NEW dedicated handler)
 - Build `ProgramAdaptationChat.jsx` slide-out component
 - Add slide-out container patterns to `uiPatterns.js`
 - Create `programConversationApi.js` API wrapper
 - Integrate into `ProgramDashboard.jsx`:
-  - Auto-open for freshly copied shared programs
+  - Auto-open for freshly copied shared programs (`metadata.copiedFromSharedProgram`)
   - Manual trigger via "Customize with Coach" button
 - Add `onCustomize` prop to `ProgramOverview.jsx`
 
-### Week 3 - Polish & Launch (Days 6-7)
-
-**Day 6: Share Management**
-
-- Build `MySharedPrograms.jsx` component
-- Add `/programs/shared` route
-- Add unshare functionality
-- Test share management flow
-
-**Day 7: Testing & Launch Prep**
+**Phase 4: Polish & Launch (~1 day)**
 
 - End-to-end testing: share → preview → copy → dashboard → slide-out → customize
 - Create `sharedProgramAnalytics.js` with all tracking events
 - Integrate analytics calls into components
 - Test analytics events fire correctly at each step
 - Soft launch with beta users
+
+---
+
+### Completed ✅
+
+**Phase 1: Backend (Days 1-2)** - COMPLETE
+
+- All Lambda handlers deployed and tested
+- DynamoDB operations working
+- S3 storage working
+- API routes configured
+
+**Phase 2 Core: Frontend Share & Copy Flow (Days 3-4)** - COMPLETE
+
+- ShareProgramModal working
+- SharedProgramPreview working with skeleton loading
+- SelectCoachModal working (matches CoachHeader styling)
+- Single coach auto-select working
+- Multi-coach modal selection working
+- Privacy: sharedProgramId uses nanoid (no userId exposure)
 
 ---
 
@@ -3601,3 +3806,36 @@ This pattern:
 3. Enables future features (customize any program with coach)
 4. Uses dedicated `stream-program-conversation` handler (simpler than ProgramDesigner wizard)
 5. Reusable for any program modification conversation
+
+---
+
+## Current Status Summary (January 19, 2026)
+
+### What's Working ✅
+
+| Feature                                  | Status                             |
+| ---------------------------------------- | ---------------------------------- |
+| Share link generation                    | ✅ Working                         |
+| Public preview page                      | ✅ Working (with skeleton loading) |
+| Instant copy (single coach)              | ✅ Working                         |
+| Coach selection modal (multiple coaches) | ✅ Working                         |
+| Privacy (nanoid for shared IDs)          | ✅ Implemented                     |
+| Backend (all Lambda handlers)            | ✅ Deployed                        |
+
+### What's Not Built Yet ⏸️
+
+| Feature                                     | Priority | Notes                    |
+| ------------------------------------------- | -------- | ------------------------ |
+| MySharedPrograms management                 | Medium   | Unshare functionality    |
+| ProgramAdaptationChat slide-out             | Medium   | Proactive coach analysis |
+| Analytics tracking                          | Low      | Track share/copy events  |
+| Multiple active programs in TrainingGrounds | Low      | Design documented above  |
+
+### Resume Plan
+
+When resuming development (late January 2026):
+
+1. **Day 1:** Build `MySharedPrograms.jsx` with unshare functionality
+2. **Day 2-3:** Build `ProgramAdaptationChat.jsx` slide-out + backend
+3. **Day 4:** Analytics integration and end-to-end testing
+4. **Future:** Multiple active programs in TrainingGrounds (Phase 2/3)

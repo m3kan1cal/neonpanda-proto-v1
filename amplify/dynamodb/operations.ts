@@ -3265,6 +3265,8 @@ export async function queryPrograms(
     status?: Program["status"];
     limit?: number;
     sortOrder?: "asc" | "desc";
+    includeArchived?: boolean;
+    includeStatus?: string[]; // Array of statuses to include (e.g., ["active", "paused"]) - more explicit and safer
   },
 ): Promise<Program[]> {
   const tableName = getTableName();
@@ -3278,25 +3280,55 @@ export async function queryPrograms(
     // Paginate through all results
     do {
       pageCount++;
+      // Build filter expression based on options
+      // Note: DynamoDB requires separate placeholders for nested attribute paths
+      const includeArchived = options?.includeArchived ?? false;
+      let filterExpression = "#entityType = :entityType";
+
+      // Build ExpressionAttributeValues dynamically
+      const expressionAttributeValues: Record<string, any> = {
+        ":gsi1pk": `user#${userId}`,
+        ":gsi1sk_prefix": "program#",
+        ":entityType": "program",
+      };
+
+      // Handle includeArchived (backward compatibility)
+      if (!includeArchived) {
+        filterExpression += " AND #attributes.#status <> :archivedStatus";
+        expressionAttributeValues[":archivedStatus"] = "archived";
+      }
+
+      // Handle includeStatus array (positive filter - explicit about what to show)
+      // This is safer than excludeStatus as new statuses won't automatically appear
+      if (options?.includeStatus && options.includeStatus.length > 0) {
+        // Use IN operator for multiple statuses
+        const statusPlaceholders = options.includeStatus
+          .map((_, index) => `:includeStatus${index}`)
+          .join(", ");
+        filterExpression += ` AND #attributes.#status IN (${statusPlaceholders})`;
+        options.includeStatus.forEach((status, index) => {
+          expressionAttributeValues[`:includeStatus${index}`] = status;
+        });
+      }
+
+      // Handle specific status filter (single status - backward compatibility)
+      if (options?.status) {
+        filterExpression += " AND #attributes.#status = :status";
+        expressionAttributeValues[":status"] = options.status;
+      }
+
       const command = new QueryCommand({
         TableName: tableName,
         IndexName: "gsi1",
         KeyConditionExpression:
           "gsi1pk = :gsi1pk AND begins_with(gsi1sk, :gsi1sk_prefix)",
-        FilterExpression: options?.status
-          ? "#entityType = :entityType AND #status = :status AND #status <> :archivedStatus"
-          : "#entityType = :entityType AND #status <> :archivedStatus",
+        FilterExpression: filterExpression,
         ExpressionAttributeNames: {
           "#entityType": "entityType",
-          "#status": "attributes.status",
+          "#attributes": "attributes",
+          "#status": "status",
         },
-        ExpressionAttributeValues: {
-          ":gsi1pk": `user#${userId}`,
-          ":gsi1sk_prefix": "program#",
-          ":entityType": "program",
-          ":archivedStatus": "archived",
-          ...(options?.status && { ":status": options.status }),
-        },
+        ExpressionAttributeValues: expressionAttributeValues,
         ExclusiveStartKey: lastEvaluatedKey,
       });
 

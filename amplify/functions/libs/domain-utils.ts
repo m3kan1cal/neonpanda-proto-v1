@@ -6,10 +6,10 @@
  */
 
 // Branch name for environment-aware URLs
-const BRANCH_NAME = process.env.BRANCH_NAME || 'main';
+const BRANCH_NAME = process.env.BRANCH_NAME || "main";
 
 // Base domain for NeonPanda
-const BASE_DOMAIN = 'neonpanda.ai';
+const BASE_DOMAIN = "neonpanda.ai";
 
 /**
  * Get the appropriate API domain based on the current branch/environment
@@ -20,11 +20,14 @@ export function getApiDomain(): string {
   // Sandbox/local development - use environment variable if available
   // (In sandbox, the actual API Gateway URL will be injected as an env var)
   if (process.env.API_ENDPOINT) {
-    return process.env.API_ENDPOINT.replace(/^https?:\/\//, '').replace(/\/$/, '');
+    return process.env.API_ENDPOINT.replace(/^https?:\/\//, "").replace(
+      /\/$/,
+      "",
+    );
   }
 
   // Production (main branch)
-  if (BRANCH_NAME === 'main') {
+  if (BRANCH_NAME === "main") {
     return `api-prod.${BASE_DOMAIN}`;
   }
 
@@ -39,7 +42,7 @@ export function getApiDomain(): string {
  */
 export function getAppDomain(): string {
   // Production (main branch) - use root domain
-  if (BRANCH_NAME === 'main') {
+  if (BRANCH_NAME === "main") {
     return BASE_DOMAIN;
   }
 
@@ -51,9 +54,14 @@ export function getAppDomain(): string {
 /**
  * Get the current app URL (for linking to frontend)
  *
- * @returns Full app URL with protocol (e.g., 'https://neonpanda.ai')
+ * @returns Full app URL with protocol (e.g., 'https://neonpanda.ai', 'http://localhost:5173')
  */
 export function getAppUrl(): string {
+  // Sandbox/local development - return localhost frontend URL
+  if (isSandbox() || process.env.NODE_ENV === "development") {
+    return "http://localhost:5173";
+  }
+
   return `https://${getAppDomain()}`;
 }
 
@@ -81,7 +89,7 @@ export function getBranchName(): string {
  * @returns True if running on main branch
  */
 export function isProduction(): boolean {
-  return BRANCH_NAME === 'main';
+  return BRANCH_NAME === "main";
 }
 
 /**

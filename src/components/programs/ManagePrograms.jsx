@@ -71,6 +71,7 @@ import { useToast } from "../../contexts/ToastContext";
 import { PROGRAM_STATUS } from "../../constants/conversationModes";
 import { createProgramDesignerSession } from "../../utils/apis/programDesignerApi";
 import { getAllPrograms } from "../../utils/apis/programApi";
+import ShareProgramModal from "../shared-programs/ShareProgramModal";
 
 // Helper function to check if a program is new (created within last 7 days)
 const isNewProgram = (createdDate, programId) => {
@@ -226,6 +227,10 @@ function ManagePrograms() {
   const [programToDelete, setProgramToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Share program modal state
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [programToShare, setProgramToShare] = useState(null);
+
   // Actions menu state
   const [openMenuId, setOpenMenuId] = useState(null);
   const [editingProgramId, setEditingProgramId] = useState(null);
@@ -334,7 +339,7 @@ function ManagePrograms() {
         // Fetch user's coaches and ALL programs in parallel
         const [coachesData, programsResponse] = await Promise.all([
           coachAgentRef.current.loadCoaches(),
-          getAllPrograms(userId),
+          getAllPrograms(userId, { includeArchived: false }),
         ]);
 
         setCoaches(coachesData || []);
@@ -674,6 +679,23 @@ function ManagePrograms() {
   const handleCancelDelete = () => {
     setShowDeleteModal(false);
     setProgramToDelete(null);
+  };
+
+  // Handle share click - show modal
+  const handleShareClick = (program) => {
+    setProgramToShare(program);
+    setShowShareModal(true);
+  };
+
+  // Handle share success
+  const handleShareSuccess = (result) => {
+    toast.success("Share link created successfully!");
+  };
+
+  // Handle share modal close
+  const handleShareClose = () => {
+    setShowShareModal(false);
+    setProgramToShare(null);
   };
 
   // Handle delete session
@@ -1088,65 +1110,88 @@ function ManagePrograms() {
           </div>
         </div>
 
-        {/* Action Buttons */}
-        {showActions && (
-          <div className="mt-6 space-y-2">
-            {/* View Dashboard Button */}
+        {/* Action Buttons - Always show navigation/share, conditionally show status actions */}
+        <div className="mt-6 space-y-2">
+          {/* View Dashboard Button - Always visible */}
+          <button
+            onClick={() => handleViewProgram(program)}
+            disabled={isAnyActionInProgress}
+            className={`${buttonPatterns.secondaryMedium} w-full space-x-2`}
+          >
+            <HomeIcon />
+            <span>View Dashboard</span>
+          </button>
+
+          {/* Share Button - for active or completed programs */}
+          {(program.status === PROGRAM_STATUS.ACTIVE ||
+            program.status === PROGRAM_STATUS.COMPLETED) && (
             <button
-              onClick={() => handleViewProgram(program)}
+              onClick={() => handleShareClick(program)}
               disabled={isAnyActionInProgress}
               className={`${buttonPatterns.secondaryMedium} w-full space-x-2`}
             >
-              <HomeIcon />
-              <span>View Dashboard</span>
-            </button>
-
-            {/* Status-specific actions */}
-            {program.status === PROGRAM_STATUS.ACTIVE && (
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => handlePauseProgram(program)}
-                  disabled={isAnyActionInProgress}
-                  className={`flex-1 ${buttonPatterns.primaryMedium} space-x-2 disabled:opacity-50 disabled:cursor-not-allowed`}
-                >
-                  {isPausing ? (
-                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
-                  ) : (
-                    <PauseIcon />
-                  )}
-                  <span>Pause</span>
-                </button>
-                <button
-                  onClick={() => handleCompleteProgram(program)}
-                  disabled={isAnyActionInProgress}
-                  className={`flex-1 ${buttonPatterns.primaryMedium} space-x-2 disabled:opacity-50 disabled:cursor-not-allowed`}
-                >
-                  {isCompleting ? (
-                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
-                  ) : (
-                    <CheckIcon />
-                  )}
-                  <span>Complete</span>
-                </button>
-              </div>
-            )}
-
-            {program.status === PROGRAM_STATUS.PAUSED && (
-              <button
-                onClick={() => handleResumeProgram(program)}
-                disabled={isAnyActionInProgress}
-                className={`w-full ${buttonPatterns.primaryMedium} space-x-2 disabled:opacity-50 disabled:cursor-not-allowed`}
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-                {isResuming ? (
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
+                />
+              </svg>
+              <span>Share This Program</span>
+            </button>
+          )}
+
+          {/* Status-specific actions - Only for active/paused */}
+          {showActions && program.status === PROGRAM_STATUS.ACTIVE && (
+            <div className="flex space-x-2">
+              <button
+                onClick={() => handlePauseProgram(program)}
+                disabled={isAnyActionInProgress}
+                className={`flex-1 ${buttonPatterns.primaryMedium} space-x-2 disabled:opacity-50 disabled:cursor-not-allowed`}
+              >
+                {isPausing ? (
                   <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
                 ) : (
-                  <ArrowRightIcon />
+                  <PauseIcon />
                 )}
-                <span>Resume Program</span>
+                <span>Pause</span>
               </button>
-            )}
-          </div>
-        )}
+              <button
+                onClick={() => handleCompleteProgram(program)}
+                disabled={isAnyActionInProgress}
+                className={`flex-1 ${buttonPatterns.primaryMedium} space-x-2 disabled:opacity-50 disabled:cursor-not-allowed`}
+              >
+                {isCompleting ? (
+                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                ) : (
+                  <CheckIcon />
+                )}
+                <span>Complete</span>
+              </button>
+            </div>
+          )}
+
+          {showActions && program.status === PROGRAM_STATUS.PAUSED && (
+            <button
+              onClick={() => handleResumeProgram(program)}
+              disabled={isAnyActionInProgress}
+              className={`w-full ${buttonPatterns.primaryMedium} space-x-2 disabled:opacity-50 disabled:cursor-not-allowed`}
+            >
+              {isResuming ? (
+                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <ArrowRightIcon />
+              )}
+              <span>Resume Program</span>
+            </button>
+          )}
+        </div>
       </div>
     );
   };
@@ -1958,6 +2003,16 @@ function ManagePrograms() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Share Program Modal */}
+      {showShareModal && programToShare && (
+        <ShareProgramModal
+          program={programToShare}
+          userId={userId}
+          onClose={handleShareClose}
+          onSuccess={handleShareSuccess}
+        />
       )}
 
       {/* Tooltips */}

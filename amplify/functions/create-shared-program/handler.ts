@@ -40,11 +40,11 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       return createErrorResponse(404, `Program not found: ${programId}`);
     }
 
-    // 2. Verify program is completed (only completed programs can be shared)
-    if (program.status !== "completed") {
+    // 2. Verify program can be shared (active or completed only)
+    if (program.status === "archived") {
       return createErrorResponse(
         400,
-        `Only completed programs can be shared. Current status: ${program.status}`,
+        `Cannot share an archived program. Only active or completed programs can be shared. Current status: ${program.status}`,
       );
     }
 
@@ -71,8 +71,8 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       coachNames: program.coachNames || [], // Use existing coach names from program
     };
 
-    // 6. Generate shared program ID
-    const sharedProgramId = generateSharedProgramId(userId);
+    // 6. Generate shared program ID (no userId for privacy)
+    const sharedProgramId = generateSharedProgramId();
 
     // 7. Store full program details in S3
     const s3DetailKey = await storeSharedProgramDetailsInS3(

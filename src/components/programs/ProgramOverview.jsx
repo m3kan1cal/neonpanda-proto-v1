@@ -18,6 +18,8 @@ export default function ProgramOverview({
   program,
   programAgentRef,
   onProgramUpdate,
+  userId,
+  onShareClick, // Callback to trigger share modal in parent (ProgramDashboard)
 }) {
   const [isPausing, setIsPausing] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
@@ -412,55 +414,78 @@ export default function ProgramOverview({
         </div>
       </div>
 
-      {/* Action Buttons */}
-      {(program.status === PROGRAM_STATUS.ACTIVE ||
-        program.status === PROGRAM_STATUS.PAUSED) && (
-        <div className="mt-6 space-y-2">
-          {program.status === PROGRAM_STATUS.ACTIVE && (
-            <div className="flex space-x-2">
-              <button
-                onClick={handlePause}
-                disabled={isPausing || isCompleting}
-                className={`flex-1 ${buttonPatterns.primaryMedium} space-x-2 disabled:opacity-50 disabled:cursor-not-allowed`}
-              >
-                {isPausing ? (
-                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
-                ) : (
-                  <PauseIcon />
-                )}
-                <span>Pause</span>
-              </button>
-              <button
-                onClick={handleComplete}
-                disabled={isPausing || isCompleting}
-                className={`flex-1 ${buttonPatterns.primaryMedium} space-x-2 disabled:opacity-50 disabled:cursor-not-allowed`}
-              >
-                {isCompleting ? (
-                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
-                ) : (
-                  <CheckIcon />
-                )}
-                <span>Complete</span>
-              </button>
-            </div>
-          )}
-
-          {program.status === PROGRAM_STATUS.PAUSED && (
+      {/* Action Buttons - Share and status actions */}
+      <div className="mt-6 space-y-2">
+        {/* Share Button - Available for active and completed programs */}
+        {onShareClick &&
+          (program.status === PROGRAM_STATUS.ACTIVE ||
+            program.status === PROGRAM_STATUS.COMPLETED) && (
             <button
-              onClick={handleResume}
-              disabled={isResuming}
-              className={`w-full ${buttonPatterns.primaryMedium} space-x-2 disabled:opacity-50 disabled:cursor-not-allowed`}
+              onClick={onShareClick}
+              className={`${buttonPatterns.secondaryMedium} w-full space-x-2`}
             >
-              {isResuming ? (
-                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
-              ) : (
-                <ArrowRightIcon />
-              )}
-              <span>Resume Program</span>
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
+                />
+              </svg>
+              <span>Share This Program</span>
             </button>
           )}
-        </div>
-      )}
+
+        {/* Status Action Buttons - Only for active/paused */}
+        {program.status === PROGRAM_STATUS.ACTIVE && (
+          <div className="flex space-x-2">
+            <button
+              onClick={handlePause}
+              disabled={isPausing || isCompleting}
+              className={`flex-1 ${buttonPatterns.primaryMedium} space-x-2 disabled:opacity-50 disabled:cursor-not-allowed`}
+            >
+              {isPausing ? (
+                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <PauseIcon />
+              )}
+              <span>Pause</span>
+            </button>
+            <button
+              onClick={handleComplete}
+              disabled={isPausing || isCompleting}
+              className={`flex-1 ${buttonPatterns.primaryMedium} space-x-2 disabled:opacity-50 disabled:cursor-not-allowed`}
+            >
+              {isCompleting ? (
+                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <CheckIcon />
+              )}
+              <span>Complete</span>
+            </button>
+          </div>
+        )}
+
+        {program.status === PROGRAM_STATUS.PAUSED && (
+          <button
+            onClick={handleResume}
+            disabled={isResuming}
+            className={`w-full ${buttonPatterns.primaryMedium} space-x-2 disabled:opacity-50 disabled:cursor-not-allowed`}
+          >
+            {isResuming ? (
+              <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+            ) : (
+              <ArrowRightIcon />
+            )}
+            <span>Resume Program</span>
+          </button>
+        )}
+      </div>
     </div>
   );
 }

@@ -99,7 +99,7 @@ async function queryAllCoaches(docClient, tableName, userId) {
       },
       ExpressionAttributeValues: {
         ":pk": `user#${userId}`,
-        ":sk_prefix": "coachConfig#",
+        ":sk_prefix": "coach#",
         ":entityType": "coachConfig",
       },
       ExclusiveStartKey: lastEvaluatedKey,
@@ -136,15 +136,15 @@ async function main() {
     process.exit(1);
   }
 
-  console.log("\n========================================");
-  console.log("  ORPHANED PROGRAMS DIAGNOSTIC TOOL");
-  console.log("========================================\n");
+  console.info("\n========================================");
+  console.info("  ORPHANED PROGRAMS DIAGNOSTIC TOOL");
+  console.info("========================================\n");
 
-  console.log(`📋 Configuration:`);
-  console.log(`   User ID:    ${options.userId}`);
-  console.log(`   Table:      ${options.tableName}`);
-  console.log(`   Region:     ${options.region}`);
-  console.log("");
+  console.info(`📋 Configuration:`);
+  console.info(`   User ID:    ${options.userId}`);
+  console.info(`   Table:      ${options.tableName}`);
+  console.info(`   Region:     ${options.region}`);
+  console.info("");
 
   // Initialize DynamoDB client
   const client = new DynamoDBClient({ region: options.region });
@@ -152,41 +152,41 @@ async function main() {
 
   try {
     // Step 1: Query all programs
-    console.log("🔍 Step 1: Querying all programs for user...");
+    console.info("🔍 Step 1: Querying all programs for user...");
     const programs = await queryAllPrograms(
       docClient,
       options.tableName,
       options.userId,
     );
-    console.log(`   Found ${programs.length} programs total\n`);
+    console.info(`   Found ${programs.length} programs total\n`);
 
     // Step 2: Query all coaches
-    console.log("🔍 Step 2: Querying all coaches for user...");
+    console.info("🔍 Step 2: Querying all coaches for user...");
     const coaches = await queryAllCoaches(
       docClient,
       options.tableName,
       options.userId,
     );
-    console.log(`   Found ${coaches.length} coaches total\n`);
+    console.info(`   Found ${coaches.length} coaches total\n`);
 
     // Extract valid coach IDs
     const validCoachIds = new Set(
       coaches.map((c) => c.attributes?.coach_id || c.coach_id),
     );
 
-    console.log("📊 Valid Coach IDs:");
+    console.info("📊 Valid Coach IDs:");
     for (const coachId of validCoachIds) {
       const coach = coaches.find(
         (c) => (c.attributes?.coach_id || c.coach_id) === coachId,
       );
       const coachName =
         coach?.attributes?.coach_name || coach?.coach_name || "Unknown";
-      console.log(`   - ${coachId} (${coachName})`);
+      console.info(`   - ${coachId} (${coachName})`);
     }
-    console.log("");
+    console.info("");
 
     // Step 3: Analyze programs
-    console.log("🔍 Step 3: Analyzing programs...\n");
+    console.info("🔍 Step 3: Analyzing programs...\n");
 
     const orphanedPrograms = [];
     const validPrograms = [];
@@ -235,20 +235,20 @@ async function main() {
     }
 
     // Report findings
-    console.log("========================================");
-    console.log("  DIAGNOSTIC RESULTS");
-    console.log("========================================\n");
+    console.info("========================================");
+    console.info("  DIAGNOSTIC RESULTS");
+    console.info("========================================\n");
 
-    console.log(`📊 Summary:`);
-    console.log(`   Total Programs:           ${programs.length}`);
-    console.log(`   Valid Programs:           ${validPrograms.length}`);
-    console.log(`   Orphaned Programs:        ${orphanedPrograms.length}`);
-    console.log(
+    console.info(`📊 Summary:`);
+    console.info(`   Total Programs:           ${programs.length}`);
+    console.info(`   Valid Programs:           ${validPrograms.length}`);
+    console.info(`   Orphaned Programs:        ${orphanedPrograms.length}`);
+    console.info(
       `   Missing coachIds:         ${programsWithMissingCoachIds.length}`,
     );
-    console.log(`   Total Valid Coaches:      ${validCoachIds.size}`);
-    console.log(`   Total Referenced Coaches: ${allReferencedCoachIds.size}`);
-    console.log("");
+    console.info(`   Total Valid Coaches:      ${validCoachIds.size}`);
+    console.info(`   Total Referenced Coaches: ${allReferencedCoachIds.size}`);
+    console.info("");
 
     // Find coach IDs referenced but not valid
     const orphanedCoachIds = [...allReferencedCoachIds].filter(
@@ -256,84 +256,84 @@ async function main() {
     );
 
     if (orphanedCoachIds.length > 0) {
-      console.log("⚠️  Orphaned Coach IDs (referenced but don't exist):");
+      console.info("⚠️  Orphaned Coach IDs (referenced but don't exist):");
       for (const coachId of orphanedCoachIds) {
         const programsWithThisCoach = orphanedPrograms.filter((p) =>
           p.coachIds.includes(coachId),
         );
-        console.log(
+        console.info(
           `   - ${coachId} (referenced by ${programsWithThisCoach.length} program(s))`,
         );
       }
-      console.log("");
+      console.info("");
     }
 
     if (orphanedPrograms.length > 0) {
-      console.log("❌ Orphaned Programs (referencing invalid coaches):");
+      console.info("❌ Orphaned Programs (referencing invalid coaches):");
       for (const program of orphanedPrograms) {
-        console.log(`   Program: ${program.name}`);
-        console.log(`     ID:              ${program.programId}`);
-        console.log(`     Status:          ${program.status}`);
-        console.log(`     Coach IDs:       ${program.coachIds.join(", ")}`);
-        console.log(
+        console.info(`   Program: ${program.name}`);
+        console.info(`     ID:              ${program.programId}`);
+        console.info(`     Status:          ${program.status}`);
+        console.info(`     Coach IDs:       ${program.coachIds.join(", ")}`);
+        console.info(
           `     Invalid Coaches: ${program.invalidCoachIds.join(", ")}`,
         );
-        console.log("");
+        console.info("");
       }
     }
 
     if (programsWithMissingCoachIds.length > 0) {
-      console.log("⚠️  Programs with Missing coachIds:");
+      console.info("⚠️  Programs with Missing coachIds:");
       for (const program of programsWithMissingCoachIds) {
-        console.log(
+        console.info(
           `   - ${program.name} (${program.programId}) - Status: ${program.status}`,
         );
       }
-      console.log("");
+      console.info("");
     }
 
     if (validPrograms.length > 0 && options.verbose) {
-      console.log("✅ Valid Programs:");
+      console.info("✅ Valid Programs:");
       for (const program of validPrograms) {
-        console.log(`   - ${program.name} (${program.programId})`);
-        console.log(`     Status:    ${program.status}`);
-        console.log(`     Coach IDs: ${program.coachIds.join(", ")}`);
+        console.info(`   - ${program.name} (${program.programId})`);
+        console.info(`     Status:    ${program.status}`);
+        console.info(`     Coach IDs: ${program.coachIds.join(", ")}`);
       }
-      console.log("");
+      console.info("");
     }
 
     // Recommendation
-    console.log("========================================");
-    console.log("  RECOMMENDATIONS");
-    console.log("========================================\n");
+    console.info("========================================");
+    console.info("  RECOMMENDATIONS");
+    console.info("========================================\n");
 
     if (
       orphanedPrograms.length === 0 &&
       programsWithMissingCoachIds.length === 0
     ) {
-      console.log(
+      console.info(
         "✅ No issues found! All programs have valid coach associations.\n",
       );
     } else {
       if (orphanedPrograms.length > 0) {
-        console.log("🔧 To fix orphaned programs, you have these options:");
-        console.log(
+        console.info("🔧 To fix orphaned programs, you have these options:");
+        console.info(
           "   1. Delete the orphaned programs (if they're old/unused)",
         );
-        console.log("   2. Update coachIds to reference a valid coach");
-        console.log(
+        console.info("   2. Update coachIds to reference a valid coach");
+        console.info(
           "   3. Re-create the deleted coach to restore association\n",
         );
       }
 
       if (programsWithMissingCoachIds.length > 0) {
-        console.log(
+        console.info(
           "🔧 Programs with missing coachIds need to be updated with valid coach IDs.\n",
         );
       }
 
-      console.log("Run the cleanup script to fix these issues:");
-      console.log(
+      console.info("Run the cleanup script to fix these issues:");
+      console.info(
         `   node scripts/cleanup-orphaned-programs.js ${options.userId} --table=${options.tableName}\n`,
       );
     }

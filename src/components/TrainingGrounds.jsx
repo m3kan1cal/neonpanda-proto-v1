@@ -336,9 +336,9 @@ function TrainingGrounds() {
       reportsAgentRef.current.loadRecentReports(5);
     }
     if (programAgentRef.current && userId && coachId) {
-      // Load all programs (not just active) and today's workout
+      // Load only active and paused programs (explicit positive filter)
       programAgentRef.current
-        .loadPrograms({ limit: 5 })
+        .loadPrograms({ limit: 5, includeStatus: ["active", "paused"] })
         .then(() => {
           // After loading programs, load today's workout if there's an active program
           if (programAgentRef.current.hasActiveProgram()) {
@@ -824,7 +824,7 @@ function TrainingGrounds() {
               />
             </>
           ) : programs && programs.length > 0 ? (
-            // User has programs but none are active - show first program
+            // User has programs but none are active - show first program (API already filtered to active/paused)
             <>
               {/* Program Summary Card */}
               <ActiveProgramSummary

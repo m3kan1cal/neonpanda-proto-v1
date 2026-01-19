@@ -44,7 +44,7 @@ export interface SharedProgramSnapshot {
  */
 export interface SharedProgram {
   // === Identity ===
-  sharedProgramId: string; // "sharedProgram_{creatorUserId}_{timestamp}_{shortId}"
+  sharedProgramId: string; // "sharedProgram_{nanoId}" (no userId for privacy)
   originalProgramId: string; // Reference to source program
   creatorUserId: string; // User who shared
   creatorUsername: string; // Display name for attribution on preview page
@@ -109,8 +109,10 @@ export interface CreateSharedProgramResponse {
  */
 export interface GetSharedProgramResponse {
   sharedProgramId: string;
+  creatorUserId: string; // For ownership check on frontend (is this the logged-in user's program?)
   creatorUsername: string;
   programSnapshot: SharedProgramSnapshot;
+  sampleWorkouts?: any[]; // Sample workout templates for preview (limited to 3-5)
   createdAt: string;
 }
 
