@@ -166,7 +166,7 @@ export const NavigationProvider = ({ children }) => {
             console.warn("NavigationContext: Failed to fetch reports:", err);
             return { items: [] };
           }),
-          getAllPrograms(userId).catch((err) => {
+          getAllPrograms(userId, { includeArchived: false }).catch((err) => {
             console.warn(
               "NavigationContext: Failed to fetch training programs:",
               err,
@@ -200,6 +200,7 @@ export const NavigationProvider = ({ children }) => {
         }
 
         // Handle different response formats for programs
+        // Note: Backend already filters out archived programs by default
         let programsCount = 0;
         if (Array.isArray(programsData)) {
           programsCount = programsData.length;

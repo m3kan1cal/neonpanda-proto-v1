@@ -30,6 +30,8 @@ import ProgressOverview from "./ProgressOverview";
 import ProgramCalendar from "./ProgramCalendar";
 import PhaseTimeline from "./PhaseTimeline";
 import PhaseBreakdown from "./PhaseBreakdown";
+import ShareProgramModal from "../shared-programs/ShareProgramModal";
+import { useToast } from "../../contexts/ToastContext";
 
 export default function ProgramDashboard() {
   const [searchParams] = useSearchParams();
@@ -45,10 +47,12 @@ export default function ProgramDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isCompletingRestDay, setIsCompletingRestDay] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   const programAgentRef = useRef(null);
   const coachAgentRef = useRef(null);
   const { setIsCommandPaletteOpen } = useNavigationContext();
+  const toast = useToast();
 
   // Load program data
   useEffect(() => {
@@ -117,19 +121,34 @@ export default function ProgramDashboard() {
         setProgramDetails(allTemplatesData);
       }
 
-      // Load today's workout
-      // Note: ProgramAgent returns null for rest days (doesn't throw error)
-      const todayData = await programAgentRef.current.loadWorkoutTemplates(
-        programId,
-        {
-          today: true,
-        },
-      );
+      // Load today's workout (only for active/paused programs)
+      // Note: Completed programs don't have "today's workout"
+      if (
+        programData.program.status === "active" ||
+        programData.program.status === "paused"
+      ) {
+        try {
+          const todayData = await programAgentRef.current.loadWorkoutTemplates(
+            programId,
+            {
+              today: true,
+            },
+          );
 
-      if (todayData) {
-        setTodaysWorkout(todayData.todaysWorkoutTemplates || todayData);
+          if (todayData) {
+            setTodaysWorkout(todayData.todaysWorkoutTemplates || todayData);
+          } else {
+            // null response means rest day
+            setTodaysWorkout(null);
+          }
+        } catch (todayError) {
+          // If loading today's workout fails, just set it to null
+          // (e.g., program is complete, no more scheduled workouts)
+          console.warn("Could not load today's workout:", todayError);
+          setTodaysWorkout(null);
+        }
       } else {
-        // null response means rest day
+        // Completed or archived programs don't have "today's workout"
         setTodaysWorkout(null);
       }
     } catch (err) {
@@ -174,6 +193,19 @@ export default function ProgramDashboard() {
     } finally {
       setIsCompletingRestDay(false);
     }
+  };
+
+  // Handle share modal (rendered at top level to avoid CSS stacking context issues)
+  const handleShareClick = () => {
+    setShowShareModal(true);
+  };
+
+  const handleShareSuccess = () => {
+    toast.success("Share link created successfully!");
+  };
+
+  const handleShareClose = () => {
+    setShowShareModal(false);
   };
 
   if (isLoading) {
@@ -229,7 +261,7 @@ export default function ProgramDashboard() {
                 data-tooltip-id="program-dashboard-info"
                 data-tooltip-content={`${program.name} - Day ${program.currentDay} of ${program.totalDays || program.duration}`}
               >
-                Training Program Dashboard
+                Program Dashboard
               </h1>
               <div
                 className="px-2 py-1 bg-synthwave-neon-purple/10 border border-synthwave-neon-purple/30 rounded text-synthwave-neon-purple font-rajdhani text-xs font-bold uppercase tracking-wider cursor-help"
@@ -369,18 +401,20 @@ export default function ProgramDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           {/* Main content - 60% (3 of 5 columns) */}
           <div className="lg:col-span-3 space-y-6">
-            {/* Today's Workout */}
-            <TodaysWorkoutCard
-              todaysWorkout={todaysWorkout}
-              program={program}
-              isLoading={false}
-              error={null}
-              userId={userId}
-              coachId={coachId}
-              onCompleteRestDay={handleCompleteRestDay}
-              isCompletingRestDay={isCompletingRestDay}
-              showViewProgramButton={false} // Hide button since user is already on program dashboard
-            />
+            {/* Today's Workout - Only show for active/paused programs */}
+            {(program.status === "active" || program.status === "paused") && (
+              <TodaysWorkoutCard
+                todaysWorkout={todaysWorkout}
+                program={program}
+                isLoading={false}
+                error={null}
+                userId={userId}
+                coachId={coachId}
+                onCompleteRestDay={handleCompleteRestDay}
+                isCompletingRestDay={isCompletingRestDay}
+                showViewProgramButton={false} // Hide button since user is already on program dashboard
+              />
+            )}
 
             {/* Calendar */}
             <ProgramCalendar
@@ -402,6 +436,8 @@ export default function ProgramDashboard() {
               program={program}
               programAgentRef={programAgentRef}
               onProgramUpdate={handleProgramUpdate}
+              userId={userId}
+              onShareClick={handleShareClick}
             />
 
             {/* Progress Overview */}
@@ -442,6 +478,16 @@ export default function ProgramDashboard() {
         {...tooltipPatterns.standard}
         place="bottom"
       />
+
+      {/* Share Program Modal - rendered at top level to avoid CSS stacking context issues */}
+      {showShareModal && program && (
+        <ShareProgramModal
+          program={program}
+          userId={userId}
+          onClose={handleShareClose}
+          onSuccess={handleShareSuccess}
+        />
+      )}
     </div>
   );
 }

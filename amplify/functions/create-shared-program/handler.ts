@@ -40,26 +40,34 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       return createErrorResponse(404, `Program not found: ${programId}`);
     }
 
-    // 2. Verify program is completed (only completed programs can be shared)
-    if (program.status !== "completed") {
+    // 2. Verify program can be shared (active, paused, or completed - not archived)
+    if (program.status === "archived") {
       return createErrorResponse(
         400,
-        `Only completed programs can be shared. Current status: ${program.status}`,
+        `Cannot share an archived program. Current status: ${program.status}`,
       );
     }
 
-    // 3. Get user profile for username attribution
+    // 3. Verify program has workouts generated (required for sharing)
+    if (!program.s3DetailKey) {
+      return createErrorResponse(
+        400,
+        "This program doesn't have workouts generated yet. Only programs with generated workouts can be shared.",
+      );
+    }
+
+    // 4. Get user profile for username attribution
     const userProfile = await getUserProfile(userId);
     const creatorUsername =
       userProfile?.username || userProfile?.email?.split("@")[0] || "Anonymous";
 
-    // 4. Get program details from S3
+    // 5. Get program details from S3
     const programDetails = await getProgramDetailsFromS3(program.s3DetailKey);
     if (!programDetails) {
       return createErrorResponse(500, "Failed to load program details from S3");
     }
 
-    // 5. Create program snapshot (preserve all coach names for multi-coach attribution)
+    // 6. Create program snapshot (preserve all coach names for multi-coach attribution)
     const programSnapshot: SharedProgramSnapshot = {
       name: program.name,
       description: program.description || "",
@@ -71,10 +79,10 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       coachNames: program.coachNames || [], // Use existing coach names from program
     };
 
-    // 6. Generate shared program ID
-    const sharedProgramId = generateSharedProgramId(userId);
+    // 7. Generate shared program ID (no userId for privacy)
+    const sharedProgramId = generateSharedProgramId();
 
-    // 7. Store full program details in S3
+    // 8. Store full program details in S3
     const s3DetailKey = await storeSharedProgramDetailsInS3(
       sharedProgramId,
       userId,
@@ -82,7 +90,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       programSnapshot,
     );
 
-    // 8. Create shared program entity
+    // 9. Create shared program entity
     const sharedProgram: SharedProgram = {
       sharedProgramId,
       originalProgramId: programId,
@@ -93,10 +101,10 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       isActive: true,
     };
 
-    // 9. Save to DynamoDB
+    // 10. Save to DynamoDB
     await saveSharedProgram(sharedProgram);
 
-    // 10. Generate share URL
+    // 11. Generate share URL
     const shareUrl = `${getAppUrl()}/shared/programs/${sharedProgramId}`;
 
     console.info("Shared program created successfully:", {

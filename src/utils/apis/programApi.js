@@ -23,6 +23,15 @@ export const getPrograms = async (userId, coachId, options = {}) => {
   if (options.limit) params.append("limit", options.limit.toString());
   if (options.sortBy) params.append("sortBy", options.sortBy);
   if (options.sortOrder) params.append("sortOrder", options.sortOrder);
+  if (options.includeArchived !== undefined)
+    params.append("includeArchived", options.includeArchived.toString());
+  if (options.includeStatus) {
+    // Support both array and comma-separated string
+    const statusArray = Array.isArray(options.includeStatus)
+      ? options.includeStatus
+      : [options.includeStatus];
+    params.append("includeStatus", statusArray.join(","));
+  }
 
   const queryString = params.toString();
   const url = `${getApiUrl("")}/users/${userId}/coaches/${coachId}/programs${queryString ? "?" + queryString : ""}`;
@@ -77,6 +86,8 @@ export const getAllPrograms = async (userId, options = {}) => {
   if (options.limit) params.append("limit", options.limit.toString());
   if (options.sortBy) params.append("sortBy", options.sortBy);
   if (options.sortOrder) params.append("sortOrder", options.sortOrder);
+  if (options.includeArchived !== undefined)
+    params.append("includeArchived", options.includeArchived.toString());
 
   const queryString = params.toString();
   const url = `${getApiUrl("")}/users/${userId}/programs${queryString ? "?" + queryString : ""}`;

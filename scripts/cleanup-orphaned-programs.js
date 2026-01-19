@@ -125,7 +125,7 @@ async function queryAllCoaches(docClient, tableName, userId) {
       },
       ExpressionAttributeValues: {
         ":pk": `user#${userId}`,
-        ":sk_prefix": "coachConfig#",
+        ":sk_prefix": "coach#",
         ":entityType": "coachConfig",
       },
       ExclusiveStartKey: lastEvaluatedKey,
@@ -147,7 +147,7 @@ async function archiveProgram(docClient, tableName, program, dryRun) {
   const sk = program.sk;
 
   if (dryRun) {
-    console.log(`   [DRY RUN] Would archive program: ${pk} / ${sk}`);
+    console.info(`   [DRY RUN] Would archive program: ${pk} / ${sk}`);
     return true;
   }
 
@@ -178,7 +178,7 @@ async function deleteProgram(docClient, tableName, program, dryRun) {
   const sk = program.sk;
 
   if (dryRun) {
-    console.log(`   [DRY RUN] Would delete program: ${pk} / ${sk}`);
+    console.info(`   [DRY RUN] Would delete program: ${pk} / ${sk}`);
     return true;
   }
 
@@ -207,7 +207,7 @@ async function reassignProgram(
   const sk = program.sk;
 
   if (dryRun) {
-    console.log(
+    console.info(
       `   [DRY RUN] Would reassign program ${pk} / ${sk} to coach ${newCoachId}`,
     );
     return true;
@@ -294,20 +294,20 @@ async function main() {
     process.exit(1);
   }
 
-  console.log("\n========================================");
-  console.log("  ORPHANED PROGRAMS CLEANUP TOOL");
-  console.log("========================================\n");
+  console.info("\n========================================");
+  console.info("  ORPHANED PROGRAMS CLEANUP TOOL");
+  console.info("========================================\n");
 
-  console.log(`📋 Configuration:`);
-  console.log(`   User ID:        ${options.userId}`);
-  console.log(`   Table:          ${options.tableName}`);
-  console.log(`   Region:         ${options.region}`);
-  console.log(`   Action:         ${options.action}`);
-  console.log(`   Dry Run:        ${options.dryRun ? "Yes" : "No"}`);
+  console.info(`📋 Configuration:`);
+  console.info(`   User ID:        ${options.userId}`);
+  console.info(`   Table:          ${options.tableName}`);
+  console.info(`   Region:         ${options.region}`);
+  console.info(`   Action:         ${options.action}`);
+  console.info(`   Dry Run:        ${options.dryRun ? "Yes" : "No"}`);
   if (options.newCoachId) {
-    console.log(`   New Coach ID:   ${options.newCoachId}`);
+    console.info(`   New Coach ID:   ${options.newCoachId}`);
   }
-  console.log("");
+  console.info("");
 
   // Initialize DynamoDB client
   const client = new DynamoDBClient({ region: options.region });
@@ -315,14 +315,14 @@ async function main() {
 
   try {
     // Step 1: Query all programs and coaches
-    console.log("🔍 Querying programs and coaches...");
+    console.info("🔍 Querying programs and coaches...");
     const [programs, coaches] = await Promise.all([
       queryAllPrograms(docClient, options.tableName, options.userId),
       queryAllCoaches(docClient, options.tableName, options.userId),
     ]);
 
-    console.log(`   Found ${programs.length} programs`);
-    console.log(`   Found ${coaches.length} coaches\n`);
+    console.info(`   Found ${programs.length} programs`);
+    console.info(`   Found ${coaches.length} coaches\n`);
 
     // Extract valid coach IDs
     const validCoachIds = new Set(
@@ -369,21 +369,21 @@ async function main() {
     }
 
     if (orphanedPrograms.length === 0) {
-      console.log("✅ No orphaned programs found. Nothing to clean up.\n");
+      console.info("✅ No orphaned programs found. Nothing to clean up.\n");
       return;
     }
 
-    console.log(`⚠️  Found ${orphanedPrograms.length} orphaned program(s):\n`);
+    console.info(`⚠️  Found ${orphanedPrograms.length} orphaned program(s):\n`);
 
     for (const program of orphanedPrograms) {
       const attrs = program.attributes || program;
-      console.log(`   - ${attrs.name || "Unnamed"}`);
-      console.log(`     ID:        ${attrs.programId}`);
-      console.log(`     Status:    ${attrs.status}`);
-      console.log(
+      console.info(`   - ${attrs.name || "Unnamed"}`);
+      console.info(`     ID:        ${attrs.programId}`);
+      console.info(`     Status:    ${attrs.status}`);
+      console.info(
         `     Coach IDs: ${(attrs.coachIds || []).join(", ") || "None"}`,
       );
-      console.log("");
+      console.info("");
     }
 
     // Confirm action
@@ -403,13 +403,13 @@ async function main() {
 
       const confirmed = await promptConfirmation(confirmMessage);
       if (!confirmed) {
-        console.log("\n❌ Operation cancelled.\n");
+        console.info("\n❌ Operation cancelled.\n");
         return;
       }
     }
 
     // Execute the action
-    console.log(`\n🔧 Executing ${options.action}...\n`);
+    console.info(`\n🔧 Executing ${options.action}...\n`);
 
     let successCount = 0;
     let errorCount = 0;
@@ -425,7 +425,7 @@ async function main() {
               program,
               options.dryRun,
             );
-            console.log(`   ✅ Archived: ${attrs.name || attrs.programId}`);
+            console.info(`   ✅ Archived: ${attrs.name || attrs.programId}`);
             break;
           case "delete":
             await deleteProgram(
@@ -434,7 +434,7 @@ async function main() {
               program,
               options.dryRun,
             );
-            console.log(`   ✅ Deleted: ${attrs.name || attrs.programId}`);
+            console.info(`   ✅ Deleted: ${attrs.name || attrs.programId}`);
             break;
           case "reassign":
             await reassignProgram(
@@ -445,30 +445,30 @@ async function main() {
               newCoachName,
               options.dryRun,
             );
-            console.log(`   ✅ Reassigned: ${attrs.name || attrs.programId}`);
+            console.info(`   ✅ Reassigned: ${attrs.name || attrs.programId}`);
             break;
         }
         successCount++;
       } catch (error) {
-        console.log(
+        console.info(
           `   ❌ Error: ${attrs.name || attrs.programId} - ${error.message}`,
         );
         errorCount++;
       }
     }
 
-    console.log("\n========================================");
-    console.log("  RESULTS");
-    console.log("========================================\n");
-    console.log(`   Successful: ${successCount}`);
-    console.log(`   Errors:     ${errorCount}`);
-    console.log(`   Total:      ${orphanedPrograms.length}`);
+    console.info("\n========================================");
+    console.info("  RESULTS");
+    console.info("========================================\n");
+    console.info(`   Successful: ${successCount}`);
+    console.info(`   Errors:     ${errorCount}`);
+    console.info(`   Total:      ${orphanedPrograms.length}`);
 
     if (options.dryRun) {
-      console.log("\n⚠️  DRY RUN - No changes were made.\n");
-      console.log("Remove --dry-run to apply changes.\n");
+      console.info("\n⚠️  DRY RUN - No changes were made.\n");
+      console.info("Remove --dry-run to apply changes.\n");
     } else {
-      console.log("\n✅ Cleanup complete.\n");
+      console.info("\n✅ Cleanup complete.\n");
     }
   } catch (error) {
     console.error("❌ Error during cleanup:", error);

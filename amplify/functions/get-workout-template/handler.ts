@@ -1,10 +1,10 @@
-import { createOkResponse, createErrorResponse } from '../libs/api-helpers';
-import { getProgram, getUserProfile } from '../../dynamodb/operations';
-import { getProgramDetailsFromS3 } from '../libs/program/s3-utils';
-import { getPhaseForDay } from '../libs/program/calendar-utils';
-import { getUserTimezoneOrDefault } from '../libs/analytics/date-utils';
-import { TodaysWorkoutTemplates } from '../libs/program/types';
-import { withAuth, AuthenticatedHandler } from '../libs/auth/middleware';
+import { createOkResponse, createErrorResponse } from "../libs/api-helpers";
+import { getProgram, getUserProfile } from "../../dynamodb/operations";
+import { getProgramDetailsFromS3 } from "../libs/program/s3-utils";
+import { getPhaseForDay } from "../libs/program/calendar-utils";
+import { getUserTimezoneOrDefault } from "../libs/analytics/date-utils";
+import { TodaysWorkoutTemplates } from "../libs/program/types";
+import { withAuth, AuthenticatedHandler } from "../libs/auth/middleware";
 
 const baseHandler: AuthenticatedHandler = async (event) => {
   try {
@@ -19,52 +19,58 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     const { day, today } = queryParams;
 
     if (!coachId) {
-      return createErrorResponse(400, 'coachId is required');
+      return createErrorResponse(400, "coachId is required");
     }
 
     if (!programId) {
-      return createErrorResponse(400, 'programId is required');
+      return createErrorResponse(400, "programId is required");
     }
 
     // Fetch user profile for timezone (parallel with program fetch)
     const [programData, userProfile] = await Promise.all([
       getProgram(userId, coachId, programId),
-      getUserProfile(userId)
+      getUserProfile(userId),
     ]);
 
     // Get user timezone with LA fallback
-    const userTimezone = getUserTimezoneOrDefault(userProfile?.preferences?.timezone);
+    const userTimezone = getUserTimezoneOrDefault(
+      userProfile?.preferences?.timezone,
+    );
 
     if (!programData) {
-      return createErrorResponse(404, 'Training program not found');
+      return createErrorResponse(404, "Training program not found");
     }
 
     const program = programData;
 
-    // Check if program is active
-    if (program.status !== 'active' && program.status !== 'paused') {
-      return createErrorResponse(400, `Program is ${program.status}. Cannot retrieve templates.`);
+    // Check if program is accessible (allow active, paused, and completed programs)
+    // Only block archived programs
+    if (program.status === "archived") {
+      return createErrorResponse(
+        400,
+        `Program is ${program.status}. Cannot retrieve templates.`,
+      );
     }
 
     // Get program details from S3
     if (!program.s3DetailKey) {
-      return createErrorResponse(404, 'Program workouts not yet generated');
+      return createErrorResponse(404, "Program workouts not yet generated");
     }
 
     const programDetails = await getProgramDetailsFromS3(program.s3DetailKey);
 
     if (!programDetails) {
-      return createErrorResponse(404, 'Program details not found in S3');
+      return createErrorResponse(404, "Program details not found in S3");
     }
 
     // Case 1: Specific template by ID
     if (templateId) {
       const template = programDetails.workoutTemplates.find(
-        (t) => t.templateId === templateId
+        (t) => t.templateId === templateId,
       );
 
       if (!template) {
-        return createErrorResponse(404, 'Workout template not found');
+        return createErrorResponse(404, "Workout template not found");
       }
 
       // Get phase from day number
@@ -72,7 +78,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
 
       return createOkResponse({
         template,
-        phaseName: phase?.name || 'Unknown Phase',
+        phaseName: phase?.name || "Unknown Phase",
         programName: program.name,
       });
     }
@@ -82,28 +88,37 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       const dayNumber = parseInt(day, 10);
 
       if (isNaN(dayNumber)) {
-        return createErrorResponse(400, 'Invalid day parameter. Must be a number.');
+        return createErrorResponse(
+          400,
+          "Invalid day parameter. Must be a number.",
+        );
       }
 
       if (dayNumber < 1 || dayNumber > program.totalDays) {
-        return createErrorResponse(400, `Invalid day number. Must be between 1 and ${program.totalDays}`);
+        return createErrorResponse(
+          400,
+          `Invalid day number. Must be between 1 and ${program.totalDays}`,
+        );
       }
 
-      const templates = programDetails.workoutTemplates
-        .filter((t) => t.dayNumber === dayNumber);
+      const templates = programDetails.workoutTemplates.filter(
+        (t) => t.dayNumber === dayNumber,
+      );
 
       if (templates.length === 0) {
-        return createErrorResponse(404, 'No templates found for this day');
+        return createErrorResponse(404, "No templates found for this day");
       }
 
       const phase = getPhaseForDay(program, dayNumber);
-      const phaseIndex = phase ? program.phases.findIndex(p => p.phaseId === phase.phaseId) : -1;
+      const phaseIndex = phase
+        ? program.phases.findIndex((p) => p.phaseId === phase.phaseId)
+        : -1;
       const phaseNumber = phaseIndex >= 0 ? phaseIndex + 1 : null;
 
       return createOkResponse({
         templates,
         dayNumber: dayNumber,
-        phaseName: phase?.name || 'Unknown Phase',
+        phaseName: phase?.name || "Unknown Phase",
         phaseNumber: phaseNumber,
         programName: program.name,
         totalDays: program.totalDays,
@@ -111,28 +126,34 @@ const baseHandler: AuthenticatedHandler = async (event) => {
     }
 
     // Case 3: Today's templates
-    if (today === 'true') {
+    if (today === "true") {
       const currentDay = program.currentDay;
 
       if (currentDay > program.totalDays) {
-        return createErrorResponse(400, 'Program is complete. No more workouts scheduled.');
+        return createErrorResponse(
+          400,
+          "Program is complete. No more workouts scheduled.",
+        );
       }
 
-      const templates = programDetails.workoutTemplates
-        .filter((t) => t.dayNumber === currentDay);
+      const templates = programDetails.workoutTemplates.filter(
+        (t) => t.dayNumber === currentDay,
+      );
 
       if (templates.length === 0) {
-        return createErrorResponse(404, 'No templates found for today');
+        return createErrorResponse(404, "No templates found for today");
       }
 
       // Get phase info
       const currentPhase = getPhaseForDay(program, currentDay);
-      const phaseIndex = currentPhase ? program.phases.findIndex(p => p.phaseId === currentPhase.phaseId) : -1;
+      const phaseIndex = currentPhase
+        ? program.phases.findIndex((p) => p.phaseId === currentPhase.phaseId)
+        : -1;
       const phaseNumber = phaseIndex >= 0 ? phaseIndex + 1 : null;
 
       // Get next workout preview (first template of next day)
       const nextDayTemplates = programDetails.workoutTemplates.filter(
-        (t) => t.dayNumber === currentDay + 1
+        (t) => t.dayNumber === currentDay + 1,
       );
       const nextDayFirstTemplate = nextDayTemplates[0];
 
@@ -141,15 +162,15 @@ const baseHandler: AuthenticatedHandler = async (event) => {
         programName: program.name,
         dayNumber: currentDay,
         totalDays: program.totalDays,
-        phaseName: currentPhase?.name || 'Unknown Phase',
+        phaseName: currentPhase?.name || "Unknown Phase",
         phaseNumber: phaseNumber,
-        groupId: templates[0]?.groupId || '',
+        groupId: templates[0]?.groupId || "",
         templates,
         nextWorkout: nextDayFirstTemplate
           ? {
               dayNumber: currentDay + 1,
               templateName: nextDayFirstTemplate.name,
-              scheduledDate: '', // No longer stored, calculated on demand
+              scheduledDate: "", // No longer stored, calculated on demand
             }
           : undefined,
       };
@@ -171,7 +192,7 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       programId: program.programId,
       programName: program.name,
       templates: programDetails.workoutTemplates.sort(
-        (a, b) => a.dayNumber - b.dayNumber
+        (a, b) => a.dayNumber - b.dayNumber,
       ),
       programContext: programDetails.programContext,
       phases: program.phases,
@@ -179,8 +200,8 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       totalDays: program.totalDays,
     });
   } catch (error) {
-    console.error('Error getting workout template:', error);
-    return createErrorResponse(500, 'Failed to get workout template', error);
+    console.error("Error getting workout template:", error);
+    return createErrorResponse(500, "Failed to get workout template", error);
   }
 };
 

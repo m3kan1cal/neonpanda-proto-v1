@@ -5,6 +5,8 @@
  * Pattern: {entityType}_{userId}_{timestamp}_{shortId}
  */
 
+import { nanoid } from "nanoid";
+
 /**
  * Generate a random short ID (11 characters, alphanumeric)
  * Uses base36 encoding for URL-safe characters
@@ -30,15 +32,14 @@ export function generateProgramId(userId: string): string {
 
 /**
  * Generate a shared program ID
- * Format: sharedProgram_{userId}_{timestamp}_{shortId}
+ * Format: sharedProgram_{nanoId}
+ * Note: Does not include userId to maintain privacy in public share links
  *
- * @param userId - User ID who is sharing the program
  * @returns Generated shared program ID
  */
-export function generateSharedProgramId(userId: string): string {
-  const timestamp = Date.now();
-  const shortId = generateShortId();
-  return `sharedProgram_${userId}_${timestamp}_${shortId}`;
+export function generateSharedProgramId(): string {
+  // Use nanoid for strong collision resistance (21 chars = ~2.8 million years to 1% collision at 1000 IDs/hour)
+  return `sharedProgram_${nanoid(21)}`;
 }
 
 /**
