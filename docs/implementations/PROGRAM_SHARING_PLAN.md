@@ -1175,10 +1175,10 @@ export async function createSharedProgram(
     throw new Error(`Program not found: ${programId}`);
   }
 
-  // 3. Verify program can be shared (active or completed only)
+  // 3. Verify program can be shared (active, paused, or completed - not archived)
   if (program.status === "archived") {
     throw new Error(
-      `Cannot share an archived program. Only active or completed programs can be shared. Current status: ${program.status}`,
+      `Cannot share an archived program. Current status: ${program.status}`,
     );
   }
 
@@ -3439,7 +3439,7 @@ success to inspire other athletes!"
 **Impact:** Users create junk programs just to share
 **Mitigation:**
 
-- Only active or completed programs can be shared (user is engaged with it)
+- Only active, paused, or completed programs can be shared (user is engaged with it)
 - Archived programs cannot be shared (prevents sharing abandoned programs)
 - Can deactivate/delete shares at any time
 - Platform can flag/remove abusive shares
@@ -3489,7 +3489,7 @@ These features are explicitly **out of scope** for initial launch but could be a
 - ✅ Built `SelectCoachModal.jsx` - Coach selection modal for users with multiple coaches
 - ✅ Created `sharedProgramApi.js` - API wrapper functions for all sharing endpoints
 - ✅ Added `/shared/programs/:sharedProgramId` route to `App.jsx`
-- ✅ Added share button to `ProgramOverview.jsx` (active/completed programs)
+- ✅ Added share button to `ProgramOverview.jsx` (UI shows for active/completed; backend also accepts paused)
 - ✅ Implemented skeleton loading for `SharedProgramPreview.jsx`
 - ✅ Refactored `generateSharedProgramId()` to use `nanoid(21)` for privacy (removes userId from public URLs)
 - ✅ Tested instant copy flow with single coach (auto-select) and multiple coaches (modal selection)
@@ -3498,7 +3498,7 @@ These features are explicitly **out of scope** for initial launch but could be a
 
 **Current State:** Core sharing flow works end-to-end:
 
-1. User can share active/completed programs from ProgramOverview
+1. User can share active/completed programs from ProgramOverview (backend also accepts paused programs)
 2. Share link is generated and can be copied or shared to social
 3. Public preview page shows program details without revealing workout specifics
 4. Logged-in users can copy program with coach selection (auto or modal)

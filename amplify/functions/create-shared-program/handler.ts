@@ -40,11 +40,11 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       return createErrorResponse(404, `Program not found: ${programId}`);
     }
 
-    // 2. Verify program can be shared (active or completed only)
+    // 2. Verify program can be shared (active, paused, or completed - not archived)
     if (program.status === "archived") {
       return createErrorResponse(
         400,
-        `Cannot share an archived program. Only active or completed programs can be shared. Current status: ${program.status}`,
+        `Cannot share an archived program. Current status: ${program.status}`,
       );
     }
 
