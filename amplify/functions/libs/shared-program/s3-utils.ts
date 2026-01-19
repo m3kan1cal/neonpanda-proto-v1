@@ -105,9 +105,9 @@ export async function getSharedProgramDetailsFromS3(
 /**
  * Select a sample of workout templates for preview purposes
  *
- * Returns up to 4 workout templates distributed across the program for variety.
- * If the program has 4 or fewer workouts, returns all of them.
- * For larger programs, samples from beginning, early, mid, and late phases.
+ * Returns up to maxSamples workout templates distributed evenly across the program.
+ * If the program has maxSamples or fewer workouts, returns all of them.
+ * For larger programs, samples are evenly distributed from beginning to end.
  *
  * @param workoutTemplates - Array of workout templates to sample from
  * @param maxSamples - Maximum number of samples to return (default: 4)
@@ -122,24 +122,32 @@ export function selectSampleWorkouts(
     return [];
   }
 
+  // Validate maxSamples
+  if (maxSamples < 1) {
+    return [];
+  }
+
   // If we have fewer templates than max samples, return all of them
   if (workoutTemplates.length <= maxSamples) {
     return workoutTemplates;
   }
 
   // Sample from different parts of the program for variety
-  // Calculate step size and ensure we don't exceed array bounds
-  const step = Math.floor(workoutTemplates.length / maxSamples);
-  const indices = [
-    0, // First workout
-    Math.min(step, workoutTemplates.length - 1), // Early phase workout
-    Math.min(step * 2, workoutTemplates.length - 1), // Mid phase workout
-    Math.min(step * 3, workoutTemplates.length - 1), // Late phase workout
-  ];
+  // Distribute maxSamples evenly across the array
+  const step = workoutTemplates.length / maxSamples;
+  const indices: number[] = [];
 
-  // Filter out any duplicate indices and map to actual templates
-  const uniqueIndices = [...new Set(indices)];
-  const samples = uniqueIndices
+  for (let i = 0; i < maxSamples; i++) {
+    const index = Math.floor(i * step);
+    // Ensure we don't exceed bounds and don't add duplicates
+    const safeIndex = Math.min(index, workoutTemplates.length - 1);
+    if (!indices.includes(safeIndex)) {
+      indices.push(safeIndex);
+    }
+  }
+
+  // Map indices to actual templates
+  const samples = indices
     .map((index) => workoutTemplates[index])
     .filter((template) => template !== undefined); // Ensure no undefined values
 
