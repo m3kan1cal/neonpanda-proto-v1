@@ -108,13 +108,6 @@ export function parseProgramDuration(
 
   // Parse string input
   const lowerValue = durationValue.toLowerCase();
-
-  // Special case: "fortnight" = 2 weeks = 14 days
-  if (/\bfortnight/.test(lowerValue)) {
-    console.info("📅 Interpreted 'fortnight' as 14 days");
-    return 14;
-  }
-
   const extractedNum = extractNumericValue(durationValue);
 
   // Convert based on time unit (using word boundaries to avoid false matches)
@@ -124,6 +117,16 @@ export function parseProgramDuration(
     console.info("📅 Converted weeks to days:", {
       input: durationValue,
       weeks: extractedNum,
+      days,
+    });
+    return days;
+  }
+
+  if (/\bfortnights?\b/.test(lowerValue)) {
+    const days = extractedNum * 14;
+    console.info("📅 Converted fortnights to days:", {
+      input: durationValue,
+      fortnights: extractedNum,
       days,
     });
     return days;
