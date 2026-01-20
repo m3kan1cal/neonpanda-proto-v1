@@ -218,11 +218,15 @@ function BlogIndex() {
                       {/* Timeline Node */}
                       <div className="hidden lg:flex absolute left-1/2 -translate-x-1/2 z-10">
                         <div
-                          className={`w-12 h-12 rounded-full ${colors.bg} ${colors.border} border-2 flex items-center justify-center`}
+                          className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                            post.color === "pink"
+                              ? "bg-synthwave-neon-pink"
+                              : post.color === "cyan"
+                                ? "bg-synthwave-neon-cyan"
+                                : "bg-synthwave-neon-purple"
+                          }`}
                         >
-                          <span
-                            className={`font-inter font-bold text-lg ${colors.text}`}
-                          >
+                          <span className="font-inter font-bold text-lg text-black">
                             {post.id}
                           </span>
                         </div>
@@ -232,7 +236,7 @@ function BlogIndex() {
                       <div
                         className={`lg:w-[calc(50%-3rem)] ${isEven ? "lg:mr-auto" : "lg:ml-auto"}`}
                       >
-                        {post.id === 1 ? (
+                        {post.id <= 2 ? (
                           <Link
                             to={`/blog/${post.slug}`}
                             className={`block ${containerPatterns.cardLight} p-6 hover:${colors.border} transition-all duration-300 group`}
@@ -240,11 +244,15 @@ function BlogIndex() {
                             {/* Mobile Post Number */}
                             <div className="lg:hidden flex items-center gap-3 mb-4">
                               <div
-                                className={`w-8 h-8 rounded-full ${colors.bg} ${colors.border} border flex items-center justify-center`}
+                                className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                                  post.color === "pink"
+                                    ? "bg-synthwave-neon-pink"
+                                    : post.color === "cyan"
+                                      ? "bg-synthwave-neon-cyan"
+                                      : "bg-synthwave-neon-purple"
+                                }`}
                               >
-                                <span
-                                  className={`font-inter font-bold text-sm ${colors.text}`}
-                                >
+                                <span className="font-inter font-bold text-sm text-white">
                                   {post.id}
                                 </span>
                               </div>
@@ -331,11 +339,15 @@ function BlogIndex() {
                             {/* Mobile Post Number */}
                             <div className="lg:hidden flex items-center gap-3 mb-4">
                               <div
-                                className={`w-8 h-8 rounded-full ${colors.bg} ${colors.border} border flex items-center justify-center`}
+                                className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                                  post.color === "pink"
+                                    ? "bg-synthwave-neon-pink/50"
+                                    : post.color === "cyan"
+                                      ? "bg-synthwave-neon-cyan/50"
+                                      : "bg-synthwave-neon-purple/50"
+                                }`}
                               >
-                                <span
-                                  className={`font-inter font-bold text-sm ${colors.text}`}
-                                >
+                                <span className="font-inter font-bold text-sm text-white/70">
                                   {post.id}
                                 </span>
                               </div>
