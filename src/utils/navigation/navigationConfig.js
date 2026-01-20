@@ -20,6 +20,7 @@ import {
   CoachIconSmall,
   ProgramIconTiny,
   WeightPlateIconTiny,
+  BlogIconTiny,
 } from "../../components/themes/SynthwaveComponents";
 
 /**
@@ -246,6 +247,14 @@ export const navigationItems = {
       color: "cyan",
     },
     {
+      id: "blog",
+      label: "Blog",
+      icon: BlogIconTiny,
+      route: "/blog",
+      alwaysVisible: true,
+      color: "cyan",
+    },
+    {
       id: "about",
       label: "About",
       icon: AboutIconTiny,
@@ -275,6 +284,7 @@ export const navigationItems = {
       icon: WaitlistIconTiny,
       route: "/auth",
       alwaysVisible: true,
+      hideWhenAuthenticated: true, // Don't show signup when logged in
       color: "cyan",
     },
     {

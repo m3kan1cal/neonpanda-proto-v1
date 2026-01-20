@@ -1,5 +1,15 @@
 # NeonPanda Program Sharing: Link-Based Viral Growth Plan
 
+**Status:** ⏸️ PAUSED - Core Flow Complete, Stabilizing Before Phase 2
+
+**Progress:** `████████████░░░░░░░░` 60% Complete
+
+**Last Updated:** January 19, 2026
+
+**Current State:** Core sharing flow is functional end-to-end. Backend complete and deployed. Frontend preview page, share modal, coach selection modal, and copy flow all working. Pausing to stabilize before building remaining features (MySharedPrograms management, ProgramAdaptationChat slide-out).
+
+---
+
 ## Strategic Vision
 
 **Core Principle:** Enable authentic sharing of successful programs to drive viral growth while keeping AI coaching central to every program copy.
@@ -27,7 +37,20 @@
 ✅ **No Creator Economy** - Sharing is a user feature, not a business model
 ✅ **Lower Maintenance** - No moderation, curation, or quality control systems
 
-### Growth Loop
+### Growth Loops
+
+**Loop 1: Workout Partner (Active Program)**
+
+```
+User starts program →
+Wants accountability/workout partner →
+Shares active program: "Join me!" →
+Friend copies and starts same program →
+Both train together, mutual accountability →
+Both complete and share success... [loop continues]
+```
+
+**Loop 2: Proven Results (Completed Program)**
 
 ```
 User completes program with great results →
@@ -60,8 +83,9 @@ Friend shares their success... [loop continues]
 
 **Trigger Points:**
 
+- During an active program (user wants workout partner to join them)
 - After completing a program (coach celebrates + offers share)
-- From ManagePrograms page (share button on program card)
+- From ManagePrograms page (share button on active/completed program cards)
 - After hitting a major PR (achievement notification includes share option)
 
 **User Journey:**
@@ -167,7 +191,7 @@ Friend shares their success... [loop continues]
 - `copy-shared-program` Lambda (pattern: `create-coach-config-from-template`)
 - Program saved with `metadata.copiedFromSharedProgram = true`
 - ProgramDashboard detects flag and auto-opens `ProgramAdaptationChat` slide-out
-- Slide-out reuses existing `ProgramDesigner` streaming infrastructure
+- Slide-out uses new `stream-program-conversation` Lambda (dedicated program modification handler)
 - Same slide-out can be triggered later via "Customize with Coach" button
 
 ### Flow 4: Managing Shared Programs
@@ -189,6 +213,155 @@ Friend shares their success... [loop continues]
 ```
 
 **Note:** Deliberately minimal stats. No gamification, no leaderboards, no pressure.
+
+---
+
+## TrainingGrounds: Multiple Active Programs Design
+
+### Current Behavior (Single Program Focus)
+
+The `TrainingGrounds.jsx` component currently assumes a **single active program** per coach:
+
+```javascript
+// Current logic in TrainingGrounds.jsx
+if (activeProgram) {
+  // Show TodaysWorkoutCard + ActiveProgramSummary
+} else if (programs && programs.length > 0) {
+  // Show first program from list (already filtered to active/paused)
+} else {
+  // Show empty state
+}
+```
+
+### Future Design: Multiple Active Programs
+
+When users can have **multiple active training programs** (e.g., copying a shared program while already running one), the TrainingGrounds page needs to handle this gracefully.
+
+#### Scenario 1: User Has Multiple Active Programs
+
+**Display Strategy:**
+
+```
+Training Programs Section:
+┌─────────────────────────────────────────────────────────┐
+│ 🏋️ YOUR ACTIVE PROGRAMS (2)                             │
+├─────────────────────────────────────────────────────────┤
+│ ┌─────────────────────┐  ┌─────────────────────────────┐│
+│ │ Olympic Lifting     │  │ 5x5 Strength Builder       ││
+│ │ Day 12 of 56       │  │ Day 3 of 30                ││
+│ │ ━━━━━━━░░░░ 21%    │  │ ━░░░░░░░░░ 10%             ││
+│ │ Today: Back Squats │  │ Today: Rest Day            ││
+│ │ [View Program]     │  │ [View Program]             ││
+│ └─────────────────────┘  └─────────────────────────────┘│
+└─────────────────────────────────────────────────────────┘
+```
+
+**Implementation Approach:**
+
+1. **Primary Program Selection** - User designates one program as "primary" (shown prominently with Today's Workout)
+2. **Secondary Programs** - Other active programs shown as compact cards
+3. **Quick Switching** - Tap to switch primary program focus
+4. **Warning on Copy** - Alert user when copying a shared program while already running one
+
+#### Scenario 2: Today's Workout from Multiple Programs
+
+**Display Strategy Options:**
+
+**Option A: Primary Program Only** (Recommended for V1)
+
+- Only show today's workout from the primary/selected program
+- Other programs accessible via "View Program" links
+
+**Option B: Combined View** (Future Enhancement)
+
+- Show all today's workouts across programs
+- Risk: Information overload, confusion about which program to follow
+
+**Option C: Intelligent Merge** (Complex - Future)
+
+- AI suggests how to combine workouts when both have training days
+- "You have workouts in both programs today. Want me to combine them?"
+
+#### Scenario 3: Rest Day Handling with Multiple Programs
+
+If Program A has rest day but Program B has workout:
+
+- Show Program B's workout prominently
+- Note: "Program A: Rest Day"
+
+If both programs have rest days:
+
+- Show rest day celebration
+- Allow completing rest for either/both programs
+
+#### Implementation Plan
+
+**Phase 1 (Current):** Single program focus
+
+- `activeProgram` is the first active program found
+- Works well for most users
+
+**Phase 2 (After Sharing Stabilizes):** Multiple program awareness
+
+- Add "primary program" concept to user preferences or coach config
+- Update `TrainingGrounds` to show secondary programs in compact view
+- Add warning when copying shared program while program is active
+
+**Phase 3 (Future):** Smart program management
+
+- AI-assisted workout scheduling across programs
+- Conflict detection and resolution
+- Combined progress tracking
+
+#### API Changes Needed
+
+**New endpoint or parameter:**
+
+```
+GET /users/{userId}/coaches/{coachId}/programs?status=active&includeToday=true
+```
+
+Returns:
+
+```json
+{
+  "programs": [...],
+  "todaysWorkouts": [
+    { "programId": "...", "workout": {...} },
+    { "programId": "...", "isRestDay": true }
+  ]
+}
+```
+
+**ProgramAgent Changes:**
+
+- `loadPrograms()` already supports `includeStatus: ["active", "paused"]`
+- Need to extend to load today's workout for each active program
+- Consider batch API call for efficiency
+
+#### UI Copy for Multiple Programs
+
+**When copying shared program while program is active:**
+
+```
+"You already have an active program running. Copying this program will give
+you two active programs to manage. You can switch between them anytime.
+
+Continue? [Copy Program] [Cancel]"
+```
+
+**On TrainingGrounds with multiple programs:**
+
+```
+"You have 2 active programs. Tap a program to focus on it."
+```
+
+**When both programs have workouts today:**
+
+```
+"You have workouts scheduled in both programs today. Which would you like to
+focus on? (You can complete both if you're feeling ambitious!)"
+```
 
 ---
 
@@ -453,7 +626,7 @@ POST /users/{userId}/shared-programs/{sharedProgramId}/copy
 }
 ```
 
-**Note:** No separate adaptation endpoint needed. Adaptation happens via ProgramDashboard's slide-out chat component, which reuses existing `stream-program-designer-session` infrastructure with adaptation context.
+**Note:** No separate adaptation endpoint needed. Adaptation happens via ProgramDashboard's slide-out chat component, which uses the new `stream-program-conversation` Lambda designed specifically for program modification conversations.
 
 ---
 
@@ -463,15 +636,24 @@ POST /users/{userId}/shared-programs/{sharedProgramId}/copy
 
 **Reference Pattern:** Follow existing program and coach template patterns
 
-| Function                | Reference                           | Purpose                          |
-| ----------------------- | ----------------------------------- | -------------------------------- |
-| `create-shared-program` | `create-coach-creator-session`      | Generate shareable link          |
-| `get-shared-program`    | `get-coach-template`                | Public preview data (no auth)    |
-| `get-shared-programs`   | `get-coach-configs`                 | User's share management          |
-| `delete-shared-program` | `delete-coach-config`               | Unshare/deactivate               |
-| `copy-shared-program`   | `create-coach-config-from-template` | **Instant copy to user account** |
+| Function                      | Reference                           | Purpose                                      |
+| ----------------------------- | ----------------------------------- | -------------------------------------------- |
+| `create-shared-program`       | `create-coach-creator-session`      | Generate shareable link                      |
+| `get-shared-program`          | `get-coach-template`                | Public preview data (no auth)                |
+| `get-shared-programs`         | `get-coach-configs`                 | User's share management                      |
+| `delete-shared-program`       | `delete-coach-config`               | Unshare/deactivate                           |
+| `copy-shared-program`         | `create-coach-config-from-template` | **Instant copy to user account**             |
+| `stream-program-conversation` | `stream-coach-conversation`         | **Stream coach chat for program adaptation** |
 
-**Note:** No `start-program-adaptation` Lambda needed. Adaptation uses existing `stream-program-designer-session` triggered from `ProgramAdaptationChat` slide-out component.
+**Note on Architecture:**
+
+- `stream-program-conversation` is a **NEW** Lambda handler dedicated to program modification conversations
+- Unlike `stream-program-designer-session` (multi-phase program creation wizard), this handler is simpler:
+  - Works with existing programs only
+  - No wizard state management
+  - Supports both "adaptation" (coach speaks first) and "customization" (user speaks first) modes
+  - Can modify programs through conversational interface
+- This separation keeps ProgramDesigner focused on creation, and program conversations focused on modification
 
 ### Lambda Permissions
 
@@ -993,10 +1175,10 @@ export async function createSharedProgram(
     throw new Error(`Program not found: ${programId}`);
   }
 
-  // 3. Verify program is completed (only completed programs can be shared)
-  if (program.status !== "completed") {
+  // 3. Verify program can be shared (active, paused, or completed - not archived)
+  if (program.status === "archived") {
     throw new Error(
-      `Only completed programs can be shared. Current status: ${program.status}`,
+      `Cannot share an archived program. Current status: ${program.status}`,
     );
   }
 
@@ -1716,6 +1898,7 @@ export default MySharedPrograms;
 - Non-destructive: program exists regardless of chat engagement
 - Same component works for shared program adaptation AND existing program customization
 - Lower friction than navigating to separate page
+- Uses dedicated `stream-program-conversation` Lambda (simpler than ProgramDesigner wizard)
 
 **Key Implementation Details:**
 
@@ -1728,10 +1911,11 @@ export default MySharedPrograms;
 
 **Reference Files:**
 
-- `src/components/ProgramDesigner.jsx` - Streaming chat UI patterns
-- `src/utils/agents/ProgramDesignerAgent.js` - State management agent
+- `src/components/ProgramDesigner.jsx` - Streaming chat UI patterns (for reference)
+- `src/components/CoachConversation.jsx` - Streaming conversation UI (closer pattern match)
 - `src/utils/ui/uiPatterns.js` - Container patterns for slide-out
-- `amplify/functions/stream-program-designer-session/handler.ts` - Backend streaming
+- `amplify/functions/stream-coach-conversation/handler.ts` - Reference for streaming pattern
+- **NEW:** `amplify/functions/stream-program-conversation/handler.ts` - Dedicated program conversation handler
 
 **Slide-out Container Pattern:**
 
@@ -1763,8 +1947,7 @@ export const slideOutPatterns = {
 // src/components/shared-programs/ProgramAdaptationChat.jsx
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useAuth } from "../../contexts/AuthContext";
-import ProgramDesignerAgent from "../../utils/agents/ProgramDesignerAgent";
-import { createProgramDesignerSession } from "../../utils/apis/programDesignerApi";
+import { createProgramConversation } from "../../utils/apis/programConversationApi";
 import ChatInput from "../shared/ChatInput";
 import {
   containerPatterns,
@@ -1834,26 +2017,19 @@ function ProgramAdaptationChat({
       setError(null);
 
       // Build context based on mode
-      const sessionContext = buildSessionContext();
+      const conversationContext = buildConversationContext();
 
-      // Create program designer session with adaptation context
-      const session = await createProgramDesignerSession(userId, coachId, {
-        existingProgramId: program.programId,
-        ...sessionContext,
+      // Create program conversation session
+      const conversation = await createProgramConversation(userId, coachId, {
+        programId: program.programId,
+        ...conversationContext,
       });
 
-      setSessionId(session.sessionId);
+      setSessionId(conversation.conversationId);
 
-      // Initialize agent (same pattern as ProgramDesigner.jsx)
-      agentRef.current = new ProgramDesignerAgent({
-        userId,
-        coachId,
-        sessionId: session.sessionId,
-        onStateChange: setAgentState,
-      });
-
-      await agentRef.current.loadCoachDetails(userId, coachId);
-      await agentRef.current.loadSession(userId, session.sessionId);
+      // Initialize streaming conversation (simpler than ProgramDesigner wizard)
+      // Pattern follows CoachConversation rather than ProgramDesigner
+      // TODO: Create ProgramConversationAgent or use simplified streaming pattern
     } catch (err) {
       console.error("Failed to initialize adaptation session:", err);
       setError("Failed to start conversation. Please try again.");
@@ -1862,23 +2038,21 @@ function ProgramAdaptationChat({
     }
   };
 
-  const buildSessionContext = () => {
+  const buildConversationContext = () => {
     if (mode === "adaptation-new-copy") {
       return {
-        adaptationMode: true,
+        mode: "adaptation",
         sourceCreator: program.metadata?.sourceCreator,
         sourceCoachNames: program.metadata?.sourceCoachNames,
         sharedProgramId: program.metadata?.sharedProgramId,
         // Tell coach to speak first with proactive analysis
         coachSpeaksFirst: true,
-        initialPromptType: "adaptation-analysis",
       };
     } else {
       return {
-        customizationMode: true,
+        mode: "customization",
         // Coach waits for user to describe what they want
         coachSpeaksFirst: false,
-        initialPromptType: "customization-request",
       };
     }
   };
@@ -2117,56 +2291,104 @@ The `ProgramAdaptationChat` slide-out is designed to serve **two use cases** wit
    - Phase transition reviews ("Phase 1 complete, let's talk about Phase 2")
    - Mid-program check-ins ("How's the program working for you?")
 
-**Backend Modifications:**
+**Backend Implementation:**
 
-The `stream-program-designer-session` handler needs to support these new context fields:
+A **NEW** Lambda handler `stream-program-conversation` is created specifically for program modification conversations:
 
 ```typescript
-// In stream-program-designer-session/handler-helpers.ts
+// amplify/functions/stream-program-conversation/handler.ts
+// Pattern: Similar to stream-coach-conversation but program-specific
 
-function buildSystemPrompt(
-  coachConfig: CoachConfig,
-  session: ProgramDesignerSession,
-  userProfile: UserProfile,
-): string {
-  // Check for adaptation/customization modes
-  if (session.adaptationMode && session.sourceCreator) {
-    return buildAdaptationPrompt(coachConfig, session, userProfile);
+import { APIGatewayProxyEventV2 } from "aws-lambda";
+import { withAuth, AuthenticatedHandler } from "../libs/auth/middleware";
+import {
+  getProgram,
+  getCoachConfig,
+  getUserProfile,
+} from "../../dynamodb/operations";
+import { getProgramDetailsFromS3 } from "../libs/program/s3-utils";
+import { buildCoachPersonalityPrompt } from "../libs/coach-config/personality-utils";
+import { callBedrockApi } from "../libs/api-helpers";
+
+/**
+ * Stream a conversation about modifying an existing program
+ *
+ * CONTEXT MODES:
+ * - "adaptation": Coach speaks first, analyzes shared program for user
+ * - "customization": User speaks first, asks for specific changes
+ *
+ * Unlike stream-program-designer-session (which creates programs),
+ * this handler modifies existing programs through conversation.
+ */
+const baseHandler: AuthenticatedHandler = async (event) => {
+  const userId = event.user.userId;
+  const { programId, coachId, mode, message, conversationHistory } = JSON.parse(
+    event.body || "{}",
+  );
+
+  try {
+    // Load program, coach, and user data
+    const program = await getProgram(userId, coachId, programId);
+    const coachConfig = await getCoachConfig(userId, coachId);
+    const userProfile = await getUserProfile(userId);
+    const programDetails = await getProgramDetailsFromS3(program.s3DetailKey);
+
+    // Build system prompt based on mode
+    const systemPrompt = buildProgramConversationPrompt(
+      coachConfig,
+      program,
+      programDetails,
+      userProfile,
+      mode,
+      JSON.parse(event.body || "{}"), // includes sourceCreator, etc for adaptation mode
+    );
+
+    // Stream response from Bedrock
+    // TODO: Implement streaming response pattern
+    // TODO: Support tool calls for program modification
+  } catch (error) {
+    console.error("Error in program conversation:", error);
+    throw error;
   }
+};
 
-  if (session.customizationMode && session.existingProgramId) {
-    return buildCustomizationPrompt(coachConfig, session, userProfile);
-  }
+export const handler = withAuth(baseHandler);
 
-  // Default program design prompt
-  return buildDefaultProgramDesignPrompt(coachConfig, userProfile);
-}
-
-function buildAdaptationPrompt(
-  coachConfig: CoachConfig,
-  session: ProgramDesignerSession,
-  userProfile: UserProfile,
+/**
+ * Build system prompt based on conversation mode
+ */
+function buildProgramConversationPrompt(
+  coachConfig: any,
+  program: any,
+  programDetails: any,
+  userProfile: any,
+  mode: "adaptation" | "customization",
+  context: any,
 ): string {
-  return `
-You are ${coachConfig.coach_name}, a ${coachConfig.selected_personality?.primary_template} coach.
+  const personalityPrompt = buildCoachPersonalityPrompt(coachConfig);
 
-CONTEXT: The user just copied a training program shared by @${session.sourceCreator}.
+  if (mode === "adaptation") {
+    return `${personalityPrompt}
+
+CONTEXT: The user just copied a training program shared by @${context.sourceCreator}.
 The program is now in their account and ready to use. Your job is to proactively
 analyze it and suggest adaptations based on their profile.
 
 PROGRAM DETAILS:
-- Name: ${session.existingProgram?.name}
-- Duration: ${session.existingProgram?.totalDays} days
-- Frequency: ${session.existingProgram?.trainingFrequency}x per week
-- Goals: ${session.existingProgram?.trainingGoals?.join(", ")}
-- Equipment: ${session.existingProgram?.equipmentConstraints?.join(", ")}
-- Created by: @${session.sourceCreator} with ${session.sourceCoachNames?.join(", ")}
+- Name: ${program.name}
+- Duration: ${program.totalDays} days
+- Frequency: ${program.trainingFrequency}x per week
+- Goals: ${program.trainingGoals?.join(", ")}
+- Equipment: ${program.equipmentConstraints?.join(", ")}
+- Created by: @${context.sourceCreator} with ${context.sourceCoachNames?.join(", ")}
 
 USER PROFILE:
-${JSON.stringify(userProfile, null, 2)}
+- Equipment: ${userProfile.availableEquipment?.join(", ") || "not specified"}
+- Training frequency: ${userProfile.trainingFrequency || "not specified"}
+- Goals: ${userProfile.fitnessGoals?.join(", ") || "not specified"}
 
 YOUR TASK:
-1. Start by acknowledging the program and giving credit to @${session.sourceCreator}
+1. Start by acknowledging the program and giving credit to @${context.sourceCreator}
 2. Proactively analyze how well it fits this user's:
    - Available equipment
    - Schedule/time constraints
@@ -2175,32 +2397,24 @@ YOUR TASK:
 3. Suggest 2-3 SPECIFIC adaptations you'd recommend
 4. Offer to make these changes, or let them use the program as-is
 
-IMPORTANT REMINDERS:
-- Be enthusiastic but professional (no excessive exclamation points)
+IMPORTANT:
 - The program already exists in their account - they can start immediately
 - If they say "make those changes" or similar, modify the program accordingly
-- Keep suggestions actionable and specific, not vague
-- Give credit to the original creator while making this their own
+- Keep suggestions actionable and specific
+- Give credit to the original creator
 
 Start by speaking first with your analysis.
 `;
-}
-
-function buildCustomizationPrompt(
-  coachConfig: CoachConfig,
-  session: ProgramDesignerSession,
-  userProfile: UserProfile,
-): string {
-  return `
-You are ${coachConfig.coach_name}, a ${coachConfig.selected_personality?.primary_template} coach.
+  } else {
+    return `${personalityPrompt}
 
 CONTEXT: The user wants to customize their existing training program.
 
 PROGRAM DETAILS:
-- Name: ${session.existingProgram?.name}
-- Current Day: ${session.existingProgram?.currentDay} of ${session.existingProgram?.totalDays}
-- Status: ${session.existingProgram?.status}
-- Goals: ${session.existingProgram?.trainingGoals?.join(", ")}
+- Name: ${program.name}
+- Current Day: ${program.currentDay} of ${program.totalDays}
+- Status: ${program.status}
+- Goals: ${program.trainingGoals?.join(", ")}
 
 USER PROFILE:
 ${JSON.stringify(userProfile, null, 2)}
@@ -2211,14 +2425,21 @@ YOUR TASK:
 3. Propose specific modifications
 4. Make changes when they confirm
 
-IMPORTANT REMINDERS:
-- Be professional and helpful
+IMPORTANT:
 - Understand their constraints before suggesting changes
 - Preserve what's working, only change what they ask for
 - Confirm changes before implementing
 `;
+  }
 }
 ```
+
+**Why This Approach:**
+
+1. **Separation of Concerns:** ProgramDesigner creates programs (wizard flow), this handler modifies them (conversation flow)
+2. **Simpler:** No multi-phase state management, just load program → chat → modify
+3. **Reusable:** Same handler for both shared program adaptation and existing program customization
+4. **Extensible:** Can add tool calls for program modification (regenerate workouts, adjust schedule, etc)
 
 ### Coach Selection Flow
 
@@ -2954,11 +3175,11 @@ function ProgramOverview({
 
 **File:** `src/components/programs/ManagePrograms.jsx`
 
-Add share button to each completed program card:
+Add share button to each active or completed program card:
 
 ```jsx
 {
-  program.status === "completed" && (
+  (program.status === "active" || program.status === "completed") && (
     <button
       onClick={() => handleShareProgram(program)}
       className={buttonPatterns.secondary}
@@ -3069,44 +3290,56 @@ success to inspire other athletes!"
   - `storeSharedProgramDetailsInS3()` - Store program snapshot with workout templates
   - `getSharedProgramDetailsFromS3()` - Retrieve shared program details
 - [x] Create Lambda handlers: `create-shared-program`, `get-shared-program`, `get-shared-programs`, `delete-shared-program` ✅
-- [ ] Add API routes to `amplify/api/resource.ts`
-- [ ] Register Lambdas and attach policies in `amplify/backend.ts`
+- [x] Add API routes to `amplify/api/resource.ts` ✅
+- [x] Register Lambdas and attach policies in `amplify/backend.ts` ✅
 
-**Day 2: Instant Copy Backend**
+**Day 2: Instant Copy Backend** ✅ COMPLETED
 
-- [ ] Add `metadata` field to Program interface in `amplify/functions/libs/program/types.ts`
-- [ ] Create `copy-shared-program` Lambda handler (pattern: `create-coach-config-from-template`)
-- [ ] Add API route for `POST /users/{userId}/shared-programs/{sharedProgramId}/copy`
-- [ ] Test instant copy flow end-to-end
+- [x] Add `metadata` field to Program interface in `amplify/functions/libs/program/types.ts` ✅
+- [x] Create centralized ID generation utilities in `amplify/functions/libs/id-utils.ts` ✅
+  - `generateProgramId()`, `generateSharedProgramId()`, `generateWorkoutId()`, etc.
+  - Refactored existing handlers to use centralized utilities
+- [x] Extend SharedProgram types to preserve AI generation provenance ✅
+  - Added `originalGeneratedBy`, `originalAiModel`, `originalConfidence`, `originalGenerationPrompt` to SharedProgramDetails
+- [x] Create `copy-shared-program` Lambda handler with thin handler pattern ✅
+  - Handler in `amplify/functions/copy-shared-program/handler.ts`
+  - Business logic in `amplify/functions/libs/shared-program/copy-utils.ts`
+  - Resource definition in `amplify/functions/copy-shared-program/resource.ts`
+- [x] Add API route for `POST /users/{userId}/shared-programs/{sharedProgramId}/copy` ✅
+- [ ] Register `copy-shared-program` Lambda in `amplify/backend.ts`
+- [ ] Test instant copy flow end-to-end (pending deployment)
 
 ### Week 2: Frontend Core (2-3 days)
 
-**Day 3: Share Flow**
+**Day 3: Share Flow** ✅ COMPLETED
 
-- [ ] Build `ShareProgramModal.jsx` component
-- [ ] Add share button to `ManagePrograms.jsx` (completed programs only)
-- [ ] Create API wrapper functions in `sharedProgramApi.js`
-- [ ] Test share link generation flow
+- [x] Build `ShareProgramModal.jsx` component ✅
+- [x] Add share button to `ManagePrograms.jsx` and `ProgramOverview.jsx` ✅
+- [x] Create API wrapper functions in `sharedProgramApi.js` ✅
+- [x] Test share link generation flow ✅
 
-**Day 4: Preview & Copy Flow**
+**Day 4: Preview & Copy Flow** ✅ COMPLETED
 
-- [ ] Build `SharedProgramPreview.jsx` component (with instant copy CTA)
-- [ ] Build `CoachSelectionModal.jsx` component
-- [ ] Add `/shared/programs/:sharedProgramId` route to `App.jsx`
-- [ ] Test public preview access (no auth)
-- [ ] Test instant copy flow (single coach auto-select + multi-coach modal)
+- [x] Build `SharedProgramPreview.jsx` component (with instant copy CTA) ✅
+- [x] Build `SelectCoachModal.jsx` component (renamed from CoachSelectionModal) ✅
+- [x] Add `/shared/programs/:sharedProgramId` route to `App.jsx` ✅
+- [x] Test public preview access (no auth) ✅
+- [x] Test instant copy flow (single coach auto-select + multi-coach modal) ✅
+- [x] Add skeleton loading to SharedProgramPreview ✅
+- [x] Refactor shared program ID generation to use nanoid for privacy ✅
 
-**Day 5: Slide-out Adaptation Chat**
+**Day 5: Slide-out Adaptation Chat** ⏸️ NOT STARTED (Future Work)
 
+- [ ] Create `stream-program-conversation` Lambda handler (NEW dedicated handler)
 - [ ] Build `ProgramAdaptationChat.jsx` slide-out component
 - [ ] Add slide-out container patterns to `uiPatterns.js`
+- [ ] Create `programConversationApi.js` API wrapper
 - [ ] Integrate into `ProgramDashboard.jsx`:
   - Auto-open for freshly copied shared programs (`metadata.copiedFromSharedProgram`)
   - Manual trigger via "Customize with Coach" button
 - [ ] Add `onCustomize` prop to `ProgramOverview.jsx`
-- [ ] Modify `stream-program-designer-session` to support adaptation prompts
 
-### Week 3: Management & Polish (1 day)
+### Week 3: Management & Polish (1 day) ⏸️ NOT STARTED (Future Work)
 
 **Day 6: Share Management**
 
@@ -3123,7 +3356,7 @@ success to inspire other athletes!"
 - [ ] Test analytics events fire correctly at each step
 - [ ] Soft launch with beta users
 
-**Total Estimated Time: 6-7 days**
+**Total Estimated Time: 6-7 days** (4 days complete, ~3 days remaining)
 
 ### Implementation Order (Recommended)
 
@@ -3168,7 +3401,7 @@ success to inspire other athletes!"
 
 ### Target Goals (3 months post-launch)
 
-- 20% of completed programs get shared
+- 20% of active/completed programs get shared
 - 30% click-through rate on shared links
 - 15% conversion rate from preview to signup (non-members)
 - **80% of members who view preview copy the program** (higher than before due to instant copy)
@@ -3206,7 +3439,8 @@ success to inspire other athletes!"
 **Impact:** Users create junk programs just to share
 **Mitigation:**
 
-- Only completed programs can be shared (user finished it themselves)
+- Only active, paused, or completed programs can be shared (user is engaged with it)
+- Archived programs cannot be shared (prevents sharing abandoned programs)
 - Can deactivate/delete shares at any time
 - Platform can flag/remove abusive shares
 
@@ -3246,6 +3480,54 @@ These features are explicitly **out of scope** for initial launch but could be a
 
 ## Implementation Progress
 
+### Recent Updates (January 19, 2026) - PAUSED FOR STABILIZATION
+
+**Completed Days 3-4: Frontend Core Flow** 🎉
+
+- ✅ Built `ShareProgramModal.jsx` - Share link generation with copy to clipboard and social sharing
+- ✅ Built `SharedProgramPreview.jsx` - Public preview page with hero, program details, phases, and CTA
+- ✅ Built `SelectCoachModal.jsx` - Coach selection modal for users with multiple coaches
+- ✅ Created `sharedProgramApi.js` - API wrapper functions for all sharing endpoints
+- ✅ Added `/shared/programs/:sharedProgramId` route to `App.jsx`
+- ✅ Added share button to `ProgramOverview.jsx` (UI shows for active/completed; backend also accepts paused)
+- ✅ Implemented skeleton loading for `SharedProgramPreview.jsx`
+- ✅ Refactored `generateSharedProgramId()` to use `nanoid(21)` for privacy (removes userId from public URLs)
+- ✅ Tested instant copy flow with single coach (auto-select) and multiple coaches (modal selection)
+- ✅ Fixed coach ID field name mismatch (`coach_id` vs `coachId`)
+- ✅ Fixed program status filtering for sidebar badge count (includeStatus API pattern)
+
+**Current State:** Core sharing flow works end-to-end:
+
+1. User can share active/completed programs from ProgramOverview (backend also accepts paused programs)
+2. Share link is generated and can be copied or shared to social
+3. Public preview page shows program details without revealing workout specifics
+4. Logged-in users can copy program with coach selection (auto or modal)
+5. Program copies to user's account and redirects to ProgramDashboard
+
+**Pausing to stabilize before building:**
+
+- `MySharedPrograms.jsx` - Share management page
+- `ProgramAdaptationChat.jsx` - Slide-out chat for program customization
+- Analytics tracking integration
+
+---
+
+### Previous Updates (January 17, 2026)
+
+**Completed Day 2: Instant Copy Backend** 🎉
+
+- ✅ Added `metadata` field to Program interface for tracking copied programs
+- ✅ Created centralized ID generation utilities (`id-utils.ts`)
+- ✅ Extended SharedProgram types to preserve AI generation provenance
+- ✅ Implemented `copy-shared-program` Lambda with thin handler pattern
+- ✅ Created `copy-utils.ts` for instant copy business logic
+- ✅ Refactored multiple handlers to use centralized ID utilities
+- ✅ Added API route for instant copy endpoint
+- ✅ Registered `copy-shared-program` Lambda in `amplify/backend.ts`
+- ✅ Deployed and tested end-to-end
+
+---
+
 ### Completed ✅
 
 **Phase 1 - Core Infrastructure:**
@@ -3253,20 +3535,20 @@ These features are explicitly **out of scope** for initial launch but could be a
 1. **Type Definitions** - `amplify/functions/libs/shared-program/types.ts`
    - SharedProgramSnapshot interface
    - SharedProgram entity interface
-   - SharedProgramDetails interface
+   - SharedProgramDetails interface (extended with provenance tracking)
    - API request/response types
    - Created: January 2026
 
 2. **DynamoDB Operations** - `amplify/dynamodb/operations.ts`
    - saveSharedProgram() - Stores shared program with GSI for user queries
    - getSharedProgram() - Public access retrieval
-   - querySharedPrograms() - Get all shared programs for a user
-   - deactivateSharedProgram() - Soft delete with ownership verification
+   - querySharedPrograms() - Get all shared programs for a user (with pagination)
+   - deactivateSharedProgram() - Soft delete with ownership verification (idempotent)
    - Created: January 2026
 
 3. **S3 Utilities** - `amplify/functions/libs/shared-program/s3-utils.ts`
-   - storeSharedProgramDetailsInS3() - Store full program details
-   - getSharedProgramDetailsFromS3() - Retrieve program details
+   - storeSharedProgramDetailsInS3() - Store full program details with provenance
+   - getSharedProgramDetailsFromS3() - Retrieve shared program details
    - Created: January 2026
 
 4. **Lambda Handlers** - Created: January 2026
@@ -3274,32 +3556,63 @@ These features are explicitly **out of scope** for initial launch but could be a
    - `get-shared-program/` - Public preview endpoint (no auth required)
    - `get-shared-programs/` - Get user's shared programs (auth required)
    - `delete-shared-program/` - Deactivate shared program (auth required)
+   - `copy-shared-program/` - **NEW** Instant copy with thin handler pattern
 
-### In Progress 🚧
+5. **API Routes Configuration** - `amplify/api/resource.ts`
+   - POST `/users/{userId}/programs/{programId}/share` - Create shared program
+   - GET `/shared-programs/{sharedProgramId}` - Public preview (no auth)
+   - GET `/users/{userId}/shared-programs` - List user's shares
+   - DELETE `/users/{userId}/shared-programs/{sharedProgramId}` - Unshare
+   - POST `/users/{userId}/shared-programs/{sharedProgramId}/copy` - Instant copy
+   - Created: January 2026
 
-**Phase 1 - API & Instant Copy:**
+6. **Lambda Registration** - `amplify/backend.ts`
+   - Registered all sharing Lambdas (create, get, list, delete)
+   - Attached appropriate policies (DynamoDB, S3)
+   - Created: January 2026
 
-- [ ] API Routes configuration in `amplify/api/resource.ts`
-- [ ] Lambda registration in `amplify/backend.ts`
-- [ ] `copy-shared-program` Lambda (instant copy pattern)
-- [ ] Program metadata field for copy tracking
+7. **ID Generation Utilities** - `amplify/functions/libs/id-utils.ts`
+   - Centralized ID generation for all entities (programs, workouts, exercises, etc.)
+   - Refactored existing handlers to use centralized utilities
+   - Created: January 2026
 
-### Not Started ⏸️
+8. **Program Metadata Extension** - `amplify/functions/libs/program/types.ts`
+   - Added `metadata` field to Program interface
+   - Tracks copied programs, source attribution, adaptation status
+   - Created: January 2026
 
-**Phase 2 - Frontend Components:**
+9. **Instant Copy Implementation** - `amplify/functions/libs/shared-program/copy-utils.ts`
+   - `copySharedProgramToUser()` - Main orchestration function
+   - Thin handler pattern (business logic separate from handler)
+   - Preserves AI generation provenance
+   - Created: January 2026
 
-- [ ] `ShareProgramModal.jsx` - Share link generation
-- [ ] `SharedProgramPreview.jsx` - Public preview + copy flow
-- [ ] `CoachSelectionModal.jsx` - Coach selection for copy
-- [ ] `ProgramAdaptationChat.jsx` - Slide-out chat component
-- [ ] `MySharedPrograms.jsx` - Share management
+### Completed ✅ (Since Last Update)
+
+**Phase 2 - Frontend Components (Core Flow):**
+
+- [x] `ShareProgramModal.jsx` - Share link generation ✅
+- [x] `SharedProgramPreview.jsx` - Public preview + copy flow ✅
+- [x] `SelectCoachModal.jsx` - Coach selection for copy (modal with avatar styling) ✅
+- [x] `sharedProgramApi.js` - API wrapper functions ✅
+- [x] Share button on `ProgramOverview.jsx` ✅
+- [x] Route `/shared/programs/:sharedProgramId` in `App.jsx` ✅
+- [x] Privacy fix: `sharedProgramId` now uses `nanoid` (no userId exposure) ✅
+
+### Paused ⏸️ (Future Work - Next Week)
+
+**Phase 2 - Frontend Components (Remaining):**
+
+- [ ] `ProgramAdaptationChat.jsx` - Slide-out chat component for program customization
+- [ ] `MySharedPrograms.jsx` - User's share management page
 
 **Phase 3 - Integration & Polish:**
 
-- [ ] ProgramDashboard integration (auto-open slide-out)
+- [ ] `stream-program-conversation` Lambda handler (backend for slide-out chat)
+- [ ] ProgramDashboard integration (auto-open slide-out for copied programs)
 - [ ] ProgramOverview "Customize with Coach" button
-- [ ] Analytics tracking implementation
-- [ ] End-to-end testing
+- [ ] Analytics tracking implementation (`sharedProgramAnalytics.js`)
+- [ ] End-to-end testing with beta users
 
 ---
 
@@ -3311,50 +3624,66 @@ These features are explicitly **out of scope** for initial launch but could be a
 
 - `amplify/functions/libs/shared-program/types.ts` - SharedProgram interfaces ✅
 - `amplify/functions/libs/shared-program/s3-utils.ts` - S3 operations ✅
+- `amplify/functions/libs/shared-program/copy-utils.ts` - **Instant copy business logic** ✅
+- `amplify/functions/libs/id-utils.ts` - **Centralized ID generation utilities** ✅
 - `amplify/functions/create-shared-program/` - Share creation Lambda ✅
 - `amplify/functions/get-shared-program/` - Public preview Lambda ✅
 - `amplify/functions/get-shared-programs/` - User's shares Lambda ✅
 - `amplify/functions/delete-shared-program/` - Unshare Lambda ✅
+- `amplify/functions/copy-shared-program/resource.ts` - Lambda resource definition ✅
+- `amplify/functions/copy-shared-program/handler.ts` - **Instant copy Lambda** (thin handler pattern) ✅
 
 **New Files to Create:**
 
-- `amplify/functions/copy-shared-program/resource.ts` - Lambda resource definition
-- `amplify/functions/copy-shared-program/handler.ts` - **Instant copy Lambda** (pattern: `create-coach-config-from-template`)
+- `amplify/functions/stream-program-conversation/resource.ts` - **NEW streaming conversation handler**
+- `amplify/functions/stream-program-conversation/handler.ts` - **NEW handler for program modification conversations**
+
+**Existing Files Modified ✅:**
+
+- `amplify/dynamodb/operations.ts` - ✅ SharedProgram CRUD operations added
+- `amplify/api/resource.ts` - ✅ API routes added (public + protected)
+- `amplify/backend.ts` - ✅ Registered sharing Lambdas (except `copy-shared-program` - pending)
+- `amplify/functions/libs/program/types.ts` - ✅ Added `metadata` field to Program interface
+- `amplify/functions/create-program/handler.ts` - ✅ Refactored to use `generateProgramId()`
+- `amplify/functions/build-exercise/handler.ts` - ✅ Refactored to use `generateExerciseId()`
+- `amplify/functions/libs/program-designer/handler-helpers.ts` - ✅ Refactored to use `generateProgramId()`
+- `amplify/functions/libs/agents/workout-logger/tools.ts` - ✅ Refactored to use `generateWorkoutId()`
 
 **Existing Files to Modify:**
 
-- `amplify/dynamodb/operations.ts` - ✅ SharedProgram CRUD operations added
-- `amplify/api/resource.ts` - Add API routes (public + protected)
-- `amplify/backend.ts` - Register Lambda functions + attach policies
-- `amplify/functions/libs/program/types.ts` - Add `metadata` field to Program interface
-- `amplify/functions/create-program-designer-session/handler.ts` - Accept adaptation context
-- `amplify/functions/stream-program-designer-session/handler.ts` - Build adaptation prompts
-- `amplify/functions/libs/program-designer/handler-helpers.ts` - Add `buildAdaptationPrompt()`, `buildCustomizationPrompt()`
-- `amplify/functions/libs/program-designer/types.ts` - Add adaptation fields to session interface
+- `amplify/backend.ts` - Register `copy-shared-program` Lambda + attach policies (final step)
 
 ### Frontend Files
 
-**New Files to Create:**
+**New Files Created ✅:**
 
-- `src/components/shared-programs/ShareProgramModal.jsx` - Share link generation modal
-- `src/components/shared-programs/SharedProgramPreview.jsx` - Public preview + instant copy
+- `src/components/shared-programs/ShareProgramModal.jsx` - Share link generation modal ✅
+- `src/components/shared-programs/SharedProgramPreview.jsx` - Public preview + instant copy ✅
+- `src/components/shared-programs/SelectCoachModal.jsx` - Coach selection modal (with avatar styling matching CoachHeader) ✅
+- `src/utils/apis/sharedProgramApi.js` - API wrapper functions ✅
+
+**New Files to Create (Future):**
+
 - `src/components/shared-programs/MySharedPrograms.jsx` - User's share management
-- `src/components/shared-programs/CoachSelectionModal.jsx` - Coach selection for copy
 - `src/components/shared-programs/ProgramAdaptationChat.jsx` - **Slide-out chat** (dual-purpose: adaptation + customization)
-- `src/utils/apis/sharedProgramApi.js` - API wrapper functions
+- `src/utils/apis/programConversationApi.js` - **API wrapper for stream-program-conversation**
 - `src/utils/analytics/sharedProgramAnalytics.js` - Analytics event tracking
 
-**Existing Files to Modify:**
+**Existing Files Modified ✅:**
 
-- `src/App.jsx` - Add routes (`/shared/programs/:id`, `/programs/shared`)
+- `src/App.jsx` - Added route `/shared/programs/:sharedProgramId` ✅
+- `src/components/programs/ProgramOverview.jsx` - Added "Share This Program" button ✅
+- `amplify/functions/libs/id-utils.ts` - Refactored `generateSharedProgramId()` to use `nanoid` ✅
+
+**Existing Files to Modify (Future):**
+
+- `src/App.jsx` - Add route `/programs/shared` for MySharedPrograms
 - `src/utils/ui/uiPatterns.js` - Add `slideOutPatterns` for slide-out panel
-- `src/components/programs/ManagePrograms.jsx` - Add share button to completed programs
 - `src/components/programs/ProgramDashboard.jsx` - Integrate slide-out chat:
   - Auto-open for copied shared programs (`metadata.copiedFromSharedProgram`)
   - State management for slide-out visibility
   - Handle metadata updates on close
 - `src/components/programs/ProgramOverview.jsx` - Add "Customize with Coach" button
-- `src/utils/apis/programDesignerApi.js` - Support adaptation/customization context
 - `src/utils/apis/programApi.js` - Add `updateProgramMetadata()` function
 
 ### Reference Files
@@ -3363,7 +3692,8 @@ These features are explicitly **out of scope** for initial launch but could be a
 
 - **Instant Copy Pattern:** `amplify/functions/create-coach-config-from-template/handler.ts` - Template to entity copy
 - **DynamoDB Operations:** `amplify/dynamodb/operations.ts` - CRUD patterns
-- **Streaming Conversation:** `amplify/functions/stream-program-designer-session/handler.ts`
+- **Streaming Conversation:** `amplify/functions/stream-coach-conversation/handler.ts` - General conversation streaming
+- **NEW Streaming Handler:** `amplify/functions/stream-program-conversation/handler.ts` - Program-specific conversations
 - **S3 Operations:** `amplify/functions/libs/program/s3-utils.ts`
 - **Public Lambda Handler:** `amplify/functions/get-coach-template/handler.ts` - No-auth pattern
 - **Protected Lambda Handler:** `amplify/functions/get-program/handler.ts` - Auth pattern
@@ -3381,6 +3711,68 @@ These features are explicitly **out of scope** for initial launch but could be a
 - **UI Patterns:** `src/utils/ui/uiPatterns.js` - All styling patterns
 - **API Config:** `src/utils/apis/apiConfig.js` - API utilities
 - **Program API:** `src/utils/apis/programApi.js` - API wrapper patterns
+
+---
+
+## Next Steps
+
+### Current Status: PAUSED FOR STABILIZATION ⏸️
+
+Core sharing flow is complete and functional. Pausing development to:
+
+1. Allow existing features to stabilize in production
+2. Gather user feedback on the share → preview → copy flow
+3. Plan remaining features with fresh perspective
+
+---
+
+### When Resuming (Estimated: Late January 2026)
+
+**Phase 2 Completion: Share Management (~1 day)**
+
+- Build `MySharedPrograms.jsx` component
+- Add `/programs/shared` route to `App.jsx`
+- Add unshare functionality
+- Test share management flow
+
+**Phase 3: Slide-out Adaptation Chat (~2 days)**
+
+- Create `stream-program-conversation` Lambda handler (NEW dedicated handler)
+- Build `ProgramAdaptationChat.jsx` slide-out component
+- Add slide-out container patterns to `uiPatterns.js`
+- Create `programConversationApi.js` API wrapper
+- Integrate into `ProgramDashboard.jsx`:
+  - Auto-open for freshly copied shared programs (`metadata.copiedFromSharedProgram`)
+  - Manual trigger via "Customize with Coach" button
+- Add `onCustomize` prop to `ProgramOverview.jsx`
+
+**Phase 4: Polish & Launch (~1 day)**
+
+- End-to-end testing: share → preview → copy → dashboard → slide-out → customize
+- Create `sharedProgramAnalytics.js` with all tracking events
+- Integrate analytics calls into components
+- Test analytics events fire correctly at each step
+- Soft launch with beta users
+
+---
+
+### Completed ✅
+
+**Phase 1: Backend (Days 1-2)** - COMPLETE
+
+- All Lambda handlers deployed and tested
+- DynamoDB operations working
+- S3 storage working
+- API routes configured
+
+**Phase 2 Core: Frontend Share & Copy Flow (Days 3-4)** - COMPLETE
+
+- ShareProgramModal working
+- SharedProgramPreview working with skeleton loading
+- SelectCoachModal working (matches CoachHeader styling)
+- Single coach auto-select working
+- Multi-coach modal selection working
+- Privacy: sharedProgramId uses nanoid (no userId exposure)
 
 ---
 
@@ -3412,4 +3804,38 @@ This pattern:
 1. Reduces friction (no mandatory conversation)
 2. Preserves coaching value (coach speaks proactively)
 3. Enables future features (customize any program with coach)
-4. Leverages existing infrastructure (ProgramDesigner streaming)
+4. Uses dedicated `stream-program-conversation` handler (simpler than ProgramDesigner wizard)
+5. Reusable for any program modification conversation
+
+---
+
+## Current Status Summary (January 19, 2026)
+
+### What's Working ✅
+
+| Feature                                  | Status                             |
+| ---------------------------------------- | ---------------------------------- |
+| Share link generation                    | ✅ Working                         |
+| Public preview page                      | ✅ Working (with skeleton loading) |
+| Instant copy (single coach)              | ✅ Working                         |
+| Coach selection modal (multiple coaches) | ✅ Working                         |
+| Privacy (nanoid for shared IDs)          | ✅ Implemented                     |
+| Backend (all Lambda handlers)            | ✅ Deployed                        |
+
+### What's Not Built Yet ⏸️
+
+| Feature                                     | Priority | Notes                    |
+| ------------------------------------------- | -------- | ------------------------ |
+| MySharedPrograms management                 | Medium   | Unshare functionality    |
+| ProgramAdaptationChat slide-out             | Medium   | Proactive coach analysis |
+| Analytics tracking                          | Low      | Track share/copy events  |
+| Multiple active programs in TrainingGrounds | Low      | Design documented above  |
+
+### Resume Plan
+
+When resuming development (late January 2026):
+
+1. **Day 1:** Build `MySharedPrograms.jsx` with unshare functionality
+2. **Day 2-3:** Build `ProgramAdaptationChat.jsx` slide-out + backend
+3. **Day 4:** Analytics integration and end-to-end testing
+4. **Future:** Multiple active programs in TrainingGrounds (Phase 2/3)

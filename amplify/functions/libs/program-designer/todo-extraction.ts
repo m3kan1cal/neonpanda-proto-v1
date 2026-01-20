@@ -11,7 +11,10 @@ import {
   MODEL_IDS,
   TEMPERATURE_PRESETS,
 } from "../api-helpers";
-import { parseJsonWithFallbacks } from "../response-utils";
+import {
+  parseJsonWithFallbacks,
+  fixDoubleEncodedProperties,
+} from "../response-utils";
 import { buildMultimodalContent } from "../streaming/multimodal-helpers";
 import { MESSAGE_TYPES, CoachMessage } from "../coach-conversation/types";
 import { TodoItem } from "../todo-types";
@@ -222,13 +225,15 @@ Return ONLY the fields you found information for using the tool. If no informati
     // Handle tool response
     let extracted: any;
     if (typeof extractionResponse !== "string") {
-      // Tool was used - extract the input
+      // Tool was used - extract the input and fix any double-encoding
       extracted = extractionResponse.input;
       console.info("✅ Tool-based extraction successful");
       console.info(
         "🔎 Raw tool input:",
         JSON.stringify(extractionResponse.input, null, 2),
       );
+      // Apply double-encoding fix to tool inputs (same as parseJsonWithFallbacks does)
+      extracted = fixDoubleEncodedProperties(extracted);
     } else {
       // Fallback to parsing (shouldn't happen with tool enforcement)
       console.warn("⚠️ Received string response, parsing as JSON fallback");

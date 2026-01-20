@@ -3265,6 +3265,8 @@ export async function queryPrograms(
     status?: Program["status"];
     limit?: number;
     sortOrder?: "asc" | "desc";
+    includeArchived?: boolean;
+    includeStatus?: string[]; // Array of statuses to include (e.g., ["active", "paused"]) - more explicit and safer
   },
 ): Promise<Program[]> {
   const tableName = getTableName();
@@ -3278,25 +3280,55 @@ export async function queryPrograms(
     // Paginate through all results
     do {
       pageCount++;
+      // Build filter expression based on options
+      // Note: DynamoDB requires separate placeholders for nested attribute paths
+      const includeArchived = options?.includeArchived ?? false;
+      let filterExpression = "#entityType = :entityType";
+
+      // Build ExpressionAttributeValues dynamically
+      const expressionAttributeValues: Record<string, any> = {
+        ":gsi1pk": `user#${userId}`,
+        ":gsi1sk_prefix": "program#",
+        ":entityType": "program",
+      };
+
+      // Handle includeStatus array (positive filter - explicit about what to show)
+      // This is the most explicit filter and takes precedence over other status filters
+      if (options?.includeStatus && options.includeStatus.length > 0) {
+        // Use IN operator for multiple statuses
+        const statusPlaceholders = options.includeStatus
+          .map((_, index) => `:includeStatus${index}`)
+          .join(", ");
+        filterExpression += ` AND #attributes.#status IN (${statusPlaceholders})`;
+        options.includeStatus.forEach((status, index) => {
+          expressionAttributeValues[`:includeStatus${index}`] = status;
+        });
+      }
+      // Handle specific status filter (single status - backward compatibility)
+      // Only apply if includeStatus is not provided
+      else if (options?.status) {
+        filterExpression += " AND #attributes.#status = :status";
+        expressionAttributeValues[":status"] = options.status;
+      }
+      // Handle includeArchived (backward compatibility)
+      // Only apply if neither includeStatus nor status is provided
+      else if (!includeArchived) {
+        filterExpression += " AND #attributes.#status <> :archivedStatus";
+        expressionAttributeValues[":archivedStatus"] = "archived";
+      }
+
       const command = new QueryCommand({
         TableName: tableName,
         IndexName: "gsi1",
         KeyConditionExpression:
           "gsi1pk = :gsi1pk AND begins_with(gsi1sk, :gsi1sk_prefix)",
-        FilterExpression: options?.status
-          ? "#entityType = :entityType AND #status = :status AND #status <> :archivedStatus"
-          : "#entityType = :entityType AND #status <> :archivedStatus",
+        FilterExpression: filterExpression,
         ExpressionAttributeNames: {
           "#entityType": "entityType",
-          "#status": "attributes.status",
+          "#attributes": "attributes",
+          "#status": "status",
         },
-        ExpressionAttributeValues: {
-          ":gsi1pk": `user#${userId}`,
-          ":gsi1sk_prefix": "program#",
-          ":entityType": "program",
-          ":archivedStatus": "archived",
-          ...(options?.status && { ":status": options.status }),
-        },
+        ExpressionAttributeValues: expressionAttributeValues,
         ExclusiveStartKey: lastEvaluatedKey,
       });
 
@@ -4167,8 +4199,16 @@ export async function saveSharedProgram(
  * Pattern: Follows getCoachTemplate pattern
  * Reference: Lines 2754-2763 (getCoachTemplate)
  */
+/**
+ * Get a shared program by ID
+ *
+ * @param sharedProgramId - The shared program ID
+ * @param includeInactive - If true, returns inactive programs. If false, filters them out. Default: false
+ * @returns SharedProgram or null if not found (or inactive when includeInactive=false)
+ */
 export async function getSharedProgram(
   sharedProgramId: string,
+  includeInactive: boolean = false,
 ): Promise<SharedProgram | null> {
   const item = await loadFromDynamoDB<SharedProgram>(
     `sharedProgram#${sharedProgramId}`,
@@ -4180,8 +4220,8 @@ export async function getSharedProgram(
     return null;
   }
 
-  // Check if active before returning
-  if (!item.attributes.isActive) {
+  // Check if active before returning (unless includeInactive is true)
+  if (!includeInactive && !item.attributes.isActive) {
     console.info("Shared program found but inactive:", { sharedProgramId });
     return null;
   }
@@ -4272,26 +4312,21 @@ export async function deactivateSharedProgram(
   userId: string,
   sharedProgramId: string,
 ): Promise<void> {
-  // 1. Load the shared program directly (including inactive programs)
-  // Don't use getSharedProgram() as it filters out inactive programs
-  const existingItem = await loadFromDynamoDB<SharedProgram>(
-    `sharedProgram#${sharedProgramId}`,
-    "metadata",
-    "sharedProgram",
-  );
+  // 1. Load the shared program (including inactive programs)
+  const sharedProgram = await getSharedProgram(sharedProgramId, true);
 
   // 2. Check if program exists at all
-  if (!existingItem) {
+  if (!sharedProgram) {
     throw new Error(`Shared program not found: ${sharedProgramId}`);
   }
 
   // 3. Verify ownership
-  if (existingItem.attributes.creatorUserId !== userId) {
+  if (sharedProgram.creatorUserId !== userId) {
     throw new Error("Unauthorized: You can only unshare your own programs");
   }
 
   // 4. If already inactive, return success (idempotent operation)
-  if (!existingItem.attributes.isActive) {
+  if (!sharedProgram.isActive) {
     console.info("Shared program already inactive, no action needed:", {
       sharedProgramId,
       userId,
@@ -4299,7 +4334,18 @@ export async function deactivateSharedProgram(
     return;
   }
 
-  // 5. Update isActive to false
+  // 5. Load full item for update (need to preserve DynamoDB metadata)
+  const existingItem = await loadFromDynamoDB<SharedProgram>(
+    `sharedProgram#${sharedProgramId}`,
+    "metadata",
+    "sharedProgram",
+  );
+
+  if (!existingItem) {
+    throw new Error(`Shared program not found: ${sharedProgramId}`);
+  }
+
+  // 6. Update isActive to false
   const updatedItem = {
     ...existingItem,
     attributes: {

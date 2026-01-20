@@ -10,6 +10,9 @@ import { navigationPatterns } from "../ui/uiPatterns";
  * @returns {boolean}
  */
 export const isItemVisible = (item, context) => {
+  // Hide item when authenticated if specified (e.g., Sign Up)
+  if (item.hideWhenAuthenticated && context.isAuthenticated) return false;
+
   // Always visible items (public pages)
   if (item.alwaysVisible) return true;
 

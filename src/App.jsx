@@ -39,6 +39,7 @@ import Settings from "./components/Settings";
 import Theme from "./components/Theme";
 import BlogIndex from "./components/blog/BlogIndex";
 import BlogPostRouter from "./components/blog/BlogPostRouter";
+import SharedProgramPreview from "./components/shared-programs/SharedProgramPreview";
 import { WelcomePage } from "./components/subscription";
 import {
   NavigationProvider,
@@ -82,6 +83,7 @@ function AppContent() {
     "/auth", // Includes all auth child routes (signin, signup, etc.)
     "/welcome", // Post-checkout welcome page
     "/blog", // Blog index and all blog posts
+    "/shared", // Shared program previews (public access)
   ];
   const isPublicPage =
     publicRoutes.includes(location.pathname) ||
@@ -185,6 +187,12 @@ function AppContent() {
           {/* Blog routes */}
           <Route path="/blog" element={<BlogIndex />} />
           <Route path="/blog/:slug" element={<BlogPostRouter />} />
+
+          {/* Shared program preview (public access) */}
+          <Route
+            path="/shared/programs/:sharedProgramId"
+            element={<SharedProgramPreview />}
+          />
 
           {/* Authentication route */}
           <Route path="/auth" element={<AuthRouter />} />

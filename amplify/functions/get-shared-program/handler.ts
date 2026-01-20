@@ -1,6 +1,10 @@
 import { createOkResponse, createErrorResponse } from "../libs/api-helpers";
 import { getSharedProgram } from "../../dynamodb/operations";
 import { GetSharedProgramResponse } from "../libs/shared-program/types";
+import {
+  getSharedProgramDetailsFromS3,
+  selectSampleWorkouts,
+} from "../libs/shared-program/s3-utils";
 import { APIGatewayProxyHandlerV2 } from "aws-lambda";
 
 /**
@@ -22,11 +26,30 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
       return createErrorResponse(404, "Shared program not found");
     }
 
+    // Get sample workouts from S3 (for preview only, limit to 3-4 workouts)
+    let sampleWorkouts: any[] = [];
+    try {
+      const sharedDetails = await getSharedProgramDetailsFromS3(
+        sharedProgram.s3DetailKey,
+      );
+      if (sharedDetails && sharedDetails.workoutTemplates) {
+        sampleWorkouts = selectSampleWorkouts(
+          sharedDetails.workoutTemplates,
+          4,
+        );
+      }
+    } catch (s3Error) {
+      console.warn("Failed to load sample workouts from S3:", s3Error);
+      // Don't fail the whole request if we can't load workouts
+    }
+
     // Return public-facing data only (no S3 keys or internal IDs)
     const response: GetSharedProgramResponse = {
       sharedProgramId: sharedProgram.sharedProgramId,
+      creatorUserId: sharedProgram.creatorUserId, // For frontend ownership check
       creatorUsername: sharedProgram.creatorUsername,
       programSnapshot: sharedProgram.programSnapshot,
+      sampleWorkouts, // Include sample workouts for preview
       createdAt: sharedProgram.createdAt
         ? new Date(sharedProgram.createdAt).toISOString()
         : new Date().toISOString(),
@@ -36,6 +59,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
       sharedProgramId,
       programName: sharedProgram.programSnapshot.name,
       creatorUsername: sharedProgram.creatorUsername,
+      sampleWorkoutsCount: sampleWorkouts.length,
     });
 
     // TODO: Track analytics event: share_link_viewed

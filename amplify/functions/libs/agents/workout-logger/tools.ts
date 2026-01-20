@@ -45,6 +45,7 @@ import {
   determineBlockingFlags,
   buildBlockingReason,
 } from "../../workout/validation-helpers";
+import { generateWorkoutId } from "../../id-utils";
 import {
   callBedrockApi,
   MODEL_IDS,
@@ -354,8 +355,7 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
         }
 
         // Set system-generated fields
-        const shortId = Math.random().toString(36).substring(2, 11);
-        workoutData.workout_id = `workout_${context.userId}_${Date.now()}_${shortId}`;
+        workoutData.workout_id = generateWorkoutId(context.userId);
         workoutData.user_id = context.userId;
 
         // Apply performance metric defaults (intensity and RPE)
@@ -410,8 +410,7 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
       workoutData = parseJsonWithFallbacks(fallbackResult);
 
       // Set system-generated fields for fallback
-      const shortId = Math.random().toString(36).substring(2, 11);
-      workoutData.workout_id = `workout_${context.userId}_${Date.now()}_${shortId}`;
+      workoutData.workout_id = generateWorkoutId(context.userId);
       workoutData.user_id = context.userId;
 
       // Apply performance metric defaults (intensity and RPE)

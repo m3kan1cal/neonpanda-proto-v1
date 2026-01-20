@@ -61,6 +61,24 @@ export interface Program {
     };
   };
 
+  // Optional metadata for tracking program origin and customization
+  metadata?: {
+    // Shared program copy tracking
+    copiedFromSharedProgram?: boolean; // True if this was copied from a shared program
+    sharedProgramId?: string; // Source shared program ID
+    sourceCreator?: string; // Username of original creator
+    sourceCoachNames?: string[]; // Original coach names for attribution
+    adaptationReviewed?: boolean; // False = trigger slide-out on first view
+    copiedAt?: string; // ISO timestamp of copy
+
+    // Future: Could track customization history
+    adaptationHistory?: Array<{
+      timestamp: string;
+      changeType: string;
+      description: string;
+    }>;
+  };
+
   // DynamoDB timestamps (populated from database metadata)
   createdAt?: Date;
   updatedAt?: Date;

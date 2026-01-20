@@ -44,7 +44,7 @@ export interface SharedProgramSnapshot {
  */
 export interface SharedProgram {
   // === Identity ===
-  sharedProgramId: string; // "sharedProgram_{creatorUserId}_{timestamp}_{shortId}"
+  sharedProgramId: string; // "sharedProgram_{nanoId}" (no userId for privacy)
   originalProgramId: string; // Reference to source program
   creatorUserId: string; // User who shared
   creatorUsername: string; // Display name for attribution on preview page
@@ -79,6 +79,11 @@ export interface SharedProgramDetails {
   generationMetadata: {
     sharedAt: string; // ISO timestamp
     originalProgramId: string;
+    // Preserve original generation metadata for provenance tracking
+    originalGeneratedBy?: string; // Original coach ID
+    originalAiModel?: string; // Original AI model used
+    originalConfidence?: number; // Original confidence score
+    originalGenerationPrompt?: string; // Original generation prompt
   };
 }
 
@@ -86,8 +91,8 @@ export interface SharedProgramDetails {
  * API request body for creating a shared program
  */
 export interface CreateSharedProgramRequest {
-  programId: string;
   coachId: string;
+  // programId comes from path parameter, not body
 }
 
 /**
@@ -104,8 +109,10 @@ export interface CreateSharedProgramResponse {
  */
 export interface GetSharedProgramResponse {
   sharedProgramId: string;
+  creatorUserId: string; // For ownership check on frontend (is this the logged-in user's program?)
   creatorUsername: string;
   programSnapshot: SharedProgramSnapshot;
+  sampleWorkouts?: any[]; // Sample workout templates for preview (limited to 3-5)
   createdAt: string;
 }
 

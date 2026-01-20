@@ -16,8 +16,8 @@ const blogPostComponents = {
   "the-symphony": BlogPost5Orchestration,
 };
 
-// Only "the-foundation" is published for now
-const publishedSlugs = ["the-foundation"];
+// Published blog posts
+const publishedSlugs = ["the-foundation", "your-coach-your-way"];
 
 function BlogPostRouter() {
   const { slug } = useParams();
