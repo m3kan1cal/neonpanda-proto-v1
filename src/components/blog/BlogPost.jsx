@@ -212,6 +212,11 @@ function BlogPost({ children }) {
                 <span className="text-white">The </span>
                 <span className={colors.text}>Foundation</span>
               </>
+            ) : currentPost.slug === "your-coach-your-way" ? (
+              <>
+                <span className="text-white">Your Coach, </span>
+                <span className={colors.text}>Your Way</span>
+              </>
             ) : (
               <span className={colors.text}>{currentPost.title}</span>
             )}
@@ -225,9 +230,7 @@ function BlogPost({ children }) {
             {blogPosts.map((post) => {
               const postColors = getColorClasses(post.color);
               const isCurrent = post.slug === slug;
-              const isPublished = post.id === 1;
-
-              if (isPublished) {
+              if (post.id <= 2) {
                 return (
                   <Link
                     key={post.id}

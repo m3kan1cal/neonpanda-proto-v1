@@ -939,7 +939,7 @@ function BlogPost1Foundation() {
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
             <div>
-              <div className="text-2xl font-inter font-bold text-synthwave-neon-pink mb-1">
+              <div className="text-2xl font-russo text-synthwave-neon-pink mb-1">
                 ~100ms
               </div>
               <div className="font-rajdhani text-sm text-synthwave-text-muted">
@@ -947,7 +947,7 @@ function BlogPost1Foundation() {
               </div>
             </div>
             <div>
-              <div className="text-2xl font-inter font-bold text-synthwave-neon-cyan mb-1">
+              <div className="text-2xl font-russo text-synthwave-neon-cyan mb-1">
                 ~50ms
               </div>
               <div className="font-rajdhani text-sm text-synthwave-text-muted">
@@ -955,7 +955,7 @@ function BlogPost1Foundation() {
               </div>
             </div>
             <div>
-              <div className="text-2xl font-inter font-bold text-synthwave-neon-purple mb-1">
+              <div className="text-2xl font-russo text-synthwave-neon-purple mb-1">
                 ~500ms
               </div>
               <div className="font-rajdhani text-sm text-synthwave-text-muted">
