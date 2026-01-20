@@ -139,10 +139,19 @@ export function parseProgramDuration(
     return days;
   }
 
-  // Assume days if no unit specified
+  if (/\bdays?\b/.test(lowerValue)) {
+    const days = extractedNum;
+    console.info("📅 Using days directly from extracted value:", {
+      input: durationValue,
+      days,
+    });
+    return days;
+  }
+
+  // Assume days if no unit specified but we can parse a number
   const days = parseInt(durationValue, 10);
   if (!isNaN(days)) {
-    console.info("📅 Using days directly:", {
+    console.info("📅 Using days directly from parseInt:", {
       input: durationValue,
       days,
     });
@@ -179,12 +188,22 @@ export function canParseDuration(durationValue: any): boolean {
     return false;
   }
 
+  const lowerValue = durationValue.toLowerCase();
+
   // Check for explicit digits
   if (/\d/.test(durationValue)) {
     return true;
   }
 
   // Check for vague terms we can interpret
-  const lowerValue = durationValue.toLowerCase();
-  return VAGUE_DURATION_TERMS.some((term) => lowerValue.includes(term));
+  if (VAGUE_DURATION_TERMS.some((term) => lowerValue.includes(term))) {
+    return true;
+  }
+
+  // Check for "a/an" + time unit pattern (e.g., "a week", "an month")
+  if (/\b(a|an)\s+(week|month|day)/.test(lowerValue)) {
+    return true;
+  }
+
+  return false;
 }
