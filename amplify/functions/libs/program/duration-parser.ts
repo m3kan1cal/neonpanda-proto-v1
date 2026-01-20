@@ -39,13 +39,7 @@ export function extractNumericValue(durationStr: string): number {
     return parseInt(numMatch[0], 10);
   }
 
-  // Check for "a" or "an" (e.g., "a week", "an month")
-  if (/\b(a|an)\b/.test(lowerValue)) {
-    console.info("📅 Interpreted 'a/an' as 1");
-    return 1;
-  }
-
-  // Check for vague terms
+  // Check for vague terms (BEFORE checking for "a/an" to avoid false matches)
   if (lowerValue.includes("couple") || lowerValue.includes("a couple")) {
     console.info("📅 Interpreted 'couple' as 2");
     return 2;
@@ -59,6 +53,13 @@ export function extractNumericValue(durationStr: string): number {
   if (lowerValue.includes("several") || lowerValue.includes("some")) {
     console.info("📅 Interpreted 'several/some' as 4");
     return 4;
+  }
+
+  // Check for standalone "a" or "an" (e.g., "a week", "an month")
+  // This must come AFTER vague term checks to avoid matching "a couple", "a few", etc.
+  if (/\b(a|an)\s+(week|month|day)/.test(lowerValue)) {
+    console.info("📅 Interpreted 'a/an' as 1");
+    return 1;
   }
 
   // Default fallback
@@ -93,6 +94,16 @@ export function parseProgramDuration(
   // Handle numeric input directly
   if (typeof durationValue === "number") {
     return durationValue;
+  }
+
+  // Type guard: must be a string at this point
+  if (typeof durationValue !== "string") {
+    console.warn("⚠️ Invalid duration type (expected string or number):", {
+      type: typeof durationValue,
+      value: durationValue,
+      default: defaultDays,
+    });
+    return defaultDays;
   }
 
   // Parse string input
