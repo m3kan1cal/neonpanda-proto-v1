@@ -252,7 +252,7 @@ function BlogIndex() {
                                       : "bg-synthwave-neon-purple"
                                 }`}
                               >
-                                <span className="font-inter font-bold text-sm text-white">
+                                <span className="font-inter font-bold text-sm text-black">
                                   {post.id}
                                 </span>
                               </div>
@@ -347,7 +347,7 @@ function BlogIndex() {
                                       : "bg-synthwave-neon-purple/50"
                                 }`}
                               >
-                                <span className="font-inter font-bold text-sm text-white/70">
+                                <span className="font-inter font-bold text-sm text-black/70">
                                   {post.id}
                                 </span>
                               </div>
