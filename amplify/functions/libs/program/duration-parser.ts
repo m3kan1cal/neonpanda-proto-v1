@@ -1,0 +1,217 @@
+/**
+ * Duration Parsing Utilities
+ *
+ * Centralized logic for parsing program duration strings into days.
+ * Handles numeric strings, vague terms, and time unit conversions.
+ */
+
+/**
+ * Default program duration constants
+ * Used as fallback when duration cannot be determined or parsed
+ */
+export const DEFAULT_PROGRAM_DURATION_DAYS = 56; // 8 weeks
+export const DEFAULT_PROGRAM_DURATION_STRING = "8 weeks";
+
+/**
+ * Vague duration terms that can be interpreted as numbers
+ * Used when users say "couple of weeks" instead of "2 weeks"
+ */
+export const VAGUE_DURATION_TERMS = [
+  "couple",
+  "few",
+  "several",
+  "some",
+] as const;
+
+/**
+ * Extract a numeric value from a duration string
+ * Handles both explicit numbers and vague terms
+ *
+ * @param durationStr - Duration string (e.g., "2 weeks", "couple of weeks")
+ * @returns Extracted number or default fallback (8)
+ *
+ * @example
+ * extractNumericValue("2 weeks") → 2
+ * extractNumericValue("couple of weeks") → 2
+ * extractNumericValue("few months") → 3
+ * extractNumericValue("no number here") → 8 (fallback)
+ */
+export function extractNumericValue(durationStr: string): number {
+  const lowerValue = durationStr.toLowerCase();
+
+  // First, try to find explicit digits
+  const numMatch = durationStr.match(/\d+/);
+  if (numMatch) {
+    return parseInt(numMatch[0], 10);
+  }
+
+  // Check for vague terms using word boundaries (BEFORE checking for "a/an" to avoid false matches)
+  // Using \b for word boundaries prevents false matches like "awesome" matching "some"
+  if (/\bcouple\b/.test(lowerValue)) {
+    console.info("📅 Interpreted 'couple' as 2");
+    return 2;
+  }
+
+  if (/\bfew\b/.test(lowerValue)) {
+    console.info("📅 Interpreted 'few' as 3");
+    return 3;
+  }
+
+  if (/\b(several|some)\b/.test(lowerValue)) {
+    console.info("📅 Interpreted 'several/some' as 4");
+    return 4;
+  }
+
+  // Check for standalone "a" or "an" (e.g., "a week", "an month")
+  // This must come AFTER vague term checks to avoid matching "a couple", "a few", etc.
+  if (/\b(a|an)\s+(week|month|day)/.test(lowerValue)) {
+    console.info("📅 Interpreted 'a/an' as 1");
+    return 1;
+  }
+
+  // Default fallback
+  console.info("📅 No number found, defaulting to 8");
+  return 8;
+}
+
+/**
+ * Parse a duration string into days
+ * Supports weeks, months, and days
+ *
+ * @param durationValue - Duration value (string or number)
+ * @param defaultDays - Default value if parsing fails (default: 56)
+ * @returns Duration in days
+ *
+ * @example
+ * parseProgramDuration("2 weeks") → 14
+ * parseProgramDuration("couple of weeks") → 14
+ * parseProgramDuration("3 months") → 90
+ * parseProgramDuration("30") → 30
+ * parseProgramDuration(14) → 14
+ */
+export function parseProgramDuration(
+  durationValue: string | number | undefined,
+  defaultDays: number = DEFAULT_PROGRAM_DURATION_DAYS,
+): number {
+  // Handle undefined/null
+  if (durationValue === undefined || durationValue === null) {
+    return defaultDays;
+  }
+
+  // Handle numeric input directly
+  if (typeof durationValue === "number") {
+    return durationValue;
+  }
+
+  // Type guard: must be a string at this point
+  if (typeof durationValue !== "string") {
+    console.warn("⚠️ Invalid duration type (expected string or number):", {
+      type: typeof durationValue,
+      value: durationValue,
+      default: defaultDays,
+    });
+    return defaultDays;
+  }
+
+  // Parse string input
+  const lowerValue = durationValue.toLowerCase();
+  const extractedNum = extractNumericValue(durationValue);
+
+  // Convert based on time unit
+  // Matches both "8 weeks" (with space) and "8weeks" (without space)
+  // Word boundary \b prevents "weekend", "biweekly" but allows "8weeks"
+  if (/\bweeks?\b|weeks?(?!\w)/.test(lowerValue)) {
+    const days = extractedNum * 7;
+    console.info("📅 Converted weeks to days:", {
+      input: durationValue,
+      weeks: extractedNum,
+      days,
+    });
+    return days;
+  }
+
+  if (/\bmonths?\b|months?(?!\w)/.test(lowerValue)) {
+    const days = extractedNum * 30; // Approximate
+    console.info("📅 Converted months to days:", {
+      input: durationValue,
+      months: extractedNum,
+      days,
+    });
+    return days;
+  }
+
+  if (/\bdays?\b|days?(?!\w)/.test(lowerValue)) {
+    const days = extractedNum;
+    console.info("📅 Using days directly from extracted value:", {
+      input: durationValue,
+      days,
+    });
+    return days;
+  }
+
+  // Assume days if no unit specified but we can parse a number
+  const days = parseInt(durationValue, 10);
+  if (!isNaN(days)) {
+    console.info("📅 Using days directly from parseInt:", {
+      input: durationValue,
+      days,
+    });
+    return days;
+  }
+
+  // Final fallback
+  console.warn("⚠️ Could not parse duration, using default:", {
+    input: durationValue,
+    default: defaultDays,
+  });
+  return defaultDays;
+}
+
+/**
+ * Check if a duration string can be parsed
+ * Used for validation before attempting to parse
+ *
+ * @param durationValue - Duration value to validate
+ * @returns true if parseable, false otherwise
+ */
+export function canParseDuration(durationValue: any): boolean {
+  if (durationValue === undefined || durationValue === null) {
+    return true; // Optional field
+  }
+
+  // Numbers are always valid
+  if (typeof durationValue === "number") {
+    return true;
+  }
+
+  // Must be a string for further checks
+  if (typeof durationValue !== "string") {
+    return false;
+  }
+
+  const lowerValue = durationValue.toLowerCase();
+
+  // Check for explicit digits
+  if (/\d/.test(durationValue)) {
+    return true;
+  }
+
+  // Check for vague terms ONLY if paired with time units
+  // "couple weeks" ✅, "couple" alone ❌ (should trigger AI normalization)
+  // Use word boundaries to prevent false matches like "awesome" matching "some"
+  const hasVagueTerm = VAGUE_DURATION_TERMS.some((term) =>
+    new RegExp(`\\b${term}\\b`).test(lowerValue),
+  );
+  const hasTimeUnit = /\b(weeks?|months?|days?)\b/.test(lowerValue);
+
+  if (hasVagueTerm && hasTimeUnit) {
+    return true;
+  }
+
+  // Check for "a/an" + time unit pattern (e.g., "a week", "an month")
+  if (/\b(a|an)\s+(week|month|day)/.test(lowerValue)) {
+    return true;
+  }
+
+  return false;
+}

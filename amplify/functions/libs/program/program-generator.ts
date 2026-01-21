@@ -23,6 +23,11 @@ import {
 } from "./phase-generator";
 import { storeProgramDetailsInS3 } from "./s3-utils";
 import type { ProgramDesignerTodoList } from "../program-designer/types";
+import {
+  parseProgramDuration,
+  DEFAULT_PROGRAM_DURATION_DAYS,
+} from "./duration-parser";
+import { validateParsedProgramDuration } from "./validation-helpers";
 
 /**
  * Generate a concise program name (50-60 characters max)
@@ -261,40 +266,17 @@ export async function generateProgramV2(
     }
 
     // 3. Build phase generation context
-    // Parse program duration (supports "X weeks", "X months", or days as number)
-    const programDurationRaw = todoList.programDuration?.value || "56";
-    let programDuration: number;
+    // Parse program duration (supports "X weeks", "X months", vague terms, or days as number)
+    const programDuration = parseProgramDuration(
+      todoList.programDuration?.value,
+      DEFAULT_PROGRAM_DURATION_DAYS,
+    );
 
-    if (typeof programDurationRaw === "string") {
-      const lowerValue = programDurationRaw.toLowerCase();
-      const numMatch = programDurationRaw.match(/\d+/);
-      const extractedNum = numMatch ? parseInt(numMatch[0], 10) : 8;
-
-      if (lowerValue.includes("week")) {
-        programDuration = extractedNum * 7; // Convert weeks to days
-        console.info("📅 Converted weeks to days:", {
-          input: programDurationRaw,
-          weeks: extractedNum,
-          days: programDuration,
-        });
-      } else if (lowerValue.includes("month")) {
-        programDuration = extractedNum * 30; // Convert months to days (approximate)
-        console.info("📅 Converted months to days:", {
-          input: programDurationRaw,
-          months: extractedNum,
-          days: programDuration,
-        });
-      } else {
-        programDuration = parseInt(programDurationRaw, 10) || 56; // Assume days
-        console.info("📅 Using days directly:", {
-          input: programDurationRaw,
-          days: programDuration,
-        });
-      }
-    } else {
-      programDuration =
-        typeof programDurationRaw === "number" ? programDurationRaw : 56;
-    }
+    // Validate parsed program duration (prevents zero/invalid durations)
+    validateParsedProgramDuration(
+      programDuration,
+      todoList.programDuration?.value,
+    );
 
     const trainingFrequency =
       typeof todoList.trainingFrequency?.value === "number"
