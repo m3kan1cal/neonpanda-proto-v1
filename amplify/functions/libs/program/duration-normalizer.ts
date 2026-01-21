@@ -74,25 +74,9 @@ EXAMPLES:
       },
     );
 
-    // Tool response returns the input object directly
-    if (
-      result &&
-      typeof result === "object" &&
-      "input" in result &&
-      result.input &&
-      typeof result.input === "object"
-    ) {
+    // Standard pattern for tool result extraction (see api-helpers.ts)
+    if (result && typeof result === "object" && result.input) {
       const toolResult = result.input as DurationNormalizationResult;
-
-      // Validate that required fields exist
-      if (!toolResult.normalizedDuration || !toolResult.confidence) {
-        console.warn("⚠️ Tool response missing required fields, using default");
-        return {
-          normalizedDuration: "8 weeks",
-          confidence: "low",
-          originalInterpretation: "Fallback - incomplete tool response",
-        };
-      }
 
       console.info("📅 AI normalized duration (tool response):", {
         input: rawValue,
