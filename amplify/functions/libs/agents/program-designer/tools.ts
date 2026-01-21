@@ -34,6 +34,7 @@ import {
   validateParsedProgramDuration,
   validateParsedTrainingFrequency,
 } from "../../program/validation-helpers";
+import { parseProgramDuration } from "../../program/duration-parser";
 import {
   normalizeProgram,
   shouldNormalizeProgram,
@@ -288,43 +289,17 @@ Returns: coachConfig, userProfile, pineconeContext, programDuration (days), trai
             .join("\n\n")
         : "";
 
-    // 3. Parse program duration (supports "X weeks", "X months", or days as number)
-    const programDurationRaw = todoList.programDuration?.value || "56";
-    let programDuration: number;
-
-    if (typeof programDurationRaw === "string") {
-      const lowerValue = programDurationRaw.toLowerCase();
-      const numMatch = programDurationRaw.match(/\d+/);
-      const extractedNum = numMatch ? parseInt(numMatch[0], 10) : 8;
-
-      if (lowerValue.includes("week")) {
-        programDuration = extractedNum * 7;
-        console.info("Converted weeks to days:", {
-          input: programDurationRaw,
-          weeks: extractedNum,
-          days: programDuration,
-        });
-      } else if (lowerValue.includes("month")) {
-        programDuration = extractedNum * 30;
-        console.info("Converted months to days:", {
-          input: programDurationRaw,
-          months: extractedNum,
-          days: programDuration,
-        });
-      } else {
-        programDuration = parseInt(programDurationRaw, 10) || 56;
-        console.info("Using days directly:", {
-          input: programDurationRaw,
-          days: programDuration,
-        });
-      }
-    } else {
-      programDuration =
-        typeof programDurationRaw === "number" ? programDurationRaw : 56;
-    }
+    // 3. Parse program duration (supports "X weeks", "X months", vague terms, or days as number)
+    const programDuration = parseProgramDuration(
+      todoList.programDuration?.value,
+      56, // Default: 56 days (8 weeks)
+    );
 
     // Validate parsed program duration
-    validateParsedProgramDuration(programDuration, programDurationRaw);
+    validateParsedProgramDuration(
+      programDuration,
+      todoList.programDuration?.value,
+    );
 
     // 4. Parse training frequency
     const trainingFrequency =

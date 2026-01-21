@@ -21,12 +21,17 @@ export interface ProgramInputValidationResult {
   providedValue?: any;
 }
 
+import { canParseDuration } from "./duration-parser";
+
 /**
  * Validate program duration input type
  *
  * Checks if the provided value is either:
  * - A number
  * - A string containing at least one digit (e.g., "4 weeks", "30", "2 months")
+ * - A string containing vague terms like "couple", "few", "several"
+ *
+ * Uses centralized parsing logic from duration-parser.ts
  *
  * @param durationValue - The duration value from todoList
  * @returns Validation result with error details if invalid
@@ -38,9 +43,7 @@ export function validateProgramDurationInput(
     return { isValid: true }; // Optional field
   }
 
-  const isValidDuration =
-    typeof durationValue === "number" ||
-    (typeof durationValue === "string" && /\d/.test(durationValue));
+  const isValidDuration = canParseDuration(durationValue);
 
   if (!isValidDuration) {
     return {

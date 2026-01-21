@@ -21,6 +21,7 @@ import {
   validateProgramDurationInput,
   validateTrainingFrequencyInput,
 } from "../libs/program/validation-helpers";
+import { normalizeDuration } from "../libs/program/duration-normalizer";
 
 // Duration calculation constants
 const DEFAULT_DURATION_FALLBACK_MS = 600000; // 10 minutes in milliseconds
@@ -92,14 +93,47 @@ export const handler = async (event: BuildProgramEvent) => {
         todoList.programDuration?.value,
       );
       if (!durationValidation.isValid) {
-        console.error("❌ Invalid program duration type:", {
-          providedValue: durationValidation.providedValue,
-          error: durationValidation.error,
+        console.warn(
+          "⚠️ Duration validation failed, attempting AI normalization:",
+          {
+            providedValue: todoList.programDuration?.value,
+          },
+        );
+
+        // Try AI normalization as fallback (returns structured JSON via tool config)
+        const normalizationResult = await normalizeDuration(
+          String(todoList.programDuration?.value || ""),
+          todoList.trainingGoals?.value, // Provide context
+        );
+
+        // Re-validate the normalized duration
+        const revalidation = validateProgramDurationInput(
+          normalizationResult.normalizedDuration,
+        );
+        if (!revalidation.isValid) {
+          console.error("❌ AI normalization also failed:", {
+            original: todoList.programDuration?.value,
+            normalized: normalizationResult.normalizedDuration,
+            confidence: normalizationResult.confidence,
+          });
+          return createErrorResponse(400, durationValidation.error!, {
+            invalidField: durationValidation.field,
+            providedValue: durationValidation.providedValue,
+          });
+        }
+
+        // Update the todoList with normalized value
+        console.info("✅ AI normalization succeeded:", {
+          original: todoList.programDuration?.value,
+          normalized: normalizationResult.normalizedDuration,
+          confidence: normalizationResult.confidence,
         });
-        return createErrorResponse(400, durationValidation.error!, {
-          invalidField: durationValidation.field,
-          providedValue: durationValidation.providedValue,
-        });
+        todoList.programDuration = {
+          ...todoList.programDuration,
+          value: normalizationResult.normalizedDuration,
+          confidence: normalizationResult.confidence,
+          notes: `AI-normalized from: "${todoList.programDuration?.value}" (${normalizationResult.originalInterpretation || "no interpretation"})`,
+        };
       }
 
       // Validate trainingFrequency value type

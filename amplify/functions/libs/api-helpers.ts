@@ -41,6 +41,46 @@ export const TEMPERATURE_PRESETS = {
   CREATIVE: 1.0, // Brainstorming, varied content, creative generation
 } as const;
 
+/**
+ * STANDARD PATTERN: Tool Result Extraction
+ *
+ * When using callBedrockApi() with tools (expectedToolName), the response structure is:
+ * { toolName: string, input: YourSchema, stopReason: string }
+ *
+ * Standard extraction pattern:
+ *
+ * ```typescript
+ * const result = await callBedrockApi(systemPrompt, userMessage, modelId, {
+ *   tools: { name: "your_tool", inputSchema: YOUR_SCHEMA },
+ *   expectedToolName: "your_tool",
+ * });
+ *
+ * // Extract the tool result
+ * if (result && typeof result === "object" && result.input) {
+ *   const toolResult = result.input as YourSchemaType;
+ *   // Use toolResult directly
+ *   return toolResult;
+ * }
+ *
+ * // Fallback for unexpected response format
+ * console.warn("⚠️ Tool response not in expected format");
+ * return defaultValue;
+ * ```
+ *
+ * Key points:
+ * - Check: result exists, is object, and has input property
+ * - Cast result.input to your expected type
+ * - Always provide a fallback for unexpected formats
+ * - The try-catch wrapper handles errors
+ * - Don't over-validate - trust the schema and handle errors gracefully
+ *
+ * Examples:
+ * - libs/program/duration-normalizer.ts
+ * - libs/coach-creator/coach-generation.ts
+ * - libs/agents/workout-logger/tools.ts
+ * - libs/exercise/normalization.ts
+ */
+
 // Model constants for external use
 // MODEL_IDS.PLANNER_MODEL_DISPLAY
 export const MODEL_IDS = {
