@@ -188,8 +188,14 @@ export function canParseDuration(durationValue: any): boolean {
     return true;
   }
 
-  // Check for vague terms we can interpret
-  if (VAGUE_DURATION_TERMS.some((term) => lowerValue.includes(term))) {
+  // Check for vague terms ONLY if paired with time units
+  // "couple weeks" ✅, "couple" alone ❌ (should trigger AI normalization)
+  const hasVagueTerm = VAGUE_DURATION_TERMS.some((term) =>
+    lowerValue.includes(term),
+  );
+  const hasTimeUnit = /\b(weeks?|months?|days?)\b/.test(lowerValue);
+
+  if (hasVagueTerm && hasTimeUnit) {
     return true;
   }
 
