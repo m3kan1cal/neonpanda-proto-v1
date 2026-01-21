@@ -24,6 +24,7 @@ import {
 import { storeProgramDetailsInS3 } from "./s3-utils";
 import type { ProgramDesignerTodoList } from "../program-designer/types";
 import { parseProgramDuration } from "./duration-parser";
+import { validateParsedProgramDuration } from "./validation-helpers";
 
 /**
  * Generate a concise program name (50-60 characters max)
@@ -266,6 +267,12 @@ export async function generateProgramV2(
     const programDuration = parseProgramDuration(
       todoList.programDuration?.value,
       56, // Default: 56 days (8 weeks)
+    );
+
+    // Validate parsed program duration (prevents zero/invalid durations)
+    validateParsedProgramDuration(
+      programDuration,
+      todoList.programDuration?.value,
     );
 
     const trainingFrequency =

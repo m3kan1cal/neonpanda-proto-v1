@@ -424,7 +424,8 @@ Analyze the user's response (text and/or images) and extract any training progra
 AVAILABLE FIELDS (only include if you find information):
 - trainingGoals: string describing their training objectives
 - targetEvent: specific event they're training for or "none"
-- programDuration: timeframe with EXPLICIT number (e.g., "8 weeks", "12 weeks", "3 months"). IMPORTANT: Convert vague terms to numbers: "couple of weeks" → "2 weeks", "a few weeks" → "3 weeks", "several weeks" → "4 weeks", "a month" → "4 weeks"
+- programDuration: MUST contain a number. Convert vague terms (e.g., "couple weeks" → "2 weeks", "6-8 weeks" → "7 weeks"). Default to "8 weeks" if truly ambiguous.
+
 - trainingFrequency: number of days per week (1-7)
 - sessionDuration: typical workout length (e.g., "45 minutes", "1 hour")
 - startDate: when to begin (YYYY-MM-DD or relative like "next Monday", "ASAP")

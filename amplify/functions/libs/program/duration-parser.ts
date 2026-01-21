@@ -14,7 +14,6 @@ export const VAGUE_DURATION_TERMS = [
   "few",
   "several",
   "some",
-  "fortnight", // British English for 2 weeks
 ] as const;
 
 /**
@@ -117,16 +116,6 @@ export function parseProgramDuration(
     console.info("📅 Converted weeks to days:", {
       input: durationValue,
       weeks: extractedNum,
-      days,
-    });
-    return days;
-  }
-
-  if (/\bfortnights?\b/.test(lowerValue)) {
-    const days = extractedNum * 14;
-    console.info("📅 Converted fortnights to days:", {
-      input: durationValue,
-      fortnights: extractedNum,
       days,
     });
     return days;
