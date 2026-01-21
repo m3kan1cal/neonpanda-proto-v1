@@ -6,6 +6,13 @@
  */
 
 /**
+ * Default program duration constants
+ * Used as fallback when duration cannot be determined or parsed
+ */
+export const DEFAULT_PROGRAM_DURATION_DAYS = 56; // 8 weeks
+export const DEFAULT_PROGRAM_DURATION_STRING = "8 weeks";
+
+/**
  * Vague duration terms that can be interpreted as numbers
  * Used when users say "couple of weeks" instead of "2 weeks"
  */
@@ -38,18 +45,19 @@ export function extractNumericValue(durationStr: string): number {
     return parseInt(numMatch[0], 10);
   }
 
-  // Check for vague terms (BEFORE checking for "a/an" to avoid false matches)
-  if (lowerValue.includes("couple") || lowerValue.includes("a couple")) {
+  // Check for vague terms using word boundaries (BEFORE checking for "a/an" to avoid false matches)
+  // Using \b for word boundaries prevents false matches like "awesome" matching "some"
+  if (/\bcouple\b/.test(lowerValue)) {
     console.info("📅 Interpreted 'couple' as 2");
     return 2;
   }
 
-  if (lowerValue.includes("few") || lowerValue.includes("a few")) {
+  if (/\bfew\b/.test(lowerValue)) {
     console.info("📅 Interpreted 'few' as 3");
     return 3;
   }
 
-  if (lowerValue.includes("several") || lowerValue.includes("some")) {
+  if (/\b(several|some)\b/.test(lowerValue)) {
     console.info("📅 Interpreted 'several/some' as 4");
     return 4;
   }
@@ -83,7 +91,7 @@ export function extractNumericValue(durationStr: string): number {
  */
 export function parseProgramDuration(
   durationValue: string | number | undefined,
-  defaultDays: number = 56,
+  defaultDays: number = DEFAULT_PROGRAM_DURATION_DAYS,
 ): number {
   // Handle undefined/null
   if (durationValue === undefined || durationValue === null) {
@@ -190,8 +198,9 @@ export function canParseDuration(durationValue: any): boolean {
 
   // Check for vague terms ONLY if paired with time units
   // "couple weeks" ✅, "couple" alone ❌ (should trigger AI normalization)
+  // Use word boundaries to prevent false matches like "awesome" matching "some"
   const hasVagueTerm = VAGUE_DURATION_TERMS.some((term) =>
-    lowerValue.includes(term),
+    new RegExp(`\\b${term}\\b`).test(lowerValue),
   );
   const hasTimeUnit = /\b(weeks?|months?|days?)\b/.test(lowerValue);
 

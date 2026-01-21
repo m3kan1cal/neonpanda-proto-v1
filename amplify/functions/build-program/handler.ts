@@ -22,6 +22,7 @@ import {
   validateTrainingFrequencyInput,
 } from "../libs/program/validation-helpers";
 import { normalizeDuration } from "../libs/program/duration-normalizer";
+import { DEFAULT_PROGRAM_DURATION_STRING } from "../libs/program/duration-parser";
 
 // Duration calculation constants
 const DEFAULT_DURATION_FALLBACK_MS = 600000; // 10 minutes in milliseconds
@@ -106,20 +107,48 @@ export const handler = async (event: BuildProgramEvent) => {
           todoList.trainingGoals?.value, // Provide context
         );
 
+        // Check for malformed AI response (undefined/null normalized duration)
+        // Best effort: fall back to default instead of blocking program creation
+        if (
+          normalizationResult.normalizedDuration === undefined ||
+          normalizationResult.normalizedDuration === null
+        ) {
+          console.warn(
+            "⚠️ AI normalization returned malformed data, using default:",
+            {
+              original: todoList.programDuration?.value,
+              normalized: normalizationResult.normalizedDuration,
+              confidence: normalizationResult.confidence,
+              fallback: DEFAULT_PROGRAM_DURATION_STRING,
+            },
+          );
+          normalizationResult.normalizedDuration =
+            DEFAULT_PROGRAM_DURATION_STRING;
+          normalizationResult.confidence = "low";
+          normalizationResult.originalInterpretation =
+            "Fallback due to malformed AI response";
+        }
+
         // Re-validate the normalized duration
+        // Best effort: if still invalid, fall back to default instead of blocking
         const revalidation = validateProgramDurationInput(
           normalizationResult.normalizedDuration,
         );
         if (!revalidation.isValid) {
-          console.error("❌ AI normalization also failed:", {
-            original: todoList.programDuration?.value,
-            normalized: normalizationResult.normalizedDuration,
-            confidence: normalizationResult.confidence,
-          });
-          return createErrorResponse(400, durationValidation.error!, {
-            invalidField: durationValidation.field,
-            providedValue: durationValidation.providedValue,
-          });
+          console.warn(
+            "⚠️ AI normalization produced invalid value, using default:",
+            {
+              original: todoList.programDuration?.value,
+              normalized: normalizationResult.normalizedDuration,
+              confidence: normalizationResult.confidence,
+              fallback: DEFAULT_PROGRAM_DURATION_STRING,
+            },
+          );
+          normalizationResult.normalizedDuration =
+            DEFAULT_PROGRAM_DURATION_STRING;
+          normalizationResult.confidence = "low";
+          normalizationResult.originalInterpretation =
+            "Fallback due to invalid AI response";
         }
 
         // Update the todoList with normalized value

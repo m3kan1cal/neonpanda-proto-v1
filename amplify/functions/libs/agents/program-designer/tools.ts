@@ -34,7 +34,10 @@ import {
   validateParsedProgramDuration,
   validateParsedTrainingFrequency,
 } from "../../program/validation-helpers";
-import { parseProgramDuration } from "../../program/duration-parser";
+import {
+  parseProgramDuration,
+  DEFAULT_PROGRAM_DURATION_DAYS,
+} from "../../program/duration-parser";
 import {
   normalizeProgram,
   shouldNormalizeProgram,
@@ -292,7 +295,7 @@ Returns: coachConfig, userProfile, pineconeContext, programDuration (days), trai
     // 3. Parse program duration (supports "X weeks", "X months", vague terms, or days as number)
     const programDuration = parseProgramDuration(
       todoList.programDuration?.value,
-      56, // Default: 56 days (8 weeks)
+      DEFAULT_PROGRAM_DURATION_DAYS,
     );
 
     // Validate parsed program duration

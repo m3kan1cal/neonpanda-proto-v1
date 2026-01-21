@@ -4,6 +4,7 @@
  */
 
 import { callBedrockApi, MODEL_IDS, TEMPERATURE_PRESETS } from "../api-helpers";
+import { DEFAULT_PROGRAM_DURATION_STRING } from "./duration-parser";
 
 /**
  * Schema for the normalize_duration tool response
@@ -91,14 +92,14 @@ EXAMPLES:
     // Fallback if tool wasn't used properly
     console.warn("⚠️ Tool response not in expected format, using default");
     return {
-      normalizedDuration: "8 weeks",
+      normalizedDuration: DEFAULT_PROGRAM_DURATION_STRING,
       confidence: "low",
       originalInterpretation: "Fallback - unexpected response format",
     };
   } catch (error) {
     console.error("❌ AI normalization failed:", error);
     return {
-      normalizedDuration: "8 weeks",
+      normalizedDuration: DEFAULT_PROGRAM_DURATION_STRING,
       confidence: "low",
       originalInterpretation: `Fallback - error: ${error}`,
     };

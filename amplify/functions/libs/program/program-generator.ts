@@ -23,7 +23,10 @@ import {
 } from "./phase-generator";
 import { storeProgramDetailsInS3 } from "./s3-utils";
 import type { ProgramDesignerTodoList } from "../program-designer/types";
-import { parseProgramDuration } from "./duration-parser";
+import {
+  parseProgramDuration,
+  DEFAULT_PROGRAM_DURATION_DAYS,
+} from "./duration-parser";
 import { validateParsedProgramDuration } from "./validation-helpers";
 
 /**
@@ -266,7 +269,7 @@ export async function generateProgramV2(
     // Parse program duration (supports "X weeks", "X months", vague terms, or days as number)
     const programDuration = parseProgramDuration(
       todoList.programDuration?.value,
-      56, // Default: 56 days (8 weeks)
+      DEFAULT_PROGRAM_DURATION_DAYS,
     );
 
     // Validate parsed program duration (prevents zero/invalid durations)
