@@ -109,9 +109,10 @@ export function parseProgramDuration(
   const lowerValue = durationValue.toLowerCase();
   const extractedNum = extractNumericValue(durationValue);
 
-  // Convert based on time unit (using word boundaries to avoid false matches)
-  // \b ensures we match "week" but not "weekend", "biweekly", etc.
-  if (/\bweeks?\b/.test(lowerValue)) {
+  // Convert based on time unit
+  // Matches both "8 weeks" (with space) and "8weeks" (without space)
+  // Word boundary \b prevents "weekend", "biweekly" but allows "8weeks"
+  if (/\bweeks?\b|weeks?(?!\w)/.test(lowerValue)) {
     const days = extractedNum * 7;
     console.info("📅 Converted weeks to days:", {
       input: durationValue,
@@ -121,7 +122,7 @@ export function parseProgramDuration(
     return days;
   }
 
-  if (/\bmonths?\b/.test(lowerValue)) {
+  if (/\bmonths?\b|months?(?!\w)/.test(lowerValue)) {
     const days = extractedNum * 30; // Approximate
     console.info("📅 Converted months to days:", {
       input: durationValue,
@@ -131,7 +132,7 @@ export function parseProgramDuration(
     return days;
   }
 
-  if (/\bdays?\b/.test(lowerValue)) {
+  if (/\bdays?\b|days?(?!\w)/.test(lowerValue)) {
     const days = extractedNum;
     console.info("📅 Using days directly from extracted value:", {
       input: durationValue,
