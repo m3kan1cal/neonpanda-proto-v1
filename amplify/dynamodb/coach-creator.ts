@@ -135,43 +135,34 @@ export async function queryCoachCreatorSessions(
       });
     }
 
-    // Sorting
+    // Sorting (always apply, using defaults if not specified)
     const sortBy = options?.sortBy || "lastActivity";
     const sortOrder = options?.sortOrder || "desc";
 
-    if (options?.sortBy) {
-      filteredSessions.sort((a, b) => {
-        let aValue: any, bValue: any;
+    filteredSessions.sort((a, b) => {
+      let aValue: any, bValue: any;
 
-        switch (sortBy) {
-          case "startedAt":
-            aValue = new Date(a.startedAt);
-            bValue = new Date(b.startedAt);
-            break;
-          case "lastActivity":
-            aValue = new Date(a.lastActivity);
-            bValue = new Date(b.lastActivity);
-            break;
-          case "sessionId":
-            aValue = a.sessionId;
-            bValue = b.sessionId;
-            break;
-          default:
-            aValue = new Date(a.lastActivity);
-            bValue = new Date(b.lastActivity);
-        }
+      switch (sortBy) {
+        case "startedAt":
+          aValue = new Date(a.startedAt);
+          bValue = new Date(b.startedAt);
+          break;
+        case "lastActivity":
+          aValue = new Date(a.lastActivity);
+          bValue = new Date(b.lastActivity);
+          break;
+        case "sessionId":
+          aValue = a.sessionId;
+          bValue = b.sessionId;
+          break;
+        default:
+          aValue = new Date(a.lastActivity);
+          bValue = new Date(b.lastActivity);
+      }
 
-        const comparison = aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
-        return sortOrder === "desc" ? -comparison : comparison;
-      });
-    } else {
-      // Default sort by lastActivity descending (most recent first)
-      filteredSessions.sort(
-        (a, b) =>
-          new Date(b.lastActivity).getTime() -
-          new Date(a.lastActivity).getTime(),
-      );
-    }
+      const comparison = aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+      return sortOrder === "desc" ? -comparison : comparison;
+    });
 
     // Pagination
     if (options?.offset || options?.limit) {
