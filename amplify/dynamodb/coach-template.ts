@@ -90,8 +90,9 @@ async function incrementTemplatePopularity(
         sk: `coachTemplate#${templateId}`,
       },
       UpdateExpression:
-        "SET #metadata.#popularity = if_not_exists(#metadata.#popularity, :zero) + :inc, updatedAt = :now",
+        "SET #attrs.#metadata.#popularity = if_not_exists(#attrs.#metadata.#popularity, :zero) + :inc, updatedAt = :now",
       ExpressionAttributeNames: {
+        "#attrs": "attributes",
         "#metadata": "metadata",
         "#popularity": "popularity_score",
       },
@@ -107,7 +108,8 @@ async function incrementTemplatePopularity(
 
     const result = await docClient.send(command);
     const newPopularity =
-      (result.Attributes?.metadata?.popularity_score as number) || 0;
+      (result.Attributes?.attributes?.metadata?.popularity_score as number) ||
+      0;
 
     return newPopularity;
   }, operationName);

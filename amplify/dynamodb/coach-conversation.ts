@@ -351,8 +351,9 @@ export async function updateCoachConversation(
   }
 
   // Prepare update with lastActivity timestamp
+  // Only title goes at top level; tags and isActive belong in metadata
   const updates = {
-    ...updateData,
+    ...(updateData.title !== undefined && { title: updateData.title }),
     metadata: {
       ...(updateData.tags !== undefined && { tags: updateData.tags }),
       ...(updateData.isActive !== undefined && {

@@ -170,8 +170,9 @@ async function incrementMemoryUsage(
         sk: `userMemory#${memoryId}`,
       },
       UpdateExpression:
-        "SET #metadata.#usageCount = if_not_exists(#metadata.#usageCount, :zero) + :inc, #metadata.#lastUsed = :now, updatedAt = :now",
+        "SET #attrs.#metadata.#usageCount = if_not_exists(#attrs.#metadata.#usageCount, :zero) + :inc, #attrs.#metadata.#lastUsed = :now, updatedAt = :now",
       ExpressionAttributeNames: {
+        "#attrs": "attributes",
         "#metadata": "metadata",
         "#usageCount": "usageCount",
         "#lastUsed": "lastUsed",
@@ -188,7 +189,7 @@ async function incrementMemoryUsage(
 
     const result = await docClient.send(command);
     const newUsageCount =
-      (result.Attributes?.metadata?.usageCount as number) || 0;
+      (result.Attributes?.attributes?.metadata?.usageCount as number) || 0;
 
     return newUsageCount;
   }, operationName);
