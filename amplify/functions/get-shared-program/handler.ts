@@ -47,7 +47,13 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
     }
 
     // Increment view count (fire-and-forget, don't block response)
-    const viewCount = await incrementSharedProgramViews(sharedProgramId);
+    incrementSharedProgramViews(sharedProgramId).catch((error) => {
+      console.warn(
+        "Failed to increment view count (non-critical):",
+        sharedProgramId,
+        error,
+      );
+    });
 
     // Return public-facing data only (no S3 keys or internal IDs)
     const response: GetSharedProgramResponse = {
@@ -59,8 +65,8 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
       createdAt: sharedProgram.createdAt
         ? new Date(sharedProgram.createdAt).toISOString()
         : new Date().toISOString(),
-      // Engagement metrics
-      viewCount,
+      // Engagement metrics (use stored values, since increment is async)
+      viewCount: sharedProgram.viewCount || 0,
       copyCount: sharedProgram.copyCount || 0,
     };
 
@@ -69,7 +75,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
       programName: sharedProgram.programSnapshot.name,
       creatorUsername: sharedProgram.creatorUsername,
       sampleWorkoutsCount: sampleWorkouts.length,
-      viewCount,
+      viewCount: sharedProgram.viewCount || 0,
     });
 
     return createOkResponse(response);

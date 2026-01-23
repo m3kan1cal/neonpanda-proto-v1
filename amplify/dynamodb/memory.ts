@@ -179,7 +179,7 @@ async function incrementMemoryUsage(
       ExpressionAttributeValues: {
         ":inc": 1,
         ":zero": 0,
-        ":now": new Date(),
+        ":now": new Date().toISOString(),
       },
       ReturnValues: "UPDATED_NEW",
     });

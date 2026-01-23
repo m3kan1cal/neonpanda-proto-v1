@@ -55,8 +55,14 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       coachId,
     );
 
-    // Increment copy count on the source shared program
-    await incrementSharedProgramCopies(sharedProgramId);
+    // Increment copy count on the source shared program (fire-and-forget, don't block response)
+    incrementSharedProgramCopies(sharedProgramId).catch((error) => {
+      console.warn(
+        "Failed to increment copy count (non-critical):",
+        sharedProgramId,
+        error,
+      );
+    });
 
     console.info("Successfully copied shared program:", {
       userId,

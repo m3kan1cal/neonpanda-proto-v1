@@ -115,11 +115,8 @@ export async function queryWeeklyAnalytics(
           bValue = new Date(b.weekStart);
       }
 
-      if (sortOrder === "asc") {
-        return aValue > bValue ? 1 : -1;
-      } else {
-        return aValue < bValue ? 1 : -1;
-      }
+      const comparison = aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+      return sortOrder === "asc" ? comparison : -comparison;
     });
 
     // Pagination
@@ -266,11 +263,8 @@ export async function queryMonthlyAnalytics(
           bValue = new Date(b.monthStart);
       }
 
-      if (sortOrder === "asc") {
-        return aValue > bValue ? 1 : -1;
-      } else {
-        return aValue < bValue ? 1 : -1;
-      }
+      const comparison = aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+      return sortOrder === "asc" ? comparison : -comparison;
     });
 
     // Pagination
