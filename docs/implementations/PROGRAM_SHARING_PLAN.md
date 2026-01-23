@@ -1,12 +1,12 @@
 # NeonPanda Program Sharing: Link-Based Viral Growth Plan
 
-**Status:** ⏸️ PAUSED - Core Flow Complete, Stabilizing Before Phase 2
+**Status:** ⏸️ PAUSED - Core Flow + Management Complete, Stabilizing Before Phase 3
 
-**Progress:** `████████████░░░░░░░░` 60% Complete
+**Progress:** `██████████████░░░░░░` 70% Complete
 
-**Last Updated:** January 19, 2026
+**Last Updated:** January 23, 2026
 
-**Current State:** Core sharing flow is functional end-to-end. Backend complete and deployed. Frontend preview page, share modal, coach selection modal, and copy flow all working. Pausing to stabilize before building remaining features (MySharedPrograms management, ProgramAdaptationChat slide-out).
+**Current State:** Core sharing flow + management page are functional end-to-end. Backend complete and deployed. Frontend preview page, share modal, coach selection modal, copy flow, and shared programs management all working. Engagement metrics (view/copy counts) implemented with atomic DynamoDB increments. AbortController pattern applied to prevent duplicate requests in React Strict Mode. Remaining: ProgramAdaptationChat slide-out for coach-guided program customization.
 
 ---
 
@@ -1304,12 +1304,105 @@ src/
     shared-programs/
       ShareProgramModal.jsx          # Share button → link generation
       SharedProgramPreview.jsx       # Public preview page
-      MySharedPrograms.jsx           # User's share management
+      ManageSharedPrograms.jsx       # User's share management (✅ Complete)
       ProgramAttribution.jsx         # "Based on program by @user"
   utils/
     apis/
-      sharedProgramApi.js            # API wrapper functions
+      sharedProgramApi.js            # API wrapper functions (✅ Complete)
 ```
+
+### Navigation Integration
+
+**Reference:** `src/utils/navigation/navigationConfig.js`
+
+**Pattern:** Shared Programs appears in multiple discovery surfaces:
+
+1. **Sidebar Navigation (Desktop)** - Added to `contextual` array:
+
+   ```javascript
+   {
+     id: "shared-programs",
+     label: "Shared Programs",
+     icon: ShareIconTiny,
+     getRoute: (ctx) =>
+       `/training-grounds/programs/shared?userId=${ctx.userId}`,
+     requiresAuth: true,
+     requiresCoach: false, // User-level, not coach-specific
+     badge: (ctx) => ctx.sharedProgramsCount || 0,
+     color: "pink",
+   }
+   ```
+
+2. **More Menu (Mobile)** - Automatically included via `contextual` navigation array
+
+3. **Command Palette** - Quick access for power users:
+
+   **Command Definition** (`CommandPalette.jsx`):
+
+   ```javascript
+   {
+     id: "shared-programs",
+     trigger: "/shared-programs",
+     description: "Manage your shared programs",
+     example: "/shared-programs",
+     category: "navigation",
+     icon: "🔗",
+     requiresInput: false,
+   }
+   ```
+
+   **Command Implementation** (`CommandPaletteAgent.js`):
+
+   ```javascript
+   case "shared-programs":
+     result = await this._executeViewSharedPrograms(options);
+     break;
+
+   async _executeViewSharedPrograms(options = {}) {
+     if (!this.userId) {
+       throw new Error("Unable to view shared programs - user not authenticated");
+     }
+     return {
+       message: "Opening shared programs...",
+       details: {},
+       navigationData: {
+         type: "shared-programs",
+         userId: this.userId,
+       },
+     };
+   }
+   ```
+
+   **Navigation Handler** (`App.jsx`):
+
+   ```javascript
+   onNavigation={(type, data) => {
+     // ... other handlers
+     } else if (type === "shared-programs") {
+       navigate(`/training-grounds/programs/shared?userId=${data.userId || userId}`);
+     }
+     // ... other handlers
+   }}
+   ```
+
+**Design Decisions:**
+
+- **Color: Pink** - Consistent with other Training Grounds navigation items
+- **requiresCoach: false** - Available to all authenticated users regardless of coach context
+- **Badge count: ✅ Shows total shared programs** - Displays count of active shared programs
+- **User-level feature** - Not tied to specific coach, accessible from any context
+
+**Badge Implementation:**
+
+The shared programs count badge is powered by:
+
+- `NavigationContext.jsx` - Fetches count via `querySharedPrograms` API when user authenticates
+- `sharedProgramsCount` state - Separate from coach-specific `newItemCounts`
+- `navigationUtils.js` - Passes `sharedProgramsCount` to badge functions via `getItemBadge`
+- `badge: (ctx) => ctx.sharedProgramsCount || 0` - Badge function in navigationConfig.js
+- Updates automatically when user shares/unshares programs (on next navigation context refresh)
+
+**Important:** Badge functions receive a subset of the navigation context via `getItemBadge`. Any new context properties needed by badges must be explicitly added to the object passed to `item.badge()` in `navigationUtils.js`.
 
 ### Frontend Patterns Reference
 
@@ -1760,9 +1853,43 @@ export default SharedProgramPreview;
 - Loading state on CTA button during copy operation
 - Attribution prominently displayed in cyan
 
-### MySharedPrograms.jsx
+### ManageSharedPrograms.jsx (✅ Complete - Refactored Jan 22, 2026)
 
-**Reference Pattern:** `src/components/programs/ManagePrograms.jsx` layout
+**Reference Pattern:** `src/components/ManageMemories.jsx` layout (NOT ManagePrograms.jsx)
+
+**Status:** Fully implemented with navigation integration, refactored to match ManageMemories patterns
+
+**Refactoring Plan (Jan 22, 2026):**
+
+The ManageSharedPrograms page was refactored to match the ManageMemories reference page for consistency across the application. Key changes:
+
+| Aspect         | Before (ManagePrograms pattern) | After (ManageMemories pattern)           |
+| -------------- | ------------------------------- | ---------------------------------------- |
+| Layout wrapper | Missing `contentWrapper`        | Uses `layoutPatterns.contentWrapper`     |
+| Header         | Simple h1 + description         | Horizontal: title + CommandPaletteButton |
+| Stats          | None                            | QuickStats row with icons                |
+| Grid layout    | 3-column responsive grid        | Masonry 2-column (lg), 1-column (mobile) |
+| Create action  | Empty state only                | Dashed "Share a Program" card            |
+| Card header    | Simple h3                       | Pink dot + title pattern                 |
+| Delete button  | Inline in footer                | Absolute top-right                       |
+| Card padding   | Mixed                           | Consistent `p-6`                         |
+| Loading state  | Simple spinner                  | Full masonry skeleton                    |
+| Delete confirm | `window.confirm()`              | Proper modal with `deleteModal` pattern  |
+| Tooltips       | None                            | Title tooltip with react-tooltip         |
+
+**Features:**
+
+- Lists all user's shared programs in masonry 2-column layout (desktop) / 1-column (mobile)
+- "Share a Program" dashed card links to ManagePrograms
+- Copy link to clipboard with visual feedback (green checkmark + toast)
+- View preview in new tab
+- Unshare with proper modal confirmation
+- QuickStats showing total shared, total days shared, etc.
+- Loading skeleton that matches masonry layout
+- Toast notifications for all actions
+- Tooltips on title and actions
+
+**Implementation:**
 
 ```jsx
 import React, { useEffect, useState } from "react";
@@ -3339,14 +3466,20 @@ success to inspire other athletes!"
   - Manual trigger via "Customize with Coach" button
 - [ ] Add `onCustomize` prop to `ProgramOverview.jsx`
 
-### Week 3: Management & Polish (1 day) ⏸️ NOT STARTED (Future Work)
+### Week 3: Management & Polish (1 day) 🚧 IN PROGRESS
 
-**Day 6: Share Management**
+**Day 6: Share Management** ✅ COMPLETED (January 20, 2026)
 
-- [ ] Build `MySharedPrograms.jsx` component
-- [ ] Add `/programs/shared` route
-- [ ] Add unshare functionality
-- [ ] Test share management flow
+- [x] Build `ManageSharedPrograms.jsx` component (renamed from MySharedPrograms for consistency) ✅
+- [x] Add `/training-grounds/programs/shared` route with ProtectedRoute ✅
+- [x] Add unshare functionality with confirmation dialog ✅
+- [x] Add ShareIconTiny to SynthwaveComponents.jsx ✅
+- [x] Add to navigationConfig.js contextual navigation (user-level, not coach-specific) ✅
+- [x] Add `/shared-programs` command to CommandPalette.jsx ✅
+- [x] Integrate toast notifications for copy and unshare actions ✅
+- [x] Add responsive grid layout (1→2→3 columns) ✅
+- [x] Add empty state with link to ManagePrograms ✅
+- [x] Add visual copy feedback (green checkmark on success) ✅
 
 **Day 7: Testing & Launch Prep**
 
@@ -3504,9 +3637,15 @@ These features are explicitly **out of scope** for initial launch but could be a
 4. Logged-in users can copy program with coach selection (auto or modal)
 5. Program copies to user's account and redirects to ProgramDashboard
 
+**Recently Completed (January 20, 2026):**
+
+- ✅ `ManageSharedPrograms.jsx` - Share management page with full navigation integration
+- ✅ Navigation integration - Added to sidebar, More menu, and Command Palette
+- ✅ ShareIconTiny icon component added to SynthwaveComponents
+- ✅ Badge count implementation - Shows total shared programs in sidebar and More menu
+
 **Pausing to stabilize before building:**
 
-- `MySharedPrograms.jsx` - Share management page
 - `ProgramAdaptationChat.jsx` - Slide-out chat for program customization
 - Analytics tracking integration
 
@@ -3599,12 +3738,19 @@ These features are explicitly **out of scope** for initial launch but could be a
 - [x] Route `/shared/programs/:sharedProgramId` in `App.jsx` ✅
 - [x] Privacy fix: `sharedProgramId` now uses `nanoid` (no userId exposure) ✅
 
+### Completed ✅ (January 20, 2026)
+
+**Phase 2 Complete: Share Management**
+
+- [x] `ManageSharedPrograms.jsx` - User's share management page ✅
+- [x] Navigation integration (sidebar, More menu, Command Palette) ✅
+- [x] ShareIconTiny icon component ✅
+
 ### Paused ⏸️ (Future Work - Next Week)
 
-**Phase 2 - Frontend Components (Remaining):**
+**Phase 3 - Frontend Components (Remaining):**
 
 - [ ] `ProgramAdaptationChat.jsx` - Slide-out chat component for program customization
-- [ ] `MySharedPrograms.jsx` - User's share management page
 
 **Phase 3 - Integration & Polish:**
 
@@ -3662,22 +3808,30 @@ These features are explicitly **out of scope** for initial launch but could be a
 - `src/components/shared-programs/SelectCoachModal.jsx` - Coach selection modal (with avatar styling matching CoachHeader) ✅
 - `src/utils/apis/sharedProgramApi.js` - API wrapper functions ✅
 
+**New Files Created ✅:**
+
+- `src/components/shared-programs/ManageSharedPrograms.jsx` - User's share management page ✅
+
 **New Files to Create (Future):**
 
-- `src/components/shared-programs/MySharedPrograms.jsx` - User's share management
 - `src/components/shared-programs/ProgramAdaptationChat.jsx` - **Slide-out chat** (dual-purpose: adaptation + customization)
 - `src/utils/apis/programConversationApi.js` - **API wrapper for stream-program-conversation**
 - `src/utils/analytics/sharedProgramAnalytics.js` - Analytics event tracking
 
 **Existing Files Modified ✅:**
 
-- `src/App.jsx` - Added route `/shared/programs/:sharedProgramId` ✅
+- `src/App.jsx` - Added routes `/shared/programs/:sharedProgramId` (public) and `/training-grounds/programs/shared` (protected) + CommandPalette navigation handler ✅
 - `src/components/programs/ProgramOverview.jsx` - Added "Share This Program" button ✅
+- `src/components/themes/SynthwaveComponents.jsx` - Added `ShareIconTiny` icon component ✅
+- `src/utils/navigation/navigationConfig.js` - Added "Shared Programs" to contextual navigation (user-level, pink color, with badge count) ✅
+- `src/components/shared/CommandPalette.jsx` - Added `/shared-programs` command definition ✅
+- `src/utils/agents/CommandPaletteAgent.js` - Implemented `/shared-programs` command execution and navigation ✅
+- `src/contexts/NavigationContext.jsx` - Added `sharedProgramsCount` state and fetch logic for badge display ✅
+- `src/utils/navigation/navigationUtils.js` - Added `sharedProgramsCount` to badge function context (fixes badge display) ✅
 - `amplify/functions/libs/id-utils.ts` - Refactored `generateSharedProgramId()` to use `nanoid` ✅
 
 **Existing Files to Modify (Future):**
 
-- `src/App.jsx` - Add route `/programs/shared` for MySharedPrograms
 - `src/utils/ui/uiPatterns.js` - Add `slideOutPatterns` for slide-out panel
 - `src/components/programs/ProgramDashboard.jsx` - Integrate slide-out chat:
   - Auto-open for copied shared programs (`metadata.copiedFromSharedProgram`)
@@ -3826,8 +3980,7 @@ This pattern:
 
 | Feature                                     | Priority | Notes                    |
 | ------------------------------------------- | -------- | ------------------------ |
-| MySharedPrograms management                 | Medium   | Unshare functionality    |
-| ProgramAdaptationChat slide-out             | Medium   | Proactive coach analysis |
+| ProgramAdaptationChat slide-out             | High     | Proactive coach analysis |
 | Analytics tracking                          | Low      | Track share/copy events  |
 | Multiple active programs in TrainingGrounds | Low      | Design documented above  |
 
@@ -3835,7 +3988,60 @@ This pattern:
 
 When resuming development (late January 2026):
 
-1. **Day 1:** Build `MySharedPrograms.jsx` with unshare functionality
+1. ~~**Day 1:** Build `ManageSharedPrograms.jsx` with unshare functionality~~ ✅ COMPLETE
 2. **Day 2-3:** Build `ProgramAdaptationChat.jsx` slide-out + backend
 3. **Day 4:** Analytics integration and end-to-end testing
 4. **Future:** Multiple active programs in TrainingGrounds (Phase 2/3)
+
+### Latest Update (January 22, 2026)
+
+**Refactored: ManageSharedPrograms to Match ManageMemories Pattern** 🎉
+
+The `ManageSharedPrograms.jsx` component was completely refactored to match the `ManageMemories.jsx` reference page for visual and structural consistency across the application.
+
+**Key Changes:**
+
+1. **Layout Structure:**
+   - Added `layoutPatterns.contentWrapper` inside `pageContainer`
+   - Horizontal header with title + CommandPaletteButton
+   - QuickStats row showing total shared programs and total days
+
+2. **Grid Layout:**
+   - Changed from 3-column responsive grid to masonry 2-column (desktop) / 1-column (mobile)
+   - Alternating distribution: even indices left column, odd indices right column
+   - Cards use `mb-6` spacing
+
+3. **Card Styling:**
+   - Added pink dot indicator in header
+   - Delete button moved to absolute position top-right
+   - Consistent `p-6` padding
+   - Metadata row with icons (date, duration, frequency)
+   - Badge row using `badgePatterns.workoutDetail`
+   - Share link section with copy button
+
+4. **Create Action:**
+   - Added "Share a Program" dashed card using `containerPatterns.dashedCard`
+   - Links to ManagePrograms page
+   - Matches ManageMemories "Save New Memory" card pattern
+
+5. **Loading State:**
+   - Full masonry skeleton that mirrors the actual layout
+   - Skeleton cards match card structure
+
+6. **Delete Confirmation:**
+   - Replaced `window.confirm()` with proper modal
+   - Uses `containerPatterns.deleteModal`
+   - Loading state for delete button
+   - Escape key to cancel
+
+7. **Additional Features:**
+   - Title tooltip with react-tooltip
+   - QuickStats component integration
+   - Proper error handling with retry button
+
+**Previous Update (January 20, 2026):**
+
+- Built initial management page with list, copy link, unshare, view preview
+- Integrated into navigation system (sidebar, More menu, Command Palette)
+- Added ShareIconTiny to icon library
+- Badge count showing total shared programs

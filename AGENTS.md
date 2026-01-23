@@ -52,6 +52,8 @@ Please respond in a professional, measured tone without excessive enthusiasm or 
 - Use Agent pattern for state management (in `src/utils/agents/`)
 - Use `uiPatterns.js` for consistent styling
 - Store mode in message metadata for historical accuracy
+- **Async in useEffect**: Always pass `AbortSignal` to fetch calls to properly cancel requests on unmount (React Strict Mode). See `docs/strategy/REACT_PATTERNS.md` for the full pattern.
+- Reference implementation: `src/components/shared-programs/ShareProgramModal.jsx`
 
 ## Critical Patterns
 
@@ -86,3 +88,5 @@ Please respond in a professional, measured tone without excessive enthusiasm or 
 - `amplify/functions/stream-coach-conversation/handler.ts` - Streaming Lambda URL pattern
 - `amplify/functions/libs/coach-config/personality-utils.ts` - Coach personality
 - `src/utils/ui/uiPatterns.js` - UI styling patterns
+- `docs/strategy/REACT_PATTERNS.md` - React patterns (AbortController, loading states)
+- `src/components/shared-programs/ShareProgramModal.jsx` - AbortController reference implementation

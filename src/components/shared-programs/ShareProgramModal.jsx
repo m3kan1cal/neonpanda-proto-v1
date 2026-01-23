@@ -38,32 +38,34 @@ function ShareProgramModal({ program, userId, onClose, onSuccess }) {
           throw new Error("Program has no associated coach");
         }
 
+        // Pass AbortSignal to cancel request if component unmounts (React Strict Mode)
         const result = await createSharedProgram(
           userId,
           program.programId,
           coachId,
+          { signal: abortController.signal },
         );
 
-        // Only update state if component is still mounted
-        if (!abortController.signal.aborted) {
-          setSharedProgramId(result.sharedProgramId);
-          setShareUrl(result.shareUrl);
+        // Request completed successfully - update state
+        setSharedProgramId(result.sharedProgramId);
+        setShareUrl(result.shareUrl);
 
-          // Call success callback if provided
-          if (onSuccess) {
-            onSuccess(result);
-          }
+        // Call success callback if provided
+        if (onSuccess) {
+          onSuccess(result);
         }
       } catch (err) {
-        // Only update state if component is still mounted
-        if (!abortController.signal.aborted) {
-          console.error("Failed to create share link:", err);
-          setError(
-            err.message || "Failed to create share link. Please try again.",
-          );
+        // Ignore AbortErrors - these are expected when component unmounts
+        if (err.name === "AbortError") {
+          return;
         }
+
+        console.error("Failed to create share link:", err);
+        setError(
+          err.message || "Failed to create share link. Please try again.",
+        );
       } finally {
-        // Only update state if component is still mounted
+        // Only update loading state if not aborted
         if (!abortController.signal.aborted) {
           setLoading(false);
         }
@@ -72,7 +74,7 @@ function ShareProgramModal({ program, userId, onClose, onSuccess }) {
 
     generateLink();
 
-    // Cleanup: abort the operation if component unmounts
+    // Cleanup: abort the request if component unmounts
     return () => {
       abortController.abort();
     };

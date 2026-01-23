@@ -21,6 +21,7 @@ import {
   ProgramIconTiny,
   WeightPlateIconTiny,
   BlogIconTiny,
+  ShareIconTiny,
 } from "../../components/themes/SynthwaveComponents";
 
 /**
@@ -141,6 +142,17 @@ export const navigationItems = {
       requiresAuth: true,
       requiresCoach: true,
       badge: (ctx) => ctx.newItemCounts.memories || 0, // Always show count
+      color: "pink",
+    },
+    {
+      id: "shared-programs",
+      label: "Shared Programs",
+      icon: ShareIconTiny,
+      getRoute: (ctx) =>
+        `/training-grounds/programs/shared?userId=${ctx.userId}&coachId=${ctx.coachId}`,
+      requiresAuth: true,
+      requiresCoach: false, // User-level data, but preserves coach context for navigation
+      badge: (ctx) => ctx.sharedProgramsCount || 0,
       color: "pink",
     },
   ],

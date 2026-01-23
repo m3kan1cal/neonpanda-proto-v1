@@ -48,6 +48,9 @@ function SharedProgramPreview() {
 
   // Load shared program data
   useEffect(() => {
+    // Create AbortController to cancel request on cleanup (React Strict Mode)
+    const abortController = new AbortController();
+
     const loadSharedProgram = async () => {
       if (!sharedProgramId) {
         setError("Invalid share link");
@@ -59,20 +62,35 @@ function SharedProgramPreview() {
         setIsLoading(true);
         setError(null);
 
-        const data = await getSharedProgram(sharedProgramId);
+        const data = await getSharedProgram(sharedProgramId, {
+          signal: abortController.signal,
+        });
         setSharedProgram(data);
       } catch (err) {
+        // Ignore AbortError - this is expected when the component unmounts
+        if (err.name === "AbortError") {
+          return;
+        }
+
         console.error("Failed to load shared program:", err);
         setError(
           err.message ||
             "Failed to load program. The link may be invalid or expired.",
         );
       } finally {
-        setIsLoading(false);
+        // Only update loading if not aborted
+        if (!abortController.signal.aborted) {
+          setIsLoading(false);
+        }
       }
     };
 
     loadSharedProgram();
+
+    // Cleanup: abort the request if component unmounts or sharedProgramId changes
+    return () => {
+      abortController.abort();
+    };
   }, [sharedProgramId]);
 
   // Load user's coaches when authenticated and not the creator

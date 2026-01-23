@@ -9,8 +9,15 @@ import { createProgramDesignerSession } from "../apis/programDesignerApi.js";
  * focused on UI concerns.
  */
 export class CommandPaletteAgent {
-  constructor(userId, workoutAgent, onStateChange = null, onNavigation = null) {
+  constructor(
+    userId,
+    workoutAgent,
+    onStateChange = null,
+    onNavigation = null,
+    coachId = null,
+  ) {
     this.userId = userId;
+    this.coachId = coachId;
     this.workoutAgent = workoutAgent;
     this.onStateChange = onStateChange;
     this.onNavigation = onNavigation;
@@ -150,6 +157,10 @@ export class CommandPaletteAgent {
 
         case "exercises":
           result = await this._executeViewExercises(options);
+          break;
+
+        case "shared-programs":
+          result = await this._executeViewSharedPrograms(options);
           break;
 
         default:
@@ -463,6 +474,27 @@ export class CommandPaletteAgent {
         type: "exercises",
         userId: this.userId,
         coachId: coachId,
+      },
+    };
+  }
+
+  /**
+   * Execute /shared-programs command - Navigate to shared programs page
+   */
+  async _executeViewSharedPrograms(options = {}) {
+    if (!this.userId) {
+      throw new Error(
+        "Unable to view shared programs - user not authenticated",
+      );
+    }
+
+    return {
+      message: "Opening shared programs...",
+      details: {},
+      navigationData: {
+        type: "shared-programs",
+        userId: this.userId,
+        coachId: this.coachId, // Include coachId to preserve coach context
       },
     };
   }
