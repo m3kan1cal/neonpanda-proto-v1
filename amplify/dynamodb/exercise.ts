@@ -331,6 +331,7 @@ export async function queryExerciseNames(
       count: number;
       lastPerformed: Date;
       disciplines: Set<ExerciseDiscipline>;
+      originalNames: Set<string>;
     }
   >();
 
@@ -351,11 +352,13 @@ export async function queryExerciseNames(
         existing.lastPerformed = completedAt;
       }
       existing.disciplines.add(exercise.discipline);
+      existing.originalNames.add(exercise.originalName);
     } else {
       exerciseMap.set(exercise.exerciseName, {
         count: 1,
         lastPerformed: completedAt,
         disciplines: new Set([exercise.discipline]),
+        originalNames: new Set([exercise.originalName]),
       });
     }
   }
@@ -368,6 +371,7 @@ export async function queryExerciseNames(
       count: data.count,
       lastPerformed: data.lastPerformed,
       disciplines: Array.from(data.disciplines),
+      originalNames: Array.from(data.originalNames),
     }))
     .sort((a, b) => b.count - a.count);
 

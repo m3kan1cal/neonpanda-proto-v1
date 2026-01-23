@@ -132,11 +132,14 @@ export async function queryCoachCreatorSessions(
     }
 
     // Sorting
+    const sortBy = options?.sortBy || "lastActivity";
+    const sortOrder = options?.sortOrder || "desc";
+
     if (options?.sortBy) {
       filteredSessions.sort((a, b) => {
         let aValue: any, bValue: any;
 
-        switch (options.sortBy) {
+        switch (sortBy) {
           case "startedAt":
             aValue = new Date(a.startedAt);
             bValue = new Date(b.startedAt);
@@ -155,7 +158,7 @@ export async function queryCoachCreatorSessions(
         }
 
         const comparison = aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
-        return options.sortOrder === "desc" ? -comparison : comparison;
+        return sortOrder === "desc" ? -comparison : comparison;
       });
     } else {
       // Default sort by lastActivity descending (most recent first)

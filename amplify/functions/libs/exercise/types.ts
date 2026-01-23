@@ -226,6 +226,7 @@ export interface ExerciseNameEntry {
   count: number; // Number of logs
   lastPerformed: Date;
   disciplines: ExerciseDiscipline[];
+  originalNames: string[]; // All original name variations used for this exercise
 }
 
 /**
