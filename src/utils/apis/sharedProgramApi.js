@@ -15,9 +15,16 @@ import { getApiUrl, authenticatedFetch } from "./apiConfig.js";
  * @param {string} userId - The user ID
  * @param {string} programId - The program ID to share
  * @param {string} coachId - The coach ID associated with the program
+ * @param {Object} options - Optional settings
+ * @param {AbortSignal} options.signal - AbortSignal to cancel the request
  * @returns {Promise<Object>} - The share response with sharedProgramId and shareUrl
  */
-export async function createSharedProgram(userId, programId, coachId) {
+export async function createSharedProgram(
+  userId,
+  programId,
+  coachId,
+  { signal } = {},
+) {
   const url = `${getApiUrl("")}/users/${userId}/programs/${programId}/share`;
 
   try {
@@ -27,6 +34,7 @@ export async function createSharedProgram(userId, programId, coachId) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ coachId }),
+      signal, // Pass AbortSignal to cancel request on cleanup
     });
 
     if (!response.ok) {
@@ -50,7 +58,10 @@ export async function createSharedProgram(userId, programId, coachId) {
     const result = await response.json();
     return result;
   } catch (error) {
-    console.error("createSharedProgram: Exception:", error);
+    // Don't log AbortErrors - these are expected during cleanup
+    if (error.name !== "AbortError") {
+      console.error("createSharedProgram: Exception:", error);
+    }
     throw error;
   }
 }
@@ -58,9 +69,11 @@ export async function createSharedProgram(userId, programId, coachId) {
 /**
  * Get a shared program by ID (PUBLIC - no auth required)
  * @param {string} sharedProgramId - The shared program ID
+ * @param {Object} options - Optional settings
+ * @param {AbortSignal} options.signal - AbortSignal to cancel the request
  * @returns {Promise<Object>} - The shared program data
  */
-export async function getSharedProgram(sharedProgramId) {
+export async function getSharedProgram(sharedProgramId, { signal } = {}) {
   // Public endpoint - no auth required
   const url = `${getApiUrl("")}/shared-programs/${sharedProgramId}`;
 
@@ -70,6 +83,7 @@ export async function getSharedProgram(sharedProgramId) {
       headers: {
         "Content-Type": "application/json",
       },
+      signal, // Pass AbortSignal to cancel request on cleanup
     });
 
     if (!response.ok) {
@@ -93,7 +107,10 @@ export async function getSharedProgram(sharedProgramId) {
     const result = await response.json();
     return result;
   } catch (error) {
-    console.error("getSharedProgram: Exception:", error);
+    // Don't log AbortErrors - these are expected during cleanup
+    if (error.name !== "AbortError") {
+      console.error("getSharedProgram: Exception:", error);
+    }
     throw error;
   }
 }

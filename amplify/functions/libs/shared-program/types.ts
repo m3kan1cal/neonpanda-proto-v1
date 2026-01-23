@@ -46,6 +46,7 @@ export interface SharedProgram {
   // === Identity ===
   sharedProgramId: string; // "sharedProgram_{nanoId}" (no userId for privacy)
   originalProgramId: string; // Reference to source program
+  originalCoachId?: string; // First coach from original program (for source program link)
   creatorUserId: string; // User who shared
   creatorUsername: string; // Display name for attribution on preview page
 
@@ -58,6 +59,10 @@ export interface SharedProgram {
 
   // === Status ===
   isActive: boolean; // False = unshared/deactivated (soft delete)
+
+  // === Engagement Metrics ===
+  viewCount: number; // Incremented on each view of the shared program
+  copyCount: number; // Incremented on each copy/adaptation of the shared program
 
   // === DynamoDB Timestamps ===
   // Populated from database metadata (like other entities)
@@ -114,6 +119,9 @@ export interface GetSharedProgramResponse {
   programSnapshot: SharedProgramSnapshot;
   sampleWorkouts?: any[]; // Sample workout templates for preview (limited to 3-5)
   createdAt: string;
+  // Engagement metrics
+  viewCount: number;
+  copyCount: number;
 }
 
 /**

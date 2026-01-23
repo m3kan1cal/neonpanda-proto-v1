@@ -40,6 +40,7 @@ import Theme from "./components/Theme";
 import BlogIndex from "./components/blog/BlogIndex";
 import BlogPostRouter from "./components/blog/BlogPostRouter";
 import SharedProgramPreview from "./components/shared-programs/SharedProgramPreview";
+import ManageSharedPrograms from "./components/shared-programs/ManageSharedPrograms";
 import { WelcomePage } from "./components/subscription";
 import {
   NavigationProvider,
@@ -329,6 +330,14 @@ function AppContent() {
             }
           />
           <Route
+            path="/training-grounds/programs/shared"
+            element={
+              <ProtectedRoute>
+                <ManageSharedPrograms />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/training-grounds/programs/dashboard"
             element={
               <ProtectedRoute>
@@ -373,6 +382,10 @@ function AppContent() {
           if (type === "conversation-created" && data?.conversationId) {
             navigate(
               `/training-grounds/coach-conversations?userId=${data.userId || userId}&coachId=${data.coachId || coachId}&conversationId=${data.conversationId}`,
+            );
+          } else if (type === "shared-programs") {
+            navigate(
+              `/training-grounds/programs/shared?userId=${data.userId || userId}&coachId=${data.coachId || coachId}`,
             );
           } else if (type === "coach-creator" && data?.sessionId) {
             navigate(
