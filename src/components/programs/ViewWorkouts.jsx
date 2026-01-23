@@ -202,10 +202,10 @@ function ViewWorkouts() {
     const prescribedWithPlaceholders = `${template.description}
 
 --- Performance Data ---
-RPE:
-Intensity:
-Duration:
-Calories:
+RPE - How hard it felt (1=easy, 10=max effort):
+Intensity - How hard you pushed (1=light, 10=all-out):
+Duration (minutes):
+Calories (kcal):
 
 --- Athlete Notes ---
 How did you feel?
@@ -1117,6 +1117,81 @@ General thoughts: `;
                             - weights used, reps completed, RPE, intensity,
                             movement substitutions, athlete notes, etc.
                           </div>
+
+                          {/* RPE/Intensity Helper - Compact Info Icons */}
+                          <div className="mt-3 flex items-start gap-4 px-2">
+                            {/* RPE Helper */}
+                            <div
+                              className="flex items-center gap-2 cursor-help"
+                              data-tooltip-id="rpe-scale"
+                              data-tooltip-html={`
+                                <div style="max-width: 280px;">
+                                  <div style="font-weight: 600; margin-bottom: 8px; color: #ffffff;">RPE Scale (Rate of Perceived Exertion)</div>
+                                  <div style="font-size: 14px; line-height: 1.5;">
+                                    <div style="margin-bottom: 4px;"><span style="color: #ff1493; font-weight: 600;">10</span> - Maximum effort, can't continue</div>
+                                    <div style="margin-bottom: 4px;"><span style="color: #ff6b9d; font-weight: 600;">9</span> - Very hard, barely sustainable</div>
+                                    <div style="margin-bottom: 4px;"><span style="color: #ffaa00; font-weight: 600;">7-8</span> - Hard, challenging but manageable</div>
+                                    <div style="margin-bottom: 4px;"><span style="color: #7fff00; font-weight: 600;">4-6</span> - Moderate, can hold conversation</div>
+                                    <div style="margin-bottom: 4px;"><span style="color: #00ffff; font-weight: 600;">2-3</span> - Light, could do for hours</div>
+                                    <div><span style="color: #8a2be2; font-weight: 600;">1</span> - Very light, minimal exertion</div>
+                                  </div>
+                                </div>
+                              `}
+                            >
+                              <svg
+                                className="w-5 h-5 text-synthwave-neon-cyan flex-shrink-0"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                />
+                              </svg>
+                              <span className={formPatterns.helperText}>
+                                RPE Scale
+                              </span>
+                            </div>
+
+                            {/* Intensity Helper */}
+                            <div
+                              className="flex items-center gap-2 cursor-help"
+                              data-tooltip-id="intensity-scale"
+                              data-tooltip-html={`
+                                <div style="max-width: 280px;">
+                                  <div style="font-weight: 600; margin-bottom: 8px; color: #ffffff;">Intensity Scale</div>
+                                  <div style="font-size: 14px; line-height: 1.5;">
+                                    <div style="margin-bottom: 4px;"><span style="color: #ff1493; font-weight: 600;">10</span> - All-out effort, sprint finish</div>
+                                    <div style="margin-bottom: 4px;"><span style="color: #ff6b9d; font-weight: 600;">8-9</span> - Very high, near maximal</div>
+                                    <div style="margin-bottom: 4px;"><span style="color: #ffaa00; font-weight: 600;">6-7</span> - High, working hard</div>
+                                    <div style="margin-bottom: 4px;"><span style="color: #7fff00; font-weight: 600;">4-5</span> - Moderate, steady pace</div>
+                                    <div style="margin-bottom: 4px;"><span style="color: #00ffff; font-weight: 600;">2-3</span> - Low, warm-up pace</div>
+                                    <div><span style="color: #8a2be2; font-weight: 600;">1</span> - Minimal, recovery pace</div>
+                                  </div>
+                                </div>
+                              `}
+                            >
+                              <svg
+                                className="w-5 h-5 text-synthwave-neon-pink flex-shrink-0"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M13 10V3L4 14h7v7l9-11h-7z"
+                                />
+                              </svg>
+                              <span className={formPatterns.helperText}>
+                                Intensity Scale
+                              </span>
+                            </div>
+                          </div>
                         </div>
                       )}
 
@@ -1569,6 +1644,18 @@ General thoughts: `;
         id="program-name-link"
         {...tooltipPatterns.standard}
         place="bottom"
+      />
+      <Tooltip
+        id="rpe-scale"
+        {...tooltipPatterns.standard}
+        place="top"
+        className="max-w-sm"
+      />
+      <Tooltip
+        id="intensity-scale"
+        {...tooltipPatterns.standard}
+        place="top"
+        className="max-w-sm"
       />
     </div>
   );

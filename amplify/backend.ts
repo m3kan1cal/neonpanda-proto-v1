@@ -394,6 +394,7 @@ const sharedPolicies = new SharedPolicies(
   backend.skipWorkoutTemplate,
   backend.buildExercise,
   backend.createSharedProgram,
+  backend.getSharedProgram, // Needs WRITE for incrementSharedProgramViews()
   backend.deleteSharedProgram,
   backend.copySharedProgram,
   // NOTE: postConfirmation excluded to avoid circular dependency with auth stack
@@ -434,7 +435,6 @@ const sharedPolicies = new SharedPolicies(
   backend.getExercises,
   backend.getExerciseNames,
   backend.getExercisesCount,
-  backend.getSharedProgram,
   backend.getSharedPrograms,
 ].forEach((func) => {
   sharedPolicies.attachDynamoDbReadOnly(func.resources.lambda);

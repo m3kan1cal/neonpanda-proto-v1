@@ -65,6 +65,7 @@ export const getItemBadge = (item, context) => {
       hasCoachContext: context.hasCoachContext,
       coachesCount: context.coachesCount,
       exercisesCount: context.exercisesCount,
+      sharedProgramsCount: context.sharedProgramsCount,
     });
   }
 

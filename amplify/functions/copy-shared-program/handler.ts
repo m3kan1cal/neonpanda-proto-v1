@@ -14,6 +14,7 @@
 import { createOkResponse, createErrorResponse } from "../libs/api-helpers";
 import { withAuth, AuthenticatedHandler } from "../libs/auth/middleware";
 import { copySharedProgramToUser } from "../libs/shared-program/copy-utils";
+import { incrementSharedProgramCopies } from "../../dynamodb/operations";
 
 const baseHandler: AuthenticatedHandler = async (event) => {
   // Auth handled by middleware - userId is already validated
@@ -54,14 +55,21 @@ const baseHandler: AuthenticatedHandler = async (event) => {
       coachId,
     );
 
+    // Increment copy count on the source shared program (fire-and-forget, don't block response)
+    incrementSharedProgramCopies(sharedProgramId).catch((error) => {
+      console.warn(
+        "Failed to increment copy count (non-critical):",
+        sharedProgramId,
+        error,
+      );
+    });
+
     console.info("Successfully copied shared program:", {
       userId,
       sharedProgramId,
       newProgramId: result.programId,
       programName: result.programName,
     });
-
-    // TODO: Track analytics event: shared_program_copied
 
     return createOkResponse({
       programId: result.programId,

@@ -1,5 +1,8 @@
 import { createOkResponse, createErrorResponse } from "../libs/api-helpers";
-import { getSharedProgram } from "../../dynamodb/operations";
+import {
+  getSharedProgram,
+  incrementSharedProgramViews,
+} from "../../dynamodb/operations";
 import { GetSharedProgramResponse } from "../libs/shared-program/types";
 import {
   getSharedProgramDetailsFromS3,
@@ -43,6 +46,15 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
       // Don't fail the whole request if we can't load workouts
     }
 
+    // Increment view count (fire-and-forget, don't block response)
+    incrementSharedProgramViews(sharedProgramId).catch((error) => {
+      console.warn(
+        "Failed to increment view count (non-critical):",
+        sharedProgramId,
+        error,
+      );
+    });
+
     // Return public-facing data only (no S3 keys or internal IDs)
     const response: GetSharedProgramResponse = {
       sharedProgramId: sharedProgram.sharedProgramId,
@@ -53,6 +65,9 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
       createdAt: sharedProgram.createdAt
         ? new Date(sharedProgram.createdAt).toISOString()
         : new Date().toISOString(),
+      // Engagement metrics (use stored values, since increment is async)
+      viewCount: sharedProgram.viewCount || 0,
+      copyCount: sharedProgram.copyCount || 0,
     };
 
     console.info("Shared program retrieved successfully:", {
@@ -60,9 +75,8 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
       programName: sharedProgram.programSnapshot.name,
       creatorUsername: sharedProgram.creatorUsername,
       sampleWorkoutsCount: sampleWorkouts.length,
+      viewCount: sharedProgram.viewCount || 0,
     });
-
-    // TODO: Track analytics event: share_link_viewed
 
     return createOkResponse(response);
   } catch (error) {

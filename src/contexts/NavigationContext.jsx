@@ -12,6 +12,7 @@ import { getCoachConversationsCount } from "../utils/apis/coachConversationApi";
 import { getMemories } from "../utils/apis/memoryApi";
 import { getWeeklyReports } from "../utils/apis/reportApi";
 import { getAllPrograms } from "../utils/apis/programApi";
+import { querySharedPrograms } from "../utils/apis/sharedProgramApi";
 import CoachAgent from "../utils/agents/CoachAgent";
 
 const NavigationContext = createContext(null);
@@ -30,6 +31,7 @@ export const NavigationProvider = ({ children }) => {
   const [coachData, setCoachData] = useState(null);
   const [coachesCount, setCoachesCount] = useState(0);
   const [exercisesCount, setExercisesCount] = useState(0);
+  const [sharedProgramsCount, setSharedProgramsCount] = useState(0);
   const [newItemCounts, setNewItemCounts] = useState({
     workouts: 0,
     conversations: 0,
@@ -128,6 +130,30 @@ export const NavigationProvider = ({ children }) => {
     };
 
     fetchExercisesCount();
+  }, [userId, isAuthenticated]);
+
+  // Fetch shared programs count when user is authenticated
+  useEffect(() => {
+    if (!isAuthenticated || !userId) {
+      setSharedProgramsCount(0);
+      return;
+    }
+
+    const fetchSharedProgramsCount = async () => {
+      try {
+        const data = await querySharedPrograms(userId);
+        // querySharedPrograms returns an object with sharedPrograms array
+        setSharedProgramsCount(data.sharedPrograms?.length || 0);
+      } catch (error) {
+        console.warn(
+          "NavigationContext: Failed to fetch shared programs count:",
+          error,
+        );
+        setSharedProgramsCount(0);
+      }
+    };
+
+    fetchSharedProgramsCount();
   }, [userId, isAuthenticated]);
 
   // Fetch new item counts when coach context changes
@@ -280,6 +306,7 @@ export const NavigationProvider = ({ children }) => {
     hasCoachContext,
     coachesCount,
     exercisesCount,
+    sharedProgramsCount,
 
     // New item counts
     newItemCounts,

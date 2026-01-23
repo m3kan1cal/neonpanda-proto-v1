@@ -10,6 +10,44 @@
 
 export const changelogEntries = [
   {
+    version: "Release v1.0.20260122-beta",
+    date: "2026-01-22",
+    changes: {
+      added: [
+        "AbortController pattern implementation in SharedProgramPreview.jsx for getSharedProgram API call preventing duplicate requests in React Strict Mode",
+        "Signal parameter support in getSharedProgram API function accepting optional { signal } for request cancellation",
+        "AbortError handling in SharedProgramPreview.jsx catch block silently ignoring expected cleanup aborts",
+        "Cleanup function in SharedProgramPreview useEffect returning abort() call on component unmount or sharedProgramId change",
+        "Signal.aborted check in SharedProgramPreview finally block preventing state updates after request cancellation",
+        "RPE and Intensity scale tooltips in ViewWorkouts.jsx workout logging form with color-coded reference scales for beginner-friendly guidance",
+        "Info icons (cyan for RPE, pink for Intensity) with hover tooltips appearing when user logs workout providing just-in-time education",
+        "Inline placeholder text improvements in workout logging form: 'RPE - How hard it felt (1=easy, 10=max effort)' and 'Intensity - How hard you pushed (1=light, 10=all-out)'",
+      ],
+      changed: [
+        "Engagement metrics storage (viewCount, copyCount) refactored from root-level DynamoDB attributes to nested attributes.viewCount and attributes.copyCount for consistency with entity structure",
+        "Atomic increment UpdateExpression in incrementSharedProgramCounter changed from 'SET #field = ...' to 'SET #attrs.#field = ...' for nested attribute updates",
+        "ExpressionAttributeNames in incrementSharedProgramCounter updated to include '#attrs': 'attributes' mapping for nested path resolution",
+        "Return value extraction in incrementSharedProgramCounter changed from result.Attributes?.[fieldName] to result.Attributes?.attributes?.[fieldName] for nested attributes",
+        "Skeleton header width in ManageSharedPrograms.jsx increased from w-64 to w-80 for improved loading state appearance",
+        "IAM permissions for get-shared-program Lambda moved from attachDynamoDbReadOnly group to attachDynamoDbReadWrite group in backend.ts enabling viewCount increments",
+        "QuickStats badge colors in ManageSharedPrograms.jsx updated to alternate pink → cyan → purple → pink pattern (Total Copies: cyan→purple, Total Workouts: cyan→pink)",
+        "RPE/Intensity tooltip styling matched to QuickStats tooltips: white headers, 14px font size, top placement, triggering on entire container (icon + text)",
+        "RPE/Intensity icons in ViewWorkouts.jsx increased from w-4 h-4 to w-5 h-5 for better visibility",
+        "RPE/Intensity label text size increased to match helper text above (removed fontSize override, uses full formPatterns.helperText)",
+      ],
+      fixed: [
+        "Critical double view count increment bug where React Strict Mode caused duplicate getSharedProgram API calls incrementing viewCount by 2 instead of 1",
+        "Critical AccessDeniedException in get-shared-program Lambda when attempting to increment viewCount due to missing dynamodb:UpdateItem permission",
+        "Critical data structure inconsistency where existing shared programs had viewCount/copyCount at root level while new code expected attributes.viewCount/attributes.copyCount",
+        "Missing AbortError handling in getSharedProgram API call causing console errors during expected cleanup aborts in React Strict Mode",
+        "Missing signal.aborted check in finally block allowing setIsLoading state update after component unmount causing React warnings",
+      ],
+      removed: [
+        "Redundant default value assignments (viewCount || 0, copyCount || 0) in getSharedProgram, getSharedProgramByProgramId, and querySharedPrograms since spreading attributes already includes these fields",
+      ],
+    },
+  },
+  {
     version: "Release v1.0.20260120-beta",
     date: "2026-01-20",
     changes: {

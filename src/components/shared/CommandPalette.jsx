@@ -88,6 +88,15 @@ const CommandPalette = ({
       icon: "💪",
       requiresInput: false,
     },
+    {
+      id: "shared-programs",
+      trigger: "/shared-programs",
+      description: "Manage your shared programs",
+      example: "/shared-programs",
+      category: "navigation",
+      icon: "🔗",
+      requiresInput: false,
+    },
   ];
 
   // Determine what to show based on input state
@@ -179,6 +188,7 @@ const CommandPalette = ({
           setAgentState(newState);
         },
         onNavigation,
+        coachId, // Pass coachId to preserve coach context in navigation
       );
     } else {
       // Update agent when dependencies change
