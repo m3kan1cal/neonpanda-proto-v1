@@ -100,6 +100,8 @@ async function incrementTemplatePopularity(
         ":zero": 0,
         ":now": new Date().toISOString(),
       },
+      // Ensure item exists before incrementing to prevent corrupted partial items
+      ConditionExpression: "attribute_exists(pk)",
       ReturnValues: "UPDATED_NEW",
     });
 
