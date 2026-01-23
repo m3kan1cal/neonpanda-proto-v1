@@ -25,13 +25,17 @@ export async function saveProgramDesignerSession(
   // Only soft-deleted (isDeleted flag) when program build succeeds
   // Hard-deleted only when user manually deletes incomplete session
 
-  const item = createDynamoDBItem<ProgramDesignerSession>(
-    "programDesignerSession",
-    `user#${session.userId}`,
-    `programDesignerSession#${session.sessionId}`,
-    session,
-    session.lastActivity.toISOString(),
-  );
+  // Use startedAt for createdAt (stable timestamp) and lastActivity for updatedAt
+  const item = {
+    ...createDynamoDBItem<ProgramDesignerSession>(
+      "programDesignerSession",
+      `user#${session.userId}`,
+      `programDesignerSession#${session.sessionId}`,
+      session,
+      session.lastActivity.toISOString(),
+    ),
+    createdAt: session.startedAt.toISOString(), // Override with stable startedAt
+  };
 
   await saveToDynamoDB(item);
   console.info("Program designer session saved successfully:", {

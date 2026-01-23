@@ -21,13 +21,17 @@ export async function saveCoachCreatorSession(
   session: CoachCreatorSession,
   ttlDays?: number, // Kept for backward compatibility but no longer used
 ): Promise<void> {
-  const item = createDynamoDBItem<CoachCreatorSession>(
-    "coachCreatorSession",
-    `user#${session.userId}`,
-    `coachCreatorSession#${session.sessionId}`,
-    session,
-    session.lastActivity.toISOString(),
-  );
+  // Use startedAt for createdAt (stable timestamp) and lastActivity for updatedAt
+  const item = {
+    ...createDynamoDBItem<CoachCreatorSession>(
+      "coachCreatorSession",
+      `user#${session.userId}`,
+      `coachCreatorSession#${session.sessionId}`,
+      session,
+      session.lastActivity.toISOString(),
+    ),
+    createdAt: session.startedAt.toISOString(), // Override with stable startedAt
+  };
 
   // No TTL timestamp - sessions persist indefinitely
   await saveToDynamoDB(item);
