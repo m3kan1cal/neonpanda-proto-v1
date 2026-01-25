@@ -29,6 +29,8 @@ You are a fitness discipline classification expert. Analyze this workout descrip
 
 **running**: Distance runs (5k, 10k, half marathon, marathon), pace work, intervals, tempo runs, splits tracking, easy/long/speed runs, race training
 
+**circuit_training**: Station-based timed intervals, F45, Orange Theory, Barry's Bootcamp, community circuit classes, boot camps, metabolic conditioning circuits, work/rest timing (30s on/30s off), station rotation, round-based circuits, HIIT circuits with stations
+
 ## IMAGE ANALYSIS GUIDANCE
 
 When images are provided:
@@ -61,6 +63,13 @@ Visual indicators often trump text descriptions for discipline classification.
 - **EMOM with powerlifting movements**: CrossFit (format determines discipline)
 - **Mixed cardio + strength**: Running if cardio dominates, CrossFit if balanced
 - **Gymnastics movements in strength workout**: CrossFit if part of metcon, Calisthenics if skill-focused
+
+### Circuit Training vs CrossFit
+- **Circuit Training**: Station-based with timed intervals, group class format, work/rest timing primary metric
+- **CrossFit**: Round-based with rep schemes, benchmark WODs, RX/scaled, time domains
+- "Community circuit class" or "boot camp" → circuit_training (explicit circuit format)
+- "F45" or "Orange Theory" or "Barry's" → circuit_training (branded circuit classes)
+- "CrossFit class" or "WOD" → crossfit (explicit CrossFit terminology)
 
 ### Programming Context Clues
 **CrossFit Programs**: CompTrain, Mayhem, Invictus, PRVN, Linchpin, WOD
@@ -113,6 +122,12 @@ Visual indicators often trump text descriptions for discipline classification.
 - "10k tempo run: 7:30/mile pace, splits: 7:28, 7:32, 7:29..." → running, 1.0
 - "Easy 5 mile run, felt good" → running, 0.95
 
+**Circuit Training:**
+- "F45 class today: 3 rounds through 6 stations, 30s work/15s rest" → circuit_training, 1.0
+- "Community circuit class: Station 1 KB swings, Station 2 box jumps..." → circuit_training, 0.95
+- "Boot camp workout: 4 rounds of 8 exercises, 40s work 20s rest" → circuit_training, 0.9
+- "Orange Theory 2G class, treadmill + floor work" → circuit_training, 0.95
+
 Use the classify_discipline tool to return your analysis.`;
 
 export async function detectDiscipline(
@@ -146,15 +161,19 @@ export async function detectDiscipline(
     if (typeof result === "object" && "toolName" in result) {
       const disciplineData = result.input;
 
+      // Round confidence to 2 decimal places to avoid floating-point precision issues
+      const roundedConfidence =
+        Math.round(disciplineData.confidence * 100) / 100;
+
       console.info("✅ Discipline detected:", {
         discipline: disciplineData.discipline,
-        confidence: disciplineData.confidence,
+        confidence: roundedConfidence,
         reasoning: disciplineData.reasoning,
       });
 
       return {
         discipline: disciplineData.discipline,
-        confidence: disciplineData.confidence,
+        confidence: roundedConfidence,
         method: "ai_detection",
         reasoning: disciplineData.reasoning,
       };

@@ -14,6 +14,7 @@ import { HYROX_EXTRACTION_GUIDANCE } from "./hyrox-guidance";
 import { OLYMPIC_WEIGHTLIFTING_EXTRACTION_GUIDANCE } from "./olympic-weightlifting-guidance";
 import { FUNCTIONAL_BODYBUILDING_EXTRACTION_GUIDANCE } from "./functional-bodybuilding-guidance";
 import { CALISTHENICS_EXTRACTION_GUIDANCE } from "./calisthenics-guidance";
+import { CIRCUIT_TRAINING_EXTRACTION_GUIDANCE } from "./circuit-training-guidance";
 
 /**
  * Map of discipline names to their specific extraction guidance
@@ -27,6 +28,7 @@ const DISCIPLINE_GUIDANCE_MAP: Record<string, string> = {
   olympic_weightlifting: OLYMPIC_WEIGHTLIFTING_EXTRACTION_GUIDANCE,
   functional_bodybuilding: FUNCTIONAL_BODYBUILDING_EXTRACTION_GUIDANCE,
   calisthenics: CALISTHENICS_EXTRACTION_GUIDANCE,
+  circuit_training: CIRCUIT_TRAINING_EXTRACTION_GUIDANCE,
   // Note: "hybrid" and "functional_fitness" map to crossfit guidance (same methodology)
 };
 

@@ -2,6 +2,9 @@
  * Olympic Weightlifting Schema Plugin
  *
  * Discipline-specific schema for Olympic Weightlifting workouts.
+ * Covers snatch, clean & jerk, and their variations plus accessory work.
+ * Supports competition attempts, percentage-based training, and technique work.
+ *
  * This plugin is composed with the base schema at runtime for targeted extraction.
  */
 
@@ -19,15 +22,26 @@ export const OLYMPIC_WEIGHTLIFTING_SCHEMA_PLUGIN = {
           "competition",
           "accessory",
         ],
+        description:
+          "Session focus: technique (light/positional), strength (heavy), competition_prep, competition, accessory",
       },
-      competition_prep: { type: "boolean" },
+      competition_prep: {
+        type: "boolean",
+        description: "Whether this session is part of competition preparation",
+      },
       lifts: {
         type: "array",
+        description:
+          "Array of lifts performed with competition attempt and technique tracking",
         items: {
           type: "object",
           required: ["lift_name", "lift_category", "sets"],
           properties: {
-            lift_name: { type: "string" },
+            lift_name: {
+              type: "string",
+              description:
+                "Name of the lift (e.g., 'snatch', 'clean and jerk', 'power clean')",
+            },
             lift_category: {
               type: "string",
               enum: [
@@ -40,36 +54,66 @@ export const OLYMPIC_WEIGHTLIFTING_SCHEMA_PLUGIN = {
                 "squat",
                 "accessory",
               ],
+              description:
+                "Lift category: competition lifts, variations, pulls, squats, or accessory",
             },
-            variation: { type: ["string", "null"] },
-            position: { type: ["string", "null"] },
+            variation: {
+              type: ["string", "null"],
+              description:
+                "Lift variation (e.g., 'power', 'hang', 'block', 'pause', 'no feet')",
+            },
+            position: {
+              type: ["string", "null"],
+              description:
+                "Starting position (e.g., 'floor', 'hang', 'knee', 'hip', 'block')",
+            },
             attempts: {
               type: "object",
+              description:
+                "Competition attempt tracking (for comp or comp prep)",
               properties: {
-                opener: { type: ["number", "null"] },
-                second_attempt: { type: ["number", "null"] },
-                third_attempt: { type: ["number", "null"] },
+                opener: {
+                  type: ["number", "null"],
+                  description: "Opening attempt weight",
+                },
+                second_attempt: {
+                  type: ["number", "null"],
+                  description: "Second attempt weight",
+                },
+                third_attempt: {
+                  type: ["number", "null"],
+                  description: "Third attempt weight",
+                },
                 successful_attempts: {
                   type: "array",
                   items: { type: "number" },
+                  description: "Weights of successful attempts",
                 },
                 missed_attempts: {
                   type: "array",
                   items: { type: "number" },
+                  description: "Weights of missed attempts",
                 },
                 miss_reasons: {
                   type: "array",
                   items: { type: "string" },
+                  description:
+                    "Reasons for misses (e.g., 'pressed out', 'forward', 'soft lockout')",
                 },
               },
             },
             sets: {
               type: "array",
+              description:
+                "Individual sets with technique and success tracking",
               items: {
                 type: "object",
                 required: ["set_number", "weight", "reps"],
                 properties: {
-                  set_number: { type: "number" },
+                  set_number: {
+                    type: "number",
+                    description: "Set number (1, 2, 3...)",
+                  },
                   set_type: {
                     type: "string",
                     enum: [
@@ -81,18 +125,47 @@ export const OLYMPIC_WEIGHTLIFTING_SCHEMA_PLUGIN = {
                       "third",
                       "complex",
                     ],
+                    description:
+                      "Set type: warmup, working, technique, competition attempts, or complex",
                   },
-                  weight: { type: "number" },
-                  weight_unit: { type: "string", enum: ["lbs", "kg"] },
-                  reps: { type: "number" },
-                  percentage_1rm: { type: ["number", "null"] },
-                  success: { type: "boolean" },
-                  rest_time: { type: ["number", "null"] },
-                  technique_notes: { type: ["string", "null"] },
+                  weight: {
+                    type: "number",
+                    description: "Weight used",
+                  },
+                  weight_unit: {
+                    type: "string",
+                    enum: ["lbs", "kg"],
+                    description: "Weight unit (kg is standard in competition)",
+                  },
+                  reps: {
+                    type: "number",
+                    description: "Reps completed",
+                  },
+                  percentage_1rm: {
+                    type: ["number", "null"],
+                    description: "Percentage of 1RM (e.g., 80 for 80%)",
+                  },
+                  success: {
+                    type: "boolean",
+                    description: "Whether the lift was made successfully",
+                  },
+                  rest_time: {
+                    type: ["number", "null"],
+                    description: "Rest time after this set in seconds",
+                  },
+                  technique_notes: {
+                    type: ["string", "null"],
+                    description:
+                      "Technique observations (e.g., 'good pull', 'soft lockout', 'early arm bend')",
+                  },
                 },
               },
             },
-            complex_structure: { type: ["string", "null"] },
+            complex_structure: {
+              type: ["string", "null"],
+              description:
+                "Complex structure if applicable (e.g., '1 snatch + 2 overhead squat')",
+            },
           },
         },
       },

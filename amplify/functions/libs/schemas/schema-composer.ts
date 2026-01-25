@@ -25,6 +25,7 @@ import { HYROX_SCHEMA_PLUGIN } from "./disciplines/hyrox-schema";
 import { OLYMPIC_WEIGHTLIFTING_SCHEMA_PLUGIN } from "./disciplines/olympic-weightlifting-schema";
 import { FUNCTIONAL_BODYBUILDING_SCHEMA_PLUGIN } from "./disciplines/functional-bodybuilding-schema";
 import { CALISTHENICS_SCHEMA_PLUGIN } from "./disciplines/calisthenics-schema";
+import { CIRCUIT_TRAINING_SCHEMA_PLUGIN } from "./disciplines/circuit-training-schema";
 // hybrid removed - use crossfit for mixed-modality workouts
 
 /**
@@ -39,6 +40,7 @@ const DISCIPLINE_PLUGIN_MAP: Record<string, any> = {
   olympic_weightlifting: OLYMPIC_WEIGHTLIFTING_SCHEMA_PLUGIN,
   functional_bodybuilding: FUNCTIONAL_BODYBUILDING_SCHEMA_PLUGIN,
   calisthenics: CALISTHENICS_SCHEMA_PLUGIN,
+  circuit_training: CIRCUIT_TRAINING_SCHEMA_PLUGIN,
   // Note: "hybrid" and "functional_fitness" map to crossfit (same methodology)
 };
 

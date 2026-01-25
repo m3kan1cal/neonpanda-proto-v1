@@ -6,6 +6,7 @@ import { OlympicWeightliftingSection } from "./OlympicWeightliftingSection";
 import { FunctionalBodybuildingSection } from "./FunctionalBodybuildingSection";
 import { CalisthenicsSection } from "./CalisthenicsSection";
 import { RunningSection } from "./RunningSection";
+import { CircuitTrainingSection } from "./CircuitTrainingSection";
 // HybridSection removed - use CrossFit for mixed-modality workouts
 
 /**
@@ -29,6 +30,7 @@ export const DISCIPLINE_COMPONENTS = {
   functional_bodybuilding: FunctionalBodybuildingSection,
   calisthenics: CalisthenicsSection,
   running: RunningSection,
+  circuit_training: CircuitTrainingSection,
   // Legacy discipline mappings - use CrossFit component for these
   hybrid: CrossFitSection,
   functional_fitness: CrossFitSection,

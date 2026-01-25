@@ -70,18 +70,21 @@ export const normalizeWorkout = async (
     toolResult.normalizedData.metadata.validation_flags.push("normalized");
   }
 
+  // Round confidence to 2 decimal places to avoid floating-point precision issues
+  const roundedConfidence = Math.round(toolResult.confidence * 100) / 100;
+
   console.info("✅ Normalization complete:", {
     isValid: toolResult.isValid,
     issuesFound: toolResult.issues.length,
     correctionsMade: toolResult.issues.filter((i) => i.corrected).length,
-    confidence: toolResult.confidence,
+    confidence: roundedConfidence,
   });
 
   return {
     isValid: toolResult.isValid,
     normalizedData: toolResult.normalizedData,
     issues: toolResult.issues,
-    confidence: toolResult.confidence,
+    confidence: roundedConfidence,
     summary: toolResult.summary,
     normalizationMethod: "tool",
   };
