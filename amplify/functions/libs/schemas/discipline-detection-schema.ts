@@ -17,6 +17,7 @@ export const DISCIPLINE_DETECTION_SCHEMA = {
         "functional_bodybuilding",
         "calisthenics",
         "running",
+        "circuit_training",
       ],
       description:
         "The detected workout discipline. Note: Mixed-modality workouts should be classified as 'crossfit'.",

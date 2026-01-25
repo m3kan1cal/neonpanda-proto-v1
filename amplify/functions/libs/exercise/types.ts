@@ -19,7 +19,8 @@ export type ExerciseDiscipline =
   | "hyrox"
   | "olympic_weightlifting"
   | "functional_bodybuilding"
-  | "calisthenics";
+  | "calisthenics"
+  | "circuit_training";
 
 /**
  * Exercise metrics - discipline-agnostic structure capturing all possible metrics

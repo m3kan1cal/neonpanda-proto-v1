@@ -106,8 +106,8 @@ const PublicHeader = () => {
   ];
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-synthwave-bg-primary/90 backdrop-blur-sm border-b border-synthwave-neon-cyan/10">
-      <div className="px-6 py-3 flex justify-between items-center">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-synthwave-bg-primary/90 backdrop-blur-sm border-b border-synthwave-neon-cyan/10 pt-[env(safe-area-inset-top)]">
+      <div className="px-6 pt-3 pb-3 flex justify-between items-center">
         {/* Logo */}
         <Link
           to="/"
@@ -166,11 +166,11 @@ const PublicHeader = () => {
             </div>
           )}
 
-          {/* Sign In Button (unauthenticated only) */}
+          {/* Sign In Button (unauthenticated only, hidden on mobile) */}
           {!loading && !isAuthenticated && (
             <button
               onClick={() => navigate("/auth")}
-              className="px-3 py-1.5 bg-synthwave-neon-pink text-synthwave-bg-primary font-rajdhani font-medium text-sm uppercase tracking-wide rounded-md transition-all duration-200 hover:bg-synthwave-neon-pink/90 hover:shadow-md hover:shadow-synthwave-neon-pink/30"
+              className="hidden sm:inline-block px-3 py-1.5 bg-synthwave-neon-pink text-synthwave-bg-primary font-rajdhani font-medium text-sm uppercase tracking-wide rounded-md transition-all duration-200 hover:bg-synthwave-neon-pink/90 hover:shadow-md hover:shadow-synthwave-neon-pink/30"
             >
               Sign In
             </button>

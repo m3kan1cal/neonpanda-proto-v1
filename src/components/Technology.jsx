@@ -124,7 +124,7 @@ function Technology() {
               with specialized agents for every aspect of your coaching
               experience. Think of it as your personal coaching staff—each
               specialist doing what they do best, seamlessly coordinating across
-              8 supported disciplines to create your perfect training
+              9 supported disciplines to create your perfect training
               experience.
             </p>
 
@@ -235,7 +235,7 @@ function Technology() {
                     and executor models for validation and parallel
                     processing—ensuring your training follows intelligent
                     progression principles whether you're doing CrossFit,
-                    powerlifting, HYROX, or any of our 8 supported disciplines
+                    powerlifting, HYROX, or any of our 9 supported disciplines
                   </p>
                 </div>
               </div>
@@ -962,7 +962,7 @@ function Technology() {
                           Additional Specialized Models:
                         </strong>{" "}
                         Custom-selected models optimized for specific coaching
-                        functions across 8 supported disciplines
+                        functions across 9 supported disciplines
                       </span>
                     </li>
                   </ul>
@@ -1184,7 +1184,7 @@ function Technology() {
                 </h4>
                 <p className={`${typographyPatterns.description} mb-4`}>
                   Our training principles are reviewed by certified coaches and
-                  experienced athletes across all 8 supported disciplines. We
+                  experienced athletes across all 9 supported disciplines. We
                   blend cutting-edge AI with time-tested wisdom from established
                   programming methodologies.
                 </p>

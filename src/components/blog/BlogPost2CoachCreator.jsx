@@ -305,7 +305,7 @@ function BlogPost2CoachCreator() {
 
         <div className={`${containerPatterns.mediumGlassCyan} mb-8`}>
           <h3 className="font-rajdhani font-semibold text-xl text-synthwave-neon-cyan mb-4">
-            8 Disciplines, Countless Coaching Styles
+            9 Disciplines, Countless Coaching Styles
           </h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
             {[
@@ -317,6 +317,10 @@ function BlogPost2CoachCreator() {
               { name: "HYROX", detail: "Hybrid competition" },
               { name: "Calisthenics", detail: "Skill progressions" },
               { name: "Functional Bodybuilding", detail: "Best of both" },
+              {
+                name: "Circuit Training",
+                detail: "F45, Orange Theory, boot camps, community classes",
+              },
             ].map((discipline, idx) => (
               <div
                 key={idx}

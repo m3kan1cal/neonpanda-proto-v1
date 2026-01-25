@@ -56,13 +56,13 @@ const blogPosts = [
     title: "Training Programs That Think",
     subtitle: "The Program Designer Agent",
     description:
-      "Deep dive into agentic AI patterns: how the Program Designer Agent orchestrates multi-week training programs across 8 disciplines with intelligent periodization.",
+      "Deep dive into agentic AI patterns: how the Program Designer Agent orchestrates multi-week training programs across 9 disciplines with intelligent periodization.",
     readTime: "14 min read",
     agent: "Program Designer Agent",
     pattern: "Orchestrator + Parallel",
     color: "pink",
     topics: [
-      "8 Disciplines",
+      "9 Disciplines",
       "Periodization",
       "Methodology Alignment",
       "Phase Management",

@@ -1622,6 +1622,50 @@ Completed in 17:32. Paced the runs at 1:45-1:50 each, KB swings were unbroken al
       },
     },
   },
+
+  "circuit-training-f45": {
+    description:
+      "Circuit Training - F45 style workout with stations and timed intervals",
+    payload: {
+      userId: "63gocaz-j-AYRsb0094ik",
+      coachId: "user_63gocaz-j-AYRsb0094ik_coach_1756078034317",
+      conversationId: "conv_1764512884381_4amplrhdd",
+      userMessage:
+        "F45 class today. 3 rounds through: Station 1 KB swings 30s, Station 2 box jumps 30s, Station 3 push-ups 30s, Station 4 battle ropes 30s, Station 5 goblet squats 30s, Station 6 rowing 30s. 30s rest between stations. Great cardio burn!",
+      coachConfig: BASE_COACH_CONFIG,
+      isSlashCommand: false,
+      messageTimestamp: new Date().toISOString(),
+      userTimezone: "America/Los_Angeles",
+    },
+    expected: {
+      success: true,
+      shouldHave: ["workoutId", "discipline", "confidence"],
+      discipline: "circuit_training",
+      minConfidence: 0.85,
+      toolsUsed: [
+        "extract_workout_data",
+        "validate_workout_completeness",
+        "generate_workout_summary",
+        "save_workout_to_database",
+      ],
+      workoutValidation: {
+        shouldExist: true,
+        requiredFields: [
+          "workout_id",
+          "user_id",
+          "discipline",
+          "workout_type",
+          "date",
+          "discipline_specific.circuit_training.stations",
+        ],
+        fieldValues: {
+          discipline: "circuit_training",
+        },
+        disciplineSpecificPath: "discipline_specific.circuit_training.stations",
+        minStationsCount: 6, // 6 stations in the circuit
+      },
+    },
+  },
 };
 
 /**

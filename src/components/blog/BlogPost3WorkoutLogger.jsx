@@ -251,6 +251,7 @@ function BlogPost3WorkoutLogger() {
               "HYROX",
               "Calisthenics",
               "Functional Bodybuilding",
+              "Circuit Training",
             ].map((discipline, idx) => (
               <span key={idx} className={badgePatterns.cyan}>
                 {discipline}

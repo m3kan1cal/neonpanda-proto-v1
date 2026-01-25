@@ -283,7 +283,7 @@ function AboutUs() {
                     Fit matters more than fame
                   </strong>
                   —your coach should work for your specific situation, across
-                  any of our 8 supported disciplines.
+                  any of our 9 supported disciplines.
                 </p>
               </div>
 
@@ -474,6 +474,7 @@ function AboutUs() {
                     "HYROX",
                     "Calisthenics",
                     "Functional Bodybuilding",
+                    "Circuit Training",
                   ].map((discipline, idx) => (
                     <div
                       key={idx}
@@ -528,7 +529,7 @@ function AboutUs() {
                 <p className={`${typographyPatterns.description} text-lg`}>
                   Create AI coaches that understand your specific situation so
                   well that interacting with them feels like talking to someone
-                  who's been training with you for years. Across 8 disciplines,
+                  who's been training with you for years. Across 9 disciplines,
                   with more launching soon.
                 </p>
               </div>
