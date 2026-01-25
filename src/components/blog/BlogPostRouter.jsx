@@ -17,7 +17,11 @@ const blogPostComponents = {
 };
 
 // Published blog posts
-const publishedSlugs = ["the-foundation", "your-coach-your-way"];
+const publishedSlugs = [
+  "the-foundation",
+  "your-coach-your-way",
+  "every-rep-counts",
+];
 
 function BlogPostRouter() {
   const { slug } = useParams();
