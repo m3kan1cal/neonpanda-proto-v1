@@ -33,12 +33,12 @@ function BlogPost4ProgramDesigner() {
         </p>
       </section>
 
-      {/* The 8 Disciplines */}
+      {/* The 9 Disciplines */}
       <section className="mb-16">
         <h2
           className={`${typographyPatterns.sectionTitle} text-synthwave-neon-pink mb-6`}
         >
-          Purpose-Built for 8 Disciplines
+          Purpose-Built for 9 Disciplines
         </h2>
         <p className={`${typographyPatterns.description} mb-6`}>
           Different disciplines require different approaches. A powerlifting
@@ -88,6 +88,11 @@ function BlogPost4ProgramDesigner() {
                 name: "Functional Bodybuilding",
                 focus: "Movement + muscle",
                 color: "cyan",
+              },
+              {
+                name: "Circuit Training",
+                focus: "Station-based intervals",
+                color: "purple",
               },
             ].map((discipline, idx) => (
               <div

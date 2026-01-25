@@ -32,6 +32,7 @@ import type {
   FunctionalBodybuildingExercise,
   CalisthenicsWorkout,
   CalisthenicsExercise,
+  CircuitTrainingWorkout,
 } from "../workout/types";
 import type {
   ExtractedExercise,
@@ -96,6 +97,12 @@ export function extractExercisesFromWorkout(
     case "calisthenics":
       return extractCalisthenicsExercises(
         disciplineSpecific.calisthenics,
+        discipline,
+      );
+
+    case "circuit_training":
+      return extractCircuitTrainingExercises(
+        disciplineSpecific.circuit_training,
         discipline,
       );
 
@@ -279,35 +286,49 @@ function extractPowerliftingExercises(
       };
     }
 
+    // Build attempts object only if present and has data
+    let attempts;
+    if (exercise.attempts) {
+      attempts = {
+        ...(exercise.attempts.opener && { opener: exercise.attempts.opener }),
+        ...(exercise.attempts.second_attempt && {
+          second: exercise.attempts.second_attempt,
+        }),
+        ...(exercise.attempts.third_attempt && {
+          third: exercise.attempts.third_attempt,
+        }),
+        ...(exercise.attempts.successful_attempts && {
+          successful: exercise.attempts.successful_attempts,
+        }),
+        ...(exercise.attempts.missed_attempts && {
+          missed: exercise.attempts.missed_attempts,
+        }),
+      };
+      // Only include attempts if it has at least one property
+      if (Object.keys(attempts).length === 0) {
+        attempts = undefined;
+      }
+    }
+
     const metrics: ExerciseMetrics = {
       weight: maxWeight,
       weightUnit: sets[0]?.weight_unit || "lbs",
       reps: avgRepsPerSet, // Average reps per set for display (e.g., 4x10 not 4x40)
       totalReps, // Total reps across all sets (for aggregations)
       sets: sets.length,
-      repsPerSet: repsPerSet.length > 0 ? repsPerSet : undefined,
-      weightsPerSet: weightsPerSet.length > 0 ? weightsPerSet : undefined,
-      volumePerSet: volumePerSet.length > 0 ? volumePerSet : undefined,
-      totalVolume,
-      maxWeight,
-      estimated1RM: bestSet?.estimated1rm,
-      bestSet,
-      intensityMetrics,
-      rpe: exercise.rpe,
+      // Use conditional spread for optional fields to avoid undefined values in DynamoDB
+      ...(repsPerSet.length > 0 && { repsPerSet }),
+      ...(weightsPerSet.length > 0 && { weightsPerSet }),
+      ...(volumePerSet.length > 0 && { volumePerSet }),
+      ...(totalVolume > 0 && { totalVolume }),
+      ...(maxWeight > 0 && { maxWeight }),
+      ...(bestSet && { bestSet, estimated1RM: bestSet.estimated1rm }),
+      ...(intensityMetrics && { intensityMetrics }),
+      ...(exercise.rpe && { rpe: exercise.rpe }),
       movementCategory: exercise.movement_category || "main_lift",
-      equipment: exercise.equipment,
+      ...(exercise.equipment && { equipment: exercise.equipment }),
+      ...(attempts && { attempts }),
     };
-
-    // Handle attempts if present (competition format)
-    if (exercise.attempts) {
-      metrics.attempts = {
-        opener: exercise.attempts.opener,
-        second: exercise.attempts.second_attempt,
-        third: exercise.attempts.third_attempt,
-        successful: exercise.attempts.successful_attempts,
-        missed: exercise.attempts.missed_attempts,
-      };
-    }
 
     exercises.push({
       originalName: exercise.exercise_name,
@@ -441,23 +462,21 @@ function extractBodybuildingMetrics(
     reps: avgRepsPerSet, // Average reps per set for display (e.g., 4x10 not 4x40)
     totalReps, // Total reps across all sets (for aggregations)
     sets: sets.length,
-    repsPerSet: repsPerSet.length > 0 ? repsPerSet : undefined,
-    weightsPerSet: weightsPerSet.length > 0 ? weightsPerSet : undefined,
-    volumePerSet: volumePerSet.length > 0 ? volumePerSet : undefined,
-    totalVolume,
-    maxWeight,
-    estimated1RM: bestSet?.estimated1rm,
-    bestSet,
-    intensityMetrics,
+    // Use conditional spread for optional fields to avoid undefined values in DynamoDB
+    ...(repsPerSet.length > 0 && { repsPerSet }),
+    ...(weightsPerSet.length > 0 && { weightsPerSet }),
+    ...(volumePerSet.length > 0 && { volumePerSet }),
+    ...(totalVolume > 0 && { totalVolume }),
+    ...(maxWeight > 0 && { maxWeight }),
+    ...(bestSet && { bestSet, estimated1RM: bestSet.estimated1rm }),
+    ...(intensityMetrics && { intensityMetrics }),
     movementCategory: exercise.movement_category,
     targetMuscles: exercise.target_muscles,
-    supersetWith: exercise.superset_with || undefined,
-    failure: hadFailure || undefined,
+    ...(exercise.superset_with && { supersetWith: exercise.superset_with }),
+    ...(hadFailure && { failure: hadFailure }),
+    ...(sets[0]?.tempo && { tempo: sets[0].tempo }),
+    ...(totalTut > 0 && { timeUnderTension: totalTut }),
   };
-
-  // Get tempo and TUT from first set if available
-  if (sets[0]?.tempo) metrics.tempo = sets[0].tempo;
-  if (totalTut > 0) metrics.timeUnderTension = totalTut;
 
   return metrics;
 }
@@ -698,34 +717,48 @@ function extractOlympicLiftMetrics(lift: OlympicLift): ExerciseMetrics {
     };
   }
 
+  // Build attempts object only if present and has data
+  let attempts;
+  if (lift.attempts) {
+    attempts = {
+      ...(lift.attempts.opener && { opener: lift.attempts.opener }),
+      ...(lift.attempts.second_attempt && {
+        second: lift.attempts.second_attempt,
+      }),
+      ...(lift.attempts.third_attempt && {
+        third: lift.attempts.third_attempt,
+      }),
+      ...(lift.attempts.successful_attempts && {
+        successful: lift.attempts.successful_attempts,
+      }),
+      ...(lift.attempts.missed_attempts && {
+        missed: lift.attempts.missed_attempts,
+      }),
+    };
+    // Only include attempts if it has at least one property
+    if (Object.keys(attempts).length === 0) {
+      attempts = undefined;
+    }
+  }
+
   const metrics: ExerciseMetrics = {
     weight: maxWeight,
     weightUnit: sets[0]?.weight_unit || "kg",
     reps: avgRepsPerSet, // Average reps per set for display (e.g., 4x10 not 4x40)
     totalReps, // Total reps across all sets (for aggregations)
     sets: sets.length,
-    repsPerSet: repsPerSet.length > 0 ? repsPerSet : undefined,
-    weightsPerSet: weightsPerSet.length > 0 ? weightsPerSet : undefined,
-    volumePerSet: volumePerSet.length > 0 ? volumePerSet : undefined,
-    totalVolume,
-    maxWeight,
-    estimated1RM: bestSet?.estimated1rm,
-    bestSet,
-    intensityMetrics,
+    // Use conditional spread for optional fields to avoid undefined values in DynamoDB
+    ...(repsPerSet.length > 0 && { repsPerSet }),
+    ...(weightsPerSet.length > 0 && { weightsPerSet }),
+    ...(volumePerSet.length > 0 && { volumePerSet }),
+    ...(totalVolume > 0 && { totalVolume }),
+    ...(maxWeight > 0 && { maxWeight }),
+    ...(bestSet && { bestSet, estimated1RM: bestSet.estimated1rm }),
+    ...(intensityMetrics && { intensityMetrics }),
     movementCategory: lift.lift_category,
-    variation: lift.variation || undefined,
+    ...(lift.variation && { variation: lift.variation }),
+    ...(attempts && { attempts }),
   };
-
-  // Handle competition attempts
-  if (lift.attempts) {
-    metrics.attempts = {
-      opener: lift.attempts.opener || undefined,
-      second: lift.attempts.second_attempt || undefined,
-      third: lift.attempts.third_attempt || undefined,
-      successful: lift.attempts.successful_attempts,
-      missed: lift.attempts.missed_attempts,
-    };
-  }
 
   return metrics;
 }
@@ -846,24 +879,20 @@ function extractFunctionalBodybuildingMetrics(
     reps: avgRepsPerSet, // Average reps per set for display (e.g., 4x10 not 4x40)
     totalReps, // Total reps across all sets (for aggregations)
     sets: sets.length,
-    repsPerSet: repsPerSet.length > 0 ? repsPerSet : undefined,
-    weightsPerSet: weightsPerSet.length > 0 ? weightsPerSet : undefined,
-    volumePerSet: volumePerSet.length > 0 ? volumePerSet : undefined,
-    totalVolume,
-    maxWeight,
-    estimated1RM: bestSet?.estimated1rm,
-    bestSet,
-    intensityMetrics,
+    // Use conditional spread for optional fields to avoid undefined values in DynamoDB
+    ...(repsPerSet.length > 0 && { repsPerSet }),
+    ...(weightsPerSet.length > 0 && { weightsPerSet }),
+    ...(volumePerSet.length > 0 && { volumePerSet }),
+    ...(totalVolume > 0 && { totalVolume }),
+    ...(maxWeight > 0 && { maxWeight }),
+    ...(bestSet && { bestSet, estimated1RM: bestSet.estimated1rm }),
+    ...(intensityMetrics && { intensityMetrics }),
     movementType: exercise.movement_pattern,
     targetMuscles: exercise.target_muscles,
-    supersetWith: exercise.superset_with || undefined,
+    ...(exercise.superset_with && { supersetWith: exercise.superset_with }),
+    ...(sets[0]?.tempo && { tempo: sets[0].tempo }),
+    ...(sets[0]?.quality_focus && { variation: sets[0].quality_focus }),
   };
-
-  // Get tempo and quality focus from first set
-  if (sets[0]?.tempo) metrics.tempo = sets[0].tempo;
-  if (sets[0]?.quality_focus) {
-    metrics.variation = sets[0].quality_focus; // Store quality focus in variation field
-  }
 
   return metrics;
 }
@@ -958,18 +987,65 @@ function extractCalisthenicsMetrics(
 
   const metrics: ExerciseMetrics = {
     reps: avgRepsPerSet, // Average reps per set for display (e.g., 4x10 not 4x40)
-    totalReps: totalReps || undefined,
     sets: sets.length,
-    repsPerSet: repsPerSet.length > 0 ? repsPerSet : undefined,
-    bestSet,
-    holdTime: totalHoldTime || undefined,
-    qualityRating: qualityCount > 0 ? avgQuality / qualityCount : undefined,
-    progressionLevel: exercise.progression_level || undefined,
-    assistanceMethod: exercise.assistance_method || undefined,
+    // Use conditional spread for optional fields to avoid undefined values in DynamoDB
+    ...(totalReps > 0 && { totalReps }),
+    ...(repsPerSet.length > 0 && { repsPerSet }),
+    ...(bestSet && { bestSet }),
+    ...(totalHoldTime > 0 && { holdTime: totalHoldTime }),
+    ...(qualityCount > 0 && { qualityRating: avgQuality / qualityCount }),
+    ...(exercise.progression_level && {
+      progressionLevel: exercise.progression_level,
+    }),
+    ...(exercise.assistance_method && {
+      assistanceMethod: exercise.assistance_method,
+    }),
     movementCategory: exercise.skill_category,
   };
 
   return metrics;
+}
+
+/**
+ * Circuit Training exercise extraction
+ * Extracts exercises from station-based circuit workouts
+ */
+function extractCircuitTrainingExercises(
+  circuitData: CircuitTrainingWorkout | undefined,
+  discipline: ExerciseDiscipline,
+): ExerciseExtractionResult {
+  if (!circuitData?.stations) {
+    return { exercises: [], discipline, extractionMethod: "circuit_empty" };
+  }
+
+  const exercises: ExtractedExercise[] = [];
+
+  for (const station of circuitData.stations) {
+    if (!station.exercise_name) {
+      console.warn(
+        "⚠️ Skipping Circuit Training station without exercise_name",
+      );
+      continue;
+    }
+
+    const metrics: ExerciseMetrics = {
+      stationNumber: station.station_number,
+      ...(station.work_time && { time: station.work_time }),
+      ...(station.reps && { reps: station.reps }),
+      ...(station.weight && { weight: station.weight }),
+      ...(station.weight_unit && { weightUnit: station.weight_unit }),
+      ...(station.equipment && { equipment: [station.equipment] }),
+    };
+
+    exercises.push({
+      originalName: station.exercise_name,
+      discipline,
+      metrics,
+      notes: station.notes,
+    });
+  }
+
+  return { exercises, discipline, extractionMethod: "circuit_stations" };
 }
 
 /**

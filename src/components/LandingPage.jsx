@@ -74,7 +74,7 @@ function LandingPage() {
     {
       heading: "Your coaches, your rules",
       description:
-        "Create AI coaches designed around your exact goals, training style, and preferences—coaches built specifically for you and your unique fitness journey. Whether you need one coach or several for different goals, each one learns what makes you tick and adapts to support you across 8 supported disciplines. Your coaches belong only to you.",
+        "Create AI coaches designed around your exact goals, training style, and preferences—coaches built specifically for you and your unique fitness journey. Whether you need one coach or several for different goals, each one learns what makes you tick and adapts to support you across 9 supported disciplines. Your coaches belong only to you.",
       imageAlt:
         "Multiple AI coaches interface showing different coaching personalities",
       imagePath: "/images/features/webp/your-coaches.webp",
@@ -213,7 +213,7 @@ function LandingPage() {
         <div className="relative z-10 max-w-7xl mx-auto w-full">
           <div className="w-full">
             {/* Main Headline */}
-            <h1 className="font-inter font-bold text-7xl md:text-7xl lg:text-8xl xl:text-8xl text-white mb-8 drop-shadow-lg leading-tight text-left">
+            <h1 className="font-inter font-bold text-5xl sm:text-6xl md:text-7xl lg:text-8xl text-white mb-8 drop-shadow-lg leading-tight text-left">
               Your fitness coach,{" "}
               <span className="text-synthwave-neon-pink">electrified</span>
             </h1>
@@ -232,13 +232,7 @@ function LandingPage() {
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-6 items-start w-full lg:w-2/3">
               <Link to="/auth" className={buttonPatterns.heroCTA}>
-                Sign Up
-              </Link>
-              <Link
-                to="/contact?type=collaborate"
-                className={buttonPatterns.secondary}
-              >
-                Let's Collaborate
+                Start Today
               </Link>
             </div>
           </div>
@@ -1024,7 +1018,7 @@ function LandingPage() {
               </div>
             </div>
 
-            {/* Pair 7: Limited Disciplines vs 8 Disciplines Supported */}
+            {/* Pair 7: Limited Disciplines vs 9 Disciplines Supported */}
             <div
               className={`challenge-pair grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 ${visiblePairs.has("6") ? "visible" : ""}`}
               data-pair-index="6"
@@ -1089,16 +1083,17 @@ function LandingPage() {
                         Your AI Coach
                       </p>
                       <h3 className="text-white text-xl font-inter font-bold mb-3">
-                        8 Disciplines. One Platform.
+                        9 Disciplines. One Platform.
                       </h3>
                     </div>
                   </div>
                   <p className="text-white/90 text-lg font-rajdhani leading-relaxed mb-4">
-                    Train across 8 supported disciplines with one platform and
+                    Train across 9 supported disciplines with one platform and
                     one coach—CrossFit, Powerlifting, Olympic Weightlifting,
-                    Bodybuilding, Running, HYROX, Calisthenics, and Functional
-                    Bodybuilding. Create multiple coaches for different training
-                    styles, or switch between disciplines as your goals evolve.
+                    Bodybuilding, Running, HYROX, Calisthenics, Functional
+                    Bodybuilding, and Circuit Training. Create multiple coaches
+                    for different training styles, or switch between disciplines
+                    as your goals evolve.
                   </p>
                   <ul className="space-y-2">
                     <li className="flex items-center gap-2 text-synthwave-neon-pink text-base font-rajdhani">
@@ -1156,13 +1151,7 @@ function LandingPage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
               <Link to="/auth" className={buttonPatterns.heroCTA}>
-                Sign Up
-              </Link>
-              <Link
-                to="/contact?type=collaborate"
-                className={buttonPatterns.secondary}
-              >
-                Let's Collaborate
+                Get Started
               </Link>
             </div>
           </div>
@@ -1207,7 +1196,7 @@ function LandingPage() {
             return (
               <div
                 key={index}
-                className={`flex flex-col ${index % 2 === 0 ? "lg:flex-row" : "lg:flex-row-reverse"} items-center ${index === features.length - 1 ? "mb-24" : "mb-40"} gap-16 relative`}
+                className={`flex flex-col ${index % 2 === 0 ? "lg:flex-row" : "lg:flex-row-reverse"} items-center ${index === features.length - 1 ? "mb-24" : "mb-32"} gap-14 md:gap-16 relative`}
               >
                 {/* Content */}
                 <div className="flex-1">
@@ -1222,7 +1211,7 @@ function LandingPage() {
                 </div>
 
                 {/* Fading Vertical Line */}
-                <div className="hidden lg:block absolute left-1/2 -top-24 -bottom-24 w-px transform -translate-x-1/2">
+                <div className="hidden lg:block absolute left-1/2 -top-12 -bottom-12 w-px transform -translate-x-1/2">
                   <div className="h-full w-full bg-gradient-to-b from-transparent via-white to-transparent opacity-30"></div>
                 </div>
 
@@ -1384,13 +1373,7 @@ function LandingPage() {
 
           <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
             <Link to="/auth" className={buttonPatterns.heroCTA}>
-              Sign Up
-            </Link>
-            <Link
-              to="/contact?type=collaborate"
-              className={buttonPatterns.secondary}
-            >
-              Let's Collaborate
+              Start Training
             </Link>
           </div>
 
@@ -1402,7 +1385,7 @@ function LandingPage() {
             </div>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-synthwave-neon-cyan rounded-full animate-pulse"></div>
-              <span>8 Disciplines Supported</span>
+              <span>9 Disciplines Supported</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-synthwave-neon-purple rounded-full animate-pulse"></div>

@@ -137,7 +137,7 @@ export interface DisciplineSpecific {
   olympic_weightlifting?: OlympicWeightliftingWorkout;
   functional_bodybuilding?: FunctionalBodybuildingWorkout;
   calisthenics?: CalisthenicsWorkout;
-  // Add other disciplines as needed
+  circuit_training?: CircuitTrainingWorkout;
 }
 
 /**
@@ -438,6 +438,41 @@ export interface CalisthenicsSet {
   success?: boolean;
   quality_rating?: number | null;
   notes?: string | null;
+}
+
+export interface CircuitTrainingWorkout {
+  circuit_format:
+    | "stations"
+    | "amrap"
+    | "emom"
+    | "tabata"
+    | "rounds"
+    | "custom";
+  session_focus?: "cardio" | "strength" | "hybrid" | "endurance" | "power";
+  total_rounds?: number;
+  work_interval?: number; // seconds
+  rest_interval?: number; // seconds
+  stations: CircuitStation[];
+  performance_data?: {
+    total_time?: number;
+    rounds_completed?: number;
+    total_work_time?: number;
+  };
+  class_name?: string; // "F45 Hollywood", "Orange Theory 2G"
+  class_style?: string; // "f45" | "orange_theory" | "barrys" | "community_class" | "custom"
+}
+
+export interface CircuitStation {
+  station_number: number;
+  station_name?: string;
+  exercise_name: string;
+  work_time?: number; // seconds
+  rest_time?: number; // seconds
+  reps?: number;
+  weight?: number;
+  weight_unit?: string;
+  equipment?: string;
+  notes?: string;
 }
 
 /**

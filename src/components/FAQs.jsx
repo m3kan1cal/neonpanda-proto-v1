@@ -110,7 +110,7 @@ function FAQs() {
     {
       question: "How smart is my AI coach really?",
       answer:
-        "Your AI coach is powered by best-in-class AI models including Claude Sonnet 4.5 and Opus 4.5 for complex coaching decisions, Claude Haiku 4.5 for fast real-time responses, Nova Micro and Nova 2 Lite for efficient background processing, and Nvidia NV-Embed-V2 for intelligent memory retrieval. This multi-model architecture combines deep expertise in exercise science with personalized understanding of your goals across 8 supported disciplines. Think of it as having access to the collective knowledge of expert coaches, orchestrated by sophisticated agentic AI specifically for your journey.",
+        "Your AI coach is powered by best-in-class AI models including Claude Sonnet 4.5 and Opus 4.5 for complex coaching decisions, Claude Haiku 4.5 for fast real-time responses, Nova Micro and Nova 2 Lite for efficient background processing, and Nvidia NV-Embed-V2 for intelligent memory retrieval. This multi-model architecture combines deep expertise in exercise science with personalized understanding of your goals across 9 supported disciplines. Think of it as having access to the collective knowledge of expert coaches, orchestrated by sophisticated agentic AI specifically for your journey.",
     },
     {
       question: "Is there a community aspect?",
@@ -172,7 +172,7 @@ function FAQs() {
     {
       question: "Who else is using this?",
       answer:
-        "Our community spans all 8 supported disciplines—CrossFit athletes chasing competition PRs, body recomp enthusiasts transforming their physiques, powerlifters building strength, runners logging miles, HYROX competitors preparing for race day, and everyone in between. What unites them is wanting coaching that actually adapts to their life, not generic programming. We're building a community of people who believe fitness should be personal, intelligent, and genuinely supportive.",
+        "Our community spans all 9 supported disciplines—CrossFit athletes chasing competition PRs, body recomp enthusiasts transforming their physiques, powerlifters building strength, runners logging miles, HYROX competitors preparing for race day, and everyone in between. What unites them is wanting coaching that actually adapts to their life, not generic programming. We're building a community of people who believe fitness should be personal, intelligent, and genuinely supportive.",
     },
     {
       question: "What if I have feedback or want to request features?",
@@ -182,7 +182,7 @@ function FAQs() {
     {
       question: "When can I start using NeonPanda?",
       answer:
-        "Right now! NeonPanda is live and actively onboarding users. Sign up today and start building your first AI coach. We're targeting full public launch in Q2 2026 and are actively seeking fitness enthusiasts across our 8 supported disciplines to help shape the platform.",
+        "Right now! NeonPanda is live and actively onboarding users. Sign up today and start building your first AI coach. We're targeting full public launch in Q2 2026 and are actively seeking fitness enthusiasts across our 9 supported disciplines to help shape the platform.",
     },
     {
       question: "What training disciplines does NeonPanda support?",
