@@ -236,7 +236,7 @@ function BlogIndex() {
                       <div
                         className={`lg:w-[calc(50%-3rem)] ${isEven ? "lg:mr-auto" : "lg:ml-auto"}`}
                       >
-                        {post.id <= 2 ? (
+                        {post.id <= 3 ? (
                           <Link
                             to={`/blog/${post.slug}`}
                             className={`block ${containerPatterns.cardLight} p-6 hover:${colors.border} transition-all duration-300 group`}

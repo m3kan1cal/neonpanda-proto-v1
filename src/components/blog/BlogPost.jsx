@@ -174,7 +174,7 @@ function BlogPost({ children }) {
         <div
           className="absolute inset-0 z-0"
           style={{
-            backgroundImage: "url(/images/blog-posts/chalk-hands.jpg)",
+            backgroundImage: "url(/images/blog-posts/barbells-plates.jpg)",
             backgroundSize: "cover",
             backgroundPosition: "center",
             backgroundRepeat: "no-repeat",
@@ -217,6 +217,11 @@ function BlogPost({ children }) {
                 <span className="text-white">Your Coach, </span>
                 <span className={colors.text}>Your Way</span>
               </>
+            ) : currentPost.slug === "every-rep-counts" ? (
+              <>
+                <span className="text-white">Every </span>
+                <span className={colors.text}>Rep Counts</span>
+              </>
             ) : (
               <span className={colors.text}>{currentPost.title}</span>
             )}
@@ -230,7 +235,7 @@ function BlogPost({ children }) {
             {blogPosts.map((post) => {
               const postColors = getColorClasses(post.color);
               const isCurrent = post.slug === slug;
-              if (post.id <= 2) {
+              if (post.id <= 3) {
                 return (
                   <Link
                     key={post.id}
