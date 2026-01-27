@@ -77,6 +77,7 @@ export function createCoreApi(
   getSharedProgramsLambda: lambda.IFunction,
   deleteSharedProgramLambda: lambda.IFunction,
   copySharedProgramLambda: lambda.IFunction,
+  explainTermLambda: lambda.IFunction,
   userPoolAuthorizer: HttpUserPoolAuthorizer,
 ) {
   // Create branch-aware API name using utility
@@ -559,6 +560,12 @@ export function createCoreApi(
       copySharedProgramLambda,
     );
 
+  const explainTermIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "ExplainTermIntegration",
+      explainTermLambda,
+    );
+
   // Create integrations object for route configuration
   const integrations = {
     contactForm: contactFormIntegration,
@@ -627,6 +634,7 @@ export function createCoreApi(
     getSharedPrograms: getSharedProgramsIntegration,
     deleteSharedProgram: deleteSharedProgramIntegration,
     copySharedProgram: copySharedProgramIntegration,
+    explainTerm: explainTermIntegration,
   };
 
   // *******************************************************
@@ -729,6 +737,14 @@ export function createCoreApi(
     path: "/users/{userId}/exercises/count",
     methods: [apigatewayv2.HttpMethod.GET],
     integration: integrations.getExercisesCount,
+    authorizer: userPoolAuthorizer,
+  });
+
+  // Explain Term Route (PROTECTED) - AI-powered explanations for fitness terms
+  httpApi.addRoutes({
+    path: "/explain-term",
+    methods: [apigatewayv2.HttpMethod.POST],
+    integration: integrations.explainTerm,
     authorizer: userPoolAuthorizer,
   });
 

@@ -99,6 +99,7 @@ import { getSharedProgram } from "./functions/get-shared-program/resource";
 import { getSharedPrograms } from "./functions/get-shared-programs/resource";
 import { deleteSharedProgram } from "./functions/delete-shared-program/resource";
 import { copySharedProgram } from "./functions/copy-shared-program/resource";
+import { explainTerm } from "./functions/explain-term/resource";
 import { apiGatewayv2 } from "./api/resource";
 import { dynamodbTable } from "./dynamodb/resource";
 import { createAppsBucket } from "./storage/resource";
@@ -203,6 +204,7 @@ const backend = defineBackend({
   getSharedPrograms,
   deleteSharedProgram,
   copySharedProgram,
+  explainTerm,
 });
 
 // Disable retries for stateful async generation functions
@@ -301,6 +303,7 @@ const coreApi = apiGatewayv2.createCoreApi(
   backend.getSharedPrograms.resources.lambda,
   backend.deleteSharedProgram.resources.lambda,
   backend.copySharedProgram.resources.lambda,
+  backend.explainTerm.resources.lambda,
   userPoolAuthorizer,
 );
 
@@ -464,6 +467,7 @@ const sharedPolicies = new SharedPolicies(
   backend.createMemory,
   backend.logWorkoutTemplate, // Added: Needs Bedrock for scaling analysis (Haiku 4.5)
   backend.buildExercise, // Added: Needs Bedrock for exercise name normalization (Haiku 4.5)
+  backend.explainTerm, // Added: Needs Bedrock for term explanations (Haiku 4.5)
 ].forEach((func) => {
   sharedPolicies.attachBedrockAccess(func.resources.lambda);
 });
@@ -786,6 +790,7 @@ const allFunctions = [
   backend.getSharedPrograms,
   backend.deleteSharedProgram,
   backend.copySharedProgram,
+  backend.explainTerm,
   // NOTE: forwardLogsToSns and syncLogSubscriptions excluded - they're utility functions that don't need app resources
 ];
 

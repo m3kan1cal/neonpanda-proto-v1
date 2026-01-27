@@ -74,6 +74,19 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
   height: 0 !important;
 }
 
+/* Gradient flow animation for AI-generated content containers */
+@keyframes gradient-flow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
 /* Custom utilities for text gradients */
 @layer utilities {
   .text-gradient-neon {
