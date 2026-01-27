@@ -5,15 +5,17 @@ import { authenticatedFetch, getApiUrl } from "./apiConfig";
  *
  * @param {string} term - The term to explain (e.g., "Barbell", "Deadlift", "Posterior Chain")
  * @param {"equipment" | "exercise" | "focus_area"} termType - The type of term
+ * @param {AbortSignal} [signal] - Optional AbortSignal for request cancellation
  * @returns {Promise<{term: string, termType: string, explanation: string, generatedAt: string}>}
  */
-export const explainTerm = async (term, termType) => {
+export const explainTerm = async (term, termType, signal) => {
   const url = getApiUrl("/explain-term");
 
   const response = await authenticatedFetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ term, termType }),
+    signal, // Pass abort signal to fetch
   });
 
   if (!response.ok) {

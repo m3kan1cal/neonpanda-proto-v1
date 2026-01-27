@@ -90,6 +90,9 @@ function ViewWorkouts() {
   const programAgentRef = useRef(null);
   const coachAgentRef = useRef(null);
 
+  // Ref to track current explanation request (for cancellation)
+  const explanationAbortControllerRef = useRef(null);
+
   // Load program and workout data
   const loadData = async () => {
     if (!userId || !coachId || !programId) return;
@@ -177,7 +180,7 @@ function ViewWorkouts() {
     loadData();
   }, [userId, coachId, programId, dayParam]);
 
-  // Cleanup agents on unmount
+  // Cleanup agents and pending requests on unmount
   useEffect(() => {
     return () => {
       if (programAgentRef.current) {
@@ -186,6 +189,11 @@ function ViewWorkouts() {
       }
       if (coachAgentRef.current) {
         coachAgentRef.current = null;
+      }
+      // Cancel any pending explanation requests
+      if (explanationAbortControllerRef.current) {
+        explanationAbortControllerRef.current.abort();
+        explanationAbortControllerRef.current = null;
       }
     };
   }, []);
@@ -519,10 +527,25 @@ General thoughts: `;
       expandedBadge?.templateId === templateId
     ) {
       setExpandedBadge(null);
+      // Cancel any in-flight request
+      if (explanationAbortControllerRef.current) {
+        explanationAbortControllerRef.current.abort();
+        explanationAbortControllerRef.current = null;
+      }
       return;
     }
 
+    // Cancel previous request if still in flight
+    if (explanationAbortControllerRef.current) {
+      explanationAbortControllerRef.current.abort();
+    }
+
+    // Create new AbortController for this request
+    const abortController = new AbortController();
+    explanationAbortControllerRef.current = abortController;
+
     // Set loading state with badge info (shows skeleton immediately)
+    const requestId = { term, termType, templateId };
     setExpandedBadge({
       term,
       termType,
@@ -534,14 +557,41 @@ General thoughts: `;
 
     try {
       // Response shape: { term, termType, explanation, generatedAt }
-      const response = await explainTerm(term, termType);
-      setExpandedBadge({ ...response, templateId });
+      const response = await explainTerm(
+        term,
+        termType,
+        abortController.signal,
+      );
+
+      // Only update if this request wasn't aborted and badge is still open for this term
+      if (
+        !abortController.signal.aborted &&
+        explanationAbortControllerRef.current === abortController
+      ) {
+        setExpandedBadge({ ...response, templateId });
+      }
     } catch (error) {
+      // Ignore abort errors (user clicked another badge or closed popup)
+      if (error.name === "AbortError") {
+        return;
+      }
+
       console.error("Error getting explanation:", error);
-      showError("Failed to load explanation");
-      setExpandedBadge(null);
+
+      // Only show error if this request wasn't aborted
+      if (!abortController.signal.aborted) {
+        showError("Failed to load explanation");
+        setExpandedBadge(null);
+      }
     } finally {
-      setIsLoadingExplanation(false);
+      // Only clear loading if this request wasn't aborted
+      if (
+        !abortController.signal.aborted &&
+        explanationAbortControllerRef.current === abortController
+      ) {
+        setIsLoadingExplanation(false);
+        explanationAbortControllerRef.current = null;
+      }
     }
   };
 
@@ -1288,39 +1338,11 @@ General thoughts: `;
                                 expandedBadge.templateId ===
                                   template.templateId &&
                                 expandedBadge.termType === "equipment" && (
-                                  <div
-                                    className={`mt-3 animate-slideDown relative bg-gradient-to-r from-synthwave-neon-cyan via-synthwave-neon-purple to-synthwave-neon-pink p-[1px] rounded-lg`}
-                                    style={{
-                                      backgroundSize: "200% 200%",
-                                      animation:
-                                        "gradient-flow 3s ease infinite",
-                                    }}
-                                  >
-                                    <div className="bg-synthwave-bg-card rounded-lg p-4 h-full">
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          setExpandedBadge(null);
-                                        }}
-                                        className="absolute top-2 right-2 text-synthwave-text-muted hover:text-synthwave-neon-cyan transition-colors"
-                                      >
-                                        <XIcon className="w-4 h-4" />
-                                      </button>
-                                      {isLoadingExplanation ? (
-                                        <div className="space-y-2">
-                                          <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-3/4"></div>
-                                          <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-full"></div>
-                                          <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-5/6"></div>
-                                        </div>
-                                      ) : (
-                                        <div className="font-rajdhani text-sm text-synthwave-text-secondary leading-relaxed">
-                                          {parseMarkdown(
-                                            expandedBadge.explanation,
-                                          )}
-                                        </div>
-                                      )}
-                                    </div>
-                                  </div>
+                                  <ExplanationPopup
+                                    isLoading={isLoadingExplanation}
+                                    explanation={expandedBadge.explanation}
+                                    onClose={() => setExpandedBadge(null)}
+                                  />
                                 )}
                             </div>
                           )}
@@ -1363,39 +1385,11 @@ General thoughts: `;
                                 expandedBadge.templateId ===
                                   template.templateId &&
                                 expandedBadge.termType === "exercise" && (
-                                  <div
-                                    className={`mt-3 animate-slideDown relative bg-gradient-to-r from-synthwave-neon-cyan via-synthwave-neon-purple to-synthwave-neon-pink p-[1px] rounded-lg`}
-                                    style={{
-                                      backgroundSize: "200% 200%",
-                                      animation:
-                                        "gradient-flow 3s ease infinite",
-                                    }}
-                                  >
-                                    <div className="bg-synthwave-bg-card rounded-lg p-4 h-full">
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          setExpandedBadge(null);
-                                        }}
-                                        className="absolute top-2 right-2 text-synthwave-text-muted hover:text-synthwave-neon-cyan transition-colors"
-                                      >
-                                        <XIcon className="w-4 h-4" />
-                                      </button>
-                                      {isLoadingExplanation ? (
-                                        <div className="space-y-2">
-                                          <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-3/4"></div>
-                                          <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-full"></div>
-                                          <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-5/6"></div>
-                                        </div>
-                                      ) : (
-                                        <div className="font-rajdhani text-sm text-synthwave-text-secondary leading-relaxed">
-                                          {parseMarkdown(
-                                            expandedBadge.explanation,
-                                          )}
-                                        </div>
-                                      )}
-                                    </div>
-                                  </div>
+                                  <ExplanationPopup
+                                    isLoading={isLoadingExplanation}
+                                    explanation={expandedBadge.explanation}
+                                    onClose={() => setExpandedBadge(null)}
+                                  />
                                 )}
                             </div>
                           )}
@@ -1436,39 +1430,11 @@ General thoughts: `;
                                 expandedBadge.templateId ===
                                   template.templateId &&
                                 expandedBadge.termType === "focus_area" && (
-                                  <div
-                                    className={`mt-3 animate-slideDown relative bg-gradient-to-r from-synthwave-neon-cyan via-synthwave-neon-purple to-synthwave-neon-pink p-[1px] rounded-lg`}
-                                    style={{
-                                      backgroundSize: "200% 200%",
-                                      animation:
-                                        "gradient-flow 3s ease infinite",
-                                    }}
-                                  >
-                                    <div className="bg-synthwave-bg-card rounded-lg p-4 h-full">
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          setExpandedBadge(null);
-                                        }}
-                                        className="absolute top-2 right-2 text-synthwave-text-muted hover:text-synthwave-neon-cyan transition-colors"
-                                      >
-                                        <XIcon className="w-4 h-4" />
-                                      </button>
-                                      {isLoadingExplanation ? (
-                                        <div className="space-y-2">
-                                          <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-3/4"></div>
-                                          <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-full"></div>
-                                          <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-5/6"></div>
-                                        </div>
-                                      ) : (
-                                        <div className="font-rajdhani text-sm text-synthwave-text-secondary leading-relaxed">
-                                          {parseMarkdown(
-                                            expandedBadge.explanation,
-                                          )}
-                                        </div>
-                                      )}
-                                    </div>
-                                  </div>
+                                  <ExplanationPopup
+                                    isLoading={isLoadingExplanation}
+                                    explanation={expandedBadge.explanation}
+                                    onClose={() => setExpandedBadge(null)}
+                                  />
                                 )}
                             </div>
                           )}
@@ -1860,6 +1826,45 @@ General thoughts: `;
         place="top"
         className="max-w-sm"
       />
+    </div>
+  );
+}
+
+/**
+ * Reusable explanation popup component
+ * Displays AI-generated explanations with animated gradient border
+ */
+function ExplanationPopup({ isLoading, explanation, onClose }) {
+  return (
+    <div
+      className="mt-3 animate-slideDown relative bg-gradient-to-r from-synthwave-neon-cyan via-synthwave-neon-purple to-synthwave-neon-pink p-[1px] rounded-lg"
+      style={{
+        backgroundSize: "200% 200%",
+        animation: "gradient-flow 3s ease infinite",
+      }}
+    >
+      <div className="bg-synthwave-bg-card rounded-lg p-4 h-full">
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onClose();
+          }}
+          className="absolute top-2 right-2 text-synthwave-text-muted hover:text-synthwave-neon-cyan transition-colors"
+        >
+          <XIcon className="w-4 h-4" />
+        </button>
+        {isLoading ? (
+          <div className="space-y-2">
+            <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-3/4"></div>
+            <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-full"></div>
+            <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-5/6"></div>
+          </div>
+        ) : (
+          <div className="font-rajdhani text-sm text-synthwave-text-secondary leading-relaxed">
+            {parseMarkdown(explanation)}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
