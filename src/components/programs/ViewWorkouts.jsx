@@ -521,9 +521,10 @@ General thoughts: `;
 
   // Handle badge click to show AI explanation
   const handleBadgeClick = async (term, termType, templateId) => {
-    // Toggle off if clicking same badge
+    // Toggle off if clicking same badge (check all three: term, termType, templateId)
     if (
       expandedBadge?.term === term &&
+      expandedBadge?.termType === termType &&
       expandedBadge?.templateId === templateId
     ) {
       setExpandedBadge(null);
@@ -545,7 +546,6 @@ General thoughts: `;
     explanationAbortControllerRef.current = abortController;
 
     // Set loading state with badge info (shows skeleton immediately)
-    const requestId = { term, termType, templateId };
     setExpandedBadge({
       term,
       termType,
@@ -1314,6 +1314,7 @@ General thoughts: `;
                                     key={i}
                                     className={`${badgePatterns.workoutDetail} cursor-pointer transition-all duration-200 ${
                                       expandedBadge?.term === item &&
+                                      expandedBadge?.termType === "equipment" &&
                                       expandedBadge?.templateId ===
                                         template.templateId
                                         ? "border-synthwave-neon-cyan bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan"
@@ -1360,6 +1361,8 @@ General thoughts: `;
                                       key={i}
                                       className={`${badgePatterns.workoutDetail} cursor-pointer transition-all duration-200 ${
                                         expandedBadge?.term === exercise &&
+                                        expandedBadge?.termType ===
+                                          "exercise" &&
                                         expandedBadge?.templateId ===
                                           template.templateId
                                           ? "border-synthwave-neon-cyan bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan"
@@ -1406,6 +1409,8 @@ General thoughts: `;
                                     key={i}
                                     className={`${badgePatterns.workoutDetail} cursor-pointer transition-all duration-200 ${
                                       expandedBadge?.term === area &&
+                                      expandedBadge?.termType ===
+                                        "focus_area" &&
                                       expandedBadge?.templateId ===
                                         template.templateId
                                         ? "border-synthwave-neon-cyan bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan"
