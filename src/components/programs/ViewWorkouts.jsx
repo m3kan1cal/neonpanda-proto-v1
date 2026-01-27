@@ -595,6 +595,16 @@ General thoughts: `;
     }
   };
 
+  // Handle closing explanation popup
+  const handleCloseExplanation = () => {
+    setExpandedBadge(null);
+    // Cancel any in-flight request
+    if (explanationAbortControllerRef.current) {
+      explanationAbortControllerRef.current.abort();
+      explanationAbortControllerRef.current = null;
+    }
+  };
+
   // Handle authorization silently - redirect if unauthorized
   useEffect(() => {
     if (!isValidatingUserId && (userIdError || !isValidUserId)) {
@@ -1342,7 +1352,7 @@ General thoughts: `;
                                   <ExplanationPopup
                                     isLoading={isLoadingExplanation}
                                     explanation={expandedBadge.explanation}
-                                    onClose={() => setExpandedBadge(null)}
+                                    onClose={handleCloseExplanation}
                                   />
                                 )}
                             </div>
@@ -1391,7 +1401,7 @@ General thoughts: `;
                                   <ExplanationPopup
                                     isLoading={isLoadingExplanation}
                                     explanation={expandedBadge.explanation}
-                                    onClose={() => setExpandedBadge(null)}
+                                    onClose={handleCloseExplanation}
                                   />
                                 )}
                             </div>
@@ -1438,7 +1448,7 @@ General thoughts: `;
                                   <ExplanationPopup
                                     isLoading={isLoadingExplanation}
                                     explanation={expandedBadge.explanation}
-                                    onClose={() => setExpandedBadge(null)}
+                                    onClose={handleCloseExplanation}
                                   />
                                 )}
                             </div>
