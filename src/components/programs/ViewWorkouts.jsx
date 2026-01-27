@@ -1842,10 +1842,11 @@ General thoughts: `;
 function ExplanationPopup({ isLoading, explanation, onClose }) {
   return (
     <div
-      className="mt-3 animate-slideDown relative bg-gradient-to-r from-synthwave-neon-cyan via-synthwave-neon-purple to-synthwave-neon-pink p-[1px] rounded-lg"
+      className="mt-3 relative bg-gradient-to-r from-synthwave-neon-cyan via-synthwave-neon-purple to-synthwave-neon-pink p-[1px] rounded-lg"
       style={{
         backgroundSize: "200% 200%",
-        animation: "gradient-flow 3s ease infinite",
+        animation:
+          "slideDown 0.3s ease-out forwards, gradient-flow 3s ease infinite",
       }}
     >
       <div className="bg-synthwave-bg-card rounded-lg p-4 h-full">
