@@ -25,6 +25,8 @@ import { ProgramAgent } from "../../utils/agents/ProgramAgent";
 import CoachAgent from "../../utils/agents/CoachAgent";
 import { useToast } from "../../contexts/ToastContext";
 import { CenteredErrorState } from "../shared/ErrorStates";
+import { explainTerm } from "../../utils/apis/explainApi";
+import { parseMarkdown } from "../../utils/markdownParser";
 
 /**
  * ViewWorkouts - Shows workout templates for a specific day or today
@@ -78,6 +80,11 @@ function ViewWorkouts() {
   // State for day completion celebration
   const [showCelebration, setShowCelebration] = useState(false);
   const [celebrationType, setCelebrationType] = useState("lasers"); // 'burst', 'lasers', 'lightning', 'warp'
+
+  // State for badge explanations
+  // Shape: { term, termType, explanation, generatedAt, templateId } or null
+  const [expandedBadge, setExpandedBadge] = useState(null);
+  const [isLoadingExplanation, setIsLoadingExplanation] = useState(false);
 
   // Agent refs
   const programAgentRef = useRef(null);
@@ -501,6 +508,40 @@ General thoughts: `;
       showError(err.message || "Failed to complete rest day");
     } finally {
       setProcessingWorkoutId(null);
+    }
+  };
+
+  // Handle badge click to show AI explanation
+  const handleBadgeClick = async (term, termType, templateId) => {
+    // Toggle off if clicking same badge
+    if (
+      expandedBadge?.term === term &&
+      expandedBadge?.templateId === templateId
+    ) {
+      setExpandedBadge(null);
+      return;
+    }
+
+    // Set loading state with badge info (shows skeleton immediately)
+    setExpandedBadge({
+      term,
+      termType,
+      templateId,
+      explanation: null,
+      generatedAt: null,
+    });
+    setIsLoadingExplanation(true);
+
+    try {
+      // Response shape: { term, termType, explanation, generatedAt }
+      const response = await explainTerm(term, termType);
+      setExpandedBadge({ ...response, templateId });
+    } catch (error) {
+      console.error("Error getting explanation:", error);
+      showError("Failed to load explanation");
+      setExpandedBadge(null);
+    } finally {
+      setIsLoadingExplanation(false);
     }
   };
 
@@ -1221,12 +1262,66 @@ General thoughts: `;
                                 {template.equipment.map((item, i) => (
                                   <span
                                     key={i}
-                                    className={badgePatterns.workoutDetail}
+                                    className={`${badgePatterns.workoutDetail} cursor-pointer transition-all duration-200 ${
+                                      expandedBadge?.term === item &&
+                                      expandedBadge?.templateId ===
+                                        template.templateId
+                                        ? "border-synthwave-neon-cyan bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan"
+                                        : "hover:border-synthwave-neon-cyan/50"
+                                    }`}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleBadgeClick(
+                                        item,
+                                        "equipment",
+                                        template.templateId,
+                                      );
+                                    }}
                                   >
                                     {item}
                                   </span>
                                 ))}
                               </div>
+
+                              {/* Equipment Explanation Container */}
+                              {expandedBadge &&
+                                expandedBadge.templateId ===
+                                  template.templateId &&
+                                expandedBadge.termType === "equipment" && (
+                                  <div
+                                    className={`mt-3 animate-slideDown relative bg-gradient-to-r from-synthwave-neon-cyan via-synthwave-neon-purple to-synthwave-neon-pink p-[1px] rounded-lg`}
+                                    style={{
+                                      backgroundSize: "200% 200%",
+                                      animation:
+                                        "gradient-flow 3s ease infinite",
+                                    }}
+                                  >
+                                    <div className="bg-synthwave-bg-card rounded-lg p-4 h-full">
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setExpandedBadge(null);
+                                        }}
+                                        className="absolute top-2 right-2 text-synthwave-text-muted hover:text-synthwave-neon-cyan transition-colors"
+                                      >
+                                        <XIcon className="w-4 h-4" />
+                                      </button>
+                                      {isLoadingExplanation ? (
+                                        <div className="space-y-2">
+                                          <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-3/4"></div>
+                                          <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-full"></div>
+                                          <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-5/6"></div>
+                                        </div>
+                                      ) : (
+                                        <div className="font-rajdhani text-sm text-synthwave-text-secondary leading-relaxed">
+                                          {parseMarkdown(
+                                            expandedBadge.explanation,
+                                          )}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
                             </div>
                           )}
 
@@ -1241,13 +1336,67 @@ General thoughts: `;
                                   (exercise, i) => (
                                     <span
                                       key={i}
-                                      className={badgePatterns.workoutDetail}
+                                      className={`${badgePatterns.workoutDetail} cursor-pointer transition-all duration-200 ${
+                                        expandedBadge?.term === exercise &&
+                                        expandedBadge?.templateId ===
+                                          template.templateId
+                                          ? "border-synthwave-neon-cyan bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan"
+                                          : "hover:border-synthwave-neon-cyan/50"
+                                      }`}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleBadgeClick(
+                                          exercise,
+                                          "exercise",
+                                          template.templateId,
+                                        );
+                                      }}
                                     >
                                       {exercise}
                                     </span>
                                   ),
                                 )}
                               </div>
+
+                              {/* Exercise Explanation Container */}
+                              {expandedBadge &&
+                                expandedBadge.templateId ===
+                                  template.templateId &&
+                                expandedBadge.termType === "exercise" && (
+                                  <div
+                                    className={`mt-3 animate-slideDown relative bg-gradient-to-r from-synthwave-neon-cyan via-synthwave-neon-purple to-synthwave-neon-pink p-[1px] rounded-lg`}
+                                    style={{
+                                      backgroundSize: "200% 200%",
+                                      animation:
+                                        "gradient-flow 3s ease infinite",
+                                    }}
+                                  >
+                                    <div className="bg-synthwave-bg-card rounded-lg p-4 h-full">
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setExpandedBadge(null);
+                                        }}
+                                        className="absolute top-2 right-2 text-synthwave-text-muted hover:text-synthwave-neon-cyan transition-colors"
+                                      >
+                                        <XIcon className="w-4 h-4" />
+                                      </button>
+                                      {isLoadingExplanation ? (
+                                        <div className="space-y-2">
+                                          <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-3/4"></div>
+                                          <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-full"></div>
+                                          <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-5/6"></div>
+                                        </div>
+                                      ) : (
+                                        <div className="font-rajdhani text-sm text-synthwave-text-secondary leading-relaxed">
+                                          {parseMarkdown(
+                                            expandedBadge.explanation,
+                                          )}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
                             </div>
                           )}
 
@@ -1261,12 +1410,66 @@ General thoughts: `;
                                 {template.metadata.focusAreas.map((area, i) => (
                                   <span
                                     key={i}
-                                    className={badgePatterns.workoutDetail}
+                                    className={`${badgePatterns.workoutDetail} cursor-pointer transition-all duration-200 ${
+                                      expandedBadge?.term === area &&
+                                      expandedBadge?.templateId ===
+                                        template.templateId
+                                        ? "border-synthwave-neon-cyan bg-synthwave-neon-cyan/20 text-synthwave-neon-cyan"
+                                        : "hover:border-synthwave-neon-cyan/50"
+                                    }`}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleBadgeClick(
+                                        area,
+                                        "focus_area",
+                                        template.templateId,
+                                      );
+                                    }}
                                   >
                                     {area}
                                   </span>
                                 ))}
                               </div>
+
+                              {/* Focus Area Explanation Container */}
+                              {expandedBadge &&
+                                expandedBadge.templateId ===
+                                  template.templateId &&
+                                expandedBadge.termType === "focus_area" && (
+                                  <div
+                                    className={`mt-3 animate-slideDown relative bg-gradient-to-r from-synthwave-neon-cyan via-synthwave-neon-purple to-synthwave-neon-pink p-[1px] rounded-lg`}
+                                    style={{
+                                      backgroundSize: "200% 200%",
+                                      animation:
+                                        "gradient-flow 3s ease infinite",
+                                    }}
+                                  >
+                                    <div className="bg-synthwave-bg-card rounded-lg p-4 h-full">
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setExpandedBadge(null);
+                                        }}
+                                        className="absolute top-2 right-2 text-synthwave-text-muted hover:text-synthwave-neon-cyan transition-colors"
+                                      >
+                                        <XIcon className="w-4 h-4" />
+                                      </button>
+                                      {isLoadingExplanation ? (
+                                        <div className="space-y-2">
+                                          <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-3/4"></div>
+                                          <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-full"></div>
+                                          <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-5/6"></div>
+                                        </div>
+                                      ) : (
+                                        <div className="font-rajdhani text-sm text-synthwave-text-secondary leading-relaxed">
+                                          {parseMarkdown(
+                                            expandedBadge.explanation,
+                                          )}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
                             </div>
                           )}
                       </div>
