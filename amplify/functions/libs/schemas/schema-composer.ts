@@ -63,14 +63,15 @@ export function composeWorkoutSchema(discipline: string): any {
   let plugin = DISCIPLINE_PLUGIN_MAP[discipline];
   let actualDiscipline = discipline;
 
-  // If no plugin found, fall back to CrossFit (most flexible and common schema)
+  // If no plugin found, fall back to hybrid (most flexible schema for mixed/unrecognized workouts)
+  // This matches the guidance-composer fallback to hybrid for consistency
   // This handles: "unknown", "strength_training", and any other unrecognized values
   if (!plugin) {
     console.warn(
-      `⚠️ No schema plugin for discipline: ${discipline}, falling back to crossfit schema`,
+      `⚠️ No schema plugin for discipline: ${discipline}, falling back to hybrid schema`,
     );
-    plugin = DISCIPLINE_PLUGIN_MAP["crossfit"];
-    actualDiscipline = "crossfit_fallback";
+    plugin = DISCIPLINE_PLUGIN_MAP["hybrid"];
+    actualDiscipline = "hybrid_fallback";
   }
 
   console.info(`📋 Composing schema for discipline: ${actualDiscipline}`);

@@ -46,6 +46,9 @@ export const changelogEntries = [
         "Date calculations in analytics/date-utils.ts mixing local time (getDay, getDate, setDate) with UTC time (setUTCHours), causing potential off-by-one day errors in non-UTC environments; replaced with consistent UTC methods (getUTCDay, getUTCDate, setUTCDate) across getCurrentWeekRange, getLastNWeeksRange, getHistoricalWorkoutRange, and getHistoricalMonthRange",
         "Normalization error message in save_workout_to_database accessing wrong property names (normalization.confidence, normalization.summary) instead of correct names (normalizationConfidence, normalizationSummary), causing fallback values to always display",
         "Diagnostic query in workout.ts queryWorkoutSummaries lacking error handling, where a failed diagnostic DynamoDB call could crash the function instead of returning valid empty results",
+        "Schema composer fallback using crossfit instead of hybrid for unrecognized disciplines, creating a mismatch with the guidance composer (which correctly defaults to hybrid); both now consistently fall back to hybrid",
+        "ViewWorkouts.jsx workout template button flicker caused by ProgramAgent state callback overwriting local optimistic updates with stale data during polling cycles; added reference-based change detection to prevent redundant state pushes",
+        "Coach incorrectly implying that other screens (Program Designer, Training Grounds) would remember or pick up context from the current conversation; added cross-screen context boundary rules to system prompt requiring coaches to give self-contained summaries when directing users to other screens",
       ],
       removed: [
         "Legacy hybrid-to-crossfit discipline mapping in WorkoutViewer.jsx getDisciplineDataPath function",

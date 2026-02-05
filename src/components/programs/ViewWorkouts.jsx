@@ -90,6 +90,10 @@ function ViewWorkouts() {
   const programAgentRef = useRef(null);
   const coachAgentRef = useRef(null);
 
+  // Ref to track ProgramAgent's todaysWorkout reference for change detection
+  // Prevents stale data from overwriting local optimistic updates during polling
+  const prevTodaysWorkoutRef = useRef(null);
+
   // Ref to track current explanation request (for cancellation)
   const explanationAbortControllerRef = useRef(null);
 
@@ -121,7 +125,17 @@ function ViewWorkouts() {
             if (newState.selectedProgram) {
               setProgram(newState.selectedProgram);
             }
-            if (newState.todaysWorkout) {
+            // Only update workoutData when the todaysWorkout reference actually changed.
+            // _updateState() spreads the full programState on every call, so todaysWorkout
+            // is always truthy after initial load. Without this check, unrelated state
+            // changes (e.g. isLoadingTodaysWorkout: true during polling) would overwrite
+            // local optimistic updates (like marking a template "completed") with stale data,
+            // causing a brief UI flicker back to "Log/Skip" buttons.
+            if (
+              newState.todaysWorkout &&
+              newState.todaysWorkout !== prevTodaysWorkoutRef.current
+            ) {
+              prevTodaysWorkoutRef.current = newState.todaysWorkout;
               setWorkoutData(newState.todaysWorkout);
             }
           },
