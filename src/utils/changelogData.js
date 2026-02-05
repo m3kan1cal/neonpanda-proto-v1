@@ -42,6 +42,8 @@ export const changelogEntries = [
         "crossfit-chipper-text-only test incorrectly saving a nearly empty workout to database despite normalization returning isValid: false with 6 issues and confidence 0.35",
         "Unknown discipline: hybrid warning in build-exercise Lambda when processing hybrid workout exercise extraction (exercise extraction switch statement missing hybrid case)",
         "HybridSection.jsx receiving undefined hybridData prop due to WorkoutViewer.jsx passing crossfitData instead of hybridData in discipline props mapping",
+        "Duplicate section numbering (8.5 / 8.5) in extraction.ts prompt for PR Detection and Optimization Examples sections, renumbered to 8.5 / 8.6",
+        "Date calculations in analytics/date-utils.ts mixing local time (getDay, getDate, setDate) with UTC time (setUTCHours), causing potential off-by-one day errors in non-UTC environments; replaced with consistent UTC methods (getUTCDay, getUTCDate, setUTCDate) across getCurrentWeekRange, getLastNWeeksRange, getHistoricalWorkoutRange, and getHistoricalMonthRange",
       ],
       removed: [
         "Legacy hybrid-to-crossfit discipline mapping in WorkoutViewer.jsx getDisciplineDataPath function",
