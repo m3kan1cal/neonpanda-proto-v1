@@ -10,6 +10,45 @@
 
 export const changelogEntries = [
   {
+    version: "Release v1.0.20260205-beta",
+    date: "2026-02-05",
+    changes: {
+      added: [
+        "Hybrid discipline for mixed-modality workouts that don't clearly fit a single training discipline (e.g., warmup + mobility + circuits + kettlebell work + deadlifts in one session)",
+        "hybrid-schema.ts discipline schema plugin with flexible phases-based structure supporting distinct workout sections (warmup, mobility, strength, conditioning, circuit, skill, cardio, cooldown, accessory) plus flat exercise list fallback",
+        "HybridWorkout, HybridPhase, HybridExercise, HybridSet TypeScript interfaces in workout/types.ts",
+        "hybrid-guidance.ts extraction guidance emphasizing phases structure for workouts with distinct sections and flat exercise fallback for unstructured workouts",
+        "HybridSection.jsx frontend component with phase-based rendering (collapsible phases with exercises, phase type badges, round counts, duration display) and flat exercise rendering fallback",
+        "Hybrid exercise extraction in build-exercise Lambda (extractHybridExercises, extractHybridMetrics) supporting both phase-based and flat exercise structures with full metrics calculation (volume, best set, intensity, estimated 1RM)",
+        "Low-confidence fallback mechanism in discipline-detector.ts: workouts detected with confidence below 0.65 are automatically reclassified as hybrid",
+        "Normalization isValid gate in save_workout_to_database tool preventing workouts from being saved when normalization returns isValid: false (defense in depth against sparse/incomplete workout data)",
+        "hybrid-complex-gym-session integration test case validating end-to-end hybrid discipline detection and extraction with phases structure",
+        "phaseType and sourcePhase fields to ExerciseMetrics and ExtractedExercise interfaces for hybrid phase context preservation in exercise logs",
+      ],
+      changed: [
+        "Discipline detection prompt and schema to include hybrid as a valid discipline option, replacing instructions that defaulted mixed-modality workouts to crossfit",
+        "Schema composer (DISCIPLINE_PLUGIN_MAP) to include hybrid schema plugin for targeted extraction",
+        "Guidance composer (DISCIPLINE_GUIDANCE_MAP) to include hybrid extraction guidance with hybrid as the default fallback when no specific guidance is found",
+        "detectDisciplineTool description in workout-logger tools.ts to list hybrid and circuit_training as supported disciplines",
+        "Error fallback in discipline detection and detectDisciplineTool to default to hybrid instead of crossfit when detection fails",
+        "DisciplineRegistry.jsx to map hybrid to HybridSection component",
+        "WorkoutViewer.jsx discipline props to pass hybridData with correct prop name and section ID (was incorrectly using legacy crossfitData mapping)",
+        "ExerciseDiscipline type to include 'hybrid' as a valid discipline for exercise extraction",
+        "Exercise ExerciseMetadata interface to include sourcePhase field for hybrid phase tracking",
+      ],
+      fixed: [
+        "circuit_training not in workout-schema.ts discipline enum causing schema validation failures for F45-style circuit training workouts",
+        "Mixed-modality workouts (e.g., warmup + circuits + kettlebell work + deadlifts) being misclassified as crossfit with low confidence instead of receiving proper hybrid discipline classification",
+        "crossfit-chipper-text-only test incorrectly saving a nearly empty workout to database despite normalization returning isValid: false with 6 issues and confidence 0.35",
+        "Unknown discipline: hybrid warning in build-exercise Lambda when processing hybrid workout exercise extraction (exercise extraction switch statement missing hybrid case)",
+        "HybridSection.jsx receiving undefined hybridData prop due to WorkoutViewer.jsx passing crossfitData instead of hybridData in discipline props mapping",
+      ],
+      removed: [
+        "Legacy hybrid-to-crossfit discipline mapping in WorkoutViewer.jsx getDisciplineDataPath function",
+      ],
+    },
+  },
+  {
     version: "Release v1.0.20260204-beta",
     date: "2026-02-04",
     changes: {
