@@ -49,6 +49,8 @@ export const changelogEntries = [
         "Schema composer fallback using crossfit instead of hybrid for unrecognized disciplines, creating a mismatch with the guidance composer (which correctly defaults to hybrid); both now consistently fall back to hybrid",
         "ViewWorkouts.jsx workout template button flicker caused by ProgramAgent state callback overwriting local optimistic updates with stale data during polling cycles; added reference-based change detection to prevent redundant state pushes",
         "Coach incorrectly implying that other screens (Program Designer, Training Grounds) would remember or pick up context from the current conversation; added cross-screen context boundary rules to system prompt requiring coaches to give self-contained summaries when directing users to other screens",
+        "generateMonthId in analytics/date-utils.ts using local time accessors (getFullYear, getMonth) instead of UTC (getUTCFullYear, getUTCMonth), producing incorrect month IDs near month boundaries when server timezone differs from UTC",
+        "Missing null check on messages array in stream-coach-conversation diagnostic logging, where accessing messages.length directly could crash if a conversation exists but has no messages array",
       ],
       removed: [
         "Legacy hybrid-to-crossfit discipline mapping in WorkoutViewer.jsx getDisciplineDataPath function",

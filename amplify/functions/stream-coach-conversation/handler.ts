@@ -1023,8 +1023,10 @@ async function saveConversationAndYieldComplete(
     userMessageLength: newUserMessage?.content?.length || 0,
     aiMessageLength: newAiMessage?.content?.length || 0,
     saveSuccess: !!saveResult,
-    previousMessageCount: conversationData.existingConversation.messages.length,
-    newTotalMessages: conversationData.existingConversation.messages.length + 2,
+    previousMessageCount:
+      conversationData.existingConversation.messages?.length || 0,
+    newTotalMessages:
+      (conversationData.existingConversation.messages?.length || 0) + 2,
   });
 
   // Extract size information from the save result

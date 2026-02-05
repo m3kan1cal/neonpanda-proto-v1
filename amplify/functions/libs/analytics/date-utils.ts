@@ -193,8 +193,8 @@ export const getHistoricalMonthRange = (months: number = 3): MonthRange => {
  * Generate month ID in YYYY-MM format
  */
 export const generateMonthId = (date: Date): string => {
-  const year = date.getFullYear();
-  const month = (date.getMonth() + 1).toString().padStart(2, "0");
+  const year = date.getUTCFullYear();
+  const month = (date.getUTCMonth() + 1).toString().padStart(2, "0");
   return `${year}-${month}`;
 };
 
