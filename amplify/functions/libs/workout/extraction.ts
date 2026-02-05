@@ -660,7 +660,7 @@ EXTRACTION GUIDELINES:
    - BEFORE: Detailed form_notes for every similar AMRAP round
    - AFTER: Brief notes on first round, null for subsequent identical rounds
 
-8.5. PR (PERSONAL RECORD) DETECTION:
+8.6. PR (PERSONAL RECORD) DETECTION:
    - EXPLICIT PR INDICATORS:
      * "a PR for me" → pr_achievements: [{type: "weight_pr", exercise: "...", value: weight, unit: "lbs/kg"}]
      * "a first for me" → pr_achievements: [{type: "first_time", exercise: "...", ...}]
