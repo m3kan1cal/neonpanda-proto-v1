@@ -26,7 +26,7 @@ import { OLYMPIC_WEIGHTLIFTING_SCHEMA_PLUGIN } from "./disciplines/olympic-weigh
 import { FUNCTIONAL_BODYBUILDING_SCHEMA_PLUGIN } from "./disciplines/functional-bodybuilding-schema";
 import { CALISTHENICS_SCHEMA_PLUGIN } from "./disciplines/calisthenics-schema";
 import { CIRCUIT_TRAINING_SCHEMA_PLUGIN } from "./disciplines/circuit-training-schema";
-// hybrid removed - use crossfit for mixed-modality workouts
+import { HYBRID_SCHEMA_PLUGIN } from "./disciplines/hybrid-schema";
 
 /**
  * Map of discipline names to their schema plugins
@@ -41,7 +41,7 @@ const DISCIPLINE_PLUGIN_MAP: Record<string, any> = {
   functional_bodybuilding: FUNCTIONAL_BODYBUILDING_SCHEMA_PLUGIN,
   calisthenics: CALISTHENICS_SCHEMA_PLUGIN,
   circuit_training: CIRCUIT_TRAINING_SCHEMA_PLUGIN,
-  // Note: "hybrid" and "functional_fitness" map to crossfit (same methodology)
+  hybrid: HYBRID_SCHEMA_PLUGIN,
 };
 
 /**
@@ -114,4 +114,41 @@ export function getSupportedDisciplines(): string[] {
  */
 export function isDisciplineSupported(discipline: string): boolean {
   return discipline in DISCIPLINE_PLUGIN_MAP;
+}
+
+/**
+ * Extract the expected array field names from a discipline's schema plugin.
+ * Looks for properties with type "array" in the schema.
+ * This makes the schema the single source of truth for expected data structures.
+ *
+ * @param discipline - The discipline to get expected fields for
+ * @returns Array of field names that should contain arrays (e.g., ["exercises"], ["rounds"])
+ *
+ * @example
+ * ```typescript
+ * getExpectedArrayFields("functional_bodybuilding"); // ["exercises", "target_muscles"]
+ * getExpectedArrayFields("crossfit"); // ["rounds"]
+ * getExpectedArrayFields("running"); // ["segments"]
+ * ```
+ */
+export function getExpectedArrayFields(discipline: string): string[] {
+  const plugin = DISCIPLINE_PLUGIN_MAP[discipline];
+  if (!plugin) return [];
+
+  // Find the discipline-specific schema (e.g., plugin.functional_bodybuilding)
+  const disciplineSchema = plugin[discipline];
+  if (!disciplineSchema?.properties) return [];
+
+  // Extract field names where type is "array"
+  // These are the primary data structure fields (exercises, rounds, segments, etc.)
+  const arrayFields: string[] = [];
+  for (const [fieldName, fieldSchema] of Object.entries(
+    disciplineSchema.properties,
+  )) {
+    if ((fieldSchema as any)?.type === "array") {
+      arrayFields.push(fieldName);
+    }
+  }
+
+  return arrayFields;
 }

@@ -34,7 +34,7 @@ import ChatInput from "./shared/ChatInput";
 import UserAvatar from "./shared/UserAvatar";
 import { getUserInitial as getInitialFromUsername } from "./shared/UserAvatar";
 import ScrollToBottomButton from "./shared/ScrollToBottomButton";
-import { parseMarkdown } from "../utils/markdownParser.jsx";
+import { MarkdownRenderer } from "./shared/MarkdownRenderer";
 import CoachConversationAgent from "../utils/agents/CoachConversationAgent";
 import CoachAgent from "../utils/agents/CoachAgent";
 import { WorkoutAgent } from "../utils/agents/WorkoutAgent";
@@ -1053,16 +1053,18 @@ function CoachConversations() {
 
         {/* Render text content */}
         {displayContent &&
-          (message.type === "ai"
-            ? // AI messages use full markdown parsing
-              parseMarkdown(displayContent)
-            : // User messages: simple line break rendering
-              displayContent.split("\n").map((line, index, array) => (
-                <span key={index}>
-                  {line}
-                  {index < array.length - 1 && <br />}
-                </span>
-              )))}
+          (message.type === "ai" ? (
+            // AI messages use full markdown parsing
+            <MarkdownRenderer content={displayContent} />
+          ) : (
+            // User messages: simple line break rendering
+            displayContent.split("\n").map((line, index, array) => (
+              <span key={index}>
+                {line}
+                {index < array.length - 1 && <br />}
+              </span>
+            ))
+          ))}
       </>
     );
   };

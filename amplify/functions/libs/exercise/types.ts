@@ -20,7 +20,8 @@ export type ExerciseDiscipline =
   | "olympic_weightlifting"
   | "functional_bodybuilding"
   | "calisthenics"
-  | "circuit_training";
+  | "circuit_training"
+  | "hybrid";
 
 /**
  * Exercise metrics - discipline-agnostic structure capturing all possible metrics
@@ -98,6 +99,7 @@ export interface ExerciseMetrics {
   equipment?: string[]; // ["belt", "sleeves", "wraps"]
   targetMuscles?: string[]; // ["chest", "triceps", "shoulders"]
   setType?: string; // "warmup" | "working" | "drop" | "rest_pause" | "amrap"
+  phaseType?: string; // "warmup" | "strength" | "conditioning" | "cooldown" | etc. (for hybrid workouts)
 }
 
 /**
@@ -109,6 +111,7 @@ export interface ExerciseMetadata {
   sourceRound?: number; // for CrossFit rounds
   sourceSet?: number; // for powerlifting/bodybuilding sets
   sourceSegment?: number; // for running segments
+  sourcePhase?: string; // for hybrid phases (phase_name or phase_type)
   notes?: string; // form_notes, technique_notes, etc.
 }
 
@@ -179,6 +182,7 @@ export interface ExtractedExercise {
   sourceRound?: number;
   sourceSet?: number;
   sourceSegment?: number;
+  sourcePhase?: string;
   notes?: string;
 }
 

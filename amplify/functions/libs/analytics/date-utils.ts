@@ -34,13 +34,13 @@ export const getCurrentWeekRange = (): WeekRange => {
     weekStart.setDate(now.getDate() - isoDay - 6);
   }
 
-  // Set to start of day (00:00:00)
-  weekStart.setHours(0, 0, 0, 0);
+  // Set to start of day (00:00:00 UTC)
+  weekStart.setUTCHours(0, 0, 0, 0);
 
-  // Week end is 6 days after Monday (Sunday) at end of day (23:59:59.999)
+  // Week end is 6 days after Monday (Sunday) at end of day (23:59:59.999 UTC)
   const weekEnd = new Date(weekStart);
   weekEnd.setDate(weekStart.getDate() + 6);
-  weekEnd.setHours(23, 59, 59, 999);
+  weekEnd.setUTCHours(23, 59, 59, 999);
 
   return { weekStart, weekEnd };
 };
@@ -71,12 +71,12 @@ export const getHistoricalWorkoutRange = (): WeekRange => {
   // End of historical range is the day before current week starts
   const historyEnd = new Date(currentWeek.weekStart);
   historyEnd.setDate(historyEnd.getDate() - 1);
-  historyEnd.setHours(23, 59, 59, 999);
+  historyEnd.setUTCHours(23, 59, 59, 999);
 
   // Start of historical range is 4 weeks (28 days) before that
   const historyStart = new Date(historyEnd);
   historyStart.setDate(historyStart.getDate() - 27); // 28 days total including end day
-  historyStart.setHours(0, 0, 0, 0);
+  historyStart.setUTCHours(0, 0, 0, 0);
 
   return {
     weekStart: historyStart,
@@ -125,13 +125,15 @@ export interface MonthRange {
 export const getCurrentMonthRange = (): MonthRange => {
   const now = new Date();
 
-  // First day of current month at 00:00:00
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  monthStart.setHours(0, 0, 0, 0);
+  // First day of current month at 00:00:00 UTC
+  const monthStart = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 0, 0, 0, 0),
+  );
 
-  // Last day of current month at 23:59:59.999
-  const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-  monthEnd.setHours(23, 59, 59, 999);
+  // Last day of current month at 23:59:59.999 UTC
+  const monthEnd = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0, 23, 59, 59, 999),
+  );
 
   return { monthStart, monthEnd };
 };
@@ -143,13 +145,15 @@ export const getCurrentMonthRange = (): MonthRange => {
 export const getLastNMonthsRange = (months: number): MonthRange => {
   const now = new Date();
 
-  // Start from N months ago (1st of that month)
-  const monthStart = new Date(now.getFullYear(), now.getMonth() - months, 1);
-  monthStart.setHours(0, 0, 0, 0);
+  // Start from N months ago (1st of that month) in UTC
+  const monthStart = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - months, 1, 0, 0, 0, 0),
+  );
 
-  // End at last day of current month
-  const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-  monthEnd.setHours(23, 59, 59, 999);
+  // End at last day of current month in UTC
+  const monthEnd = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0, 23, 59, 59, 999),
+  );
 
   return { monthStart, monthEnd };
 };
@@ -164,15 +168,20 @@ export const getHistoricalMonthRange = (months: number = 3): MonthRange => {
   // End of historical range is the day before current month starts
   const historyEnd = new Date(currentMonth.monthStart);
   historyEnd.setDate(historyEnd.getDate() - 1);
-  historyEnd.setHours(23, 59, 59, 999);
+  historyEnd.setUTCHours(23, 59, 59, 999);
 
-  // Start of historical range is N months before that
+  // Start of historical range is N months before that (in UTC)
   const historyStart = new Date(
-    historyEnd.getFullYear(),
-    historyEnd.getMonth() - months + 1,
-    1,
+    Date.UTC(
+      historyEnd.getUTCFullYear(),
+      historyEnd.getUTCMonth() - months + 1,
+      1,
+      0,
+      0,
+      0,
+      0,
+    ),
   );
-  historyStart.setHours(0, 0, 0, 0);
 
   return {
     monthStart: historyStart,

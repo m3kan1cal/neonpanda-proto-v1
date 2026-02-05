@@ -42,6 +42,7 @@ import {
 import {
   validateAndCorrectWorkoutDate,
   validateExerciseStructure,
+  validateSchemaStructure,
   determineBlockingFlags,
   buildBlockingReason,
 } from "../../workout/validation-helpers";
@@ -84,7 +85,7 @@ export const detectDisciplineTool: Tool<WorkoutLoggerContext> = {
 ALWAYS CALL THIS FIRST before extract_workout_data to identify the workout type.
 
 This tool analyzes the workout description and classifies it into one of these disciplines:
-- crossfit: Functional fitness with AMRAPs, EMOMs, "For Time" workouts, benchmark WODs, mixed-modality training
+- crossfit: Functional fitness with AMRAPs, EMOMs, "For Time" workouts, benchmark WODs
 - powerlifting: Squat/bench/deadlift focus, low rep ranges (1-5), RPE tracking, competition lifts
 - bodybuilding: Hypertrophy focus (8-12 reps), split training, tempo work, isolation exercises
 - olympic_weightlifting: Snatch, clean & jerk, technique work, complexes
@@ -92,8 +93,11 @@ This tool analyzes the workout description and classifies it into one of these d
 - calisthenics: Bodyweight skill development, gymnastics strength, progressions
 - hyrox: 8 stations + 9 runs, race simulation
 - running: Distance runs, pace work, intervals, race training
+- circuit_training: Station-based timed intervals, F45, Orange Theory, boot camps
+- hybrid: Mixed-modality workouts that don't fit a single discipline, personal training, open gym, general fitness
 
-NOTE: Mixed-modality or unclear workouts should be classified as "crossfit" (the functional fitness discipline).
+NOTE: Truly mixed-modality workouts with multiple distinct sections (strength + cardio + mobility) should be classified as "hybrid".
+Low-confidence detections (below 0.65) will automatically fall back to "hybrid".
 
 The detected discipline enables targeted extraction with discipline-specific schema and guidance,
 reducing token usage by ~70% and improving extraction accuracy.
@@ -136,16 +140,17 @@ Returns: discipline, confidence (0-1), method ("ai_detection"), reasoning`,
       return detection;
     } catch (error) {
       console.error(
-        "❌ Discipline detection failed, defaulting to crossfit:",
+        "❌ Discipline detection failed, defaulting to hybrid:",
         error,
       );
 
-      // Fallback to crossfit (most flexible)
+      // Fallback to hybrid (most flexible for mixed-modality workouts)
       return {
-        discipline: "crossfit",
+        discipline: "hybrid",
         confidence: 0.5,
         method: "ai_detection",
-        reasoning: "Detection failed, defaulting to crossfit discipline",
+        reasoning:
+          "Detection failed, defaulting to hybrid discipline for flexible extraction",
       };
     }
   },
@@ -254,13 +259,17 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
       schemaSize: JSON.stringify(targetedSchema).length,
     });
 
-    // Check workout complexity (determines if thinking should be enabled)
-    const isComplexWorkout = checkWorkoutComplexity(userMessage);
+    // Check workout complexity using AI (determines if thinking should be enabled)
+    const complexityResult = await checkWorkoutComplexity(userMessage);
+    const isComplexWorkout = complexityResult.isComplex;
     const enableThinking = isComplexWorkout;
 
     console.info("Extraction configuration:", {
       isComplexWorkout,
       enableThinking,
+      complexityConfidence: complexityResult.confidence,
+      complexityReasoning: complexityResult.reasoning,
+      complexityFactors: complexityResult.complexityFactors,
       workoutLength: userMessage.length,
     });
 
@@ -308,6 +317,33 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
       if (typeof result !== "string") {
         workoutData = result.input as UniversalWorkoutSchema;
         console.info("✅ Tool-based extraction succeeded with targeted schema");
+
+        // Reconcile discipline with actual data structure
+        // AI may output discipline="functional_bodybuilding" but store data under "crossfit" key
+        const actualDisciplineKey = Object.keys(
+          workoutData.discipline_specific || {},
+        )[0];
+        if (
+          actualDisciplineKey &&
+          workoutData.discipline !== actualDisciplineKey
+        ) {
+          console.warn("⚠️ Discipline mismatch detected:", {
+            declaredDiscipline: workoutData.discipline,
+            actualDataKey: actualDisciplineKey,
+            action: "correcting discipline field",
+          });
+          workoutData.discipline = actualDisciplineKey;
+        }
+
+        // Post-extraction discipline check for debugging
+        console.info("🔍 Post-extraction discipline check:", {
+          expectedDiscipline: discipline, // From detect_discipline
+          extractedDiscipline: workoutData.discipline,
+          disciplineSpecificKeys: Object.keys(
+            workoutData.discipline_specific || {},
+          ),
+          match: discipline === workoutData.discipline,
+        });
 
         // Debug: Check nested field types RIGHT AFTER extracting from Bedrock response
         const bedrockNestedTypes: Record<string, string> = {};
@@ -539,6 +575,8 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
       workoutData,
       completedAt,
       generationMethod,
+      // Include userMessage for qualitative workout validation
+      userMessage,
     };
   },
 };
@@ -549,7 +587,7 @@ Returns: workoutData (structured), completedAt (ISO timestamp), generationMethod
  * Checks if extracted workout data meets minimum requirements.
  * Validates dates, calculates confidence scores, determines blocking issues.
  *
- * RETRIEVES FROM CONTEXT: extraction result (workoutData, completedAt)
+ * RETRIEVES FROM CONTEXT: extraction result (workoutData, completedAt, userMessage)
  * INPUT FROM CLAUDE: isSlashCommand only
  */
 export const validateWorkoutCompletenessTool: Tool<WorkoutLoggerContext> = {
@@ -603,7 +641,7 @@ Returns: validation result with shouldSave, shouldNormalize, confidence, complet
       );
     }
 
-    let { workoutData, completedAt } = extraction;
+    let { workoutData, completedAt, userMessage } = extraction;
 
     if (!workoutData) {
       throw new Error(
@@ -778,8 +816,11 @@ Returns: validation result with shouldSave, shouldNormalize, confidence, complet
       };
     }
 
-    // Check for missing exercise structure
-    const exerciseValidation = await validateExerciseStructure(workoutData);
+    // Check for missing exercise structure (pass userMessage for qualitative workout detection)
+    const exerciseValidation = await validateExerciseStructure(
+      workoutData,
+      userMessage,
+    );
 
     if (!exerciseValidation.hasExercises) {
       console.warn("🚫 Blocking workout due to missing exercise structure:", {
@@ -808,12 +849,42 @@ Returns: validation result with shouldSave, shouldNormalize, confidence, complet
       };
     }
 
-    // Determine if normalization should run
-    const shouldNormalize = shouldNormalizeWorkout(
-      workoutData,
-      confidence,
-      completeness,
-    );
+    // If validation succeeded via qualitative path, log it
+    if (exerciseValidation.isQualitative) {
+      console.info("✅ Workout validated as qualitative/activity-based:", {
+        discipline: workoutData.discipline,
+        workoutName: workoutData.workout_name,
+        method: exerciseValidation.method,
+        reason: exerciseValidation.aiReasoning,
+      });
+    }
+
+    // Validate schema structure (data matches expected schema fields)
+    const schemaValidation = validateSchemaStructure(workoutData);
+    let forceNormalization = false;
+
+    if (
+      !schemaValidation.isValid &&
+      schemaValidation.suggestedAction === "normalize"
+    ) {
+      console.warn("⚠️ Schema structure mismatch - forcing normalization:", {
+        discipline: workoutData.discipline,
+        reason: schemaValidation.mismatchReason,
+      });
+      forceNormalization = true;
+      // Add schema_mismatch to validation flags
+      if (!workoutData.metadata.validation_flags) {
+        workoutData.metadata.validation_flags = [];
+      }
+      if (!workoutData.metadata.validation_flags.includes("schema_mismatch")) {
+        workoutData.metadata.validation_flags.push("schema_mismatch");
+      }
+    }
+
+    // Determine if normalization should run (base decision + force if schema mismatch)
+    const shouldNormalize =
+      forceNormalization ||
+      shouldNormalizeWorkout(workoutData, confidence, completeness);
 
     // Build validation result
     const reason = hasBlockingFlag
@@ -1137,6 +1208,17 @@ Returns: workoutId, success, pineconeStored, pineconeRecordId, templateLinked`,
     if (!summaryResult) {
       throw new Error(
         "Summary not generated - call generate_workout_summary first",
+      );
+    }
+
+    // Check if normalization was run and returned isValid: false
+    // This indicates the workout data is too sparse or incomplete to save meaningfully
+    if (normalization && normalization.isValid === false) {
+      throw new Error(
+        `Cannot save workout: Normalization determined the workout data is invalid or insufficient. ` +
+          `Confidence: ${normalization.confidence || 0}, Issues: ${normalization.issuesFound || 0}. ` +
+          `Summary: ${normalization.summary || "No summary provided"}. ` +
+          `This typically indicates the user provided minimal information without sufficient workout details.`,
       );
     }
 

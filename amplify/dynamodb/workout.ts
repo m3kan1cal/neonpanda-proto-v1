@@ -188,6 +188,15 @@ export async function queryWorkoutSummaries(
   const operationName = `Query workout summaries`;
 
   return withThroughputScaling(async () => {
+    const fromDateIso = fromDate.toISOString();
+    const toDateIso = toDate.toISOString();
+
+    console.info("🔍 Workout summary query parameters:", {
+      userId,
+      fromDate: fromDateIso,
+      toDate: toDateIso,
+    });
+
     const command = new QueryCommand({
       TableName: tableName,
       KeyConditionExpression: "#pk = :pk AND begins_with(#sk, :skPrefix)",
@@ -207,8 +216,8 @@ export async function queryWorkoutSummaries(
         ":pk": `user#${userId}`,
         ":skPrefix": "workout#",
         ":entityType": "workout",
-        ":fromDate": fromDate.toISOString(),
-        ":toDate": toDate.toISOString(),
+        ":fromDate": fromDateIso,
+        ":toDate": toDateIso,
       },
     });
 
@@ -218,8 +227,56 @@ export async function queryWorkoutSummaries(
     console.info(`Workout summaries queried successfully:`, {
       userId,
       itemCount: items.length,
-      dateRange: `${fromDate.toISOString().split("T")[0]} to ${toDate.toISOString().split("T")[0]}`,
+      dateRange: `${fromDateIso.split("T")[0]} to ${toDateIso.split("T")[0]}`,
     });
+
+    // DIAGNOSTIC: If no items found, query without date filter to see if workouts exist at all
+    if (items.length === 0) {
+      const diagnosticCommand = new QueryCommand({
+        TableName: tableName,
+        KeyConditionExpression: "#pk = :pk AND begins_with(#sk, :skPrefix)",
+        FilterExpression: "#entityType = :entityType",
+        ProjectionExpression:
+          "sk, #attributes.workoutId, #attributes.completedAt",
+        ExpressionAttributeNames: {
+          "#pk": "pk",
+          "#sk": "sk",
+          "#entityType": "entityType",
+          "#attributes": "attributes",
+        },
+        ExpressionAttributeValues: {
+          ":pk": `user#${userId}`,
+          ":skPrefix": "workout#",
+          ":entityType": "workout",
+        },
+        Limit: 5,
+      });
+
+      const diagnosticResult = await docClient.send(diagnosticCommand);
+      const diagnosticItems = (diagnosticResult.Items || []) as any[];
+
+      console.warn(
+        "⚠️ No workouts found in date range. Diagnostic query (no date filter):",
+        {
+          totalWorkoutsForUser:
+            diagnosticItems.length > 0 ? `${diagnosticItems.length}+` : 0,
+          sampleCompletedAts: diagnosticItems
+            .map((item) => item.attributes?.completedAt)
+            .filter(Boolean),
+        },
+      );
+    }
+
+    // Log first few completedAt values for debugging if items found
+    if (items.length > 0 && items.length <= 5) {
+      console.info("✅ Sample completedAt values from query results:", {
+        samples: items.map((item) => ({
+          workoutId: item.attributes?.workoutId,
+          completedAt: item.attributes?.completedAt,
+          completedAtType: typeof item.attributes?.completedAt,
+        })),
+      });
+    }
 
     // Deserialize and format the items - return unwrapped summaries
     return items.map(

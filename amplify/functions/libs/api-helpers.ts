@@ -2545,7 +2545,9 @@ export const querySemanticMemories = async (
 ): Promise<any[]> => {
   const {
     topK = 6,
-    minScore = 0.7,
+    // Lower default minScore from 0.7 to 0.5 to allow more memories through
+    // This fixes issue where semantic retrieval was returning 0 results
+    minScore = 0.5,
     contextTypes = [],
     enableReranking = RERANKING_CONFIG.enabled,
   } = options;
@@ -2599,9 +2601,27 @@ export const querySemanticMemories = async (
         userId,
         contextTypes,
         queryLength: userMessage.length,
+        namespace: userNamespace,
+        filter: JSON.stringify(filter),
       });
       return [];
     }
+
+    // Log raw scores for diagnostics (before any filtering)
+    console.info("📊 Raw Pinecone memory scores (before filtering):", {
+      userId,
+      totalHits: response.result.hits.length,
+      scores: response.result.hits.slice(0, 10).map((hit: any) => ({
+        id: hit._id?.substring(0, 20),
+        score: hit._score?.toFixed(4),
+        memoryType: hit.fields?.memoryType,
+        hasMemoryId: !!hit.fields?.memoryId,
+      })),
+      minScore,
+      effectiveMinScoreWillBe: enableReranking
+        ? RERANKING_CONFIG.minScore
+        : minScore,
+    });
 
     // Normalize all memory matches - extract record data and combine with score
     let normalizedHits = response.result.hits
@@ -2648,71 +2668,95 @@ export const querySemanticMemories = async (
         ? RERANKING_CONFIG.minScore
         : minScore;
 
+    // Count filtered results for diagnostics
+    let filteredByScore = 0;
+    let filteredByMissingId = 0;
+
     // Filter by minimum score and convert to memory objects
-    const relevantMemories = normalizedHits
-      .filter((hit: any) => {
-        // Must meet score threshold
-        if (hit.score < effectiveMinScore) return false;
+    const relevantMemories = normalizedHits.filter((hit: any) => {
+      // Must meet score threshold
+      if (hit.score < effectiveMinScore) {
+        filteredByScore++;
+        return false;
+      }
 
-        // Must have memoryId (skip old context records without proper IDs)
-        if (!hit.metadata.memoryId) {
-          console.info(
-            "ℹ️ Skipping non-memory Pinecone record (expected behavior):",
-            {
-              pineconeId: hit.id,
-              recordType: hit.metadata.recordType,
-              contentPreview: extractTextContent(hit)?.substring(0, 100),
-            },
-          );
-          return false;
-        }
-
-        return true;
-      })
-      .map((hit: any) => {
-        // Convert Pinecone result back to UserMemory-like object
-        return {
-          memoryId: hit.metadata.memoryId,
-          userId: hit.metadata.userId || userId,
-          coachId: hit.metadata.coachId,
-          content: extractTextContent(hit), // Use standardized extraction
-          memoryType: hit.metadata.memoryType,
-          metadata: {
-            importance: hit.metadata.importance,
-            createdAt: new Date(hit.metadata.createdAt),
-            usageCount: hit.metadata.usageCount || 0,
-            lastUsed: hit.metadata.lastUsed
-              ? new Date(hit.metadata.lastUsed)
-              : undefined,
-            tags: hit.metadata.tags || [],
-            // Add reranking metadata
-            originalScore: hit.metadata.originalScore,
-            rerankScore: hit.metadata.rerankScore,
-            wasReranked: !!hit.metadata.isReranked,
+      // Must have memoryId (skip old context records without proper IDs)
+      if (!hit.metadata.memoryId) {
+        filteredByMissingId++;
+        console.info(
+          "ℹ️ Skipping non-memory Pinecone record (expected behavior):",
+          {
+            pineconeId: hit.id,
+            recordType: hit.metadata.recordType,
+            contentPreview: extractTextContent(hit)?.substring(0, 100),
           },
-          // Add Pinecone-specific metadata
-          pineconeScore: hit.score,
-          pineconeId: hit.id,
-        };
+        );
+        return false;
+      }
+
+      return true;
+    });
+
+    // Log filtering diagnostics
+    if (filteredByScore > 0 || filteredByMissingId > 0) {
+      console.info("📉 Semantic memory filtering diagnostics:", {
+        filteredByScore,
+        filteredByMissingId,
+        effectiveMinScore,
+        remainingAfterFilter: relevantMemories.length,
+        hint:
+          filteredByScore > 0 && relevantMemories.length === 0
+            ? "All results filtered by score threshold. Consider lowering minScore if memories exist but aren't being retrieved."
+            : undefined,
       });
+    }
+
+    const finalMemories = relevantMemories.map((hit: any) => {
+      // Convert Pinecone result back to UserMemory-like object
+      return {
+        memoryId: hit.metadata.memoryId,
+        userId: hit.metadata.userId || userId,
+        coachId: hit.metadata.coachId,
+        content: extractTextContent(hit), // Use standardized extraction
+        memoryType: hit.metadata.memoryType,
+        metadata: {
+          importance: hit.metadata.importance,
+          createdAt: new Date(hit.metadata.createdAt),
+          usageCount: hit.metadata.usageCount || 0,
+          lastUsed: hit.metadata.lastUsed
+            ? new Date(hit.metadata.lastUsed)
+            : undefined,
+          tags: hit.metadata.tags || [],
+          // Add reranking metadata
+          originalScore: hit.metadata.originalScore,
+          rerankScore: hit.metadata.rerankScore,
+          wasReranked: !!hit.metadata.isReranked,
+        },
+        // Add Pinecone-specific metadata
+        pineconeScore: hit.score,
+        pineconeId: hit.id,
+      };
+    });
 
     console.info("✅ Successfully retrieved semantic memories:", {
       userId,
       totalHits: response.result.hits.length,
-      relevantMemories: relevantMemories.length,
+      relevantMemories: finalMemories.length,
       effectiveMinScore,
       wasReranked: enableReranking && normalizedHits.length > 1,
       wasNormalized: true, // Indicate normalization was applied
       averageScore:
-        relevantMemories.length > 0
+        finalMemories.length > 0
           ? (
-              relevantMemories.reduce((sum, m) => sum + m.pineconeScore, 0) /
-              relevantMemories.length
+              finalMemories.reduce(
+                (sum: number, m: any) => sum + m.pineconeScore,
+                0,
+              ) / finalMemories.length
             ).toFixed(3)
           : 0,
     });
 
-    return relevantMemories;
+    return finalMemories;
   } catch (error) {
     console.error("❌ Failed to query semantic memories from Pinecone:", error);
     // Return empty array to allow graceful fallback

@@ -72,6 +72,7 @@ export interface WorkoutExtractionResult {
   workoutData: any; // UniversalWorkoutSchema
   completedAt: Date;
   generationMethod: "tool" | "fallback";
+  userMessage: string; // Original user message for qualitative workout validation
 }
 
 /**

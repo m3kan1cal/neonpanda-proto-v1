@@ -8,7 +8,11 @@
  * - Managing user's shared programs
  */
 
-import { getApiUrl, authenticatedFetch } from "./apiConfig.js";
+import {
+  getApiUrl,
+  authenticatedFetch,
+  requireValidUserId,
+} from "./apiConfig.js";
 
 /**
  * Create a shareable link for an active or completed program
@@ -25,6 +29,7 @@ export async function createSharedProgram(
   coachId,
   { signal } = {},
 ) {
+  requireValidUserId(userId, "createSharedProgram");
   const url = `${getApiUrl("")}/users/${userId}/programs/${programId}/share`;
 
   try {
@@ -121,6 +126,7 @@ export async function getSharedProgram(sharedProgramId, { signal } = {}) {
  * @returns {Promise<Object>} - Object with sharedPrograms array and counts
  */
 export async function querySharedPrograms(userId) {
+  requireValidUserId(userId, "querySharedPrograms");
   const url = `${getApiUrl("")}/users/${userId}/shared-programs`;
 
   try {
@@ -161,6 +167,7 @@ export async function querySharedPrograms(userId) {
  * @returns {Promise<Object>} - Success response
  */
 export async function deactivateSharedProgram(userId, sharedProgramId) {
+  requireValidUserId(userId, "deactivateSharedProgram");
   const url = `${getApiUrl("")}/users/${userId}/shared-programs/${sharedProgramId}`;
 
   try {
@@ -205,6 +212,7 @@ export async function deactivateSharedProgram(userId, sharedProgramId) {
  * @returns {Promise<Object>} - The new program info { programId, programName, coachId, coachName }
  */
 export async function copySharedProgram(userId, sharedProgramId, coachId) {
+  requireValidUserId(userId, "copySharedProgram");
   const url = `${getApiUrl("")}/users/${userId}/shared-programs/${sharedProgramId}/copy`;
 
   try {
@@ -259,6 +267,7 @@ export async function updateProgramMetadata(
   programId,
   metadata,
 ) {
+  requireValidUserId(userId, "updateProgramMetadata");
   const url = `${getApiUrl("")}/users/${userId}/coaches/${coachId}/programs/${programId}`;
 
   try {

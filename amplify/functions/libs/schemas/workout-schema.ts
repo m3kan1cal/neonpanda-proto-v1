@@ -69,6 +69,7 @@ export const WORKOUT_SCHEMA = {
         "climbing",
         "hyrox",
         "hybrid",
+        "circuit_training",
       ],
       description: "Primary training discipline for this workout",
     },

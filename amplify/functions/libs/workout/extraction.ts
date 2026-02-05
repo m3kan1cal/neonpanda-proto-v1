@@ -20,117 +20,107 @@ import {
 import { parseJsonWithFallbacks } from "../response-utils";
 import { JSON_FORMATTING_INSTRUCTIONS_STANDARD } from "../prompt-helpers";
 import { parseCompletedAt } from "../analytics/date-utils";
+import {
+  WORKOUT_COMPLEXITY_SCHEMA,
+  WorkoutComplexityResult,
+} from "../schemas/workout-complexity-schema";
 
 /**
- * Simple complexity check to determine if thinking should be enabled
+ * Prompt for AI-based workout complexity detection
  */
-export const checkWorkoutComplexity = (workoutContent: string): boolean => {
-  const content = workoutContent.toLowerCase();
+const WORKOUT_COMPLEXITY_PROMPT = `You are a workout complexity classifier. Analyze the workout description and determine if it requires extended reasoning (thinking) for accurate data extraction.
 
-  // Check for multiple phases
-  const phaseIndicators = [
-    "warmup",
-    "warm-up",
-    "warm up",
-    "working",
-    "cooldown",
-    "cool-down",
-    "cool down",
-    "metcon",
-    "strength",
-  ];
-  const phaseMatches = phaseIndicators.filter((indicator) =>
-    content.includes(indicator),
-  ).length;
+## COMPLEX workouts require extended thinking:
+- Multiple distinct phases (warmup → strength → metcon → cooldown)
+- Nested structures (supersets within circuits, EMOMs within rounds)
+- Ambiguous or non-standard notation needing interpretation
+- Mixed modalities requiring careful organization (strength + cardio + skill)
+- Data from wearables/devices (heart rate zones, GPS data, power metrics)
+- Complex rep schemes (pyramids, ladders, waves, 21-15-9 patterns)
+- Multiple time domains or intervals
+- Equipment transitions requiring sequencing
 
-  // Check for complex structures
-  const complexityIndicators = [
-    /\d+\s*rounds/gi, // Multiple rounds
-    /\d+\s*sets/gi, // Multiple sets
-    /superset/gi, // Supersets
-    /circuit/gi, // Circuits
-    /emom/gi, // EMOM
-    /tabata/gi, // Tabata
-    /for\s+time/gi, // For time
-    /amrap/gi, // AMRAP
-    /\d+:\d+/g, // Time notation
-    /\d+\s*x\s*\d+/gi, // Rep schemes like 5x5
-  ];
+## SIMPLE workouts do NOT need extended thinking:
+- Single exercise or straightforward list
+- Clear, standard notation (3x10 @ 185lbs, 5x5 squats)
+- No phase transitions
+- Minimal ambiguity
+- Short descriptions with obvious structure
 
-  const complexMatches = complexityIndicators.filter((pattern) =>
-    pattern.test(content),
-  ).length;
-
-  // Enable thinking for complex workouts
-  const isComplex =
-    phaseMatches >= 2 || complexMatches >= 3 || workoutContent.length > 800;
-
-  console.info("Workout complexity analysis:", {
-    phaseMatches,
-    complexMatches,
-    contentLength: workoutContent.length,
-    isComplex,
-  });
-
-  return isComplex;
-};
+Be conservative - only mark as complex if extended reasoning would genuinely improve extraction accuracy. Most straightforward workout logs are SIMPLE.`;
 
 /**
- * Detects if a workout is likely to be complex and need optimization
+ * AI-based workout complexity detection using Bedrock
+ *
+ * Determines whether a workout requires extended thinking for accurate extraction.
+ * Uses the executor model for fast, cost-effective classification.
+ *
+ * @param workoutContent - The workout description to analyze
+ * @returns Promise<WorkoutComplexityResult> with complexity assessment
  */
-export const isComplexWorkout = (userMessage: string): boolean => {
-  const complexityIndicators = [
-    // Original indicators
-    /warmup.*\d+.*\d+.*\d+/i, // Multiple warmup weights
-    /\d+\s*sets.*\d+\s*reps/i, // Multiple sets mentioned
-    /amrap.*\d+.*rounds/i, // AMRAP with multiple rounds
-    /strength.*metcon/i, // Strength + metcon combination
-    /\d+\s*rounds.*\d+\s*rounds/i, // Multiple round mentions
-    /progression/i, // Progression workouts
-    /then.*then/i, // Multiple phases (then X then Y)
+export const checkWorkoutComplexity = async (
+  workoutContent: string,
+): Promise<WorkoutComplexityResult> => {
+  const startTime = Date.now();
 
-    // Enhanced multi-phase detection
-    /metcon.*strength|strength.*metcon/i, // Strength/metcon combos
-    /warmup.*working.*cooldown/i, // Full workout phases
-    /part\s*[12].*part\s*[12]/i, // Explicit part mentions
-    /phase\s*[12].*phase\s*[12]/i, // Phase mentions
+  try {
+    const result = await callBedrockApi(
+      WORKOUT_COMPLEXITY_PROMPT,
+      workoutContent,
+      MODEL_IDS.EXECUTOR_MODEL_FULL,
+      {
+        temperature: TEMPERATURE_PRESETS.STRUCTURED,
+        tools: {
+          name: "classify_complexity",
+          description:
+            "Classify whether the workout requires extended thinking for accurate extraction",
+          inputSchema: WORKOUT_COMPLEXITY_SCHEMA,
+        },
+        expectedToolName: "classify_complexity",
+      },
+    );
 
-    // Complex rep schemes
-    /\d+[-x]\d+[-x]\d+/i, // 21-15-9 patterns
-    /\d+\s*sets.*\d+\s*reps.*\d+\s*(lbs?|kg|#)/i, // Sets+reps+weight
-    /ladder|pyramid|wave/i, // Progressive schemes
-    /ascending|descending/i, // Progressive patterns
+    // Extract tool result (follows established pattern)
+    if (typeof result === "object" && "toolName" in result) {
+      const complexityData = result.input as WorkoutComplexityResult;
+      const duration = Date.now() - startTime;
 
-    // Interval complexity
-    /\d+\s*rounds.*\d+\s*minutes.*rest/i, // Timed intervals
-    /emom.*\d+.*minutes/i, // EMOM duration
-    /tabata|intervals?/i, // Interval formats
-    /\d+\s*on\s*\d+\s*off/i, // Work/rest patterns
+      console.info("🔍 AI workout complexity analysis:", {
+        isComplex: complexityData.isComplex,
+        confidence: complexityData.confidence,
+        reasoning: complexityData.reasoning,
+        factors: complexityData.complexityFactors || [],
+        contentLength: workoutContent.length,
+        durationMs: duration,
+      });
 
-    // Movement complexity
-    /superset|circuit|complex/i, // Complex formats
-    /then|followed\s*by|after/i, // Sequential phases
-    /(\w+\s+){6,}/i, // Dense descriptions (6+ consecutive words)
-    /\d+\s*exercises?/i, // Multiple exercise mentions
+      return complexityData;
+    }
 
-    // Equipment/setup complexity
-    /barbell.*dumbbell|dumbbell.*barbell/i, // Multiple equipment
-    /\d+\s*(stations?|movements?)/i, // Multi-station workouts
-    /rotate|switch/i, // Equipment rotation
-
-    // Time domain complexity
-    /\d+\s*minutes.*\d+\s*minutes/i, // Multiple time domains
-    /sprint.*endurance|endurance.*sprint/i, // Mixed energy systems
-  ];
-
-  const matchCount = complexityIndicators.filter((pattern) =>
-    pattern.test(userMessage),
-  ).length;
-  const messageLength = userMessage.length;
-  const wordCount = userMessage.split(/\s+/).length;
-
-  // Complex if multiple indicators OR very long message OR very detailed
-  return matchCount >= 2 || messageLength > 500 || wordCount > 100;
+    // Fallback if tool use didn't work as expected - default to complex (conservative)
+    console.warn(
+      "⚠️ AI complexity detection returned unexpected format, defaulting to complex",
+    );
+    return {
+      isComplex: true,
+      confidence: 0.5,
+      reasoning:
+        "AI detection returned unexpected format - defaulting to complex",
+      complexityFactors: [],
+    };
+  } catch (error) {
+    // On error, default to complex (conservative - enables thinking when uncertain)
+    console.error(
+      "❌ AI complexity detection failed, defaulting to complex:",
+      error,
+    );
+    return {
+      isComplex: true,
+      confidence: 0.5,
+      reasoning: "AI detection failed - defaulting to complex",
+      complexityFactors: [],
+    };
+  }
 };
 
 /**
@@ -336,8 +326,13 @@ export const buildWorkoutExtractionPrompt = (
   }
 
   // Otherwise, fall back to full prompt below (for backward compatibility)
+  // This path should rarely be hit since discipline is always detected now
+  console.warn(
+    "⚠️ buildWorkoutExtractionPrompt called without discipline - using legacy fallback path",
+  );
 
-  const isComplex = isComplexWorkout(userMessage);
+  // Default to complex (conservative) since this is a legacy path
+  const isComplex = true;
 
   // Build directive section if enabled
   const directiveSection =
@@ -665,7 +660,73 @@ EXTRACTION GUIDELINES:
    - BEFORE: Detailed form_notes for every similar AMRAP round
    - AFTER: Brief notes on first round, null for subsequent identical rounds
 
-8.5. POWERLIFTING WARMUP INTERPRETATION EXAMPLES:
+8.5. PR (PERSONAL RECORD) DETECTION:
+   - EXPLICIT PR INDICATORS:
+     * "a PR for me" → pr_achievements: [{type: "weight_pr", exercise: "...", value: weight, unit: "lbs/kg"}]
+     * "a first for me" → pr_achievements: [{type: "first_time", exercise: "...", ...}]
+     * "first time doing X" → pr_achievements: [{type: "first_time", exercise: "X", ...}]
+     * "personal best", "new record", "PR" → extract as PR achievement
+     * "heaviest I've done", "never done X before" → first_time or weight_pr
+   - PR ACHIEVEMENT STRUCTURE:
+     * type: "weight_pr" | "rep_pr" | "time_pr" | "distance_pr" | "first_time" | "volume_pr"
+     * exercise: normalized exercise name
+     * value: numeric value achieved
+     * unit: appropriate unit (lbs, kg, reps, seconds, etc.)
+     * notes: any context about the PR (e.g., "first time with 30lb kettlebells")
+   - USER QUESTIONS ABOUT PRs:
+     * "does that make it a PR by default?" → Yes, first time at a new weight/movement = PR
+     * When user asks about PR status, confirm and extract as PR achievement
+   - EXAMPLES:
+     * "deadlift 205 - a PR for me" → pr_achievements: [{type: "weight_pr", exercise: "deadlift", value: 205, unit: "lbs"}]
+     * "double KB swings with 30 pounds - a first for me" → pr_achievements: [{type: "first_time", exercise: "double_kettlebell_swing", value: 30, unit: "lbs", notes: "First time at this weight"}]
+
+8.6. WEARABLE DEVICE DATA EXTRACTION (Apple Watch, Garmin, Fitbit, etc.):
+   - CALORIE DATA:
+     * "Apple Watch says I burned 239 calories" → performance_metrics.calories_burned: 239
+     * "Fitbit logged 350 calories" → performance_metrics.calories_burned: 350
+     * Always store in performance_metrics.calories_burned (number, not string)
+   - DURATION DATA FROM WEARABLES:
+     * "It took 57 minutes and 5 seconds" → duration: 3425 (convert to seconds)
+     * "Apple Watch says 26 minutes 11 seconds" → duration: 1571 (in seconds)
+     * "1:05:30 total time" → duration: 3930 (convert to seconds)
+   - HEART RATE DATA:
+     * "average heart rate 145" → performance_metrics.heart_rate.avg: 145
+     * "max HR 175" → performance_metrics.heart_rate.max: 175
+   - PRIORITIZE EXPLICIT DATA:
+     * When user provides specific wearable data, use those values
+     * Don't estimate duration if user provides exact timing from device
+
+8.7. MULTI-SECTION WORKOUT STRUCTURE:
+   - SECTION DETECTION KEYWORDS:
+     * Warmup: "warmup", "warm-up", "warmed up", "treadmill walk to warm up"
+     * Mobility: "mobility work", "stretching", "cat/cow", "bird dog", "hip opener"
+     * Strength: "then we did", "main lifts", "working sets", "deadlifts", "squats"
+     * Circuit: "circuit x2", "for x rounds", "AMRAP", "EMOM"
+     * Conditioning: "metcon", "finisher", "cardio"
+     * Cooldown: "cooldown", "cool down", "stretching after"
+   - PHASE ASSIGNMENT:
+     * Warmup/mobility exercises → phase: "warmup"
+     * Main strength work → phase: "working"
+     * Circuits/conditioning → phase: "working" (mark as separate rounds)
+     * Cooldown → phase: "cooldown"
+   - TEMPORAL SEQUENCING:
+     * "Then we did..." indicates new section/phase
+     * "After that...", "Next...", "Following..." = section transitions
+     * Track order of exercises as presented
+   - MULTI-DISCIPLINE WORKOUTS:
+     * A workout with warmup walk + mobility + circuits + deadlifts = "hybrid" or "functional_bodybuilding"
+     * Extract exercises from ALL sections, not just the "main" work
+   - COMPLEX WORKOUT EXAMPLE:
+     User: "5 min treadmill walk warmup. Then mobility: cat/cow, lizard lunge, bird dog. Then circuit x2: Kelso shrugs 40lb DBs, side plank rows x10 each side, bridges x10 each leg. Then KB swings 10x26lb 2x, then 10x30lb. Then deadlifts: 2x5@135, 1x5@175, 1x3@185, 1x@205 PR."
+     Structure:
+     - Phase: warmup → treadmill walk 5min
+     - Phase: warmup → mobility exercises (group into 1-2 rounds)
+     - Phase: working → circuit round 1, circuit round 2
+     - Phase: working → KB swing rounds
+     - Phase: working → deadlift warmup sets + working sets
+     - Extract PR for deadlift 205
+
+8.8. POWERLIFTING WARMUP INTERPRETATION EXAMPLES:
    - LITERAL INTERPRETATION (when explicit language is used):
      * "three warm-up sets at 135 pounds 185 pounds 205 pounds each" = 135×5, 185×5, 205×5 (same reps "each")
      * "did all my warmups at 5 reps" = every warmup set gets 5 reps

@@ -7,7 +7,7 @@ import { FunctionalBodybuildingSection } from "./FunctionalBodybuildingSection";
 import { CalisthenicsSection } from "./CalisthenicsSection";
 import { RunningSection } from "./RunningSection";
 import { CircuitTrainingSection } from "./CircuitTrainingSection";
-// HybridSection removed - use CrossFit for mixed-modality workouts
+import { HybridSection } from "./HybridSection";
 
 /**
  * Registry of discipline-specific workout viewer components
@@ -31,8 +31,8 @@ export const DISCIPLINE_COMPONENTS = {
   calisthenics: CalisthenicsSection,
   running: RunningSection,
   circuit_training: CircuitTrainingSection,
-  // Legacy discipline mappings - use CrossFit component for these
-  hybrid: CrossFitSection,
+  hybrid: HybridSection,
+  // Legacy discipline mapping - use CrossFit component
   functional_fitness: CrossFitSection,
 };
 
