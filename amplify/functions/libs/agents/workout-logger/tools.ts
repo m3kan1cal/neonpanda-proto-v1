@@ -1216,8 +1216,8 @@ Returns: workoutId, success, pineconeStored, pineconeRecordId, templateLinked`,
     if (normalization && normalization.isValid === false) {
       throw new Error(
         `Cannot save workout: Normalization determined the workout data is invalid or insufficient. ` +
-          `Confidence: ${normalization.confidence || 0}, Issues: ${normalization.issuesFound || 0}. ` +
-          `Summary: ${normalization.summary || "No summary provided"}. ` +
+          `Confidence: ${normalization.normalizationConfidence || 0}, Issues: ${normalization.issuesFound || 0}. ` +
+          `Summary: ${normalization.normalizationSummary || "No summary provided"}. ` +
           `This typically indicates the user provided minimal information without sufficient workout details.`,
       );
     }

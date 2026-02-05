@@ -232,39 +232,46 @@ export async function queryWorkoutSummaries(
 
     // DIAGNOSTIC: If no items found, query without date filter to see if workouts exist at all
     if (items.length === 0) {
-      const diagnosticCommand = new QueryCommand({
-        TableName: tableName,
-        KeyConditionExpression: "#pk = :pk AND begins_with(#sk, :skPrefix)",
-        FilterExpression: "#entityType = :entityType",
-        ProjectionExpression:
-          "sk, #attributes.workoutId, #attributes.completedAt",
-        ExpressionAttributeNames: {
-          "#pk": "pk",
-          "#sk": "sk",
-          "#entityType": "entityType",
-          "#attributes": "attributes",
-        },
-        ExpressionAttributeValues: {
-          ":pk": `user#${userId}`,
-          ":skPrefix": "workout#",
-          ":entityType": "workout",
-        },
-        Limit: 5,
-      });
+      try {
+        const diagnosticCommand = new QueryCommand({
+          TableName: tableName,
+          KeyConditionExpression: "#pk = :pk AND begins_with(#sk, :skPrefix)",
+          FilterExpression: "#entityType = :entityType",
+          ProjectionExpression:
+            "sk, #attributes.workoutId, #attributes.completedAt",
+          ExpressionAttributeNames: {
+            "#pk": "pk",
+            "#sk": "sk",
+            "#entityType": "entityType",
+            "#attributes": "attributes",
+          },
+          ExpressionAttributeValues: {
+            ":pk": `user#${userId}`,
+            ":skPrefix": "workout#",
+            ":entityType": "workout",
+          },
+          Limit: 5,
+        });
 
-      const diagnosticResult = await docClient.send(diagnosticCommand);
-      const diagnosticItems = (diagnosticResult.Items || []) as any[];
+        const diagnosticResult = await docClient.send(diagnosticCommand);
+        const diagnosticItems = (diagnosticResult.Items || []) as any[];
 
-      console.warn(
-        "⚠️ No workouts found in date range. Diagnostic query (no date filter):",
-        {
-          totalWorkoutsForUser:
-            diagnosticItems.length > 0 ? `${diagnosticItems.length}+` : 0,
-          sampleCompletedAts: diagnosticItems
-            .map((item) => item.attributes?.completedAt)
-            .filter(Boolean),
-        },
-      );
+        console.warn(
+          "⚠️ No workouts found in date range. Diagnostic query (no date filter):",
+          {
+            totalWorkoutsForUser:
+              diagnosticItems.length > 0 ? `${diagnosticItems.length}+` : 0,
+            sampleCompletedAts: diagnosticItems
+              .map((item) => item.attributes?.completedAt)
+              .filter(Boolean),
+          },
+        );
+      } catch (diagnosticError) {
+        console.warn(
+          "⚠️ Diagnostic query failed (non-critical):",
+          diagnosticError,
+        );
+      }
     }
 
     // Log first few completedAt values for debugging if items found

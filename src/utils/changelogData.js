@@ -44,6 +44,8 @@ export const changelogEntries = [
         "HybridSection.jsx receiving undefined hybridData prop due to WorkoutViewer.jsx passing crossfitData instead of hybridData in discipline props mapping",
         "Duplicate section numbering (8.5 / 8.5) in extraction.ts prompt for PR Detection and Optimization Examples sections, renumbered to 8.5 / 8.6",
         "Date calculations in analytics/date-utils.ts mixing local time (getDay, getDate, setDate) with UTC time (setUTCHours), causing potential off-by-one day errors in non-UTC environments; replaced with consistent UTC methods (getUTCDay, getUTCDate, setUTCDate) across getCurrentWeekRange, getLastNWeeksRange, getHistoricalWorkoutRange, and getHistoricalMonthRange",
+        "Normalization error message in save_workout_to_database accessing wrong property names (normalization.confidence, normalization.summary) instead of correct names (normalizationConfidence, normalizationSummary), causing fallback values to always display",
+        "Diagnostic query in workout.ts queryWorkoutSummaries lacking error handling, where a failed diagnostic DynamoDB call could crash the function instead of returning valid empty results",
       ],
       removed: [
         "Legacy hybrid-to-crossfit discipline mapping in WorkoutViewer.jsx getDisciplineDataPath function",
