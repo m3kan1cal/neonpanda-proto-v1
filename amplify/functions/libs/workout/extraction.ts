@@ -680,7 +680,7 @@ EXTRACTION GUIDELINES:
      * "deadlift 205 - a PR for me" → pr_achievements: [{type: "weight_pr", exercise: "deadlift", value: 205, unit: "lbs"}]
      * "double KB swings with 30 pounds - a first for me" → pr_achievements: [{type: "first_time", exercise: "double_kettlebell_swing", value: 30, unit: "lbs", notes: "First time at this weight"}]
 
-8.6. WEARABLE DEVICE DATA EXTRACTION (Apple Watch, Garmin, Fitbit, etc.):
+8.7. WEARABLE DEVICE DATA EXTRACTION (Apple Watch, Garmin, Fitbit, etc.):
    - CALORIE DATA:
      * "Apple Watch says I burned 239 calories" → performance_metrics.calories_burned: 239
      * "Fitbit logged 350 calories" → performance_metrics.calories_burned: 350
@@ -696,7 +696,7 @@ EXTRACTION GUIDELINES:
      * When user provides specific wearable data, use those values
      * Don't estimate duration if user provides exact timing from device
 
-8.7. MULTI-SECTION WORKOUT STRUCTURE:
+8.8. MULTI-SECTION WORKOUT STRUCTURE:
    - SECTION DETECTION KEYWORDS:
      * Warmup: "warmup", "warm-up", "warmed up", "treadmill walk to warm up"
      * Mobility: "mobility work", "stretching", "cat/cow", "bird dog", "hip opener"
@@ -726,7 +726,7 @@ EXTRACTION GUIDELINES:
      - Phase: working → deadlift warmup sets + working sets
      - Extract PR for deadlift 205
 
-8.8. POWERLIFTING WARMUP INTERPRETATION EXAMPLES:
+8.9. POWERLIFTING WARMUP INTERPRETATION EXAMPLES:
    - LITERAL INTERPRETATION (when explicit language is used):
      * "three warm-up sets at 135 pounds 185 pounds 205 pounds each" = 135×5, 185×5, 205×5 (same reps "each")
      * "did all my warmups at 5 reps" = every warmup set gets 5 reps
