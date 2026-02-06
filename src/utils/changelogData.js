@@ -22,8 +22,13 @@ export const changelogEntries = [
         "program_summary record type now queried in coach conversations and program designer sessions, making training program context visible to the coach for the first time",
         "TRAINING PROGRAM CONTEXT section in formatPineconeContext for program_summary records, following the same pattern as workout, coach creator, and conversation summary sections",
         "Cross-context conversation retrieval in program designer using broader query string and higher conversationTopK budget (8 vs 5) to ensure coaching conversation summaries reach the program design flow",
+        "user_memory record type added to queryUserNamespace via opt-in userMemoryTopK parameter; program designer sessions and coach conversations now query user memories (injury notes, preferences, equipment info) with topK: 3 for richer contextual awareness",
+        "USER MEMORY CONTEXT section in formatPineconeContext for user_memory records, following the same pattern as other Pinecone record type sections",
+        "deleteCoachCreatorSummaryFromPinecone function in coach-creator/pinecone.ts for cleaning up coach_creator_summary records when sessions are hard-deleted, matching the existing pattern in program-designer/pinecone.ts",
+        "Pinecone cleanup in delete-coach-creator-session handler; coach_creator_summary records are now deleted from Pinecone when their session is hard-deleted, closing the last gap in Pinecone cleanup across all 6 delete handlers",
       ],
       changed: [
+        "error-invalid-duration integration test renamed to graceful-invalid-duration and updated to expect success; system intentionally falls back to default 8-week duration for non-parseable inputs to reduce user friction rather than rejecting the request",
         "queryPineconeContext options interface from boolean flags (includeWorkouts, includeCoachCreator, includeConversationSummaries) to per-type topK budgets (workoutTopK, conversationTopK, programTopK, coachCreatorTopK) with sensible defaults",
         "Coach conversation Pinecone query budgets: workoutTopK: 8, conversationTopK: 5, programTopK: 3, coachCreatorTopK: 2 (was single topK: 6 shared across all types)",
         "Program designer Pinecone query: broader query string including training history, preferences, and coaching discussions; conversationTopK: 8 for stronger cross-context retrieval; minScore lowered to 0.5 for broader recall",
@@ -34,6 +39,7 @@ export const changelogEntries = [
       fixed: [
         "Workout validation now runs fast deterministic property checks (Tier 1) before the AI qualitative check (was Tier 0), avoiding unnecessary ~500ms Bedrock API calls for structured workouts like powerlifting, CrossFit, and hybrid that have obvious exercise arrays",
         "Added phases array to Tier 1 fast property checks for hybrid discipline; hybrid workouts using phase-based structure no longer fall through to slower AI validation path",
+        "Auto-populate missing focusAreas on program phases in save_program_to_database; Claude sometimes omits focusAreas from phase objects, causing schema validation failures — now recovers from stored phase_structure result or derives from phase name as fallback",
       ],
       removed: [
         "Template-based concatenation in generateCoachCreatorSessionSummary that produced raw pipe-delimited user responses instead of semantically meaningful summaries",

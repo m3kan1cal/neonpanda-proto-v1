@@ -5,7 +5,7 @@
  * and future analysis capabilities.
  */
 
-import { storePineconeContext } from "../api-helpers";
+import { storePineconeContext, deletePineconeContext } from "../api-helpers";
 import { storeWithAutoCompression } from "../pinecone-compression";
 import { filterNullish } from "../object-utils";
 import { CoachCreatorSession, CoachConfig } from "./types";
@@ -130,10 +130,52 @@ export const storeCoachCreatorSummaryInPinecone = async (
 };
 
 /**
- * Future functions can be added here:
- * - retrieveCoachCreatorHistory()
- * - searchSimilarCoachConfigs()
- * - getCoachCreatorPatterns()
- * - updateCoachCreatorSummary()
- * - analyzeCoachCreatorTrends()
+ * Delete coach creator session summary from Pinecone.
+ * Called when a coach creator session is hard-deleted.
+ * Uses sessionId metadata filter to locate the record.
  */
+export async function deleteCoachCreatorSummaryFromPinecone(
+  userId: string,
+  sessionId: string,
+): Promise<{ success: boolean; deletedCount: number; error?: string }> {
+  try {
+    console.info("🗑️ Deleting coach creator session summary from Pinecone:", {
+      userId,
+      sessionId,
+    });
+
+    const result = await deletePineconeContext(userId, {
+      sessionId: sessionId,
+      recordType: "coach_creator_summary",
+    });
+
+    if (result.success) {
+      console.info("✅ Coach creator session summary deleted from Pinecone:", {
+        userId,
+        sessionId,
+        deletedCount: result.deletedCount,
+      });
+    } else {
+      console.warn(
+        "⚠️ Failed to delete coach creator session summary from Pinecone:",
+        {
+          userId,
+          sessionId,
+          error: result.error,
+        },
+      );
+    }
+
+    return result;
+  } catch (error) {
+    console.error(
+      "❌ Error deleting coach creator session summary from Pinecone:",
+      error,
+    );
+    return {
+      success: false,
+      deletedCount: 0,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}

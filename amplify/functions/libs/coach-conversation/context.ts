@@ -82,6 +82,7 @@ export async function gatherConversationContext(
         conversationTopK: 5,
         programTopK: 3,
         coachCreatorTopK: 2,
+        userMemoryTopK: 3,
         includeMethodology: true,
         minScore: 0.7,
       });

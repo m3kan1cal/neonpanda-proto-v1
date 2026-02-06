@@ -1956,6 +1956,7 @@ export interface UserNamespaceQueryOptions {
   conversationTopK?: number; // default: 5, set 0 to skip
   programTopK?: number; // default: 3, set 0 to skip
   coachCreatorTopK?: number; // default: 2, set 0 to skip
+  userMemoryTopK?: number; // default: 0 (opt-in), set >0 to include user memories
 }
 
 /**
@@ -2023,6 +2024,7 @@ const queryUserNamespace = async (
     conversationTopK = 5,
     programTopK = 3,
     coachCreatorTopK = 2,
+    userMemoryTopK = 0,
   } = options;
 
   // Build list of queries to execute
@@ -2041,6 +2043,8 @@ const queryUserNamespace = async (
       recordType: "coach_creator_summary",
       topK: coachCreatorTopK,
     });
+  if (userMemoryTopK > 0)
+    queries.push({ recordType: "user_memory", topK: userMemoryTopK });
 
   if (queries.length === 0) return [];
 
@@ -2456,6 +2460,7 @@ export const queryPineconeContext = async (
     conversationTopK?: number;
     programTopK?: number;
     coachCreatorTopK?: number;
+    userMemoryTopK?: number;
     // Methodology (separate namespace)
     includeMethodology?: boolean;
     // Reranking and filtering
@@ -2470,6 +2475,7 @@ export const queryPineconeContext = async (
       conversationTopK = 5,
       programTopK = 3,
       coachCreatorTopK = 2,
+      userMemoryTopK = 0,
       includeMethodology = true,
       minScore = 0.7,
       enableReranking = RERANKING_CONFIG.enabled,
@@ -2491,6 +2497,7 @@ export const queryPineconeContext = async (
         conversationTopK,
         programTopK,
         coachCreatorTopK,
+        userMemoryTopK,
       },
     });
 
@@ -2501,6 +2508,7 @@ export const queryPineconeContext = async (
         conversationTopK,
         programTopK,
         coachCreatorTopK,
+        userMemoryTopK,
       }),
       includeMethodology
         ? queryMethodologyNamespace(userMessage, userId, {
