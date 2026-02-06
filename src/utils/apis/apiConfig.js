@@ -1,6 +1,50 @@
 import outputs from "../../../amplify_outputs.json";
 import { fetchAuthSession } from "aws-amplify/auth";
 
+// ============================================================================
+// VALIDATION HELPERS
+// ============================================================================
+
+/**
+ * Validates that a userId is valid and not the literal string "null"
+ * This prevents API calls with malformed URLs like /users/null/coaches
+ *
+ * @param {string|null|undefined} userId - The userId to validate
+ * @returns {boolean} - True if userId is valid, false otherwise
+ */
+export const isValidUserId = (userId) => {
+  // Check for null, undefined, empty string
+  if (!userId) return false;
+
+  // Check for literal string "null" or "undefined" (common JS template string bug)
+  if (userId === "null" || userId === "undefined") return false;
+
+  // Check for whitespace-only strings
+  if (typeof userId === "string" && userId.trim() === "") return false;
+
+  return true;
+};
+
+/**
+ * Validates userId and throws an error if invalid
+ * Use this in API functions to fail fast with a clear error message
+ *
+ * @param {string|null|undefined} userId - The userId to validate
+ * @param {string} functionName - Name of the calling function for error messages
+ * @throws {Error} - If userId is invalid
+ */
+export const requireValidUserId = (userId, functionName = "API call") => {
+  if (!isValidUserId(userId)) {
+    throw new Error(
+      `${functionName}: Invalid userId "${userId}". A valid userId is required.`,
+    );
+  }
+};
+
+// ============================================================================
+// API CONFIGURATION
+// ============================================================================
+
 // Amplify API Configuration - Must be declared first!
 const AMPLIFY_API_NAME = Object.keys(outputs.custom?.api || {})[0];
 if (!AMPLIFY_API_NAME) {

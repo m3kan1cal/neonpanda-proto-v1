@@ -730,8 +730,9 @@ export const navigationPatterns = {
   // Mobile Bottom Navigation - Thumb-friendly navigation bar (< 768px)
   mobile: {
     // Bottom nav container - fixed at bottom with solid background (prevents iOS overscroll gap)
+    // Uses pb-[env(safe-area-inset-bottom)] directly on container to ensure background extends to bottom edge
     container:
-      "fixed bottom-0 left-0 right-0 z-50 md:hidden bg-synthwave-bg-card backdrop-blur-xl border-t border-synthwave-neon-cyan/20 shadow-[0_-4px_24px_rgba(0,255,255,0.1)]",
+      "fixed bottom-0 left-0 right-0 z-50 md:hidden bg-synthwave-bg-card backdrop-blur-xl border-t border-synthwave-neon-cyan/20 shadow-[0_-4px_24px_rgba(0,255,255,0.1)] pb-[env(safe-area-inset-bottom)]",
 
     // Nav item container - flex wrapper for items
     itemsContainer: "flex items-center justify-around",

@@ -388,6 +388,27 @@ async function* processCoachConversationAsync(
     throw new Error("Coach configuration not found");
   }
 
+  // 📊 Diagnostic logging for conversation history debugging
+  // This helps identify when conversation history isn't persisting
+  const conversationMessages = existingConversation.messages || [];
+  const actualConversationLength = conversationMessages.length;
+
+  console.info("📊 Conversation history diagnostics:", {
+    conversationId: params.conversationId,
+    actualMessageCount: actualConversationLength,
+    routerUsedConversationLength: 0, // Router analysis ran in parallel, used 0
+    hasMessages: actualConversationLength > 0,
+    firstMessageRole: conversationMessages[0]?.role,
+    lastMessageRole: conversationMessages[actualConversationLength - 1]?.role,
+    isNewConversation: actualConversationLength === 0,
+    conversationMode: existingConversation.mode,
+    conversationTitle: existingConversation.title,
+    hint:
+      actualConversationLength === 0
+        ? "Conversation has no messages - this might be a new conversation or messages weren't persisted"
+        : undefined,
+  });
+
   // Extract router decision flags for cleaner code
   const shouldShowUpdates = routerAnalysis.showContextualUpdates;
 
@@ -994,7 +1015,19 @@ async function saveConversationAndYieldComplete(
     [newUserMessage, newAiMessage],
   );
 
-  console.info("✅ Conversation updated successfully");
+  // 📊 Diagnostic logging for message persistence
+  console.info("✅ Conversation messages saved:", {
+    conversationId,
+    userMessageId: newUserMessage?.id,
+    aiMessageId: newAiMessage?.id,
+    userMessageLength: newUserMessage?.content?.length || 0,
+    aiMessageLength: newAiMessage?.content?.length || 0,
+    saveSuccess: !!saveResult,
+    previousMessageCount:
+      conversationData.existingConversation.messages?.length || 0,
+    newTotalMessages:
+      (conversationData.existingConversation.messages?.length || 0) + 2,
+  });
 
   // Extract size information from the save result
   const itemSizeKB = parseFloat(saveResult?.dynamodbResult?.itemSizeKB || "0");

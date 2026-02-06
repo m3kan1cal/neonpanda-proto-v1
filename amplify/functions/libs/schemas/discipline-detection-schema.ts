@@ -18,9 +18,10 @@ export const DISCIPLINE_DETECTION_SCHEMA = {
         "calisthenics",
         "running",
         "circuit_training",
+        "hybrid",
       ],
       description:
-        "The detected workout discipline. Note: Mixed-modality workouts should be classified as 'crossfit'.",
+        "The detected workout discipline. Use 'hybrid' for mixed-modality workouts that don't clearly fit a single discipline, workouts with multiple distinct sections (strength + cardio + mobility), or when the user explicitly mentions 'mixed' or 'general' training.",
     },
     confidence: {
       type: "number",

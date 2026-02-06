@@ -1,4 +1,4 @@
-import { getApiUrl, authenticatedFetch } from './apiConfig';
+import { getApiUrl, authenticatedFetch, requireValidUserId } from "./apiConfig";
 
 /**
  * API service for Coach operations
@@ -10,20 +10,24 @@ import { getApiUrl, authenticatedFetch } from './apiConfig';
  * @returns {Promise<Object>} - The API response with coaches array
  */
 export const getCoaches = async (userId) => {
-  const url = `${getApiUrl('')}/users/${userId}/coaches`;
+  requireValidUserId(userId, "getCoaches");
+  const url = `${getApiUrl("")}/users/${userId}/coaches`;
 
   try {
     const response = await authenticatedFetch(url, {
-      method: 'GET',
+      method: "GET",
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('getCoaches: Error response:', errorText);
+      console.error("getCoaches: Error response:", errorText);
       let errorMessage;
       try {
         const errorData = JSON.parse(errorText);
-        errorMessage = errorData.error || errorData.message || `API Error: ${response.status}`;
+        errorMessage =
+          errorData.error ||
+          errorData.message ||
+          `API Error: ${response.status}`;
       } catch (parseError) {
         errorMessage = `API Error: ${response.status}`;
       }
@@ -33,7 +37,7 @@ export const getCoaches = async (userId) => {
     const result = await response.json();
     return result;
   } catch (error) {
-    console.error('getCoaches: API Error:', error);
+    console.error("getCoaches: API Error:", error);
     throw error;
   }
 };
@@ -44,20 +48,24 @@ export const getCoaches = async (userId) => {
  * @returns {Promise<Object>} - The API response with totalCount
  */
 export const getCoachesCount = async (userId) => {
-  const url = `${getApiUrl('')}/users/${userId}/coaches/count`;
+  requireValidUserId(userId, "getCoachesCount");
+  const url = `${getApiUrl("")}/users/${userId}/coaches/count`;
 
   try {
     const response = await authenticatedFetch(url, {
-      method: 'GET',
+      method: "GET",
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('getCoachesCount: Error response:', errorText);
+      console.error("getCoachesCount: Error response:", errorText);
       let errorMessage;
       try {
         const errorData = JSON.parse(errorText);
-        errorMessage = errorData.error || errorData.message || `API Error: ${response.status}`;
+        errorMessage =
+          errorData.error ||
+          errorData.message ||
+          `API Error: ${response.status}`;
       } catch (parseError) {
         errorMessage = `API Error: ${response.status}`;
       }
@@ -67,7 +75,7 @@ export const getCoachesCount = async (userId) => {
     const result = await response.json();
     return result;
   } catch (error) {
-    console.error('getCoachesCount: API Error:', error);
+    console.error("getCoachesCount: API Error:", error);
     throw error;
   }
 };
@@ -79,20 +87,24 @@ export const getCoachesCount = async (userId) => {
  * @returns {Promise<Object>} - The API response with full coach details
  */
 export const getCoach = async (userId, coachId) => {
-  const url = `${getApiUrl('')}/users/${userId}/coaches/${coachId}`;
+  requireValidUserId(userId, "getCoach");
+  const url = `${getApiUrl("")}/users/${userId}/coaches/${coachId}`;
 
   try {
     const response = await authenticatedFetch(url, {
-      method: 'GET',
+      method: "GET",
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('getCoach: Error response:', errorText);
+      console.error("getCoach: Error response:", errorText);
       let errorMessage;
       try {
         const errorData = JSON.parse(errorText);
-        errorMessage = errorData.error || errorData.message || `API Error: ${response.status}`;
+        errorMessage =
+          errorData.error ||
+          errorData.message ||
+          `API Error: ${response.status}`;
       } catch (parseError) {
         errorMessage = `API Error: ${response.status}`;
       }
@@ -102,7 +114,7 @@ export const getCoach = async (userId, coachId) => {
     const result = await response.json();
     return result;
   } catch (error) {
-    console.error('getCoach: API Error:', error);
+    console.error("getCoach: API Error:", error);
     throw error;
   }
 };
@@ -116,27 +128,31 @@ export const getCoach = async (userId, coachId) => {
  * @returns {Promise<Object>} - The API response with updated coach config
  */
 export const updateCoachConfig = async (userId, coachId, metadata) => {
-  const url = `${getApiUrl('')}/users/${userId}/coaches/${coachId}`;
+  requireValidUserId(userId, "updateCoachConfig");
+  const url = `${getApiUrl("")}/users/${userId}/coaches/${coachId}`;
 
   try {
     const response = await authenticatedFetch(url, {
-      method: 'PUT',
+      method: "PUT",
       body: JSON.stringify(metadata),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('updateCoachConfig: Error response:', errorText);
+      console.error("updateCoachConfig: Error response:", errorText);
       let errorMessage;
       try {
         const errorData = JSON.parse(errorText);
-        errorMessage = errorData.error || errorData.message || `API Error: ${response.status}`;
+        errorMessage =
+          errorData.error ||
+          errorData.message ||
+          `API Error: ${response.status}`;
       } catch (parseError) {
         errorMessage = `API Error: ${response.status}`;
       }
 
       if (response.status === 404) {
-        throw new Error('Coach not found');
+        throw new Error("Coach not found");
       }
       throw new Error(errorMessage);
     }
@@ -144,7 +160,7 @@ export const updateCoachConfig = async (userId, coachId, metadata) => {
     const result = await response.json();
     return result;
   } catch (error) {
-    console.error('updateCoachConfig: API Error:', error);
+    console.error("updateCoachConfig: API Error:", error);
     throw error;
   }
 };
@@ -156,26 +172,30 @@ export const updateCoachConfig = async (userId, coachId, metadata) => {
  * @returns {Promise<Object>} - The API response with deleted coach confirmation
  */
 export const deleteCoachConfig = async (userId, coachId) => {
-  const url = `${getApiUrl('')}/users/${userId}/coaches/${coachId}`;
+  requireValidUserId(userId, "deleteCoachConfig");
+  const url = `${getApiUrl("")}/users/${userId}/coaches/${coachId}`;
 
   try {
     const response = await authenticatedFetch(url, {
-      method: 'DELETE',
+      method: "DELETE",
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('deleteCoachConfig: Error response:', errorText);
+      console.error("deleteCoachConfig: Error response:", errorText);
       let errorMessage;
       try {
         const errorData = JSON.parse(errorText);
-        errorMessage = errorData.error || errorData.message || `API Error: ${response.status}`;
+        errorMessage =
+          errorData.error ||
+          errorData.message ||
+          `API Error: ${response.status}`;
       } catch (parseError) {
         errorMessage = `API Error: ${response.status}`;
       }
 
       if (response.status === 404) {
-        throw new Error('Coach not found');
+        throw new Error("Coach not found");
       }
       throw new Error(errorMessage);
     }
@@ -183,7 +203,7 @@ export const deleteCoachConfig = async (userId, coachId) => {
     const result = await response.json();
     return result;
   } catch (error) {
-    console.error('deleteCoachConfig: API Error:', error);
+    console.error("deleteCoachConfig: API Error:", error);
     throw error;
   }
 };
@@ -193,10 +213,10 @@ export const deleteCoachConfig = async (userId, coachId) => {
  * @returns {Promise<Object>} - The API response with templates array
  */
 export const getCoachTemplates = async () => {
-  const response = await fetch(`${getApiUrl('')}/coach-templates`, {
-    method: 'GET',
+  const response = await fetch(`${getApiUrl("")}/coach-templates`, {
+    method: "GET",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
   });
 
@@ -215,12 +235,15 @@ export const getCoachTemplates = async () => {
  * @returns {Promise<Object>} - The API response with template details
  */
 export const getCoachTemplate = async (templateId) => {
-  const response = await fetch(`${getApiUrl('')}/coach-templates/${templateId}`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
+  const response = await fetch(
+    `${getApiUrl("")}/coach-templates/${templateId}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
     },
-  });
+  );
 
   if (!response.ok) {
     throw new Error(`API Error: ${response.status}`);
@@ -238,20 +261,24 @@ export const getCoachTemplate = async (templateId) => {
  * @returns {Promise<Object>} - The API response with new coach config
  */
 export const createCoachFromTemplate = async (userId, templateId) => {
-  const url = `${getApiUrl('')}/users/${userId}/coaches/from-template/${templateId}`;
+  requireValidUserId(userId, "createCoachFromTemplate");
+  const url = `${getApiUrl("")}/users/${userId}/coaches/from-template/${templateId}`;
 
   try {
     const response = await authenticatedFetch(url, {
-      method: 'POST',
+      method: "POST",
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('createCoachFromTemplate: Error response:', errorText);
+      console.error("createCoachFromTemplate: Error response:", errorText);
       let errorMessage;
       try {
         const errorData = JSON.parse(errorText);
-        errorMessage = errorData.error || errorData.message || `API Error: ${response.status}`;
+        errorMessage =
+          errorData.error ||
+          errorData.message ||
+          `API Error: ${response.status}`;
       } catch (parseError) {
         errorMessage = `API Error: ${response.status}`;
       }
@@ -261,7 +288,7 @@ export const createCoachFromTemplate = async (userId, templateId) => {
     const result = await response.json();
     return result;
   } catch (error) {
-    console.error('createCoachFromTemplate: API Error:', error);
+    console.error("createCoachFromTemplate: API Error:", error);
     throw error;
   }
 };
@@ -273,21 +300,25 @@ export const createCoachFromTemplate = async (userId, templateId) => {
  * @returns {Promise<Object>} - The API response with confirmation
  */
 export const createCoachFromSession = async (userId, sessionId) => {
-  const url = `${getApiUrl('')}/users/${userId}/coaches/from-session/${sessionId}`;
+  requireValidUserId(userId, "createCoachFromSession");
+  const url = `${getApiUrl("")}/users/${userId}/coaches/from-session/${sessionId}`;
 
   try {
     const response = await authenticatedFetch(url, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify({}),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('createCoachFromSession: Error response:', errorText);
+      console.error("createCoachFromSession: Error response:", errorText);
       let errorMessage;
       try {
         const errorData = JSON.parse(errorText);
-        errorMessage = errorData.error || errorData.message || `API Error: ${response.status}`;
+        errorMessage =
+          errorData.error ||
+          errorData.message ||
+          `API Error: ${response.status}`;
       } catch (parseError) {
         errorMessage = `API Error: ${response.status}`;
       }
@@ -297,7 +328,7 @@ export const createCoachFromSession = async (userId, sessionId) => {
     const result = await response.json();
     return result;
   } catch (error) {
-    console.error('createCoachFromSession: API Error:', error);
+    console.error("createCoachFromSession: API Error:", error);
     throw error;
   }
 };

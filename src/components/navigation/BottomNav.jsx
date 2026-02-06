@@ -1,10 +1,10 @@
 // BottomNav.jsx - Mobile Bottom Navigation Bar
 // 4-tab thumb-friendly navigation for mobile devices (< 768px)
 
-import React from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { useNavigationContext } from '../../contexts/NavigationContext';
-import { navigationPatterns } from '../../utils/ui/uiPatterns';
+import React from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigationContext } from "../../contexts/NavigationContext";
+import { navigationPatterns } from "../../utils/ui/uiPatterns";
 import {
   navigationItems,
   isItemVisible,
@@ -14,7 +14,7 @@ import {
   isRouteActive,
   triggerHaptic,
   getItemAriaLabel,
-} from '../../utils/navigation';
+} from "../../utils/navigation";
 
 const BottomNav = () => {
   const navigate = useNavigate();
@@ -25,21 +25,31 @@ const BottomNav = () => {
   const bottomNavItems = [];
 
   // Always show Coaches (from primary) - Remove badge for mobile
-  const coachesItem = navigationItems.primary?.find((item) => item.id === 'coaches');
+  const coachesItem = navigationItems.primary?.find(
+    (item) => item.id === "coaches",
+  );
   if (coachesItem && isItemVisible(coachesItem, context)) {
     bottomNavItems.push({ ...coachesItem, badge: undefined }); // Remove badge count for mobile
   }
 
   // Show Training (training-grounds from contextual)
-  const trainingItem = navigationItems.contextual?.find((item) => item.id === 'training-grounds');
+  const trainingItem = navigationItems.contextual?.find(
+    (item) => item.id === "training-grounds",
+  );
   if (trainingItem && isItemVisible(trainingItem, context)) {
-    bottomNavItems.push({ ...trainingItem, label: 'Training' }); // Shorten label for mobile
+    bottomNavItems.push({ ...trainingItem, label: "Training" }); // Shorten label for mobile
   }
 
   // Show Progress (from contextual) - Remove badge for mobile, shorten label
-  const progressItem = navigationItems.contextual?.find((item) => item.id === 'progress');
+  const progressItem = navigationItems.contextual?.find(
+    (item) => item.id === "progress",
+  );
   if (progressItem && isItemVisible(progressItem, context)) {
-    bottomNavItems.push({ ...progressItem, badge: undefined, label: 'Analytics' }); // Remove badge count and shorten label for mobile
+    bottomNavItems.push({
+      ...progressItem,
+      badge: undefined,
+      label: "Analytics",
+    }); // Remove badge count and shorten label for mobile
   }
 
   const displayItems = bottomNavItems;
@@ -53,7 +63,7 @@ const BottomNav = () => {
   // Navigate to item
   const handleItemClick = (item) => {
     const route = getItemRoute(item, context);
-    if (route === '#') return; // Disabled item
+    if (route === "#") return; // Disabled item
 
     triggerHaptic(10);
     navigate(route);
@@ -73,39 +83,41 @@ const BottomNav = () => {
     const Icon = item.icon;
     const ariaLabel = getItemAriaLabel(item, context);
 
-      return (
-        <button
-          key={item.id}
-          onClick={() => handleItemClick(item)}
-          className={`
+    return (
+      <button
+        key={item.id}
+        onClick={() => handleItemClick(item)}
+        className={`
             ${navigationPatterns.mobile.item}
             ${active ? `${colorClasses.active} focus:ring-${item.color} ${navigationPatterns.mobile.itemActiveBg}` : colorClasses.inactive}
-            ${active ? 'font-semibold' : 'font-medium'}
+            ${active ? "font-semibold" : "font-medium"}
           `}
-          style={{ WebkitTapHighlightColor: 'transparent' }}
-          aria-label={ariaLabel}
-          aria-current={active ? 'page' : undefined}
-        >
+        style={{ WebkitTapHighlightColor: "transparent" }}
+        aria-label={ariaLabel}
+        aria-current={active ? "page" : undefined}
+      >
         {/* Icon with glow effect when active */}
-        <div className={`relative ${active ? colorClasses.glow : ''}`}>
+        <div className={`relative ${active ? colorClasses.glow : ""}`}>
           <Icon className="w-6 h-6" />
 
           {/* Badge indicator */}
           {badge > 0 && (
-            <div className={`${navigationPatterns.mobile.badge} ${colorClasses.shadow}`}>
-              {badge > 99 ? '99+' : badge}
+            <div
+              className={`${navigationPatterns.mobile.badge} ${colorClasses.shadow}`}
+            >
+              {badge > 99 ? "99+" : badge}
             </div>
           )}
         </div>
 
         {/* Label */}
-        <span className={navigationPatterns.mobile.label}>
-          {item.label}
-        </span>
+        <span className={navigationPatterns.mobile.label}>{item.label}</span>
 
         {/* Active indicator bar */}
         {active && (
-          <div className={`${navigationPatterns.mobile.activeBar} ${colorClasses.bg} ${colorClasses.shadow}`} />
+          <div
+            className={`${navigationPatterns.mobile.activeBar} ${colorClasses.bg} ${colorClasses.shadow}`}
+          />
         )}
       </button>
     );
@@ -114,22 +126,22 @@ const BottomNav = () => {
   // Render "More" button
   const renderMoreButton = () => {
     const isMoreActive = context.isMoreMenuOpen;
-    const purpleClasses = getItemColorClasses('purple', isMoreActive);
+    const purpleClasses = getItemColorClasses("purple", isMoreActive);
 
     return (
       <button
         onClick={handleMoreClick}
         className={`
           ${navigationPatterns.mobile.item}
-          ${isMoreActive ? `text-synthwave-neon-purple font-semibold ${navigationPatterns.mobile.itemActiveBg}` : 'text-synthwave-text-muted hover:text-synthwave-neon-purple font-medium'}
+          ${isMoreActive ? `text-synthwave-neon-purple font-semibold ${navigationPatterns.mobile.itemActiveBg}` : "text-synthwave-text-muted hover:text-synthwave-neon-purple font-medium"}
           focus:ring-synthwave-neon-purple/50
         `}
-        style={{ WebkitTapHighlightColor: 'transparent' }}
+        style={{ WebkitTapHighlightColor: "transparent" }}
         aria-label="More options"
         aria-expanded={isMoreActive}
       >
         {/* Menu icon */}
-        <div className={`relative ${isMoreActive ? purpleClasses.glow : ''}`}>
+        <div className={`relative ${isMoreActive ? purpleClasses.glow : ""}`}>
           <svg
             className="w-6 h-6"
             fill="none"
@@ -146,13 +158,13 @@ const BottomNav = () => {
         </div>
 
         {/* Label */}
-        <span className={navigationPatterns.mobile.label}>
-          More
-        </span>
+        <span className={navigationPatterns.mobile.label}>More</span>
 
         {/* Active indicator bar */}
         {isMoreActive && (
-          <div className={`${navigationPatterns.mobile.activeBar} ${purpleClasses.bg} ${purpleClasses.shadow}`} />
+          <div
+            className={`${navigationPatterns.mobile.activeBar} ${purpleClasses.bg} ${purpleClasses.shadow}`}
+          />
         )}
       </button>
     );
@@ -171,12 +183,9 @@ const BottomNav = () => {
         {/* More menu button */}
         {renderMoreButton()}
       </div>
-
-      {/* Safe area padding for iPhone notch */}
-      <div className={navigationPatterns.mobile.safeArea} />
+      {/* Safe area padding now handled by pb-[env(safe-area-inset-bottom)] on container */}
     </nav>
   );
 };
 
 export default BottomNav;
-

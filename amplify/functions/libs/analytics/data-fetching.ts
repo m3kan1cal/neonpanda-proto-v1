@@ -521,6 +521,10 @@ export const fetchUserWeeklyData = async (
     `📊 Fetching complete weekly data (summary-based) for user ${userId}`,
     {
       timezone: userTimezone,
+      weekRange: {
+        start: weekRange.weekStart.toISOString(),
+        end: weekRange.weekEnd.toISOString(),
+      },
     },
   );
 

@@ -273,14 +273,15 @@ Returns: coachConfig, userProfile, pineconeContext, programDuration (days), trai
     console.info("Querying Pinecone for user context...");
     const pineconeResult = await queryPineconeContext(
       userId,
-      `Program for: ${todoList.trainingGoals?.value || "fitness goals"}`,
+      `User training history, preferences, goals, and coaching discussions for program design: ${todoList.trainingGoals?.value || "fitness goals"}`,
       {
-        topK: 8,
-        includeWorkouts: true,
-        includeCoachCreator: true,
-        includeConversationSummaries: true,
+        workoutTopK: 5,
+        conversationTopK: 8, // Higher -- cross-context retrieval is the priority here
+        programTopK: 3,
+        coachCreatorTopK: 2,
+        userMemoryTopK: 3,
         includeMethodology: true,
-        minScore: 0.7,
+        minScore: 0.5, // Lower threshold for broader recall on conversations
       },
     );
 
@@ -1705,6 +1706,42 @@ Returns: success, programId, s3Key, pineconeRecordId`,
         console.info(
           `🔧 Auto-populated trainingFrequency: ${program.trainingFrequency}`,
         );
+      }
+    }
+
+    // ROBUST: Auto-populate missing focusAreas on phases
+    // Claude sometimes omits focusAreas from the phase objects it passes to save.
+    // Recover from the stored phase_structure result which always has them.
+    if (Array.isArray(program.phases) && getToolResult) {
+      const phaseStructure = getToolResult("phase_structure");
+      const structurePhases = phaseStructure?.phases || [];
+
+      for (const phase of program.phases) {
+        if (
+          !phase.focusAreas ||
+          (Array.isArray(phase.focusAreas) && phase.focusAreas.length === 0)
+        ) {
+          // Try to recover from stored phase structure
+          const matchingStructure = structurePhases.find(
+            (sp: any) => sp.phaseId === phase.phaseId,
+          );
+
+          if (
+            matchingStructure?.focusAreas &&
+            matchingStructure.focusAreas.length > 0
+          ) {
+            phase.focusAreas = matchingStructure.focusAreas;
+            console.info(
+              `🔧 Auto-populated focusAreas for phase ${phase.phaseId}: ${phase.focusAreas.join(", ")}`,
+            );
+          } else {
+            // Fallback: derive from phase name
+            phase.focusAreas = [phase.name || "general training"];
+            console.info(
+              `🔧 Derived focusAreas for phase ${phase.phaseId} from name: ${phase.focusAreas[0]}`,
+            );
+          }
+        }
       }
     }
 

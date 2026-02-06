@@ -33,6 +33,8 @@ import type {
   CalisthenicsWorkout,
   CalisthenicsExercise,
   CircuitTrainingWorkout,
+  HybridWorkout,
+  HybridExercise,
 } from "../workout/types";
 import type {
   ExtractedExercise,
@@ -105,6 +107,9 @@ export function extractExercisesFromWorkout(
         disciplineSpecific.circuit_training,
         discipline,
       );
+
+    case "hybrid":
+      return extractHybridExercises(disciplineSpecific.hybrid, discipline);
 
     default:
       console.warn(
@@ -1046,6 +1051,182 @@ function extractCircuitTrainingExercises(
   }
 
   return { exercises, discipline, extractionMethod: "circuit_stations" };
+}
+
+/**
+ * Hybrid exercise extraction
+ * Extracts exercises from phase-based or flat exercise structure
+ * Handles mixed-modality workouts that don't fit a single discipline
+ */
+function extractHybridExercises(
+  hybrid: HybridWorkout | undefined,
+  discipline: ExerciseDiscipline,
+): ExerciseExtractionResult {
+  if (!hybrid) {
+    return { exercises: [], discipline, extractionMethod: "hybrid_empty" };
+  }
+
+  const exercises: ExtractedExercise[] = [];
+
+  // Prefer phase-based extraction if phases exist
+  if (hybrid.phases && hybrid.phases.length > 0) {
+    for (const phase of hybrid.phases) {
+      if (!phase.exercises) continue;
+
+      for (const exercise of phase.exercises) {
+        if (!exercise.exercise_name) {
+          console.warn(
+            `⚠️ Skipping Hybrid exercise without name in phase: ${phase.phase_name}`,
+          );
+          continue;
+        }
+
+        const metrics = extractHybridMetrics(exercise, phase.phase_type);
+
+        exercises.push({
+          originalName: exercise.exercise_name,
+          discipline,
+          metrics,
+          notes: exercise.equipment
+            ? `Equipment: ${exercise.equipment}`
+            : undefined,
+          sourcePhase: phase.phase_name || phase.phase_type || undefined,
+        });
+      }
+    }
+    return { exercises, discipline, extractionMethod: "hybrid_phases" };
+  }
+
+  // Fallback to flat exercise list
+  if (hybrid.exercises && hybrid.exercises.length > 0) {
+    for (const exercise of hybrid.exercises) {
+      if (!exercise.exercise_name) {
+        console.warn("⚠️ Skipping Hybrid exercise without name");
+        continue;
+      }
+
+      const metrics = extractHybridMetrics(exercise);
+
+      exercises.push({
+        originalName: exercise.exercise_name,
+        discipline,
+        metrics,
+        notes: exercise.equipment
+          ? `Equipment: ${exercise.equipment}`
+          : undefined,
+      });
+    }
+    return { exercises, discipline, extractionMethod: "hybrid_flat" };
+  }
+
+  return { exercises: [], discipline, extractionMethod: "hybrid_no_structure" };
+}
+
+function extractHybridMetrics(
+  exercise: HybridExercise,
+  phaseType?: string | null,
+): ExerciseMetrics {
+  const sets = exercise.sets || [];
+  let totalReps = 0;
+  let maxWeight = 0;
+  let totalVolume = 0;
+  let totalDuration = 0;
+  let totalWeightForAvg = 0;
+  let weightCount = 0;
+  const repsPerSet: number[] = [];
+  const weightsPerSet: number[] = [];
+  const volumePerSet: number[] = [];
+
+  let bestSetVolume = 0;
+  let bestSetIndex = -1;
+
+  for (let i = 0; i < sets.length; i++) {
+    const set = sets[i];
+    const reps = typeof set.reps === "number" ? set.reps : 0;
+    const weight = set.weight?.value || 0;
+    const volume = reps * weight;
+
+    if (reps > 0) {
+      totalReps += reps;
+      repsPerSet.push(reps);
+    }
+
+    if (weight > 0) {
+      if (weight > maxWeight) maxWeight = weight;
+      weightsPerSet.push(weight);
+      totalWeightForAvg += weight;
+      weightCount++;
+    }
+
+    if (volume > 0) {
+      totalVolume += volume;
+      volumePerSet.push(volume);
+
+      if (volume > bestSetVolume) {
+        bestSetVolume = volume;
+        bestSetIndex = i;
+      }
+    }
+
+    if (set.duration) {
+      totalDuration += set.duration;
+    }
+  }
+
+  // Calculate average reps per set for consistent display
+  const avgRepsPerSet =
+    sets.length > 0 && totalReps > 0 ? Math.round(totalReps / sets.length) : 0;
+
+  // Build best set data
+  let bestSet;
+  if (bestSetIndex >= 0) {
+    const bestSetData = sets[bestSetIndex];
+    const bestReps =
+      typeof bestSetData.reps === "number" ? bestSetData.reps : 0;
+    const bestWeight = bestSetData.weight?.value || 0;
+    bestSet = {
+      setNumber: bestSetIndex + 1,
+      reps: bestReps,
+      weight: bestWeight,
+      volume: bestSetVolume,
+      estimated1rm: calculateEstimated1RM(bestReps, bestWeight),
+    };
+  }
+
+  // Calculate intensity metrics
+  let intensityMetrics;
+  if (maxWeight > 0 && weightCount > 0) {
+    const avgWeight = totalWeightForAvg / weightCount;
+    intensityMetrics = {
+      averageIntensity: avgWeight / maxWeight,
+      volumeLoad: totalVolume,
+    };
+  }
+
+  const metrics: ExerciseMetrics = {
+    ...(avgRepsPerSet > 0 && { reps: avgRepsPerSet }),
+    ...(totalReps > 0 && { totalReps }),
+    ...(sets.length > 0 && { sets: sets.length }),
+    ...(maxWeight > 0 && {
+      weight: maxWeight,
+      weightUnit: sets[0]?.weight?.unit || "lbs",
+      maxWeight,
+    }),
+    ...(repsPerSet.length > 0 && { repsPerSet }),
+    ...(weightsPerSet.length > 0 && { weightsPerSet }),
+    ...(volumePerSet.length > 0 && { volumePerSet }),
+    ...(totalVolume > 0 && { totalVolume }),
+    ...(bestSet && { bestSet, estimated1RM: bestSet.estimated1rm }),
+    ...(intensityMetrics && { intensityMetrics }),
+    ...(totalDuration > 0 && { time: totalDuration }),
+    ...(exercise.movement_pattern && {
+      movementType: exercise.movement_pattern,
+    }),
+    ...(exercise.equipment && { equipment: [exercise.equipment] }),
+    ...(phaseType && { phaseType }),
+  };
+
+  return metrics;
 }
 
 /**

@@ -1,4 +1,9 @@
-import { getApiUrl, authenticatedFetch, isStreamingEnabled } from "./apiConfig";
+import {
+  getApiUrl,
+  authenticatedFetch,
+  isStreamingEnabled,
+  requireValidUserId,
+} from "./apiConfig";
 import { handleStreamingApiRequest } from "./streamingApiHelper";
 import { streamCoachConversationLambda } from "./streamingLambdaApi";
 import { CONVERSATION_MODES } from "../../constants/conversationModes";
@@ -23,6 +28,7 @@ export const createCoachConversation = async (
   initialMessage = null,
   mode = CONVERSATION_MODES.CHAT,
 ) => {
+  requireValidUserId(userId, "createCoachConversation");
   const url = `${getApiUrl("")}/users/${userId}/coaches/${coachId}/conversations`;
   const requestBody = {
     title,
@@ -56,6 +62,7 @@ export const createCoachConversation = async (
  * @returns {Promise<Object>} - The conversation data with message history
  */
 export const getCoachConversation = async (userId, coachId, conversationId) => {
+  requireValidUserId(userId, "getCoachConversation");
   const url = `${getApiUrl("")}/users/${userId}/coaches/${coachId}/conversations/${conversationId}`;
   const response = await authenticatedFetch(url, {
     method: "GET",
@@ -89,6 +96,7 @@ export const sendCoachConversationMessage = async (
   userResponse,
   imageS3Keys = [],
 ) => {
+  requireValidUserId(userId, "sendCoachConversationMessage");
   // Create AbortController for timeout handling
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 45000); // 45 second timeout
@@ -238,6 +246,7 @@ export const updateCoachConversation = async (
   conversationId,
   metadata,
 ) => {
+  requireValidUserId(userId, "updateCoachConversation");
   const url = `${getApiUrl("")}/users/${userId}/coaches/${coachId}/conversations/${conversationId}`;
   const response = await authenticatedFetch(url, {
     method: "PUT",
@@ -264,6 +273,7 @@ export const updateCoachConversation = async (
  * @returns {Promise<Object>} - The API response with conversations array
  */
 export const getCoachConversations = async (userId, coachId, options = {}) => {
+  requireValidUserId(userId, "getCoachConversations");
   const { includeFirstMessages = false } = options;
   const queryParams = includeFirstMessages ? "?includeFirstMessages=true" : "";
   const url = `${getApiUrl("")}/users/${userId}/coaches/${coachId}/conversations${queryParams}`;
@@ -287,6 +297,7 @@ export const getCoachConversations = async (userId, coachId, options = {}) => {
  * @returns {Promise<Object>} - The API response with conversation count
  */
 export const getCoachConversationsCount = async (userId, coachId) => {
+  requireValidUserId(userId, "getCoachConversationsCount");
   const url = `${getApiUrl("")}/users/${userId}/coaches/${coachId}/conversations/count`;
 
   try {
@@ -328,6 +339,7 @@ export const deleteCoachConversation = async (
   coachId,
   conversationId,
 ) => {
+  requireValidUserId(userId, "deleteCoachConversation");
   const url = `${getApiUrl("")}/users/${userId}/coaches/${coachId}/conversations/${conversationId}`;
 
   try {

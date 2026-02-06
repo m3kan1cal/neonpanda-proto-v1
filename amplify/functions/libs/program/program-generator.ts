@@ -247,11 +247,11 @@ export async function generateProgramV2(
       userId,
       `Program for: ${todoList.trainingGoals?.value || "fitness goals"}`,
       {
-        topK: 8, // Increase for more comprehensive context including methodologies
-        includeWorkouts: true,
-        includeCoachCreator: true,
-        includeConversationSummaries: true,
-        includeMethodology: true, // Explicitly include training methodologies
+        workoutTopK: 5,
+        conversationTopK: 5,
+        programTopK: 3,
+        coachCreatorTopK: 2,
+        includeMethodology: true,
         minScore: 0.7,
       },
     );

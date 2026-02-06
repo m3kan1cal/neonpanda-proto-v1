@@ -13,6 +13,7 @@ import { getMemories } from "../utils/apis/memoryApi";
 import { getWeeklyReports } from "../utils/apis/reportApi";
 import { getAllPrograms } from "../utils/apis/programApi";
 import { querySharedPrograms } from "../utils/apis/sharedProgramApi";
+import { isValidUserId } from "../utils/apis/apiConfig";
 import CoachAgent from "../utils/agents/CoachAgent";
 
 const NavigationContext = createContext(null);
@@ -22,8 +23,10 @@ export const NavigationProvider = ({ children }) => {
   const location = useLocation();
   const { isAuthenticated, user, signOut } = useAuth();
 
-  // Extract URL parameters
-  const userId = searchParams.get("userId");
+  // Extract URL parameters and validate them
+  // This prevents API calls with literal "null" string when userId is missing
+  const rawUserId = searchParams.get("userId");
+  const userId = isValidUserId(rawUserId) ? rawUserId : null;
   const coachId = searchParams.get("coachId");
 
   // Local state

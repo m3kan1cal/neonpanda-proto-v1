@@ -26,7 +26,9 @@ import {
   extractGoalTimelineFromSession,
   extractIntensityPreferenceFromSession,
 } from "./data-extraction";
-import { generateCoachCreatorSessionSummary } from "./session-management";
+// Note: generateCoachCreatorSessionSummary is now AI-powered and used in the agent tools
+// flow (tools.ts save_coach_config_to_database) where coachConfig is available.
+// This legacy flow uses an inline summary builder instead.
 import {
   validateCoachConfig,
   COACH_CONFIG_SCHEMA,
@@ -756,10 +758,23 @@ async function buildCoachConfigPrompts(
   const goalTimeline = await extractGoalTimelineFromSession(session);
   const preferredIntensity =
     await extractIntensityPreferenceFromSession(session);
-  const sessionSummary = generateCoachCreatorSessionSummary(session).replace(
-    /"/g,
-    '\\"',
-  );
+  // Build a simple session summary for prompt context (not for Pinecone storage).
+  // The AI-powered generateCoachCreatorSessionSummary requires coachConfig which
+  // doesn't exist yet at this point in the legacy flow.
+  const userResponses =
+    session.conversationHistory
+      ?.filter((m) => m.role === "user")
+      .map((m) => m.content)
+      .join(" | ") || "No responses";
+  const truncatedResponses =
+    userResponses.length > 500
+      ? userResponses.substring(0, 500) + "..."
+      : userResponses;
+  const sessionSummary =
+    `${session.sophisticationLevel || "unknown"} level athlete. Key responses: ${truncatedResponses}`.replace(
+      /"/g,
+      '\\"',
+    );
 
   // Pre-compute all JSON.stringify calls once to avoid repetition in template
   const programmingFocusJson = JSON.stringify(

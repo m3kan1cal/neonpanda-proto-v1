@@ -31,7 +31,7 @@ import CompactCoachCard from "./shared/CompactCoachCard";
 import ScrollToBottomButton from "./shared/ScrollToBottomButton";
 import CommandPaletteButton from "./shared/CommandPaletteButton";
 import { useNavigationContext } from "../contexts/NavigationContext";
-import { parseMarkdown } from "../utils/markdownParser.jsx";
+import { MarkdownRenderer } from "./shared/MarkdownRenderer";
 import CoachCreatorAgent from "../utils/agents/CoachCreatorAgent";
 import { useToast } from "../contexts/ToastContext";
 import ImageWithPresignedUrl from "./shared/ImageWithPresignedUrl";
@@ -543,16 +543,18 @@ function CoachCreator() {
 
         {/* Render text content */}
         {displayContent &&
-          (message.type === "ai"
-            ? // AI messages use full markdown parsing
-              parseMarkdown(displayContent)
-            : // User messages: simple line break rendering
-              displayContent.split("\n").map((line, index, array) => (
-                <span key={index}>
-                  {line}
-                  {index < array.length - 1 && <br />}
-                </span>
-              )))}
+          (message.type === "ai" ? (
+            // AI messages use full markdown parsing
+            <MarkdownRenderer content={displayContent} />
+          ) : (
+            // User messages: simple line break rendering
+            displayContent.split("\n").map((line, index, array) => (
+              <span key={index}>
+                {line}
+                {index < array.length - 1 && <br />}
+              </span>
+            ))
+          ))}
       </>
     );
   };

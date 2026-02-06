@@ -15,6 +15,7 @@ import { OLYMPIC_WEIGHTLIFTING_EXTRACTION_GUIDANCE } from "./olympic-weightlifti
 import { FUNCTIONAL_BODYBUILDING_EXTRACTION_GUIDANCE } from "./functional-bodybuilding-guidance";
 import { CALISTHENICS_EXTRACTION_GUIDANCE } from "./calisthenics-guidance";
 import { CIRCUIT_TRAINING_EXTRACTION_GUIDANCE } from "./circuit-training-guidance";
+import { HYBRID_EXTRACTION_GUIDANCE } from "./hybrid-guidance";
 
 /**
  * Map of discipline names to their specific extraction guidance
@@ -29,24 +30,23 @@ const DISCIPLINE_GUIDANCE_MAP: Record<string, string> = {
   functional_bodybuilding: FUNCTIONAL_BODYBUILDING_EXTRACTION_GUIDANCE,
   calisthenics: CALISTHENICS_EXTRACTION_GUIDANCE,
   circuit_training: CIRCUIT_TRAINING_EXTRACTION_GUIDANCE,
-  // Note: "hybrid" and "functional_fitness" map to crossfit guidance (same methodology)
+  hybrid: HYBRID_EXTRACTION_GUIDANCE,
 };
 
 /**
  * Get discipline-specific extraction guidance
- * Falls back to CrossFit guidance if discipline not found (most flexible guidance)
+ * Falls back to hybrid guidance if discipline not found (most flexible for mixed workouts)
  */
 export function composeDisciplineGuidance(discipline: string): string {
   let guidance = DISCIPLINE_GUIDANCE_MAP[discipline];
 
-  // If no guidance found (unrecognized discipline), fall back to CrossFit
+  // If no guidance found (unrecognized discipline), fall back to hybrid
   // This handles: "strength_training", "unknown", and any other unrecognized values
-  // Note: "hybrid" explicitly has empty guidance (intentional - uses base only)
   if (guidance === undefined) {
     console.warn(
-      `No extraction guidance for discipline: ${discipline}, falling back to crossfit guidance`,
+      `No extraction guidance for discipline: ${discipline}, falling back to hybrid guidance`,
     );
-    guidance = CROSSFIT_EXTRACTION_GUIDANCE;
+    guidance = HYBRID_EXTRACTION_GUIDANCE;
   }
 
   return guidance;
@@ -81,9 +81,17 @@ export function buildTargetedExtractionPrompt(
   // Get discipline-specific guidance
   const disciplineGuidance = composeDisciplineGuidance(discipline);
 
-  // Combine: Base + Discipline-Specific (much smaller than all-in-one)
+  // Build discipline enforcement instruction to prevent AI from changing discipline
+  const disciplineEnforcementInstruction = `
+CRITICAL DISCIPLINE ENFORCEMENT:
+You MUST set discipline="${discipline}" and structure all exercise data under discipline_specific.${discipline}.
+DO NOT change the discipline to a different value. The schema provided is specifically for ${discipline} workouts.
+Even if the workout seems to fit another discipline better, use ${discipline} as instructed.`;
+
+  // Combine: Base + Discipline Enforcement + Discipline-Specific (much smaller than all-in-one)
   if (disciplineGuidance) {
     return `${basePrompt}
+${disciplineEnforcementInstruction}
 
 ---
 
@@ -92,8 +100,9 @@ DISCIPLINE-SPECIFIC GUIDANCE (${discipline.toUpperCase()}):
 ${disciplineGuidance}`;
   }
 
-  // Return just base if no discipline-specific guidance
-  return basePrompt;
+  // Return base + enforcement if no discipline-specific guidance
+  return `${basePrompt}
+${disciplineEnforcementInstruction}`;
 }
 
 /**
