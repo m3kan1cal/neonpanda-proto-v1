@@ -270,18 +270,21 @@ const BASE_COACH_CONFIG = {
 /**
  * Test payloads with expected outcomes
  *
- * IMPORTANT: Discipline Detection Integration
- * -----------------------------------------
- * Discipline detection happens in the `stream-coach-conversation` Lambda
- * (during workout detection phase), NOT in the `build-workout` Lambda.
- * The detected discipline is passed to `build-workout` via the
- * `BuildWorkoutEvent.detectedDiscipline` field.
+ * IMPORTANT: Discipline Detection via Agent Tool
+ * -----------------------------------------------
+ * The WorkoutLoggerAgent now handles discipline detection via the `detect_discipline` tool
+ * as its first action. This replaces the previous approach where discipline was detected
+ * in `stream-coach-conversation` and passed to `build-workout`.
  *
- * Therefore:
- * - Tool counts in these tests remain the same as before (no discipline detection tool)
- * - The discipline is already known when build-workout starts
- * - Tests validate that the correct discipline is used for extraction
- * - Discipline accuracy tracking measures end-to-end classification quality
+ * Expected tool sequence for successful workouts:
+ * 1. detect_discipline - Classifies workout discipline using AI
+ * 2. extract_workout_data - Extracts workout with discipline-specific schema
+ * 3. validate_workout_completeness - Validates extraction quality
+ * 4. generate_workout_summary - Creates coaching summary
+ * 5. save_workout_to_database - Saves to DynamoDB and Pinecone
+ *
+ * Blocked/skipped workouts (planning questions, future intentions) should NOT
+ * call detect_discipline or any subsequent tools.
  */
 const TEST_CASES = {
   "simple-slash-command": {
@@ -305,6 +308,7 @@ const TEST_CASES = {
       discipline: "powerlifting", // Correct: back squats + bench press = powerlifting
       minConfidence: 0.65, // Lowered from 0.7 - basic workouts have less context
       toolsUsed: [
+        "detect_discipline",
         "extract_workout_data",
         "validate_workout_completeness",
         // normalize_workout_data skipped for high confidence (>= 0.95) - OPTIMIZATION
@@ -356,6 +360,7 @@ const TEST_CASES = {
       workoutName: "Fran",
       minConfidence: 0.85,
       toolsUsed: [
+        "detect_discipline",
         "extract_workout_data",
         "validate_workout_completeness",
         "generate_workout_summary",
@@ -531,6 +536,7 @@ const TEST_CASES = {
       discipline: "crossfit",
       minConfidence: 0.8,
       toolsUsed: [
+        "detect_discipline",
         "extract_workout_data",
         "validate_workout_completeness",
         "generate_workout_summary",
@@ -575,6 +581,7 @@ const TEST_CASES = {
       discipline: "crossfit",
       minConfidence: 0.75,
       toolsUsed: [
+        "detect_discipline",
         "extract_workout_data",
         "validate_workout_completeness",
         "generate_workout_summary",
@@ -671,6 +678,7 @@ const TEST_CASES = {
       discipline: "running",
       minConfidence: 0.8,
       toolsUsed: [
+        "detect_discipline",
         "extract_workout_data",
         "validate_workout_completeness",
         "generate_workout_summary",
@@ -750,6 +758,7 @@ Diamond Push-ups: 2 sets to failure (got 18, 14)
       discipline: "bodybuilding",
       minConfidence: 0.85,
       toolsUsed: [
+        "detect_discipline",
         "extract_workout_data",
         "validate_workout_completeness",
         "generate_workout_summary",
@@ -865,6 +874,7 @@ Diamond Push-ups: 2 sets to failure (got 18, 14)
       discipline: "hyrox",
       minConfidence: 0.9,
       toolsUsed: [
+        "detect_discipline",
         "extract_workout_data",
         "validate_workout_completeness",
         "generate_workout_summary",
@@ -941,6 +951,7 @@ Snatch Pulls: 3x5 at 85kg
       discipline: "olympic_weightlifting",
       minConfidence: 0.85,
       toolsUsed: [
+        "detect_discipline",
         "extract_workout_data",
         "validate_workout_completeness",
         "generate_workout_summary",
@@ -1020,6 +1031,7 @@ Rest 90 seconds between rounds
       discipline: "functional_bodybuilding",
       minConfidence: 0.85,
       toolsUsed: [
+        "detect_discipline",
         "extract_workout_data",
         "validate_workout_completeness",
         "generate_workout_summary",
@@ -1102,6 +1114,7 @@ Rest 90 seconds between rounds
       discipline: "calisthenics",
       minConfidence: 0.85,
       toolsUsed: [
+        "detect_discipline",
         "extract_workout_data",
         "validate_workout_completeness",
         "generate_workout_summary",
@@ -1176,6 +1189,7 @@ Got through all 8 rounds with 15-30 seconds rest each interval. Thrusters were m
       discipline: "crossfit",
       minConfidence: 0.85,
       toolsUsed: [
+        "detect_discipline",
         "extract_workout_data",
         "validate_workout_completeness",
         "generate_workout_summary",
@@ -1254,6 +1268,7 @@ Finished in 23:47. Wall balls were done in sets of 15-20-15 at the start. Box ju
       discipline: "crossfit",
       minConfidence: 0.85,
       toolsUsed: [
+        "detect_discipline",
         "extract_workout_data",
         "validate_workout_completeness",
         "generate_workout_summary",
@@ -1339,6 +1354,7 @@ Completed in 6:52. Maintained steady pace, kept rowing at 1:50-1:55/500m. DB cle
       discipline: "crossfit",
       minConfidence: 0.9,
       toolsUsed: [
+        "detect_discipline",
         "extract_workout_data",
         "validate_workout_completeness",
         "generate_workout_summary",
@@ -1405,6 +1421,7 @@ Duration: About 45 minutes total (25min strength, 15min conditioning, 5min trans
       discipline: "crossfit", // ✅ UPDATED: Was "hybrid", now "crossfit"
       minConfidence: 0.8,
       toolsUsed: [
+        "detect_discipline",
         "extract_workout_data",
         "validate_workout_completeness",
         "generate_workout_summary",
@@ -1589,6 +1606,7 @@ Completed in 17:32. Paced the runs at 1:45-1:50 each, KB swings were unbroken al
       discipline: "crossfit",
       minConfidence: 0.95, // Very high - comprehensive data
       toolsUsed: [
+        "detect_discipline",
         "extract_workout_data",
         "validate_workout_completeness",
         "generate_workout_summary",
@@ -1643,6 +1661,7 @@ Completed in 17:32. Paced the runs at 1:45-1:50 each, KB swings were unbroken al
       discipline: "circuit_training",
       minConfidence: 0.85,
       toolsUsed: [
+        "detect_discipline",
         "extract_workout_data",
         "validate_workout_completeness",
         "generate_workout_summary",
@@ -1663,6 +1682,73 @@ Completed in 17:32. Paced the runs at 1:45-1:50 each, KB swings were unbroken al
         },
         disciplineSpecificPath: "discipline_specific.circuit_training.stations",
         minStationsCount: 6, // 6 stations in the circuit
+      },
+    },
+  },
+
+  // Renamed to reflect hybrid classification - this mixed-modality workout now triggers
+  // the low-confidence fallback to hybrid discipline
+  "hybrid-complex-gym-session": {
+    description:
+      "Complex mixed-modality gym session with warmup, mobility, circuits, KB work, and deadlifts - tests hybrid discipline extraction with phases structure",
+    payload: {
+      userId: "63gocaz-j-AYRsb0094ik",
+      coachId: "user_63gocaz-j-AYRsb0094ik_coach_1756078034317",
+      conversationId: "conv_1764512884381_4amplrhdd",
+      userMessage: `Tonight at the gym I did a five minute treadmill walk to warmup. Then we did a few minutes of mobility work including cat/cow, lizard lunge with hip internal and external rotation, bird dog twists, upper back extensions, and lower back extensions.
+
+Then we did the following circuit x2:
+1. Kelso shrugs with 40 pound dumbbells
+2. Side plank rows - x10 each side
+3. Feet elevated single leg bridges x10 each leg
+
+Then we did 10 double kettlebell swings with 26 pound kettlebell 2 times, then 10 more with 30 pounds - a first for me (does that make it a PR by default)?
+
+Then we did double KB cleans 3x6, also with the 30 pounds and also a first for me
+
+Then we did deadlifts:
+2x5 at 135
+1x5 at 175
+1x3 at 185
+1x at 205 - a PR for me
+
+It took 57 minutes and 5 seconds and my Apple Watch says I burned 239 calories. The effort is a 7`,
+      coachConfig: BASE_COACH_CONFIG,
+      isSlashCommand: false,
+      messageTimestamp: new Date().toISOString(),
+      userTimezone: "America/Los_Angeles",
+    },
+    expected: {
+      success: true,
+      shouldHave: ["workoutId", "discipline", "confidence"],
+      // This mixed-modality workout should be classified as hybrid (either directly
+      // or via low-confidence fallback since it doesn't clearly fit one discipline)
+      discipline: "hybrid",
+      minConfidence: 0.5, // Lower threshold since hybrid is for mixed workouts
+      toolsUsed: [
+        "detect_discipline",
+        "extract_workout_data",
+        "validate_workout_completeness",
+        "generate_workout_summary",
+        "save_workout_to_database",
+      ],
+      workoutValidation: {
+        shouldExist: true,
+        requiredFields: [
+          "workout_id",
+          "user_id",
+          "discipline",
+          "workout_type",
+          "workout_name",
+          "date",
+          "duration",
+          "discipline_specific.hybrid",
+        ],
+        fieldValues: {
+          discipline: "hybrid",
+        },
+        // Hybrid workouts can use either phases or flat exercises structure
+        // Don't validate specific structure - just ensure hybrid data exists
       },
     },
   },

@@ -138,6 +138,7 @@ export interface DisciplineSpecific {
   functional_bodybuilding?: FunctionalBodybuildingWorkout;
   calisthenics?: CalisthenicsWorkout;
   circuit_training?: CircuitTrainingWorkout;
+  hybrid?: HybridWorkout;
 }
 
 /**
@@ -473,6 +474,65 @@ export interface CircuitStation {
   weight_unit?: string;
   equipment?: string;
   notes?: string;
+}
+
+export interface HybridWorkout {
+  primary_focus?: string | null;
+  workout_style?: string | null;
+  phases?: HybridPhase[];
+  exercises?: HybridExercise[]; // Fallback for unstructured workouts
+}
+
+export interface HybridPhase {
+  phase_name?: string | null;
+  phase_type?:
+    | "warmup"
+    | "mobility"
+    | "working"
+    | "strength"
+    | "conditioning"
+    | "circuit"
+    | "skill"
+    | "cardio"
+    | "cooldown"
+    | "accessory"
+    | "other"
+    | null;
+  duration?: number | null;
+  rounds?: number | null;
+  notes?: string | null;
+  exercises: HybridExercise[];
+}
+
+export interface HybridExercise {
+  exercise_name: string;
+  movement_pattern?:
+    | "push"
+    | "pull"
+    | "squat"
+    | "hinge"
+    | "carry"
+    | "accessory"
+    | "core"
+    | "cardio"
+    | "mobility"
+    | "other"
+    | null;
+  equipment?: string | null;
+  sets?: HybridSet[];
+}
+
+export interface HybridSet {
+  set_number?: number | null;
+  reps?: number | string | null;
+  weight?: {
+    value?: number | null;
+    unit?: "lbs" | "kg" | null;
+  } | null;
+  duration?: number | null;
+  distance?: string | null;
+  rpe?: number | null;
+  notes?: string | null;
 }
 
 /**

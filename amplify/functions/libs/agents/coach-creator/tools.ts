@@ -142,9 +142,6 @@ Returns: session, userProfile, safetyProfile, methodologyPreferences, genderPref
       extractSpecializationsFromSession(session),
     ]);
 
-    // 3. Generate session summary
-    const sessionSummary = generateCoachCreatorSessionSummary(session);
-
     console.info("✅ Session requirements loaded:", {
       hasUserProfile: !!userProfile,
       genderPreference,
@@ -163,7 +160,6 @@ Returns: session, userProfile, safetyProfile, methodologyPreferences, genderPref
       goalTimeline,
       preferredIntensity,
       specializations,
-      sessionSummary,
     };
   },
 };
@@ -1130,7 +1126,7 @@ Returns: success, coachConfigId, coachName, pineconeStored, pineconeRecordId`,
       );
     }
 
-    const { session, sessionSummary } = requirements;
+    const { session } = requirements;
     // Use normalized config if available, otherwise use assembled config
     const coachConfig =
       normalization?.normalizedConfig || assembledConfig.coachConfig;
@@ -1151,12 +1147,17 @@ Returns: success, coachConfigId, coachName, pineconeStored, pineconeRecordId`,
     await saveCoachConfig(context.userId, coachConfig, creationTimestamp);
     console.info("✅ Coach config saved to DynamoDB");
 
-    // 3. Store in Pinecone (fire-and-forget)
-    console.info("Storing session summary in Pinecone...");
+    // 3. Generate AI-powered session summary and store in Pinecone
+    console.info("Generating AI session summary and storing in Pinecone...");
     let pineconeRecordId: string | null = null;
     let pineconeStored = false;
 
     try {
+      const sessionSummary = await generateCoachCreatorSessionSummary(
+        session,
+        coachConfig,
+      );
+
       const pineconeResult = await storeCoachCreatorSummaryInPinecone(
         context.userId,
         sessionSummary,

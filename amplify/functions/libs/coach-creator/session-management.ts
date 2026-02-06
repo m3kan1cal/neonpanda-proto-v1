@@ -4,31 +4,89 @@ import {
   getUserProfile,
   saveCoachCreatorSession,
 } from "../../../dynamodb/operations";
-import { invokeAsyncLambda } from "../api-helpers";
+import {
+  invokeAsyncLambda,
+  callBedrockApi,
+  TEMPERATURE_PRESETS,
+  MODEL_IDS,
+} from "../api-helpers";
 
-// Generate coach creator session summary for analytics
-export const generateCoachCreatorSessionSummary = (
-  session: CoachCreatorSession
-): string => {
-  const sophistication = session.sophisticationLevel || "UNKNOWN";
+/**
+ * Generate an AI-powered summary of a coach creation session for semantic search and coaching context.
+ *
+ * Captures the athlete profile, methodology chosen, personality traits, training philosophy,
+ * and key preferences discussed during the session.
+ *
+ * @param session - The coach creator session with conversation history
+ * @param coachConfig - The generated coach configuration with methodology, personality, etc.
+ * @param enableThinking - Whether to enable extended thinking in the Bedrock call
+ * @returns Promise<string> - Concise AI-generated summary for Pinecone embedding
+ */
+export const generateCoachCreatorSessionSummary = async (
+  session: CoachCreatorSession,
+  coachConfig: any,
+  enableThinking: boolean = false,
+): Promise<string> => {
+  // Extract conversation context (last 10 messages for sufficient context)
+  const conversationContext = (session.conversationHistory || [])
+    .slice(-10)
+    .map((m) => `${m.role}: ${m.content}`)
+    .join("\n");
 
-  // Build summary from conversation history (user responses only)
-  const userResponses =
-    session.conversationHistory
-      ?.filter((m) => m.role === "user")
-      .map((m) => m.content)
-      .join(" | ") || "No responses";
+  // STATIC PROMPT (cacheable - instructions and examples don't change)
+  const staticPrompt = `
+You are summarizing a coach creation session where a user set up their AI fitness coach.
 
-  // Truncate if too long
-  const truncatedResponses =
-    userResponses.length > 1000
-      ? userResponses.substring(0, 1000) + "..."
-      : userResponses;
+Create a 3-4 sentence summary that captures:
+1. The athlete's experience level, training background, and fitness goals
+2. The coaching methodology and personality selected (and why)
+3. Key training preferences (frequency, equipment, specializations, intensity)
+4. Any important constraints or considerations (injuries, schedule, safety concerns)
 
-  return (
-    `User ${session.userId} completed coach creator as ${sophistication.toLowerCase()} level athlete. ` +
-    `Responses: ${truncatedResponses}`
-  );
+Keep it concise and semantically rich -- this summary will be used for semantic search to retrieve relevant context in future conversations. Focus on the substance of what was decided, not the process.
+
+EXAMPLE GOOD SUMMARIES:
+- "Intermediate powerlifter setting up a coach focused on conjugate methodology with a technical, data-driven personality. Training 4x/week in a fully equipped gym, targeting a 500lb deadlift within 6 months. Has a history of lower back issues requiring careful loading progression."
+- "Beginner athlete creating a supportive, encouraging coach using general fitness methodology. Plans to train 3x/week with minimal home equipment (dumbbells and bands). Primary goal is weight loss and building consistent exercise habits after years of inactivity."
+- "Advanced CrossFit competitor configuring a competition-focused coach with hybrid methodology blending CrossFit and Olympic weightlifting. Training 5-6x/week with full box access. Preparing for regional qualifiers, needs to improve gymnastics capacity and barbell cycling."`;
+
+  // DYNAMIC PROMPT (not cacheable - session data varies)
+  const dynamicPrompt = `SESSION DATA:
+${JSON.stringify(
+  {
+    sophisticationLevel: session.sophisticationLevel,
+    coachName: coachConfig.name,
+    methodology: coachConfig.methodology?.name || coachConfig.methodology,
+    personality: coachConfig.personality?.name || coachConfig.personality,
+    specializations: coachConfig.specializations,
+    trainingFrequency: coachConfig.trainingFrequency,
+    equipmentAvailable: coachConfig.equipmentAvailable,
+    safetyConsiderations: coachConfig.safetyConsiderations,
+    programmingEmphasis: coachConfig.programmingEmphasis,
+    periodizationApproach: coachConfig.periodizationApproach,
+  },
+  null,
+  2,
+)}
+
+CONVERSATION HISTORY:
+${conversationContext}
+
+Write the summary now:`;
+
+  const response = (await callBedrockApi(
+    staticPrompt,
+    dynamicPrompt,
+    MODEL_IDS.EXECUTOR_MODEL_FULL,
+    {
+      temperature: TEMPERATURE_PRESETS.BALANCED,
+      staticPrompt,
+      dynamicPrompt,
+      enableThinking,
+    },
+  )) as string;
+
+  return response.trim();
 };
 
 // Mark session as complete
@@ -54,7 +112,7 @@ export interface SessionData {
  */
 export async function loadSessionData(
   userId: string,
-  sessionId: string
+  sessionId: string,
 ): Promise<SessionData> {
   console.info("📂 Loading session data:", { userId, sessionId });
 
@@ -83,7 +141,7 @@ export async function saveSessionAndTriggerCoachConfig(
   userId: string,
   sessionId: string,
   session: CoachCreatorSession,
-  isComplete: boolean
+  isComplete: boolean,
 ): Promise<{ coachConfigId?: string; alreadyGenerating?: boolean }> {
   console.info("💾 Preparing to save session..");
 
@@ -100,7 +158,7 @@ export async function saveSessionAndTriggerCoachConfig(
           coachConfigId: idempotencyCheck.coachConfigId,
           status: idempotencyCheck.status,
           completedAt: idempotencyCheck.metadata?.completedAt,
-        }
+        },
       );
 
       // Don't save session again - already complete
@@ -120,7 +178,7 @@ export async function saveSessionAndTriggerCoachConfig(
           status: idempotencyCheck.status,
           startedAt: idempotencyCheck.metadata?.startedAt,
           elapsedSeconds: idempotencyCheck.metadata?.elapsedSeconds,
-        }
+        },
       );
 
       // Don't save session again - already in progress
@@ -151,7 +209,7 @@ export async function saveSessionAndTriggerCoachConfig(
         process.env.BUILD_COACH_CONFIG_FUNCTION_NAME;
       if (!buildCoachConfigFunction) {
         console.warn(
-          "⚠️ BUILD_COACH_CONFIG_FUNCTION_NAME environment variable not set"
+          "⚠️ BUILD_COACH_CONFIG_FUNCTION_NAME environment variable not set",
         );
       } else {
         // Trigger the async Lambda (lock is already saved to DynamoDB)
@@ -161,11 +219,11 @@ export async function saveSessionAndTriggerCoachConfig(
             userId,
             sessionId,
           },
-          "coach config generation"
+          "coach config generation",
         );
 
         console.info(
-          "✅ Triggered async coach config generation with idempotency protection"
+          "✅ Triggered async coach config generation with idempotency protection",
         );
       }
     } catch (error) {
@@ -177,7 +235,7 @@ export async function saveSessionAndTriggerCoachConfig(
       try {
         await saveCoachCreatorSession(failedSession);
         console.info(
-          "🔓 Reset session to FAILED status after Lambda trigger error"
+          "🔓 Reset session to FAILED status after Lambda trigger error",
         );
       } catch (resetError) {
         console.error("❌ Failed to reset session status:", resetError);
@@ -253,7 +311,7 @@ export interface IdempotencyCheckResult {
  * ```
  */
 export const checkCoachConfigIdempotency = (
-  session: CoachCreatorSession
+  session: CoachCreatorSession,
 ): IdempotencyCheckResult => {
   const existingGeneration = session.configGeneration;
 
@@ -314,7 +372,7 @@ export const checkCoachConfigIdempotency = (
  * ```
  */
 export const createCoachConfigGenerationLock = (
-  session: CoachCreatorSession
+  session: CoachCreatorSession,
 ): CoachCreatorSession => {
   return {
     ...session,
@@ -347,7 +405,7 @@ export const createCoachConfigGenerationLock = (
  */
 export const createCoachConfigGenerationFailure = (
   session: CoachCreatorSession,
-  error: Error | unknown
+  error: Error | unknown,
 ): CoachCreatorSession => {
   return {
     ...session,

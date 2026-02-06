@@ -202,6 +202,33 @@ ${JSON.stringify(collectedData, null, 2)}
 WHAT WE STILL NEED:
 ${missingSummary}${turnWarning}
 
+🚨 CRITICAL - AVOID DUPLICATE QUESTIONS:
+BEFORE asking about something, CAREFULLY CHECK THE CONVERSATION HISTORY that will be provided.
+- If the user ALREADY mentioned information (even if not yet in "COLLECTED SO FAR"), DO NOT ask it again
+- Example: If they said "Today at the gym" earlier, DON'T ask "Where did you work out?"
+- Example: If they said "a hybrid circuit training / strength training class", DON'T ask what type of workout it was
+- Example: If they mentioned specific exercises, DON'T ask "what exercises did you do?"
+- The "STILL NEED" list shows what hasn't been formally extracted yet, but they may have already mentioned it in their messages
+- Look for location hints: "at the gym", "at home", "at the box", "outside", etc.
+- Look for time hints: "today", "this morning", "tonight", "yesterday", etc.
+- Look for duration hints: "it took X minutes", "about an hour", etc.
+- Look for exercise hints: any movement names mentioned anywhere in their messages
+
+🚨 SPECIAL CASE - USER FRUSTRATION:
+If the user says things like:
+- "I already answered that"
+- "I mentioned it above"
+- "Do you not see..."
+- "We already talked about..."
+- "I said earlier..."
+- "I told you already"
+
+Then:
+1. ACKNOWLEDGE their frustration with a brief apology
+2. MOVE ON to a DIFFERENT question or confirm what you have and finish
+3. DO NOT ask the same question again even if it's in the "STILL NEED" list
+4. If unsure, err on the side of proceeding with what you have
+
 ⚠️ CRITICAL RULE: DO NOT say "You're all logged!", "I'll log this now", "Logging that for you", or similar completion phrases. You are STILL COLLECTING DATA. Only ask for the next piece of information. The system will tell you when it's time to complete.
 
 ${
@@ -286,8 +313,12 @@ Example approaches for optional fields (1-2 questions):
 AVOID:
 - Asking more than 2 questions at once (overwhelming)
 - Formal or robotic language
-- Asking for things they already provided
-- Unrelated question pairs (keep them thematically connected)`;
+- ⚠️ CRITICAL: Asking for things they ALREADY MENTIONED ANYWHERE in the conversation (check ENTIRE conversation history!)
+  - If they said "at the gym" anywhere → DON'T ask about location
+  - If they mentioned exercise names → DON'T ask what exercises they did
+  - If they said "today" or "tonight" → DON'T ask when they worked out
+- Unrelated question pairs (keep them thematically connected)
+- Re-asking after user says "I already told you" or expresses frustration`;
 }
 
 /**
@@ -302,7 +333,13 @@ function buildConversationContext(
 
   // Include FULL conversation history so AI doesn't repeat questions
   // This matches the extraction function which also uses full history
-  return conversationHistory
+  const historyText = conversationHistory
     .map((m) => `${m.role.toUpperCase()}: ${m.content}`)
     .join("\n\n");
+
+  return `FULL CONVERSATION HISTORY (⚠️ READ CAREFULLY before asking questions - check if user already mentioned info):
+
+${historyText}
+
+Based on the conversation above, generate your next response. REMEMBER: Do NOT ask about anything the user has already mentioned, even if it's still in the "WHAT WE STILL NEED" list.`;
 }

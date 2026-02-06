@@ -1,4 +1,8 @@
-import { getApiUrl, authenticatedFetch } from "./apiConfig.js";
+import {
+  getApiUrl,
+  authenticatedFetch,
+  requireValidUserId,
+} from "./apiConfig.js";
 
 /**
  * API service for Workout Session operations
@@ -22,6 +26,7 @@ import { getApiUrl, authenticatedFetch } from "./apiConfig.js";
  * @returns {Promise<Object>} - The API response with workouts array
  */
 export const getWorkouts = async (userId, options = {}) => {
+  requireValidUserId(userId, "getWorkouts");
   // Validate limit parameter
   if (options.limit !== undefined) {
     if (
@@ -90,6 +95,7 @@ export const getWorkouts = async (userId, options = {}) => {
  * @returns {Promise<Object>} - The API response with full workout details
  */
 export const getWorkout = async (userId, workoutId) => {
+  requireValidUserId(userId, "getWorkout");
   const url = `${getApiUrl("")}/users/${userId}/workouts/${workoutId}`;
 
   try {
@@ -140,6 +146,7 @@ export const getWorkout = async (userId, workoutId) => {
  * @returns {Promise<Object>} - The API response with updated workout session
  */
 export const updateWorkout = async (userId, workoutId, updates) => {
+  requireValidUserId(userId, "updateWorkout");
   const url = `${getApiUrl("")}/users/${userId}/workouts/${workoutId}`;
 
   try {
@@ -221,7 +228,7 @@ export const getRecentWorkouts = async (userId, limit = 10) => {
 export const getWorkoutsByDiscipline = async (
   userId,
   discipline,
-  limit = 20
+  limit = 20,
 ) => {
   return getWorkouts(userId, {
     discipline,
@@ -233,6 +240,7 @@ export const getWorkoutsByDiscipline = async (
 
 // Get workout sessions count for a user
 export async function getWorkoutsCount(userId, options = {}) {
+  requireValidUserId(userId, "getWorkoutsCount");
   const queryParams = new URLSearchParams();
 
   // Add optional filters
@@ -324,7 +332,7 @@ export const getTrainingDaysCount = async (userId, options = {}) => {
           console.warn(
             "getTrainingDaysCount: Invalid date format for workout:",
             workout.workoutId,
-            workout.completedAt
+            workout.completedAt,
           );
         }
       }
@@ -335,7 +343,7 @@ export const getTrainingDaysCount = async (userId, options = {}) => {
   } catch (error) {
     console.error(
       "getTrainingDaysCount: Error calculating training days:",
-      error
+      error,
     );
     throw error;
   }
@@ -351,6 +359,7 @@ export const getTrainingDaysCount = async (userId, options = {}) => {
  * @returns {Promise<Object>} - The API response with workout creation status
  */
 export const createWorkout = async (userId, workoutContent, options = {}) => {
+  requireValidUserId(userId, "createWorkout");
   const url = `${getApiUrl("")}/users/${userId}/workouts`;
 
   const requestBody = {
@@ -400,6 +409,7 @@ export const createWorkout = async (userId, workoutContent, options = {}) => {
  * @returns {Promise<Object>} - The API response
  */
 export const deleteWorkout = async (userId, workoutId) => {
+  requireValidUserId(userId, "deleteWorkout");
   const url = `${getApiUrl("")}/users/${userId}/workouts/${workoutId}`;
 
   try {

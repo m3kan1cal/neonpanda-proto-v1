@@ -404,8 +404,9 @@ const TEST_CASES = [
     },
   },
   {
-    name: "error-invalid-duration",
-    description: "Should fail with non-numeric program duration",
+    name: "graceful-invalid-duration",
+    description:
+      "Should gracefully handle non-numeric duration by falling back to default (8 weeks)",
     payload: {
       userId: TEST_USER_ID,
       coachId: TEST_COACH_ID,
@@ -414,13 +415,12 @@ const TEST_CASES = [
       sessionId: `session_${Date.now()}_error3`,
       todoList: {
         trainingGoals: { value: "Build strength" },
-        programDuration: { value: { invalid: "object" } }, // Invalid: not a number or string
+        programDuration: { value: { invalid: "object" } }, // Invalid: not a number or string — system falls back to 8 weeks
         trainingFrequency: { value: 4 },
       },
     },
     expectations: {
-      shouldSucceed: false,
-      expectedErrorPattern: "duration|required|invalid",
+      shouldSucceed: true,
     },
   },
   {

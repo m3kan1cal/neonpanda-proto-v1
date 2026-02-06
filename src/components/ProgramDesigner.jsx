@@ -32,7 +32,7 @@ import ChatInput from "./shared/ChatInput";
 import UserAvatar from "./shared/UserAvatar";
 import { getUserInitial as getInitialFromUsername } from "./shared/UserAvatar";
 import ScrollToBottomButton from "./shared/ScrollToBottomButton";
-import { parseMarkdown } from "../utils/markdownParser.jsx";
+import { MarkdownRenderer } from "./shared/MarkdownRenderer";
 // No imports needed - session ID comes from URL
 import ProgramDesignerAgent from "../utils/agents/ProgramDesignerAgent";
 import CoachAgent from "../utils/agents/CoachAgent";
@@ -874,16 +874,18 @@ function ProgramDesigner() {
 
         {/* Render text content */}
         {displayContent &&
-          (message.type === "ai"
-            ? // AI messages use full markdown parsing
-              parseMarkdown(displayContent)
-            : // User messages: simple line break rendering
-              displayContent.split("\n").map((line, index, array) => (
-                <span key={index}>
-                  {line}
-                  {index < array.length - 1 && <br />}
-                </span>
-              )))}
+          (message.type === "ai" ? (
+            // AI messages use full markdown parsing
+            <MarkdownRenderer content={displayContent} />
+          ) : (
+            // User messages: simple line break rendering
+            displayContent.split("\n").map((line, index, array) => (
+              <span key={index}>
+                {line}
+                {index < array.length - 1 && <br />}
+              </span>
+            ))
+          ))}
       </>
     );
   };

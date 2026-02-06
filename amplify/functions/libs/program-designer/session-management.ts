@@ -11,31 +11,95 @@ import {
   saveProgramDesignerSession,
   getUserProfile,
 } from "../../../dynamodb/operations";
-import { invokeAsyncLambda } from "../api-helpers";
+import {
+  invokeAsyncLambda,
+  callBedrockApi,
+  TEMPERATURE_PRESETS,
+  MODEL_IDS,
+} from "../api-helpers";
+import type { Program } from "../program/types";
 
 /**
- * Generate program designer session summary for analytics
+ * Generate an AI-powered summary of a program design session for semantic search and coaching context.
+ *
+ * Captures what the user asked for, the requirements gathered, key design decisions,
+ * and constraints discussed during the session.
+ *
+ * @param session - The program designer session with conversation history
+ * @param program - The generated training program with phases, goals, etc.
+ * @param enableThinking - Whether to enable extended thinking in the Bedrock call
+ * @returns Promise<string> - Concise AI-generated summary for Pinecone embedding
  */
-export const generateProgramDesignerSessionSummary = (
+export const generateProgramDesignerSessionSummary = async (
   session: ProgramDesignerSession,
-): string => {
-  // Build summary from conversation history (user responses only)
-  const userResponses =
-    session.conversationHistory
-      ?.filter((m) => m.role === "user")
-      .map((m) => m.content)
-      .join(" | ") || "No responses";
+  program: Program,
+  enableThinking: boolean = false,
+): Promise<string> => {
+  // Extract conversation context (last 10 messages for sufficient context)
+  const conversationContext = (session.conversationHistory || [])
+    .slice(-10)
+    .map((m) => `${m.role}: ${m.content}`)
+    .join("\n");
 
-  // Truncate if too long
-  const truncatedResponses =
-    userResponses.length > 1000
-      ? userResponses.substring(0, 1000) + "..."
-      : userResponses;
+  // STATIC PROMPT (cacheable - instructions and examples don't change)
+  const staticPrompt = `
+You are summarizing a program design session where a user worked with an AI coach to create a training program.
 
-  return (
-    `User ${session.userId} completed program designer. ` +
-    `Responses: ${truncatedResponses}`
-  );
+Create a 3-4 sentence summary that captures:
+1. What the user asked for and their primary training goals
+2. The program structure created (name, duration, phases, frequency)
+3. Key design decisions and constraints discussed (equipment, schedule, focus areas)
+4. Any important user context that influenced the program design (experience level, injuries, preferences)
+
+Keep it concise and semantically rich -- this summary will be used for semantic search to retrieve relevant context in future conversations. Focus on the substance of what was designed, not the process.
+
+EXAMPLE GOOD SUMMARIES:
+- "User requested a 12-week strength program targeting powerlifting competition prep. Created 'Peak Performance' with 3 phases: hypertrophy base (4 weeks), strength intensification (5 weeks), and peaking (3 weeks) at 4x/week. Equipment limited to home gym with rack, barbell, and dumbbells. User has 3 years of training experience and wants to compete in the 83kg class."
+- "User designed a 6-week bodyweight fitness program for travel. Created 'Road Warrior' with 2 phases: foundation and progression at 5x/week. No equipment required, sessions capped at 30 minutes. User prioritized maintaining muscle mass during extended business travel."
+- "User built an 8-week hybrid program combining CrossFit and Olympic weightlifting. Created 'Oly-Fit Hybrid' with 2 phases at 5x/week in a fully equipped CrossFit box. Focus on improving clean & jerk technique while maintaining metcon capacity for upcoming competition."`;
+
+  // DYNAMIC PROMPT (not cacheable - session and program data vary)
+  const dynamicPrompt = `PROGRAM DATA:
+${JSON.stringify(
+  {
+    name: program.name,
+    description: program.description,
+    totalDays: program.totalDays,
+    trainingFrequency: program.trainingFrequency,
+    startDate: program.startDate,
+    endDate: program.endDate,
+    phases: program.phases?.map((p) => ({
+      name: p.name,
+      description: p.description,
+      durationDays: p.durationDays,
+      focusAreas: p.focusAreas,
+    })),
+    trainingGoals: program.trainingGoals,
+    equipmentConstraints: program.equipmentConstraints,
+    totalWorkouts: program.totalWorkouts,
+  },
+  null,
+  2,
+)}
+
+CONVERSATION HISTORY:
+${conversationContext}
+
+Write the summary now:`;
+
+  const response = (await callBedrockApi(
+    staticPrompt,
+    dynamicPrompt,
+    MODEL_IDS.EXECUTOR_MODEL_FULL,
+    {
+      temperature: TEMPERATURE_PRESETS.BALANCED,
+      staticPrompt,
+      dynamicPrompt,
+      enableThinking,
+    },
+  )) as string;
+
+  return response.trim();
 };
 
 /**
@@ -167,7 +231,9 @@ export async function saveSessionAndTriggerProgramGeneration(
         // Trigger the async Lambda (lock is already saved to DynamoDB)
         // Note: generationPayload should always be provided by caller with full BuildProgramEvent
         if (!generationPayload) {
-          throw new Error("generationPayload is required for program generation");
+          throw new Error(
+            "generationPayload is required for program generation",
+          );
         }
         const payload = generationPayload;
 

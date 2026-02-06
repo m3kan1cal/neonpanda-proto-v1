@@ -26,7 +26,7 @@ import CoachAgent from "../../utils/agents/CoachAgent";
 import { useToast } from "../../contexts/ToastContext";
 import { CenteredErrorState } from "../shared/ErrorStates";
 import { explainTerm } from "../../utils/apis/explainApi";
-import { parseMarkdown } from "../../utils/markdownParser";
+import { MarkdownRenderer } from "../shared/MarkdownRenderer";
 
 /**
  * ViewWorkouts - Shows workout templates for a specific day or today
@@ -90,6 +90,10 @@ function ViewWorkouts() {
   const programAgentRef = useRef(null);
   const coachAgentRef = useRef(null);
 
+  // Ref to track ProgramAgent's todaysWorkout reference for change detection
+  // Prevents stale data from overwriting local optimistic updates during polling
+  const prevTodaysWorkoutRef = useRef(null);
+
   // Ref to track current explanation request (for cancellation)
   const explanationAbortControllerRef = useRef(null);
 
@@ -121,7 +125,17 @@ function ViewWorkouts() {
             if (newState.selectedProgram) {
               setProgram(newState.selectedProgram);
             }
-            if (newState.todaysWorkout) {
+            // Only update workoutData when the todaysWorkout reference actually changed.
+            // _updateState() spreads the full programState on every call, so todaysWorkout
+            // is always truthy after initial load. Without this check, unrelated state
+            // changes (e.g. isLoadingTodaysWorkout: true during polling) would overwrite
+            // local optimistic updates (like marking a template "completed") with stale data,
+            // causing a brief UI flicker back to "Log/Skip" buttons.
+            if (
+              newState.todaysWorkout &&
+              newState.todaysWorkout !== prevTodaysWorkoutRef.current
+            ) {
+              prevTodaysWorkoutRef.current = newState.todaysWorkout;
               setWorkoutData(newState.todaysWorkout);
             }
           },
@@ -1195,18 +1209,31 @@ General thoughts: `;
                             style={{
                               resize: "none",
                               overflow: "hidden",
+                              // Use min-height to prevent collapse during typing
+                              minHeight: "200px",
                             }}
                             ref={(el) => {
                               if (el) {
                                 // Set initial height based on content when textarea first renders
-                                el.style.height = "auto";
-                                el.style.height = el.scrollHeight + "px";
+                                // Use requestAnimationFrame to avoid layout thrashing
+                                requestAnimationFrame(() => {
+                                  if (el.scrollHeight > el.clientHeight) {
+                                    el.style.height = el.scrollHeight + "px";
+                                  }
+                                });
                               }
                             }}
                             onInput={(e) => {
-                              e.target.style.height = "auto";
-                              e.target.style.height =
-                                e.target.scrollHeight + "px";
+                              // Avoid resetting to "auto" which causes iOS Safari to scroll to top
+                              // Instead, only grow the textarea if content exceeds current height
+                              const target = e.target;
+                              // Temporarily set overflow to get accurate scrollHeight
+                              const currentHeight = target.clientHeight;
+                              const scrollHeight = target.scrollHeight;
+
+                              if (scrollHeight > currentHeight) {
+                                target.style.height = scrollHeight + "px";
+                              }
                             }}
                           />
                           <div
@@ -1877,7 +1904,7 @@ function ExplanationPopup({ isLoading, explanation, onClose }) {
           </div>
         ) : (
           <div className="font-rajdhani text-sm text-synthwave-text-secondary leading-relaxed">
-            {parseMarkdown(explanation)}
+            <MarkdownRenderer content={explanation} />
           </div>
         )}
       </div>

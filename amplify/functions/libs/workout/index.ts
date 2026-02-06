@@ -23,12 +23,16 @@ export {
   calculateCompleteness,
   extractCompletedAtTime,
   checkWorkoutComplexity,
-  isComplexWorkout,
   generateWorkoutSummary,
   classifyDiscipline,
   validateWorkoutStructure,
   applyPerformanceMetricDefaults,
 } from "./extraction";
+
+export {
+  WORKOUT_COMPLEXITY_SCHEMA,
+  type WorkoutComplexityResult,
+} from "../schemas/workout-complexity-schema";
 
 export { storeWorkoutSummaryInPinecone } from "./pinecone";
 

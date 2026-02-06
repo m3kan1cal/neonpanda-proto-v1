@@ -31,6 +31,8 @@ You are a fitness discipline classification expert. Analyze this workout descrip
 
 **circuit_training**: Station-based timed intervals, F45, Orange Theory, Barry's Bootcamp, community circuit classes, boot camps, metabolic conditioning circuits, work/rest timing (30s on/30s off), station rotation, round-based circuits, HIIT circuits with stations
 
+**hybrid**: Mixed-modality workouts that combine multiple distinct training styles in one session without clearly belonging to a single discipline. Examples: warmup + strength + cardio + mobility, personal training sessions, open gym mixed work, "general fitness" sessions, workouts with multiple unrelated sections
+
 ## IMAGE ANALYSIS GUIDANCE
 
 When images are provided:
@@ -43,7 +45,7 @@ Visual indicators often trump text descriptions for discipline classification.
 
 ## CLASSIFICATION RULES
 
-**IMPORTANT**: If the workout is mixed-modality or unclear, classify as "crossfit" (the functional fitness discipline that encompasses mixed training).
+**IMPORTANT**: If the workout is truly mixed-modality with multiple distinct sections (e.g., warmup + strength + cardio + mobility) that don't fit a single discipline, classify as "hybrid". Only use "crossfit" for workouts that follow CrossFit-specific formats (AMRAPs, EMOMs, For Time, etc.).
 
 ### Priority Rules (Most Important)
 1. **Format/Structure trumps exercise selection**: "EMOM 10: bench press" = CrossFit (not powerlifting)
@@ -55,7 +57,8 @@ Visual indicators often trump text descriptions for discipline classification.
 - **Strength + Metcon**: Identify which is the MAIN workout vs warmup/accessory
   - "Strength work: squats 3x5, then 12-min AMRAP..." = CrossFit (metcon is primary)
   - "5x5 squats at 80%, then accessory work" = Powerlifting (strength is primary)
-- **Equal emphasis on multiple disciplines**: Classify as "crossfit" (functional fitness methodology)
+- **Equal emphasis on multiple disciplines**: Classify as "hybrid" (truly mixed-modality)
+- **Multiple distinct sections without CrossFit format**: Classify as "hybrid" (personal training, open gym, general fitness)
 - **Warmup doesn't determine discipline**: "Warmed up with a 400m run, then did Fran" = CrossFit
 
 ### Edge Case Handling
@@ -81,8 +84,8 @@ Visual indicators often trump text descriptions for discipline classification.
 ### Confidence Scoring
 - **0.9-1.0**: Clear single-discipline indicators (named WOD, explicit program name, race-specific, unambiguous format)
 - **0.7-0.9**: Strong indicators with minor ambiguity (EMOM with non-standard movements, tempo work without split mention)
-- **0.5-0.7**: Mixed signals, multi-phase without clear primary, could be 2+ disciplines
-- **0.4-0.5**: Very unclear, lean toward crossfit (default for mixed/unclear)
+- **0.5-0.7**: Mixed signals, multi-phase without clear primary, could be 2+ disciplines - consider "hybrid"
+- **0.4-0.5**: Very unclear, use "hybrid" (default for mixed/unclear multi-modality workouts)
 
 ## EXAMPLES
 
@@ -128,6 +131,12 @@ Visual indicators often trump text descriptions for discipline classification.
 - "Boot camp workout: 4 rounds of 8 exercises, 40s work 20s rest" → circuit_training, 0.9
 - "Orange Theory 2G class, treadmill + floor work" → circuit_training, 0.95
 
+**Hybrid:**
+- "Warmup: 10 min treadmill, mobility. Then: deadlifts 3x5, some KB swings, finished with stretching" → hybrid, 0.85
+- "Personal training session: cardio warmup, upper body strength, core work, flexibility" → hybrid, 0.9
+- "Open gym: did some squats, ran a mile, practiced handstands, then yoga" → hybrid, 0.85
+- "General fitness: 20 min bike, 20 min weights, 20 min stretching" → hybrid, 0.95
+
 Use the classify_discipline tool to return your analysis.`;
 
 export async function detectDiscipline(
@@ -165,17 +174,38 @@ export async function detectDiscipline(
       const roundedConfidence =
         Math.round(disciplineData.confidence * 100) / 100;
 
+      // Low-confidence fallback: If confidence is below threshold and not already hybrid,
+      // override to hybrid since the workout likely doesn't fit a single discipline well
+      const LOW_CONFIDENCE_THRESHOLD = 0.65;
+      let finalDiscipline = disciplineData.discipline;
+      let finalReasoning = disciplineData.reasoning;
+
+      if (
+        roundedConfidence < LOW_CONFIDENCE_THRESHOLD &&
+        disciplineData.discipline !== "hybrid"
+      ) {
+        console.info(
+          `⚠️ Low confidence (${roundedConfidence}) for ${disciplineData.discipline}, falling back to hybrid`,
+        );
+        finalDiscipline = "hybrid";
+        finalReasoning = `Low confidence (${roundedConfidence}) for ${disciplineData.discipline}: ${disciplineData.reasoning}. Defaulting to hybrid due to mixed-modality characteristics.`;
+      }
+
       console.info("✅ Discipline detected:", {
-        discipline: disciplineData.discipline,
+        discipline: finalDiscipline,
+        originalDiscipline:
+          finalDiscipline !== disciplineData.discipline
+            ? disciplineData.discipline
+            : undefined,
         confidence: roundedConfidence,
-        reasoning: disciplineData.reasoning,
+        reasoning: finalReasoning,
       });
 
       return {
-        discipline: disciplineData.discipline,
+        discipline: finalDiscipline,
         confidence: roundedConfidence,
         method: "ai_detection",
-        reasoning: disciplineData.reasoning,
+        reasoning: finalReasoning,
       };
     }
 
@@ -183,14 +213,15 @@ export async function detectDiscipline(
     throw new Error("AI did not use classification tool");
   } catch (error) {
     console.error(
-      "❌ AI discipline detection failed, defaulting to crossfit:",
+      "❌ AI discipline detection failed, defaulting to hybrid:",
       error,
     );
     return {
-      discipline: "crossfit",
+      discipline: "hybrid",
       confidence: 0.5,
       method: "ai_detection",
-      reasoning: "Detection failed, defaulting to crossfit discipline",
+      reasoning:
+        "Detection failed, defaulting to hybrid discipline for flexible extraction",
     };
   }
 }

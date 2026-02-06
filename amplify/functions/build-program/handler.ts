@@ -356,17 +356,19 @@ export const handler = async (event: BuildProgramEvent) => {
                 );
 
                 if (program) {
-                  // Generate session summary
-                  const sessionSummary =
-                    generateProgramDesignerSessionSummary(existingSession);
-
-                  // Store in Pinecone (fire-and-forget, non-blocking)
-                  storeProgramDesignerSessionSummaryInPinecone(
-                    event.userId,
-                    sessionSummary,
+                  // Generate AI-powered session summary and store in Pinecone (fire-and-forget, non-blocking)
+                  generateProgramDesignerSessionSummary(
                     existingSession,
                     program,
                   )
+                    .then((sessionSummary) =>
+                      storeProgramDesignerSessionSummaryInPinecone(
+                        event.userId,
+                        sessionSummary,
+                        existingSession,
+                        program,
+                      ),
+                    )
                     .then((pineconeResult) => {
                       if (pineconeResult.success) {
                         console.info(

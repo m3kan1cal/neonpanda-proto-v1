@@ -1,4 +1,8 @@
-import { getApiUrl, authenticatedFetch } from "./apiConfig.js";
+import {
+  getApiUrl,
+  authenticatedFetch,
+  requireValidUserId,
+} from "./apiConfig.js";
 
 /**
  * API service for Exercise operations
@@ -15,6 +19,7 @@ import { getApiUrl, authenticatedFetch } from "./apiConfig.js";
  * ExerciseNameEntry: { exerciseName, displayName, count, lastPerformed, disciplines }
  */
 export const getExerciseNames = async (userId, options = {}) => {
+  requireValidUserId(userId, "getExerciseNames");
   // Validate limit parameter
   if (options.limit !== undefined) {
     if (
@@ -85,6 +90,7 @@ export const getExerciseNames = async (userId, options = {}) => {
  * }
  */
 export const getExercises = async (userId, exerciseName, options = {}) => {
+  requireValidUserId(userId, "getExercises");
   if (!exerciseName) {
     throw new Error("exerciseName is required");
   }
@@ -194,6 +200,7 @@ export const getRecentExercises = async (userId, exerciseName, limit = 5) => {
  * Response: { count: number }
  */
 export const getExercisesCount = async (userId, options = {}) => {
+  requireValidUserId(userId, "getExercisesCount");
   const queryParams = new URLSearchParams();
 
   // Add optional filters

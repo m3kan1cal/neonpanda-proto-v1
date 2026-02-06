@@ -1197,10 +1197,8 @@ const WorkoutViewer = ({
 
   // Map legacy disciplines to their data location
   const getDisciplineDataPath = (disciplineName) => {
-    if (
-      disciplineName === "hybrid" ||
-      disciplineName === "functional_fitness"
-    ) {
+    // Only functional_fitness needs mapping - hybrid now has its own schema
+    if (disciplineName === "functional_fitness") {
       return "crossfit";
     }
     return disciplineName;
@@ -1221,7 +1219,7 @@ const WorkoutViewer = ({
   const functionalBodybuildingData =
     workoutData.discipline_specific?.functional_bodybuilding;
   const calisthenicsData = workoutData.discipline_specific?.calisthenics;
-  // hybrid removed - use crossfit for mixed-modality workouts
+  const hybridData = workoutData.discipline_specific?.hybrid;
 
   return (
     <div className="space-y-6" data-workout-viewer>
@@ -2248,10 +2246,9 @@ const WorkoutViewer = ({
                   toggleSubsection,
                   collapsedSubsections,
                 },
-                // Legacy discipline mappings - use CrossFit component
                 hybrid: {
-                  crossfitData: disciplineData,
-                  sectionId: 4,
+                  hybridData: disciplineData,
+                  sectionId: "hybrid",
                   toggleSubsection,
                   collapsedSubsections,
                 },
