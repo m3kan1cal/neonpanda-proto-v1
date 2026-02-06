@@ -1,6 +1,9 @@
 import { queryWorkouts } from "../../../dynamodb/operations";
 import { queryPineconeContext } from "../api-helpers";
-import { shouldUsePineconeSearch, formatPineconeContext } from "../pinecone-utils";
+import {
+  shouldUsePineconeSearch,
+  formatPineconeContext,
+} from "../pinecone-utils";
 
 // Configuration constants
 const RECENT_WORKOUTS_CONTEXT_LIMIT = 14;
@@ -22,7 +25,7 @@ export interface ConversationContextResult {
 export async function gatherConversationContext(
   userId: string,
   userMessage: string,
-  shouldQueryPinecone?: boolean
+  shouldQueryPinecone?: boolean,
 ): Promise<ConversationContextResult> {
   // Load recent workouts for context
   let recentWorkouts: any[] = [];
@@ -41,14 +44,12 @@ export async function gatherConversationContext(
     console.info("Loaded recent workouts for context:", {
       userId,
       workoutCount: recentWorkouts.length,
-      summaries: recentWorkouts.map(
-        (w) => w.summary?.substring(0, 50) + "..."
-      ),
+      summaries: recentWorkouts.map((w) => w.summary?.substring(0, 50) + "..."),
     });
   } catch (error) {
     console.warn(
       "Failed to load recent workouts for context, continuing without:",
-      error
+      error,
     );
     // Continue without workout context - don't fail the conversation
   }
@@ -58,31 +59,32 @@ export async function gatherConversationContext(
   let pineconeMatches: any[] = [];
 
   // Use provided flag, or fall back to AI-based decision for backward compatibility
-  const shouldQuery = shouldQueryPinecone !== undefined
-    ? shouldQueryPinecone
-    : await shouldUsePineconeSearch(userMessage);
+  const shouldQuery =
+    shouldQueryPinecone !== undefined
+      ? shouldQueryPinecone
+      : await shouldUsePineconeSearch(userMessage);
 
   if (shouldQuery) {
     try {
-      const decisionSource = shouldQueryPinecone !== undefined ? 'smart-router' : 'ai-analysis';
-      console.info(`🔍 Querying Pinecone for semantic context (decision: ${decisionSource}):`, {
-        userId,
-        userMessageLength: userMessage.length,
-        messagePreview: userMessage.substring(0, 100) + "...",
-      });
-
-      const pineconeResult = await queryPineconeContext(
-        userId,
-        userMessage,
+      const decisionSource =
+        shouldQueryPinecone !== undefined ? "smart-router" : "ai-analysis";
+      console.info(
+        `🔍 Querying Pinecone for semantic context (decision: ${decisionSource}):`,
         {
-          topK: 6, // Increase to 8-10 for more context
-          includeWorkouts: true,
-          includeCoachCreator: true,
-          includeConversationSummaries: true,
-          includeMethodology: true, // Enable methodology document retrieval
-          minScore: 0.7,
-        }
+          userId,
+          userMessageLength: userMessage.length,
+          messagePreview: userMessage.substring(0, 100) + "...",
+        },
       );
+
+      const pineconeResult = await queryPineconeContext(userId, userMessage, {
+        workoutTopK: 8,
+        conversationTopK: 5,
+        programTopK: 3,
+        coachCreatorTopK: 2,
+        includeMethodology: true,
+        minScore: 0.7,
+      });
 
       if (pineconeResult.success && pineconeResult.matches.length > 0) {
         pineconeMatches = pineconeResult.matches;
@@ -102,13 +104,13 @@ export async function gatherConversationContext(
     } catch (error) {
       console.warn(
         "⚠️ Failed to query Pinecone context, continuing without:",
-        error
+        error,
       );
       // Continue without Pinecone context - don't fail the conversation
     }
   } else {
     console.info(
-      "⏭️ Skipping Pinecone query - message does not require semantic search"
+      "⏭️ Skipping Pinecone query - message does not require semantic search",
     );
   }
 

@@ -72,7 +72,6 @@ export interface SessionRequirementsResult {
   goalTimeline: string;
   preferredIntensity: string;
   specializations: string[];
-  sessionSummary: string;
 }
 
 /**

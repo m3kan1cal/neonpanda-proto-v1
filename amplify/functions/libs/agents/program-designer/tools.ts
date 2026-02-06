@@ -273,14 +273,14 @@ Returns: coachConfig, userProfile, pineconeContext, programDuration (days), trai
     console.info("Querying Pinecone for user context...");
     const pineconeResult = await queryPineconeContext(
       userId,
-      `Program for: ${todoList.trainingGoals?.value || "fitness goals"}`,
+      `User training history, preferences, goals, and coaching discussions for program design: ${todoList.trainingGoals?.value || "fitness goals"}`,
       {
-        topK: 8,
-        includeWorkouts: true,
-        includeCoachCreator: true,
-        includeConversationSummaries: true,
+        workoutTopK: 5,
+        conversationTopK: 8, // Higher -- cross-context retrieval is the priority here
+        programTopK: 3,
+        coachCreatorTopK: 2,
         includeMethodology: true,
-        minScore: 0.7,
+        minScore: 0.5, // Lower threshold for broader recall on conversations
       },
     );
 

@@ -370,6 +370,11 @@ export function formatPineconeContext(pineconeMatches: any[]): string {
     .map((match) => `- ${match.content} (Score: ${match.score.toFixed(2)})`)
     .join("\n");
 
+  const programContext = otherMatches
+    .filter((match) => match.recordType === "program_summary")
+    .map((match) => `- ${match.content} (Score: ${match.score.toFixed(2)})`)
+    .join("\n");
+
   if (workoutContext) {
     contextString += `\nRELEVANT WORKOUT HISTORY:\n${workoutContext}`;
   }
@@ -380,6 +385,10 @@ export function formatPineconeContext(pineconeMatches: any[]): string {
 
   if (conversationContext) {
     contextString += `\nCOACHING RELATIONSHIP MEMORY:\n${conversationContext}`;
+  }
+
+  if (programContext) {
+    contextString += `\nTRAINING PROGRAM CONTEXT:\n${programContext}`;
   }
 
   return contextString;

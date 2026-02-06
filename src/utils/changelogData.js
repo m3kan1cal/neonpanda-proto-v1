@@ -10,6 +10,36 @@
 
 export const changelogEntries = [
   {
+    version: "Release v1.0.20260206-beta",
+    date: "2026-02-06",
+    changes: {
+      added: [
+        "AI-powered coach creator session summaries replacing template-based concatenation; generateCoachCreatorSessionSummary now uses Bedrock (Haiku 4) to produce rich 3-4 sentence narratives capturing athlete profile, methodology chosen, personality traits, training philosophy, and key preferences for high-quality semantic search in Pinecone",
+        "AI-powered program designer session summaries replacing template-based concatenation; generateProgramDesignerSessionSummary now uses Bedrock (Haiku 4) to produce rich 3-4 sentence narratives capturing program requirements, design decisions, structure, and user context for high-quality semantic search in Pinecone",
+        "Per-type parallel Pinecone queries in queryUserNamespace replacing single combined query; each record type (workout_summary, conversation_summary, program_summary, coach_creator_summary) now gets its own query with its own topK budget running in parallel, eliminating type crowding where high-volume types (80+ workouts) could push out low-volume types (3 programs) before reranking",
+        "querySingleRecordType helper function in api-helpers.ts for focused single-type Pinecone queries with individual error handling",
+        "UserNamespaceQueryOptions exported interface for per-type topK budget configuration (workoutTopK, conversationTopK, programTopK, coachCreatorTopK)",
+        "program_summary record type now queried in coach conversations and program designer sessions, making training program context visible to the coach for the first time",
+        "TRAINING PROGRAM CONTEXT section in formatPineconeContext for program_summary records, following the same pattern as workout, coach creator, and conversation summary sections",
+        "Cross-context conversation retrieval in program designer using broader query string and higher conversationTopK budget (8 vs 5) to ensure coaching conversation summaries reach the program design flow",
+      ],
+      changed: [
+        "queryPineconeContext options interface from boolean flags (includeWorkouts, includeCoachCreator, includeConversationSummaries) to per-type topK budgets (workoutTopK, conversationTopK, programTopK, coachCreatorTopK) with sensible defaults",
+        "Coach conversation Pinecone query budgets: workoutTopK: 8, conversationTopK: 5, programTopK: 3, coachCreatorTopK: 2 (was single topK: 6 shared across all types)",
+        "Program designer Pinecone query: broader query string including training history, preferences, and coaching discussions; conversationTopK: 8 for stronger cross-context retrieval; minScore lowered to 0.5 for broader recall",
+        "Program generator Pinecone query updated to per-type budgets: workoutTopK: 5, conversationTopK: 5, programTopK: 3, coachCreatorTopK: 2",
+        "Coach creator summary generation moved from load_session_requirements tool to save_coach_config_to_database tool where coachConfig is available for richer AI-generated summaries",
+        "Program designer summary generation changed from synchronous to async fire-and-forget chain (generateProgramDesignerSessionSummary -> storeProgramDesignerSessionSummaryInPinecone) in build-program handler",
+      ],
+      fixed: [],
+      removed: [
+        "Template-based concatenation in generateCoachCreatorSessionSummary that produced raw pipe-delimited user responses instead of semantically meaningful summaries",
+        "Template-based concatenation in generateProgramDesignerSessionSummary that produced raw pipe-delimited user responses instead of semantically meaningful summaries",
+        "Single combined Pinecone query in queryUserNamespace using $in filter across all record types, which caused type crowding in search results",
+      ],
+    },
+  },
+  {
     version: "Release v1.0.20260205-beta",
     date: "2026-02-05",
     changes: {

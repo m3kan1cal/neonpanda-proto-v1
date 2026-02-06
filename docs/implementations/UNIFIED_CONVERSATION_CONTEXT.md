@@ -3,9 +3,51 @@
 ## Shared Context Between Coach Conversations & Program Designer
 
 **Created:** 2026-02-05
-**Status:** Proposed
+**Updated:** 2026-02-06
+**Status:** Phase 0 Complete, Phase 1 Partially Complete
 **Priority:** High
 **Related Fix:** Cross-screen context boundary prompt guardrail (v1.0.20260205-beta)
+
+---
+
+## Progress Log
+
+### Phase 0: Foundation (Completed 2026-02-06, v1.0.20260206-beta)
+
+Before implementing cross-context summary sharing, we addressed foundational quality and architecture issues in the Pinecone summary and retrieval layer:
+
+**Summary Quality Upgrades:**
+
+- Upgraded `generateCoachCreatorSessionSummary()` from template-based concatenation of raw user responses to AI-powered (Bedrock Haiku 4) 3-4 sentence narratives capturing athlete profile, methodology, personality, and training preferences
+- Upgraded `generateProgramDesignerSessionSummary()` from template-based concatenation to AI-powered 3-4 sentence narratives capturing program requirements, design decisions, structure, and user context
+- Both now produce semantically rich text suitable for Pinecone embedding and cross-context retrieval (previously, raw pipe-delimited user responses performed poorly in semantic search)
+
+**Query Architecture Refactor:**
+
+- Refactored `queryUserNamespace()` from a single combined Pinecone query (all record types sharing one `topK: 30`) to per-type parallel queries, each with its own `topK` budget
+- This eliminates type crowding where high-volume types (e.g., 80+ workout summaries) would push out low-volume types (e.g., 3 program summaries) before the reranker could evaluate them
+- New `querySingleRecordType()` helper issues focused single-type Pinecone queries; `queryUserNamespace` runs all enabled types via `Promise.all` and combines results for reranking
+
+**Cross-Context Retrieval Enablement:**
+
+- Added `program_summary` as a queryable record type in coach conversations (previously invisible to the coach)
+- Added `TRAINING PROGRAM CONTEXT` formatting section in `formatPineconeContext()`
+- Program designer now queries with `conversationTopK: 8` (higher budget) and a broader query string for stronger cross-context retrieval of coaching conversation summaries
+- Coach conversations now query with `programTopK: 3` to surface relevant training program context
+
+**Files Changed:**
+
+- `amplify/functions/libs/coach-creator/session-management.ts`
+- `amplify/functions/libs/program-designer/session-management.ts`
+- `amplify/functions/libs/agents/coach-creator/tools.ts`
+- `amplify/functions/build-program/handler.ts`
+- `amplify/functions/libs/api-helpers.ts`
+- `amplify/functions/libs/pinecone-utils.ts`
+- `amplify/functions/libs/coach-conversation/context.ts`
+- `amplify/functions/libs/agents/program-designer/tools.ts`
+- `amplify/functions/libs/program/program-generator.ts`
+- `amplify/functions/libs/coach-creator/coach-generation.ts`
+- `amplify/functions/libs/agents/coach-creator/types.ts`
 
 ---
 
@@ -143,24 +185,33 @@ Promote messages from embedded arrays to first-class DynamoDB items with a share
 
 ## Existing Pinecone Summary Inventory
 
-All conversation types already generate and store summaries in both DynamoDB and Pinecone. This is a significant advantage for Phase 1, as no new summary generation infrastructure is needed — we only need to query existing summaries cross-contextually.
+All conversation types generate and store summaries in Pinecone. As of v1.0.20260206-beta, all five types now use AI-generated summaries suitable for semantic search.
 
-| Conversation Type             | Record Type                | Pinecone Function                                                                       | Trigger                                                         | Key Metadata                                                                                                   |
-| ----------------------------- | -------------------------- | --------------------------------------------------------------------------------------- | --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| **Coach Conversations**       | `conversation_summary`     | `storeCoachConversationSummaryInPinecone()` in `libs/coach-conversation/pinecone.ts`    | `build-conversation-summary` Lambda (async, after conversation) | `conversationId`, `messageCount`, `triggerReason`, `confidence`, goal/progress/emotional flags                 |
-| **Coach Creator Sessions**    | `coach_creator_summary`    | `storeCoachCreatorSummaryInPinecone()` in `libs/coach-creator/pinecone.ts`              | `saveCoachConfigToDatabaseTool` in coach-creator tools          | `sessionId`, `coachName`, `selectedPersonality`, `selectedMethodology`, `experienceLevel`, `trainingFrequency` |
-| **Program Designer Sessions** | `program_designer_summary` | `storeProgramDesignerSessionSummaryInPinecone()` in `libs/program-designer/pinecone.ts` | `build-program` Lambda (after program creation)                 | `sessionId`, `programId`, `programName`, `conversationTurns`, `trainingGoals`, `equipmentConstraints`          |
-| **Training Programs**         | `program_summary`          | `storeProgramSummaryInPinecone()` in `libs/program/pinecone.ts`                         | Program designer tools (after generation)                       | `programId`, `programName`, `totalDays`, `phaseNames`, `trainingGoals`, `adherenceRate`                        |
-| **Workout Logging**           | `workout_summary`          | `storeWorkoutSummaryInPinecone()` in `libs/workout/pinecone.ts`                         | Workout logger tools (after save)                               | `workoutId`, `discipline`, `workoutName`, `completedAt`, `prAchievements`, discipline-specific metrics         |
+| Conversation Type             | Record Type                | Summary Quality          | Pinecone Function                                                                       | Trigger                                                         | Key Metadata                                                                                                   |
+| ----------------------------- | -------------------------- | ------------------------ | --------------------------------------------------------------------------------------- | --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| **Coach Conversations**       | `conversation_summary`     | AI-generated (Claude)    | `storeCoachConversationSummaryInPinecone()` in `libs/coach-conversation/pinecone.ts`    | `build-conversation-summary` Lambda (async, after conversation) | `conversationId`, `messageCount`, `triggerReason`, `confidence`, goal/progress/emotional flags                 |
+| **Coach Creator Sessions**    | `coach_creator_summary`    | AI-generated (Haiku 4)   | `storeCoachCreatorSummaryInPinecone()` in `libs/coach-creator/pinecone.ts`              | `saveCoachConfigToDatabaseTool` in coach-creator tools          | `sessionId`, `coachName`, `selectedPersonality`, `selectedMethodology`, `experienceLevel`, `trainingFrequency` |
+| **Program Designer Sessions** | `program_designer_summary` | AI-generated (Haiku 4)   | `storeProgramDesignerSessionSummaryInPinecone()` in `libs/program-designer/pinecone.ts` | `build-program` Lambda (after program creation)                 | `sessionId`, `programId`, `programName`, `conversationTurns`, `trainingGoals`, `equipmentConstraints`          |
+| **Training Programs**         | `program_summary`          | AI-generated (Haiku 4)   | `storeProgramSummaryInPinecone()` in `libs/program/pinecone.ts`                         | Program designer tools (after generation)                       | `programId`, `programName`, `totalDays`, `phaseNames`, `trainingGoals`, `adherenceRate`                        |
+| **Workout Logging**           | `workout_summary`          | AI-generated (Haiku 4.5) | `storeWorkoutSummaryInPinecone()` in `libs/workout/pinecone.ts`                         | Workout logger tools (after save)                               | `workoutId`, `discipline`, `workoutName`, `completedAt`, `prAchievements`, discipline-specific metrics         |
+
+### Current Retrieval Architecture (Post Phase 0)
+
+Pinecone queries now use per-type parallel queries instead of a single combined query. Each record type gets its own `topK` budget, preventing type crowding:
+
+| Caller              | `workoutTopK` | `conversationTopK` | `programTopK` | `coachCreatorTopK` | `minScore` | Notes                                        |
+| ------------------- | ------------- | ------------------ | ------------- | ------------------ | ---------- | -------------------------------------------- |
+| Coach Conversations | 8             | 5                  | 3             | 2                  | 0.7        | Standard balanced retrieval                  |
+| Program Designer    | 5             | **8**              | 3             | 2                  | **0.5**    | Higher conversation budget for cross-context |
+| Program Generator   | 5             | 5                  | 3             | 2                  | 0.7        | Balanced for program building context        |
 
 ### Phase 1 Implications
 
-Since all summaries already exist in Pinecone with rich metadata:
+Since all summaries now exist in Pinecone with AI-generated text and per-type retrieval is in place:
 
-- **No new summary generation needed** — the data is already there
-- **Pinecone semantic search** can find the most relevant cross-context summaries by topic
-- **Metadata filtering** can scope queries by `recordType`, `coachId`, and time range
-- Phase 1 reduces to: query Pinecone for recent summaries from _other_ contexts, format them, and inject into the system prompt
+- **No new summary generation needed** — all five types produce rich, semantically searchable text
+- **Cross-context retrieval already active** — program designer queries conversation summaries with `conversationTopK: 8`, coach conversations query program summaries with `programTopK: 3`
+- **Remaining Phase 1 work** is adding explicit cross-context prompt sections (e.g., "RECENT ACTIVITY IN OTHER CONTEXTS") and potentially time-based filtering via Pinecone metadata to scope queries to recent activity
 
 ### Gaps to Consider for Phase 1
 
@@ -177,33 +228,23 @@ Since all summaries already exist in Pinecone with rich metadata:
 **Effort:** Small
 **Risk:** Low
 **Benefit:** Immediate cross-context awareness
+**Status:** Partially complete (foundation done, prompt injection remaining)
 
-All five summary types already exist in Pinecone (see inventory above). Phase 1 is purely a **read-side change**: query recent summaries from other contexts and include them in the system prompt. No new summary generation, no schema changes, no migration.
+#### Completed (Phase 0 / v1.0.20260206-beta)
 
-**Implementation:**
+- All five summary types now use AI-generated text (coach_creator and program_designer upgraded from template-based)
+- Per-type parallel Pinecone queries eliminate type crowding and ensure each record type gets fair representation
+- `program_summary` records now queryable by coach conversations (previously invisible)
+- Program designer queries `conversation_summary` with higher budget (`conversationTopK: 8`) and broader query string for cross-context retrieval
+- `formatPineconeContext()` includes `TRAINING PROGRAM CONTEXT` section for program summaries
 
-1. In `prompt-generation.ts`, add a Pinecone query for recent summaries from other contexts:
-   - **Coach conversation starting** → query recent `program_designer_summary` and `program_summary` records (last 24-48 hours, max 3-5)
-   - **Program designer session starting** → query recent `conversation_summary` records (last 24-48 hours, max 3-5)
-2. Filter by `coachId` to keep context scoped to the relevant coach relationship
-3. Format summaries and inject into the system prompt as a "Recent Activity" section
-4. Include timestamp and source context so the AI can frame references appropriately
+#### Remaining Work
 
-**Pinecone query example:**
+The cross-context summaries are now being retrieved and included in the general `SEMANTIC CONTEXT` section of the system prompt. What remains is:
 
-```typescript
-// In prompt-generation.ts, when building system prompt for coach conversation:
-const recentCrossContextSummaries = await queryPinecone({
-  namespace: userId,
-  filter: {
-    recordType: { $in: ["program_designer_summary", "program_summary"] },
-    coachId: coachId,
-    // Only recent activity (timestamp filtering)
-  },
-  topK: 3,
-  // Could also use semantic search with the user's first message as query
-});
-```
+1. **Explicit cross-context prompt section** — Add a dedicated "RECENT ACTIVITY IN OTHER CONTEXTS" section in `prompt-generation.ts` that clearly labels summaries from other contexts with source and timestamp, so the AI can frame references appropriately rather than treating them as general background context
+2. **Time-based filtering** — Add Pinecone metadata filtering to scope cross-context queries to recent activity (e.g., `createdAt` within last 24-48 hours) so stale summaries don't pollute the context
+3. **Prompt guardrail update** — Once cross-context summaries are reliably flowing, soften or remove the "CRITICAL: Cross-Screen Context Boundaries" guardrail in the coach prompt that currently instructs the coach never to imply context carries over
 
 **Prompt addition example:**
 
@@ -222,7 +263,6 @@ equipment at home. The change was discussed but may not have been completed.
 - Coach can reference what happened in Program Designer (and vice versa)
 - No database schema changes required
 - No new summary generation — uses existing Pinecone data
-- Can be implemented in `prompt-generation.ts` with a few additional Pinecone queries
 - Low token cost (summaries are concise by design)
 
 **Limitation to note:** Coach conversation summaries are generated asynchronously after the conversation ends. If a user switches screens mid-conversation, the latest summary may not exist yet. This can be addressed in Phase 2 with real-time message access, or with a lightweight "in-progress summary" generation on navigation.
@@ -301,15 +341,19 @@ This allows a zero-downtime migration with rollback capability at each step.
 
 ## Related Files
 
-| File                                                             | Relevance                                                                                 |
-| ---------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| `amplify/functions/libs/coach-conversation/prompt-generation.ts` | System prompt building, cross-context boundary guardrail, Phase 1 summary injection point |
-| `amplify/functions/stream-coach-conversation/handler.ts`         | Message write path for coach conversations                                                |
-| `amplify/functions/libs/coach-conversation/detection.ts`         | Program designer mention detection                                                        |
-| `amplify/dynamodb/operations.ts`                                 | DynamoDB operations, new message record operations                                        |
-| `amplify/functions/build-conversation-summary/handler.ts`        | Summary generation, Phase 1 cross-context summaries                                       |
-| `amplify/functions/libs/program/question-generator.ts`           | Program designer conversation flow                                                        |
-| `amplify/functions/libs/api-helpers.ts`                          | Pinecone query helpers for semantic search                                                |
+| File                                                             | Relevance                                                                                                  |
+| ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `amplify/functions/libs/api-helpers.ts`                          | Per-type parallel Pinecone queries (`queryUserNamespace`, `querySingleRecordType`, `queryPineconeContext`) |
+| `amplify/functions/libs/pinecone-utils.ts`                       | `formatPineconeContext()` with `TRAINING PROGRAM CONTEXT` section                                          |
+| `amplify/functions/libs/coach-conversation/context.ts`           | Coach conversation context gathering with per-type topK budgets                                            |
+| `amplify/functions/libs/coach-conversation/prompt-generation.ts` | System prompt building, cross-context boundary guardrail, Phase 1 remaining prompt injection point         |
+| `amplify/functions/libs/agents/program-designer/tools.ts`        | Program designer `load_program_requirements` with cross-context conversation retrieval                     |
+| `amplify/functions/libs/coach-creator/session-management.ts`     | AI-powered `generateCoachCreatorSessionSummary()`                                                          |
+| `amplify/functions/libs/program-designer/session-management.ts`  | AI-powered `generateProgramDesignerSessionSummary()`                                                       |
+| `amplify/functions/libs/program/program-generator.ts`            | Program generator Pinecone query with per-type budgets                                                     |
+| `amplify/functions/stream-coach-conversation/handler.ts`         | Message write path for coach conversations                                                                 |
+| `amplify/dynamodb/operations.ts`                                 | DynamoDB operations, future shared message store                                                           |
+| `amplify/functions/build-conversation-summary/handler.ts`        | Async summary generation for coach conversations                                                           |
 
 ---
 
