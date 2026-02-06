@@ -215,12 +215,13 @@ export const validateAndCorrectWorkoutDate = (
  * Validate exercise structure exists in workout (HYBRID: Property checks + AI)
  *
  * Uses a three-tier approach:
- * 1. Check if it's a qualitative workout (allows activity-based workouts without structured data)
- * 2. Fast deterministic property checks for obvious cases (instant, free)
+ * 1. Fast deterministic property checks for obvious cases (instant, free)
+ * 2. AI qualitative check for activity-based workouts without structured data (~500ms)
  * 3. AI semantic validation for ambiguous cases (~500ms, negligible cost)
  *
- * This hybrid approach provides universal discipline support without hardcoding
- * structure checks for every discipline type.
+ * Property checks run first to avoid unnecessary AI calls for structured workouts
+ * (powerlifting, CrossFit, hybrid with phases, etc.), which represent the majority
+ * of logged workouts.
  */
 export const validateExerciseStructure = async (
   workoutData: UniversalWorkoutSchema,
@@ -233,47 +234,11 @@ export const validateExerciseStructure = async (
   stationsCount?: number;
   runsCount?: number;
   liftsCount?: number;
+  phasesCount?: number;
   method: "property_check" | "ai_validation" | "qualitative_workout";
   aiReasoning?: string;
   isQualitative?: boolean;
 }> => {
-  // ==================================================================
-  // TIER 0: Check for Qualitative Workouts (Activity-Based, No Structure Required)
-  // ==================================================================
-
-  const qualitativeCheck = await isQualitativeWorkout(workoutData, userMessage);
-
-  if (qualitativeCheck.isQualitative) {
-    const qualitativeValidation = validateQualitativeWorkout(workoutData);
-
-    if (qualitativeValidation.isValid) {
-      console.info(
-        "✅ Qualitative workout validated - no exercise structure required",
-        {
-          reason: qualitativeCheck.reason,
-          validationReason: qualitativeValidation.reason,
-          discipline: workoutData.discipline,
-          workoutName: workoutData.workout_name,
-        },
-      );
-      return {
-        hasExercises: true,
-        method: "qualitative_workout",
-        aiReasoning: `Qualitative workout: ${qualitativeCheck.reason}. ${qualitativeValidation.reason}`,
-        isQualitative: true,
-      };
-    } else {
-      console.warn(
-        "⚠️ Qualitative workout identified but missing required data",
-        {
-          reason: qualitativeCheck.reason,
-          validationReason: qualitativeValidation.reason,
-        },
-      );
-      // Fall through to other validation methods
-    }
-  }
-
   const discipline = workoutData.discipline;
   let disciplineData = workoutData.discipline_specific?.[
     discipline as keyof typeof workoutData.discipline_specific
@@ -299,7 +264,22 @@ export const validateExerciseStructure = async (
 
   // ==================================================================
   // TIER 1: Fast Deterministic Property Checks (Instant, Free)
+  // Runs FIRST to avoid unnecessary AI calls for structured workouts.
   // ==================================================================
+
+  // Check for phases (hybrid - phase-based structure)
+  const phasesCount = disciplineData?.phases?.length || 0;
+  if (phasesCount > 0) {
+    console.info(
+      "✅ Exercise structure validated via property check (phases array)",
+      { discipline, phasesCount },
+    );
+    return {
+      hasExercises: true,
+      phasesCount,
+      method: "property_check",
+    };
+  }
 
   // Check for structured exercises (powerlifting, bodybuilding)
   const exerciseCount = disciplineData?.exercises?.length || 0;
@@ -373,7 +353,46 @@ export const validateExerciseStructure = async (
     };
   }
 
-  // Fast fail: Completely empty discipline data
+  // ==================================================================
+  // TIER 2: AI Qualitative Check (Activity-Based, No Structure Required)
+  // Only runs if Tier 1 property checks found no structured data.
+  // This avoids the ~500ms AI call for structured workouts.
+  // ==================================================================
+
+  const qualitativeCheck = await isQualitativeWorkout(workoutData, userMessage);
+
+  if (qualitativeCheck.isQualitative) {
+    const qualitativeValidation = validateQualitativeWorkout(workoutData);
+
+    if (qualitativeValidation.isValid) {
+      console.info(
+        "✅ Qualitative workout validated - no exercise structure required",
+        {
+          reason: qualitativeCheck.reason,
+          validationReason: qualitativeValidation.reason,
+          discipline: workoutData.discipline,
+          workoutName: workoutData.workout_name,
+        },
+      );
+      return {
+        hasExercises: true,
+        method: "qualitative_workout",
+        aiReasoning: `Qualitative workout: ${qualitativeCheck.reason}. ${qualitativeValidation.reason}`,
+        isQualitative: true,
+      };
+    } else {
+      console.warn(
+        "⚠️ Qualitative workout identified but missing required data",
+        {
+          reason: qualitativeCheck.reason,
+          validationReason: qualitativeValidation.reason,
+        },
+      );
+      // Fall through to other validation methods
+    }
+  }
+
+  // Fast fail: Completely empty discipline data and not qualitative
   if (!disciplineData || Object.keys(disciplineData).length === 0) {
     console.warn(
       "❌ No exercise structure found - discipline_specific is empty",
@@ -386,9 +405,10 @@ export const validateExerciseStructure = async (
   }
 
   // ==================================================================
-  // TIER 2: AI Semantic Validation (500ms, $0.0001)
+  // TIER 3: AI Semantic Validation (500ms, $0.0001)
   // ==================================================================
-  // For ambiguous cases: qualitative disciplines, partial data, edge cases
+  // For ambiguous cases: partial data, edge cases where property checks
+  // found no known array fields but discipline data exists.
 
   console.info(
     "🤖 Using AI validation for exercise structure (ambiguous case)",

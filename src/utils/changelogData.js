@@ -31,7 +31,10 @@ export const changelogEntries = [
         "Coach creator summary generation moved from load_session_requirements tool to save_coach_config_to_database tool where coachConfig is available for richer AI-generated summaries",
         "Program designer summary generation changed from synchronous to async fire-and-forget chain (generateProgramDesignerSessionSummary -> storeProgramDesignerSessionSummaryInPinecone) in build-program handler",
       ],
-      fixed: [],
+      fixed: [
+        "Workout validation now runs fast deterministic property checks (Tier 1) before the AI qualitative check (was Tier 0), avoiding unnecessary ~500ms Bedrock API calls for structured workouts like powerlifting, CrossFit, and hybrid that have obvious exercise arrays",
+        "Added phases array to Tier 1 fast property checks for hybrid discipline; hybrid workouts using phase-based structure no longer fall through to slower AI validation path",
+      ],
       removed: [
         "Template-based concatenation in generateCoachCreatorSessionSummary that produced raw pipe-delimited user responses instead of semantically meaningful summaries",
         "Template-based concatenation in generateProgramDesignerSessionSummary that produced raw pipe-delimited user responses instead of semantically meaningful summaries",
