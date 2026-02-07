@@ -2,6 +2,7 @@
  * Small, focused UI helpers for streaming message interactions
  * Each function handles a specific aspect of streaming UI without complex state management
  */
+import { avatarPatterns, streamingPatterns } from "./uiPatterns";
 
 /**
  * Handles message sending with streaming first, fallback to non-streaming
@@ -109,6 +110,48 @@ export function getStreamingMessageClasses(
   }
 
   return classes.filter(Boolean).join(" ");
+}
+
+/**
+ * Contextual update indicator - shows AI processing stages during streaming (ephemeral)
+ * Displays a left-bordered message with animated processing dots and contextual text,
+ * followed by the AI avatar. Used consistently across all conversation flows.
+ *
+ * @param {string} content - The contextual update text to display
+ * @param {string} avatarLabel - Single character for the AI avatar (default: "C")
+ * @returns {JSX.Element} - Contextual update indicator
+ */
+export function ContextualUpdateIndicator({ content, avatarLabel = "C" }) {
+  return (
+    <div className={streamingPatterns.contextualUpdate.container}>
+      <div className={streamingPatterns.contextualUpdate.borderAccent}>
+        <div className={streamingPatterns.contextualUpdate.contentRow}>
+          <div className={streamingPatterns.contextualUpdate.dotsContainer}>
+            <div
+              className={streamingPatterns.contextualUpdate.dot}
+              style={{ animationDelay: "0ms" }}
+            />
+            <div
+              className={streamingPatterns.contextualUpdate.dot}
+              style={{ animationDelay: "0.2s" }}
+            />
+            <div
+              className={streamingPatterns.contextualUpdate.dot}
+              style={{ animationDelay: "0.4s" }}
+            />
+          </div>
+          <span className={streamingPatterns.contextualUpdate.text}>
+            {content}
+          </span>
+        </div>
+      </div>
+      <div className={streamingPatterns.avatarRow}>
+        <div className={`flex-shrink-0 ${avatarPatterns.aiSmall}`}>
+          {avatarLabel}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 /**

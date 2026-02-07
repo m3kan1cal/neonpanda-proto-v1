@@ -43,6 +43,7 @@ import {
   getTypingState,
   handleStreamingError,
   supportsStreaming,
+  ContextualUpdateIndicator,
 } from "../utils/ui/streamingUiHelper.jsx";
 
 // Vesper coach data - static coach for coach creator
@@ -113,37 +114,7 @@ const TypingIndicator = () => (
   </div>
 );
 
-// Contextual update indicator - shows AI processing stages
-const ContextualUpdateIndicator = ({ content, stage }) => {
-  return (
-    <div className="flex flex-col items-start mb-1 animate-message-in">
-      <div className="px-4 py-2 border-l-2 border-synthwave-neon-cyan/30 ml-2">
-        <div className="flex items-center gap-2">
-          <div className="flex space-x-1">
-            <div
-              className="w-1.5 h-1.5 bg-synthwave-neon-cyan/60 rounded-full animate-typing-dot"
-              style={{ animationDelay: "0ms" }}
-            ></div>
-            <div
-              className="w-1.5 h-1.5 bg-synthwave-neon-cyan/60 rounded-full animate-typing-dot"
-              style={{ animationDelay: "0.2s" }}
-            ></div>
-            <div
-              className="w-1.5 h-1.5 bg-synthwave-neon-cyan/60 rounded-full animate-typing-dot"
-              style={{ animationDelay: "0.4s" }}
-            ></div>
-          </div>
-          <span className="font-rajdhani text-base italic animate-contextual-pulse text-synthwave-text-secondary/70">
-            {content}
-          </span>
-        </div>
-      </div>
-      <div className="flex items-start gap-2 px-2 mt-2">
-        <div className={`flex-shrink-0 ${avatarPatterns.aiSmall}`}>V</div>
-      </div>
-    </div>
-  );
-};
+// ContextualUpdateIndicator imported from streamingUiHelper.jsx
 
 // Memoized MessageItem component to prevent unnecessary re-renders during streaming
 const MessageItem = memo(
@@ -562,11 +533,10 @@ function CoachCreator() {
         {displayContent &&
           (message.type === "ai" ? (
             // AI messages use full markdown parsing with streaming cursor
-            <div
+            <MarkdownRenderer
+              content={displayContent}
               className={streaming && displayContent ? "streaming-cursor" : ""}
-            >
-              <MarkdownRenderer content={displayContent} />
-            </div>
+            />
           ) : (
             // User messages: simple line break rendering
             displayContent.split("\n").map((line, index, array) => (
@@ -804,7 +774,7 @@ function CoachCreator() {
                 {agentState.contextualUpdate && (
                   <ContextualUpdateIndicator
                     content={agentState.contextualUpdate.content}
-                    stage={agentState.contextualUpdate.stage}
+                    avatarLabel="V"
                   />
                 )}
 

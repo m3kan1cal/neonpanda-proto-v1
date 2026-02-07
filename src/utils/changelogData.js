@@ -34,7 +34,11 @@ export const changelogEntries = [
         "Typing indicator dots in all three conversation components changed from animate-bounce with 150ms/300ms delays to animate-typing-dot with 0.2s/0.4s delays and increased spacing (space-x-1 to space-x-1.5) for smoother wave effect",
         "ContextualUpdateIndicator in all three conversation components upgraded from plain italic pulsing text to bordered layout with processing dots, animate-message-in entry animation, and animate-contextual-pulse",
       ],
-      fixed: [],
+      fixed: [
+        "Streaming cursor (blinking ▎) now appears inline at the end of the last line of AI streaming text instead of on a separate line below the content; CSS selector updated from .streaming-cursor::after to target the last child element within MarkdownRenderer (p, li, ol) so the ::after pseudo-element renders in inline formatting context",
+        "ContextualUpdateIndicator extracted from duplicated ~30-line local component definitions in CoachConversations, CoachCreator, and ProgramDesigner into a single shared component in streamingUiHelper.jsx; all three conversation flows now import and render the same implementation, eliminating maintenance burden and drift risk",
+        "streamingPatterns added to uiPatterns.js centralizing contextual update indicator styles (container, borderAccent, contentRow, dotsContainer, dot, text, avatarRow) for consistent styling across all streaming UI components",
+      ],
       removed: [],
     },
   },

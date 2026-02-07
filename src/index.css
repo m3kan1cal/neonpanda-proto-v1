@@ -197,7 +197,12 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
   }
 }
 
-.streaming-cursor::after {
+/* Streaming cursor - targets the last text element inside MarkdownRenderer during AI streaming.
+   Applied to MarkdownRenderer's wrapper div (via className prop) so ::after appears
+   inline with the last line of text rather than on a separate line below the content. */
+.streaming-cursor > p:last-child::after,
+.streaming-cursor > ul:last-child > li:last-child > span:last-child::after,
+.streaming-cursor > ol:last-child > li:last-child::after {
   content: "▎";
   display: inline;
   color: rgb(0 255 255 / 0.8);
