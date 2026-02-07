@@ -279,6 +279,7 @@ Returns: coachConfig, userProfile, pineconeContext, programDuration (days), trai
         conversationTopK: 8, // Higher -- cross-context retrieval is the priority here
         programTopK: 3,
         coachCreatorTopK: 2,
+        programDesignerTopK: 2, // Include past program designer session context
         userMemoryTopK: 3,
         includeMethodology: true,
         minScore: 0.5, // Lower threshold for broader recall on conversations

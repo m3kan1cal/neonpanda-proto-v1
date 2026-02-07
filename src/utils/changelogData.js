@@ -10,6 +10,35 @@
 
 export const changelogEntries = [
   {
+    version: "Release v1.0.20260207-beta",
+    date: "2026-02-07",
+    changes: {
+      added: [
+        "program_designer_summary record type to Pinecone query infrastructure; programDesignerTopK added to UserNamespaceQueryOptions interface and queryPineconeContext options, enabling retrieval of program designer session context across all conversation flows for the first time",
+        "PROGRAM DESIGNER CONTEXT formatting section in formatPineconeContext for program_designer_summary records, following the same pattern as workout, coach creator, conversation, and program summary sections",
+        "Pinecone cross-context queries in stream-coach-creator-session handler; coach creator now queries user workout history, past programs, coaching conversations, and program designer sessions in parallel with session loading and contextual update generation (workoutTopK: 3, conversationTopK: 3, programTopK: 2, programDesignerTopK: 2, userMemoryTopK: 2)",
+        "USER'S PLATFORM HISTORY section in coach creator question generation prompt; AI intake coach now receives formatted Pinecone context and is instructed to naturally incorporate the knowledge without explicitly mentioning it, enabling smarter and more personalized questions based on existing user activity",
+        "Pinecone cross-context queries in stream-program-designer-session handler; program designer collection phase now queries user training history, coaching conversations, and past programs in parallel with session loading (workoutTopK: 5, conversationTopK: 5, programTopK: 3, programDesignerTopK: 2, userMemoryTopK: 2)",
+        "USER'S PLATFORM HISTORY section in program designer question generation prompt; collection conversation AI now receives formatted Pinecone context for personalized questions based on existing user activity",
+        "pineconeFormattedContext field threaded through program designer userContext from handler through handler-helpers to conversation-handler and question-generator",
+        "Message entry animation (animate-message-in) with slide-up and fade-in effect (250ms ease-out) applied to MessageItem components across all three conversation flows (CoachConversations, CoachCreator, ProgramDesigner)",
+        "Streaming cursor indicator (streaming-cursor CSS class) showing a blinking cyan bar at the end of AI streaming text via ::after pseudo-element, replacing the previous full-message animate-pulse effect for a more refined typing feel",
+        "Smooth typing indicator wave animation (animate-typing-dot) with staggered opacity and translateY keyframes replacing aggressive animate-bounce dots across all three conversation components and shared StreamingTypingIndicator",
+        "Polished contextual update indicator with left cyan border accent, inline processing dots, and gentler animate-contextual-pulse animation replacing the plain italic animate-pulse text treatment",
+      ],
+      changed: [
+        "gatherConversationContext in coach-conversation/context.ts refactored to run DynamoDB workouts query and Pinecone semantic search query in parallel via Promise.all instead of sequentially, reducing context gathering latency",
+        "Coach conversation Pinecone query budgets updated to include programDesignerTopK: 2 for cross-context awareness of program designer session summaries",
+        "Program designer agent load_program_requirements tool Pinecone query updated to include programDesignerTopK: 2 for awareness of past program designer sessions",
+        "getStreamingMessageClasses in streamingUiHelper.jsx no longer adds animate-pulse class to streaming messages; streaming visual feedback now handled by the streaming-cursor CSS indicator instead",
+        "Typing indicator dots in all three conversation components changed from animate-bounce with 150ms/300ms delays to animate-typing-dot with 0.2s/0.4s delays and increased spacing (space-x-1 to space-x-1.5) for smoother wave effect",
+        "ContextualUpdateIndicator in all three conversation components upgraded from plain italic pulsing text to bordered layout with processing dots, animate-message-in entry animation, and animate-contextual-pulse",
+      ],
+      fixed: [],
+      removed: [],
+    },
+  },
+  {
     version: "Release v1.0.20260206-beta",
     date: "2026-02-06",
     changes: {

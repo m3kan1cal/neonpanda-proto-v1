@@ -140,11 +140,13 @@ Remember: You're NeonPanda - playfully powerful, energetically supportive, serio
 /**
  * STREAMING version: Generate the next question with real-time streaming
  * Yields chunks as they arrive from Bedrock
+ * @param userHistoryContext - Optional formatted Pinecone context with user's training history
  */
 export async function* generateNextQuestionStream(
   conversationHistory: CoachMessage[],
   todoList: CoachCreatorTodoList,
   sophisticationLevel: SophisticationLevel,
+  userHistoryContext?: string,
 ): AsyncGenerator<string, string, unknown> {
   console.info("🎯 Generating next question (STREAMING)");
 
@@ -174,10 +176,11 @@ export async function* generateNextQuestionStream(
   // Check if this is the initial message (no conversation history)
   const isInitialMessage = conversationHistory.length === 0;
 
-  // Build the prompt for question generation
+  // Build the prompt for question generation (with optional user history context)
   const systemPrompt = buildQuestionGenerationPrompt(
     summary,
     sophisticationLevel,
+    userHistoryContext,
   );
 
   // Get recent conversation context
@@ -362,6 +365,7 @@ CRITICAL: Make sure to tell them about the 2-3 minute build time and that they'l
 
 /**
  * Build the system prompt for question generation
+ * @param userHistoryContext - Optional formatted Pinecone context with user's training history
  */
 function buildQuestionGenerationPrompt(
   summary: {
@@ -371,8 +375,21 @@ function buildQuestionGenerationPrompt(
     optionalPending: string[];
   },
   sophisticationLevel: SophisticationLevel,
+  userHistoryContext?: string,
 ): string {
+  const historySection = userHistoryContext
+    ? `
+USER'S PLATFORM HISTORY:
+The following is context retrieved from this user's existing activity on the platform.
+Use this to personalize your questions and avoid asking about things you already know.
+Do NOT explicitly mention that you have this data - just naturally incorporate the knowledge.
+For example, if you can see they do powerlifting, don't ask "what are your goals?" - instead ask something more specific.
+${userHistoryContext}
+`
+    : "";
+
   return `You are NeonPanda's AI intake coach - your job is to gather information to create the user's perfect custom AI coach.
+${historySection}
 
 NEONPANDA BRAND VOICE:
 You embody "playful power" - seriously smart but refreshingly fun. Think: energetic friend who's also an incredible coach.

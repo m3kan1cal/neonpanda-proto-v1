@@ -1,4 +1,5 @@
 import type { APIGatewayProxyHandlerV2 } from "aws-lambda";
+import { createHmac } from "crypto";
 import Stripe from "stripe";
 import { createOkResponse, createErrorResponse } from "../libs/api-helpers";
 import {
@@ -20,6 +21,9 @@ import {
  * Process Stripe webhook events
  * Public endpoint - validates via Stripe signature (NO Cognito auth)
  *
+ * IMPORTANT: This Lambda must be invoked via its Function URL (not API Gateway).
+ * API Gateway HTTP API may modify JSON bodies, breaking Stripe's signature verification.
+ *
  * Handles subscription lifecycle events:
  * - customer.subscription.created
  * - customer.subscription.updated
@@ -36,20 +40,42 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 export const handler: APIGatewayProxyHandlerV2 = async (event) => {
   console.info("Stripe webhook received");
 
-  // COMPREHENSIVE DEBUG: Log everything about the request
-  console.info("Request debug:", {
+  // Identify request source: Function URL vs API Gateway
+  const domainName = event.requestContext?.domainName || "unknown";
+  const isFunctionUrl = domainName.includes(".lambda-url.");
+  const requestPath = event.requestContext?.http?.path || "unknown";
+
+  console.info("Request source:", {
+    domainName,
+    isFunctionUrl,
+    path: requestPath,
     httpMethod: event.requestContext?.http?.method,
     sourceIp: event.requestContext?.http?.sourceIp,
     contentType: event.headers["content-type"],
     hasStripeSignature: !!event.headers["stripe-signature"],
     isBase64Encoded: event.isBase64Encoded,
-    bodyType: typeof event.body,
     bodyLength: event.body?.length,
-    bodyFirstChar: event.body?.charCodeAt(0),
   });
 
-  // Log the entire raw body - this is the critical part for debugging
-  console.info("Complete raw body:", event.body);
+  // Warn if request is coming through API Gateway instead of Function URL
+  if (!isFunctionUrl) {
+    console.warn(
+      "Request is coming through API Gateway, NOT Function URL. " +
+        "API Gateway may modify the JSON body, breaking Stripe signature verification. " +
+        "Update the webhook URL in Stripe to use the Lambda Function URL instead.",
+    );
+  }
+
+  // Validate webhook secret is configured
+  const webhookSecret = (process.env.STRIPE_WEBHOOK_SECRET || "").trim();
+  console.info("Webhook secret config:", {
+    envVarExists: !!process.env.STRIPE_WEBHOOK_SECRET,
+    envVarLength: process.env.STRIPE_WEBHOOK_SECRET?.length,
+    trimmedLength: webhookSecret.length,
+    prefix: webhookSecret.substring(0, 12) + "...",
+    hasPadding:
+      process.env.STRIPE_WEBHOOK_SECRET?.length !== webhookSecret.length,
+  });
 
   try {
     // Validate request has required fields
@@ -77,25 +103,41 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
         console.info("Decoded base64 body");
       }
 
-      // Debug: Show exactly what we're passing to Stripe
-      const bodyPreview =
-        typeof rawBody === "string"
-          ? rawBody.substring(0, 200)
-          : rawBody.toString("utf-8").substring(0, 200);
-      console.info("Body being sent to Stripe for verification:", bodyPreview);
+      // Manual signature debug: compute HMAC ourselves to identify mismatch source
+      const rawBodyStr =
+        typeof rawBody === "string" ? rawBody : rawBody.toString("utf-8");
+      const sigParts = signature.split(",").reduce(
+        (acc, part) => {
+          const eqIdx = part.indexOf("=");
+          if (eqIdx > 0) {
+            acc[part.substring(0, eqIdx)] = part.substring(eqIdx + 1);
+          }
+          return acc;
+        },
+        {} as Record<string, string>,
+      );
+
+      const manualSig = createHmac("sha256", webhookSecret)
+        .update(`${sigParts["t"]}.${rawBodyStr}`)
+        .digest("hex");
+
+      console.info("Signature verification debug:", {
+        signatureTimestamp: sigParts["t"],
+        receivedV1Prefix: sigParts["v1"]?.substring(0, 16),
+        computedSigPrefix: manualSig.substring(0, 16),
+        signaturesMatch: sigParts["v1"] === manualSig,
+        bodyByteLength: Buffer.byteLength(rawBodyStr, "utf-8"),
+        bodyFirstChars: rawBodyStr.substring(0, 50),
+        bodyLastChars: rawBodyStr.substring(rawBodyStr.length - 50),
+      });
 
       stripeEvent = stripe.webhooks.constructEvent(
         rawBody,
         signature,
-        process.env.STRIPE_WEBHOOK_SECRET!,
+        webhookSecret,
       );
     } catch (err) {
       console.error("Webhook signature verification failed:", err);
-      console.error("Debug info:", {
-        isBase64Encoded: event.isBase64Encoded,
-        bodyType: typeof event.body,
-        bodyLength: event.body?.length,
-      });
       return createErrorResponse(400, "Invalid signature");
     }
 

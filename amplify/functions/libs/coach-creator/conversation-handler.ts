@@ -21,10 +21,12 @@ import { CoachMessage } from "../coach-conversation/types";
 /**
  * Handle to-do list based conversational flow
  * Generates next question dynamically based on what's been collected
+ * @param userHistoryContext - Optional formatted Pinecone context with user's training history
  */
 export async function* handleTodoListConversation(
   userResponse: string,
   session: any,
+  userHistoryContext?: string,
 ): AsyncGenerator<string, any, unknown> {
   console.info("✨ Handling to-do list conversation");
 
@@ -63,6 +65,7 @@ export async function* handleTodoListConversation(
       session.conversationHistory,
       session.todoList!,
       session.sophisticationLevel || "UNKNOWN",
+      userHistoryContext,
     );
 
     let nextResponse = "";
