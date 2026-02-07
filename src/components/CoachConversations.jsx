@@ -49,6 +49,7 @@ import {
   getTypingState,
   handleStreamingError,
   supportsStreaming,
+  ContextualUpdateIndicator,
 } from "../utils/ui/streamingUiHelper.jsx";
 import IconButton from "./shared/IconButton";
 import {
@@ -101,39 +102,23 @@ const AIIcon = () => (
 );
 
 const TypingIndicator = () => (
-  <div className="flex space-x-1 p-4">
+  <div className="flex space-x-1.5 p-4">
     <div
-      className="w-2 h-2 bg-synthwave-neon-cyan rounded-full animate-bounce"
+      className="w-2 h-2 bg-synthwave-neon-cyan rounded-full animate-typing-dot"
       style={{ animationDelay: "0ms" }}
     ></div>
     <div
-      className="w-2 h-2 bg-synthwave-neon-cyan rounded-full animate-bounce"
-      style={{ animationDelay: "150ms" }}
+      className="w-2 h-2 bg-synthwave-neon-cyan rounded-full animate-typing-dot"
+      style={{ animationDelay: "0.2s" }}
     ></div>
     <div
-      className="w-2 h-2 bg-synthwave-neon-cyan rounded-full animate-bounce"
-      style={{ animationDelay: "300ms" }}
+      className="w-2 h-2 bg-synthwave-neon-cyan rounded-full animate-typing-dot"
+      style={{ animationDelay: "0.4s" }}
     ></div>
   </div>
 );
 
-// Contextual update indicator - shows AI processing stages
-const ContextualUpdateIndicator = ({ content, stage, coachName }) => {
-  return (
-    <div className="flex flex-col items-start mb-1">
-      <div className="px-4 py-2">
-        <span className="font-rajdhani text-base italic animate-pulse text-synthwave-text-secondary/70">
-          {content}
-        </span>
-      </div>
-      <div className="flex items-start gap-2 px-2 mt-2">
-        <div className={`flex-shrink-0 ${avatarPatterns.aiSmall}`}>
-          {coachName?.charAt(0) || "C"}
-        </div>
-      </div>
-    </div>
-  );
-};
+// ContextualUpdateIndicator imported from streamingUiHelper.jsx
 
 // Memoized MessageItem component to prevent unnecessary re-renders
 const MessageItem = memo(
@@ -150,7 +135,7 @@ const MessageItem = memo(
   }) => {
     return (
       <div
-        className={`flex flex-col mb-1 group ${
+        className={`flex flex-col mb-1 group animate-message-in ${
           message.type === "user" ? "items-end" : "items-start"
         }`}
       >
@@ -1034,6 +1019,7 @@ function CoachConversations() {
       message,
       coachConversationAgentState,
     );
+    const streaming = isMessageStreaming(message, coachConversationAgentState);
 
     return (
       <>
@@ -1054,8 +1040,11 @@ function CoachConversations() {
         {/* Render text content */}
         {displayContent &&
           (message.type === "ai" ? (
-            // AI messages use full markdown parsing
-            <MarkdownRenderer content={displayContent} />
+            // AI messages use full markdown parsing with streaming cursor
+            <MarkdownRenderer
+              content={displayContent}
+              className={streaming && displayContent ? "streaming-cursor" : ""}
+            />
           ) : (
             // User messages: simple line break rendering
             displayContent.split("\n").map((line, index, array) => (
@@ -1522,27 +1511,29 @@ function CoachConversations() {
                       content={
                         coachConversationAgentState.contextualUpdate.content
                       }
-                      stage={coachConversationAgentState.contextualUpdate.stage}
-                      coachName={coachConversationAgentState.coach?.name}
+                      avatarLabel={
+                        coachConversationAgentState.coach?.name?.charAt(0) ||
+                        "C"
+                      }
                     />
                   )}
 
                   {/* Typing Indicator - Show only when typing but not actively streaming content */}
                   {typingState.showTypingIndicator &&
                     !coachConversationAgentState.contextualUpdate && (
-                      <div className="flex flex-col items-start mb-1">
+                      <div className="flex flex-col items-start mb-1 animate-message-in">
                         <div
                           className={`${containerPatterns.aiChatBubble} px-4 py-3`}
                         >
-                          <div className="flex space-x-1">
-                            <div className="w-2 h-2 bg-synthwave-neon-cyan rounded-full animate-bounce"></div>
+                          <div className="flex space-x-1.5">
+                            <div className="w-2 h-2 bg-synthwave-neon-cyan rounded-full animate-typing-dot"></div>
                             <div
-                              className="w-2 h-2 bg-synthwave-neon-cyan rounded-full animate-bounce"
-                              style={{ animationDelay: "0.1s" }}
+                              className="w-2 h-2 bg-synthwave-neon-cyan rounded-full animate-typing-dot"
+                              style={{ animationDelay: "0.2s" }}
                             ></div>
                             <div
-                              className="w-2 h-2 bg-synthwave-neon-cyan rounded-full animate-bounce"
-                              style={{ animationDelay: "0.2s" }}
+                              className="w-2 h-2 bg-synthwave-neon-cyan rounded-full animate-typing-dot"
+                              style={{ animationDelay: "0.4s" }}
                             ></div>
                           </div>
                         </div>

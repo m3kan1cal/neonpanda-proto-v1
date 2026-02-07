@@ -83,6 +83,8 @@ export async function* startProgramDesignCollection(
     const userContext = {
       recentWorkouts: conversationData.context?.recentWorkouts,
       pineconeMemories: conversationData.context?.pineconeContext?.memories,
+      pineconeFormattedContext:
+        conversationData.context?.pineconeContext?.formatted,
       userProfile: conversationData.userProfile,
       activeProgram: conversationData.context?.activeProgram,
     };
@@ -286,6 +288,8 @@ export async function* handleProgramDesignerFlow(
     const userContext = {
       recentWorkouts: conversationData.context?.recentWorkouts,
       pineconeMemories: conversationData.context?.pineconeContext?.memories,
+      pineconeFormattedContext:
+        conversationData.context?.pineconeContext?.formatted,
       userProfile: conversationData.userProfile,
       activeProgram: conversationData.context?.activeProgram,
     };

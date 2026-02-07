@@ -1222,6 +1222,22 @@ export const heatMapPatterns = {
     "absolute -top-1 -right-1 w-3 h-3 bg-synthwave-neon-pink rounded-full animate-pulse",
 };
 
+// Streaming UI Patterns - Shared styles for streaming message interactions
+export const streamingPatterns = {
+  // Contextual update indicator - shows AI processing stages (ephemeral)
+  contextualUpdate: {
+    container: "flex flex-col items-start mb-1 animate-message-in",
+    borderAccent: "px-4 py-2 border-l-2 border-synthwave-neon-cyan/30 ml-2",
+    contentRow: "flex items-center gap-2",
+    dotsContainer: "flex space-x-1",
+    dot: "w-1.5 h-1.5 bg-synthwave-neon-cyan/60 rounded-full animate-typing-dot",
+    text: "font-rajdhani text-base italic animate-contextual-pulse text-synthwave-text-secondary/70",
+  },
+
+  // Avatar row below contextual update or typing indicator
+  avatarRow: "flex items-start gap-2 px-2 mt-2",
+};
+
 // Usage Examples:
 // Buttons:
 // <button className={buttonPatterns.primary}>Create New</button>

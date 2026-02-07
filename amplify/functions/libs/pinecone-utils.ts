@@ -391,6 +391,15 @@ export function formatPineconeContext(pineconeMatches: any[]): string {
     contextString += `\nTRAINING PROGRAM CONTEXT:\n${programContext}`;
   }
 
+  const programDesignerContext = otherMatches
+    .filter((match) => match.recordType === "program_designer_summary")
+    .map((match) => `- ${match.content} (Score: ${match.score.toFixed(2)})`)
+    .join("\n");
+
+  if (programDesignerContext) {
+    contextString += `\nPROGRAM DESIGNER CONTEXT:\n${programDesignerContext}`;
+  }
+
   const userMemoryContext = otherMatches
     .filter((match) => match.recordType === "user_memory")
     .map((match) => `- ${match.content} (Score: ${match.score.toFixed(2)})`)

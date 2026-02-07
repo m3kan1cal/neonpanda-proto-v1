@@ -2,6 +2,7 @@
  * Small, focused UI helpers for streaming message interactions
  * Each function handles a specific aspect of streaming UI without complex state management
  */
+import { avatarPatterns, streamingPatterns } from "./uiPatterns";
 
 /**
  * Handles message sending with streaming first, fallback to non-streaming
@@ -14,15 +15,23 @@
  * @param {boolean} options.enableStreaming - Whether to use streaming (default: true)
  * @returns {Promise} - Result from sending the message
  */
-export async function sendMessageWithStreaming(agent, messageContent, imageS3Keys = [], options = {}) {
+export async function sendMessageWithStreaming(
+  agent,
+  messageContent,
+  imageS3Keys = [],
+  options = {},
+) {
   const {
     onStreamingStart = () => {},
     onStreamingError = () => {},
-    enableStreaming = true
+    enableStreaming = true,
   } = options;
 
   // Allow sending if there's text OR images
-  if (!agent || (!messageContent.trim() && (!imageS3Keys || imageS3Keys.length === 0))) {
+  if (
+    !agent ||
+    (!messageContent.trim() && (!imageS3Keys || imageS3Keys.length === 0))
+  ) {
     return;
   }
 
@@ -32,7 +41,10 @@ export async function sendMessageWithStreaming(agent, messageContent, imageS3Key
       onStreamingStart();
       return await agent.sendMessageStream(messageContent, imageS3Keys);
     } catch (streamingError) {
-      console.warn('⚠️ Streaming failed, falling back to non-streaming:', streamingError);
+      console.warn(
+        "⚠️ Streaming failed, falling back to non-streaming:",
+        streamingError,
+      );
       onStreamingError(streamingError);
 
       // DON'T call sendMessage here - it would create duplicate messages!
@@ -70,12 +82,12 @@ export function getMessageDisplayContent(message, agentState) {
 
   // If this message is currently streaming, use the streaming content
   if (streaming) {
-    const content = agentState.streamingMessage || message.content || '';
+    const content = agentState.streamingMessage || message.content || "";
     return content;
   }
 
   // Otherwise use the final message content
-  return message.content || '';
+  return message.content || "";
 }
 
 /**
@@ -85,16 +97,61 @@ export function getMessageDisplayContent(message, agentState) {
  * @param {string} baseClassName - Base CSS classes for the message
  * @returns {string} - Enhanced CSS classes with streaming effects
  */
-export function getStreamingMessageClasses(message, agentState, baseClassName = '') {
+export function getStreamingMessageClasses(
+  message,
+  agentState,
+  baseClassName = "",
+) {
   const classes = [baseClassName];
 
   if (isMessageStreaming(message, agentState)) {
-    // Add streaming-specific classes
-    classes.push('animate-pulse');  // Subtle pulse effect while streaming
-    classes.push('streaming-message'); // Custom class for streaming messages
+    // Custom class for streaming messages (used by components to add cursor indicator)
+    classes.push("streaming-message");
   }
 
-  return classes.filter(Boolean).join(' ');
+  return classes.filter(Boolean).join(" ");
+}
+
+/**
+ * Contextual update indicator - shows AI processing stages during streaming (ephemeral)
+ * Displays a left-bordered message with animated processing dots and contextual text,
+ * followed by the AI avatar. Used consistently across all conversation flows.
+ *
+ * @param {string} content - The contextual update text to display
+ * @param {string} avatarLabel - Single character for the AI avatar (default: "C")
+ * @returns {JSX.Element} - Contextual update indicator
+ */
+export function ContextualUpdateIndicator({ content, avatarLabel = "C" }) {
+  return (
+    <div className={streamingPatterns.contextualUpdate.container}>
+      <div className={streamingPatterns.contextualUpdate.borderAccent}>
+        <div className={streamingPatterns.contextualUpdate.contentRow}>
+          <div className={streamingPatterns.contextualUpdate.dotsContainer}>
+            <div
+              className={streamingPatterns.contextualUpdate.dot}
+              style={{ animationDelay: "0ms" }}
+            />
+            <div
+              className={streamingPatterns.contextualUpdate.dot}
+              style={{ animationDelay: "0.2s" }}
+            />
+            <div
+              className={streamingPatterns.contextualUpdate.dot}
+              style={{ animationDelay: "0.4s" }}
+            />
+          </div>
+          <span className={streamingPatterns.contextualUpdate.text}>
+            {content}
+          </span>
+        </div>
+      </div>
+      <div className={streamingPatterns.avatarRow}>
+        <div className={`flex-shrink-0 ${avatarPatterns.aiSmall}`}>
+          {avatarLabel}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 /**
@@ -103,22 +160,25 @@ export function getStreamingMessageClasses(message, agentState, baseClassName = 
  * @param {string} customClass - Additional CSS classes
  * @returns {JSX.Element|null} - Typing indicator or null
  */
-export function StreamingTypingIndicator({ isVisible = false, customClass = '' }) {
+export function StreamingTypingIndicator({
+  isVisible = false,
+  customClass = "",
+}) {
   if (!isVisible) return null;
 
   return (
-    <div className={`flex space-x-1 px-4 py-3 ${customClass}`}>
+    <div className={`flex space-x-1.5 px-4 py-3 ${customClass}`}>
       <div
-        className="w-2 h-2 bg-synthwave-neon-cyan rounded-full animate-bounce"
-        style={{ animationDelay: '0ms' }}
+        className="w-2 h-2 bg-synthwave-neon-cyan rounded-full animate-typing-dot"
+        style={{ animationDelay: "0ms" }}
       />
       <div
-        className="w-2 h-2 bg-synthwave-neon-cyan rounded-full animate-bounce"
-        style={{ animationDelay: '150ms' }}
+        className="w-2 h-2 bg-synthwave-neon-cyan rounded-full animate-typing-dot"
+        style={{ animationDelay: "0.2s" }}
       />
       <div
-        className="w-2 h-2 bg-synthwave-neon-cyan rounded-full animate-bounce"
-        style={{ animationDelay: '300ms' }}
+        className="w-2 h-2 bg-synthwave-neon-cyan rounded-full animate-typing-dot"
+        style={{ animationDelay: "0.4s" }}
       />
     </div>
   );
@@ -130,15 +190,22 @@ export function StreamingTypingIndicator({ isVisible = false, customClass = '' }
  * @returns {Object} - Object with typing state information
  */
 export function getTypingState(agentState) {
-  const hasStreamingContent = !!(agentState.streamingMessage && agentState.streamingMessage.length > 0);
-  const hasStreamingMessage = !!(agentState.isStreaming && agentState.streamingMessageId);
+  const hasStreamingContent = !!(
+    agentState.streamingMessage && agentState.streamingMessage.length > 0
+  );
+  const hasStreamingMessage = !!(
+    agentState.isStreaming && agentState.streamingMessageId
+  );
 
   return {
     isTyping: agentState.isTyping || agentState.isStreaming || false,
     isStreaming: agentState.isStreaming || false,
     // Don't show typing indicator if we have a streaming message bubble, even if no content yet
-    showTypingIndicator: (agentState.isTyping || agentState.isStreaming) && !hasStreamingContent && !hasStreamingMessage,
-    streamingMessageId: agentState.streamingMessageId || null
+    showTypingIndicator:
+      (agentState.isTyping || agentState.isStreaming) &&
+      !hasStreamingContent &&
+      !hasStreamingMessage,
+    streamingMessageId: agentState.streamingMessageId || null,
   };
 }
 
@@ -149,21 +216,23 @@ export function getTypingState(agentState) {
  * @returns {string} - User-friendly error message
  */
 export function handleStreamingError(error, showToast = null) {
-  const errorMessage = error?.message || 'An unexpected error occurred';
-  let userMessage = 'Message sending failed. Please try again.';
+  const errorMessage = error?.message || "An unexpected error occurred";
+  let userMessage = "Message sending failed. Please try again.";
 
   // Customize message based on error type
-  if (errorMessage.includes('network') || errorMessage.includes('timeout')) {
-    userMessage = 'Network issue detected. Your message will be retried automatically.';
-  } else if (errorMessage.includes('rate limit')) {
-    userMessage = 'Too many messages sent. Please wait a moment before trying again.';
+  if (errorMessage.includes("network") || errorMessage.includes("timeout")) {
+    userMessage =
+      "Network issue detected. Your message will be retried automatically.";
+  } else if (errorMessage.includes("rate limit")) {
+    userMessage =
+      "Too many messages sent. Please wait a moment before trying again.";
   }
 
-  if (showToast && showToast.error && typeof showToast.error === 'function') {
+  if (showToast && showToast.error && typeof showToast.error === "function") {
     showToast.error(userMessage);
   }
 
-  console.error('Streaming UI error:', error);
+  console.error("Streaming UI error:", error);
   return userMessage;
 }
 
@@ -173,14 +242,14 @@ export function handleStreamingError(error, showToast = null) {
  */
 export function supportsStreaming() {
   // Check for ReadableStream support (needed for SSE parsing)
-  if (typeof ReadableStream === 'undefined') {
-    console.warn('ReadableStream not supported, streaming disabled');
+  if (typeof ReadableStream === "undefined") {
+    console.warn("ReadableStream not supported, streaming disabled");
     return false;
   }
 
   // Check for EventSource support (SSE)
-  if (typeof EventSource === 'undefined') {
-    console.warn('EventSource not supported, streaming disabled');
+  if (typeof EventSource === "undefined") {
+    console.warn("EventSource not supported, streaming disabled");
     return false;
   }
 

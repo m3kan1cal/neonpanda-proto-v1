@@ -20,6 +20,9 @@ import {
  * Process Stripe webhook events
  * Public endpoint - validates via Stripe signature (NO Cognito auth)
  *
+ * IMPORTANT: This Lambda must be invoked via its Function URL (not API Gateway).
+ * API Gateway HTTP API may modify JSON bodies, breaking Stripe's signature verification.
+ *
  * Handles subscription lifecycle events:
  * - customer.subscription.created
  * - customer.subscription.updated
@@ -36,20 +39,21 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 export const handler: APIGatewayProxyHandlerV2 = async (event) => {
   console.info("Stripe webhook received");
 
-  // COMPREHENSIVE DEBUG: Log everything about the request
-  console.info("Request debug:", {
-    httpMethod: event.requestContext?.http?.method,
-    sourceIp: event.requestContext?.http?.sourceIp,
-    contentType: event.headers["content-type"],
-    hasStripeSignature: !!event.headers["stripe-signature"],
-    isBase64Encoded: event.isBase64Encoded,
-    bodyType: typeof event.body,
-    bodyLength: event.body?.length,
-    bodyFirstChar: event.body?.charCodeAt(0),
-  });
+  // Identify request source: Function URL vs API Gateway
+  const domainName = event.requestContext?.domainName || "unknown";
+  const isFunctionUrl = domainName.includes(".lambda-url.");
 
-  // Log the entire raw body - this is the critical part for debugging
-  console.info("Complete raw body:", event.body);
+  // Warn if request is coming through API Gateway instead of Function URL
+  if (!isFunctionUrl) {
+    console.warn(
+      "Webhook received via API Gateway, NOT Function URL. " +
+        "API Gateway may modify the JSON body, breaking Stripe signature verification. " +
+        "Update the webhook URL in Stripe to use the Lambda Function URL instead.",
+    );
+  }
+
+  // Trim webhook secret defensively (guards against invisible whitespace from copy-paste)
+  const webhookSecret = (process.env.STRIPE_WEBHOOK_SECRET || "").trim();
 
   try {
     // Validate request has required fields
@@ -68,34 +72,21 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
     // We use a Function URL to ensure we receive the exact raw body from Stripe
     let stripeEvent: Stripe.Event;
     try {
-      // Function URLs might base64 encode the body if content-type is binary-ish
-      // or pass it as a string. constructEvent handles both Buffer and string.
+      // Function URLs may base64 encode the body depending on content-type.
+      // constructEvent handles both Buffer and string.
       let rawBody: string | Buffer = event.body;
 
       if (event.isBase64Encoded) {
         rawBody = Buffer.from(event.body, "base64");
-        console.info("Decoded base64 body");
       }
-
-      // Debug: Show exactly what we're passing to Stripe
-      const bodyPreview =
-        typeof rawBody === "string"
-          ? rawBody.substring(0, 200)
-          : rawBody.toString("utf-8").substring(0, 200);
-      console.info("Body being sent to Stripe for verification:", bodyPreview);
 
       stripeEvent = stripe.webhooks.constructEvent(
         rawBody,
         signature,
-        process.env.STRIPE_WEBHOOK_SECRET!,
+        webhookSecret,
       );
     } catch (err) {
       console.error("Webhook signature verification failed:", err);
-      console.error("Debug info:", {
-        isBase64Encoded: event.isBase64Encoded,
-        bodyType: typeof event.body,
-        bodyLength: event.body?.length,
-      });
       return createErrorResponse(400, "Invalid signature");
     }
 

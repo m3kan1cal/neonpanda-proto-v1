@@ -166,6 +166,84 @@ input[type="password"]::-webkit-credentials-auto-fill-button {
   }
 }
 
+/* ==========================================================================
+   Chat Message Animations
+   ========================================================================== */
+
+/* Message entry animation - subtle slide-up + fade-in */
+@keyframes messageSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-message-in {
+  animation: messageSlideIn 0.25s ease-out;
+}
+
+/* Streaming cursor - blinking bar at end of streaming text */
+@keyframes streamingCursorBlink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+/* Streaming cursor - targets the last text element inside MarkdownRenderer during AI streaming.
+   Applied to MarkdownRenderer's wrapper div (via className prop) so ::after appears
+   inline with the last line of text rather than on a separate line below the content. */
+.streaming-cursor > p:last-child::after,
+.streaming-cursor > ul:last-child > li:last-child > span:last-child::after,
+.streaming-cursor > ol:last-child > li:last-child::after {
+  content: "▎";
+  display: inline;
+  color: rgb(0 255 255 / 0.8);
+  animation: streamingCursorBlink 0.8s step-end infinite;
+  margin-left: 1px;
+  font-weight: 300;
+}
+
+/* Typing indicator wave animation - smoother than animate-bounce */
+@keyframes typingWave {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+  30% {
+    transform: translateY(-6px);
+    opacity: 1;
+  }
+}
+
+.animate-typing-dot {
+  animation: typingWave 1.4s ease-in-out infinite;
+}
+
+/* Contextual update indicator styling */
+@keyframes contextualPulse {
+  0%,
+  100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.animate-contextual-pulse {
+  animation: contextualPulse 2s ease-in-out infinite;
+}
+
 /* Custom Amplify Authenticator styles removed - now using custom auth components */
 
 /* Custom Auth Form Autofill Styling - Clean and effective approach */

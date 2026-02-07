@@ -182,6 +182,7 @@ export async function* generateNextQuestionStream(
   userContext?: {
     recentWorkouts?: any[];
     pineconeMemories?: any[];
+    pineconeFormattedContext?: string;
     userProfile?: any;
     activeProgram?: any;
     additionalConsiderations?: string; // Flag from session
@@ -257,8 +258,12 @@ Feel free to share as much or as little as you'd like - or just say "nothing els
   // Check if this is the initial message (no session messages, ignoring pre-session context)
   const isInitialMessage = sessionMessages.length === 0;
 
-  // Build the prompt for question generation
-  const systemPrompt = buildQuestionPrompt(summary, coachPersonality);
+  // Build the prompt for question generation (with optional Pinecone cross-context)
+  const systemPrompt = buildQuestionPrompt(
+    summary,
+    coachPersonality,
+    userContext?.pineconeFormattedContext,
+  );
 
   // Get recent conversation context from current session
   const recentMessages = sessionMessages.slice(-6); // Last 6 session messages
@@ -476,9 +481,21 @@ function buildQuestionPrompt(
     optionalPending: string[];
   },
   coachPersonality?: string,
+  userHistoryContext?: string,
 ): string {
-  return `You are an AI coach helping to create a custom training program through conversation.
+  const historySection = userHistoryContext
+    ? `
+USER'S PLATFORM HISTORY:
+The following is context retrieved from this user's existing activity on the platform (workouts, conversations, programs).
+Use this to personalize your questions and avoid asking about things you already know.
+Do NOT explicitly mention that you have this data - just naturally incorporate the knowledge.
+For example, if you can see they do powerlifting, reference that knowledge when asking about goals.
+${userHistoryContext}
+`
+    : "";
 
+  return `You are an AI coach helping to create a custom training program through conversation.
+${historySection}
 ${coachPersonality ? `COACH PERSONALITY:\n${coachPersonality}\n\n` : ""}CONVERSATION GUIDELINES:
 
 1. **Flow Like a Real Conversation**
