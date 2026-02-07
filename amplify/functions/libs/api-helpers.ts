@@ -1956,6 +1956,7 @@ export interface UserNamespaceQueryOptions {
   conversationTopK?: number; // default: 5, set 0 to skip
   programTopK?: number; // default: 3, set 0 to skip
   coachCreatorTopK?: number; // default: 2, set 0 to skip
+  programDesignerTopK?: number; // default: 0 (opt-in), set >0 to include program designer session summaries
   userMemoryTopK?: number; // default: 0 (opt-in), set >0 to include user memories
 }
 
@@ -2024,6 +2025,7 @@ const queryUserNamespace = async (
     conversationTopK = 5,
     programTopK = 3,
     coachCreatorTopK = 2,
+    programDesignerTopK = 0,
     userMemoryTopK = 0,
   } = options;
 
@@ -2042,6 +2044,11 @@ const queryUserNamespace = async (
     queries.push({
       recordType: "coach_creator_summary",
       topK: coachCreatorTopK,
+    });
+  if (programDesignerTopK > 0)
+    queries.push({
+      recordType: "program_designer_summary",
+      topK: programDesignerTopK,
     });
   if (userMemoryTopK > 0)
     queries.push({ recordType: "user_memory", topK: userMemoryTopK });
@@ -2460,6 +2467,7 @@ export const queryPineconeContext = async (
     conversationTopK?: number;
     programTopK?: number;
     coachCreatorTopK?: number;
+    programDesignerTopK?: number;
     userMemoryTopK?: number;
     // Methodology (separate namespace)
     includeMethodology?: boolean;
@@ -2475,6 +2483,7 @@ export const queryPineconeContext = async (
       conversationTopK = 5,
       programTopK = 3,
       coachCreatorTopK = 2,
+      programDesignerTopK = 0,
       userMemoryTopK = 0,
       includeMethodology = true,
       minScore = 0.7,
@@ -2497,6 +2506,7 @@ export const queryPineconeContext = async (
         conversationTopK,
         programTopK,
         coachCreatorTopK,
+        programDesignerTopK,
         userMemoryTopK,
       },
     });
@@ -2508,6 +2518,7 @@ export const queryPineconeContext = async (
         conversationTopK,
         programTopK,
         coachCreatorTopK,
+        programDesignerTopK,
         userMemoryTopK,
       }),
       includeMethodology

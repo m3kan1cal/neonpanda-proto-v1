@@ -13,7 +13,9 @@ import {
   MODEL_IDS,
   AI_ERROR_FALLBACK_MESSAGE,
   invokeAsyncLambda,
+  queryPineconeContext,
 } from "../libs/api-helpers";
+import { formatPineconeContext } from "../libs/pinecone-utils";
 import {
   getCoachConversation,
   saveCoachConversation,
@@ -207,12 +209,51 @@ async function* createProgramDesignerEventStream(
       `📡 Yielded coach acknowledgment (contextual): "${acknowledgment}"`,
     );
 
-    // Load session data (no conversation creation)
-    console.info("🔄 Loading session data...");
-    const { programSession, coachConfig, userProfile } = await loadSessionData(
-      userId,
-      sessionId,
-    );
+    // Load session data + Pinecone context in parallel
+    console.info("🔄 Loading session data + Pinecone context...");
+    const [sessionData, pineconeResult] = await Promise.all([
+      loadSessionData(userId, sessionId),
+      queryPineconeContext(
+        userId,
+        `User training history, preferences, goals, and coaching discussions for program design: ${userResponse}`,
+        {
+          workoutTopK: 5,
+          conversationTopK: 5,
+          programTopK: 3,
+          coachCreatorTopK: 2,
+          programDesignerTopK: 2,
+          userMemoryTopK: 2,
+          includeMethodology: false,
+          minScore: 0.5,
+        },
+      ).catch((error) => {
+        console.warn(
+          "⚠️ Pinecone query failed, continuing without context:",
+          error,
+        );
+        return {
+          success: false,
+          matches: [],
+          totalMatches: 0,
+          relevantMatches: 0,
+        };
+      }),
+    ]);
+
+    const { programSession, coachConfig, userProfile } = sessionData;
+
+    // Format Pinecone context for prompt injection
+    let pineconeContext = "";
+    if (pineconeResult.success && pineconeResult.matches.length > 0) {
+      pineconeContext = formatPineconeContext(pineconeResult.matches);
+      console.info("✅ Pinecone context retrieved for program designer:", {
+        totalMatches: pineconeResult.totalMatches,
+        relevantMatches: pineconeResult.relevantMatches,
+        contextLength: pineconeContext.length,
+      });
+    } else {
+      console.info("📭 No Pinecone context available for program designer");
+    }
 
     console.info("✅ Session data loaded", {
       sessionId: programSession.sessionId,
@@ -266,6 +307,16 @@ async function* createProgramDesignerEventStream(
       return;
     }
 
+    // Build context with Pinecone data for cross-context awareness
+    const sessionContext = pineconeContext
+      ? {
+          pineconeContext: {
+            formatted: pineconeContext,
+            matches: pineconeResult.matches,
+          },
+        }
+      : {};
+
     // Build business logic params (session-based, no conversation)
     const businessLogicParams: BusinessLogicParams = {
       userId,
@@ -276,7 +327,7 @@ async function* createProgramDesignerEventStream(
       existingConversation: null as any, // Not used
       coachConfig,
       userProfile,
-      context: {}, // Empty context for program design
+      context: sessionContext,
     };
 
     // Continue the session flow
@@ -285,7 +336,7 @@ async function* createProgramDesignerEventStream(
       existingConversation: null as any,
       coachConfig,
       userProfile,
-      context: {},
+      context: sessionContext,
     };
 
     yield* handleProgramDesignerFlow(
