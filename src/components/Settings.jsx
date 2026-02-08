@@ -17,6 +17,7 @@ import { useAuth } from "../auth/contexts/AuthContext";
 import { AccessDenied, LoadingScreen } from "./shared/AccessDenied";
 import UserAvatar from "./shared/UserAvatar";
 import FormInput from "./shared/FormInput";
+import AppFooter from "./shared/AppFooter";
 import AuthInput from "../auth/components/AuthInput";
 import AuthButton from "../auth/components/AuthButton";
 import { useToast } from "../contexts/ToastContext";
@@ -1605,6 +1606,7 @@ function Settings() {
             </div>
           </div>
         </div>
+        <AppFooter />
       </div>
     </div>
   );

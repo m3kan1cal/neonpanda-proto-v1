@@ -16,6 +16,7 @@ import QuickStats from "./shared/QuickStats";
 import { isNewWorkout } from "../utils/dateUtils";
 import { NeonBorder, NewBadge } from "./themes/SynthwaveComponents";
 import { AccessDenied, LoadingScreen } from "./shared/AccessDenied";
+import AppFooter from "./shared/AppFooter";
 import { useToast } from "../contexts/ToastContext";
 import { MemoryAgent } from "../utils/agents/MemoryAgent";
 import CoachAgent from "../utils/agents/CoachAgent";
@@ -463,9 +464,11 @@ function ManageMemories() {
               <div className="flex items-center gap-1.5 font-rajdhani text-sm">
                 <span className="text-synthwave-text-muted">Last Used:</span>
                 <span className="text-synthwave-neon-cyan font-medium">
-                  {(memoryAgentRef.current?.formatMemoryDate(
-                    memory.metadata.lastUsed,
-                  ) || "Unknown").replace(/^Created\s+/i, "")}
+                  {(
+                    memoryAgentRef.current?.formatMemoryDate(
+                      memory.metadata.lastUsed,
+                    ) || "Unknown"
+                  ).replace(/^Created\s+/i, "")}
                 </span>
               </div>
             )}
@@ -938,6 +941,7 @@ function ManageMemories() {
           {!memoryAgentState.error && (
             <div className="mb-8">{renderMemoryList()}</div>
           )}
+          <AppFooter />
         </div>
       </div>
 

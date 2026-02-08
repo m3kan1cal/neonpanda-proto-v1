@@ -12,6 +12,7 @@ import { CenteredErrorState } from "./shared/ErrorStates";
 import CompactCoachCard from "./shared/CompactCoachCard";
 import CommandPaletteButton from "./shared/CommandPaletteButton";
 import QuickStats from "./shared/QuickStats";
+import AppFooter from "./shared/AppFooter";
 import { useNavigationContext } from "../contexts/NavigationContext";
 import WeeklyReportViewer from "./WeeklyReportViewer";
 import ReportAgent from "../utils/agents/ReportAgent";
@@ -395,6 +396,7 @@ function WeeklyReports() {
             </div>
           )}
         </div>
+        <AppFooter />
       </div>
 
       {/* Tooltips */}

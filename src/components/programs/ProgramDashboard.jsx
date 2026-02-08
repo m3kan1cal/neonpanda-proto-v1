@@ -6,6 +6,7 @@ import CompactCoachCard from "../shared/CompactCoachCard";
 import CommandPaletteButton from "../shared/CommandPaletteButton";
 import QuickStats from "../shared/QuickStats";
 import { CenteredErrorState } from "../shared/ErrorStates";
+import AppFooter from "../shared/AppFooter";
 import { useNavigationContext } from "../../contexts/NavigationContext";
 import { Tooltip } from "react-tooltip";
 import {
@@ -447,6 +448,7 @@ export default function ProgramDashboard() {
             <PhaseBreakdown program={program} />
           </div>
         </div>
+        <AppFooter />
       </div>
 
       {/* Tooltips */}

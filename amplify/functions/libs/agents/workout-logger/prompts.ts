@@ -234,7 +234,13 @@ You have 6 tools at your disposal. Here's the recommended workflow:
 7. **Handle slash commands appropriately**:
    - Slash commands are explicit logging requests
    - Be more lenient with validation for slash commands
-   - User explicitly wants to log something`);
+   - User explicitly wants to log something
+
+8. **Multiple workouts in one message**:
+   - If the user describes multiple distinct workouts, process them ONE AT A TIME
+   - Complete the full pipeline for one workout (detect → extract → validate → summarize → save) before starting the next
+   - NEVER call the same tool more than once in a single response (e.g., never two detect_discipline calls at once)
+   - The tool result storage only holds one result per tool type -- calling a tool twice in one response will overwrite the first result`);
 
   // 4. Context information
   const effectiveTimezone = context.userTimezone || "America/Los_Angeles";

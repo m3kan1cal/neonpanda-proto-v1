@@ -20,7 +20,7 @@ import FAQs from "./components/FAQs";
 import ContactForm from "./components/ContactForm";
 import CoachCreator from "./components/CoachCreator";
 import Coaches from "./components/Coaches";
-import TrainingGrounds from "./components/TrainingGrounds";
+import TrainingGroundsV2 from "./components/TrainingGroundsV2";
 import CoachConversations from "./components/CoachConversations";
 import ProgramDesigner from "./components/ProgramDesigner";
 import StreamingDebugTest from "./components/StreamingDebugTest";
@@ -237,7 +237,7 @@ function AppContent() {
             path="/training-grounds"
             element={
               <ProtectedRoute>
-                <TrainingGrounds />
+                <TrainingGroundsV2 />
               </ProtectedRoute>
             }
           />

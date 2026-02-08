@@ -24,6 +24,29 @@ export const VAGUE_DURATION_TERMS = [
 ] as const;
 
 /**
+ * Open-ended duration terms that resolve to the default program duration.
+ * Users may say "ongoing" or "no end date" when they don't have a fixed
+ * timeline in mind. We can't build truly open-ended programs, so these
+ * map deterministically to DEFAULT_PROGRAM_DURATION_DAYS (8 weeks).
+ */
+export const OPEN_ENDED_DURATION_TERMS = [
+  "ongoing",
+  "indefinite",
+  "indefinitely",
+  "continuous",
+  "open-ended",
+  "open ended",
+  "no end date",
+  "no end",
+  "no timeline",
+  "forever",
+  "long-term",
+  "long term",
+  "as long as possible",
+  "until further notice",
+] as const;
+
+/**
  * Extract a numeric value from a duration string
  * Handles both explicit numbers and vague terms
  *
@@ -115,9 +138,11 @@ export function parseProgramDuration(
 
   // Parse string input
   const lowerValue = durationValue.toLowerCase();
+
   const extractedNum = extractNumericValue(durationValue);
 
-  // Convert based on time unit
+  // Convert based on time unit (check explicit units FIRST, before open-ended terms)
+  // This ensures "12 week long-term program" parses as 84 days, not the default 56.
   // Matches both "8 weeks" (with space) and "8weeks" (without space)
   // Word boundary \b prevents "weekend", "biweekly" but allows "8weeks"
   if (/\bweeks?\b|weeks?(?!\w)/.test(lowerValue)) {
@@ -147,6 +172,16 @@ export function parseProgramDuration(
       days,
     });
     return days;
+  }
+
+  // Handle open-ended terms → default duration (checked AFTER explicit time units
+  // so that inputs like "12 week long-term program" parse the explicit duration)
+  if (isOpenEndedDuration(lowerValue)) {
+    console.info("📅 Open-ended duration resolved to default:", {
+      input: durationValue,
+      days: DEFAULT_PROGRAM_DURATION_DAYS,
+    });
+    return DEFAULT_PROGRAM_DURATION_DAYS;
   }
 
   // Assume days if no unit specified but we can parse a number
@@ -213,5 +248,22 @@ export function canParseDuration(durationValue: any): boolean {
     return true;
   }
 
+  // Check for open-ended terms (resolve to default duration)
+  if (isOpenEndedDuration(lowerValue)) {
+    return true;
+  }
+
   return false;
+}
+
+/**
+ * Check if a duration string is an open-ended term
+ * These are terms that indicate no fixed end date, which we resolve
+ * to the default program duration since we can't build truly open-ended programs.
+ *
+ * @param lowerValue - Lowercased duration string
+ * @returns true if the string matches an open-ended term
+ */
+function isOpenEndedDuration(lowerValue: string): boolean {
+  return OPEN_ENDED_DURATION_TERMS.some((term) => lowerValue.includes(term));
 }
