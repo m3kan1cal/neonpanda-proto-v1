@@ -136,6 +136,10 @@ export const badgePatterns = {
   countMuted:
     "bg-synthwave-text-muted/10 text-synthwave-text-muted hover:bg-synthwave-text-muted/20",
 
+  // Small count badges - For inline numbered indicators (workout template rows, etc.)
+  countSmall:
+    "min-w-[20px] h-[20px] px-0.5 rounded-md flex items-center justify-center font-rajdhani font-bold text-xs transition-all duration-150",
+
   // Workout badge patterns - For workout viewer and discipline components
   // Base pattern with proper vertical centering (inline-flex items-center with asymmetric padding)
   workoutBadgeBase:
@@ -390,10 +394,29 @@ export const containerPatterns = {
     "bg-synthwave-bg-card/20 backdrop-blur-sm border border-synthwave-neon-pink/20 rounded-2xl shadow-lg shadow-synthwave-neon-pink/10 transition-all duration-300 hover:bg-synthwave-bg-card/40 hover:border-synthwave-neon-pink/40 hover:shadow-xl hover:shadow-synthwave-neon-pink/20 hover:-translate-y-1",
 
   cardMedium:
-    "bg-synthwave-bg-card/60 border border-synthwave-neon-cyan/20 rounded-2xl shadow-xl shadow-synthwave-neon-cyan/20 hover:shadow-2xl hover:shadow-synthwave-neon-cyan/30 transition-all duration-300 hover:-translate-y-2",
+    "bg-synthwave-bg-card/60 border-2 border-synthwave-neon-cyan/40 rounded-2xl shadow-xl shadow-synthwave-neon-cyan/20 hover:shadow-2xl hover:shadow-synthwave-neon-cyan/30 transition-all duration-300 hover:-translate-y-2",
 
   cardMediumOpaque:
     "bg-synthwave-bg-card/95 border border-synthwave-neon-cyan/20 rounded-2xl shadow-xl shadow-synthwave-neon-cyan/20",
+
+  // Neon Glass cards -- gradient border via padding trick (outer wrapper)
+  neonGlassWrapper:
+    "p-[2px] rounded-2xl bg-gradient-to-r from-synthwave-neon-cyan via-synthwave-neon-purple to-synthwave-neon-pink cursor-pointer transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-synthwave-neon-cyan/30",
+  // Neon Glass inner panel (always paired with neonGlassWrapper)
+  neonGlassInner:
+    "rounded-[14px] bg-synthwave-bg-card p-6 h-full flex flex-col gap-3.5",
+  // Neon Glass muted variant -- for rest day / inactive states (outer wrapper)
+  neonGlassMuted:
+    "p-[2px] rounded-2xl bg-synthwave-text-muted/20 transition-all duration-300 hover:-translate-y-1",
+  // Neon Glass muted inner panel
+  neonGlassMutedInner:
+    "rounded-[14px] bg-synthwave-bg-card p-6 h-full flex flex-col gap-3",
+  // Neon Glass skeleton variant -- dimmed gradient border for loading placeholders
+  neonGlassSkeleton:
+    "p-[2px] rounded-2xl bg-gradient-to-r from-synthwave-neon-cyan/30 via-synthwave-neon-purple/30 to-synthwave-neon-pink/30",
+  // Neon Glass skeleton inner panel
+  neonGlassSkeletonInner:
+    "rounded-[14px] bg-synthwave-bg-card/95 p-6 flex flex-col gap-3",
 
   cardHeavy:
     "bg-synthwave-bg-card/50 backdrop-blur-xl border border-synthwave-neon-purple/30 rounded-2xl shadow-2xl shadow-synthwave-neon-purple/20 transition-all duration-300 hover:bg-synthwave-bg-card/60 hover:border-synthwave-neon-purple/50 hover:shadow-2xl hover:shadow-synthwave-neon-purple/30 hover:-translate-y-1",
@@ -1034,6 +1057,42 @@ export const typographyPatterns = {
   // Code/inline code styling
   inlineCode:
     "font-mono text-xs text-synthwave-neon-cyan bg-synthwave-bg-primary/50 border border-synthwave-neon-cyan/30 px-2 py-1 rounded inline-block",
+
+  // Section divider -- used in Training Grounds tier headers
+  sectionDivider:
+    "font-russo font-bold text-white text-md uppercase tracking-wider",
+
+  // Program label -- small uppercase identifier used in workout/program cards
+  programLabel:
+    "font-rajdhani text-[11px] font-semibold tracking-[1.2px] uppercase text-synthwave-neon-cyan",
+  // Program label muted variant -- for rest/inactive states
+  programLabelMuted:
+    "font-rajdhani text-[11px] font-semibold tracking-[1.2px] uppercase text-synthwave-text-muted",
+};
+
+// List Item Patterns -- accent-border + gradient rows for Training Grounds lists
+export const listItemPatterns = {
+  // Cyan variant (programs, today's workouts)
+  rowCyan:
+    "group border-l-2 border-l-synthwave-neon-cyan bg-gradient-to-r from-synthwave-neon-cyan/5 to-transparent rounded-lg p-4 cursor-pointer transition-all duration-200 hover:from-synthwave-neon-cyan/10 hover:shadow-md hover:shadow-synthwave-neon-cyan/5",
+
+  // Pink variant (conversations, workouts, reports)
+  rowPink:
+    "group border-l-2 border-l-synthwave-neon-pink bg-gradient-to-r from-synthwave-neon-pink/5 to-transparent rounded-lg p-4 cursor-pointer transition-all duration-200 hover:from-synthwave-neon-pink/10 hover:shadow-md hover:shadow-synthwave-neon-pink/5",
+
+  // Chevron/icon that highlights on row hover
+  chevronCyan:
+    "text-synthwave-text-muted group-hover:text-synthwave-neon-cyan transition-colors",
+  chevronPink:
+    "text-synthwave-neon-pink/50 group-hover:text-synthwave-neon-pink transition-colors",
+
+  // Today's workout card -- energetic cyan with glow
+  todayCard:
+    "group border-l-2 border-l-synthwave-neon-cyan bg-gradient-to-r from-synthwave-neon-cyan/5 to-transparent rounded-lg p-4 cursor-pointer transition-all duration-200 hover:from-synthwave-neon-cyan/10 hover:shadow-lg hover:shadow-synthwave-neon-cyan/20",
+
+  // Show More/Less toggle link
+  showMoreLink:
+    "font-rajdhani text-xs text-synthwave-neon-cyan hover:text-synthwave-neon-cyan/80 transition-colors cursor-pointer",
 };
 
 export const scrollbarPatterns = {
@@ -1270,12 +1329,18 @@ export const streamingPatterns = {
 // <div className={containerPatterns.emptyStateTipCard}>Empty state tip card</div>
 // <div className={toastPatterns.success}>Success message</div>
 //
+// Neon Glass Cards (gradient border via padding trick):
+// <div className={containerPatterns.neonGlassWrapper}><div className={containerPatterns.neonGlassInner}>...</div></div>
+// <div className={containerPatterns.neonGlassMuted}><div className={containerPatterns.neonGlassMutedInner}>...</div></div>
+// <div className={containerPatterns.neonGlassSkeleton}><div className={containerPatterns.neonGlassSkeletonInner}>...</div></div>
+//
 // Typography:
 // <h1 className={typographyPatterns.pageTitle}>Page Title</h1>
 // <h2 className={typographyPatterns.emptyStateHeader}>Ready to Train?</h2>
 // <p className={typographyPatterns.emptyStateDescription}>Description text</p>
 // <h4 className={typographyPatterns.emptyStateSectionHeader}>Section Header</h4>
 // <h3 className={typographyPatterns.emptyStateCardTitle}>Card Title</h3>
+// <span className={typographyPatterns.programLabel}>Program Name</span>
 // <p className={typographyPatterns.emptyStateCardText}>Card description</p>
 // <code className={typographyPatterns.inlineCode}>/log-workout</code>
 //

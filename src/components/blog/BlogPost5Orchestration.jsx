@@ -131,7 +131,7 @@ function BlogPost5Orchestration() {
             </div>
             <p className="text-synthwave-text-secondary font-rajdhani text-sm">
               Creates intelligent multi-week training programs with proper
-              periodization across 9 supported disciplines.
+              periodization across 10 supported disciplines.
             </p>
           </div>
         </div>
@@ -478,7 +478,7 @@ function BlogPost5Orchestration() {
                 More Disciplines
               </h4>
               <p className="text-synthwave-text-secondary font-rajdhani text-sm">
-                Expanding beyond our initial 9 disciplines based on community
+                Expanding beyond our initial 10 disciplines based on community
                 feedback and demand.
               </p>
             </div>
@@ -568,7 +568,7 @@ function BlogPost5Orchestration() {
             </div>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-synthwave-neon-cyan rounded-full animate-pulse"></div>
-              <span>9 Disciplines Supported</span>
+              <span>10 Disciplines Supported</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-synthwave-neon-purple rounded-full animate-pulse"></div>

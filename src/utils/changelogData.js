@@ -10,6 +10,49 @@
 
 export const changelogEntries = [
   {
+    version: "Release v1.0.20260208-beta",
+    date: "2026-02-08",
+    changes: {
+      added: [
+        "Training Grounds V2 promoted to primary /training-grounds route, replacing V1 as the default dashboard experience",
+        "AI-powered contextual coach greeting on Training Grounds powered by Nova Micro via generate-greeting Lambda; greeting is personalized based on coach personality, user activity, and time of day",
+        "Neon Glass workout cards in Today's Lineup section with gradient border (cyan→purple→pink), program label, hero workout name, progress bar, numbered workout template list with durations, and secondary CTA button",
+        "Responsive CSS Grid layout for Today's Lineup workout cards (1 column mobile, 2 columns tablet, 3 columns desktop) with full-width cards in single-column views",
+        "Masonry layout for Your Highlights section with two-column desktop distribution (Programs + Workout History left, Conversations + Reports right) and single-column mobile stack",
+        "Quick action pill buttons (Chat, Log Workout, Design Program) inline with QuickStats on desktop, hidden on mobile where FAB covers the same actions",
+        "Chat pill button creates a new conversation and navigates (with Creating... spinner); Design Program pill button creates a program designer session and navigates (with Creating... spinner); Log Workout pill button toggles command palette /log-workout action",
+        "Show More / Show Less pagination on Programs, Conversations, Workout History, and Reports lists with 5-item initial limit",
+        "Neon Glass card patterns (neonGlassWrapper, neonGlassInner, neonGlassMuted, neonGlassMutedInner, neonGlassSkeleton, neonGlassSkeletonInner) added to containerPatterns in uiPatterns.js for reusable gradient-border cards",
+        "Program label typography patterns (programLabel, programLabelMuted) added to typographyPatterns in uiPatterns.js for consistent small uppercase program identifiers",
+        "Section divider typography pattern (sectionDivider) and list item patterns (rowCyan, rowPink, chevronCyan, chevronPink, todayCard, showMoreLink) added to uiPatterns.js",
+        "Skeleton loading structure for Training Grounds V2 matching the full page layout: header, AI greeting, QuickStats + pills, Today's Lineup workout card skeletons, Your Highlights section card skeletons, and footer",
+        "Active Programs empty state with 3-step numbered instructions (design program, answer questions, programs appear here)",
+        "Branded footer: Powered by NeonPanda with cyan tag icon and version number, replacing generic version display",
+      ],
+      changed: [
+        "cardMedium border updated to border-2 with border-synthwave-neon-cyan/40 (thicker, less transparent) for stronger card definition across all pages using containerPatterns.cardMedium",
+        "Training Grounds section titles renamed to on-brand alternatives: Today → Today's Lineup, Your Activity → Your Highlights",
+        "Reports & Insights list items changed from pink to cyan accent styling (rowCyan) with gray-to-cyan hover icons for visual consistency",
+        "Recent Conversations and Workout History sub-headers removed for cleaner section layouts; section card headers now serve as the sole title",
+        "Workout History list item icon changed from kettlebell to right-pointing chevron (gray default, pink on hover) matching other list sections",
+        "Conversation list chevrons changed to gray default with pink on hover for consistency across all Your Highlights sections",
+        "AI greeting loading state shows Checking in with your coach... with pulse animation instead of flashing static text",
+        "AI greeting paragraph constrained to max-w-3xl width with mb-4 spacing",
+        "Removed backdrop-blur-xl from workout card inner panels to prevent empty card rendering glitches on browser resize (consistent with existing backdrop-blur removal from chat bubbles)",
+      ],
+      fixed: [
+        "Weekly analytics workout summary query returning 0 results due to incorrect DynamoDB FilterExpression; #completedAt was mapped to literal string attributes.completedAt instead of using nested path #attributes.#completedAt with separate ExpressionAttributeName mappings — filter was matching a nonexistent top-level attribute, causing reports to never generate",
+        "QuickStats and pill buttons vertical alignment fixed by using items-start on parent flex container and neutralizing QuickStats intrinsic -mt-4/mb-6 margins via child selector overrides",
+        "Pill buttons now top-aligned with first line of QuickStats when stats wrap to multiple lines on narrow desktop viewports",
+        "Double skeleton flash for workout cards eliminated by matching page-level and TodaysWorkoutRow internal skeletons (both render 2 cards in identical grid layout)",
+      ],
+      removed: [
+        "Training Grounds V1 route (/training-grounds-v1) removed from App.jsx; V1 component file retained for reference",
+        "Horizontal scroll implementation for Today's Lineup section (scroll arrows, overflow-x-auto, ResizeObserver) replaced by wrapping CSS Grid layout",
+      ],
+    },
+  },
+  {
     version: "Release v1.0.20260207-beta",
     date: "2026-02-07",
     changes: {
@@ -38,6 +81,8 @@ export const changelogEntries = [
         "Streaming cursor (blinking ▎) now appears inline at the end of the last line of AI streaming text instead of on a separate line below the content; CSS selector updated from .streaming-cursor::after to target the last child element within MarkdownRenderer (p, li, ol) so the ::after pseudo-element renders in inline formatting context",
         "ContextualUpdateIndicator extracted from duplicated ~30-line local component definitions in CoachConversations, CoachCreator, and ProgramDesigner into a single shared component in streamingUiHelper.jsx; all three conversation flows now import and render the same implementation, eliminating maintenance burden and drift risk",
         "streamingPatterns added to uiPatterns.js centralizing contextual update indicator styles (container, borderAccent, contentRow, dotsContainer, dot, text, avatarRow) for consistent styling across all streaming UI components",
+        "Open-ended duration terms (ongoing, indefinite, continuous, open-ended, forever, long-term, no end date, etc.) now parsed deterministically to default 8-week program duration in duration-parser.ts, eliminating an unnecessary Bedrock AI normalization call (~1.35s latency + cost) and WARN-level log noise for common user inputs",
+        "Removed API Gateway vs Function URL detection warning from Stripe webhook handler; the check logged a WARN on every API Gateway invocation that was pure noise since signature verification already handles invalid requests",
       ],
       removed: [],
     },

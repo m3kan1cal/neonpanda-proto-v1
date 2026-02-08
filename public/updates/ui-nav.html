@@ -1,0 +1,483 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no"
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <title>NeonPanda Bottom Nav Demo</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      :root {
+        --neon-cyan: #00ffff;
+        --neon-pink: #ff10f0;
+        --neon-purple: #bf00ff;
+        --deep-black: #0a0a0a;
+        --card-bg: #1a1a1a;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: var(--deep-black);
+        color: white;
+        /* Critical: Prevent overscroll bounce */
+        overscroll-behavior-y: none;
+        overflow: hidden;
+        /* Use new viewport units */
+        height: 100dvh;
+      }
+
+      .app-container {
+        height: 100dvh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        background: var(--deep-black);
+      }
+
+      /* Header */
+      .header {
+        flex-shrink: 0;
+        padding: max(12px, env(safe-area-inset-top)) 20px 12px;
+        background: linear-gradient(
+          180deg,
+          rgba(0, 255, 255, 0.1) 0%,
+          transparent 100%
+        );
+        border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+      }
+
+      .header h1 {
+        font-size: 24px;
+        font-weight: 700;
+        background: linear-gradient(135deg, var(--neon-cyan), var(--neon-pink));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      /* Scrollable content area */
+      .content-area {
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+        /* Contain overscroll within this element */
+        overscroll-behavior: contain;
+        padding: 20px;
+        padding-bottom: calc(80px + env(safe-area-inset-bottom));
+      }
+
+      /* Workout cards */
+      .workout-card {
+        background: var(--card-bg);
+        border: 1px solid rgba(0, 255, 255, 0.3);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 16px;
+        box-shadow: 0 0 20px rgba(0, 255, 255, 0.1);
+      }
+
+      .workout-card h3 {
+        color: var(--neon-cyan);
+        margin-bottom: 12px;
+        font-size: 18px;
+      }
+
+      .workout-card p {
+        color: rgba(255, 255, 255, 0.7);
+        line-height: 1.6;
+        margin-bottom: 12px;
+      }
+
+      .stats {
+        display: flex;
+        gap: 16px;
+        margin-top: 12px;
+      }
+
+      .stat {
+        flex: 1;
+        background: rgba(0, 255, 255, 0.1);
+        padding: 8px;
+        border-radius: 8px;
+        text-align: center;
+      }
+
+      .stat-value {
+        color: var(--neon-cyan);
+        font-size: 20px;
+        font-weight: 700;
+      }
+
+      .stat-label {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 12px;
+      }
+
+      /* Bottom Navigation */
+      .bottom-nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+
+        /* Account for iOS safe area */
+        padding-bottom: env(safe-area-inset-bottom);
+
+        background: linear-gradient(
+          180deg,
+          rgba(10, 10, 10, 0.95) 0%,
+          rgba(10, 10, 10, 0.98) 100%
+        );
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+
+        /* Border glow effect */
+        border-top: 1px solid rgba(0, 255, 255, 0.3);
+        box-shadow: 0 -2px 20px rgba(0, 255, 255, 0.1);
+
+        /* Critical: Extend beyond viewport to catch overscroll */
+        transform: translateZ(0);
+        -webkit-transform: translateZ(0);
+
+        /* Prevent the nav from scrolling */
+        overscroll-behavior: contain;
+
+        /* Ensure it's always on top */
+        z-index: 1000;
+      }
+
+      .nav-items {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        padding: 12px 0;
+        max-width: 600px;
+        margin: 0 auto;
+      }
+
+      .nav-item {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        text-decoration: none;
+        color: rgba(255, 255, 255, 0.6);
+        transition: all 0.3s ease;
+        padding: 8px;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .nav-item:active {
+        transform: scale(0.95);
+      }
+
+      .nav-item.active {
+        color: var(--neon-cyan);
+      }
+
+      .nav-icon {
+        width: 24px;
+        height: 24px;
+        position: relative;
+      }
+
+      .nav-item.active .nav-icon {
+        filter: drop-shadow(0 0 8px var(--neon-cyan));
+      }
+
+      .nav-label {
+        font-size: 11px;
+        font-weight: 500;
+      }
+
+      /* Icon SVGs */
+      .icon-chat {
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>')
+          no-repeat center;
+        background-size: contain;
+      }
+
+      .icon-dumbbell {
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6h4M6 18h4M14 6h4M14 18h4M6 12h12M6 6v12M18 6v12M14 6v12M10 6v12"/></svg>')
+          no-repeat center;
+        background-size: contain;
+      }
+
+      .icon-chart {
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>')
+          no-repeat center;
+        background-size: contain;
+      }
+
+      .icon-user {
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>')
+          no-repeat center;
+        background-size: contain;
+      }
+
+      /* Floating Action Button */
+      .fab {
+        position: fixed;
+        bottom: calc(70px + env(safe-area-inset-bottom));
+        right: 20px;
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--neon-cyan), var(--neon-pink));
+        box-shadow: 0 4px 20px rgba(0, 255, 255, 0.4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        border: none;
+        font-size: 28px;
+        color: var(--deep-black);
+        font-weight: 700;
+        z-index: 999;
+        transition: transform 0.3s ease;
+      }
+
+      .fab:active {
+        transform: scale(0.9);
+      }
+
+      /* Debug info (remove in production) */
+      .debug {
+        position: fixed;
+        top: max(12px, env(safe-area-inset-top));
+        right: 12px;
+        background: rgba(0, 0, 0, 0.8);
+        padding: 8px;
+        border-radius: 8px;
+        font-size: 10px;
+        color: var(--neon-cyan);
+        z-index: 9999;
+        font-family: monospace;
+        pointer-events: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-container">
+      <!-- Header -->
+      <div class="header">
+        <h1>🐼 NeonPanda</h1>
+      </div>
+
+      <!-- Scrollable Content -->
+      <div class="content-area" id="content">
+        <div class="workout-card">
+          <h3>💪 Today's Strength Session</h3>
+          <p>
+            Your coach Emma has designed this session focused on building your
+            squat foundation.
+          </p>
+          <div class="stats">
+            <div class="stat">
+              <div class="stat-value">45min</div>
+              <div class="stat-label">Duration</div>
+            </div>
+            <div class="stat">
+              <div class="stat-value">8.5</div>
+              <div class="stat-label">Intensity</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="workout-card">
+          <h3>🎯 Weekly Progress</h3>
+          <p>
+            You've completed 4/5 workouts this week. Keep the momentum going!
+          </p>
+          <div class="stats">
+            <div class="stat">
+              <div class="stat-value">80%</div>
+              <div class="stat-label">Complete</div>
+            </div>
+            <div class="stat">
+              <div class="stat-value">+5lbs</div>
+              <div class="stat-label">PR Gains</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="workout-card">
+          <h3>🔥 Last Week's Highlights</h3>
+          <p>
+            New deadlift PR! Your coach noticed improved hip hinge mechanics.
+          </p>
+          <div class="stats">
+            <div class="stat">
+              <div class="stat-value">315lbs</div>
+              <div class="stat-label">Deadlift PR</div>
+            </div>
+            <div class="stat">
+              <div class="stat-value">12</div>
+              <div class="stat-label">Total Sets</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="workout-card">
+          <h3>📊 4-Week Program Progress</h3>
+          <p>
+            Week 2 of your strength building program. Right on track for your
+            goals.
+          </p>
+          <div class="stats">
+            <div class="stat">
+              <div class="stat-value">Week 2</div>
+              <div class="stat-label">Current</div>
+            </div>
+            <div class="stat">
+              <div class="stat-value">85%</div>
+              <div class="stat-label">Adherence</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="workout-card">
+          <h3>💬 Coach Check-in</h3>
+          <p>
+            Your coach wants to discuss your recovery. How are you feeling after
+            yesterday's volume?
+          </p>
+        </div>
+
+        <div class="workout-card">
+          <h3>🎉 Achievements Unlocked</h3>
+          <p>5 Day Streak, New Squat PR, Perfect Form Check</p>
+          <div class="stats">
+            <div class="stat">
+              <div class="stat-value">3</div>
+              <div class="stat-label">This Week</div>
+            </div>
+            <div class="stat">
+              <div class="stat-value">47</div>
+              <div class="stat-label">Total</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Extra cards for testing scroll -->
+        <div class="workout-card">
+          <h3>📝 Program Notes</h3>
+          <p>
+            Remember to focus on tempo during accessory work. 3-1-1 on all
+            movements.
+          </p>
+        </div>
+
+        <div class="workout-card">
+          <h3>🌙 Recovery Reminder</h3>
+          <p>
+            Don't forget to log your sleep quality. It helps your coach adjust
+            tomorrow's intensity.
+          </p>
+        </div>
+      </div>
+
+      <!-- Floating Action Button -->
+      <button class="fab" onclick="alert('Start Workout!')">▶️</button>
+
+      <!-- Bottom Navigation -->
+      <nav class="bottom-nav">
+        <div class="nav-items">
+          <a href="#" class="nav-item" data-tab="coach">
+            <div class="nav-icon icon-chat"></div>
+            <span class="nav-label">Coach</span>
+          </a>
+          <a href="#" class="nav-item active" data-tab="workouts">
+            <div class="nav-icon icon-dumbbell"></div>
+            <span class="nav-label">Workouts</span>
+          </a>
+          <a href="#" class="nav-item" data-tab="progress">
+            <div class="nav-icon icon-chart"></div>
+            <span class="nav-label">Progress</span>
+          </a>
+          <a href="#" class="nav-item" data-tab="profile">
+            <div class="nav-icon icon-user"></div>
+            <span class="nav-label">Profile</span>
+          </a>
+        </div>
+      </nav>
+
+      <!-- Debug Info (remove in production) -->
+      <div class="debug" id="debug"></div>
+    </div>
+
+    <script>
+      // Nav item switching
+      document.querySelectorAll(".nav-item").forEach((item) => {
+        item.addEventListener("click", (e) => {
+          e.preventDefault();
+          document
+            .querySelectorAll(".nav-item")
+            .forEach((i) => i.classList.remove("active"));
+          item.classList.add("active");
+
+          const tab = item.dataset.tab;
+          console.info("Switched to:", tab);
+          // In real app, this would change the route/content
+        });
+      });
+
+      // Debug viewport info (helpful for testing)
+      function updateDebug() {
+        const debug = document.getElementById("debug");
+        debug.innerHTML = `
+        innerHeight: ${window.innerHeight}px<br>
+        visualViewport: ${visualViewport?.height || "N/A"}px<br>
+        dvh support: ${CSS.supports("height", "100dvh") ? "✅" : "❌"}<br>
+        safe-area-bottom: ${getComputedStyle(document.documentElement).getPropertyValue("padding-bottom")}
+      `;
+      }
+
+      updateDebug();
+      window.addEventListener("resize", updateDebug);
+      if (visualViewport) {
+        visualViewport.addEventListener("resize", updateDebug);
+      }
+
+      // Prevent pull-to-refresh on some browsers
+      let touchStartY = 0;
+      document.addEventListener(
+        "touchstart",
+        (e) => {
+          touchStartY = e.touches[0].clientY;
+        },
+        { passive: true },
+      );
+
+      document.addEventListener(
+        "touchmove",
+        (e) => {
+          const touchY = e.touches[0].clientY;
+          const touchDelta = touchY - touchStartY;
+          const content = document.getElementById("content");
+
+          // If at top of scroll and pulling down, prevent
+          if (content.scrollTop === 0 && touchDelta > 0) {
+            e.preventDefault();
+          }
+        },
+        { passive: false },
+      );
+    </script>
+  </body>
+</html>
