@@ -139,18 +139,10 @@ export function parseProgramDuration(
   // Parse string input
   const lowerValue = durationValue.toLowerCase();
 
-  // Handle open-ended terms → default duration
-  if (isOpenEndedDuration(lowerValue)) {
-    console.info("📅 Open-ended duration resolved to default:", {
-      input: durationValue,
-      days: DEFAULT_PROGRAM_DURATION_DAYS,
-    });
-    return DEFAULT_PROGRAM_DURATION_DAYS;
-  }
-
   const extractedNum = extractNumericValue(durationValue);
 
-  // Convert based on time unit
+  // Convert based on time unit (check explicit units FIRST, before open-ended terms)
+  // This ensures "12 week long-term program" parses as 84 days, not the default 56.
   // Matches both "8 weeks" (with space) and "8weeks" (without space)
   // Word boundary \b prevents "weekend", "biweekly" but allows "8weeks"
   if (/\bweeks?\b|weeks?(?!\w)/.test(lowerValue)) {
@@ -180,6 +172,16 @@ export function parseProgramDuration(
       days,
     });
     return days;
+  }
+
+  // Handle open-ended terms → default duration (checked AFTER explicit time units
+  // so that inputs like "12 week long-term program" parse the explicit duration)
+  if (isOpenEndedDuration(lowerValue)) {
+    console.info("📅 Open-ended duration resolved to default:", {
+      input: durationValue,
+      days: DEFAULT_PROGRAM_DURATION_DAYS,
+    });
+    return DEFAULT_PROGRAM_DURATION_DAYS;
   }
 
   // Assume days if no unit specified but we can parse a number

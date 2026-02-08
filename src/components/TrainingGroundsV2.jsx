@@ -373,7 +373,7 @@ function TrainingGroundsV2() {
         .loadPrograms({ limit: 10, includeStatus: ["active", "paused"] })
         .then(() => {
           // Load today's workout for ALL active programs
-          return programAgentRef.current.loadAllTodaysWorkouts();
+          return programAgentRef.current?.loadAllTodaysWorkouts();
         })
         .catch((error) => {
           console.error(
