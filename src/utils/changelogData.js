@@ -10,6 +10,18 @@
 
 export const changelogEntries = [
   {
+    version: "Release v1.0.20260208b-beta",
+    date: "2026-02-08",
+    changes: {
+      changed: [
+        "templateCard border updated to border-2 with border-synthwave-neon-pink/20 (thicker) for consistency with cardMedium border-2 update across all coach template cards on the Coaches page",
+      ],
+      fixed: [
+        "Multi-workout agent data loss: when a user message contained two distinct workouts, the WorkoutLoggerAgent's internal toolResults Map used fixed semantic keys causing the second extraction to silently overwrite the first; added three-layer fix: (1) prompt rule 8 instructing Claude to process one workout at a time through the full pipeline, (2) duplicate tool detection guard in handleToolUse that blocks same-tool-type calls within a single turn and returns an informative error to Claude for self-correction, (3) defense-in-depth overwrite warning in storeToolResult logging when an extraction is overwritten before being saved",
+      ],
+    },
+  },
+  {
     version: "Release v1.0.20260208-beta",
     date: "2026-02-08",
     changes: {

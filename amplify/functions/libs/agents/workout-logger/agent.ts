@@ -127,6 +127,26 @@ export class WorkoutLoggerAgent extends Agent<WorkoutLoggerContext> {
       }
     }
 
+    // Defense in depth: warn if extraction is being overwritten before save
+    if (storageKey === "extraction" && this.toolResults.has("extraction")) {
+      const existingExtraction = this.toolResults.get("extraction");
+      const savedResult = this.toolResults.get("save");
+      if (
+        !savedResult ||
+        savedResult.workoutId !== existingExtraction?.workoutData?.workout_id
+      ) {
+        console.warn(
+          "⚠️ MULTI-WORKOUT OVERWRITE: Extraction being overwritten before save",
+          {
+            existingWorkoutId: existingExtraction?.workoutData?.workout_id,
+            existingWorkoutName: existingExtraction?.workoutData?.workout_name,
+            savedWorkoutId: savedResult?.workoutId,
+            note: "Previous extraction data will be lost.",
+          },
+        );
+      }
+    }
+
     this.toolResults.set(storageKey, result);
     console.info(`📦 Stored tool result: ${toolId} → ${storageKey}`);
   }
@@ -229,9 +249,38 @@ export class WorkoutLoggerAgent extends Agent<WorkoutLoggerContext> {
     const toolResults: any[] = [];
     const augmentedContext = this.createAugmentedContext();
 
+    // Track which tools have been executed this turn to prevent duplicate calls
+    // (multi-workout protection: storage only holds one result per tool type)
+    const executedToolIds = new Set<string>();
+
     // Execute tools sequentially (workout logging has dependencies)
     for (const block of toolUses) {
       const toolUse = block.toolUse;
+
+      // Guard: Prevent duplicate tool types in a single turn (multi-workout protection)
+      if (executedToolIds.has(toolUse.name)) {
+        console.warn(
+          `⚠️ DUPLICATE TOOL BLOCKED: ${toolUse.name} already called this turn`,
+          {
+            toolName: toolUse.name,
+            note: "Multi-workout detected. Process one workout at a time through the full pipeline.",
+          },
+        );
+        toolResults.push(
+          this.buildToolResult(
+            toolUse,
+            {
+              error:
+                `Tool '${toolUse.name}' was already called in this response. ` +
+                `Process one workout at a time: complete the full pipeline ` +
+                `(detect → extract → validate → summarize → save) for one workout before starting the next.`,
+            },
+            "error",
+          ),
+        );
+        continue;
+      }
+
       const tool = this.config.tools.find((t) => t.id === toolUse.name);
 
       if (!tool) {
@@ -267,6 +316,9 @@ export class WorkoutLoggerAgent extends Agent<WorkoutLoggerContext> {
 
         // Store result for later retrieval (with sanitization)
         this.storeToolResult(tool.id, result);
+
+        // Mark tool as executed this turn (after successful storage)
+        executedToolIds.add(tool.id);
 
         toolResults.push(this.buildToolResult(toolUse, result, "success"));
       } catch (error) {

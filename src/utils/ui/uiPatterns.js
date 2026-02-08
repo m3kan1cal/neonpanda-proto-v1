@@ -423,7 +423,7 @@ export const containerPatterns = {
 
   // Special purpose containers
   templateCard:
-    "bg-synthwave-bg-card/60 border border-synthwave-neon-pink/20 rounded-2xl shadow-xl shadow-synthwave-neon-pink/20 hover:shadow-2xl hover:shadow-synthwave-neon-pink/30 transition-all duration-300 hover:-translate-y-2",
+    "bg-synthwave-bg-card/60 border-2 border-synthwave-neon-pink/20 rounded-2xl shadow-xl shadow-synthwave-neon-pink/20 hover:shadow-2xl hover:shadow-synthwave-neon-pink/30 transition-all duration-300 hover:-translate-y-2",
 
   loadingCard:
     "bg-synthwave-bg-card/30 backdrop-blur-lg border border-synthwave-neon-cyan/20 rounded-2xl shadow-xl shadow-synthwave-neon-cyan/10",
