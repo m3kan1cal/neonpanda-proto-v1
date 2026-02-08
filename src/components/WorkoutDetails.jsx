@@ -20,6 +20,7 @@ import WorkoutViewer from "./WorkoutViewer";
 import IconButton from "./shared/IconButton";
 import { useNavigationContext } from "../contexts/NavigationContext";
 import { CenteredErrorState, EmptyState } from "./shared/ErrorStates";
+import AppFooter from "./shared/AppFooter";
 import {
   ClockIcon,
   TargetIcon,
@@ -510,6 +511,7 @@ function WorkoutDetails() {
             <EmptyState title="No workout data available" size="large" />
           </div>
         )}
+        <AppFooter />
       </div>
 
       {/* Delete Confirmation Modal */}

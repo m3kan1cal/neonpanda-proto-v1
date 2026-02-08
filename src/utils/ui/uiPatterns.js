@@ -403,8 +403,9 @@ export const containerPatterns = {
   neonGlassWrapper:
     "p-[2px] rounded-2xl bg-gradient-to-r from-synthwave-neon-cyan via-synthwave-neon-purple to-synthwave-neon-pink cursor-pointer transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-synthwave-neon-cyan/30",
   // Neon Glass inner panel (always paired with neonGlassWrapper)
+  // Uses relative positioning with light navy overlay for lighter appearance
   neonGlassInner:
-    "rounded-[14px] bg-synthwave-bg-card p-6 h-full flex flex-col gap-3.5",
+    "relative rounded-[14px] bg-synthwave-bg-card p-6 h-full flex flex-col gap-3.5 before:absolute before:inset-0 before:rounded-[14px] before:bg-gradient-to-br before:from-[#7099C8]/[0.08] before:to-transparent before:pointer-events-none before:z-0 [&>*]:relative [&>*]:z-10",
   // Neon Glass muted variant -- for rest day / inactive states (outer wrapper)
   neonGlassMuted:
     "p-[2px] rounded-2xl bg-synthwave-text-muted/20 transition-all duration-300 hover:-translate-y-1",
@@ -615,10 +616,10 @@ export const tooltipPatterns = {
 export const layoutPatterns = {
   // Page containers
   pageContainer:
-    "bg-synthwave-gradient min-h-screen text-synthwave-text-primary",
+    "bg-synthwave-gradient min-h-screen text-synthwave-text-primary flex flex-col",
 
   // Content wrappers
-  contentWrapper: "max-w-7xl mx-auto px-8 py-8",
+  contentWrapper: "max-w-7xl mx-auto px-8 py-8 flex-1 flex flex-col w-full",
 
   // Grid layouts
   cardGrid:

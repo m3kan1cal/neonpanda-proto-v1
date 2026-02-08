@@ -16,6 +16,7 @@ import CommandPaletteButton from "./shared/CommandPaletteButton";
 import { useNavigationContext } from "../contexts/NavigationContext";
 import { createCoachConversation } from "../utils/apis/coachConversationApi";
 import QuickStats from "./shared/QuickStats";
+import AppFooter from "./shared/AppFooter";
 import { isRecentConversation } from "../utils/dateUtils";
 import { NeonBorder, NewBadge } from "./themes/SynthwaveComponents";
 import { useToast } from "../contexts/ToastContext";
@@ -1090,6 +1091,7 @@ function ManageCoachConversations() {
 
           {/* Conversation List */}
           <div className="mb-8">{renderConversationList()}</div>
+          <AppFooter />
         </div>
       </div>
 

@@ -188,7 +188,22 @@ function TodaysWorkoutRow({
               <div className={containerPatterns.neonGlassMutedInner}>
                 {/* Program label */}
                 <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-synthwave-text-muted/40 shadow-[0_0_6px_rgba(255,255,255,0.1)]"></span>
+                  <svg
+                    className="w-3.5 h-3.5 text-synthwave-text-muted/40 flex-shrink-0"
+                    fill="currentColor"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <path d="M5.50093 6.50098H3.50047V9.50166H5.50093V6.50098Z" />
+                    <path d="M3.50045 9.50195H1.5V15.5033H3.50045V9.50195Z" />
+                    <path d="M5.50093 15.5029H3.50047V18.5036H5.50093V15.5029Z" />
+                    <path d="M17.5036 18.5039V23.505H5.5009V18.5039H8.50158V20.5044H14.5029V18.5039H17.5036Z" />
+                    <path d="M19.5041 15.5029H17.5036V18.5036H19.5041V15.5029Z" />
+                    <path d="M23.505 11.5024V13.5029H21.5045V15.5033H19.5041V9.50195H21.5045V11.5024H23.505Z" />
+                    <path d="M19.5041 6.50098H17.5036V9.50166H19.5041V6.50098Z" />
+                    <path d="M17.5036 1.5V6.50114H14.5029V4.50068H12.5025V13.5027H10.502V4.50068H8.50158V6.50114H5.5009V1.5H17.5036Z" />
+                  </svg>
                   <span className={typographyPatterns.programLabelMuted}>
                     {program.name}
                   </span>
@@ -253,7 +268,22 @@ function TodaysWorkoutRow({
             <div className={containerPatterns.neonGlassInner}>
               {/* Program label */}
               <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-synthwave-neon-cyan shadow-[0_0_6px_#00ffff]"></span>
+                <svg
+                  className="w-3.5 h-3.5 text-synthwave-neon-cyan flex-shrink-0 drop-shadow-[0_0_6px_#00ffff]"
+                  fill="currentColor"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path d="M5.50093 6.50098H3.50047V9.50166H5.50093V6.50098Z" />
+                  <path d="M3.50045 9.50195H1.5V15.5033H3.50045V9.50195Z" />
+                  <path d="M5.50093 15.5029H3.50047V18.5036H5.50093V15.5029Z" />
+                  <path d="M17.5036 18.5039V23.505H5.5009V18.5039H8.50158V20.5044H14.5029V18.5039H17.5036Z" />
+                  <path d="M19.5041 15.5029H17.5036V18.5036H19.5041V15.5029Z" />
+                  <path d="M23.505 11.5024V13.5029H21.5045V15.5033H19.5041V9.50195H21.5045V11.5024H23.505Z" />
+                  <path d="M19.5041 6.50098H17.5036V9.50166H19.5041V6.50098Z" />
+                  <path d="M17.5036 1.5V6.50114H14.5029V4.50068H12.5025V13.5027H10.502V4.50068H8.50158V6.50114H5.5009V1.5H17.5036Z" />
+                </svg>
                 <span className={typographyPatterns.programLabel}>
                   {program.name}
                 </span>

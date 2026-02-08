@@ -13,8 +13,18 @@ export const changelogEntries = [
     version: "Release v1.0.20260208b-beta",
     date: "2026-02-08",
     changes: {
+      added: [
+        "AppFooter shared component with retro pixel-art tag icon, 'Powered by NeonPanda' branding, version number, and changelog link; added to 14 authenticated app screens (all non-chat screens)",
+      ],
       changed: [
         "templateCard border updated to border-2 with border-synthwave-neon-pink/20 (thicker) for consistency with cardMedium border-2 update across all coach template cards on the Coaches page",
+        "Training Grounds section header icons replaced with retro pixel-art icons: Active Programs uses table-solid (retro grid), Recent Conversations uses message-dots (retro chat bubble), Workout History uses hackernoon-purcat (retro cat), Reports & Insights uses analytics-solid (retro bar chart)",
+        "Today's Lineup workout cards: cyan dot next to program name replaced with hackernoon-purcat retro pixel-art cat icon",
+        "Quick action pill buttons (Chat and Design Program) now use retro pixel-art icons matching their respective sections",
+        "ProgramIcon and ProgramIconTiny globally updated to table-solid retro pixel-art grid icon (affects sidebar navigation, quick stats, and all program-related screens)",
+        "ReportIcon, ReportIconSmall, and ReportsIconTiny globally updated to analytics-solid retro pixel-art bar chart icon (affects sidebar navigation, quick stats, and all report-related screens)",
+        "ConversationIcon, ChatIcon, and ChatIconSmall globally updated to message-dots retro pixel-art chat bubble icon (affects sidebar navigation, quick stats, and all conversation-related screens)",
+        "neonGlassInner pattern updated with light navy gradient overlay (#7099C8 at 8% opacity) for lighter workout card backgrounds without affecting transparency",
       ],
       fixed: [
         "Multi-workout agent data loss: when a user message contained two distinct workouts, the WorkoutLoggerAgent's internal toolResults Map used fixed semantic keys causing the second extraction to silently overwrite the first; added three-layer fix: (1) prompt rule 8 instructing Claude to process one workout at a time through the full pipeline, (2) duplicate tool detection guard in handleToolUse that blocks same-tool-type calls within a single turn and returns an informative error to Claude for self-correction, (3) defense-in-depth overwrite warning in storeToolResult logging when an extraction is overwritten before being saved",
