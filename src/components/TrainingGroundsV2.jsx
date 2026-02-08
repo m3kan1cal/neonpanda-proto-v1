@@ -64,7 +64,7 @@ function getContextualGreeting({
 }) {
   const hour = new Date().getHours();
   let timeGreeting;
-  if (hour < 6) timeGreeting = "Good evening";
+  if (hour < 6) timeGreeting = "Hey there";
   else if (hour < 12) timeGreeting = "Good morning";
   else if (hour < 17) timeGreeting = "Good afternoon";
   else timeGreeting = "Good evening";
