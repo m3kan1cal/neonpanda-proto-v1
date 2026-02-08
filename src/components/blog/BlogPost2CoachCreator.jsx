@@ -321,6 +321,7 @@ function BlogPost2CoachCreator() {
                 name: "Circuit Training",
                 detail: "F45, Orange Theory, boot camps, community classes",
               },
+              { name: "Hybrid", detail: "Methodology-agnostic" },
             ].map((discipline, idx) => (
               <div
                 key={idx}
