@@ -64,7 +64,8 @@ function getContextualGreeting({
 }) {
   const hour = new Date().getHours();
   let timeGreeting;
-  if (hour < 12) timeGreeting = "Good morning";
+  if (hour < 6) timeGreeting = "Hey there";
+  else if (hour < 12) timeGreeting = "Good morning";
   else if (hour < 17) timeGreeting = "Good afternoon";
   else timeGreeting = "Good evening";
 
@@ -170,8 +171,12 @@ function TrainingGroundsV2() {
   const [programs, setPrograms] = useState([]);
   const [activeProgram, setActiveProgram] = useState(null);
   const [todaysWorkouts, setTodaysWorkouts] = useState({});
-  const [isLoadingPrograms, setIsLoadingPrograms] = useState(false);
-  const [isLoadingTodaysWorkouts, setIsLoadingTodaysWorkouts] = useState(false);
+  const [isLoadingPrograms, setIsLoadingPrograms] = useState(
+    !!(userId && coachId),
+  );
+  const [isLoadingTodaysWorkouts, setIsLoadingTodaysWorkouts] = useState(
+    !!(userId && coachId),
+  );
   const [programError, setProgramError] = useState(null);
 
   // AI greeting state
@@ -380,6 +385,9 @@ function TrainingGroundsV2() {
             "TrainingGroundsV2: Error loading program data:",
             error,
           );
+          // Reset loading flags so the AI greeting effect and UI aren't stuck
+          setIsLoadingPrograms(false);
+          setIsLoadingTodaysWorkouts(false);
         });
     }
   }, [userId, coachId]);
