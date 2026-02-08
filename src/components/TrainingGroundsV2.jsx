@@ -385,6 +385,9 @@ function TrainingGroundsV2() {
             "TrainingGroundsV2: Error loading program data:",
             error,
           );
+          // Reset loading flags so the AI greeting effect and UI aren't stuck
+          setIsLoadingPrograms(false);
+          setIsLoadingTodaysWorkouts(false);
         });
     }
   }, [userId, coachId]);
