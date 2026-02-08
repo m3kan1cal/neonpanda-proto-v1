@@ -414,7 +414,8 @@ function TrainingGroundsV2() {
             todaysWorkoutNames:
               todaysWorkoutNames.length > 0 ? todaysWorkoutNames : undefined,
             lastWorkoutDate:
-              workoutState.lastWorkoutDaysAgo != null
+              workoutState.lastWorkoutDaysAgo != null &&
+              workoutState.totalWorkoutCount > 0
                 ? new Date(
                     Date.now() - workoutState.lastWorkoutDaysAgo * 86400000,
                   )
