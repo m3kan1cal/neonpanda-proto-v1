@@ -794,6 +794,9 @@ export class WorkoutAgent {
         allWorkouts: this.state.allWorkouts.filter(
           (w) => w.workoutId !== workoutId,
         ),
+        recentPrAchievements: this.state.recentPrAchievements.filter(
+          (pr) => pr.workoutId !== workoutId,
+        ),
       });
 
       return result;
