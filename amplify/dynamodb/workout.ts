@@ -201,16 +201,16 @@ export async function queryWorkoutSummaries(
       TableName: tableName,
       KeyConditionExpression: "#pk = :pk AND begins_with(#sk, :skPrefix)",
       FilterExpression:
-        "#entityType = :entityType AND #completedAt BETWEEN :fromDate AND :toDate",
+        "#entityType = :entityType AND #attributes.#completedAt BETWEEN :fromDate AND :toDate",
       // Only fetch the fields needed for analytics (significantly reduces data transfer)
       ProjectionExpression:
-        "pk, sk, entityType, #attributes.workoutId, #attributes.completedAt, #attributes.summary, #attributes.workoutData.workout_name, #attributes.workoutData.discipline, #attributes.coachIds",
+        "pk, sk, entityType, #attributes.workoutId, #attributes.#completedAt, #attributes.summary, #attributes.workoutData.workout_name, #attributes.workoutData.discipline, #attributes.coachIds",
       ExpressionAttributeNames: {
         "#pk": "pk",
         "#sk": "sk",
         "#entityType": "entityType",
         "#attributes": "attributes",
-        "#completedAt": "attributes.completedAt",
+        "#completedAt": "completedAt",
       },
       ExpressionAttributeValues: {
         ":pk": `user#${userId}`,

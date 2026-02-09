@@ -305,7 +305,7 @@ function BlogPost2CoachCreator() {
 
         <div className={`${containerPatterns.mediumGlassCyan} mb-8`}>
           <h3 className="font-rajdhani font-semibold text-xl text-synthwave-neon-cyan mb-4">
-            9 Disciplines, Countless Coaching Styles
+            10 Disciplines, Countless Coaching Styles
           </h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
             {[
@@ -321,6 +321,7 @@ function BlogPost2CoachCreator() {
                 name: "Circuit Training",
                 detail: "F45, Orange Theory, boot camps, community classes",
               },
+              { name: "Hybrid", detail: "Methodology-agnostic" },
             ].map((discipline, idx) => (
               <div
                 key={idx}
@@ -700,7 +701,7 @@ function BlogPost2CoachCreator() {
             </div>
             <div className="bg-synthwave-bg-primary/30 rounded-lg p-4">
               <h4 className="font-rajdhani font-semibold text-synthwave-neon-purple mb-2">
-                Amazon Nova Micro
+                Amazon Nova 2 Lite
               </h4>
               <p className="text-synthwave-text-secondary font-rajdhani text-sm">
                 Real-time contextual updates and progress feedback. Ultra-low

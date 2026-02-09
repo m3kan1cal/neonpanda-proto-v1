@@ -283,7 +283,7 @@ function AboutUs() {
                     Fit matters more than fame
                   </strong>
                   —your coach should work for your specific situation, across
-                  any of our 9 supported disciplines.
+                  any of our 10 supported disciplines.
                 </p>
               </div>
 
@@ -461,8 +461,7 @@ function AboutUs() {
                   Currently Supported Disciplines
                 </h3>
                 <p className={`${typographyPatterns.description} text-lg mb-6`}>
-                  NeonPanda currently supports 8 training disciplines, with more
-                  launching soon:
+                  NeonPanda currently supports 10 training disciplines:
                 </p>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {[
@@ -475,6 +474,7 @@ function AboutUs() {
                     "Calisthenics",
                     "Functional Bodybuilding",
                     "Circuit Training",
+                    "Hybrid",
                   ].map((discipline, idx) => (
                     <div
                       key={idx}
@@ -529,7 +529,7 @@ function AboutUs() {
                 <p className={`${typographyPatterns.description} text-lg`}>
                   Create AI coaches that understand your specific situation so
                   well that interacting with them feels like talking to someone
-                  who's been training with you for years. Across 9 disciplines,
+                  who's been training with you for years. Across 10 disciplines,
                   with more launching soon.
                 </p>
               </div>

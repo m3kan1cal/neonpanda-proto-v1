@@ -78,6 +78,7 @@ export function createCoreApi(
   deleteSharedProgramLambda: lambda.IFunction,
   copySharedProgramLambda: lambda.IFunction,
   explainTermLambda: lambda.IFunction,
+  generateGreetingLambda: lambda.IFunction,
   userPoolAuthorizer: HttpUserPoolAuthorizer,
 ) {
   // Create branch-aware API name using utility
@@ -566,6 +567,12 @@ export function createCoreApi(
       explainTermLambda,
     );
 
+  const generateGreetingIntegration =
+    new apigatewayv2_integrations.HttpLambdaIntegration(
+      "GenerateGreetingIntegration",
+      generateGreetingLambda,
+    );
+
   // Create integrations object for route configuration
   const integrations = {
     contactForm: contactFormIntegration,
@@ -635,6 +642,7 @@ export function createCoreApi(
     deleteSharedProgram: deleteSharedProgramIntegration,
     copySharedProgram: copySharedProgramIntegration,
     explainTerm: explainTermIntegration,
+    generateGreeting: generateGreetingIntegration,
   };
 
   // *******************************************************
@@ -745,6 +753,14 @@ export function createCoreApi(
     path: "/explain-term",
     methods: [apigatewayv2.HttpMethod.POST],
     integration: integrations.explainTerm,
+    authorizer: userPoolAuthorizer,
+  });
+
+  // Generate Greeting Route (PROTECTED) - AI-generated contextual dashboard greetings from coach perspective
+  httpApi.addRoutes({
+    path: "/users/{userId}/coaches/{coachId}/greeting",
+    methods: [apigatewayv2.HttpMethod.POST],
+    integration: integrations.generateGreeting,
     authorizer: userPoolAuthorizer,
   });
 

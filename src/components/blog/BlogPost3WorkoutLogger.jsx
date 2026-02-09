@@ -44,7 +44,7 @@ function BlogPost3WorkoutLogger() {
             This is the Workout Logger Agent.
           </span>{" "}
           And it's smarter than it looks. This post dives into how we built an
-          AI that speaks fluent fitness across nine disciplines, understands the
+          AI that speaks fluent fitness across ten disciplines, understands the
           difference between "Fran" and "Grace," and knows that "felt heavy"
           means something different to a powerlifter than a runner.
         </p>
@@ -497,7 +497,7 @@ function BlogPost3WorkoutLogger() {
         {/* Full Discipline Support */}
         <div className={`${containerPatterns.mediumGlassCyan} mb-8`}>
           <h3 className="font-rajdhani font-semibold text-xl text-synthwave-neon-cyan mb-4">
-            9 Disciplines, One Agent
+            10 Disciplines, One Agent
           </h3>
           <p className="text-synthwave-text-secondary font-rajdhani mb-4">
             The Workout Logger Agent automatically detects and applies the
@@ -514,6 +514,7 @@ function BlogPost3WorkoutLogger() {
               "Calisthenics",
               "Functional Bodybuilding",
               "Circuit Training",
+              "Hybrid",
             ].map((discipline, idx) => (
               <span key={idx} className={badgePatterns.cyan}>
                 {discipline}

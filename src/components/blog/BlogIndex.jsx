@@ -56,16 +56,16 @@ const blogPosts = [
     title: "Training Programs That Think",
     subtitle: "The Program Designer Agent",
     description:
-      "Deep dive into agentic AI patterns: how the Program Designer Agent orchestrates multi-week training programs across 9 disciplines with intelligent periodization.",
+      "Deep dive into agentic AI patterns: how the Program Designer Agent orchestrates multi-week training programs across 10 disciplines with intelligent periodization, evolving programs, and shareable plans.",
     readTime: "14 min read",
     agent: "Program Designer Agent",
     pattern: "Orchestrator + Parallel",
     color: "pink",
     topics: [
-      "9 Disciplines",
+      "10 Disciplines",
       "Periodization",
       "Methodology Alignment",
-      "Phase Management",
+      "Shareable Programs",
     ],
   },
   {
@@ -236,7 +236,7 @@ function BlogIndex() {
                       <div
                         className={`lg:w-[calc(50%-3rem)] ${isEven ? "lg:mr-auto" : "lg:ml-auto"}`}
                       >
-                        {post.id <= 3 ? (
+                        {post.id <= 4 ? (
                           <Link
                             to={`/blog/${post.slug}`}
                             className={`block ${containerPatterns.cardLight} p-6 hover:${colors.border} transition-all duration-300 group`}

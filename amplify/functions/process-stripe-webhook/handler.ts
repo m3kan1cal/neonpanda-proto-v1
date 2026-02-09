@@ -20,8 +20,7 @@ import {
  * Process Stripe webhook events
  * Public endpoint - validates via Stripe signature (NO Cognito auth)
  *
- * IMPORTANT: This Lambda must be invoked via its Function URL (not API Gateway).
- * API Gateway HTTP API may modify JSON bodies, breaking Stripe's signature verification.
+ * Invoked via Function URL to receive exact raw body for Stripe signature verification.
  *
  * Handles subscription lifecycle events:
  * - customer.subscription.created
@@ -38,19 +37,6 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 export const handler: APIGatewayProxyHandlerV2 = async (event) => {
   console.info("Stripe webhook received");
-
-  // Identify request source: Function URL vs API Gateway
-  const domainName = event.requestContext?.domainName || "unknown";
-  const isFunctionUrl = domainName.includes(".lambda-url.");
-
-  // Warn if request is coming through API Gateway instead of Function URL
-  if (!isFunctionUrl) {
-    console.warn(
-      "Webhook received via API Gateway, NOT Function URL. " +
-        "API Gateway may modify the JSON body, breaking Stripe signature verification. " +
-        "Update the webhook URL in Stripe to use the Lambda Function URL instead.",
-    );
-  }
 
   // Trim webhook secret defensively (guards against invisible whitespace from copy-paste)
   const webhookSecret = (process.env.STRIPE_WEBHOOK_SECRET || "").trim();

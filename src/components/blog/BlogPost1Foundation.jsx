@@ -888,7 +888,7 @@ function BlogPost1Foundation() {
               <li className="flex items-start gap-2">
                 <span className="text-synthwave-neon-purple">→</span>
                 <span>
-                  Amazon Nova Micro for contextual updates (ultra-low latency)
+                  Amazon Nova 2 Lite for contextual updates (ultra-low latency)
                 </span>
               </li>
               <li className="flex items-start gap-2">

@@ -11,6 +11,7 @@ import { useToast } from "../../contexts/ToastContext";
 import { useNavigationContext } from "../../contexts/NavigationContext";
 import CommandPaletteButton from "../shared/CommandPaletteButton";
 import QuickStats from "../shared/QuickStats";
+import AppFooter from "../shared/AppFooter";
 import {
   layoutPatterns,
   containerPatterns,
@@ -689,6 +690,7 @@ function ManageSharedPrograms() {
 
           {/* Program List */}
           {!error && <div className="mb-8">{renderProgramList()}</div>}
+          <AppFooter />
         </div>
       </div>
 

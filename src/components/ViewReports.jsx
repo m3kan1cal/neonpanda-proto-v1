@@ -25,6 +25,7 @@ import CompactCoachCard from "./shared/CompactCoachCard";
 import CommandPaletteButton from "./shared/CommandPaletteButton";
 import { useNavigationContext } from "../contexts/NavigationContext";
 import QuickStats from "./shared/QuickStats";
+import AppFooter from "./shared/AppFooter";
 import {
   StackIcon,
   CalendarMonthIcon,
@@ -1199,6 +1200,7 @@ function ViewReports() {
                 </div>
               </div>
             )}
+          <AppFooter />
         </div>
       </div>
 

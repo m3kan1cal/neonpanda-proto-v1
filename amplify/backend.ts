@@ -100,6 +100,7 @@ import { getSharedPrograms } from "./functions/get-shared-programs/resource";
 import { deleteSharedProgram } from "./functions/delete-shared-program/resource";
 import { copySharedProgram } from "./functions/copy-shared-program/resource";
 import { explainTerm } from "./functions/explain-term/resource";
+import { generateGreeting } from "./functions/generate-greeting/resource";
 import { apiGatewayv2 } from "./api/resource";
 import { dynamodbTable } from "./dynamodb/resource";
 import { createAppsBucket } from "./storage/resource";
@@ -205,6 +206,7 @@ const backend = defineBackend({
   deleteSharedProgram,
   copySharedProgram,
   explainTerm,
+  generateGreeting,
 });
 
 // Disable retries for stateful async generation functions
@@ -304,6 +306,7 @@ const coreApi = apiGatewayv2.createCoreApi(
   backend.deleteSharedProgram.resources.lambda,
   backend.copySharedProgram.resources.lambda,
   backend.explainTerm.resources.lambda,
+  backend.generateGreeting.resources.lambda,
   userPoolAuthorizer,
 );
 
@@ -439,6 +442,7 @@ const sharedPolicies = new SharedPolicies(
   backend.getExerciseNames,
   backend.getExercisesCount,
   backend.getSharedPrograms,
+  backend.generateGreeting, // Needs DynamoDB read to fetch coach config for personalized greeting
 ].forEach((func) => {
   sharedPolicies.attachDynamoDbReadOnly(func.resources.lambda);
 });
@@ -468,6 +472,7 @@ const sharedPolicies = new SharedPolicies(
   backend.logWorkoutTemplate, // Added: Needs Bedrock for scaling analysis (Haiku 4.5)
   backend.buildExercise, // Added: Needs Bedrock for exercise name normalization (Haiku 4.5)
   backend.explainTerm, // Added: Needs Bedrock for term explanations (Haiku 4.5)
+  backend.generateGreeting, // Added: Needs Bedrock for AI-generated dashboard greetings (Nova 2 Lite)
 ].forEach((func) => {
   sharedPolicies.attachBedrockAccess(func.resources.lambda);
 });
@@ -791,6 +796,7 @@ const allFunctions = [
   backend.deleteSharedProgram,
   backend.copySharedProgram,
   backend.explainTerm,
+  backend.generateGreeting,
   // NOTE: forwardLogsToSns and syncLogSubscriptions excluded - they're utility functions that don't need app resources
 ];
 

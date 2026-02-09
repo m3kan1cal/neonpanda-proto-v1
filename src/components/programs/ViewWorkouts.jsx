@@ -27,6 +27,7 @@ import { useToast } from "../../contexts/ToastContext";
 import { CenteredErrorState } from "../shared/ErrorStates";
 import { explainTerm } from "../../utils/apis/explainApi";
 import { MarkdownRenderer } from "../shared/MarkdownRenderer";
+import AppFooter from "../shared/AppFooter";
 
 /**
  * ViewWorkouts - Shows workout templates for a specific day or today
@@ -1609,6 +1610,7 @@ General thoughts: `;
               );
             })}
         </div>
+        <AppFooter />
       </div>
 
       {/* CommandPalette removed - using global CommandPalette from App.jsx */}

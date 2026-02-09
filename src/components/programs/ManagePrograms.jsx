@@ -15,6 +15,7 @@ import { Tooltip } from "react-tooltip";
 import CompactCoachCard from "../shared/CompactCoachCard";
 import CommandPaletteButton from "../shared/CommandPaletteButton";
 import { InlineEditField } from "../shared/InlineEditField";
+import AppFooter from "../shared/AppFooter";
 import { useNavigationContext } from "../../contexts/NavigationContext";
 import {
   NeonBorder,
@@ -1891,6 +1892,7 @@ function ManagePrograms() {
             </div>
           </div>
         )}
+        <AppFooter />
       </div>
 
       {/* Delete Session Confirmation Modal */}

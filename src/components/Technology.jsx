@@ -124,7 +124,7 @@ function Technology() {
               with specialized agents for every aspect of your coaching
               experience. Think of it as your personal coaching staff—each
               specialist doing what they do best, seamlessly coordinating across
-              9 supported disciplines to create your perfect training
+              10 supported disciplines to create your perfect training
               experience.
             </p>
 
@@ -235,7 +235,7 @@ function Technology() {
                     and executor models for validation and parallel
                     processing—ensuring your training follows intelligent
                     progression principles whether you're doing CrossFit,
-                    powerlifting, HYROX, or any of our 9 supported disciplines
+                    powerlifting, HYROX, or any of our 10 supported disciplines
                   </p>
                 </div>
               </div>
@@ -274,7 +274,7 @@ function Technology() {
                     <strong className="text-synthwave-neon-cyan">
                       How it works:
                     </strong>{" "}
-                    Using discipline detection across 8 supported training
+                    Using discipline detection across 10 supported training
                     styles, this agent understands everything from "Did Fran in
                     8:45" to complex powerlifting sessions with warmups and
                     working sets. It handles temporal awareness, partner
@@ -472,7 +472,7 @@ function Technology() {
                       </strong>{" "}
                       Opus 4.5 for deep reasoning tasks, Sonnet 4.5 for
                       orchestration, Haiku 4.5 and Nova 2 Lite for fast
-                      responses, Nova Micro for efficient background processing
+                      responses, Nova 2 Lite for efficient background processing
                     </span>
                   </li>
                   <li className="flex items-start space-x-3">
@@ -509,8 +509,8 @@ function Technology() {
                       <strong className="text-synthwave-neon-cyan">
                         Discipline Detection:
                       </strong>{" "}
-                      Automatic classification across 8 training disciplines for
-                      targeted extraction schemas and methodology alignment
+                      Automatic classification across 10 training disciplines
+                      for targeted extraction schemas and methodology alignment
                     </span>
                   </li>
                   <li className="flex items-start space-x-3">
@@ -923,7 +923,7 @@ function Technology() {
                       </span>
                       <span>
                         <strong className="text-synthwave-neon-pink">
-                          Nova Micro:
+                          Nova 2 Lite:
                         </strong>{" "}
                         Ultra-efficient processing for contextual updates and
                         intent classification
@@ -962,7 +962,7 @@ function Technology() {
                           Additional Specialized Models:
                         </strong>{" "}
                         Custom-selected models optimized for specific coaching
-                        functions across 9 supported disciplines
+                        functions across 10 supported disciplines
                       </span>
                     </li>
                   </ul>
@@ -1184,7 +1184,7 @@ function Technology() {
                 </h4>
                 <p className={`${typographyPatterns.description} mb-4`}>
                   Our training principles are reviewed by certified coaches and
-                  experienced athletes across all 9 supported disciplines. We
+                  experienced athletes across all 10 supported disciplines. We
                   blend cutting-edge AI with time-tested wisdom from established
                   programming methodologies.
                 </p>

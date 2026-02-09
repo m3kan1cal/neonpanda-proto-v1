@@ -49,10 +49,12 @@ export class ProgramAgent {
       activePrograms: [], // Active programs only
       activeProgram: null, // Primary active program
       selectedProgram: null, // Currently viewing program
-      todaysWorkout: null, // Today's workout templates
+      todaysWorkout: null, // Today's workout templates (single program, backward compat)
+      todaysWorkouts: {}, // Today's workouts for ALL active programs (keyed by programId)
       isLoadingPrograms: false,
       isLoadingProgram: false,
       isLoadingTodaysWorkout: false,
+      isLoadingAllTodaysWorkouts: false,
       isUpdating: false,
       isLoggingWorkout: false,
       error: null,
@@ -826,6 +828,107 @@ export class ProgramAgent {
     } catch (error) {
       console.error("Error deleting training program:", error);
       throw error;
+    }
+  }
+
+  /**
+   * Load today's workouts for ALL active programs (v2 multi-program support)
+   * Returns an object keyed by programId, each value being { program, todaysWorkout }.
+   * Uses Promise.allSettled so one failure doesn't block others.
+   * Does NOT modify the existing todaysWorkout (singular) state -- that stays for
+   * backward compatibility with ProgramDashboard and other single-program consumers.
+   * @returns {Promise<Object>} - Object keyed by programId
+   */
+  async loadAllTodaysWorkouts() {
+    if (!this.userId || !this.coachId) {
+      console.error(
+        "ProgramAgent.loadAllTodaysWorkouts: userId and coachId are required",
+      );
+      return {};
+    }
+
+    const activePrograms = this.programState.activePrograms || [];
+    if (activePrograms.length === 0) {
+      this._updateState({
+        todaysWorkouts: {},
+        isLoadingAllTodaysWorkouts: false,
+      });
+      return {};
+    }
+
+    this._updateState({
+      isLoadingAllTodaysWorkouts: true,
+    });
+
+    try {
+      const results = await Promise.allSettled(
+        activePrograms.map(async (program) => {
+          try {
+            const response = await getWorkoutTemplates(
+              this.userId,
+              this.coachId,
+              program.programId,
+              { today: true },
+            );
+            return {
+              programId: program.programId,
+              program,
+              todaysWorkout:
+                response.todaysWorkoutTemplates ||
+                response.workoutTemplates ||
+                null,
+            };
+          } catch (error) {
+            // Rest day is not an error
+            const isRestDay =
+              error.message === "No templates found for today" ||
+              error.message?.includes("No templates found");
+            if (isRestDay) {
+              return {
+                programId: program.programId,
+                program,
+                todaysWorkout: null, // Rest day
+              };
+            }
+            throw error;
+          }
+        }),
+      );
+
+      const todaysWorkouts = {};
+      for (const result of results) {
+        if (result.status === "fulfilled" && result.value) {
+          todaysWorkouts[result.value.programId] = {
+            program: result.value.program,
+            todaysWorkout: result.value.todaysWorkout,
+          };
+        }
+        // Rejected results are silently skipped (logged by Promise.allSettled)
+      }
+
+      // Also set the singular todaysWorkout for backward compatibility (first active program)
+      const firstActive = activePrograms[0];
+      const firstWorkoutData = todaysWorkouts[firstActive?.programId];
+      if (firstWorkoutData) {
+        this._updateState({
+          todaysWorkout: firstWorkoutData.todaysWorkout,
+        });
+      }
+
+      this._updateState({
+        todaysWorkouts,
+        isLoadingAllTodaysWorkouts: false,
+        isLoadingTodaysWorkout: false,
+      });
+
+      return todaysWorkouts;
+    } catch (error) {
+      console.error("ProgramAgent.loadAllTodaysWorkouts: Error:", error);
+      this._updateState({
+        isLoadingAllTodaysWorkouts: false,
+        isLoadingTodaysWorkout: false,
+      });
+      return {};
     }
   }
 
