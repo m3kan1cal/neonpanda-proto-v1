@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { Tooltip } from "react-tooltip";
 import { useAuthorizeUser } from "../auth/hooks/useAuthorizeUser";
+import { useAuth } from "../auth/contexts/AuthContext";
 import { useToast } from "../contexts/ToastContext";
 import {
   containerPatterns,
@@ -121,7 +122,11 @@ function TrainingGroundsV2() {
     isValid: isValidUserId,
     error: userIdError,
   } = useAuthorizeUser(userId);
+  const { userProfile } = useAuth();
   const { success: showSuccess, error: showError } = useToast();
+
+  // Derive unit system from user profile preferences (default: imperial)
+  const unitSystem = userProfile?.preferences?.unitSystem || "imperial";
 
   // Global Command Palette state
   const { setIsCommandPaletteOpen, onCommandPaletteToggle } =
@@ -953,6 +958,7 @@ function TrainingGroundsV2() {
         isLoading={workoutState.isLoadingPrAchievements}
         userId={userId}
         coachId={coachId}
+        unitSystem={unitSystem}
       />
     );
   };

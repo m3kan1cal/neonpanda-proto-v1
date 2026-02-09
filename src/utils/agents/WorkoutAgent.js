@@ -465,59 +465,6 @@ export class WorkoutAgent {
   }
 
   /**
-   * Loads recent PR achievements for the user.
-   * Can accept pre-fetched workouts to avoid a duplicate API call (used by loadWorkoutStats),
-   * or fetches its own workouts when called standalone.
-   * @param {number} weeksBack - Number of weeks to look back for PRs (default: 2)
-   * @param {Array} [prefetchedWorkouts] - Optional pre-fetched workouts to extract PRs from
-   */
-  async loadRecentPrAchievements(weeksBack = 2, prefetchedWorkouts = null) {
-    if (!this.userId) {
-      console.error("WorkoutAgent.loadRecentPrAchievements: No userId set");
-      return;
-    }
-
-    this._updateState({ isLoadingPrAchievements: true });
-
-    try {
-      let workouts = prefetchedWorkouts;
-
-      // If no pre-fetched workouts provided, fetch our own with a date range
-      if (!workouts) {
-        const fromDate = new Date();
-        fromDate.setDate(fromDate.getDate() - weeksBack * 7);
-
-        const result = await getWorkouts(this.userId, {
-          fromDate: fromDate.toISOString(),
-          sortBy: "completedAt",
-          sortOrder: "desc",
-          limit: 50,
-        });
-        workouts = result.workouts || [];
-      }
-
-      const recentPrAchievements = this._extractPrAchievements(
-        workouts,
-        weeksBack,
-      );
-
-      this._updateState({
-        recentPrAchievements,
-        isLoadingPrAchievements: false,
-      });
-    } catch (error) {
-      console.error(
-        "WorkoutAgent.loadRecentPrAchievements: Error loading PR achievements:",
-        error,
-      );
-      this._updateState({
-        isLoadingPrAchievements: false,
-        recentPrAchievements: [],
-      });
-    }
-  }
-
-  /**
    * Loads all workout sessions with optional filtering
    */
   async loadAllWorkouts(options = {}) {

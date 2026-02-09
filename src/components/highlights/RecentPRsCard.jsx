@@ -10,47 +10,16 @@ import {
   TrendingUpIconTiny,
   NewBadge,
 } from "../themes/SynthwaveComponents";
+import { getPrTypeLabel, getPrUnit } from "../../utils/workout/constants";
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
-const PR_TYPE_LABELS = {
-  "1rm": "1RM",
-  volume_pr: "Volume",
-  distance_pr: "Distance",
-  pace_pr: "Pace",
-  workout_time: "Time",
-};
-
-const PR_TYPE_UNITS = {
-  "1rm": "lbs",
-  volume_pr: "lbs",
-  distance_pr: "mi",
-  pace_pr: "min/mi",
-  workout_time: "min",
-};
-
 const PAGINATION_LIMIT = 6;
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-/**
- * Returns a user-friendly label for a PR type.
- */
-function getPrTypeLabel(prType) {
-  if (!prType) return "PR";
-  return PR_TYPE_LABELS[prType] || prType.replace(/_/g, " ").toUpperCase();
-}
-
-/**
- * Returns the appropriate unit for a PR type.
- */
-function getPrUnit(prType) {
-  if (!prType) return "";
-  return PR_TYPE_UNITS[prType] || "";
-}
 
 /**
  * Converts an exercise name to Pascal Case (e.g., "back_squat" -> "Back Squat").
@@ -119,6 +88,7 @@ export default function RecentPRsCard({
   isLoading = false,
   userId,
   coachId,
+  unitSystem = "imperial",
 }) {
   const navigate = useNavigate();
   const [showAll, setShowAll] = useState(false);
@@ -169,7 +139,7 @@ export default function RecentPRsCard({
       {/* PR achievement cards -- 2-column grid */}
       <div className="grid grid-cols-2 gap-3">
         {visiblePrs.map((pr, index) => {
-          const unit = getPrUnit(pr.prType);
+          const unit = getPrUnit(pr.prType, unitSystem);
           const relTime = formatRelativeTime(pr.completedAt);
           const isNew = isWithinPastWeek(pr.completedAt);
 

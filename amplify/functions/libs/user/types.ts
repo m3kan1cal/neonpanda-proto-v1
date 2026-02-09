@@ -17,6 +17,7 @@ export interface UserProfile {
   };
   preferences: {
     timezone?: string; // User's preferred timezone (e.g., 'America/Los_Angeles')
+    unitSystem?: "imperial" | "metric"; // Unit system for weights and distances (default: 'imperial')
     emailNotifications?: {
       coachCheckIns?: boolean; // Receive coach check-ins and reminders (inactivity, motivation, holidays, etc.)
       weeklyReports?: boolean; // Receive weekly progress reports
