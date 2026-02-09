@@ -132,6 +132,8 @@ const baseHandler: AuthenticatedHandler = async (event) => {
         session.workoutData.performance_metrics?.perceived_exertion,
       calories_burned: session.workoutData.performance_metrics?.calories_burned,
     },
+    // Include PR achievements for dashboard highlights
+    prAchievements: session.workoutData?.pr_achievements || [],
     // Include CrossFit specific summary if applicable
     crossfitSummary:
       session.workoutData.discipline === "crossfit"
