@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { Tooltip } from "react-tooltip";
 import { useAuthorizeUser } from "../auth/hooks/useAuthorizeUser";
+import { useAuth } from "../auth/contexts/AuthContext";
 import { useToast } from "../contexts/ToastContext";
 import {
   containerPatterns,
@@ -48,6 +49,7 @@ import ReportAgent from "../utils/agents/ReportAgent";
 import { ProgramAgent } from "../utils/agents/ProgramAgent";
 import TodaysWorkoutRow from "./programs/TodaysWorkoutRow";
 import ProgramList from "./programs/ProgramList";
+import RecentPRsCard from "./highlights/RecentPRsCard";
 import { useUpgradePrompts } from "../hooks/useUpgradePrompts";
 import { UpgradePrompt } from "./subscription";
 import { generateGreeting as fetchAiGreeting } from "../utils/apis/greetingApi";
@@ -120,7 +122,11 @@ function TrainingGroundsV2() {
     isValid: isValidUserId,
     error: userIdError,
   } = useAuthorizeUser(userId);
+  const { userProfile } = useAuth();
   const { success: showSuccess, error: showError } = useToast();
+
+  // Derive unit system from user profile preferences (default: imperial)
+  const unitSystem = userProfile?.preferences?.unitSystem || "imperial";
 
   // Global Command Palette state
   const { setIsCommandPaletteOpen, onCommandPaletteToggle } =
@@ -645,10 +651,23 @@ function TrainingGroundsV2() {
               <div className="flex-1 h-px bg-synthwave-neon-cyan/10"></div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className={`${containerPatterns.cardMedium} p-6`}>
+              {/* Left Column: Active Programs, Reports, Conversations */}
+              <div className="space-y-6">
+                {/* Active Programs skeleton */}
+                <div className={`${containerPatterns.cardMedium} p-6`}>
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="w-3 h-3 bg-synthwave-text-muted/20 rounded-full animate-pulse"></div>
+                    <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                    <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-36"></div>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="h-10 bg-synthwave-text-muted/10 rounded-lg animate-pulse"></div>
+                    <div className="h-10 bg-synthwave-text-muted/10 rounded-lg animate-pulse"></div>
+                  </div>
+                </div>
+                {/* Reports skeleton */}
+                <div className={`${containerPatterns.cardMedium} p-6`}>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
                     <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-36"></div>
                   </div>
                   <div className="space-y-3">
@@ -657,7 +676,52 @@ function TrainingGroundsV2() {
                     <div className="h-10 bg-synthwave-text-muted/10 rounded-lg animate-pulse w-3/4"></div>
                   </div>
                 </div>
-              ))}
+                {/* Conversations skeleton */}
+                <div className={`${containerPatterns.cardMedium} p-6`}>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                    <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-44"></div>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="h-10 bg-synthwave-text-muted/10 rounded-lg animate-pulse"></div>
+                    <div className="h-10 bg-synthwave-text-muted/10 rounded-lg animate-pulse"></div>
+                  </div>
+                </div>
+              </div>
+              {/* Right Column: Recent PRs, Workout History */}
+              <div className="space-y-6">
+                {/* Recent PRs skeleton */}
+                <div className={`${containerPatterns.cardMedium} p-6`}>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                    <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-28"></div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    {[1, 2, 3, 4].map((i) => (
+                      <div
+                        key={i}
+                        className="bg-synthwave-bg-primary/30 border border-synthwave-text-muted/10 rounded-xl p-3"
+                      >
+                        <div className="h-2.5 bg-synthwave-text-muted/20 rounded animate-pulse w-2/3 mb-2"></div>
+                        <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-1/2 mb-2"></div>
+                        <div className="h-2.5 bg-synthwave-text-muted/20 rounded animate-pulse w-full"></div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                {/* Workout History skeleton */}
+                <div className={`${containerPatterns.cardMedium} p-6`}>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                    <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-36"></div>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="h-10 bg-synthwave-text-muted/10 rounded-lg animate-pulse"></div>
+                    <div className="h-10 bg-synthwave-text-muted/10 rounded-lg animate-pulse"></div>
+                    <div className="h-10 bg-synthwave-text-muted/10 rounded-lg animate-pulse w-3/4"></div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -938,6 +1002,25 @@ function TrainingGroundsV2() {
     </div>
   );
 
+  const renderRecentPRsCard = () => {
+    const hasPrs =
+      (workoutState.recentPrAchievements &&
+        workoutState.recentPrAchievements.length > 0) ||
+      workoutState.isLoadingPrAchievements;
+
+    if (!hasPrs) return null;
+
+    return (
+      <RecentPRsCard
+        prAchievements={workoutState.recentPrAchievements || []}
+        isLoading={workoutState.isLoadingPrAchievements}
+        userId={userId}
+        coachId={coachId}
+        unitSystem={unitSystem}
+      />
+    );
+  };
+
   const renderReportsCard = () => (
     <div className={`${containerPatterns.cardMedium} p-6`}>
       <div className="flex items-start space-x-3 mb-4">
@@ -1056,7 +1139,7 @@ function TrainingGroundsV2() {
                         </div>
                       </div>
                       <div className="ml-2 text-synthwave-text-muted group-hover:text-synthwave-neon-cyan transition-colors">
-                        <BarChartIcon />
+                        <ChevronRightIcon />
                       </div>
                     </div>
                   </div>
@@ -1341,19 +1424,22 @@ function TrainingGroundsV2() {
               />
             </div>
 
-            {/* Conversations */}
-            {renderConversationsCard()}
+            {/* Recent PRs */}
+            {renderRecentPRsCard()}
+
+            {/* Reports & Insights */}
+            {renderReportsCard()}
 
             {/* Workout History */}
             {renderWorkoutHistoryCard()}
 
-            {/* Reports & Insights */}
-            {renderReportsCard()}
+            {/* Recent Conversations */}
+            {renderConversationsCard()}
           </div>
 
           {/* Desktop: Two columns with alternating distribution (masonry) */}
           <div className="hidden md:grid md:grid-cols-2 md:gap-x-6 md:items-start">
-            {/* Left Column -- Programs + Workout History */}
+            {/* Left Column -- Programs + Reports + Recent Conversations */}
             <div className="space-y-6">
               <div className={`${containerPatterns.cardMedium} p-6`}>
                 <div className="flex items-start space-x-3 mb-4">
@@ -1381,13 +1467,14 @@ function TrainingGroundsV2() {
                 />
               </div>
 
-              {renderWorkoutHistoryCard()}
+              {renderReportsCard()}
+              {renderConversationsCard()}
             </div>
 
-            {/* Right Column -- Conversations + Reports */}
+            {/* Right Column -- Recent PRs + Workout History */}
             <div className="space-y-6">
-              {renderConversationsCard()}
-              {renderReportsCard()}
+              {renderRecentPRsCard()}
+              {renderWorkoutHistoryCard()}
             </div>
           </div>
         </div>

@@ -136,6 +136,8 @@ function Settings() {
     programUpdates: true,
     featureAnnouncements: true,
   });
+  const [unitSystem, setUnitSystem] = useState("imperial");
+  const [originalUnitSystem, setOriginalUnitSystem] = useState("imperial");
   const [isSavingPreferences, setIsSavingPreferences] = useState(false);
 
   // State for Subscription
@@ -223,6 +225,11 @@ function Settings() {
             profile.preferences?.timezone || "America/Los_Angeles";
           setOriginalTimezone(userTimezone);
           setTimezone(userTimezone);
+
+          // Set unit system from profile preferences (default to imperial)
+          const userUnitSystem = profile.preferences?.unitSystem || "imperial";
+          setOriginalUnitSystem(userUnitSystem);
+          setUnitSystem(userUnitSystem);
 
           // Set email notification preferences (default to true if not set)
           const userEmailNotifications = {
@@ -433,11 +440,13 @@ function Settings() {
       await updateUserProfile(userId, {
         preferences: {
           timezone: timezone,
+          unitSystem: unitSystem,
           emailNotifications: emailNotifications,
         },
       });
 
       setOriginalTimezone(timezone);
+      setOriginalUnitSystem(unitSystem);
       setOriginalEmailNotifications(emailNotifications);
       showSuccess("Preferences updated successfully");
     } catch (error) {
@@ -451,6 +460,7 @@ function Settings() {
   // Handle preferences cancel
   const handleCancelPreferences = () => {
     setTimezone(originalTimezone);
+    setUnitSystem(originalUnitSystem);
     setEmailNotifications(originalEmailNotifications);
   };
 
@@ -1202,6 +1212,39 @@ function Settings() {
                         >
                           This affects how dates and times are displayed
                           throughout the application.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Unit System Settings */}
+                  <div>
+                    <div className="mb-6">
+                      <label
+                        htmlFor="unitSystem"
+                        className={formPatterns.label}
+                      >
+                        Unit System
+                      </label>
+                      <select
+                        id="unitSystem"
+                        value={unitSystem}
+                        onChange={(e) => setUnitSystem(e.target.value)}
+                        className={inputPatterns.select}
+                        disabled={isSavingPreferences}
+                      >
+                        <option value="imperial">Imperial (lbs, mi, ft)</option>
+                        <option value="metric">Metric (kg, km, m)</option>
+                      </select>
+                      <div className="flex items-start space-x-2 mt-2">
+                        <div className="text-synthwave-neon-cyan mt-0.5 flex-shrink-0">
+                          <InfoIcon />
+                        </div>
+                        <p
+                          className={`${formPatterns.helperText} text-synthwave-neon-cyan`}
+                        >
+                          This affects how weights, distances, and measurements
+                          are displayed throughout the application.
                         </p>
                       </div>
                     </div>
