@@ -42,11 +42,13 @@ export class WorkoutAgent {
       thisWeekWorkoutCount: 0,
       trainingDaysCount: 0,
       lastWorkoutDaysAgo: 0,
+      recentPrAchievements: [],
       isLoadingCount: false,
       isLoadingTrainingDays: false,
       isLoadingRecentItems: false,
       isLoadingAllItems: false,
       isLoadingItem: false,
+      isLoadingPrAchievements: false,
       error: null,
       lastCheckTime: null,
     };
@@ -157,6 +159,7 @@ export class WorkoutAgent {
       isLoadingCount: true,
       isLoadingRecentItems: true,
       isLoadingTrainingDays: true,
+      isLoadingPrAchievements: true,
       error: null,
     });
 
@@ -215,6 +218,9 @@ export class WorkoutAgent {
       // Calculate days since last workout
       const lastWorkoutDaysAgo = this._calculateLastWorkoutDaysAgo(workouts);
 
+      // Extract PR achievements from the fetched workouts (avoids a duplicate API call)
+      const recentPrAchievements = this._extractPrAchievements(workouts, 2);
+
       // Update all state at once
       this._updateState({
         recentWorkouts,
@@ -222,9 +228,11 @@ export class WorkoutAgent {
         thisWeekWorkoutCount: thisWeekWorkouts.length,
         trainingDaysCount: uniqueDates.size,
         lastWorkoutDaysAgo,
+        recentPrAchievements,
         isLoadingCount: false,
         isLoadingRecentItems: false,
         isLoadingTrainingDays: false,
+        isLoadingPrAchievements: false,
         error: null,
         lastCheckTime: Date.now(),
       });
@@ -237,6 +245,7 @@ export class WorkoutAgent {
         isLoadingCount: false,
         isLoadingRecentItems: false,
         isLoadingTrainingDays: false,
+        isLoadingPrAchievements: false,
         error: error.message || "Failed to load workout statistics",
       });
     }
@@ -399,6 +408,60 @@ export class WorkoutAgent {
         error: error.message || "Failed to load workouts",
       });
     }
+  }
+
+  /**
+   * Extracts and enriches PR achievements from an array of workout objects.
+   * Each PR is enriched with parent workout context (workoutId, workoutName, completedAt, discipline).
+   * @param {Array} workouts - Array of workout objects (must include prAchievements field)
+   * @param {number} weeksBack - Only include PRs from workouts within this many weeks
+   * @returns {Array} - Flattened, enriched PR achievements sorted by completedAt descending
+   */
+  _extractPrAchievements(workouts, weeksBack = 2) {
+    if (!workouts || workouts.length === 0) return [];
+
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - weeksBack * 7);
+
+    const enrichedPrs = [];
+
+    for (const workout of workouts) {
+      // Filter by date
+      if (workout.completedAt) {
+        const workoutDate = new Date(workout.completedAt);
+        if (workoutDate < cutoffDate) continue;
+      }
+
+      const prAchievements = workout.prAchievements || [];
+      if (prAchievements.length === 0) continue;
+
+      for (const pr of prAchievements) {
+        enrichedPrs.push({
+          // PR fields
+          exercise: pr.exercise,
+          prType: pr.pr_type,
+          newBest: pr.new_best,
+          previousBest: pr.previous_best,
+          improvement: pr.improvement,
+          improvementPercentage: pr.improvement_percentage,
+          significance: pr.significance,
+          context: pr.context,
+          datePrevious: pr.date_previous,
+          // Parent workout context
+          workoutId: workout.workoutId,
+          workoutName: workout.workoutName || "Workout",
+          completedAt: workout.completedAt,
+          discipline: workout.discipline,
+        });
+      }
+    }
+
+    // Sort by completedAt descending (most recent first)
+    enrichedPrs.sort(
+      (a, b) => new Date(b.completedAt) - new Date(a.completedAt),
+    );
+
+    return enrichedPrs;
   }
 
   /**
@@ -796,11 +859,13 @@ export class WorkoutAgent {
       thisWeekWorkoutCount: 0,
       trainingDaysCount: 0,
       lastWorkoutDaysAgo: 0,
+      recentPrAchievements: [],
       isLoadingCount: false,
       isLoadingTrainingDays: false,
       isLoadingRecentItems: false,
       isLoadingAllItems: false,
       isLoadingItem: false,
+      isLoadingPrAchievements: false,
       error: null,
       lastCheckTime: null,
     };

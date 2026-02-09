@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { Tooltip } from "react-tooltip";
 import { useAuthorizeUser } from "../auth/hooks/useAuthorizeUser";
+import { useAuth } from "../auth/contexts/AuthContext";
 import { useToast } from "../contexts/ToastContext";
 import {
   containerPatterns,
@@ -48,6 +49,7 @@ import ReportAgent from "../utils/agents/ReportAgent";
 import { ProgramAgent } from "../utils/agents/ProgramAgent";
 import TodaysWorkoutRow from "./programs/TodaysWorkoutRow";
 import ProgramList from "./programs/ProgramList";
+import RecentPRsCard from "./highlights/RecentPRsCard";
 import { useUpgradePrompts } from "../hooks/useUpgradePrompts";
 import { UpgradePrompt } from "./subscription";
 import { generateGreeting as fetchAiGreeting } from "../utils/apis/greetingApi";
@@ -120,7 +122,11 @@ function TrainingGroundsV2() {
     isValid: isValidUserId,
     error: userIdError,
   } = useAuthorizeUser(userId);
+  const { userProfile } = useAuth();
   const { success: showSuccess, error: showError } = useToast();
+
+  // Derive unit system from user profile preferences (default: imperial)
+  const unitSystem = userProfile?.preferences?.unitSystem || "imperial";
 
   // Global Command Palette state
   const { setIsCommandPaletteOpen, onCommandPaletteToggle } =
@@ -938,6 +944,25 @@ function TrainingGroundsV2() {
     </div>
   );
 
+  const renderRecentPRsCard = () => {
+    const hasPrs =
+      (workoutState.recentPrAchievements &&
+        workoutState.recentPrAchievements.length > 0) ||
+      workoutState.isLoadingPrAchievements;
+
+    if (!hasPrs) return null;
+
+    return (
+      <RecentPRsCard
+        prAchievements={workoutState.recentPrAchievements || []}
+        isLoading={workoutState.isLoadingPrAchievements}
+        userId={userId}
+        coachId={coachId}
+        unitSystem={unitSystem}
+      />
+    );
+  };
+
   const renderReportsCard = () => (
     <div className={`${containerPatterns.cardMedium} p-6`}>
       <div className="flex items-start space-x-3 mb-4">
@@ -1056,7 +1081,7 @@ function TrainingGroundsV2() {
                         </div>
                       </div>
                       <div className="ml-2 text-synthwave-text-muted group-hover:text-synthwave-neon-cyan transition-colors">
-                        <BarChartIcon />
+                        <ChevronRightIcon />
                       </div>
                     </div>
                   </div>
@@ -1341,19 +1366,22 @@ function TrainingGroundsV2() {
               />
             </div>
 
-            {/* Conversations */}
-            {renderConversationsCard()}
+            {/* Recent PRs */}
+            {renderRecentPRsCard()}
+
+            {/* Reports & Insights */}
+            {renderReportsCard()}
 
             {/* Workout History */}
             {renderWorkoutHistoryCard()}
 
-            {/* Reports & Insights */}
-            {renderReportsCard()}
+            {/* Recent Conversations */}
+            {renderConversationsCard()}
           </div>
 
           {/* Desktop: Two columns with alternating distribution (masonry) */}
           <div className="hidden md:grid md:grid-cols-2 md:gap-x-6 md:items-start">
-            {/* Left Column -- Programs + Workout History */}
+            {/* Left Column -- Programs + Reports + Recent Conversations */}
             <div className="space-y-6">
               <div className={`${containerPatterns.cardMedium} p-6`}>
                 <div className="flex items-start space-x-3 mb-4">
@@ -1381,13 +1409,14 @@ function TrainingGroundsV2() {
                 />
               </div>
 
-              {renderWorkoutHistoryCard()}
+              {renderReportsCard()}
+              {renderConversationsCard()}
             </div>
 
-            {/* Right Column -- Conversations + Reports */}
+            {/* Right Column -- Recent PRs + Workout History */}
             <div className="space-y-6">
-              {renderConversationsCard()}
-              {renderReportsCard()}
+              {renderRecentPRsCard()}
+              {renderWorkoutHistoryCard()}
             </div>
           </div>
         </div>
