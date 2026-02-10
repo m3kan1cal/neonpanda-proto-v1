@@ -1,8 +1,8 @@
 # Dashboard Features Roadmap
 
-**Status:** Planning
+**Status:** Active
 
-**Last Updated:** February 8, 2026
+**Last Updated:** February 10, 2026
 
 **Context:** Feature ideas for improving the Training Grounds dashboard (`TrainingGroundsV2.jsx`) and broader platform capabilities. Prioritized by ROI relative to effort.
 
@@ -12,7 +12,7 @@
 
 **Priority:** High -- Best ROI
 **Effort:** Low-Medium
-**Status:** Not Started
+**Status:** Complete
 
 ### Overview
 
@@ -135,36 +135,26 @@ viewedAt?: string; // ISO timestamp, null = not viewed
 
 ## Feature 3: Multi-Workout Logger Architecture
 
-**Priority:** Low -- Technical debt, not user-facing
-**Effort:** High
-**Status:** Documented (architecture spec complete)
+**Priority:** High -- Data integrity issue
+**Effort:** Medium
+**Status:** Complete (Phases 1-3)
 
 ### Overview
 
 Refactor the workout logger agent's storage layer to natively support multiple workout extractions in a single agent invocation, allowing Claude to process workouts in parallel rather than being forced into sequential processing.
 
-### Current State
+### Implementation (2026-02-09)
 
-The architecture and migration plan are fully documented in `docs/implementations/WORKOUT_LOGGER_AGENT_ARCHITECTURE.md`. A prompt + code enforcement workaround is already in place and working:
+Phases 1-3 implemented:
 
-1. Prompt rule (prompts.ts, rule 8): Instructs Claude to process one workout at a time.
-2. Code guard (agent.ts, `handleToolUse`): `executedToolIds` Set blocks duplicate tool types within a single turn.
-3. Overwrite warning (agent.ts, `storeToolResult`): Logs a warning if extraction data is overwritten before being saved.
+1. **Array-based storage**: `Map<string, any[]>` with push-based storage, index-aware `getToolResult(key, index?)`, and `getAllToolResults(key)`.
+2. **Index-aware tools**: `workoutIndex` parameter added to validate, normalize, summary, and save tools. Each tool retrieves the correct workout's data via index.
+3. **Multi-result aggregation**: `buildResultFromToolData` aggregates all saved workouts into `allWorkouts` array. Handler passes `allWorkouts` in response.
+4. **Removed workarounds**: `executedToolIds` guard and overwrite warnings removed. Prompt rule 8 updated to explain parallel processing.
 
-### When to Implement
+### Remaining
 
-- When multi-workout messages become more common (currently rare/edge case).
-- When performance matters: sequential processing adds latency for multi-workout messages.
-- When the agent framework is being refactored for other reasons (good time to bundle the storage change).
-
-### Migration Phases
-
-| Phase | Scope                                                     | Risk        | Files Affected                         |
-| ----- | --------------------------------------------------------- | ----------- | -------------------------------------- |
-| 1     | Array-based storage, backward-compatible retrieval        | Low         | `agent.ts`                             |
-| 2     | Pipeline-aware tools (save, validate, normalize, summary) | Medium      | 4 tool files                           |
-| 3     | Multi-result return from `logWorkout`, handler updates    | Medium-High | `types.ts`, `handler.ts`               |
-| 4     | UI support for multiple workout confirmations             | Medium-High | `stream-coach-conversation/handler.ts` |
+- **Phase 4**: UI support for multiple workout confirmations (not yet needed -- backend handles it transparently).
 
 ### Reference
 
@@ -288,8 +278,8 @@ A dedicated "Exercise History" or "PR Timeline" feature that leverages exercise-
 
 | #   | Feature                        | Priority  | Effort     | Build When                            |
 | --- | ------------------------------ | --------- | ---------- | ------------------------------------- |
-| 1   | PR Highlights                  | High      | Low-Medium | Now (implemented)                     |
+| 1   | PR Highlights                  | High      | Low-Medium | Complete                              |
 | 2   | Report Action Card             | Medium    | Medium     | After Feature 1                       |
-| 3   | Multi-Workout Architecture     | Low       | High       | When edge case becomes common         |
+| 3   | Multi-Workout Architecture     | High      | Medium     | Complete (Phases 1-3)                 |
 | 4   | Meal Planner Agent             | Low (now) | Very High  | After core engagement is proven       |
 | 5   | Exercise History & PR Timeline | Low       | Medium     | After users request exercise tracking |

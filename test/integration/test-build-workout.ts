@@ -1688,6 +1688,92 @@ Completed in 17:32. Paced the runs at 1:45-1:50 each, KB swings were unbroken al
 
   // Renamed to reflect hybrid classification - this mixed-modality workout now triggers
   // the low-confidence fallback to hybrid discipline
+  "multi-workout-two-sessions": {
+    description:
+      "Two distinct workouts in one message - tests parallel multi-workout processing with array-based storage and index-aware tools",
+    payload: {
+      userId: "63gocaz-j-AYRsb0094ik",
+      coachId: "user_63gocaz-j-AYRsb0094ik_coach_1756078034317",
+      conversationId: "conv_1764512884381_4amplrhdd",
+      userMessage:
+        "I did two workouts today. This morning I did a circuit training session: 3 rounds of 10 burpees, 15 box jumps at 24 inches, and 20 air squats. Took about 18 minutes. Then this evening I went for a 5K run in 24:32, felt good, kept a steady pace around 7:50/mile.",
+      coachConfig: BASE_COACH_CONFIG,
+      isSlashCommand: false,
+      messageTimestamp: new Date().toISOString(),
+      userTimezone: "America/Los_Angeles",
+    },
+    expected: {
+      success: true,
+      shouldHave: ["workoutId", "discipline"],
+      minConfidence: 0.5,
+      toolsUsed: [
+        "detect_discipline",
+        "extract_workout_data",
+        "validate_workout_completeness",
+        "generate_workout_summary",
+        "save_workout_to_database",
+      ],
+      workoutValidation: {
+        shouldExist: true,
+        requiredFields: [
+          "workout_id",
+          "user_id",
+          "discipline",
+          "workout_type",
+          "workout_name",
+          "date",
+        ],
+      },
+      multiWorkoutValidation: {
+        minWorkoutCount: 2,
+        validateAllSaved: true,
+      },
+    },
+  },
+
+  "multi-workout-strength-and-cardio": {
+    description:
+      "Strength session plus cardio in one message - tests multi-workout with different disciplines (powerlifting + running)",
+    payload: {
+      userId: "63gocaz-j-AYRsb0094ik",
+      coachId: "user_63gocaz-j-AYRsb0094ik_coach_1756078034317",
+      conversationId: "conv_1764512884381_4amplrhdd",
+      userMessage:
+        "Two sessions today. Morning was a strength day: 5x5 back squats at 225lbs, then 5x3 deadlifts at 315lbs, finished with 3x10 barbell rows at 135lbs. RPE 8. Then in the afternoon I ran 3 miles in 25:40, easy recovery pace, heart rate stayed around 140.",
+      coachConfig: BASE_COACH_CONFIG,
+      isSlashCommand: false,
+      messageTimestamp: new Date().toISOString(),
+      userTimezone: "America/Los_Angeles",
+    },
+    expected: {
+      success: true,
+      shouldHave: ["workoutId", "discipline"],
+      minConfidence: 0.5,
+      toolsUsed: [
+        "detect_discipline",
+        "extract_workout_data",
+        "validate_workout_completeness",
+        "generate_workout_summary",
+        "save_workout_to_database",
+      ],
+      workoutValidation: {
+        shouldExist: true,
+        requiredFields: [
+          "workout_id",
+          "user_id",
+          "discipline",
+          "workout_type",
+          "workout_name",
+          "date",
+        ],
+      },
+      multiWorkoutValidation: {
+        minWorkoutCount: 2,
+        validateAllSaved: true,
+      },
+    },
+  },
+
   "hybrid-complex-gym-session": {
     description:
       "Complex mixed-modality gym session with warmup, mobility, circuits, KB work, and deadlifts - tests hybrid discipline extraction with phases structure",
@@ -2594,6 +2680,91 @@ function validateResult(
     }
   }
 
+  // Check multi-workout validation (allWorkouts in response)
+  if (expected.multiWorkoutValidation) {
+    const multiWorkout = expected.multiWorkoutValidation;
+    const allWorkouts = result.body.allWorkouts || [];
+
+    console.info("🏋️ Validating multi-workout response:", {
+      allWorkoutsCount: allWorkouts.length,
+      expectedMinCount: multiWorkout.minWorkoutCount,
+      allWorkouts: allWorkouts.map((w) => ({
+        workoutId: w.workoutId,
+        discipline: w.discipline,
+        workoutName: w.workoutName,
+        saved: w.saved,
+      })),
+    });
+
+    // Check that allWorkouts field exists
+    const hasAllWorkoutsCheck = {
+      name: "Multi-workout: allWorkouts field present",
+      expected: true,
+      actual: !!result.body.allWorkouts,
+      passed: !!result.body.allWorkouts,
+    };
+    validation.checks.push(hasAllWorkoutsCheck);
+    if (!hasAllWorkoutsCheck.passed) validation.passed = false;
+
+    // Check minimum workout count
+    const countCheck = {
+      name: "Multi-workout: minimum workout count",
+      expected: `>= ${multiWorkout.minWorkoutCount}`,
+      actual: allWorkouts.length,
+      passed: allWorkouts.length >= multiWorkout.minWorkoutCount,
+    };
+    validation.checks.push(countCheck);
+    if (!countCheck.passed) validation.passed = false;
+
+    // Check that all entries have workoutIds and are marked as saved
+    for (let i = 0; i < allWorkouts.length; i++) {
+      const workout = allWorkouts[i];
+      const idCheck = {
+        name: `Multi-workout: workout[${i}] has workoutId`,
+        expected: true,
+        actual: !!workout.workoutId,
+        passed: !!workout.workoutId,
+      };
+      validation.checks.push(idCheck);
+      if (!idCheck.passed) validation.passed = false;
+
+      const savedCheck = {
+        name: `Multi-workout: workout[${i}] saved`,
+        expected: true,
+        actual: workout.saved,
+        passed: workout.saved === true,
+      };
+      validation.checks.push(savedCheck);
+      if (!savedCheck.passed) validation.passed = false;
+    }
+
+    // Check that tools were called multiple times (parallel processing evidence)
+    const extractCalls = logs.toolCalls.filter(
+      (t) => t === "extract_workout_data",
+    ).length;
+    const saveCalls = logs.toolCalls.filter(
+      (t) => t === "save_workout_to_database",
+    ).length;
+
+    const multiExtractCheck = {
+      name: "Multi-workout: extract_workout_data called multiple times",
+      expected: `>= ${multiWorkout.minWorkoutCount}`,
+      actual: extractCalls,
+      passed: extractCalls >= multiWorkout.minWorkoutCount,
+    };
+    validation.checks.push(multiExtractCheck);
+    if (!multiExtractCheck.passed) validation.passed = false;
+
+    const multiSaveCheck = {
+      name: "Multi-workout: save_workout_to_database called multiple times",
+      expected: `>= ${multiWorkout.minWorkoutCount}`,
+      actual: saveCalls,
+      passed: saveCalls >= multiWorkout.minWorkoutCount,
+    };
+    validation.checks.push(multiSaveCheck);
+    if (!multiSaveCheck.passed) validation.passed = false;
+  }
+
   // Display results
   for (const check of validation.checks) {
     const icon = check.passed ? "✅" : "❌";
@@ -2755,6 +2926,74 @@ async function runTest(
     }
   }
 
+  // Multi-workout DynamoDB validation: fetch and verify each workout in allWorkouts
+  const multiWorkoutValidations: ValidationCheck[] = [];
+  if (
+    testCase.expected.multiWorkoutValidation?.validateAllSaved &&
+    result.body.allWorkouts
+  ) {
+    console.info(
+      `\n🏋️ Multi-workout DynamoDB validation: verifying ${result.body.allWorkouts.length} workouts...`,
+    );
+
+    for (let i = 0; i < result.body.allWorkouts.length; i++) {
+      const entry = result.body.allWorkouts[i];
+      if (!entry.workoutId) {
+        multiWorkoutValidations.push({
+          name: `Multi-workout DynamoDB: workout[${i}] missing workoutId`,
+          expected: "valid workoutId",
+          actual: null,
+          passed: false,
+        });
+        continue;
+      }
+
+      const fetchedWorkout = await fetchWorkout(
+        entry.workoutId,
+        testCase.payload.userId,
+        options.region,
+      );
+
+      const existsCheck: ValidationCheck = {
+        name: `Multi-workout DynamoDB: workout[${i}] exists (${entry.workoutId})`,
+        expected: true,
+        actual: fetchedWorkout !== null,
+        passed: fetchedWorkout !== null,
+      };
+      multiWorkoutValidations.push(existsCheck);
+
+      if (fetchedWorkout) {
+        // Validate discipline matches what was reported
+        if (entry.discipline) {
+          const disciplineCheck: ValidationCheck = {
+            name: `Multi-workout DynamoDB: workout[${i}] discipline matches`,
+            expected: entry.discipline,
+            actual: fetchedWorkout.discipline,
+            passed: fetchedWorkout.discipline === entry.discipline,
+          };
+          multiWorkoutValidations.push(disciplineCheck);
+        }
+
+        // Validate workout name exists
+        const nameCheck: ValidationCheck = {
+          name: `Multi-workout DynamoDB: workout[${i}] has workout_name`,
+          expected: true,
+          actual: !!fetchedWorkout.workout_name,
+          passed: !!fetchedWorkout.workout_name,
+        };
+        multiWorkoutValidations.push(nameCheck);
+
+        console.info(
+          `   ✅ workout[${i}]: ${entry.workoutId} - ${fetchedWorkout.workout_name || "unnamed"} (${fetchedWorkout.discipline})`,
+        );
+      } else {
+        console.error(
+          `   ❌ workout[${i}]: ${entry.workoutId} - NOT FOUND in DynamoDB`,
+        );
+      }
+    }
+  }
+
   // Validate result
   const validation = validateResult(testName, result, testCase.expected, logs);
 
@@ -2763,6 +3002,13 @@ async function runTest(
     validation.checks.push(...workoutValidations);
     validation.passed =
       validation.passed && workoutValidations.every((v) => v.passed);
+  }
+
+  // Merge multi-workout validations into main validation
+  if (multiWorkoutValidations.length > 0) {
+    validation.checks.push(...multiWorkoutValidations);
+    validation.passed =
+      validation.passed && multiWorkoutValidations.every((v) => v.passed);
   }
 
   // Show verbose logs if requested

@@ -125,6 +125,7 @@ export const handler = async (event: BuildWorkoutEvent) => {
           confidence: result.confidence,
           extractionMetadata: result.extractionMetadata,
           normalizationSummary: result.normalizationSummary,
+          allWorkouts: result.allWorkouts,
         });
       } else {
         return createOkResponse({

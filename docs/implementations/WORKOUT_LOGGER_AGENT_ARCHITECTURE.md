@@ -1,176 +1,134 @@
 # Workout Logger Agent - Storage Architecture & Multi-Workout Handling
 
-## Current Architecture (v1.0.20260208b)
+## Current Architecture (v1.0.20260210)
 
 ### Tool Result Storage
 
-The `WorkoutLoggerAgent` stores tool results in a `Map<string, any>` using fixed semantic keys:
+The `WorkoutLoggerAgent` stores tool results in a `Map<string, any[]>` using fixed semantic keys, with each key holding an array of results:
 
 ```
-detect_discipline    → "discipline"
-extract_workout_data → "extraction"
-validate_workout_completeness → "validation"
-normalize_workout_data → "normalization"
-generate_workout_summary → "summary"
-save_workout_to_database → "save"
+detect_discipline    → "discipline"    → [result0, result1, ...]
+extract_workout_data → "extraction"    → [result0, result1, ...]
+validate_workout_completeness → "validation" → [result0, result1, ...]
+normalize_workout_data → "normalization" → [result0, result1, ...]
+generate_workout_summary → "summary"   → [result0, result1, ...]
+save_workout_to_database → "save"      → [result0, result1, ...]
 ```
 
-Each tool retrieves previous tool results via `context.getToolResult("extraction")`, which returns the single value stored under that key. This is a 1:1 mapping: one storage slot per tool type.
+Results are stored via `storeToolResult` which pushes to the array. Retrieval is via:
 
-### Multi-Workout Problem (Discovered 2026-02-08)
+- `getToolResult(key, index?)` — returns the result at the given index, or the latest result if no index is provided (backward-compatible with single-workout flows).
+- `getAllToolResults(key)` — returns the full array for a given key (used for aggregation).
 
-When a user message contains multiple distinct workouts, Claude correctly identifies all of them and may attempt to call the same tool multiple times in a single response (e.g., two `detect_discipline` calls). Because the storage uses fixed keys, the second result silently overwrites the first, causing data loss.
+### Index-Aware Tool Pipeline
 
-### Current Fix: Prompt Guidance + Code Enforcement
+Tools that operate on a specific workout's data accept an optional `workoutIndex` parameter in their input schema:
 
-Three layers of defense were implemented:
+| Tool                            | workoutIndex? | Uses it to retrieve                                                                                                                                                                |
+| ------------------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `detect_discipline`             | No            | First in pipeline, no dependencies                                                                                                                                                 |
+| `extract_workout_data`          | No            | Uses latest discipline detection                                                                                                                                                   |
+| `validate_workout_completeness` | Yes           | `getToolResult("extraction", workoutIndex)`                                                                                                                                        |
+| `normalize_workout_data`        | Yes           | `getToolResult("validation", workoutIndex)`, `getToolResult("extraction", workoutIndex)`                                                                                           |
+| `generate_workout_summary`      | Yes           | `getToolResult("normalization", workoutIndex)`, `getToolResult("validation", workoutIndex)`, `getToolResult("extraction", workoutIndex)`                                           |
+| `save_workout_to_database`      | Yes           | `getToolResult("extraction", workoutIndex)`, `getToolResult("validation", workoutIndex)`, `getToolResult("normalization", workoutIndex)`, `getToolResult("summary", workoutIndex)` |
 
-1. **Prompt rule** (prompts.ts, rule 8): Instructs Claude to process one workout at a time through the full pipeline before starting the next.
-2. **Code guard** (agent.ts, `handleToolUse`): An `executedToolIds` Set blocks duplicate tool types within a single turn, returning an error message to Claude that guides it to process sequentially.
-3. **Overwrite warning** (agent.ts, `storeToolResult`): Logs a warning if extraction data is overwritten before being saved.
+Claude naturally uses a "stage-parallel" execution pattern when processing multiple workouts:
 
-This approach works because when Claude processes workouts sequentially (detect -> extract -> validate -> summarize -> save -> repeat), each storage overwrite happens _after_ the previous workout has already been persisted to DynamoDB/Pinecone via the save tool.
+1. `detect_discipline` × N (one per workout)
+2. `extract_workout_data` × N
+3. `validate_workout_completeness(workoutIndex=0)` + `validate_workout_completeness(workoutIndex=1)` + ...
+4. `normalize_workout_data(workoutIndex=0)` + `normalize_workout_data(workoutIndex=1)` + ...
+5. `generate_workout_summary(workoutIndex=0)` + `generate_workout_summary(workoutIndex=1)` + ...
+6. `save_workout_to_database(workoutIndex=0)` + `save_workout_to_database(workoutIndex=1)` + ...
 
-## Long-Term Architecture: Indexed Multi-Workout Storage
+### Multi-Workout Result Aggregation
 
-The current fix is effective but relies on enforcing sequential behavior. A more robust long-term approach would refactor the storage layer to natively support multiple results per tool type, allowing Claude to process workouts in parallel if it chooses to.
-
-### Design Goals
-
-- Support N workout extractions in a single agent invocation without data loss
-- Maintain backward compatibility with existing tool implementations
-- Allow Claude to decide processing strategy (sequential or parallel)
-- Return results for all processed workouts, not just the last one
-
-### Proposed Storage Changes
-
-#### 1. Array-Based Storage with Backward-Compatible Retrieval
-
-Replace the single-value `Map` with array-based storage:
+`buildResultFromToolData` checks `getAllToolResults("save")` and `getAllToolResults("extraction")`. When multiple saves are detected, it builds an `allWorkouts` array on the `WorkoutLogResult`:
 
 ```typescript
-// Current: Map<string, any>
-private toolResults: Map<string, any> = new Map();
-
-// Proposed: Map<string, any[]>
-private toolResults: Map<string, any[]> = new Map();
-```
-
-The `storeToolResult` method would push to arrays instead of overwriting:
-
-```typescript
-private storeToolResult(toolId: string, result: any): void {
-  const storageKey = STORAGE_KEY_MAP[toolId] || toolId;
-  if (!this.toolResults.has(storageKey)) {
-    this.toolResults.set(storageKey, []);
-  }
-  this.toolResults.get(storageKey)!.push(result);
-}
-```
-
-#### 2. Backward-Compatible Retrieval
-
-The `getToolResult` method used by all tools would default to returning the latest item (preserving current behavior), with an optional index for explicit access:
-
-```typescript
-// In the augmented context passed to tools
-getToolResult: (key: string, index?: number): any => {
-  const results = this.toolResults.get(key);
-  if (!results || results.length === 0) return undefined;
-  if (index !== undefined) return results[index];
-  return results[results.length - 1]; // Default: latest result
-};
-
-// New: get all results for a key
-getAllToolResults: (key: string): any[] => {
-  return this.toolResults.get(key) || [];
-};
-```
-
-This means existing tool code (`context.getToolResult("extraction")`) continues to work without changes -- it gets the latest extraction. Tools that need to be multi-workout aware can use `getAllToolResults` or an explicit index.
-
-#### 3. Workout Pipeline Tracking
-
-Add a pipeline tracker to know which workout is currently being processed:
-
-```typescript
-interface WorkoutPipeline {
-  index: number;
-  disciplineIndex: number;   // index into toolResults["discipline"]
-  extractionIndex: number;   // index into toolResults["extraction"]
-  validationIndex: number;   // index into toolResults["validation"]
-  saved: boolean;
-}
-
-private workoutPipelines: WorkoutPipeline[] = [];
-```
-
-When Claude calls `detect_discipline` for a new workout, a new pipeline entry is created. Each subsequent tool call for that workout references the correct indices.
-
-#### 4. Multi-Result Return from logWorkout
-
-Update `buildResultFromToolData` to return results for all saved workouts:
-
-```typescript
-// Current: returns single WorkoutLogResult
-// Proposed: returns WorkoutLogResult with all saved workouts
 interface WorkoutLogResult {
   success: boolean;
   workoutId?: string; // Primary workout (backward compat)
   allWorkouts?: {
     // All processed workouts
     workoutId: string;
-    workoutName: string;
-    discipline: string;
+    workoutName?: string;
+    discipline?: string;
     saved: boolean;
   }[];
   // ... existing fields
 }
 ```
 
-### Migration Path
+The `build-workout` Lambda handler passes `allWorkouts` through in its response.
 
-The migration can be done incrementally:
+### Validation Blocking (enforceToolBlocking)
 
-1. **Phase 1**: Change storage to arrays internally, keep `getToolResult` returning latest item. No tool changes needed. Remove the duplicate tool guard (it becomes unnecessary). This is the minimum viable change.
+The `enforceToolBlocking` method extracts `workoutIndex` from tool input to check the correct workout's validation result. This prevents the normalize/summary/save tools from running if validation failed for that specific workout, without blocking other workouts that passed validation.
 
-2. **Phase 2**: Update `save_workout_to_database` tool to be pipeline-aware, using explicit indices to save the correct extraction. Add `getAllToolResults` to the context.
+### Prompt Guidance
 
-3. **Phase 3**: Update `buildResultFromToolData` to aggregate all saved workouts into the response. Update the `build-workout` handler to handle multi-workout results.
+Prompt rule 8 instructs Claude on multi-workout parallel processing, explaining the `workoutIndex` parameter usage and the stage-parallel pattern. Claude is free to process workouts in parallel rather than being forced into sequential processing.
 
-4. **Phase 4**: Update the streaming conversation UI to display multiple workout confirmations from a single message.
+## History
 
-### Files That Would Need Changes
+### Original Architecture (v1.0.20260208b)
 
-| File                                               | Phase | Change                                                                   |
-| -------------------------------------------------- | ----- | ------------------------------------------------------------------------ |
-| `agents/workout-logger/agent.ts`                   | 1     | Storage from `Map<string, any>` to `Map<string, any[]>`, retrieval logic |
-| `agents/workout-logger/agent.ts`                   | 1     | Remove `executedToolIds` guard (no longer needed)                        |
-| `agents/workout-logger/types.ts`                   | 3     | `WorkoutLogResult` interface update                                      |
-| `agents/workout-logger/tools/save-workout.ts`      | 2     | Pipeline-aware extraction retrieval                                      |
-| `agents/workout-logger/tools/validate-workout.ts`  | 2     | Pipeline-aware extraction retrieval                                      |
-| `agents/workout-logger/tools/normalize-workout.ts` | 2     | Pipeline-aware extraction retrieval                                      |
-| `agents/workout-logger/tools/generate-summary.ts`  | 2     | Pipeline-aware extraction retrieval                                      |
-| `build-workout/handler.ts`                         | 3     | Handle multi-workout results                                             |
-| `stream-coach-conversation/handler.ts`             | 4     | Display multiple workout confirmations                                   |
+The original implementation used a `Map<string, any>` with single-value storage per tool type. When a user message contained multiple distinct workouts, Claude's natural parallel tool calls caused the second extraction to silently overwrite the first, resulting in data loss.
 
-### Complexity & Risk Assessment
+A three-layer workaround was implemented:
 
-- **Phase 1** is low risk: internal storage change with backward-compatible retrieval means zero tool code changes. Can be shipped independently.
-- **Phase 2** is medium risk: tools need to understand which workout they are operating on. Requires careful testing with single and multi-workout scenarios.
-- **Phase 3-4** are higher risk: handler and UI changes that affect user-visible behavior.
+1. **Prompt rule 8**: Instructed Claude to process one workout at a time through the full pipeline.
+2. **`executedToolIds` guard**: Blocked duplicate tool types within a single turn.
+3. **Overwrite warning**: Logged when extraction data was overwritten before being saved.
 
-### When to Implement
+This approach forced sequential processing and worked but was fragile — it relied on Claude following prompt instructions perfectly and added unnecessary latency.
 
-The current prompt + code enforcement approach handles the multi-workout case safely. This long-term refactor should be prioritized when:
+### Refactor (v1.0.20260210)
 
-- Multi-workout messages become more common (currently rare/edge case)
-- Performance matters: sequential processing adds latency for multi-workout messages since each workout requires a full agent loop iteration
-- The agent framework is being refactored for other reasons (good time to bundle the storage change)
+Production logs showed 2 occurrences across 20 users — not a rare edge case. Silent data loss is unacceptable for a system users need to trust. The refactor implemented Phases 1-3 of the indexed storage design:
 
-### Decision Record
+- **Phase 1**: Array-based storage (`Map<string, any[]>`), push-based writes, backward-compatible retrieval.
+- **Phase 2**: Index-aware tools with `workoutIndex` parameter on validate, normalize, summary, and save tools. `enforceToolBlocking` made index-aware.
+- **Phase 3**: `buildResultFromToolData` aggregates all saved workouts into `allWorkouts`. Handler passes through in response.
 
-| Date       | Decision                                         | Rationale                                                                                                             |
-| ---------- | ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- |
-| 2026-02-08 | Implemented prompt + code enforcement            | Lowest risk fix for a rare edge case; prevents silent data loss without touching storage architecture                 |
-| 2026-02-08 | Documented indexed storage as long-term approach | User requested architecture documentation for future implementation; addresses the fundamental 1:1 storage limitation |
+All workarounds removed: `executedToolIds` guard, overwrite warning, sequential prompt rule.
+
+### Remaining
+
+- **Phase 4**: UI support for multiple workout confirmations. Not yet needed — the backend handles multi-workout transparently and Claude's natural conversation response acknowledges all saved workouts.
+
+## Integration Tests
+
+Multi-workout behavior is verified by two test cases in `test/integration/test-build-workout.ts`:
+
+- `multi-workout-two-sessions`: Two distinct cardio workouts in one message.
+- `multi-workout-strength-and-cardio`: One strength + one cardio workout in one message.
+
+Tests validate:
+
+- `allWorkouts` array present in Lambda response with correct count.
+- Each workout persisted in DynamoDB with expected fields.
+- CloudWatch logs confirm `extract_workout_data` and `save_workout_to_database` called N times (parallel processing evidence).
+
+## Decision Record
+
+| Date       | Decision                                                         | Rationale                                                                                                                                                                                                                                                                                         |
+| ---------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-02-08 | Implemented prompt + code enforcement                            | Lowest risk fix for what was initially assessed as a rare edge case; prevents silent data loss without touching storage architecture                                                                                                                                                              |
+| 2026-02-08 | Documented indexed storage as long-term approach                 | User requested architecture documentation for future implementation; addresses the fundamental 1:1 storage limitation                                                                                                                                                                             |
+| 2026-02-09 | Implemented array-based storage + index-aware tools (Phases 1-3) | Production logs showed 2 occurrences across 20 users — not a rare edge case. Silent data loss is unacceptable. Refactored storage to `Map<string, any[]>`, added `workoutIndex` parameter to downstream tools, removed `executedToolIds` guard, and enabled Claude's natural parallel processing. |
+| 2026-02-09 | Integration tests validated multi-workout processing             | Both test cases passed: stage-parallel execution, correct `workoutIndex` usage, all workouts saved to DynamoDB, `allWorkouts` aggregation accurate, no errors or warnings.                                                                                                                        |
+
+## Files
+
+| File                                     | Role                                                                                                                                                             |
+| ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `agents/workout-logger/agent.ts`         | Array storage, `getToolResult(key, index?)`, `getAllToolResults(key)`, index-aware `enforceToolBlocking`, multi-workout aggregation in `buildResultFromToolData` |
+| `agents/workout-logger/types.ts`         | `WorkoutLogResult` with `allWorkouts` field                                                                                                                      |
+| `agents/workout-logger/tools.ts`         | `workoutIndex` parameter on validate, normalize, summary, save tools                                                                                             |
+| `agents/workout-logger/prompts.ts`       | Rule 8: parallel multi-workout processing guidance                                                                                                               |
+| `build-workout/handler.ts`               | Passes `allWorkouts` in Lambda response                                                                                                                          |
+| `test/integration/test-build-workout.ts` | Multi-workout test cases with DynamoDB + CloudWatch validation                                                                                                   |
+| `test/integration/types.ts`              | `MultiWorkoutValidationExpectations` type                                                                                                                        |
