@@ -469,11 +469,11 @@ export const RunningSection = ({
               )}
             </div>
           )}
+
+          {/* Badge Color Legend */}
+          {(runningData?.run_type || runningData?.segments) && <BadgeLegend />}
         </div>
       )}
-
-      {/* Badge Color Legend */}
-      {(runningData?.run_type || runningData?.segments) && <BadgeLegend />}
     </>
   );
 };

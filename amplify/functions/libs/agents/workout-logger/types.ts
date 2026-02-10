@@ -36,7 +36,7 @@ export interface WorkoutLoggerContext
  */
 export interface WorkoutLogResult {
   success: boolean;
-  workoutId?: string;
+  workoutId?: string; // Primary/last workout (backward compat)
   discipline?: string;
   workoutName?: string;
   confidence?: number;
@@ -48,6 +48,14 @@ export interface WorkoutLogResult {
   skipped?: boolean;
   reason?: string;
   blockingFlags?: string[];
+
+  // Multi-workout support
+  allWorkouts?: {
+    workoutId: string;
+    workoutName?: string;
+    discipline?: string;
+    saved: boolean;
+  }[];
 }
 
 /**

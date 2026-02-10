@@ -66,6 +66,12 @@ export interface LambdaResponse {
     skipped?: boolean;
     reason?: string;
     blockingFlags?: string[];
+    allWorkouts?: {
+      workoutId: string;
+      workoutName?: string;
+      discipline?: string;
+      saved: boolean;
+    }[];
     [key: string]: any;
   };
   duration: number;
@@ -100,6 +106,14 @@ export interface ImageProcessingExpectations {
 }
 
 /**
+ * Multi-workout validation expectations
+ */
+export interface MultiWorkoutValidationExpectations {
+  minWorkoutCount: number; // Minimum number of workouts expected in allWorkouts
+  validateAllSaved: boolean; // Whether to fetch and verify each workout exists in DynamoDB
+}
+
+/**
  * Test expectations structure
  */
 export interface TestExpectations {
@@ -115,6 +129,7 @@ export interface TestExpectations {
   shouldNotUseTool?: string;
   workoutValidation?: WorkoutValidationExpectations;
   imageProcessing?: ImageProcessingExpectations;
+  multiWorkoutValidation?: MultiWorkoutValidationExpectations;
 }
 
 /**

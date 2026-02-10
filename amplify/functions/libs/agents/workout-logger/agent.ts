@@ -45,13 +45,17 @@ const STORAGE_KEY_MAP: Record<string, string> = {
  * Claude decides when to extract, validate, normalize, summarize, and save.
  */
 export class WorkoutLoggerAgent extends Agent<WorkoutLoggerContext> {
-  private toolResults: Map<string, any> = new Map(); // Track tool results
+  private toolResults: Map<string, any[]> = new Map(); // Track tool results (array-based for multi-workout support)
 
   /**
    * Store tool result with semantic key for later retrieval
    * Maps tool IDs to semantic keys (Coach Creator pattern)
    */
-  private storeToolResult(toolId: string, result: any): void {
+  private storeToolResult(
+    toolId: string,
+    result: any,
+    workoutIndex?: number,
+  ): void {
     const storageKey = STORAGE_KEY_MAP[toolId] || toolId;
 
     // Debug: Deep inspection if nested objects are double-encoded at storage time
@@ -127,43 +131,54 @@ export class WorkoutLoggerAgent extends Agent<WorkoutLoggerContext> {
       }
     }
 
-    // Defense in depth: warn if extraction is being overwritten before save
-    if (storageKey === "extraction" && this.toolResults.has("extraction")) {
-      const existingExtraction = this.toolResults.get("extraction");
-      const savedResult = this.toolResults.get("save");
-      if (
-        !savedResult ||
-        savedResult.workoutId !== existingExtraction?.workoutData?.workout_id
-      ) {
-        console.warn(
-          "⚠️ MULTI-WORKOUT OVERWRITE: Extraction being overwritten before save",
-          {
-            existingWorkoutId: existingExtraction?.workoutData?.workout_id,
-            existingWorkoutName: existingExtraction?.workoutData?.workout_name,
-            savedWorkoutId: savedResult?.workoutId,
-            note: "Previous extraction data will be lost.",
-          },
-        );
-      }
+    // Store result in array (multi-workout safe)
+    if (!this.toolResults.has(storageKey)) {
+      this.toolResults.set(storageKey, []);
     }
+    const arr = this.toolResults.get(storageKey)!;
 
-    this.toolResults.set(storageKey, result);
-    console.info(`📦 Stored tool result: ${toolId} → ${storageKey}`);
+    if (workoutIndex !== undefined) {
+      // Positional storage: ensures the result for workoutIndex N is at arr[N]
+      // regardless of execution order within a turn
+      arr[workoutIndex] = result;
+      console.info(
+        `📦 Stored tool result: ${toolId} → ${storageKey}[${workoutIndex}] (positional)`,
+      );
+    } else {
+      // Append storage: for tools without workoutIndex (detect, extract)
+      arr.push(result);
+      console.info(
+        `📦 Stored tool result: ${toolId} → ${storageKey}[${arr.length - 1}] (append)`,
+      );
+    }
   }
 
   /**
    * Retrieve stored tool result by key
+   * Supports optional index for multi-workout targeting.
+   * Defaults to latest result (backward compatible with single-workout flow).
    */
-  private getToolResult(key: string): any {
-    return this.toolResults.get(key);
+  private getToolResult(key: string, index?: number): any {
+    const results = this.toolResults.get(key);
+    if (!results || results.length === 0) return undefined;
+    if (index !== undefined) return results[index];
+    return results[results.length - 1]; // Default: latest
+  }
+
+  /**
+   * Retrieve all stored results for a key (multi-workout aggregation)
+   */
+  private getAllToolResults(key: string): any[] {
+    return this.toolResults.get(key) || [];
   }
 
   /**
    * Create augmented context with getToolResult accessor
    * Used by all tool executions for data retrieval
+   * Supports optional index parameter for multi-workout targeting
    */
   private createAugmentedContext(): WorkoutLoggerContext & {
-    getToolResult: (key: string) => any;
+    getToolResult: (key: string, index?: number) => any;
   } {
     return {
       ...this.config.context,
@@ -191,32 +206,35 @@ export class WorkoutLoggerAgent extends Agent<WorkoutLoggerContext> {
   /**
    * Retrieve all tool results in structured format
    * Uses semantic keys for consistent access
+   * Returns the latest result for each key (backward compatible with single-workout flow)
    */
   private getStructuredToolResults() {
     return {
-      discipline: this.toolResults.get("discipline"),
-      extraction: this.toolResults.get("extraction"),
-      validation: this.toolResults.get("validation"),
-      normalization: this.toolResults.get("normalization"),
-      summary: this.toolResults.get("summary"),
-      save: this.toolResults.get("save"),
+      discipline: this.getToolResult("discipline"),
+      extraction: this.getToolResult("extraction"),
+      validation: this.getToolResult("validation"),
+      normalization: this.getToolResult("normalization"),
+      summary: this.getToolResult("summary"),
+      save: this.getToolResult("save"),
     };
   }
 
   /**
    * Override enforceToolBlocking to implement validation-based blocking
    * Prevents save/normalize when validation failed (defense in depth)
+   * Index-aware: uses workoutIndex from tool input to check the correct validation result
    */
   protected enforceToolBlocking(
     toolId: string,
-    _toolInput: any,
+    toolInput: any,
   ): {
     error: boolean;
     blocked: boolean;
     reason: string;
   } | null {
-    // Get validation result from stored tool results using semantic key
-    const validationResult = this.toolResults.get("validation");
+    // Extract workoutIndex from tool input to check the correct validation result
+    const workoutIndex = toolInput?.workoutIndex;
+    const validationResult = this.getToolResult("validation", workoutIndex);
 
     // Delegate to helper function for blocking logic
     return enforceValidationBlocking(toolId, validationResult);
@@ -249,37 +267,11 @@ export class WorkoutLoggerAgent extends Agent<WorkoutLoggerContext> {
     const toolResults: any[] = [];
     const augmentedContext = this.createAugmentedContext();
 
-    // Track which tools have been executed this turn to prevent duplicate calls
-    // (multi-workout protection: storage only holds one result per tool type)
-    const executedToolIds = new Set<string>();
-
-    // Execute tools sequentially (workout logging has dependencies)
+    // Execute tools sequentially (workout logging has dependencies within a pipeline)
+    // Note: With array-based storage, duplicate tool calls push safely -- no blocking needed.
+    // Claude can call the same tool multiple times for multi-workout parallel processing.
     for (const block of toolUses) {
       const toolUse = block.toolUse;
-
-      // Guard: Prevent duplicate tool types in a single turn (multi-workout protection)
-      if (executedToolIds.has(toolUse.name)) {
-        console.warn(
-          `⚠️ DUPLICATE TOOL BLOCKED: ${toolUse.name} already called this turn`,
-          {
-            toolName: toolUse.name,
-            note: "Multi-workout detected. Process one workout at a time through the full pipeline.",
-          },
-        );
-        toolResults.push(
-          this.buildToolResult(
-            toolUse,
-            {
-              error:
-                `Tool '${toolUse.name}' was already called in this response. ` +
-                `Process one workout at a time: complete the full pipeline ` +
-                `(detect → extract → validate → summarize → save) for one workout before starting the next.`,
-            },
-            "error",
-          ),
-        );
-        continue;
-      }
 
       const tool = this.config.tools.find((t) => t.id === toolUse.name);
 
@@ -307,6 +299,9 @@ export class WorkoutLoggerAgent extends Agent<WorkoutLoggerContext> {
 
       console.info(`⚙️ Executing tool: ${tool.id}`);
 
+      // Extract workoutIndex from tool input for positional storage alignment
+      const workoutIndex: number | undefined = toolUse.input?.workoutIndex;
+
       try {
         const startTime = Date.now();
         const result = await tool.execute(toolUse.input, augmentedContext);
@@ -315,10 +310,7 @@ export class WorkoutLoggerAgent extends Agent<WorkoutLoggerContext> {
         console.info(`✅ Tool ${tool.id} completed in ${duration}ms`);
 
         // Store result for later retrieval (with sanitization)
-        this.storeToolResult(tool.id, result);
-
-        // Mark tool as executed this turn (after successful storage)
-        executedToolIds.add(tool.id);
+        this.storeToolResult(tool.id, result, workoutIndex);
 
         toolResults.push(this.buildToolResult(toolUse, result, "success"));
       } catch (error) {
@@ -329,7 +321,7 @@ export class WorkoutLoggerAgent extends Agent<WorkoutLoggerContext> {
 
         // Store error result for later retrieval (important for blocking enforcement)
         // Uses storeToolResult() to apply semantic key mapping
-        this.storeToolResult(tool.id, errorResult);
+        this.storeToolResult(tool.id, errorResult, workoutIndex);
 
         toolResults.push(this.buildToolResult(toolUse, errorResult, "error"));
       }
@@ -411,7 +403,7 @@ export class WorkoutLoggerAgent extends Agent<WorkoutLoggerContext> {
 
         // NOTE: We do NOT clear tool results here. If the retry prompt references
         // already-completed tools, those results need to remain available for dependent
-        // tools to retrieve. If the AI re-runs a tool, it will overwrite the result.
+        // tools to retrieve. If the AI re-runs a tool, the new result appends to the array.
 
         const retryResponse = await this.converse(retryDecision.retryPrompt);
 
@@ -486,9 +478,10 @@ export class WorkoutLoggerAgent extends Agent<WorkoutLoggerContext> {
 
     // Count only successful tool results (exclude error results)
     // Error results are stored for blocking enforcement but shouldn't count toward progress
-    const successfulToolCount = Array.from(this.toolResults.values()).filter(
-      (result) => result && !("error" in result),
-    ).length;
+    // Flatten arrays since each key stores an array of results (multi-workout support)
+    const successfulToolCount = Array.from(this.toolResults.values())
+      .flat()
+      .filter((result) => result && !("error" in result)).length;
 
     // Check if Claude's response is a valid blocking response
     // If Claude correctly identifies non-workout content, it will respond with blocking
@@ -764,25 +757,68 @@ Complete the workout logging workflow now using your tools.`;
       hasSave: !!results.save,
     });
 
-    // If save tool was called successfully, we have a complete workout
-    if (results.save?.success && results.save?.workoutId) {
-      console.info("✅ Building success result from save tool");
+    // Check if ANY save succeeded (not just the latest)
+    const allSaves = this.getAllToolResults("save");
+    const allExtractions = this.getAllToolResults("extraction");
+    const successfulSaves = allSaves
+      .map((save, originalIndex) => ({ save, originalIndex }))
+      .filter((entry) => entry.save.success && entry.save.workoutId);
 
-      return {
+    if (successfulSaves.length > 0) {
+      // Use the first successful save as the primary result for backward compatibility
+      const primarySave = successfulSaves[0];
+      const primaryExtraction = allExtractions[primarySave.originalIndex];
+      // For validation/normalization/summary, use latest (single-workout) or first successful match
+      const primaryValidation =
+        this.getToolResult("validation", primarySave.originalIndex) ||
+        results.validation;
+      const primaryNormalization =
+        this.getToolResult("normalization", primarySave.originalIndex) ||
+        results.normalization;
+
+      console.info("✅ Building success result from save tool", {
+        totalSaves: allSaves.length,
+        successfulSaves: successfulSaves.length,
+        primaryIndex: primarySave.originalIndex,
+      });
+
+      const primaryResult: WorkoutLogResult = {
         success: true,
-        workoutId: results.save.workoutId,
-        discipline: results.extraction?.workoutData?.discipline,
-        workoutName: results.extraction?.workoutData?.workout_name,
+        workoutId: primarySave.save.workoutId,
+        discipline: primaryExtraction?.workoutData?.discipline,
+        workoutName: primaryExtraction?.workoutData?.workout_name,
         confidence:
-          results.validation?.confidence ||
-          results.extraction?.workoutData?.metadata?.data_confidence,
-        completeness: results.validation?.completeness,
+          primaryValidation?.confidence ||
+          primaryExtraction?.workoutData?.metadata?.data_confidence,
+        completeness: primaryValidation?.completeness,
         extractionMetadata: {
-          generationMethod: results.extraction?.generationMethod,
-          confidence: results.validation?.confidence,
+          generationMethod: primaryExtraction?.generationMethod,
+          confidence: primaryValidation?.confidence,
         },
-        normalizationSummary: results.normalization?.normalizationSummary,
+        normalizationSummary: primaryNormalization?.normalizationSummary,
       };
+
+      // Aggregate all saved workouts for multi-workout support
+      if (successfulSaves.length > 1) {
+        primaryResult.allWorkouts = successfulSaves.map((entry) => {
+          const extraction = allExtractions[entry.originalIndex];
+          return {
+            workoutId: entry.save.workoutId,
+            workoutName: extraction?.workoutData?.workout_name,
+            discipline: extraction?.workoutData?.discipline,
+            saved: true,
+          };
+        });
+
+        console.info("📋 Multi-workout aggregation:", {
+          totalSaves: allSaves.length,
+          totalExtractions: allExtractions.length,
+          successfulWorkouts: primaryResult.allWorkouts.length,
+          failedSaves: allSaves.length - successfulSaves.length,
+        });
+      }
+
+      return primaryResult;
     }
 
     // If validation blocked save, return structured failure

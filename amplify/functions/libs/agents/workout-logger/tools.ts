@@ -67,7 +67,7 @@ import { detectDiscipline } from "../../workout/discipline-detector";
  * Used by tools that retrieve previous results instead of receiving from Claude
  */
 type AugmentedWorkoutLoggerContext = WorkoutLoggerContext & {
-  getToolResult?: (key: string) => any;
+  getToolResult?: (key: string, index?: number) => any;
 };
 
 /**
@@ -621,6 +621,12 @@ Returns: validation result with shouldSave, shouldNormalize, confidence, complet
         type: "boolean",
         description: "Whether this was triggered by a slash command",
       },
+      workoutIndex: {
+        type: "number",
+        description:
+          "When processing multiple workouts, the 0-based index of which workout to validate. " +
+          "Corresponds to the order extractions were stored. Omit for single-workout messages.",
+      },
     },
     required: ["isSlashCommand"],
   },
@@ -631,10 +637,11 @@ Returns: validation result with shouldSave, shouldNormalize, confidence, complet
   ): Promise<WorkoutValidationResult> {
     console.info("✅ Executing validate_workout_completeness tool");
 
-    const { isSlashCommand } = input;
+    const { isSlashCommand, workoutIndex } = input;
 
     // Retrieve extraction result from stored tool results (Coach Creator pattern)
-    const extraction = context.getToolResult?.("extraction");
+    // Uses workoutIndex for multi-workout targeting
+    const extraction = context.getToolResult?.("extraction", workoutIndex);
     if (!extraction) {
       throw new Error(
         "Extraction not completed - call extract_workout_data first",
@@ -952,20 +959,27 @@ Returns: normalizedData, isValid, issuesFound, issuesCorrected, normalizationSum
   inputSchema: {
     type: "object",
     properties: {
-      // No inputs needed - retrieves from stored results
+      workoutIndex: {
+        type: "number",
+        description:
+          "When processing multiple workouts, the 0-based index of which workout to normalize.",
+      },
     },
     required: [],
   },
 
   async execute(
-    _input: any,
+    input: any,
     context: AugmentedWorkoutLoggerContext,
   ): Promise<WorkoutNormalizationResult> {
     console.info("🔧 Executing normalize_workout_data tool");
 
+    const { workoutIndex } = input;
+
     // Retrieve workout data from validation or extraction result
-    const validation = context.getToolResult?.("validation");
-    const extraction = context.getToolResult?.("extraction");
+    // Uses workoutIndex for multi-workout targeting
+    const validation = context.getToolResult?.("validation", workoutIndex);
+    const extraction = context.getToolResult?.("extraction", workoutIndex);
 
     // Prefer validation result (has updated workoutData), fallback to extraction
     const sourceResult = validation || extraction;
@@ -1098,6 +1112,11 @@ Returns: summary (string)`,
         type: "string",
         description: "The original user message",
       },
+      workoutIndex: {
+        type: "number",
+        description:
+          "When processing multiple workouts, the 0-based index of which workout to summarize.",
+      },
     },
     required: ["originalMessage"],
   },
@@ -1108,12 +1127,16 @@ Returns: summary (string)`,
   ): Promise<WorkoutSummaryResult> {
     console.info("📝 Executing generate_workout_summary tool");
 
-    const { originalMessage } = input;
+    const { originalMessage, workoutIndex } = input;
 
     // Retrieve workout data from normalization, validation, or extraction
-    const normalization = context.getToolResult?.("normalization");
-    const validation = context.getToolResult?.("validation");
-    const extraction = context.getToolResult?.("extraction");
+    // Uses workoutIndex for multi-workout targeting
+    const normalization = context.getToolResult?.(
+      "normalization",
+      workoutIndex,
+    );
+    const validation = context.getToolResult?.("validation", workoutIndex);
+    const extraction = context.getToolResult?.("extraction", workoutIndex);
 
     // Prefer normalized data, then validation, then extraction
     let workoutData;
@@ -1178,22 +1201,32 @@ Returns: workoutId, success, pineconeStored, pineconeRecordId, templateLinked`,
   inputSchema: {
     type: "object",
     properties: {
-      // No inputs needed - retrieves from stored results
+      workoutIndex: {
+        type: "number",
+        description:
+          "When processing multiple workouts, the 0-based index of which workout to save.",
+      },
     },
     required: [],
   },
 
   async execute(
-    _input: any,
+    input: any,
     context: AugmentedWorkoutLoggerContext,
   ): Promise<WorkoutSaveResult> {
     console.info("💾 Executing save_workout_to_database tool");
 
+    const { workoutIndex } = input;
+
     // Retrieve all required data from context
-    const extraction = context.getToolResult?.("extraction");
-    const validation = context.getToolResult?.("validation");
-    const normalization = context.getToolResult?.("normalization");
-    const summaryResult = context.getToolResult?.("summary");
+    // Uses workoutIndex for multi-workout targeting
+    const extraction = context.getToolResult?.("extraction", workoutIndex);
+    const validation = context.getToolResult?.("validation", workoutIndex);
+    const normalization = context.getToolResult?.(
+      "normalization",
+      workoutIndex,
+    );
+    const summaryResult = context.getToolResult?.("summary", workoutIndex);
 
     if (!extraction) {
       throw new Error(
