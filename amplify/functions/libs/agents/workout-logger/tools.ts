@@ -969,12 +969,12 @@ Returns: normalizedData, isValid, issuesFound, issuesCorrected, normalizationSum
   },
 
   async execute(
-    _input: any,
+    input: any,
     context: AugmentedWorkoutLoggerContext,
   ): Promise<WorkoutNormalizationResult> {
     console.info("🔧 Executing normalize_workout_data tool");
 
-    const { workoutIndex } = _input;
+    const { workoutIndex } = input;
 
     // Retrieve workout data from validation or extraction result
     // Uses workoutIndex for multi-workout targeting
@@ -1211,12 +1211,12 @@ Returns: workoutId, success, pineconeStored, pineconeRecordId, templateLinked`,
   },
 
   async execute(
-    _input: any,
+    input: any,
     context: AugmentedWorkoutLoggerContext,
   ): Promise<WorkoutSaveResult> {
     console.info("💾 Executing save_workout_to_database tool");
 
-    const { workoutIndex } = _input;
+    const { workoutIndex } = input;
 
     // Retrieve all required data from context
     // Uses workoutIndex for multi-workout targeting
