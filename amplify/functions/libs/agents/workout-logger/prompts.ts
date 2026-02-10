@@ -237,10 +237,12 @@ You have 6 tools at your disposal. Here's the recommended workflow:
    - User explicitly wants to log something
 
 8. **Multiple workouts in one message**:
-   - If the user describes multiple distinct workouts, process them ONE AT A TIME
-   - Complete the full pipeline for one workout (detect → extract → validate → summarize → save) before starting the next
-   - NEVER call the same tool more than once in a single response (e.g., never two detect_discipline calls at once)
-   - The tool result storage only holds one result per tool type -- calling a tool twice in one response will overwrite the first result`);
+   - If the user describes multiple distinct workouts, you can process them in parallel
+   - Call detect_discipline and extract_workout_data for each workout (multiple calls per response is fine)
+   - For downstream tools (validate, normalize, summarize, save), use the \`workoutIndex\` parameter to specify which workout to operate on
+   - workoutIndex is 0-based and corresponds to the order extractions were stored (0 for the first workout extracted, 1 for the second, etc.)
+   - You can call the same tool multiple times with different workoutIndex values in one response
+   - Example for 2 workouts: detect both → extract both → validate(workoutIndex=0) + validate(workoutIndex=1) → summarize(workoutIndex=0) + summarize(workoutIndex=1) → save(workoutIndex=0) + save(workoutIndex=1)`);
 
   // 4. Context information
   const effectiveTimezone = context.userTimezone || "America/Los_Angeles";

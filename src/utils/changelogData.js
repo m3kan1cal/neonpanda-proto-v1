@@ -10,6 +10,56 @@
 
 export const changelogEntries = [
   {
+    version: "Release v1.0.20260210-beta",
+    date: "2026-02-10",
+    changes: {
+      added: [
+        "Multi-workout parallel processing: WorkoutLoggerAgent now natively supports logging multiple distinct workouts from a single user message without data loss, using array-based tool result storage (Map<string, any[]>) and index-aware tool retrieval (getToolResult(key, index?))",
+        "workoutIndex parameter added to validate, normalize, summarize, and save tools, allowing Claude to target specific workout pipelines when processing multiple workouts in parallel",
+        "getAllToolResults(key) method on WorkoutLoggerAgent for aggregating all results of a given tool type (used for multi-workout result building)",
+        "allWorkouts field on WorkoutLogResult and build-workout Lambda response, listing all saved workouts with workoutId, workoutName, discipline, and saved status",
+        "Multi-workout integration tests (multi-workout-two-sessions, multi-workout-strength-and-cardio) with DynamoDB validation confirming both workouts are persisted and correctly indexed",
+        "MultiWorkoutValidationExpectations type and validation logic in test harness: checks allWorkouts count, individual workout persistence in DynamoDB, and parallel tool call evidence in CloudWatch logs",
+      ],
+      changed: [
+        "WorkoutLoggerAgent toolResults storage refactored from Map<string, any> to Map<string, any[]> with push-based storeToolResult; getToolResult defaults to latest entry for backward compatibility with single-workout flow",
+        "Prompt rule 8 rewritten: instead of enforcing sequential one-at-a-time processing, now instructs Claude to use workoutIndex for parallel multi-workout processing (detect both, extract both, validate(workoutIndex=0) + validate(workoutIndex=1), etc.)",
+        "enforceToolBlocking now extracts workoutIndex from tool input to check the correct workout's validation result, preventing cross-workout blocking",
+        "shouldRetryWorkflow tool count logic updated to flatten arrays (.flat()) for accurate successful tool counting across multi-workout sessions",
+        "buildResultFromToolData aggregates allWorkouts from getAllToolResults('save') and getAllToolResults('extraction') when multiple saves detected",
+      ],
+      fixed: [
+        "Multi-workout silent data loss: previously when a user logged two workouts in one message, Claude's natural parallel tool calls caused the second extraction to overwrite the first in single-value storage, losing the first workout entirely; array-based storage eliminates this by preserving all results at distinct indices",
+        "Removed executedToolIds duplicate tool guard from handleToolUse (no longer needed with array storage; was forcing sequential processing as a workaround)",
+        "Removed storeToolResult overwrite warning block (no longer relevant since push-based storage cannot overwrite)",
+      ],
+    },
+  },
+  {
+    version: "Release v1.0.20260209-beta",
+    date: "2026-02-09",
+    changes: {
+      added: [
+        "Recent PRs highlight card on Training Grounds dashboard displaying personal records from workouts logged in the past two weeks, with 2-column achievement card grid, hero numbers, PR type badges, relative timestamps, and 'New' badge for PRs within the past week",
+        "TrophySolidIcon retro pixel-art trophy SVG added to SynthwaveComponents for the Recent PRs card header",
+        "Animated hover caret on PR achievement cards: neon pink chevron slides in from the right on hover indicating clickable navigation to the source workout",
+        "Unit System preference in Settings (imperial/metric) with dropdown selector, saved to user profile in DynamoDB; affects PR unit labels (lbs/kg, mi/km) on dashboard",
+        "Shared workout display constants module (src/utils/workout/constants.js) exporting PR_TYPE_LABELS, PR_TYPE_UNITS, getPrTypeLabel, and getPrUnit for reuse across components",
+        "PR achievements included in get-workouts API response (prAchievements field added to workout summaries)",
+        "WorkoutAgent tracks recentPrAchievements state with _extractPrAchievements helper integrated into loadWorkoutStats for efficient PR extraction from already-fetched workout data",
+      ],
+      changed: [
+        "Your Highlights section order updated: Active Programs, Recent PRs, Reports & Insights, Workout History, Recent Conversations (desktop: left column Programs/Reports/Conversations, right column PRs/Workout History)",
+        "Reports & Insights list item icon changed from bar chart to right-pointing chevron with cyan hover accent for navigation consistency",
+        "Skeleton loading structure updated to match new section order with PR card grid skeleton in right column",
+      ],
+      fixed: [
+        "Deleted workout PRs no longer remain in dashboard state; WorkoutAgent.deleteWorkout now filters recentPrAchievements alongside recentWorkouts and allWorkouts",
+        "Removed unused loadRecentPrAchievements method (dead code) from WorkoutAgent; PR extraction runs inline within loadWorkoutStats",
+      ],
+    },
+  },
+  {
     version: "Release v1.0.20260208b-beta",
     date: "2026-02-08",
     changes: {
