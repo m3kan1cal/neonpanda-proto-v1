@@ -740,47 +740,64 @@ Complete the workout logging workflow now using your tools.`;
       hasSave: !!results.save,
     });
 
-    // If save tool was called successfully, we have a complete workout
-    if (results.save?.success && results.save?.workoutId) {
-      console.info("✅ Building success result from save tool");
+    // Check if ANY save succeeded (not just the latest)
+    const allSaves = this.getAllToolResults("save");
+    const allExtractions = this.getAllToolResults("extraction");
+    const successfulSaves = allSaves
+      .map((save, originalIndex) => ({ save, originalIndex }))
+      .filter((entry) => entry.save.success && entry.save.workoutId);
+
+    if (successfulSaves.length > 0) {
+      // Use the first successful save as the primary result for backward compatibility
+      const primarySave = successfulSaves[0];
+      const primaryExtraction = allExtractions[primarySave.originalIndex];
+      // For validation/normalization/summary, use latest (single-workout) or first successful match
+      const primaryValidation =
+        this.getToolResult("validation", primarySave.originalIndex) ||
+        results.validation;
+      const primaryNormalization =
+        this.getToolResult("normalization", primarySave.originalIndex) ||
+        results.normalization;
+
+      console.info("✅ Building success result from save tool", {
+        totalSaves: allSaves.length,
+        successfulSaves: successfulSaves.length,
+        primaryIndex: primarySave.originalIndex,
+      });
 
       const primaryResult: WorkoutLogResult = {
         success: true,
-        workoutId: results.save.workoutId,
-        discipline: results.extraction?.workoutData?.discipline,
-        workoutName: results.extraction?.workoutData?.workout_name,
+        workoutId: primarySave.save.workoutId,
+        discipline: primaryExtraction?.workoutData?.discipline,
+        workoutName: primaryExtraction?.workoutData?.workout_name,
         confidence:
-          results.validation?.confidence ||
-          results.extraction?.workoutData?.metadata?.data_confidence,
-        completeness: results.validation?.completeness,
+          primaryValidation?.confidence ||
+          primaryExtraction?.workoutData?.metadata?.data_confidence,
+        completeness: primaryValidation?.completeness,
         extractionMetadata: {
-          generationMethod: results.extraction?.generationMethod,
-          confidence: results.validation?.confidence,
+          generationMethod: primaryExtraction?.generationMethod,
+          confidence: primaryValidation?.confidence,
         },
-        normalizationSummary: results.normalization?.normalizationSummary,
+        normalizationSummary: primaryNormalization?.normalizationSummary,
       };
 
       // Aggregate all saved workouts for multi-workout support
-      const allSaves = this.getAllToolResults("save");
-      const allExtractions = this.getAllToolResults("extraction");
-
-      if (allSaves.length > 1 || allExtractions.length > 1) {
-        primaryResult.allWorkouts = allSaves
-          .filter((s) => s.success && s.workoutId)
-          .map((save, i) => {
-            const extraction = allExtractions[i];
-            return {
-              workoutId: save.workoutId,
-              workoutName: extraction?.workoutData?.workout_name,
-              discipline: extraction?.workoutData?.discipline,
-              saved: true,
-            };
-          });
+      if (successfulSaves.length > 1) {
+        primaryResult.allWorkouts = successfulSaves.map((entry) => {
+          const extraction = allExtractions[entry.originalIndex];
+          return {
+            workoutId: entry.save.workoutId,
+            workoutName: extraction?.workoutData?.workout_name,
+            discipline: extraction?.workoutData?.discipline,
+            saved: true,
+          };
+        });
 
         console.info("📋 Multi-workout aggregation:", {
           totalSaves: allSaves.length,
           totalExtractions: allExtractions.length,
           successfulWorkouts: primaryResult.allWorkouts.length,
+          failedSaves: allSaves.length - successfulSaves.length,
         });
       }
 
