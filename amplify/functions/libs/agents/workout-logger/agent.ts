@@ -51,7 +51,11 @@ export class WorkoutLoggerAgent extends Agent<WorkoutLoggerContext> {
    * Store tool result with semantic key for later retrieval
    * Maps tool IDs to semantic keys (Coach Creator pattern)
    */
-  private storeToolResult(toolId: string, result: any): void {
+  private storeToolResult(
+    toolId: string,
+    result: any,
+    workoutIndex?: number,
+  ): void {
     const storageKey = STORAGE_KEY_MAP[toolId] || toolId;
 
     // Debug: Deep inspection if nested objects are double-encoded at storage time
@@ -127,16 +131,26 @@ export class WorkoutLoggerAgent extends Agent<WorkoutLoggerContext> {
       }
     }
 
-    // Push to array (multi-workout safe -- no overwrite)
+    // Store result in array (multi-workout safe)
     if (!this.toolResults.has(storageKey)) {
       this.toolResults.set(storageKey, []);
     }
-    this.toolResults.get(storageKey)!.push(result);
+    const arr = this.toolResults.get(storageKey)!;
 
-    const currentIndex = this.toolResults.get(storageKey)!.length - 1;
-    console.info(
-      `📦 Stored tool result: ${toolId} → ${storageKey}[${currentIndex}]`,
-    );
+    if (workoutIndex !== undefined) {
+      // Positional storage: ensures the result for workoutIndex N is at arr[N]
+      // regardless of execution order within a turn
+      arr[workoutIndex] = result;
+      console.info(
+        `📦 Stored tool result: ${toolId} → ${storageKey}[${workoutIndex}] (positional)`,
+      );
+    } else {
+      // Append storage: for tools without workoutIndex (detect, extract)
+      arr.push(result);
+      console.info(
+        `📦 Stored tool result: ${toolId} → ${storageKey}[${arr.length - 1}] (append)`,
+      );
+    }
   }
 
   /**
@@ -285,6 +299,9 @@ export class WorkoutLoggerAgent extends Agent<WorkoutLoggerContext> {
 
       console.info(`⚙️ Executing tool: ${tool.id}`);
 
+      // Extract workoutIndex from tool input for positional storage alignment
+      const workoutIndex: number | undefined = toolUse.input?.workoutIndex;
+
       try {
         const startTime = Date.now();
         const result = await tool.execute(toolUse.input, augmentedContext);
@@ -293,7 +310,7 @@ export class WorkoutLoggerAgent extends Agent<WorkoutLoggerContext> {
         console.info(`✅ Tool ${tool.id} completed in ${duration}ms`);
 
         // Store result for later retrieval (with sanitization)
-        this.storeToolResult(tool.id, result);
+        this.storeToolResult(tool.id, result, workoutIndex);
 
         toolResults.push(this.buildToolResult(toolUse, result, "success"));
       } catch (error) {
@@ -304,7 +321,7 @@ export class WorkoutLoggerAgent extends Agent<WorkoutLoggerContext> {
 
         // Store error result for later retrieval (important for blocking enforcement)
         // Uses storeToolResult() to apply semantic key mapping
-        this.storeToolResult(tool.id, errorResult);
+        this.storeToolResult(tool.id, errorResult, workoutIndex);
 
         toolResults.push(this.buildToolResult(toolUse, errorResult, "error"));
       }
