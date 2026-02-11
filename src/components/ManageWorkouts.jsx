@@ -490,13 +490,10 @@ function ManageWorkouts() {
                           {rpe}/10
                         </span>
                       </div>
-                      <div className="relative w-full h-2 rounded-full overflow-hidden">
-                        {/* Fixed gradient background (always visible in same position) */}
-                        <div className="absolute inset-0 bg-gradient-to-r from-synthwave-neon-cyan via-synthwave-neon-pink to-synthwave-neon-purple rounded-full" />
-                        {/* Black overlay that shrinks from right to reveal gradient - straight left edge, rounded right */}
+                      <div className="h-2 bg-synthwave-bg-primary/60 rounded-full overflow-hidden">
                         <div
-                          className="absolute top-0 right-0 h-full bg-synthwave-bg-primary rounded-r-full transition-all duration-300"
-                          style={{ width: `${100 - (rpe / 10) * 100}%` }}
+                          className="h-full rounded-full bg-gradient-to-r from-synthwave-neon-cyan via-synthwave-neon-pink to-synthwave-neon-purple transition-all duration-500"
+                          style={{ width: `${(rpe / 10) * 100}%` }}
                         />
                       </div>
                     </div>
@@ -513,13 +510,10 @@ function ManageWorkouts() {
                           {intensity}/10
                         </span>
                       </div>
-                      <div className="relative w-full h-2 rounded-full overflow-hidden">
-                        {/* Fixed gradient background (always visible in same position) */}
-                        <div className="absolute inset-0 bg-gradient-to-r from-synthwave-neon-cyan via-synthwave-neon-pink to-synthwave-neon-purple rounded-full" />
-                        {/* Black overlay that shrinks from right to reveal gradient - straight left edge, rounded right */}
+                      <div className="h-2 bg-synthwave-bg-primary/60 rounded-full overflow-hidden">
                         <div
-                          className="absolute top-0 right-0 h-full bg-synthwave-bg-primary rounded-r-full transition-all duration-300"
-                          style={{ width: `${100 - (intensity / 10) * 100}%` }}
+                          className="h-full rounded-full bg-gradient-to-r from-synthwave-neon-cyan via-synthwave-neon-pink to-synthwave-neon-purple transition-all duration-500"
+                          style={{ width: `${(intensity / 10) * 100}%` }}
                         />
                       </div>
                     </div>

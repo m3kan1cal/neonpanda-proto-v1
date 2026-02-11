@@ -176,6 +176,15 @@ EXTRACTION GUIDELINES:
     - MOVEMENT PAIRING: Keep paired movements (supersets) in the same round
     - PROGRESSION TRACKING: Use consistent field names across rounds for same exercises
     - PHASE CLARITY: Use clear phase markers ("warmup", "working", "cooldown")
+
+11. PR ACHIEVEMENT UNIT TRACKING:
+    - ALWAYS include the unit field for PR achievements
+    - Weight PRs (1rm, volume_pr): use "lbs" or "kg" based on the user's stated units or coach methodology
+    - Distance PRs (distance_pr): use "mi", "km", or "m" based on context
+    - Pace PRs (pace_pr): use "min/mi" or "min/km"
+    - Time PRs (workout_time): use "min" or "sec" as appropriate
+    - If the user specifies units explicitly (e.g., "315lbs"), use those exact units
+    - If no unit is stated, infer from coach context (US-based coaches default to lbs/mi)
 `;
 
 /**

@@ -244,6 +244,11 @@ export const BASE_WORKOUT_SCHEMA = {
             type: ["string", "null"],
             description: "Context or notes about the PR",
           },
+          unit: {
+            type: ["string", "null"],
+            description:
+              "Unit of measurement for the PR value (e.g., 'lbs', 'kg', 'mi', 'km', 'min', 'sec'). Infer from context: weight PRs use weight units, distance PRs use distance units, time PRs use 'min' or 'sec'.",
+          },
         },
       },
     },
