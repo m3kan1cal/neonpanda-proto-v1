@@ -67,9 +67,17 @@ export function getPrTypeLabel(prType) {
 }
 
 /**
- * Returns the appropriate unit suffix for a PR type based on the user's unit system.
+ * Returns the appropriate unit for a PR.
+ * Priority: storedUnit (from data) > PR_TYPE_UNITS lookup > empty string.
+ * The storedUnit parameter enables using the unit captured during workout
+ * extraction, falling back to the inferred unit for older PR data.
  */
-export function getPrUnit(prType, unitSystem = DEFAULT_UNIT_SYSTEM) {
+export function getPrUnit(
+  prType,
+  unitSystem = DEFAULT_UNIT_SYSTEM,
+  storedUnit = null,
+) {
+  if (storedUnit) return storedUnit;
   if (!prType) return "";
   const units = PR_TYPE_UNITS[unitSystem] || PR_TYPE_UNITS.imperial;
   return units[prType] || "";

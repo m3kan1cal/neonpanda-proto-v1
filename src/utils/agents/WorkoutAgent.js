@@ -42,6 +42,8 @@ export class WorkoutAgent {
       thisWeekWorkoutCount: 0,
       trainingDaysCount: 0,
       lastWorkoutDaysAgo: 0,
+      currentStreak: 0,
+      bestStreak: 0,
       recentPrAchievements: [],
       isLoadingCount: false,
       isLoadingTrainingDays: false,
@@ -94,6 +96,122 @@ export class WorkoutAgent {
       );
       return 0;
     }
+  }
+
+  /**
+   * Calculates the current workout streak (consecutive calendar days with a workout).
+   * Uses local dates to avoid timezone edge cases.
+   * Grace period: if no workout today, streak starts from yesterday so a morning
+   * check doesn't reset a streak built through the previous day.
+   * @param {Array} workouts - Array of workout objects sorted by completedAt desc
+   * @returns {number} - Consecutive day streak count
+   */
+  _calculateWorkoutStreak(workouts) {
+    if (!workouts || workouts.length === 0) return 0;
+
+    // Extract unique local-date strings (YYYY-MM-DD in user's timezone)
+    const uniqueDates = new Set();
+    for (const workout of workouts) {
+      if (workout.completedAt) {
+        try {
+          const date = new Date(workout.completedAt);
+          // Use local date to respect user's timezone
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, "0");
+          const day = String(date.getDate()).padStart(2, "0");
+          uniqueDates.add(`${year}-${month}-${day}`);
+        } catch {
+          // Skip invalid dates
+        }
+      }
+    }
+
+    if (uniqueDates.size === 0) return 0;
+
+    // Sort dates descending
+    const sortedDates = Array.from(uniqueDates).sort().reverse();
+
+    // Determine today and yesterday in local time
+    const now = new Date();
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, "0")}-${String(yesterday.getDate()).padStart(2, "0")}`;
+
+    // The most recent workout date must be today or yesterday for a streak to exist
+    const mostRecent = sortedDates[0];
+    if (mostRecent !== todayStr && mostRecent !== yesterdayStr) return 0;
+
+    // Walk backward from the most recent date counting consecutive days
+    let streak = 1;
+    let currentDate = new Date(mostRecent + "T00:00:00");
+
+    for (let i = 1; i < sortedDates.length; i++) {
+      // Expected previous day
+      const expectedPrev = new Date(currentDate);
+      expectedPrev.setDate(expectedPrev.getDate() - 1);
+      const expectedStr = `${expectedPrev.getFullYear()}-${String(expectedPrev.getMonth() + 1).padStart(2, "0")}-${String(expectedPrev.getDate()).padStart(2, "0")}`;
+
+      if (sortedDates[i] === expectedStr) {
+        streak++;
+        currentDate = expectedPrev;
+      } else {
+        break;
+      }
+    }
+
+    return streak;
+  }
+
+  /**
+   * Calculates the best (longest) workout streak from workout history.
+   * Scans all consecutive day sequences to find the maximum.
+   * @param {Array} workouts - Array of workout objects sorted by completedAt desc
+   * @returns {number} - Best streak count
+   */
+  _calculateBestStreak(workouts) {
+    if (!workouts || workouts.length === 0) return 0;
+
+    // Extract unique local-date strings
+    const uniqueDates = new Set();
+    for (const workout of workouts) {
+      if (workout.completedAt) {
+        try {
+          const date = new Date(workout.completedAt);
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, "0");
+          const day = String(date.getDate()).padStart(2, "0");
+          uniqueDates.add(`${year}-${month}-${day}`);
+        } catch {
+          // Skip invalid dates
+        }
+      }
+    }
+
+    if (uniqueDates.size === 0) return 0;
+
+    // Sort dates ascending for sequential checking
+    const sortedDates = Array.from(uniqueDates).sort();
+
+    let maxStreak = 1;
+    let currentStreak = 1;
+
+    for (let i = 1; i < sortedDates.length; i++) {
+      const prevDate = new Date(sortedDates[i - 1] + "T00:00:00");
+      const expectedNext = new Date(prevDate);
+      expectedNext.setDate(expectedNext.getDate() + 1);
+      const expectedStr = `${expectedNext.getFullYear()}-${String(expectedNext.getMonth() + 1).padStart(2, "0")}-${String(expectedNext.getDate()).padStart(2, "0")}`;
+
+      if (sortedDates[i] === expectedStr) {
+        currentStreak++;
+        maxStreak = Math.max(maxStreak, currentStreak);
+      } else {
+        currentStreak = 1;
+      }
+    }
+
+    return maxStreak;
   }
 
   /**
@@ -218,6 +336,12 @@ export class WorkoutAgent {
       // Calculate days since last workout
       const lastWorkoutDaysAgo = this._calculateLastWorkoutDaysAgo(workouts);
 
+      // Calculate current workout streak (consecutive days)
+      const currentStreak = this._calculateWorkoutStreak(workouts);
+
+      // Calculate best streak (longest consecutive days in history)
+      const bestStreak = this._calculateBestStreak(workouts);
+
       // Extract PR achievements from the fetched workouts (avoids a duplicate API call)
       const recentPrAchievements = this._extractPrAchievements(workouts, 2);
 
@@ -228,6 +352,8 @@ export class WorkoutAgent {
         thisWeekWorkoutCount: thisWeekWorkouts.length,
         trainingDaysCount: uniqueDates.size,
         lastWorkoutDaysAgo,
+        currentStreak,
+        bestStreak,
         recentPrAchievements,
         isLoadingCount: false,
         isLoadingRecentItems: false,
@@ -447,6 +573,7 @@ export class WorkoutAgent {
           significance: pr.significance,
           context: pr.context,
           datePrevious: pr.date_previous,
+          unit: pr.unit,
           // Parent workout context
           workoutId: workout.workoutId,
           workoutName: workout.workoutName || "Workout",

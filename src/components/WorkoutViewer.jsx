@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Tooltip } from "react-tooltip";
 import { containerPatterns, badgePatterns } from "../utils/ui/uiPatterns";
+import { getPrUnit, getPrTypeLabel } from "../utils/workout/constants";
 import {
   ChevronDownIcon,
   MetricsIcon,
@@ -2522,79 +2523,97 @@ const WorkoutViewer = ({
                 {workoutData.pr_achievements &&
                 workoutData.pr_achievements.length > 0 ? (
                   <div className="space-y-3">
-                    {workoutData.pr_achievements.map((pr, index) => (
-                      <div
-                        key={index}
-                        className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-lg p-4"
-                      >
-                        <div className="flex items-center justify-between mb-3">
-                          <h4 className="font-rajdhani font-bold text-synthwave-neon-pink text-base capitalize">
-                            {pr.exercise}{" "}
-                            {pr.pr_type && `(${pr.pr_type.replace(/_/g, " ")})`}
-                          </h4>
-                          <span
-                            className={`${badgePatterns.workoutBadgeBase} ${
-                              pr.significance === "major"
-                                ? badgePatterns.workoutBadgePink
-                                : pr.significance === "moderate"
-                                  ? badgePatterns.workoutBadgeCyan
-                                  : badgePatterns.workoutBadgeMuted
-                            }`}
-                          >
-                            {pr.significance}
-                          </span>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-                          {pr.previous_best && (
-                            <div className="flex items-center gap-1.5 font-rajdhani text-sm">
-                              <span className="text-synthwave-text-secondary">
-                                Previous:
-                              </span>
-                              <span className="text-synthwave-neon-cyan font-medium">
-                                {pr.previous_best}
-                              </span>
-                            </div>
-                          )}
-                          {pr.new_best && (
-                            <div className="flex items-center gap-1.5 font-rajdhani text-sm">
-                              <span className="text-synthwave-text-secondary">
-                                New:
-                              </span>
-                              <span className="text-synthwave-neon-cyan font-medium">
-                                {pr.new_best}
-                              </span>
-                            </div>
-                          )}
-                          {pr.improvement && (
-                            <div className="flex items-center gap-1.5 font-rajdhani text-sm">
-                              <span className="text-synthwave-text-secondary">
-                                Improvement:
-                              </span>
-                              <span className="text-synthwave-neon-cyan font-medium">
-                                {pr.improvement}
-                              </span>
-                            </div>
-                          )}
-                          {pr.improvement_percentage && (
-                            <div className="flex items-center gap-1.5 font-rajdhani text-sm">
-                              <span className="text-synthwave-text-secondary">
-                                %:
-                              </span>
-                              <span className="text-synthwave-neon-cyan font-medium">
-                                {pr.improvement_percentage}%
-                              </span>
-                            </div>
-                          )}
-                        </div>
-
-                        {pr.context && (
-                          <div className="mt-2 text-synthwave-text-secondary font-rajdhani text-sm">
-                            {pr.context}
+                    {workoutData.pr_achievements.map((pr, index) => {
+                      const unit = getPrUnit(pr.pr_type, "imperial", pr.unit);
+                      return (
+                        <div
+                          key={index}
+                          className="bg-synthwave-bg-primary/30 border border-synthwave-neon-cyan/20 rounded-lg p-4"
+                        >
+                          <div className="flex items-center justify-between mb-3">
+                            <h4 className="font-rajdhani font-bold text-synthwave-neon-pink text-base capitalize">
+                              {pr.exercise}{" "}
+                              {pr.pr_type && `(${getPrTypeLabel(pr.pr_type)})`}
+                            </h4>
+                            <span
+                              className={`${badgePatterns.workoutBadgeBase} ${
+                                pr.significance === "major"
+                                  ? badgePatterns.workoutBadgePink
+                                  : pr.significance === "moderate"
+                                    ? badgePatterns.workoutBadgeCyan
+                                    : badgePatterns.workoutBadgeMuted
+                              }`}
+                            >
+                              {pr.significance}
+                            </span>
                           </div>
-                        )}
-                      </div>
-                    ))}
+
+                          <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                            {pr.previous_best && (
+                              <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                                <span className="text-synthwave-text-secondary">
+                                  Previous:
+                                </span>
+                                <span className="text-synthwave-neon-cyan font-medium">
+                                  {pr.previous_best}
+                                  {unit && (
+                                    <span className="text-synthwave-text-muted ml-0.5">
+                                      {unit}
+                                    </span>
+                                  )}
+                                </span>
+                              </div>
+                            )}
+                            {pr.new_best && (
+                              <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                                <span className="text-synthwave-text-secondary">
+                                  New:
+                                </span>
+                                <span className="text-synthwave-neon-cyan font-medium">
+                                  {pr.new_best}
+                                  {unit && (
+                                    <span className="text-synthwave-text-muted ml-0.5">
+                                      {unit}
+                                    </span>
+                                  )}
+                                </span>
+                              </div>
+                            )}
+                            {pr.improvement && (
+                              <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                                <span className="text-synthwave-text-secondary">
+                                  Improvement:
+                                </span>
+                                <span className="text-synthwave-neon-cyan font-medium">
+                                  {pr.improvement}
+                                  {unit && (
+                                    <span className="text-synthwave-text-muted ml-0.5">
+                                      {unit}
+                                    </span>
+                                  )}
+                                </span>
+                              </div>
+                            )}
+                            {pr.improvement_percentage && (
+                              <div className="flex items-center gap-1.5 font-rajdhani text-sm">
+                                <span className="text-synthwave-text-secondary">
+                                  %:
+                                </span>
+                                <span className="text-synthwave-neon-cyan font-medium">
+                                  {pr.improvement_percentage}%
+                                </span>
+                              </div>
+                            )}
+                          </div>
+
+                          {pr.context && (
+                            <div className="mt-2 text-synthwave-text-secondary font-rajdhani text-sm">
+                              {pr.context}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 ) : (
                   <div className={containerPatterns.coachNotesSection}>

@@ -139,7 +139,7 @@ export default function RecentPRsCard({
       {/* PR achievement cards -- 2-column grid */}
       <div className="grid grid-cols-2 gap-3">
         {visiblePrs.map((pr, index) => {
-          const unit = getPrUnit(pr.prType, unitSystem);
+          const unit = getPrUnit(pr.prType, unitSystem, pr.unit);
           const relTime = formatRelativeTime(pr.completedAt);
           const isNew = isWithinPastWeek(pr.completedAt);
 

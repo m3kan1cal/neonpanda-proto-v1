@@ -662,23 +662,23 @@ EXTRACTION GUIDELINES:
 
 8.6. PR (PERSONAL RECORD) DETECTION:
    - EXPLICIT PR INDICATORS:
-     * "a PR for me" → pr_achievements: [{type: "weight_pr", exercise: "...", value: weight, unit: "lbs/kg"}]
-     * "a first for me" → pr_achievements: [{type: "first_time", exercise: "...", ...}]
-     * "first time doing X" → pr_achievements: [{type: "first_time", exercise: "X", ...}]
+     * "a PR for me" → pr_achievements: [{pr_type: "1rm", exercise: "...", new_best: weight, unit: "lbs"}]
+     * "a first for me" → pr_achievements: [{pr_type: "1rm", exercise: "...", new_best: value, unit: "lbs"}]
+     * "first time doing X" → pr_achievements: [{pr_type: "1rm", exercise: "X", new_best: value, unit: "lbs"}]
      * "personal best", "new record", "PR" → extract as PR achievement
-     * "heaviest I've done", "never done X before" → first_time or weight_pr
+     * "heaviest I've done", "never done X before" → extract as PR achievement
    - PR ACHIEVEMENT STRUCTURE:
-     * type: "weight_pr" | "rep_pr" | "time_pr" | "distance_pr" | "first_time" | "volume_pr"
+     * pr_type: "1rm" | "volume_pr" | "distance_pr" | "pace_pr" | "workout_time"
      * exercise: normalized exercise name
-     * value: numeric value achieved
-     * unit: appropriate unit (lbs, kg, reps, seconds, etc.)
-     * notes: any context about the PR (e.g., "first time with 30lb kettlebells")
+     * new_best: numeric value achieved
+     * unit: appropriate unit (lbs, kg, mi, km, min, sec)
+     * context: any context about the PR (e.g., "first time with 30lb kettlebells")
    - USER QUESTIONS ABOUT PRs:
      * "does that make it a PR by default?" → Yes, first time at a new weight/movement = PR
      * When user asks about PR status, confirm and extract as PR achievement
    - EXAMPLES:
-     * "deadlift 205 - a PR for me" → pr_achievements: [{type: "weight_pr", exercise: "deadlift", value: 205, unit: "lbs"}]
-     * "double KB swings with 30 pounds - a first for me" → pr_achievements: [{type: "first_time", exercise: "double_kettlebell_swing", value: 30, unit: "lbs", notes: "First time at this weight"}]
+     * "deadlift 205 - a PR for me" → pr_achievements: [{pr_type: "1rm", exercise: "deadlift", new_best: 205, unit: "lbs"}]
+     * "double KB swings with 30 pounds - a first for me" → pr_achievements: [{pr_type: "1rm", exercise: "double_kettlebell_swing", new_best: 30, unit: "lbs", context: "First time at this weight"}]
 
 8.7. WEARABLE DEVICE DATA EXTRACTION (Apple Watch, Garmin, Fitbit, etc.):
    - CALORIE DATA:

@@ -274,12 +274,103 @@ A dedicated "Exercise History" or "PR Timeline" feature that leverages exercise-
 
 ---
 
+## Feature 6: Workout Streak + Weekly Progress
+
+**Priority:** High -- Best retention ROI
+**Effort:** Low
+**Status:** Complete
+
+### Overview
+
+Replace the misleading "Days" QuickStat (showed unique training days but tooltip said "training streak") with a real consecutive-day streak, plus a dedicated StreakCard in Your Highlights showing the streak prominently with a weekly progress bar.
+
+### Implementation (2026-02-10)
+
+- Added `_calculateWorkoutStreak(workouts)` to `WorkoutAgent.js` -- computes consecutive calendar days with at least one workout, with grace period (if no workout today, starts from yesterday).
+- Added `currentStreak` to `WorkoutAgent` state, computed alongside existing stats in `loadWorkoutStats()`.
+- Replaced "Days" QuickStat with "Streak" using a pixel-art `FireIcon`.
+- Created `StreakCard.jsx` in `src/components/highlights/` -- hero streak number, pink-to-purple weekly progress bar (X/5), and context-aware motivational nudge.
+- Updated "This Week" QuickStat tooltip to show "X of 5 workouts completed (Mon-Sun)".
+
+### Key Files
+
+| File                                            | Change                                             |
+| ----------------------------------------------- | -------------------------------------------------- |
+| `src/utils/agents/WorkoutAgent.js`              | `_calculateWorkoutStreak()`, `currentStreak` state |
+| `src/components/highlights/StreakCard.jsx`      | New streak highlight card                          |
+| `src/components/themes/SynthwaveComponents.jsx` | `FireIcon`, `FireIconSmall`                        |
+| `src/components/TrainingGroundsV2.jsx`          | QuickStat replacement, StreakCard integration      |
+
+---
+
+## Feature 7: PR Unit of Measure
+
+**Priority:** High -- Data quality
+**Effort:** Low
+**Status:** Complete
+
+### Overview
+
+Add `unit` field to PR achievements end-to-end so PR values display with their correct unit of measure (lbs, kg, mi, etc.) instead of inferring from PR type and user preference.
+
+### Implementation (2026-02-10)
+
+- Added `unit?: string` to `PRAchievement` interface in types.
+- Added `unit` to the base workout extraction schema sent to Claude.
+- Added PR unit tracking guidance to `base-guidance.ts` and aligned legacy `extraction.ts` field names with the actual schema.
+- Updated `getPrUnit()` to accept optional `storedUnit` as first-priority override, falling back to `PR_TYPE_UNITS` inference for backward compatibility.
+- Updated `WorkoutAgent._extractPrAchievements()` to pass `unit` through.
+- Updated `RecentPRsCard` and `WorkoutViewer` to display units on PR values.
+
+### Key Files
+
+| File                                                         | Change                                        |
+| ------------------------------------------------------------ | --------------------------------------------- |
+| `amplify/functions/libs/workout/types.ts`                    | `unit?: string` on `PRAchievement`            |
+| `amplify/functions/libs/schemas/base-schema.ts`              | `unit` in `pr_achievements` schema            |
+| `amplify/functions/libs/workout/extraction/base-guidance.ts` | PR unit tracking guidance                     |
+| `amplify/functions/libs/workout/extraction.ts`               | Aligned legacy PR guidance field names        |
+| `src/utils/workout/constants.js`                             | `getPrUnit()` accepts `storedUnit` override   |
+| `src/utils/agents/WorkoutAgent.js`                           | `unit` in PR enrichment                       |
+| `src/components/highlights/RecentPRsCard.jsx`                | Passes stored unit to `getPrUnit`             |
+| `src/components/WorkoutViewer.jsx`                           | Displays units on PR previous/new/improvement |
+
+---
+
+## Feature 8: Top Exercises Card
+
+**Priority:** Medium -- Low effort, celebrates consistency
+**Effort:** Trivial
+**Status:** Complete
+
+### Overview
+
+New `TopExercisesCard` in Your Highlights showing the user's most-performed exercises sorted by frequency, celebrating consistency alongside PRs that celebrate peaks.
+
+### Implementation (2026-02-10)
+
+- Created `TopExercisesCard.jsx` following `RecentPRsCard` pattern -- `containerPatterns.cardMedium`, `listItemPatterns.rowCyan`, count badges, discipline tags, relative timestamps.
+- Integrated `ExerciseAgent` into `TrainingGroundsV2` (initialization, state management, data loading with `limit: 5`).
+- Placed card in desktop right column (after Recent PRs, before Workout History) and mobile layout.
+
+### Key Files
+
+| File                                             | Change                                    |
+| ------------------------------------------------ | ----------------------------------------- |
+| `src/components/highlights/TopExercisesCard.jsx` | New component                             |
+| `src/components/TrainingGroundsV2.jsx`           | ExerciseAgent integration, card placement |
+
+---
+
 ## Priority Summary
 
-| #   | Feature                        | Priority  | Effort     | Build When                            |
-| --- | ------------------------------ | --------- | ---------- | ------------------------------------- |
-| 1   | PR Highlights                  | High      | Low-Medium | Complete                              |
-| 2   | Report Action Card             | Medium    | Medium     | After Feature 1                       |
-| 3   | Multi-Workout Architecture     | High      | Medium     | Complete (Phases 1-3)                 |
-| 4   | Meal Planner Agent             | Low (now) | Very High  | After core engagement is proven       |
-| 5   | Exercise History & PR Timeline | Low       | Medium     | After users request exercise tracking |
+| #   | Feature                          | Priority  | Effort     | Build When                            |
+| --- | -------------------------------- | --------- | ---------- | ------------------------------------- |
+| 1   | PR Highlights                    | High      | Low-Medium | Complete                              |
+| 2   | Report Action Card               | Medium    | Medium     | Next                                  |
+| 3   | Multi-Workout Architecture       | High      | Medium     | Complete (Phases 1-3)                 |
+| 4   | Meal Planner Agent               | Low (now) | Very High  | After core engagement is proven       |
+| 5   | Exercise History & PR Timeline   | Low       | Medium     | After users request exercise tracking |
+| 6   | Workout Streak + Weekly Progress | High      | Low        | Complete                              |
+| 7   | PR Unit of Measure               | High      | Low        | Complete                              |
+| 8   | Top Exercises Card               | Medium    | Trivial    | Complete                              |
