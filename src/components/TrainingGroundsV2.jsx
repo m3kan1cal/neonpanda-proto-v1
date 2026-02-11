@@ -27,6 +27,7 @@ import {
   ReportIcon,
   WorkoutIcon,
   LightningIcon,
+  FireIcon,
   ChevronRightIcon,
   ProgramIcon,
   MessagesIcon,
@@ -47,9 +48,12 @@ import CoachConversationAgent from "../utils/agents/CoachConversationAgent";
 import WorkoutAgent from "../utils/agents/WorkoutAgent";
 import ReportAgent from "../utils/agents/ReportAgent";
 import { ProgramAgent } from "../utils/agents/ProgramAgent";
+import ExerciseAgent from "../utils/agents/ExerciseAgent";
 import TodaysWorkoutRow from "./programs/TodaysWorkoutRow";
 import ProgramList from "./programs/ProgramList";
 import RecentPRsCard from "./highlights/RecentPRsCard";
+import StreakCard from "./highlights/StreakCard";
+import TopExercisesCard from "./highlights/TopExercisesCard";
 import { useUpgradePrompts } from "../hooks/useUpgradePrompts";
 import { UpgradePrompt } from "./subscription";
 import { generateGreeting as fetchAiGreeting } from "../utils/apis/greetingApi";
@@ -137,6 +141,7 @@ function TrainingGroundsV2() {
   const workoutAgentRef = useRef(null);
   const reportsAgentRef = useRef(null);
   const programAgentRef = useRef(null);
+  const exerciseAgentRef = useRef(null);
 
   // Coach data state
   const [coachData, setCoachData] = useState(null);
@@ -185,6 +190,14 @@ function TrainingGroundsV2() {
   );
   const [programError, setProgramError] = useState(null);
 
+  // Exercise state (for Top Exercises card)
+  const [exerciseState, setExerciseState] = useState({
+    exerciseNames: [],
+    totalExerciseCount: 0,
+    isLoadingNames: false,
+    error: null,
+  });
+
   // AI greeting state
   const [aiGreeting, setAiGreeting] = useState(null);
   const [isLoadingGreeting, setIsLoadingGreeting] = useState(
@@ -200,7 +213,7 @@ function TrainingGroundsV2() {
   const [showAllConversations, setShowAllConversations] = useState(false);
   const [showAllWorkouts, setShowAllWorkouts] = useState(false);
   const [showAllReports, setShowAllReports] = useState(false);
-  const PAGINATION_LIMIT = 5;
+  const PAGINATION_LIMIT = 3;
 
   // Upgrade prompts
   const {
@@ -365,6 +378,21 @@ function TrainingGroundsV2() {
     };
   }, [userId, coachId]);
 
+  // Initialize exercise agent
+  useEffect(() => {
+    if (!exerciseAgentRef.current) {
+      exerciseAgentRef.current = new ExerciseAgent(null, (newState) => {
+        setExerciseState((prev) => ({ ...prev, ...newState }));
+      });
+    }
+    return () => {
+      if (exerciseAgentRef.current) {
+        exerciseAgentRef.current.destroy();
+        exerciseAgentRef.current = null;
+      }
+    };
+  }, []);
+
   // Load data when userId / coachId available
   useEffect(() => {
     if (conversationAgentRef.current && userId && coachId) {
@@ -395,6 +423,10 @@ function TrainingGroundsV2() {
           setIsLoadingPrograms(false);
           setIsLoadingTodaysWorkouts(false);
         });
+    }
+    if (exerciseAgentRef.current && userId) {
+      exerciseAgentRef.current.setUserId(userId);
+      exerciseAgentRef.current.loadExerciseNames({ limit: 6 });
     }
   }, [userId, coachId]);
 
@@ -651,50 +683,81 @@ function TrainingGroundsV2() {
               <div className="flex-1 h-px bg-synthwave-neon-cyan/10"></div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Left Column: Active Programs, Reports, Conversations */}
+              {/* Left Column: Active Programs, Reports, Workout History, Conversations */}
               <div className="space-y-6">
-                {/* Active Programs skeleton */}
+                {/* Active Programs skeleton - matches ProgramList */}
                 <div className={`${containerPatterns.cardMedium} p-6`}>
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
                     <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-36"></div>
                   </div>
                   <div className="space-y-3">
-                    <div className="h-10 bg-synthwave-text-muted/10 rounded-lg animate-pulse"></div>
-                    <div className="h-10 bg-synthwave-text-muted/10 rounded-lg animate-pulse"></div>
+                    {[1, 2].map((i) => (
+                      <div
+                        key={i}
+                        className="border-l-2 border-synthwave-text-muted/20 bg-synthwave-bg-primary/20 rounded-lg p-4 flex items-center gap-4"
+                      >
+                        <div className="w-10 h-10 rounded-full bg-synthwave-text-muted/20 animate-pulse flex-shrink-0"></div>
+                        <div className="flex-1 space-y-2">
+                          <div className="h-4 bg-synthwave-text-muted/20 rounded animate-pulse w-40"></div>
+                          <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-24"></div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
-                {/* Reports skeleton */}
+                {/* Reports skeleton - simple 3-line */}
                 <div className={`${containerPatterns.cardMedium} p-6`}>
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
                     <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-36"></div>
                   </div>
                   <div className="space-y-3">
-                    <div className="h-10 bg-synthwave-text-muted/10 rounded-lg animate-pulse"></div>
-                    <div className="h-10 bg-synthwave-text-muted/10 rounded-lg animate-pulse"></div>
-                    <div className="h-10 bg-synthwave-text-muted/10 rounded-lg animate-pulse w-3/4"></div>
+                    <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                    <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-3/4"></div>
+                    <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-1/2"></div>
                   </div>
                 </div>
-                {/* Conversations skeleton */}
+                {/* Workout History skeleton - simple 3-line */}
+                <div className={`${containerPatterns.cardMedium} p-6`}>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                    <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-36"></div>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                    <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-3/4"></div>
+                    <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-1/2"></div>
+                  </div>
+                </div>
+                {/* Conversations skeleton - simple 3-line */}
                 <div className={`${containerPatterns.cardMedium} p-6`}>
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
                     <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-44"></div>
                   </div>
                   <div className="space-y-3">
-                    <div className="h-10 bg-synthwave-text-muted/10 rounded-lg animate-pulse"></div>
-                    <div className="h-10 bg-synthwave-text-muted/10 rounded-lg animate-pulse"></div>
+                    <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
+                    <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-3/4"></div>
+                    <div className="h-3 bg-synthwave-text-muted/20 rounded animate-pulse w-1/2"></div>
                   </div>
                 </div>
               </div>
-              {/* Right Column: Recent PRs, Workout History */}
+              {/* Right Column: Streak, Recent PRs, Top Exercises */}
               <div className="space-y-6">
-                {/* Recent PRs skeleton */}
+                {/* Streak skeleton - matches StreakCard */}
                 <div className={`${containerPatterns.cardMedium} p-6`}>
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
-                    <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-28"></div>
+                  <div className="flex items-start space-x-3 mb-4">
+                    <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded-full animate-pulse flex-shrink-0 mt-1" />
+                    <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-32" />
+                  </div>
+                  <div className="h-16 bg-synthwave-text-muted/10 rounded-xl animate-pulse" />
+                </div>
+                {/* Recent PRs skeleton - matches RecentPRsCard */}
+                <div className={`${containerPatterns.cardMedium} p-6`}>
+                  <div className="flex items-start space-x-3 mb-4">
+                    <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded-full animate-pulse flex-shrink-0 mt-1" />
+                    <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-32" />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     {[1, 2, 3, 4].map((i) => (
@@ -702,23 +765,30 @@ function TrainingGroundsV2() {
                         key={i}
                         className="bg-synthwave-bg-primary/30 border border-synthwave-text-muted/10 rounded-xl p-3"
                       >
-                        <div className="h-2.5 bg-synthwave-text-muted/20 rounded animate-pulse w-2/3 mb-2"></div>
-                        <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-1/2 mb-2"></div>
-                        <div className="h-2.5 bg-synthwave-text-muted/20 rounded animate-pulse w-full"></div>
+                        <div className="h-2.5 bg-synthwave-text-muted/20 rounded animate-pulse w-2/3 mb-2" />
+                        <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-1/2 mb-2" />
+                        <div className="h-2.5 bg-synthwave-text-muted/20 rounded animate-pulse w-full" />
                       </div>
                     ))}
                   </div>
                 </div>
-                {/* Workout History skeleton */}
+                {/* Top Exercises skeleton - matches TopExercisesCard */}
                 <div className={`${containerPatterns.cardMedium} p-6`}>
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded animate-pulse"></div>
-                    <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-36"></div>
+                  <div className="flex items-start space-x-3 mb-4">
+                    <div className="w-5 h-5 bg-synthwave-text-muted/20 rounded-full animate-pulse flex-shrink-0 mt-1" />
+                    <div className="h-5 bg-synthwave-text-muted/20 rounded animate-pulse w-32" />
                   </div>
-                  <div className="space-y-3">
-                    <div className="h-10 bg-synthwave-text-muted/10 rounded-lg animate-pulse"></div>
-                    <div className="h-10 bg-synthwave-text-muted/10 rounded-lg animate-pulse"></div>
-                    <div className="h-10 bg-synthwave-text-muted/10 rounded-lg animate-pulse w-3/4"></div>
+                  <div className="grid grid-cols-2 gap-3">
+                    {[1, 2, 3, 4].map((i) => (
+                      <div
+                        key={i}
+                        className="bg-synthwave-bg-primary/30 border border-synthwave-text-muted/10 rounded-xl p-3"
+                      >
+                        <div className="h-2.5 bg-synthwave-text-muted/20 rounded animate-pulse w-2/3 mb-2" />
+                        <div className="h-6 bg-synthwave-text-muted/20 rounded animate-pulse w-1/2 mb-2" />
+                        <div className="h-2.5 bg-synthwave-text-muted/20 rounded animate-pulse w-full" />
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -771,6 +841,16 @@ function TrainingGroundsV2() {
   // ---------------------------------------------------------------------------
   // Masonry section cards (shared between mobile and desktop layouts)
   // ---------------------------------------------------------------------------
+  const renderStreakCard = () => (
+    <StreakCard
+      currentStreak={workoutState.currentStreak || 0}
+      bestStreak={workoutState.bestStreak || 0}
+      thisWeekWorkoutCount={workoutState.thisWeekWorkoutCount || 0}
+      lastWorkoutDaysAgo={workoutState.lastWorkoutDaysAgo || 0}
+      isLoading={workoutState.isLoadingTrainingDays}
+    />
+  );
+
   const renderConversationsCard = () => (
     <div className={`${containerPatterns.cardMedium} p-6`}>
       <div className="flex items-start space-x-3 mb-4">
@@ -1021,6 +1101,21 @@ function TrainingGroundsV2() {
     );
   };
 
+  const renderTopExercisesCard = () => {
+    const hasExercises =
+      (exerciseState.exerciseNames && exerciseState.exerciseNames.length > 0) ||
+      exerciseState.isLoadingNames;
+
+    if (!hasExercises) return null;
+
+    return (
+      <TopExercisesCard
+        exercises={exerciseState.exerciseNames || []}
+        isLoading={exerciseState.isLoadingNames}
+      />
+    );
+  };
+
   const renderReportsCard = () => (
     <div className={`${containerPatterns.cardMedium} p-6`}>
       <div className="flex items-start space-x-3 mb-4">
@@ -1256,8 +1351,7 @@ function TrainingGroundsV2() {
                   value: workoutState.thisWeekWorkoutCount || 0,
                   tooltip: {
                     title: `${workoutState.thisWeekWorkoutCount || 0} This Week`,
-                    description:
-                      "Workouts completed this week (Sunday-Saturday)",
+                    description: `${workoutState.thisWeekWorkoutCount || 0} of 5 workouts completed (Mon-Sun)`,
                   },
                   color: "pink",
                   isLoading: workoutState.isLoadingCount,
@@ -1278,16 +1372,19 @@ function TrainingGroundsV2() {
                   id: "v2-stat-programs",
                 },
                 {
-                  icon: LightningIcon,
-                  value: workoutState.trainingDaysCount || 0,
+                  icon: FireIcon,
+                  value: workoutState.currentStreak || 0,
                   tooltip: {
-                    title: `${workoutState.trainingDaysCount || 0} Days`,
-                    description: "Your current training streak",
+                    title: `${workoutState.currentStreak || 0} Day Streak`,
+                    description:
+                      workoutState.currentStreak > 0
+                        ? "Consecutive days with a logged workout"
+                        : "Log a workout to start your streak",
                   },
-                  color: "purple",
+                  color: "pink",
                   isLoading: workoutState.isLoadingTrainingDays,
-                  ariaLabel: `${workoutState.trainingDaysCount || 0} training days`,
-                  id: "v2-stat-days",
+                  ariaLabel: `${workoutState.currentStreak || 0} day workout streak`,
+                  id: "v2-stat-streak",
                 },
                 {
                   icon: ReportIcon,
@@ -1424,8 +1521,14 @@ function TrainingGroundsV2() {
               />
             </div>
 
+            {/* Streak */}
+            {renderStreakCard()}
+
             {/* Recent PRs */}
             {renderRecentPRsCard()}
+
+            {/* Top Exercises */}
+            {renderTopExercisesCard()}
 
             {/* Reports & Insights */}
             {renderReportsCard()}
@@ -1468,13 +1571,15 @@ function TrainingGroundsV2() {
               </div>
 
               {renderReportsCard()}
+              {renderWorkoutHistoryCard()}
               {renderConversationsCard()}
             </div>
 
-            {/* Right Column -- Recent PRs + Workout History */}
+            {/* Right Column -- Streak + Recent PRs + Top Exercises */}
             <div className="space-y-6">
+              {renderStreakCard()}
               {renderRecentPRsCard()}
-              {renderWorkoutHistoryCard()}
+              {renderTopExercisesCard()}
             </div>
           </div>
         </div>
