@@ -64,7 +64,32 @@ export class WorkoutAgent {
   }
 
   /**
-   * Calculates days since the most recent workout
+   * Extracts unique calendar date strings (YYYY-MM-DD) from workouts.
+   * Uses local timezone to respect user's calendar.
+   * @param {Array} workouts - Array of workout objects
+   * @returns {Set<string>} - Set of unique date strings
+   */
+  _getUniqueDateStrings(workouts) {
+    const uniqueDates = new Set();
+    for (const workout of workouts) {
+      if (workout.completedAt) {
+        try {
+          const date = new Date(workout.completedAt);
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, "0");
+          const day = String(date.getDate()).padStart(2, "0");
+          uniqueDates.add(`${year}-${month}-${day}`);
+        } catch {
+          // Skip invalid dates
+        }
+      }
+    }
+    return uniqueDates;
+  }
+
+  /**
+   * Calculates calendar days since the most recent workout.
+   * Uses calendar dates (not elapsed time) to match streak calculation semantics.
    * @param {Array} workouts - Array of workout objects
    * @returns {number} - Number of days since last workout, or 0 if no workouts
    */
@@ -84,9 +109,18 @@ export class WorkoutAgent {
       const lastWorkoutDate = new Date(mostRecentWorkout.completedAt);
       const now = new Date();
 
-      // Calculate difference in milliseconds and convert to days
-      const diffInMs = now.getTime() - lastWorkoutDate.getTime();
-      const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+      // Use calendar dates (not elapsed time) to match streak calculation
+      const lastWorkoutDateStr = `${lastWorkoutDate.getFullYear()}-${String(lastWorkoutDate.getMonth() + 1).padStart(2, "0")}-${String(lastWorkoutDate.getDate()).padStart(2, "0")}`;
+      const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+
+      // If same calendar day, return 0
+      if (lastWorkoutDateStr === todayStr) return 0;
+
+      // Calculate difference in calendar days
+      const lastDate = new Date(lastWorkoutDateStr + "T00:00:00");
+      const today = new Date(todayStr + "T00:00:00");
+      const diffInMs = today.getTime() - lastDate.getTime();
+      const diffInDays = Math.round(diffInMs / (1000 * 60 * 60 * 24));
 
       return Math.max(0, diffInDays); // Ensure non-negative
     } catch (error) {
@@ -110,21 +144,7 @@ export class WorkoutAgent {
     if (!workouts || workouts.length === 0) return 0;
 
     // Extract unique local-date strings (YYYY-MM-DD in user's timezone)
-    const uniqueDates = new Set();
-    for (const workout of workouts) {
-      if (workout.completedAt) {
-        try {
-          const date = new Date(workout.completedAt);
-          // Use local date to respect user's timezone
-          const year = date.getFullYear();
-          const month = String(date.getMonth() + 1).padStart(2, "0");
-          const day = String(date.getDate()).padStart(2, "0");
-          uniqueDates.add(`${year}-${month}-${day}`);
-        } catch {
-          // Skip invalid dates
-        }
-      }
-    }
+    const uniqueDates = this._getUniqueDateStrings(workouts);
 
     if (uniqueDates.size === 0) return 0;
 
@@ -174,20 +194,7 @@ export class WorkoutAgent {
     if (!workouts || workouts.length === 0) return 0;
 
     // Extract unique local-date strings
-    const uniqueDates = new Set();
-    for (const workout of workouts) {
-      if (workout.completedAt) {
-        try {
-          const date = new Date(workout.completedAt);
-          const year = date.getFullYear();
-          const month = String(date.getMonth() + 1).padStart(2, "0");
-          const day = String(date.getDate()).padStart(2, "0");
-          uniqueDates.add(`${year}-${month}-${day}`);
-        } catch {
-          // Skip invalid dates
-        }
-      }
-    }
+    const uniqueDates = this._getUniqueDateStrings(workouts);
 
     if (uniqueDates.size === 0) return 0;
 
