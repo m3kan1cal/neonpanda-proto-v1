@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Tooltip } from "react-tooltip";
 import { useAuthorizeUser } from "../auth/hooks/useAuthorizeUser";
+import { useAuth } from "../auth/contexts/AuthContext";
 import { AccessDenied } from "./shared/AccessDenied";
 import {
   buttonPatterns,
@@ -74,6 +75,10 @@ function WorkoutDetails() {
     isValid: isValidUserId,
     error: userIdError,
   } = useAuthorizeUser(userId);
+  const { userProfile } = useAuth();
+
+  // Derive unit system from user profile preferences (default: imperial)
+  const unitSystem = userProfile?.preferences?.unitSystem || "imperial";
 
   // View state
   const [viewMode, setViewMode] = useState("formatted"); // 'formatted' or 'raw'
@@ -505,6 +510,7 @@ function WorkoutDetails() {
             viewMode={viewMode}
             onSaveWorkoutTitle={handleSaveWorkoutTitle}
             formatDate={formatDate}
+            unitSystem={unitSystem}
           />
         ) : (
           <div className="flex items-center justify-center h-full">

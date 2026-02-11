@@ -362,6 +362,67 @@ New `TopExercisesCard` in Your Highlights showing the user's most-performed exer
 
 ---
 
+## Feature 9: Best Streak Backend Optimization
+
+**Priority:** Medium -- Accuracy issue for power users
+**Effort:** Medium
+**Status:** Planned
+
+### Overview
+
+Currently, best streak is computed from the most recent 100 workouts fetched by `WorkoutAgent.loadWorkoutStats()`. Active users with 100+ workouts will see an underreported "Best" streak since older workout data is never considered. The solution is to store `bestStreak` as a pre-computed field that updates when workouts are created.
+
+### Problem
+
+- `_calculateBestStreak()` operates on `workouts` array limited to 100 items
+- Original 100-item limit was designed for "recent items and this week" calculations
+- Best streak computation requires analyzing the user's complete workout history
+- Power users with >100 workouts will never see their true best streak
+
+### Proposed Solution (Backend Computed Field)
+
+**Backend Changes:**
+
+1. Add `bestStreak` field to user stats in DynamoDB (stored alongside other workout metrics)
+2. Update `build-workout` Lambda to recalculate and store best streak after each workout creation
+3. Modify `WorkoutAgent` to read pre-computed `bestStreak` from user stats instead of calculating client-side
+
+**Migration:**
+
+- One-time backfill script to calculate and store `bestStreak` for all existing users
+- Query all workouts per user, compute best streak, update user stats record
+
+**Benefits:**
+
+- Accurate for all users regardless of workout count
+- Improves dashboard performance (no client-side calculation needed)
+- Best streak updates automatically when workouts are logged
+- Scales efficiently as users log 1000+ workouts
+
+### Alternative Approaches (Not Recommended)
+
+**Option A: Increase Limit**
+
+- Raise workout query limit from 100 to 500-1000
+- Still has ceiling problem, loads unnecessary data, slows dashboard for power users
+
+**Option C: Lightweight Query**
+
+- Fetch only `completedAt` dates for streak calculation (not full workout objects)
+- Still requires client-side calculation on every dashboard load
+- Better than current, but not as efficient as backend computed field
+
+### Key Files
+
+| File                                         | Change                                                      |
+| -------------------------------------------- | ----------------------------------------------------------- |
+| `amplify/functions/build-workout/handler.ts` | Compute and store `bestStreak` after workout creation       |
+| `amplify/dynamodb/operations.ts`             | Add `bestStreak` to user stats schema and update operations |
+| `src/utils/agents/WorkoutAgent.js`           | Read `bestStreak` from user stats instead of computing      |
+| Migration script (new)                       | Backfill `bestStreak` for existing users                    |
+
+---
+
 ## Priority Summary
 
 | #   | Feature                          | Priority  | Effort     | Build When                            |
@@ -374,3 +435,4 @@ New `TopExercisesCard` in Your Highlights showing the user's most-performed exer
 | 6   | Workout Streak + Weekly Progress | High      | Low        | Complete                              |
 | 7   | PR Unit of Measure               | High      | Low        | Complete                              |
 | 8   | Top Exercises Card               | Medium    | Trivial    | Complete                              |
+| 9   | Best Streak Backend Optimization | Medium    | Medium     | When power users hit 100+ workouts    |

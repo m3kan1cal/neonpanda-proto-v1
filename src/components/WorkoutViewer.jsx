@@ -1147,6 +1147,7 @@ const WorkoutViewer = ({
   viewMode = "formatted",
   onSaveWorkoutTitle,
   formatDate,
+  unitSystem = "imperial",
 }) => {
   // Collapse state management - default: all sections expanded
   const [collapsedSections, setCollapsedSections] = useState(new Set([]));
@@ -2524,7 +2525,7 @@ const WorkoutViewer = ({
                 workoutData.pr_achievements.length > 0 ? (
                   <div className="space-y-3">
                     {workoutData.pr_achievements.map((pr, index) => {
-                      const unit = getPrUnit(pr.pr_type, "imperial", pr.unit);
+                      const unit = getPrUnit(pr.pr_type, unitSystem, pr.unit);
                       return (
                         <div
                           key={index}

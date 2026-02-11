@@ -11,6 +11,7 @@ import {
   NewBadge,
 } from "../themes/SynthwaveComponents";
 import { getPrTypeLabel, getPrUnit } from "../../utils/workout/constants";
+import { formatRelativeTime } from "../../utils/dateUtils";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -43,25 +44,6 @@ function getSignificanceBadgeClass(significance) {
       return badgePatterns.cyanBorder;
     default:
       return badgePatterns.workoutDetail;
-  }
-}
-
-/**
- * Formats a completedAt date as a relative timestamp (e.g., "2d ago").
- */
-function formatRelativeTime(completedAt) {
-  if (!completedAt) return "";
-  try {
-    const date = new Date(completedAt);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(Math.abs(diffMs) / (1000 * 60));
-
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffMins < 1440) return `${Math.floor(diffMins / 60)}h ago`;
-    return `${Math.floor(diffMins / 1440)}d ago`;
-  } catch {
-    return "";
   }
 }
 

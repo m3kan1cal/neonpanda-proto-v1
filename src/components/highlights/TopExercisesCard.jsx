@@ -5,37 +5,12 @@ import {
   listItemPatterns,
 } from "../../utils/ui/uiPatterns";
 import { WeightPlateIconTiny } from "../themes/SynthwaveComponents";
+import { formatRelativeTime } from "../../utils/dateUtils";
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 const DISPLAY_LIMIT = 6;
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-/**
- * Formats a lastPerformed date as a relative timestamp (e.g., "2d ago").
- */
-function formatRelativeTime(lastPerformed) {
-  if (!lastPerformed) return "";
-  try {
-    const date =
-      lastPerformed instanceof Date ? lastPerformed : new Date(lastPerformed);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(Math.abs(diffMs) / (1000 * 60));
-
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffMins < 1440) return `${Math.floor(diffMins / 60)}h ago`;
-    const days = Math.floor(diffMins / 1440);
-    if (days < 30) return `${days}d ago`;
-    return `${Math.floor(days / 30)}mo ago`;
-  } catch {
-    return "";
-  }
-}
 
 // ---------------------------------------------------------------------------
 // Component
