@@ -426,7 +426,7 @@ function TrainingGroundsV2() {
     }
     if (exerciseAgentRef.current && userId) {
       exerciseAgentRef.current.setUserId(userId);
-      exerciseAgentRef.current.loadExerciseNames({ limit: 5 });
+      exerciseAgentRef.current.loadExerciseNames({ limit: 6 });
     }
   }, [userId, coachId]);
 
