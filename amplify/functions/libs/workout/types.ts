@@ -549,6 +549,7 @@ export interface PRAchievement {
   date_previous?: string;
   significance: "minor" | "moderate" | "major";
   context?: string;
+  unit?: string; // "lbs", "kg", "mi", "km", "min", "sec", etc.
 }
 
 /**

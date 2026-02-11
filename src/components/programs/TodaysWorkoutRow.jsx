@@ -295,7 +295,7 @@ function TodaysWorkoutRow({
               </div>
 
               {/* Meta row */}
-              <div className="flex gap-3 font-rajdhani text-xs text-white/50">
+              <div className="flex gap-3 font-rajdhani text-xs text-white/50 mb-1.5">
                 <span>
                   Day {dayNumber || program.currentDay || 1} of{" "}
                   {program.totalDays}
@@ -304,9 +304,9 @@ function TodaysWorkoutRow({
 
               {/* Progress bar */}
               <div>
-                <div className="relative w-full h-[3px] bg-white/[0.08] rounded-full overflow-hidden">
+                <div className="h-[6px] bg-synthwave-bg-primary/60 rounded-full overflow-hidden">
                   <div
-                    className="absolute top-0 left-0 h-full bg-gradient-to-r from-synthwave-neon-cyan to-synthwave-neon-purple rounded-full transition-all duration-500"
+                    className="h-full rounded-full bg-gradient-to-r from-synthwave-neon-cyan to-synthwave-neon-purple transition-all duration-500"
                     style={{ width: `${progressPercentage}%` }}
                   />
                 </div>
